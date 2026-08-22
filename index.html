@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon</title>
+<meta name="description" content="The Hubricon Quantitative CFO Protocol — predictive modeling and price elasticity calculus to extract maximum profit from your Amazon catalog.">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+
+<style>
+/* ============================================================
+   LAYER 02 — COLOR & OPACITY SYSTEM (HSL custom properties)
+   Single-theme by design: cinematic deep navy, committed.
+   ============================================================ */
+:root{
+  --navy-h: 225; --navy-s: 72%; --navy-l: 7%;
+  --bg:        hsl(225 72% 7%);            /* #050A1F */
+  --bg-raise:  hsl(224 60% 11%);
+  --amber:     hsl(45 100% 50%);           /* #FFC000 */
+  --amber-soft:hsl(45 100% 50% / .12);
+  --serious:   hsl(8 72% 58%);             /* reserved status red — bleed zone only */
+
+  /* opacity hierarchy */
+  --ink-100: hsl(220 40% 98% / 1);         /* primary headings & CTAs */
+  --ink-70:  hsl(220 40% 98% / .7);        /* subheadings */
+  --ink-60:  hsl(220 40% 98% / .6);        /* secondary body copy */
+  --rule-20: hsl(220 40% 98% / .2);        /* borders, dividers, UI rules */
+  --rule-08: hsl(220 40% 98% / .08);       /* chart grid, faint rules */
+
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; }
+body{
+  background: var(--bg);
+  color: var(--ink-60);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 14.5px;
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+
+h1,h2,h3{
+  font-family: var(--font-head);
+  font-weight: 400;
+  color: var(--ink-100);
+  text-transform: uppercase;
+  letter-spacing: .015em;
+  line-height: .98;
+  text-wrap: balance;
+}
+
+/* film grain — cinematic layer over everything */
+.grain{
+  position: fixed; inset: -50%; z-index: 90; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: .045;
+  animation: grain 1.4s steps(4) infinite;
+}
+@keyframes grain{
+  0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); }
+  50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); }
+}
+
+/* ============================================================
+   LAYER 03 — LIQUID GLASS
+   Gradient borders: light catch at the edges, navy tint mid,
+   so the rule fades into the background instead of boxing it.
+   ============================================================ */
+.glass, .glass-strong{ position: relative; border-radius: 20px; }
+.glass::before, .glass-strong::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+/* SUBTLE GLASS — cards, navbar, badges */
+.glass{
+  background: hsl(224 55% 14% / .32);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.glass::before{
+  background: linear-gradient(175deg,
+    hsl(220 60% 85% / .32) 0%,
+    hsl(224 60% 20% / .06) 38%,
+    hsl(224 60% 20% / .06) 62%,
+    hsl(45 90% 65% / .14) 100%);
+}
+/* STRONG GLASS — CTA buttons, prominent UI */
+.glass-strong{
+  background: hsl(224 55% 16% / .45);
+  -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
+  box-shadow: 0 14px 44px hsl(226 80% 3% / .55), inset 0 1px 0 hsl(220 60% 90% / .1);
+}
+.glass-strong::before{
+  padding: 1.2px;
+  background: linear-gradient(170deg,
+    hsl(220 70% 92% / .6) 0%,
+    hsl(224 60% 24% / .12) 42%,
+    hsl(224 60% 24% / .12) 58%,
+    hsl(45 100% 62% / .45) 100%);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 12px;
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 13px 22px; border-radius: 999px;
+  border: 0; cursor: pointer; white-space: nowrap;
+  transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s;
+}
+.btn svg{ width: 13px; height: 13px; transition: transform .25s var(--ease-out); }
+.btn:hover svg{ transform: translate(2px,-2px); }
+.btn:active{ transform: scale(.98); }
+
+.btn-white{ background: var(--ink-100); color: var(--bg); }
+.btn-white:hover{ box-shadow: 0 0 0 5px hsl(220 40% 98% / .12); }
+
+/* strong amber glass CTA */
+.btn-amber{
+  color: var(--amber);
+  background: hsl(45 100% 50% / .13);
+  -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
+  box-shadow: 0 10px 36px hsl(45 100% 40% / .22), inset 0 1px 0 hsl(45 100% 72% / .38);
+  position: relative;
+}
+.btn-amber::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.2px;
+  background: linear-gradient(170deg,
+    hsl(45 100% 78% / .8) 0%,
+    hsl(45 90% 40% / .12) 45%,
+    hsl(45 90% 40% / .12) 60%,
+    hsl(45 100% 62% / .55) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.btn-amber:hover{ background: hsl(45 100% 50% / .2); box-shadow: 0 12px 48px hsl(45 100% 42% / .32), inset 0 1px 0 hsl(45 100% 76% / .45); }
+
+/* subtle glass secondary button */
+.btn-glass{
+  color: var(--ink-100);
+  background: hsl(224 55% 16% / .35);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  position: relative;
+}
+.btn-glass::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(175deg,
+    hsl(220 60% 85% / .3) 0%, hsl(224 60% 20% / .05) 45%,
+    hsl(224 60% 20% / .05) 60%, hsl(220 60% 70% / .16) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.btn-glass:hover{ background: hsl(224 55% 22% / .5); }
+
+.btn-text{
+  color: var(--ink-70); background: transparent; padding: 13px 8px;
+}
+.btn-text:hover{ color: var(--ink-100); }
+
+/* ============================================================
+   01 · NAVBAR — fixed floating glass pill
+   ============================================================ */
+.nav{
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+  z-index: 80;
+  width: min(1080px, calc(100% - 28px));
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 9px 9px 24px;
+  border-radius: 999px;
+  opacity: 0; translate: 0 -14px;
+  animation: navIn .9s var(--ease-out) .2s forwards;
+}
+@keyframes navIn{ to{ opacity: 1; translate: 0 0; } }
+.nav-logo{
+  font-family: var(--font-head); font-size: 20px; letter-spacing: .04em;
+  color: var(--ink-100); text-transform: uppercase;
+}
+.nav-logo em{ font-style: normal; color: var(--amber); }
+.nav-links{
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 30px;
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: .12em;
+}
+.nav-links a{ color: var(--ink-70); transition: color .2s; padding: 6px 2px; }
+.nav-links a:hover{ color: var(--ink-100); }
+.nav .btn{ padding: 11px 18px; }
+
+/* ============================================================
+   02 · HERO — 1000px, data-mesh canvas background
+   ============================================================ */
+.hero{
+  position: relative; height: 1000px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; overflow: hidden;
+}
+.hero-canvas, .proof-canvas, .close-canvas{
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
+}
+/* LAYER 05 — video edge blends */
+.edge{ position: absolute; left: 0; right: 0; height: 200px; z-index: 2; pointer-events: none; }
+.edge-top{ top: 0; background: linear-gradient(180deg, var(--bg), transparent); }
+.edge-bottom{ bottom: 0; background: linear-gradient(0deg, var(--bg), transparent); }
+.hero .edge-bottom{ height: 300px; }
+
+.hero-inner{
+  position: relative; z-index: 3;
+  width: min(1040px, calc(100% - 48px));
+  display: flex; flex-direction: column; align-items: center; gap: 34px;
+  padding-top: 40px;
+}
+.badge{
+  display: inline-flex; align-items: center; gap: 10px;
+  border-radius: 999px; padding: 8px 18px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .2em;
+  color: var(--ink-70);
+}
+.badge i{
+  width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+  box-shadow: 0 0 12px 2px hsl(45 100% 50% / .5);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{ opacity: 1; } 50%{ opacity: .35; } }
+
+.hero h1{
+  font-size: clamp(52px, 8.6vw, 118px);
+  max-width: 11ch;
+}
+.hero-sub{
+  color: var(--ink-70);
+  font-size: clamp(13.5px, 1.35vw, 16px);
+  max-width: 56ch;
+}
+.cta-row{ display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+
+.hero-ticker{
+  position: absolute; bottom: 42px; left: 0; right: 0; z-index: 3;
+  display: flex; justify-content: center; gap: 40px;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-60);
+  flex-wrap: wrap; padding: 0 20px;
+}
+.hero-ticker b{ color: var(--amber); font-weight: 400; }
+
+/* ============================================================
+   03–05 · FEATURE ROWS — chess layout
+   ============================================================ */
+.features{ position: relative; z-index: 3; }
+.feature{
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto; padding: 110px 0;
+}
+.feature + .feature{ border-top: 1px solid hsl(220 40% 98% / .08); }
+.feature-inner{
+  display: grid; grid-template-columns: 1fr 1.15fr;
+  gap: clamp(40px, 6vw, 90px); align-items: center;
+}
+.feature.flip .feature-copy{ order: 2; }
+.feature.flip .feature-media{ order: 1; }
+
+.eyebrow{
+  display: flex; align-items: center; gap: 12px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .22em;
+  color: var(--amber); margin-bottom: 22px;
+}
+.eyebrow::after{ content:""; height: 1px; width: 64px; background: var(--rule-20); }
+.feature h2{ font-size: clamp(34px, 3.8vw, 54px); margin-bottom: 22px; max-width: 14ch; }
+.feature p{ color: var(--ink-60); max-width: 48ch; margin-bottom: 30px; }
+
+/* media panel — subtle glass container around the data viz */
+.feature-media{ border-radius: 20px; padding: 0; overflow: hidden; }
+.media-head{
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid hsl(220 40% 98% / .1);
+  font-size: 10px; text-transform: uppercase; letter-spacing: .16em;
+  color: var(--ink-60);
+}
+.media-head b{ color: var(--ink-70); font-weight: 400; }
+.media-body{ position: relative; padding: 10px 6px 2px; }
+.media-body svg{ width: 100%; height: auto; }
+.media-foot{
+  display: flex; gap: 24px; padding: 12px 20px 16px;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-60); flex-wrap: wrap;
+}
+.media-foot span{ display: inline-flex; align-items: center; gap: 8px; }
+.swatch{ width: 14px; height: 3px; border-radius: 2px; background: var(--amber); display: inline-block; }
+.swatch.band{ height: 8px; background: hsl(45 100% 50% / .18); }
+.swatch.dash{ background: repeating-linear-gradient(90deg, var(--rule-20) 0 3px, transparent 3px 6px); }
+.swatch.bleed{ height: 8px; background: hsl(8 72% 58% / .22); }
+
+/* chart tooltip */
+.tip{
+  position: absolute; z-index: 5; pointer-events: none;
+  background: hsl(226 60% 8% / .92);
+  border: 1px solid var(--rule-20); border-radius: 8px;
+  padding: 8px 11px; font-size: 10.5px; line-height: 1.6;
+  color: var(--ink-70); white-space: nowrap;
+  opacity: 0; transition: opacity .15s;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.tip b{ color: var(--ink-100); font-weight: 400; }
+.tip .k{ color: var(--amber); }
+
+/* chart text */
+.chart-label{ font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; fill: var(--ink-60); }
+.chart-label.strong{ fill: var(--ink-70); }
+.chart-label.accent{ fill: var(--amber); }
+.chart-num{ font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   06 · PROOF — desaturated video + glass stat card
+   ============================================================ */
+.proof{
+  position: relative; padding: 190px 0; overflow: hidden;
+}
+.proof-canvas{ filter: saturate(0); }
+.proof-inner{
+  position: relative; z-index: 3;
+  width: min(1180px, calc(100% - 48px)); margin: 0 auto;
+}
+.proof-head{ text-align: center; margin-bottom: 54px; }
+.proof-head .eyebrow{ justify-content: center; }
+.proof-head .eyebrow::after{ display: none; }
+.proof-head h2{ font-size: clamp(34px, 4.4vw, 62px); margin: 0 auto; max-width: 18ch; }
+.stat-card{ border-radius: 24px; padding: 0; overflow: hidden; }
+.stat-grid{ display: grid; grid-template-columns: repeat(4, 1fr); }
+.stat{
+  padding: 44px 34px 40px; text-align: left;
+  border-left: 1px solid hsl(220 40% 98% / .1);
+}
+.stat:first-child{ border-left: 0; }
+.stat-num{
+  font-family: var(--font-head); font-size: clamp(44px, 4.6vw, 68px);
+  color: var(--ink-100); line-height: 1; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.stat-num small{ font-size: .48em; color: var(--amber); }
+.stat-label{
+  margin-top: 14px; font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .18em; color: var(--ink-60);
+}
+.stat-rule{ width: 34px; height: 2px; background: var(--amber); margin-top: 18px; }
+
+/* ============================================================
+   07 · FOOTER & CLOSE
+   ============================================================ */
+.close{
+  position: relative; overflow: hidden;
+  padding: 210px 0 0; text-align: center;
+}
+.close-inner{
+  position: relative; z-index: 3;
+  width: min(980px, calc(100% - 48px)); margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 38px;
+}
+.close h2{
+  font-style: italic; font-size: clamp(46px, 7.4vw, 104px);
+  max-width: 13ch;
+}
+.close .hint{ color: var(--ink-60); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+.footer-bar{
+  position: relative; z-index: 3;
+  margin-top: 150px;
+  border-top: 1px solid hsl(220 40% 98% / .12);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  background: hsl(226 65% 6% / .55);
+}
+.footer-row{
+  width: min(1180px, calc(100% - 48px)); margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 26px 0; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-60); flex-wrap: wrap;
+}
+.footer-row nav{ display: flex; gap: 26px; }
+.footer-row a:hover{ color: var(--ink-100); }
+.footer-logo{ font-family: var(--font-head); font-size: 15px; color: var(--ink-70); letter-spacing: .06em; }
+
+/* ============================================================
+   LAYER 05 — MOTION CHOREOGRAPHY
+   ============================================================ */
+.reveal-words .w{
+  display: inline-block;
+  opacity: 0; filter: blur(10px); transform: translateY(50px);
+  transition: opacity .7s ease, filter .7s ease, transform .8s var(--ease-out);
+  will-change: opacity, filter, transform;
+}
+.in .reveal-words .w{ opacity: 1; filter: blur(0); transform: none; }
+
+.reveal-unit{
+  opacity: 0; filter: blur(10px); transform: translateY(26px);
+  transition: opacity .6s ease, filter .6s ease, transform .6s var(--ease-out);
+  will-change: opacity, filter, transform;
+}
+.reveal-sub{ transition-delay: .8s; }   /* subtext: 0.8s delay, 0.6s duration */
+.reveal-cta{ transition-delay: 1.1s; }  /* CTAs last: 1.1s delay */
+.reveal-early{ transition-delay: .05s; }
+.reveal-media{ transition-delay: .5s; }
+.in .reveal-unit{ opacity: 1; filter: blur(0); transform: none; }
+
+@media (prefers-reduced-motion: reduce){
+  .reveal-words .w, .reveal-unit{
+    opacity: 1 !important; filter: none !important; transform: none !important;
+    transition: none !important;
+  }
+  .nav{ animation: none; opacity: 1; translate: 0 0; }
+  .grain, .badge i{ animation: none; }
+  html{ scroll-behavior: auto; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 920px){
+  .nav-links{ display: none; }
+  .feature-inner{ grid-template-columns: 1fr; }
+  .feature.flip .feature-copy{ order: 1; }
+  .feature.flip .feature-media{ order: 2; }
+  .feature{ padding: 80px 0; }
+  .stat-grid{ grid-template-columns: 1fr 1fr; }
+  .stat:nth-child(3){ border-left: 0; }
+  .stat:nth-child(n+3){ border-top: 1px solid hsl(220 40% 98% / .1); }
+}
+@media (max-width: 760px){
+  .hero{ height: auto; min-height: 100svh; padding: 170px 0 140px; }
+  .hero-ticker{ display: none; }
+  .stat-grid{ grid-template-columns: 1fr; }
+  .stat{ border-left: 0; }
+  .stat:nth-child(n+2){ border-top: 1px solid hsl(220 40% 98% / .1); }
+  .footer-row{ justify-content: center; text-align: center; }
+}
+</style>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ══════════════ 01 · NAVBAR ══════════════ -->
+<nav class="nav glass" aria-label="Primary">
+  <a class="nav-logo" href="#top">Hubric<em>o</em>n</a>
+  <div class="nav-links">
+    <a href="#inventory">Inventory</a>
+    <a href="#elasticity">Elasticity</a>
+    <a href="#ads">Ad&nbsp;Efficiency</a>
+    <a href="#proof">Proof</a>
+  </div>
+  <!-- data-calendly: swapped to the Calendly routing form URL by the CALENDLY_URL constant below -->
+  <a class="btn btn-white" data-calendly href="#apply">
+    Apply for Margin Audit
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+  </a>
+</nav>
+
+<!-- ══════════════ 02 · HERO ══════════════ -->
+<header class="hero" id="top" data-reveal>
+  <canvas class="hero-canvas" data-mesh="hero" aria-hidden="true"></canvas>
+  <div class="edge edge-top" aria-hidden="true"></div>
+  <div class="edge edge-bottom" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <span class="badge glass reveal-unit reveal-early"><i aria-hidden="true"></i>Quantitative finance for Amazon catalogs</span>
+    <h1 class="reveal-words">The Hubricon Quantitative CFO Protocol.</h1>
+    <p class="hero-sub reveal-unit reveal-sub">We use predictive modeling and price elasticity calculus to extract maximum mathematical profit from your Amazon catalog. Zero spreadsheets. Zero guesswork.</p>
+    <div class="cta-row reveal-unit reveal-cta">
+      <a class="btn btn-amber" data-calendly href="#apply">
+        Apply for Margin Audit
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+      <a class="btn btn-text" href="#inventory">
+        See the Protocol
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-ticker" aria-hidden="true">
+    <span>MODEL <b>MC-10K</b></span>
+    <span>ELASTICITY <b>PER-SKU</b></span>
+    <span>PPC <b>BAYESIAN</b></span>
+    <span>CONFIDENCE <b>95%</b></span>
+  </div>
+</header>
+
+<main class="features">
+  <!-- ══════════════ 03 · FEATURE ROW 1 — text left / media right ══════════════ -->
+  <section class="feature" id="inventory" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Module 01 / Inventory</div>
+        <h2 class="reveal-words">Probabilistic Inventory Optimization.</h2>
+        <p class="reveal-unit reveal-sub">Stop guessing reorder dates. We run thousands of Monte Carlo simulations against your sales velocity and supply chain lead times to output exact, risk-adjusted capital allocation models.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" href="#apply" data-calendly>
+            Learn more
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>MONTE_CARLO.RUN</b><span>n = 10,000 · horizon 90d</span></div>
+        <div class="media-body" id="chart-mc"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>P50 units on hand</span>
+          <span><i class="swatch band"></i>P5–P95 envelope</span>
+          <span><i class="swatch dash"></i>Safety stock</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ══════════════ 04 · FEATURE ROW 2 — media left / text right ══════════════ -->
+  <section class="feature flip" id="elasticity" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Module 02 / Pricing</div>
+        <h2 class="reveal-words">Price Elasticity Calculus.</h2>
+        <p class="reveal-unit reveal-sub">We map the exact elasticity curve of every SKU in your catalog. Discover precisely where a 3% price increase yields a net increase in total profit without cannibalizing your search ranking.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" href="#apply" data-calendly>
+            Learn more
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>ELASTICITY.MAP</b><span>SKU B0-7841 · ε = −3.68</span></div>
+        <div class="media-body" id="chart-el"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>Net profit index</span>
+          <span><i class="swatch dash"></i>Current baseline = 100</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ══════════════ 05 · FEATURE ROW 3 — text left / media right ══════════════ -->
+  <section class="feature" id="ads" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Module 03 / Advertising</div>
+        <h2 class="reveal-words">Bayesian Ad Efficiency.</h2>
+        <p class="reveal-unit reveal-sub">Standard PPC software reacts too slowly. We apply Bayesian statistics to identify the exact mathematical inflection point where your ad spend hits diminishing returns, cutting the bleed instantly.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" href="#apply" data-calendly>
+            Learn more
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>BAYES.POSTERIOR</b><span>ad spend response · $k / mo</span></div>
+        <div class="media-body" id="chart-ba"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>Incremental revenue</span>
+          <span><i class="swatch dash"></i>Break-even (ROAS 1.0)</span>
+          <span><i class="swatch bleed"></i>▲ Bleed zone — cut</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<!-- ══════════════ 06 · STATS / PROOF ══════════════ -->
+<section class="proof" id="proof" data-reveal>
+  <canvas class="proof-canvas" data-mesh="proof" aria-hidden="true"></canvas>
+  <div class="edge edge-top" aria-hidden="true"></div>
+  <div class="edge edge-bottom" aria-hidden="true"></div>
+
+  <div class="proof-inner">
+    <div class="proof-head">
+      <div class="eyebrow reveal-unit reveal-early">The Operating Numbers</div>
+      <h2 class="reveal-words">Run your catalog like a fund.</h2>
+    </div>
+    <div class="stat-card glass reveal-unit reveal-sub">
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-num">95<small>%</small></div>
+          <div class="stat-label">Confidence Intervals</div>
+          <div class="stat-rule" aria-hidden="true"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Excel Spreadsheets</div>
+          <div class="stat-rule" aria-hidden="true"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">3&hairsp;–&hairsp;5</div>
+          <div class="stat-label">Monthly Directives</div>
+          <div class="stat-rule" aria-hidden="true"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">100<small>%</small></div>
+          <div class="stat-label">Data Backed</div>
+          <div class="stat-rule" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 07 · FOOTER & CLOSE ══════════════ -->
+<footer class="close" id="apply" data-reveal>
+  <canvas class="close-canvas" data-mesh="close" aria-hidden="true"></canvas>
+  <div class="edge edge-top" aria-hidden="true"></div>
+
+  <div class="close-inner">
+    <h2 class="reveal-words">Your margin is a math problem.</h2>
+    <p class="hint reveal-unit reveal-sub">Audit slots are capped at 4 per month — model capacity, not scarcity theater.</p>
+    <div class="cta-row reveal-unit reveal-cta">
+      <a class="btn btn-amber" data-calendly href="#apply">
+        Apply for Margin Audit
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+      <a class="btn btn-white" data-calendly href="#apply">
+        Talk to an Analyst
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="footer-row">
+      <span class="footer-logo">HUBRICON</span>
+      <nav aria-label="Footer">
+        <a href="#inventory">Inventory</a>
+        <a href="#elasticity">Elasticity</a>
+        <a href="#ads">Ads</a>
+        <a href="#proof">Proof</a>
+      </nav>
+      <span>© 2026 Hubricon Quantitative · All models audited</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/* ── Calendly routing form: replace this one URL when the form is live ── */
+const CALENDLY_URL = "https://calendly.com/hubricon/margin-audit";
+document.querySelectorAll("[data-calendly]").forEach(a => {
+  a.href = CALENDLY_URL;
+  a.target = "_blank";
+  a.rel = "noopener";
+});
+
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============================================================
+   LAYER 05 — MOTION: word splitting + IntersectionObserver
+   ============================================================ */
+document.querySelectorAll(".reveal-words").forEach(el => {
+  const words = el.textContent.trim().split(/\s+/);
+  el.textContent = "";
+  el.setAttribute("aria-label", words.join(" "));
+  words.forEach((w, i) => {
+    const s = document.createElement("span");
+    s.className = "w";
+    s.textContent = w;
+    s.style.transitionDelay = (i * 100) + "ms"; /* 100ms word stagger */
+    s.setAttribute("aria-hidden", "true");
+    el.appendChild(s);
+    if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
+  });
+});
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+  });
+}, { threshold: 0.18 });
+document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
+
+/* ============================================================
+   DATA-MESH "VIDEO" BACKGROUNDS (canvas — self-contained)
+   ============================================================ */
+function dataMesh(canvas, cfg) {
+  const ctx = canvas.getContext("2d");
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  let W = 0, H = 0, pts = [], raf = 0, running = false;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const n = Math.round((W * H) / cfg.sparsity);
+    pts = Array.from({ length: n }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * cfg.speed, vy: (Math.random() - .5) * cfg.speed,
+      a: Math.random() < cfg.amberRatio
+    }));
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    const R = cfg.link, R2 = R * R;
+    for (const p of pts) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+      if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
+    }
+    ctx.lineWidth = 1;
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i];
+      for (let j = i + 1; j < pts.length; j++) {
+        const b = pts[j];
+        const dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+        if (d2 < R2) {
+          const t = 1 - Math.sqrt(d2) / R;
+          ctx.strokeStyle = (a.a && b.a)
+            ? `hsl(45 100% 55% / ${t * .14})`
+            : `hsl(220 50% 80% / ${t * cfg.lineAlpha})`;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      }
+    }
+    for (const p of pts) {
+      ctx.fillStyle = p.a ? "hsl(45 100% 55% / .55)" : "hsl(220 50% 85% / .3)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.a ? 1.6 : 1.1, 0, 7); ctx.fill();
+    }
+    if (running && !REDUCED) raf = requestAnimationFrame(frame);
+  }
+
+  resize();
+  addEventListener("resize", () => { resize(); if (!running || REDUCED) frame(); });
+  frame(); /* always paint at least one frame */
+
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !REDUCED) { if (!running) { running = true; raf = requestAnimationFrame(frame); } }
+    else { running = false; cancelAnimationFrame(raf); }
+  }).observe(canvas);
+}
+
+dataMesh(document.querySelector('[data-mesh="hero"]'),  { sparsity: 11000, link: 130, speed: .32, lineAlpha: .075, amberRatio: .16 });
+dataMesh(document.querySelector('[data-mesh="proof"]'), { sparsity: 15000, link: 120, speed: .26, lineAlpha: .09,  amberRatio: .1  });
+dataMesh(document.querySelector('[data-mesh="close"]'), { sparsity: 13000, link: 125, speed: .3,  lineAlpha: .07,  amberRatio: .2  });
+
+/* ============================================================
+   CHARTS — deterministic (seeded), inline SVG, crosshair tips
+   ============================================================ */
+const SVGNS = "http://www.w3.org/2000/svg";
+function E(tag, attrs, parent) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  let u = 0, v = 0;
+  while (u === 0) u = rng(); while (v === 0) v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+const CW = 640, CH = 380, PAD = { l: 48, r: 64, t: 30, b: 40 };
+const PW = CW - PAD.l - PAD.r, PH = CH - PAD.t - PAD.b;
+
+function chartBase(mount) {
+  const svg = E("svg", { viewBox: `0 0 ${CW} ${CH}`, role: "img" });
+  mount.appendChild(svg);
+  /* recessive horizontal grid */
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.t + PH * i / 4;
+    E("line", { x1: PAD.l, x2: CW - PAD.r, y1: y, y2: y, stroke: "hsl(220 40% 98% / .08)", "stroke-width": 1 }, svg);
+  }
+  E("line", { x1: PAD.l, x2: CW - PAD.r, y1: PAD.t + PH, y2: PAD.t + PH, stroke: "hsl(220 40% 98% / .2)", "stroke-width": 1 }, svg);
+  return svg;
+}
+function poly(ptsArr) { return ptsArr.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "); }
+function label(svg, x, y, text, cls, anchor) {
+  const t = E("text", { x, y, class: "chart-label chart-num " + (cls || ""), "text-anchor": anchor || "start" }, svg);
+  t.textContent = text;
+  return t;
+}
+
+/* crosshair + tooltip layer */
+function crosshair(mount, svg, xMin, xMax, rowsAt) {
+  const line = E("line", { y1: PAD.t, y2: PAD.t + PH, stroke: "hsl(220 40% 98% / .2)", "stroke-width": 1, opacity: 0 }, svg);
+  const tip = document.createElement("div");
+  tip.className = "tip";
+  mount.appendChild(tip);
+  svg.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect();
+    const sx = (ev.clientX - r.left) * (CW / r.width);
+    if (sx < PAD.l || sx > CW - PAD.r) { line.setAttribute("opacity", 0); tip.style.opacity = 0; return; }
+    const xv = xMin + (sx - PAD.l) / PW * (xMax - xMin);
+    const { title, rows } = rowsAt(xv);
+    line.setAttribute("x1", sx); line.setAttribute("x2", sx); line.setAttribute("opacity", 1);
+    tip.innerHTML = "<b>" + title + "</b><br>" + rows.map(r2 => `<span class="k">${r2[0]}</span> ${r2[1]}`).join("<br>");
+    tip.style.opacity = 1;
+    const mx = (ev.clientX - mount.getBoundingClientRect().left);
+    const flip = mx > mount.clientWidth - 170;
+    tip.style.left = (mx + (flip ? -12 : 14)) + "px";
+    tip.style.transform = flip ? "translateX(-100%)" : "none";
+    tip.style.top = (ev.clientY - mount.getBoundingClientRect().top - 14) + "px";
+  });
+  svg.addEventListener("pointerleave", () => { line.setAttribute("opacity", 0); tip.style.opacity = 0; });
+}
+
+/* ── Chart 1 · Monte Carlo inventory fan ─────────────────── */
+(function () {
+  const mount = document.getElementById("chart-mc");
+  const svg = chartBase(mount);
+  const rng = mulberry32(20260822);
+  const DAYS = 90, RUNS = 320, S0 = 1200, MU = 14, SIG = 6, SAFETY = 160;
+  const runs = [];
+  for (let r = 0; r < RUNS; r++) {
+    const path = [S0];
+    for (let d = 1; d <= DAYS; d++) path.push(Math.max(0, path[d - 1] - Math.max(0, MU + SIG * gauss(rng))));
+    runs.push(path);
+  }
+  const q = (arr, p) => arr.slice().sort((a, b) => a - b)[Math.floor(p * (arr.length - 1))];
+  const p5 = [], p50 = [], p95 = [];
+  for (let d = 0; d <= DAYS; d++) {
+    const col = runs.map(rr => rr[d]);
+    p5.push(q(col, .05)); p50.push(q(col, .5)); p95.push(q(col, .95));
+  }
+  const X = d => PAD.l + d / DAYS * PW;
+  const Y = v => PAD.t + PH * (1 - v / 1300);
+
+  /* P5–P95 envelope */
+  const band = p95.map((v, d) => [X(d), Y(v)]).concat(p5.map((v, d) => [X(d), Y(v)]).reverse());
+  E("polygon", { points: poly(band), fill: "hsl(45 100% 50% / .08)" }, svg);
+  /* simulation traces */
+  for (let r = 0; r < 44; r++) {
+    const path = runs[Math.floor(rng() * RUNS)];
+    E("polyline", { points: poly(path.map((v, d) => [X(d), Y(v)])), fill: "none", stroke: "hsl(45 100% 58% / .06)", "stroke-width": 1 }, svg);
+  }
+  /* safety stock rule */
+  E("line", { x1: PAD.l, x2: CW - PAD.r, y1: Y(SAFETY), y2: Y(SAFETY), stroke: "hsl(220 40% 98% / .2)", "stroke-dasharray": "4 5" }, svg);
+  /* median */
+  E("polyline", { points: poly(p50.map((v, d) => [X(d), Y(v)])), fill: "none", stroke: "hsl(45 100% 50%)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  /* reorder point: median crosses safety stock */
+  const cross = p50.findIndex(v => v <= SAFETY);
+  E("line", { x1: X(cross), x2: X(cross), y1: PAD.t + 6, y2: PAD.t + PH, stroke: "hsl(45 100% 50% / .35)", "stroke-dasharray": "2 4" }, svg);
+  E("circle", { cx: X(cross), cy: Y(SAFETY), r: 4.5, fill: "hsl(45 100% 50%)", stroke: "hsl(225 72% 7%)", "stroke-width": 2 }, svg);
+  label(svg, X(cross), PAD.t - 4, "REORDER · DAY " + cross, "accent", cross > DAYS * .72 ? "end" : "middle");
+  /* selective direct labels */
+  label(svg, CW - PAD.r + 8, Y(p95[DAYS]) + 3, "P95", "");
+  label(svg, CW - PAD.r + 8, Y(p50[DAYS]) + 3, "P50", "accent");
+  label(svg, CW - PAD.r + 8, Y(p5[DAYS]) + 9, "P5", "");
+  label(svg, PAD.l - 6, Y(SAFETY) + 3, "160", "strong", "end");
+  label(svg, PAD.l - 6, Y(1200) + 3, "1.2k", "", "end");
+  label(svg, PAD.l, CH - 12, "T+0", "");
+  label(svg, CW - PAD.r, CH - 12, "T+90 DAYS", "", "end");
+  const stockout = runs.filter(rr => rr[DAYS] <= 0).length / RUNS * 100;
+  label(svg, PAD.l + 10, PAD.t + 16, "P(STOCKOUT) = " + stockout.toFixed(1) + "%", "strong");
+
+  crosshair(mount, svg, 0, DAYS, xv => {
+    const d = Math.round(Math.min(DAYS, Math.max(0, xv)));
+    return { title: "DAY " + d, rows: [["P95", Math.round(p95[d]) + " u"], ["P50", Math.round(p50[d]) + " u"], ["P5", Math.round(p5[d]) + " u"]] };
+  });
+})();
+
+/* ── Chart 2 · Price elasticity profit curve ─────────────── */
+(function () {
+  const mount = document.getElementById("chart-el");
+  const svg = chartBase(mount);
+  const EPS = 3.68, MARGIN = .25, XMIN = -.08, XMAX = .10;
+  const profit = dp => (MARGIN + dp) * Math.pow(1 + dp, -EPS) / MARGIN * 100;
+  const N = 140;
+  const xs = Array.from({ length: N + 1 }, (_, i) => XMIN + (XMAX - XMIN) * i / N);
+  const ys = xs.map(profit);
+  const yLo = 82, yHi = 112;
+  const X = v => PAD.l + (v - XMIN) / (XMAX - XMIN) * PW;
+  const Y = v => PAD.t + PH * (1 - (v - yLo) / (yHi - yLo));
+
+  /* cannibalization zone: price up but profit below baseline */
+  let breakEven = XMAX;
+  for (let i = 0; i <= N; i++) if (xs[i] > .04 && ys[i] < 100) { breakEven = xs[i]; break; }
+  E("rect", { x: X(breakEven), y: PAD.t, width: X(XMAX) - X(breakEven), height: PH, fill: "hsl(220 40% 98% / .04)" }, svg);
+  label(svg, X(breakEven) + 8, PAD.t + 16, "RANK CANNIBALIZATION", "");
+
+  /* baseline = 100 */
+  E("line", { x1: PAD.l, x2: CW - PAD.r, y1: Y(100), y2: Y(100), stroke: "hsl(220 40% 98% / .2)", "stroke-dasharray": "4 5" }, svg);
+  label(svg, PAD.l - 6, Y(100) + 3, "100", "strong", "end");
+
+  /* area under curve, then the curve */
+  const area = xs.map((v, i) => [X(v), Y(ys[i])]).concat([[X(XMAX), PAD.t + PH], [X(XMIN), PAD.t + PH]]);
+  E("polygon", { points: poly(area), fill: "hsl(45 100% 50% / .06)" }, svg);
+  E("polyline", { points: poly(xs.map((v, i) => [X(v), Y(ys[i])])), fill: "none", stroke: "hsl(45 100% 50%)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+
+  /* peak marker at +3% */
+  let pk = 0; ys.forEach((v, i) => { if (v > ys[pk]) pk = i; });
+  E("line", { x1: X(xs[pk]), x2: X(xs[pk]), y1: Y(ys[pk]), y2: PAD.t + PH, stroke: "hsl(45 100% 50% / .35)", "stroke-dasharray": "2 4" }, svg);
+  E("circle", { cx: X(xs[pk]), cy: Y(ys[pk]), r: 5, fill: "hsl(45 100% 50%)", stroke: "hsl(225 72% 7%)", "stroke-width": 2 }, svg);
+  E("circle", { cx: X(xs[pk]), cy: Y(ys[pk]), r: 10, fill: "none", stroke: "hsl(45 100% 50% / .4)" }, svg);
+  label(svg, X(xs[pk]), PAD.t - 4, "+" + (xs[pk] * 100).toFixed(1) + "% PRICE → PEAK PROFIT", "accent", "middle");
+
+  /* x ticks */
+  [-.08, -.04, 0, .04, .08].forEach(v => label(svg, X(v), CH - 12, (v > 0 ? "+" : "") + Math.round(v * 100) + "%", "", "middle"));
+  label(svg, PAD.l - 6, Y(yHi - 2) + 3, Math.round(yHi - 2), "", "end");
+
+  crosshair(mount, svg, XMIN, XMAX, xv => {
+    const p = profit(xv);
+    return {
+      title: "ΔPRICE " + (xv >= 0 ? "+" : "") + (xv * 100).toFixed(1) + "%",
+      rows: [["PROFIT", p.toFixed(1) + " idx"], ["VS BASE", (p >= 100 ? "+" : "") + (p - 100).toFixed(1)]]
+    };
+  });
+})();
+
+/* ── Chart 3 · Bayesian ad-spend response ────────────────── */
+(function () {
+  const mount = document.getElementById("chart-ba");
+  const svg = chartBase(mount);
+  const RMAX = 40, K = 12, SMAX = 44;
+  const R = s => RMAX * (1 - Math.exp(-s / K));
+  const sStar = K * Math.log(RMAX / K);           /* marginal ROAS = 1.0 */
+  const X = s => PAD.l + s / SMAX * PW;
+  const Y = v => PAD.t + PH * (1 - v / 44);
+
+  /* bleed zone (reserved status color + labeled) */
+  E("rect", { x: X(sStar), y: PAD.t, width: X(SMAX) - X(sStar), height: PH, fill: "hsl(8 72% 58% / .07)" }, svg);
+  E("line", { x1: X(sStar), x2: X(sStar), y1: PAD.t, y2: PAD.t + PH, stroke: "hsl(8 72% 58% / .5)", "stroke-dasharray": "2 4" }, svg);
+  const bl = label(svg, X(sStar) + 8, PAD.t + 16, "▲ BLEED — CUT SPEND", "");
+  bl.setAttribute("fill", "hsl(8 72% 66% / .85)");
+
+  /* break-even ROAS 1.0 line */
+  E("line", { x1: X(0), y1: Y(0), x2: X(SMAX), y2: Y(SMAX), stroke: "hsl(220 40% 98% / .2)", "stroke-dasharray": "4 5" }, svg);
+  label(svg, X(SMAX) - 4, Y(SMAX) + 14, "ROAS 1.0", "", "end");
+
+  /* posterior draws around the response curve */
+  const rng = mulberry32(777);
+  for (let d = 0; d < 14; d++) {
+    const rm = RMAX * (1 + (rng() - .5) * .16), kk = K * (1 + (rng() - .5) * .22);
+    const pp = [];
+    for (let s = 0; s <= SMAX; s += 1) pp.push([X(s), Y(rm * (1 - Math.exp(-s / kk)))]);
+    E("polyline", { points: poly(pp), fill: "none", stroke: "hsl(45 100% 58% / .07)", "stroke-width": 1 }, svg);
+  }
+  /* mean response */
+  const mean = [];
+  for (let s = 0; s <= SMAX; s += .5) mean.push([X(s), Y(R(s))]);
+  E("polyline", { points: poly(mean), fill: "none", stroke: "hsl(45 100% 50%)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+
+  /* inflection marker */
+  E("circle", { cx: X(sStar), cy: Y(R(sStar)), r: 5, fill: "hsl(45 100% 50%)", stroke: "hsl(225 72% 7%)", "stroke-width": 2 }, svg);
+  E("circle", { cx: X(sStar), cy: Y(R(sStar)), r: 10, fill: "none", stroke: "hsl(45 100% 50% / .4)" }, svg);
+  label(svg, X(sStar) - 10, Y(R(sStar)) - 12, "MARGINAL ROAS = 1.0 · $" + sStar.toFixed(1) + "k", "accent", "end");
+
+  [0, 10, 20, 30, 40].forEach(v => label(svg, X(v), CH - 12, "$" + v + "k", "", v ? "middle" : "start"));
+  label(svg, PAD.l - 6, Y(40) + 3, "$40k", "", "end");
+  label(svg, PAD.l - 6, Y(0) + 3, "0", "", "end");
+
+  crosshair(mount, svg, 0, SMAX, xv => {
+    const rev = R(xv), marg = (RMAX / K) * Math.exp(-xv / K);
+    return {
+      title: "SPEND $" + xv.toFixed(1) + "k / mo",
+      rows: [["REVENUE", "$" + rev.toFixed(1) + "k"], ["mROAS", marg.toFixed(2) + (marg < 1 ? " ▲ bleed" : "")]]
+    };
+  });
+})();
+</script>
+</body>
+</html>
