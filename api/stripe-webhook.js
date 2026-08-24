@@ -1,9 +1,18 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(request) {
+  const missing = [
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ].filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    return new Response(`Server not configured: missing ${missing.join(", ")}`, { status: 500 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const signature = request.headers.get("stripe-signature");
   const payload = await request.text();
 
