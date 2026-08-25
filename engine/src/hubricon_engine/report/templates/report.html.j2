@@ -80,6 +80,32 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   </div>
 </section>
 
+{% if ledger %}
+<section>
+  <div class="card">
+    <h2>Decision Ledger</h2>
+    <p class="small" style="margin-top:2px">Every directive we issue is recorded with its expected impact, your decision, and the measured outcome — cumulative, across the whole engagement.</p>
+    <div class="kpis" style="margin:14px 0 4px">
+      <div class="kpi"><b class="good">${{ "{:,.0f}".format(ledger_measured) }}</b><span>measured impact to date</span></div>
+      <div class="kpi"><b>{{ ledger|length }}</b><span>directives issued</span></div>
+      <div class="kpi"><b>{{ ledger|selectattr("status", "in", ["approved", "done"])|list|length }}</b><span>approved or completed</span></div>
+    </div>
+    <table>
+      <tr><th>Module</th><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
+      {% for d in ledger[:12] %}
+      <tr>
+        <td>{{ d.module|upper }}</td>
+        <td>{{ d.action_text }}</td>
+        <td class="num">{% if d.expected_impact_usd %}${{ "{:,.0f}".format(d.expected_impact_usd|float) }}{% else %}—{% endif %}</td>
+        <td>{{ d.status }}</td>
+        <td class="num {{ 'good' if d.measured_impact_usd and d.measured_impact_usd|float > 0 else '' }}">{% if d.measured_impact_usd is not none %}${{ "{:,.0f}".format(d.measured_impact_usd|float) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endif %}
+
 {% if chart_stockout %}
 <section>
   <h2>Module 01 · Probabilistic inventory</h2>

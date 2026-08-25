@@ -8,6 +8,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from ..config import REPO_ROOT
+from ..directives import draft_directives
 from . import charts
 
 STOCKOUT_ALERT = 0.25
@@ -30,56 +31,8 @@ def _resolve_run(db, client_id: str, run_id: str | None) -> dict:
 
 
 def _top_actions(inventory, ads, elasticity, margins) -> list[dict]:
-    actions = []
-    for r in inventory:
-        p = float(r["stockout_probability"] or 0)
-        if p >= STOCKOUT_ALERT:
-            actions.append({
-                "score": p * 100,
-                "tag": "INVENTORY",
-                "text": f"Reorder {r['sku']} now — {p:.0%} chance of stocking out before a "
-                        f"replenishment lands. Suggested order: {r['reorder_qty']} units.",
-            })
-    bleed_total = sum(t["spend"] or 0 for r in ads for t in (r["bleed_terms"] or []))
-    if bleed_total > 0:
-        n = sum(len(r["bleed_terms"] or []) for r in ads)
-        actions.append({
-            "score": bleed_total,
-            "tag": "ADVERTISING",
-            "text": f"Negative-match {n} search terms spending with zero attributed sales — "
-                    f"${bleed_total:,.0f} of pure bleed in the export window.",
-        })
-    for r in ads:
-        if r["status"] == "ok" and r["current_spend"] and r["breakeven_spend"] \
-                and float(r["current_spend"]) > float(r["breakeven_spend"]):
-            excess = float(r["current_spend"]) - float(r["breakeven_spend"])
-            actions.append({
-                "score": excess,
-                "tag": "ADVERTISING",
-                "text": f"“{r['campaign_name']}” is past its marginal break-even — trim spend "
-                        f"toward ${float(r['breakeven_spend']):,.0f} (currently "
-                        f"${float(r['current_spend']):,.0f} per point).",
-            })
-    for r in elasticity:
-        if r["status"] == "ok" and r["elasticity"] is not None and -1 < float(r["elasticity"]) < 0:
-            actions.append({
-                "score": 20 + 10 * (1 + float(r["elasticity"])),
-                "tag": "PRICING",
-                "text": f"{r['item_id']} demand is price-insensitive (ε = {float(r['elasticity']):.2f}) — "
-                        f"test a 3–5% price increase; volume loss should be smaller than the margin gain.",
-            })
-    if margins:
-        latest = max(m["period_start"] for m in margins)
-        for m in margins:
-            if m["period_start"] == latest and m["net_margin"] is not None and float(m["net_margin"]) < 0:
-                actions.append({
-                    "score": abs(float(m["net_margin"])),
-                    "tag": "MARGIN",
-                    "text": f"{m['sku']} sold at a loss last period (net ${float(m['net_margin']):,.0f} "
-                            f"after fees, COGS and ads) — reprice or cut its ad allocation.",
-                })
-    actions.sort(key=lambda a: a["score"], reverse=True)
-    return actions[:5]
+    drafts = draft_directives(inventory, ads, elasticity, margins)
+    return [{"tag": d["module"].upper(), "text": d["action_text"]} for d in drafts[:5]]
 
 
 def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = None) -> Path:
@@ -88,6 +41,13 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
     elasticity = _fetch_results(db, "elasticity_results", run["id"])
     ads = _fetch_results(db, "ad_efficiency_results", run["id"])
     margins = _fetch_results(db, "margin_results", run["id"])
+
+    # Decision Ledger: cumulative across all runs, clients never see drafts.
+    ledger = (
+        db.table("directives").select("*").eq("client_id", client["id"])
+        .neq("status", "draft").order("created_at", desc=True).execute().data
+    )
+    ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in ledger)
 
     latest = max((m["period_start"] for m in margins), default=None)
     latest_margins = [m for m in margins if m["period_start"] == latest] if latest else []
@@ -109,6 +69,8 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         inventory=sorted(inventory, key=lambda r: float(r["stockout_probability"] or 0), reverse=True),
         elasticity=elasticity,
         ads=ads,
+        ledger=ledger,
+        ledger_measured=ledger_measured,
         chart_stockout=charts.stockout_bars(inventory),
         chart_elasticity=charts.elasticity_scatter(elasticity),
         chart_ads=charts.ad_curves(ads),

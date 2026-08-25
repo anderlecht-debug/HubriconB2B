@@ -1,10 +1,13 @@
 """hubricon — operator CLI.
 
     hubricon clients
-    hubricon ingest <client> [--reparse] [--upload-id ID]
-    hubricon run    <client> [--models margin,inventory,elasticity,ads] [--simulations N] [--seed N]
-    hubricon report <client> [--run ID] [--out DIR]
-    hubricon all    <client>
+    hubricon ingest     <client> [--reparse] [--upload-id ID]
+    hubricon run        <client> [--models margin,inventory,elasticity,ads] [--simulations N] [--seed N]
+    hubricon directives <client> [--run ID] [--issue]
+    hubricon ledger     <client>
+    hubricon measure    <client> --directive <id-prefix> --impact <usd> [--notes TEXT]
+    hubricon report     <client> [--run ID] [--out DIR]
+    hubricon all        <client>
 
 <client> is a client uuid, uuid prefix, or contact email.
 """
@@ -19,6 +22,7 @@ import numpy as np
 from . import __version__
 from . import db as dbmod
 from . import storage
+from .directives import draft_directives
 from .ingest import PARSERS
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
@@ -189,6 +193,82 @@ def _write_results(db, table: str, rows: list[dict], run_id: str, client_id: str
     print(f"  {table}: {len(padded)} rows")
 
 
+def _latest_run(db, client_id: str, run_id: str | None) -> dict:
+    q = db.table("model_runs").select("id, started_at").eq("client_id", client_id)
+    rows = (q.eq("id", run_id) if run_id else q.eq("status", "succeeded").order("started_at", desc=True).limit(1)).execute().data
+    if not rows:
+        sys.exit("No succeeded model run for this client — `hubricon run` first.")
+    return rows[0]
+
+
+def cmd_directives(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], args.run)
+    results = {t: db.table(t).select("*").eq("run_id", run["id"]).execute().data
+               for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
+    drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
+                              results["elasticity_results"], results["margin_results"])
+    if not drafts:
+        print("No directives drafted — clean run.")
+        return
+
+    # regenerate this run's drafts idempotently; issued/answered rows are untouched
+    db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run["id"]).eq("status", "draft").execute()
+    rows = [{
+        "client_id": client["id"],
+        "run_id": run["id"],
+        "module": d["module"],
+        "action_text": d["action_text"],
+        "expected_impact_usd": d["expected_impact_usd"],
+    } for d in drafts]
+    inserted = db.table("directives").insert(rows).execute().data
+
+    if args.issue:
+        ids = [r["id"] for r in inserted]
+        db.table("directives").update({"status": "issued", "issued_at": _now()}).in_("id", ids).execute()
+
+    state = "issued" if args.issue else "draft (review, then rerun with --issue)"
+    print(f"{len(inserted)} directive(s) {state}:")
+    for r in inserted:
+        expected = f"~${float(r['expected_impact_usd']):,.0f}" if r["expected_impact_usd"] else "—"
+        print(f"  {r['id'][:8]}  {r['module']:<12} {expected:>10}  {r['action_text'][:90]}")
+
+
+def cmd_ledger(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    rows = db.table("directives").select("*").eq("client_id", client["id"]).order("created_at", desc=True).execute().data
+    if not rows:
+        print("Ledger is empty — `hubricon directives` after a run.")
+        return
+    measured = sum(float(r["measured_impact_usd"] or 0) for r in rows)
+    print(f"Decision Ledger — {client['company_name'] or client['contact_email']}")
+    print(f"Measured impact to date: ${measured:,.0f} across {len(rows)} directive(s)\n")
+    for r in rows:
+        expected = f"~${float(r['expected_impact_usd']):,.0f}" if r["expected_impact_usd"] else "        —"
+        actual = f"${float(r['measured_impact_usd']):,.0f}" if r["measured_impact_usd"] is not None else "—"
+        print(f"  {r['id'][:8]}  {r['status']:<9} {r['module']:<12} exp {expected:>10}  got {actual:>9}  {r['action_text'][:70]}")
+
+
+def cmd_measure(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    rows = (db.table("directives").select("id, status, action_text").eq("client_id", client["id"])
+            .like("id", f"{args.directive}%").execute().data)
+    if len(rows) != 1:
+        sys.exit(f"Directive prefix {args.directive!r} matched {len(rows)} row(s) — need exactly 1.")
+    patch = {
+        "measured_impact_usd": args.impact,
+        "measured_at": _now(),
+        "status": "done",
+    }
+    if args.notes:
+        patch["measurement_notes"] = args.notes
+    db.table("directives").update(patch).eq("id", rows[0]["id"]).execute()
+    print(f"Recorded ${args.impact:,.0f} on {rows[0]['id'][:8]} ({rows[0]['action_text'][:60]}…)")
+
+
 def cmd_report(args):
     from .report.html_report import generate
 
@@ -223,6 +303,23 @@ def main():
     p.add_argument("--simulations", type=int, default=20000)
     p.add_argument("--seed", type=int, default=42)
     p.set_defaults(fn=cmd_run)
+
+    p = sub.add_parser("directives", help="draft (and optionally issue) Decision Ledger directives from a run")
+    p.add_argument("client")
+    p.add_argument("--run", help="model_runs id (default: latest succeeded)")
+    p.add_argument("--issue", action="store_true", help="issue the drafts to the client portal")
+    p.set_defaults(fn=cmd_directives)
+
+    p = sub.add_parser("ledger", help="print the client's Decision Ledger")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_ledger)
+
+    p = sub.add_parser("measure", help="record the measured impact of a directive")
+    p.add_argument("client")
+    p.add_argument("--directive", required=True, help="directive id prefix")
+    p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
+    p.add_argument("--notes", help="how the measurement was made")
+    p.set_defaults(fn=cmd_measure)
 
     p = sub.add_parser("report", help="render the HTML report for a run")
     p.add_argument("client")
