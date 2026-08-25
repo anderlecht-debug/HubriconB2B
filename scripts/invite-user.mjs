@@ -79,6 +79,6 @@ if (linkError) {
 console.log(`
 ${email} now has ${args.role} access to ${client.company_name ?? client.contact_email}.
 
-Tell them: go to https://hubricon-b2-b.vercel.app/portal, enter this email,
+Tell them: go to https://www.hubricon.com/portal, enter this email,
 and click the sign-in link that arrives. No password to remember.
 `);

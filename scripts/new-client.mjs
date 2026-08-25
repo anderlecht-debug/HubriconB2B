@@ -33,7 +33,7 @@ if (!args.email) {
 }
 const email = args.email.trim().toLowerCase();
 
-const INTAKE_BASE_URL = process.env.INTAKE_BASE_URL ?? "https://hubricon-b2-b.vercel.app";
+const INTAKE_BASE_URL = process.env.INTAKE_BASE_URL ?? "https://www.hubricon.com";
 const TOKEN_LIFETIME_DAYS = 90;
 
 const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {

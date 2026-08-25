@@ -17,7 +17,9 @@ const stripe = new Stripe(key);
 
 const PRODUCT_NAME = "Hubricon Quantitative CFO Protocol";
 const MONTHLY_USD_CENTS = 600000; // $6,000.00 / month
-const WEBHOOK_URL = "https://hubricon-b2-b.vercel.app/api/stripe-webhook";
+// www, never the apex: hubricon.com 308-redirects and Stripe treats
+// redirected webhook deliveries as failures.
+const WEBHOOK_URL = "https://www.hubricon.com/api/stripe-webhook";
 const WEBHOOK_EVENTS = [
   "invoice.paid",
   "invoice.payment_failed",
