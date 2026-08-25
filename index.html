@@ -463,8 +463,8 @@ h1,h2,h3{
     <a href="#ads">Ad&nbsp;Efficiency</a>
     <a href="#proof">Proof</a>
   </div>
-  <!-- data-calendly: swapped to the Calendly routing form URL by the CALENDLY_URL constant below -->
-  <a class="btn btn-white" data-calendly href="#apply">
+  <!-- data-calendly="audit|analyst": href is swapped to the matching CALENDLY_EVENTS URL below -->
+  <a class="btn btn-white" data-calendly="audit" href="#apply">
     Apply for Margin Audit
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
   </a>
@@ -481,7 +481,7 @@ h1,h2,h3{
     <h1 class="reveal-words">The Hubricon Quantitative CFO Protocol.</h1>
     <p class="hero-sub reveal-unit reveal-sub">We use predictive modeling and price elasticity calculus to extract maximum mathematical profit from your Amazon catalog. Zero spreadsheets. Zero guesswork.</p>
     <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly href="#apply">
+      <a class="btn btn-amber" data-calendly="audit" href="#apply">
         Apply for Margin Audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
@@ -509,7 +509,7 @@ h1,h2,h3{
         <h2 class="reveal-words">Probabilistic Inventory Optimization.</h2>
         <p class="reveal-unit reveal-sub">Stop guessing reorder dates. We run thousands of Monte Carlo simulations against your sales velocity and supply chain lead times to output exact, risk-adjusted capital allocation models.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly>
+          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
             Learn more
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
@@ -535,7 +535,7 @@ h1,h2,h3{
         <h2 class="reveal-words">Price Elasticity Calculus.</h2>
         <p class="reveal-unit reveal-sub">We map the exact elasticity curve of every SKU in your catalog. Discover precisely where a 3% price increase yields a net increase in total profit without cannibalizing your search ranking.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly>
+          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
             Learn more
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
@@ -560,7 +560,7 @@ h1,h2,h3{
         <h2 class="reveal-words">Bayesian Ad Efficiency.</h2>
         <p class="reveal-unit reveal-sub">Standard PPC software reacts too slowly. We apply Bayesian statistics to identify the exact mathematical inflection point where your ad spend hits diminishing returns, cutting the bleed instantly.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly>
+          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
             Learn more
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
@@ -626,11 +626,11 @@ h1,h2,h3{
     <h2 class="reveal-words">Your margin is a math problem.</h2>
     <p class="hint reveal-unit reveal-sub">Audit slots are capped at 4 per month — model capacity, not scarcity theater.</p>
     <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly href="#apply">
+      <a class="btn btn-amber" data-calendly="audit" href="#apply">
         Apply for Margin Audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
-      <a class="btn btn-white" data-calendly href="#apply">
+      <a class="btn btn-white" data-calendly="analyst" href="#apply">
         Talk to an Analyst
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
@@ -654,10 +654,17 @@ h1,h2,h3{
 <script>
 "use strict";
 
-/* ── Calendly routing form: replace this one URL when the form is live ── */
-const CALENDLY_URL = "https://calendly.com/hubricon";
+/* ── Calendly two-tier funnel ──
+   "audit"   = high-intent application call (qualification questions on)
+   "analyst" = low-friction 15-min intro call
+   Both event types must exist in Calendly with these exact slugs before
+   this ships — until then keep both values at the base page URL. */
+const CALENDLY_EVENTS = {
+  audit:   "https://calendly.com/hubricon/margin-audit",
+  analyst: "https://calendly.com/hubricon/analyst-intro",
+};
 document.querySelectorAll("[data-calendly]").forEach(a => {
-  a.href = CALENDLY_URL;
+  a.href = CALENDLY_EVENTS[a.dataset.calendly] || CALENDLY_EVENTS.audit;
   a.target = "_blank";
   a.rel = "noopener";
 });
