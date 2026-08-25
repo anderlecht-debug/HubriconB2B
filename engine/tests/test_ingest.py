@@ -80,6 +80,23 @@ def test_cogs_drops_example_row():
     assert blue["supplier_lead_time_days"] == 38
 
 
+def test_all_parsed_rows_are_json_serializable():
+    """NaN from pandas must never reach the PostgREST payload."""
+    import json
+
+    cases = [
+        ("business_report", "business_report_clean.csv"),
+        ("sku_economics", "sku_economics_clean.csv"),
+        ("ppc_search_terms", "ppc_search_terms_clean.csv"),
+        ("ppc_campaign", "ppc_campaign_clean.csv"),
+        ("fba_inventory", "fba_inventory_clean.csv"),
+        ("cogs", "cogs_clean.csv"),
+    ]
+    for report_type, fixture in cases:
+        _, rows, _ = _parse(report_type, fixture)
+        json.dumps(rows, allow_nan=False)  # raises on NaN/inf
+
+
 def test_missing_required_column_reports_found_headers():
     with pytest.raises(IngestError) as err:
         _parse("business_report", "business_report_missing_units.csv")

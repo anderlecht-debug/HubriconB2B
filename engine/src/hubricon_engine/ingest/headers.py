@@ -75,7 +75,9 @@ def map_columns(df: pd.DataFrame, spec: dict) -> pd.DataFrame:
         raise IngestError(
             f"Missing required column(s) {missing}; file headers were: {list(df.columns)}"
         )
-    return out
+    # Series.map turns a cleaner's None into NaN, which is not JSON-compliant
+    # and would poison the PostgREST payload — normalize back to None.
+    return out.astype(object).where(pd.notnull(out), None)
 
 
 def dedupe_last(rows: list[dict], key_fields: tuple[str, ...]) -> list[dict]:

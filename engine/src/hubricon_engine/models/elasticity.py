@@ -12,6 +12,10 @@ from .common import num
 
 MIN_PERIODS = 5
 MIN_PRICE_CV = 0.02
+# When sessions move in lockstep with units, the traffic control absorbs the
+# price effect and returns a confidently wrong near-zero elasticity — drop
+# the control in that case and say so.
+CONTROL_COLLINEARITY_LIMIT = 0.98
 
 
 def _fit(points: list[dict]) -> dict:
@@ -33,8 +37,14 @@ def _fit(points: list[dict]) -> dict:
     y = np.log([p["units"] for p in usable])
     cols = [np.ones(n), np.log(prices)]
     with_sessions = all(p.get("sessions") and p["sessions"] > 0 for p in usable)
+    use_control = False
     if with_sessions:
-        cols.append(np.log([p["sessions"] for p in usable]))
+        log_sessions = np.log([p["sessions"] for p in usable])
+        spread = float(np.std(log_sessions)) > 0 and float(np.std(y)) > 0
+        collinear = not spread or abs(float(np.corrcoef(log_sessions, y)[0, 1])) > CONTROL_COLLINEARITY_LIMIT
+        if not collinear:
+            cols.append(log_sessions)
+            use_control = True
     X = np.column_stack(cols)
     if n <= X.shape[1]:
         return {**base, "status": "insufficient_data"}
@@ -47,7 +57,8 @@ def _fit(points: list[dict]) -> dict:
     ss_total = float(np.sum((y - y.mean()) ** 2))
     r_squared = 1 - float(residuals @ residuals) / ss_total if ss_total > 0 else 0.0
 
-    base["details"]["controls"] = ["sessions"] if with_sessions else []
+    base["details"]["controls"] = ["sessions"] if use_control else []
+    base["details"]["control_dropped_collinear"] = with_sessions and not use_control
     return {
         **base,
         "status": "ok",

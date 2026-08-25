@@ -57,6 +57,43 @@ def test_too_few_periods():
     assert results[0]["status"] == "insufficient_data"
 
 
+def _traffic_rows(prices, units, sessions):
+    rows = []
+    for i, (p, u, s) in enumerate(zip(prices, units, sessions), start=1):
+        start, end = _month(i)
+        rows.append({
+            "child_asin": "B0TEST", "parent_asin": None, "period_start": start, "period_end": end,
+            "units_ordered": u, "ordered_product_sales": p * u, "sessions": s,
+        })
+    return rows
+
+
+def test_collinear_sessions_control_is_dropped():
+    e_true = -1.8
+    prices = [18.0, 19.0, 20.0, 21.0, 22.0, 23.0]
+    units = [1e6 * p**e_true for p in prices]
+    sessions = [u * 4 + 60 for u in units]  # sessions a pure function of units
+    results = elasticity.run(_data(asin_traffic=_traffic_rows(prices, units, sessions)))
+    r = results[0]
+    assert r["status"] == "ok"
+    assert r["details"]["control_dropped_collinear"] is True
+    assert r["details"]["controls"] == []
+    assert r["elasticity"] == pytest.approx(e_true, abs=1e-3)
+
+
+def test_independent_sessions_control_is_used():
+    rng = np.random.default_rng(3)
+    e_true = -1.5
+    prices = np.array([18.0, 21.0, 19.0, 23.0, 20.0, 22.0, 18.5, 21.5])
+    sessions = rng.uniform(800, 2000, size=len(prices))  # traffic swings on its own
+    units = 50.0 * prices**e_true * (sessions / 1000.0)
+    results = elasticity.run(_data(asin_traffic=_traffic_rows(prices, units, sessions)))
+    r = results[0]
+    assert r["status"] == "ok"
+    assert r["details"]["controls"] == ["sessions"]
+    assert r["elasticity"] == pytest.approx(e_true, abs=1e-3)
+
+
 # ── ad efficiency ─────────────────────────────────────────────────────────
 
 def test_hill_fit_recovers_parameters():
