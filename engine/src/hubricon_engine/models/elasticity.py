@@ -57,13 +57,17 @@ def _fit(points: list[dict]) -> dict:
     ss_total = float(np.sum((y - y.mean()) ** 2))
     r_squared = 1 - float(residuals @ residuals) / ss_total if ss_total > 0 else 0.0
 
+    e = float(beta[1])
+    se = float(np.sqrt(covariance[1, 1]))
     base["details"]["controls"] = ["sessions"] if use_control else []
     base["details"]["control_dropped_collinear"] = with_sessions and not use_control
+    # the interval is the honesty: a wide CI is reported, never hidden
+    base["details"]["ci95"] = [num(e - 1.96 * se, 4), num(e + 1.96 * se, 4)]
     return {
         **base,
         "status": "ok",
-        "elasticity": num(float(beta[1]), 4),
-        "std_err": num(float(np.sqrt(covariance[1, 1])), 4),
+        "elasticity": num(e, 4),
+        "std_err": num(se, 4),
         "r_squared": num(r_squared, 4),
     }
 

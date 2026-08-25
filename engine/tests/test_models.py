@@ -41,6 +41,8 @@ def test_elasticity_recovers_known_exponent():
     assert r["status"] == "ok"
     assert r["elasticity"] == pytest.approx(e_true, abs=1e-3)
     assert r["r_squared"] == pytest.approx(1.0, abs=1e-6)
+    lo, hi = r["details"]["ci95"]
+    assert lo <= r["elasticity"] <= hi  # interval brackets the estimate
 
 
 def test_flat_prices_are_a_status_not_a_number():

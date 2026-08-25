@@ -165,7 +165,15 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
     <div class="card">
       <h2>Price elasticity</h2>
       <div class="scroll"><table id="elast">
-        <tr><th>Item</th><th class="num">&epsilon;</th><th class="num">R&sup2;</th><th>Read</th></tr>
+        <tr><th>Item</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th>Read</th></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>Price tests</h2>
+      <p class="hint" style="margin-bottom:8px">Deliberate, tracked price moves — Buy Box share watched so suppression gets caught in days, not quarters.</p>
+      <div class="scroll"><table id="ptests">
+        <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
       </table></div>
     </div>
 
@@ -273,10 +281,26 @@ async function load(){
   $("#who").classList.remove("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, runs] = await Promise.all([
+  const [directives, runs, ptests] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
     rest("/rest/v1/model_runs?select=id,started_at&status=eq.succeeded&order=started_at.desc&limit=1"),
+    rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
   ]);
+
+  const pt = $("#ptests");
+  pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
+  pt.closest(".card").style.display = ptests.length ? "" : "none";
+  for (const t of ptests){
+    const drop = t.buy_box_share_before != null && t.buy_box_share_during != null
+      && Number(t.buy_box_share_before) - Number(t.buy_box_share_during) >= 10;
+    pt.insertAdjacentHTML("beforeend", `<tr>
+      <td>${t.sku}</td>
+      <td class="num">$${Number(t.baseline_price).toFixed(2)} → $${Number(t.test_price).toFixed(2)}</td>
+      <td>${t.start_date ?? "—"} .. ${t.end_date ?? "—"}</td>
+      <td class="num ${drop ? "risk" : ""}">${t.buy_box_share_before ?? "—"}% → ${t.buy_box_share_during ?? "—"}%</td>
+      <td>${t.status}</td>
+    </tr>`);
+  }
 
   const measured = directives.reduce((t, d) => t + Number(d.measured_impact_usd || 0), 0);
   const awaiting = directives.filter((d) => d.status === "issued");
@@ -349,8 +373,10 @@ async function load(){
   for (const r of elast){
     const read = r.status !== "ok" ? "not enough price variation yet"
       : Number(r.elasticity) > -1 ? "price-insensitive — increase testable" : "elastic — price cuts move volume";
+    const ci = r.details?.ci95 ? `[${r.details.ci95[0]}, ${r.details.ci95[1]}]` : "—";
     et.insertAdjacentHTML("beforeend", `<tr>
       <td>${r.item_id}</td><td class="num">${r.elasticity ?? "—"}</td>
+      <td class="num">${ci}</td>
       <td class="num">${r.r_squared ?? "—"}</td><td>${read}</td>
     </tr>`);
   }

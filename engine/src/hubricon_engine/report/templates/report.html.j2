@@ -139,12 +139,48 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   <div class="narrate">ε below −1 means demand is elastic — price cuts grow revenue. Between −1 and 0 the
   product is price-insensitive: a careful increase converts almost directly into margin.</div>
   {% endif %}
+  {% set scored = elasticity|selectattr("status", "equalto", "ok")|selectattr("level", "equalto", "sku")|list %}
+  {% if scored %}
+  <table>
+    <tr><th>SKU</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th class="num">Periods</th></tr>
+    {% for r in scored[:12] %}
+    <tr>
+      <td>{{ r.item_id }}</td>
+      <td class="num">{{ r.elasticity }}</td>
+      <td class="num">{% if r.details and r.details.ci95 %}[{{ r.details.ci95[0] }}, {{ r.details.ci95[1] }}]{% else %}—{% endif %}</td>
+      <td class="num">{{ r.r_squared }}</td>
+      <td class="num">{{ r.n_periods }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
   {% set skipped = elasticity|rejectattr("status", "equalto", "ok")|list %}
   {% if skipped %}
   <p class="small">{{ skipped|length }} item(s) not scored —
   {{ skipped|selectattr("status", "equalto", "insufficient_price_variation")|list|length }} had effectively one price all year
   (that itself is a finding: no price testing has happened), the rest lacked enough monthly history.</p>
   {% endif %}
+</section>
+{% endif %}
+
+{% if price_tests %}
+<section>
+  <h2>Price-testing program</h2>
+  <p>Deliberate, tracked price moves — Buy Box share watched so suppression is caught in days, and every completed test feeds the next elasticity fit.</p>
+  <table>
+    <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box before → during</th><th>Status</th><th>Outcome</th></tr>
+    {% for t in price_tests %}
+    <tr>
+      <td>{{ t.sku }}</td>
+      <td class="num">${{ "%.2f"|format(t.baseline_price|float) }} → ${{ "%.2f"|format(t.test_price|float) }}</td>
+      <td>{{ t.start_date or "—" }} .. {{ t.end_date or "—" }}</td>
+      <td class="num {{ 'risk' if t.buy_box_share_before and t.buy_box_share_during and t.buy_box_share_before|float - t.buy_box_share_during|float >= 10 else '' }}">
+        {{ t.buy_box_share_before or "—" }}% → {{ t.buy_box_share_during or "—" }}%</td>
+      <td>{{ t.status }}</td>
+      <td class="small">{{ t.outcome_notes or "" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 </section>
 {% endif %}
 

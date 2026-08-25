@@ -24,6 +24,13 @@ from . import db as dbmod
 from . import storage
 from .directives import draft_directives
 from .ingest import PARSERS
+from .price_tests import (
+    DEFAULT_TEST_DAYS,
+    buybox_warning,
+    latest_elasticity,
+    predict_units_change,
+    resolve_baseline,
+)
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import ad_efficiency, elasticity, inventory_sim, margin
@@ -269,6 +276,90 @@ def cmd_measure(args):
     print(f"Recorded ${args.impact:,.0f} on {rows[0]['id'][:8]} ({rows[0]['action_text'][:60]}…)")
 
 
+def _find_test(db, client_id: str, prefix: str) -> dict:
+    rows = db.table("price_tests").select("*").eq("client_id", client_id).like("id", f"{prefix}%").execute().data
+    if len(rows) != 1:
+        sys.exit(f"Test prefix {prefix!r} matched {len(rows)} row(s) — need exactly 1.")
+    return rows[0]
+
+
+def cmd_pricetest(args):
+    from datetime import date, timedelta
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+
+    if args.action == "plan":
+        if not args.sku or args.to is None:
+            sys.exit("plan needs --sku and --to <test price>")
+        econ = (db.table("sku_economics").select("sku, asin, period_start, avg_sales_price, sales, units_sold")
+                .eq("client_id", client["id"]).eq("sku", args.sku).execute().data)
+        baseline = args.baseline or resolve_baseline(econ, args.sku)
+        if baseline is None:
+            sys.exit(f"No observed price for {args.sku} — pass --baseline explicitly.")
+        row = {
+            "client_id": client["id"],
+            "sku": args.sku,
+            "asin": next((r["asin"] for r in econ if r.get("asin")), None),
+            "baseline_price": round(float(baseline), 2),
+            "test_price": round(float(args.to), 2),
+            "start_date": args.start,
+            "end_date": (date.fromisoformat(args.start) + timedelta(days=args.days)).isoformat() if args.start else None,
+        }
+        test = db.table("price_tests").insert(row).execute().data[0]
+        move = (row["test_price"] / row["baseline_price"] - 1) * 100
+        print(f"Planned {test['id'][:8]}: {args.sku} ${row['baseline_price']:.2f} → ${row['test_price']:.2f} ({move:+.1f}%)")
+
+        run = _latest_run(db, client["id"], None)
+        fit = latest_elasticity(
+            db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data, args.sku)
+        if fit:
+            predicted = predict_units_change(float(fit["elasticity"]), row["baseline_price"], row["test_price"])
+            print(f"Model expects units {predicted:+.1%} at ε = {float(fit['elasticity']):.2f} — "
+                  f"revenue change ≈ {((1 + move / 100) * (1 + predicted) - 1):+.1%}.")
+        else:
+            print("No elasticity fit for this SKU yet — this test is what creates the data.")
+        return
+
+    if args.action == "list":
+        rows = db.table("price_tests").select("*").eq("client_id", client["id"]).order("created_at", desc=True).execute().data
+        if not rows:
+            print("No price tests yet — `hubricon pricetest <client> plan --sku ... --to ...`")
+            return
+        for r in rows:
+            bb = f"BB {r['buy_box_share_before'] or '—'}→{r['buy_box_share_during'] or '—'}"
+            window = f"{r['start_date'] or '—'}..{r['end_date'] or '—'}"
+            print(f"  {r['id'][:8]}  {r['status']:<9} {r['sku']:<18} ${float(r['baseline_price']):.2f}→${float(r['test_price']):.2f}  {window}  {bb}")
+        return
+
+    if not args.test:
+        sys.exit(f"{args.action} needs --test <id prefix>")
+    test = _find_test(db, client["id"], args.test)
+
+    if args.action == "start":
+        patch = {"status": "running", "start_date": test["start_date"] or date.today().isoformat()}
+        patch["end_date"] = test["end_date"] or (date.fromisoformat(patch["start_date"]) + timedelta(days=args.days)).isoformat()
+        if args.buybox is not None:
+            patch["buy_box_share_before"] = args.buybox
+        db.table("price_tests").update(patch).eq("id", test["id"]).execute()
+        print(f"Running {test['id'][:8]} through {patch['end_date']}. Set the price in Seller Central now.")
+    elif args.action == "track":
+        if args.buybox is None:
+            sys.exit("track needs --buybox <current featured-offer share %>")
+        db.table("price_tests").update({"buy_box_share_during": args.buybox}).eq("id", test["id"]).execute()
+        warning = buybox_warning(test["buy_box_share_before"], args.buybox)
+        print(warning if warning else f"Buy Box holding at {args.buybox:.0f}% — test continues.")
+    elif args.action in ("complete", "abort"):
+        patch = {"status": "completed" if args.action == "complete" else "aborted"}
+        if args.notes:
+            patch["outcome_notes"] = args.notes
+        db.table("price_tests").update(patch).eq("id", test["id"]).execute()
+        print(f"{patch['status'].capitalize()} {test['id'][:8]}. The next monthly upload carries this "
+              f"price variation into the elasticity fit.")
+    else:
+        sys.exit(f"Unknown action {args.action!r}")
+
+
 def cmd_report(args):
     from .report.html_report import generate
 
@@ -320,6 +411,19 @@ def main():
     p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
     p.add_argument("--notes", help="how the measurement was made")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
+    p.add_argument("client")
+    p.add_argument("action", choices=["plan", "start", "track", "complete", "abort", "list"])
+    p.add_argument("--sku")
+    p.add_argument("--to", type=float, help="test price")
+    p.add_argument("--baseline", type=float, help="override the observed baseline price")
+    p.add_argument("--start", help="start date YYYY-MM-DD (default: when you run `start`)")
+    p.add_argument("--days", type=int, default=DEFAULT_TEST_DAYS)
+    p.add_argument("--test", help="test id prefix (for start/track/complete/abort)")
+    p.add_argument("--buybox", type=float, help="featured-offer share %% observed")
+    p.add_argument("--notes")
+    p.set_defaults(fn=cmd_pricetest)
 
     p = sub.add_parser("report", help="render the HTML report for a run")
     p.add_argument("client")

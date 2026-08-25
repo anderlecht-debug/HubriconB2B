@@ -48,6 +48,10 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         .neq("status", "draft").order("created_at", desc=True).execute().data
     )
     ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in ledger)
+    price_tests = (
+        db.table("price_tests").select("*").eq("client_id", client["id"])
+        .order("created_at", desc=True).execute().data
+    )
 
     latest = max((m["period_start"] for m in margins), default=None)
     latest_margins = [m for m in margins if m["period_start"] == latest] if latest else []
@@ -71,6 +75,7 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         ads=ads,
         ledger=ledger,
         ledger_measured=ledger_measured,
+        price_tests=price_tests,
         chart_stockout=charts.stockout_bars(inventory),
         chart_elasticity=charts.elasticity_scatter(elasticity),
         chart_ads=charts.ad_curves(ads),
