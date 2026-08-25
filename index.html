@@ -3,13 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hubricon</title>
-<meta name="description" content="The Hubricon Quantitative CFO Protocol — predictive modeling and price elasticity calculus to extract maximum profit from your Amazon catalog.">
-</head>
-<body>
+<title>Hubricon — Quantitative Margin Analytics for Amazon FBA Sellers</title>
+<meta name="description" content="Free margin audit for $1M–$20M private-label FBA sellers. Inventory risk, price elasticity, PPC break-even — every recommendation's dollar impact measured. $6,000/mo flat.">
+<link rel="canonical" href="https://www.hubricon.com/">
+<meta name="theme-color" content="#050A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/">
+<meta property="og:title" content="Hubricon — Quantitative Margin Analytics for Amazon FBA Sellers">
+<meta property="og:description" content="Free margin audit for $1M–$20M private-label FBA sellers. Every recommendation's dollar impact measured on a ledger. $6,000/mo flat, never a % of spend.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hubricon — Quantitative Margin Analytics for Amazon FBA Sellers">
+<meta name="twitter:description" content="Free margin audit for $1M–$20M private-label FBA sellers. Every recommendation's dollar impact measured on a ledger. $6,000/mo flat.">
+<meta name="twitter:image" content="https://www.hubricon.com/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Hubricon",
+  "url": "https://www.hubricon.com/",
+  "description": "Quantitative margin analytics for Amazon FBA private-label sellers: probabilistic inventory modeling, per-SKU price elasticity, PPC break-even analysis, and true net-margin decomposition, delivered as a founder-led service.",
+  "priceRange": "$6,000/month flat",
+  "areaServed": "US"
+}
+</script>
+</head>
+<body>
 
 <style>
 /* ============================================================
@@ -78,8 +101,6 @@ h1,h2,h3{
 
 /* ============================================================
    LAYER 03 — LIQUID GLASS
-   Gradient borders: light catch at the edges, navy tint mid,
-   so the rule fades into the background instead of boxing it.
    ============================================================ */
 .glass, .glass-strong{ position: relative; border-radius: 20px; }
 .glass::before, .glass-strong::before{
@@ -88,7 +109,6 @@ h1,h2,h3{
   -webkit-mask-composite: xor; mask-composite: exclude;
   pointer-events:none;
 }
-/* SUBTLE GLASS — cards, navbar, badges */
 .glass{
   background: hsl(224 55% 14% / .32);
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
@@ -100,7 +120,6 @@ h1,h2,h3{
     hsl(224 60% 20% / .06) 62%,
     hsl(45 90% 65% / .14) 100%);
 }
-/* STRONG GLASS — CTA buttons, prominent UI */
 .glass-strong{
   background: hsl(224 55% 16% / .45);
   -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
@@ -133,7 +152,6 @@ h1,h2,h3{
 .btn-white{ background: var(--ink-100); color: var(--bg); }
 .btn-white:hover{ box-shadow: 0 0 0 5px hsl(220 40% 98% / .12); }
 
-/* strong amber glass CTA */
 .btn-amber{
   color: var(--amber);
   background: hsl(45 100% 50% / .13);
@@ -154,7 +172,6 @@ h1,h2,h3{
 }
 .btn-amber:hover{ background: hsl(45 100% 50% / .2); box-shadow: 0 12px 48px hsl(45 100% 42% / .32), inset 0 1px 0 hsl(45 100% 76% / .45); }
 
-/* subtle glass secondary button */
 .btn-glass{
   color: var(--ink-100);
   background: hsl(224 55% 16% / .35);
@@ -172,9 +189,7 @@ h1,h2,h3{
 }
 .btn-glass:hover{ background: hsl(224 55% 22% / .5); }
 
-.btn-text{
-  color: var(--ink-70); background: transparent; padding: 13px 8px;
-}
+.btn-text{ color: var(--ink-70); background: transparent; padding: 13px 8px; }
 .btn-text:hover{ color: var(--ink-100); }
 
 /* ============================================================
@@ -206,17 +221,16 @@ h1,h2,h3{
 .nav .btn{ padding: 11px 18px; }
 
 /* ============================================================
-   02 · HERO — 1000px, data-mesh canvas background
+   02 · HERO
    ============================================================ */
 .hero{
   position: relative; height: 1000px;
   display: flex; align-items: center; justify-content: center;
   text-align: center; overflow: hidden;
 }
-.hero-canvas, .proof-canvas, .close-canvas{
+.hero-canvas, .close-canvas{
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
 }
-/* LAYER 05 — video edge blends */
 .edge{ position: absolute; left: 0; right: 0; height: 200px; z-index: 2; pointer-events: none; }
 .edge-top{ top: 0; background: linear-gradient(180deg, var(--bg), transparent); }
 .edge-bottom{ bottom: 0; background: linear-gradient(0deg, var(--bg), transparent); }
@@ -225,7 +239,7 @@ h1,h2,h3{
 .hero-inner{
   position: relative; z-index: 3;
   width: min(1040px, calc(100% - 48px));
-  display: flex; flex-direction: column; align-items: center; gap: 34px;
+  display: flex; flex-direction: column; align-items: center; gap: 30px;
   padding-top: 40px;
 }
 .badge{
@@ -242,15 +256,19 @@ h1,h2,h3{
 @keyframes pulse{ 0%,100%{ opacity: 1; } 50%{ opacity: .35; } }
 
 .hero h1{
-  font-size: clamp(52px, 8.6vw, 118px);
-  max-width: 11ch;
+  font-size: clamp(44px, 7.2vw, 100px);
+  max-width: 15ch;
 }
 .hero-sub{
   color: var(--ink-70);
   font-size: clamp(13.5px, 1.35vw, 16px);
-  max-width: 56ch;
+  max-width: 62ch;
 }
 .cta-row{ display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.microcopy{
+  font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60);
+}
+.microcopy b{ color: var(--amber); font-weight: 400; }
 
 .hero-ticker{
   position: absolute; bottom: 42px; left: 0; right: 0; z-index: 3;
@@ -262,9 +280,118 @@ h1,h2,h3{
 .hero-ticker b{ color: var(--amber); font-weight: 400; }
 
 /* ============================================================
-   03–05 · FEATURE ROWS — chess layout
+   GENERIC SECTION SHELL (new sections)
    ============================================================ */
-.features{ position: relative; z-index: 3; }
+.sect{
+  position: relative; z-index: 3;
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto; padding: 110px 0;
+}
+.sect + .sect{ border-top: 1px solid var(--rule-08); }
+.sect-head{ max-width: 760px; margin-bottom: 46px; }
+.sect-head h2{ font-size: clamp(32px, 3.8vw, 52px); margin-bottom: 16px; }
+.sect-head p{ color: var(--ink-60); max-width: 60ch; }
+.sect-cta{ margin-top: 44px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.src-line{ margin-top: 16px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); opacity: .75; }
+
+/* ============================================================
+   03 · MARKET REALITY — stat band
+   ============================================================ */
+.stat-card{ border-radius: 24px; padding: 0; overflow: hidden; }
+.stat-grid{ display: grid; grid-template-columns: repeat(4, 1fr); }
+.stat{
+  padding: 44px 34px 40px; text-align: left;
+  border-left: 1px solid hsl(220 40% 98% / .1);
+}
+.stat:first-child{ border-left: 0; }
+.stat-num{
+  font-family: var(--font-head); font-size: clamp(44px, 4.6vw, 68px);
+  color: var(--ink-100); line-height: 1; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.stat-num small{ font-size: .48em; color: var(--amber); }
+.stat-label{
+  margin-top: 14px; font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: .18em; color: var(--ink-60);
+}
+.stat-rule{ width: 34px; height: 2px; background: var(--amber); margin-top: 18px; }
+
+/* ============================================================
+   04 · DELIVERABLES — artifact cards
+   ============================================================ */
+.deliv-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.deliv{ padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.deliv h3{ font-size: 17px; letter-spacing: .04em; }
+.deliv > p{ font-size: 13px; color: var(--ink-60); margin: 0; }
+.sample-tag{
+  align-self: flex-start; font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 2px 10px;
+}
+.artifact{
+  background: hsl(226 65% 6% / .6); border: 1px solid var(--rule-08);
+  border-radius: 14px; padding: 16px; font-size: 11px;
+}
+.artifact .a-head{
+  display: flex; justify-content: space-between; font-size: 9.5px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60);
+  border-bottom: 1px solid var(--rule-08); padding-bottom: 9px; margin-bottom: 12px;
+}
+/* margin decomposition mini bars */
+.mini-row{ display: grid; grid-template-columns: 86px 1fr 52px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.mini-row .lbl{ color: var(--ink-70); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row .val{ text-align: right; color: var(--ink-100); font-variant-numeric: tabular-nums; font-size: 10.5px; }
+.mini-track{ display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.mini-track i{ display: block; height: 100%; }
+.seg-fees{ background: hsl(224 40% 34%); }
+.seg-cogs{ background: hsl(220 20% 60% / .55); }
+.seg-ads{ background: hsl(45 100% 50% / .75); }
+.seg-net{ background: hsl(150 55% 55% / .85); }
+.seg-loss{ background: hsl(8 72% 58% / .85); }
+.mini-legend{ display: flex; gap: 12px; flex-wrap: wrap; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); margin-top: 10px; }
+.mini-legend span{ display: inline-flex; align-items: center; gap: 5px; }
+.mini-legend i{ width: 10px; height: 6px; border-radius: 2px; display: inline-block; }
+/* directive mockup */
+.mock-directive .tagline{ font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+.mock-directive .d-text{ color: var(--ink-70); font-size: 11.5px; line-height: 1.6; margin: 8px 0 12px; }
+.mock-btns{ display: flex; gap: 8px; align-items: center; }
+.mock-btn{
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  border-radius: 8px; padding: 6px 12px; border: 1px solid var(--rule-20); color: var(--ink-70);
+}
+.mock-btn.yes{ background: var(--amber); border-color: var(--amber); color: var(--bg); font-weight: 700; }
+.mock-exp{ font-size: 10px; color: var(--ink-60); margin-left: auto; }
+/* ledger mockup */
+.mock-ledger table{ width: 100%; border-collapse: collapse; font-size: 10px; }
+.mock-ledger th{ text-align: left; font-weight: 400; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); padding: 4px 6px; border-bottom: 1px solid var(--rule-20); }
+.mock-ledger td{ padding: 5px 6px; border-bottom: 1px solid var(--rule-08); color: var(--ink-70); }
+.mock-ledger td.num{ text-align: right; font-variant-numeric: tabular-nums; }
+.mock-ledger .pos{ color: hsl(150 55% 60%); }
+.mock-total{ display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); }
+.mock-total b{ font-family: var(--font-head); font-size: 22px; color: hsl(150 55% 60%); font-weight: 400; letter-spacing: .01em; }
+
+/* ============================================================
+   05 · PROCESS TIMELINE
+   ============================================================ */
+.steps{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; counter-reset: step; }
+.step{ padding: 22px 20px; position: relative; counter-increment: step; }
+.step::after{
+  content: counter(step, decimal-leading-zero);
+  position: absolute; top: 16px; right: 18px;
+  font-family: var(--font-head); font-size: 26px; color: hsl(45 100% 50% / .5);
+}
+.step .when{ font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; display: block; }
+.step h3{ font-size: 15px; letter-spacing: .04em; margin-bottom: 8px; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); }
+.step p{ font-size: 12px; color: var(--ink-60); margin: 0; }
+.step .callout{
+  margin-top: 12px; border-left: 2px solid var(--amber); padding: 4px 0 4px 10px;
+  font-size: 11px; color: var(--ink-70);
+}
+
+/* ============================================================
+   06 · FEATURE ROWS — chess layout (the method)
+   ============================================================ */
+.features{ position: relative; z-index: 3; border-top: 1px solid var(--rule-08); }
 .feature{
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto; padding: 110px 0;
@@ -283,10 +410,9 @@ h1,h2,h3{
   color: var(--amber); margin-bottom: 22px;
 }
 .eyebrow::after{ content:""; height: 1px; width: 64px; background: var(--rule-20); }
-.feature h2{ font-size: clamp(34px, 3.8vw, 54px); margin-bottom: 22px; max-width: 14ch; }
+.feature h2{ font-size: clamp(34px, 3.8vw, 54px); margin-bottom: 22px; max-width: 15ch; }
 .feature p{ color: var(--ink-60); max-width: 48ch; margin-bottom: 30px; }
 
-/* media panel — subtle glass container around the data viz */
 .feature-media{ border-radius: 20px; padding: 0; overflow: hidden; }
 .media-head{
   display: flex; justify-content: space-between; align-items: center;
@@ -309,7 +435,6 @@ h1,h2,h3{
 .swatch.dash{ background: repeating-linear-gradient(90deg, var(--rule-20) 0 3px, transparent 3px 6px); }
 .swatch.bleed{ height: 8px; background: hsl(8 72% 58% / .22); }
 
-/* chart tooltip */
 .tip{
   position: absolute; z-index: 5; pointer-events: none;
   background: hsl(226 60% 8% / .92);
@@ -322,49 +447,95 @@ h1,h2,h3{
 .tip b{ color: var(--ink-100); font-weight: 400; }
 .tip .k{ color: var(--amber); }
 
-/* chart text */
 .chart-label{ font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; fill: var(--ink-60); }
 .chart-label.strong{ fill: var(--ink-70); }
 .chart-label.accent{ fill: var(--amber); }
 .chart-num{ font-variant-numeric: tabular-nums; }
 
 /* ============================================================
-   06 · PROOF — desaturated video + glass stat card
+   07 · COMPARISON TABLE
    ============================================================ */
-.proof{
-  position: relative; padding: 190px 0; overflow: hidden;
+.compare-wrap{ overflow-x: auto; border-radius: 20px; }
+.compare{ width: 100%; min-width: 760px; border-collapse: collapse; font-size: 12px; }
+.compare th{
+  text-align: left; font-weight: 400; font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-70);
+  padding: 14px 16px; border-bottom: 1px solid var(--rule-20);
 }
-.proof-canvas{ filter: saturate(0); }
-.proof-inner{
-  position: relative; z-index: 3;
-  width: min(1180px, calc(100% - 48px)); margin: 0 auto;
+.compare th.us, .compare td.us{ background: hsl(45 100% 50% / .06); }
+.compare th.us{ color: var(--amber); }
+.compare td{
+  padding: 12px 16px; border-bottom: 1px solid var(--rule-08);
+  color: var(--ink-60); vertical-align: top;
 }
-.proof-head{ text-align: center; margin-bottom: 54px; }
-.proof-head .eyebrow{ justify-content: center; }
-.proof-head .eyebrow::after{ display: none; }
-.proof-head h2{ font-size: clamp(34px, 4.4vw, 62px); margin: 0 auto; max-width: 18ch; }
-.stat-card{ border-radius: 24px; padding: 0; overflow: hidden; }
-.stat-grid{ display: grid; grid-template-columns: repeat(4, 1fr); }
-.stat{
-  padding: 44px 34px 40px; text-align: left;
-  border-left: 1px solid hsl(220 40% 98% / .1);
-}
-.stat:first-child{ border-left: 0; }
-.stat-num{
-  font-family: var(--font-head); font-size: clamp(44px, 4.6vw, 68px);
-  color: var(--ink-100); line-height: 1; letter-spacing: .01em;
-  font-variant-numeric: tabular-nums;
-  display: flex; align-items: baseline; gap: 4px;
-}
-.stat-num small{ font-size: .48em; color: var(--amber); }
-.stat-label{
-  margin-top: 14px; font-size: 10.5px; text-transform: uppercase;
-  letter-spacing: .18em; color: var(--ink-60);
-}
-.stat-rule{ width: 34px; height: 2px; background: var(--amber); margin-top: 18px; }
+.compare td:first-child{ color: var(--ink-70); }
+.compare tr:last-child td{ border-bottom: 0; color: var(--ink-100); font-variant-numeric: tabular-nums; }
+.compare .y{ color: var(--amber); }
+.compare .n{ color: var(--ink-60); opacity: .5; }
 
 /* ============================================================
-   07 · FOOTER & CLOSE
+   08 · FIT — for / not for
+   ============================================================ */
+.fit-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.fit-card{ padding: 26px 28px; }
+.fit-card h3{ font-size: 16px; letter-spacing: .05em; margin-bottom: 16px; }
+.fit-card ul{ list-style: none; }
+.fit-card li{ padding: 8px 0 8px 22px; position: relative; font-size: 13px; color: var(--ink-70); border-top: 1px solid var(--rule-08); }
+.fit-card li:first-child{ border-top: 0; }
+.fit-card.for li::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
+.fit-card.notfor li::before{ content: "×"; position: absolute; left: 2px; color: var(--ink-60); }
+.fit-card.notfor h3{ color: var(--ink-70); }
+
+/* ============================================================
+   09 · PRICING & TERMS
+   ============================================================ */
+.price-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.price-card{ padding: 30px 32px; display: flex; flex-direction: column; gap: 18px; }
+.price-tag{ font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--amber); }
+.price-num{
+  font-family: var(--font-head); font-size: clamp(40px, 4.5vw, 58px);
+  color: var(--ink-100); line-height: 1;
+}
+.price-num small{ font-size: .34em; color: var(--ink-60); letter-spacing: .06em; }
+.price-card ul{ list-style: none; }
+.price-card li{ padding: 7px 0 7px 22px; position: relative; font-size: 13px; color: var(--ink-70); }
+.price-card li::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
+.price-card .btn{ align-self: flex-start; }
+.terms{
+  margin-top: 18px; padding: 24px 28px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 26px;
+}
+.terms span{ position: relative; padding-left: 22px; font-size: 12.5px; color: var(--ink-70); }
+.terms span::before{ content: "✓"; position: absolute; left: 0; color: var(--amber); }
+.guarantee{ margin-top: 18px; padding: 28px 32px; }
+.guarantee .price-tag{ margin-bottom: 10px; display: block; }
+.guarantee p{ font-size: clamp(15px, 1.6vw, 18px); color: var(--ink-100); max-width: 56ch; margin: 0; }
+
+/* ============================================================
+   10 · OPERATOR — faceless trust
+   ============================================================ */
+.principles{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.principle{ padding: 22px 22px; }
+.principle h3{ font-size: 13.5px; letter-spacing: .02em; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); margin-bottom: 8px; }
+.principle p{ font-size: 12px; color: var(--ink-60); margin: 0; }
+.principle .k{ font-family: var(--font-head); font-size: 22px; color: var(--amber); display: block; margin-bottom: 12px; }
+
+/* ============================================================
+   11 · FAQ
+   ============================================================ */
+.faq{ max-width: 860px; }
+.faq details{ border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
+.faq summary{
+  cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 18px 22px; font-size: 13.5px; color: var(--ink-100);
+}
+.faq summary::-webkit-details-marker{ display: none; }
+.faq summary::after{ content: "+"; font-family: var(--font-head); font-size: 18px; color: var(--amber); transition: transform .25s var(--ease-out); }
+.faq details[open] summary::after{ transform: rotate(45deg); }
+.faq details > p{ padding: 0 22px 18px; font-size: 13px; color: var(--ink-60); max-width: 68ch; }
+
+/* ============================================================
+   12 · FOOTER & CLOSE
    ============================================================ */
 .close{
   position: relative; overflow: hidden;
@@ -376,10 +547,11 @@ h1,h2,h3{
   display: flex; flex-direction: column; align-items: center; gap: 38px;
 }
 .close h2{
-  font-style: italic; font-size: clamp(46px, 7.4vw, 104px);
-  max-width: 13ch;
+  font-style: italic; font-size: clamp(42px, 6.6vw, 92px);
+  max-width: 15ch;
 }
 .close .hint{ color: var(--ink-60); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+.calendly-inline{ width: min(920px, 100%); min-height: 700px; border-radius: 20px; overflow: hidden; }
 .footer-bar{
   position: relative; z-index: 3;
   margin-top: 150px;
@@ -393,9 +565,23 @@ h1,h2,h3{
   padding: 26px 0; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--ink-60); flex-wrap: wrap;
 }
-.footer-row nav{ display: flex; gap: 26px; }
+.footer-row nav{ display: flex; gap: 26px; flex-wrap: wrap; }
 .footer-row a:hover{ color: var(--ink-100); }
 .footer-logo{ font-family: var(--font-head); font-size: 15px; color: var(--ink-70); letter-spacing: .06em; }
+
+/* ============================================================
+   MOBILE STICKY CTA
+   ============================================================ */
+.sticky-cta{
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70;
+  display: none; padding: 10px; border-radius: 999px;
+  transform: translateY(120%); transition: transform .4s var(--ease-out);
+}
+.sticky-cta.show{ transform: translateY(0); }
+.sticky-cta .btn{ width: 100%; justify-content: center; }
+@media (max-width: 760px){
+  .sticky-cta{ display: block; }
+}
 
 /* ============================================================
    LAYER 05 — MOTION CHOREOGRAPHY
@@ -413,8 +599,8 @@ h1,h2,h3{
   transition: opacity .6s ease, filter .6s ease, transform .6s var(--ease-out);
   will-change: opacity, filter, transform;
 }
-.reveal-sub{ transition-delay: .8s; }   /* subtext: 0.8s delay, 0.6s duration */
-.reveal-cta{ transition-delay: 1.1s; }  /* CTAs last: 1.1s delay */
+.reveal-sub{ transition-delay: .8s; }
+.reveal-cta{ transition-delay: 1.1s; }
 .reveal-early{ transition-delay: .05s; }
 .reveal-media{ transition-delay: .5s; }
 .in .reveal-unit{ opacity: 1; filter: blur(0); transform: none; }
@@ -426,6 +612,7 @@ h1,h2,h3{
   }
   .nav{ animation: none; opacity: 1; translate: 0 0; }
   .grain, .badge i{ animation: none; }
+  .sticky-cta{ transition: none; }
   html{ scroll-behavior: auto; }
 }
 
@@ -441,6 +628,10 @@ h1,h2,h3{
   .stat-grid{ grid-template-columns: 1fr 1fr; }
   .stat:nth-child(3){ border-left: 0; }
   .stat:nth-child(n+3){ border-top: 1px solid hsl(220 40% 98% / .1); }
+  .deliv-grid{ grid-template-columns: 1fr; }
+  .steps{ grid-template-columns: 1fr 1fr; }
+  .principles{ grid-template-columns: 1fr 1fr; }
+  .fit-grid, .price-grid{ grid-template-columns: 1fr; }
 }
 @media (max-width: 760px){
   .hero{ height: auto; min-height: 100svh; padding: 170px 0 140px; }
@@ -449,6 +640,9 @@ h1,h2,h3{
   .stat{ border-left: 0; }
   .stat:nth-child(n+2){ border-top: 1px solid hsl(220 40% 98% / .1); }
   .footer-row{ justify-content: center; text-align: center; }
+  .steps{ grid-template-columns: 1fr; }
+  .principles{ grid-template-columns: 1fr; }
+  .sect{ padding: 76px 0; }
 }
 </style>
 
@@ -458,13 +652,12 @@ h1,h2,h3{
 <nav class="nav glass" aria-label="Primary">
   <a class="nav-logo" href="#top">Hubric<em>o</em>n</a>
   <div class="nav-links">
-    <a href="#inventory">Inventory</a>
-    <a href="#elasticity">Elasticity</a>
-    <a href="#ads">Ad&nbsp;Efficiency</a>
-    <a href="#proof">Proof</a>
+    <a href="#deliverables">What you get</a>
+    <a href="#process">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
   </div>
-  <!-- data-calendly="audit|analyst": href is swapped to the matching CALENDLY_EVENTS URL below -->
-  <a class="btn btn-white" data-calendly="audit" href="#apply">
+  <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">
     Apply for Margin Audit
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
   </a>
@@ -477,40 +670,187 @@ h1,h2,h3{
   <div class="edge edge-bottom" aria-hidden="true"></div>
 
   <div class="hero-inner">
-    <span class="badge glass reveal-unit reveal-early"><i aria-hidden="true"></i>Quantitative finance for Amazon catalogs</span>
-    <h1 class="reveal-words">The Hubricon Quantitative CFO Protocol.</h1>
-    <p class="hero-sub reveal-unit reveal-sub">We use predictive modeling and price elasticity calculus to extract maximum mathematical profit from your Amazon catalog. Zero spreadsheets. Zero guesswork.</p>
+    <span class="badge glass reveal-unit reveal-early"><i aria-hidden="true"></i>Quantitative analytics for Amazon FBA sellers · $1M–$20M/yr</span>
+    <h1 class="reveal-words">We find the profit your Amazon numbers are hiding.</h1>
+    <p class="hero-sub reveal-unit reveal-sub">Hubricon models your inventory risk, price elasticity, and ad-spend break-even from five CSV exports — no Seller Central login. You get a written audit in 5 business days, then 3–5 approved moves a month, each with its dollar impact measured on a ledger.</p>
     <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly="audit" href="#apply">
-        Apply for Margin Audit
+      <a class="btn btn-amber" data-calendly="audit" data-section="hero" href="#apply">
+        Apply for the free Margin Audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
-      <a class="btn btn-text" href="#inventory">
-        See the Protocol
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      <a class="btn btn-text" data-calendly="analyst" data-section="hero" href="#apply">
+        Book a 15-min intro call
       </a>
     </div>
+    <p class="microcopy reveal-unit reveal-cta"><b>$0</b> · 4 slots per month · report in 5 business days</p>
   </div>
 
   <div class="hero-ticker" aria-hidden="true">
-    <span>MODEL <b>MC-10K</b></span>
-    <span>ELASTICITY <b>PER-SKU</b></span>
-    <span>PPC <b>BAYESIAN</b></span>
-    <span>CONFIDENCE <b>95%</b></span>
+    <span>RETAINER <b>FLAT $6,000/MO</b></span>
+    <span>ACCESS <b>NO SELLER CENTRAL LOGIN</b></span>
+    <span>TERMS <b>MONTH-TO-MONTH</b></span>
+    <span>AUDIT SLOTS <b>4 / MO</b></span>
   </div>
 </header>
 
+<!-- ══════════════ 03 · MARKET REALITY ══════════════ -->
+<section class="sect" id="numbers" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">The margin problem, in four numbers</div>
+    <h2 class="reveal-words">Selling more while keeping less.</h2>
+  </div>
+  <div class="stat-card glass reveal-unit reveal-sub">
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-num">~50<small>%</small></div>
+        <div class="stat-label">Amazon's effective take of seller revenue</div>
+        <div class="stat-rule" aria-hidden="true"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">67<small>%</small></div>
+        <div class="stat-label">Sellers who raised prices in 2024</div>
+        <div class="stat-rule" aria-hidden="true"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">~60<small>%</small></div>
+        <div class="stat-label">Of those ended up less profitable</div>
+        <div class="stat-rule" aria-hidden="true"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5.4</div>
+        <div class="stat-label">Tools the average $1M+ seller runs — none decide</div>
+        <div class="stat-rule" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+  <p class="src-line reveal-unit reveal-sub">Sources: Marketplace Pulse · SmartScout seller survey 2025 · Fortune · industry operations research</p>
+</section>
+
+<!-- ══════════════ 04 · WHAT YOU ACTUALLY GET ══════════════ -->
+<section class="sect" id="deliverables" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">What you actually get</div>
+    <h2 class="reveal-words">Three things land on your desk.</h2>
+    <p class="reveal-unit reveal-sub">Not a dashboard subscription. Specific documents and decisions, on a monthly rhythm.</p>
+  </div>
+  <div class="deliv-grid reveal-unit reveal-sub">
+
+    <div class="deliv glass">
+      <span class="sample-tag">Sample · demo data</span>
+      <h3>The Margin Audit</h3>
+      <div class="artifact" aria-label="Sample audit excerpt: per-SKU margin decomposition">
+        <div class="a-head"><span>MARGIN.DECOMP</span><span>latest period</span></div>
+        <div class="mini-row"><span class="lbl">WIDGET-BLUE</span>
+          <span class="mini-track"><i class="seg-fees" style="width:32%"></i><i class="seg-cogs" style="width:24%"></i><i class="seg-ads" style="width:4%"></i><i class="seg-net" style="width:40%"></i></span>
+          <span class="val">+40%</span></div>
+        <div class="mini-row"><span class="lbl">WIDGET-RED</span>
+          <span class="mini-track"><i class="seg-fees" style="width:35%"></i><i class="seg-cogs" style="width:27%"></i><i class="seg-ads" style="width:12%"></i><i class="seg-net" style="width:26%"></i></span>
+          <span class="val">+26%</span></div>
+        <div class="mini-row"><span class="lbl">GADGET-PRO</span>
+          <span class="mini-track"><i class="seg-fees" style="width:26%"></i><i class="seg-cogs" style="width:37%"></i><i class="seg-ads" style="width:44%"></i><i class="seg-loss" style="width:7%"></i></span>
+          <span class="val" style="color:hsl(8 72% 62%)">−7%</span></div>
+        <div class="mini-legend">
+          <span><i class="seg-fees"></i>Amazon fees</span><span><i class="seg-cogs"></i>COGS</span>
+          <span><i class="seg-ads"></i>Ads</span><span><i class="seg-net"></i>Net</span>
+        </div>
+      </div>
+      <p>Every SKU's true net margin — fees, landed cost, and ad spend honestly allocated — plus stockout probabilities, elasticity reads, and your ad break-even. Written report and a recorded voice-over-screen walkthrough.</p>
+    </div>
+
+    <div class="deliv glass">
+      <span class="sample-tag">Sample · demo data</span>
+      <h3>Monthly Directives</h3>
+      <div class="artifact mock-directive" aria-label="Sample directive card from the client portal">
+        <div class="a-head"><span>DIRECTIVE</span><span>awaiting review</span></div>
+        <span class="tagline">Advertising</span>
+        <p class="d-text">Negative-match 11 search terms that spent with zero attributed sales — $1,940 of pure bleed in the export window.</p>
+        <div class="mock-btns">
+          <span class="mock-btn yes">Approve</span>
+          <span class="mock-btn">Decline</span>
+          <span class="mock-exp">expected $1,940</span>
+        </div>
+      </div>
+      <p>3–5 specific moves a month, each with its expected dollar impact stated up front. You approve every one in your portal before anything changes. We issue directives; you keep the wheel.</p>
+    </div>
+
+    <div class="deliv glass">
+      <span class="sample-tag">Sample · demo data</span>
+      <h3>The Decision Ledger</h3>
+      <div class="artifact mock-ledger" aria-label="Sample Decision Ledger excerpt">
+        <div class="a-head"><span>DECISION.LEDGER</span><span>cumulative</span></div>
+        <table>
+          <tr><th>Directive</th><th>Expected</th><th>Measured</th></tr>
+          <tr><td>Cut bleed terms</td><td class="num">$1,940</td><td class="num pos">$2,105</td></tr>
+          <tr><td>Price test +4%</td><td class="num">$860</td><td class="num pos">$1,240</td></tr>
+          <tr><td>Trim campaign spend</td><td class="num">$1,200</td><td class="num">$890</td></tr>
+        </table>
+        <div class="mock-total"><span>Measured to date</span><b>$4,235</b></div>
+      </div>
+      <p>Every directive's expected and <em>measured</em> dollar impact, on one ledger — including the calls that came in under. This is the number you judge us by, and you can export it the day you leave.</p>
+    </div>
+
+  </div>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-glass" data-calendly="analyst" data-section="deliverables" href="#apply">
+      Ask what your version looks like
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════ 05 · HOW IT WORKS ══════════════ -->
+<section class="sect" id="process" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">How it works</div>
+    <h2 class="reveal-words">From application to audit in five business days.</h2>
+  </div>
+  <div class="steps reveal-unit reveal-sub">
+    <div class="step glass">
+      <span class="when">Day 0</span>
+      <h3>Apply</h3>
+      <p>A 20-minute application call. We check fit — 4 audit slots per month, hand-built.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">~15 minutes</span>
+      <h3>Upload</h3>
+      <p>Five standard CSV exports through your private, secure intake page.</p>
+      <p class="callout">No Seller Central login. Ever. You export the files; we never touch your account.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">5 business days</span>
+      <h3>Audit delivered</h3>
+      <p>Written report plus a recorded walkthrough of your numbers, SKU by SKU.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">Your call</span>
+      <h3>Decide</h3>
+      <p>If the numbers justify a retainer, we start. If the audit finds nothing worth fixing, we tell you so — and you keep the full report.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">Monthly</span>
+      <h3>Co-pilot cadence</h3>
+      <p>Data refresh, 3–5 directives to approve, ledger updated. Price tests watched against Buy Box share daily.</p>
+    </div>
+  </div>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-amber" data-calendly="audit" data-section="process" href="#apply">
+      Apply for the free Margin Audit
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+  </div>
+</section>
+
 <main class="features">
-  <!-- ══════════════ 03 · FEATURE ROW 1 — text left / media right ══════════════ -->
+  <!-- ══════════════ 06 · METHOD 01 — INVENTORY ══════════════ -->
   <section class="feature" id="inventory" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Module 01 / Inventory</div>
-        <h2 class="reveal-words">Probabilistic Inventory Optimization.</h2>
-        <p class="reveal-unit reveal-sub">Stop guessing reorder dates. We run thousands of Monte Carlo simulations against your sales velocity and supply chain lead times to output exact, risk-adjusted capital allocation models.</p>
+        <div class="eyebrow reveal-unit reveal-early">Method 01 / This is the actual model, not an illustration</div>
+        <h2 class="reveal-words">Know your stockout risk before it happens.</h2>
+        <p class="reveal-unit reveal-sub">We simulate the next 90 days of demand against your supplier lead times — ten thousand times per SKU. You get a reorder date, a quantity, and the exact probability of stocking out if you wait. No Amazon-native tool does probabilistic inventory math; they give you a point estimate and hope.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
-            Learn more
+          <a class="btn btn-glass" data-calendly="analyst" data-section="inventory" href="#apply">
+            Ask how this runs on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
@@ -527,16 +867,16 @@ h1,h2,h3{
     </div>
   </section>
 
-  <!-- ══════════════ 04 · FEATURE ROW 2 — media left / text right ══════════════ -->
+  <!-- ══════════════ 07 · METHOD 02 — PRICING ══════════════ -->
   <section class="feature flip" id="elasticity" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Module 02 / Pricing</div>
-        <h2 class="reveal-words">Price Elasticity Calculus.</h2>
-        <p class="reveal-unit reveal-sub">We map the exact elasticity curve of every SKU in your catalog. As tariffs force your prices up, we measure how far they can move before the Buy Box punishes you — instead of guessing and finding out the expensive way.</p>
+        <div class="eyebrow reveal-unit reveal-early">Method 02 / Pricing</div>
+        <h2 class="reveal-words">Know how far a price can move before it costs you.</h2>
+        <p class="reveal-unit reveal-sub">For every SKU we measure how demand responds to price — with a 95% confidence range, not a hunch. Two-thirds of sellers raised prices in 2024; most of them lost money doing it, and sellers report losing ~80% of Buy Boxes on the way up. We tell you which SKUs can carry an increase, then watch your Buy Box share daily so suppression is caught in days, not quarters.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
-            Learn more
+          <a class="btn btn-glass" data-calendly="analyst" data-section="elasticity" href="#apply">
+            Ask how this runs on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
@@ -552,22 +892,22 @@ h1,h2,h3{
     </div>
   </section>
 
-  <!-- ══════════════ 05 · FEATURE ROW 3 — text left / media right ══════════════ -->
+  <!-- ══════════════ 08 · METHOD 03 — ADVERTISING ══════════════ -->
   <section class="feature" id="ads" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Module 03 / Advertising</div>
-        <h2 class="reveal-words">Bayesian Ad Efficiency.</h2>
-        <p class="reveal-unit reveal-sub">Standard PPC software reacts too slowly. We apply Bayesian statistics to identify the exact mathematical inflection point where your ad spend hits diminishing returns, cutting the bleed instantly.</p>
+        <div class="eyebrow reveal-unit reveal-early">Method 03 / Advertising</div>
+        <h2 class="reveal-words">Know where your next ad dollar stops paying.</h2>
+        <p class="reveal-unit reveal-sub">Ad spend has a break-even point. We estimate your account's response curve and mark the spend level where one more dollar returns less than a dollar. No PPC tool derives what your target ACoS should be — they optimize toward whatever number you typed in.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" href="#apply" data-calendly="analyst">
-            Learn more
+          <a class="btn btn-glass" data-calendly="analyst" data-section="ads" href="#apply">
+            Ask how this runs on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
       </div>
       <figure class="feature-media glass reveal-unit reveal-media">
-        <div class="media-head"><b>BAYES.POSTERIOR</b><span>ad spend response · $k / mo</span></div>
+        <div class="media-head"><b>SPEND.RESPONSE</b><span>ad spend response · $k / mo</span></div>
         <div class="media-body" id="chart-ba"></div>
         <figcaption class="media-foot">
           <span><i class="swatch"></i>Incremental revenue</span>
@@ -579,96 +919,309 @@ h1,h2,h3{
   </section>
 </main>
 
-<!-- ══════════════ 06 · STATS / PROOF ══════════════ -->
-<section class="proof" id="proof" data-reveal>
-  <canvas class="proof-canvas" data-mesh="proof" aria-hidden="true"></canvas>
-  <div class="edge edge-top" aria-hidden="true"></div>
-  <div class="edge edge-bottom" aria-hidden="true"></div>
+<!-- ══════════════ 09 · COMPARISON ══════════════ -->
+<section class="sect" id="compare" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">Where we sit</div>
+    <h2 class="reveal-words">Dashboards tell you what happened. Nobody tells you what to do next.</h2>
+  </div>
+  <div class="compare-wrap glass reveal-unit reveal-sub">
+    <table class="compare">
+      <tr>
+        <th></th>
+        <th>Your tool stack <span style="opacity:.6">(avg 5.4 apps)</span></th>
+        <th>PPC agency</th>
+        <th>Fractional CFO</th>
+        <th class="us">Hubricon</th>
+      </tr>
+      <tr><td>Tells you what to do, with expected $</td><td class="n">Reports what happened</td><td class="n">Ads only</td><td class="n">Board-level only</td><td class="us y">Every directive</td></tr>
+      <tr><td>Probabilistic inventory math</td><td class="n">Velocity averages</td><td class="n">—</td><td class="n">—</td><td class="us y">10,000 simulations / SKU</td></tr>
+      <tr><td>Derives what your target ACoS should be</td><td class="n">You type the target in</td><td class="n">You type the target in</td><td class="n">—</td><td class="us y">From your margins</td></tr>
+      <tr><td>SKU-level true net margin</td><td class="n">Only as good as hand-keyed COGS</td><td class="n">—</td><td class="n">P&amp;L altitude, not SKU</td><td class="us y">Fees + COGS + allocated ads</td></tr>
+      <tr><td>Incentives</td><td class="n">Subscription</td><td class="n">% of your ad spend · 49%/yr avg client churn</td><td class="n">Retainer</td><td class="us y">Flat fee — advice never inflates our invoice</td></tr>
+      <tr><td>Measures each recommendation's realized impact</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="us y">The Decision Ledger</td></tr>
+      <tr><td>Cost</td><td>$29–$500/mo, you operate them</td><td>% of spend</td><td>$3,000–$12,000/mo</td><td class="us">$6,000/mo flat</td></tr>
+    </table>
+  </div>
+  <p class="src-line reveal-unit reveal-sub">Churn and pricing figures: industry benchmarks and published price lists, 2025–26</p>
+</section>
 
-  <div class="proof-inner">
-    <div class="proof-head">
-      <div class="eyebrow reveal-unit reveal-early">The Operating Numbers</div>
-      <h2 class="reveal-words">Run your catalog like a fund.</h2>
+<!-- ══════════════ 10 · FIT ══════════════ -->
+<section class="sect" id="fit" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">Fit check</div>
+    <h2 class="reveal-words">Built for a specific kind of seller.</h2>
+  </div>
+  <div class="fit-grid reveal-unit reveal-sub">
+    <div class="fit-card glass for">
+      <h3>This is for you if</h3>
+      <ul>
+        <li>Private-label FBA, roughly $1M–$20M/yr</li>
+        <li>10+ SKUs with real pricing power</li>
+        <li>You still make the pricing, inventory, and ad calls yourself</li>
+        <li>You can spend 15 minutes exporting data, and ~30 minutes a month approving directives</li>
+      </ul>
     </div>
-    <div class="stat-card glass reveal-unit reveal-sub">
-      <div class="stat-grid">
-        <div class="stat">
-          <div class="stat-num">95<small>%</small></div>
-          <div class="stat-label">Confidence Intervals</div>
-          <div class="stat-rule" aria-hidden="true"></div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">0</div>
-          <div class="stat-label">Excel Spreadsheets</div>
-          <div class="stat-rule" aria-hidden="true"></div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">3&hairsp;–&hairsp;5</div>
-          <div class="stat-label">Monthly Directives</div>
-          <div class="stat-rule" aria-hidden="true"></div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">100<small>%</small></div>
-          <div class="stat-label">Data Backed</div>
-          <div class="stat-rule" aria-hidden="true"></div>
-        </div>
-      </div>
+    <div class="fit-card glass notfor">
+      <h3>This is not for you if</h3>
+      <ul>
+        <li>Under ~$1M/yr — the fee doesn't math for you yet</li>
+        <li>Arbitrage or wholesale — no pricing power to model</li>
+        <li>You want your ads managed for you — we issue directives; you keep the wheel</li>
+        <li>You want another dashboard subscription</li>
+      </ul>
     </div>
+  </div>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-amber" data-calendly="audit" data-section="fit" href="#apply">
+      Apply for the free Margin Audit
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+    <span class="microcopy">Not sure you fit? That's what the <a data-calendly="analyst" data-section="fit" href="#apply" style="color:var(--amber)">15-minute call</a> is for.</span>
   </div>
 </section>
 
-<!-- ══════════════ 07 · FOOTER & CLOSE ══════════════ -->
+<!-- ══════════════ 11 · PRICING & TERMS ══════════════ -->
+<section class="sect" id="pricing" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">Pricing &amp; terms</div>
+    <h2 class="reveal-words">One price. Every term in writing.</h2>
+  </div>
+  <div class="price-grid reveal-unit reveal-sub">
+    <div class="price-card glass">
+      <span class="price-tag">Step one · The Margin Audit</span>
+      <div class="price-num">$0</div>
+      <ul>
+        <li>Application-gated — 4 per month, capped by model capacity, not scarcity theater</li>
+        <li>Per-SKU true net margin decomposition</li>
+        <li>Stockout probabilities and reorder points</li>
+        <li>Elasticity reads and ad-spend break-even</li>
+        <li>Written report + recorded walkthrough, 5 business days</li>
+      </ul>
+      <a class="btn btn-amber" data-calendly="audit" data-section="pricing" href="#apply">
+        Apply now
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+    </div>
+    <div class="price-card glass">
+      <span class="price-tag">Step two · The Co-Pilot Retainer</span>
+      <div class="price-num">$6,000<small>/MO FLAT</small></div>
+      <ul>
+        <li>Monthly data refresh and full model re-run</li>
+        <li>3–5 directives with expected dollar impact</li>
+        <li>Client portal — you approve every move</li>
+        <li>The Decision Ledger: expected vs. measured, cumulative</li>
+        <li>Price-testing program with daily Buy Box tracking</li>
+        <li>Founder-led calls — the person who builds your models is the person you talk to</li>
+      </ul>
+    </div>
+  </div>
+  <div class="terms glass reveal-unit reveal-sub">
+    <span>Month-to-month, cancel anytime</span>
+    <span>Invoiced by email, ACH, net-7 — no card on file</span>
+    <span>Flat fee, never a % of your ad spend</span>
+    <span>Your data and your ledger export free, anytime — including the day you cancel</span>
+    <span>Capped roster — every account gets the founder</span>
+  </div>
+  <div class="guarantee glass-strong reveal-unit reveal-cta">
+    <span class="price-tag">The honesty guarantee</span>
+    <p>If the audit finds nothing worth fixing, we tell you so — and you keep the full report.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 12 · OPERATOR ══════════════ -->
+<section class="sect" id="operator" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">Who runs your numbers</div>
+    <h2 class="reveal-words">No headshot. Here's what you get instead.</h2>
+    <p class="reveal-unit reveal-sub">Hubricon is a founder-operated practice. The person who builds your models is the person on your calls — no account managers, no outsourcing. Trust the terms, not a face:</p>
+  </div>
+  <div class="principles reveal-unit reveal-sub">
+    <div class="principle glass"><span class="k">01</span><h3>The math is public.</h3><p>Every chart on this page is the working method, not marketing art.</p></div>
+    <div class="principle glass"><span class="k">02</span><h3>The results are ledgered.</h3><p>Expected vs. measured, recorded even when we're wrong.</p></div>
+    <div class="principle glass"><span class="k">03</span><h3>The incentives are flat.</h3><p>No % of spend — our advice never inflates our own invoice.</p></div>
+    <div class="principle glass"><span class="k">04</span><h3>The exit is open.</h3><p>Month-to-month, free export. We re-earn the fee every 30 days.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════ 13 · FAQ ══════════════ -->
+<section class="sect" id="faq" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">FAQ</div>
+    <h2 class="reveal-words">Zero questions left.</h2>
+  </div>
+  <div class="faq reveal-unit reveal-sub">
+    <details class="glass" data-q="login"><summary>Do you need my Seller Central login?</summary>
+      <p>No — never. You export five standard CSV reports and upload them through a private, tokenized intake page. Takes about 15 minutes, and we never touch your account.</p></details>
+    <details class="glass" data-q="data"><summary>What data do I need to send?</summary>
+      <p>Five standard reports: the Business Report, FBA inventory, your PPC campaign and search-term reports, and SKU Economics — plus a small cost template we provide for your unit costs and lead times. Step-by-step export instructions come with your intake link.</p></details>
+    <details class="glass" data-q="catch"><summary>The audit is free — what's the catch?</summary>
+      <p>The application and the cap. We run 4 audits a month because each one is hand-built, so we only take sellers where the math is likely to matter. No obligation afterward — and if we find nothing worth fixing, we tell you so and you keep the report.</p></details>
+    <details class="glass" data-q="speed"><summary>How long until I see value?</summary>
+      <p>The audit lands in 5 business days. On the retainer, your first directives arrive in month one, and price tests read out in days because Buy Box share is tracked daily.</p></details>
+    <details class="glass" data-q="terms"><summary>What are the contract terms?</summary>
+      <p>$6,000/month flat, month-to-month, cancel anytime. Invoiced by email via ACH, net-7 — no card on file. Never a percentage of your ad spend. Your data and your ledger export free, anytime.</p></details>
+    <details class="glass" data-q="nothing"><summary>What if you find nothing worth fixing?</summary>
+      <p>We tell you exactly that, and you keep the full report. An audit that honestly clears you is a good outcome for you and cheap marketing for us.</p></details>
+    <details class="glass" data-q="tools"><summary>Why not just use Sellerboard or Helium 10?</summary>
+      <p>Keep them — they're good mirrors. But they report what happened. None runs probabilistic inventory math, none derives what your target ACoS should be, and the average $1M+ seller already runs 5.4 of them. We're the layer that turns their numbers into decisions, then measures what each decision earned.</p></details>
+    <details class="glass" data-q="agency"><summary>Why not a PPC agency or a fractional CFO?</summary>
+      <p>Agencies bill a percentage of your ad spend — an incentive problem — and average roughly 49% client churn a year. Fractional CFOs run $3,000–$12,000/month at P&amp;L altitude without SKU-level modeling. We sit in the gap: SKU-level math, measured outcomes, flat fee.</p></details>
+    <details class="glass" data-q="who"><summary>Who are you?</summary>
+      <p>A founder-operated quantitative practice. The person who builds your models is the one on your calls — no outsourcing, no account managers. The method is on this page; the audit is how you evaluate us.</p></details>
+  </div>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-amber" data-calendly="audit" data-section="faq" href="#apply">
+      Apply for the free Margin Audit
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+    <a class="btn btn-text" data-calendly="analyst" data-section="faq" href="#apply">Still deciding? 15-minute call</a>
+  </div>
+</section>
+
+<!-- ══════════════ 14 · FOOTER & CLOSE ══════════════ -->
 <footer class="close" id="apply" data-reveal>
   <canvas class="close-canvas" data-mesh="close" aria-hidden="true"></canvas>
   <div class="edge edge-top" aria-hidden="true"></div>
 
   <div class="close-inner">
-    <h2 class="reveal-words">Your margin is a math problem.</h2>
+    <h2 class="reveal-words">The audit is free. The math is real. Slots are capped.</h2>
     <p class="hint reveal-unit reveal-sub">67% of sellers raised prices last year. 60% of them ended up less profitable — because nobody measured the demand curve first. We do, and then we prove what every move earned you, in dollars, on a ledger.</p>
     <p class="hint reveal-unit reveal-sub">Audit slots are capped at 4 per month — model capacity, not scarcity theater.</p>
     <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly="audit" href="#apply">
-        Apply for Margin Audit
+      <a class="btn btn-amber" data-calendly="audit" data-section="close" href="https://calendly.com/hubricon/margin-audit">
+        Apply for the free Margin Audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
-      <a class="btn btn-white" data-calendly="analyst" href="#apply">
-        Talk to an Analyst
+      <a class="btn btn-white" data-calendly="analyst" data-section="close" href="https://calendly.com/hubricon/analyst-intro">
+        Book a 15-min intro call
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
     </div>
+    <div class="calendly-inline glass reveal-unit reveal-cta" id="calendly-inline" aria-label="Book the margin audit"></div>
   </div>
 
   <div class="footer-bar">
     <div class="footer-row">
       <span class="footer-logo">HUBRICON</span>
       <nav aria-label="Footer">
-        <a href="#inventory">Inventory</a>
-        <a href="#elasticity">Elasticity</a>
-        <a href="#ads">Ads</a>
-        <a href="#proof">Proof</a>
+        <a href="#deliverables">What you get</a>
+        <a href="#process">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="/portal">Client login</a>
       </nav>
-      <span>© 2026 Hubricon Quantitative · All models audited</span>
+      <span>© 2026 Hubricon · www.hubricon.com</span>
     </div>
   </div>
 </footer>
 
+<!-- mobile sticky CTA -->
+<div class="sticky-cta glass-strong" id="sticky-cta" aria-hidden="true">
+  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="https://calendly.com/hubricon/margin-audit">
+    Free Margin Audit — Apply
+  </a>
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Do you need my Seller Central login?", "acceptedAnswer": {"@type": "Answer", "text": "No — never. You export five standard CSV reports and upload them through a private, tokenized intake page. Takes about 15 minutes, and we never touch your account."}},
+    {"@type": "Question", "name": "What data do I need to send?", "acceptedAnswer": {"@type": "Answer", "text": "Five standard reports: the Business Report, FBA inventory, your PPC campaign and search-term reports, and SKU Economics — plus a small cost template we provide for your unit costs and lead times. Step-by-step export instructions come with your intake link."}},
+    {"@type": "Question", "name": "The audit is free — what's the catch?", "acceptedAnswer": {"@type": "Answer", "text": "The application and the cap. We run 4 audits a month because each one is hand-built, so we only take sellers where the math is likely to matter. No obligation afterward — and if we find nothing worth fixing, we tell you so and you keep the report."}},
+    {"@type": "Question", "name": "How long until I see value?", "acceptedAnswer": {"@type": "Answer", "text": "The audit lands in 5 business days. On the retainer, your first directives arrive in month one, and price tests read out in days because Buy Box share is tracked daily."}},
+    {"@type": "Question", "name": "What are the contract terms?", "acceptedAnswer": {"@type": "Answer", "text": "$6,000/month flat, month-to-month, cancel anytime. Invoiced by email via ACH, net-7 — no card on file. Never a percentage of your ad spend. Your data and your ledger export free, anytime."}},
+    {"@type": "Question", "name": "What if you find nothing worth fixing?", "acceptedAnswer": {"@type": "Answer", "text": "We tell you exactly that, and you keep the full report. An audit that honestly clears you is a good outcome for you and cheap marketing for us."}},
+    {"@type": "Question", "name": "Why not just use Sellerboard or Helium 10?", "acceptedAnswer": {"@type": "Answer", "text": "Keep them — they're good mirrors. But they report what happened. None runs probabilistic inventory math, none derives what your target ACoS should be, and the average $1M+ seller already runs 5.4 of them. We're the layer that turns their numbers into decisions, then measures what each decision earned."}},
+    {"@type": "Question", "name": "Why not a PPC agency or a fractional CFO?", "acceptedAnswer": {"@type": "Answer", "text": "Agencies bill a percentage of your ad spend — an incentive problem — and average roughly 49% client churn a year. Fractional CFOs run $3,000–$12,000/month at P&L altitude without SKU-level modeling. We sit in the gap: SKU-level math, measured outcomes, flat fee."}},
+    {"@type": "Question", "name": "Who are you?", "acceptedAnswer": {"@type": "Answer", "text": "A founder-operated quantitative practice. The person who builds your models is the one on your calls — no outsourcing, no account managers. The method is on this page; the audit is how you evaluate us."}}
+  ]
+}
+</script>
+
 <script>
 "use strict";
 
-/* ── Calendly two-tier funnel ──
-   "audit"   = high-intent application call (qualification questions on)
-   "analyst" = low-friction 15-min intro call
-   Both event types must exist in Calendly with these exact slugs before
-   this ships — until then keep both values at the base page URL. */
+/* ── Vercel Web Analytics (enable in the Vercel dashboard) ── */
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+
+/* ── Calendly: same-page popup with href fallback ── */
 const CALENDLY_EVENTS = {
   audit:   "https://calendly.com/hubricon/margin-audit",
   analyst: "https://calendly.com/hubricon/analyst-intro",
 };
+let calendlyReady = null;
+function loadCalendly() {
+  if (calendlyReady) return calendlyReady;
+  calendlyReady = new Promise(resolve => {
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "https://assets.calendly.com/assets/external/widget.css";
+    document.head.appendChild(css);
+    const s = document.createElement("script");
+    s.src = "https://assets.calendly.com/assets/external/widget.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+  return calendlyReady;
+}
+
 document.querySelectorAll("[data-calendly]").forEach(a => {
-  a.href = CALENDLY_EVENTS[a.dataset.calendly] || CALENDLY_EVENTS.audit;
-  a.target = "_blank";
-  a.rel = "noopener";
+  const url = CALENDLY_EVENTS[a.dataset.calendly] || CALENDLY_EVENTS.audit;
+  a.href = url; /* real link = no-JS fallback */
+  a.addEventListener("pointerenter", loadCalendly, { once: true, passive: true });
+  a.addEventListener("touchstart", loadCalendly, { once: true, passive: true });
+  a.addEventListener("click", async ev => {
+    track("cta_click", { goal: a.dataset.calendly, section: a.dataset.section || "" });
+    if (!(await loadCalendly()) || !window.Calendly) return; /* fall through to href */
+    ev.preventDefault();
+    window.Calendly.initPopupWidget({ url });
+    track("calendly_opened", { goal: a.dataset.calendly });
+  });
 });
+
+/* conversion signal from the Calendly widget */
+window.addEventListener("message", e => {
+  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
+    track("calendly_scheduled", {});
+  }
+});
+
+/* inline embed in the close section, loaded when it scrolls near */
+const inlineMount = document.getElementById("calendly-inline");
+if (inlineMount) {
+  new IntersectionObserver(async ([e], obs) => {
+    if (!e.isIntersecting) return;
+    obs.disconnect();
+    if (await loadCalendly() && window.Calendly) {
+      window.Calendly.initInlineWidget({
+        url: CALENDLY_EVENTS.audit + "?hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000",
+        parentElement: inlineMount,
+      });
+    } else {
+      inlineMount.style.display = "none";
+    }
+  }, { rootMargin: "600px" }).observe(inlineMount);
+}
+
+/* FAQ engagement */
+document.querySelectorAll(".faq details").forEach(d => {
+  d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q }); });
+});
+
+/* mobile sticky CTA — appears once the hero scrolls out */
+const hero = document.getElementById("top");
+const sticky = document.getElementById("sticky-cta");
+if (hero && sticky) {
+  new IntersectionObserver(([e]) => {
+    sticky.classList.toggle("show", !e.isIntersecting);
+    sticky.setAttribute("aria-hidden", e.isIntersecting ? "true" : "false");
+  }, { threshold: 0.05 }).observe(hero);
+}
 
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -686,7 +1239,7 @@ document.querySelectorAll(".reveal-words").forEach(el => {
     s.style.transitionDelay = (i * 100) + "ms"; /* 100ms word stagger */
     s.setAttribute("aria-hidden", "true");
     el.appendChild(s);
-    if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
+    if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
   });
 });
 
@@ -701,6 +1254,7 @@ document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
    DATA-MESH "VIDEO" BACKGROUNDS (canvas — self-contained)
    ============================================================ */
 function dataMesh(canvas, cfg) {
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const DPR = Math.min(devicePixelRatio || 1, 2);
   let W = 0, H = 0, pts = [], raf = 0, running = false;
@@ -759,7 +1313,6 @@ function dataMesh(canvas, cfg) {
 }
 
 dataMesh(document.querySelector('[data-mesh="hero"]'),  { sparsity: 11000, link: 130, speed: .32, lineAlpha: .075, amberRatio: .16 });
-dataMesh(document.querySelector('[data-mesh="proof"]'), { sparsity: 15000, link: 120, speed: .26, lineAlpha: .09,  amberRatio: .1  });
 dataMesh(document.querySelector('[data-mesh="close"]'), { sparsity: 13000, link: 125, speed: .3,  lineAlpha: .07,  amberRatio: .2  });
 
 /* ============================================================
@@ -933,7 +1486,7 @@ function crosshair(mount, svg, xMin, xMax, rowsAt) {
   });
 })();
 
-/* ── Chart 3 · Bayesian ad-spend response ────────────────── */
+/* ── Chart 3 · Ad-spend response ─────────────────────────── */
 (function () {
   const mount = document.getElementById("chart-ba");
   const svg = chartBase(mount);
@@ -984,5 +1537,6 @@ function crosshair(mount, svg, xMin, xMax, rowsAt) {
   });
 })();
 </script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
