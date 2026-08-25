@@ -3,3 +3,8 @@ node_modules/
 .env.*
 !.env.example
 .vercel
+reports/
+engine/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

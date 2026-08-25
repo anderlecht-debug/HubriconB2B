@@ -1,0 +1,4 @@
+sku,fnsku,asin,condition,afn-fulfillable-quantity,afn-inbound-working-quantity,afn-inbound-shipped-quantity,afn-inbound-receiving-quantity,afn-reserved-quantity
+WIDGET-BLUE,X001ABC1,B0CHILD001,NewItem,412,0,200,0,18
+WIDGET-RED,X001ABC2,B0CHILD002,NewItem,96,0,0,0,7
+GADGET-PRO,X001ABC3,B0CHILD003,NewItem,240,0,0,50,3

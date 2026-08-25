@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon — Secure Intake</title>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+
+<style>
+/* Design tokens lifted from index.html so the intake feels like the same product. */
+:root{
+  --bg:        hsl(225 72% 7%);
+  --bg-raise:  hsl(224 60% 11%);
+  --amber:     hsl(45 100% 50%);
+  --amber-soft:hsl(45 100% 50% / .12);
+  --serious:   hsl(8 72% 58%);
+  --ok:        hsl(150 55% 55%);
+  --ink-100: hsl(220 40% 98% / 1);
+  --ink-70:  hsl(220 40% 98% / .7);
+  --ink-60:  hsl(220 40% 98% / .6);
+  --rule-20: hsl(220 40% 98% / .2);
+  --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+body{
+  background: var(--bg); color: var(--ink-60);
+  font-family: var(--font-mono); font-size: 14.5px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh; padding: 48px 20px 96px;
+}
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: var(--amber); text-decoration: none; }
+a:hover{ text-decoration: underline; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2{
+  font-family: var(--font-head); font-weight: 400; color: var(--ink-100);
+  text-transform: uppercase; letter-spacing: .015em; line-height: 1.05;
+}
+h1{ font-size: clamp(30px, 5vw, 44px); }
+h2{ font-size: 19px; }
+
+.wrap{ max-width: 780px; margin: 0 auto; }
+.logo{ font-family: var(--font-head); font-size: 20px; color: var(--ink-100); letter-spacing: .04em; text-transform: uppercase; }
+.logo em{ color: var(--amber); font-style: normal; }
+.head{ margin: 34px 0 8px; }
+.sub{ color: var(--ink-70); margin-bottom: 36px; max-width: 60ch; }
+
+.card{
+  position: relative; border-radius: 20px;
+  background: hsl(224 55% 14% / .32);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  padding: 22px 24px; margin-bottom: 18px;
+}
+.card::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+  background: linear-gradient(175deg,
+    hsl(220 60% 85% / .32) 0%, hsl(224 60% 20% / .06) 38%,
+    hsl(224 60% 20% / .06) 62%, hsl(45 90% 65% / .14) 100%);
+}
+.card h2{ margin-bottom: 4px; }
+.card .why{ font-size: 13px; margin-bottom: 14px; }
+.card .path{ color: var(--ink-70); font-size: 12.5px; border-left: 2px solid var(--rule-20); padding-left: 10px; margin-bottom: 14px; }
+
+.row{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+.row .status{ font-size: 12px; min-width: 90px; }
+input[type=file]{ color: var(--ink-60); font-family: inherit; font-size: 12.5px; max-width: 100%; }
+input[type=file]::file-selector-button{
+  background: none; border: 1px solid var(--rule-20); border-radius: 8px;
+  color: var(--ink-100); font-family: inherit; font-size: 12.5px;
+  padding: 7px 12px; margin-right: 10px; cursor: pointer;
+}
+input[type=file]::file-selector-button:hover{ border-color: var(--amber); color: var(--amber); }
+input[type=month], input[type=date], select{
+  background: var(--bg-raise); border: 1px solid var(--rule-20); border-radius: 8px;
+  color: var(--ink-100); font-family: inherit; font-size: 12.5px; padding: 7px 10px;
+  color-scheme: dark;
+}
+.add-row{
+  background: none; border: 1px dashed var(--rule-20); border-radius: 8px;
+  color: var(--ink-70); font-family: inherit; font-size: 12px;
+  padding: 6px 12px; cursor: pointer;
+}
+.add-row:hover{ border-color: var(--amber); color: var(--amber); }
+
+.submit{
+  display: inline-block; background: var(--amber); color: hsl(225 72% 7%);
+  font-family: var(--font-head); font-size: 17px; text-transform: uppercase;
+  letter-spacing: .03em; border: 0; border-radius: 12px;
+  padding: 14px 30px; cursor: pointer; margin-top: 10px;
+}
+.submit:hover{ filter: brightness(1.08); }
+.submit:disabled{ opacity: .45; cursor: default; filter: none; }
+
+.note{ font-size: 12.5px; margin-top: 14px; }
+.status.done{ color: var(--ok); }
+.status.err{ color: var(--serious); }
+.status.busy{ color: var(--amber); }
+.banner{
+  border-radius: 14px; padding: 16px 18px; margin: 22px 0; font-size: 13.5px;
+  background: var(--amber-soft); color: var(--ink-100); display: none;
+}
+.banner.err{ background: hsl(8 72% 58% / .14); }
+.hidden{ display: none; }
+</style>
+
+<div class="wrap">
+  <span class="logo">Hubric<em>o</em>n</span>
+
+  <!-- shown until the token checks out -->
+  <div id="gate">
+    <div class="head"><h1>Checking your link…</h1></div>
+    <p class="sub" id="gate-msg">One moment.</p>
+  </div>
+
+  <!-- the intake form -->
+  <div id="form" class="hidden">
+    <div class="head"><h1>Secure data intake</h1></div>
+    <p class="sub">Private workspace for <b id="company" style="color:var(--ink-100)"></b>.
+    Files upload straight into an isolated, encrypted store — nothing is sent by email.
+    Add what you have; you can reopen this link to send the rest (it expires after 90 days).</p>
+
+    <div class="card" data-type="business_report">
+      <h2>1 · Sales &amp; traffic by product</h2>
+      <p class="why">One file per month, last 6 months — monthly files are what let us model your trend, not just a snapshot.</p>
+      <p class="path">Seller Central → Reports → Business Reports → Detail Page Sales and Traffic by Child Item → set the range to one month → Download CSV. Repeat per month.</p>
+      <div class="rows"></div>
+      <button type="button" class="add-row">+ add another month</button>
+    </div>
+
+    <div class="card" data-type="sku_economics">
+      <h2>2 · SKU economics (fees)</h2>
+      <p class="why">Same months as above — this is where your true Amazon fees live.</p>
+      <p class="path">Seller Central → Reports → SKU Economics → one month per file → Download CSV.</p>
+      <div class="rows"></div>
+      <button type="button" class="add-row">+ add another month</button>
+    </div>
+
+    <div class="card" data-type="ppc">
+      <h2>3 · Advertising</h2>
+      <p class="why">Your Sponsored Products search-term report for roughly the last 60 days.</p>
+      <p class="path">Advertising Console → Measurement &amp; Reporting → Sponsored ads reports → Create report → Sponsored Products / Search term → export.</p>
+      <div class="row">
+        <select id="ppc-kind" aria-label="Report kind">
+          <option value="ppc_search_terms">Search term report</option>
+          <option value="ppc_campaign">Campaign report (daily)</option>
+        </select>
+        <input type="date" id="ppc-start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" id="ppc-end" aria-label="Report end date">
+        <input type="file" id="ppc-file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="fba_inventory">
+      <h2>4 · FBA inventory snapshot</h2>
+      <p class="why">Today's snapshot is fine.</p>
+      <p class="path">Seller Central → Reports → Fulfillment → Inventory → FBA Inventory → Download.</p>
+      <div class="row">
+        <input type="date" id="inv-date" aria-label="Snapshot date">
+        <input type="file" id="inv-file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="cogs">
+      <h2>5 · Your costs</h2>
+      <p class="why">Amazon doesn't know what you pay for your product — margin math is impossible without this.
+      <a href="/cogs-template.csv" download>Download the template</a>, fill in one row per SKU (estimates are fine), upload it back.</p>
+      <div class="row">
+        <input type="file" id="cogs-file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="banner" id="banner"></div>
+    <button class="submit" id="submit">Upload files</button>
+    <p class="note">Questions? Just reply to the email that brought you here.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const token = new URLSearchParams(location.search).get("t");
+const $ = (sel, el) => (el ?? document).querySelector(sel);
+const gate = $("#gate"), gateMsg = $("#gate-msg"), form = $("#form"), banner = $("#banner");
+
+function deadLink(msg){
+  $("h1", gate).textContent = "This link is no longer active";
+  gateMsg.textContent = msg;
+}
+
+async function api(payload){
+  const res = await fetch("/api/intake", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ t: token, ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+/* month "2026-07" -> ["2026-07-01", "2026-07-31"] */
+function monthRange(ym){
+  const [y, m] = ym.split("-").map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return [`${ym}-01`, `${ym}-${String(last).padStart(2, "0")}`];
+}
+
+function addMonthRow(card){
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<input type="month" aria-label="Report month">
+    <input type="file" accept=".csv,.txt,.tsv">
+    <span class="status"></span>`;
+  $(".rows", card).appendChild(row);
+}
+document.querySelectorAll(".add-row").forEach((btn) => {
+  const card = btn.closest(".card");
+  addMonthRow(card);
+  btn.addEventListener("click", () => addMonthRow(card));
+});
+$("#inv-date").value = new Date().toISOString().slice(0, 10);
+
+function setStatus(el, text, cls){
+  el.textContent = text;
+  el.className = "status" + (cls ? " " + cls : "");
+}
+
+/* Collects every row that has a file picked. Each job: {spec, file, statusEl, done} */
+function collectJobs(){
+  const jobs = [], problems = [];
+  for (const type of ["business_report", "sku_economics"]){
+    const card = document.querySelector(`.card[data-type=${type}]`);
+    for (const row of card.querySelectorAll(".row")){
+      const file = $("input[type=file]", row).files[0];
+      if (!file) continue;
+      const month = $("input[type=month]", row).value;
+      if (!month){ problems.push(`Pick the month for "${file.name}".`); continue; }
+      const [start, end] = monthRange(month);
+      jobs.push({ file, statusEl: $(".status", row),
+        spec: { report_type: type, period_start: start, period_end: end } });
+    }
+  }
+  const ppcFile = $("#ppc-file").files[0];
+  if (ppcFile){
+    const start = $("#ppc-start").value, end = $("#ppc-end").value;
+    if (!start || !end) problems.push(`Pick the date range for "${ppcFile.name}".`);
+    else jobs.push({ file: ppcFile, statusEl: $(".status", $("#ppc-file").closest(".row")),
+      spec: { report_type: $("#ppc-kind").value, period_start: start, period_end: end } });
+  }
+  const invFile = $("#inv-file").files[0];
+  if (invFile){
+    const day = $("#inv-date").value;
+    if (!day) problems.push(`Pick the snapshot date for "${invFile.name}".`);
+    else jobs.push({ file: invFile, statusEl: $(".status", $("#inv-file").closest(".row")),
+      spec: { report_type: "fba_inventory", period_start: day } });
+  }
+  const cogsFile = $("#cogs-file").files[0];
+  if (cogsFile) jobs.push({ file: cogsFile, statusEl: $(".status", $("#cogs-file").closest(".row")),
+    spec: { report_type: "cogs" } });
+  return { jobs, problems };
+}
+
+function showBanner(text, isError){
+  banner.textContent = text;
+  banner.className = "banner" + (isError ? " err" : "");
+  banner.style.display = "block";
+}
+
+$("#submit").addEventListener("click", async () => {
+  const { jobs, problems } = collectJobs();
+  const todo = jobs.filter((j) => !j.done);
+  if (problems.length) return showBanner(problems[0], true);
+  if (!todo.length) return showBanner("Pick at least one file first.", true);
+
+  const btn = $("#submit");
+  btn.disabled = true;
+  banner.style.display = "none";
+
+  let sent = 0, failed = 0;
+  // the API takes at most 12 files per call
+  for (let i = 0; i < todo.length; i += 12){
+    const batch = todo.slice(i, i + 12);
+    let init;
+    try {
+      init = await api({ action: "init", files: batch.map((j) => ({
+        ...j.spec, filename: j.file.name, size: j.file.size,
+        content_type: j.file.type || "text/csv",
+      })) });
+    } catch (err) {
+      batch.forEach((j) => setStatus(j.statusEl, "failed", "err"));
+      failed += batch.length;
+      showBanner(err.message, true);
+      continue;
+    }
+
+    const uploaded = [];
+    for (let k = 0; k < batch.length; k++){
+      const job = batch[k], target = init.files[k];
+      setStatus(job.statusEl, "uploading…", "busy");
+      try {
+        const put = await fetch(target.signed_url, {
+          method: "PUT",
+          headers: { "content-type": job.file.type || "text/csv" },
+          body: job.file,
+        });
+        if (!put.ok) throw new Error(`storage rejected the file (${put.status})`);
+        uploaded.push({ job, id: target.upload_id });
+      } catch {
+        setStatus(job.statusEl, "failed", "err");
+        failed++;
+      }
+    }
+
+    if (uploaded.length){
+      try {
+        const { completed } = await api({ action: "complete", upload_ids: uploaded.map((u) => u.id) });
+        for (const u of uploaded){
+          if (completed.includes(u.id)){ u.job.done = true; setStatus(u.job.statusEl, "received ✓", "done"); sent++; }
+          else { setStatus(u.job.statusEl, "failed", "err"); failed++; }
+        }
+      } catch {
+        uploaded.forEach((u) => setStatus(u.job.statusEl, "unconfirmed", "err"));
+        failed += uploaded.length;
+      }
+    }
+  }
+
+  btn.disabled = false;
+  if (failed === 0) showBanner(`All set — ${sent} file${sent === 1 ? "" : "s"} received. You can close this page, or add more months any time.`);
+  else showBanner(`${sent} received, ${failed} failed — hit “Upload files” again to retry the failed ones.`, true);
+});
+
+(async () => {
+  if (!token) return deadLink("No access token in the URL. Use the exact link from your Hubricon email.");
+  try {
+    const res = await fetch(`/api/intake?t=${encodeURIComponent(token)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok)
+      return deadLink("The link may have expired or been replaced. Reply to your Hubricon email for a fresh one.");
+    $("#company").textContent = data.company || "your team";
+    gate.classList.add("hidden");
+    form.classList.remove("hidden");
+  } catch {
+    deadLink("Couldn't reach the server. Check your connection and reload.");
+  }
+})();
+</script>
+</body>
+</html>

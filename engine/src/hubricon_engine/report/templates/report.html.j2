@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon — Margin Audit — {{ client.company_name or client.contact_email }}</title>
+<style>
+:root{
+  --bg: #050A1F; --bg-raise: #0A1130; --amber: #FFC000;
+  --ink-100: rgba(244,246,252,1); --ink-70: rgba(244,246,252,.7); --ink-60: rgba(244,246,252,.6);
+  --rule-20: rgba(244,246,252,.2); --rule-08: rgba(244,246,252,.08);
+  --red: #E0604F; --green: #5FBF8F;
+  --font-head: "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+body{ background: var(--bg); color: var(--ink-60); font-family: var(--font-mono);
+  font-size: 14px; line-height: 1.7; padding: 56px 24px 120px; }
+h1,h2{ font-family: var(--font-head); font-weight: 700; color: var(--ink-100);
+  text-transform: uppercase; letter-spacing: .02em; line-height: 1.05; }
+h1{ font-size: 40px; } h2{ font-size: 20px; margin-bottom: 6px; }
+.wrap{ max-width: 900px; margin: 0 auto; }
+.logo{ font-family: var(--font-head); font-weight: 700; font-size: 18px; color: var(--ink-100);
+  text-transform: uppercase; letter-spacing: .06em; }
+.logo b{ color: var(--amber); }
+.meta{ font-size: 12px; color: var(--ink-60); margin: 6px 0 40px; }
+section{ margin-bottom: 52px; }
+.card{ background: var(--bg-raise); border: 1px solid var(--rule-08); border-radius: 16px; padding: 22px 24px; }
+.kpis{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+.kpi{ background: var(--bg-raise); border: 1px solid var(--rule-08); border-radius: 14px; padding: 14px 16px; }
+.kpi b{ display: block; font-family: var(--font-head); font-size: 24px; color: var(--ink-100); }
+.kpi span{ font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+ol.actions{ list-style: none; counter-reset: n; }
+ol.actions li{ counter-increment: n; display: flex; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--rule-08); color: var(--ink-70); }
+ol.actions li::before{ content: counter(n, decimal-leading-zero); font-family: var(--font-head);
+  font-size: 20px; color: var(--amber); }
+.tag{ font-size: 10px; letter-spacing: .08em; color: var(--amber); display: block; }
+img.chart{ max-width: 100%; border-radius: 12px; margin: 14px 0; display: block; }
+.narrate{ border-left: 2px solid var(--amber); padding: 4px 0 4px 14px; font-size: 13px;
+  color: var(--ink-70); margin-top: 12px; }
+table{ width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+th{ text-align: left; color: var(--ink-70); font-weight: 400; text-transform: uppercase;
+  font-size: 10.5px; letter-spacing: .06em; padding: 6px 10px; border-bottom: 1px solid var(--rule-20); }
+td{ padding: 6px 10px; border-bottom: 1px solid var(--rule-08); }
+td.num{ text-align: right; font-variant-numeric: tabular-nums; }
+.risk{ color: var(--red); } .good{ color: var(--green); }
+.small{ font-size: 11.5px; color: var(--ink-60); }
+footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px solid var(--rule-08); padding-top: 16px; }
+@media print{ body{ padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<span class="logo">Hubric<b>o</b>n</span>
+<h1>Margin Audit</h1>
+<p class="meta">{{ client.company_name or client.contact_email }} · prepared {{ today }} · run {{ run.id[:8] }}
+{%- if run.git_sha %} · engine {{ run.engine_version }} @ {{ run.git_sha }}{% endif %}</p>
+
+<section>
+  <div class="kpis">
+    <div class="kpi"><b>${{ "{:,.0f}".format(totals.revenue) }}</b><span>revenue, latest period</span></div>
+    <div class="kpi"><b class="{{ 'good' if totals.net >= 0 else 'risk' }}">${{ "{:,.0f}".format(totals.net) }}</b><span>true net margin</span></div>
+    <div class="kpi"><b class="{{ 'risk' if totals.skus_at_risk else '' }}">{{ totals.skus_at_risk }}</b><span>SKUs at stockout risk</span></div>
+    <div class="kpi"><b class="{{ 'risk' if totals.bleed > 0 else '' }}">${{ "{:,.0f}".format(totals.bleed) }}</b><span>ad bleed identified</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Directives</h2>
+    {% if actions %}
+    <ol class="actions">
+      {% for a in actions %}
+      <li><div><span class="tag">{{ a.tag }}</span>{{ a.text }}</div></li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p>No urgent directives this run — the follow-up sections carry the detail.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if chart_stockout %}
+<section>
+  <h2>Module 01 · Probabilistic inventory</h2>
+  <p>{{ inventory|length }} SKUs simulated against supplier lead times ({{ run.params.simulations }} Monte Carlo paths each).</p>
+  <img class="chart" src="data:image/png;base64,{{ chart_stockout }}" alt="Stockout risk by SKU">
+  <div class="narrate">Bars past the dashed line are SKUs more likely than 1-in-4 to sell out before a
+  reorder placed today could arrive. The reorder quantities in the table are sized for a
+  95% service level.</div>
+  <table>
+    <tr><th>SKU</th><th class="num">Stockout P</th><th class="num">Days cover</th><th class="num">On hand</th><th class="num">Inbound</th><th class="num">Reorder point</th><th class="num">Order qty</th></tr>
+    {% for r in inventory[:15] %}
+    <tr>
+      <td>{{ r.sku }}</td>
+      <td class="num {{ 'risk' if r.stockout_probability and r.stockout_probability|float >= 0.25 else '' }}">{{ "%.0f%%"|format(r.stockout_probability|float * 100) }}</td>
+      <td class="num">{{ r.days_of_cover }}</td>
+      <td class="num">{{ r.on_hand_units }}</td>
+      <td class="num">{{ r.inbound_units }}</td>
+      <td class="num">{{ r.reorder_point }}</td>
+      <td class="num">{{ r.reorder_qty }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</section>
+{% endif %}
+
+{% if chart_elasticity or elasticity %}
+<section>
+  <h2>Module 02 · Price elasticity</h2>
+  {% if chart_elasticity %}
+  <img class="chart" src="data:image/png;base64,{{ chart_elasticity }}" alt="Price vs demand">
+  <div class="narrate">ε below −1 means demand is elastic — price cuts grow revenue. Between −1 and 0 the
+  product is price-insensitive: a careful increase converts almost directly into margin.</div>
+  {% endif %}
+  {% set skipped = elasticity|rejectattr("status", "equalto", "ok")|list %}
+  {% if skipped %}
+  <p class="small">{{ skipped|length }} item(s) not scored —
+  {{ skipped|selectattr("status", "equalto", "insufficient_price_variation")|list|length }} had effectively one price all year
+  (that itself is a finding: no price testing has happened), the rest lacked enough monthly history.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if chart_ads or ads %}
+<section>
+  <h2>Module 03 · Bayesian ad efficiency</h2>
+  {% if chart_ads %}
+  <img class="chart" src="data:image/png;base64,{{ chart_ads }}" alt="Ad saturation curves">
+  <div class="narrate">The curve is the fitted response of attributed sales to spend. Where the amber line
+  (current spend) sits right of the red line (marginal break-even), the last dollars in are
+  buying less than a dollar back.</div>
+  {% endif %}
+  {% for r in ads if r.bleed_terms %}
+  {% if loop.first %}
+  <table>
+    <tr><th>Campaign</th><th>Search term</th><th class="num">Spend, $0 sales</th><th class="num">Clicks</th></tr>
+  {% endif %}
+    {% for t in r.bleed_terms[:5] %}
+    <tr><td>{{ r.campaign_name }}</td><td>{{ t.search_term }}</td><td class="num risk">${{ t.spend }}</td><td class="num">{{ t.clicks }}</td></tr>
+    {% endfor %}
+  {% if loop.last %}</table>{% endif %}
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if chart_margin %}
+<section>
+  <h2>Module 04 · True net margin</h2>
+  <img class="chart" src="data:image/png;base64,{{ chart_margin }}" alt="Margin decomposition">
+  <div class="narrate">Revenue split into Amazon fees, landed COGS, allocated ad spend, and what's actually
+  left. Ad allocation is proportional to revenue share within the period.</div>
+</section>
+{% endif %}
+
+<footer>
+  Hubricon Quantitative · methodology: Monte Carlo lead-time demand (lognormal lead times, gamma-Poisson demand),
+  log-log OLS elasticity with traffic controls where available, Hill saturation fits for ad response.
+  Items without enough data are reported as such, never estimated. All models audited.
+</footer>
+
+</div>
+</body>
+</html>

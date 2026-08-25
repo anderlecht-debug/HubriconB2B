@@ -2,3 +2,5 @@ node_modules
 scripts
 supabase
 .env.example
+engine
+reports

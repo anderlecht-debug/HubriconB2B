@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "stripe:setup": "node scripts/stripe-setup.mjs"
+    "stripe:setup": "node scripts/stripe-setup.mjs",
+    "new-client": "node scripts/new-client.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

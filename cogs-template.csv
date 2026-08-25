@@ -1,0 +1,2 @@
+sku,asin,product_name,unit_cost_usd,inbound_freight_per_unit_usd,packaging_per_unit_usd,other_cost_per_unit_usd,supplier_lead_time_days,notes
+EXAMPLE-001,B0EXAMPLE1,Example Widget 2-Pack,4.20,0.65,0.18,0.00,45,"Delete this row - example only. Lead time = PO placed to FBA check-in."

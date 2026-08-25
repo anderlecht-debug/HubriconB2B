@@ -1,0 +1,4 @@
+(Parent) ASIN,(Child) ASIN,Title,Sessions - Total,Page Views - Total,Featured Offer (Buy Box) Percentage,Units Ordered,Ordered Product Sales,Total Order Items,Unit Session Percentage
+B0PARENT01,B0CHILD001,"Widget, Blue 2-Pack","1,204","1,890",92.5%,310,"US$6,193.90",290,25.75%
+B0PARENT01,B0CHILD002,"Widget, Red 2-Pack",884,"1,232",88.1%,190,"US$3,791.10",180,21.49%
+B0PARENT02,B0CHILD003,Gadget Pro,455,610,95.0%,72,"US$2,231.28",70,15.82%
