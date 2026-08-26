@@ -119,6 +119,22 @@ input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
 .sim-out .o b.pos{ color: var(--ok); } .sim-out .o b.neg{ color: var(--serious); }
 .sim-out .o span{ font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-60); }
 .sim-warn{ margin-top: 10px; font-size: 11.5px; color: var(--serious); display: none; }
+/* briefing card */
+.brief-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.brief-headline{ font-family: var(--font-head); font-size: 22px; color: var(--ok); font-variant-numeric: tabular-nums; }
+.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 14px; overflow: hidden; background: var(--bg-raise); }
+.video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.tldr{ font-size: 13.5px; color: var(--ink-70); margin-top: 14px; max-width: 72ch; }
+/* delta strip */
+.kpi i{ font-style: normal; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.kpi i.up{ color: var(--ok); } .kpi i.down{ color: var(--serious); }
+/* evidence appendix */
+details.card summary{ cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+details.card summary::-webkit-details-marker{ display: none; }
+details.card summary::after{ content: "+"; font-family: var(--font-head); font-size: 18px; color: var(--amber); }
+details.card[open] summary::after{ content: "−"; }
+details.card summary h2{ margin-bottom: 0; }
+details.card .scroll{ margin-top: 14px; }
 table{ width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 560px; }
 th{ text-align: left; color: var(--ink-70); font-weight: 400; text-transform: uppercase; font-size: 10px;
   letter-spacing: .07em; padding: 7px 10px; border-bottom: 1px solid var(--rule-20); }
@@ -146,7 +162,7 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
   <!-- login -->
   <div id="login" class="login-box">
     <h1>Client Portal</h1>
-    <p>Enter the email your workspace was set up with — we'll send a one-time sign-in link. No passwords.</p>
+    <p>Enter the email your workspace was set up with — we'll send a one-time sign-in link. No passwords, and you'll stay signed in on this device.</p>
     <div class="login-row">
       <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
       <button class="primary" id="send">Send link</button>
@@ -158,17 +174,31 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
   <div id="app" class="hidden">
     <h1 style="margin-bottom:18px">Your numbers</h1>
 
-    <div class="kpis" id="kpis"></div>
+    <div class="card" id="brief-card" style="display:none">
+      <div class="brief-head">
+        <h2 id="brief-title">Your briefing</h2>
+        <span class="brief-headline" id="brief-headline"></span>
+      </div>
+      <div class="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe></div>
+      <p class="tldr" id="brief-tldr"></p>
+    </div>
 
-    <div class="card" id="alerts-card" style="display:none">
-      <h2>Watch alerts</h2>
-      <p class="hint" style="margin-bottom:6px">The models sweep your catalog automatically — this is what they flagged.</p>
-      <div id="alerts"></div>
+    <div class="kpis">
+      <div class="kpi"><b id="d-net">—</b><span id="d-net-s">net profit, latest period</span></div>
+      <div class="kpi"><b id="d-rev">—</b><span id="d-rev-s">revenue, latest period</span></div>
+      <div class="kpi"><b id="d-pct">—</b><span>blended net margin</span></div>
+      <div class="kpi"><b class="good" id="d-measured">$0</b><span>measured impact to date</span></div>
     </div>
 
     <div class="card" id="review-card">
       <h2>Directives awaiting your review</h2>
       <div id="review"></div>
+    </div>
+
+    <div class="card" id="alerts-card" style="display:none">
+      <h2>Watch alerts</h2>
+      <p class="hint" style="margin-bottom:6px">The models sweep your catalog automatically — this is what they flagged.</p>
+      <div id="alerts"></div>
     </div>
 
     <div class="card" id="sim-card" style="display:none">
@@ -231,34 +261,36 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
       </table></div>
     </div>
 
-    <div class="card">
-      <h2>True net margin — latest period</h2>
+    <p class="hint" style="margin:26px 0 10px">The evidence — the tables behind every number above, when you want to verify.</p>
+
+    <details class="card evidence">
+      <summary><h2>True net margin — latest period</h2></summary>
       <div class="scroll"><table id="margin">
         <tr><th>SKU</th><th class="num">Revenue</th><th class="num">Amazon fees</th><th class="num">COGS</th><th class="num">Ads</th><th class="num">Net</th><th class="num">Net %</th></tr>
       </table></div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Inventory risk</h2>
+    <details class="card evidence">
+      <summary><h2>Inventory risk</h2></summary>
       <div class="scroll"><table id="inv">
         <tr><th>SKU</th><th class="num">Stockout P</th><th class="num">Days cover</th><th class="num">Reorder point</th><th class="num">Order qty</th></tr>
       </table></div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Price elasticity</h2>
+    <details class="card evidence">
+      <summary><h2>Price elasticity</h2></summary>
       <div class="scroll"><table id="elast">
         <tr><th>Item</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th>Read</th></tr>
       </table></div>
-    </div>
+    </details>
 
-    <div class="card">
-      <h2>Price tests</h2>
-      <p class="hint" style="margin-bottom:8px">Deliberate, tracked price moves — Buy Box share watched so suppression gets caught in days, not quarters.</p>
+    <details class="card evidence">
+      <summary><h2>Price tests</h2></summary>
+      <p class="hint" style="margin:10px 0 8px">Deliberate, tracked price moves — Buy Box share watched so suppression gets caught in days, not quarters.</p>
       <div class="scroll"><table id="ptests">
         <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
       </table></div>
-    </div>
+    </details>
 
     <footer>Your data is yours: request a complete export of everything we hold — raw files, tables, results — at any time, free. That's policy, not a favor.</footer>
   </div>
@@ -274,28 +306,59 @@ const PORTAL_URL = location.origin + "/portal";
 const $ = (s, el) => (el ?? document).querySelector(s);
 const money = (v) => v == null ? "—" : "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
 
-/* ── session ── */
-function saveSession(h){
-  sessionStorage.setItem("hubricon_session", JSON.stringify({
-    access_token: h.get("access_token"),
-    expires_at: Number(h.get("expires_at") || 0),
-  }));
+/* ── session: localStorage + refresh-token renewal = one magic link per device ── */
+function storeSession(s){
+  try { localStorage.setItem("hubricon_session", JSON.stringify(s)); } catch {}
 }
 function session(){
   try {
-    const s = JSON.parse(sessionStorage.getItem("hubricon_session"));
-    if (s && s.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 30000)) return s;
+    const s = JSON.parse(localStorage.getItem("hubricon_session"));
+    if (s && s.access_token) return s;
   } catch {}
   return null;
 }
+function clearSession(){ try { localStorage.removeItem("hubricon_session"); } catch {} }
+function sessionFresh(s){ return s && (!s.expires_at || s.expires_at * 1000 > Date.now() + 60000); }
+
+async function ensureSession(){
+  const s = session();
+  if (!s) return null;
+  if (sessionFresh(s)) return s;
+  if (!s.refresh_token){ clearSession(); return null; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, "content-type": "application/json" },
+      body: JSON.stringify({ refresh_token: s.refresh_token }),
+    });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    const renewed = {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token || s.refresh_token,
+      expires_at: d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600),
+    };
+    storeSession(renewed);
+    return renewed;
+  } catch {
+    clearSession();
+    return null;
+  }
+}
+
 if (location.hash.includes("access_token=")){
-  saveSession(new URLSearchParams(location.hash.slice(1)));
+  const h = new URLSearchParams(location.hash.slice(1));
+  storeSession({
+    access_token: h.get("access_token"),
+    refresh_token: h.get("refresh_token") || null,
+    expires_at: Number(h.get("expires_at") || 0),
+  });
   history.replaceState(null, "", location.pathname);
 }
 
 /* ── api ── */
 async function rest(path, options){
-  const s = session();
+  const s = await ensureSession();
   const res = await fetch(`${SUPABASE_URL}${path}`, {
     ...options,
     headers: {
@@ -305,7 +368,7 @@ async function rest(path, options){
       ...(options?.headers ?? {}),
     },
   });
-  if (res.status === 401){ sessionStorage.removeItem("hubricon_session"); showLogin(); throw new Error("signed out"); }
+  if (res.status === 401){ clearSession(); showLogin(); throw new Error("signed out"); }
   if (!res.ok) throw new Error(`${path} failed (${res.status})`);
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -329,13 +392,13 @@ $("#send").addEventListener("click", async () => {
       body: JSON.stringify({ email, create_user: false }),
     });
     if (!res.ok) throw new Error();
-    showLogin("Link sent — check your email (it can take a minute).");
+    showLogin("Link sent — check your email (first time? it can land in spam — search “Hubricon”).");
   } catch {
     showLogin("Couldn't send the link. Check the address, or reply to your Hubricon email for access.", true);
   }
   $("#send").disabled = false;
 });
-$("#signout").addEventListener("click", () => { sessionStorage.removeItem("hubricon_session"); showLogin(); });
+$("#signout").addEventListener("click", () => { clearSession(); showLogin(); });
 
 /* ── workspace ── */
 function statusBadge(s){ return `<span class="state ${s}">${s}</span>`; }
@@ -364,12 +427,24 @@ async function load(){
   $("#who").classList.remove("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, runs, ptests, alerts] = await Promise.all([
+  const [directives, runs, ptests, alerts, briefs] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
     rest("/rest/v1/model_runs?select=id,started_at&status=eq.succeeded&order=started_at.desc&limit=1"),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
     rest("/rest/v1/alerts?select=*&order=created_at.desc&limit=20"),
+    rest("/rest/v1/briefings?select=*&order=created_at.desc&limit=1"),
   ]);
+
+  if (briefs.length){
+    const b = briefs[0];
+    $("#brief-card").style.display = "";
+    $("#brief-title").textContent = b.title || "Your briefing";
+    $("#brief-headline").textContent = b.headline || "";
+    $("#brief-tldr").textContent = b.tldr || "";
+    const frame = $("#brief-frame");
+    const src = `https://www.loom.com/embed/${b.video_id}?hide_owner=true&hideEmbedTopBar=true&hide_share=true`;
+    if (frame.src !== src) frame.src = src;
+  }
 
   const ac = $("#alerts");
   ac.innerHTML = "";
@@ -400,10 +475,7 @@ async function load(){
 
   const measured = directives.reduce((t, d) => t + Number(d.measured_impact_usd || 0), 0);
   const awaiting = directives.filter((d) => d.status === "issued");
-  $("#kpis").innerHTML = `
-    <div class="kpi"><b class="good">${money(measured)}</b><span>measured impact to date</span></div>
-    <div class="kpi"><b>${directives.length}</b><span>directives issued in total</span></div>
-    <div class="kpi"><b class="${awaiting.length ? "warn" : ""}">${awaiting.length}</b><span>awaiting your review</span></div>`;
+  $("#d-measured").textContent = money(measured);
 
   const review = $("#review");
   review.innerHTML = awaiting.length ? "" : `<p class="hint">Nothing waiting — you're fully up to date.</p>`;
@@ -443,6 +515,30 @@ async function load(){
     rest(`/rest/v1/ad_efficiency_results?select=*&${runFilter}&status=eq.ok`),
   ]);
   setupSimulator(margins, elast, adFits, inv);
+
+  /* "since last time" delta strip from the two latest margin periods */
+  const periods = [...new Set(margins.map((m) => m.period_start))].sort();
+  if (periods.length){
+    const totals = (p) => {
+      const rows = margins.filter((m) => m.period_start === p);
+      const rev = rows.reduce((t, m) => t + Number(m.revenue || 0), 0);
+      const net = rows.reduce((t, m) => t + Number(m.net_margin || 0), 0);
+      return { rev, net };
+    };
+    const cur = totals(periods[periods.length - 1]);
+    const prev = periods.length >= 2 ? totals(periods[periods.length - 2]) : null;
+    const delta = (now, before) => {
+      if (before == null) return "";
+      const d = now - before;
+      return ` <i class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"} ${money(Math.abs(d))} vs prior</i>`;
+    };
+    $("#d-net").textContent = money(cur.net);
+    $("#d-net").className = cur.net >= 0 ? "good" : "warn";
+    $("#d-net-s").innerHTML = "net profit, latest period" + delta(cur.net, prev?.net);
+    $("#d-rev").textContent = money(cur.rev);
+    $("#d-rev-s").innerHTML = "revenue, latest period" + delta(cur.rev, prev?.rev);
+    $("#d-pct").textContent = cur.rev > 0 ? (cur.net / cur.rev * 100).toFixed(1) + "%" : "—";
+  }
 
   const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
   const mt = $("#margin");
@@ -595,8 +691,10 @@ function setupSimulator(margins, elast, adFits, inv){
     (priceSkus.length || adFits.length || invSkus.length) ? "" : "none";
 }
 
-if (session()) load().catch(() => {});
-else showLogin();
+(async () => {
+  if (await ensureSession()) load().catch(() => {});
+  else showLogin();
+})();
 </script>
 </body>
 </html>

@@ -24,6 +24,7 @@ from . import __version__
 from . import db as dbmod
 from . import storage
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
+from .briefing import build_script, parse_loom_id, period_deltas
 from .directives import draft_directives
 from .ingest import PARSERS
 from .notify import alert_email_body, email_configured, send_email
@@ -387,6 +388,54 @@ def cmd_report(args):
     print(f"Report: {path}")
 
 
+def cmd_script(args):
+    from datetime import date
+    from .config import REPO_ROOT
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], None)
+    margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+    elasticity = db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .neq("status", "draft").order("created_at", desc=True).limit(20).execute().data)
+    alerts = (db.table("alerts").select("*").eq("client_id", client["id"])
+              .order("created_at", desc=True).limit(10).execute().data)
+    ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in directives)
+
+    first_name = (client.get("contact_name") or "").split(" ")[0]
+    script = build_script(
+        client["company_name"] or client["contact_email"], first_name,
+        period_deltas(margins), directives, alerts, elasticity,
+        ledger_measured, len(directives),
+    )
+    folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"script-{date.today().isoformat()}.md"
+    path.write_text(script, encoding="utf-8")
+    print(script)
+    print(f"\nSaved: {path}")
+
+
+def cmd_brief(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    video_id = parse_loom_id(args.video)
+    if not video_id:
+        sys.exit(f"Couldn't read a Loom video id from {args.video!r} — paste the share URL.")
+    run = _latest_run(db, client["id"], None) if not args.no_run else None
+    row = {
+        "client_id": client["id"],
+        "run_id": run["id"] if run else None,
+        "video_id": video_id,
+        "title": args.title,
+        "tldr": args.tldr,
+        "headline": args.headline,
+    }
+    db.table("briefings").insert(row).execute()
+    print(f"Briefing published to the portal for {client['company_name'] or client['contact_email']}.")
+
+
 def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
     """Ingest -> run -> draft -> alert for one client. Returns digest facts."""
     summary = {"client": client["company_name"] or client["contact_email"],
@@ -527,6 +576,19 @@ def main():
     p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
     p.add_argument("--notes", help="how the measurement was made")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("script", help="generate the briefing narration script from the latest run")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_script)
+
+    p = sub.add_parser("brief", help="publish a recorded Loom briefing to the client portal")
+    p.add_argument("client")
+    p.add_argument("--video", required=True, help="Loom share URL or video id")
+    p.add_argument("--tldr", help="3-4 sentence summary shown under the video")
+    p.add_argument("--headline", help="one headline stat, e.g. '+$9,200 vs July'")
+    p.add_argument("--title", help="briefing title (default shown as 'Your briefing')")
+    p.add_argument("--no-run", action="store_true", help="don't link the latest model run")
+    p.set_defaults(fn=cmd_brief)
 
     p = sub.add_parser("sweep", help="always-on pass over every active client: ingest, run, draft, alert")
     p.add_argument("--client", help="sweep just this client")
