@@ -1,8 +1,14 @@
-from hubricon_engine.directives import draft_directives
+from hubricon_engine.directives import (
+    branded_spend,
+    draft_directives,
+    resolve_brand_terms,
+)
 
 INVENTORY = [
-    {"sku": "RISKY", "stockout_probability": 0.62, "reorder_qty": 740, "reorder_point": 690, "lead_time_days": 38},
-    {"sku": "SAFE", "stockout_probability": 0.05, "reorder_qty": 100, "reorder_point": 90, "lead_time_days": 30},
+    {"sku": "RISKY", "stockout_probability": 0.62, "reorder_qty": 740, "reorder_point": 690,
+     "lead_time_days": 38, "daily_velocity_mean": 10.0, "on_hand_units": 400, "inbound_units": 0},
+    {"sku": "SAFE", "stockout_probability": 0.05, "reorder_qty": 100, "reorder_point": 90,
+     "lead_time_days": 30, "daily_velocity_mean": 5.0, "on_hand_units": 300, "inbound_units": 0},
 ]
 ADS = [
     {"campaign_name": "Over", "status": "ok", "current_spend": 90.0, "breakeven_spend": 60.0,
@@ -10,48 +16,82 @@ ADS = [
     {"campaign_name": "Fine", "status": "ok", "current_spend": 40.0, "breakeven_spend": 60.0, "bleed_terms": []},
 ]
 ELASTICITY = [
-    {"level": "sku", "item_id": "INELASTIC", "status": "ok", "elasticity": -0.5},
-    {"level": "sku", "item_id": "ELASTIC", "status": "ok", "elasticity": -1.9},
+    {"level": "sku", "item_id": "INELASTIC", "status": "ok", "elasticity": -0.5, "details": {}},
+    {"level": "sku", "item_id": "RISKY", "status": "ok", "elasticity": -2.0, "details": {"ci95": [-2.4, -1.6]}},
     {"level": "sku", "item_id": "FLAT", "status": "insufficient_price_variation", "elasticity": None},
 ]
 MARGINS = [
-    {"sku": "INELASTIC", "period_start": "2026-07-01", "revenue": 10000.0, "net_margin": 2000.0},
-    {"sku": "LOSER", "period_start": "2026-07-01", "revenue": 3000.0, "net_margin": -450.0},
-    {"sku": "LOSER", "period_start": "2026-06-01", "revenue": 3200.0, "net_margin": -300.0},  # older period ignored
+    # latest period rows carry units + cogs so directives can be dollar-exact
+    {"sku": "INELASTIC", "period_start": "2026-07-01", "units": 100, "revenue": 10000.0,
+     "amazon_fees": 1500.0, "cogs": 2000.0, "net_margin": 2000.0},
+    {"sku": "RISKY", "period_start": "2026-07-01", "units": 100, "revenue": 2000.0,
+     "amazon_fees": 300.0, "cogs": 500.0, "net_margin": 400.0},
+    {"sku": "LOSER", "period_start": "2026-07-01", "units": 30, "revenue": 3000.0,
+     "amazon_fees": 900.0, "cogs": 1200.0, "net_margin": -450.0},
+    {"sku": "LOSER", "period_start": "2026-06-01", "units": 32, "revenue": 3200.0,
+     "amazon_fees": 940.0, "cogs": 1260.0, "net_margin": -300.0},
+]
+SEARCH_TERMS = [
+    {"search_term": "acme widget 2 pack", "spend": 80.0, "sales_7d": 400.0,
+     "period_start": "2026-07-01", "period_end": "2026-07-31"},
+    {"search_term": "acme", "spend": 45.0, "sales_7d": 300.0,
+     "period_start": "2026-07-01", "period_end": "2026-07-31"},
+    {"search_term": "kitchen widget", "spend": 200.0, "sales_7d": 500.0,
+     "period_start": "2026-07-01", "period_end": "2026-07-31"},
+    {"search_term": "acme branded zero sale", "spend": 60.0, "sales_7d": 0.0,
+     "period_start": "2026-07-01", "period_end": "2026-07-31"},   # bleed's territory, excluded
 ]
 
 
-def test_drafts_cover_all_modules_and_thresholds():
-    drafts = draft_directives(INVENTORY, ADS, ELASTICITY, MARGINS)
-    by_module = {}
-    for d in drafts:
-        by_module.setdefault(d["module"], []).append(d)
-
-    assert [d for d in by_module["inventory"] if "RISKY" in d["action_text"]]
-    assert not any("SAFE" in d["action_text"] for d in drafts)  # below alert threshold
-
-    ad_texts = " ".join(d["action_text"] for d in by_module["advertising"])
-    assert "bleed" in ad_texts and "Over" in ad_texts
-    assert "Fine" not in ad_texts  # under break-even, no trim directive
-
-    pricing = by_module["pricing"]
-    assert len(pricing) == 1 and "INELASTIC" in pricing[0]["action_text"]  # elastic + flat excluded
-
-    assert [d for d in by_module["margin"] if "LOSER" in d["action_text"]]
+def _draft(**kw):
+    return draft_directives(INVENTORY, ADS, ELASTICITY, MARGINS, **kw)
 
 
-def test_expected_impacts_are_computed_honestly():
-    drafts = draft_directives(INVENTORY, ADS, ELASTICITY, MARGINS)
-    bleed = next(d for d in drafts if "bleed" in d["action_text"])
-    assert bleed["expected_impact_usd"] == 100.0
-    trim = next(d for d in drafts if "Trim" in d["action_text"])
-    assert trim["expected_impact_usd"] == 30.0 * 30  # excess/day over the 30-day horizon
-    price = next(d for d in drafts if d["module"] == "pricing")
-    assert price["expected_impact_usd"] == 300.0  # 3% of $10k latest revenue
-    stockout = next(d for d in drafts if d["module"] == "inventory")
-    assert stockout["expected_impact_usd"] is None  # not honestly computable -> stays empty
+def test_inventory_directive_is_a_wire_instruction():
+    d = next(x for x in _draft() if x["module"] == "inventory")
+    # 740 units at $5/unit landed (cogs 500 / 100 units) = $3,700
+    assert "Wire $3,700" in d["action_text"]
+    assert "740 units of RISKY" in d["action_text"]
+    assert " by " in d["action_text"]                 # a real calendar date
+    assert d["expected_impact_usd"] is None           # avoided stockout not claimed
+    assert not any("SAFE" in x["action_text"] for x in _draft())
 
 
-def test_ranked_most_severe_first():
-    drafts = draft_directives(INVENTORY, ADS, ELASTICITY, MARGINS)
+def test_pricing_directive_is_exact_with_destination_and_range():
+    texts = [x["action_text"] for x in _draft() if x["module"] == "pricing"]
+    exact = next(t for t in texts if "RISKY" in t)
+    assert "$20.00 → $19.00" in exact                 # -5% cap toward the $11.76 optimum
+    assert "optimum $11.76" in exact
+    assert "95% range" in exact
+    inelastic = next(t for t in texts if "INELASTIC" in t)
+    assert "$100.00 → $103.00" in inelastic           # +3% bounded step, computed dollars
+    assert not any("FLAT" in t for t in texts)
+
+
+def test_inelastic_with_cogs_carries_computed_dollars():
+    d = next(x for x in _draft() if x["module"] == "pricing" and "INELASTIC" in x["action_text"])
+    assert d["expected_impact_usd"] is not None and d["expected_impact_usd"] > 0
+
+
+def test_branded_spend_detector_and_directive():
+    spend, n = branded_spend(SEARCH_TERMS, ["acme"])
+    assert spend == 125.0 and n == 2                  # zero-sale branded term excluded
+    drafts = _draft(search_terms=SEARCH_TERMS, brand_terms=["acme"])
+    d = next(x for x in drafts if "your own brand" in x["action_text"])
+    assert "$125" in d["action_text"] and "25–60%" in d["action_text"]
+    assert d["expected_impact_usd"] == 50.0           # 0.4 midpoint
+    # no brand terms -> no directive
+    assert not any("your own brand" in x["action_text"] for x in _draft())
+
+
+def test_resolve_brand_terms_prefers_explicit_then_derives():
+    assert resolve_brand_terms({"brand_terms": "Acme, Acme Labs", "company_name": "X"}) == ["acme", "acme labs"]
+    assert resolve_brand_terms({"brand_terms": None, "company_name": "Acme Goods LLC"}) == ["acme", "goods"]
+
+
+def test_bleed_trim_and_margin_loser_survive():
+    drafts = _draft()
+    texts = " ".join(d["action_text"] for d in drafts)
+    assert "zero attributed sales" in texts and "Over" in texts
+    assert "LOSER sold at a loss" in texts
     assert drafts == sorted(drafts, key=lambda d: d["score"], reverse=True)

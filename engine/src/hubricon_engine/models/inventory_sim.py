@@ -17,6 +17,18 @@ DEFAULT_LEAD_TIME_DAYS = 45
 FALLBACK_RATE_CV = 0.35
 SERVICE_LEVEL = 0.95
 TARGET_COVER_EXTRA_DAYS = 30
+Z_95 = 1.645
+LEAD_TIME_CV = 0.2  # same lognormal lead-time assumption the simulation uses
+
+
+def closed_form_rop(mean_rate: float, std_rate: float, lead: float) -> float:
+    """Textbook variance-aware reorder point as a cross-check on the Monte
+    Carlo: ROP = mu_d*mu_L + Z*sqrt(mu_L*sigma_d^2 + mu_d^2*sigma_L^2),
+    Z = 1.645 (95% service). Daily demand variance combines Poisson noise
+    with rate uncertainty (sigma_d^2 = mu_d + std_rate^2); sigma_L = 0.2*mu_L."""
+    var_d = mean_rate + std_rate**2
+    sd_l = LEAD_TIME_CV * lead
+    return mean_rate * lead + Z_95 * (lead * var_d + (mean_rate * sd_l) ** 2) ** 0.5
 
 
 def _daily_rates(rows: list[dict], units_key: str) -> list[float]:
@@ -84,6 +96,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000) -> list[
                     "demand_percentiles": {
                         f"p{p}": num(float(np.quantile(demand, p / 100)), 1) for p in (5, 25, 50, 75, 95)
                     },
+                    "closed_form_rop": num(closed_form_rop(mean_rate, std_rate, lead), 1),
                     "observed_periods": len(rates),
                     "lead_time_assumed": sku not in cogs_by_sku
                     or cogs_by_sku[sku].get("supplier_lead_time_days") is None,

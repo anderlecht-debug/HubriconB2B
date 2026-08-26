@@ -25,7 +25,7 @@ from . import db as dbmod
 from . import storage
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_script, parse_loom_id, period_deltas
-from .directives import draft_directives
+from .directives import draft_directives, resolve_brand_terms
 from .ingest import PARSERS
 from .notify import alert_email_body, email_configured, send_email
 from .price_tests import (
@@ -226,8 +226,10 @@ def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
     rows are untouched. Returns the inserted rows (possibly empty)."""
     results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
+    search_terms = db.table("ppc_search_terms").select("*").eq("client_id", client["id"]).execute().data
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
-                              results["elasticity_results"], results["margin_results"])
+                              results["elasticity_results"], results["margin_results"],
+                              search_terms=search_terms, brand_terms=resolve_brand_terms(client))
     db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run_id).eq("status", "draft").execute()
     if not drafts:
         return []
@@ -386,6 +388,14 @@ def cmd_report(args):
     client = dbmod.resolve_client(db, args.client)
     path = generate(db, client, run_id=args.run, out_dir=args.out)
     print(f"Report: {path}")
+
+
+def cmd_brand(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    db.table("clients").update({"brand_terms": args.terms}).eq("id", client["id"]).execute()
+    terms = resolve_brand_terms({**client, "brand_terms": args.terms})
+    print(f"Brand terms for {client['company_name'] or client['contact_email']}: {', '.join(terms)}")
 
 
 def cmd_script(args):
@@ -576,6 +586,11 @@ def main():
     p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
     p.add_argument("--notes", help="how the measurement was made")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("brand", help="set a client's brand terms for cannibalization detection")
+    p.add_argument("client")
+    p.add_argument("--terms", required=True, help='comma-separated, e.g. "acme,acme labs"')
+    p.set_defaults(fn=cmd_brand)
 
     p = sub.add_parser("script", help="generate the briefing narration script from the latest run")
     p.add_argument("client")

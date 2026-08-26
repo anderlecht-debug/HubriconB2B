@@ -163,6 +163,19 @@ def test_stockout_probability_rises_with_lead_time():
     assert long["stockout_probability"] > 0.90
 
 
+def test_closed_form_rop_matches_formula_and_tracks_mc():
+    from hubricon_engine.models.inventory_sim import closed_form_rop
+
+    # mu_d=10, std_rate=2, L=40: ROP = 400 + 1.645*sqrt(40*(10+4) + (10*8)^2)
+    expected = 400 + 1.645 * (40 * 14 + 6400) ** 0.5
+    assert closed_form_rop(10.0, 2.0, 40.0) == pytest.approx(expected, abs=1e-6)
+
+    result = inventory_sim.run(_inventory_data(40), np.random.default_rng(7), simulations=8000)[0]
+    cf = result["details"]["closed_form_rop"]
+    # the analytic cross-check should be in the same neighborhood as the MC
+    assert cf == pytest.approx(result["reorder_point"], rel=0.35)
+
+
 def test_simulation_is_reproducible():
     a = inventory_sim.run(_inventory_data(40), np.random.default_rng(7), simulations=4000)[0]
     b = inventory_sim.run(_inventory_data(40), np.random.default_rng(7), simulations=4000)[0]
