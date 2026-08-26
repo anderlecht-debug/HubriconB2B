@@ -127,10 +127,9 @@ private intake page (no account needed):
    know what you pay for your product, and margin math is impossible
    without it. Estimates are fine — flag anything uncertain in notes.
 
-The upload page checks everything in as it arrives. Once the files
-land I'll confirm the same day, and you'll have your audit — a written
-report plus a recorded walkthrough of your numbers — within 5 business
-days.
+The upload page checks everything in as it arrives, and the models run
+the moment your last file lands. Your audit — a written report plus a
+recorded walkthrough of your numbers — is back within 24 hours.
 
 Best,
 Hubricon
