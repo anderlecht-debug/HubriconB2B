@@ -13,6 +13,7 @@
 """
 
 import argparse
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -22,8 +23,10 @@ import numpy as np
 from . import __version__
 from . import db as dbmod
 from . import storage
+from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .directives import draft_directives
 from .ingest import PARSERS
+from .notify import alert_email_body, email_configured, send_email
 from .price_tests import (
     DEFAULT_TEST_DAYS,
     buybox_warning,
@@ -90,19 +93,15 @@ def cmd_clients(_args):
         print(f"{r['id'][:8]}  {r['status']:<9} {r['company_name'] or '—':<28} {r['contact_email'] or ''}")
 
 
-def cmd_ingest(args):
-    db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    statuses = ["uploaded", "parsed", "failed"] if args.reparse else ["uploaded"]
+def _ingest_client(db, client: dict, reparse: bool = False, upload_id: str | None = None) -> tuple[int, int]:
+    """Parse this client's pending uploads; returns (parsed, failed)."""
+    statuses = ["uploaded", "parsed", "failed"] if reparse else ["uploaded"]
     q = db.table("uploads").select("*").eq("client_id", client["id"]).in_("status", statuses)
-    if args.upload_id:
-        q = q.eq("id", args.upload_id)
+    if upload_id:
+        q = q.eq("id", upload_id)
     uploads = q.order("created_at").execute().data
-    if not uploads:
-        print("Nothing to ingest.")
-        return
 
-    failures = 0
+    parsed = failures = 0
     for upload in uploads:
         label = f"{upload['report_type']} {upload['original_filename']}"
         try:
@@ -114,11 +113,21 @@ def cmd_ingest(args):
             db.table("uploads").update(
                 {"status": "parsed", "row_count": len(rows), "parse_error": None, "parsed_at": _now()}
             ).eq("id", upload["id"]).execute()
+            parsed += 1
             print(f"  parsed  {label}: {len(rows)} rows -> {table}")
         except (ReadError, IngestError) as err:
             failures += 1
             db.table("uploads").update({"status": "failed", "parse_error": str(err)}).eq("id", upload["id"]).execute()
             print(f"  FAILED  {label}: {err}", file=sys.stderr)
+    return parsed, failures
+
+
+def cmd_ingest(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    parsed, failures = _ingest_client(db, client, reparse=args.reparse, upload_id=args.upload_id)
+    if parsed == 0 and failures == 0:
+        print("Nothing to ingest.")
     if failures:
         sys.exit(f"{failures} upload(s) failed — fix the synonym maps and rerun with --reparse.")
 
@@ -132,14 +141,7 @@ def _pad(rows: list[dict], table: str) -> list[dict]:
     return [{c: row.get(c) for c in cols} for row in rows]
 
 
-def cmd_run(args):
-    db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    wanted = set(args.models.split(","))
-    unknown = wanted - {"margin", "inventory", "elasticity", "ads"}
-    if unknown:
-        sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))}")
-
+def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int) -> str:
     data = _load_data(db, client["id"])
     counts = {t: len(rows) for t, rows in data.items()}
     print(f"Data: {counts}")
@@ -151,14 +153,14 @@ def cmd_run(args):
                 "client_id": client["id"],
                 "engine_version": __version__,
                 "git_sha": _git_sha(),
-                "params": {"models": sorted(wanted), "simulations": args.simulations, "seed": args.seed},
+                "params": {"models": sorted(wanted), "simulations": simulations, "seed": seed},
             }
         )
         .execute()
         .data
     )
     run_id = run[0]["id"]
-    rng = np.random.default_rng(args.seed)
+    rng = np.random.default_rng(seed)
 
     try:
         avg_margin = None
@@ -167,7 +169,7 @@ def cmd_run(args):
             avg_margin = margin.average_margin(rows)
             _write_results(db, "margin_results", rows, run_id, client["id"])
         if "inventory" in wanted:
-            rows = inventory_sim.run(data, rng, simulations=args.simulations)
+            rows = inventory_sim.run(data, rng, simulations=simulations)
             _write_results(db, "inventory_sim_results", rows, run_id, client["id"])
         if "elasticity" in wanted:
             _write_results(db, "elasticity_results", elasticity.run(data), run_id, client["id"])
@@ -183,6 +185,16 @@ def cmd_run(args):
     db.table("model_runs").update({"status": "succeeded", "finished_at": _now()}).eq("id", run_id).execute()
     print(f"Run {run_id} succeeded.")
     return run_id
+
+
+def cmd_run(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    wanted = set(args.models.split(","))
+    unknown = wanted - {"margin", "inventory", "elasticity", "ads"}
+    if unknown:
+        sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))}")
+    return _run_models(db, client, wanted, args.simulations, args.seed)
 
 
 RESULT_KEYS = {
@@ -208,28 +220,34 @@ def _latest_run(db, client_id: str, run_id: str | None) -> dict:
     return rows[0]
 
 
-def cmd_directives(args):
-    db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    run = _latest_run(db, client["id"], args.run)
-    results = {t: db.table(t).select("*").eq("run_id", run["id"]).execute().data
+def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
+    """Regenerate this run's draft directives idempotently; issued/answered
+    rows are untouched. Returns the inserted rows (possibly empty)."""
+    results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"])
+    db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run_id).eq("status", "draft").execute()
     if not drafts:
-        print("No directives drafted — clean run.")
-        return
-
-    # regenerate this run's drafts idempotently; issued/answered rows are untouched
-    db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run["id"]).eq("status", "draft").execute()
+        return []
     rows = [{
         "client_id": client["id"],
-        "run_id": run["id"],
+        "run_id": run_id,
         "module": d["module"],
         "action_text": d["action_text"],
         "expected_impact_usd": d["expected_impact_usd"],
     } for d in drafts]
-    inserted = db.table("directives").insert(rows).execute().data
+    return db.table("directives").insert(rows).execute().data
+
+
+def cmd_directives(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], args.run)
+    inserted = _draft_for_run(db, client, run["id"])
+    if not inserted:
+        print("No directives drafted — clean run.")
+        return
 
     if args.issue:
         ids = [r["id"] for r in inserted]
@@ -369,6 +387,104 @@ def cmd_report(args):
     print(f"Report: {path}")
 
 
+def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
+    """Ingest -> run -> draft -> alert for one client. Returns digest facts."""
+    summary = {"client": client["company_name"] or client["contact_email"],
+               "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False}
+    summary["parsed"], summary["failed"] = _ingest_client(db, client)
+
+    has_data = bool(
+        db.table("sku_economics").select("id").eq("client_id", client["id"]).limit(1).execute().data
+        or db.table("asin_traffic").select("id").eq("client_id", client["id"]).limit(1).execute().data
+    )
+    if not has_data:
+        return summary
+
+    # previous run's inventory picture, for crossed/worsened comparison
+    prev_runs = (db.table("model_runs").select("id").eq("client_id", client["id"])
+                 .eq("status", "succeeded").order("started_at", desc=True).limit(1).execute().data)
+    prev_inventory = (
+        db.table("inventory_sim_results").select("*").eq("run_id", prev_runs[0]["id"]).execute().data
+        if prev_runs else []
+    )
+
+    run_id = _run_models(db, client, {"margin", "inventory", "elasticity", "ads"}, 20000, 42)
+    summary["ran"] = True
+    summary["drafts"] = len(_draft_for_run(db, client, run_id))
+
+    inventory = db.table("inventory_sim_results").select("*").eq("run_id", run_id).execute().data
+    margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
+    tests = db.table("price_tests").select("*").eq("client_id", client["id"]).execute().data
+
+    from datetime import timedelta
+    window = (datetime.now(timezone.utc) - timedelta(days=DEDUPE_DAYS)).isoformat()
+    recent = {a["message"] for a in
+              db.table("alerts").select("message").eq("client_id", client["id"])
+              .gte("created_at", window).execute().data}
+    fresh = dedupe(compute_alerts(inventory, prev_inventory, margins, tests), recent)
+    summary["alerts"] = len(fresh)
+    if not fresh:
+        return summary
+
+    emailed = False
+    if send_alerts and email_configured() and client.get("contact_email"):
+        emailed = send_email(
+            client["contact_email"],
+            f"Hubricon watch: {len(fresh)} alert(s) on your catalog",
+            alert_email_body(summary["client"], fresh),
+        )
+    summary["emailed"] = emailed
+    db.table("alerts").insert([
+        {**a, "client_id": client["id"], "run_id": run_id,
+         "emailed_at": _now() if emailed else None}
+        for a in fresh
+    ]).execute()
+    for a in fresh:
+        print(f"  ALERT [{a['severity']}] {a['message'][:90]}")
+    return summary
+
+
+def cmd_sweep(args):
+    db = dbmod.connect()
+    q = db.table("clients").select("*").in_("status", ["pending", "active"])
+    if args.client:
+        clients = [dbmod.resolve_client(db, args.client)]
+    else:
+        clients = q.execute().data
+    if not clients:
+        print("No active clients to sweep.")
+        return
+
+    digests = []
+    for client in clients:
+        print(f"== {client['company_name'] or client['contact_email']}")
+        try:
+            digests.append(_sweep_client(db, client, send_alerts=args.alert))
+        except Exception as err:
+            print(f"  SWEEP FAILED: {err}", file=sys.stderr)
+            digests.append({"client": client["company_name"] or client["contact_email"],
+                            "error": str(err)})
+
+    lines = [f"Hubricon sweep — {len(digests)} client(s):", ""]
+    for d in digests:
+        if "error" in d:
+            lines.append(f"  {d['client']}: FAILED — {d['error']}")
+        else:
+            lines.append(
+                f"  {d['client']}: {d['parsed']} file(s) parsed"
+                + (f", {d['failed']} FAILED" if d["failed"] else "")
+                + (f", models ran, {d['drafts']} draft directive(s) awaiting review, "
+                   f"{d['alerts']} alert(s)" + (" (emailed)" if d["emailed"] else "")
+                   if d["ran"] else ", no data yet")
+            )
+    digest = "\n".join(lines)
+    print("\n" + digest)
+
+    founder = os.environ.get("FOUNDER_EMAIL")
+    if args.alert and founder and email_configured():
+        send_email(founder, "Hubricon sweep digest", digest)
+
+
 def cmd_all(args):
     cmd_ingest(args)
     cmd_run(args)
@@ -411,6 +527,11 @@ def main():
     p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
     p.add_argument("--notes", help="how the measurement was made")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("sweep", help="always-on pass over every active client: ingest, run, draft, alert")
+    p.add_argument("--client", help="sweep just this client")
+    p.add_argument("--alert", action="store_true", help="send alert/digest emails (needs RESEND_API_KEY)")
+    p.set_defaults(fn=cmd_sweep)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")

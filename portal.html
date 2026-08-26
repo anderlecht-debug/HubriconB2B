@@ -94,6 +94,31 @@ input[type=email]{
 .state.approved, .state.done{ color: var(--ok); }
 .state.declined{ color: var(--serious); }
 .scroll{ overflow-x: auto; }
+/* alerts feed */
+.alert-row{ display: flex; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule-08); font-size: 13px; }
+.alert-row:last-child{ border-bottom: 0; }
+.sev{ flex-shrink: 0; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border-radius: 99px; padding: 2px 9px; border: 1px solid var(--rule-20); color: var(--ink-70); }
+.sev.critical{ color: var(--serious); border-color: hsl(8 72% 58% / .5); }
+.sev.warning{ color: var(--amber); border-color: hsl(45 100% 50% / .5); }
+.alert-row .when{ margin-left: auto; font-size: 10.5px; color: var(--ink-60); flex-shrink: 0; }
+/* scenario simulator */
+.sim{ border-top: 1px solid var(--rule-08); padding: 18px 0 6px; }
+.sim:first-of-type{ border-top: 0; padding-top: 4px; }
+.sim h3{ font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; color: var(--ink-100); text-transform: none; letter-spacing: 0; margin-bottom: 4px; }
+.sim .note{ font-size: 11px; color: var(--ink-60); margin-bottom: 10px; }
+.sim-row{ display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+select{
+  background: var(--bg-raise); border: 1px solid var(--rule-20); border-radius: 9px;
+  color: var(--ink-100); font-family: inherit; font-size: 12.5px; padding: 8px 10px; color-scheme: dark;
+}
+input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
+.sim-val{ font-size: 12px; color: var(--ink-100); font-variant-numeric: tabular-nums; min-width: 64px; }
+.sim-out{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.sim-out .o{ background: var(--bg-raise); border: 1px solid var(--rule-08); border-radius: 12px; padding: 10px 14px; }
+.sim-out .o b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: 21px; color: var(--ink-100); font-variant-numeric: tabular-nums; }
+.sim-out .o b.pos{ color: var(--ok); } .sim-out .o b.neg{ color: var(--serious); }
+.sim-out .o span{ font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-60); }
+.sim-warn{ margin-top: 10px; font-size: 11.5px; color: var(--serious); display: none; }
 table{ width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 560px; }
 th{ text-align: left; color: var(--ink-70); font-weight: 400; text-transform: uppercase; font-size: 10px;
   letter-spacing: .07em; padding: 7px 10px; border-bottom: 1px solid var(--rule-20); }
@@ -135,9 +160,67 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
 
     <div class="kpis" id="kpis"></div>
 
+    <div class="card" id="alerts-card" style="display:none">
+      <h2>Watch alerts</h2>
+      <p class="hint" style="margin-bottom:6px">The models sweep your catalog automatically — this is what they flagged.</p>
+      <div id="alerts"></div>
+    </div>
+
     <div class="card" id="review-card">
       <h2>Directives awaiting your review</h2>
       <div id="review"></div>
+    </div>
+
+    <div class="card" id="sim-card" style="display:none">
+      <h2>Scenario simulator</h2>
+      <p class="hint" style="margin-bottom:10px">Your fitted curves, live. Drag a lever — this is the same math as your audit, running on your numbers.</p>
+
+      <div class="sim" id="sim-price" style="display:none">
+        <h3>Price</h3>
+        <p class="note">Projected monthly profit if you move a SKU's price, from its measured demand curve.</p>
+        <div class="sim-row">
+          <select id="sp-sku" aria-label="SKU"></select>
+          <input type="range" id="sp-range" min="-15" max="15" step="1" value="0" aria-label="Price change %">
+          <span class="sim-val" id="sp-pct">+0%</span>
+        </div>
+        <div class="sim-out">
+          <div class="o"><b id="sp-price">—</b><span>new price</span></div>
+          <div class="o"><b id="sp-units">—</b><span>projected units / period</span></div>
+          <div class="o"><b id="sp-profit">—</b><span>profit change / period</span></div>
+          <div class="o"><b id="sp-range-out">—</b><span>95% range</span></div>
+        </div>
+        <p class="sim-warn" id="sp-warn">Price increases risk Buy Box suppression — on the retainer we step them and watch your share daily.</p>
+      </div>
+
+      <div class="sim" id="sim-ads" style="display:none">
+        <h3>Ad spend</h3>
+        <p class="note">Your campaign's fitted response curve: revenue and the return on the next dollar.</p>
+        <div class="sim-row">
+          <select id="sa-camp" aria-label="Campaign"></select>
+          <input type="range" id="sa-range" min="10" max="200" step="5" value="100" aria-label="Spend vs current %">
+          <span class="sim-val" id="sa-pct">100%</span>
+        </div>
+        <div class="sim-out">
+          <div class="o"><b id="sa-spend">—</b><span>spend</span></div>
+          <div class="o"><b id="sa-rev">—</b><span>projected ad revenue</span></div>
+          <div class="o"><b id="sa-mroas">—</b><span>marginal ROAS</span></div>
+        </div>
+        <p class="sim-warn" id="sa-warn">Past break-even: the next dollar here buys less than a dollar back.</p>
+      </div>
+
+      <div class="sim" id="sim-inv" style="display:none">
+        <h3>Reorder timing</h3>
+        <p class="note">Approximate stockout risk if you wait to place the next PO.</p>
+        <div class="sim-row">
+          <select id="si-sku" aria-label="SKU"></select>
+          <input type="range" id="si-range" min="0" max="30" step="1" value="0" aria-label="Days you wait">
+          <span class="sim-val" id="si-days">today</span>
+        </div>
+        <div class="sim-out">
+          <div class="o"><b id="si-prob">—</b><span>stockout probability</span></div>
+          <div class="o"><b id="si-cover">—</b><span>days of cover</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -281,11 +364,24 @@ async function load(){
   $("#who").classList.remove("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, runs, ptests] = await Promise.all([
+  const [directives, runs, ptests, alerts] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
     rest("/rest/v1/model_runs?select=id,started_at&status=eq.succeeded&order=started_at.desc&limit=1"),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
+    rest("/rest/v1/alerts?select=*&order=created_at.desc&limit=20"),
   ]);
+
+  const ac = $("#alerts");
+  ac.innerHTML = "";
+  $("#alerts-card").style.display = alerts.length ? "" : "none";
+  for (const a of alerts){
+    const row = document.createElement("div");
+    row.className = "alert-row";
+    row.innerHTML = `<span class="sev ${a.severity}">${a.severity}</span>
+      <span>${a.message}</span>
+      <span class="when">${(a.created_at || "").slice(0, 10)}</span>`;
+    ac.appendChild(row);
+  }
 
   const pt = $("#ptests");
   pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
@@ -340,11 +436,13 @@ async function load(){
 
   if (!runs.length) return;
   const runFilter = `run_id=eq.${runs[0].id}`;
-  const [margins, inv, elast] = await Promise.all([
+  const [margins, inv, elast, adFits] = await Promise.all([
     rest(`/rest/v1/margin_results?select=*&${runFilter}&order=revenue.desc`),
     rest(`/rest/v1/inventory_sim_results?select=*&${runFilter}&order=stockout_probability.desc`),
     rest(`/rest/v1/elasticity_results?select=*&${runFilter}&level=eq.sku`),
+    rest(`/rest/v1/ad_efficiency_results?select=*&${runFilter}&status=eq.ok`),
   ]);
+  setupSimulator(margins, elast, adFits, inv);
 
   const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
   const mt = $("#margin");
@@ -380,6 +478,121 @@ async function load(){
       <td class="num">${r.r_squared ?? "—"}</td><td>${read}</td>
     </tr>`);
   }
+}
+
+/* ── scenario simulator: client-side math on the fitted results ── */
+const money2 = (v) => "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+function normCdf(z){
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
+function setupSimulator(margins, elast, adFits, inv){
+  const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
+  const latestBySku = {};
+  for (const m of margins) if (m.period_start === latest) latestBySku[m.sku] = m;
+
+  /* price sim: needs an ok elasticity fit AND latest-period economics */
+  const priceSkus = elast.filter((e) => e.status === "ok" && latestBySku[e.item_id]
+    && Number(latestBySku[e.item_id].units) > 0 && Number(latestBySku[e.item_id].revenue) > 0);
+  if (priceSkus.length){
+    $("#sim-price").style.display = "";
+    const sel = $("#sp-sku");
+    sel.innerHTML = priceSkus.map((e) => `<option value="${e.item_id}">${e.item_id}</option>`).join("");
+    const update = () => {
+      const fit = priceSkus.find((e) => e.item_id === sel.value) ?? priceSkus[0];
+      const m = latestBySku[fit.item_id];
+      const dp = Number($("#sp-range").value) / 100;
+      $("#sp-pct").textContent = (dp >= 0 ? "+" : "") + Math.round(dp * 100) + "%";
+      const units = Number(m.units), revenue = Number(m.revenue);
+      const p0 = revenue / units;
+      const feesRate = Number(m.amazon_fees || 0) / revenue;
+      const unitCogs = m.cogs != null ? Number(m.cogs) / units : 0;
+      const ads = Number(m.ad_spend_allocated || 0);
+      const project = (e) => {
+        const nu = units * Math.pow(1 + dp, e);
+        const nr = p0 * (1 + dp) * nu;
+        return { nu, profit: nr * (1 - feesRate) - unitCogs * nu - ads };
+      };
+      const baseProfit = revenue * (1 - feesRate) - (m.cogs != null ? Number(m.cogs) : 0) - ads;
+      const mid = project(Number(fit.elasticity));
+      const ci = fit.details?.ci95;
+      const lo = ci ? project(Number(ci[1])).profit - baseProfit : null; /* more elastic bound */
+      const hi = ci ? project(Number(ci[0])).profit - baseProfit : null;
+      const d = mid.profit - baseProfit;
+      $("#sp-price").textContent = "$" + (p0 * (1 + dp)).toFixed(2);
+      $("#sp-units").textContent = Math.round(mid.nu).toLocaleString();
+      const pb = $("#sp-profit");
+      pb.textContent = (d >= 0 ? "+" : "−") + money2(Math.abs(d));
+      pb.className = d >= 0 ? "pos" : "neg";
+      $("#sp-range-out").textContent = ci
+        ? `${lo >= 0 ? "+" : "−"}${money2(Math.abs(lo))} … ${hi >= 0 ? "+" : "−"}${money2(Math.abs(hi))}` : "—";
+      $("#sp-warn").style.display = dp > 0.02 ? "block" : "none";
+    };
+    sel.addEventListener("change", update);
+    $("#sp-range").addEventListener("input", update);
+    update();
+  }
+
+  /* ad sim: fitted response curves */
+  if (adFits.length){
+    $("#sim-ads").style.display = "";
+    const sel = $("#sa-camp");
+    sel.innerHTML = adFits.map((a, i) => `<option value="${i}">${a.campaign_name}</option>`).join("");
+    const curve = (a, s) => {
+      const p = a.curve_params || {};
+      if (a.curve_model === "hill") return p.a * Math.pow(s, p.h) / (Math.pow(p.k, p.h) + Math.pow(s, p.h));
+      return p.a * Math.log1p((p.k ?? 1) * s);
+    };
+    const update = () => {
+      const a = adFits[Number(sel.value) || 0];
+      const mult = Number($("#sa-range").value) / 100;
+      $("#sa-pct").textContent = Math.round(mult * 100) + "%";
+      const s = Math.max(0.01, Number(a.current_spend) * mult);
+      const eps = Math.max(s * 1e-3, 0.01);
+      const mroas = (curve(a, s + eps) - curve(a, s - eps)) / (2 * eps);
+      $("#sa-spend").textContent = money2(s);
+      $("#sa-rev").textContent = money2(curve(a, s));
+      const mb = $("#sa-mroas");
+      mb.textContent = mroas.toFixed(2);
+      mb.className = mroas >= 1 ? "pos" : "neg";
+      $("#sa-warn").style.display = mroas < 1 ? "block" : "none";
+    };
+    sel.addEventListener("change", update);
+    $("#sa-range").addEventListener("input", update);
+    update();
+  }
+
+  /* reorder timing sim: normal approximation over delay + lead time */
+  const invSkus = inv.filter((r) => Number(r.daily_velocity_mean) > 0);
+  if (invSkus.length){
+    $("#sim-inv").style.display = "";
+    const sel = $("#si-sku");
+    sel.innerHTML = invSkus.map((r) => `<option value="${r.sku}">${r.sku}</option>`).join("");
+    const update = () => {
+      const r = invSkus.find((x) => x.sku === sel.value) ?? invSkus[0];
+      const wait = Number($("#si-range").value);
+      $("#si-days").textContent = wait === 0 ? "today" : `+${wait}d`;
+      const T = wait + Number(r.lead_time_days || 45);
+      const rate = Number(r.daily_velocity_mean), std = Number(r.daily_velocity_std || rate * 0.35);
+      const position = Number(r.on_hand_units || 0) + Number(r.inbound_units || 0);
+      const mu = rate * T;
+      const sigma = Math.sqrt(Math.max(1e-9, rate * T + Math.pow(std * T, 2)));
+      const p = 1 - normCdf((position - mu) / sigma);
+      const pb = $("#si-prob");
+      pb.textContent = (p * 100).toFixed(0) + "%";
+      pb.className = p >= 0.25 ? "neg" : "pos";
+      $("#si-cover").textContent = rate > 0 ? Math.round(position / rate) + "d" : "—";
+    };
+    sel.addEventListener("change", update);
+    $("#si-range").addEventListener("input", update);
+    update();
+  }
+
+  $("#sim-card").style.display =
+    (priceSkus.length || adFits.length || invSkus.length) ? "" : "none";
 }
 
 if (session()) load().catch(() => {});
