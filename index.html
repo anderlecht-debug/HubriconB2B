@@ -501,6 +501,36 @@ h1,h2,h3{
 .price-card li{ padding: 7px 0 7px 22px; position: relative; font-size: 13px; color: var(--ink-70); }
 .price-card li::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
 .price-card .btn{ align-self: flex-start; }
+.worth{ font-size: 12.5px; color: var(--ink-70); margin-top: -6px; }
+.worth em{ color: var(--amber); font-style: normal; }
+/* value stack: each component priced against what it replaces */
+.vs{ list-style: none; }
+.vs li{
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 10px 0; border-top: 1px solid var(--rule-08); font-size: 13px;
+}
+.vs li:first-child{ border-top: 0; }
+.vs .what{ position: relative; padding-left: 22px; color: var(--ink-70); }
+.vs .what::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
+.vs .what b{ color: var(--ink-100); font-weight: 700; }
+.vs .rate{ font-size: 10.5px; color: var(--ink-60); text-align: right; letter-spacing: .04em; text-transform: uppercase; flex-shrink: 0; }
+.vs-total{
+  margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--rule-20);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60);
+}
+.vs-total b{ color: var(--ink-100); font-family: var(--font-head); font-size: 20px; font-weight: 400; letter-spacing: .02em; white-space: nowrap; }
+.vs-total b.strike{ color: var(--ink-60); text-decoration: line-through; text-decoration-color: hsl(8 72% 58% / .8); text-decoration-thickness: 2px; }
+.roi{
+  margin-top: 18px; border-left: 2px solid var(--amber);
+  background: var(--amber-soft); border-radius: 0 12px 12px 0;
+  padding: 16px 20px; font-size: 13px; color: var(--ink-70);
+}
+.roi b{ color: var(--ink-100); font-weight: 700; }
+@media (max-width: 560px){
+  .vs li{ flex-direction: column; gap: 2px; }
+  .vs .rate{ padding-left: 22px; text-align: left; }
+}
 .terms{
   margin-top: 18px; padding: 24px 28px;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 26px;
@@ -985,36 +1015,45 @@ h1,h2,h3{
 <section class="sect" id="pricing" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">Pricing &amp; terms</div>
-    <h2 class="reveal-words">One price. Every term in writing.</h2>
+    <h2 class="reveal-words">Less than the margin you're leaking.</h2>
+    <p class="reveal-unit reveal-sub">One flat price, anchored against what it replaces — and every term in writing below.</p>
   </div>
   <div class="price-grid reveal-unit reveal-sub">
     <div class="price-card glass">
       <span class="price-tag">Step one · The Margin Audit</span>
       <div class="price-num">$0</div>
+      <p class="worth">The same SKU-level teardown a fractional CFO would bill <em>thousands</em> for — free, because it's how we earn the retainer. Application-gated, 4 per month.</p>
       <ul>
-        <li>Application-gated — 4 per month, capped by model capacity, not scarcity theater</li>
-        <li>Per-SKU true net margin decomposition</li>
-        <li>Stockout probabilities and reorder points</li>
-        <li>Elasticity reads and ad-spend break-even</li>
-        <li>Written report + recorded walkthrough — back within 24 hours of your files</li>
+        <li><b style="color:var(--ink-100)">10,000 demand simulations per SKU</b> — your stockout probabilities and exact reorder points</li>
+        <li><b style="color:var(--ink-100)">Every fee decomposed</b> — true net margin per SKU across 40+ Amazon fee types, COGS, and honestly allocated ads</li>
+        <li><b style="color:var(--ink-100)">Your demand curve, measured</b> — which SKUs can carry a price increase, with a 95% confidence range</li>
+        <li><b style="color:var(--ink-100)">Your ad break-even, in dollars</b> — the spend level where the next dollar stops paying</li>
+        <li><b style="color:var(--ink-100)">Back in 24 hours</b> — written report + recorded walkthrough of your own numbers</li>
       </ul>
+      <p class="worth">If we find nothing worth fixing, we tell you so — and you keep it all.</p>
       <a class="btn btn-amber" data-calendly="audit" data-section="pricing" href="#apply">
-        Apply now
+        Apply for the free audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
     </div>
     <div class="price-card glass">
       <span class="price-tag">Step two · The Co-Pilot Retainer</span>
       <div class="price-num">$6,000<small>/MO FLAT</small></div>
-      <ul>
-        <li>Monthly data refresh and full model re-run</li>
-        <li>3–5 directives with expected dollar impact</li>
-        <li>Client portal — you approve every move</li>
-        <li>The Decision Ledger: expected vs. measured, cumulative</li>
-        <li>Price-testing program with daily Buy Box tracking</li>
-        <li>Founder-led calls — the person who builds your models is the person you talk to</li>
+      <p class="worth">What this replaces, at the prices those things actually sell for:</p>
+      <ul class="vs">
+        <li><span class="what"><b>SKU-level finance modeling</b> — margin, elasticity, forecasting</span><span class="rate">Fractional CFO<br>$3,000–$12,000/mo</span></li>
+        <li><span class="what"><b>Ad break-even + bleed elimination</b> — with the target derived, not guessed</span><span class="rate">PPC agency<br>% of spend, $2,000+</span></li>
+        <li><span class="what"><b>Probabilistic inventory planning</b> — risk-priced reorders, not velocity averages</span><span class="rate">Planning software<br>$300–$500/mo</span></li>
+        <li><span class="what"><b>Elasticity-based price testing</b> — with the math shown, Buy Box tracked daily</span><span class="rate">Pricing AI<br>$350–$650/mo</span></li>
+        <li><span class="what"><b>The Decision Ledger</b> — every move's expected vs. measured dollars, cumulative</span><span class="rate">Sold nowhere</span></li>
+        <li><span class="what"><b>Founder on every call</b> — the person who builds your models, 3–5 approved moves a month</span><span class="rate">Not an account manager</span></li>
       </ul>
+      <div class="vs-total"><span>Assembled from parts, four vendors</span><b class="strike">$5,700–$15,000+/mo</b></div>
+      <div class="vs-total" style="border-top:0; padding-top:4px"><span>One operator, one ledger</span><b>$6,000/mo flat</b></div>
     </div>
+  </div>
+  <div class="roi reveal-unit reveal-sub">
+    <b>The break-even math:</b> sellers waste 20–40% of ad spend on search terms that never convert. On a $25k/month ad account that alone is $5,000–$10,000 — the fee covers itself before we touch pricing or inventory. And every dollar we claim, the Ledger has to prove.
   </div>
   <div class="terms glass reveal-unit reveal-sub">
     <span>Month-to-month, cancel anytime</span>
