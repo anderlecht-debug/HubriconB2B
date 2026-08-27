@@ -180,6 +180,13 @@ input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
 .state.declined{ color: var(--serious); }
 
 /* the watch */
+#horizon{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
+.hz-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+#hz-svg{ width: 100%; height: auto; display: block; }
+#hz-svg .grid{ stroke: var(--hairline); }
+#hz-svg .ax{ fill: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+#hz-svg .lbl{ font-family: var(--mono); font-size: 10.5px; }
+.hz-note{ font-size: 11.5px; color: var(--ink-faint); margin-top: 10px; max-width: 74ch; }
 .watch-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
 .watch-item{ display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; }
 .watch-item:first-of-type{ border-top: 0; }
@@ -356,6 +363,14 @@ footer{
     <!-- 4 · the watch -->
     <div class="sect-label"><span class="label">The watch — what your infrastructure is doing</span></div>
     <div class="panel">
+      <div id="horizon" class="hidden">
+        <div class="hz-head">
+          <span class="label">The cash horizon — next 90 days</span>
+          <span class="chip" id="hz-chip"></span>
+        </div>
+        <svg id="hz-svg" viewBox="0 0 920 240" role="img" aria-label="Simulated cash position over the next 90 days"></svg>
+        <p class="hz-note" id="hz-note"></p>
+      </div>
       <div class="watch-grid">
         <div>
           <span class="label" style="margin-bottom:10px">Under watch</span>
@@ -561,6 +576,70 @@ async function respond(id, approve, row){
   }
 }
 
+/* ── the cash horizon — percentile cone from the desk_cash RPC ── */
+function renderHorizon(rows){
+  const hz = rows?.[0];
+  const d = hz?.details;
+  if (!d?.p50?.length) return;
+  const P5 = d.p5.map(Number), P50 = d.p50.map(Number), P95 = d.p95.map(Number);
+  const W = 920, H = 240, L = 74, R = 16, T = 14, B = 30;
+  const lo = Math.min(0, Math.min(...P5) * 1.08), hi = Math.max(...P95) * 1.06;
+  const sx = (i) => L + (i / (P5.length - 1)) * (W - L - R);
+  const sy = (v) => T + (1 - (v - lo) / (hi - lo || 1)) * (H - T - B);
+  const pt = (i, v) => `${sx(i).toFixed(1)},${sy(v).toFixed(1)}`;
+  const line = (a) => a.map((v, i) => pt(i, v)).join(" ");
+  const anchor = new Date(hz.created_at);
+  const dayLabel = (day) => new Date(anchor.getTime() + day * 86400000)
+    .toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+  const step0 = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= step0);
+  let svg = "";
+  for (let t = Math.ceil(lo / step) * step; t <= hi; t += step){
+    svg += `<line x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}" class="grid"/>
+      <text x="${L - 10}" y="${(sy(t) + 3.5).toFixed(1)}" class="ax" text-anchor="end">${money(t)}</text>`;
+  }
+  for (let day = 15; day < P5.length; day += 15){
+    svg += `<text x="${sx(day).toFixed(1)}" y="${H - 8}" class="ax" text-anchor="middle">${dayLabel(day)}</text>`;
+  }
+  svg += `<defs><linearGradient id="hz-cone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="hsl(45 100% 50%)" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="hsl(45 100% 50%)" stop-opacity="0.04"/>
+    </linearGradient></defs>
+    <path d="M ${line(P95).replaceAll(" ", " L ")} L ${P5.map((v, i) => pt(i, v)).reverse().join(" L ")} Z" fill="url(#hz-cone)"/>
+    <polyline points="${line(P5)}" fill="none" stroke="hsl(45 100% 50% / .45)" stroke-width="1"/>
+    <polyline points="${line(P50)}" fill="none" stroke="var(--amber)" stroke-width="2"/>
+    <line x1="${L}" x2="${W - R}" y1="${sy(0).toFixed(1)}" y2="${sy(0).toFixed(1)}"
+      stroke="var(--serious)" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.8"/>
+    <text x="${W - R}" y="${(sy(0) - 6).toFixed(1)}" class="lbl" fill="var(--serious)" text-anchor="end">$0</text>`;
+  for (const w of d.wires || []){
+    if (w.day < 1 || w.day >= P5.length) continue;
+    svg += `<line x1="${sx(w.day).toFixed(1)}" x2="${sx(w.day).toFixed(1)}" y1="${H - B}" y2="${H - B - 8}"
+      stroke="var(--serious)" stroke-width="2" opacity="0.7"><title>Supplier wire ${money(Number(w.amount))} — ${esc(String(w.sku))}</title></line>`;
+  }
+  const mid = Math.floor(P5.length * 2 / 3);
+  svg += `<text x="${sx(mid).toFixed(1)}" y="${(sy(P50[mid]) - 9).toFixed(1)}" class="lbl" fill="var(--amber)">median path</text>
+    <text x="${sx(mid).toFixed(1)}" y="${(sy(P5[mid]) + 14).toFixed(1)}" class="lbl" fill="var(--ink-faint)">5th percentile — the bad quarter</text>`;
+
+  const minP5 = Number(hz.min_p5), pRuin = Number(hz.p_ruin);
+  const chip = $("#hz-chip");
+  if (minP5 >= 0){
+    chip.className = "chip clear";
+    chip.textContent = `worst realistic case stays ${money(minP5)} above zero`;
+  } else {
+    chip.className = "chip escalated";
+    chip.textContent = `${(pRuin * 100).toFixed(0)}% of paths touch $0 — wire schedule under management`;
+  }
+  const wires = (d.wires || []).length;
+  $("#hz-note").textContent =
+    `${Number(hz.n_paths).toLocaleString()} simulated paths of your daily cash position — Amazon's 14-day payout cycle, ` +
+    `your fixed costs, and ${wires} scheduled supplier wire${wires === 1 ? "" : "s"} included. ` +
+    `Assumes ${money(Number(hz.starting_cash))} on hand and ${money(Number(hz.monthly_fixed_costs))}/mo fixed costs, as you reported. ` +
+    `Refreshed with every weekly sweep.`;
+  $("#hz-svg").innerHTML = svg;
+  $("#horizon").classList.remove("hidden");
+}
+
 /* ── main load ── */
 async function load(){
   const clients = await rest("/rest/v1/clients?select=id,company_name,goals,created_at");
@@ -577,7 +656,7 @@ async function load(){
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives] = await Promise.all([
+  const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives, cashRows] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
     rest("/rest/v1/rpc/desk_metrics", { method: "POST", body: "{}" }).catch(() => []),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
@@ -586,7 +665,9 @@ async function load(){
     rest("/rest/v1/uploads?select=original_filename,row_count,parsed_at&status=eq.parsed&order=parsed_at.desc&limit=6"),
     rest("/rest/v1/plans?select=*&status=eq.active&order=created_at.desc&limit=1"),
     rest("/rest/v1/initiatives?select=*&order=sort"),
+    rest("/rest/v1/rpc/desk_cash", { method: "POST", body: "{}" }).catch(() => []),
   ]);
+  try { renderHorizon(cashRows); } catch {}
   const plan = plans[0] ?? null;
   const planInits = plan ? initiatives.filter((i) => i.plan_id === plan.id) : [];
   const initTitle = Object.fromEntries(initiatives.map((i) => [i.id, i.title]));
