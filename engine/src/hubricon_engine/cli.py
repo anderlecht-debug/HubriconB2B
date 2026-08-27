@@ -38,7 +38,7 @@ from .price_tests import (
 )
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
-from .models import ad_efficiency, elasticity, inventory_sim, margin
+from .models import ad_efficiency, cashflow, elasticity, inventory_sim, margin
 
 DATA_TABLES = (
     "asin_traffic",
@@ -166,18 +166,36 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
 
     try:
         avg_margin = None
+        margin_rows = inventory_rows = None
         if "margin" in wanted:
-            rows = margin.run(data)
-            avg_margin = margin.average_margin(rows)
-            _write_results(db, "margin_results", rows, run_id, client["id"])
+            margin_rows = margin.run(data)
+            avg_margin = margin.average_margin(margin_rows)
+            _write_results(db, "margin_results", margin_rows, run_id, client["id"])
         if "inventory" in wanted:
-            rows = inventory_sim.run(data, rng, simulations=simulations)
-            _write_results(db, "inventory_sim_results", rows, run_id, client["id"])
+            inventory_rows = inventory_sim.run(data, rng, simulations=simulations)
+            _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
         if "elasticity" in wanted:
             _write_results(db, "elasticity_results", elasticity.run(data), run_id, client["id"])
         if "ads" in wanted:
             rows = ad_efficiency.run(data, avg_margin=avg_margin)
             _write_results(db, "ad_efficiency_results", rows, run_id, client["id"])
+        if "cash" in wanted:
+            cash = cashflow.run(
+                client,
+                inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations),
+                margin_rows if margin_rows is not None else margin.run(data),
+                rng,
+            )
+            if cash is None:
+                print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
+            else:
+                dbmod.chunked_upsert(
+                    db, "cash_horizon_results",
+                    [{**cash, "run_id": run_id, "client_id": client["id"]}],
+                    on_conflict="run_id",
+                )
+                print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
+                      f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
     except Exception as err:
         db.table("model_runs").update({"status": "failed", "error": str(err), "finished_at": _now()}).eq(
             "id", run_id
@@ -193,7 +211,7 @@ def cmd_run(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
     wanted = set(args.models.split(","))
-    unknown = wanted - {"margin", "inventory", "elasticity", "ads"}
+    unknown = wanted - {"margin", "inventory", "elasticity", "ads", "cash"}
     if unknown:
         sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))}")
     return _run_models(db, client, wanted, args.simulations, args.seed)
@@ -587,6 +605,82 @@ def cmd_goals(args):
     print(f"Objective on file for {client['company_name'] or client['contact_email']}: {args.set}")
 
 
+def cmd_cash(args):
+    """Record the client-stated cash inputs, then compute and store the
+    horizon against the latest run so the number is never stale."""
+    from datetime import date, timedelta
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    patch = {}
+    if args.balance is not None:
+        patch["cash_on_hand"] = args.balance
+        patch["cash_as_of"] = args.as_of or date.today().isoformat()
+    if args.opex is not None:
+        patch["monthly_fixed_costs"] = args.opex
+    if patch:
+        db.table("clients").update(patch).eq("id", client["id"]).execute()
+        client = {**client, **patch}
+    if client.get("cash_on_hand") is None or client.get("monthly_fixed_costs") is None:
+        sys.exit("Need both --balance and --opex on file before the horizon can run.")
+
+    run = _latest_run(db, client["id"], None)
+    inventory = db.table("inventory_sim_results").select("*").eq("run_id", run["id"]).execute().data
+    margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+    cash = cashflow.run(client, inventory, margins, np.random.default_rng(42))
+    if cash is None:
+        sys.exit("No revenue machinery to simulate yet — ingest data and `hubricon run` first.")
+    dbmod.chunked_upsert(db, "cash_horizon_results",
+                         [{**cash, "run_id": run["id"], "client_id": client["id"]}],
+                         on_conflict="run_id")
+
+    today = date.today()
+    print(f"Cash horizon — {client['company_name'] or client['contact_email']}")
+    print(f"  inputs: ${float(client['cash_on_hand']):,.0f} on hand "
+          f"(as of {client.get('cash_as_of') or today.isoformat()}), "
+          f"${float(client['monthly_fixed_costs']):,.0f}/mo fixed costs")
+    print(f"  p(dip below $0 in {cash['horizon_days']}d): {float(cash['p_ruin']):.1%}")
+    print(f"  5th-percentile low: ${float(cash['min_p5']):,.0f} around "
+          f"{(today + timedelta(days=cash['min_p5_day'])).strftime('%b %d')}")
+    for w in cash["details"]["wires"][:6]:
+        print(f"  wire {(today + timedelta(days=w['day'])).strftime('%b %d')}: "
+              f"${w['amount']:,.0f} — {w['sku']}")
+
+
+def cmd_console(args):
+    """Self-contained dark console (HTML file) to screen-share while
+    recording the Loom. Internal artifact — clients receive the brief."""
+    from datetime import date
+    from .config import REPO_ROOT
+    from .console import build_console
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], None)
+    margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+    fits = db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data
+    inventory = db.table("inventory_sim_results").select("*").eq("run_id", run["id"]).execute().data
+    cash_rows = db.table("cash_horizon_results").select("*").eq("run_id", run["id"]).execute().data
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .neq("status", "draft").order("created_at", desc=True).execute().data)
+
+    html = build_console(
+        company=client["company_name"] or client["contact_email"],
+        directives=directives,
+        cash=cash_rows[0] if cash_rows else None,
+        margins=margins,
+        elasticity_rows=fits,
+        inventory_rows=inventory,
+        generated_on=date.today(),
+    )
+    folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"console-{date.today().isoformat()}.html"
+    path.write_text(html, encoding="utf-8")
+    print(f"Briefing console: {path}")
+    print("Open it full-screen, hit record — it is internal; the client gets the Loom link.")
+
+
 def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
     """Ingest -> run -> draft -> alert for one client. Returns digest facts."""
     summary = {"client": client["company_name"] or client["contact_email"],
@@ -608,20 +702,22 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
         if prev_runs else []
     )
 
-    run_id = _run_models(db, client, {"margin", "inventory", "elasticity", "ads"}, 20000, 42)
+    run_id = _run_models(db, client, {"margin", "inventory", "elasticity", "ads", "cash"}, 20000, 42)
     summary["ran"] = True
     summary["drafts"] = len(_draft_for_run(db, client, run_id))
 
     inventory = db.table("inventory_sim_results").select("*").eq("run_id", run_id).execute().data
     margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
     tests = db.table("price_tests").select("*").eq("client_id", client["id"]).execute().data
+    cash_rows = db.table("cash_horizon_results").select("*").eq("run_id", run_id).execute().data
 
     from datetime import timedelta
     window = (datetime.now(timezone.utc) - timedelta(days=DEDUPE_DAYS)).isoformat()
     recent = {a["message"] for a in
               db.table("alerts").select("message").eq("client_id", client["id"])
               .gte("created_at", window).execute().data}
-    fresh = dedupe(compute_alerts(inventory, prev_inventory, margins, tests), recent)
+    fresh = dedupe(compute_alerts(inventory, prev_inventory, margins, tests,
+                                  cash_rows[0] if cash_rows else None), recent)
     summary["alerts"] = len(fresh)
     if not fresh:
         return summary
@@ -706,7 +802,7 @@ def main():
 
     p = sub.add_parser("run", help="run the models")
     p.add_argument("client")
-    p.add_argument("--models", default="margin,inventory,elasticity,ads")
+    p.add_argument("--models", default="margin,inventory,elasticity,ads,cash")
     p.add_argument("--simulations", type=int, default=20000)
     p.add_argument("--seed", type=int, default=42)
     p.set_defaults(fn=cmd_run)
@@ -768,6 +864,17 @@ def main():
     p.add_argument("--set", required=True, help='e.g. "Grow to $5M/yr without giving back margin"')
     p.set_defaults(fn=cmd_goals)
 
+    p = sub.add_parser("cash", help="record cash inputs and compute the 90-day cash-flow horizon")
+    p.add_argument("client")
+    p.add_argument("--balance", type=float, help="cash on hand (USD)")
+    p.add_argument("--opex", type=float, help="monthly fixed operating costs (USD)")
+    p.add_argument("--as-of", dest="as_of", help="balance date YYYY-MM-DD (default today)")
+    p.set_defaults(fn=cmd_cash)
+
+    p = sub.add_parser("console", help="render the internal briefing console for Loom screen-share")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_console)
+
     p = sub.add_parser("sweep", help="always-on pass over every active client: ingest, run, draft, alert")
     p.add_argument("--client", help="sweep just this client")
     p.add_argument("--alert", action="store_true", help="send alert/digest emails (needs RESEND_API_KEY)")
@@ -795,7 +902,7 @@ def main():
     p = sub.add_parser("all", help="ingest + run + report")
     p.add_argument("client")
     p.set_defaults(
-        fn=cmd_all, reparse=False, upload_id=None, models="margin,inventory,elasticity,ads",
+        fn=cmd_all, reparse=False, upload_id=None, models="margin,inventory,elasticity,ads,cash",
         simulations=20000, seed=42, run=None, out=None,
     )
 

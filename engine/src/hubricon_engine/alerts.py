@@ -10,6 +10,8 @@ STOCKOUT_WARNING = 0.25
 STOCKOUT_CRITICAL = 0.50
 STOCKOUT_WORSENED = 0.10   # re-alert only if probability rose this much
 BUYBOX_DROP_ALERT = 10.0   # percentage points, matches price_tests warning
+CASH_RUIN_WARNING = 0.05   # mirror cashflow.RUIN_WARNING / RUIN_CRITICAL
+CASH_RUIN_CRITICAL = 0.15
 DEDUPE_DAYS = 14
 
 
@@ -92,9 +94,36 @@ def buybox_alerts(price_tests: list[dict]) -> list[dict]:
     return alerts
 
 
-def compute_alerts(current_inventory, previous_inventory, margin_rows, price_tests) -> list[dict]:
+def cash_alerts(cash_row: dict | None) -> list[dict]:
+    """Ruin-probability crossing from the cash-horizon model. Numbers are
+    coarsened (nearest 5 points, week not day) so the message-level dedupe
+    can actually suppress an unchanged condition."""
+    from datetime import date, timedelta
+
+    if not cash_row:
+        return []
+    p = float(cash_row["p_ruin"] or 0)
+    if p < CASH_RUIN_WARNING:
+        return []
+    pct = max(5, int(round(p * 20) * 5))
+    pinch = date.today() + timedelta(days=int(cash_row.get("min_p5_day") or 0))
+    week = (pinch - timedelta(days=pinch.weekday())).strftime("%b %d")
+    return [{
+        "severity": "critical" if p >= CASH_RUIN_CRITICAL else "warning",
+        "module": "cash",
+        "message": (
+            f"Cash horizon: roughly {pct}% of simulated paths dip below $0 inside "
+            f"{cash_row['horizon_days']} days — tightest stretch the week of {week}. "
+            f"Options before then: shift a PO wire, trim ad spend, or line up bridge capital."
+        ),
+    }]
+
+
+def compute_alerts(current_inventory, previous_inventory, margin_rows, price_tests,
+                   cash_row=None) -> list[dict]:
     return (
-        buybox_alerts(price_tests)
+        cash_alerts(cash_row)
+        + buybox_alerts(price_tests)
         + stockout_alerts(current_inventory, previous_inventory)
         + margin_flip_alerts(margin_rows)
     )

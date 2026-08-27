@@ -16,7 +16,10 @@ def connect() -> Client:
 
 def resolve_client(db: Client, ident: str) -> dict:
     """Accepts a client uuid, uuid prefix, or contact email."""
-    q = db.table("clients").select("id, company_name, contact_email, status, contact_name, brand_terms, goals, created_at")
+    q = db.table("clients").select(
+        "id, company_name, contact_email, status, contact_name, brand_terms, goals, "
+        "cash_on_hand, cash_as_of, monthly_fixed_costs, created_at"
+    )
     if "@" in ident:
         rows = q.eq("contact_email", ident.lower()).execute().data
     else:
