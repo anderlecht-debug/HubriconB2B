@@ -583,7 +583,54 @@ h1,h2,h3{
   max-width: 15ch;
 }
 .close .hint{ color: var(--ink-60); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
-.calendly-inline{ width: min(920px, 100%); min-height: 700px; border-radius: 20px; overflow: hidden; }
+
+/* ============================================================
+   THE GATE — the routing form every path leads through
+   ============================================================ */
+.gate-overlay{
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: hsl(226 80% 3% / .72);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.gate-overlay[hidden]{ display: none; }
+.gate-modal{
+  width: min(600px, 100%); max-height: 92svh; overflow-y: auto;
+  padding: 36px 38px; position: relative; border-radius: 24px;
+}
+.gate-x{
+  position: absolute; top: 12px; right: 14px; z-index: 2;
+  background: none; border: 0; color: var(--ink-60);
+  font-family: var(--font-mono); font-size: 20px; cursor: pointer; padding: 8px 12px;
+}
+.gate-x:hover{ color: var(--ink-100); }
+.gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+.gate-title{ font-size: clamp(24px, 3vw, 32px); margin-bottom: 10px; }
+.gate-sub{ font-size: 12.5px; color: var(--ink-60); margin-bottom: 24px; max-width: 52ch; }
+.gate fieldset{ border: 0; margin: 0 0 20px; padding: 0; }
+.gate legend{
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-70); margin-bottom: 10px; padding: 0;
+}
+.chips{ display: flex; flex-wrap: wrap; gap: 8px; }
+.chips label{ cursor: pointer; position: relative; }
+.chips input{ position: absolute; opacity: 0; pointer-events: none; }
+.chips span{
+  display: inline-block; font-family: var(--font-mono); font-size: 12px;
+  padding: 9px 15px; border-radius: 999px;
+  border: 1px solid var(--rule-20); color: var(--ink-70);
+  transition: border-color .15s, color .15s, background-color .15s;
+}
+.chips label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
+.chips input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+.chips input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
+.gate .btn[disabled]{ opacity: .45; cursor: not-allowed; }
+.gate-note{ margin-top: 16px; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-60); }
+.gate-decline p{ font-size: 13.5px; color: var(--ink-70); margin-bottom: 14px; max-width: 54ch; }
+.gate-decline p b{ color: var(--ink-100); font-weight: 400; }
+.gate-inline{ width: min(680px, 100%); border-radius: 24px; padding: 36px 38px; text-align: left; }
+.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
+@media (max-width: 560px){ .gate-modal, .gate-inline{ padding: 28px 22px; } }
 .footer-bar{
   position: relative; z-index: 3;
   margin-top: 150px;
@@ -710,11 +757,8 @@ h1,h2,h3{
         Apply for the free Margin Audit
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
-      <a class="btn btn-text" data-calendly="analyst" data-section="hero" href="#apply">
-        Book a 15-min intro call
-      </a>
     </div>
-    <p class="microcopy reveal-unit reveal-cta"><b>$0</b> · 4 slots per month · audit back in 24 hours</p>
+    <p class="microcopy reveal-unit reveal-cta"><b>$0</b> · 4 slots per month · three questions decide fit · audit back in 24 hours</p>
   </div>
 
   <div class="hero-ticker" aria-hidden="true">
@@ -823,8 +867,8 @@ h1,h2,h3{
 
   </div>
   <div class="sect-cta reveal-unit reveal-cta">
-    <a class="btn btn-glass" data-calendly="analyst" data-section="deliverables" href="#apply">
-      Ask what your version looks like
+    <a class="btn btn-glass" data-calendly="audit" data-section="deliverables" href="#apply">
+      See your version — apply for the audit
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
     </a>
   </div>
@@ -840,7 +884,7 @@ h1,h2,h3{
     <div class="step glass">
       <span class="when">Day 0</span>
       <h3>Apply</h3>
-      <p>A 20-minute application call. We check fit — 4 audit slots per month, hand-built.</p>
+      <p>A two-minute application — revenue, model, catalog size. If the numbers don't fit, it tells you straight; if they do, you book the 20-minute audit call on the spot. 4 slots per month, hand-built.</p>
     </div>
     <div class="step glass">
       <span class="when">~15 minutes</span>
@@ -882,8 +926,8 @@ h1,h2,h3{
         <h2 class="reveal-words">Know your stockout risk before it happens.</h2>
         <p class="reveal-unit reveal-sub">We simulate the next 90 days of demand against your supplier lead times — ten thousand times per SKU. You get a reorder date, a quantity, and the exact probability of stocking out if you wait. A stockout costs you rank you'll buy back with ads; overstock is trapped capital plus storage fees. Both sides of that trade are priced in the model — no Amazon-native tool does probabilistic inventory math.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="analyst" data-section="inventory" href="#apply">
-            Ask how this runs on your catalog
+          <a class="btn btn-glass" data-calendly="audit" data-section="inventory" href="#apply">
+            See this run on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
@@ -908,8 +952,8 @@ h1,h2,h3{
         <h2 class="reveal-words">Know how far a price can move before it costs you.</h2>
         <p class="reveal-unit reveal-sub">For every SKU we measure how demand responds to price — with a 95% confidence range, not a hunch. Two-thirds of sellers raised prices in 2024; most of them lost money doing it, and sellers report losing ~80% of Buy Boxes on the way up. We tell you which SKUs can carry an increase, then watch your Buy Box share daily so suppression is caught in days, not quarters.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="analyst" data-section="elasticity" href="#apply">
-            Ask how this runs on your catalog
+          <a class="btn btn-glass" data-calendly="audit" data-section="elasticity" href="#apply">
+            See this run on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
@@ -933,8 +977,8 @@ h1,h2,h3{
         <h2 class="reveal-words">Know where your next ad dollar stops paying.</h2>
         <p class="reveal-unit reveal-sub">Ad spend has a break-even point. We estimate your account's response curve and mark the spend level where one more dollar returns less than a dollar — and flag the 20–40% of budget that typically leaks to search terms that never convert, in dollars, by term. No PPC tool derives what your target ACoS should be — they optimize toward whatever number you typed in.</p>
         <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="analyst" data-section="ads" href="#apply">
-            Ask how this runs on your catalog
+          <a class="btn btn-glass" data-calendly="audit" data-section="ads" href="#apply">
+            See this run on your catalog
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </a>
         </div>
@@ -1011,7 +1055,7 @@ h1,h2,h3{
       Apply for the free Margin Audit
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
     </a>
-    <span class="microcopy">Not sure you fit? That's what the <a data-calendly="analyst" data-section="fit" href="#apply" style="color:var(--amber)">15-minute call</a> is for.</span>
+    <span class="microcopy">Not sure you fit? The <a data-calendly="audit" data-section="fit" href="#apply" style="color:var(--amber)">application</a> takes two minutes and answers straight.</span>
   </div>
 </section>
 
@@ -1121,7 +1165,6 @@ h1,h2,h3{
       Apply for the free Margin Audit
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
     </a>
-    <a class="btn btn-text" data-calendly="analyst" data-section="faq" href="#apply">Still deciding? 15-minute call</a>
   </div>
 </section>
 
@@ -1134,17 +1177,9 @@ h1,h2,h3{
     <h2 class="reveal-words">The audit is free. The math is real. Slots are capped.</h2>
     <p class="hint reveal-unit reveal-sub">67% of sellers raised prices last year. 60% of them ended up less profitable — because nobody measured the demand curve first. We do, and then we prove what every move earned you, in dollars, on a ledger.</p>
     <p class="hint reveal-unit reveal-sub">Audit slots are capped at 4 per month — model capacity, not scarcity theater.</p>
-    <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly="audit" data-section="close" href="https://calendly.com/hubricon/margin-audit">
-        Apply for the free Margin Audit
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-      </a>
-      <a class="btn btn-white" data-calendly="analyst" data-section="close" href="https://calendly.com/hubricon/analyst-intro">
-        Book a 15-min intro call
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-      </a>
+    <div class="gate gate-inline glass-strong reveal-unit reveal-cta" id="gate-inline" aria-label="Apply for the margin audit">
+      <noscript><p style="color:var(--ink-70)">The application needs JavaScript enabled to run.</p></noscript>
     </div>
-    <div class="calendly-inline glass reveal-unit reveal-cta" id="calendly-inline" aria-label="Book the margin audit"></div>
   </div>
 
   <div class="footer-bar">
@@ -1163,9 +1198,17 @@ h1,h2,h3{
 
 <!-- mobile sticky CTA -->
 <div class="sticky-cta glass-strong" id="sticky-cta" aria-hidden="true">
-  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="https://calendly.com/hubricon/margin-audit">
+  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">
     Free Margin Audit — Apply
   </a>
+</div>
+
+<!-- the gate, modal form -->
+<div class="gate-overlay" id="gate-overlay" hidden>
+  <div class="gate gate-modal glass-strong" role="dialog" aria-modal="true" aria-label="Apply for the margin audit">
+    <button class="gate-x" id="gate-x" aria-label="Close">✕</button>
+    <div id="gate-modal-mount"></div>
+  </div>
 </div>
 
 <script type="application/ld+json">
@@ -1194,11 +1237,12 @@ h1,h2,h3{
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
 
-/* ── Calendly: same-page popup with href fallback ── */
-const CALENDLY_EVENTS = {
-  audit:   "https://calendly.com/hubricon/margin-audit",
-  analyst: "https://calendly.com/hubricon/analyst-intro",
-};
+/* ── The gate: the routing form every path leads through.
+      Three stated metrics decide whether a booking exists at all;
+      disqualified sellers get the straight answer, qualified answers
+      ride along on the Calendly booking as utm_content. ── */
+const CALENDLY_AUDIT = "https://calendly.com/hubricon/margin-audit";
+const EMBED_THEME = "hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000";
 let calendlyReady = null;
 function loadCalendly() {
   if (calendlyReady) return calendlyReady;
@@ -1216,17 +1260,105 @@ function loadCalendly() {
   return calendlyReady;
 }
 
+const GATE_QUESTIONS = [
+  { key: "rev",   legend: "Trailing-12-month Amazon revenue", options: ["Under $1M", "$1M–$5M", "$5M–$20M", "$20M+"] },
+  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
+  { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
+];
+
+function disqualify(a) {
+  if (a.rev === "Under $1M")
+    return "Under ~$1M a year, the fee doesn't math for you yet: the leaks our models find won't reliably cover $6,000 a month, and we'd rather tell you that here than sell you on a call. <b>When you cross $1M, come straight back</b> — this form takes two minutes and the answer changes.";
+  if (a.model === "Arbitrage" || a.model === "Wholesale / reseller")
+    return "Our models work on pricing power — a demand curve you own. Arbitrage and wholesale catalogs price against other people's listings, so the math we'd bill you for has nothing to grip. <b>If you build a private-label line later, the door is open.</b>";
+  return null;
+}
+
+function auditUrl(a) {
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}`;
+  return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
+}
+
+function renderGate(mount, section, onQualified) {
+  mount.innerHTML = `
+    <p class="gate-eyebrow">Application · 4 audit slots per month</p>
+    <h3 class="gate-title">Three answers decide it.</h3>
+    <p class="gate-sub">No email harvest, no “someone will reach out.” If the numbers don't fit, we say so right here — if they do, you book the audit call on the spot.</p>
+    <form>
+      ${GATE_QUESTIONS.map(q => `
+        <fieldset>
+          <legend>${q.legend}</legend>
+          <div class="chips">
+            ${q.options.map(o => `<label><input type="radio" name="${q.key}" value="${o}"><span>${o}</span></label>`).join("")}
+          </div>
+        </fieldset>`).join("")}
+      <div class="cta-row" style="justify-content:flex-start">
+        <button class="btn btn-amber" type="submit" disabled>
+          Continue — pick your call time
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+        </button>
+      </div>
+      <p class="gate-note">Your answers ride along on the booking — the call starts from your numbers.</p>
+    </form>`;
+  const form = mount.querySelector("form");
+  const submit = form.querySelector("button[type=submit]");
+  const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
+  form.addEventListener("change", () => {
+    submit.disabled = !GATE_QUESTIONS.every(q => form.elements[q.key].value);
+    loadCalendly();
+  });
+  form.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const a = answers();
+    const reason = disqualify(a);
+    track("gate_submit", { section, qualified: !reason, ...a });
+    if (reason) {
+      mount.innerHTML = `
+        <div class="gate-decline">
+          <p class="gate-eyebrow">The straight answer</p>
+          <h3 class="gate-title">Not yet — and here's why.</h3>
+          <p>${reason}</p>
+          <p style="margin-top:18px">— Hubricon</p>
+        </div>`;
+      return;
+    }
+    onQualified(auditUrl(a));
+  });
+}
+
+/* every CTA opens the modal gate; href="#apply" scrolls to the inline gate as fallback */
+const overlay = document.getElementById("gate-overlay");
+const modalMount = document.getElementById("gate-modal-mount");
+function openGate(section) {
+  track("gate_open", { section });
+  renderGate(modalMount, section, async url => {
+    closeGate();
+    if (await loadCalendly() && window.Calendly) {
+      window.Calendly.initPopupWidget({ url });
+      track("calendly_opened", { section });
+    } else {
+      location.href = url; /* widget blocked — go straight to Calendly */
+    }
+  });
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  modalMount.querySelector("input")?.focus();
+}
+function closeGate() {
+  overlay.hidden = true;
+  document.body.style.overflow = "";
+}
+document.getElementById("gate-x").addEventListener("click", closeGate);
+overlay.addEventListener("click", ev => { if (ev.target === overlay) closeGate(); });
+addEventListener("keydown", ev => { if (ev.key === "Escape" && !overlay.hidden) closeGate(); });
+
 document.querySelectorAll("[data-calendly]").forEach(a => {
-  const url = CALENDLY_EVENTS[a.dataset.calendly] || CALENDLY_EVENTS.audit;
-  a.href = url; /* real link = no-JS fallback */
   a.addEventListener("pointerenter", loadCalendly, { once: true, passive: true });
   a.addEventListener("touchstart", loadCalendly, { once: true, passive: true });
-  a.addEventListener("click", async ev => {
-    track("cta_click", { goal: a.dataset.calendly, section: a.dataset.section || "" });
-    if (!(await loadCalendly()) || !window.Calendly) return; /* fall through to href */
+  a.addEventListener("click", ev => {
     ev.preventDefault();
-    window.Calendly.initPopupWidget({ url });
-    track("calendly_opened", { goal: a.dataset.calendly });
+    track("cta_click", { section: a.dataset.section || "" });
+    openGate(a.dataset.section || "");
   });
 });
 
@@ -1237,21 +1369,25 @@ window.addEventListener("message", e => {
   }
 });
 
-/* inline embed in the close section, loaded when it scrolls near */
-const inlineMount = document.getElementById("calendly-inline");
-if (inlineMount) {
-  new IntersectionObserver(async ([e], obs) => {
+/* inline gate in the close section, rendered when it scrolls near */
+const inlineGate = document.getElementById("gate-inline");
+if (inlineGate) {
+  new IntersectionObserver(([e], obs) => {
     if (!e.isIntersecting) return;
     obs.disconnect();
-    if (await loadCalendly() && window.Calendly) {
-      window.Calendly.initInlineWidget({
-        url: CALENDLY_EVENTS.audit + "?hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000",
-        parentElement: inlineMount,
-      });
-    } else {
-      inlineMount.style.display = "none";
-    }
-  }, { rootMargin: "600px" }).observe(inlineMount);
+    renderGate(inlineGate, "close-inline", async url => {
+      inlineGate.innerHTML = `<p class="gate-eyebrow">Qualified — pick your call time</p><div class="calendly-mount"></div>`;
+      if (await loadCalendly() && window.Calendly) {
+        window.Calendly.initInlineWidget({
+          url: url + "&" + EMBED_THEME,
+          parentElement: inlineGate.querySelector(".calendly-mount"),
+        });
+        track("calendly_opened", { section: "close-inline" });
+      } else {
+        location.href = url;
+      }
+    });
+  }, { rootMargin: "600px" }).observe(inlineGate);
 }
 
 /* FAQ engagement */

@@ -368,60 +368,7 @@ footer{
       </div>
     </div>
 
-    <!-- 5 · instruments -->
-    <div class="sect-label"><span class="label">Instruments</span></div>
-    <div class="panel" id="sim-card" style="display:none">
-      <p class="hint" style="margin-bottom:16px">Your fitted curves, live — the same models that write your directives.</p>
-
-      <div class="sim" id="sim-price" style="display:none">
-        <h3>Price</h3>
-        <p class="note">Projected monthly profit if you move a SKU's price, from its measured demand curve.</p>
-        <div class="sim-row">
-          <select id="sp-sku" aria-label="SKU"></select>
-          <input type="range" id="sp-range" min="-15" max="15" step="1" value="0" aria-label="Price change %">
-          <span class="sim-val" id="sp-pct">+0%</span>
-        </div>
-        <div class="sim-out">
-          <div class="o"><b id="sp-price">—</b><span>new price</span></div>
-          <div class="o"><b id="sp-units">—</b><span>projected units / period</span></div>
-          <div class="o"><b id="sp-profit">—</b><span>profit change / period</span></div>
-          <div class="o"><b id="sp-range-out">—</b><span>95% range</span></div>
-        </div>
-        <p class="sim-warn" id="sp-warn">Price increases risk Buy Box suppression — we step them and watch your share daily.</p>
-      </div>
-
-      <div class="sim" id="sim-ads" style="display:none">
-        <h3>Ad spend</h3>
-        <p class="note">Your campaign's fitted response curve: revenue and the return on the next dollar.</p>
-        <div class="sim-row">
-          <select id="sa-camp" aria-label="Campaign"></select>
-          <input type="range" id="sa-range" min="10" max="200" step="5" value="100" aria-label="Spend vs current %">
-          <span class="sim-val" id="sa-pct">100%</span>
-        </div>
-        <div class="sim-out">
-          <div class="o"><b id="sa-spend">—</b><span>spend</span></div>
-          <div class="o"><b id="sa-rev">—</b><span>projected ad revenue</span></div>
-          <div class="o"><b id="sa-mroas">—</b><span>marginal ROAS</span></div>
-        </div>
-        <p class="sim-warn" id="sa-warn">Past break-even: the next dollar here buys less than a dollar back.</p>
-      </div>
-
-      <div class="sim" id="sim-inv" style="display:none">
-        <h3>Reorder timing</h3>
-        <p class="note">Approximate stockout risk if you wait to place the next PO.</p>
-        <div class="sim-row">
-          <select id="si-sku" aria-label="SKU"></select>
-          <input type="range" id="si-range" min="0" max="30" step="1" value="0" aria-label="Days you wait">
-          <span class="sim-val" id="si-days">today</span>
-        </div>
-        <div class="sim-out">
-          <div class="o"><b id="si-prob">—</b><span>stockout probability</span></div>
-          <div class="o"><b id="si-cover">—</b><span>days of cover</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 6 · the record -->
+    <!-- 5 · the record -->
     <div class="sect-label"><span class="label">The record</span></div>
     <div class="panel">
       <p class="tenure" id="tenure"></p>
@@ -438,28 +385,10 @@ footer{
       </div>
     </div>
 
-    <!-- 7 · evidence -->
+    <!-- 6 · evidence -->
     <div class="sect-label"><span class="label">The evidence</span></div>
     <p class="report-link hidden" id="report-link-wrap">Full written report: <a href="#" id="report-link">Issue —</a></p>
 
-    <details class="panel">
-      <summary>True net margin — latest period</summary>
-      <div class="inner"><div class="scroll"><table id="margin">
-        <tr><th>SKU</th><th class="num">Revenue</th><th class="num">Amazon fees</th><th class="num">COGS</th><th class="num">Ads</th><th class="num">Net</th><th class="num">Net %</th></tr>
-      </table></div></div>
-    </details>
-    <details class="panel">
-      <summary>Inventory risk</summary>
-      <div class="inner"><div class="scroll"><table id="inv">
-        <tr><th>SKU</th><th class="num">Stockout P</th><th class="num">Days cover</th><th class="num">Reorder point</th><th class="num">Order qty</th></tr>
-      </table></div></div>
-    </details>
-    <details class="panel">
-      <summary>Price elasticity</summary>
-      <div class="inner"><div class="scroll"><table id="elast">
-        <tr><th>Item</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th>Read</th></tr>
-      </table></div></div>
-    </details>
     <details class="panel">
       <summary>Price tests</summary>
       <div class="inner"><div class="scroll"><table id="ptests">
@@ -648,9 +577,9 @@ async function load(){
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, runs, ptests, alerts, briefs, uploads, plans, initiatives] = await Promise.all([
+  const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
-    rest("/rest/v1/model_runs?select=id,started_at,params&status=eq.succeeded&order=started_at.desc&limit=5"),
+    rest("/rest/v1/rpc/desk_metrics", { method: "POST", body: "{}" }).catch(() => []),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
     rest("/rest/v1/alerts?select=*&order=created_at.desc&limit=10"),
     rest("/rest/v1/briefings?select=*&order=created_at.desc"),
@@ -736,28 +665,11 @@ async function load(){
     desk.appendChild(row);
   });
 
-  /* run-scoped data */
-  let margins = [], inv = [], elast = [], adFits = [];
-  if (runs.length){
-    const runFilter = `run_id=eq.${runs[0].id}`;
-    [margins, inv, elast, adFits] = await Promise.all([
-      rest(`/rest/v1/margin_results?select=*&${runFilter}&order=revenue.desc`),
-      rest(`/rest/v1/inventory_sim_results?select=*&${runFilter}&order=stockout_probability.desc`),
-      rest(`/rest/v1/elasticity_results?select=*&${runFilter}&level=eq.sku`),
-      rest(`/rest/v1/ad_efficiency_results?select=*&${runFilter}&status=eq.ok`),
-    ]);
-  }
-
-  /* delta tiles */
-  const periods = [...new Set(margins.map((m) => m.period_start))].sort();
+  /* position tiles — curated per-period totals from the desk_metrics RPC;
+     the engine's per-SKU output never reaches this page */
+  const periods = (pace || []).slice().sort((a, b) => String(a.period_start).localeCompare(String(b.period_start)));
   if (periods.length){
-    const totals = (p) => {
-      const rows = margins.filter((m) => m.period_start === p);
-      return {
-        rev: rows.reduce((t, m) => t + Number(m.revenue || 0), 0),
-        net: rows.reduce((t, m) => t + Number(m.net_margin || 0), 0),
-      };
-    };
+    const totals = (row) => ({ rev: Number(row.revenue || 0), net: Number(row.net_margin || 0) });
     const cur = totals(periods[periods.length - 1]);
     const prev = periods.length >= 2 ? totals(periods[periods.length - 2]) : null;
     const delta = (el, now, before) => {
@@ -821,28 +733,19 @@ async function load(){
     }
   }
 
-  /* the watch: watchlist with resolution states */
+  /* the watch: watchlist driven by the sweep's published alerts */
   const wl = $("#watchlist");
   wl.innerHTML = "";
   const watchItems = [];
-  for (const r of inv){
-    const p = Number(r.stockout_probability || 0);
+  for (const a of alerts.filter((a) => a.severity !== "info").slice(0, 6)){
     watchItems.push({
-      order: p >= 0.25 ? 0 : 2,
-      html: `<span class="what">${esc(r.sku)} — inventory</span>
-        <span class="chip ${p >= 0.25 ? "escalated" : "clear"}">${p >= 0.25 ? `${(p * 100).toFixed(0)}% risk — action issued` : "checked — no action needed"}</span>`,
+      order: a.severity === "critical" ? 0 : 1,
+      html: `<span class="what">${esc(a.message.slice(0, 90))}${a.message.length > 90 ? "…" : ""}</span>
+        <span class="chip escalated">${a.severity === "critical" ? "escalated — action issued" : "flagged at last sweep"}</span>`,
     });
   }
   for (const t of ptests.filter((t) => t.status === "running")){
     watchItems.push({ order: 1, html: `<span class="what">${esc(t.sku)} — price test</span><span class="chip watching">watching Buy Box daily</span>` });
-  }
-  for (const a of adFits){
-    const over = a.current_spend && a.breakeven_spend && Number(a.current_spend) > Number(a.breakeven_spend);
-    watchItems.push({
-      order: over ? 0 : 2,
-      html: `<span class="what">${esc(a.campaign_name)} — ad spend</span>
-        <span class="chip ${over ? "escalated" : "clear"}">${over ? "past break-even — trim issued" : "within efficient range"}</span>`,
-    });
   }
   watchItems.sort((a, b) => a.order - b.order).slice(0, 8).forEach((w) => {
     const el = document.createElement("div");
@@ -850,16 +753,14 @@ async function load(){
     el.innerHTML = w.html;
     wl.appendChild(el);
   });
-  if (!watchItems.length) wl.innerHTML = `<p class="hint">The watch begins after your first models run.</p>`;
+  if (!watchItems.length){
+    wl.innerHTML = alerts.length
+      ? `<p class="hint">All clear at the last sweep — nothing under escalation.</p>`
+      : `<p class="hint">The watch begins after your first models run.</p>`;
+  }
 
   /* the watch: activity log — specific named work, never counters */
   const events = [];
-  for (const r of runs){
-    const sims = r.params?.simulations;
-    events.push({ t: r.started_at, what: sims
-      ? `Ran ${Number(sims).toLocaleString()} demand simulations per SKU — margin, elasticity, and ad-response models refreshed`
-      : "Full model refresh across your catalog" });
-  }
   for (const u of uploads) events.push({ t: u.parsed_at, what: `Ingested ${u.original_filename} — ${u.row_count ?? "?"} rows verified` });
   for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${a.message.slice(0, 90)}${a.message.length > 90 ? "…" : ""}` });
   for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Directive issued: ${d.action_text.slice(0, 80)}…` });
@@ -905,38 +806,7 @@ async function load(){
     </tr>`);
   }
 
-  /* evidence tables */
-  const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
-  const mt = $("#margin");
-  mt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  for (const m of margins.filter((r) => r.period_start === latest).slice(0, 15)){
-    const pct = m.net_margin_pct != null ? (Number(m.net_margin_pct) * 100).toFixed(1) + "%" : "—";
-    mt.insertAdjacentHTML("beforeend", `<tr>
-      <td>${esc(m.sku)}</td><td class="num">${money(m.revenue)}</td><td class="num">${money(m.amazon_fees)}</td>
-      <td class="num">${m.cogs != null ? money(m.cogs) : "—"}</td><td class="num">${money(m.ad_spend_allocated)}</td>
-      <td class="num ${Number(m.net_margin) < 0 ? "risk" : "good"}">${money(m.net_margin)}</td><td class="num">${pct}</td>
-    </tr>`);
-  }
-  const it = $("#inv");
-  it.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  for (const r of inv.slice(0, 15)){
-    const p = Number(r.stockout_probability || 0);
-    it.insertAdjacentHTML("beforeend", `<tr>
-      <td>${esc(r.sku)}</td><td class="num ${p >= 0.25 ? "risk" : ""}">${(p * 100).toFixed(0)}%</td>
-      <td class="num">${r.days_of_cover ?? "—"}</td><td class="num">${r.reorder_point ?? "—"}</td><td class="num">${r.reorder_qty ?? "—"}</td>
-    </tr>`);
-  }
-  const et = $("#elast");
-  et.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  for (const r of elast){
-    const read = r.status !== "ok" ? "not enough price variation yet"
-      : Number(r.elasticity) > -1 ? "price-insensitive — increase testable" : "elastic — price cuts move volume";
-    const ci = r.details?.ci95 ? `[${r.details.ci95[0]}, ${r.details.ci95[1]}]` : "—";
-    et.insertAdjacentHTML("beforeend", `<tr>
-      <td>${esc(r.item_id)}</td><td class="num">${r.elasticity ?? "—"}</td>
-      <td class="num">${ci}</td><td class="num">${r.r_squared ?? "—"}</td><td>${read}</td>
-    </tr>`);
-  }
+  /* evidence: the client's own price tests — the full report carries the rest */
   const pt = $("#ptests");
   pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
   for (const t of ptests){
@@ -950,120 +820,6 @@ async function load(){
       <td>${esc(t.status)}</td>
     </tr>`);
   }
-
-  setupSimulator(margins, elast, adFits, inv);
-}
-
-/* ── scenario simulator: client-side math on the fitted results ── */
-const money2 = (v) => "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
-function normCdf(z){
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp(-z * z / 2);
-  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  return z > 0 ? 1 - p : p;
-}
-
-function setupSimulator(margins, elast, adFits, inv){
-  const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
-  const latestBySku = {};
-  for (const m of margins) if (m.period_start === latest) latestBySku[m.sku] = m;
-
-  const priceSkus = elast.filter((e) => e.status === "ok" && latestBySku[e.item_id]
-    && Number(latestBySku[e.item_id].units) > 0 && Number(latestBySku[e.item_id].revenue) > 0);
-  if (priceSkus.length){
-    $("#sim-price").style.display = "";
-    const sel = $("#sp-sku");
-    sel.innerHTML = priceSkus.map((e) => `<option value="${esc(e.item_id)}">${esc(e.item_id)}</option>`).join("");
-    const update = () => {
-      const fit = priceSkus.find((e) => e.item_id === sel.value) ?? priceSkus[0];
-      const m = latestBySku[fit.item_id];
-      const dp = Number($("#sp-range").value) / 100;
-      $("#sp-pct").textContent = (dp >= 0 ? "+" : "") + Math.round(dp * 100) + "%";
-      const units = Number(m.units), revenue = Number(m.revenue);
-      const p0 = revenue / units;
-      const feesRate = Number(m.amazon_fees || 0) / revenue;
-      const unitCogs = m.cogs != null ? Number(m.cogs) / units : 0;
-      const ads = Number(m.ad_spend_allocated || 0);
-      const project = (e) => {
-        const nu = units * Math.pow(1 + dp, e);
-        const nr = p0 * (1 + dp) * nu;
-        return { nu, profit: nr * (1 - feesRate) - unitCogs * nu - ads };
-      };
-      const baseProfit = revenue * (1 - feesRate) - (m.cogs != null ? Number(m.cogs) : 0) - ads;
-      const mid = project(Number(fit.elasticity));
-      const ci = fit.details?.ci95;
-      const lo = ci ? project(Number(ci[1])).profit - baseProfit : null;
-      const hi = ci ? project(Number(ci[0])).profit - baseProfit : null;
-      const d = mid.profit - baseProfit;
-      $("#sp-price").textContent = "$" + (p0 * (1 + dp)).toFixed(2);
-      $("#sp-units").textContent = Math.round(mid.nu).toLocaleString();
-      const pb = $("#sp-profit");
-      pb.textContent = (d >= 0 ? "+" : "−") + money2(Math.abs(d));
-      pb.className = d >= 0 ? "pos" : "neg";
-      $("#sp-range-out").textContent = ci
-        ? `${lo >= 0 ? "+" : "−"}${money2(Math.abs(lo))} … ${hi >= 0 ? "+" : "−"}${money2(Math.abs(hi))}` : "—";
-      $("#sp-warn").style.display = dp > 0.02 ? "block" : "none";
-    };
-    sel.addEventListener("change", update);
-    $("#sp-range").addEventListener("input", update);
-    update();
-  }
-
-  if (adFits.length){
-    $("#sim-ads").style.display = "";
-    const sel = $("#sa-camp");
-    sel.innerHTML = adFits.map((a, i) => `<option value="${i}">${esc(a.campaign_name)}</option>`).join("");
-    const curve = (a, s) => {
-      const p = a.curve_params || {};
-      if (a.curve_model === "hill") return p.a * Math.pow(s, p.h) / (Math.pow(p.k, p.h) + Math.pow(s, p.h));
-      return p.a * Math.log1p((p.k ?? 1) * s);
-    };
-    const update = () => {
-      const a = adFits[Number(sel.value) || 0];
-      const mult = Number($("#sa-range").value) / 100;
-      $("#sa-pct").textContent = Math.round(mult * 100) + "%";
-      const s = Math.max(0.01, Number(a.current_spend) * mult);
-      const eps = Math.max(s * 1e-3, 0.01);
-      const mroas = (curve(a, s + eps) - curve(a, s - eps)) / (2 * eps);
-      $("#sa-spend").textContent = money2(s);
-      $("#sa-rev").textContent = money2(curve(a, s));
-      const mb = $("#sa-mroas");
-      mb.textContent = mroas.toFixed(2);
-      mb.className = mroas >= 1 ? "pos" : "neg";
-      $("#sa-warn").style.display = mroas < 1 ? "block" : "none";
-    };
-    sel.addEventListener("change", update);
-    $("#sa-range").addEventListener("input", update);
-    update();
-  }
-
-  const invSkus = inv.filter((r) => Number(r.daily_velocity_mean) > 0);
-  if (invSkus.length){
-    $("#sim-inv").style.display = "";
-    const sel = $("#si-sku");
-    sel.innerHTML = invSkus.map((r) => `<option value="${esc(r.sku)}">${esc(r.sku)}</option>`).join("");
-    const update = () => {
-      const r = invSkus.find((x) => x.sku === sel.value) ?? invSkus[0];
-      const wait = Number($("#si-range").value);
-      $("#si-days").textContent = wait === 0 ? "today" : `+${wait}d`;
-      const T = wait + Number(r.lead_time_days || 45);
-      const rate = Number(r.daily_velocity_mean), std = Number(r.daily_velocity_std || rate * 0.35);
-      const position = Number(r.on_hand_units || 0) + Number(r.inbound_units || 0);
-      const mu = rate * T;
-      const sigma = Math.sqrt(Math.max(1e-9, rate * T + Math.pow(std * T, 2)));
-      const p = 1 - normCdf((position - mu) / sigma);
-      const pb = $("#si-prob");
-      pb.textContent = (p * 100).toFixed(0) + "%";
-      pb.className = p >= 0.25 ? "neg" : "pos";
-      $("#si-cover").textContent = rate > 0 ? Math.round(position / rate) + "d" : "—";
-    };
-    sel.addEventListener("change", update);
-    $("#si-range").addEventListener("input", update);
-    update();
-  }
-
-  $("#sim-card").style.display =
-    (priceSkus.length || adFits.length || invSkus.length) ? "" : "none";
 }
 
 (async () => {
