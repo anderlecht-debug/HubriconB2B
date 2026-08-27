@@ -26,6 +26,7 @@ from . import storage
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
 from .directives import draft_directives, resolve_brand_terms
+from .growth_plan import latest_period_totals, pace, propose_plan
 from .ingest import PARSERS
 from .notify import alert_email_body, email_configured, send_email
 from .price_tests import (
@@ -230,6 +231,14 @@ def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"],
                               search_terms=search_terms, brand_terms=resolve_brand_terms(client))
+
+    # file each directive into the active plan's matching initiative
+    initiative_by_module = {}
+    active = (db.table("plans").select("id").eq("client_id", client["id"])
+              .eq("status", "active").limit(1).execute().data)
+    if active:
+        for i in db.table("initiatives").select("id, module").eq("plan_id", active[0]["id"]).execute().data:
+            initiative_by_module[i["module"]] = i["id"]
     db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run_id).eq("status", "draft").execute()
     if not drafts:
         return []
@@ -239,6 +248,7 @@ def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
         "module": d["module"],
         "action_text": d["action_text"],
         "expected_impact_usd": d["expected_impact_usd"],
+        "initiative_id": initiative_by_module.get(d["module"]),
     } for d in drafts]
     return db.table("directives").insert(rows).execute().data
 
@@ -390,6 +400,77 @@ def cmd_report(args):
     client = dbmod.resolve_client(db, args.client)
     path = generate(db, client, run_id=args.run, out_dir=args.out)
     print(f"Report: {path}")
+
+
+def cmd_plan(args):
+    from datetime import date
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+
+    if args.action == "status":
+        plans = (db.table("plans").select("*").eq("client_id", client["id"])
+                 .eq("status", "active").limit(1).execute().data)
+        if not plans:
+            sys.exit("No active plan — `hubricon plan <client> draft`, then commit.")
+        plan = plans[0]
+        run = _latest_run(db, client["id"], None)
+        margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+        current = latest_period_totals(margins)
+        total = (date.fromisoformat(plan["ends_on"]) - date.fromisoformat(plan["starts_on"])).days or 1
+        elapsed = min(1.0, max(0.0, (date.today() - date.fromisoformat(plan["starts_on"])).days / total))
+        print(f"{plan['label']} — day {int(elapsed * total)} of {total}")
+        for metric, cur in (("net", current["net"]), ("revenue", current["revenue"])):
+            b, t = float(plan[f"baseline_{metric}"] or 0), float(plan[f"target_{metric}"] or 0)
+            state = pace(cur, b, t, elapsed)
+            print(f"  {metric:<8} ${b:,.0f} → ${cur:,.0f} of ${t:,.0f}  [{state}]")
+        return
+
+    run = _latest_run(db, client["id"], None)
+    margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .in_("status", ["draft", "issued", "approved", "done"]).execute().data)
+    proposal = propose_plan(margins, directives)
+    if proposal is None:
+        sys.exit("No margin data yet — run the models first.")
+
+    b, t = proposal["baseline"], proposal["targets"]
+    print(f"{proposal['label']}  ({proposal['starts_on']} → {proposal['ends_on']})")
+    print(f"  baseline: ${b['net']:,.0f} net / ${b['revenue']:,.0f} revenue"
+          + (f" / {b['margin_pct']:.1%}" if b["margin_pct"] is not None else ""))
+    print(f"  targets:  ${t['net']:,.0f} net / ${t['revenue']:,.0f} revenue"
+          + (f" / {t['margin_pct']:.1%}" if t["margin_pct"] is not None else "")
+          + f"   (70% of ${proposal['opportunity']:,.0f} identified)")
+    for i in proposal["initiatives"]:
+        exp = f" · ~${i['expected_impact_usd']:,.0f}" if i["expected_impact_usd"] else ""
+        print(f"  — {i['title']} ({i['steps']} step(s){exp})")
+
+    if args.action == "draft":
+        print("\nEdit targets with --target-net/--target-revenue/--target-margin, then `plan commit`.")
+        return
+
+    # commit
+    db.table("plans").update({"status": "superseded"}).eq("client_id", client["id"]).eq("status", "active").execute()
+    plan_row = db.table("plans").insert({
+        "client_id": client["id"],
+        "label": args.label or proposal["label"],
+        "starts_on": proposal["starts_on"],
+        "ends_on": proposal["ends_on"],
+        "baseline_net": b["net"], "baseline_revenue": b["revenue"], "baseline_margin_pct": b["margin_pct"],
+        "target_net": args.target_net or t["net"],
+        "target_revenue": args.target_revenue or t["revenue"],
+        "target_margin_pct": args.target_margin or t["margin_pct"],
+    }).execute().data[0]
+    for sort, i in enumerate(proposal["initiatives"]):
+        row = db.table("initiatives").insert({
+            "client_id": client["id"], "plan_id": plan_row["id"],
+            "title": i["title"], "thesis": i["thesis"], "module": i["module"],
+            "expected_impact_usd": i["expected_impact_usd"], "sort": sort,
+        }).execute().data[0]
+        ids = [d["id"] for d in directives if d["module"] == i["module"]]
+        if ids:
+            db.table("directives").update({"initiative_id": row["id"]}).in_("id", ids).execute()
+    print(f"\nCommitted {plan_row['label']} — live in the portal.")
 
 
 def cmd_brand(args):
@@ -630,6 +711,15 @@ def main():
     p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
     p.add_argument("--notes", help="how the measurement was made")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("plan", help="draft, commit, or check the client's 90-day growth plan")
+    p.add_argument("client")
+    p.add_argument("action", choices=["draft", "commit", "status"])
+    p.add_argument("--label", help='override the quarter label, e.g. "Q4 2026"')
+    p.add_argument("--target-net", type=float)
+    p.add_argument("--target-revenue", type=float)
+    p.add_argument("--target-margin", type=float)
+    p.set_defaults(fn=cmd_plan)
 
     p = sub.add_parser("brand", help="set a client's brand terms for cannibalization detection")
     p.add_argument("client")
