@@ -289,6 +289,22 @@ def cmd_ledger(args):
         print(f"  {r['id'][:8]}  {r['status']:<9} {r['module']:<12} exp {expected:>10}  got {actual:>9}  {r['action_text'][:70]}")
 
 
+def cmd_approve(args):
+    """Operator records the client's standing-mandate outcome for a directive:
+    approved (default, veto window passed or explicit yes) or declined."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    candidates = (db.table("directives").select("id, status, action_text")
+                  .eq("client_id", client["id"]).eq("status", "issued").execute().data)
+    rows = [r for r in candidates if r["id"].startswith(args.directive.lower())]
+    if len(rows) != 1:
+        sys.exit(f"Issued-directive prefix {args.directive!r} matched {len(rows)} row(s) — need exactly 1.")
+    status = "declined" if args.decline else "approved"
+    db.table("directives").update({"status": status, "responded_at": _now()}).eq("id", rows[0]["id"]).execute()
+    print(f"{status.capitalize()}: {rows[0]['action_text'][:80]}…"
+          + ("" if args.decline else "  → execute it, then record the outcome with `hubricon measure`."))
+
+
 def cmd_measure(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
@@ -704,6 +720,12 @@ def main():
     p = sub.add_parser("ledger", help="print the client's Decision Ledger")
     p.add_argument("client")
     p.set_defaults(fn=cmd_ledger)
+
+    p = sub.add_parser("approve", help="record a standing-mandate outcome for an issued directive")
+    p.add_argument("client")
+    p.add_argument("--directive", required=True, help="directive id prefix")
+    p.add_argument("--decline", action="store_true", help="client vetoed it")
+    p.set_defaults(fn=cmd_approve)
 
     p = sub.add_parser("measure", help="record the measured impact of a directive")
     p.add_argument("client")

@@ -134,4 +134,21 @@ recorded walkthrough of your numbers — is back within 24 hours.
 Best,
 Hubricon
 ──────────────────────────────────────────────────────────────────────
+
+WHEN THEY SIGN THE RETAINER, send the execution-access request:
+──────────────────────────────────────────────────────────────────────
+Subject: One 2-minute setup and we take it from here
+
+To execute corrections for you, we need a permissions-scoped seat in
+your Seller Central — pricing and advertising only. Banking, settings,
+and everything else stay untouchable, and you can revoke the seat in
+one click, any day.
+
+Settings → User Permissions → Add new user → ${process.env.EXECUTION_EMAIL ?? "ops@hubricon.com"}
+Then grant: Pricing (view & edit) · Advertising (view & edit). Nothing else.
+
+From there: every two weeks you get a three-minute brief — what we
+found, what we executed, what it's expected to earn — and every dollar
+lands on your ledger, measured.
+──────────────────────────────────────────────────────────────────────
 `);
