@@ -15,21 +15,22 @@
 /* ══════════════════════════════════════════════════════════════════
    THE PRIVATE DESK — calm is credibility.
    Serif editorial display (Fraunces) for numbers, titles, the letter;
-   the brand mono for labels and data. Hairline rules, restrained
-   amber, no decoration, motion ≤ .2s.
+   the brand mono for labels and data. White paper with navy ink and
+   deep-gold accents — the accents are darkened from the brand amber
+   so lines and labels keep contrast on white. Motion ≤ .2s.
    ══════════════════════════════════════════════════════════════════ */
 :root{
-  --bg:        hsl(228 45% 6%);
-  --panel:     hsl(226 38% 9%);
-  --panel-2:   hsl(225 35% 12%);
-  --amber:     hsl(45 100% 50%);
-  --ok:        hsl(150 45% 55%);
-  --serious:   hsl(8 65% 60%);
-  --ink:       hsl(220 30% 96% / .88);
-  --ink-soft:  hsl(220 30% 96% / .62);
-  --ink-faint: hsl(220 30% 96% / .40);
-  --hairline:  hsl(220 30% 96% / .08);
-  --rule:      hsl(220 30% 96% / .16);
+  --bg:        hsl(220 30% 98%);
+  --panel:     hsl(0 0% 100%);
+  --panel-2:   hsl(222 28% 95%);
+  --amber:     hsl(40 95% 35%);
+  --ok:        hsl(150 55% 30%);
+  --serious:   hsl(8 68% 44%);
+  --ink:       hsl(228 40% 12% / .93);
+  --ink-soft:  hsl(228 32% 22% / .72);
+  --ink-faint: hsl(228 25% 25% / .52);
+  --hairline:  hsl(228 40% 15% / .10);
+  --rule:      hsl(228 40% 15% / .24);
   --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -69,6 +70,7 @@ h2{ font-size: 21px; }
 .panel{
   background: var(--panel); border: 1px solid var(--hairline);
   border-radius: 14px; padding: 30px 34px; margin-bottom: 22px;
+  box-shadow: 0 1px 2px hsl(228 40% 15% / .05);
 }
 section{ margin-bottom: 8px; }
 .sect-label{ margin: 34px 0 12px; display: flex; align-items: baseline; gap: 14px; }
@@ -82,8 +84,10 @@ button{
   transition: border-color .2s, color .2s, background-color .2s;
 }
 button:hover{ border-color: var(--amber); color: var(--amber); }
-button.primary{ background: var(--amber); border-color: var(--amber); color: hsl(228 45% 6%); font-weight: 700; }
-button.primary:hover{ color: hsl(228 45% 6%); filter: brightness(1.06); }
+/* the one bright-amber moment on the page: the brand amber holds as a
+   fill behind near-navy text, while the --amber token stays deep gold */
+button.primary{ background: hsl(45 100% 50%); border-color: hsl(45 95% 45%); color: hsl(228 45% 10%); font-weight: 700; }
+button.primary:hover{ color: hsl(228 45% 10%); filter: brightness(1.04); }
 button.decline:hover{ border-color: var(--serious); color: var(--serious); }
 button:disabled{ opacity: .4; cursor: default; }
 input[type=email]{
@@ -92,9 +96,9 @@ input[type=email]{
 }
 select{
   background: var(--panel-2); border: 1px solid var(--rule); border-radius: 8px;
-  color: var(--ink); font-family: var(--mono); font-size: 12px; padding: 7px 10px; color-scheme: dark;
+  color: var(--ink); font-family: var(--mono); font-size: 12px; padding: 7px 10px; color-scheme: light;
 }
-input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
+input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
 
 /* masthead */
 .masthead{
@@ -186,6 +190,17 @@ input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
 #hz-svg .grid{ stroke: var(--hairline); }
 #hz-svg .ax{ fill: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
 #hz-svg .lbl{ font-family: var(--mono); font-size: 10.5px; }
+/* SVG colors live here, not in presentation attributes — var() only
+   resolves in CSS, and this is what keeps the chart on-theme */
+#hz-svg .hz-p5{ fill: none; stroke: var(--amber); stroke-width: 1; opacity: .45; }
+#hz-svg .hz-med{ fill: none; stroke: var(--amber); stroke-width: 2; }
+#hz-svg .hz-zero{ stroke: var(--serious); stroke-width: 1.2; stroke-dasharray: 6 5; opacity: .8; }
+#hz-svg .hz-wire{ stroke: var(--serious); stroke-width: 2; opacity: .7; }
+#hz-svg .lbl-amber{ fill: var(--amber); }
+#hz-svg .lbl-faint{ fill: var(--ink-faint); }
+#hz-svg .lbl-serious{ fill: var(--serious); }
+.spark .spark-line{ fill: none; stroke: var(--ok); stroke-width: 2; stroke-linejoin: round; }
+.spark .spark-dot{ fill: var(--ok); }
 .hz-note{ font-size: 11.5px; color: var(--ink-faint); margin-top: 10px; max-width: 74ch; }
 .watch-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
 .watch-item{ display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; }
@@ -603,23 +618,22 @@ function renderHorizon(rows){
     svg += `<text x="${sx(day).toFixed(1)}" y="${H - 8}" class="ax" text-anchor="middle">${dayLabel(day)}</text>`;
   }
   svg += `<defs><linearGradient id="hz-cone" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="hsl(45 100% 50%)" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="hsl(45 100% 50%)" stop-opacity="0.04"/>
+      <stop offset="0" stop-color="hsl(42 90% 45%)" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="hsl(42 90% 45%)" stop-opacity="0.03"/>
     </linearGradient></defs>
     <path d="M ${line(P95).replaceAll(" ", " L ")} L ${P5.map((v, i) => pt(i, v)).reverse().join(" L ")} Z" fill="url(#hz-cone)"/>
-    <polyline points="${line(P5)}" fill="none" stroke="hsl(45 100% 50% / .45)" stroke-width="1"/>
-    <polyline points="${line(P50)}" fill="none" stroke="var(--amber)" stroke-width="2"/>
-    <line x1="${L}" x2="${W - R}" y1="${sy(0).toFixed(1)}" y2="${sy(0).toFixed(1)}"
-      stroke="var(--serious)" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.8"/>
-    <text x="${W - R}" y="${(sy(0) - 6).toFixed(1)}" class="lbl" fill="var(--serious)" text-anchor="end">$0</text>`;
+    <polyline points="${line(P5)}" class="hz-p5"/>
+    <polyline points="${line(P50)}" class="hz-med"/>
+    <line x1="${L}" x2="${W - R}" y1="${sy(0).toFixed(1)}" y2="${sy(0).toFixed(1)}" class="hz-zero"/>
+    <text x="${W - R}" y="${(sy(0) - 6).toFixed(1)}" class="lbl lbl-serious" text-anchor="end">$0</text>`;
   for (const w of d.wires || []){
     if (w.day < 1 || w.day >= P5.length) continue;
     svg += `<line x1="${sx(w.day).toFixed(1)}" x2="${sx(w.day).toFixed(1)}" y1="${H - B}" y2="${H - B - 8}"
-      stroke="var(--serious)" stroke-width="2" opacity="0.7"><title>Supplier wire ${money(Number(w.amount))} — ${esc(String(w.sku))}</title></line>`;
+      class="hz-wire"><title>Supplier wire ${money(Number(w.amount))} — ${esc(String(w.sku))}</title></line>`;
   }
   const mid = Math.floor(P5.length * 2 / 3);
-  svg += `<text x="${sx(mid).toFixed(1)}" y="${(sy(P50[mid]) - 9).toFixed(1)}" class="lbl" fill="var(--amber)">median path</text>
-    <text x="${sx(mid).toFixed(1)}" y="${(sy(P5[mid]) + 14).toFixed(1)}" class="lbl" fill="var(--ink-faint)">5th percentile — the bad quarter</text>`;
+  svg += `<text x="${sx(mid).toFixed(1)}" y="${(sy(P50[mid]) - 9).toFixed(1)}" class="lbl lbl-amber">median path</text>
+    <text x="${sx(mid).toFixed(1)}" y="${(sy(P5[mid]) + 14).toFixed(1)}" class="lbl lbl-faint">5th percentile — the bad quarter</text>`;
 
   const minP5 = Number(hz.min_p5), pRuin = Number(hz.p_ruin);
   const chip = $("#hz-chip");
@@ -713,8 +727,8 @@ async function load(){
     spark.style.display = "block";
     const step = 232 / (series.length - 1);
     const poly = series.map((v, i) => `${(4 + i * step).toFixed(1)},${(40 - (v / max) * 34).toFixed(1)}`).join(" ");
-    spark.innerHTML = `<polyline points="${poly}" fill="none" stroke="hsl(150 45% 55%)" stroke-width="2" stroke-linejoin="round"/>
-      <circle cx="${(4 + (series.length - 1) * step).toFixed(1)}" cy="${(40 - 34).toFixed(1)}" r="3" fill="hsl(150 45% 55%)"/>`;
+    spark.innerHTML = `<polyline points="${poly}" class="spark-line"/>
+      <circle cx="${(4 + (series.length - 1) * step).toFixed(1)}" cy="${(40 - 34).toFixed(1)}" r="3" class="spark-dot"/>`;
   }
 
   /* decisions on the desk */
