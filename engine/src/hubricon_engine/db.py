@@ -16,11 +16,12 @@ def connect() -> Client:
 
 def resolve_client(db: Client, ident: str) -> dict:
     """Accepts a client uuid, uuid prefix, or contact email."""
-    q = db.table("clients").select("id, company_name, contact_email, status, contact_name, brand_terms")
+    q = db.table("clients").select("id, company_name, contact_email, status, contact_name, brand_terms, goals, created_at")
     if "@" in ident:
         rows = q.eq("contact_email", ident.lower()).execute().data
     else:
-        rows = q.like("id", f"{ident}%").execute().data
+        # uuid columns reject LIKE, so prefix-match client-side (roster is small)
+        rows = [r for r in q.execute().data if r["id"].startswith(ident.lower())]
     if not rows:
         sys.exit(f"No client matches {ident!r} — try `hubricon clients`.")
     if len(rows) > 1:

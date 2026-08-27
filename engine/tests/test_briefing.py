@@ -58,6 +58,27 @@ def test_build_script_hits_all_beats_with_real_numbers():
     assert "approve or decline" in script
 
 
+def test_build_memo_is_a_numbered_letter_with_real_numbers():
+    from hubricon_engine.briefing import build_memo
+
+    directives = [{"status": "issued", "module": "advertising",
+                   "action_text": "Cut bleed.", "expected_impact_usd": 500, "measured_impact_usd": None}]
+    memo = build_memo("Acme Goods", "Jane", period_deltas(MARGINS),
+                      directives, [], [], ledger_measured=1240, ledger_count=3, issue_number=4)
+    assert memo.startswith("Issue No. 004")
+    assert "Dear Jane," in memo
+    assert "$3,700" in memo and "up $1,200" in memo          # real numbers, prose form
+    assert "one decision" in memo                             # decision count in words
+    assert "$1,240" in memo and memo.rstrip().endswith("— Hubricon")
+
+
+def test_build_memo_baseline_framing_on_first_issue():
+    from hubricon_engine.briefing import build_memo
+
+    memo = build_memo("Acme", "", period_deltas(MARGINS[:2]), [], [], [], 0, 0, issue_number=1)
+    assert "Issue No. 001" in memo and "baseline" in memo and "$2,500" in memo
+
+
 def test_build_script_first_period_hook():
     script = build_script("Acme", "", period_deltas(MARGINS[:2]), [], [], [], 0, 0)
     assert "first full read" in script and "$2,500" in script

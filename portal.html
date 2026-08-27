@@ -3,165 +3,260 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hubricon — Client Portal</title>
+<title>Hubricon — Private Desk</title>
 <meta name="robots" content="noindex">
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
 
 <style>
-/* Same design tokens as index.html / intake.html — one product, one look. */
+/* ══════════════════════════════════════════════════════════════════
+   THE PRIVATE DESK — calm is credibility.
+   Serif editorial display (Fraunces) for numbers, titles, the letter;
+   the brand mono for labels and data. Hairline rules, restrained
+   amber, no decoration, motion ≤ .2s.
+   ══════════════════════════════════════════════════════════════════ */
 :root{
-  --bg:        hsl(225 72% 7%);
-  --bg-raise:  hsl(224 60% 11%);
+  --bg:        hsl(228 45% 6%);
+  --panel:     hsl(226 38% 9%);
+  --panel-2:   hsl(225 35% 12%);
   --amber:     hsl(45 100% 50%);
-  --amber-soft:hsl(45 100% 50% / .12);
-  --serious:   hsl(8 72% 58%);
-  --ok:        hsl(150 55% 55%);
-  --ink-100: hsl(220 40% 98% / 1);
-  --ink-70:  hsl(220 40% 98% / .7);
-  --ink-60:  hsl(220 40% 98% / .6);
-  --rule-20: hsl(220 40% 98% / .2);
-  --rule-08: hsl(220 40% 98% / .08);
-  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ok:        hsl(150 45% 55%);
+  --serious:   hsl(8 65% 60%);
+  --ink:       hsl(220 30% 96% / .88);
+  --ink-soft:  hsl(220 30% 96% / .62);
+  --ink-faint: hsl(220 30% 96% / .40);
+  --hairline:  hsl(220 30% 96% / .08);
+  --rule:      hsl(220 30% 96% / .16);
+  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
 *{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; }
 body{
-  background: var(--bg); color: var(--ink-60);
-  font-family: var(--font-mono); font-size: 14px; line-height: 1.65;
+  background: var(--bg); color: var(--ink-soft);
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.75;
   -webkit-font-smoothing: antialiased;
-  min-height: 100svh; padding: 40px 20px 96px;
+  min-height: 100svh; padding: 34px 20px 110px;
 }
-::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+::selection{ background: hsl(45 100% 50% / .22); color: var(--ink); }
 a{ color: var(--amber); text-decoration: none; }
+a:hover{ text-decoration: underline; }
 :focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-h1,h2{
-  font-family: var(--font-head); font-weight: 400; color: var(--ink-100);
-  text-transform: uppercase; letter-spacing: .015em; line-height: 1.05;
+
+.wrap{ max-width: 860px; margin: 0 auto; }
+
+/* type roles */
+.serif{ font-family: var(--serif); }
+h1, h2{
+  font-family: var(--serif); font-weight: 500; color: var(--ink);
+  letter-spacing: -.01em; line-height: 1.15;
 }
-h1{ font-size: clamp(26px, 4.5vw, 38px); }
-h2{ font-size: 17px; margin-bottom: 10px; }
-.wrap{ max-width: 920px; margin: 0 auto; }
-.topbar{ display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 34px; }
-.logo{ font-family: var(--font-head); font-size: 19px; color: var(--ink-100); letter-spacing: .04em; text-transform: uppercase; }
-.logo em{ color: var(--amber); font-style: normal; }
-.who{ font-size: 12px; text-align: right; }
-.who b{ color: var(--ink-100); display: block; }
+h1{ font-size: clamp(26px, 4.5vw, 34px); }
+h2{ font-size: 21px; }
+.label{
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-faint); display: block;
+}
+.fig{
+  font-family: var(--serif); font-weight: 500; color: var(--ink);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+
+/* panels */
+.panel{
+  background: var(--panel); border: 1px solid var(--hairline);
+  border-radius: 14px; padding: 30px 34px; margin-bottom: 22px;
+}
+section{ margin-bottom: 8px; }
+.sect-label{ margin: 34px 0 12px; display: flex; align-items: baseline; gap: 14px; }
+.sect-label .label{ display: inline; }
+.sect-label::after{ content: ""; flex: 1; height: 1px; background: var(--hairline); }
+
 button{
-  font-family: inherit; font-size: 12.5px; cursor: pointer; border-radius: 9px;
-  border: 1px solid var(--rule-20); background: none; color: var(--ink-100); padding: 8px 14px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .04em;
+  cursor: pointer; border-radius: 8px; padding: 9px 16px;
+  border: 1px solid var(--rule); background: none; color: var(--ink);
+  transition: border-color .2s, color .2s, background-color .2s;
 }
 button:hover{ border-color: var(--amber); color: var(--amber); }
-button.primary{ background: var(--amber); border-color: var(--amber); color: hsl(225 72% 7%); font-weight: 700; }
-button.primary:hover{ filter: brightness(1.08); color: hsl(225 72% 7%); }
+button.primary{ background: var(--amber); border-color: var(--amber); color: hsl(228 45% 6%); font-weight: 700; }
+button.primary:hover{ color: hsl(228 45% 6%); filter: brightness(1.06); }
 button.decline:hover{ border-color: var(--serious); color: var(--serious); }
-button:disabled{ opacity: .45; cursor: default; }
+button:disabled{ opacity: .4; cursor: default; }
 input[type=email]{
-  background: var(--bg-raise); border: 1px solid var(--rule-20); border-radius: 9px;
-  color: var(--ink-100); font-family: inherit; font-size: 14px; padding: 11px 14px; width: 100%;
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 9px;
+  color: var(--ink); font-family: var(--mono); font-size: 14px; padding: 12px 14px; width: 100%;
 }
-.card{
-  position: relative; border-radius: 18px;
-  background: hsl(224 55% 14% / .32);
-  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
-  padding: 22px 24px; margin-bottom: 18px;
-}
-.card::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
-  background: linear-gradient(175deg,
-    hsl(220 60% 85% / .32) 0%, hsl(224 60% 20% / .06) 38%,
-    hsl(224 60% 20% / .06) 62%, hsl(45 90% 65% / .14) 100%);
-}
-.kpis{ display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 22px; }
-.kpi{ background: var(--bg-raise); border: 1px solid var(--rule-08); border-radius: 14px; padding: 14px 16px; }
-.kpi b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: 27px; color: var(--ink-100);
-  line-height: 1.1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
-.kpi b.good{ color: var(--ok); } .kpi b.warn{ color: var(--amber); }
-.kpi span{ font-size: 11px; }
-.tag{ display: inline-block; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
-  border: 1px solid hsl(45 100% 50% / .4); color: var(--amber); border-radius: 99px; padding: 2px 9px; }
-.directive{ border-bottom: 1px solid var(--rule-08); padding: 14px 0; }
-.directive:last-child{ border-bottom: 0; }
-.directive .body{ color: var(--ink-70); margin: 7px 0 10px; }
-.directive .exp{ color: var(--ink-100); font-size: 12.5px; }
-.directive .actions{ display: flex; gap: 10px; align-items: center; }
-.directive .state{ font-size: 12px; }
-.state.approved, .state.done{ color: var(--ok); }
-.state.declined{ color: var(--serious); }
-.scroll{ overflow-x: auto; }
-/* alerts feed */
-.alert-row{ display: flex; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule-08); font-size: 13px; }
-.alert-row:last-child{ border-bottom: 0; }
-.sev{ flex-shrink: 0; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border-radius: 99px; padding: 2px 9px; border: 1px solid var(--rule-20); color: var(--ink-70); }
-.sev.critical{ color: var(--serious); border-color: hsl(8 72% 58% / .5); }
-.sev.warning{ color: var(--amber); border-color: hsl(45 100% 50% / .5); }
-.alert-row .when{ margin-left: auto; font-size: 10.5px; color: var(--ink-60); flex-shrink: 0; }
-/* scenario simulator */
-.sim{ border-top: 1px solid var(--rule-08); padding: 18px 0 6px; }
-.sim:first-of-type{ border-top: 0; padding-top: 4px; }
-.sim h3{ font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; color: var(--ink-100); text-transform: none; letter-spacing: 0; margin-bottom: 4px; }
-.sim .note{ font-size: 11px; color: var(--ink-60); margin-bottom: 10px; }
-.sim-row{ display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 select{
-  background: var(--bg-raise); border: 1px solid var(--rule-20); border-radius: 9px;
-  color: var(--ink-100); font-family: inherit; font-size: 12.5px; padding: 8px 10px; color-scheme: dark;
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 8px;
+  color: var(--ink); font-family: var(--mono); font-size: 12px; padding: 7px 10px; color-scheme: dark;
 }
 input[type=range]{ accent-color: hsl(45 100% 50%); flex: 1; min-width: 150px; }
-.sim-val{ font-size: 12px; color: var(--ink-100); font-variant-numeric: tabular-nums; min-width: 64px; }
-.sim-out{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-.sim-out .o{ background: var(--bg-raise); border: 1px solid var(--rule-08); border-radius: 12px; padding: 10px 14px; }
-.sim-out .o b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: 21px; color: var(--ink-100); font-variant-numeric: tabular-nums; }
-.sim-out .o b.pos{ color: var(--ok); } .sim-out .o b.neg{ color: var(--serious); }
-.sim-out .o span{ font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-60); }
-.sim-warn{ margin-top: 10px; font-size: 11.5px; color: var(--serious); display: none; }
-/* briefing card */
-.brief-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
-.brief-headline{ font-family: var(--font-head); font-size: 22px; color: var(--ok); font-variant-numeric: tabular-nums; }
-.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 14px; overflow: hidden; background: var(--bg-raise); }
+
+/* masthead */
+.masthead{
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding-bottom: 22px; border-bottom: 1px solid var(--hairline); margin-bottom: 30px;
+}
+.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 19px; color: var(--ink); letter-spacing: .01em; }
+.wordmark i{ font-style: normal; color: var(--amber); }
+.prepared{ text-align: right; font-size: 11px; color: var(--ink-faint); line-height: 1.8; }
+.prepared b{ color: var(--ink-soft); font-weight: 400; }
+.prepared button{ margin-top: 6px; padding: 5px 12px; font-size: 11px; }
+.objective{
+  font-family: var(--serif); font-size: 15px; color: var(--ink-soft);
+  font-style: italic; margin: -12px 0 30px;
+}
+.objective b{ font-style: normal; color: var(--ink); font-weight: 500; }
+
+/* position hero */
+.position{ padding: 40px 34px; }
+.pos-num{ font-size: clamp(44px, 8vw, 64px); line-height: 1; margin: 8px 0 4px; }
+.pos-num.good{ color: var(--ok); }
+.pos-sub{ font-size: 12px; color: var(--ink-faint); }
+.spark{ margin-top: 18px; }
+.pos-tiles{
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  border-top: 1px solid var(--hairline); margin-top: 28px; padding-top: 22px;
+}
+.pos-tile{ padding: 0 18px; border-left: 1px solid var(--hairline); }
+.pos-tile:first-child{ border-left: 0; padding-left: 0; }
+.pos-tile .fig{ font-size: 24px; display: block; margin: 4px 0 2px; }
+.pos-tile .d{ font-size: 11px; }
+.d.up{ color: var(--ok); } .d.down{ color: var(--serious); }
+
+/* the briefing */
+.issue-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+.issue-no{ font-family: var(--serif); font-size: 13px; color: var(--amber); letter-spacing: .06em; }
+.issue-headline{ font-family: var(--serif); font-size: 19px; color: var(--ok); font-variant-numeric: tabular-nums; }
+.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden; background: var(--panel-2); margin-bottom: 24px; }
 .video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.tldr{ font-size: 13.5px; color: var(--ink-70); margin-top: 14px; max-width: 72ch; }
-/* delta strip */
-.kpi i{ font-style: normal; font-size: 11px; letter-spacing: 0; text-transform: none; }
-.kpi i.up{ color: var(--ok); } .kpi i.down{ color: var(--serious); }
-/* evidence appendix */
-details.card summary{ cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-details.card summary::-webkit-details-marker{ display: none; }
-details.card summary::after{ content: "+"; font-family: var(--font-head); font-size: 18px; color: var(--amber); }
-details.card[open] summary::after{ content: "−"; }
-details.card summary h2{ margin-bottom: 0; }
-details.card .scroll{ margin-top: 14px; }
-table{ width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 560px; }
-th{ text-align: left; color: var(--ink-70); font-weight: 400; text-transform: uppercase; font-size: 10px;
-  letter-spacing: .07em; padding: 7px 10px; border-bottom: 1px solid var(--rule-20); }
-td{ padding: 7px 10px; border-bottom: 1px solid var(--rule-08); }
+.letter{
+  font-family: var(--serif); font-weight: 300; font-size: 16.5px; line-height: 1.85;
+  color: var(--ink); max-width: 62ch;
+}
+.letter p{ margin-bottom: 1.1em; }
+.letter .signoff{ color: var(--ink-soft); margin-top: 1.6em; }
+.tldr{ font-size: 13px; color: var(--ink-soft); max-width: 68ch; margin-top: 4px; }
+.next-delivery{
+  border-left: 2px solid var(--amber); padding: 4px 0 4px 16px;
+  font-size: 13px; color: var(--ink-soft);
+}
+.onboard{ margin-top: 20px; display: grid; gap: 10px; }
+.onboard .step{ display: flex; gap: 14px; align-items: baseline; font-size: 12.5px; }
+.onboard .when{ min-width: 88px; color: var(--amber); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; }
+
+/* decisions */
+.decision{ display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 22px 0; border-top: 1px solid var(--hairline); }
+.decision:first-of-type{ border-top: 0; padding-top: 4px; }
+.decision .no{ font-family: var(--serif); font-size: 20px; color: var(--amber); }
+.decision .mod{ font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
+.decision .text{ font-family: var(--serif); font-weight: 300; font-size: 15.5px; line-height: 1.7; color: var(--ink); margin: 6px 0 12px; max-width: 62ch; }
+.decision .row{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.decision .stake{ font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.decision .stamp{ font-size: 10.5px; color: var(--ink-faint); margin-top: 10px; font-style: italic; font-family: var(--serif); }
+.state{ font-size: 11.5px; }
+.state.approved, .state.done{ color: var(--ok); }
+.state.declined{ color: var(--serious); }
+
+/* the watch */
+.watch-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+.watch-item{ display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; }
+.watch-item:first-of-type{ border-top: 0; }
+.watch-item .what{ color: var(--ink-soft); }
+.chip{ font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.chip.watching{ color: var(--amber); }
+.chip.clear{ color: var(--ok); }
+.chip.escalated{ color: var(--serious); }
+.log-item{ display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 12px; }
+.log-item:first-of-type{ border-top: 0; }
+.log-item .when{ color: var(--ink-faint); font-size: 10.5px; padding-top: 2px; }
+.log-item .what{ color: var(--ink-soft); }
+
+/* instruments (simulator) */
+.sim{ border-top: 1px solid var(--hairline); padding: 20px 0 8px; }
+.sim:first-of-type{ border-top: 0; padding-top: 0; }
+.sim h3{ font-family: var(--serif); font-weight: 500; font-size: 15px; color: var(--ink); margin-bottom: 2px; }
+.sim .note{ font-size: 11px; color: var(--ink-faint); margin-bottom: 12px; }
+.sim-row{ display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.sim-val{ font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 62px; }
+.sim-out{ display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.sim-out .o{ background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 14px; }
+.sim-out .o b{ display: block; font-family: var(--serif); font-weight: 500; font-size: 19px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sim-out .o b.pos{ color: var(--ok); } .sim-out .o b.neg{ color: var(--serious); }
+.sim-out .o span{ font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); }
+.sim-warn{ margin-top: 10px; font-size: 11.5px; color: var(--serious); display: none; }
+
+/* the record */
+.tenure{ font-size: 11.5px; color: var(--ink-faint); margin-bottom: 18px; }
+.candor{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+.candor .c{ background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 18px; font-size: 12.5px; }
+.candor .c b{ display: block; font-family: var(--serif); font-weight: 500; font-size: 18px; margin-bottom: 2px; }
+.candor .win b{ color: var(--ok); }
+.candor .miss b{ color: var(--ink); }
+table{ width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; }
+th{ text-align: left; color: var(--ink-faint); font-weight: 400; text-transform: uppercase; font-size: 9.5px;
+  letter-spacing: .1em; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+td{ padding: 8px 10px; border-bottom: 1px solid var(--hairline); color: var(--ink-soft); }
 tr:last-child td{ border-bottom: 0; }
 td.num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .risk{ color: var(--serious); } .good{ color: var(--ok); }
-.hint{ font-size: 12px; }
-.banner{ border-radius: 12px; padding: 12px 16px; margin: 14px 0; font-size: 13px;
-  background: var(--amber-soft); color: var(--ink-100); display: none; }
-.banner.err{ background: hsl(8 72% 58% / .14); }
+.scroll{ overflow-x: auto; }
+.archive-item{
+  display: flex; gap: 16px; align-items: baseline; padding: 10px 0;
+  border-top: 1px solid var(--hairline); font-size: 12.5px; cursor: pointer; color: var(--ink-soft);
+}
+.archive-item:hover{ color: var(--ink); }
+.archive-item:first-of-type{ border-top: 0; }
+.archive-item .n{ font-family: var(--serif); color: var(--amber); min-width: 74px; }
+.archive-item .kinds{ margin-left: auto; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* evidence */
+details.panel{ padding: 0; }
+details.panel summary{
+  cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 18px 26px; font-family: var(--serif); font-size: 15px; color: var(--ink);
+}
+details.panel summary::-webkit-details-marker{ display: none; }
+details.panel summary::after{ content: "+"; color: var(--amber); font-size: 17px; }
+details.panel[open] summary::after{ content: "−"; }
+details.panel .inner{ padding: 0 26px 22px; }
+.report-link{ font-size: 12.5px; margin: 6px 0 18px; }
+
+.hint{ font-size: 12px; color: var(--ink-faint); }
+.banner{ border-radius: 10px; padding: 12px 16px; margin: 14px 0; font-size: 13px;
+  background: hsl(45 100% 50% / .1); color: var(--ink); display: none; }
+.banner.err{ background: hsl(8 65% 60% / .12); }
 .hidden{ display: none; }
-.login-box{ max-width: 430px; margin: 10vh auto 0; }
-.login-box p{ margin: 10px 0 18px; }
-.login-row{ display: flex; gap: 10px; margin-top: 6px; }
-footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1px solid var(--rule-08); padding-top: 14px; }
+.login-box{ max-width: 430px; margin: 12vh auto 0; }
+.login-box p{ margin: 12px 0 20px; }
+.login-row{ display: flex; gap: 10px; }
+footer{
+  margin-top: 46px; border-top: 1px solid var(--hairline); padding-top: 18px;
+  font-size: 11.5px; color: var(--ink-faint); line-height: 1.9;
+}
+
+@media (max-width: 700px){
+  .panel{ padding: 22px 20px; }
+  .position{ padding: 28px 20px; }
+  .pos-tiles{ grid-template-columns: 1fr; gap: 14px; }
+  .pos-tile{ border-left: 0; padding: 0; }
+  .watch-grid{ grid-template-columns: 1fr; }
+  .candor{ grid-template-columns: 1fr; }
+  .masthead{ flex-direction: column; }
+  .prepared{ text-align: left; }
+}
+@media (prefers-reduced-motion: reduce){ *{ transition: none !important; } }
 </style>
 
 <div class="wrap">
-  <div class="topbar">
-    <span class="logo">Hubric<em>o</em>n</span>
-    <div id="who" class="who hidden"><b id="company"></b><button id="signout">Sign out</button></div>
-  </div>
 
   <!-- login -->
   <div id="login" class="login-box">
-    <h1>Client Portal</h1>
+    <h1>Private Desk</h1>
     <p>Enter the email your workspace was set up with — we'll send a one-time sign-in link. No passwords, and you'll stay signed in on this device.</p>
     <div class="login-row">
       <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
@@ -170,40 +265,77 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
     <div class="banner" id="login-banner"></div>
   </div>
 
-  <!-- workspace -->
+  <!-- the desk -->
   <div id="app" class="hidden">
-    <h1 style="margin-bottom:18px">Your numbers</h1>
 
-    <div class="card" id="brief-card" style="display:none">
-      <div class="brief-head">
-        <h2 id="brief-title">Your briefing</h2>
-        <span class="brief-headline" id="brief-headline"></span>
+    <div class="masthead">
+      <span class="wordmark">Hubric<i>o</i>n</span>
+      <div class="prepared">
+        Prepared for <b id="company">—</b><br>
+        Hubricon Quantitative · as of <span id="asof"></span><br>
+        <button id="signout">Sign out</button>
       </div>
-      <div class="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe></div>
-      <p class="tldr" id="brief-tldr"></p>
+    </div>
+    <p class="objective hidden" id="objective">Your stated objective: <b id="objective-text"></b></p>
+
+    <!-- 1 · the position -->
+    <div class="panel position" id="position">
+      <span class="label" id="pos-label">Measured impact since engagement began</span>
+      <div class="fig pos-num good" id="pos-num">$0</div>
+      <div class="pos-sub" id="pos-sub"></div>
+      <svg class="spark" id="spark" width="240" height="44" viewBox="0 0 240 44" style="display:none" aria-hidden="true"></svg>
+      <div class="pos-tiles">
+        <div class="pos-tile"><span class="label">Net profit, latest period</span><span class="fig" id="d-net">—</span><span class="d" id="d-net-d"></span></div>
+        <div class="pos-tile"><span class="label">Revenue, latest period</span><span class="fig" id="d-rev">—</span><span class="d" id="d-rev-d"></span></div>
+        <div class="pos-tile"><span class="label">Blended net margin</span><span class="fig" id="d-pct">—</span><span class="d"></span></div>
+      </div>
     </div>
 
-    <div class="kpis">
-      <div class="kpi"><b id="d-net">—</b><span id="d-net-s">net profit, latest period</span></div>
-      <div class="kpi"><b id="d-rev">—</b><span id="d-rev-s">revenue, latest period</span></div>
-      <div class="kpi"><b id="d-pct">—</b><span>blended net margin</span></div>
-      <div class="kpi"><b class="good" id="d-measured">$0</b><span>measured impact to date</span></div>
+    <!-- 2 · the briefing -->
+    <div class="sect-label"><span class="label">The briefing</span></div>
+    <div class="panel" id="issue-panel">
+      <div id="issue-body" class="hidden">
+        <div class="issue-head">
+          <span class="issue-no" id="issue-no"></span>
+          <span class="issue-headline" id="issue-headline"></span>
+        </div>
+        <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe></div>
+        <div class="letter" id="letter"></div>
+        <p class="tldr" id="issue-tldr"></p>
+      </div>
+      <div id="issue-pending">
+        <p class="next-delivery"><b style="color:var(--ink)">Issue No. 001 is in preparation.</b> It lands within 24 hours of your data completing — a written letter, your recorded walkthrough, and the full report.</p>
+        <div class="onboard">
+          <div class="step"><span class="when">Days 0–1</span><span>Data ingested · models calibrated · baseline recorded — this becomes the number every future issue measures against.</span></div>
+          <div class="step"><span class="when">Days 1–30</span><span>Issue 001 delivered · first decisions on your desk · the watch begins (weekly sweeps, daily Buy Box tracking on any live test).</span></div>
+          <div class="step"><span class="when">Days 30–90</span><span>Monthly issue cadence · first measured results land on the ledger · price-testing program under way.</span></div>
+        </div>
+      </div>
     </div>
 
-    <div class="card" id="review-card">
-      <h2>Directives awaiting your review</h2>
-      <div id="review"></div>
+    <!-- 3 · decisions -->
+    <div class="sect-label"><span class="label">Decisions on your desk</span></div>
+    <div class="panel" id="desk-panel"><div id="desk"></div></div>
+
+    <!-- 4 · the watch -->
+    <div class="sect-label"><span class="label">The watch — what your infrastructure is doing</span></div>
+    <div class="panel">
+      <div class="watch-grid">
+        <div>
+          <span class="label" style="margin-bottom:10px">Under watch</span>
+          <div id="watchlist"></div>
+        </div>
+        <div>
+          <span class="label" style="margin-bottom:10px">Recent work</span>
+          <div id="log"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="card" id="alerts-card" style="display:none">
-      <h2>Watch alerts</h2>
-      <p class="hint" style="margin-bottom:6px">The models sweep your catalog automatically — this is what they flagged.</p>
-      <div id="alerts"></div>
-    </div>
-
-    <div class="card" id="sim-card" style="display:none">
-      <h2>Scenario simulator</h2>
-      <p class="hint" style="margin-bottom:10px">Your fitted curves, live. Drag a lever — this is the same math as your audit, running on your numbers.</p>
+    <!-- 5 · instruments -->
+    <div class="sect-label"><span class="label">Instruments</span></div>
+    <div class="panel" id="sim-card" style="display:none">
+      <p class="hint" style="margin-bottom:16px">Your fitted curves, live — the same models that write your directives.</p>
 
       <div class="sim" id="sim-price" style="display:none">
         <h3>Price</h3>
@@ -219,7 +351,7 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
           <div class="o"><b id="sp-profit">—</b><span>profit change / period</span></div>
           <div class="o"><b id="sp-range-out">—</b><span>95% range</span></div>
         </div>
-        <p class="sim-warn" id="sp-warn">Price increases risk Buy Box suppression — on the retainer we step them and watch your share daily.</p>
+        <p class="sim-warn" id="sp-warn">Price increases risk Buy Box suppression — we step them and watch your share daily.</p>
       </div>
 
       <div class="sim" id="sim-ads" style="display:none">
@@ -253,46 +385,56 @@ footer{ margin-top: 44px; font-size: 11.5px; color: var(--ink-60); border-top: 1
       </div>
     </div>
 
-    <div class="card">
-      <h2>Decision Ledger</h2>
-      <p class="hint" style="margin-bottom:8px">Every recommendation we've issued, what you decided, and the measured result.</p>
+    <!-- 6 · the record -->
+    <div class="sect-label"><span class="label">The record</span></div>
+    <div class="panel">
+      <p class="tenure" id="tenure"></p>
+      <div class="candor" id="candor" style="display:none">
+        <div class="c win"><b id="wins-num">$0</b><span id="wins-text">measured wins</span></div>
+        <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
+      </div>
       <div class="scroll"><table id="ledger">
-        <tr><th>Module</th><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
+        <tr><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
       </table></div>
+      <div style="margin-top:26px">
+        <span class="label" style="margin-bottom:8px">Issue archive</span>
+        <div id="archive"><p class="hint">Your first issue will appear here.</p></div>
+      </div>
     </div>
 
-    <p class="hint" style="margin:26px 0 10px">The evidence — the tables behind every number above, when you want to verify.</p>
+    <!-- 7 · evidence -->
+    <div class="sect-label"><span class="label">The evidence</span></div>
+    <p class="report-link hidden" id="report-link-wrap">Full written report: <a href="#" id="report-link">Issue —</a></p>
 
-    <details class="card evidence">
-      <summary><h2>True net margin — latest period</h2></summary>
-      <div class="scroll"><table id="margin">
+    <details class="panel">
+      <summary>True net margin — latest period</summary>
+      <div class="inner"><div class="scroll"><table id="margin">
         <tr><th>SKU</th><th class="num">Revenue</th><th class="num">Amazon fees</th><th class="num">COGS</th><th class="num">Ads</th><th class="num">Net</th><th class="num">Net %</th></tr>
-      </table></div>
+      </table></div></div>
     </details>
-
-    <details class="card evidence">
-      <summary><h2>Inventory risk</h2></summary>
-      <div class="scroll"><table id="inv">
+    <details class="panel">
+      <summary>Inventory risk</summary>
+      <div class="inner"><div class="scroll"><table id="inv">
         <tr><th>SKU</th><th class="num">Stockout P</th><th class="num">Days cover</th><th class="num">Reorder point</th><th class="num">Order qty</th></tr>
-      </table></div>
+      </table></div></div>
     </details>
-
-    <details class="card evidence">
-      <summary><h2>Price elasticity</h2></summary>
-      <div class="scroll"><table id="elast">
+    <details class="panel">
+      <summary>Price elasticity</summary>
+      <div class="inner"><div class="scroll"><table id="elast">
         <tr><th>Item</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th>Read</th></tr>
-      </table></div>
+      </table></div></div>
     </details>
-
-    <details class="card evidence">
-      <summary><h2>Price tests</h2></summary>
-      <p class="hint" style="margin:10px 0 8px">Deliberate, tracked price moves — Buy Box share watched so suppression gets caught in days, not quarters.</p>
-      <div class="scroll"><table id="ptests">
+    <details class="panel">
+      <summary>Price tests</summary>
+      <div class="inner"><div class="scroll"><table id="ptests">
         <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
-      </table></div>
+      </table></div></div>
     </details>
 
-    <footer>Your data is yours: request a complete export of everything we hold — raw files, tables, results — at any time, free. That's policy, not a favor.</footer>
+    <footer>
+      Your data is yours: request a complete export of everything we hold — raw files, tables, results, this ledger — at any time, free. That's policy, not a favor.<br>
+      Reply to any Hubricon email to reach the person who builds your models. There is no support tier.
+    </footer>
   </div>
 </div>
 
@@ -305,16 +447,14 @@ const PORTAL_URL = location.origin + "/portal";
 
 const $ = (s, el) => (el ?? document).querySelector(s);
 const money = (v) => v == null ? "—" : "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fdate = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+const fmonth = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "";
 
-/* ── session: localStorage + refresh-token renewal = one magic link per device ── */
-function storeSession(s){
-  try { localStorage.setItem("hubricon_session", JSON.stringify(s)); } catch {}
-}
+/* ── session: localStorage + refresh-token renewal ── */
+function storeSession(s){ try { localStorage.setItem("hubricon_session", JSON.stringify(s)); } catch {} }
 function session(){
-  try {
-    const s = JSON.parse(localStorage.getItem("hubricon_session"));
-    if (s && s.access_token) return s;
-  } catch {}
+  try { const s = JSON.parse(localStorage.getItem("hubricon_session")); if (s && s.access_token) return s; } catch {}
   return null;
 }
 function clearSession(){ try { localStorage.removeItem("hubricon_session"); } catch {} }
@@ -340,10 +480,7 @@ async function ensureSession(){
     };
     storeSession(renewed);
     return renewed;
-  } catch {
-    clearSession();
-    return null;
-  }
+  } catch { clearSession(); return null; }
 }
 
 if (location.hash.includes("access_token=")){
@@ -376,7 +513,7 @@ async function rest(path, options){
 
 /* ── login flow ── */
 function showLogin(msg, isError){
-  $("#app").classList.add("hidden"); $("#who").classList.add("hidden");
+  $("#app").classList.add("hidden");
   $("#login").classList.remove("hidden");
   const b = $("#login-banner");
   if (msg){ b.textContent = msg; b.className = "banner" + (isError ? " err" : ""); b.style.display = "block"; }
@@ -400,9 +537,51 @@ $("#send").addEventListener("click", async () => {
 });
 $("#signout").addEventListener("click", () => { clearSession(); showLogin(); });
 
-/* ── workspace ── */
-function statusBadge(s){ return `<span class="state ${s}">${s}</span>`; }
+/* ── the briefing (issue) rendering ── */
+function renderIssue(b){
+  $("#issue-pending").classList.add("hidden");
+  $("#issue-body").classList.remove("hidden");
+  const month = fmonth(b.created_at);
+  $("#issue-no").textContent = (b.issue_number ? `Issue No. ${String(b.issue_number).padStart(3, "0")}` : (b.title || "Your briefing")) + (month ? ` · ${month}` : "");
+  $("#issue-headline").textContent = b.headline || "";
+  const vw = $("#video-wrap");
+  if (b.video_id){
+    vw.classList.remove("hidden");
+    const src = `https://www.loom.com/embed/${b.video_id}?hide_owner=true&hideEmbedTopBar=true&hide_share=true`;
+    if ($("#brief-frame").src !== src) $("#brief-frame").src = src;
+  } else {
+    vw.classList.add("hidden");
+    $("#brief-frame").removeAttribute("src");
+  }
+  const letter = $("#letter");
+  if (b.memo){
+    const paras = b.memo.split(/\n\s*\n/).filter((p) => p.trim() && !/^Issue No\./i.test(p.trim()));
+    letter.innerHTML = paras.map((p) =>
+      `<p class="${p.trim().startsWith("—") ? "signoff" : ""}">${esc(p.trim())}</p>`).join("");
+  } else {
+    letter.innerHTML = "";
+  }
+  $("#issue-tldr").textContent = b.tldr || "";
+  const rl = $("#report-link-wrap");
+  if (b.report_path){
+    rl.classList.remove("hidden");
+    $("#report-link").textContent = `Issue No. ${String(b.issue_number ?? 1).padStart(3, "0")} — open`;
+    $("#report-link").onclick = async (ev) => {
+      ev.preventDefault();
+      const s = await ensureSession();
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/intake/${b.report_path}`, {
+        headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${s.access_token}` },
+      });
+      if (!res.ok) return;
+      const url = URL.createObjectURL(new Blob([await res.blob()], { type: "text/html" }));
+      window.open(url, "_blank");
+    };
+  } else {
+    rl.classList.add("hidden");
+  }
+}
 
+/* ── decisions ── */
 async function respond(id, approve, row){
   row.querySelectorAll("button").forEach((b) => (b.disabled = true));
   try {
@@ -410,158 +589,254 @@ async function respond(id, approve, row){
       method: "POST",
       body: JSON.stringify({ p_directive_id: id, p_approve: approve }),
     });
-    if (ok) { await load(); return; }
+    if (ok){ await load(); return; }
     throw new Error();
   } catch {
     row.querySelectorAll("button").forEach((b) => (b.disabled = false));
   }
 }
 
+/* ── main load ── */
 async function load(){
-  const clients = await rest("/rest/v1/clients?select=id,company_name");
+  const clients = await rest("/rest/v1/clients?select=id,company_name,goals,created_at");
   if (!clients.length){
     return showLogin("Your login isn't linked to a workspace yet — reply to your Hubricon email and we'll connect it.", true);
   }
-  $("#company").textContent = clients[0].company_name || "Your workspace";
+  const client = clients[0];
+  $("#company").textContent = client.company_name || "Your workspace";
+  $("#asof").textContent = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  if (client.goals){
+    $("#objective").classList.remove("hidden");
+    $("#objective-text").textContent = client.goals;
+  }
   $("#login").classList.add("hidden");
-  $("#who").classList.remove("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, runs, ptests, alerts, briefs] = await Promise.all([
+  const [directives, runs, ptests, alerts, briefs, uploads] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
-    rest("/rest/v1/model_runs?select=id,started_at&status=eq.succeeded&order=started_at.desc&limit=1"),
+    rest("/rest/v1/model_runs?select=id,started_at,params&status=eq.succeeded&order=started_at.desc&limit=5"),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
-    rest("/rest/v1/alerts?select=*&order=created_at.desc&limit=20"),
-    rest("/rest/v1/briefings?select=*&order=created_at.desc&limit=1"),
+    rest("/rest/v1/alerts?select=*&order=created_at.desc&limit=10"),
+    rest("/rest/v1/briefings?select=*&order=created_at.desc"),
+    rest("/rest/v1/uploads?select=original_filename,row_count,parsed_at&status=eq.parsed&order=parsed_at.desc&limit=6"),
   ]);
 
+  /* briefing + archive */
+  if (briefs.length) renderIssue(briefs[0]);
+  const archive = $("#archive");
   if (briefs.length){
-    const b = briefs[0];
-    $("#brief-card").style.display = "";
-    $("#brief-title").textContent = b.title || "Your briefing";
-    $("#brief-headline").textContent = b.headline || "";
-    $("#brief-tldr").textContent = b.tldr || "";
-    const frame = $("#brief-frame");
-    const src = `https://www.loom.com/embed/${b.video_id}?hide_owner=true&hideEmbedTopBar=true&hide_share=true`;
-    if (frame.src !== src) frame.src = src;
+    archive.innerHTML = "";
+    for (const b of briefs){
+      const row = document.createElement("div");
+      row.className = "archive-item";
+      const kinds = [b.video_id && "video", b.memo && "letter", b.report_path && "report"].filter(Boolean).join(" · ");
+      row.innerHTML = `<span class="n">No. ${String(b.issue_number ?? 1).padStart(3, "0")}</span>
+        <span>${fmonth(b.created_at)}</span><span class="kinds">${kinds}</span>`;
+      row.addEventListener("click", () => { renderIssue(b); $("#issue-panel").scrollIntoView({ behavior: "smooth" }); });
+      archive.appendChild(row);
+    }
   }
 
-  const ac = $("#alerts");
-  ac.innerHTML = "";
-  $("#alerts-card").style.display = alerts.length ? "" : "none";
-  for (const a of alerts){
-    const row = document.createElement("div");
-    row.className = "alert-row";
-    row.innerHTML = `<span class="sev ${a.severity}">${a.severity}</span>
-      <span>${a.message}</span>
-      <span class="when">${(a.created_at || "").slice(0, 10)}</span>`;
-    ac.appendChild(row);
+  /* position hero */
+  const measuredRows = directives.filter((d) => d.measured_impact_usd != null && d.measured_at);
+  const measured = measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0);
+  const since = fmonth(client.created_at);
+  if (measured > 0 || measuredRows.length){
+    $("#pos-label").textContent = `Measured impact since ${since}`;
+    $("#pos-num").textContent = money(measured);
+    $("#pos-sub").textContent = `${measuredRows.length} measured directive${measuredRows.length === 1 ? "" : "s"} · every figure verified against your own data`;
+  } else {
+    $("#pos-label").textContent = "Your engagement";
+    $("#pos-num").textContent = since || "—";
+    $("#pos-num").classList.remove("good");
+    $("#pos-num").style.fontSize = "clamp(28px, 5vw, 40px)";
+    $("#pos-sub").textContent = "Baseline period — measurement begins with your first approved directive, and every claim lands on the ledger below.";
+  }
+  /* sparkline of cumulative measured impact */
+  if (measuredRows.length >= 2){
+    const pts = measuredRows.sort((a, b) => a.measured_at.localeCompare(b.measured_at));
+    let acc = 0;
+    const series = pts.map((d) => (acc += Number(d.measured_impact_usd)));
+    const max = Math.max(...series, 1);
+    const spark = $("#spark");
+    spark.style.display = "block";
+    const step = 232 / (series.length - 1);
+    const poly = series.map((v, i) => `${(4 + i * step).toFixed(1)},${(40 - (v / max) * 34).toFixed(1)}`).join(" ");
+    spark.innerHTML = `<polyline points="${poly}" fill="none" stroke="hsl(150 45% 55%)" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="${(4 + (series.length - 1) * step).toFixed(1)}" cy="${(40 - 34).toFixed(1)}" r="3" fill="hsl(150 45% 55%)"/>`;
   }
 
-  const pt = $("#ptests");
-  pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  pt.closest(".card").style.display = ptests.length ? "" : "none";
-  for (const t of ptests){
-    const drop = t.buy_box_share_before != null && t.buy_box_share_during != null
-      && Number(t.buy_box_share_before) - Number(t.buy_box_share_during) >= 10;
-    pt.insertAdjacentHTML("beforeend", `<tr>
-      <td>${t.sku}</td>
-      <td class="num">$${Number(t.baseline_price).toFixed(2)} → $${Number(t.test_price).toFixed(2)}</td>
-      <td>${t.start_date ?? "—"} .. ${t.end_date ?? "—"}</td>
-      <td class="num ${drop ? "risk" : ""}">${t.buy_box_share_before ?? "—"}% → ${t.buy_box_share_during ?? "—"}%</td>
-      <td>${t.status}</td>
-    </tr>`);
-  }
-
-  const measured = directives.reduce((t, d) => t + Number(d.measured_impact_usd || 0), 0);
+  /* decisions on the desk */
   const awaiting = directives.filter((d) => d.status === "issued");
-  $("#d-measured").textContent = money(measured);
-
-  const review = $("#review");
-  review.innerHTML = awaiting.length ? "" : `<p class="hint">Nothing waiting — you're fully up to date.</p>`;
-  for (const d of awaiting){
+  const executed = directives.filter((d) => ["approved", "done"].includes(d.status)).length;
+  const desk = $("#desk");
+  desk.innerHTML = "";
+  if (!awaiting.length){
+    desk.innerHTML = `<p class="hint">Nothing awaiting you — ${executed} decision${executed === 1 ? "" : "s"} executed to date. The watch continues below.</p>`;
+  }
+  awaiting.forEach((d, i) => {
     const row = document.createElement("div");
-    row.className = "directive";
+    row.className = "decision";
     row.innerHTML = `
-      <span class="tag">${d.module}</span>
-      <div class="body">${d.action_text}</div>
-      <div class="actions">
-        <button class="primary">Approve</button>
-        <button class="decline">Decline</button>
-        <span class="exp">${d.expected_impact_usd ? "expected " + money(d.expected_impact_usd) : ""}</span>
+      <span class="no">${String(i + 1).padStart(2, "0")}</span>
+      <div>
+        <span class="mod">${esc(d.module)}</span>
+        <p class="text">${esc(d.action_text)}</p>
+        <div class="row">
+          <button class="primary">Approve</button>
+          <button class="decline">Decline</button>
+          <span class="stake">${d.expected_impact_usd ? "expected " + money(d.expected_impact_usd) : ""}</span>
+        </div>
+        <p class="stamp">Reviewed and signed off — Hubricon, ${fdate(d.issued_at || d.created_at)}</p>
       </div>`;
     row.querySelector(".primary").addEventListener("click", () => respond(d.id, true, row));
     row.querySelector(".decline").addEventListener("click", () => respond(d.id, false, row));
-    review.appendChild(row);
+    desk.appendChild(row);
+  });
+
+  /* run-scoped data */
+  let margins = [], inv = [], elast = [], adFits = [];
+  if (runs.length){
+    const runFilter = `run_id=eq.${runs[0].id}`;
+    [margins, inv, elast, adFits] = await Promise.all([
+      rest(`/rest/v1/margin_results?select=*&${runFilter}&order=revenue.desc`),
+      rest(`/rest/v1/inventory_sim_results?select=*&${runFilter}&order=stockout_probability.desc`),
+      rest(`/rest/v1/elasticity_results?select=*&${runFilter}&level=eq.sku`),
+      rest(`/rest/v1/ad_efficiency_results?select=*&${runFilter}&status=eq.ok`),
+    ]);
   }
 
-  const ledger = $("#ledger");
-  ledger.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  for (const d of directives){
-    ledger.insertAdjacentHTML("beforeend", `<tr>
-      <td>${d.module.toUpperCase()}</td><td>${d.action_text}</td>
-      <td class="num">${d.expected_impact_usd ? money(d.expected_impact_usd) : "—"}</td>
-      <td>${statusBadge(d.status)}</td>
-      <td class="num ${Number(d.measured_impact_usd) > 0 ? "good" : ""}">${d.measured_impact_usd != null ? money(d.measured_impact_usd) : "—"}</td>
-    </tr>`);
-  }
-
-  if (!runs.length) return;
-  const runFilter = `run_id=eq.${runs[0].id}`;
-  const [margins, inv, elast, adFits] = await Promise.all([
-    rest(`/rest/v1/margin_results?select=*&${runFilter}&order=revenue.desc`),
-    rest(`/rest/v1/inventory_sim_results?select=*&${runFilter}&order=stockout_probability.desc`),
-    rest(`/rest/v1/elasticity_results?select=*&${runFilter}&level=eq.sku`),
-    rest(`/rest/v1/ad_efficiency_results?select=*&${runFilter}&status=eq.ok`),
-  ]);
-  setupSimulator(margins, elast, adFits, inv);
-
-  /* "since last time" delta strip from the two latest margin periods */
+  /* delta tiles */
   const periods = [...new Set(margins.map((m) => m.period_start))].sort();
   if (periods.length){
     const totals = (p) => {
       const rows = margins.filter((m) => m.period_start === p);
-      const rev = rows.reduce((t, m) => t + Number(m.revenue || 0), 0);
-      const net = rows.reduce((t, m) => t + Number(m.net_margin || 0), 0);
-      return { rev, net };
+      return {
+        rev: rows.reduce((t, m) => t + Number(m.revenue || 0), 0),
+        net: rows.reduce((t, m) => t + Number(m.net_margin || 0), 0),
+      };
     };
     const cur = totals(periods[periods.length - 1]);
     const prev = periods.length >= 2 ? totals(periods[periods.length - 2]) : null;
-    const delta = (now, before) => {
-      if (before == null) return "";
+    const delta = (el, now, before) => {
+      if (before == null) return;
       const d = now - before;
-      return ` <i class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"} ${money(Math.abs(d))} vs prior</i>`;
+      const n = $(el);
+      n.textContent = `${d >= 0 ? "▲" : "▼"} ${money(Math.abs(d))} vs prior`;
+      n.className = "d " + (d >= 0 ? "up" : "down");
     };
     $("#d-net").textContent = money(cur.net);
-    $("#d-net").className = cur.net >= 0 ? "good" : "warn";
-    $("#d-net-s").innerHTML = "net profit, latest period" + delta(cur.net, prev?.net);
+    delta("#d-net-d", cur.net, prev?.net);
     $("#d-rev").textContent = money(cur.rev);
-    $("#d-rev-s").innerHTML = "revenue, latest period" + delta(cur.rev, prev?.rev);
+    delta("#d-rev-d", cur.rev, prev?.rev);
     $("#d-pct").textContent = cur.rev > 0 ? (cur.net / cur.rev * 100).toFixed(1) + "%" : "—";
   }
 
+  /* the watch: watchlist with resolution states */
+  const wl = $("#watchlist");
+  wl.innerHTML = "";
+  const watchItems = [];
+  for (const r of inv){
+    const p = Number(r.stockout_probability || 0);
+    watchItems.push({
+      order: p >= 0.25 ? 0 : 2,
+      html: `<span class="what">${esc(r.sku)} — inventory</span>
+        <span class="chip ${p >= 0.25 ? "escalated" : "clear"}">${p >= 0.25 ? `${(p * 100).toFixed(0)}% risk — action issued` : "checked — no action needed"}</span>`,
+    });
+  }
+  for (const t of ptests.filter((t) => t.status === "running")){
+    watchItems.push({ order: 1, html: `<span class="what">${esc(t.sku)} — price test</span><span class="chip watching">watching Buy Box daily</span>` });
+  }
+  for (const a of adFits){
+    const over = a.current_spend && a.breakeven_spend && Number(a.current_spend) > Number(a.breakeven_spend);
+    watchItems.push({
+      order: over ? 0 : 2,
+      html: `<span class="what">${esc(a.campaign_name)} — ad spend</span>
+        <span class="chip ${over ? "escalated" : "clear"}">${over ? "past break-even — trim issued" : "within efficient range"}</span>`,
+    });
+  }
+  watchItems.sort((a, b) => a.order - b.order).slice(0, 8).forEach((w) => {
+    const el = document.createElement("div");
+    el.className = "watch-item";
+    el.innerHTML = w.html;
+    wl.appendChild(el);
+  });
+  if (!watchItems.length) wl.innerHTML = `<p class="hint">The watch begins after your first models run.</p>`;
+
+  /* the watch: activity log — specific named work, never counters */
+  const events = [];
+  for (const r of runs){
+    const sims = r.params?.simulations;
+    events.push({ t: r.started_at, what: sims
+      ? `Ran ${Number(sims).toLocaleString()} demand simulations per SKU — margin, elasticity, and ad-response models refreshed`
+      : "Full model refresh across your catalog" });
+  }
+  for (const u of uploads) events.push({ t: u.parsed_at, what: `Ingested ${u.original_filename} — ${u.row_count ?? "?"} rows verified` });
+  for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${a.message.slice(0, 90)}${a.message.length > 90 ? "…" : ""}` });
+  for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Directive issued: ${d.action_text.slice(0, 80)}…` });
+  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku} — Buy Box under daily watch` });
+  events.sort((a, b) => String(b.t).localeCompare(String(a.t)));
+  const log = $("#log");
+  log.innerHTML = events.length ? "" : `<p class="hint">Work appears here as it happens.</p>`;
+  for (const e of events.slice(0, 10)){
+    const el = document.createElement("div");
+    el.className = "log-item";
+    el.innerHTML = `<span class="when">${fdate(e.t)}</span><span class="what">${esc(e.what)}</span>`;
+    log.appendChild(el);
+  }
+
+  /* the record */
+  const issues = briefs.length;
+  $("#tenure").textContent = `Client since ${since || "—"} · ${issues} issue${issues === 1 ? "" : "s"} · ${directives.length} directive${directives.length === 1 ? "" : "s"} · ${executed} executed`;
+  const wins = measuredRows.filter((d) => Number(d.measured_impact_usd) > 0);
+  if (measuredRows.length){
+    $("#candor").style.display = "";
+    $("#wins-num").textContent = money(wins.reduce((t, d) => t + Number(d.measured_impact_usd), 0));
+    $("#wins-text").textContent = `across ${wins.length} measured win${wins.length === 1 ? "" : "s"}`;
+    const misses = measuredRows.filter((d) => d.expected_impact_usd && Number(d.measured_impact_usd) < Number(d.expected_impact_usd));
+    if (misses.length){
+      const worst = misses.sort((a, b) =>
+        (Number(a.measured_impact_usd) - Number(a.expected_impact_usd)) -
+        (Number(b.measured_impact_usd) - Number(b.expected_impact_usd)))[0];
+      $("#miss-num").textContent = `${money(worst.expected_impact_usd)} → ${money(worst.measured_impact_usd)}`;
+      $("#miss-text").textContent = "we said, it measured — the misses stay on the record too";
+    } else {
+      $("#miss-num").textContent = "none yet";
+      $("#miss-text").textContent = "when a call comes in under, it stays on this record";
+    }
+  }
+  const ledger = $("#ledger");
+  ledger.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
+  for (const d of directives.filter((x) => x.status !== "draft")){
+    ledger.insertAdjacentHTML("beforeend", `<tr>
+      <td>${esc(d.action_text)}</td>
+      <td class="num">${d.expected_impact_usd ? money(d.expected_impact_usd) : "—"}</td>
+      <td><span class="state ${esc(d.status)}">${esc(d.status)}</span></td>
+      <td class="num ${Number(d.measured_impact_usd) > 0 ? "good" : ""}">${d.measured_impact_usd != null ? money(d.measured_impact_usd) : "—"}</td>
+    </tr>`);
+  }
+
+  /* evidence tables */
   const latest = margins.reduce((m, r) => (r.period_start > m ? r.period_start : m), "");
   const mt = $("#margin");
   mt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
   for (const m of margins.filter((r) => r.period_start === latest).slice(0, 15)){
     const pct = m.net_margin_pct != null ? (Number(m.net_margin_pct) * 100).toFixed(1) + "%" : "—";
     mt.insertAdjacentHTML("beforeend", `<tr>
-      <td>${m.sku}</td><td class="num">${money(m.revenue)}</td><td class="num">${money(m.amazon_fees)}</td>
+      <td>${esc(m.sku)}</td><td class="num">${money(m.revenue)}</td><td class="num">${money(m.amazon_fees)}</td>
       <td class="num">${m.cogs != null ? money(m.cogs) : "—"}</td><td class="num">${money(m.ad_spend_allocated)}</td>
       <td class="num ${Number(m.net_margin) < 0 ? "risk" : "good"}">${money(m.net_margin)}</td><td class="num">${pct}</td>
     </tr>`);
   }
-
   const it = $("#inv");
   it.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
   for (const r of inv.slice(0, 15)){
     const p = Number(r.stockout_probability || 0);
     it.insertAdjacentHTML("beforeend", `<tr>
-      <td>${r.sku}</td><td class="num ${p >= 0.25 ? "risk" : ""}">${(p * 100).toFixed(0)}%</td>
+      <td>${esc(r.sku)}</td><td class="num ${p >= 0.25 ? "risk" : ""}">${(p * 100).toFixed(0)}%</td>
       <td class="num">${r.days_of_cover ?? "—"}</td><td class="num">${r.reorder_point ?? "—"}</td><td class="num">${r.reorder_qty ?? "—"}</td>
     </tr>`);
   }
-
   const et = $("#elast");
   et.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
   for (const r of elast){
@@ -569,11 +844,25 @@ async function load(){
       : Number(r.elasticity) > -1 ? "price-insensitive — increase testable" : "elastic — price cuts move volume";
     const ci = r.details?.ci95 ? `[${r.details.ci95[0]}, ${r.details.ci95[1]}]` : "—";
     et.insertAdjacentHTML("beforeend", `<tr>
-      <td>${r.item_id}</td><td class="num">${r.elasticity ?? "—"}</td>
-      <td class="num">${ci}</td>
-      <td class="num">${r.r_squared ?? "—"}</td><td>${read}</td>
+      <td>${esc(r.item_id)}</td><td class="num">${r.elasticity ?? "—"}</td>
+      <td class="num">${ci}</td><td class="num">${r.r_squared ?? "—"}</td><td>${read}</td>
     </tr>`);
   }
+  const pt = $("#ptests");
+  pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
+  for (const t of ptests){
+    const drop = t.buy_box_share_before != null && t.buy_box_share_during != null
+      && Number(t.buy_box_share_before) - Number(t.buy_box_share_during) >= 10;
+    pt.insertAdjacentHTML("beforeend", `<tr>
+      <td>${esc(t.sku)}</td>
+      <td class="num">$${Number(t.baseline_price).toFixed(2)} → $${Number(t.test_price).toFixed(2)}</td>
+      <td>${t.start_date ?? "—"} .. ${t.end_date ?? "—"}</td>
+      <td class="num ${drop ? "risk" : ""}">${t.buy_box_share_before ?? "—"}% → ${t.buy_box_share_during ?? "—"}%</td>
+      <td>${esc(t.status)}</td>
+    </tr>`);
+  }
+
+  setupSimulator(margins, elast, adFits, inv);
 }
 
 /* ── scenario simulator: client-side math on the fitted results ── */
@@ -590,13 +879,12 @@ function setupSimulator(margins, elast, adFits, inv){
   const latestBySku = {};
   for (const m of margins) if (m.period_start === latest) latestBySku[m.sku] = m;
 
-  /* price sim: needs an ok elasticity fit AND latest-period economics */
   const priceSkus = elast.filter((e) => e.status === "ok" && latestBySku[e.item_id]
     && Number(latestBySku[e.item_id].units) > 0 && Number(latestBySku[e.item_id].revenue) > 0);
   if (priceSkus.length){
     $("#sim-price").style.display = "";
     const sel = $("#sp-sku");
-    sel.innerHTML = priceSkus.map((e) => `<option value="${e.item_id}">${e.item_id}</option>`).join("");
+    sel.innerHTML = priceSkus.map((e) => `<option value="${esc(e.item_id)}">${esc(e.item_id)}</option>`).join("");
     const update = () => {
       const fit = priceSkus.find((e) => e.item_id === sel.value) ?? priceSkus[0];
       const m = latestBySku[fit.item_id];
@@ -615,7 +903,7 @@ function setupSimulator(margins, elast, adFits, inv){
       const baseProfit = revenue * (1 - feesRate) - (m.cogs != null ? Number(m.cogs) : 0) - ads;
       const mid = project(Number(fit.elasticity));
       const ci = fit.details?.ci95;
-      const lo = ci ? project(Number(ci[1])).profit - baseProfit : null; /* more elastic bound */
+      const lo = ci ? project(Number(ci[1])).profit - baseProfit : null;
       const hi = ci ? project(Number(ci[0])).profit - baseProfit : null;
       const d = mid.profit - baseProfit;
       $("#sp-price").textContent = "$" + (p0 * (1 + dp)).toFixed(2);
@@ -632,11 +920,10 @@ function setupSimulator(margins, elast, adFits, inv){
     update();
   }
 
-  /* ad sim: fitted response curves */
   if (adFits.length){
     $("#sim-ads").style.display = "";
     const sel = $("#sa-camp");
-    sel.innerHTML = adFits.map((a, i) => `<option value="${i}">${a.campaign_name}</option>`).join("");
+    sel.innerHTML = adFits.map((a, i) => `<option value="${i}">${esc(a.campaign_name)}</option>`).join("");
     const curve = (a, s) => {
       const p = a.curve_params || {};
       if (a.curve_model === "hill") return p.a * Math.pow(s, p.h) / (Math.pow(p.k, p.h) + Math.pow(s, p.h));
@@ -661,12 +948,11 @@ function setupSimulator(margins, elast, adFits, inv){
     update();
   }
 
-  /* reorder timing sim: normal approximation over delay + lead time */
   const invSkus = inv.filter((r) => Number(r.daily_velocity_mean) > 0);
   if (invSkus.length){
     $("#sim-inv").style.display = "";
     const sel = $("#si-sku");
-    sel.innerHTML = invSkus.map((r) => `<option value="${r.sku}">${r.sku}</option>`).join("");
+    sel.innerHTML = invSkus.map((r) => `<option value="${esc(r.sku)}">${esc(r.sku)}</option>`).join("");
     const update = () => {
       const r = invSkus.find((x) => x.sku === sel.value) ?? invSkus[0];
       const wait = Number($("#si-range").value);

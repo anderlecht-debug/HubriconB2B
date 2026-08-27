@@ -73,6 +73,56 @@ def top_story(directives: list[dict], alerts: list[dict], elasticity: list[dict]
     return "This month is a clean bill of health — walk the numbers and bank the ledger."
 
 
+def build_memo(company: str, first_name: str, deltas: dict | None,
+               directives: list[dict], alerts: list[dict], elasticity: list[dict],
+               ledger_measured: float, ledger_count: int, issue_number: int) -> str:
+    """The written letter — the Marks-memo tradition. Same facts as the
+    narration script, formatted as prose the founder edits, not reads."""
+    name = first_name or "there"
+    issued = [d for d in directives if d.get("status") == "issued"]
+
+    paragraphs = [f"Issue No. {issue_number:03d}", "", f"Dear {name},", ""]
+
+    if deltas and deltas["net_delta"] is not None:
+        d = deltas
+        direction = "up" if d["net_delta"] >= 0 else "down"
+        paragraphs.append(
+            f"Your catalog earned {_money(d['latest']['net'])} of true net profit last period — "
+            f"{direction} {_money(d['net_delta'])} from the period before, on "
+            f"{_money(d['latest']['revenue'])} of revenue"
+            + (f" ({d['latest']['pct']:.1%} blended net margin)." if d["latest"]["pct"] is not None else ".")
+        )
+    elif deltas:
+        paragraphs.append(
+            f"This is your first full read: {_money(deltas['latest']['net'])} of true net profit "
+            f"last period after every Amazon fee, your landed costs, and advertising — the baseline "
+            f"every future issue measures against."
+        )
+    else:
+        paragraphs.append("Your first models have run; the numbers below are your baseline.")
+
+    paragraphs += ["", top_story(directives, alerts, elasticity), ""]
+
+    if issued:
+        paragraphs.append(
+            f"There {'is one decision' if len(issued) == 1 else f'are {len(issued)} decisions'} "
+            f"on your desk below — each states the exact action, the expected dollars, and how "
+            f"we'll measure it. Approve or decline; nothing moves without you."
+        )
+    else:
+        paragraphs.append("Nothing needs your decision this period — the watch continues either way.")
+
+    paragraphs += [
+        "",
+        f"The record to date: {_money(ledger_measured)} of measured impact across "
+        f"{ledger_count} directives. Every claim we make ends up on that ledger, "
+        f"in our favor or against us.",
+        "",
+        "— Hubricon",
+    ]
+    return "\n".join(paragraphs)
+
+
 def build_script(company: str, first_name: str, deltas: dict | None,
                  directives: list[dict], alerts: list[dict], elasticity: list[dict],
                  ledger_measured: float, ledger_count: int) -> str:

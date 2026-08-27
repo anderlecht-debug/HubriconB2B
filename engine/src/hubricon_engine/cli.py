@@ -24,7 +24,7 @@ from . import __version__
 from . import db as dbmod
 from . import storage
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
-from .briefing import build_script, parse_loom_id, period_deltas
+from .briefing import build_memo, build_script, parse_loom_id, period_deltas
 from .directives import draft_directives, resolve_brand_terms
 from .ingest import PARSERS
 from .notify import alert_email_body, email_configured, send_email
@@ -282,8 +282,9 @@ def cmd_ledger(args):
 def cmd_measure(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
-    rows = (db.table("directives").select("id, status, action_text").eq("client_id", client["id"])
-            .like("id", f"{args.directive}%").execute().data)
+    candidates = (db.table("directives").select("id, status, action_text")
+                  .eq("client_id", client["id"]).execute().data)
+    rows = [r for r in candidates if r["id"].startswith(args.directive.lower())]
     if len(rows) != 1:
         sys.exit(f"Directive prefix {args.directive!r} matched {len(rows)} row(s) — need exactly 1.")
     patch = {
@@ -298,7 +299,8 @@ def cmd_measure(args):
 
 
 def _find_test(db, client_id: str, prefix: str) -> dict:
-    rows = db.table("price_tests").select("*").eq("client_id", client_id).like("id", f"{prefix}%").execute().data
+    candidates = db.table("price_tests").select("*").eq("client_id", client_id).execute().data
+    rows = [r for r in candidates if r["id"].startswith(prefix.lower())]
     if len(rows) != 1:
         sys.exit(f"Test prefix {prefix!r} matched {len(rows)} row(s) — need exactly 1.")
     return rows[0]
@@ -414,36 +416,78 @@ def cmd_script(args):
     ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in directives)
 
     first_name = (client.get("contact_name") or "").split(" ")[0]
-    script = build_script(
-        client["company_name"] or client["contact_email"], first_name,
-        period_deltas(margins), directives, alerts, elasticity,
-        ledger_measured, len(directives),
-    )
+    company = client["company_name"] or client["contact_email"]
+    deltas = period_deltas(margins)
+    issue_count = db.table("briefings").select("id", count="exact", head=True).eq(
+        "client_id", client["id"]).execute().count or 0
+
+    script = build_script(company, first_name, deltas, directives, alerts, elasticity,
+                          ledger_measured, len(directives))
+    memo = build_memo(company, first_name, deltas, directives, alerts, elasticity,
+                      ledger_measured, len(directives), issue_number=issue_count + 1)
+
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"script-{date.today().isoformat()}.md"
-    path.write_text(script, encoding="utf-8")
+    script_path = folder / f"script-{date.today().isoformat()}.md"
+    memo_path = folder / f"memo-{date.today().isoformat()}.md"
+    script_path.write_text(script, encoding="utf-8")
+    memo_path.write_text(memo, encoding="utf-8")
     print(script)
-    print(f"\nSaved: {path}")
+    print(f"\nSaved narration: {script_path}")
+    print(f"Saved letter draft (edit, then `hubricon brief --memo-file`): {memo_path}")
 
 
 def cmd_brief(args):
+    from pathlib import Path
+
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
-    video_id = parse_loom_id(args.video)
-    if not video_id:
-        sys.exit(f"Couldn't read a Loom video id from {args.video!r} — paste the share URL.")
+
+    video_id = None
+    if args.video:
+        video_id = parse_loom_id(args.video)
+        if not video_id:
+            sys.exit(f"Couldn't read a Loom video id from {args.video!r} — paste the share URL.")
+    memo = Path(args.memo_file).read_text(encoding="utf-8") if args.memo_file else None
+    if not video_id and not memo:
+        sys.exit("An issue needs a --video, a --memo-file, or both.")
+
+    issue = (db.table("briefings").select("id", count="exact", head=True)
+             .eq("client_id", client["id"]).execute().count or 0) + 1
+
+    report_path = None
+    if args.report:
+        report_file = Path(args.report)
+        if not report_file.exists():
+            sys.exit(f"No such report file: {args.report}")
+        report_path = f"reports/{client['id']}/issue-{issue:03d}.html"
+        db.storage.from_(storage.BUCKET).upload(
+            report_path, report_file.read_bytes(),
+            {"content-type": "text/html", "upsert": "true"},
+        )
+
     run = _latest_run(db, client["id"], None) if not args.no_run else None
-    row = {
+    db.table("briefings").insert({
         "client_id": client["id"],
         "run_id": run["id"] if run else None,
         "video_id": video_id,
+        "memo": memo,
+        "issue_number": issue,
+        "report_path": report_path,
         "title": args.title,
         "tldr": args.tldr,
         "headline": args.headline,
-    }
-    db.table("briefings").insert(row).execute()
-    print(f"Briefing published to the portal for {client['company_name'] or client['contact_email']}.")
+    }).execute()
+    parts = [p for p, on in (("video", video_id), ("letter", memo), ("report", report_path)) if on]
+    print(f"Issue No. {issue:03d} ({' + '.join(parts)}) published to the portal for "
+          f"{client['company_name'] or client['contact_email']}.")
+
+
+def cmd_goals(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    db.table("clients").update({"goals": args.set}).eq("id", client["id"]).execute()
+    print(f"Objective on file for {client['company_name'] or client['contact_email']}: {args.set}")
 
 
 def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
@@ -596,14 +640,21 @@ def main():
     p.add_argument("client")
     p.set_defaults(fn=cmd_script)
 
-    p = sub.add_parser("brief", help="publish a recorded Loom briefing to the client portal")
+    p = sub.add_parser("brief", help="publish an Issue (video and/or letter, optional full report) to the portal")
     p.add_argument("client")
-    p.add_argument("--video", required=True, help="Loom share URL or video id")
+    p.add_argument("--video", help="Loom share URL or video id")
+    p.add_argument("--memo-file", help="path to the edited letter (markdown/plain text)")
+    p.add_argument("--report", help="path to the full written report HTML to attach")
     p.add_argument("--tldr", help="3-4 sentence summary shown under the video")
     p.add_argument("--headline", help="one headline stat, e.g. '+$9,200 vs July'")
-    p.add_argument("--title", help="briefing title (default shown as 'Your briefing')")
+    p.add_argument("--title", help="issue title (default 'Issue No. N')")
     p.add_argument("--no-run", action="store_true", help="don't link the latest model run")
     p.set_defaults(fn=cmd_brief)
+
+    p = sub.add_parser("goals", help="record the client's stated objective (shown on their masthead)")
+    p.add_argument("client")
+    p.add_argument("--set", required=True, help='e.g. "Grow to $5M/yr without giving back margin"')
+    p.set_defaults(fn=cmd_goals)
 
     p = sub.add_parser("sweep", help="always-on pass over every active client: ingest, run, draft, alert")
     p.add_argument("--client", help="sweep just this client")
