@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to Hubricon</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2f3f8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+<style>
+/* The concierge page — same paper-and-gold system as the Desk. One page,
+   one action, zero logins. */
+:root{
+  --bg:        hsl(222 28% 96%);
+  --panel:     hsl(0 0% 100%);
+  --panel-2:   hsl(222 26% 94%);
+  --amber:     hsl(40 96% 33%);
+  --amber-fill:hsl(45 100% 50%);
+  --ok:        hsl(150 58% 28%);
+  --serious:   hsl(8 70% 42%);
+  --ink:       hsl(228 44% 11%);
+  --ink-soft:  hsl(228 26% 26%);
+  --ink-faint: hsl(228 16% 42%);
+  --hairline:  hsl(228 30% 20% / .14);
+  --rule:      hsl(228 30% 20% / .30);
+  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+*{ box-sizing: border-box; margin: 0; }
+html{ scroll-behavior: smooth; }
+body{
+  background: var(--bg); color: var(--ink-soft);
+  font-family: var(--sans); font-size: 15.5px; line-height: 1.65;
+  padding: 40px 20px 90px;
+}
+.wrap{ max-width: 760px; margin: 0 auto; }
+h1, h2, h3{ font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
+h1{ font-size: clamp(30px, 6vw, 42px); line-height: 1.12; text-wrap: balance; }
+h2{ font-size: 22px; }
+h3{ font-size: 17px; }
+a{ color: var(--amber); }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+.label{ font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--ink-faint); display: block; }
+.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); }
+.wordmark i{ font-style: normal; color: var(--amber); }
+.masthead{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+  border-bottom: 1px solid var(--hairline); padding-bottom: 18px; margin-bottom: 34px; }
+.masthead .mono{ font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint);
+  letter-spacing: .08em; text-transform: uppercase; }
+.promise{
+  font-family: var(--serif); font-weight: 300; font-size: 19px; line-height: 1.7;
+  color: var(--ink); max-width: 58ch; margin: 18px 0 8px;
+}
+.promise b{ font-weight: 600; }
+.panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px;
+  padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
+.step-no{ font-family: var(--serif); font-size: 15px; color: var(--amber); letter-spacing: .04em; display: block; margin-bottom: 6px; }
+.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden;
+  background: hsl(228 45% 7%); margin-top: 18px; }
+.video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-poster{ position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px;
+  align-items: center; justify-content: center; text-align: center; padding: 24px;
+  color: hsl(220 30% 96% / .85); font-family: var(--serif); font-size: 18px; }
+.video-poster .sub{ font-family: var(--sans); font-size: 13px; color: hsl(220 30% 96% / .55); }
+.video-poster .mark{ font-family: var(--serif); font-weight: 600; font-size: 30px; color: hsl(45 100% 50%); }
+
+.email-line{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 4px; }
+.email-box{ font-family: var(--mono); font-size: 15.5px; color: var(--ink); background: var(--panel-2);
+  border: 1px solid var(--rule); border-radius: 9px; padding: 11px 16px; user-select: all; }
+button.copy{
+  font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer;
+  border-radius: 8px; padding: 11px 18px; border: 1px solid hsl(45 95% 45%);
+  background: var(--amber-fill); color: hsl(228 45% 10%);
+}
+button.copy:hover{ filter: brightness(1.04); }
+.path{ font-family: var(--mono); font-size: 13px; color: var(--ink-soft); background: var(--panel-2);
+  border-radius: 8px; padding: 8px 14px; display: inline-block; margin: 10px 0 4px; }
+.perm{ display: grid; gap: 8px; margin: 14px 0 6px; padding: 0; list-style: none; }
+.perm li{ display: flex; gap: 10px; align-items: baseline; }
+.perm li::before{ content: "☑"; color: var(--ok); font-size: 15px; }
+.perm li.no::before{ content: "☒"; color: var(--serious); }
+.perm b{ color: var(--ink); font-weight: 600; }
+.why{ font-size: 13.5px; color: var(--ink-faint); margin-top: 12px; max-width: 62ch; }
+.fallback{ font-size: 13.5px; color: var(--ink-faint); margin-top: 12px; font-style: italic; }
+
+.calendly-mount{ min-height: 660px; margin-top: 14px; border-radius: 10px; overflow: hidden; }
+.cal-fallback{ font-size: 14px; margin-top: 8px; }
+
+.timeline{ display: grid; gap: 0; margin-top: 16px; }
+.t-step{ display: grid; grid-template-columns: 132px 1fr; gap: 16px; padding: 13px 0;
+  border-top: 1px solid var(--hairline); font-size: 14.5px; }
+.t-step:first-child{ border-top: 0; }
+.t-step .when{ font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--amber); padding-top: 3px; }
+.t-step b{ color: var(--ink); font-weight: 600; }
+
+.faq{ display: grid; gap: 18px; margin-top: 16px; }
+.faq h3{ margin-bottom: 4px; }
+.faq p{ max-width: 66ch; font-size: 14.5px; }
+footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18px;
+  font-size: 13px; color: var(--ink-faint); line-height: 1.8; }
+@media (max-width: 560px){
+  .panel{ padding: 22px 20px; }
+  .t-step{ grid-template-columns: 1fr; gap: 2px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <span class="wordmark">Hubric<i>o</i>n</span>
+    <span class="mono">Client onboarding · private</span>
+  </div>
+
+  <h1>You're in. Here's everything — in one page.</h1>
+  <p class="promise">We run the math on your Amazon account and <b>execute the profit fixes for
+  you</b> — pricing, ads, inventory. You watch a 3-minute video every two weeks and keep the
+  margin. <b>First month free</b> — if we don't find you more than we cost, walk away owing
+  nothing.</p>
+
+  <div class="panel">
+    <span class="label">90 seconds · from the founder</span>
+    <div class="video-wrap" id="video-wrap">
+      <div class="video-poster" id="video-poster">
+        <span class="mark">H</span>
+        <span>Your welcome briefing is being recorded.</span>
+        <span class="sub">It lands right here — everything below covers the same ground in writing.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <span class="step-no">Step 1 · The only thing we ever need from you</span>
+    <h2>Add one email to your Seller Central. Two minutes.</h2>
+    <p style="margin-top:10px">This one seat is how our models read your numbers and how we
+    execute corrections for you — no report exports, no monthly homework, ever.</p>
+    <div class="email-line">
+      <span class="email-box" id="exec-email">hagen.simmons@hubricon.com</span>
+      <button class="copy" id="copy-btn">Copy email</button>
+    </div>
+    <span class="path">Settings → User Permissions → Invite new user</span>
+    <p style="margin-top:12px">When the invite is accepted, grant exactly these permissions — and
+    nothing else:</p>
+    <ul class="perm">
+      <li><b>Reports → Business Reports</b> — view</li>
+      <li><b>Reports → Fulfillment reports</b> — view</li>
+      <li><b>Pricing</b> — view &amp; edit</li>
+      <li><b>Advertising → Campaign Manager</b> — view &amp; edit</li>
+      <li class="no"><b>Everything else stays off.</b> Banking, settings, account info — untouchable by design.</li>
+    </ul>
+    <p class="why">You can revoke the seat in one click, any day, from the same screen. The narrow
+    scope is deliberate: it's what lets you hand over the work without handing over the keys.</p>
+    <p class="why"><b style="color:var(--ink)">One five-minute homework, ever:</b> Amazon can't
+    tell us what you pay for your product. Your welcome email includes a one-row-per-SKU cost
+    template (unit cost, freight, lead time) and a secure upload link — estimates are fine.</p>
+    <p class="fallback">Prefer to send files instead of granting a seat? Reply to your welcome
+    email and we'll send a secure upload link — it works, it's just fifteen minutes of exporting
+    we'd rather do for you.</p>
+  </div>
+
+  <div class="panel">
+    <span class="step-no">Step 2 · Put your kickoff on the calendar</span>
+    <h2>Kickoff — your 90-day plan, presented</h2>
+    <p style="margin-top:10px">Within 24 hours of your seat activating, your Profit Teardown is
+    recorded and your 90-day plan is drafted from it. On this call we present the plan —
+    quarterly targets and the three-to-four moves that get you there — and set your standing
+    mandate: which corrections we execute without asking, and where your veto sits.</p>
+    <div class="calendly-mount" id="cal-mount"></div>
+    <p class="cal-fallback">Calendar not loading? <a href="https://calendly.com/hubricon/analyst-intro" rel="noopener">Book directly here.</a></p>
+  </div>
+
+  <div class="panel">
+    <span class="step-no">Step 3 · What happens next</span>
+    <h2>The cadence, in writing</h2>
+    <div class="timeline">
+      <div class="t-step"><span class="when">Within 24h</span><span><b>Your Profit Teardown, on video.</b> Ten thousand simulations per SKU, every fee decomposed, your demand curves fitted — what your account is leaking and what it's worth.</span></div>
+      <div class="t-step"><span class="when">Kickoff call</span><span><b>Your 90-day plan, presented.</b> Targets, initiatives, and the standing mandate agreed on one call.</span></div>
+      <div class="t-step"><span class="when">Week 1</span><span><b>First corrections executed</b> in your account — pricing steps and ad trims, each with the expected dollars stated before we touch anything.</span></div>
+      <div class="t-step"><span class="when">Every 2 weeks</span><span><b>A three-minute brief</b> lands in your inbox: what we found, what we executed, what it earned — with the running ledger total. That's your entire time cost.</span></div>
+      <div class="t-step"><span class="when">Day 30</span><span><b>Your first invoice — only if you stay.</b> $6,000/month flat, invoiced by email, ACH, net-7. No card on file, month-to-month, cancel any time.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <span class="label" style="margin-bottom:12px">Answers you shouldn't have to ask for</span>
+    <div class="faq">
+      <div><h3>When do I actually pay?</h3>
+        <p>Never in month one. If you stay past day 30, the first invoice arrives by email — ACH,
+        net-7, $6,000 flat. There is no card on file and nothing renews automatically against
+        your will; cancel with one email, effective immediately.</p></div>
+      <div><h3>What can you change in my account, exactly?</h3>
+        <p>Only what the standing mandate we set on your kickoff call allows — bounded price steps
+        (capped at 5% per cycle, Buy Box watched daily) and ad corrections. Anything outside those
+        bounds needs your explicit yes first, and you hold a veto on everything.</p></div>
+      <div><h3>What does the free month cost me, really?</h3>
+        <p>If we deliver, we'll ask for a short testimonial and permission to publish your results
+        with the numbers anonymized. That's the whole price of the seat.</p></div>
+      <div><h3>How do I revoke access?</h3>
+        <p>Settings → User Permissions → remove the user. One click, effective instantly. Your
+        data and your full ledger export free, any time — including the day you cancel.</p></div>
+      <div><h3>Who do I talk to?</h3>
+        <p>The founder — always. Reply to any Hubricon email and it lands with the person who
+        builds your models and records your briefs. There is no support tier.</p></div>
+    </div>
+  </div>
+
+  <footer>
+    Hubricon Quantitative · www.hubricon.com<br>
+    This page is your onboarding home — bookmark it. Everything else arrives in your inbox,
+    three minutes at a time.
+  </footer>
+</div>
+
+<script>
+/* Paste the Loom share URL's video id here once the welcome video is recorded. */
+const WELCOME_LOOM_ID = "";
+
+if (WELCOME_LOOM_ID){
+  const wrap = document.getElementById("video-wrap");
+  wrap.innerHTML = `<iframe src="https://www.loom.com/embed/${WELCOME_LOOM_ID}?hide_owner=true&hideEmbedTopBar=true&hide_share=true"
+    title="Welcome from the founder" allowfullscreen loading="lazy"></iframe>`;
+}
+
+document.getElementById("copy-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("copy-btn");
+  try {
+    await navigator.clipboard.writeText("hagen.simmons@hubricon.com");
+    btn.textContent = "Copied ✓";
+  } catch {
+    btn.textContent = "Select & copy above";
+  }
+  setTimeout(() => { btn.textContent = "Copy email"; }, 2400);
+});
+
+/* Calendly inline — same loader pattern as the landing page. */
+const KICKOFF_URL = "https://calendly.com/hubricon/analyst-intro";
+(function(){
+  const css = document.createElement("link");
+  css.rel = "stylesheet";
+  css.href = "https://assets.calendly.com/assets/external/widget.css";
+  document.head.appendChild(css);
+  const s = document.createElement("script");
+  s.src = "https://assets.calendly.com/assets/external/widget.js";
+  s.async = true;
+  s.onload = () => {
+    if (window.Calendly){
+      window.Calendly.initInlineWidget({
+        url: KICKOFF_URL + "?hide_gdpr_banner=1&background_color=ffffff&text_color=131a30&primary_color=a97a04",
+        parentElement: document.getElementById("cal-mount"),
+      });
+    }
+  };
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

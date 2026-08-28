@@ -89,66 +89,85 @@ if (tokenError) {
 }
 
 const link = `${INTAKE_BASE_URL}/intake?t=${token}`;
+const welcome = `${INTAKE_BASE_URL}/welcome`;
+const execEmail = process.env.EXECUTION_EMAIL ?? "hagen.simmons@hubricon.com";
 const firstName = (args.name ?? client.contact_name ?? "").split(/\s+/)[0] || "there";
 
 console.log(`
-Intake link (valid ${TOKEN_LIFETIME_DAYS} days, not stored anywhere — copy it now):
+Fallback intake link (valid ${TOKEN_LIFETIME_DAYS} days, not stored anywhere — copy it now):
 
   ${link}
 
+WHEN THEY SAY YES (free month or paid), send the welcome email:
 ──────────────────────────────────────────────────────────────────────
-Subject: Your Margin Audit — 15 minutes of exports and you're done
+Subject: You're in — one 2-minute step and we take it from here
 
 Hi ${firstName},
 
-Great speaking with you today. To run your audit I need four exports
-from Seller Central and one short spreadsheet, uploaded through your
-private intake page (no account needed):
+Welcome aboard. Everything you need is on one page:
+
+  ${welcome}
+
+The short version: add ${execEmail} as a user in your
+Seller Central (Settings → User Permissions — the page shows the exact
+four permissions), and book your kickoff on the same page. Within 24
+hours of that seat going live you'll have your Profit Teardown on
+video, and on the kickoff call I'll present your 90-day plan.
+
+One five-minute homework: Amazon doesn't know your unit costs. Grab
+the template on your secure upload page and fill one row per SKU
+(estimates are fine):
+
+  ${link}
+
+Your first month is free. If we don't find you more than we cost,
+walk away owing nothing.
+
+Best,
+Hagen — Hubricon
+──────────────────────────────────────────────────────────────────────
+
+IF THEY STALL ON THE SEAT after 2–3 days, send the nudge:
+──────────────────────────────────────────────────────────────────────
+Subject: 2 minutes and your Teardown starts
+
+Quick nudge — your models are waiting on one thing: the seat.
+
+Settings → User Permissions → Invite new user → ${execEmail}
+Grant: Business Reports (view) · Fulfillment reports (view) ·
+Pricing (view & edit) · Campaign Manager (view & edit). Nothing else.
+
+The moment it's live, your 24-hour Teardown clock starts. Exact steps
+with screenshots: ${welcome}
+──────────────────────────────────────────────────────────────────────
+
+IF THEY PREFER FILES over a seat, send the export fallback:
+──────────────────────────────────────────────────────────────────────
+Subject: Your Profit Teardown — 15 minutes of exports and you're done
+
+Hi ${firstName},
+
+No seat needed — five exports through your private upload page and
+we're off (no account required):
 
   ${link}
 
 1. Sales & traffic by product — Reports → Business Reports → "Detail
-   Page Sales and Traffic by Child Item". Export one file PER MONTH for
-   the last 6 months (set the date range to each month, download, repeat
-   — this is what lets us model your trend, not just a snapshot).
-
+   Page Sales and Traffic by Child Item". One file PER MONTH for the
+   last 6 months (this is what lets us model your trend, not just a
+   snapshot).
 2. Fees & SKU economics — Reports → SKU Economics → one file per month,
    same 6 months.
-
 3. Advertising — Advertising Console → Measurement & Reporting →
-   Sponsored ads reports → Create report → Sponsored Products / Search
-   term → last 60 days.
+   Sponsored ads reports → Sponsored Products / Search term → last 60 days.
+4. Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.
+5. Your costs — the page has a one-row-per-SKU template (unit cost,
+   freight, packaging, lead time). Estimates are fine.
 
-4. Inventory — Reports → Fulfillment → Inventory → FBA Inventory →
-   Download (today's snapshot is fine).
-
-5. Your costs — the intake page has a small template (one row per SKU:
-   unit cost, freight, packaging, supplier lead time). Amazon doesn't
-   know what you pay for your product, and margin math is impossible
-   without it. Estimates are fine — flag anything uncertain in notes.
-
-The upload page checks everything in as it arrives, and the models run
-the moment your last file lands. Your audit — a written report plus a
-recorded walkthrough of your numbers — is back within 24 hours.
+The models run the moment your last file lands — your Profit Teardown,
+written and on video, is back within 24 hours.
 
 Best,
-Hubricon
-──────────────────────────────────────────────────────────────────────
-
-WHEN THEY SIGN THE RETAINER, send the execution-access request:
-──────────────────────────────────────────────────────────────────────
-Subject: One 2-minute setup and we take it from here
-
-To execute corrections for you, we need a permissions-scoped seat in
-your Seller Central — pricing and advertising only. Banking, settings,
-and everything else stay untouchable, and you can revoke the seat in
-one click, any day.
-
-Settings → User Permissions → Add new user → ${process.env.EXECUTION_EMAIL ?? "ops@hubricon.com"}
-Then grant: Pricing (view & edit) · Advertising (view & edit). Nothing else.
-
-From there: every two weeks you get a three-minute brief — what we
-found, what we executed, what it's expected to earn — and every dollar
-lands on your ledger, measured.
+Hagen — Hubricon
 ──────────────────────────────────────────────────────────────────────
 `);
