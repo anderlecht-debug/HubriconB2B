@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from . import __version__
+from . import chart_pack
 from . import db as dbmod
 from . import storage
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
@@ -166,7 +167,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
 
     try:
         avg_margin = None
-        margin_rows = inventory_rows = None
+        margin_rows = inventory_rows = elast_rows = ads_rows = None
         if "margin" in wanted:
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
@@ -175,10 +176,18 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
             inventory_rows = inventory_sim.run(data, rng, simulations=simulations)
             _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
         if "elasticity" in wanted:
-            _write_results(db, "elasticity_results", elasticity.run(data), run_id, client["id"])
+            elast_rows = elasticity.run(data)
+            _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
         if "ads" in wanted:
-            rows = ad_efficiency.run(data, avg_margin=avg_margin)
-            _write_results(db, "ad_efficiency_results", rows, run_id, client["id"])
+            ads_rows = ad_efficiency.run(data, avg_margin=avg_margin)
+            _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
+        if {"margin", "inventory", "elasticity", "ads"} <= wanted:
+            pack = chart_pack.build_pack(margin_rows, elast_rows, inventory_rows, ads_rows,
+                                         data["ppc_search_terms"], resolve_brand_terms(client))
+            dbmod.chunked_upsert(db, "chart_packs",
+                                 [{"run_id": run_id, "client_id": client["id"], "payload": pack}],
+                                 on_conflict="run_id")
+            print(f"  chart_packs: {', '.join(sorted(pack)) or 'empty'}")
         if "cash" in wanted:
             cash = cashflow.run(
                 client,

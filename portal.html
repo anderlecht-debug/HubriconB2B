@@ -26,6 +26,10 @@
   --amber:     hsl(40 95% 35%);
   --ok:        hsl(150 55% 30%);
   --serious:   hsl(8 68% 44%);
+  --c1: #4553C8;   /* chart categorical — validated for CVD on white */
+  --c2: #00939D;
+  --c3: #B07C10;
+  --c4: #1F8049;
   --ink:       hsl(228 40% 12% / .93);
   --ink-soft:  hsl(228 32% 22% / .72);
   --ink-faint: hsl(228 25% 25% / .52);
@@ -183,8 +187,52 @@ input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
 .state.approved, .state.done{ color: var(--ok); }
 .state.declined{ color: var(--serious); }
 
+/* charts — colors live in these classes, never in SVG attributes */
+.chart{ width: 100%; height: auto; display: block; }
+.chart .grid{ stroke: var(--hairline); stroke-width: 1; }
+.chart .ax{ fill: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+.chart .lbl{ fill: var(--ink-soft); font-family: var(--mono); font-size: 10.5px; }
+.chart .ink{ stroke: var(--ink-soft); stroke-width: 1.8; fill: none; }
+.chart .goldl{ stroke: var(--amber); stroke-width: 2; fill: none; }
+.chart .goldf{ fill: var(--amber); }
+.chart .okl{ stroke: var(--ok); stroke-width: 2; fill: none; }
+.chart .okf{ fill: var(--ok); }
+.chart .badl{ stroke: var(--serious); stroke-width: 1.3; stroke-dasharray: 6 5; fill: none; }
+.chart .badsolid{ stroke: var(--serious); stroke-width: 2; }
+.chart .badf{ fill: var(--serious); }
+.chart .mutf{ fill: var(--ink-faint); }
+.chart .band{ fill: hsl(40 90% 45% / .13); }
+.chart .dash{ stroke: var(--rule); stroke-width: 1.2; stroke-dasharray: 4 5; }
+.chart .hollow{ fill: var(--panel); stroke: var(--ink-faint); stroke-width: 1.6; }
+.chart .c1{ fill: var(--c1); } .chart .c2{ fill: var(--c2); }
+.chart .c3{ fill: var(--c3); } .chart .c4{ fill: var(--c4); }
+.chart-duo{ display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.cap{ font-size: 10.5px; color: var(--ink-faint); margin-top: 6px; }
+.legend{ display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; font-size: 11px; color: var(--ink-soft); }
+.legend i{ width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.legend .c1{ background: var(--c1); } .legend .c2{ background: var(--c2); }
+.legend .c3{ background: var(--c3); } .legend .c4{ background: var(--c4); }
+.stack-row{ display: grid; grid-template-columns: minmax(90px, 150px) 1fr 120px; gap: 12px; align-items: center; padding: 7px 0; font-size: 12px; }
+.stack-row .segs{ display: flex; gap: 2px; height: 16px; }
+.stack-row .seg{ border-radius: 3px; display: block; }
+.seg.c1{ background: var(--c1); } .seg.c2{ background: var(--c2); }
+.seg.c3{ background: var(--c3); } .seg.c4{ background: var(--c4); }
+.stack-row .s-net{ text-align: right; font-variant-numeric: tabular-nums; }
+.stack-row .s-net.good{ color: var(--ok); } .stack-row .s-net.risk{ color: var(--serious); }
+.stack-row .s-sku{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-soft); }
+.p-row{ padding: 18px 0 8px; border-top: 1px solid var(--hairline); }
+.p-row:first-child{ border-top: 0; padding-top: 0; }
+.p-cap{ display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-bottom: 10px; }
+.p-sku{ font-family: var(--serif); font-size: 16px; color: var(--ink); }
+.bleed-row{ display: grid; grid-template-columns: minmax(110px, 180px) 1fr 80px; gap: 12px; align-items: center; padding: 5px 0; font-size: 12px; }
+.bleed-row .bar{ height: 12px; border-radius: 3px; background: var(--ink-faint); }
+.bleed-row.top .bar{ background: var(--amber); }
+.bleed-row.rest .bar{ opacity: .4; }
+.bleed-row .amt{ text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 700px){ .chart-duo{ grid-template-columns: 1fr; } }
+
 /* the watch */
-#horizon{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
+#horizon, #riskmap{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
 .hz-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
 #hz-svg{ width: 100%; height: auto; display: block; }
 #hz-svg .grid{ stroke: var(--hairline); }
@@ -328,6 +376,9 @@ footer{
         <div class="pos-tile"><span class="label">Revenue, latest period</span><span class="fig" id="d-rev">—</span><span class="d" id="d-rev-d"></span></div>
         <div class="pos-tile"><span class="label">Blended net margin</span><span class="fig" id="d-pct">—</span><span class="d"></span></div>
       </div>
+      <div id="trend" class="hidden" style="margin-top:24px; border-top:1px solid var(--hairline); padding-top:20px">
+        <svg class="chart" id="trend-svg" viewBox="0 0 920 170" role="img" aria-label="Net profit and revenue by month"></svg>
+      </div>
     </div>
 
     <!-- 2 · the plan -->
@@ -348,6 +399,44 @@ footer{
         <p class="next-delivery"><b style="color:var(--ink)">Your 90-day plan is drafted from your audit</b> and presented on your kickoff call: quarterly targets for profit, revenue, and margin, plus the three-to-four initiatives that get you there. Every decision on this desk executes a step of that plan.</p>
       </div>
     </div>
+
+    <!-- 2b · where the money goes -->
+    <section id="money-sect" class="hidden">
+      <div class="sect-label"><span class="label">Where the money goes</span></div>
+      <div class="panel">
+        <svg class="chart" id="waterfall-svg" viewBox="0 0 920 260" role="img" aria-label="Latest period: revenue stepping down to net profit"></svg>
+        <div id="stacks" style="margin-top:24px"></div>
+        <div class="legend"><span><i class="c1"></i>Amazon fees</span><span><i class="c2"></i>COGS</span><span><i class="c3"></i>Ad spend</span><span><i class="c4"></i>Net profit</span></div>
+        <p class="hint" style="margin-top:12px">Latest period, computed from your own exports. Bars are proportional across SKUs; a red figure is a SKU that sold at a loss.</p>
+      </div>
+    </section>
+
+    <!-- 2c · the mathematics of your prices -->
+    <section id="pricing-sect" class="hidden">
+      <div class="sect-label"><span class="label">The mathematics of your prices</span></div>
+      <div class="panel">
+        <div id="pricing-rows"></div>
+        <p class="hint" style="margin-top:14px">The demand curve is fitted to your observed months (the dots) with its 95% confidence band — that band is us showing our work. The profit curve follows from it and your true unit economics: the gold dot is the move on your desk, P* the destination. Steps are capped at 5% per cycle, Buy Box watched daily.</p>
+      </div>
+    </section>
+
+    <!-- 2d · advertising efficiency -->
+    <section id="ads-sect" class="hidden">
+      <div class="sect-label"><span class="label">Advertising efficiency</span></div>
+      <div class="panel">
+        <div class="chart-duo" id="ad-curves"></div>
+        <div id="bleed-wrap" class="hidden" style="margin-top:26px">
+          <span class="label" style="margin-bottom:4px">Spend with zero attributed sales</span>
+          <p class="hint" id="bleed-total" style="margin-bottom:10px"></p>
+          <div id="bleed-rows"></div>
+        </div>
+        <div id="brand-wrap" class="hidden" style="margin-top:26px">
+          <span class="label" style="margin-bottom:4px">Paying for your own brand</span>
+          <p class="hint" id="brand-note" style="margin-bottom:8px"></p>
+          <svg class="chart" id="brand-svg" viewBox="0 0 920 92" role="img" aria-label="Recapturable branded spend range"></svg>
+        </div>
+      </div>
+    </section>
 
     <!-- 3 · the briefing -->
     <div class="sect-label"><span class="label">The briefing</span></div>
@@ -386,6 +475,11 @@ footer{
         <svg id="hz-svg" viewBox="0 0 920 240" role="img" aria-label="Simulated cash position over the next 90 days"></svg>
         <p class="hz-note" id="hz-note"></p>
       </div>
+      <div id="riskmap" class="hidden">
+        <div class="hz-head"><span class="label">Inventory risk — every SKU on one map</span></div>
+        <svg class="chart" id="risk-svg" viewBox="0 0 920 250" role="img" aria-label="Stockout probability vs days of cover per SKU"></svg>
+        <p class="hz-note">Days of cover run out toward the right; the dashed line is our 25% directive threshold. A SKU above it already has a reorder instruction on your desk.</p>
+      </div>
       <div class="watch-grid">
         <div>
           <span class="label" style="margin-bottom:10px">Under watch</span>
@@ -402,6 +496,10 @@ footer{
     <div class="sect-label"><span class="label">The record</span></div>
     <div class="panel">
       <p class="tenure" id="tenure"></p>
+      <div id="dumbbells" class="hidden" style="margin-bottom:22px">
+        <span class="label" style="margin-bottom:10px">Promised vs measured — every claim, drawn</span>
+        <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per directive"></svg>
+      </div>
       <div class="candor" id="candor" style="display:none">
         <div class="c win"><b id="wins-num">$0</b><span id="wins-text">measured wins</span></div>
         <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
@@ -591,6 +689,306 @@ async function respond(id, approve, row){
   }
 }
 
+/* ── chart helpers ── */
+const lin = (d0, d1, r0, r1) => { const s = (d1 - d0) || 1; return (v) => r0 + ((Number(v) - d0) / s) * (r1 - r0); };
+function niceTicks(lo, hi, n = 4){
+  const s0 = (hi - lo) / Math.max(1, n), m = Math.pow(10, Math.floor(Math.log10(Math.abs(s0) || 1)));
+  const s = [1, 2, 5, 10].map((k) => k * m).find((k) => k >= s0) || m;
+  const out = []; for (let t = Math.ceil(lo / s) * s; t <= hi + s / 1e6; t += s) out.push(t);
+  return out;
+}
+const mon = (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short" });
+const nearest = (arr, key, v) => arr.reduce((b, pt) => Math.abs(pt[key] - v) < Math.abs(b[key] - v) ? pt : b);
+
+/* ── the position trend: two aligned small multiples, one axis each ── */
+function renderTrend(periods){
+  if (periods.length < 3) return;
+  const H = 170, T = 30, B = 24;
+  const panels = [
+    { x0: 0,   x1: 440, key: "net_margin", title: "NET PROFIT / PERIOD" },
+    { x0: 480, x1: 920, key: "revenue",    title: "REVENUE / PERIOD" },
+  ];
+  let svg = "";
+  for (const p of panels){
+    const vals = periods.map((r) => Number(r[p.key] || 0));
+    const lo = Math.min(...vals) * 0.94, hi = Math.max(...vals) * 1.06;
+    const sx = lin(0, vals.length - 1, p.x0 + 6, p.x1 - 64);
+    const sy = lin(lo, hi, H - B, T);
+    const last = vals.length - 1;
+    svg += `<text class="ax" x="${p.x0}" y="12" style="letter-spacing:.12em">${p.title}</text>
+      <line class="grid" x1="${p.x0}" x2="${p.x1}" y1="${H - B}" y2="${H - B}"/>
+      <polyline class="ink" points="${vals.map((v, i) => `${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join(" ")}"/>
+      <circle class="goldf" cx="${sx(last).toFixed(1)}" cy="${sy(vals[last]).toFixed(1)}" r="4"/>
+      <text class="lbl" x="${(sx(last) + 9).toFixed(1)}" y="${(sy(vals[last]) + 4).toFixed(1)}">${money(vals[last])}</text>
+      <text class="ax" x="${p.x0}" y="${H - 6}">${mon(periods[0].period_start)}</text>
+      <text class="ax" x="${(p.x1 - 64).toFixed(1)}" y="${H - 6}" text-anchor="middle">${mon(periods[last].period_start)}</text>`;
+  }
+  $("#trend-svg").innerHTML = svg;
+  $("#trend").classList.remove("hidden");
+}
+
+/* ── where the money goes ── */
+function renderWaterfall(w){
+  const W = 920, H = 260, L = 74, R = 12, T = 30, B = 34;
+  const hi = Number(w.revenue), net = Number(w.net), lo = Math.min(0, net);
+  const sy = lin(lo, hi, H - B, T);
+  const slot = (W - L - R) / 5, bw = slot - 28;
+  const colX = (i) => L + i * slot + 14;
+  let svg = "";
+  for (const t of niceTicks(lo, hi)) svg +=
+    `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}"/>
+     <text class="ax" x="${L - 8}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${money(t)}</text>`;
+  const bar = (i, top, bot, cls, name, val) => {
+    svg += `<rect class="${cls}" x="${colX(i).toFixed(1)}" y="${sy(top).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, sy(bot) - sy(top)).toFixed(1)}" rx="3"/>
+      <text class="lbl" x="${(colX(i) + bw / 2).toFixed(1)}" y="${(sy(top) - 7).toFixed(1)}" text-anchor="middle">${money(val)}</text>
+      <text class="ax" x="${(colX(i) + bw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${name}</text>`;
+  };
+  bar(0, hi, Math.max(0, lo === 0 ? 0 : 0), "mutf", "Revenue", hi);
+  let level = hi;
+  [["Amazon fees", Number(w.fees), "c1"], ["COGS", Number(w.cogs), "c2"], ["Ad spend", Number(w.ads), "c3"]]
+    .forEach(([name, val, cls], j) => {
+      const next = level - val;
+      svg += `<line class="grid" x1="${(colX(j) + bw).toFixed(1)}" x2="${colX(j + 1).toFixed(1)}" y1="${sy(level).toFixed(1)}" y2="${sy(level).toFixed(1)}"/>`;
+      bar(j + 1, level, next, cls, name, val);
+      level = next;
+    });
+  svg += `<line class="grid" x1="${(colX(3) + bw).toFixed(1)}" x2="${colX(4).toFixed(1)}" y1="${sy(level).toFixed(1)}" y2="${sy(level).toFixed(1)}"/>`;
+  bar(4, Math.max(level, 0), Math.min(level, 0), level >= 0 ? "okf" : "badf", "Net profit", level);
+  $("#waterfall-svg").innerHTML = svg;
+}
+
+function renderStacks(rows){
+  const wrap = $("#stacks"); wrap.innerHTML = "";
+  const maxRev = Math.max(...rows.map((r) => Number(r.revenue)));
+  for (const r of rows){
+    const net = Number(r.net);
+    const segs = [["c1", r.fees], ["c2", r.cogs], ["c3", r.ads]];
+    if (net > 0) segs.push(["c4", net]);
+    const row = document.createElement("div");
+    row.className = "stack-row";
+    row.innerHTML = `<span class="s-sku">${esc(r.sku)}</span>
+      <div class="segs">${segs.filter(([, v]) => Number(v) > 0).map(([c, v]) =>
+        `<i class="seg ${c}" style="width:${(Number(v) / maxRev * 100).toFixed(2)}%" title="${money(v)}"></i>`).join("")}</div>
+      <span class="s-net ${net >= 0 ? "good" : "risk"}">${net >= 0 ? money(net) : "−" + money(Math.abs(net)) + " loss"}</span>`;
+    wrap.appendChild(row);
+  }
+}
+
+/* ── the mathematics of your prices ── */
+function demandSvg(fit){
+  const W = 450, H = 250, L = 56, R = 10, T = 14, B = 30;
+  const ps = fit.curve.map((c) => Number(c.p));
+  const us = [...fit.curve.map((c) => Number(c.u)), ...fit.points.map((c) => Number(c.u)),
+              ...(fit.band || []).flatMap((b) => [Number(b.lo), Number(b.hi)])];
+  const sx = lin(Math.min(...ps), Math.max(...ps), L, W - R);
+  const sy = lin(Math.min(...us) * 0.92, Math.max(...us) * 1.06, H - B, T);
+  let svg = `<line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+  for (const t of niceTicks(Math.min(...ps), Math.max(...ps), 3))
+    svg += `<text class="ax" x="${sx(t).toFixed(1)}" y="${H - 10}" text-anchor="middle">$${Number(t).toFixed(2)}</text>`;
+  for (const t of niceTicks(Math.min(...us) * 0.92, Math.max(...us) * 1.06, 3))
+    svg += `<text class="ax" x="${L - 6}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${Math.round(t)}</text>`;
+  if (fit.band){
+    const top = fit.band.map((b) => `${sx(b.p).toFixed(1)},${sy(b.hi).toFixed(1)}`).join(" L ");
+    const bot = [...fit.band].reverse().map((b) => `${sx(b.p).toFixed(1)},${sy(b.lo).toFixed(1)}`).join(" L ");
+    svg += `<path class="band" d="M ${top} L ${bot} Z"/>`;
+  }
+  svg += `<polyline class="ink" points="${fit.curve.map((c) => `${sx(c.p).toFixed(1)},${sy(c.u).toFixed(1)}`).join(" ")}"/>`;
+  for (const pt of fit.points) svg += `<circle class="mutf" cx="${sx(pt.p).toFixed(1)}" cy="${sy(pt.u).toFixed(1)}" r="4"/>`;
+  svg += `<text class="ax" x="${L - 6}" y="${T}" text-anchor="end">units</text>`;
+  return svg;
+}
+
+function profitSvg(c){
+  const W = 450, H = 250, L = 62, R = 10, T = 14, B = 30;
+  const ps = c.curve.map((p) => Number(p.p)), ys = c.curve.map((p) => Number(p.profit));
+  const pad = (Math.max(...ys) - Math.min(...ys)) * 0.14 || 1;
+  const sx = lin(Math.min(...ps), Math.max(...ps), L, W - R);
+  const sy = lin(Math.min(...ys) - pad, Math.max(...ys) + pad, H - B, T);
+  let svg = `<line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+  for (const t of niceTicks(Math.min(...ps), Math.max(...ps), 3))
+    svg += `<text class="ax" x="${sx(t).toFixed(1)}" y="${H - 10}" text-anchor="middle">$${Number(t).toFixed(2)}</text>`;
+  for (const t of niceTicks(Math.min(...ys) - pad, Math.max(...ys) + pad, 3))
+    svg += `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}"/>
+      <text class="ax" x="${L - 6}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${money(t)}</text>`;
+  svg += `<polyline class="ink" points="${c.curve.map((p) => `${sx(p.p).toFixed(1)},${sy(p.profit).toFixed(1)}`).join(" ")}"/>
+    <line class="dash" x1="${sx(c.p0).toFixed(1)}" x2="${sx(c.p0).toFixed(1)}" y1="${T}" y2="${H - B}"/>
+    <text class="lbl" x="${(sx(c.p0) + 5).toFixed(1)}" y="${T + 10}">today $${Number(c.p0).toFixed(2)}</text>`;
+  const stepY = sy(nearest(c.curve, "p", Number(c.p_new)).profit);
+  svg += `<circle class="goldf" cx="${sx(c.p_new).toFixed(1)}" cy="${stepY.toFixed(1)}" r="5.5"/>
+    <text class="lbl" x="${sx(c.p_new).toFixed(1)}" y="${(stepY - 12).toFixed(1)}" text-anchor="middle">next step $${Number(c.p_new).toFixed(2)}</text>`;
+  if (c.p_star != null){
+    if (c.p_star >= Math.min(...ps) && c.p_star <= Math.max(...ps)){
+      const starY = sy(nearest(c.curve, "p", Number(c.p_star)).profit);
+      svg += `<circle class="hollow" cx="${sx(c.p_star).toFixed(1)}" cy="${starY.toFixed(1)}" r="6"/>
+        <text class="lbl" x="${sx(c.p_star).toFixed(1)}" y="${(starY + 20).toFixed(1)}" text-anchor="middle">P* $${Number(c.p_star).toFixed(2)}</text>`;
+    } else {
+      svg += `<text class="lbl" x="${W - R}" y="${T + 24}" text-anchor="end">optimum $${Number(c.p_star).toFixed(2)} — walked in 5% steps</text>`;
+    }
+  }
+  return svg;
+}
+
+function renderPricing(picks, elas){
+  const bySku = Object.fromEntries((elas || []).map((e) => [e.sku, e]));
+  const items = picks.length
+    ? picks.map((p) => ({ sku: p.sku, fit: bySku[p.sku], curve: p }))
+    : (elas || []).slice(0, 2).map((e) => ({ sku: e.sku, fit: e, curve: null }));
+  const wrap = $("#pricing-rows"); wrap.innerHTML = "";
+  for (const it of items){
+    const bits = [];
+    if (it.fit) bits.push(`ε = ${Number(it.fit.eps).toFixed(2)}${it.fit.ci95 ? ` (95%: ${Number(it.fit.ci95[0]).toFixed(2)} … ${Number(it.fit.ci95[1]).toFixed(2)})` : ""}`);
+    if (it.curve && it.curve.expected_delta != null)
+      bits.push(`expected ${it.curve.expected_delta >= 0 ? "+" : "−"}${money(Math.abs(it.curve.expected_delta))}/period${it.curve.delta_range ? ` (95% range ${money(it.curve.delta_range[0])} … ${money(it.curve.delta_range[1])})` : ""}`);
+    const div = document.createElement("div");
+    div.className = "p-row";
+    div.innerHTML = `<div class="p-cap"><span class="p-sku">${esc(it.sku)}</span><span class="hint">${bits.join(" · ")}</span></div>
+      <div class="chart-duo">
+        ${it.fit ? `<figure><svg class="chart" viewBox="0 0 450 250">${demandSvg(it.fit)}</svg><figcaption class="cap">Demand, measured from your sales — dots are observed months</figcaption></figure>` : ""}
+        ${it.curve ? `<figure><svg class="chart" viewBox="0 0 450 250">${profitSvg(it.curve)}</svg><figcaption class="cap">Profit vs price — dΠ/dP = 0 marks the optimum</figcaption></figure>` : ""}
+      </div>`;
+    wrap.appendChild(div);
+  }
+}
+
+/* ── advertising efficiency ── */
+function renderAdCurves(list){
+  const wrap = $("#ad-curves"); wrap.innerHTML = "";
+  for (const r of list){
+    const W = 450, H = 250, L = 62, R = 10, T = 16, B = 30;
+    const xs = r.curve.map((p) => Number(p.s)), ys = r.curve.map((p) => Number(p.y));
+    const sx = lin(0, Math.max(...xs), L, W - R);
+    const sy = lin(0, Math.max(...ys) * 1.08, H - B, T);
+    let svg = `<line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+    for (const t of niceTicks(0, Math.max(...xs), 3))
+      svg += `<text class="ax" x="${sx(t).toFixed(1)}" y="${H - 10}" text-anchor="middle">${money(t)}</text>`;
+    for (const t of niceTicks(0, Math.max(...ys) * 1.08, 3))
+      svg += `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}"/>
+        <text class="ax" x="${L - 6}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${money(t)}</text>`;
+    if (r.current != null && r.breakeven != null && Number(r.current) > Number(r.breakeven))
+      svg += `<rect class="band" x="${sx(r.breakeven).toFixed(1)}" y="${T}" width="${(sx(r.current) - sx(r.breakeven)).toFixed(1)}" height="${H - B - T}"/>`;
+    svg += `<polyline class="ink" points="${r.curve.map((p) => `${sx(p.s).toFixed(1)},${sy(p.y).toFixed(1)}`).join(" ")}"/>`;
+    if (r.breakeven != null) svg += `<line class="badl" x1="${sx(r.breakeven).toFixed(1)}" x2="${sx(r.breakeven).toFixed(1)}" y1="${T}" y2="${H - B}"/>
+      <text class="lbl" x="${sx(r.breakeven).toFixed(1)}" y="${T - 3}" text-anchor="middle">break-even</text>`;
+    if (r.current != null) svg += `<line class="goldl" x1="${sx(r.current).toFixed(1)}" x2="${sx(r.current).toFixed(1)}" y1="${T}" y2="${H - B}"/>
+      <text class="lbl" x="${sx(r.current).toFixed(1)}" y="${H - B + 0}" dy="-6" text-anchor="middle"></text>
+      <text class="lbl" x="${(sx(r.current) + 5).toFixed(1)}" y="${T + 12}">today</text>`;
+    const fig = document.createElement("figure");
+    const roas = r.marginal_roas != null ? ` — the last dollar in returns $${Number(r.marginal_roas).toFixed(2)}` : "";
+    fig.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}">${svg}</svg>
+      <figcaption class="cap">${esc(r.name)}${roas}. Spend in, attributed sales out; the shaded gap is spend past break-even.</figcaption>`;
+    wrap.appendChild(fig);
+  }
+}
+
+function renderBleed(b){
+  $("#bleed-total").textContent = `${money(b.total)} in the last export window across ${b.n_terms} search terms — negative-matched by us, measured on the ledger.`;
+  const wrap = $("#bleed-rows"); wrap.innerHTML = "";
+  const maxS = Math.max(...b.terms.map((t) => Number(t.spend)));
+  b.terms.forEach((t, i) => {
+    const row = document.createElement("div");
+    row.className = "bleed-row" + (i === 0 ? " top" : "");
+    row.innerHTML = `<span class="s-sku">${esc(t.term)}</span>
+      <div><div class="bar" style="width:${(Number(t.spend) / maxS * 100).toFixed(1)}%"></div></div>
+      <span class="amt">${money(t.spend)}</span>`;
+    wrap.appendChild(row);
+  });
+  if (Number(b.other) > 0){
+    const row = document.createElement("div");
+    row.className = "bleed-row rest";
+    row.innerHTML = `<span class="s-sku">everything else</span>
+      <div><div class="bar" style="width:${(Number(b.other) / maxS * 100).toFixed(1)}%"></div></div>
+      <span class="amt">${money(b.other)}</span>`;
+    wrap.appendChild(row);
+  }
+}
+
+function renderBrand(br){
+  $("#brand-note").textContent = `${money(br.spend)} of paid clicks on your own brand terms last window (${br.n_terms} terms). The shaded span is what incrementality studies say you'd capture organically anyway — we pause it as a tracked test.`;
+  const W = 920, H = 92, L = 14, R = 14, y = 46;
+  const sx = lin(0, Number(br.spend), L, W - R);
+  let svg = `<line class="grid" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/>
+    <rect class="band" x="${sx(br.lo).toFixed(1)}" y="${y - 15}" width="${(sx(br.hi) - sx(br.lo)).toFixed(1)}" height="30" rx="5"/>
+    <line class="goldl" x1="${sx(br.expected).toFixed(1)}" x2="${sx(br.expected).toFixed(1)}" y1="${y - 21}" y2="${y + 21}"/>
+    <text class="ax" x="${sx(br.lo).toFixed(1)}" y="${y + 36}" text-anchor="middle">25% · ${money(br.lo)}</text>
+    <text class="ax" x="${sx(br.hi).toFixed(1)}" y="${y + 36}" text-anchor="middle">60% · ${money(br.hi)}</text>
+    <text class="lbl" x="${sx(br.expected).toFixed(1)}" y="${y - 27}" text-anchor="middle">expected ${money(br.expected)}</text>
+    <text class="ax" x="${W - R}" y="${y - 27}" text-anchor="end">total ${money(br.spend)}</text>`;
+  $("#brand-svg").innerHTML = svg;
+}
+
+/* ── inventory risk map ── */
+function renderRiskMap(points){
+  const W = 920, H = 250, L = 60, R = 20, T = 18, B = 34;
+  const sx = lin(90, 0, L, W - R);
+  const sy = lin(0, 1, H - B, T);
+  let svg = "";
+  for (const t of [0, 0.25, 0.5, 0.75, 1])
+    svg += `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}"/>
+      <text class="ax" x="${L - 8}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${(t * 100).toFixed(0)}%</text>`;
+  for (const t of [90, 60, 30, 15, 0])
+    svg += `<text class="ax" x="${sx(t).toFixed(1)}" y="${H - 12}" text-anchor="middle">${t}d</text>`;
+  svg += `<line class="badl" x1="${L}" x2="${W - R}" y1="${sy(0.25).toFixed(1)}" y2="${sy(0.25).toFixed(1)}"/>
+    <text class="lbl" x="${W - R}" y="${(sy(0.25) - 7).toFixed(1)}" text-anchor="end">directive threshold — 25%</text>`;
+  for (const r of points){
+    const p = Number(r.p), cover = Number(r.cover);
+    const danger = p >= 0.5 && cover < 15;
+    const cls = danger ? "badf" : p >= 0.25 ? "goldf" : "mutf";
+    svg += `<circle class="${cls}" cx="${sx(cover).toFixed(1)}" cy="${sy(p).toFixed(1)}" r="${danger ? 7 : 5.5}"><title>${esc(r.sku)} — ${(p * 100).toFixed(0)}% stockout risk, ${cover.toFixed(0)} days of cover</title></circle>`;
+    if (p >= 0.25) svg += `<text class="lbl" x="${(sx(cover) + 11).toFixed(1)}" y="${(sy(p) + 4).toFixed(1)}">${esc(r.sku)}</text>`;
+  }
+  $("#risk-svg").innerHTML = svg;
+}
+
+/* ── the ledger, drawn: promised vs measured ── */
+function renderDumbbells(dirs){
+  const rows = dirs.filter((d) => d.measured_impact_usd != null && d.expected_impact_usd != null)
+    .sort((a, b) => String(a.measured_at || "").localeCompare(String(b.measured_at || ""))).slice(-8);
+  if (rows.length < 2) return;
+  const W = 920, rowH = 42, T = 26, B = 30, L = 96, R = 140;
+  const H = T + rows.length * rowH + B;
+  const maxV = Math.max(...rows.flatMap((d) => [Number(d.expected_impact_usd), Number(d.measured_impact_usd)])) * 1.08 || 1;
+  const sx = lin(0, maxV, L, W - R);
+  let svg = `<circle class="hollow" cx="${W - 210}" cy="12" r="4.5"/><text class="ax" x="${W - 200}" y="16">promised</text>
+    <circle class="okf" cx="${W - 120}" cy="12" r="4.5"/><text class="ax" x="${W - 110}" y="16">measured</text>`;
+  for (const t of niceTicks(0, maxV, 4))
+    svg += `<line class="grid" x1="${sx(t).toFixed(1)}" x2="${sx(t).toFixed(1)}" y1="${T}" y2="${H - B}"/>
+      <text class="ax" x="${sx(t).toFixed(1)}" y="${H - 12}" text-anchor="middle">${money(t)}</text>`;
+  rows.forEach((d, i) => {
+    const y = T + i * rowH + rowH / 2;
+    const e = Number(d.expected_impact_usd), m = Number(d.measured_impact_usd);
+    const beat = m >= e;
+    svg += `<line class="${beat ? "okl" : "badsolid"}" x1="${sx(e).toFixed(1)}" x2="${sx(m).toFixed(1)}" y1="${y}" y2="${y}"/>
+      <circle class="hollow" cx="${sx(e).toFixed(1)}" cy="${y}" r="5"/>
+      <circle class="${beat ? "okf" : "badf"}" cx="${sx(m).toFixed(1)}" cy="${y}" r="5.5"/>
+      <text class="ax" x="${L - 10}" y="${y + 3.5}" text-anchor="end">${esc(d.module)}</text>
+      <text class="lbl" x="${(Math.max(sx(e), sx(m)) + 12).toFixed(1)}" y="${y + 4}">${beat ? "+" : "−"}${money(Math.abs(m - e))} vs promise</text>`;
+  });
+  $("#db-svg").setAttribute("viewBox", `0 0 ${W} ${H}`);
+  $("#db-svg").innerHTML = svg;
+  $("#dumbbells").classList.remove("hidden");
+}
+
+/* ── the chart pack: engine-computed series, drawn here ── */
+function renderPack(pack){
+  if (!pack) return;
+  if (pack.waterfall){
+    renderWaterfall(pack.waterfall);
+    if (pack.sku_stacks?.length) renderStacks(pack.sku_stacks);
+    $("#money-sect").classList.remove("hidden");
+  }
+  if (pack.profit_curves?.length || pack.elasticity?.length){
+    renderPricing(pack.profit_curves || [], pack.elasticity || []);
+    $("#pricing-sect").classList.remove("hidden");
+  }
+  if (pack.ad_curves?.length || pack.bleed || pack.brand){
+    if (pack.ad_curves?.length) renderAdCurves(pack.ad_curves);
+    if (pack.bleed){ renderBleed(pack.bleed); $("#bleed-wrap").classList.remove("hidden"); }
+    if (pack.brand){ renderBrand(pack.brand); $("#brand-wrap").classList.remove("hidden"); }
+    $("#ads-sect").classList.remove("hidden");
+  }
+  if (pack.risk_map?.length) { renderRiskMap(pack.risk_map); $("#riskmap").classList.remove("hidden"); }
+}
+
 /* ── the cash horizon — percentile cone from the desk_cash RPC ── */
 function renderHorizon(rows){
   const hz = rows?.[0];
@@ -670,7 +1068,7 @@ async function load(){
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
 
-  const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives, cashRows] = await Promise.all([
+  const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives, cashRows, packRows] = await Promise.all([
     rest("/rest/v1/directives?select=*&order=created_at.desc"),
     rest("/rest/v1/rpc/desk_metrics", { method: "POST", body: "{}" }).catch(() => []),
     rest("/rest/v1/price_tests?select=*&order=created_at.desc"),
@@ -680,8 +1078,11 @@ async function load(){
     rest("/rest/v1/plans?select=*&status=eq.active&order=created_at.desc&limit=1"),
     rest("/rest/v1/initiatives?select=*&order=sort"),
     rest("/rest/v1/rpc/desk_cash", { method: "POST", body: "{}" }).catch(() => []),
+    rest("/rest/v1/chart_packs?select=payload&order=created_at.desc&limit=1").catch(() => []),
   ]);
   try { renderHorizon(cashRows); } catch {}
+  try { renderPack(packRows[0]?.payload); } catch {}
+  try { renderDumbbells(directives); } catch {}
   const plan = plans[0] ?? null;
   const planInits = plan ? initiatives.filter((i) => i.plan_id === plan.id) : [];
   const initTitle = Object.fromEntries(initiatives.map((i) => [i.id, i.title]));
@@ -779,6 +1180,7 @@ async function load(){
     $("#d-rev").textContent = money(cur.rev);
     delta("#d-rev-d", cur.rev, prev?.rev);
     $("#d-pct").textContent = cur.rev > 0 ? (cur.net / cur.rev * 100).toFixed(1) + "%" : "—";
+    try { renderTrend(periods); } catch {}
 
     /* the plan: budget-vs-actual bars + the roadmap */
     if (plan){
