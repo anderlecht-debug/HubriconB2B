@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
 <style>
-/* The concierge page — same paper-and-gold system as the Desk. One page,
+/* The concierge page. Same paper-and-gold system as the Desk: one page,
    one action, zero logins. */
 :root{
   --bg:        hsl(222 28% 96%);
@@ -117,72 +117,76 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     <span class="mono">Client onboarding · private</span>
   </div>
 
-  <h1>You're in. Here's everything — in one page.</h1>
-  <p class="promise">We run the math on your Amazon account and <b>execute the profit fixes for
-  you</b> — pricing, ads, inventory. You watch a 3-minute video every two weeks and keep the
-  margin. <b>First month free</b> — if we don't find you more than we cost, walk away owing
-  nothing.</p>
+  <h1>You're in. And this page is all you need.</h1>
+  <p class="promise">Here's the deal. We run the math on your Amazon account. We <b>execute the
+  profit fixes for you</b>: pricing, ads, inventory, all of it. You watch a 3-minute video every
+  two weeks and keep the margin. <b>Your first month? Free.</b> If we don't find you more than we
+  cost, you walk away owing nothing.</p>
 
   <div class="panel">
     <span class="label">90 seconds · from the founder</span>
     <div class="video-wrap" id="video-wrap">
       <div class="video-poster" id="video-poster">
         <span class="mark">H</span>
-        <span>Your welcome briefing is being recorded.</span>
-        <span class="sub">It lands right here — everything below covers the same ground in writing.</span>
+        <span>Your welcome video is on its way.</span>
+        <span class="sub">It'll live right here. Until then, everything below covers the same ground.</span>
       </div>
     </div>
   </div>
 
   <div class="panel">
     <span class="step-no">Step 1 · The only thing we ever need from you</span>
-    <h2>Add one email to your Seller Central. Two minutes.</h2>
-    <p style="margin-top:10px">This one seat is how our models read your numbers and how we
-    execute corrections for you — no report exports, no monthly homework, ever.</p>
+    <h2>Add one email to your Seller Central. That's it.</h2>
+    <p style="margin-top:10px">This one seat lets our models read your numbers. It's also how
+    the fixes happen inside your account. No report exports. No monthly homework. Not now,
+    not ever.</p>
     <div class="email-line">
       <span class="email-box" id="exec-email">hagen.simmons@hubricon.com</span>
       <button class="copy" id="copy-btn">Copy email</button>
     </div>
     <span class="path">Settings → User Permissions → Invite new user</span>
-    <p style="margin-top:12px">When the invite is accepted, grant exactly these permissions — and
+    <p style="margin-top:12px">When the invite goes through, grant exactly these permissions and
     nothing else:</p>
     <ul class="perm">
-      <li><b>Reports → Business Reports</b> — view</li>
-      <li><b>Reports → Fulfillment reports</b> — view</li>
-      <li><b>Pricing</b> — view &amp; edit</li>
-      <li><b>Advertising → Campaign Manager</b> — view &amp; edit</li>
-      <li class="no"><b>Everything else stays off.</b> Banking, settings, account info — untouchable by design.</li>
+      <li><b>Reports → Business Reports</b>: view</li>
+      <li><b>Reports → Fulfillment reports</b>: view</li>
+      <li><b>Pricing</b>: view &amp; edit</li>
+      <li><b>Advertising → Campaign Manager</b>: view &amp; edit</li>
+      <li class="no"><b>Everything else stays off.</b> Banking, settings, account info. Locked out by design.</li>
     </ul>
-    <p class="why">You can revoke the seat in one click, any day, from the same screen. The narrow
-    scope is deliberate: it's what lets you hand over the work without handing over the keys.</p>
-    <p class="why"><b style="color:var(--ink)">One five-minute homework, ever:</b> Amazon can't
-    tell us what you pay for your product. Your welcome email includes a one-row-per-SKU cost
-    template (unit cost, freight, lead time) and a secure upload link — estimates are fine.</p>
-    <p class="fallback">Prefer to send files instead of granting a seat? Reply to your welcome
-    email and we'll send a secure upload link — it works, it's just fifteen minutes of exporting
-    we'd rather do for you.</p>
+    <p class="why">Want it gone? One click on that same screen revokes the seat, any day you
+    choose. And the narrow scope is the whole point. You hand over the work without handing
+    over the keys.</p>
+    <p class="why"><b style="color:var(--ink)">One tiny homework, one time.</b> Amazon has no
+    idea what you actually pay for your product. So your welcome email includes a simple cost
+    template (unit cost, freight, lead time) and a secure upload link. One row per SKU, five
+    minutes tops. Estimates are totally fine.</p>
+    <p class="fallback">Rather send files than grant a seat? No problem. Reply to your welcome
+    email and we'll set you up with a secure upload link. It works just as well. It's just
+    fifteen minutes of exporting we'd rather do for you.</p>
   </div>
 
   <div class="panel">
     <span class="step-no">Step 2 · Put your kickoff on the calendar</span>
-    <h2>Kickoff — your 90-day plan, presented</h2>
-    <p style="margin-top:10px">Within 24 hours of your seat activating, your Profit Teardown is
-    recorded and your 90-day plan is drafted from it. On this call we present the plan —
-    quarterly targets and the three-to-four moves that get you there — and set your standing
-    mandate: which corrections we execute without asking, and where your veto sits.</p>
+    <h2>Book the kickoff. See your plan.</h2>
+    <p style="margin-top:10px">Here's what happens once your seat goes live. Within 24 hours,
+    your Profit Teardown is recorded and your 90-day plan is drafted straight from it. On this
+    call, you see the plan: your quarterly targets, plus the three or four moves that get you
+    there. Then we set your standing mandate. That's where you decide which fixes we make
+    without asking, and exactly where your veto sits.</p>
     <div class="calendly-mount" id="cal-mount"></div>
     <p class="cal-fallback">Calendar not loading? <a href="https://calendly.com/hubricon/analyst-intro" rel="noopener">Book directly here.</a></p>
   </div>
 
   <div class="panel">
     <span class="step-no">Step 3 · What happens next</span>
-    <h2>The cadence, in writing</h2>
+    <h2>Here's exactly what happens next.</h2>
     <div class="timeline">
-      <div class="t-step"><span class="when">Within 24h</span><span><b>Your Profit Teardown, on video.</b> Ten thousand simulations per SKU, every fee decomposed, your demand curves fitted — what your account is leaking and what it's worth.</span></div>
-      <div class="t-step"><span class="when">Kickoff call</span><span><b>Your 90-day plan, presented.</b> Targets, initiatives, and the standing mandate agreed on one call.</span></div>
-      <div class="t-step"><span class="when">Week 1</span><span><b>First corrections executed</b> in your account — pricing steps and ad trims, each with the expected dollars stated before we touch anything.</span></div>
-      <div class="t-step"><span class="when">Every 2 weeks</span><span><b>A three-minute brief</b> lands in your inbox: what we found, what we executed, what it earned — with the running ledger total. That's your entire time cost.</span></div>
-      <div class="t-step"><span class="when">Day 30</span><span><b>Your first invoice — only if you stay.</b> $6,000/month flat, invoiced by email, ACH, net-7. No card on file, month-to-month, cancel any time.</span></div>
+      <div class="t-step"><span class="when">Within 24h</span><span><b>Your Profit Teardown, on video.</b> Ten thousand simulations per SKU. Every fee decomposed. Your demand curves, fitted. You'll see what your account is leaking, and what it's worth.</span></div>
+      <div class="t-step"><span class="when">Kickoff call</span><span><b>Your 90-day plan, presented.</b> Targets, initiatives, and your standing mandate. Agreed on one call.</span></div>
+      <div class="t-step"><span class="when">Week 1</span><span><b>First fixes go live</b> in your account. Pricing steps and ad trims, each with the expected dollars stated before we touch a thing.</span></div>
+      <div class="t-step"><span class="when">Every 2 weeks</span><span><b>A three-minute brief</b> lands in your inbox. What we found, what we fixed, what it earned, plus the running ledger total. That's your entire time cost.</span></div>
+      <div class="t-step"><span class="when">Day 30</span><span><b>Your first invoice, only if you stay.</b> $6,000 a month, flat. Invoiced by email, ACH, net-7. No card on file. Month to month. Cancel any time.</span></div>
     </div>
   </div>
 
@@ -190,28 +194,29 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     <span class="label" style="margin-bottom:12px">Answers you shouldn't have to ask for</span>
     <div class="faq">
       <div><h3>When do I actually pay?</h3>
-        <p>Never in month one. If you stay past day 30, the first invoice arrives by email — ACH,
-        net-7, $6,000 flat. There is no card on file and nothing renews automatically against
-        your will; cancel with one email, effective immediately.</p></div>
+        <p>Never in month one. Stay past day 30, and your first invoice arrives by email. ACH,
+        net-7, $6,000 flat. There's no card on file and nothing renews on its own. Cancel with
+        one email, effective immediately.</p></div>
       <div><h3>What can you change in my account, exactly?</h3>
-        <p>Only what the standing mandate we set on your kickoff call allows — bounded price steps
-        (capped at 5% per cycle, Buy Box watched daily) and ad corrections. Anything outside those
-        bounds needs your explicit yes first, and you hold a veto on everything.</p></div>
+        <p>Only what your standing mandate allows. That means bounded price steps, capped at 5%
+        per cycle with your Buy Box watched daily, plus ad corrections. Anything bigger needs
+        your explicit yes first. And you hold a veto on everything.</p></div>
       <div><h3>What does the free month cost me, really?</h3>
-        <p>If we deliver, we'll ask for a short testimonial and permission to publish your results
-        with the numbers anonymized. That's the whole price of the seat.</p></div>
+        <p>If we deliver, we'll ask you for two things. A short testimonial, and permission to
+        publish your results with the numbers anonymized. That's it. That's the whole price.</p></div>
       <div><h3>How do I revoke access?</h3>
-        <p>Settings → User Permissions → remove the user. One click, effective instantly. Your
-        data and your full ledger export free, any time — including the day you cancel.</p></div>
+        <p>Settings → User Permissions → remove the user. One click, effective instantly. And
+        your data plus your full ledger export free, any time. Yes, including the day you
+        cancel.</p></div>
       <div><h3>Who do I talk to?</h3>
-        <p>The founder — always. Reply to any Hubricon email and it lands with the person who
+        <p>The founder. Always. Reply to any Hubricon email and it lands with the person who
         builds your models and records your briefs. There is no support tier.</p></div>
     </div>
   </div>
 
   <footer>
     Hubricon Quantitative · www.hubricon.com<br>
-    This page is your onboarding home — bookmark it. Everything else arrives in your inbox,
+    This page is your onboarding home. Bookmark it. Everything else lands in your inbox,
     three minutes at a time.
   </footer>
 </div>
@@ -237,7 +242,7 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
   setTimeout(() => { btn.textContent = "Copy email"; }, 2400);
 });
 
-/* Calendly inline — same loader pattern as the landing page. */
+/* Calendly inline, same loader pattern as the landing page. */
 const KICKOFF_URL = "https://calendly.com/hubricon/analyst-intro";
 (function(){
   const css = document.createElement("link");

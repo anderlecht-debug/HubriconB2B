@@ -30,10 +30,10 @@ beat longer than the audio and trim.
 
 ### 2 · 0:12–0:27 — SCREEN: slow scroll to rest on the promise paragraph; cursor sweeps under "execute the profit fixes for you".
 
-> Here's the deal, in one sentence. We run the math on your Amazon
-> account, and we execute the profit fixes for you — pricing, ads,
-> inventory. You watch a three-minute video every two weeks, and you keep
-> the margin. Your first month is free. If we don't find you more than we
+> Here's the deal. We run the math on your Amazon account, and we
+> execute the profit fixes for you. Pricing, ads, inventory... all of it.
+> You watch a three-minute video every two weeks, and you keep the
+> margin. Your first month? Free. If we don't find you more than we
 > cost... you walk away owing nothing.
 
 ### 3 · 0:27–0:52 — SCREEN: scroll to Step 1. Hover the email box, click "Copy email" (button flips to "Copied ✓" on camera), then move the cursor down the four permission rows, pausing on each; end hovering the red "everything else stays off" row.
@@ -64,7 +64,7 @@ beat longer than the audio and trim.
 ### 6 · 1:20–1:34 — SCREEN: scroll to the Step 3 timeline; cursor steps down the rows in rhythm with the narration, landing on "Every 2 weeks".
 
 > From there, the rhythm is simple. Every two weeks, a three-minute video
-> lands in your inbox — what we found, what we executed, and what it
+> lands in your inbox — what we found, what we fixed, and what it
 > earned, with the running ledger total. That is your entire time cost.
 
 ### 7 · 1:34–1:52 — SCREEN: pause on the "Day 30" row, then slow scroll through the FAQ to the footer; hold the footer for the last 3 seconds.
