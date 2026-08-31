@@ -59,7 +59,9 @@ a{ color: var(--amber); }
 .panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px;
   padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
 .step-no{ font-family: var(--serif); font-size: 15px; color: var(--amber); letter-spacing: .04em; display: block; margin-bottom: 6px; }
-.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden;
+/* aspect-ratio matches the recording (browser-window capture, ~3:2) so the
+   player doesn't pillarbox it — adjust this one number if the bars return */
+.video-wrap{ position: relative; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden;
   background: hsl(228 45% 7%); margin-top: 18px; }
 .video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
@@ -119,7 +121,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   cost, you walk away owing nothing.</p>
 
   <div class="panel">
-    <span class="label">90 seconds · from the founder</span>
+    <span class="label">Under 90 seconds · from the founder</span>
     <div class="video-wrap" id="video-wrap">
       <iframe
         src="https://app.screencastify.com/watch/s7UJGRveU2UVXvmyTMGJ/embed"
