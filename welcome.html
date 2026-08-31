@@ -62,11 +62,6 @@ a{ color: var(--amber); }
 .video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden;
   background: hsl(228 45% 7%); margin-top: 18px; }
 .video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.video-poster{ position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px;
-  align-items: center; justify-content: center; text-align: center; padding: 24px;
-  color: hsl(220 30% 96% / .85); font-family: var(--serif); font-size: 18px; }
-.video-poster .sub{ font-family: var(--sans); font-size: 13px; color: hsl(220 30% 96% / .55); }
-.video-poster .mark{ font-family: var(--serif); font-weight: 600; font-size: 30px; color: hsl(45 100% 50%); }
 
 .email-line{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 4px; }
 .email-box{ font-family: var(--mono); font-size: 15.5px; color: var(--ink); background: var(--panel-2);
@@ -126,11 +121,12 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   <div class="panel">
     <span class="label">90 seconds · from the founder</span>
     <div class="video-wrap" id="video-wrap">
-      <div class="video-poster" id="video-poster">
-        <span class="mark">H</span>
-        <span>Your welcome video is on its way.</span>
-        <span class="sub">It'll live right here. Until then, everything below covers the same ground.</span>
-      </div>
+      <iframe
+        src="https://app.screencastify.com/watch/s7UJGRveU2UVXvmyTMGJ/embed"
+        title="Welcome from the founder"
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen loading="lazy"></iframe>
     </div>
   </div>
 
@@ -222,15 +218,6 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
 </div>
 
 <script>
-/* Paste the Loom share URL's video id here once the welcome video is recorded. */
-const WELCOME_LOOM_ID = "";
-
-if (WELCOME_LOOM_ID){
-  const wrap = document.getElementById("video-wrap");
-  wrap.innerHTML = `<iframe src="https://www.loom.com/embed/${WELCOME_LOOM_ID}?hide_owner=true&hideEmbedTopBar=true&hide_share=true"
-    title="Welcome from the founder" allowfullscreen loading="lazy"></iframe>`;
-}
-
 document.getElementById("copy-btn").addEventListener("click", async () => {
   const btn = document.getElementById("copy-btn");
   try {
