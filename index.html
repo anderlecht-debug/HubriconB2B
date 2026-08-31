@@ -1383,6 +1383,7 @@ if (inlineGate) {
         window.Calendly.initInlineWidget({
           url: url + "&" + EMBED_THEME,
           parentElement: inlineGate.querySelector(".calendly-mount"),
+          resize: true,
         });
         track("calendly_opened", { section: "close-inline" });
       } else {
