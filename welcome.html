@@ -59,13 +59,11 @@ a{ color: var(--amber); }
 .panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px;
   padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
 .step-no{ font-family: var(--serif); font-size: 15px; color: var(--amber); letter-spacing: .04em; display: block; margin-bottom: 6px; }
-/* The Screencastify player = a 16:9 video canvas + a fixed ~50px control
-   strip inside the iframe, so the frame is 16:9 PLUS that strip. The 1.5%
-   scale crops any residual hairline instead of showing it. */
-.video-wrap{ position: relative; padding-top: calc(56.25% + 50px); border-radius: 10px;
-  overflow: hidden; background: hsl(228 45% 7%); margin-top: 18px; }
-.video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
-  transform: scale(1.015); }
+/* Self-hosted native video: the element sizes itself to the file
+   (1460×828), so there is no frame math and nothing to letterbox. */
+.video-wrap{ border-radius: 10px; overflow: hidden; background: hsl(228 45% 7%);
+  margin-top: 18px; }
+.video-wrap video{ display: block; width: 100%; height: auto; }
 
 .email-line{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 4px; }
 .email-box{ font-family: var(--mono); font-size: 15.5px; color: var(--ink); background: var(--panel-2);
@@ -125,12 +123,8 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   <div class="panel">
     <span class="label">Under 90 seconds · from the founder</span>
     <div class="video-wrap" id="video-wrap">
-      <iframe
-        src="https://app.screencastify.com/watch/s7UJGRveU2UVXvmyTMGJ/embed"
-        title="Welcome from the founder"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen loading="lazy"></iframe>
+      <video src="/welcome.mp4" controls playsinline preload="metadata"
+        aria-label="Welcome from the founder"></video>
     </div>
   </div>
 
