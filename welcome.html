@@ -59,9 +59,9 @@ a{ color: var(--amber); }
 .panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px;
   padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
 .step-no{ font-family: var(--serif); font-size: 15px; color: var(--amber); letter-spacing: .04em; display: block; margin-bottom: 6px; }
-/* aspect-ratio matches the recording (browser-window capture, ~3:2) so the
-   player doesn't pillarbox it — adjust this one number if the bars return */
-.video-wrap{ position: relative; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden;
+/* aspect-ratio matches the recording (browser-window capture, ~1.52:1) so
+   the player doesn't letterbox it — adjust this one number if bars return */
+.video-wrap{ position: relative; aspect-ratio: 1.52; border-radius: 10px; overflow: hidden;
   background: hsl(228 45% 7%); margin-top: 18px; }
 .video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
