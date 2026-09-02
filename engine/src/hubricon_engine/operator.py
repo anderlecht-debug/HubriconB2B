@@ -170,7 +170,7 @@ class Pass:
         if self.dry:
             self.say(f"[dry] would send {kind} to {client['contact_email']}")
             return
-        token = onboarding.mint_token(self.db, client["id"], f"{kind} link")
+        token = onboarding.mint_token(self.db, client["id"], f"{kind} link", rotate=False)
         link = f"{onboarding.INTAKE_BASE_URL}/intake?t={token}"
         if self._touch(client, kind, link):
             self.say(f"Sent {kind} email to {client['contact_email']} (no uploads yet).")

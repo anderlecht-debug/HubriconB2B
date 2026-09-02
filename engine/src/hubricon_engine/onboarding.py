@@ -44,9 +44,12 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def mint_token(db, client_id: str, label: str) -> str:
-    """Rotates the client's intake link: raw token returned, only its hash stored."""
-    db.rpc("revoke_intake_tokens", {"p_client_id": client_id}).execute()
+def mint_token(db, client_id: str, label: str, rotate: bool = True) -> str:
+    """Mints an intake link: raw token returned, only its hash stored. With
+    rotate (the default) earlier links stop working; a nudge passes False so
+    the link in the welcome email keeps working too."""
+    if rotate:
+        db.rpc("revoke_intake_tokens", {"p_client_id": client_id}).execute()
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     expires = (datetime.now(timezone.utc) + timedelta(days=TOKEN_LIFETIME_DAYS)).isoformat()

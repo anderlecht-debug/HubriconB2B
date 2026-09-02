@@ -183,10 +183,11 @@ class Instantly:
 
     # -- unibox ------------------------------------------------------------
     def received_emails(self, campaign_id: str, max_items: int = 500) -> list[dict]:
-        """Inbound replies on the campaign, newest first as Instantly returns them."""
-        return self._page("GET", "/emails",
-                          params={"campaign_id": campaign_id, "email_type": "received"},
+        """Inbound replies on the campaign (ue_type 2), filtered client-side so
+        an unknown query flag can't silently return nothing."""
+        rows = self._page("GET", "/emails", params={"campaign_id": campaign_id},
                           limit=100, max_items=max_items)
+        return [r for r in rows if r.get("ue_type") == UE_RECEIVED]
 
     def reply(self, email_id: str, eaccount: str, subject: str, text: str, html: str | None = None) -> dict:
         body = {

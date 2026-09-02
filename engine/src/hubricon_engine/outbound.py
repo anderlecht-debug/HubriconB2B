@@ -202,14 +202,15 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
                 added += 1
                 continue
             try:
-                api.create_lead(campaign_id, email, first, last, lead.get("company_name"), lead.get("website"))
+                created = api.create_lead(campaign_id, email, first, last, lead.get("company_name"), lead.get("website"))
             except InstantlyError as err:
                 notes.append(f"enroll {email}: {err}")
                 continue
             db.table("prospects").upsert({
                 "email": email, "first_name": first, "last_name": last,
                 "company_name": lead.get("company_name"), "website": lead.get("website"),
-                "source": "instantly_list", "instantly_lead_id": lead.get("id"),
+                "source": "instantly_list",
+                "instantly_lead_id": (created or {}).get("id") or lead.get("id"),
                 "instantly_campaign_id": campaign_id, "status": "queued", "last_event_at": _now(),
             }, on_conflict="email").execute()
             known[email] = {"email": email}
