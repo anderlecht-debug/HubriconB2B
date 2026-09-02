@@ -1,0 +1,73 @@
+name: Hourly operator
+
+# The funnel runs itself: outbound through Instantly, replies triaged and
+# answered, Calendly bookings provisioned, stalled clients nudged, first
+# teardowns published, and a daily digest to the founder at 13:17 UTC
+# (8:17 am Chicago). See OPERATIONS.md.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Read everything, change nothing"
+        type: boolean
+        default: false
+
+jobs:
+  operator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # Secrets live in the "Production" environment (Settings → Environments),
+    # not in Repository secrets; a job only sees them when it declares the
+    # environment, so this line is what makes ${{ secrets.* }} resolve.
+    environment: Production
+    concurrency:
+      group: hubricon-operator
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Check secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
+          INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
+          POSTAL_ADDRESS: ${{ secrets.POSTAL_ADDRESS }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          missing=""
+          for k in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+            [ -n "$(printenv "$k")" ] || missing="$missing $k"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Required secret(s) not set:$missing"
+            exit 1
+          fi
+          [ -n "$RESEND_API_KEY" ]     || echo "::warning::RESEND_API_KEY is not set — no client or founder email will go out."
+          [ -n "$FOUNDER_EMAIL" ]      || echo "::warning::FOUNDER_EMAIL is not set — the digest has nowhere to go."
+          [ -n "$INSTANTLY_API_KEY" ]  || echo "::warning::INSTANTLY_API_KEY is not set — outbound is OFF until it is."
+          [ -n "$POSTAL_ADDRESS" ]     || echo "::warning::POSTAL_ADDRESS is not set — the campaign cannot be created (CAN-SPAM)."
+          [ -n "$ANTHROPIC_API_KEY" ]  || echo "::notice::ANTHROPIC_API_KEY is not set — questions wait for the cloud routine instead of being answered in-run."
+      - name: Run the operator
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ secrets.ALERT_FROM }}
+          FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
+          INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
+          POSTAL_ADDRESS: ${{ secrets.POSTAL_ADDRESS }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          flags="--send"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi
+          # One digest a day, on the 13:17 UTC run (8:17 am Chicago).
+          if [ "$(date -u +%H)" = "13" ]; then flags="$flags --digest"; fi
+          uv run hubricon operator $flags

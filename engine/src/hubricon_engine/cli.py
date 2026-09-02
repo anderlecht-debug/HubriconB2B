@@ -1070,6 +1070,19 @@ def cmd_all(args):
     cmd_report(args)
 
 
+def cmd_operator(args):
+    from . import operator
+
+    operator.run(send=args.send, dry=args.dry_run, digest=args.digest)
+
+
+def cmd_scoreboard(_args):
+    import json
+
+    db = dbmod.connect()
+    print(json.dumps(db.rpc("pmf_scoreboard", {}).execute().data, indent=2, default=str))
+
+
 def main():
     parser = argparse.ArgumentParser(prog="hubricon", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1180,6 +1193,14 @@ def main():
     p.add_argument("--client", help="sweep just this client")
     p.add_argument("--alert", action="store_true", help="send alert/digest emails (needs RESEND_API_KEY)")
     p.set_defaults(fn=cmd_sweep)
+
+    p = sub.add_parser("operator", help="hourly funnel pass: outbound, bookings, nudges, teardowns, digest")
+    p.add_argument("--send", action="store_true", help="actually send emails and Instantly replies")
+    p.add_argument("--dry-run", action="store_true", help="read everything, change nothing")
+    p.add_argument("--digest", action="store_true", help="email the founder the digest (with --send)")
+    p.set_defaults(fn=cmd_operator)
+
+    sub.add_parser("scoreboard", help="print the PMF scoreboard").set_defaults(fn=cmd_scoreboard)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")

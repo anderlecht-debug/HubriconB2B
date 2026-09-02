@@ -16,16 +16,21 @@ def email_configured() -> bool:
     return bool(os.environ.get("RESEND_API_KEY"))
 
 
-def send_email(to: str, subject: str, text: str) -> bool:
+def send_email(to: str, subject: str, text: str, html: str | None = None,
+               sender: str | None = None, reply_to: str | None = None) -> bool:
     key = os.environ.get("RESEND_API_KEY")
     if not key or not to:
         return False
     payload = {
-        "from": os.environ.get("ALERT_FROM", "Hubricon <alerts@hubricon.com>"),
+        "from": sender or os.environ.get("ALERT_FROM", "Hubricon <alerts@hubricon.com>"),
         "to": [to],
         "subject": subject,
         "text": text,
     }
+    if html:
+        payload["html"] = html
+    if reply_to:
+        payload["reply_to"] = reply_to
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=json.dumps(payload).encode(),
