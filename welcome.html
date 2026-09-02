@@ -169,7 +169,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     there. Then we set your standing mandate. That's where you decide which fixes we make
     without asking, and exactly where your veto sits.</p>
     <div class="calendly-mount" id="cal-mount"></div>
-    <p class="cal-fallback">Calendar not loading? <a href="https://calendly.com/hubricon/analyst-intro" rel="noopener">Book directly here.</a></p>
+    <p class="cal-fallback">Calendar not loading? <a id="cal-link" href="https://calendly.com/hubricon/kickoff" rel="noopener">Book directly here.</a></p>
   </div>
 
   <div class="panel">
@@ -209,7 +209,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   </div>
 
   <footer>
-    Hubricon Quantitative · www.hubricon.com<br>
+    Hubricon Quantitative · www.hubricon.com · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a><br>
     This page is your onboarding home. Bookmark it. Everything else lands in your inbox,
     three minutes at a time.
   </footer>
@@ -227,8 +227,11 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
   setTimeout(() => { btn.textContent = "Copy email"; }, 2400);
 });
 
-/* Calendly inline, same loader pattern as the landing page. */
-const KICKOFF_URL = "https://calendly.com/hubricon/analyst-intro";
+/* Calendly inline, same loader pattern as the landing page.
+   The kickoff is its own Calendly event (slug "kickoff": 45 min, Google Meet) —
+   the 15-minute analyst-intro was the wrong shape for presenting a 90-day plan. */
+const KICKOFF_URL = "https://calendly.com/hubricon/kickoff";
+document.getElementById("cal-link").href = KICKOFF_URL;
 (function(){
   const css = document.createElement("link");
   css.rel = "stylesheet";
