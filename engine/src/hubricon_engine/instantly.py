@@ -64,7 +64,10 @@ class Instantly:
         req = urllib.request.Request(
             url, data=data, method=method,
             headers={"authorization": f"Bearer {self.key}", "content-type": "application/json",
-                     "accept": "application/json"},
+                     "accept": "application/json",
+                     # Cloudflare in front of api.instantly.ai answers "error 1010"
+                     # to Python's default user agent; a named client passes.
+                     "user-agent": "Hubricon-operator/1.0 (+https://www.hubricon.com)"},
         )
         for attempt in (1, 2):
             try:
