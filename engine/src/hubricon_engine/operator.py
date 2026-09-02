@@ -99,12 +99,13 @@ class Pass:
             if b.get("is_test") or onboarding.is_internal(email, b.get("invitee_name")):
                 self.db.table("bookings").update({"is_test": True, "provisioned_at": _iso()}).eq("id", b["id"]).execute()
                 continue
+            # The routine's fit flag is a note for the call, never a reason to
+            # turn a booking away: everyone who books gets the welcome + upload
+            # link, and the founder sells on the call.
+            fit_note = ""
             if b.get("qualified") is False:
-                self.human.append(f"Booking from {b.get('invitee_name') or email} was flagged as not a fit "
-                                  f"({b.get('dq_reason') or 'no reason given'}); nothing was sent. "
-                                  "Reply to them yourself if you disagree.")
-                self.db.table("bookings").update({"provisioned_at": _iso()}).eq("id", b["id"]).execute()
-                continue
+                fit_note = (f" Flagged as a stretch fit ({b.get('dq_reason') or 'no reason given'}) "
+                            "— this is a call to sell on.")
             if self.dry:
                 self.say(f"[dry] would provision {email} from booking {b['id'][:8]}")
                 continue
@@ -123,7 +124,8 @@ class Pass:
             when = _parse_ts(b.get("starts_at"))
             when_s = when.astimezone().strftime("%a %b %d, %I:%M %p %Z") if when else "time unknown"
             self.human.append(f"Call booked: {b.get('invitee_name') or email} ({b.get('event_type') or 'event'}) "
-                              f"at {when_s}. Welcome email {'sent' if sent else 'NOT sent'}; upload link live.")
+                              f"at {when_s}. Welcome email {'sent' if sent else 'NOT sent'}; upload link live."
+                              f"{fit_note}")
             self.say(f"Provisioned {email} ({'new' if created else 'existing'} client) from a booking.")
 
     # -- 3. TEARDOWN replies -------------------------------------------------

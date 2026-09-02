@@ -102,3 +102,7 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
   counted.
 - Prospects who say "later" get `follow_up_at` 90 days out; nothing
   re-contacts them automatically yet.
+- Nobody is turned away before the founder has talked to them. The site's
+  application never declines; every non-test booking is provisioned and
+  welcomed. The routine's fit flag (`bookings.qualified` / `dq_reason`) is
+  informational and shows up in the digest as "sell on this call".

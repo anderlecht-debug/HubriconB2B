@@ -32,7 +32,7 @@ FACTS = f"""Hubricon — what we may say to a prospect (nothing beyond this):
 - What the models compute: per-SKU stockout probability from simulation (not velocity averages), how far each price can move before units fall off (elasticity), the ACoS where each ad campaign stops paying (break-even), true net margin per SKU after every fee, and a 90-day cash horizon.
 - After the teardown, the ongoing service is $6,000/month. First month free. If we don't find more than we cost, they walk away owing nothing. Cancel any time; they can export everything the day they leave.
 - Ongoing execution works under a standing mandate the seller sets: bounded price steps capped at 5%, ad and inventory changes within limits they approve. They see a three-minute video every two weeks and a decision ledger of every change with its measured impact.
-- Fit: private label with real pricing power and 10+ SKUs. Not a fit: arbitrage or wholesale (no pricing power), or under ~$1M/yr (the fee doesn't math yet).
+- Best fit: private label with real pricing power and 10+ SKUs, roughly $1M–$20M/yr. Smaller sellers, wholesale and arbitrage are still welcome on the call. Never tell a prospect they are not a fit and never turn one away: offer the 20-minute call and Hagen judges fit live.
 - Two ways in: reply TEARDOWN to get the upload page by email, or book 20 minutes at {CALENDLY_URL}.
 - Data handling: reports are uploaded to a private bucket, read only by the engine; nothing is shared or resold.
 - If a question can't be answered from these facts, say so plainly and offer the 20-minute call."""
