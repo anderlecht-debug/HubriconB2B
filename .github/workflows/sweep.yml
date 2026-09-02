@@ -12,6 +12,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      # The sweep exits in seconds with a one-line error when a secret is
+      # missing; this step names the culprit in the Actions UI instead.
+      # Add them under Settings → Secrets and variables → Actions.
+      - name: Check repository secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ secrets.ALERT_FROM }}
+          FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
+        run: |
+          missing=""
+          for k in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+            [ -n "$(printenv "$k")" ] || missing="$missing $k"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Required secret(s) not set:$missing — add them in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          for k in RESEND_API_KEY ALERT_FROM FOUNDER_EMAIL; do
+            [ -n "$(printenv "$k")" ] || echo "::warning::$k is not set — the sweep will run but send no alert emails."
+          done
+          echo "Secrets present."
       - name: Run the always-on sweep
         working-directory: engine
         env:
