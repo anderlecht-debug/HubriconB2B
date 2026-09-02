@@ -9,12 +9,11 @@ jobs:
   sweep:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # The secrets were entered as *environment* secrets (in an environment
-    # that happens to be named SUPABASE_URL), not repository secrets. A job
-    # only sees environment secrets when it declares that environment, so
-    # this line is what makes ${{ secrets.* }} below resolve. If the values
-    # are ever moved to Repository secrets, this line can be deleted.
-    environment: SUPABASE_URL
+    # The five secrets live in the "Production" environment (Settings →
+    # Environments), not in Repository secrets. A job only sees environment
+    # secrets when it declares that environment, so this line is what makes
+    # ${{ secrets.* }} below resolve.
+    environment: Production
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
