@@ -1053,8 +1053,14 @@ def cmd_sweep(args):
     print("\n" + digest)
 
     founder = os.environ.get("FOUNDER_EMAIL")
-    if args.alert and founder and email_configured():
-        send_email(founder, "Hubricon sweep digest", digest)
+    if not args.alert:
+        return
+    if not founder or not email_configured():
+        print("\nDigest not emailed: set FOUNDER_EMAIL and RESEND_API_KEY.")
+    elif send_email(founder, "Hubricon sweep digest", digest):
+        print(f"\nDigest emailed to {founder}.")
+    else:
+        print(f"\nDigest NOT emailed to {founder} — see the error above.")
 
 
 def cmd_all(args):

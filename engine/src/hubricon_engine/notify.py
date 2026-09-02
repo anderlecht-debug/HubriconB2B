@@ -7,6 +7,7 @@ ALERT_FROM must be a sender on a domain verified in Resend.
 
 import json
 import os
+import sys
 import urllib.error
 import urllib.request
 
@@ -33,7 +34,14 @@ def send_email(to: str, subject: str, text: str) -> bool:
     try:
         with urllib.request.urlopen(req, timeout=20) as res:
             return 200 <= res.status < 300
-    except (urllib.error.URLError, TimeoutError):
+    except urllib.error.HTTPError as err:
+        # Say why in the log (wrong team's key, unverified sender domain…)
+        # instead of failing silently; the sweep itself keeps going.
+        body = err.read().decode(errors="replace")[:300]
+        print(f"  email to {to} failed: HTTP {err.code} {body}", file=sys.stderr)
+        return False
+    except (urllib.error.URLError, TimeoutError) as err:
+        print(f"  email to {to} failed: {err}", file=sys.stderr)
         return False
 
 
