@@ -39,7 +39,7 @@ SYSTEM = """You are the writing desk of Hubricon, a quantitative CFO service for
 
 The one rule you never break: you do not write numbers. No digits, no currency or percent signs, no number words (two, hundred, half, percent...). Every figure appears only as a placeholder in double braces, {{key}}, using a key from the FACTS list exactly as given. If a fact you want is not in FACTS, describe it without a number or leave it out. Never invent a key.
 
-Voice: private-banking restraint. Short sentences. Plain English, no jargon, no hype, no exclamation marks. The client's first name once, in the greeting. Say what was found, what it is worth, what will be done, and how it will be measured. Admit uncertainty where the FACTS carry a range. Close with the record to date and sign off with an em dash and the word Hubricon on its own line."""
+Voice: private-banking restraint. Short sentences. Plain English, no jargon, no hype, no exclamation marks. The client's first name once, in the greeting. Say what was found, what it is worth, what will be done, and how it will be measured. Admit uncertainty where the FACTS carry a range. Never speculate about why a figure is missing or how a decision was made; if a fact is absent, leave the point out. Verbatim facts are complete sentences: do not add a second full stop after them. Close with the record to date, then a final line that reads exactly: — Hubricon"""
 
 
 def _money(v) -> str:
@@ -71,19 +71,23 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
         if deltas["latest"].get("pct") is not None:
             facts["margin_pct_latest"] = {"value": _pct(deltas["latest"]["pct"]), "label": "blended net margin, latest period"}
         if deltas.get("net_delta") is not None:
-            facts["net_delta"] = {"value": _money(deltas["net_delta"]), "label": "change in net profit vs the prior period (signed)"}
+            facts["net_delta"] = {"value": _money(abs(deltas["net_delta"])), "label": "size of the net profit change vs the prior period (unsigned; pair with net_direction)"}
             facts["net_direction"] = {"value": "up" if deltas["net_delta"] >= 0 else "down", "label": "direction of the net profit change"}
         if deltas.get("revenue_delta") is not None:
-            facts["revenue_delta"] = {"value": _money(deltas["revenue_delta"]), "label": "change in revenue vs the prior period (signed)"}
+            facts["revenue_delta"] = {"value": _money(abs(deltas["revenue_delta"])), "label": "size of the revenue change vs the prior period (unsigned; pair with revenue_direction)"}
+            facts["revenue_direction"] = {"value": "up" if deltas["revenue_delta"] >= 0 else "down", "label": "direction of the revenue change"}
     issued = [d for d in directives if d.get("status") == "issued"]
     facts["decisions_on_desk"] = {"value": str(len(issued)), "label": "decisions awaiting the client's approval"}
     for i, d in enumerate(issued[:4], start=1):
-        facts[f"decision_{i}"] = {"value": d["action_text"], "label": f"decision {i} on the desk, verbatim instruction"}
+        facts[f"decision_{i}"] = {"value": d["action_text"].rstrip("."), "label": f"decision {i} on the desk, verbatim instruction (no closing period)"}
         if d.get("expected_impact_usd") is not None:
-            facts[f"decision_{i}_expected"] = {"value": _money(d["expected_impact_usd"]), "label": f"expected impact of decision {i} per period"}
+            facts[f"decision_{i}_expected"] = {"value": _money(d["expected_impact_usd"]) + " per period", "label": f"expected impact of decision {i}"}
+        else:
+            facts[f"decision_{i}_expected"] = {"value": "no dollar estimate in advance; the ledger measures it after the fact",
+                                               "label": f"expected impact of decision {i} (use this phrase verbatim, do not explain further)"}
     critical = [a for a in alerts if a.get("severity") == "critical"]
     if critical:
-        facts["critical_alert"] = {"value": critical[0]["message"], "label": "the most serious alert from the last sweep, verbatim"}
+        facts["critical_alert"] = {"value": critical[0]["message"].rstrip("."), "label": "the most serious alert from the last sweep, verbatim (no closing period)"}
     if health and health.get("status") == "ok":
         facts["health_score"] = {"value": f"{float(health['score']):.0f}", "label": "Health Score out of one hundred"}
         facts["health_grade"] = {"value": health["grade"], "label": "Health Score letter grade"}
@@ -167,7 +171,7 @@ LETTER_STRUCTURE = """An Issue letter of five to seven short paragraphs:
 1. 'Issue No. {{issue_number}}' on its own line, then 'Dear {{first_name}},'.
 2. The headline: net profit and its direction versus the prior period, on what revenue and margin.
 3. The one thing to understand this month — the critical alert if there is one, otherwise the largest opportunity (recovery claims, anomalies, inventory bleed, or the Health Score's top driver), with its dollars.
-4. The decisions on the desk, each stated verbatim with its expected impact, and how each will be measured.
+4. One short paragraph per decision on the desk: the instruction verbatim, then its expected impact placeholder. After the last one, a single sentence on how the ledger measures them.
 5. The Health Score and grade, naming the drivers costing the most.
 6. The record: value delivered against fees paid, and what is identified but not yet banked.
 7. Sign-off."""

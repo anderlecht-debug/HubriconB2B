@@ -57,5 +57,5 @@ def test_build_facts_only_emits_formatted_strings():
                                 value={"value_total": 2977, "fees_paid": 0, "roi_multiple": None, "identified_unbanked": 900})
     assert all(isinstance(v["value"], str) for v in facts.values())
     assert facts["net_latest"]["value"] == "$4,842" and facts["margin_pct_latest"]["value"] == "16.0%"
-    assert facts["health_score"]["value"] == "71" and facts["decision_1_expected"]["value"] == "$121"
+    assert facts["health_score"]["value"] == "71" and facts["decision_1_expected"]["value"] == "$121 per period"
     assert facts["net_direction"]["value"] == "up"
