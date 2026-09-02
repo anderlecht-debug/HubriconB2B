@@ -169,7 +169,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     there. Then we set your standing mandate. That's where you decide which fixes we make
     without asking, and exactly where your veto sits.</p>
     <div class="calendly-mount" id="cal-mount"></div>
-    <p class="cal-fallback">Calendar not loading? <a id="cal-link" href="https://calendly.com/hubricon/kickoff" rel="noopener">Book directly here.</a></p>
+    <p class="cal-fallback">Calendar not loading? <a id="cal-link" href="https://calendly.com/hubricon/new-meeting" rel="noopener">Book directly here.</a></p>
   </div>
 
   <div class="panel">
@@ -228,9 +228,10 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
 });
 
 /* Calendly inline, same loader pattern as the landing page.
-   The kickoff is its own Calendly event (slug "kickoff": 45 min, Google Meet) —
-   the 15-minute analyst-intro was the wrong shape for presenting a 90-day plan. */
-const KICKOFF_URL = "https://calendly.com/hubricon/kickoff";
+   The kickoff is its own 45-minute Calendly event named "Kickoff"; Calendly kept its
+   auto-generated slug "new-meeting" when it was renamed. The 15-minute analyst-intro
+   was the wrong shape for presenting a 90-day plan. */
+const KICKOFF_URL = "https://calendly.com/hubricon/new-meeting";
 document.getElementById("cal-link").href = KICKOFF_URL;
 (function(){
   const css = document.createElement("link");
