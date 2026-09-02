@@ -182,6 +182,69 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
+    <div class="card" data-type="fba_reimbursements" data-scope="range">
+      <h2>6 · Reimbursements</h2>
+      <p class="why">What Amazon has already paid you back for lost or damaged units — the baseline for finding what it still owes.</p>
+      <p class="path">Seller Central → Reports → Fulfillment → Payments → Reimbursements → widest date range offered → Download.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="fba_returns" data-scope="range">
+      <h2>7 · Customer returns</h2>
+      <p class="why">Every returned unit and what Amazon did with it — units marked damaged and never restocked are money you can claim.</p>
+      <p class="path">Seller Central → Reports → Fulfillment → Customer Concessions → FBA customer returns → date range → Download.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="inventory_ledger" data-scope="range">
+      <h2>8 · Inventory ledger</h2>
+      <p class="why">Amazon's own record of every unit lost, found, damaged or disposed of inside its warehouses.</p>
+      <p class="path">Seller Central → Reports → Fulfillment → Inventory → Inventory Ledger → Detail view → date range → Download.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="inventory_health" data-scope="snapshot">
+      <h2>9 · Inventory age</h2>
+      <p class="why">Today's snapshot — aged-inventory surcharges and low-stock fees show up here before they hit your statement.</p>
+      <p class="path">Seller Central → Inventory → FBA Inventory → Download → “Inventory Age” (or Manage Inventory Health → Download).</p>
+      <div class="row">
+        <input type="date" data-role="snapshot" aria-label="Snapshot date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="transactions" data-scope="range">
+      <h2>10 · Payments transactions</h2>
+      <p class="why">The settlement-level detail behind your payouts — every fee line Amazon charged, by type. Last 90 days is ideal.</p>
+      <p class="path">Seller Central → Payments → Transaction View → set a custom date range → Download CSV.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
     <div class="banner" id="banner"></div>
     <button class="submit" id="submit">Upload files</button>
     <p class="note">Questions? Just reply to the email that brought you here.</p>
@@ -232,6 +295,9 @@ document.querySelectorAll(".add-row").forEach((btn) => {
   btn.addEventListener("click", () => addMonthRow(card));
 });
 $("#inv-date").value = new Date().toISOString().slice(0, 10);
+document.querySelectorAll("input[data-role=snapshot]").forEach((el) => {
+  el.value = new Date().toISOString().slice(0, 10);
+});
 
 function setStatus(el, text, cls){
   el.textContent = text;
@@ -270,6 +336,23 @@ function collectJobs(){
   const cogsFile = $("#cogs-file").files[0];
   if (cogsFile) jobs.push({ file: cogsFile, statusEl: $(".status", $("#cogs-file").closest(".row")),
     spec: { report_type: "cogs" } });
+  /* bleed reports: cards tagged data-scope carry their own date inputs */
+  for (const card of document.querySelectorAll(".card[data-scope=range]")){
+    const file = $("input[type=file]", card).files[0];
+    if (!file) continue;
+    const start = $("input[data-role=start]", card).value, end = $("input[data-role=end]", card).value;
+    if (!start || !end) problems.push(`Pick the date range for "${file.name}".`);
+    else jobs.push({ file, statusEl: $(".status", card),
+      spec: { report_type: card.dataset.type, period_start: start, period_end: end } });
+  }
+  for (const card of document.querySelectorAll(".card[data-scope=snapshot]")){
+    const file = $("input[type=file]", card).files[0];
+    if (!file) continue;
+    const day = $("input[data-role=snapshot]", card).value;
+    if (!day) problems.push(`Pick the snapshot date for "${file.name}".`);
+    else jobs.push({ file, statusEl: $(".status", card),
+      spec: { report_type: card.dataset.type, period_start: day } });
+  }
   return { jobs, problems };
 }
 

@@ -2,10 +2,14 @@
 
     hubricon clients
     hubricon ingest     <client> [--reparse] [--upload-id ID]
-    hubricon run        <client> [--models margin,inventory,elasticity,ads] [--simulations N] [--seed N]
+    hubricon run        <client> [--models margin,forecast,inventory,...] [--simulations N] [--seed N]
     hubricon directives <client> [--run ID] [--issue]
     hubricon ledger     <client>
     hubricon measure    <client> --directive <id-prefix> --impact <usd> [--notes TEXT]
+    hubricon recover    <client> list | file --claim ID [--case N] | paid --claim ID --amount X | deny | dismiss
+    hubricon health     <client>
+    hubricon value      <client>
+    hubricon script     <client> [--no-ai]
     hubricon report     <client> [--run ID] [--out DIR]
     hubricon all        <client>
 
@@ -16,14 +20,16 @@ import argparse
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import numpy as np
 
 from . import __version__
 from . import chart_pack
 from . import db as dbmod
+from . import narrate
 from . import storage
+from . import value as valuemod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
 from .directives import draft_directives, resolve_brand_terms
@@ -39,7 +45,11 @@ from .price_tests import (
 )
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
-from .models import ad_efficiency, cashflow, elasticity, inventory_sim, margin
+from .models import (
+    ad_efficiency, anomaly, cashflow, elasticity, forecast, health_score,
+    inventory_econ, inventory_sim, margin, recovery, risk,
+)
+from .models.anomaly import summarize as summarize_anomalies
 
 DATA_TABLES = (
     "asin_traffic",
@@ -48,7 +58,21 @@ DATA_TABLES = (
     "ppc_spend",
     "inventory_levels",
     "cogs_inputs",
+    "fba_reimbursements",
+    "fba_returns",
+    "inventory_ledger",
+    "inventory_health",
+    "settlement_transactions",
 )
+
+# Every model, in dependency order: forecast feeds inventory, inventory
+# economics and risk; cash feeds health; value closes the loop.
+ALL_MODELS = ("margin", "forecast", "inventory", "elasticity", "ads", "recovery",
+              "anomaly", "invecon", "risk", "cash", "health")
+DEFAULT_MODELS = ",".join(ALL_MODELS)
+
+CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
+                "value", "value_basis", "p_approve", "expected_value", "eligible_from", "deadline", "evidence")
 
 # Bulk PostgREST inserts need uniform keys, so every result row is padded to
 # its table's full column list.
@@ -144,9 +168,55 @@ def _pad(rows: list[dict], table: str) -> list[dict]:
     return [{c: row.get(c) for c in cols} for row in rows]
 
 
+def _save_output(db, run_id: str, client_id: str, model: str, payload) -> None:
+    dbmod.chunked_upsert(
+        db, "model_outputs",
+        [{"run_id": run_id, "client_id": client_id, "model": model, "payload": payload}],
+        on_conflict="run_id,model",
+    )
+
+
+def _load_outputs(db, run_id: str | None) -> dict:
+    if not run_id:
+        return {}
+    rows = db.table("model_outputs").select("model, payload").eq("run_id", run_id).execute().data
+    return {r["model"]: r["payload"] for r in rows}
+
+
+def _fetch_claims(db, client_id: str) -> list[dict]:
+    return (db.table("recovery_claims").select("*").eq("client_id", client_id)
+            .order("deadline").execute().data)
+
+
+def _sync_claims(db, client_id: str, run_id: str, rec: dict, today: date) -> list[dict]:
+    """Detected claims land in recovery_claims without touching a claim's
+    lifecycle (filed/paid/denied are the operator's and Amazon's to set).
+    Returns every claim on file for the client."""
+    claims = rec.get("claims", [])
+    if claims:
+        existing = {r["claim_key"] for r in
+                    db.table("recovery_claims").select("claim_key").eq("client_id", client_id).execute().data}
+        new, seen = [], []
+        for c in claims:
+            row = {**{k: c.get(k) for k in CLAIM_FIELDS}, "client_id": client_id,
+                   "claim_key": c["claim_key"], "last_seen_run_id": run_id}
+            if c["claim_key"] in existing:
+                seen.append(row)
+            else:
+                new.append({**row, "first_seen_run_id": run_id,
+                            "status": "expired" if c["status"] == "expired" else "detected"})
+        if new:
+            dbmod.chunked_upsert(db, "recovery_claims", new, on_conflict="client_id,claim_key")
+        if seen:
+            dbmod.chunked_upsert(db, "recovery_claims", seen, on_conflict="client_id,claim_key")
+    (db.table("recovery_claims").update({"status": "expired"}).eq("client_id", client_id)
+     .eq("status", "detected").lt("deadline", today.isoformat()).execute())
+    return _fetch_claims(db, client_id)
+
+
 def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int) -> str:
     data = _load_data(db, client["id"])
-    counts = {t: len(rows) for t, rows in data.items()}
+    counts = {t: len(rows) for t, rows in data.items() if rows}
     print(f"Data: {counts}")
 
     run = (
@@ -164,16 +234,28 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
     )
     run_id = run[0]["id"]
     rng = np.random.default_rng(seed)
+    today = date.today()
 
     try:
         avg_margin = None
-        margin_rows = inventory_rows = elast_rows = ads_rows = None
+        margin_rows = inventory_rows = elast_rows = ads_rows = forecast_rows = anomaly_rows = None
+        rec = inv_econ = risk_out = cash = health = claims = None
+
         if "margin" in wanted:
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
             _write_results(db, "margin_results", margin_rows, run_id, client["id"])
+        if "forecast" in wanted:
+            forecast_rows = forecast.run(data)
+            _save_output(db, run_id, client["id"], "forecast", {"rows": forecast_rows})
+            ok = [f for f in forecast_rows if f["status"] == "ok"]
+            gains = [float(f["fva_pct"]) for f in ok if f.get("fva_pct") is not None]
+            print(f"  forecast: {len(ok)} of {len(forecast_rows)} items backtested"
+                  + (f", mean gain vs naive {sum(gains) / len(gains):+.0f}%" if gains else ""))
         if "inventory" in wanted:
-            inventory_rows = inventory_sim.run(data, rng, simulations=simulations)
+            overrides = {f["item_id"]: forecast.rate_moments(f) for f in (forecast_rows or [])
+                         if f["status"] == "ok" and f["level"] == "sku"}
+            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides)
             _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
         if "elasticity" in wanted:
             elast_rows = elasticity.run(data)
@@ -181,20 +263,43 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
         if "ads" in wanted:
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin)
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
-        if {"margin", "inventory", "elasticity", "ads"} <= wanted:
-            pack = chart_pack.build_pack(margin_rows, elast_rows, inventory_rows, ads_rows,
-                                         data["ppc_search_terms"], resolve_brand_terms(client))
-            dbmod.chunked_upsert(db, "chart_packs",
-                                 [{"run_id": run_id, "client_id": client["id"], "payload": pack}],
-                                 on_conflict="run_id")
-            print(f"  chart_packs: {', '.join(sorted(pack)) or 'empty'}")
+        if "recovery" in wanted:
+            rec = recovery.run(data, today=today)
+            _save_output(db, run_id, client["id"], "recovery", rec)
+            claims = _sync_claims(db, client["id"], run_id, rec, today)
+            s = rec["summary"]
+            if rec["status"] == "ok":
+                print(f"  recovery: {s['n_live']} live claim(s) — ${float(s['live_value'] or 0):,.0f} face, "
+                      f"${float(s['live_ev'] or 0):,.0f} expected, {s['n_expiring']} expiring")
+            else:
+                print("  recovery: no bleed reports on file yet (ledger, returns, reimbursements, transactions)")
+        if "anomaly" in wanted:
+            anomaly_rows = anomaly.run(data)
+            _save_output(db, run_id, client["id"], "anomaly", {"rows": anomaly_rows})
+            s = summarize_anomalies(anomaly_rows)
+            print(f"  anomaly: {s['scanned']} series scanned, {s['flagged']} flagged, "
+                  f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
+        base_inventory = inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations)
+        base_margins = margin_rows if margin_rows is not None else margin.run(data)
+        if "invecon" in wanted:
+            inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng, simulations, today)
+            _save_output(db, run_id, client["id"], "invecon", inv_econ)
+            if inv_econ["status"] == "ok":
+                b = inv_econ["summary"]["bleed"]
+                print(f"  inventory economics: {inv_econ['summary']['n_skus']} SKUs priced, fee bleed "
+                      f"${float(b['total_month'] or 0):,.0f}/month, {len(inv_econ['summary']['econ_orders'])} "
+                      f"economic order(s), {len(inv_econ['summary']['liquidation_candidates'])} liquidation candidate(s)")
+        if "risk" in wanted:
+            risk_out = risk.run(data, base_margins, forecast_rows, base_inventory, ads_rows, rng, min(simulations, 10000))
+            _save_output(db, run_id, client["id"], "risk", risk_out)
+            v = risk_out.get("var") or {}
+            c = (risk_out.get("concentration") or {}).get("sku_revenue") or {}
+            print("  risk: "
+                  + (f"expected net ${float(v['expected_net']):,.0f}, worst-5% ${float(v['worst_5pct_net']):,.0f}"
+                     if v.get("status") == "ok" else "VaR skipped (no unit economics)")
+                  + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "cash" in wanted:
-            cash = cashflow.run(
-                client,
-                inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations),
-                margin_rows if margin_rows is not None else margin.run(data),
-                rng,
-            )
+            cash = cashflow.run(client, base_inventory, base_margins, rng)
             if cash is None:
                 print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
             else:
@@ -205,6 +310,38 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
                 )
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
+        if "health" in wanted:
+            data_present = {t: bool(data[t]) for t in DATA_TABLES}
+            health = health_score.compute(base_margins, cash, risk_out, base_inventory, inv_econ,
+                                          ads_rows, forecast_rows, rec, data_present)
+            _save_output(db, run_id, client["id"], "health", health)
+            if health["status"] == "ok":
+                top = health["top_drivers"][0] if health["top_drivers"] else None
+                print(f"  health score: {float(health['score']):.0f}/100 (grade {health['grade']})"
+                      + (f" — largest deduction {top['label'].lower()}, ${float(top['dollars_at_stake'] or 0):,.0f}" if top else ""))
+
+        # the value ledger closes the loop on every run: what was delivered vs what was paid
+        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+        if claims is None:
+            claims = _fetch_claims(db, client["id"])
+        value_out = valuemod.compute(client, directives, claims, today)
+        _save_output(db, run_id, client["id"], "value", value_out)
+        print(f"  value ledger: ${float(value_out['value_total']):,.0f} delivered vs "
+              f"${float(value_out['fees_paid']):,.0f} fees"
+              + (f" — {float(value_out['roi_multiple']):.1f}× ({value_out['status']})"
+                 if value_out["roi_multiple"] is not None else " (free month)"))
+
+        if {"margin", "inventory", "elasticity", "ads"} <= wanted:
+            pack = chart_pack.build_pack(
+                margin_rows, elast_rows, inventory_rows, ads_rows,
+                data["ppc_search_terms"], resolve_brand_terms(client),
+                value=value_out, health=health, claims=claims, recovery=rec, forecast_rows=forecast_rows,
+                inv_econ=inv_econ, risk=risk_out, anomaly_rows=anomaly_rows, today=today,
+            )
+            dbmod.chunked_upsert(db, "chart_packs",
+                                 [{"run_id": run_id, "client_id": client["id"], "payload": pack}],
+                                 on_conflict="run_id")
+            print(f"  chart_packs: {', '.join(sorted(pack)) or 'empty'}")
     except Exception as err:
         db.table("model_runs").update({"status": "failed", "error": str(err), "finished_at": _now()}).eq(
             "id", run_id
@@ -220,9 +357,9 @@ def cmd_run(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
     wanted = set(args.models.split(","))
-    unknown = wanted - {"margin", "inventory", "elasticity", "ads", "cash"}
+    unknown = wanted - set(ALL_MODELS)
     if unknown:
-        sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))}")
+        sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))} — choose from {DEFAULT_MODELS}")
     return _run_models(db, client, wanted, args.simulations, args.seed)
 
 
@@ -255,9 +392,12 @@ def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
     results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
     search_terms = db.table("ppc_search_terms").select("*").eq("client_id", client["id"]).execute().data
+    outputs = _load_outputs(db, run_id)
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"],
-                              search_terms=search_terms, brand_terms=resolve_brand_terms(client))
+                              search_terms=search_terms, brand_terms=resolve_brand_terms(client),
+                              recovery=outputs.get("recovery"), inv_econ=outputs.get("invecon"),
+                              anomaly_rows=(outputs.get("anomaly") or {}).get("rows"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -349,6 +489,102 @@ def cmd_measure(args):
         patch["measurement_notes"] = args.notes
     db.table("directives").update(patch).eq("id", rows[0]["id"]).execute()
     print(f"Recorded ${args.impact:,.0f} on {rows[0]['id'][:8]} ({rows[0]['action_text'][:60]}…)")
+
+
+def _find_claim(db, client_id: str, prefix: str) -> dict:
+    candidates = db.table("recovery_claims").select("*").eq("client_id", client_id).execute().data
+    rows = [r for r in candidates if r["id"].startswith(prefix.lower())]
+    if len(rows) != 1:
+        sys.exit(f"Claim prefix {prefix!r} matched {len(rows)} row(s) — need exactly 1.")
+    return rows[0]
+
+
+def cmd_recover(args):
+    """The reimbursement desk: list what the reconciliation found, mark
+    claims filed, and record what Amazon actually paid — which is the only
+    moment recovered money lands on the value ledger."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    today = date.today()
+
+    if args.action == "list":
+        rows = (db.table("recovery_claims").select("*").eq("client_id", client["id"])
+                .neq("status", "dismissed").order("deadline").execute().data)
+        if not rows:
+            print("No claims on file — ingest the bleed reports (ledger, returns, reimbursements, "
+                  "transactions) and `hubricon run`.")
+            return
+        print(f"Reimbursement desk — {client['company_name'] or client['contact_email']} (as of {today})\n")
+        live_value = paid = 0.0
+        for r in rows:
+            state = chart_pack.claim_window_state(r, today)
+            if state in ("open", "expiring", "filed", "not_yet_eligible"):
+                live_value += float(r["value"] or 0)
+            if r["status"] == "paid":
+                paid += float(r["paid_amount"] or 0)
+            extra = (f"paid ${float(r['paid_amount']):,.0f}" if r["status"] == "paid"
+                     else f"case {r['case_id']}" if r.get("case_id") else "")
+            print(f"  {r['id'][:8]}  {state:<17} {r['claim_type']:<23} {(r['sku'] or '')[:18]:<18} "
+                  f"{int(r['units'] or 0):>4}u  ${float(r['value'] or 0):>9,.0f}  closes {r['deadline'] or '—'}  {extra}")
+        print(f"\n  live face value ${live_value:,.0f} · recovered to date ${paid:,.0f} across "
+              f"{sum(1 for r in rows if r['status'] == 'paid')} paid claim(s)")
+        return
+
+    if not args.claim:
+        sys.exit(f"{args.action} needs --claim <id prefix>")
+    claim = _find_claim(db, client["id"], args.claim)
+    patch = {}
+    if args.action == "file":
+        patch = {"status": "filed", "filed_at": _now(), "case_id": args.case}
+    elif args.action == "paid":
+        if args.amount is None:
+            sys.exit("paid needs --amount <usd Amazon actually sent>")
+        patch = {"status": "paid", "paid_amount": args.amount, "paid_at": _now()}
+        if args.case:
+            patch["case_id"] = args.case
+    elif args.action == "deny":
+        patch = {"status": "denied", "denied_at": _now()}
+    elif args.action == "dismiss":
+        patch = {"status": "dismissed"}
+    if args.notes:
+        patch["notes"] = args.notes
+    db.table("recovery_claims").update(patch).eq("id", claim["id"]).execute()
+    print(f"{patch['status'].capitalize()}: {claim['claim_type']} · {claim['sku']} · {claim['units']} unit(s)"
+          + (f" · ${args.amount:,.2f} lands on the value ledger at the next run" if args.action == "paid" else ""))
+
+
+def cmd_health(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], None)
+    h = _load_outputs(db, run["id"]).get("health")
+    if not h or h.get("status") != "ok":
+        sys.exit("No Health Score on the latest run — `hubricon run` (the health model needs margin data).")
+    print(f"Health Score — {client['company_name'] or client['contact_email']}: "
+          f"{float(h['score']):.0f}/100, grade {h['grade']} (period {h.get('period')})\n")
+    for s in h["sub_scores"]:
+        print(f"  {s['label']:<24} {float(s['score']):>5.0f}  weight {float(s['weight']):.0%}  "
+              f"−{float(s['points_lost']):.1f} pts  ${float(s['dollars_at_stake'] or 0):>9,.0f} at stake")
+        print(f"  {'':<24} {s['note']}")
+    if h.get("excluded"):
+        print(f"\n  excluded for lack of data: {', '.join(h['excluded'])}")
+
+
+def cmd_value(args):
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+    v = valuemod.compute(client, directives, _fetch_claims(db, client["id"]))
+    print(f"Value ledger — {client['company_name'] or client['contact_email']} (as of {v['as_of']})")
+    print(f"  engagement since {v['engagement_start']} · {v['months_elapsed']} month(s) · "
+          f"{v['billed_months']} billed at ${float(v['monthly_fee']):,.0f}")
+    print(f"  measured on directives  ${float(v['measured']):>10,.0f}  ({v['measured_count']})")
+    print(f"  recovered from Amazon   ${float(v['recovered']):>10,.0f}  ({v['recovered_count']})")
+    print(f"  value delivered         ${float(v['value_total']):>10,.0f}")
+    print(f"  fees to date            ${float(v['fees_paid']):>10,.0f}")
+    print(f"  return on fees          {str(round(float(v['roi_multiple']), 1)) + '×' if v['roi_multiple'] is not None else '— (free month)':>10}  [{v['status']}]")
+    print(f"  identified, unbanked    ${float(v['identified_unbanked']):>10,.0f}  "
+          f"(directives ${float(v['identified_parts']['directives']):,.0f}, claims ${float(v['identified_parts']['claims']):,.0f})")
 
 
 def _find_test(db, client_id: str, prefix: str) -> dict:
@@ -560,6 +796,32 @@ def cmd_script(args):
     print(f"\nSaved narration: {script_path}")
     print(f"Saved letter draft (edit, then `hubricon brief --memo-file`): {memo_path}")
 
+    # The narrated letter: Claude writes, the engine supplies every number.
+    outputs = _load_outputs(db, run["id"])
+    facts = narrate.build_facts(
+        company, first_name, deltas, directives, alerts, ledger_measured, len(directives),
+        issue_number=issue_count + 1, health=outputs.get("health"), value=outputs.get("value"),
+        recovery=outputs.get("recovery"), forecast_rows=(outputs.get("forecast") or {}).get("rows"),
+        risk=outputs.get("risk"), anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
+        inv_econ=outputs.get("invecon"),
+    )
+    if args.facts:
+        print("\nFACTS the narrator may cite (every figure the engine computed):")
+        print(narrate.facts_json(facts))
+    if args.no_ai or not narrate.available():
+        print("\nNarrated letter: skipped" + ("" if args.no_ai else " (set ANTHROPIC_API_KEY to enable)")
+              + " — the template letter above is the draft.")
+        return
+    result = narrate.narrate(facts)
+    if result["text"]:
+        ai_path = folder / f"memo-ai-{date.today().isoformat()}.md"
+        ai_path.write_text(result["text"], encoding="utf-8")
+        print(f"\nNarrated letter by {result['model']}: {result['placeholders']} figures substituted from the "
+              f"engine, none originated by the model (number guard passed in {result['attempts']} attempt(s)).")
+        print(f"Saved: {ai_path}")
+    else:
+        print(f"\nNarrated letter fell back to the template: {result['reason']}")
+
 
 def cmd_brief(args):
     from pathlib import Path
@@ -710,8 +972,9 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
         db.table("inventory_sim_results").select("*").eq("run_id", prev_runs[0]["id"]).execute().data
         if prev_runs else []
     )
+    prev_health = _load_outputs(db, prev_runs[0]["id"] if prev_runs else None).get("health")
 
-    run_id = _run_models(db, client, {"margin", "inventory", "elasticity", "ads", "cash"}, 20000, 42)
+    run_id = _run_models(db, client, set(ALL_MODELS), 20000, 42)
     summary["ran"] = True
     summary["drafts"] = len(_draft_for_run(db, client, run_id))
 
@@ -719,6 +982,7 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
     margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
     tests = db.table("price_tests").select("*").eq("client_id", client["id"]).execute().data
     cash_rows = db.table("cash_horizon_results").select("*").eq("run_id", run_id).execute().data
+    outputs = _load_outputs(db, run_id)
 
     from datetime import timedelta
     window = (datetime.now(timezone.utc) - timedelta(days=DEDUPE_DAYS)).isoformat()
@@ -726,7 +990,10 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
               db.table("alerts").select("message").eq("client_id", client["id"])
               .gte("created_at", window).execute().data}
     fresh = dedupe(compute_alerts(inventory, prev_inventory, margins, tests,
-                                  cash_rows[0] if cash_rows else None), recent)
+                                  cash_rows[0] if cash_rows else None,
+                                  recovery=outputs.get("recovery"),
+                                  anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
+                                  health=outputs.get("health"), previous_health=prev_health), recent)
     summary["alerts"] = len(fresh)
     if not fresh:
         return summary
@@ -811,10 +1078,27 @@ def main():
 
     p = sub.add_parser("run", help="run the models")
     p.add_argument("client")
-    p.add_argument("--models", default="margin,inventory,elasticity,ads,cash")
+    p.add_argument("--models", default=DEFAULT_MODELS, help=f"comma-separated subset of {DEFAULT_MODELS}")
     p.add_argument("--simulations", type=int, default=20000)
     p.add_argument("--seed", type=int, default=42)
     p.set_defaults(fn=cmd_run)
+
+    p = sub.add_parser("recover", help="the reimbursement desk: list, file, paid, deny, dismiss")
+    p.add_argument("client")
+    p.add_argument("action", choices=["list", "file", "paid", "deny", "dismiss"])
+    p.add_argument("--claim", help="claim id prefix")
+    p.add_argument("--case", help="Seller Central case id")
+    p.add_argument("--amount", type=float, help="USD Amazon actually paid (for `paid`)")
+    p.add_argument("--notes")
+    p.set_defaults(fn=cmd_recover)
+
+    p = sub.add_parser("health", help="print the latest Health Score with its driver decomposition")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_health)
+
+    p = sub.add_parser("value", help="print the value ledger: delivered vs fees")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_value)
 
     p = sub.add_parser("directives", help="draft (and optionally issue) Decision Ledger directives from a run")
     p.add_argument("client")
@@ -853,8 +1137,10 @@ def main():
     p.add_argument("--terms", required=True, help='comma-separated, e.g. "acme,acme labs"')
     p.set_defaults(fn=cmd_brand)
 
-    p = sub.add_parser("script", help="generate the briefing narration script from the latest run")
+    p = sub.add_parser("script", help="generate the briefing narration script and letter from the latest run")
     p.add_argument("client")
+    p.add_argument("--no-ai", dest="no_ai", action="store_true", help="skip the Claude-narrated letter")
+    p.add_argument("--facts", action="store_true", help="print the FACTS table the narrator may cite")
     p.set_defaults(fn=cmd_script)
 
     p = sub.add_parser("brief", help="publish an Issue (video and/or letter, optional full report) to the portal")
@@ -911,7 +1197,7 @@ def main():
     p = sub.add_parser("all", help="ingest + run + report")
     p.add_argument("client")
     p.set_defaults(
-        fn=cmd_all, reparse=False, upload_id=None, models="margin,inventory,elasticity,ads,cash",
+        fn=cmd_all, reparse=False, upload_id=None, models=DEFAULT_MODELS,
         simulations=20000, seed=42, run=None, out=None,
     )
 

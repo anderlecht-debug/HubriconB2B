@@ -1,0 +1,223 @@
+"""The narration layer — Claude writes, the engine supplies every number.
+
+The one non-negotiable rule of a financial product with a language model
+in it: the model never originates a figure. It is enforced here in code,
+not in a prompt:
+
+  1. build_facts() renders every number the letter may mention — already
+     formatted by the engine — into a keyed FACTS table.
+  2. Claude is asked to write the letter using only {{key}} placeholders
+     wherever a figure belongs.
+  3. validate() rejects any draft containing a digit, a currency or percent
+     sign, a number word, or an unknown placeholder. One retry with the
+     violations spelled out; a second failure falls back to the template
+     letter in briefing.py and says so.
+  4. render() substitutes the placeholders from FACTS.
+
+A fabricated number is therefore a validation failure, never a sentence a
+client reads. The model choice is an environment variable; the guardrail
+is the architecture.
+"""
+
+import json
+import os
+import re
+from typing import Callable
+
+DEFAULT_MODEL = "claude-fable-5-1"
+FALLBACK_MODEL = "claude-opus-4-8"
+PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
+NUMBER_WORDS = {
+    "zero", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
+    "nineteen", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+    "hundred", "thousand", "million", "billion", "dozen", "percent", "half", "third", "quarter",
+    "double", "triple", "twice",
+}
+
+SYSTEM = """You are the writing desk of Hubricon, a quantitative CFO service for Amazon private-label sellers. You draft the client's monthly Issue letter.
+
+The one rule you never break: you do not write numbers. No digits, no currency or percent signs, no number words (two, hundred, half, percent...). Every figure appears only as a placeholder in double braces, {{key}}, using a key from the FACTS list exactly as given. If a fact you want is not in FACTS, describe it without a number or leave it out. Never invent a key.
+
+Voice: private-banking restraint. Short sentences. Plain English, no jargon, no hype, no exclamation marks. The client's first name once, in the greeting. Say what was found, what it is worth, what will be done, and how it will be measured. Admit uncertainty where the FACTS carry a range. Close with the record to date and sign off with an em dash and the word Hubricon on its own line."""
+
+
+def _money(v) -> str:
+    v = float(v or 0)
+    return ("−" if v < 0 else "") + f"${abs(v):,.0f}"
+
+
+def _pct(v, digits=1) -> str:
+    return f"{float(v) * 100:.{digits}f}%"
+
+
+def build_facts(company: str, first_name: str, deltas: dict | None, directives: list[dict],
+                alerts: list[dict], ledger_measured: float, ledger_count: int, issue_number: int,
+                health: dict | None = None, value: dict | None = None, recovery: dict | None = None,
+                forecast_rows: list[dict] | None = None, risk: dict | None = None,
+                anomaly_summary: dict | None = None, inv_econ: dict | None = None) -> dict:
+    """key -> {"value": formatted string, "label": what it is}. Only formatted
+    strings leave this function; the model never sees a raw float."""
+    facts = {
+        "company": {"value": company, "label": "client company name"},
+        "first_name": {"value": first_name or "there", "label": "client first name"},
+        "issue_number": {"value": f"{issue_number:03d}", "label": "this issue's number"},
+        "ledger_measured": {"value": _money(ledger_measured), "label": "measured impact to date on the Decision Ledger"},
+        "ledger_count": {"value": str(ledger_count), "label": "number of directives issued to date"},
+    }
+    if deltas:
+        facts["net_latest"] = {"value": _money(deltas["latest"]["net"]), "label": "true net profit, latest period"}
+        facts["revenue_latest"] = {"value": _money(deltas["latest"]["revenue"]), "label": "revenue, latest period"}
+        if deltas["latest"].get("pct") is not None:
+            facts["margin_pct_latest"] = {"value": _pct(deltas["latest"]["pct"]), "label": "blended net margin, latest period"}
+        if deltas.get("net_delta") is not None:
+            facts["net_delta"] = {"value": _money(deltas["net_delta"]), "label": "change in net profit vs the prior period (signed)"}
+            facts["net_direction"] = {"value": "up" if deltas["net_delta"] >= 0 else "down", "label": "direction of the net profit change"}
+        if deltas.get("revenue_delta") is not None:
+            facts["revenue_delta"] = {"value": _money(deltas["revenue_delta"]), "label": "change in revenue vs the prior period (signed)"}
+    issued = [d for d in directives if d.get("status") == "issued"]
+    facts["decisions_on_desk"] = {"value": str(len(issued)), "label": "decisions awaiting the client's approval"}
+    for i, d in enumerate(issued[:4], start=1):
+        facts[f"decision_{i}"] = {"value": d["action_text"], "label": f"decision {i} on the desk, verbatim instruction"}
+        if d.get("expected_impact_usd") is not None:
+            facts[f"decision_{i}_expected"] = {"value": _money(d["expected_impact_usd"]), "label": f"expected impact of decision {i} per period"}
+    critical = [a for a in alerts if a.get("severity") == "critical"]
+    if critical:
+        facts["critical_alert"] = {"value": critical[0]["message"], "label": "the most serious alert from the last sweep, verbatim"}
+    if health and health.get("status") == "ok":
+        facts["health_score"] = {"value": f"{float(health['score']):.0f}", "label": "Health Score out of one hundred"}
+        facts["health_grade"] = {"value": health["grade"], "label": "Health Score letter grade"}
+        for i, d in enumerate(health.get("top_drivers", [])[:3], start=1):
+            facts[f"health_driver_{i}"] = {"value": d["label"].lower(), "label": f"health driver {i} name"}
+            facts[f"health_driver_{i}_dollars"] = {"value": _money(d["dollars_at_stake"]), "label": f"dollars behind health driver {i}"}
+    if value:
+        facts["value_total"] = {"value": _money(value["value_total"]), "label": "measured value delivered to date (directives + recovered)"}
+        facts["fees_paid"] = {"value": _money(value["fees_paid"]), "label": "fees invoiced to date"}
+        if value.get("roi_multiple") is not None:
+            facts["roi_multiple"] = {"value": f"{float(value['roi_multiple']):.1f}×", "label": "value delivered divided by fees paid"}
+        facts["identified_unbanked"] = {"value": _money(value["identified_unbanked"]), "label": "identified value not yet measured or paid"}
+    if recovery and recovery.get("status") == "ok":
+        s = recovery["summary"]
+        facts["recovery_live_value"] = {"value": _money(s["live_value"]), "label": "face value of open reimbursement claims"}
+        facts["recovery_live_ev"] = {"value": _money(s["live_ev"]), "label": "expected value of open claims after approval odds"}
+        facts["recovery_n_live"] = {"value": str(s["n_live"]), "label": "number of open claims"}
+        facts["recovery_n_expiring"] = {"value": str(s["n_expiring"]), "label": "claims expiring within two weeks"}
+        facts["recovery_reimbursed_90d"] = {"value": _money(s["reimbursed_90d"]), "label": "reimbursements Amazon paid in the last ninety days"}
+    if risk:
+        var = risk.get("var") or {}
+        if var.get("status", "ok") == "ok" and var.get("cvar_95") is not None:
+            facts["worst_5pct_net"] = {"value": _money(var.get("worst_5pct_net")), "label": "net profit in the worst five-percent of simulated periods"}
+            facts["cvar_95"] = {"value": _money(var["cvar_95"]), "label": "expected shortfall below plan in a bad period (CVaR)"}
+        conc = (risk.get("concentration") or {}).get("sku_revenue") or {}
+        if conc.get("hhi") is not None:
+            facts["top_sku_share"] = {"value": _pct(conc.get("top_share") or 0, 0), "label": "revenue share of the largest SKU"}
+            facts["top_sku"] = {"value": str(conc.get("top_item")), "label": "the largest SKU"}
+            facts["effective_skus"] = {"value": f"{float(conc.get('effective_n') or 0):.1f}", "label": "effective number of SKUs (inverse HHI)"}
+    if forecast_rows:
+        ok = [f for f in forecast_rows if f.get("status") == "ok" and f.get("fva_pct") is not None]
+        if ok:
+            fva = sum(float(f["fva_pct"]) for f in ok) / len(ok)
+            facts["forecast_fva"] = {"value": f"{fva:.0f}%", "label": "average forecast accuracy gain over the naive baseline"}
+            facts["forecast_skus"] = {"value": str(len(ok)), "label": "SKUs with a backtested forecast"}
+    if anomaly_summary and anomaly_summary.get("flagged"):
+        facts["anomalies_flagged"] = {"value": str(anomaly_summary["flagged"]), "label": "fee or traffic anomalies flagged"}
+        facts["anomalies_dollars"] = {"value": _money(anomaly_summary.get("dollar_impact_total")), "label": "dollar impact per period of flagged fee creep and conversion drops"}
+        top = (anomaly_summary.get("top") or [None])[0]
+        if top:
+            facts["anomaly_top"] = {"value": f"{top.get('metric')} on {top.get('item_id')}", "label": "the largest anomaly, what and where"}
+    if inv_econ and inv_econ.get("status") == "ok":
+        b = inv_econ["summary"]["bleed"]
+        facts["inventory_bleed_month"] = {"value": _money(b["total_month"]), "label": "monthly inventory fee bleed (aged, low-inventory, peak storage)"}
+        if inv_econ["summary"].get("liquidation_value"):
+            facts["liquidation_value"] = {"value": _money(inv_econ["summary"]["liquidation_value"]), "label": "cash available now from liquidating excess"}
+    return facts
+
+
+def validate(text: str, facts: dict) -> list[str]:
+    """Every way a draft can smuggle a number in. Empty list = clean."""
+    problems = []
+    for key in PLACEHOLDER.findall(text):
+        if key not in facts:
+            problems.append(f"unknown placeholder {{{{{key}}}}}")
+    stripped = PLACEHOLDER.sub(" ", text)
+    if re.search(r"\d", stripped):
+        problems.append("contains digits outside placeholders")
+    if re.search(r"[$€£%]", stripped):
+        problems.append("contains a currency or percent sign outside placeholders")
+    words = {w for w in re.findall(r"[a-z]+", stripped.lower())}
+    bad = sorted(words & NUMBER_WORDS)
+    if bad:
+        problems.append("contains number words: " + ", ".join(bad))
+    if not stripped.strip():
+        problems.append("empty draft")
+    return problems
+
+
+def render(text: str, facts: dict) -> str:
+    return PLACEHOLDER.sub(lambda m: str(facts[m.group(1)]["value"]), text)
+
+
+def _prompt(facts: dict, structure: str) -> str:
+    table = "\n".join(f"- {{{{{k}}}}}: {v['label']}" for k, v in facts.items())
+    return (f"FACTS (use as placeholders exactly; never write their values yourself):\n{table}\n\n"
+            f"Write:\n{structure}\n\nReturn the letter only, no preamble.")
+
+
+LETTER_STRUCTURE = """An Issue letter of five to seven short paragraphs:
+1. 'Issue No. {{issue_number}}' on its own line, then 'Dear {{first_name}},'.
+2. The headline: net profit and its direction versus the prior period, on what revenue and margin.
+3. The one thing to understand this month — the critical alert if there is one, otherwise the largest opportunity (recovery claims, anomalies, inventory bleed, or the Health Score's top driver), with its dollars.
+4. The decisions on the desk, each stated verbatim with its expected impact, and how each will be measured.
+5. The Health Score and grade, naming the drivers costing the most.
+6. The record: value delivered against fees paid, and what is identified but not yet banked.
+7. Sign-off."""
+
+
+def _call_claude(system: str, prompt: str, model: str) -> str:
+    import anthropic
+
+    client = anthropic.Anthropic()
+    response = client.beta.messages.create(
+        model=model,
+        max_tokens=4000,
+        betas=["server-side-fallback-2026-06-01"],
+        fallbacks=[{"model": FALLBACK_MODEL}],
+        output_config={"effort": "medium"},
+        system=system,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    if response.stop_reason == "refusal":
+        raise RuntimeError("model declined the request")
+    return "".join(b.text for b in response.content if b.type == "text").strip()
+
+
+def narrate(facts: dict, structure: str = LETTER_STRUCTURE, call: Callable[[str, str, str], str] | None = None,
+            model: str | None = None) -> dict:
+    """Returns {"text": rendered letter or None, "model", "attempts", "reason",
+    "placeholders": count}. `call` is injectable so tests never touch the network."""
+    model = model or os.environ.get("HUBRICON_NARRATOR_MODEL", DEFAULT_MODEL)
+    call = call or _call_claude
+    prompt = _prompt(facts, structure)
+    attempts, problems = 0, []
+    for attempt in range(2):
+        attempts += 1
+        try:
+            draft = call(SYSTEM, prompt, model)
+        except Exception as err:  # network, auth, refusal — never a client-facing failure
+            return {"text": None, "model": model, "attempts": attempts, "reason": f"{type(err).__name__}: {err}", "placeholders": 0}
+        problems = validate(draft, facts)
+        if not problems:
+            return {"text": render(draft, facts), "model": model, "attempts": attempts, "reason": None,
+                    "placeholders": len(PLACEHOLDER.findall(draft))}
+        prompt = (prompt + "\n\nYour previous draft was rejected by the number guard: "
+                  + "; ".join(problems) + ". Rewrite it using placeholders only.")
+    return {"text": None, "model": model, "attempts": attempts,
+            "reason": "rejected by the number guard: " + "; ".join(problems), "placeholders": 0}
+
+
+def available() -> bool:
+    return bool(os.environ.get("ANTHROPIC_API_KEY")) and os.environ.get("HUBRICON_NARRATOR", "on").lower() != "off"
+
+
+def facts_json(facts: dict) -> str:
+    return json.dumps({k: v["value"] for k, v in facts.items()}, indent=2, ensure_ascii=False)

@@ -234,8 +234,74 @@ input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
 .bleed-row .amt{ text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 700px){ .chart-duo{ grid-template-columns: 1fr; } }
 
+/* numerals are the typography: the currency sign steps back from the value */
+.fig .cur{ font-weight: 300; color: var(--ink-faint); margin-right: 1px; }
+
+/* value delivered vs fees */
+.value-strip{
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  border-top: 1px solid var(--hairline); margin-top: 24px; padding-top: 20px;
+}
+.value-strip .v{ padding: 0 18px; border-left: 1px solid var(--hairline); }
+.value-strip .v:first-child{ border-left: 0; padding-left: 0; }
+.value-strip .fig{ font-size: 24px; display: block; margin: 4px 0 2px; }
+.value-strip .d{ font-size: 12.5px; color: var(--ink-faint); }
+
+/* the health score */
+.health{ display: grid; grid-template-columns: 200px 1fr; gap: 34px; align-items: start; }
+.health .score{
+  font-family: var(--serif); font-weight: 500; font-size: 72px; line-height: 1; color: var(--ink);
+  font-variant-numeric: tabular-nums; letter-spacing: -.03em; margin-top: 6px;
+}
+.health .score small{ font-size: 17px; color: var(--ink-faint); letter-spacing: 0; margin-left: 4px; font-weight: 400; }
+.health .grade{ display: inline-block; margin-top: 10px; font-family: var(--serif); font-size: 19px; color: var(--amber); }
+.driver{
+  display: grid; grid-template-columns: minmax(130px, 180px) 1fr 52px 96px; gap: 14px; align-items: center;
+  padding: 9px 0 2px; border-top: 1px solid var(--hairline); font-size: 13.5px;
+}
+.driver:first-child{ border-top: 0; padding-top: 0; }
+.driver .bar{ height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+.driver .bar i{ display: block; height: 100%; border-radius: 4px; background: var(--ok); }
+.driver .bar i.mid{ background: var(--amber); } .driver .bar i.low{ background: var(--serious); }
+.driver .sc{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-family: var(--serif); font-size: 16px; }
+.driver .usd{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-faint); font-size: 12.5px; }
+.driver-note{ font-size: 12.5px; color: var(--ink-faint); padding: 2px 0 8px; }
+
+/* money found */
+.claim{
+  display: grid; grid-template-columns: 118px 1fr 84px 92px 118px; gap: 12px; align-items: baseline;
+  padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px;
+}
+.claim:first-child{ border-top: 0; }
+.claim .num{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.claim .type{ font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+.claim .when{ text-align: right; font-size: 12px; }
+
+/* demand fans */
+.fan-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 22px; }
+.chart .fan{ fill: hsl(40 90% 45% / .15); }
+.chart .fan2{ fill: hsl(40 90% 45% / .30); }
+
+/* concentration meter */
+.meter{
+  position: relative; height: 10px; border-radius: 5px; opacity: .85;
+  background: linear-gradient(90deg, var(--ok) 0 10%, var(--amber) 10% 18%, var(--serious) 18% 100%);
+}
+.meter i{ position: absolute; top: -5px; width: 3px; height: 20px; background: var(--ink); border-radius: 2px; margin-left: -1px; }
+.share-row{ display: grid; grid-template-columns: minmax(110px, 190px) 1fr 60px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13.5px; }
+.share-row .bar{ height: 12px; border-radius: 3px; background: var(--c1); }
+.share-row .pct{ text-align: right; font-variant-numeric: tabular-nums; }
+.anom-row{ display: grid; grid-template-columns: 1fr 120px 96px; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
+.anom-row:first-child{ border-top: 0; }
+.anom-row .spark2{ width: 120px; height: 26px; display: block; }
+.anom-row .spark2 polyline{ fill: none; stroke: var(--ink-faint); stroke-width: 1.5; }
+.anom-row .spark2 circle{ fill: var(--serious); }
+.anom-row .usd{ text-align: right; font-variant-numeric: tabular-nums; color: var(--serious); }
+.anom-row .what b{ color: var(--ink); font-weight: 500; }
+.anom-row .what span{ display: block; font-size: 12px; color: var(--ink-faint); }
+
 /* the watch */
-#horizon, #riskmap{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
+#horizon, #riskmap, #risk, #conc, #anom{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
 .hz-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
 #hz-svg{ width: 100%; height: auto; display: block; }
 #hz-svg .grid{ stroke: var(--hairline); }
@@ -334,6 +400,12 @@ footer{
   .position{ padding: 28px 20px; }
   .pos-tiles{ grid-template-columns: 1fr; gap: 14px; }
   .pos-tile{ border-left: 0; padding: 0; }
+  .value-strip{ grid-template-columns: 1fr; gap: 14px; }
+  .value-strip .v{ border-left: 0; padding: 0; }
+  .health{ grid-template-columns: 1fr; }
+  .driver{ grid-template-columns: 1fr 1fr; }
+  .driver .bar{ grid-column: 1 / -1; }
+  .claim{ grid-template-columns: 1fr 1fr; }
   .watch-grid{ grid-template-columns: 1fr; }
   .candor{ grid-template-columns: 1fr; }
   .masthead{ flex-direction: column; }
@@ -382,7 +454,29 @@ footer{
       <div id="trend" class="hidden" style="margin-top:24px; border-top:1px solid var(--hairline); padding-top:20px">
         <svg class="chart" id="trend-svg" viewBox="0 0 920 170" role="img" aria-label="Net profit and revenue by month"></svg>
       </div>
+      <div class="value-strip hidden" id="value-strip">
+        <div class="v"><span class="label">Value delivered</span><span class="fig" id="v-total">—</span><span class="d" id="v-total-d"></span></div>
+        <div class="v"><span class="label">Fees to date</span><span class="fig" id="v-fees">—</span><span class="d" id="v-fees-d"></span></div>
+        <div class="v"><span class="label">Return on fees</span><span class="fig" id="v-roi">—</span><span class="d" id="v-roi-d"></span></div>
+      </div>
     </div>
+
+    <!-- 1b · the health score -->
+    <section id="health-sect" class="hidden">
+      <div class="sect-label"><span class="label">The Health Score</span></div>
+      <div class="panel">
+        <div class="health">
+          <div>
+            <span class="label">Out of one hundred</span>
+            <div class="score" id="hs-score">—</div>
+            <span class="grade" id="hs-grade"></span>
+            <p class="hint" id="hs-note" style="margin-top:12px; max-width: 24ch"></p>
+          </div>
+          <div id="hs-drivers"></div>
+        </div>
+        <p class="hint" style="margin-top:18px">Six sub-scores, each with the dollars behind its deduction, weighted over whichever ones your data supports. The thresholds are stated rules, not a black box — argue with any of them.</p>
+      </div>
+    </section>
 
     <!-- 2 · the plan -->
     <div class="sect-label"><span class="label">The plan</span></div>
@@ -414,12 +508,42 @@ footer{
       </div>
     </section>
 
+    <!-- 2b' · money found -->
+    <section id="found-sect" class="hidden">
+      <div class="sect-label"><span class="label">Money found — what Amazon owes you</span></div>
+      <div class="panel">
+        <div class="sim-out" id="mf-tiles" style="margin-bottom:20px"></div>
+        <div id="mf-claims"></div>
+        <p class="hint" id="mf-note" style="margin-top:14px"></p>
+      </div>
+    </section>
+
     <!-- 2c · the mathematics of your prices -->
     <section id="pricing-sect" class="hidden">
       <div class="sect-label"><span class="label">The mathematics of your prices</span></div>
       <div class="panel">
         <div id="pricing-rows"></div>
         <p class="hint" style="margin-top:14px">The demand curve is fitted to your observed months (the dots) with its 95% confidence band — that band is us showing our work. The profit curve follows from it and your true unit economics: the gold dot is the move on your desk, P* the destination. Steps are capped at 5% per cycle, Buy Box watched daily.</p>
+      </div>
+    </section>
+
+    <!-- 2c' · the demand outlook -->
+    <section id="fc-sect" class="hidden">
+      <div class="sect-label"><span class="label">The demand outlook</span></div>
+      <div class="panel">
+        <div class="fan-grid" id="fans"></div>
+        <p class="hint" style="margin-top:14px">Each SKU's daily sales rate as observed (the line), then the next period as a range: the darker band holds the middle half of outcomes, the lighter band nine in ten. The method is chosen by backtesting against a naive forecast, and the accuracy gain is stated — a forecast that cannot beat "same as last month" says so.</p>
+      </div>
+    </section>
+
+    <!-- 2e · inventory economics -->
+    <section id="inv-sect" class="hidden">
+      <div class="sect-label"><span class="label">Inventory economics</span></div>
+      <div class="panel">
+        <div class="sim-out" id="inv-tiles" style="margin-bottom:20px"></div>
+        <div id="inv-orders"></div>
+        <div id="inv-liq" class="hidden" style="margin-top:22px"></div>
+        <p class="hint" id="inv-note" style="margin-top:14px"></p>
       </div>
     </section>
 
@@ -477,6 +601,23 @@ footer{
         </div>
         <svg id="hz-svg" viewBox="0 0 920 240" role="img" aria-label="Simulated cash position over the next 90 days"></svg>
         <p class="hz-note" id="hz-note"></p>
+      </div>
+      <div id="risk" class="hidden">
+        <div class="hz-head"><span class="label">Profit at risk — next period</span><span class="chip" id="risk-chip"></span></div>
+        <div class="sim-out" id="risk-tiles"></div>
+        <p class="hz-note" id="risk-note"></p>
+      </div>
+      <div id="conc" class="hidden">
+        <div class="hz-head"><span class="label">Concentration — how much rides on one listing</span><span class="chip" id="conc-chip"></span></div>
+        <div class="meter" style="margin:12px 0 6px"><i id="conc-pin"></i></div>
+        <div class="t-meta"><span>diversified</span><span>1,800 · highly concentrated</span><span>one SKU</span></div>
+        <div id="conc-rows" style="margin-top:14px"></div>
+        <p class="hz-note" id="conc-note"></p>
+      </div>
+      <div id="anom" class="hidden">
+        <div class="hz-head"><span class="label">Fee creep and traffic shifts</span><span class="chip escalated" id="anom-chip"></span></div>
+        <div id="anom-rows"></div>
+        <p class="hz-note">Statistical change-point and CUSUM tests on your own fee-per-unit, conversion, and traffic series. A flag means a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.</p>
       </div>
       <div id="riskmap" class="hidden">
         <div class="hz-head"><span class="label">Inventory risk — every SKU on one map</span></div>
@@ -544,8 +685,13 @@ const PORTAL_URL = location.origin + "/portal";
 const $ = (s, el) => (el ?? document).querySelector(s);
 const money = (v) => v == null ? "—" : "$" + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fdate = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
-const fmonth = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "";
+/* date-only strings are calendar dates, not instants: parse them as local
+   so "2026-05-01" never renders as Apr 30 west of Greenwich */
+const asDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v))
+  ? new Date(Number(v.slice(0, 4)), Number(v.slice(5, 7)) - 1, Number(v.slice(8, 10)))
+  : new Date(v);
+const fdate = (iso) => iso ? asDate(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+const fmonth = (iso) => iso ? asDate(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "";
 
 /* ── session: localStorage + refresh-token renewal ── */
 function storeSession(s){ try { localStorage.setItem("hubricon_session", JSON.stringify(s)); } catch {} }
@@ -700,7 +846,7 @@ function niceTicks(lo, hi, n = 4){
   const out = []; for (let t = Math.ceil(lo / s) * s; t <= hi + s / 1e6; t += s) out.push(t);
   return out;
 }
-const mon = (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short" });
+const mon = (iso) => asDate(iso).toLocaleDateString(undefined, { month: "short" });
 const nearest = (arr, key, v) => arr.reduce((b, pt) => Math.abs(pt[key] - v) < Math.abs(b[key] - v) ? pt : b);
 
 /* ── the position trend: two aligned small multiples, one axis each ── */
@@ -971,9 +1117,228 @@ function renderDumbbells(dirs){
   $("#dumbbells").classList.remove("hidden");
 }
 
+/* ── value delivered vs fees ── */
+const moneyCur = (v) => v == null ? "—" : `<span class="cur">${Number(v) < 0 ? "−$" : "$"}</span>${Math.abs(Number(v)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+function renderValue(v){
+  if (!v) return;
+  $("#value-strip").classList.remove("hidden");
+  $("#v-total").innerHTML = moneyCur(v.value_total);
+  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered from Amazon`;
+  $("#v-fees").innerHTML = moneyCur(v.fees_paid);
+  $("#v-fees-d").textContent = v.billed_months
+    ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
+    : "free month — nothing invoiced yet";
+  $("#v-roi").textContent = v.roi_multiple != null ? `${Number(v.roi_multiple).toFixed(1)}×` : "—";
+  const d = $("#v-roi-d");
+  const line = {
+    strong: ["up", "every dollar of fees returned more than five"],
+    holding: ["", "holding — the standard we work to is five times"],
+    at_risk: ["down", "under three times — the work deepens until it isn't"],
+    free_month: ["", "measured from the first invoice onward"],
+  }[v.status] || ["", ""];
+  d.className = "d " + line[0];
+  d.textContent = line[1] + (Number(v.identified_unbanked) > 0 ? ` · ${money(v.identified_unbanked)} identified, not yet banked` : "");
+}
+
+/* ── the health score ── */
+function renderHealth(h){
+  if (!h || h.score == null) return;
+  $("#hs-score").innerHTML = `${Math.round(Number(h.score))}<small>/100</small>`;
+  $("#hs-grade").textContent = `Grade ${h.grade}`;
+  const top = (h.top_drivers || [])[0];
+  $("#hs-note").textContent = top ? `Largest deduction: ${top.label.toLowerCase()} — ${money(top.dollars_at_stake)} at stake.` : "";
+  const wrap = $("#hs-drivers"); wrap.innerHTML = "";
+  for (const s of h.sub_scores || []){
+    const sc = Number(s.score);
+    const cls = sc >= 70 ? "" : sc >= 45 ? "mid" : "low";
+    wrap.insertAdjacentHTML("beforeend", `<div class="driver">
+        <span>${esc(s.label)} <span class="hint" style="font-size:11px">· ${(Number(s.weight) * 100).toFixed(0)}% weight</span></span>
+        <div class="bar"><i class="${cls}" style="width:${sc.toFixed(1)}%"></i></div>
+        <span class="sc">${sc.toFixed(0)}</span>
+        <span class="usd">${Number(s.dollars_at_stake) > 0 ? money(s.dollars_at_stake) + " at stake" : "—"}</span>
+      </div><div class="driver-note">${esc(s.note)}</div>`);
+  }
+  $("#health-sect").classList.remove("hidden");
+}
+
+/* ── money found: reimbursement claims ── */
+function renderMoneyFound(mf){
+  if (!mf) return;
+  const tiles = $("#mf-tiles"); tiles.innerHTML = "";
+  const tile = (v, label, cls = "") => tiles.insertAdjacentHTML("beforeend", `<div class="o"><b class="${cls}">${v}</b><span>${label}</span></div>`);
+  tile(money(mf.live_value), `open claims · ${mf.n_live}`);
+  tile(money(mf.live_ev), "expected after approval odds");
+  if (Number(mf.n_expiring) > 0) tile(money(mf.expiring_value), `expiring within two weeks · ${mf.n_expiring}`, "neg");
+  tile(money(mf.paid_total), `recovered to date · ${mf.paid_count}`, Number(mf.paid_total) > 0 ? "pos" : "");
+  if (Number(mf.reimbursed_90d) > 0) tile(money(mf.reimbursed_90d), "Amazon paid, last 90 days");
+  const names = { warehouse_lost: "lost in warehouse", warehouse_damaged: "damaged by Amazon", carrier_damaged: "damaged by carrier",
+    transit_lost: "lost in transit", refund_no_return: "refunded, never returned", damaged_return: "damaged return",
+    reimbursement_reversal: "reimbursement reversed" };
+  const wrap = $("#mf-claims"); wrap.innerHTML = "";
+  for (const c of mf.claims || []){
+    const chip = c.status === "expiring" ? ["escalated", `${c.days_left} day${c.days_left === 1 ? "" : "s"} left`]
+      : c.status === "filed" ? ["watching", "filed — awaiting Amazon"]
+      : c.status === "paid" ? ["clear", "paid"]
+      : c.status === "not_yet_eligible" ? ["watching", `eligible ${fdate(c.eligible_from)}`]
+      : ["watching", `closes ${fdate(c.deadline)}`];
+    wrap.insertAdjacentHTML("beforeend", `<div class="claim">
+      <span class="type">${esc(names[c.claim_type] || c.claim_type)}</span>
+      <span class="s-sku">${esc(c.sku)}${c.order_id ? ` <span class="hint">· ${esc(c.order_id)}</span>` : ""}</span>
+      <span class="num">${c.units} unit${c.units === 1 ? "" : "s"}</span>
+      <span class="num">${money(c.value)}</span>
+      <span class="when"><span class="chip ${chip[0]}">${chip[1]}</span></span>
+    </div>`);
+  }
+  $("#mf-note").textContent = `${mf.n_claims} discrepancies reconciled across your inventory ledger, returns, reimbursements and settlements. Values use your landed cost where on file; expected value applies stated approval odds per claim type. We file, Amazon pays, the ledger records what actually arrived.`;
+  $("#found-sect").classList.remove("hidden");
+}
+
+/* ── the demand outlook: observed rate + next-period fan ── */
+function fanSvg(f){
+  const W = 450, H = 210, L = 46, R = 14, T = 16, B = 28;
+  const series = f.series.map((p) => Number(p.rate));
+  const n = series.length;
+  const ys = [...series, Number(f.p90), Number(f.p10)];
+  const hi = Math.max(...ys) * 1.12 || 1, lo = 0;
+  const sx = lin(0, n, L, W - R);
+  const sy = lin(lo, hi, H - B, T);
+  let svg = `<line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+  for (const t of niceTicks(lo, hi, 3))
+    svg += `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(t).toFixed(1)}" y2="${sy(t).toFixed(1)}"/>
+      <text class="ax" x="${L - 6}" y="${(sy(t) + 3.5).toFixed(1)}" text-anchor="end">${Number(t).toFixed(1)}</text>`;
+  const x0 = sx(n - 1), x1 = sx(n), yl = sy(series[n - 1]);
+  svg += `<path class="fan" d="M ${x0.toFixed(1)},${yl.toFixed(1)} L ${x1.toFixed(1)},${sy(f.p90).toFixed(1)} L ${x1.toFixed(1)},${sy(f.p10).toFixed(1)} Z"/>
+    <path class="fan2" d="M ${x0.toFixed(1)},${yl.toFixed(1)} L ${x1.toFixed(1)},${sy(f.p75).toFixed(1)} L ${x1.toFixed(1)},${sy(f.p25).toFixed(1)} Z"/>
+    <polyline class="ink" points="${series.map((v, i) => `${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join(" ")}"/>
+    <line class="dash" x1="${x1.toFixed(1)}" x2="${x1.toFixed(1)}" y1="${sy(f.p10).toFixed(1)}" y2="${sy(f.p90).toFixed(1)}"/>
+    <circle class="goldf" cx="${x1.toFixed(1)}" cy="${sy(f.point).toFixed(1)}" r="5"/>
+    <text class="lbl" x="${(x1 - 8).toFixed(1)}" y="${(sy(f.p90) - 6).toFixed(1)}" text-anchor="end">${Number(f.p90).toFixed(1)}</text>
+    <text class="lbl" x="${(x1 - 8).toFixed(1)}" y="${(sy(f.p10) + 14).toFixed(1)}" text-anchor="end">${Number(f.p10).toFixed(1)}</text>
+    <text class="ax" x="${L}" y="${H - 8}">${mon(f.series[0].t)}</text>
+    <text class="ax" x="${x0.toFixed(1)}" y="${H - 8}" text-anchor="middle">${mon(f.series[n - 1].t)}</text>
+    <text class="ax" x="${x1.toFixed(1)}" y="${H - 8}" text-anchor="end">next</text>
+    <text class="ax" x="${L + 4}" y="${T - 4}">units per day</text>`;
+  return svg;
+}
+function renderFans(list){
+  const wrap = $("#fans"); wrap.innerHTML = "";
+  for (const f of list){
+    if (!f.series || f.series.length < 3) continue;
+    const gain = f.fva_pct != null && Number(f.fva_pct) > 0
+      ? `${Number(f.fva_pct).toFixed(0)}% more accurate than "same as last period"`
+      : `no gain over "same as last period" — we say so`;
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<svg class="chart" viewBox="0 0 450 210">${fanSvg(f)}</svg>
+      <figcaption class="cap"><b style="color:var(--ink);font-weight:500">${esc(f.sku)}</b> · ${esc(String(f.method).replace(/_/g, " "))} · ${gain}${f.horizon_units_point != null ? ` · next ${f.horizon_days} days ≈ ${Math.round(f.horizon_units_point)} units (${Math.round(f.horizon_units_p10)}–${Math.round(f.horizon_units_p90)})` : ""}</figcaption>`;
+    wrap.appendChild(fig);
+  }
+  if (wrap.children.length) $("#fc-sect").classList.remove("hidden");
+}
+
+/* ── inventory economics ── */
+function renderInvEcon(ie){
+  if (!ie) return;
+  const tiles = $("#inv-tiles"); tiles.innerHTML = "";
+  const tile = (v, label, cls = "") => tiles.insertAdjacentHTML("beforeend", `<div class="o"><b class="${cls}">${v}</b><span>${label}</span></div>`);
+  const b = ie.bleed || {};
+  tile(money(b.total_month), "fee bleed per month", Number(b.total_month) > 0 ? "neg" : "pos");
+  if (Number(b.aged_surcharge_month) > 0) tile(money(b.aged_surcharge_month), `aged-inventory surcharge · ${ie.aged_units_181_plus} units past 181 days`);
+  if (Number(b.low_inventory_fee_month) > 0) tile(money(b.low_inventory_fee_month), `low-inventory fee · ${ie.n_low_inventory_fee_risk} SKU${ie.n_low_inventory_fee_risk === 1 ? "" : "s"} thin`);
+  if (Number(b.peak_storage_premium_month) > 0) tile(money(b.peak_storage_premium_month), "Oct–Dec storage premium, projected");
+  if (Number(ie.liquidation_value) > 0) tile(money(ie.liquidation_value), "cash from liquidating excess now");
+  const orders = $("#inv-orders"); orders.innerHTML = "";
+  if ((ie.econ_orders || []).length){
+    orders.innerHTML = `<span class="label" style="margin-bottom:6px">Purchase orders the money justifies</span>`;
+    for (const o of ie.econ_orders){
+      orders.insertAdjacentHTML("beforeend", `<div class="claim" style="grid-template-columns: 1fr 90px 110px 140px">
+        <span class="s-sku">${esc(o.sku)}</span>
+        <span class="num">${o.qty} units</span>
+        <span class="num">${money(o.wire)}</span>
+        <span class="when hint">service level ${(Number(o.service_level) * 100).toFixed(1)}%</span></div>`);
+    }
+  }
+  const liq = $("#inv-liq");
+  if ((ie.liquidation_candidates || []).length){
+    liq.classList.remove("hidden");
+    liq.innerHTML = `<span class="label" style="margin-bottom:6px">Liquidate rather than hold</span>`;
+    for (const c of ie.liquidation_candidates){
+      liq.insertAdjacentHTML("beforeend", `<div class="claim" style="grid-template-columns: 1fr 90px 1fr">
+        <span class="s-sku">${esc(c.sku)}</span><span class="num">${c.units} units</span>
+        <span class="hint">liquidate now ${money(c.liquidate_value)} vs hold ${money(c.hold_npv)} (discounted, storage and surcharge included)</span></div>`);
+    }
+  } else liq.classList.add("hidden");
+  const sl = (ie.service_levels || []).slice(0, 3).map((s) => `${esc(s.sku)} ${(Number(s.critical_fractile) * 100).toFixed(0)}%`).join(", ");
+  $("#inv-note").textContent = `Service levels are set by the money, SKU by SKU: q* = C_u ÷ (C_u + C_o), the cost of a lost sale against the cost of a unit left over — storage at the ${ie.fee_schedule_effective} rate card, capital, and the season priced in${sl ? ` (${sl})` : ""}. ${ie.inventory_age_on_file ? "Aged-inventory and storage figures are Amazon's own estimates from your Inventory Age export." : "Upload the Inventory Age export and Amazon's own surcharge estimates replace the rate-card figures."}`;
+  $("#inv-sect").classList.remove("hidden");
+}
+
+/* ── profit at risk, concentration, fee creep (the watch) ── */
+function renderRisk(r){
+  const v = r?.var;
+  if (!v || v.status !== "ok") return;
+  const tiles = $("#risk-tiles"); tiles.innerHTML = "";
+  const tile = (val, label, cls = "") => tiles.insertAdjacentHTML("beforeend", `<div class="o"><b class="${cls}">${val}</b><span>${label}</span></div>`);
+  tile(money(v.expected_net), "expected net profit");
+  tile(money(v.p5_net), "one period in twenty is this bad", Number(v.p5_net) < 0 ? "neg" : "");
+  tile(money(v.worst_5pct_net), "average of the worst five percent", Number(v.worst_5pct_net) < 0 ? "neg" : "");
+  tile(money(v.cvar_95), "expected shortfall vs plan (CVaR 95)");
+  const chip = $("#risk-chip");
+  if (Number(v.worst_5pct_net) < 0){ chip.className = "chip escalated"; chip.textContent = "a bad period is a loss — covered on the cash horizon"; }
+  else { chip.className = "chip clear"; chip.textContent = "profitable even in the bad tail"; }
+  $("#risk-note").textContent = `${Number(v.n_paths).toLocaleString()} simulated periods over ${v.skus_modeled} SKUs — demand from the forecast distribution, your unit economics and ad spend held at the latest period. Value-at-risk reads the tail of that distribution; expected shortfall averages beyond it, the coherent measure insurers use.`;
+  $("#risk").classList.remove("hidden");
+}
+function renderConcentration(c){
+  if (!c || c.hhi == null) return;
+  const hhi = Number(c.hhi);
+  $("#conc-pin").style.left = `${Math.min(100, hhi / 100).toFixed(1)}%`;
+  const chip = $("#conc-chip");
+  chip.className = "chip " + (c.level === "highly_concentrated" ? "escalated" : c.level === "moderate" ? "watching" : "clear");
+  chip.textContent = `HHI ${Math.round(hhi).toLocaleString()} · ${String(c.level).replace("_", " ")}`;
+  const rows = $("#conc-rows"); rows.innerHTML = "";
+  const maxS = Math.max(...(c.shares || []).map((s) => Number(s.share)), 0.01);
+  for (const s of c.shares || []){
+    rows.insertAdjacentHTML("beforeend", `<div class="share-row"><span class="s-sku">${esc(s.item)}</span>
+      <div><div class="bar" style="width:${(Number(s.share) / maxS * 100).toFixed(1)}%"></div></div>
+      <span class="pct">${(Number(s.share) * 100).toFixed(0)}%</span></div>`);
+  }
+  $("#conc-note").textContent = `Your catalog behaves like ${Number(c.effective_n).toFixed(1)} equally-sized SKUs. ${esc(c.top_item)} carries ${(Number(c.top_share) * 100).toFixed(0)}% of revenue${c.dollar_at_risk_top_item != null ? ` — one suppressed listing costs ${money(c.dollar_at_risk_top_item)} of profit a period` : ""}. The 1,800 line is the regulators' own definition of "highly concentrated".`;
+  $("#conc").classList.remove("hidden");
+}
+function renderAnomalies(a){
+  if (!a || !(a.top || []).length) return;
+  $("#anom-chip").textContent = `${a.flagged} flagged · ${money(a.dollar_impact_total)} per period`;
+  const rows = $("#anom-rows"); rows.innerHTML = "";
+  for (const r of a.top){
+    const vs = (r.series || []).map((p) => Number(p.v));
+    const lo = Math.min(...vs), hi = Math.max(...vs) || 1;
+    const px = (i) => (4 + i * (112 / Math.max(1, vs.length - 1))).toFixed(1);
+    const py = (v) => (22 - ((v - lo) / ((hi - lo) || 1)) * 18).toFixed(1);
+    const spark = vs.length > 1 ? `<svg class="spark2" viewBox="0 0 120 26"><polyline points="${vs.map((v, i) => `${px(i)},${py(v)}`).join(" ")}"/><circle cx="${px(vs.length - 1)}" cy="${py(vs[vs.length - 1])}" r="2.5"/></svg>` : "";
+    const what = { fee_per_unit: "Amazon fees per unit", fba_fee_per_unit: "FBA fee per unit", referral_rate: "referral fee rate",
+      storage_fee: "storage fee", sessions: "sessions", unit_session_pct: "conversion", buy_box_pct: "Buy Box share", spend: "daily ad spend" }[r.metric] || r.metric;
+    const title = r.scope === "fee_type" ? `${r.item_id} charges per month` : `${what} on ${r.item_id}`;
+    const pct = r.delta_pct != null ? (Math.abs(Number(r.delta_pct)) * 100).toFixed(0) + "%" : "";
+    const detector = { changepoint: "change-point test", cusum: "CUSUM", robust_z: "robust z-score", spikes: "spike test" }[r.detector] || r.detector;
+    rows.insertAdjacentHTML("beforeend", `<div class="anom-row">
+      <div class="what"><b>${esc(title)}</b><span>${r.direction === "up" ? "▲" : "▼"} ${pct} ${r.since ? "since " + fdate(r.since) : ""} · ${esc(detector)}</span></div>
+      ${spark}
+      <span class="usd">${r.dollar_impact != null ? money(r.dollar_impact) + "/period" : ""}</span></div>`);
+  }
+  $("#anom").classList.remove("hidden");
+}
+
 /* ── the chart pack: engine-computed series, drawn here ── */
 function renderPack(pack){
   if (!pack) return;
+  try { renderValue(pack.value); } catch {}
+  try { renderHealth(pack.health); } catch {}
+  try { renderMoneyFound(pack.money_found); } catch {}
+  try { if (pack.forecast_fans?.length) renderFans(pack.forecast_fans); } catch {}
+  try { renderInvEcon(pack.inventory_econ); } catch {}
+  try { renderRisk(pack.risk); } catch {}
+  try { renderConcentration(pack.risk?.concentration); } catch {}
+  try { renderAnomalies(pack.anomalies); } catch {}
   if (pack.waterfall){
     renderWaterfall(pack.waterfall);
     if (pack.sku_stacks?.length) renderStacks(pack.sku_stacks);
@@ -1110,9 +1475,14 @@ async function load(){
   const measuredRows = directives.filter((d) => d.measured_impact_usd != null && d.measured_at);
   const measured = measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0);
   const since = fmonth(client.created_at);
-  if (measured > 0 || measuredRows.length){
+  const packValue = packRows[0]?.payload?.value;
+  if (packValue && Number(packValue.value_total) > 0){
+    $("#pos-label").textContent = `Value delivered since ${since}`;
+    $("#pos-num").innerHTML = moneyCur(packValue.value_total);
+    $("#pos-sub").textContent = `${packValue.measured_count} measured directive${packValue.measured_count === 1 ? "" : "s"} and ${packValue.recovered_count} reimbursement${packValue.recovered_count === 1 ? "" : "s"} recovered · every figure verified against your own data`;
+  } else if (measured > 0 || measuredRows.length){
     $("#pos-label").textContent = `Measured impact since ${since}`;
-    $("#pos-num").textContent = money(measured);
+    $("#pos-num").innerHTML = moneyCur(measured);
     $("#pos-sub").textContent = `${measuredRows.length} measured directive${measuredRows.length === 1 ? "" : "s"} · every figure verified against your own data`;
   } else {
     $("#pos-label").textContent = "Your engagement";

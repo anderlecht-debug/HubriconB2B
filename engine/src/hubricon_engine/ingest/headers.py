@@ -2,7 +2,9 @@
 accounts and years, so every parser matches on normalized names against a
 synonym list — this module is the single place those quirks accumulate."""
 
+import hashlib
 import re
+from datetime import date, datetime
 
 import pandas as pd
 
@@ -50,6 +52,118 @@ def clean_int(value: str) -> int | None:
 def clean_pct(value: str) -> float | None:
     return clean_money(str(value).replace("%", ""))
 
+
+
+def clean_bool(value: str) -> bool | None:
+    """'Yes'/'No', 'true'/'false', '1'/'0' -> bool; anything else -> None."""
+    v = str(value).strip().lower()
+    if v in ("yes", "y", "true", "t", "1"):
+        return True
+    if v in ("no", "n", "false", "f", "0"):
+        return False
+    return None
+
+
+def as_int(value) -> int | None:
+    """pandas promotes an int column that also holds blanks to float (2 -> 2.0)
+    on the way through map_columns; restore int so JSON payloads and row-key
+    hashes are identical whether or not a file happened to contain a blank."""
+    return None if value is None else int(value)
+
+
+# --- dates ------------------------------------------------------------------
+# Amazon exports mix 2026-07-14, 2026-07-14T10:21:00+00:00, 14.07.2026 (EU
+# accounts), 7/14/2026, "Jul 14, 2026" and Payments' "Jul 1, 2026 3:12:44 AM
+# PDT" — sometimes within one account. Wall-clock semantics throughout: a
+# timezone name or offset is dropped, never converted, so the date a seller
+# sees in Seller Central is the date stored. Blank -> None; anything
+# unrecognized raises rather than guessing.
+
+_BLANKS = {"", "n/a", "na", "-", "--", "null", "none"}
+_TZ_SUFFIX = re.compile(r"\s+(?!(?:AM|PM)$)(?:[A-Z]{2,5}|(?:UTC|GMT)[+-]\d{1,2}(?::\d{2})?)$")
+_SLASH = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4}|\d{2})(?:\s+(.*))?$")
+_DOT = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(.*))?$")
+_YEAR_SPLIT = re.compile(r"^(.*?\d{4})(?:\s+(.*))?$")
+_DATE_FORMATS = (
+    "%Y-%m-%d", "%b %d, %Y", "%B %d, %Y", "%b %d %Y", "%d %b %Y", "%d %B %Y",
+    "%d-%b-%Y", "%Y/%m/%d", "%Y.%m.%d", "%d-%m-%Y",
+)
+_TIME_FORMATS = ("%H:%M:%S", "%H:%M", "%I:%M:%S %p", "%I:%M %p", "%I:%M:%S%p", "%I:%M%p")
+
+
+def _safe_date(year: int, month: int, day: int, original: str) -> date:
+    try:
+        return date(year, month, day)
+    except ValueError as err:
+        raise IngestError(f"Unrecognized date {original!r}") from err
+
+
+def _with_time(day: date, rest: str | None, original: str) -> datetime:
+    rest = (rest or "").strip()
+    if not rest:
+        return datetime(day.year, day.month, day.day)
+    for fmt in _TIME_FORMATS:
+        try:
+            return datetime.combine(day, datetime.strptime(rest, fmt).time())
+        except ValueError:
+            continue
+    raise IngestError(f"Unrecognized time of day in {original!r}")
+
+
+def parse_datetime(value) -> datetime | None:
+    if value is None:
+        return None
+    v = re.sub(r"\s+", " ", str(value).strip())
+    if v.lower() in _BLANKS:
+        return None
+    v = _TZ_SUFFIX.sub("", v)
+    try:
+        return datetime.fromisoformat(v)  # 2026-07-14, 2026-07-14 10:21, ...T10:21:00+00:00
+    except ValueError:
+        pass
+    if m := _SLASH.match(v):
+        a, b, year, rest = m.groups()
+        a, b = int(a), int(b)
+        month, day = (b, a) if a > 12 else (a, b)  # US order unless that is impossible
+        y = int(year) if len(year) == 4 else 2000 + int(year)
+        return _with_time(_safe_date(y, month, day, v), rest, v)
+    if m := _DOT.match(v):
+        day, month, year, rest = m.groups()
+        return _with_time(_safe_date(int(year), int(month), int(day), v), rest, v)
+    # "<date> <time>": split after the 4-digit year ("Jul 1, 2026 3:12:44 AM"),
+    # else at the first space, else treat the whole string as a date.
+    heads = [(v, None)]
+    if " " in v:
+        heads.insert(0, tuple(v.split(" ", 1)))
+    if m := _YEAR_SPLIT.match(v):
+        heads.insert(0, (m.group(1), m.group(2)))
+    for head, rest in heads:
+        for fmt in _DATE_FORMATS:
+            try:
+                day = datetime.strptime(head, fmt).date()
+            except ValueError:
+                continue
+            return _with_time(day, rest, v)
+    raise IngestError(f"Unrecognized date {value!r}")
+
+
+def to_iso_date(value) -> str | None:
+    dt = parse_datetime(value)
+    return None if dt is None else dt.date().isoformat()
+
+
+def to_iso_datetime(value) -> str | None:
+    """Full timestamp when the source carries one, else midnight of the date."""
+    dt = parse_datetime(value)
+    return None if dt is None else dt.isoformat()
+
+
+def row_key(*parts) -> str:
+    """sha1 over a row's natural-key fields joined by '|' (None -> ''). The
+    unique constraint pairs it with client_id, so it needs to be stable across
+    re-uploads of the same export, not globally unique."""
+    joined = "|".join("" if p is None else str(p) for p in parts)
+    return hashlib.sha1(joined.encode("utf-8")).hexdigest()
 
 def map_columns(df: pd.DataFrame, spec: dict) -> pd.DataFrame:
     """spec: canonical -> {"synonyms": [normalized...], "required": bool, "cleaner": fn}.

@@ -1,0 +1,6 @@
+approval-date,reimbursement-id,case-id,amazon-order-id,reason,sku,fnsku,asin,product-name,condition,currency-unit,amount-per-unit,amount-total,quantity-reimbursed-cash,quantity-reimbursed-inventory,quantity-reimbursed-total,original-reimbursement-id,original-reimbursement-type
+2026-07-14,RM-1001,,,Lost_Warehouse,WIDGET-BLUE,X001ABC1,B0CHILD001,"Widget, Blue 2-Pack",New,USD,14.20,28.40,2,0,2,,
+14.07.2026,RM-1002,12345678901,,Damaged_Warehouse,WIDGET-RED,X001ABC2,B0CHILD002,"Widget, Red 2-Pack",New,USD,13.90,13.90,1,0,1,,
+"Jul 15, 2026",RM-1003,,111-2233445-6677889,CustomerReturn,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,USD,22.50,22.50,1,0,1,,
+2026-07-16T10:21:00+00:00,RM-1004,,,Lost_Inbound,,X001ABC4,B0CHILD004,Gizmo Mini,New,USD,9.75,0.00,0,3,3,,
+2026-07-14,RM-1001,,,Lost_Warehouse,WIDGET-BLUE,X001ABC1,B0CHILD001,"Widget, Blue 2-Pack",New,USD,14.20,28.40,2,0,2,,

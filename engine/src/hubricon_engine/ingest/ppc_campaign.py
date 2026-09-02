@@ -1,10 +1,8 @@
 """Daily Campaign report -> ppc_spend (the table built for the Ads API)."""
 
-from datetime import datetime
-
 import pandas as pd
 
-from .headers import IngestError, clean_int, clean_money, clean_str, dedupe_last, map_columns
+from .headers import clean_int, clean_money, clean_str, dedupe_last, map_columns, to_iso_date
 
 SPEC = {
     "report_date": {"synonyms": ["date", "startdate", "day"], "required": True, "cleaner": clean_str},
@@ -15,17 +13,6 @@ SPEC = {
     "clicks": {"synonyms": ["clicks"], "cleaner": clean_int},
     "impressions": {"synonyms": ["impressions"], "cleaner": clean_int},
 }
-
-DATE_FORMATS = ("%Y-%m-%d", "%b %d, %Y", "%m/%d/%Y", "%d/%m/%Y", "%m/%d/%y")
-
-
-def _to_iso_date(value: str) -> str:
-    for fmt in DATE_FORMATS:
-        try:
-            return datetime.strptime(value, fmt).date().isoformat()
-        except ValueError:
-            continue
-    raise IngestError(f"Unrecognized date {value!r} in campaign report")
 
 
 def parse(df: pd.DataFrame, upload: dict):
@@ -38,7 +25,7 @@ def parse(df: pd.DataFrame, upload: dict):
             {
                 "client_id": upload["client_id"],
                 "upload_id": upload["id"],
-                "report_date": _to_iso_date(record["report_date"]),
+                "report_date": to_iso_date(record["report_date"]),
                 "campaign_id": record["campaign_id"] or record["campaign_name"],
                 "campaign_name": record["campaign_name"],
                 "spend": record["spend"],

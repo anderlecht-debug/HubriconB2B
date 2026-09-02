@@ -24,10 +24,27 @@ const REPORT_TYPES = new Set([
   "ppc_campaign",
   "fba_inventory",
   "cogs",
+  // bleed reports
+  "fba_reimbursements",
+  "fba_returns",
+  "inventory_ledger",
+  "inventory_health",
+  "transactions",
 ]);
-// business/economics/ppc exports cover a date range; inventory is a snapshot
-// (period_start only); cogs is timeless.
-const RANGE_SCOPED = new Set(["business_report", "sku_economics", "ppc_search_terms", "ppc_campaign"]);
+// business/economics/ppc exports and the row-level bleed reports cover a
+// date range; the two inventory reports are snapshots (period_start only);
+// cogs is timeless.
+const RANGE_SCOPED = new Set([
+  "business_report",
+  "sku_economics",
+  "ppc_search_terms",
+  "ppc_campaign",
+  "transactions",
+  "fba_reimbursements",
+  "fba_returns",
+  "inventory_ledger",
+]);
+const SNAPSHOT_SCOPED = new Set(["fba_inventory", "inventory_health"]);
 
 function getDb() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -76,7 +93,7 @@ function validateFileSpec(spec) {
       return `"${filename}" needs period_start and period_end (YYYY-MM-DD)`;
     }
     if (spec.period_start > spec.period_end) return `"${filename}" has period_start after period_end`;
-  } else if (spec.report_type === "fba_inventory" && !isIsoDate(spec.period_start)) {
+  } else if (SNAPSHOT_SCOPED.has(spec.report_type) && !isIsoDate(spec.period_start)) {
     return `"${filename}" needs a snapshot date (period_start, YYYY-MM-DD)`;
   }
   return null;

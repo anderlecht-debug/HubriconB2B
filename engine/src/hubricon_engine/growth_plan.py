@@ -31,8 +31,12 @@ INITIATIVE_DEFS = {
         "Fix or exit losing SKUs",
         "Reprice, cut ad allocation, or plan the exit for every SKU selling at a loss.",
     ),
+    "recovery": (
+        "Recover what Amazon owes",
+        "File every reimbursement claim inside its window; measured by what Amazon actually pays.",
+    ),
 }
-MODULE_ORDER = ["pricing", "advertising", "inventory", "margin"]
+MODULE_ORDER = ["recovery", "pricing", "advertising", "inventory", "margin"]
 
 
 def next_quarter(today: date) -> tuple[str, date, date]:

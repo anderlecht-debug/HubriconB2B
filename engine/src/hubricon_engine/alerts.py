@@ -119,11 +119,101 @@ def cash_alerts(cash_row: dict | None) -> list[dict]:
     }]
 
 
+RECOVERY_EXPIRING_MIN = 100.0   # dollars closing inside the window
+RECOVERY_LIVE_MIN = 500.0
+ANOMALY_ALERT_MIN = 100.0       # dollars per period
+HEALTH_DROP_ALERT = 8.0         # points between sweeps
+ANOMALY_LABELS = {
+    "fee_per_unit": "Amazon fees per unit", "fba_fee_per_unit": "FBA fee per unit",
+    "referral_rate": "referral fee rate", "storage_fee": "storage fee", "monthly_total": "monthly charges",
+    "sessions": "traffic", "unit_session_pct": "conversion", "buy_box_pct": "Buy Box share", "spend": "daily ad spend",
+}
+
+
+def _round_to(v: float, step: float) -> float:
+    return round(float(v) / step) * step
+
+
+def recovery_alerts(recovery: dict | None) -> list[dict]:
+    """Coarsened to the nearest $50/$100 so an unchanged condition dedupes."""
+    if not recovery or recovery.get("status") != "ok":
+        return []
+    s = recovery["summary"]
+    alerts = []
+    if s["n_expiring"] and float(s["expiring_value"] or 0) >= RECOVERY_EXPIRING_MIN:
+        alerts.append({
+            "severity": "warning", "module": "recovery",
+            "message": (
+                f"{s['n_expiring']} reimbursement claim{'s' if s['n_expiring'] != 1 else ''} worth about "
+                f"${_round_to(s['expiring_value'], 50):,.0f} close within two weeks — filing now, not at month-end."
+            ),
+        })
+    if s["n_live"] and float(s["live_value"] or 0) >= RECOVERY_LIVE_MIN:
+        alerts.append({
+            "severity": "info", "module": "recovery",
+            "message": (
+                f"Reconciliation found {s['n_live']} open reimbursement claim{'s' if s['n_live'] != 1 else ''} — "
+                f"about ${_round_to(s['live_value'], 100):,.0f} at face value, "
+                f"${_round_to(s['live_ev'], 100):,.0f} expected after approval odds."
+            ),
+        })
+    return alerts
+
+
+def anomaly_alerts(anomaly_rows: list[dict] | None) -> list[dict]:
+    seen, alerts = set(), []
+    for r in sorted((r for r in anomaly_rows or [] if r.get("flagged")),
+                    key=lambda r: r.get("dollar_impact") or 0, reverse=True):
+        key = (r.get("scope"), r.get("item_id"), r.get("metric"))
+        if key in seen:
+            continue
+        adverse_up = r["metric"] in ("fee_per_unit", "fba_fee_per_unit", "referral_rate", "storage_fee", "spend", "monthly_total")
+        if (adverse_up and r.get("direction") != "up") or (not adverse_up and r.get("direction") != "down"):
+            continue
+        impact = float(r.get("dollar_impact") or 0)
+        if r["metric"] != "buy_box_pct" and impact < ANOMALY_ALERT_MIN:
+            continue
+        seen.add(key)
+        since = str(r["since"])[:7] if r.get("since") else "recently"
+        pct = abs(float(r.get("delta_pct") or 0)) * 100
+        label = ANOMALY_LABELS.get(r["metric"], r["metric"])
+        alerts.append({
+            "severity": "critical" if r["metric"] == "buy_box_pct" else "warning",
+            "module": "anomaly",
+            "message": (
+                f"{label[0].upper() + label[1:]} on {r['item_id']} moved {r.get('direction')} "
+                f"{pct:.0f}% since {since}"
+                + (f" — about ${_round_to(impact, 10):,.0f} per period." if impact else ".")
+            ),
+        })
+    return alerts
+
+
+def health_alerts(health: dict | None, previous_health: dict | None) -> list[dict]:
+    if not health or not previous_health:
+        return []
+    if health.get("status") != "ok" or previous_health.get("status") != "ok":
+        return []
+    drop = float(previous_health["score"]) - float(health["score"])
+    if drop < HEALTH_DROP_ALERT:
+        return []
+    top = (health.get("top_drivers") or [{}])[0]
+    driver = f" Largest deduction now: {top['label'].lower()} (${float(top.get('dollars_at_stake') or 0):,.0f})." if top else ""
+    return [{
+        "severity": "warning", "module": "system",
+        "message": f"Health Score fell from {float(previous_health['score']):.0f} to {float(health['score']):.0f} since the last sweep.{driver}",
+    }]
+
+
 def compute_alerts(current_inventory, previous_inventory, margin_rows, price_tests,
-                   cash_row=None) -> list[dict]:
+                   cash_row=None, recovery=None, anomaly_rows=None, health=None,
+                   previous_health=None) -> list[dict]:
     return (
         cash_alerts(cash_row)
         + buybox_alerts(price_tests)
+        + recovery_alerts(recovery)
+        + anomaly_alerts(anomaly_rows)
+        + health_alerts(health, previous_health)
         + stockout_alerts(current_inventory, previous_inventory)
         + margin_flip_alerts(margin_rows)
     )

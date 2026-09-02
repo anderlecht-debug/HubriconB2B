@@ -22,6 +22,14 @@ MEASUREMENT_HORIZON_DAYS = 30
 BRANDED_SPEND_MIN = 25.0
 INCREMENTALITY_MID = 0.4       # midpoint of the 25–60% industry range
 GENERIC_NAME_WORDS = {"inc", "llc", "ltd", "the", "and", "co", "company"}
+RECOVERY_MIN_VALUE = 50.0      # below this, filing costs more attention than it returns
+ANOMALY_MIN_IMPACT = 100.0     # per period
+LIQUIDATION_MIN_GAIN = 100.0
+ANOMALY_LABELS = {
+    "fee_per_unit": "total Amazon fees per unit", "fba_fee_per_unit": "FBA fulfillment fee per unit",
+    "referral_rate": "referral fee rate", "storage_fee": "storage fee",
+    "sessions": "traffic", "unit_session_pct": "conversion", "buy_box_pct": "Buy Box share", "spend": "daily spend",
+}
 
 
 def _money(v: float) -> str:
@@ -62,7 +70,7 @@ def branded_spend(search_terms: list[dict], brand_terms: list[str]) -> tuple[flo
     return total, n
 
 
-def _inventory_directive(r: dict, margin_row: dict | None, today: date) -> dict:
+def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None) -> dict:
     p = float(r["stockout_probability"] or 0)
     rate = float(r["daily_velocity_mean"] or 0)
     position = int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
@@ -74,7 +82,16 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date) -> dict:
     if margin_row and margin_row.get("cogs") is not None and float(margin_row.get("units") or 0) > 0:
         unit_cost = float(margin_row["cogs"]) / float(margin_row["units"])
 
-    if unit_cost:
+    if econ_row and econ_row.get("order_qty_econ") and econ_row.get("wire_econ") is not None:
+        # the newsvendor sized it: the service level is the one the margin justifies
+        q = float(econ_row["critical_fractile"])
+        text = (
+            f"Wire {_money(float(econ_row['wire_econ']))} to your supplier by {by_text} — "
+            f"{int(econ_row['order_qty_econ'])} units of {r['sku']}. Sized to a {q:.0%} service level, "
+            f"the level your margin justifies (C_u ÷ (C_u + C_o), storage and the season priced in); "
+            f"lead time {r['lead_time_days']}d, current stockout risk {p:.0%}."
+        )
+    elif unit_cost:
         wire = float(r["reorder_qty"]) * unit_cost
         text = (
             f"Wire {_money(wire)} to your supplier by {by_text} — {r['reorder_qty']} units of "
@@ -134,15 +151,133 @@ def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
     return None
 
 
+def _recovery_directive(recovery: dict | None) -> dict | None:
+    if not recovery or recovery.get("status") != "ok":
+        return None
+    live = [c for c in recovery.get("claims", []) if c["status"] in ("open", "expiring")]
+    value = sum(float(c.get("value") or 0) for c in live)
+    ev = sum(float(c.get("expected_value") or 0) for c in live)
+    if not live or value < RECOVERY_MIN_VALUE:
+        return None
+    expiring = [c for c in live if c["status"] == "expiring"]
+    closes = ""
+    if expiring:
+        soonest = min(c["deadline"] for c in expiring)
+        closes = f" {len(expiring)} of them close by {date.fromisoformat(soonest).strftime('%b %d').replace(' 0', ' ')}."
+    return {
+        "module": "recovery",
+        "score": 60 + ev / 100,
+        "expected_impact_usd": round(ev, 2),
+        "action_text": (
+            f"Authorize us to file {len(live)} reimbursement claim{'s' if len(live) != 1 else ''} with Amazon — "
+            f"{_money(value)} at face value, {_money(ev)} expected after approval odds.{closes} "
+            f"We file through your account; the ledger records what Amazon actually pays."
+        ),
+    }
+
+
+def _liquidation_directives(inv_econ: dict | None) -> list[dict]:
+    out = []
+    for r in (inv_econ or {}).get("rows", []):
+        if r.get("decision") != "liquidate":
+            continue
+        gain = float(r.get("liquidate_value") or 0) - float(r.get("hold_npv") or 0)
+        if gain < LIQUIDATION_MIN_GAIN:
+            continue
+        aged = float(r.get("aged_surcharge_month") or 0)
+        out.append({
+            "module": "inventory",
+            "score": 30 + gain / 100,
+            "expected_impact_usd": round(gain, 2),
+            "action_text": (
+                f"Liquidate {int(r['excess_units'])} excess units of {r['sku']}: Amazon's program returns about "
+                f"{_money(float(r['liquidate_value']))} now, against {_money(float(r['hold_npv']))} from holding and "
+                f"selling them down with storage, the aged surcharge and capital priced in"
+                + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".")
+            ),
+        })
+    return out
+
+
+def _anomaly_directives(anomaly_rows: list[dict] | None) -> list[dict]:
+    """One instruction per (item, metric) for adverse shifts worth ≥ $100/period."""
+    best: dict[tuple, dict] = {}
+    for r in anomaly_rows or []:
+        if not r.get("flagged") or (r.get("dollar_impact") or 0) < ANOMALY_MIN_IMPACT:
+            continue
+        adverse_up = r["metric"] in ("fee_per_unit", "fba_fee_per_unit", "referral_rate", "storage_fee", "spend", "monthly_total")
+        if (adverse_up and r.get("direction") != "up") or (not adverse_up and r.get("direction") != "down"):
+            continue
+        key = (r.get("scope"), r.get("item_id"), r.get("metric"))
+        if key not in best or (r.get("detector") == "changepoint" and best[key].get("detector") != "changepoint"):
+            best[key] = r
+    out = []
+    for r in best.values():
+        since = date.fromisoformat(str(r["since"])[:10]).strftime("%b %Y") if r.get("since") else "recently"
+        impact = float(r["dollar_impact"])
+        b, c = float(r.get("baseline") or 0), float(r.get("current") or 0)
+        m = r["metric"]
+        if m in ("fee_per_unit", "fba_fee_per_unit"):
+            out.append({"module": "margin", "score": 25 + impact / 100, "expected_impact_usd": round(impact, 2),
+                        "action_text": (
+                            f"Amazon's {ANOMALY_LABELS[m]} on {r['item_id']} rose from ${b:.2f} to ${c:.2f} since {since} "
+                            f"— {_money(impact)}/period at last period's volume. Verify the listing's weight and "
+                            f"dimensions in Seller Central and request a re-measure; overcharged fees are reimbursable.")})
+        elif m == "referral_rate":
+            out.append({"module": "margin", "score": 25 + impact / 100, "expected_impact_usd": round(impact, 2),
+                        "action_text": (
+                            f"The referral fee rate on {r['item_id']} moved from {b:.1%} to {c:.1%} since {since} — "
+                            f"{_money(impact)}/period. Check the listing's category assignment; a wrong category "
+                            f"bills a higher rate and the difference is reimbursable.")})
+        elif m == "monthly_total":
+            out.append({"module": "margin", "score": 20 + impact / 100, "expected_impact_usd": round(impact, 2),
+                        "action_text": (
+                            f"Amazon's {r['item_id']} charges rose from {_money(b)} to {_money(c)} per month since "
+                            f"{since}. We are tracing the lines to the SKUs behind the step.")})
+        elif m == "unit_session_pct":
+            out.append({"module": "general", "score": 15 + impact / 100, "expected_impact_usd": None,
+                        "action_text": (
+                            f"Conversion on {r['item_id']} fell from {b:.1f}% to {c:.1f}% since {since} — "
+                            f"{_money(impact)}/period at current traffic. We check the Buy Box, price against "
+                            f"competitors, and recent listing or review changes before touching price.")})
+        elif m == "sessions":
+            out.append({"module": "general", "score": 15 + impact / 100, "expected_impact_usd": None,
+                        "action_text": (
+                            f"Traffic on {r['item_id']} fell from {b:,.0f} to {c:,.0f} sessions a period since {since} — "
+                            f"{_money(impact)}/period at current conversion. Ranking, ads, or a suppressed listing; "
+                            f"we find which.")})
+        elif m == "buy_box_pct":
+            out.append({"module": "pricing", "score": 40 + impact / 100, "expected_impact_usd": None,
+                        "action_text": (
+                            f"Buy Box share on {r['item_id']} fell from {b:.0f}% to {c:.0f}% since {since}. "
+                            f"Amazon is suppressing the Featured Offer — price, competitor, or account health; "
+                            f"we step the price back if that is the cause.")})
+        elif m == "spend":
+            out.append({"module": "advertising", "score": 15 + impact / 100, "expected_impact_usd": None,
+                        "action_text": (
+                            f"Daily spend on “{r['item_id']}” stepped up from {_money(b)} to {_money(c)} since "
+                            f"{since} — about {_money(impact)} per 30 days. Confirm it was intended; we hold it "
+                            f"at the marginal break-even otherwise.")})
+    return out
+
+
 def draft_directives(inventory, ads, elasticity, margins,
-                     search_terms=None, brand_terms=None) -> list[dict]:
+                     search_terms=None, brand_terms=None,
+                     recovery=None, inv_econ=None, anomaly_rows=None) -> list[dict]:
     today = date.today()
     latest_by_sku = _latest_margins_by_sku(margins)
+    econ_by_sku = {r["sku"]: r for r in (inv_econ or {}).get("rows", [])}
     drafts = []
+
+    rec = _recovery_directive(recovery)
+    if rec:
+        drafts.append(rec)
+    drafts += _liquidation_directives(inv_econ)
+    drafts += _anomaly_directives(anomaly_rows)
 
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
-            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today))
+            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"])))
 
     bleed_total = sum(t["spend"] or 0 for r in ads for t in (r["bleed_terms"] or []))
     if bleed_total > 0:

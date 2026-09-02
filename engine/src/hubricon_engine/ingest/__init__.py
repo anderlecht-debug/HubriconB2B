@@ -9,9 +9,14 @@ from . import (
     business_report,
     cogs,
     fba_inventory,
+    fba_reimbursements,
+    fba_returns,
+    inventory_health,
+    inventory_ledger,
     ppc_campaign,
     ppc_search_terms,
     sku_economics,
+    transactions,
 )
 
 PARSERS = {
@@ -21,4 +26,10 @@ PARSERS = {
     "ppc_campaign": ppc_campaign,
     "fba_inventory": fba_inventory,
     "cogs": cogs,
+    # bleed reports: where money leaks out of an FBA account
+    "fba_reimbursements": fba_reimbursements,
+    "fba_returns": fba_returns,
+    "inventory_ledger": inventory_ledger,
+    "inventory_health": inventory_health,
+    "transactions": transactions,
 }

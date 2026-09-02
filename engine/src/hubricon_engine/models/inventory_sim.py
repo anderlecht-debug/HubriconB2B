@@ -41,7 +41,13 @@ def _daily_rates(rows: list[dict], units_key: str) -> list[float]:
     return rates
 
 
-def run(data: dict, rng: np.random.Generator, simulations: int = 20000) -> list[dict]:
+def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
+        rate_overrides: dict[str, tuple[float, float]] | None = None) -> list[dict]:
+    """`rate_overrides` — {sku: (mean_rate, std_rate)} from the forecast
+    ladder; when present for a SKU it replaces the mean/std of observed
+    periods so the stockout probability and the demand forecast are the
+    same distribution. Surfaced as details.rate_source."""
+    rate_overrides = rate_overrides or {}
     on_hand = latest_snapshot(data["inventory_levels"])
     bridge = sku_asin_bridge(data["sku_economics"], data["cogs_inputs"])
     cogs_by_sku = {r["sku"]: r for r in data["cogs_inputs"]}
@@ -63,6 +69,10 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000) -> list[
 
         mean_rate = float(np.mean(rates))
         std_rate = float(np.std(rates, ddof=1)) if len(rates) >= 2 else mean_rate * FALLBACK_RATE_CV
+        rate_source = "observed periods"
+        if sku in rate_overrides and rate_overrides[sku][0] and rate_overrides[sku][0] > 0:
+            mean_rate, std_rate = float(rate_overrides[sku][0]), float(rate_overrides[sku][1] or mean_rate * FALLBACK_RATE_CV)
+            rate_source = "forecast"
         if mean_rate <= 0:
             continue
 
@@ -98,6 +108,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000) -> list[
                     },
                     "closed_form_rop": num(closed_form_rop(mean_rate, std_rate, lead), 1),
                     "observed_periods": len(rates),
+                    "rate_source": rate_source,
                     "lead_time_assumed": sku not in cogs_by_sku
                     or cogs_by_sku[sku].get("supplier_lead_time_days") is None,
                     "rate_std_assumed": len(rates) < 2,

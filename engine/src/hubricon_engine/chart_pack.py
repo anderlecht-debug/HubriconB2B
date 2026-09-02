@@ -10,12 +10,23 @@ math happens here in Python, on the same functions the directives use,
 so a chart can never disagree with the instruction beside it.
 """
 
+from datetime import date
+
 import numpy as np
 
 from .console import _select_price_curves
 from .directives import BRANDED_SPEND_MIN, INCREMENTALITY_MID, branded_spend
+from .models.anomaly import summarize as summarize_anomalies
 from .models.common import num
 from .models.pricing_engine import profit
+
+MAX_FANS = 3
+MAX_CLAIMS = 8
+MAX_SHARES = 8
+SERIES_TAIL = 12
+EXPIRING_WITHIN_DAYS = 14
+ANOMALY_MIN_DOLLARS = 50.0    # per period, to appear on the Desk
+ANOMALY_MIN_PCT = 0.02
 
 TOP_SKUS = 6
 CURVE_POINTS = 48
@@ -184,15 +195,206 @@ def risk_map(inventory_rows: list[dict]) -> list[dict]:
         if r.get("stockout_probability") is not None and r.get("days_of_cover") is not None]
 
 
-def build_pack(margins, fits, inventory_rows, ads_rows, search_terms, brand_terms) -> dict:
+def value_section(value: dict | None) -> dict | None:
+    if not value:
+        return None
+    keys = ("value_total", "measured", "measured_count", "recovered", "recovered_count", "fees_paid",
+            "billed_months", "monthly_fee", "roi_multiple", "identified_unbanked", "status", "engagement_start")
+    return {k: value.get(k) for k in keys}
+
+
+def health_section(health: dict | None) -> dict | None:
+    if not health or health.get("status") != "ok":
+        return None
+    return {
+        "status": "ok",
+        "score": health["score"], "grade": health["grade"], "period": health.get("period"),
+        "sub_scores": [{k: s.get(k) for k in ("key", "label", "score", "weight", "dollars_at_stake", "points_lost", "note")}
+                       for s in health.get("sub_scores", [])],
+        "top_drivers": health.get("top_drivers", []),
+        "excluded": health.get("excluded", []),
+    }
+
+
+def claim_window_state(claim: dict, today: date) -> str:
+    """Where a stored claim sits today: the DB holds the lifecycle
+    (detected → filed → paid/denied); the window state is a function of
+    the calendar."""
+    status = claim.get("status") or "detected"
+    if status != "detected":
+        return status
+    deadline = date.fromisoformat(str(claim["deadline"])[:10]) if claim.get("deadline") else None
+    eligible = date.fromisoformat(str(claim["eligible_from"])[:10]) if claim.get("eligible_from") else today
+    if deadline and today > deadline:
+        return "expired"
+    if today < eligible:
+        return "not_yet_eligible"
+    if deadline and (deadline - today).days <= EXPIRING_WITHIN_DAYS:
+        return "expiring"
+    return "open"
+
+
+def money_found(claims: list[dict] | None, recovery: dict | None, today: date | None = None) -> dict | None:
+    today = today or date.today()
+    claims = claims or []
+    if not claims and not (recovery and recovery.get("status") == "ok"):
+        return None
+    order = {"expiring": 0, "open": 1, "filed": 2, "not_yet_eligible": 3}
+    staged = []
+    for c in claims:
+        state = claim_window_state(c, today)
+        if state in order:
+            deadline = date.fromisoformat(str(c["deadline"])[:10]) if c.get("deadline") else None
+            staged.append({**c, "state": state, "days_left": (deadline - today).days if deadline else None})
+    staged.sort(key=lambda c: (order[c["state"]], -float(c.get("value") or 0)))
+    paid = [c for c in claims if c.get("status") == "paid"]
+    summary = (recovery or {}).get("summary") or {}
+    return {
+        "n_claims": sum(1 for c in claims if c.get("status") != "dismissed"),
+        "n_live": len(staged),
+        "live_value": num(sum(float(c.get("value") or 0) for c in staged)),
+        "live_ev": num(sum(float(c.get("expected_value") or 0) for c in staged)),
+        "n_expiring": sum(1 for c in staged if c["state"] == "expiring"),
+        "expiring_value": num(sum(float(c.get("value") or 0) for c in staged if c["state"] == "expiring")),
+        "paid_total": num(sum(float(c.get("paid_amount") or 0) for c in paid)),
+        "paid_count": len(paid),
+        "reimbursed_90d": summary.get("reimbursed_90d"),
+        "by_type": summary.get("by_type"),
+        "claims": [{
+            "claim_type": c["claim_type"], "sku": c.get("sku"), "order_id": c.get("order_id"),
+            "units": c.get("units"), "value": num(float(c["value"])) if c.get("value") is not None else None,
+            "status": c["state"], "days_left": c["days_left"],
+            "deadline": str(c["deadline"])[:10] if c.get("deadline") else None,
+            "eligible_from": str(c["eligible_from"])[:10] if c.get("eligible_from") else None,
+        } for c in staged[:MAX_CLAIMS]],
+    }
+
+
+def forecast_fans(forecast_rows: list[dict] | None, margins: list[dict], max_skus: int = MAX_FANS) -> list[dict]:
+    if not forecast_rows:
+        return []
+    _, latest = _latest_rows(margins)
+    revenue = {m["sku"]: float(m.get("revenue") or 0) for m in latest}
+    ok = [f for f in forecast_rows if f.get("status") == "ok" and f.get("level") == "sku"
+          and (f.get("details") or {}).get("series")]
+    ok.sort(key=lambda f: revenue.get(f["item_id"], 0), reverse=True)
+    out = []
+    for f in ok[:max_skus]:
+        series = [{"t": p["period_start"], "rate": num(float(p["rate"]), 3)}
+                  for p in f["details"]["series"][-SERIES_TAIL:] if p.get("rate") is not None]
+        if len(series) < 3:
+            continue
+        out.append({
+            "sku": f["item_id"], "method": f.get("method"),
+            "fva_pct": f.get("fva_pct"), "mase": f.get("mase"), "naive_mase": f.get("naive_mase"),
+            "series": series,
+            "point": f.get("daily_rate_point"),
+            "p10": f.get("daily_rate_p10"), "p25": f.get("daily_rate_p25"),
+            "p75": f.get("daily_rate_p75"), "p90": f.get("daily_rate_p90"),
+            "horizon_days": f.get("horizon_days"),
+            "horizon_units_point": f.get("horizon_units_point"),
+            "horizon_units_p10": f.get("horizon_units_p10"),
+            "horizon_units_p90": f.get("horizon_units_p90"),
+        })
+    return out
+
+
+def inventory_econ_section(inv_econ: dict | None) -> dict | None:
+    if not inv_econ or inv_econ.get("status") != "ok":
+        return None
+    s = inv_econ["summary"]
+    priced = [r for r in inv_econ["rows"] if r.get("critical_fractile") is not None]
+    priced.sort(key=lambda r: float(r.get("unit_margin") or 0), reverse=True)
+    return {
+        "bleed": s.get("bleed"),
+        "n_low_inventory_fee_risk": s.get("n_low_inventory_fee_risk"),
+        "aged_units_181_plus": s.get("aged_units_181_plus"),
+        "liquidation_candidates": s.get("liquidation_candidates"),
+        "liquidation_value": s.get("liquidation_value"),
+        "econ_orders": s.get("econ_orders"),
+        "econ_wires_total": s.get("econ_wires_total"),
+        "fee_schedule_effective": s.get("fee_schedule_effective"),
+        "inventory_age_on_file": s.get("inventory_age_on_file"),
+        "service_levels": [{"sku": r["sku"], "critical_fractile": r["critical_fractile"],
+                            "service_level_current_policy": r.get("service_level_current_policy"),
+                            "unit_margin": r.get("unit_margin")} for r in priced[:6]],
+        "n_skus": s.get("n_skus"),
+    }
+
+
+def risk_section(risk: dict | None, margins: list[dict]) -> dict | None:
+    if not risk:
+        return None
+    out = {}
+    var = risk.get("var") or {}
+    if var.get("status") == "ok":
+        out["var"] = {k: var.get(k) for k in ("status", "expected_net", "var_95", "cvar_95", "var_99", "cvar_99",
+                                              "worst_5pct_net", "p5_net", "p50_net", "n_paths", "skus_modeled")}
+    conc = ((risk.get("concentration") or {}).get("sku_revenue")) or {}
+    if conc.get("hhi") is not None:
+        _, latest = _latest_rows(margins)
+        total = sum(float(m.get("revenue") or 0) for m in latest)
+        shares = sorted(((m["sku"], float(m.get("revenue") or 0) / total) for m in latest if total > 0),
+                        key=lambda x: x[1], reverse=True)[:MAX_SHARES]
+        out["concentration"] = {
+            **{k: conc.get(k) for k in ("hhi", "effective_n", "top_item", "top_share", "level",
+                                        "dollar_at_risk_top_item", "n")},
+            "shares": [{"item": s, "share": num(v, 4)} for s, v in shares],
+        }
+    rr = risk.get("returns_reserve") or {}
+    if rr.get("status") == "ok":
+        out["returns_reserve"] = {k: rr.get(k) for k in ("expected", "p95", "return_rate_pct", "returned_units")}
+    return out or None
+
+
+def anomalies_section(anomaly_rows: list[dict] | None) -> dict | None:
+    if not anomaly_rows:
+        return None
+    s = summarize_anomalies(anomaly_rows)
+    if not s["flagged"]:
+        return None
+    seen, top = set(), []
+    flagged = sorted((r for r in anomaly_rows if r.get("flagged")),
+                     key=lambda r: (r.get("dollar_impact") or 0, r.get("detector") == "changepoint"), reverse=True)
+    for r in flagged:
+        key = (r.get("scope"), r.get("item_id"), r.get("metric"))
+        if key in seen:
+            continue
+        # materiality: a statistically real 1% shift on a quiet series is not
+        # a story worth a client's attention; Buy Box moves always are
+        material = (r.get("dollar_impact") or 0) >= ANOMALY_MIN_DOLLARS or r.get("metric") == "buy_box_pct"
+        if not material or (r.get("delta_pct") is not None and abs(float(r["delta_pct"])) < ANOMALY_MIN_PCT
+                            and r.get("metric") != "buy_box_pct"):
+            continue
+        seen.add(key)
+        top.append({
+            **{k: r.get(k) for k in ("scope", "item_id", "metric", "detector", "direction", "since",
+                                     "baseline", "current", "delta", "delta_pct", "dollar_impact")},
+            "series": ((r.get("details") or {}).get("series") or [])[-SERIES_TAIL:],
+        })
+        if len(top) == 6:
+            break
+    return {"flagged": s["flagged"], "dollar_impact_total": s["dollar_impact_total"], "top": top}
+
+
+def build_pack(margins, fits, inventory_rows, ads_rows, search_terms, brand_terms, *,
+               value=None, health=None, claims=None, recovery=None, forecast_rows=None,
+               inv_econ=None, risk=None, anomaly_rows=None, today=None) -> dict:
     sections = {
+        "value": value_section(value),
+        "health": health_section(health),
         "waterfall": waterfall(margins),
         "sku_stacks": sku_stacks(margins),
+        "money_found": money_found(claims, recovery, today),
         "elasticity": elasticity_curves(fits),
         "profit_curves": profit_curves(margins, fits),
+        "forecast_fans": forecast_fans(forecast_rows, margins),
         "ad_curves": ad_curves(ads_rows),
         "bleed": bleed(ads_rows),
         "brand": brand_range(search_terms, brand_terms),
+        "inventory_econ": inventory_econ_section(inv_econ),
+        "risk": risk_section(risk, margins),
+        "anomalies": anomalies_section(anomaly_rows),
         "risk_map": risk_map(inventory_rows),
     }
     return {k: v for k, v in sections.items() if v}
