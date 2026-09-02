@@ -176,7 +176,12 @@ LETTER_STRUCTURE = """An Issue letter of five to seven short paragraphs:
 def _call_claude(system: str, prompt: str, model: str) -> str:
     import anthropic
 
-    client = anthropic.Anthropic()
+    # Identity-linked API keys must name the workspace they act in on every
+    # request; the Console shows the id (wrkspc_…) beside the key.
+    workspace = os.environ.get("ANTHROPIC_WORKSPACE_ID")
+    client = anthropic.Anthropic(
+        default_headers={"anthropic-workspace-id": workspace} if workspace else None,
+    )
     response = client.beta.messages.create(
         model=model,
         max_tokens=4000,

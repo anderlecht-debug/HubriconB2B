@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "stripe:setup": "node scripts/stripe-setup.mjs",
-    "new-client": "node scripts/new-client.mjs",
-    "invite-user": "node scripts/invite-user.mjs"
+    "stripe:setup": "node --env-file-if-exists=.env scripts/stripe-setup.mjs",
+    "new-client": "node --env-file-if-exists=.env scripts/new-client.mjs",
+    "invite-user": "node --env-file-if-exists=.env scripts/invite-user.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
