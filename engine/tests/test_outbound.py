@@ -33,6 +33,20 @@ def test_schedule_is_us_business_hours_on_weekdays():
     assert sched["timing"] == {"from": "08:00", "to": "17:00"}
 
 
+def test_supersearch_filters_use_instantly_vocabulary():
+    # enums copied from api.instantly.ai/openapi/api_v2.json
+    revenue_enum = {"$0 - 1M", "$1 - 10M", "$10 - 50M", "$50 - 100M", "$100 - 250M", "$250 - 500M", "$500M - 1B", "> $1B"}
+    employee_enum = {"0 - 25", "25 - 100", "100 - 250", "250 - 1000", "1K - 10K", "10K - 50K", "50K - 100K", "> 100K"}
+    f = outbound.SUPERSEARCH_FILTERS
+    assert set(f["revenue"]) <= revenue_enum and "$0 - 1M" not in f["revenue"]
+    assert set(f["employeeCount"]) <= employee_enum
+    assert isinstance(f["keyword_filter"]["include"], str) and f["keyword_filter"]["include_mode"] in ("ANY", "ALL")
+    assert f["title"]["includeMode"] in ("EXACT", "CONTAINS") and "Founder" in f["title"]["include"]
+    assert f["locations"] == {"include": [{"country": "United States"}]}
+    assert f["location_mode"] in ("contact", "company")
+    assert outbound.LIST_MATCH in outbound.SUPERSEARCH_LIST.lower()  # the auto list enrolls itself
+
+
 def test_every_step_word_count_stays_short():
     spec = campaign_spec(["a@x.com"], "addr")
     for s in spec["sequences"][0]["steps"]:

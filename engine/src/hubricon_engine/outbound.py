@@ -21,11 +21,18 @@ CAMPAIGN_DAILY_CAP = 60
 LIST_MATCH = os.environ.get("INSTANTLY_LIST_MATCH", "hubricon").lower()
 SUPERSEARCH_DAILY = int(os.environ.get("SUPERSEARCH_DAILY", "25"))
 
+SUPERSEARCH_LIST = "Hubricon SuperSearch (auto)"
+# Instantly's own filter vocabulary (enums from api.instantly.ai/openapi/api_v2.json).
+# Revenue bands are the ICP verbatim: $1M–$50M private-label brands run by their founder.
 SUPERSEARCH_FILTERS = {
-    "title": {"include": ["Founder", "Co-Founder", "CEO", "Owner", "President"]},
-    "keyword_filter": {"include": ["Amazon FBA", "private label", "Amazon brand", "Amazon seller"]},
-    "locations": ["United States"],
-    "employee_count": ["1-10", "11-50"],
+    "title": {"include": ["Founder", "Co-Founder", "CEO", "Owner", "President"], "includeMode": "CONTAINS"},
+    "keyword_filter": {"include": "Amazon FBA, private label, Amazon brand, Amazon seller", "include_mode": "ANY"},
+    "revenue": ["$1 - 10M", "$10 - 50M"],
+    "employeeCount": ["0 - 25", "25 - 100"],
+    "locations": {"include": [{"country": "United States"}]},
+    "location_mode": "company",
+    "skip_owned_leads": True,
+    "show_one_lead_per_company": True,
 }
 
 
@@ -209,7 +216,7 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             db.table("prospects").upsert({
                 "email": email, "first_name": first, "last_name": last,
                 "company_name": lead.get("company_name"), "website": lead.get("website"),
-                "source": "instantly_list",
+                "source": "supersearch" if "supersearch" in (lst.get("name") or "").lower() else "instantly_list",
                 "instantly_lead_id": (created or {}).get("id") or lead.get("id"),
                 "instantly_campaign_id": campaign_id, "status": "queued", "last_event_at": _now(),
             }, on_conflict="email").execute()
@@ -228,13 +235,25 @@ def enroll_from_supersearch(db, api: Instantly, campaign_id: str, dry: bool) -> 
     if (get_state(db, "supersearch.last_run", {}) or {}).get("date") == today:
         return 0, notes
     if dry:
-        notes.append(f"[dry] would request {SUPERSEARCH_DAILY} SuperSearch leads into the campaign")
+        notes.append(f"[dry] would request {SUPERSEARCH_DAILY} SuperSearch leads into '{SUPERSEARCH_LIST}'")
         return 0, notes
     try:
-        out = api.supersearch_enrich(campaign_id, SUPERSEARCH_FILTERS, SUPERSEARCH_DAILY)
-        set_state(db, "supersearch.last_run", {"date": today, "response": str(out)[:500]})
-        notes.append(f"SuperSearch requested {SUPERSEARCH_DAILY} leads into the campaign (job: {str(out)[:120]}).")
-        log_event(db, "supersearch_requested", payload={"limit": SUPERSEARCH_DAILY, "response": str(out)[:500]})
+        lst = next((l for l in api.lead_lists() if l.get("name") == SUPERSEARCH_LIST), None)
+        if lst is None:
+            lst = api.create_lead_list(SUPERSEARCH_LIST)
+            notes.append(f"Created Instantly lead list '{SUPERSEARCH_LIST}' ({lst.get('id')}).")
+        try:
+            pool = api.supersearch_count(SUPERSEARCH_FILTERS)
+        except InstantlyError as err:
+            pool = {"error": err.body[:120]}
+        out = api.supersearch_enrich(lst["id"], SUPERSEARCH_FILTERS, SUPERSEARCH_DAILY, search_name="Hubricon ICP")
+        set_state(db, "supersearch.last_run", {"date": today, "list_id": lst.get("id"),
+                                               "job": out.get("background_job_id"), "pool": str(pool)[:200]})
+        notes.append(f"SuperSearch: asked for {SUPERSEARCH_DAILY} founders into '{SUPERSEARCH_LIST}' "
+                     f"(pool {str(pool)[:80]}); they enroll into the campaign on the next pass.")
+        log_event(db, "supersearch_requested",
+                  payload={"limit": SUPERSEARCH_DAILY, "list_id": lst.get("id"), "job": out.get("background_job_id"),
+                           "pool": str(pool)[:300]})
         return SUPERSEARCH_DAILY, notes
     except InstantlyError as err:
         set_state(db, "supersearch.last_run", {"date": today, "error": str(err)[:500]})

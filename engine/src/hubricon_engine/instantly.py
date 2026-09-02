@@ -167,28 +167,34 @@ class Instantly:
         # 0 out of office · -1 not interested · -2 wrong person · -3 lost
         return self._call("PATCH", f"/leads/{lead_id}", body={"lt_interest_status": lt_interest_status})
 
-    def supersearch_enrich(self, campaign_id: str, filters: dict, limit: int) -> dict:
-        """Best effort: Instantly's lead database → straight into the campaign.
+    def create_lead_list(self, name: str) -> dict:
+        return self._call("POST", "/lead-lists", body={"name": name})
 
-        The public docs list the endpoint but keep the filter schema behind
-        the interactive reference, so this may 4xx on a plan without
-        SuperSearch or on a filter the account can't use. The operator
-        treats that as a warning in the digest, never as a crash.
-        """
+    def supersearch_count(self, filters: dict) -> dict:
+        return self._call("POST", "/supersearch-enrichment/count-leads-from-supersearch",
+                          body={"search_filters": filters, "skip_owned_leads": True,
+                                "show_one_lead_per_company": True})
+
+    def supersearch_enrich(self, list_id: str, filters: dict, limit: int, search_name: str) -> dict:
+        """Instantly's lead database → a lead list (the API targets lists, not
+        campaigns; the operator enrolls the list into the campaign on its next
+        pass). Runs as a background job on Instantly's side; the response
+        carries background_job_id. Schema from api.instantly.ai/openapi/api_v2.json."""
         body = {
-            "campaign_id": campaign_id,
             "search_filters": filters,
             "limit": limit,
+            "resource_id": list_id,
+            "search_name": search_name,
             "work_email_enrichment": True,
             "skip_rows_without_email": True,
         }
-        return self._call("POST", "/supersearch-enrichment/enrich", body=body)
+        return self._call("POST", "/supersearch-enrichment/enrich-leads-from-supersearch", body=body)
 
     # -- unibox ------------------------------------------------------------
     def received_emails(self, campaign_id: str, max_items: int = 500) -> list[dict]:
         """Inbound replies on the campaign (ue_type 2), filtered client-side so
         an unknown query flag can't silently return nothing."""
-        rows = self._page("GET", "/emails", params={"campaign_id": campaign_id},
+        rows = self._page("GET", "/emails", params={"campaign_id": campaign_id, "email_type": "received"},
                           limit=100, max_items=max_items)
         return [r for r in rows if r.get("ue_type") == UE_RECEIVED]
 
@@ -199,4 +205,4 @@ class Instantly:
             "subject": subject,
             "body": {"text": text, "html": html or "<br/>".join(text.split("\n"))},
         }
-        return self._call("POST", f"/emails/{email_id}/reply", body=body)
+        return self._call("POST", "/emails/reply", body=body)
