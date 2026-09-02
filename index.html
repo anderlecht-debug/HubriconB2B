@@ -219,6 +219,14 @@ h1,h2,h3{
 .nav-links a{ color: var(--ink-70); transition: color .2s; padding: 6px 2px; }
 .nav-links a:hover{ color: var(--ink-100); }
 .nav .btn{ padding: 11px 18px; }
+/* Narrow phones: the pill cannot seat the wordmark and the full CTA side by side,
+   so the button loses its arrow and some air instead of overlapping the logo. */
+@media (max-width: 430px){
+  .nav{ padding: 7px 7px 7px 16px; }
+  .nav-logo{ font-size: 17px; }
+  .nav .btn{ padding: 10px 13px; font-size: 10px; letter-spacing: .06em; gap: 0; }
+  .nav .btn svg{ display: none; }
+}
 
 /* ============================================================
    02 · HERO
@@ -474,6 +482,28 @@ h1,h2,h3{
 .compare tr:last-child td{ border-bottom: 0; color: var(--ink-100); font-variant-numeric: tabular-nums; }
 .compare .y{ color: var(--amber); }
 .compare .n{ color: var(--ink-60); opacity: .5; }
+
+/* Phones: the five-column grid becomes one card per row — label on top,
+   each alternative on its own line, Hubricon last and lit. No sideways scroll. */
+@media (max-width: 760px){
+  .compare{ min-width: 0; display: block; font-size: 12.5px; }
+  .compare tbody{ display: block; }
+  .compare tr{ display: block; padding: 16px 18px; border-bottom: 1px solid var(--rule-08); }
+  .compare tr:first-child{ display: none; }
+  .compare tr:last-child{ border-bottom: 0; }
+  .compare td{ display: block; padding: 0; border: 0; }
+  .compare td:first-child{ color: var(--ink-100); font-size: 13.5px; line-height: 1.35; margin-bottom: 10px; }
+  .compare td:not(:first-child){ display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 5px 0; }
+  .compare td:not(:first-child)::before{
+    content: attr(data-c); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-60); padding-top: 3px;
+  }
+  .compare td.us{ background: none; margin-top: 6px; padding-top: 9px; border-top: 1px dashed var(--rule-20); }
+  .compare td.us::before{ color: var(--amber); }
+  .compare .n{ opacity: .65; }
+  .compare tr:last-child td{ color: var(--ink-100); }
+  .compare tr:last-child td.us{ color: var(--amber); }
+}
 
 /* ============================================================
    08 · FIT — for / not for
@@ -1011,14 +1041,14 @@ h1,h2,h3{
         <th>Fractional CFO</th>
         <th class="us">Hubricon</th>
       </tr>
-      <tr><td>Tells you what to do, with expected $</td><td class="n">Reports what happened</td><td class="n">Ads only</td><td class="n">Board-level only</td><td class="us y">Every correction</td></tr>
-      <tr><td>Probabilistic inventory math</td><td class="n">Velocity averages</td><td class="n">—</td><td class="n">—</td><td class="us y">10,000 simulations / SKU</td></tr>
-      <tr><td>Derives what your target ACoS should be</td><td class="n">You type the target in</td><td class="n">You type the target in</td><td class="n">—</td><td class="us y">From your margins</td></tr>
-      <tr><td>SKU-level true net margin</td><td class="n">Only as good as hand-keyed COGS</td><td class="n">—</td><td class="n">P&amp;L altitude, not SKU</td><td class="us y">Fees + COGS + allocated ads</td></tr>
-      <tr><td>Incentives</td><td class="n">Subscription</td><td class="n">% of your ad spend · 49%/yr avg client churn</td><td class="n">Retainer</td><td class="us y">Flat fee — advice never inflates our invoice</td></tr>
-      <tr><td>Measures each recommendation's realized impact</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="us y">The Decision Ledger</td></tr>
-      <tr><td>Executes the changes for you</td><td class="n">You operate them</td><td class="n">Ads only</td><td class="n">—</td><td class="us y">Pricing + ads, done for you — you never log in anywhere</td></tr>
-      <tr><td>Cost</td><td>$29–$500/mo, you operate them</td><td>% of spend</td><td>$3,000–$12,000/mo</td><td class="us">$6,000/mo flat</td></tr>
+      <tr><td>Tells you what to do, with expected $</td><td class="n" data-c="Your tool stack">Reports what happened</td><td class="n" data-c="PPC agency">Ads only</td><td class="n" data-c="Fractional CFO">Board-level only</td><td class="us y" data-c="Hubricon">Every correction</td></tr>
+      <tr><td>Probabilistic inventory math</td><td class="n" data-c="Your tool stack">Velocity averages</td><td class="n" data-c="PPC agency">—</td><td class="n" data-c="Fractional CFO">—</td><td class="us y" data-c="Hubricon">10,000 simulations / SKU</td></tr>
+      <tr><td>Derives what your target ACoS should be</td><td class="n" data-c="Your tool stack">You type the target in</td><td class="n" data-c="PPC agency">You type the target in</td><td class="n" data-c="Fractional CFO">—</td><td class="us y" data-c="Hubricon">From your margins</td></tr>
+      <tr><td>SKU-level true net margin</td><td class="n" data-c="Your tool stack">Only as good as hand-keyed COGS</td><td class="n" data-c="PPC agency">—</td><td class="n" data-c="Fractional CFO">P&amp;L altitude, not SKU</td><td class="us y" data-c="Hubricon">Fees + COGS + allocated ads</td></tr>
+      <tr><td>Incentives</td><td class="n" data-c="Your tool stack">Subscription</td><td class="n" data-c="PPC agency">% of your ad spend · 49%/yr avg client churn</td><td class="n" data-c="Fractional CFO">Retainer</td><td class="us y" data-c="Hubricon">Flat fee — advice never inflates our invoice</td></tr>
+      <tr><td>Measures each recommendation's realized impact</td><td class="n" data-c="Your tool stack">—</td><td class="n" data-c="PPC agency">—</td><td class="n" data-c="Fractional CFO">—</td><td class="us y" data-c="Hubricon">The Decision Ledger</td></tr>
+      <tr><td>Executes the changes for you</td><td class="n" data-c="Your tool stack">You operate them</td><td class="n" data-c="PPC agency">Ads only</td><td class="n" data-c="Fractional CFO">—</td><td class="us y" data-c="Hubricon">Pricing + ads, done for you — you never log in anywhere</td></tr>
+      <tr><td>Cost</td><td data-c="Your tool stack">$29–$500/mo, you operate them</td><td data-c="PPC agency">% of spend</td><td data-c="Fractional CFO">$3,000–$12,000/mo</td><td class="us" data-c="Hubricon">$6,000/mo flat</td></tr>
     </table>
   </div>
   <p class="src-line reveal-unit reveal-sub">Churn and pricing figures: industry benchmarks and published price lists, 2025–26</p>
@@ -1192,6 +1222,8 @@ h1,h2,h3{
         <a href="#process">How it works</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
       </nav>
       <span>© 2026 Hubricon · www.hubricon.com</span>
     </div>
