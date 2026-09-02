@@ -8,6 +8,13 @@ name: Hourly operator
 on:
   schedule:
     - cron: "17 * * * *"
+  # A change to the operator runs it once immediately (idempotent, so this
+  # is a free smoke test on every deploy).
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/operator.yml"
+      - "engine/**"
   workflow_dispatch:
     inputs:
       dry_run:
