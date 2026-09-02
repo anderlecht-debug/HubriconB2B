@@ -1,0 +1,21 @@
+<!-- Supabase Auth email template: Magic Link
+     Paste into: Dashboard → Authentication → Email Templates → Magic Link
+     Subject line: Your Hubricon sign-in link -->
+<div style="max-width:520px;margin:0 auto;padding:32px 24px;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;line-height:1.6">
+  <p style="font-size:15px;letter-spacing:0.08em;text-transform:uppercase;color:#8a8a8a;margin:0 0 28px">Hubricon</p>
+  <p style="font-size:16px;margin:0 0 20px">Here is your sign-in link for the Hubricon desk:</p>
+  <p style="margin:0 0 24px">
+    <a href="{{ .ConfirmationURL }}"
+       style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 24px;font-size:15px">
+      Open your desk
+    </a>
+  </p>
+  <p style="font-size:14px;color:#555;margin:0 0 20px">
+    The link works once and expires in an hour. If the button doesn't open, copy this address into your browser:<br>
+    <a href="{{ .ConfirmationURL }}" style="color:#555;word-break:break-all">{{ .ConfirmationURL }}</a>
+  </p>
+  <p style="font-size:14px;color:#555;margin:0 0 28px">
+    If you didn't request this, you can ignore it — nobody gets in without a link sent to this address.
+  </p>
+  <p style="font-size:14px;margin:0">Hagen Simmons<br><span style="color:#8a8a8a">Hubricon</span></p>
+</div>

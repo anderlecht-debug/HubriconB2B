@@ -7,12 +7,18 @@
  *
  * Finds-or-creates the client by email (status 'pending' — the Stripe
  * webhook flips it to 'active' on conversion), revokes any previous intake
- * links, mints a fresh one, and prints the data-request email to send.
+ * links, mints a fresh one, and prints the onboarding emails to send.
  * Re-running always rotates the link; old links stop working immediately.
+ *
+ * Add `--send welcome` (or `nudge` / `files`) to deliver that email through
+ * Resend, branded like the portal's sign-in link, from
+ * Hagen Simmons <hagen.simmons@hubricon.com>. Needs RESEND_API_KEY. `--to`
+ * overrides the recipient (send yourself a copy first).
  */
 import { createHash, randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
 import { createClient } from "@supabase/supabase-js";
+import { emailConfigured, renderHtml, renderText, sendEmail } from "./lib/email.mjs";
 
 const missing = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"].filter((k) => !process.env[k]);
 if (missing.length) {
@@ -25,10 +31,21 @@ const { values: args } = parseArgs({
     company: { type: "string" },
     name: { type: "string" },
     email: { type: "string" },
+    send: { type: "string" },
+    to: { type: "string" },
   },
 });
 if (!args.email) {
-  console.error('Usage: npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com');
+  console.error('Usage: npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com [--send welcome|nudge|files] [--to you@example.com]');
+  process.exit(1);
+}
+const EMAIL_KINDS = ["welcome", "nudge", "files"];
+if (args.send && !EMAIL_KINDS.includes(args.send)) {
+  console.error(`--send must be one of ${EMAIL_KINDS.join(", ")}`);
+  process.exit(1);
+}
+if (args.send && !emailConfigured()) {
+  console.error("--send needs RESEND_API_KEY (a key from the Resend team that owns hubricon.com).");
   process.exit(1);
 }
 const email = args.email.trim().toLowerCase();
@@ -92,82 +109,105 @@ const link = `${INTAKE_BASE_URL}/intake?t=${token}`;
 const welcome = `${INTAKE_BASE_URL}/welcome`;
 const execEmail = process.env.EXECUTION_EMAIL ?? "hagen.simmons@hubricon.com";
 const firstName = (args.name ?? client.contact_name ?? "").split(/\s+/)[0] || "there";
+const greeting = `Hi ${firstName},`;
+
+// One definition per email; lib/email.mjs renders it as HTML and as text.
+const EMAILS = {
+  welcome: {
+    when: "WHEN THEY SAY YES (free month or paid), send the welcome email:",
+    subject: "You're in — one 2-minute step and we take it from here",
+    greeting,
+    blocks: [
+      { p: "Welcome aboard. Everything you need is on one page:" },
+      { button: "Open your welcome page", url: welcome },
+      {
+        p:
+          `The short version: add ${execEmail} as a user in your Seller Central (Settings → User Permissions — ` +
+          "the page shows the exact four permissions), and book your kickoff on the same page. Within 24 hours " +
+          "of that seat going live you'll have your Profit Teardown on video, and on the kickoff call I'll " +
+          "present your 90-day plan.",
+      },
+      {
+        p:
+          "One five-minute homework: Amazon doesn't know your unit costs. Grab the template on your secure " +
+          "upload page and fill one row per SKU (estimates are fine):",
+      },
+      { button: "Open your secure upload page", url: link },
+      { p: "Your first month is free. If we don't find you more than we cost, walk away owing nothing." },
+    ],
+  },
+  nudge: {
+    when: "IF THEY STALL ON THE SEAT after 2–3 days, send the nudge:",
+    subject: "2 minutes and your Teardown starts",
+    greeting,
+    blocks: [
+      { p: "Quick nudge — your models are waiting on one thing: the seat." },
+      { path: `Settings → User Permissions → Invite new user → ${execEmail}` },
+      {
+        p:
+          "Grant: Business Reports (view) · Fulfillment reports (view) · Pricing (view & edit) · " +
+          "Campaign Manager (view & edit). Nothing else.",
+      },
+      { p: "The moment it's live, your 24-hour Teardown clock starts. Exact steps with screenshots:" },
+      { button: "See the exact steps", url: welcome },
+    ],
+  },
+  files: {
+    when: "IF THEY PREFER FILES over a seat, send the export fallback:",
+    subject: "Your Profit Teardown — 15 minutes of exports and you're done",
+    greeting,
+    blocks: [
+      { p: "No seat needed — five exports through your private upload page and we're off (no account required):" },
+      { button: "Open your private upload page", url: link },
+      {
+        ol: [
+          'Sales & traffic by product — Reports → Business Reports → "Detail Page Sales and Traffic by Child Item". ' +
+            "One file PER MONTH for the last 6 months (this is what lets us model your trend, not just a snapshot).",
+          "Fees & SKU economics — Reports → SKU Economics → one file per month, same 6 months.",
+          "Advertising — Advertising Console → Measurement & Reporting → Sponsored ads reports → " +
+            "Sponsored Products / Search term → last 60 days.",
+          "Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.",
+          "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, lead time). " +
+            "Estimates are fine.",
+        ],
+      },
+      {
+        p:
+          "The models run the moment your last file lands — your Profit Teardown, written and on video, " +
+          "is back within 24 hours.",
+      },
+    ],
+  },
+};
+
+const RULE = "─".repeat(70);
 
 console.log(`
 Fallback intake link (valid ${TOKEN_LIFETIME_DAYS} days, not stored anywhere — copy it now):
 
   ${link}
-
-WHEN THEY SAY YES (free month or paid), send the welcome email:
-──────────────────────────────────────────────────────────────────────
-Subject: You're in — one 2-minute step and we take it from here
-
-Hi ${firstName},
-
-Welcome aboard. Everything you need is on one page:
-
-  ${welcome}
-
-The short version: add ${execEmail} as a user in your
-Seller Central (Settings → User Permissions — the page shows the exact
-four permissions), and book your kickoff on the same page. Within 24
-hours of that seat going live you'll have your Profit Teardown on
-video, and on the kickoff call I'll present your 90-day plan.
-
-One five-minute homework: Amazon doesn't know your unit costs. Grab
-the template on your secure upload page and fill one row per SKU
-(estimates are fine):
-
-  ${link}
-
-Your first month is free. If we don't find you more than we cost,
-walk away owing nothing.
-
-Best,
-Hagen — Hubricon
-──────────────────────────────────────────────────────────────────────
-
-IF THEY STALL ON THE SEAT after 2–3 days, send the nudge:
-──────────────────────────────────────────────────────────────────────
-Subject: 2 minutes and your Teardown starts
-
-Quick nudge — your models are waiting on one thing: the seat.
-
-Settings → User Permissions → Invite new user → ${execEmail}
-Grant: Business Reports (view) · Fulfillment reports (view) ·
-Pricing (view & edit) · Campaign Manager (view & edit). Nothing else.
-
-The moment it's live, your 24-hour Teardown clock starts. Exact steps
-with screenshots: ${welcome}
-──────────────────────────────────────────────────────────────────────
-
-IF THEY PREFER FILES over a seat, send the export fallback:
-──────────────────────────────────────────────────────────────────────
-Subject: Your Profit Teardown — 15 minutes of exports and you're done
-
-Hi ${firstName},
-
-No seat needed — five exports through your private upload page and
-we're off (no account required):
-
-  ${link}
-
-1. Sales & traffic by product — Reports → Business Reports → "Detail
-   Page Sales and Traffic by Child Item". One file PER MONTH for the
-   last 6 months (this is what lets us model your trend, not just a
-   snapshot).
-2. Fees & SKU economics — Reports → SKU Economics → one file per month,
-   same 6 months.
-3. Advertising — Advertising Console → Measurement & Reporting →
-   Sponsored ads reports → Sponsored Products / Search term → last 60 days.
-4. Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.
-5. Your costs — the page has a one-row-per-SKU template (unit cost,
-   freight, packaging, lead time). Estimates are fine.
-
-The models run the moment your last file lands — your Profit Teardown,
-written and on video, is back within 24 hours.
-
-Best,
-Hagen — Hubricon
-──────────────────────────────────────────────────────────────────────
 `);
+
+if (args.send) {
+  const spec = EMAILS[args.send];
+  const to = (args.to ?? email).trim().toLowerCase();
+  try {
+    const id = await sendEmail({
+      to,
+      subject: spec.subject,
+      html: renderHtml(spec),
+      text: renderText(spec),
+    });
+    console.log(`Sent the ${args.send} email to ${to} — "${spec.subject}" (Resend id ${id}).`);
+  } catch (err) {
+    console.error(`Sending the ${args.send} email failed: ${err.message}`);
+    console.error("The intake link above is still valid — send the draft below by hand.");
+    console.log(`\n${RULE}\nSubject: ${spec.subject}\n\n${renderText(spec)}\n${RULE}`);
+    process.exit(1);
+  }
+} else {
+  for (const spec of Object.values(EMAILS)) {
+    console.log(`${spec.when}\n${RULE}\nSubject: ${spec.subject}\n\n${renderText(spec)}\n${RULE}\n`);
+  }
+  console.log("Add `--send welcome` (or nudge / files) to deliver it branded through Resend instead.");
+}
