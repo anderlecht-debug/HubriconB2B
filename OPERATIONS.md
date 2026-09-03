@@ -117,6 +117,17 @@ uv run hubricon harvest prune          # skip_* rows still in Instantly → dele
 uv run hubricon harvest wayback        # second source: archived seller profiles, no Amazon request (below)
 ```
 
+**The named owner comes from SuperSearch, not the website.** Public pages
+give a brand's role inbox (hello@, info@), which the campaign gate treats as
+a support queue and routes to the founder lane. The brand is the qualified
+part, so the operator asks Instantly's SuperSearch for the Founder/Owner/CEO
+at exactly the pushed brands' domains (`domains` filter, one lead per
+company, verified work email) into the list "Hubricon harvest owners (auto)",
+which enrolls like any Hubricon list. `HARVEST_OWNER_LOOKUPS_DAILY` (50)
+caps the Instantly lead credits spent a day; each row is asked about once
+(`person_source = supersearch:requested`). Rows that never get a named owner
+stay in the harvest list for the founder lane.
+
 **Second source, the Wayback Machine.** The Internet Archive holds ~1,800
 captures of `amazon.com/sp?seller=…` from 2021 on, each with the storefront
 name, business name and address, country and feedback counts. `hubricon
