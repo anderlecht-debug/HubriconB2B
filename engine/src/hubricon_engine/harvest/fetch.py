@@ -13,7 +13,12 @@ from __future__ import annotations
 import gzip
 import http.cookiejar
 import json
+import os
 import random
+import shutil
+import signal
+import subprocess
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -39,6 +44,69 @@ BLOCK_MARKERS = (
 
 class Blocked(RuntimeError):
     """Amazon is answering with captchas; the run stops so tomorrow still works."""
+
+
+# Amazon fingerprints the client, not just the pace: a plain urllib session
+# drew a captcha on its second product page on 2026-09-03 while the same
+# pages loaded cleanly in headless Chrome from the same connection. So the
+# Amazon pages go through the Mac's own Chrome when it is installed (one
+# process per page, --dump-dom, a private profile under ~/.hubricon); every
+# other host keeps urllib. HARVEST_AMAZON_CLIENT=urllib turns it off.
+CHROME_CANDIDATES = (
+    os.environ.get("HARVEST_CHROME", ""),
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    shutil.which("google-chrome") or "", shutil.which("chromium") or "",
+)
+
+
+def chrome_binary() -> str | None:
+    if os.environ.get("HARVEST_AMAZON_CLIENT", "chrome").lower() != "chrome":
+        return None
+    return next((c for c in CHROME_CANDIDATES if c and os.path.exists(c)), None)
+
+
+def _chrome_transport(chrome: str, profile_dir: str | None = None, hard_timeout: float = 45.0, runner=None):
+    """transport(url, headers, timeout) → (200, rendered DOM). Chrome writes the
+    DOM and then lingers (its updater child keeps the pipe open), so stdout is
+    read as it arrives and the process group is killed the moment the document
+    ends, or at the hard timeout."""
+    profile = profile_dir or str(Path.home() / ".hubricon" / "chrome-profile")
+
+    def transport(url: str, headers: dict, timeout: int) -> tuple[int, str]:
+        Path(profile).mkdir(parents=True, exist_ok=True)
+        cmd = [chrome, "--headless", "--disable-gpu", "--no-sandbox", "--no-first-run", "--no-default-browser-check",
+               "--disable-extensions", "--disable-background-networking", "--disable-component-update",
+               "--disable-sync", "--mute-audio", f"--user-data-dir={profile}", "--window-size=1280,900",
+               f"--user-agent={headers.get('User-Agent', '')}", f"--lang={headers.get('Accept-Language', 'en-US')}",
+               f"--timeout={int(min(timeout, 30) * 1000)}", "--virtual-time-budget=8000", "--dump-dom", url]
+        if runner:
+            return runner(cmd)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, start_new_session=True)
+        chunks: list[bytes] = []
+        done = threading.Event()
+
+        def pump():
+            try:
+                for chunk in iter(lambda: proc.stdout.read1(65536), b""):
+                    chunks.append(chunk)
+                    if b"</html>" in chunk[-200:].lower():
+                        break
+            finally:
+                done.set()
+
+        threading.Thread(target=pump, daemon=True).start()
+        done.wait(hard_timeout)
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+        text = b"".join(chunks).decode("utf-8", "replace")
+        if len(text.strip()) < 200:
+            raise urllib.error.URLError("chrome produced no DOM")
+        return 200, text
+
+    return transport
 
 
 def _urllib_transport(jar: http.cookiejar.CookieJar):
@@ -70,6 +138,11 @@ class Fetcher:
                  transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None):
         self.jar = http.cookiejar.CookieJar()
         self.transport = transport or _urllib_transport(self.jar)
+        # Amazon pages through Chrome when it is installed (see chrome_binary);
+        # an injected transport (tests) is used for every host.
+        chrome = chrome_binary() if transport is None else None
+        self.amazon_transport = _chrome_transport(chrome) if chrome else None
+        self.client = "chrome" if chrome else "urllib"
         self.min_interval, self.jitter, self.timeout = min_interval, jitter, timeout
         self.block_pause, self.max_block_streak = block_pause, max_block_streak
         # give_up=True raises Blocked at max_block_streak (the original "stop
@@ -103,9 +176,10 @@ class Fetcher:
             **(headers or {}),
         }
         self.stats["requests"] += 1
+        transport = self.amazon_transport if (self.amazon_transport and "amazon." in host) else self.transport
         for attempt in (1, 2):
             try:
-                status, text = self.transport(url, hdrs, self.timeout)
+                status, text = transport(url, hdrs, self.timeout)
                 break
             except urllib.error.HTTPError as err:
                 if err.code in (429, 503) and "amazon." in host:

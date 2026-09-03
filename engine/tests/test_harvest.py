@@ -283,6 +283,31 @@ def test_private_label_reseller_and_offshore_heuristics():
     assert not amazon.looks_offshore("HYDROJUG LLC", "1 MAIN ST, OGDEN, UT 84401, US")
 
 
+def test_chrome_transport_builds_a_headless_dump_dom_command(monkeypatch, tmp_path):
+    from hubricon_engine.harvest import fetch as fetchmod
+    seen = {}
+
+    def runner(cmd):
+        seen["cmd"] = cmd
+        return 200, "<html>dom</html>"
+    t = fetchmod._chrome_transport("/fake/chrome", profile_dir=str(tmp_path / "prof"), runner=runner)
+    assert t("https://www.amazon.com/dp/X", {"User-Agent": "UA/1"}, 40) == (200, "<html>dom</html>")
+    cmd = seen["cmd"]
+    assert cmd[0] == "/fake/chrome" and "--headless" in cmd and "--dump-dom" in cmd and cmd[-1] == "https://www.amazon.com/dp/X"
+    assert "--user-agent=UA/1" in cmd and f"--user-data-dir={tmp_path / 'prof'}" in cmd and "--timeout=30000" in cmd
+    monkeypatch.setenv("HARVEST_AMAZON_CLIENT", "urllib")
+    assert fetchmod.chrome_binary() is None  # the switch back to plain HTTP
+    monkeypatch.setenv("HARVEST_AMAZON_CLIENT", "chrome")
+    monkeypatch.setenv("HARVEST_CHROME", str(tmp_path / "nope"))
+    monkeypatch.setattr(fetchmod, "CHROME_CANDIDATES", (str(tmp_path / "nope"),))
+    assert fetchmod.chrome_binary() is None
+    (tmp_path / "chrome").write_text("")
+    monkeypatch.setattr(fetchmod, "CHROME_CANDIDATES", (str(tmp_path / "chrome"),))
+    assert fetchmod.chrome_binary() == str(tmp_path / "chrome")
+    f = Fetcher(transport=lambda u, h, t: (200, "x"))  # an injected transport is used for every host
+    assert f.amazon_transport is None and f.client == "urllib"
+
+
 # -- enrichment -----------------------------------------------------------------------
 
 def test_candidate_domains_start_with_the_obvious_one():

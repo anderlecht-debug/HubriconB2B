@@ -131,6 +131,15 @@ Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run
 waits ten minutes once, then stops for the day; the digest says so.
 
+**Amazon pages go through the Mac's own Chrome** (since 2026-09-03). Amazon
+fingerprints the client, not just the pace: a plain Python session drew a
+captcha on its second product page while the same pages loaded cleanly in
+headless Chrome from the same connection. The fetcher runs one headless
+Chrome process per Amazon page (`--dump-dom`, private profile under
+`~/.hubricon/chrome-profile`, ~6 s a page) whenever Chrome is installed;
+every other host stays on plain HTTP. `HARVEST_AMAZON_CLIENT=urllib` turns
+it off, `HARVEST_CHROME=/path` points at another binary.
+
 Amazon's conditions of use discourage automated access. The harvester reads
 public pages at a human's pace from a home connection, never pushes through
 a captcha, and never runs from a datacenter. That is the whole risk posture;
