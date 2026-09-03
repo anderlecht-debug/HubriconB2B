@@ -20,6 +20,7 @@ address in `enrich` before it is pushed. Instantly verifies on import.
 from __future__ import annotations
 
 import re
+import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -111,8 +112,8 @@ def classify_profile(sid: str, prof: dict) -> tuple[str, str, dict]:
 def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers: int = WORKERS,
           fetcher_factory=None, log=print) -> dict:
     """Newest captures first, sellers not yet on file, `limit` of them, read by
-    `workers` fetchers in parallel. Rows are upserted per hundred so a killed
-    run keeps what it read."""
+    `workers` fetchers in parallel. Rows are upserted every fifty and progress
+    is logged every hundred, so a killed run keeps what it read."""
     fetcher_factory = fetcher_factory or (lambda: Fetcher(min_interval=1.0, jitter=1.0, timeout=90))
     existing = {r["seller_id"] for r in db.table("harvest_sellers").select("seller_id").execute().data}
     todo = [(sid, ts, url) for sid, (ts, url) in sorted(captures.items(), key=lambda kv: kv[1][0], reverse=True)
@@ -120,35 +121,38 @@ def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers:
     log(f"wayback: {len(captures)} archived sellers, {len(todo)} not yet on file, reading {len(todo)}")
     summary: dict = {"captures": len(captures), "read": 0, "unreadable": 0, "statuses": {}}
     counts: Counter = Counter()
-    rows: list[dict] = []
+    lock = threading.Lock()  # one writer at a time: the client and the counters are shared
+    pending: list[dict] = []
 
-    def work(chunk: list[tuple[str, str, str]]) -> list[dict]:
+    def flush() -> None:
+        if pending:
+            db.table("harvest_sellers").upsert(list(pending), on_conflict="seller_id").execute()
+            pending.clear()
+
+    def work(chunk: list[tuple[str, str, str]]) -> None:
         fetcher = fetcher_factory()
-        out = []
         for sid, ts, url in chunk:
             prof = profile_from_capture(fetcher, ts, url)
-            if prof is None:
-                out.append({"seller_id": sid, "_unreadable": True})
-                continue
-            status, note, agg = classify_profile(sid, prof)
-            row = seller_row(sid, agg, prof, status, f"archived profile {ts[:8]}; {note}", source="wayback",
-                             est_monthly_revenue=amazon.revenue_from_ratings(prof.get("ratings_12mo")))
-            out.append(row)
-        return out
+            with lock:
+                if prof is None:
+                    summary["unreadable"] += 1
+                else:
+                    status, note, agg = classify_profile(sid, prof)
+                    pending.append(seller_row(sid, agg, prof, status, f"archived profile {ts[:8]}; {note}", source="wayback",
+                                              est_monthly_revenue=amazon.revenue_from_ratings(prof.get("ratings_12mo"))))
+                    counts[status] += 1
+                    summary["read"] += 1
+                done = summary["read"] + summary["unreadable"]
+                if len(pending) >= 50:
+                    flush()
+                if done % 100 == 0:
+                    log(f"  wayback: {done}/{len(todo)} read, " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
 
     n = max(1, min(workers, len(todo)))
     chunks = [todo[i::n] for i in range(n)]
     with ThreadPoolExecutor(max_workers=n) as pool:
-        for result in pool.map(work, chunks):
-            for row in result:
-                if row.get("_unreadable"):
-                    summary["unreadable"] += 1
-                    continue
-                rows.append(row)
-                counts[row["status"]] += 1
-                summary["read"] += 1
-    for i in range(0, len(rows), 100):
-        db.table("harvest_sellers").upsert(rows[i:i + 100], on_conflict="seller_id").execute()
+        list(pool.map(work, chunks))
+    flush()
     summary["statuses"] = dict(counts)
     note = (f"wayback: {summary['read']} archived profiles read ({summary['unreadable']} unreadable), "
             + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
