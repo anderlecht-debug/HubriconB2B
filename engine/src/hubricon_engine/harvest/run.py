@@ -27,9 +27,15 @@ from . import enrich as enrichmod
 from .fetch import Blocked, Cache, Fetcher
 
 LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator enrolls it
-MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "150"))
-CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "3"))
+# A night's budget: ~400 product pages at a human's pace is about 40 minutes,
+# and roughly one in twenty pages yields a pushable founder-run brand, so this
+# keeps two mailboxes' 40 sends a day fed. Depth 2 reads the grandchildren
+# of a category (e.g. Kitchen → Bakeware → Muffin Pans), which is where the
+# $1M–$20M private-label brands rank; page 1 of a top category is the giants.
+MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "400"))
+CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "4"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
+CRAWL_DEPTH = int(os.environ.get("HARVEST_DEPTH", "2"))
 MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"))
 # One listing alone doing $300k/mo (est.) marks a brand well past the $20M
 # ceiling; the first pass showed $600k let Unilever-scale brands through.
@@ -60,18 +66,38 @@ def _log_event(db, note: str, payload: dict) -> None:
 
 # -- crawl ----------------------------------------------------------------------
 
-def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY) -> list[str]:
-    """ASINs to read, mid-size brands first: the child-category lists, then the
-    category's page 2, then its page 1 (where the conglomerates sit)."""
+def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY,
+                   depth: int = CRAWL_DEPTH) -> list[str]:
+    """ASINs to read, mid-size brands first: the deepest child lists, then the
+    shallower ones, then the category's page 2, then its page 1 (where the
+    conglomerates sit). `depth` 1 reads the children, 2 the grandchildren."""
     root = fetcher.get(amazon.category_url(slug))
     if not root:
         return []
     top = amazon.bestseller_page(root)
+    seen = {amazon.category_url(slug)}
+    frontier = top["subcategories"][:subcats]
+    levels: list[list[str]] = []
+    for _ in range(max(0, depth)):
+        this_level: list[str] = []
+        next_frontier: list[str] = []
+        for url in frontier:
+            if url in seen:
+                continue
+            seen.add(url)
+            page = fetcher.get(url)
+            if not page:
+                continue
+            parsed = amazon.bestseller_page(page)
+            this_level += parsed["asins"]
+            next_frontier += [c for c in parsed["subcategories"] if c not in seen][:subcats]
+        levels.append(this_level)
+        frontier = next_frontier
+        if not frontier:
+            break
     asins: list[str] = []
-    for sub in top["subcategories"][:subcats]:
-        page = fetcher.get(sub)
-        if page:
-            asins += amazon.bestseller_page(page)["asins"]
+    for level in reversed(levels):
+        asins += level
     if top["next"]:
         page2 = fetcher.get(top["next"])
         if page2:
@@ -105,7 +131,8 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
 
 
 def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_products: int = MAX_PRODUCTS,
-          subcats: int = SUBCATS_PER_CATEGORY, cache: Cache | None = None, log=print) -> dict:
+          subcats: int = SUBCATS_PER_CATEGORY, cache: Cache | None = None, log=print,
+          depth: int = CRAWL_DEPTH) -> dict:
     cache = cache or Cache()
     categories = categories or pick_categories()
     summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
@@ -116,7 +143,7 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
     try:
         for slug in categories:
             log(f"Best Sellers: {slug}")
-            for asin in category_asins(fetcher, slug, subcats):
+            for asin in category_asins(fetcher, slug, subcats, depth):
                 if fetched >= max_products:
                     break
                 prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)

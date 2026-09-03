@@ -380,6 +380,23 @@ def test_category_asins_reads_child_lists_before_the_giants():
     assert run.category_asins(f, "kitchen", subcats=6) == ["B0SUBC0001", "B0PAGE2001", "B0ROOT0001"]
 
 
+def test_category_asins_goes_two_levels_down_and_reads_the_deepest_first():
+    sub = "https://www.amazon.com/Best-Sellers-Kitchen-Dining-Bakeware/zgbs/kitchen/289668"
+    grand = "https://www.amazon.com/Best-Sellers-Bakeware-Muffin-Pans/zgbs/kitchen/289675"
+    f = FakeFetcher({
+        amazon.category_url("kitchen"): ('<a href="/x/dp/B0ROOT0001/ref=a">r</a>'
+                                         '<a href="/Best-Sellers-Kitchen-Dining-Bakeware/zgbs/kitchen/289668/ref=n">sub</a>'),
+        sub: ('<a href="/y/dp/B0SUBC0001/ref=a">s</a>'
+              '<a href="/Best-Sellers-Kitchen-Dining-Bakeware/zgbs/kitchen/289668/ref=self">me</a>'  # nav repeats the current node
+              '<a href="/Best-Sellers-Bakeware-Muffin-Pans/zgbs/kitchen/289675/ref=n">grand</a>'),
+        grand: '<a href="/z/dp/B0GRAND001/ref=a">g</a>',
+    })
+    assert run.category_asins(f, "kitchen", subcats=6, depth=2) == ["B0GRAND001", "B0SUBC0001", "B0ROOT0001"]
+    assert f.calls.count(sub) == 1  # the node's own link in its nav is not re-fetched
+    f2 = FakeFetcher(dict(f.pages))
+    assert run.category_asins(f2, "kitchen", subcats=6, depth=1) == ["B0SUBC0001", "B0ROOT0001"]
+
+
 def _crawl_pages():
     return {amazon.category_url("kitchen"): BESTSELLER_PAGE,
             f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P,
