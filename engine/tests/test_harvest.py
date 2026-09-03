@@ -521,3 +521,34 @@ def test_status_text_and_launchd_plist():
     plist = run.launchd_plist(Path("/x/engine"), "/opt/homebrew/bin/uv", 6, 10)
     assert plist["ProgramArguments"] == ["/opt/homebrew/bin/uv", "run", "hubricon", "harvest", "all"]
     assert plist["StartCalendarInterval"] == {"Hour": 6, "Minute": 10} and plist["WorkingDirectory"] == "/x/engine"
+
+
+def test_page_budget_is_split_across_categories_and_unused_pages_roll_over(tmp_path):
+    seen_budgets = []
+
+    def fake_category(db, fetcher, slug, budget, subcats, depth, cache, log):
+        seen_budgets.append((slug, budget))
+        used = 10 if slug == "kitchen" else budget  # kitchen has few listings; the rest are deep
+        return {"products_fetched": used, "products_cached": 0, "sellers_seen": 0, "sellers_new": 0,
+                "statuses": {}, "blocked": False}
+
+    original = run._crawl_category
+    run._crawl_category = fake_category
+    try:
+        s = run.crawl(FakeDB(), FakeFetcher({}), ["kitchen", "beauty", "hpc"], max_products=90,
+                      cache=Cache(tmp_path), log=quiet)
+    finally:
+        run._crawl_category = original
+    assert seen_budgets == [("kitchen", 30), ("beauty", 50), ("hpc", 30)]  # 20 unused pages rolled once
+    assert s["products_fetched"] == 90
+
+
+def test_category_asins_stops_reading_lists_once_it_has_enough():
+    root = ('<a href="/Best-Sellers-A/zgbs/kitchen/1/ref=n">a</a><a href="/Best-Sellers-B/zgbs/kitchen/2/ref=n">b</a>'
+            '<a href="/Best-Sellers-C/zgbs/kitchen/3/ref=n">c</a>')
+    lists = {f"https://www.amazon.com/Best-Sellers-{n}/zgbs/kitchen/{i}":
+             "".join(f'<a href="/x/dp/B0{n}{j:07d}/ref=a">p</a>' for j in range(31))
+             for i, n in ((1, "A"), (2, "B"), (3, "C"))}
+    f = FakeFetcher({amazon.category_url("kitchen"): root, **lists})
+    got = run.category_asins(f, "kitchen", subcats=6, depth=2, enough=40)
+    assert len(got) == 62 and sum(1 for c in f.calls if "/zgbs/kitchen/" in c) == 2  # two lists, not three

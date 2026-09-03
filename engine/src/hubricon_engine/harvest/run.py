@@ -67,10 +67,12 @@ def _log_event(db, note: str, payload: dict) -> None:
 # -- crawl ----------------------------------------------------------------------
 
 def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY,
-                   depth: int = CRAWL_DEPTH) -> list[str]:
+                   depth: int = CRAWL_DEPTH, enough: int | None = None) -> list[str]:
     """ASINs to read, mid-size brands first: the deepest child lists, then the
     shallower ones, then the category's page 2, then its page 1 (where the
-    conglomerates sit). `depth` 1 reads the children, 2 the grandchildren."""
+    conglomerates sit). `depth` 1 reads the children, 2 the grandchildren.
+    `enough` stops reading further lists once that many ASINs are in hand,
+    so a small page budget does not pay for forty list pages."""
     root = fetcher.get(amazon.category_url(slug))
     if not root:
         return []
@@ -78,11 +80,12 @@ def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEG
     seen = {amazon.category_url(slug)}
     frontier = top["subcategories"][:subcats]
     levels: list[list[str]] = []
+    collected = 0
     for _ in range(max(0, depth)):
         this_level: list[str] = []
         next_frontier: list[str] = []
         for url in frontier:
-            if url in seen:
+            if url in seen or (enough is not None and collected >= enough):
                 continue
             seen.add(url)
             page = fetcher.get(url)
@@ -90,6 +93,7 @@ def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEG
                 continue
             parsed = amazon.bestseller_page(page)
             this_level += parsed["asins"]
+            collected += len(parsed["asins"])
             next_frontier += [c for c in parsed["subcategories"] if c not in seen][:subcats]
         levels.append(this_level)
         frontier = next_frontier
@@ -151,7 +155,7 @@ def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, 
     sellers: dict[str, dict] = {}
     product_rows: list[dict] = []
     try:
-        for asin in category_asins(fetcher, slug, subcats, depth):
+        for asin in category_asins(fetcher, slug, subcats, depth, enough=budget * 2):
             if part["products_fetched"] >= budget:
                 break
             prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
@@ -240,12 +244,18 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
     categories = categories or pick_categories()
     summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
                      "sellers_seen": 0, "sellers_new": 0, "statuses": {}, "blocked": False}
+    # Every category gets an equal share of the page budget; what one does not
+    # use rolls over to the next, so one deep category cannot eat the night.
+    per_category = max(10, max_products // max(1, len(categories)))
+    carry = 0
     for slug in categories:
-        budget = max_products - summary["products_fetched"]
-        if budget <= 0 or summary["blocked"]:
+        remaining = max_products - summary["products_fetched"]
+        if remaining <= 0 or summary["blocked"]:
             break
-        log(f"Best Sellers: {slug}")
+        budget = min(remaining, per_category + carry)
+        log(f"Best Sellers: {slug} (budget {budget} pages)")
         part = _crawl_category(db, fetcher, slug, budget, subcats, depth, cache, log)
+        carry = budget - part["products_fetched"]
         for k in ("products_fetched", "products_cached", "sellers_seen", "sellers_new"):
             summary[k] += part[k]
         for k, v in part["statuses"].items():
