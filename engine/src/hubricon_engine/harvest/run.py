@@ -432,7 +432,11 @@ def requalify(db, fetcher: Fetcher, limit: int = REQUALIFY_LIMIT, statuses: tupl
         agg = {"seller_id": row["seller_id"], "seller_name": row.get("seller_name"), "brand": row.get("brand"),
                "brands": row.get("brands") or [row.get("brand")], "asins": row.get("asins") or [],
                "reviews_max": row.get("reviews_max") or 0}
-        status, note = classify(agg, prof)
+        if row.get("source") == "wayback":
+            from .wayback import classify_profile  # profile-only rows keep their stricter rules
+            status, note, _ = classify_profile(row["seller_id"], prof)
+        else:
+            status, note = classify(agg, prof)
         tld = enrichmod.offshore_domain(row.get("email")) or enrichmod.offshore_domain(
             enrichmod._domain(row["website"]) if row.get("website") else None)
         if status not in SKIP_STATUSES and tld:

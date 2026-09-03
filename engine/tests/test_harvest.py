@@ -718,8 +718,13 @@ def test_requalify_rereads_profiles_and_demotes_giants(tmp_path):
                                         "asins": [], "reviews_max": 0, "status": "enriched", "email": "bellavita@akacompany.com.vn",
                                         "est_monthly_revenue": 89000, "country": "US"})
     f.pages[amazon.seller_url("V")] = seller_page("Bella Vita", "BELLA VITA INC", r12="3,057", life="5,266")
+    db.store["harvest_sellers"].append({"seller_id": "W", "seller_name": "-Bookworm-", "brand": "-Bookworm-", "brands": ["-Bookworm-"],
+                                        "asins": [], "reviews_max": 0, "status": "candidate", "source": "wayback",
+                                        "est_monthly_revenue": 1000, "country": "US"})
+    f.pages[amazon.seller_url("W")] = seller_page("-Bookworm-", "Page Turners LLC", r12="3,177", life="21,535")
     counts = run.requalify(db, f, limit=10, cache=Cache(tmp_path), log=quiet)
-    assert counts == {"skip_size": 1, "kept": 1, "skip_non_us": 1}
+    assert counts == {"skip_size": 1, "kept": 1, "skip_non_us": 1, "skip_reseller": 1}
+    assert db.store["harvest_sellers"][3]["status"] == "skip_reseller"  # a wayback row keeps the profile-only rules
     assert db.store["harvest_sellers"][2]["status"] == "skip_non_us"  # a .vn inbox outranks the profile's "US"
     g, k = db.store["harvest_sellers"][:2]
     assert g["status"] == "skip_size" and g["ratings_12mo"] == 8703 and g["instantly_lead_id"] == "lead-g"  # prune needs the id
@@ -838,6 +843,7 @@ def test_profile_only_rows_keep_brands_and_drop_resellers_individuals_and_handle
     assert verdict("HydroJug", "HYDROJUG LLC") == "candidate"
     assert verdict("Tens Towels", "Tens Home") == "candidate"          # brand-ish two-word legal name, not a person
     assert verdict("Blue Vase Books", "Blue Vase Markeplace LLC") == "skip_reseller"
+    assert verdict("-Bookworm-", "Page Turners LLC") == "skip_reseller"   # punctuation around the word
     assert verdict("UPSW Auto Parts", "Time Auto Parts Inc.") == "skip_reseller"
     assert verdict("SSA Cards", "Super Special Awesome Cards") == "skip_reseller"
     assert verdict("LuxuryMerchandise", "Lorenzo Juan Ramos Jr") == "skip_reseller"   # individual

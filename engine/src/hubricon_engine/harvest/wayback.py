@@ -141,9 +141,10 @@ def looks_like_a_handle(storefront: str | None) -> bool:
 
 
 def reseller_storefront(storefront: str | None, business_name: str | None) -> str | None:
-    joined = f" {storefront or ''} {business_name or ''} ".lower()
+    """'-Bookworm-', 'Blue Vase Books', 'UPSW Auto Parts' → the word that gives it away."""
+    joined = " " + re.sub(r"[^a-z0-9]+", " ", f"{storefront or ''} {business_name or ''}".lower()) + " "
     for w in RESELLER_STOREFRONT_WORDS:
-        if f" {w}" in joined or f"{w} " in joined or f"{w}s " in joined:
+        if f" {w}" in joined:
             return w
     return None
 
