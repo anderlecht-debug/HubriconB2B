@@ -299,13 +299,30 @@ def test_enrich_seller_reports_no_website_and_no_mx():
 
 # -- fetcher / cache --------------------------------------------------------------------
 
-def test_fetcher_waits_once_then_stops_on_repeated_captchas():
+def test_fetcher_backs_off_and_keeps_going_by_default():
+    sleeps, pages = [], iter(["<html>Robot Check</html>", "<html>Robot Check</html>", "<html>Robot Check</html>", "<html>fine</html>"])
+
+    def transport(url, headers, timeout):
+        return 200, next(pages)
+
+    f = Fetcher(min_interval=8, jitter=0, transport=transport, sleep=sleeps.append, clock=lambda: 0.0,
+                block_pause=600, block_pause_cap=1500)
+    assert f.get("https://www.amazon.com/dp/A") is None
+    assert f.get("https://www.amazon.com/dp/B") is None
+    assert f.get("https://www.amazon.com/dp/C") is None
+    assert f.get("https://www.amazon.com/dp/D") == "<html>fine</html>"  # no Blocked, the run continues
+    assert [x for x in sleeps if x >= 60] == [600, 1200, 1500]  # 10, 20, then the cap (shorter sleeps are pacing)
+    assert f.min_interval == 27 and f.block_streak == 0 and f.stats["blocked"] == 3
+
+
+def test_fetcher_can_still_give_up_when_asked():
     sleeps = []
 
     def transport(url, headers, timeout):
         return 200, "<html>Robot Check</html>" if "amazon." in url else "<html>ok</html>"
 
-    f = Fetcher(min_interval=0, jitter=0, transport=transport, sleep=sleeps.append, clock=lambda: 0.0, block_pause=5)
+    f = Fetcher(min_interval=0, jitter=0, transport=transport, sleep=sleeps.append, clock=lambda: 0.0, block_pause=5,
+                give_up=True)
     assert f.get("https://example.com/") == "<html>ok</html>"
     assert f.get("https://www.amazon.com/dp/X") is None and sleeps == [5]
     with pytest.raises(Blocked):
@@ -576,3 +593,14 @@ def test_push_records_instantly_counts_and_drops_a_rejected_batch():
     assert run.push(db2, api2, limit=40, log=quiet) == 0
     a2 = next(r for r in db2.store["harvest_sellers"] if r["seller_id"] == "A")
     assert a2["status"] == "no_email" and "invalid_email_count 1" in a2["notes"]
+
+
+def test_one_harvest_at_a_time(tmp_path):
+    lock = tmp_path / "run.lock"
+    lock.write_text("999999")  # a pid that is not running
+    assert run.acquire_lock(lock) == lock and lock.read_text() == str(run.os.getpid())
+    assert run.acquire_lock(lock) is None  # this process holds it
+    assert run.run_all(FakeDB(), FakeFetcher({}), lock=lock, log=quiet) == {"skipped": "locked"}
+    lock.unlink()
+    out = run.run_all(FakeDB(), FakeFetcher({}), categories=["kitchen"], max_products=1, lock=lock, log=quiet)
+    assert "crawl" in out and not lock.exists()  # released even though nothing was found

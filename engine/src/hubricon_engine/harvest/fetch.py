@@ -65,12 +65,18 @@ class Fetcher:
     """
 
     def __init__(self, min_interval: float = 7.0, jitter: float = 5.0, timeout: int = 40,
-                 block_pause: float = 600.0, max_block_streak: int = 2,
+                 block_pause: float = 600.0, max_block_streak: int = 2, give_up: bool = False,
+                 block_pause_cap: float = 3600.0, max_interval: float = 30.0,
                  transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None):
         self.jar = http.cookiejar.CookieJar()
         self.transport = transport or _urllib_transport(self.jar)
         self.min_interval, self.jitter, self.timeout = min_interval, jitter, timeout
         self.block_pause, self.max_block_streak = block_pause, max_block_streak
+        # give_up=True raises Blocked at max_block_streak (the original "stop
+        # for the day"). The founder's rule since 2026-09-03 is that the crawl
+        # never stops: give_up=False backs off 10 → 20 → 40 → 60 min, slows the
+        # pace for the rest of the run, and carries on when Amazon relents.
+        self.give_up, self.block_pause_cap, self.max_interval = give_up, block_pause_cap, max_interval
         self.sleep, self.clock = sleep, clock
         self.ua = user_agent or random.choice(USER_AGENTS)
         self._last: dict[str, float] = {}
@@ -116,10 +122,15 @@ class Fetcher:
     def _blocked(self, url: str) -> None:
         self.stats["blocked"] += 1
         self.block_streak += 1
-        if self.block_streak >= self.max_block_streak:
+        if self.give_up and self.block_streak >= self.max_block_streak:
             raise Blocked(f"Amazon answered {self.block_streak} requests in a row with a captcha ({url}); "
                           "stopping for today.")
-        self.sleep(self.block_pause)
+        pause = min(self.block_pause_cap, self.block_pause * (2 ** (self.block_streak - 1)))
+        self.min_interval = min(self.max_interval, self.min_interval * 1.5)
+        self.stats["backoff_seconds"] = self.stats.get("backoff_seconds", 0) + pause
+        print(f"  captcha #{self.block_streak} on {url}: waiting {pause / 60:.0f} min, "
+              f"then {self.min_interval:.0f}–{self.min_interval + self.jitter:.0f} s between requests", flush=True)
+        self.sleep(pause)
         return None
 
 

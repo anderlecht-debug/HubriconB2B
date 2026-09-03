@@ -4,6 +4,10 @@ crawl   Best Sellers pages → product pages → seller profiles → harvest_sel
 enrich  candidate rows → website → published contact → 'enriched' (or why not)
 push    enriched rows → the Instantly list "Hubricon harvest (auto)"; the hourly
         operator enrolls that list into the campaign like any other Hubricon list
+requalify  re-read the live profile of rows already past the gate and apply
+        today's size band (seller feedback counts); giants become skip_size
+prune   skip_* rows that already sit in Instantly are deleted there (operator)
+wayback  see wayback.py: archived seller profiles as a second, Amazon-free source
 
 Crawl and enrich need a home connection (Amazon captchas datacenter ranges),
 so `hubricon harvest install` schedules them on the founder's Mac with
@@ -42,7 +46,9 @@ MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"
 MAX_ASIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MAX_ASIN_MONTHLY_REVENUE", "300000"))
 MEGA_REVIEWS = 150_000
 ENRICH_LIMIT = int(os.environ.get("HARVEST_ENRICH_LIMIT", "60"))
-PUSH_LIMIT = int(os.environ.get("HARVEST_PUSH_LIMIT", "40"))
+PUSH_LIMIT = int(os.environ.get("HARVEST_PUSH_LIMIT", "200"))  # Instantly takes 100 a call; the operator runs hourly
+REQUALIFY_LIMIT = int(os.environ.get("HARVEST_REQUALIFY_LIMIT", "60"))
+SKIP_STATUSES = ("skip_reseller", "skip_non_us", "skip_amazon", "skip_size", "skip_internal")
 PRODUCT_CACHE_DAYS, SELLER_CACHE_DAYS = 30, 60
 
 
@@ -116,7 +122,7 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
     seller_name = agg.get("seller_name") or prof.get("seller_name")
     business = prof.get("business_name")
     brands = agg["brands"]
-    top = max(agg["asins"], key=lambda a: a.get("est_monthly_revenue") or 0)
+    top = max(agg["asins"], key=lambda a: a.get("est_monthly_revenue") or 0, default={})
     if prof and prof.get("country") and prof["country"] != "US":
         return "skip_non_us", f"business address in {prof['country']}"
     if amazon.looks_offshore(business, prof.get("address")):
@@ -125,6 +131,11 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
         return "skip_size", "corporate parent or aggregator as seller of record"
     if amazon.looks_reseller(seller_name, business, len(brands)):
         return "skip_reseller", f"{len(brands)} brands or reseller wording"
+    # The seller's own feedback count sizes the whole account; one listing
+    # under the ceiling said nothing about the other two hundred.
+    size, why = amazon.seller_size(prof.get("ratings_12mo"), prof.get("ratings_lifetime"))
+    if size:
+        return "skip_size", why
     if (top.get("est_monthly_revenue") or 0) > MAX_ASIN_MONTHLY_REVENUE or (agg["reviews_max"] or 0) > MEGA_REVIEWS:
         return "skip_size", "one listing alone is bigger than the $20M brand ceiling"
     if not amazon.looks_private_label(agg["brand"], seller_name, business):
@@ -132,6 +143,26 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
             return "skip_reseller", "sells more than one brand, none matching its name"
         return "candidate", "brand name differs from seller name; single brand seen"
     return "candidate", "brand matches seller"
+
+
+def seller_row(sid: str, agg: dict, prof: dict, status: str, note: str, source: str = "bestsellers",
+               est_monthly_revenue: float | None = None) -> dict:
+    """The harvest_sellers row for one seller: listing aggregate + public profile.
+    `est_monthly_revenue` overrides the listing sum when the estimate comes from
+    elsewhere (the seller's feedback count, for profile-only rows)."""
+    est_units = sum((a.get("est_monthly_revenue") or 0) / (a.get("price") or 1) for a in agg["asins"] if a.get("price"))
+    revenue = est_monthly_revenue if est_monthly_revenue is not None else \
+        round(sum(a.get("est_monthly_revenue") or 0 for a in agg["asins"]), 2)
+    return {
+        "seller_id": sid, "seller_name": agg.get("seller_name") or prof.get("seller_name"), "brand": agg["brand"],
+        "brands": agg["brands"], "business_name": prof.get("business_name"), "address": prof.get("address"),
+        "city": prof.get("city"), "state": prof.get("state"), "country": prof.get("country"),
+        "asins": agg["asins"], "top_bsr": agg.get("top_bsr"), "top_category": agg.get("top_category"),
+        "reviews_max": agg.get("reviews_max"), "est_monthly_units": round(est_units, 1),
+        "est_monthly_revenue": revenue, "ratings_12mo": prof.get("ratings_12mo"),
+        "ratings_lifetime": prof.get("ratings_lifetime"), "source": source,
+        "status": status, "notes": note, "updated_at": _now(),
+    }
 
 
 def _product_row(asin: str, prod: dict) -> dict:
@@ -216,16 +247,7 @@ def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, 
         status, note = classify(agg, prof)
         if old and old["status"] not in ("candidate",) and status == "candidate":
             status = old["status"]  # already enriched/pushed/skipped: keep the verdict
-        est_units = sum((a.get("est_monthly_revenue") or 0) / (a.get("price") or 1) for a in agg["asins"] if a.get("price"))
-        rows.append({
-            "seller_id": sid, "seller_name": agg["seller_name"] or prof.get("seller_name"), "brand": agg["brand"],
-            "brands": agg["brands"], "business_name": prof.get("business_name"), "address": prof.get("address"),
-            "city": prof.get("city"), "state": prof.get("state"), "country": prof.get("country"),
-            "asins": agg["asins"], "top_bsr": agg["top_bsr"], "top_category": agg["top_category"],
-            "reviews_max": agg["reviews_max"], "est_monthly_units": round(est_units, 1),
-            "est_monthly_revenue": round(sum(a.get("est_monthly_revenue") or 0 for a in agg["asins"]), 2),
-            "status": status, "notes": note, "updated_at": _now(),
-        })
+        rows.append(seller_row(sid, agg, prof, status, note))
         part["statuses"][status] = part["statuses"].get(status, 0) + 1
         if not old:
             part["sellers_new"] += 1
@@ -378,12 +400,97 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
     return pushed
 
 
+# -- requalify / prune ----------------------------------------------------------
+
+def requalify(db, fetcher: Fetcher, limit: int = REQUALIFY_LIMIT, statuses: tuple[str, ...] = ("pushed", "enriched", "candidate"),
+              cache: Cache | None = None, log=print) -> dict:
+    """Re-read the live profile of rows already past the gate and apply today's
+    band. The first pass sized brands by one listing, which let Gorilla Grip
+    (8,703 seller ratings a year) through; the seller's own feedback count
+    catches that. Rows that fail become skip_*; `prune` then takes them off
+    Instantly. One Amazon request per row, at the fetcher's pace."""
+    cache = cache or Cache()
+    counts: Counter = Counter()
+    rows = db.table("harvest_sellers").select("*").in_("status", list(statuses)) \
+        .order("est_monthly_revenue", desc=True).limit(limit).execute().data
+    for row in rows:
+        try:
+            page = fetcher.get(amazon.seller_url(row["seller_id"]))
+        except Blocked as err:
+            log(f"  {err}")
+            break
+        if not page:
+            counts["unread"] += 1
+            continue
+        prof = amazon.seller(page)
+        cache.put("seller", row["seller_id"], prof)
+        agg = {"seller_id": row["seller_id"], "seller_name": row.get("seller_name"), "brand": row.get("brand"),
+               "brands": row.get("brands") or [row.get("brand")], "asins": row.get("asins") or [],
+               "reviews_max": row.get("reviews_max") or 0}
+        status, note = classify(agg, prof)
+        upd = {"ratings_12mo": prof.get("ratings_12mo"), "ratings_lifetime": prof.get("ratings_lifetime"),
+               "business_name": prof.get("business_name") or row.get("business_name"),
+               "country": prof.get("country") or row.get("country")}
+        if status in SKIP_STATUSES:
+            upd.update(status=status, notes=f"requalified: {note}")
+            counts[status] += 1
+        else:
+            counts["kept"] += 1
+        _update(db, row["seller_id"], **upd)
+        log(f"  {row['brand']}: {'kept' if status not in SKIP_STATUSES else status} "
+            f"({prof.get('ratings_12mo')} ratings/12mo, {prof.get('ratings_lifetime')} lifetime) {note if status in SKIP_STATUSES else ''}".rstrip())
+    note = "requalify: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "nothing to re-read")
+    log(note)
+    _log_event(db, note, dict(counts))
+    return dict(counts)
+
+
+def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
+    """Sellers re-qualified out after they were pushed still sit in the
+    Instantly list (and, once enrolled, in the campaign). Delete both leads
+    before a mailbox spends a send on them; the prospect row becomes 'dq'."""
+    rows = [r for r in db.table("harvest_sellers").select("seller_id, brand, email, status, notes, instantly_lead_id")
+            .in_("status", list(SKIP_STATUSES)).execute().data if r.get("instantly_lead_id")]
+    if not rows:
+        return 0
+    if dry or api is None:
+        log(f"prune: {'[dry] would remove' if dry else 'INSTANTLY_API_KEY not set; the operator removes'} "
+            f"{len(rows)} lead(s) from Instantly: " + ", ".join(r["brand"] or r["seller_id"] for r in rows))
+        return 0 if api is None and not dry else len(rows)
+    removed = 0
+    for r in rows:
+        ids = [r["instantly_lead_id"]]
+        prospects = db.table("prospects").select("id, instantly_lead_id").eq("email", (r.get("email") or "").lower()).execute().data \
+            if r.get("email") else []
+        ids += [p["instantly_lead_id"] for p in prospects if p.get("instantly_lead_id") and p["instantly_lead_id"] not in ids]
+        for lead_id in ids:
+            try:
+                api.delete_lead(lead_id)
+            except InstantlyError as err:
+                if err.status != 404:  # gone already is fine
+                    log(f"prune {r['brand']}: {err}")
+                    break
+        else:
+            for p in prospects:
+                db.table("prospects").update({"status": "dq", "fit_notes": f"harvest: {r['status']} — {r.get('notes') or ''}"[:500],
+                                              "updated_at": _now()}).eq("id", p["id"]).execute()
+            _update(db, r["seller_id"], instantly_lead_id=None,
+                    notes=((r.get("notes") or "") + "; removed from Instantly").strip("; "))
+            removed += 1
+            log(f"  removed {r['brand']} from Instantly ({r['status']})")
+    note = f"prune: {removed} lead(s) removed from Instantly"
+    log(note)
+    _log_event(db, note, {"removed": removed, "brands": [r["brand"] for r in rows[:removed]]})
+    return removed
+
+
 # -- status / all / install -----------------------------------------------------
 
 def status(db) -> dict:
-    rows = db.table("harvest_sellers").select("status, est_monthly_revenue, pushed_at").execute().data
+    rows = db.table("harvest_sellers").select("status, est_monthly_revenue, pushed_at, source").execute().data
     counts = Counter(r["status"] for r in rows)
     return {"total": len(rows), "by_status": dict(counts),
+            "by_source": dict(Counter(r.get("source") or "bestsellers" for r in rows)),
             "pushed": counts.get("pushed", 0), "ready": counts.get("enriched", 0),
             "candidates": counts.get("candidate", 0)}
 
@@ -391,7 +498,8 @@ def status(db) -> dict:
 def status_text(db) -> str:
     s = status(db)
     lines = [f"Harvest: {s['total']} sellers on file — "
-             + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items()))]
+             + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items()))
+             + (" (" + ", ".join(f"{k} {v}" for k, v in sorted(s["by_source"].items())) + ")" if s.get("by_source") else "")]
     for r in _rows(db, "enriched", 10):
         lines.append(f"  ready  {r['brand']:<28} {r.get('email') or '':<34} est ${(r.get('est_monthly_revenue') or 0):,.0f}/mo")
     return "\n".join(lines)
@@ -437,14 +545,37 @@ def fee_cliff_text(db, within_oz: float = 1.0) -> str:
     return "\n".join(lines)
 
 
+def acquire_lock(path: Path | None = None) -> Path | None:
+    """One harvest at a time on this machine: two crawls would double the pace
+    Amazon sees. Returns the lock path, or None when a live run holds it."""
+    path = path or Cache().root / "run.lock"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        try:
+            pid = int(path.read_text().strip() or 0)
+            os.kill(pid, 0)  # raises when the process is gone
+            return None
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass
+    path.write_text(str(os.getpid()))
+    return path
+
+
 def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products: int = MAX_PRODUCTS,
-            categories: list[str] | None = None, log=print) -> dict:
-    fetcher = fetcher or Fetcher()
-    out = {"crawl": crawl(db, fetcher, categories, max_products, log=log)}
-    out["enrich"] = enrich(db, fetcher, log=log)
-    api = Instantly() if os.environ.get("INSTANTLY_API_KEY") else None
-    out["pushed"] = push(db, api, dry=dry, log=log)
-    return out
+            categories: list[str] | None = None, log=print, lock: Path | None = None) -> dict:
+    held = acquire_lock(lock)
+    if held is None:
+        log("harvest: another run is in progress on this machine; not starting a second one")
+        return {"skipped": "locked"}
+    try:
+        fetcher = fetcher or Fetcher()
+        out = {"crawl": crawl(db, fetcher, categories, max_products, log=log)}
+        out["enrich"] = enrich(db, fetcher, log=log)
+        api = Instantly() if os.environ.get("INSTANTLY_API_KEY") else None
+        out["pushed"] = push(db, api, dry=dry, log=log)
+        return out
+    finally:
+        held.unlink(missing_ok=True)
 
 
 RUN_HOURS = (6, 18)  # two gentle runs beat one long one: Amazon rate-limits by the hour
