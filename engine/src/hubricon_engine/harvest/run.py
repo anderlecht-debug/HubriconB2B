@@ -56,10 +56,15 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def pick_categories(n: int = CATEGORIES_PER_RUN, today: date | None = None) -> list[str]:
-    """Rotate through the category list by day so a week covers all of it."""
+def pick_categories(n: int = CATEGORIES_PER_RUN, today: date | None = None, slot: int | None = None) -> list[str]:
+    """Rotate through the category list by half-day, so the 06:10 and 18:10
+    runs read different slices and a week covers everything twice."""
     cats = amazon.CATEGORIES
-    start = ((today or date.today()).timetuple().tm_yday * n) % len(cats)
+    now = datetime.now()
+    today = today or now.date()
+    if slot is None:
+        slot = 1 if now.hour >= 12 else 0
+    start = ((today.timetuple().tm_yday * 2 + slot) * n) % len(cats)
     return [cats[(start + i) % len(cats)] for i in range(min(n, len(cats)))]
 
 

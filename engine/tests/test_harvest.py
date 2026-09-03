@@ -352,9 +352,10 @@ def test_cache_roundtrip_and_expiry(tmp_path):
 
 # -- pipeline ------------------------------------------------------------------------------
 
-def test_categories_rotate_by_day():
-    a, b = run.pick_categories(3, date(2026, 9, 3)), run.pick_categories(3, date(2026, 9, 4))
+def test_categories_rotate_by_half_day():
+    a, b = run.pick_categories(3, date(2026, 9, 3), slot=0), run.pick_categories(3, date(2026, 9, 4), slot=0)
     assert len(a) == 3 and set(a) <= set(amazon.CATEGORIES) and a != b
+    assert run.pick_categories(3, date(2026, 9, 3), slot=1) != a  # the evening run reads a different slice
 
 
 def _agg(brand="HydroJug", seller="HydroJug", brands=None, rev=95000.0, reviews=1000):
