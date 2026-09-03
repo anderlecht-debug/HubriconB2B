@@ -432,7 +432,8 @@ def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hour: int 
         "StartCalendarInterval": {"Hour": hour, "Minute": minute},
         "StandardOutPath": str(log_dir / "hubricon-harvest.log"),
         "StandardErrorPath": str(log_dir / "hubricon-harvest.err"),
-        "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"},
+        "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+                                 "PYTHONUNBUFFERED": "1"},  # the log is readable while the run is going
     }
 
 
