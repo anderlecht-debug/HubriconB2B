@@ -88,7 +88,12 @@ stops for the whole company on any reply.
 
 Knobs (env): `HARVEST_MAX_PRODUCTS` (150), `HARVEST_CATEGORIES_PER_RUN` (3),
 `HARVEST_MIN_MONTHLY_REVENUE` (2500, estimated, below it a row waits),
-`HARVEST_MAX_ASIN_MONTHLY_REVENUE` (600000), `HARVEST_PUSH_LIMIT` (40).
+`HARVEST_MAX_ASIN_MONTHLY_REVENUE` (300000: one listing above it means a
+brand past the $20M ceiling; the first pass showed $600k let Unilever-scale
+brands through), `HARVEST_PUSH_LIMIT` (40). Sellers of record that are a
+conglomerate or an aggregator (Nestlé, Pattern, Thrasio…) are skipped by
+name, and child-category lists are read before a category's page 1, where
+the giants sit.
 Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run
 waits ten minutes once, then stops for the day; the digest says so.

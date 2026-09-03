@@ -357,6 +357,29 @@ def test_classify_keeps_us_founder_brands_and_skips_the_rest():
     assert run.classify(_agg(), None)[0] == "candidate"  # profile unavailable: still worth enriching
 
 
+def test_big_parents_and_aggregators_are_skipped():
+    us = {"country": "US", "address": "1 MAIN ST, OGDEN, UT 84401, US"}
+    assert run.classify(_agg(brand="Vital Proteins", seller="Vital Proteins"),
+                        {**us, "business_name": "Nestle Healthcare Nutrition Inc"})[0] == "skip_size"
+    assert run.classify(_agg(brand="Pure Encapsulations", seller="Pattern."),
+                        {**us, "business_name": "Pattern Inc"})[0] == "skip_size"
+    assert run.classify(_agg(rev=350_000), {**us, "business_name": "HYDROJUG LLC"})[0] == "skip_size"
+    assert run.classify(_agg(rev=200_000), {**us, "business_name": "HYDROJUG LLC"})[0] == "candidate"
+
+
+def test_category_asins_reads_child_lists_before_the_giants():
+    root = ('<a href="/x/dp/B0ROOT0001/ref=a">r</a>'
+            '<a href="/Best-Sellers-Kitchen-Dining-Bakeware/zgbs/kitchen/289668/ref=n">sub</a>'
+            '<a href="/Best-Sellers-Kitchen-Dining/zgbs/kitchen/ref=zg_bs_pg_2_kitchen?_encoding=UTF8&amp;pg=2">n</a>')
+    f = FakeFetcher({
+        amazon.category_url("kitchen"): root,
+        "https://www.amazon.com/Best-Sellers-Kitchen-Dining-Bakeware/zgbs/kitchen/289668": '<a href="/y/dp/B0SUBC0001/ref=a">s</a>',
+        "https://www.amazon.com/Best-Sellers-Kitchen-Dining/zgbs/kitchen/ref=zg_bs_pg_2_kitchen?_encoding=UTF8&pg=2":
+            '<a href="/z/dp/B0PAGE2001/ref=a">p</a><a href="/z/dp/B0ROOT0001/ref=dup">d</a>',
+    })
+    assert run.category_asins(f, "kitchen", subcats=6) == ["B0SUBC0001", "B0PAGE2001", "B0ROOT0001"]
+
+
 def _crawl_pages():
     return {amazon.category_url("kitchen"): BESTSELLER_PAGE,
             f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P,

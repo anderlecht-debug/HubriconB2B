@@ -31,7 +31,9 @@ MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "150"))
 CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "3"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
 MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"))
-MAX_ASIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MAX_ASIN_MONTHLY_REVENUE", "600000"))
+# One listing alone doing $300k/mo (est.) marks a brand well past the $20M
+# ceiling; the first pass showed $600k let Unilever-scale brands through.
+MAX_ASIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MAX_ASIN_MONTHLY_REVENUE", "300000"))
 MEGA_REVIEWS = 150_000
 ENRICH_LIMIT = int(os.environ.get("HARVEST_ENRICH_LIMIT", "60"))
 PUSH_LIMIT = int(os.environ.get("HARVEST_PUSH_LIMIT", "40"))
@@ -59,19 +61,22 @@ def _log_event(db, note: str, payload: dict) -> None:
 # -- crawl ----------------------------------------------------------------------
 
 def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY) -> list[str]:
+    """ASINs to read, mid-size brands first: the child-category lists, then the
+    category's page 2, then its page 1 (where the conglomerates sit)."""
     root = fetcher.get(amazon.category_url(slug))
     if not root:
         return []
     top = amazon.bestseller_page(root)
-    asins = list(top["asins"])
-    if top["next"]:
-        page2 = fetcher.get(top["next"])
-        if page2:
-            asins += amazon.bestseller_page(page2)["asins"]
+    asins: list[str] = []
     for sub in top["subcategories"][:subcats]:
         page = fetcher.get(sub)
         if page:
             asins += amazon.bestseller_page(page)["asins"]
+    if top["next"]:
+        page2 = fetcher.get(top["next"])
+        if page2:
+            asins += amazon.bestseller_page(page2)["asins"]
+    asins += top["asins"]
     return list(dict.fromkeys(asins))
 
 
@@ -86,6 +91,8 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
         return "skip_non_us", f"business address in {prof['country']}"
     if amazon.looks_offshore(business, prof.get("address")):
         return "skip_non_us", "offshore trading-company name"
+    if amazon.looks_big_parent(seller_name, business):
+        return "skip_size", "corporate parent or aggregator as seller of record"
     if amazon.looks_reseller(seller_name, business, len(brands)):
         return "skip_reseller", f"{len(brands)} brands or reseller wording"
     if (top.get("est_monthly_revenue") or 0) > MAX_ASIN_MONTHLY_REVENUE or (agg["reviews_max"] or 0) > MEGA_REVIEWS:

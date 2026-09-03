@@ -45,6 +45,20 @@ RESELLER_WORDS = ("trading", "wholesale", "distribut", "import", "deals", "outle
 OFFSHORE_WORDS = ("shenzhen", "guangzhou", "dongguan", "yiwu", "hangzhou", "shanghai", "ningbo",
                   "co., ltd", "co.,ltd", "co. ltd", "technology co", "trade co", "e-commerce co",
                   "electronic co", "network technology")
+# Corporate parents and aggregators: the brand may look private-label on the
+# listing, but the seller of record is a conglomerate or a portfolio company,
+# not a founder. First pass (2026-09-03) surfaced Unilever, Nestlé, Church &
+# Dwight and Pattern in the top 40 of Health & Household.
+BIG_PARENT_WORDS = (
+    "nestle", "unilever", "procter", "church & dwight", "church and dwight", "johnson & johnson", "kimberly",
+    "colgate", "reckitt", "clorox", "henkel", "newell", "spectrum brands", "helen of troy", "hasbro", "mattel",
+    "central garden", "purina", "kraft", "pepsico", "coca-cola", "l'oreal", "estee lauder", "shiseido",
+    "beiersdorf", "edgewell", "energizer", "stanley black", "hanesbrands", "vf corp", "abbott", "bayer",
+    "glaxo", "haleon", "kenvue", "pfizer", "sc johnson", "s.c. johnson", "prestige consumer", "perrigo",
+    "pattern inc", "pattern.", "thrasio", "perch", "razor group", "heyday", "branded group", "unybrands",
+    "suma brands", "elevate brands", "boosted commerce", "forum brands", "accel club", "d1 brands", "olsam",
+    "berlin brands", "dragonfly", "moonshot brands", "acquco", "factory14", "benitago", "accelerator store",
+)
 NAME_NOISE = ("llc", "inc", "co", "ltd", "corp", "corporation", "company", "store", "official",
               "shop", "usa", "us", "the", "brand", "brands", "group", "international", "direct",
               "products", "home", "online", "retail", "global", "enterprises", "l.l.c")
@@ -218,6 +232,11 @@ def looks_reseller(seller_name: str | None, business_name: str | None, brand_cou
 def looks_offshore(business_name: str | None, address: str | None) -> bool:
     joined = f"{business_name or ''} {address or ''}".lower()
     return any(w in joined for w in OFFSHORE_WORDS)
+
+
+def looks_big_parent(seller_name: str | None, business_name: str | None) -> bool:
+    joined = f"{seller_name or ''} {business_name or ''}".lower()
+    return any(w in joined for w in BIG_PARENT_WORDS)
 
 
 # -- Fee cliffs (the data post) --------------------------------------------------
