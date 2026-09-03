@@ -10,6 +10,7 @@ captcha; it waits once, then gives up.
 
 from __future__ import annotations
 
+import atexit
 import gzip
 import http.cookiejar
 import json
@@ -71,7 +72,11 @@ def _chrome_transport(chrome: str, profile_dir: str | None = None, hard_timeout:
     DOM and then lingers (its updater child keeps the pipe open), so stdout is
     read as it arrives and the process group is killed the moment the document
     ends, or at the hard timeout."""
-    profile = profile_dir or str(Path.home() / ".hubricon" / "chrome-profile")
+    # One profile per process: Chrome refuses to start on a profile another
+    # instance holds (it hands the URL to that instance and exits with no
+    # DOM), so a crawl, an enrich pass and the launchd run must not share one.
+    profile = profile_dir or str(Path.home() / ".hubricon" / "chrome-profile" / str(os.getpid()))
+    atexit.register(shutil.rmtree, profile, True)
 
     def transport(url: str, headers: dict, timeout: int) -> tuple[int, str]:
         Path(profile).mkdir(parents=True, exist_ok=True)
