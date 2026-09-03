@@ -115,6 +115,7 @@ ceiling says nothing about the other two hundred.
 uv run hubricon harvest requalify      # re-read live profiles of pushed/enriched/candidate rows with today's band
 uv run hubricon harvest prune          # skip_* rows still in Instantly → deleted there (the operator does this hourly)
 uv run hubricon harvest wayback        # second source: archived seller profiles, no Amazon request (below)
+uv run hubricon harvest listings       # profile-only sellers: read the storefront, keep two live listings (rank, price, weight)
 ```
 
 **The named owner comes from SuperSearch, not the website.** Public pages
