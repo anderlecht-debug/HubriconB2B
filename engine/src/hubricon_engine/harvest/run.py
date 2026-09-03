@@ -365,8 +365,9 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
                 _update(db, r["seller_id"], status="no_email", notes=f"Instantly rejected the import: {summary}")
             dropped += len(batch)
             continue
-        for r in batch:
-            _update(db, r["seller_id"], status="pushed", pushed_at=_now(),
+        ids = {c.get("index"): c.get("id") for c in (res.get("created_leads") or []) if isinstance(c, dict)}
+        for i, r in enumerate(batch):
+            _update(db, r["seller_id"], status="pushed", pushed_at=_now(), instantly_lead_id=ids.get(i),
                     notes=((r.get("notes") or "") + f"; Instantly: {summary}").strip("; "))
         pushed += len(batch)
     note = f"push: {pushed} lead(s) → Instantly list '{LIST_NAME}'" + (f", {dropped} rejected on import" if dropped else "")
