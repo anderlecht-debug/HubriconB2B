@@ -185,6 +185,14 @@ class FakeApi:
             raise InstantlyError(404, f"/leads/{lead_id}", "not found")
         return {}
 
+    def supersearch_count(self, filters):
+        self.counted = filters
+        return {"number_of_leads": 7}
+
+    def supersearch_enrich(self, list_id, filters, limit, search_name):
+        self.enriched = (list_id, filters, limit, search_name)
+        return {"background_job_id": "job-1"}
+
     def add_leads(self, list_id=None, campaign_id=None, leads=None):
         self.added.append((list_id, leads))
         return self.reply if hasattr(self, "reply") else {
@@ -864,3 +872,28 @@ def test_load_captures_downloads_once_and_reuses_the_file(tmp_path):
     assert set(caps) == {"A1AAAAAAAAAAAA", "A4DDDDDDDDDDDD"} and path.exists()
     f2 = FakeFetcher({})
     assert wayback.load_captures(f2, path, log=quiet) == caps and not f2.calls
+
+
+# -- owners ---------------------------------------------------------------------------
+
+def test_owners_asks_supersearch_for_the_founder_at_each_pushed_domain_once():
+    db, api = FakeDB(), FakeApi()
+    db.store["harvest_sellers"] = [
+        {"seller_id": "A", "brand": "A Brand", "status": "pushed", "website": "https://www.abrand.com/", "first_name": None},
+        {"seller_id": "B", "brand": "B Brand", "status": "enriched", "website": "https://bbrand.com/", "first_name": None},
+        {"seller_id": "C", "brand": "C Brand", "status": "pushed", "website": "https://cbrand.com/", "first_name": "Cara"},  # named already
+        {"seller_id": "D", "brand": "D Brand", "status": "candidate", "website": None, "first_name": None},
+    ]
+    assert run.owners(db, api, dry=True, log=quiet, today="2026-09-03") == 2 and not hasattr(api, "enriched")
+    assert run.owners(db, api, log=quiet, today="2026-09-03") == 2
+    list_id, filters, limit, name = api.enriched
+    assert list_id == "L1" and api.created == [run.OWNERS_LIST_NAME] and "hubricon" in run.OWNERS_LIST_NAME.lower()
+    assert filters["domains"] == ["abrand.com", "bbrand.com"] and "Founder" in filters["title"]["include"] and limit == 2
+    by_id = {r["seller_id"]: r for r in db.store["harvest_sellers"]}
+    assert by_id["A"]["person_source"] == "supersearch:requested" and by_id["C"].get("person_source") is None
+    assert db.store["operator_state"][0]["value"]["count"] == 2
+    assert run.owners(db, api, log=quiet, today="2026-09-03") == 0  # nothing left to ask
+    db.store["harvest_sellers"].append({"seller_id": "E", "brand": "E", "status": "pushed", "website": "https://e.com/", "first_name": None})
+    assert run.owners(db, api, daily=2, log=quiet, today="2026-09-03") == 0  # the daily cap holds
+    assert run.owners(db, api, daily=2, log=quiet, today="2026-09-04") == 1  # a new day
+    assert db.store["funnel_events"][-1]["note"].startswith("owners: asked SuperSearch")

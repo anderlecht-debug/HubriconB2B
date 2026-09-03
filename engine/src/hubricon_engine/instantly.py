@@ -136,7 +136,7 @@ class Instantly:
         return self._call("PATCH", f"/campaigns/{campaign_id}", body=fields)
 
     def campaign_analytics(self, campaign_id: str) -> dict:
-        out = self._call("GET", "/campaigns/analytics", params={"campaign_id": campaign_id})
+        out = self._call("GET", "/campaigns/analytics", params={"id": campaign_id})  # the spec names it "id"
         if isinstance(out, list):
             return out[0] if out else {}
         return out

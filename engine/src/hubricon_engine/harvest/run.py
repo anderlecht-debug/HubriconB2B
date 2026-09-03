@@ -405,6 +405,77 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
     return pushed
 
 
+# -- owners: the named person behind a harvested brand ------------------------------
+
+OWNERS_LIST_NAME = "Hubricon harvest owners (auto)"  # contains "hubricon" → the operator enrolls it
+OWNER_LOOKUPS_DAILY = int(os.environ.get("HARVEST_OWNER_LOOKUPS_DAILY", "50"))
+OWNER_BATCH = 50
+OWNER_TITLES = ["Founder", "Co-Founder", "CEO", "Owner", "President", "Managing Director"]
+
+
+def owner_filters(domains: list[str]) -> dict:
+    """SuperSearch filters: the founder/owner at exactly these company domains."""
+    return {
+        "domains": domains,
+        "title": {"include": OWNER_TITLES, "includeMode": "CONTAINS"},
+        "locations": {"include": [{"country": "United States"}]},
+        "location_mode": "company",
+        "skip_owned_leads": True,
+        "show_one_lead_per_company": True,
+    }
+
+
+def owners(db, api: Instantly | None, dry: bool = False, daily: int = OWNER_LOOKUPS_DAILY, log=print,
+           today: str | None = None) -> int:
+    """Public pages give a brand's role inbox (hello@, info@), which the campaign
+    gate treats as a support queue. The brand itself is the qualified part —
+    US, private label, the right size — so the operator asks Instantly's
+    SuperSearch for the named founder/owner at that brand's own domain, with a
+    verified work email, into the list '{OWNERS_LIST_NAME}'. One request per
+    batch of domains, capped at `daily` leads a day (Instantly lead credits);
+    each row is asked about once (person_source records it)."""
+    from ..outbound import get_state, set_state
+
+    today = today or date.today().isoformat()
+    state = get_state(db, "harvest.owner_lookups", {}) or {}
+    used = state.get("count", 0) if state.get("date") == today else 0
+    if used >= daily:
+        log(f"owners: daily cap of {daily} lookups reached")
+        return 0
+    rows = [r for r in db.table("harvest_sellers").select("seller_id, brand, website, first_name, person_source, notes")
+            .in_("status", ["pushed", "enriched"]).execute().data
+            if r.get("website") and not r.get("first_name") and not (r.get("person_source") or "").startswith("supersearch")]
+    rows = rows[:OWNER_BATCH]
+    if not rows:
+        log("owners: nothing to look up")
+        return 0
+    domains = list(dict.fromkeys(enrichmod._domain(r["website"]) for r in rows))
+    if dry or api is None:
+        log(f"owners: {'[dry] would ask' if dry else 'INSTANTLY_API_KEY not set; the operator asks'} SuperSearch for the "
+            f"founder at {len(domains)} domain(s)")
+        return 0 if api is None and not dry else len(domains)
+    limit = min(daily - used, len(domains))
+    filters = owner_filters(domains)
+    try:
+        pool = api.supersearch_count(filters)
+        list_id = ensure_list(api, OWNERS_LIST_NAME)
+        res = api.supersearch_enrich(list_id, filters, limit, search_name="Hubricon harvest owners")
+    except InstantlyError as err:
+        log(f"owners: SuperSearch unavailable: {err}")
+        _log_event(db, f"owners: SuperSearch unavailable: {err}", {"domains": domains})
+        return 0
+    for r in rows:
+        _update(db, r["seller_id"], person_source="supersearch:requested",
+                notes=((r.get("notes") or "") + "; owner asked of SuperSearch").strip("; "))
+    set_state(db, "harvest.owner_lookups", {"date": today, "count": used + limit, "list_id": list_id,
+                                            "last_job": (res or {}).get("background_job_id")})
+    note = (f"owners: asked SuperSearch for the founder at {len(domains)} domain(s), up to {limit} lead(s) "
+            f"(pool {pool.get('number_of_leads', '?') if isinstance(pool, dict) else pool}) → list '{OWNERS_LIST_NAME}'")
+    log(note)
+    _log_event(db, note, {"domains": domains, "limit": limit, "pool": pool, "job": (res or {}).get("background_job_id")})
+    return limit
+
+
 # -- requalify / prune ----------------------------------------------------------
 
 def requalify(db, fetcher: Fetcher, limit: int = REQUALIFY_LIMIT, statuses: tuple[str, ...] = ("pushed", "enriched", "candidate"),
