@@ -243,6 +243,42 @@ def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | N
 
 # -- enrollment ----------------------------------------------------------------
 
+def enroll_one(api: Instantly, campaign_id: str, email: str, first: str | None, last: str | None,
+               company: str | None, website: str | None) -> dict:
+    """Put one lead into the campaign, even though it is already in a list.
+
+    THE BUG THIS EXISTS FOR. instantly.create_lead sends skip_if_in_workspace,
+    which means "do not add anyone whose address exists anywhere in this
+    workspace". Every lead source here writes to a lead list first — the
+    harvest pushes to "Hubricon harvest (auto)", the SuperSearch job fills
+    "Hubricon SuperSearch (auto)" — and enrollment then reads those lists and
+    tries to add each address to the campaign. Instantly sees the address
+    already in the workspace, in the very list we just read it from, and skips
+    it. The campaign therefore stayed empty: on 2026-09-03 it was active, with a
+    valid schedule, two warmed mailboxes attached and a daily limit of 40, and
+    leads_in_campaign returned 0 while 88 prospects here believed they were
+    enrolled. enroll_from_lists then stored the LIST lead's id as
+    instantly_lead_id, which is why every row looked enrolled and none was.
+
+    skip_if_in_campaign stays on: that is the guard that actually matters, and
+    it keeps this idempotent. The one-word fix belongs in instantly.py, which
+    another session owns, so this calls the endpoint directly and works either
+    way.
+    """
+    body = {
+        "campaign": campaign_id,
+        "email": email,
+        "skip_if_in_workspace": False,   # the list IS the workspace; see above
+        "skip_if_in_campaign": True,
+        "verify_leads_on_import": True,
+    }
+    for k, v in (("first_name", first), ("last_name", last),
+                 ("company_name", company), ("website", website)):
+        if v:
+            body[k] = v
+    return api._call("POST", "/leads", body=body) or {}
+
+
 def _known_emails(db) -> dict[str, dict]:
     rows = db.table("prospects").select("id, email, status").execute().data
     return {r["email"]: r for r in rows}
@@ -300,15 +336,21 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
                 added += 1
                 continue
             try:
-                created = api.create_lead(campaign_id, email, first, last, lead.get("company_name"), lead.get("website"))
+                created = enroll_one(api, campaign_id, email, first, last,
+                                     lead.get("company_name"), lead.get("website"))
             except InstantlyError as err:
                 notes.append(f"enroll {email}: {err}")
                 continue
+            # Store the campaign lead's id, not the list lead's. They are two
+            # objects, and only the campaign one is ever emailed.
+            new_id = created.get("id")
+            if not new_id:
+                notes.append(f"enroll {email}: Instantly returned no lead id; it may already be enrolled.")
             db.table("prospects").upsert({
                 "email": email, "first_name": first, "last_name": last,
                 "company_name": lead.get("company_name"), "website": lead.get("website"),
                 "source": "supersearch" if "supersearch" in (lst.get("name") or "").lower() else "instantly_list",
-                "instantly_lead_id": (created or {}).get("id") or lead.get("id"),
+                "instantly_lead_id": new_id or lead.get("id"),
                 "instantly_campaign_id": campaign_id, "status": "queued", "last_event_at": _now(),
             }, on_conflict="email").execute()
             known[email] = {"email": email}
@@ -320,6 +362,52 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
         notes.append("  held back as off-ICP (never enrolled): "
                      + ", ".join(f"{k} {v}" for k, v in sorted(held.items())))
     return added, notes
+
+
+def repair_enrollment(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, list[str]]:
+    """Enroll queued prospects that the campaign does not actually contain.
+
+    enroll_from_lists skips any address already in `prospects`, so the 88 rows
+    that were written as 'queued' while the create call was silently skipping
+    them would never have been retried: permanently queued, permanently
+    unsent. This reconciles the two sides — what we believe against what
+    Instantly holds — and enrolls the difference.
+
+    It is idempotent and self-limiting: once a prospect really is in the
+    campaign it is never touched again, so this costs one roster read a pass
+    and nothing else.
+    """
+    notes: list[str] = []
+    queued = db.table("prospects").select("email, first_name, last_name, company_name, website") \
+        .eq("status", "queued").execute().data
+    if not queued:
+        return 0, notes
+    try:
+        in_campaign = {(l.get("email") or "").lower() for l in api.leads_in_campaign(campaign_id)}
+    except InstantlyError as err:
+        return 0, [f"Could not read the campaign roster to repair enrollment: {err}"]
+    missing = [p for p in queued if (p.get("email") or "").lower() not in in_campaign]
+    if not missing:
+        return 0, notes
+    if dry:
+        return 0, [f"[dry] would enroll {len(missing)} queued prospect(s) the campaign does not hold"]
+    fixed = 0
+    for p in missing:
+        try:
+            created = enroll_one(api, campaign_id, p["email"], p.get("first_name"), p.get("last_name"),
+                                 p.get("company_name"), p.get("website"))
+        except InstantlyError as err:
+            notes.append(f"  repair {p['email']}: {err}")
+            continue
+        if created.get("id"):
+            db.table("prospects").update({"instantly_lead_id": created["id"], "last_event_at": _now()}) \
+                .eq("email", p["email"]).execute()
+        fixed += 1
+    if fixed:
+        notes.append(f"Repaired enrollment: {fixed} queued prospect(s) were not in the campaign and now are. "
+                     f"They had been sitting unsent because create_lead was skipping them as workspace duplicates.")
+        log_event(db, "enrollment_repaired", payload={"count": fixed, "campaign": campaign_id})
+    return fixed, notes
 
 
 def enroll_from_supersearch(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, list[str]]:

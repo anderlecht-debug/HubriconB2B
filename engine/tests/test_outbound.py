@@ -80,6 +80,8 @@ class _Table:
     def __init__(self, store, name):
         self.rows = store.setdefault(name, [])
         self._key = None
+        self._negate = False
+        self._update = None
 
     def select(self, *_):
         return self
@@ -88,11 +90,19 @@ class _Table:
         self._key = (k, v)
         return self
 
+    def _match(self, r):
+        k, v = self._key
+        return (r.get(k) != v) if self._negate else (r.get(k) == v)
+
     def execute(self):
+        if self._update is not None:
+            for i, r in enumerate(self.rows):
+                if self._key is None or self._match(r):
+                    self.rows[i] = {**r, **self._update}
+            return _Result([])
         if self._key is None:  # after insert/upsert: nothing to read back
             return _Result([])
-        k, v = self._key
-        return _Result([dict(r) for r in self.rows if r.get(k) == v])
+        return _Result([dict(r) for r in self.rows if self._match(r)])
 
     def upsert(self, row, on_conflict="key"):
         for i, r in enumerate(self.rows):
@@ -105,6 +115,14 @@ class _Table:
 
     def insert(self, row):
         self.rows.append(dict(row))
+        return self
+
+    def update(self, fields):
+        self._update = dict(fields)
+        return self
+
+    def neq(self, k, v):
+        self._key, self._negate = (k, v), True
         return self
 
 
@@ -310,3 +328,73 @@ def test_health_names_a_mailbox_missing_from_the_campaign():
 
     h = outbound.health(_DB(), _Detached(), "C1")
     assert any("no sending accounts" in v for v in h["verdicts"])
+
+
+# -- the empty campaign ----------------------------------------------------------
+# The campaign was active, correctly configured and held zero leads: every lead
+# source writes to a list first, and create_lead sent skip_if_in_workspace.
+
+def test_enroll_one_does_not_skip_addresses_already_in_a_list():
+    sent = {}
+
+    class _Api:
+        def _call(self, method, path, body=None, **k):
+            sent.update({"method": method, "path": path, "body": body})
+            return {"id": "CAMP1"}
+
+    out = outbound.enroll_one(_Api(), "C1", "a@b.com", "A", "B", "Co", "co.com")
+    assert out["id"] == "CAMP1"
+    assert sent["body"]["skip_if_in_workspace"] is False, \
+        "the list IS the workspace; skipping workspace duplicates empties the campaign"
+    assert sent["body"]["skip_if_in_campaign"] is True, "must still be idempotent"
+    assert sent["body"]["campaign"] == "C1"
+
+
+class _RepairDB(_DB):
+    def __init__(self, queued):
+        super().__init__()
+        self.store["prospects"] = [dict(q) for q in queued]
+
+
+def test_repair_enrolls_queued_prospects_the_campaign_does_not_hold():
+    db = _RepairDB([{"email": "a@b.com", "first_name": "A", "status": "queued"},
+                    {"email": "c@d.com", "first_name": "C", "status": "queued"}])
+    calls = []
+
+    class _Api:
+        def leads_in_campaign(self, cid):
+            return [{"email": "a@b.com"}]          # only one of the two is really there
+
+        def _call(self, method, path, body=None, **k):
+            calls.append(body["email"])
+            return {"id": "NEW"}
+
+    n, notes = outbound.repair_enrollment(db, _Api(), "C1", dry=False)
+    assert n == 1 and calls == ["c@d.com"]
+    assert any("Repaired enrollment" in x for x in notes)
+
+
+def test_repair_is_a_no_op_once_everyone_is_really_enrolled():
+    db = _RepairDB([{"email": "a@b.com", "status": "queued"}])
+
+    class _Api:
+        def leads_in_campaign(self, cid):
+            return [{"email": "A@B.com"}]          # case-insensitive
+
+        def _call(self, *a, **k):
+            raise AssertionError("nothing should be enrolled twice")
+
+    assert outbound.repair_enrollment(db, _Api(), "C1", dry=False)[0] == 0
+
+
+def test_repair_never_touches_a_disqualified_prospect():
+    db = _RepairDB([{"email": "agency@x.com", "status": "dq"}])
+
+    class _Api:
+        def leads_in_campaign(self, cid):
+            return []
+
+        def _call(self, *a, **k):
+            raise AssertionError("a disqualified prospect must never be enrolled")
+
+    assert outbound.repair_enrollment(db, _Api(), "C1", dry=False)[0] == 0

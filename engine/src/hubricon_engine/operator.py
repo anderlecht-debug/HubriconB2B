@@ -76,12 +76,19 @@ class Pass:
             _, notes = outbound.enroll_from_supersearch(self.db, api, cid, self.dry)
             for n in notes:
                 self.say(n)
+            # Reconcile what we believe against what Instantly holds. It only
+            # looks at 'queued' rows, so a disqualified prospect is never
+            # repaired back into the campaign the prune below just removed it from.
+            _, notes = outbound.repair_enrollment(self.db, api, cid, self.dry)
+            for n in notes:
+                self.say(n)
             # Harvested sellers (crawled on the founder's Mac) wait as 'enriched'
             # until something with the Instantly key pushes them to the list.
             try:
                 from .harvest import run as harvest
                 harvest.prune(self.db, api, dry=self.dry, log=self.say)  # re-qualified giants come off the list
                 harvest.push(self.db, api, dry=self.dry, log=self.say)
+                harvest.owners(self.db, api, dry=self.dry, log=self.say)  # the named founder behind each pushed brand
             except Exception as err:  # never let the free channel break the paid one
                 self.warnings.append(f"Harvest push: {err}")
             # A prospect marked dq here is still enrolled over there until

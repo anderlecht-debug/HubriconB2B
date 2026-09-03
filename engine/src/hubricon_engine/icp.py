@@ -58,6 +58,11 @@ _KNOWN_NON_ICP = {
 }
 # Teaching people to sell on Amazon is a different business from selling on it.
 _EDUCATION = ("coaching", "course", "mastermind", "academy", "training", "bootcamp", "mentor")
+# They make other people's products. Deliberately narrow: a brand that
+# manufactures its own goods is still a brand, so bare "manufacturing" is not
+# here. A false positive costs a customer; a false negative costs one email.
+_CONTRACT_MFG = ("contract manufactur", "co-packer", "copacker", "private label manufactur",
+                 "wholesale distributor", "oem supplier")
 # Aggregators and roll-ups buy brands; they have their own analytics teams.
 _AGGREGATOR = (
     "thrasio", "perch", "aggregator", "roll-up", "rollup", "acquisition", "acquires brands",
@@ -76,6 +81,7 @@ _BUCKETS = (
     ("finance", _FINANCE),
     ("logistics", _LOGISTICS),
     ("education", _EDUCATION),
+    ("contract_mfg", _CONTRACT_MFG),
     ("aggregator", _AGGREGATOR),
     ("too_big", _TOO_BIG),
 )
