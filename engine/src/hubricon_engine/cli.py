@@ -1169,12 +1169,8 @@ def cmd_outreach(args):
         rows = outreach.dq_scan(db)
         print(outreach.dq_text(rows))
         if args.apply and rows:
-            api = None
-            if os.environ.get("INSTANTLY_API_KEY"):
-                from .instantly import Instantly
-                api = Instantly()
             print()
-            outreach.apply_dq(db, rows, api=api)
+            outreach.apply_dq(db, rows)
         elif rows:
             print("\nNothing was written. Re-run with --apply to disqualify these.")
         return

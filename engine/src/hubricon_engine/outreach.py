@@ -74,11 +74,13 @@ def dq_text(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def apply_dq(db, rows: list[dict], api=None, log=print) -> int:
-    """Mark the rows dq and, when Instantly is reachable, delete the lead there.
+def apply_dq(db, rows: list[dict], log=print) -> int:
+    """Mark the rows dq. Deliberately does not touch Instantly.
 
-    Deleting is the point: a row marked dq here but still sitting in an active
-    Instantly campaign will still be emailed by Instantly.
+    Un-enrolling needs the campaign id so it can delete the campaign object and
+    leave the lead lists alone, and the hourly operator is the only place that
+    has both that and the API key. This just records the decision; prune_dq
+    acts on it.
     """
     n = 0
     for r in rows:
@@ -86,49 +88,58 @@ def apply_dq(db, rows: list[dict], api=None, log=print) -> int:
         db.table("prospects").update({
             "status": "dq", "fit_notes": f"{r['bucket']} ({lane}) — {r['why']}",
         }).eq("email", r["email"]).execute()
-        lead_id = r.get("instantly_lead_id")
-        if api is not None and lead_id:
-            try:
-                api.delete_lead(lead_id)
-            except Exception as err:
-                log(f"  could not delete {r['email']} from Instantly: {err}")
         n += 1
-    log(f"Disqualified {n} prospect(s)."
-        + ("" if api is not None else "  (No Instantly key here: they stay in the campaign until"
-                                      " the hourly operator runs this with the key.)"))
+    log(f"Disqualified {n} prospect(s). The next operator pass un-enrolls them from the campaign; "
+        "their lead-list rows stay, because that is the only address the founder lane has for them.")
     return n
 
 
-def prune_dq(db, api, dry: bool = False, log=print) -> int:
-    """Delete disqualified prospects' leads from Instantly.
+def prune_dq(db, api, campaign_id: str | None = None, dry: bool = False, log=print) -> int:
+    """Un-enroll disqualified prospects from the CAMPAIGN, and only the campaign.
 
     Marking a row dq in Postgres does nothing to Instantly: the lead stays
     enrolled and would still be emailed the moment the campaign starts sending.
     This runs in the hourly operator, which is the only place that holds the
     API key, and closes that gap.
+
+    It must not touch the lead lists. The first version of this deleted every
+    lead object leads_by_email returned, which emptied "Hubricon harvest (auto)"
+    from 34 leads to 1 between 20:12 and 20:18 on 2026-09-03. Those lists are
+    the harvest's inventory and the founder lane's only record of how to reach
+    those brands: a role inbox is the wrong address for a cold sequence and the
+    right one for a human who has found the owner's name. Deleting the campaign
+    enrolment stops the email; deleting the list row destroys the lead.
+
+    So a lead object is only ever deleted when Instantly says it belongs to this
+    campaign. Without a campaign_id to compare against, nothing is deleted.
     """
     rows = [r for r in db.table("prospects").select("email, instantly_lead_id, fit_notes")
             .eq("status", "dq").execute().data
             if (r.get("instantly_lead_id") or r.get("email")) and DONE_MARK not in (r.get("fit_notes") or "")]
     if not rows:
         return 0
+    if not campaign_id:
+        log("DQ prune: no campaign id, so nothing is deleted "
+            "(deleting by address alone would take the lead lists with it).")
+        return 0
     if dry:
-        log(f"[dry] would remove {len(rows)} disqualified lead(s) from Instantly")
+        log(f"[dry] would un-enroll {len(rows)} disqualified prospect(s) from the campaign")
         return 0
     gone = 0
     for r in rows:
         email = (r.get("email") or "").lower()
-        # A lead exists twice over there: once in the list it was uploaded to
-        # and once in the campaign it was enrolled into. Deleting the stored id
-        # removes one of them and leaves the other free to be emailed, which is
-        # the whole failure this function exists to prevent.
-        ids = [r["instantly_lead_id"]] if r.get("instantly_lead_id") else []
-        if email:
-            try:
-                ids += [l["id"] for l in api.leads_by_email(email) if l.get("id") and l["id"] not in ids]
-            except Exception as err:
-                log(f"  lookup failed for {email}: {err}")
-                continue
+        if not email:
+            continue
+        # A lead exists more than once over there: once in each list it was
+        # uploaded to, and once in the campaign it was enrolled into. Only the
+        # campaign object is deleted. The list rows are the harvest's inventory
+        # and the founder lane's address book, and they stay.
+        try:
+            objects = api.leads_by_email(email)
+        except Exception as err:
+            log(f"  lookup failed for {email}: {err}")
+            continue
+        ids = [l["id"] for l in objects if l.get("id") and l.get("campaign") == campaign_id]
         failed = False
         for lead_id in ids:
             try:
@@ -145,7 +156,7 @@ def prune_dq(db, api, dry: bool = False, log=print) -> int:
             .eq("email", r["email"]).execute()
         if ids:
             gone += 1
-    log(f"Removed {gone} disqualified lead(s) from Instantly so the campaign cannot email them.")
+    log(f"Un-enrolled {gone} disqualified prospect(s) from the campaign. Their list rows are untouched.")
     return gone
 
 

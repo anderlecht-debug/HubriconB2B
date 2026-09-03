@@ -95,7 +95,7 @@ class Pass:
             # something with the API key deletes it. This is that something.
             try:
                 from . import outreach
-                outreach.prune_dq(self.db, api, dry=self.dry, log=self.say)
+                outreach.prune_dq(self.db, api, cid, dry=self.dry, log=self.say)
             except Exception as err:
                 self.warnings.append(f"DQ prune: {err}")
             for n in outbound.sync_campaign_leads(self.db, api, cid):
