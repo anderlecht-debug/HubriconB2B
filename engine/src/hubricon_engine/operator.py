@@ -76,6 +76,13 @@ class Pass:
             _, notes = outbound.enroll_from_supersearch(self.db, api, cid, self.dry)
             for n in notes:
                 self.say(n)
+            # Harvested sellers (crawled on the founder's Mac) wait as 'enriched'
+            # until something with the Instantly key pushes them to the list.
+            try:
+                from .harvest import run as harvest
+                harvest.push(self.db, api, dry=self.dry, log=self.say)
+            except Exception as err:  # never let the free channel break the paid one
+                self.warnings.append(f"Harvest push: {err}")
             for n in outbound.sync_campaign_leads(self.db, api, cid):
                 self.say(n)
             _, notes = outbound.sync_replies(self.db, api, cid, self.dry)
@@ -308,6 +315,15 @@ class Pass:
         analytics = outbound.get_state(self.db, "instantly.analytics", {}) or {}
         if analytics:
             lines += ["Instantly campaign", "  " + ", ".join(f"{k} {v}" for k, v in analytics.items() if k != "as_of"), ""]
+        try:
+            from .harvest import run as harvest
+            h = harvest.status(self.db)
+            if h["total"]:
+                lines += ["Harvest (free seller leads from public pages)",
+                          f"  {h['total']} sellers on file — "
+                          + ", ".join(f"{k} {v}" for k, v in sorted(h["by_status"].items())), ""]
+        except Exception:
+            pass
         queue = self.review_queue()
         if queue:
             lines += [f"{len(queue)} repl{'y' if len(queue) == 1 else 'ies'} waiting for a written answer "

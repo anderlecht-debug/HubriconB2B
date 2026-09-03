@@ -47,6 +47,7 @@ jobs:
           INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
           POSTAL_ADDRESS: ${{ secrets.POSTAL_ADDRESS }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
         run: |
           missing=""
           for k in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
@@ -61,6 +62,9 @@ jobs:
           [ -n "$INSTANTLY_API_KEY" ]  || echo "::warning::INSTANTLY_API_KEY is not set — outbound is OFF until it is."
           [ -n "$POSTAL_ADDRESS" ]     || echo "::warning::POSTAL_ADDRESS is not set — the campaign cannot be created (CAN-SPAM)."
           [ -n "$ANTHROPIC_API_KEY" ]  || echo "::notice::ANTHROPIC_API_KEY is not set — questions wait for the cloud routine instead of being answered in-run."
+          if [ -n "$ANTHROPIC_API_KEY" ] && [ -z "$ANTHROPIC_WORKSPACE_ID" ]; then
+            echo "::warning::ANTHROPIC_WORKSPACE_ID is not set — an identity-linked key is refused without it, so questions still wait for the routine."
+          fi
       - name: Run the operator
         working-directory: engine
         env:
@@ -72,6 +76,7 @@ jobs:
           INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
           POSTAL_ADDRESS: ${{ secrets.POSTAL_ADDRESS }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
         run: |
           flags="--send"
           if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi

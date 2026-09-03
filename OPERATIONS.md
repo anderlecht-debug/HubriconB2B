@@ -24,6 +24,7 @@ Three components, each doing only what it is placed to do:
 | `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign, enrollment, reply sync + rule/Claude triage, sending replies, provisioning bookings and TEARDOWN requests, nudges, teardown runs, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
 | `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients |
+| `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list |
 
 The routine never sends email. The operator never reads the inbox. Both talk
 through Supabase (`bookings`, `prospect_messages`, `funnel_events`,
@@ -38,6 +39,7 @@ GitHub → repo → Settings → Environments → **Production** → add:
 | `INSTANTLY_API_KEY` | Instantly → Settings → Integrations → API keys → v2 key with `all:all`. Outbound is OFF until this exists. Needs the Growth plan or above. |
 | `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. |
 | `ANTHROPIC_API_KEY` | Optional. Lets the hourly run answer prospect questions itself instead of waiting up to 2 h for the routine. Same key as `.env`. |
+| `ANTHROPIC_WORKSPACE_ID` | Goes with the key above (`wrkspc_…`, shown beside the key in the Console; same value as `.env`). Identity-linked keys are refused without it, and the questions silently wait for the routine. |
 
 The other five secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 `RESEND_API_KEY`, `ALERT_FROM`, `FOUNDER_EMAIL`) are already there from the
@@ -48,6 +50,53 @@ warmup on. The operator only sends from mailboxes whose warmup is active and
 sizes the daily limit to 20 per mailbox (cap 60). Lead lists whose name
 contains "Hubricon" are enrolled automatically; SuperSearch is asked for 25
 founders a day on top, best effort.
+
+## The free lead harvest (runs on the Mac)
+
+`hubricon harvest` builds the same rows the paid seller databases sell, from
+public pages: Amazon Best Sellers lists → product pages (brand, seller id,
+rank, price, weight) → the seller profile every professional seller has had
+to publish since 2020 (business name, address, country) → the brand's own
+site (published contact address, founder's name). GROWTH.md has the
+reasoning and the other free channels.
+
+It has to run from a home connection: Amazon answers datacenter ranges
+(GitHub Actions included) with a captcha. So, once, on the Mac:
+
+```
+cd engine
+uv run hubricon harvest install        # launchd: daily 06:10, `hubricon harvest all`
+uv run hubricon harvest all --max-products 40   # first pass by hand, watch it work
+uv run hubricon harvest status
+```
+
+Per day it reads three rotating categories (~150 product pages, a few
+seconds apart, ~15 minutes), the profiles of the third-party FBA sellers it
+found, then the sites of the US founder-run brands among them. Rows land in
+`harvest_sellers` as `candidate` → `enriched` (has an address) → `pushed`
+(in the Instantly list "Hubricon harvest (auto)", which the hourly operator
+enrolls like any other Hubricon list). Skips are recorded with a reason:
+`skip_non_us`, `skip_reseller` (three brands or reseller wording),
+`skip_size` (a single listing bigger than the $20M ceiling), `no_website`,
+`no_email`. Leads without a found person are addressed "Hi <Brand> team".
+
+Pushing needs the Instantly key. If it is in the root `.env` the Mac pushes
+at the end of its run; if not, the hourly operator (which has it) pushes
+whatever is `enriched` on its next pass. Either way nothing is contacted
+twice: Instantly skips addresses already in the workspace, and the campaign
+stops for the whole company on any reply.
+
+Knobs (env): `HARVEST_MAX_PRODUCTS` (150), `HARVEST_CATEGORIES_PER_RUN` (3),
+`HARVEST_MIN_MONTHLY_REVENUE` (2500, estimated, below it a row waits),
+`HARVEST_MAX_ASIN_MONTHLY_REVENUE` (600000), `HARVEST_PUSH_LIMIT` (40).
+Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
+costs only what is new. If Amazon starts answering with captchas the run
+waits ten minutes once, then stops for the day; the digest says so.
+
+Amazon's conditions of use discourage automated access. The harvester reads
+public pages at a human's pace from a home connection, never pushes through
+a captcha, and never runs from a datacenter. That is the whole risk posture;
+the founder owns it.
 
 ## What "PMF" means here, in numbers
 
@@ -66,6 +115,9 @@ Arrives at 8:17 am Chicago from the operator. Sections:
 
 - **PMF scoreboard** — the numbers above.
 - **Instantly campaign** — sent / replies / bounces as Instantly reports them.
+- **Harvest** — sellers on file by status (candidate / enriched / pushed /
+  skipped). If it stops moving for two days the Mac job is not running:
+  `launchctl list | grep hubricon`, then `~/Library/Logs/hubricon-harvest.err`.
 - **Replies waiting for a written answer** — the routine clears these within
   two hours; if a name sits there for a day, the routine is not running
   (check https://claude.ai/code/routines).
@@ -89,9 +141,13 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
 
 ## Guardrails
 
-- Cold email is 3 plain-text steps over 8 days, weekdays 8–5 Chicago,
-  unsubscribe header on, opens and links untracked, stops on any reply,
-  stops for the whole company on a reply. Every claim in it is on the site.
+- Cold email is one plain-text email and no follow-ups (the founder's call,
+  2026-09-03: the first email is the one that gets answered), weekdays 8–5
+  Chicago, unsubscribe header on, opens and links untracked, stops for the
+  whole company on a reply. Every claim in it is on the site. To change the
+  copy, edit `campaign_spec` in `engine/src/hubricon_engine/outbound.py` and
+  bump `COPY_VERSION`; the next operator pass updates the live campaign in
+  place, so threads already sent keep their history.
 - Replies to prospects come from templates or from Claude constrained to the
   fact sheet in `engine/src/hubricon_engine/triage.py`. No numbers the engine
   did not compute, no discounts, no guarantees.

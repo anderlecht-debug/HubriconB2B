@@ -1,0 +1,382 @@
+"""The harvest pipeline: crawl → enrich → push, plus status and the launchd install.
+
+crawl   Best Sellers pages → product pages → seller profiles → harvest_sellers rows
+enrich  candidate rows → website → published contact → 'enriched' (or why not)
+push    enriched rows → the Instantly list "Hubricon harvest (auto)"; the hourly
+        operator enrolls that list into the campaign like any other Hubricon list
+
+Crawl and enrich need a home connection (Amazon captchas datacenter ranges),
+so `hubricon harvest install` schedules them on the founder's Mac with
+launchd. Push only needs the Instantly key, so the operator does it too.
+"""
+
+from __future__ import annotations
+
+import os
+import plistlib
+import subprocess
+import sys
+from collections import Counter
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+from ..instantly import Instantly, InstantlyError
+from ..onboarding import is_internal
+from . import amazon
+from . import enrich as enrichmod
+from .fetch import Blocked, Cache, Fetcher
+
+LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator enrolls it
+MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "150"))
+CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "3"))
+SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
+MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"))
+MAX_ASIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MAX_ASIN_MONTHLY_REVENUE", "600000"))
+MEGA_REVIEWS = 150_000
+ENRICH_LIMIT = int(os.environ.get("HARVEST_ENRICH_LIMIT", "60"))
+PUSH_LIMIT = int(os.environ.get("HARVEST_PUSH_LIMIT", "40"))
+PRODUCT_CACHE_DAYS, SELLER_CACHE_DAYS = 30, 60
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def pick_categories(n: int = CATEGORIES_PER_RUN, today: date | None = None) -> list[str]:
+    """Rotate through the category list by day so a week covers all of it."""
+    cats = amazon.CATEGORIES
+    start = ((today or date.today()).timetuple().tm_yday * n) % len(cats)
+    return [cats[(start + i) % len(cats)] for i in range(min(n, len(cats)))]
+
+
+def _log_event(db, note: str, payload: dict) -> None:
+    try:
+        db.table("funnel_events").insert({"kind": "harvest", "note": note, "payload": payload}).execute()
+    except Exception as err:  # the log must never stop the run
+        print(f"  (could not log harvest event: {err})", file=sys.stderr)
+
+
+# -- crawl ----------------------------------------------------------------------
+
+def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY) -> list[str]:
+    root = fetcher.get(amazon.category_url(slug))
+    if not root:
+        return []
+    top = amazon.bestseller_page(root)
+    asins = list(top["asins"])
+    if top["next"]:
+        page2 = fetcher.get(top["next"])
+        if page2:
+            asins += amazon.bestseller_page(page2)["asins"]
+    for sub in top["subcategories"][:subcats]:
+        page = fetcher.get(sub)
+        if page:
+            asins += amazon.bestseller_page(page)["asins"]
+    return list(dict.fromkeys(asins))
+
+
+def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
+    """→ (status, note) for a seller seen this crawl."""
+    prof = prof or {}
+    seller_name = agg.get("seller_name") or prof.get("seller_name")
+    business = prof.get("business_name")
+    brands = agg["brands"]
+    top = max(agg["asins"], key=lambda a: a.get("est_monthly_revenue") or 0)
+    if prof and prof.get("country") and prof["country"] != "US":
+        return "skip_non_us", f"business address in {prof['country']}"
+    if amazon.looks_offshore(business, prof.get("address")):
+        return "skip_non_us", "offshore trading-company name"
+    if amazon.looks_reseller(seller_name, business, len(brands)):
+        return "skip_reseller", f"{len(brands)} brands or reseller wording"
+    if (top.get("est_monthly_revenue") or 0) > MAX_ASIN_MONTHLY_REVENUE or (agg["reviews_max"] or 0) > MEGA_REVIEWS:
+        return "skip_size", "one listing alone is bigger than the $20M brand ceiling"
+    if not amazon.looks_private_label(agg["brand"], seller_name, business):
+        if len(brands) > 1:
+            return "skip_reseller", "sells more than one brand, none matching its name"
+        return "candidate", "brand name differs from seller name; single brand seen"
+    return "candidate", "brand matches seller"
+
+
+def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_products: int = MAX_PRODUCTS,
+          subcats: int = SUBCATS_PER_CATEGORY, cache: Cache | None = None, log=print) -> dict:
+    cache = cache or Cache()
+    categories = categories or pick_categories()
+    summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
+                     "sellers_seen": 0, "sellers_new": 0, "statuses": {}, "blocked": False}
+    sellers: dict[str, dict] = {}
+    product_rows: list[dict] = []
+    fetched = 0
+    try:
+        for slug in categories:
+            log(f"Best Sellers: {slug}")
+            for asin in category_asins(fetcher, slug, subcats):
+                if fetched >= max_products:
+                    break
+                prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
+                if prod is None:
+                    fetched += 1
+                    page = fetcher.get(f"{amazon.BASE}/dp/{asin}")
+                    if not page:
+                        continue
+                    prod = amazon.product(page, asin)
+                    prod.pop("related", None)
+                    prod["slug"] = slug
+                    cache.put("product", asin, prod)
+                    product_rows.append({
+                        "asin": asin, "seller_id": prod["seller_id"], "brand": prod["brand"], "title": prod["title"],
+                        "category": prod["category"], "bsr": prod["bsr"], "price": prod["price"],
+                        "reviews": prod["reviews"], "weight_oz": prod["weight_oz"], "dims": prod["dims"],
+                        "fulfilled_by_amazon": prod["fba"], "est_monthly_units": prod["est_monthly_units"],
+                        "est_monthly_revenue": prod["est_monthly_revenue"], "seen_at": _now(),
+                    })
+                else:
+                    summary["products_cached"] += 1
+                if prod["sold_by_amazon"] or not prod["seller_id"] or not prod["fba"] or not prod["brand"]:
+                    continue
+                agg = sellers.setdefault(prod["seller_id"], {
+                    "seller_id": prod["seller_id"], "seller_name": prod["seller_name"], "brand": prod["brand"],
+                    "brands": [], "asins": [], "reviews_max": 0, "top_bsr": None, "top_category": None, "slug": slug,
+                })
+                if prod["brand"] not in agg["brands"]:
+                    agg["brands"].append(prod["brand"])
+                agg["asins"].append({"asin": asin, "brand": prod["brand"], "bsr": prod["bsr"], "price": prod["price"],
+                                     "reviews": prod["reviews"], "est_monthly_revenue": prod["est_monthly_revenue"]})
+                agg["reviews_max"] = max(agg["reviews_max"], prod["reviews"] or 0)
+                if prod["bsr"] and (agg["top_bsr"] is None or prod["bsr"] < agg["top_bsr"]):
+                    agg["top_bsr"], agg["top_category"] = prod["bsr"], prod["category"]
+            if fetched >= max_products:
+                break
+    except Blocked as err:
+        log(f"  {err}")
+        summary["blocked"] = True
+    summary["products_fetched"] = fetched
+    if product_rows:
+        db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
+
+    existing = {r["seller_id"]: r for r in db.table("harvest_sellers").select("seller_id, status, brands, asins").execute().data}
+    rows: list[dict] = []
+    for sid, agg in sellers.items():
+        prof = cache.get("seller", sid, SELLER_CACHE_DAYS)
+        if prof is None and not summary["blocked"]:
+            try:
+                page = fetcher.get(amazon.seller_url(sid))
+            except Blocked as err:
+                log(f"  {err}")
+                summary["blocked"] = True
+                page = None
+            if page:
+                prof = amazon.seller(page)
+                cache.put("seller", sid, prof)
+        prof = prof or {}
+        old = existing.get(sid)
+        if old:
+            for b in old.get("brands") or []:
+                if b not in agg["brands"]:
+                    agg["brands"].append(b)
+            seen = {a["asin"] for a in agg["asins"]}
+            agg["asins"] += [a for a in (old.get("asins") or []) if a.get("asin") not in seen]
+        status, note = classify(agg, prof)
+        if old and old["status"] not in ("candidate",) and status == "candidate":
+            status = old["status"]  # already enriched/pushed/skipped: keep the verdict
+        est_units = sum((a.get("est_monthly_revenue") or 0) / (a.get("price") or 1) for a in agg["asins"] if a.get("price"))
+        rows.append({
+            "seller_id": sid, "seller_name": agg["seller_name"] or prof.get("seller_name"), "brand": agg["brand"],
+            "brands": agg["brands"], "business_name": prof.get("business_name"), "address": prof.get("address"),
+            "city": prof.get("city"), "state": prof.get("state"), "country": prof.get("country"),
+            "asins": agg["asins"], "top_bsr": agg["top_bsr"], "top_category": agg["top_category"],
+            "reviews_max": agg["reviews_max"], "est_monthly_units": round(est_units, 1),
+            "est_monthly_revenue": round(sum(a.get("est_monthly_revenue") or 0 for a in agg["asins"]), 2),
+            "status": status, "notes": note, "updated_at": _now(),
+        })
+        summary["statuses"][status] = summary["statuses"].get(status, 0) + 1
+        if not old:
+            summary["sellers_new"] += 1
+    summary["sellers_seen"] = len(sellers)
+    if rows:
+        db.table("harvest_sellers").upsert(rows, on_conflict="seller_id").execute()
+    summary["fetch"] = dict(fetcher.stats)
+    note = (f"crawl {', '.join(categories)}: {fetched} product pages, {len(sellers)} sellers "
+            f"({summary['sellers_new']} new), " + ", ".join(f"{k} {v}" for k, v in sorted(summary["statuses"].items())))
+    log(note)
+    _log_event(db, note, summary)
+    return summary
+
+
+# -- enrich ---------------------------------------------------------------------
+
+def _rows(db, status: str, limit: int | None = None, min_revenue: float | None = None) -> list[dict]:
+    q = db.table("harvest_sellers").select("*").eq("status", status)
+    if min_revenue is not None:
+        q = q.gte("est_monthly_revenue", min_revenue)
+    q = q.order("est_monthly_revenue", desc=True)
+    if limit:
+        q = q.limit(limit)
+    return q.execute().data
+
+
+def _update(db, seller_id: str, **fields) -> None:
+    db.table("harvest_sellers").update({**fields, "updated_at": _now()}).eq("seller_id", seller_id).execute()
+
+
+def enrich(db, fetcher: Fetcher, limit: int = ENRICH_LIMIT, resolver=None, log=print) -> dict:
+    counts: Counter = Counter()
+    for row in _rows(db, "candidate", limit):
+        upd = enrichmod.enrich_seller(fetcher, row, resolver)
+        if upd.get("email") and is_internal(upd["email"]):
+            upd = {"status": "skip_internal", "notes": "internal address"}
+        _update(db, row["seller_id"], **upd)
+        counts[upd["status"]] += 1
+        log(f"  {row['brand']}: {upd['status']} {upd.get('email') or ''} {upd.get('notes') or ''}")
+    note = "enrich: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "nothing to enrich")
+    log(note)
+    _log_event(db, note, dict(counts))
+    return dict(counts)
+
+
+# -- push -----------------------------------------------------------------------
+
+def ensure_list(api: Instantly, name: str = LIST_NAME) -> str:
+    for lst in api.lead_lists():
+        if lst.get("name") == name:
+            return lst["id"]
+    return api.create_lead_list(name)["id"]
+
+
+def lead_payload(row: dict) -> dict:
+    first = row.get("first_name") or f"{row['brand']} team"
+    return {
+        "email": row["email"],
+        "first_name": first,
+        "last_name": row.get("last_name") or "",
+        "company_name": row["brand"],
+        "website": row.get("website") or "",
+        "custom_variables": {
+            "source": "harvest", "seller_id": row["seller_id"], "business_name": row.get("business_name") or "",
+            "est_monthly_revenue": row.get("est_monthly_revenue") or 0,
+            "email_confidence": row.get("email_confidence") or "", "person_found": bool(row.get("first_name")),
+        },
+    }
+
+
+def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
+         min_revenue: float = MIN_MONTHLY_REVENUE, log=print) -> int:
+    rows = [r for r in _rows(db, "enriched", limit, min_revenue) if r.get("email") and not is_internal(r["email"])]
+    if not rows:
+        log("push: nothing enriched and above the revenue floor")
+        return 0
+    if dry or api is None:
+        log(f"push: {'[dry] would push' if dry else 'INSTANTLY_API_KEY not set; the hourly operator pushes'} "
+            f"{len(rows)} lead(s)")
+        return 0 if api is None and not dry else len(rows)
+    list_id = ensure_list(api)
+    pushed = 0
+    for i in range(0, len(rows), 100):
+        batch = rows[i:i + 100]
+        try:
+            api.add_leads(list_id=list_id, leads=[lead_payload(r) for r in batch])
+        except InstantlyError as err:
+            log(f"push: {err}")
+            break
+        for r in batch:
+            _update(db, r["seller_id"], status="pushed", pushed_at=_now())
+        pushed += len(batch)
+    note = f"push: {pushed} lead(s) → Instantly list '{LIST_NAME}'"
+    log(note)
+    _log_event(db, note, {"pushed": pushed})
+    return pushed
+
+
+# -- status / all / install -----------------------------------------------------
+
+def status(db) -> dict:
+    rows = db.table("harvest_sellers").select("status, est_monthly_revenue, pushed_at").execute().data
+    counts = Counter(r["status"] for r in rows)
+    return {"total": len(rows), "by_status": dict(counts),
+            "pushed": counts.get("pushed", 0), "ready": counts.get("enriched", 0),
+            "candidates": counts.get("candidate", 0)}
+
+
+def status_text(db) -> str:
+    s = status(db)
+    lines = [f"Harvest: {s['total']} sellers on file — "
+             + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items()))]
+    for r in _rows(db, "enriched", 10):
+        lines.append(f"  ready  {r['brand']:<28} {r.get('email') or '':<34} est ${(r.get('est_monthly_revenue') or 0):,.0f}/mo")
+    return "\n".join(lines)
+
+
+def fee_cliff_report(db, within_oz: float = 1.0) -> dict:
+    """The weekly data post, from public weights: how many best-selling FBA
+    listings sit within `within_oz` of a lighter fee band."""
+    rows = db.table("harvest_products").select(
+        "asin, brand, category, weight_oz, price, est_monthly_units, fulfilled_by_amazon").execute().data
+    weighed = [r for r in rows if r.get("weight_oz")]
+    near = []
+    for r in weighed:
+        c = amazon.fee_cliff(r["weight_oz"])
+        if c and c[1] <= within_oz:
+            near.append({**r, "edge_oz": c[0], "over_by_oz": c[1]})
+    total_by_cat = Counter(r.get("category") or "?" for r in weighed)
+    near_by_cat = Counter(r.get("category") or "?" for r in near)
+    by_category = sorted(
+        ({"category": cat, "near": near_by_cat.get(cat, 0), "total": n,
+          "share": round(near_by_cat.get(cat, 0) / n, 3)} for cat, n in total_by_cat.items()),
+        key=lambda d: (-d["share"], -d["total"]))
+    examples = sorted(near, key=lambda r: r.get("est_monthly_units") or 0, reverse=True)[:10]
+    return {"products": len(rows), "with_weight": len(weighed), "near_cliff": len(near),
+            "share": round(len(near) / len(weighed), 3) if weighed else 0.0,
+            "within_oz": within_oz, "by_category": by_category, "examples": examples}
+
+
+def fee_cliff_text(db, within_oz: float = 1.0) -> str:
+    r = fee_cliff_report(db, within_oz)
+    if not r["with_weight"]:
+        return "Fee-cliff report: no product weights on file yet — run a crawl first."
+    lines = [f"Fee-cliff report (public listing weights, {r['with_weight']} of {r['products']} products carry one)",
+             f"  {r['near_cliff']} listings ({r['share']:.0%}) sit within {within_oz:g} oz of a lighter FBA weight band", ""]
+    for c in r["by_category"][:12]:
+        lines.append(f"  {c['category'][:34]:<34} {c['near']:>4} of {c['total']:<5} {c['share']:.0%}")
+    if r["examples"]:
+        lines += ["", "  Biggest movers (est. units/mo, ounces over the edge):"]
+        for e in r["examples"]:
+            lines.append(f"    {(e.get('brand') or '?')[:24]:<24} {e['asin']}  {e['weight_oz']:>6.1f} oz  "
+                         f"+{e['over_by_oz']:.2f} over {e['edge_oz']} oz  ~{(e.get('est_monthly_units') or 0):,.0f}/mo")
+    lines += ["", "  Every figure is an estimate from public pages; the post says so."]
+    return "\n".join(lines)
+
+
+def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products: int = MAX_PRODUCTS,
+            categories: list[str] | None = None, log=print) -> dict:
+    fetcher = fetcher or Fetcher()
+    out = {"crawl": crawl(db, fetcher, categories, max_products, log=log)}
+    out["enrich"] = enrich(db, fetcher, log=log)
+    api = Instantly() if os.environ.get("INSTANTLY_API_KEY") else None
+    out["pushed"] = push(db, api, dry=dry, log=log)
+    return out
+
+
+def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hour: int = 6, minute: int = 10) -> dict:
+    log_dir = Path.home() / "Library" / "Logs"
+    return {
+        "Label": "com.hubricon.harvest",
+        "ProgramArguments": [uv, "run", "hubricon", "harvest", "all"],
+        "WorkingDirectory": str(engine_dir),
+        "StartCalendarInterval": {"Hour": hour, "Minute": minute},
+        "StandardOutPath": str(log_dir / "hubricon-harvest.log"),
+        "StandardErrorPath": str(log_dir / "hubricon-harvest.err"),
+        "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"},
+    }
+
+
+def install_launchd(engine_dir: Path | None = None, hour: int = 6, minute: int = 10, runner=subprocess.run) -> str:
+    engine_dir = engine_dir or Path(__file__).resolve().parents[3]
+    uv = subprocess.run(["which", "uv"], capture_output=True, text=True).stdout.strip() or "/opt/homebrew/bin/uv"
+    plist_path = Path.home() / "Library" / "LaunchAgents" / "com.hubricon.harvest.plist"
+    plist_path.parent.mkdir(parents=True, exist_ok=True)
+    plist_path.write_bytes(plistlib.dumps(launchd_plist(engine_dir, uv, hour, minute)))
+    domain = f"gui/{os.getuid()}"
+    runner(["launchctl", "bootout", domain, str(plist_path)], capture_output=True)
+    res = runner(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
+    state = "loaded" if res.returncode == 0 else f"launchctl said: {(res.stderr or res.stdout).strip()}"
+    return (f"{plist_path}\n  runs `uv run hubricon harvest all` daily at {hour:02d}:{minute:02d} local "
+            f"(missed while asleep → runs at next wake); logs in ~/Library/Logs/hubricon-harvest.log\n  {state}")

@@ -1083,6 +1083,35 @@ def cmd_scoreboard(_args):
     print(json.dumps(db.rpc("pmf_scoreboard", {}).execute().data, indent=2, default=str))
 
 
+def cmd_harvest(args):
+    """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
+    from .harvest import run as harvest
+
+    if args.action == "install":
+        print(harvest.install_launchd())
+        return
+    db = dbmod.connect()
+    if args.action == "status":
+        print(harvest.status_text(db))
+        return
+    if args.action == "report":
+        print(harvest.fee_cliff_text(db, args.within_oz))
+        return
+    max_products = args.max_products or harvest.MAX_PRODUCTS
+    fetcher = harvest.Fetcher()
+    if args.action == "all":
+        harvest.run_all(db, fetcher, dry=args.dry_run, max_products=max_products, categories=args.categories)
+    elif args.action == "crawl":
+        harvest.crawl(db, fetcher, categories=args.categories, max_products=max_products)
+    elif args.action == "enrich":
+        harvest.enrich(db, fetcher, limit=args.limit or harvest.ENRICH_LIMIT)
+    elif args.action == "push":
+        from . import instantly
+
+        api = instantly.Instantly() if instantly.configured() else None
+        harvest.push(db, api, limit=args.limit or harvest.PUSH_LIMIT, dry=args.dry_run)
+
+
 def main():
     parser = argparse.ArgumentParser(prog="hubricon", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1201,6 +1230,16 @@ def main():
     p.set_defaults(fn=cmd_operator)
 
     sub.add_parser("scoreboard", help="print the PMF scoreboard").set_defaults(fn=cmd_scoreboard)
+
+    p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers → seller profiles → brand sites → Instantly list")
+    p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install"])
+    p.add_argument("--categories", nargs="*", help="Best Sellers slugs (default: three, rotating by day)")
+    p.add_argument("--within-oz", dest="within_oz", type=float, default=1.0,
+                   help="report: ounces above a lighter FBA weight band that count as a cliff (default 1)")
+    p.add_argument("--max-products", dest="max_products", type=int, help="product pages per run (default 150)")
+    p.add_argument("--limit", type=int, help="rows to enrich / push this run")
+    p.add_argument("--dry-run", dest="dry_run", action="store_true", help="push: report, don't touch Instantly")
+    p.set_defaults(fn=cmd_harvest)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")

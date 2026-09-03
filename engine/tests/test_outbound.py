@@ -2,19 +2,24 @@ from hubricon_engine import outbound
 from hubricon_engine.outbound import CAMPAIGN_NAME, campaign_spec
 
 
-def test_campaign_spec_is_three_plain_text_steps_with_compliance_footer():
+def test_campaign_spec_is_one_plain_text_email_with_compliance_footer():
     spec = campaign_spec(["hagen@gethubricon.com", "h@gethubricon.com"], "123 Main St, Dallas, TX 75201")
     assert spec["name"] == CAMPAIGN_NAME
     steps = spec["sequences"][0]["steps"]
-    assert len(steps) == 3 and all(s["type"] == "email" for s in steps)
-    for s in steps:
-        body = s["variants"][0]["body"]
-        assert "123 Main St" in body and "stop emailing" in body
-        assert "{{firstName}}" in body
-        assert "TEARDOWN" in body
-        assert "<br/>" in body and "\n" not in body  # Instantly wants <br/> line breaks
-    assert steps[0]["variants"][0]["subject"]  # first step opens the thread
-    assert steps[1]["variants"][0]["subject"] == ""  # follow-ups stay in-thread
+    assert len(steps) == 1 and steps[0]["type"] == "email" and steps[0]["delay"] == 0  # no follow-ups, ever
+    body = steps[0]["variants"][0]["body"]
+    assert "123 Main St" in body and "stop emailing" in body
+    assert "{{firstName}}" in body and "{{companyName}}" in body
+    assert "TEARDOWN" in body
+    assert "<br/>" in body and "\n" not in body  # Instantly wants <br/> line breaks
+    assert steps[0]["variants"][0]["subject"]
+    # the offer, the honest reason it's free, the price of the seat, the risk reversal — all on the site
+    for claim in ("first month", "free", "testimonial", "anonymized", "walk away owing nothing", "24 hours",
+                  "three-minute brief", "No card", "new"):
+        assert claim.lower() in body.lower(), claim
+    prose = body.replace(outbound.CALENDLY_URL, "")  # the booking slug is legacy, the prose is not
+    assert "audit" not in prose.lower()  # banned client-facing word
+    assert "seats" not in prose.lower() and "spots" not in prose.lower()  # no scarcity claims
     assert spec["text_only"] and spec["insert_unsubscribe_header"] and spec["stop_on_reply"]
     assert not spec["open_tracking"] and not spec["link_tracking"]
     assert spec["email_list"] == ["hagen@gethubricon.com", "h@gethubricon.com"]
@@ -41,6 +46,15 @@ def test_supersearch_filters_use_instantly_vocabulary():
     assert set(f["revenue"]) <= revenue_enum and "$0 - 1M" not in f["revenue"]
     assert set(f["employeeCount"]) <= employee_enum
     assert isinstance(f["keyword_filter"]["include"], str) and f["keyword_filter"]["include_mode"] in ("ANY", "ALL")
+    # the service providers who *talk about* FBA are excluded by keyword and by industry enum
+    industry_enum = {"Agriculture & Mining", "Business Services", "Computers & Electronics", "Consumer Services",
+                     "Education", "Energy & Utilities", "Financial Services", "Government",
+                     "Healthcare, Pharmaceuticals, & Biotech", "Manufacturing", "Media & Entertainment", "Non-Profit",
+                     "Other", "Real Estate & Construction", "Retail", "Software & Internet", "Telecommunications",
+                     "Transportation & Storage", "Travel, Recreation, and Leisure", "Wholesale & Distribution"}
+    assert isinstance(f["keyword_filter"]["exclude"], str) and "agency" in f["keyword_filter"]["exclude"]
+    assert set(f["industry"]["exclude"]) <= industry_enum
+    assert not ({"Retail", "Manufacturing", "Consumer Services"} & set(f["industry"]["exclude"]))  # brands live here
     assert f["title"]["includeMode"] in ("EXACT", "CONTAINS") and "Founder" in f["title"]["include"]
     assert f["locations"] == {"include": [{"country": "United States"}]}
     assert f["location_mode"] in ("contact", "company")
@@ -52,3 +66,96 @@ def test_every_step_word_count_stays_short():
     for s in spec["sequences"][0]["steps"]:
         words = s["variants"][0]["body"].replace("<br/>", " ").split()
         assert len(words) <= 130, len(words)
+
+
+# -- the live campaign follows the copy in this file -------------------------------
+
+class _Result:
+    def __init__(self, data):
+        self.data = data
+
+
+class _Table:
+    def __init__(self, store, name):
+        self.rows = store.setdefault(name, [])
+        self._key = None
+
+    def select(self, *_):
+        return self
+
+    def eq(self, k, v):
+        self._key = (k, v)
+        return self
+
+    def execute(self):
+        if self._key is None:  # after insert/upsert: nothing to read back
+            return _Result([])
+        k, v = self._key
+        return _Result([dict(r) for r in self.rows if r.get(k) == v])
+
+    def upsert(self, row, on_conflict="key"):
+        for i, r in enumerate(self.rows):
+            if r.get(on_conflict) == row.get(on_conflict):
+                self.rows[i] = {**r, **row}
+                break
+        else:
+            self.rows.append(dict(row))
+        return self
+
+    def insert(self, row):
+        self.rows.append(dict(row))
+        return self
+
+
+class _DB:
+    def __init__(self):
+        self.store = {}
+
+    def table(self, name):
+        return _Table(self.store, name)
+
+
+class _Api:
+    def __init__(self):
+        self.updated, self.activated = [], []
+
+    def campaigns(self):
+        return [{"id": "C1", "name": CAMPAIGN_NAME, "status": outbound.CAMPAIGN_ACTIVE}]
+
+    def find_campaign(self, name):
+        return self.campaigns()[0]
+
+    def ready_senders(self):
+        return [{"email": "hagen@gethubricon.com"}]
+
+    def update_campaign(self, cid, fields):
+        self.updated.append((cid, fields))
+        return {}
+
+    def activate_campaign(self, cid):
+        self.activated.append(cid)
+
+    def create_campaign(self, spec):
+        raise AssertionError("the campaign already exists")
+
+
+def test_existing_campaign_gets_the_new_copy_once():
+    db, api = _DB(), _Api()
+    cid, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert cid == "C1" and len(api.updated) == 1
+    _, fields = api.updated[0]
+    assert list(fields) == ["sequences"] and len(fields["sequences"][0]["steps"]) == 1
+    assert any("no follow-ups" in n for n in notes)
+    assert outbound.get_state(db, "instantly.campaign")["copy_version"] == outbound.COPY_VERSION
+    assert db.store["funnel_events"][0]["kind"] == "campaign_copy_updated"
+    # second pass: version matches, nothing is sent to Instantly
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert len(api.updated) == 1 and not api.activated
+
+
+def test_copy_update_respects_dry_run_and_needs_the_postal_footer():
+    db, api = _DB(), _Api()
+    _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=True)
+    assert not api.updated and any(n.startswith("[dry] would update the campaign copy") for n in notes)
+    _, notes = outbound.ensure_campaign(db, api, None, dry=False)
+    assert not api.updated and any("POSTAL_ADDRESS" in n for n in notes)

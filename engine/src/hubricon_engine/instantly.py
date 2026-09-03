@@ -128,6 +128,11 @@ class Instantly:
     def activate_campaign(self, campaign_id: str) -> dict:
         return self._call("POST", f"/campaigns/{campaign_id}/activate", body={})
 
+    def update_campaign(self, campaign_id: str, fields: dict) -> dict:
+        """PATCH /campaigns/{id}: e.g. {"sequences": [...]} swaps the copy in place,
+        so threads already sent keep their history."""
+        return self._call("PATCH", f"/campaigns/{campaign_id}", body=fields)
+
     def campaign_analytics(self, campaign_id: str) -> dict:
         out = self._call("GET", "/campaigns/analytics", params={"campaign_id": campaign_id})
         if isinstance(out, list):
@@ -169,6 +174,25 @@ class Instantly:
 
     def create_lead_list(self, name: str) -> dict:
         return self._call("POST", "/lead-lists", body={"name": name})
+
+    def add_leads(self, list_id: str | None = None, campaign_id: str | None = None,
+                  leads: list[dict] | None = None) -> dict:
+        """POST /leads/add: up to 1000 leads into a list *or* a campaign. Instantly
+        validates each address on import and skips ones already in the workspace."""
+        if bool(list_id) == bool(campaign_id):
+            raise InstantlyError(0, "/leads/add", "give exactly one of list_id / campaign_id")
+        body = {
+            "leads": leads or [],
+            "verify_leads_on_import": True,
+            "skip_if_in_workspace": True,
+            "skip_if_in_campaign": True,
+            "skip_if_in_list": True,
+        }
+        if list_id:
+            body["list_id"] = list_id
+        else:
+            body["campaign_id"] = campaign_id
+        return self._call("POST", "/leads/add", body=body)
 
     def supersearch_count(self, filters: dict) -> dict:
         return self._call("POST", "/supersearch-enrichment/count-leads-from-supersearch",

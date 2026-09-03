@@ -26,7 +26,19 @@ SUPERSEARCH_LIST = "Hubricon SuperSearch (auto)"
 # Revenue bands are the ICP verbatim: $1M–$50M private-label brands run by their founder.
 SUPERSEARCH_FILTERS = {
     "title": {"include": ["Founder", "Co-Founder", "CEO", "Owner", "President"], "includeMode": "CONTAINS"},
-    "keyword_filter": {"include": "Amazon FBA, private label, Amazon brand, Amazon seller", "include_mode": "ANY"},
+    # The first 25 leads (2026-09-02) were half agencies, tools, 3PLs and
+    # lenders that *talk about* Amazon FBA. Brands sell products; the
+    # exclusions keep the people who sell services to brands out.
+    "keyword_filter": {
+        "include": "Amazon FBA, private label, Amazon brand, Amazon seller",
+        "include_mode": "ANY",
+        "exclude": "agency, agencies, consulting, consultant, marketing services, PPC management, "
+                   "logistics, freight, 3PL, prep center, fulfillment services, software, SaaS, "
+                   "platform, tool, analytics, aggregator, capital, lending, funding, investment, "
+                   "accounting, bookkeeping, law firm, legal, coaching, course, mastermind",
+    },
+    "industry": {"exclude": ["Business Services", "Software & Internet", "Transportation & Storage",
+                             "Financial Services", "Education", "Media & Entertainment"]},
     "revenue": ["$1 - 10M", "$10 - 50M"],
     "employeeCount": ["0 - 25", "25 - 100"],
     "locations": {"include": [{"country": "United States"}]},
@@ -41,35 +53,29 @@ def _footer(postal_address: str) -> str:
             "Reply \"no\" and I'll stop emailing. There's also an unsubscribe link in the header.")
 
 
+# Bump when the copy below changes: the operator PATCHes the live campaign's
+# sequence in place on its next pass (threads already sent keep their history).
+COPY_VERSION = "2026-09-03 one email, testimonial deal"
+
+
 def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = CALENDLY_URL,
                   daily_limit: int | None = None) -> dict:
-    """Three plain-text steps over eight days. Every claim is on the website."""
+    """One plain-text email, no follow-ups (the founder's call, 2026-09-03: the
+    first email is the one that gets answered; the rest is noise on a young
+    domain). Offer stated the Hormozi way — outcome, price, the honest reason
+    it's free, the risk reversal, one-word CTA. Every claim is on the website."""
     foot = _footer(postal_address)
     step1 = (
         "Hi {{firstName}},<br/><br/>"
-        "Most private-label brands your size run five dashboards and none of them says what to do next: "
-        "which SKU can take a price move, where the next ad dollar stops paying, which ASIN stocks out first.<br/><br/>"
-        "I run Hubricon. Send five Seller Central exports through a private upload page and you get a written "
-        "Profit Teardown back in 24 hours. Free, no seat in your account needed.<br/><br/>"
-        f"Want one? Reply TEARDOWN and I'll send the upload page, or grab 20 minutes here: {calendly_url}<br/><br/>"
+        "We run the math on {{companyName}}'s Amazon account and execute the profit fixes for you: "
+        "pricing, ads, inventory. You watch a three-minute brief every two weeks and keep the margin.<br/><br/>"
+        "Your first month is the full service, free. If we don't find you more than we cost, walk away owing "
+        "nothing. No card on file.<br/><br/>"
+        "Why free: Hubricon is new. The engine is built; the track record isn't. If it works, I ask for a "
+        "testimonial and permission to publish your anonymized results. That's the whole price.<br/><br/>"
+        "Reply TEARDOWN and the free Profit Teardown is back 24 hours after your exports land. "
+        f"Or book 20 minutes: {calendly_url}<br/><br/>"
         "Hagen Simmons<br/>Hubricon" + foot
-    )
-    step2 = (
-        "Hi {{firstName}},<br/><br/>"
-        "Three numbers Seller Central never shows you: the stockout probability of each SKU (simulated, not a "
-        "velocity average), how far each price can move before units fall off, and the ACoS where each campaign "
-        "stops paying.<br/><br/>"
-        "That's what the teardown is: those numbers for your catalog, written up, 24 hours after your last export "
-        "lands.<br/><br/>"
-        f"Reply TEARDOWN for the upload page, or book 20 minutes: {calendly_url}<br/><br/>"
-        "Hagen" + foot
-    )
-    step3 = (
-        "Hi {{firstName}},<br/><br/>"
-        "Closing the loop. If margin is a next-year problem, reply \"later\" and I'll check back in Q1. If it's a "
-        "now problem, the teardown is free and takes 15 minutes of exports on your side: reply TEARDOWN.<br/><br/>"
-        "Either way, thanks for reading.<br/><br/>"
-        "Hagen" + foot
     )
     limit = daily_limit or min(CAMPAIGN_DAILY_CAP, PER_MAILBOX_DAILY * max(1, len(senders)))
     return {
@@ -84,9 +90,8 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         },
         "sequences": [{
             "steps": [
-                {"type": "email", "delay": 3, "variants": [{"subject": "{{companyName}} margin, quantified", "body": step1}]},
-                {"type": "email", "delay": 4, "variants": [{"subject": "", "body": step2}]},
-                {"type": "email", "delay": 0, "variants": [{"subject": "", "body": step3}]},
+                {"type": "email", "delay": 0,
+                 "variants": [{"subject": "{{companyName}}: first month free, here's why", "body": step1}]},
             ],
         }],
         "email_list": senders,
@@ -160,9 +165,12 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -
         campaign = api.create_campaign(spec)
         notes.append(f"Created campaign {CAMPAIGN_NAME!r} ({campaign.get('id')}) sending from {', '.join(senders)}")
         log_event(db, "campaign_created", payload={"id": campaign.get("id"), "senders": senders})
+        state["copy_version"] = COPY_VERSION  # born from the current copy
 
     cid = campaign.get("id")
-    set_state(db, "instantly.campaign", {"id": cid, "name": campaign.get("name"), "senders": senders})
+    state = {**state, "id": cid, "name": campaign.get("name"), "senders": senders}
+    set_state(db, "instantly.campaign", state)
+    notes += sync_copy(db, api, cid, state, postal_address, dry)
 
     if campaign.get("status") != CAMPAIGN_ACTIVE:
         if not senders:
@@ -174,6 +182,25 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -
             notes.append(f"Activated campaign {cid}.")
             log_event(db, "campaign_activated", payload={"id": cid})
     return cid, notes
+
+
+def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | None, dry: bool) -> list[str]:
+    """The live campaign follows campaign_spec. When COPY_VERSION moves, the
+    sequence is PATCHed in place: threads already sent keep their history, and
+    nobody receives a follow-up the new copy no longer has."""
+    if state.get("copy_version") == COPY_VERSION:
+        return []
+    if not postal_address:
+        return ["Campaign copy not updated: POSTAL_ADDRESS is empty (the footer needs it)."]
+    spec = campaign_spec(state.get("senders") or [], postal_address)
+    if dry:
+        return [f"[dry] would update the campaign copy to {COPY_VERSION!r}"]
+    api.update_campaign(cid, {"sequences": spec["sequences"]})
+    set_state(db, "instantly.campaign", {**state, "copy_version": COPY_VERSION})
+    log_event(db, "campaign_copy_updated", payload={"id": cid, "copy_version": COPY_VERSION,
+                                                    "steps": len(spec["sequences"][0]["steps"])})
+    return [f"Updated the campaign copy to {COPY_VERSION!r}: "
+            f"{len(spec['sequences'][0]['steps'])} step(s), no follow-ups."]
 
 
 # -- enrollment ----------------------------------------------------------------
@@ -347,7 +374,8 @@ def sync_replies(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, 
             except InstantlyError as err:
                 notes.append(f"interest status for {sender}: {err}")
         log_event(db, "reply_received", note=verdict["category"], prospect_id=prospect["id"],
-                  payload={"by": verdict["by"], "reply_status": verdict["reply_status"]})
+                  payload={"by": verdict["by"], "reply_status": verdict["reply_status"],
+                           **({"reason": verdict["reason"]} if verdict.get("reason") else {})})
         new += 1
     if new:
         notes.append(f"{'[dry] would ingest' if dry else 'Ingested'} {new} new repl{'y' if new == 1 else 'ies'}.")

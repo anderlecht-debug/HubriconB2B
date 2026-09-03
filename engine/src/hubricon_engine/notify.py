@@ -12,6 +12,9 @@ import urllib.error
 import urllib.request
 
 
+USER_AGENT = "Hubricon-engine/1.0 (+https://www.hubricon.com)"
+
+
 def email_configured() -> bool:
     return bool(os.environ.get("RESEND_API_KEY"))
 
@@ -34,7 +37,11 @@ def send_email(to: str, subject: str, text: str, html: str | None = None,
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=json.dumps(payload).encode(),
-        headers={"authorization": f"Bearer {key}", "content-type": "application/json"},
+        headers={"authorization": f"Bearer {key}", "content-type": "application/json",
+                 # Cloudflare in front of api.resend.com answers "error 1010"
+                 # (HTTP 403) to Python's default user agent, which made every
+                 # engine email fail silently. A named client passes.
+                 "user-agent": USER_AGENT},
     )
     try:
         with urllib.request.urlopen(req, timeout=20) as res:

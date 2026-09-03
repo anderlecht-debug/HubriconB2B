@@ -61,6 +61,28 @@ def _has(text: str, *phrases: str) -> bool:
     return any(p in text for p in phrases)
 
 
+_TEARDOWN_ASKS = (
+    "send me the teardown", "send the teardown", "send over the teardown", "send it over",
+    "teardown please", "teardown pls", "want the teardown", "like the teardown", "do the teardown",
+    "run the teardown", "the teardown link", "the upload page", "send the upload", "send me the upload",
+    "yes to the teardown", "let's do the teardown", "lets do the teardown", "up for the teardown",
+    "take the teardown", "take you up on the teardown", "sign me up for the teardown", "start the teardown",
+)
+
+
+def _wants_teardown(raw: str, t: str, words: list[str]) -> bool:
+    """The keyword is a request only when it is used as one. A question that
+    happens to mention the teardown ("how long does the teardown take?") is a
+    question, and the auto-reply must not say the upload page is on its way."""
+    if "teardown" not in t and "tear down" not in t:
+        return False
+    if "TEARDOWN" in raw:
+        return True  # the keyword exactly as the email asked for it
+    if _has(t, *_TEARDOWN_ASKS):
+        return True
+    return "?" not in t and len(words) <= 12  # "sure, teardown sounds good"
+
+
 def classify_rules(subject: str, body: str, sender: str | None = None) -> str | None:
     """Deterministic categories. Returns None when the rules can't tell."""
     s = (subject or "").lower()
@@ -86,8 +108,10 @@ def classify_rules(subject: str, body: str, sender: str | None = None) -> str | 
     if _has(t, "not interested", "no thanks", "no thank you", "not a fit", "no need",
             "we're good", "we are good", "all set", "hard pass", "not for us"):
         return "not_interested"
-    if "teardown" in t or "tear down" in t:
+    if _wants_teardown(strip_quoted(body), t, words):
         return "wants_teardown"
+    if words and words[0] == "later" and len(words) <= 4:
+        return "not_now"  # step 3 of the sequence invites exactly this one-word reply
     if _has(t, "not right now", "not now", "not at the moment", "circle back", "check back",
             "reach back", "next quarter", "next year", "later this year", "in a few months",
             "revisit", "touch base in", "after q", "busy season", "maybe later", "not yet"):
@@ -162,12 +186,22 @@ def classify_claude(subject: str, body: str, first_name: str | None) -> dict | N
         f"Subject: {subject or ''}\nReply body:\n{text[:4000]}\n---\nJSON only."
     )
     try:
-        client = anthropic.Anthropic()
+        # Identity-linked API keys must name the workspace they act in on
+        # every request (same header the narrator sends; the Console shows
+        # the wrkspc_… id beside the key). Without it the API answers 400
+        # and every question waited for the cloud routine.
+        workspace = os.environ.get("ANTHROPIC_WORKSPACE_ID")
+        client = anthropic.Anthropic(
+            default_headers={"anthropic-workspace-id": workspace} if workspace else None,
+        )
         msg = client.messages.create(
-            model=MODEL, max_tokens=500, system=_SYSTEM,
+            model=MODEL, max_tokens=2000, system=_SYSTEM,
+            output_config={"effort": "low"},  # a classification; thinking is on by default
             messages=[{"role": "user", "content": prompt}],
         )
-        raw = "".join(getattr(b, "text", "") for b in msg.content)
+        if msg.stop_reason == "refusal":
+            return {"category": None, "reply": None, "reason": "claude declined the request"}
+        raw = "".join(b.text for b in msg.content if b.type == "text")
         raw = raw.strip().strip("`")
         if raw.startswith("json"):
             raw = raw[4:]
@@ -193,6 +227,7 @@ def triage(subject: str, body: str, first_name: str | None, sender: str | None =
     cat = classify_rules(subject, body, sender)
     by = "rules"
     draft = draft_for(cat, first_name) if cat else None
+    reason = None
 
     if cat in (None, "question", "other") and use_claude:
         verdict = classify_claude(subject, body, first_name)
@@ -202,6 +237,8 @@ def triage(subject: str, body: str, first_name: str | None, sender: str | None =
             if reply and len(reply.split()) > 160:
                 reply = None  # too long to trust unread; leave it for review
             draft = draft_for(cat, first_name) or reply
+        elif verdict:
+            reason = verdict.get("reason")  # why the model tier passed; lands in funnel_events
 
     if cat is None:
         cat = "other"
@@ -211,7 +248,7 @@ def triage(subject: str, body: str, first_name: str | None, sender: str | None =
         status = "approved"
     else:
         status = "pending_review"
-    return {"category": cat, "draft": draft, "by": by, "reply_status": status}
+    return {"category": cat, "draft": draft, "by": by, "reply_status": status, "reason": reason}
 
 
 # prospects.status after a reply of each category
