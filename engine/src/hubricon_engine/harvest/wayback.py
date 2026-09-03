@@ -19,6 +19,7 @@ address in `enrich` before it is pushed. Instantly verifies on import.
 
 from __future__ import annotations
 
+import os
 import re
 import threading
 from collections import Counter
@@ -33,8 +34,11 @@ CDX = ("https://web.archive.org/cdx/search/cdx?url=amazon.com/sp?seller=*&from=2
        "&filter=statuscode:200&filter=mimetype:text/html&fl=original,timestamp,length")
 SNAPSHOT = "https://web.archive.org/web/{ts}id_/{url}"  # id_: the original bytes, no toolbar
 MIN_CAPTURE_BYTES = 30_000  # a real profile is 60–120 KB; Amazon's captcha stub is ~2 KB
-LIMIT = 400          # sellers per run; ~1,800 exist, so a week of nightly runs reads them all
-WORKERS = 3          # parallel fetchers; each paces itself, ~2 requests a second in total
+LIMIT = int(os.environ.get("HARVEST_WAYBACK_LIMIT", "400"))  # sellers per run; ~1,800 exist
+# web.archive.org refused connections for a while after three fetchers at ~2
+# requests a second (2026-09-03); one fetcher at 3–5 s is the pace it accepts.
+WORKERS = int(os.environ.get("HARVEST_WAYBACK_WORKERS", "1"))
+INTERVAL = float(os.environ.get("HARVEST_WAYBACK_INTERVAL", "3.0"))
 SELLER_RE = re.compile(r"[?&]seller=([A-Z0-9]{10,16})", re.I)
 DEFAULT_CDX_FILE = Path.home() / ".hubricon" / "harvest" / "wayback-sellers.cdx"
 
@@ -112,9 +116,9 @@ def classify_profile(sid: str, prof: dict) -> tuple[str, str, dict]:
 def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers: int = WORKERS,
           fetcher_factory=None, log=print) -> dict:
     """Newest captures first, sellers not yet on file, `limit` of them, read by
-    `workers` fetchers in parallel. Rows are upserted every fifty and progress
+    `workers` fetchers in parallel. Rows are upserted every twenty and progress
     is logged every hundred, so a killed run keeps what it read."""
-    fetcher_factory = fetcher_factory or (lambda: Fetcher(min_interval=1.0, jitter=1.0, timeout=90))
+    fetcher_factory = fetcher_factory or (lambda: Fetcher(min_interval=INTERVAL, jitter=2.0, timeout=90, throttle_pause=60.0))
     existing = {r["seller_id"] for r in db.table("harvest_sellers").select("seller_id").execute().data}
     todo = [(sid, ts, url) for sid, (ts, url) in sorted(captures.items(), key=lambda kv: kv[1][0], reverse=True)
             if sid not in existing][:limit]
@@ -131,8 +135,15 @@ def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers:
 
     def work(chunk: list[tuple[str, str, str]]) -> None:
         fetcher = fetcher_factory()
+        misses = 0
         for sid, ts, url in chunk:
             prof = profile_from_capture(fetcher, ts, url)
+            # Ten unreadable in a row means the archive is refusing us, not
+            # that ten captures are stubs: wait it out rather than burn the list.
+            misses = misses + 1 if prof is None else 0
+            if misses and misses % 10 == 0:
+                log(f"  wayback: {misses} unreadable in a row; pausing 5 min")
+                fetcher.sleep(300)
             with lock:
                 if prof is None:
                     summary["unreadable"] += 1
@@ -143,7 +154,7 @@ def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers:
                     counts[status] += 1
                     summary["read"] += 1
                 done = summary["read"] + summary["unreadable"]
-                if len(pending) >= 50:
+                if len(pending) >= 20:
                     flush()
                 if done % 100 == 0:
                     log(f"  wayback: {done}/{len(todo)} read, " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
