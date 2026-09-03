@@ -92,9 +92,18 @@ class Pass:
             _, notes = outbound.send_approved(self.db, api, self.dry)
             for n in notes:
                 self.say(n)
+            # Always write both, even when they are only an error: a missing
+            # key is indistinguishable from a healthy silence, and that is
+            # exactly how twenty hours of zero sends went unnoticed.
             summary = outbound.campaign_summary(api, cid)
-            if summary:
-                outbound.set_state(self.db, "instantly.analytics", {**summary, "as_of": _iso()})
+            outbound.set_state(self.db, "instantly.analytics", {**summary, "as_of": _iso()})
+            try:
+                h = outbound.health(self.db, api, cid)
+                outbound.set_state(self.db, "instantly.health", h)
+                for v in h.get("verdicts", []):
+                    self.warnings.append(f"Outbound: {v}")
+            except Exception as err:  # a diagnostic must never break the pass
+                self.warnings.append(f"Outbound health check failed: {err}")
         except instantly.InstantlyError as err:
             self.warnings.append(f"Instantly: {err}")
 
@@ -314,8 +323,23 @@ class Pass:
                 "",
             ]
         analytics = outbound.get_state(self.db, "instantly.analytics", {}) or {}
-        if analytics:
-            lines += ["Instantly campaign", "  " + ", ".join(f"{k} {v}" for k, v in analytics.items() if k != "as_of"), ""]
+        lines += ["Instantly campaign",
+                  "  " + (", ".join(f"{k} {v}" for k, v in analytics.items() if k != "as_of")
+                          if analytics else "no analytics recorded yet"), ""]
+        # The stall rule. A campaign that exists, is enrolled and has never
+        # sent is the single most expensive thing that can go quietly wrong
+        # here, so it gets the loudest line in the digest.
+        hs = outbound.get_state(self.db, "instantly.health", {}) or {}
+        contacted = (analytics.get("contacted_count") or 0) if not analytics.get("error") else 0
+        leads = (hs.get("leads") or {}).get("total") or 0
+        if leads and not contacted:
+            camp = hs.get("campaign") or {}
+            lines += [
+                f"COLD CAMPAIGN HAS SENT ZERO EMAILS — {leads} leads enrolled, none contacted",
+                f"  campaign status {camp.get('status')} ({camp.get('status_name')})",
+            ]
+            lines += [f"  → {v}" for v in (hs.get("verdicts") or [])[:6]]
+            lines += ["  Run `hubricon doctor`, or read operator_state['instantly.health'].", ""]
         try:
             from .harvest import run as harvest
             h = harvest.status(self.db)

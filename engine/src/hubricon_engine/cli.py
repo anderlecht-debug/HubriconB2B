@@ -1083,6 +1083,150 @@ def cmd_scoreboard(_args):
     print(json.dumps(db.rpc("pmf_scoreboard", {}).execute().data, indent=2, default=str))
 
 
+def cmd_doctor(args):
+    """Why is or isn't the cold campaign sending. Read-only; never sends anything.
+
+    On the founder's Mac there is no INSTANTLY_API_KEY (it lives in the GitHub
+    Actions Production environment) and no gh CLI, so a live check is usually
+    impossible here. The hourly operator writes its findings to operator_state,
+    and this command reads them back — the database is the shared log.
+    """
+    import json
+
+    from . import outbound
+    from .instantly import Instantly
+
+    db = dbmod.connect()
+    out: dict = {}
+
+    have_key = bool(os.environ.get("INSTANTLY_API_KEY"))
+    print("Environment")
+    for name in ("INSTANTLY_API_KEY", "POSTAL_ADDRESS", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY",
+                 "RESEND_API_KEY", "ANTHROPIC_API_KEY", "CALENDLY_URL"):
+        mark = "set" if os.environ.get(name) else "missing"
+        print(f"  {name:<26} {mark}")
+    if not have_key:
+        print("  (INSTANTLY_API_KEY lives in GitHub → Settings → Environments → Production;")
+        print("   without it this command reports what the hourly operator last saw.)")
+    print()
+
+    state = outbound.get_state(db, "instantly.campaign", {}) or {}
+    cid = state.get("id")
+    if have_key and cid:
+        health = outbound.health(db, Instantly(), cid)
+        source = "live"
+    else:
+        health = outbound.get_state(db, "instantly.health", {}) or {}
+        source = f"recorded by the operator at {health.get('as_of', 'never')}"
+    out["health"] = health
+
+    print(f"Instantly ({source})")
+    if not health:
+        print("  nothing recorded yet — the operator has not run since this check was added.")
+    else:
+        camp = health.get("campaign") or {}
+        print(f"  campaign   {cid} status {camp.get('status')} ({camp.get('status_name')})")
+        print(f"  mailboxes  " + ", ".join(
+            f"{m['email']} (status {m['status']}, warmup {m['warmup_status']})"
+            for m in health.get("mailboxes") or []) or "  mailboxes  none")
+        leads = health.get("leads") or {}
+        print(f"  leads      {leads.get('total', 0)} enrolled, {leads.get('contacted', 0)} ever contacted")
+        print(f"  analytics  {health.get('analytics')}")
+    print()
+
+    sb = db.rpc("pmf_scoreboard", {}).execute().data
+    out["scoreboard"] = sb
+    print("Funnel")
+    print(f"  {sb}")
+    print()
+
+    try:
+        from .harvest import run as harvest
+        print(harvest.status_text(db))
+        print()
+    except Exception as err:
+        print(f"Harvest status unavailable: {err}\n")
+
+    verdicts = (health or {}).get("verdicts") or []
+    print("Verdicts")
+    if verdicts:
+        for v in verdicts:
+            print(f"  - {v}")
+    else:
+        print("  nothing flagged.")
+
+    if args.json:
+        print(json.dumps(out, indent=2, default=str))
+
+
+def cmd_outreach(args):
+    """The manual lane. Prints briefs and drafts; never sends anything."""
+    from . import icp, outbound, outreach
+
+    db = dbmod.connect()
+
+    if args.action == "dq":
+        rows = outreach.dq_scan(db)
+        print(outreach.dq_text(rows))
+        if args.apply and rows:
+            api = None
+            if os.environ.get("INSTANTLY_API_KEY"):
+                from .instantly import Instantly
+                api = Instantly()
+            print()
+            outreach.apply_dq(db, rows, api=api)
+        elif rows:
+            print("\nNothing was written. Re-run with --apply to disqualify these.")
+        return
+
+    if args.action == "targets":
+        rows = db.table("harvest_sellers").select("*").in_(
+            "status", ["pushed", "enriched"]).execute().data
+        keep = []
+        for r in rows:
+            bucket, _ = icp.off_icp(r.get("brand") or r.get("seller_name"), r.get("email"), r.get("website"))
+            if bucket:
+                continue
+            keep.append(r)
+        keep.sort(key=lambda r: -(float(r.get("est_monthly_revenue") or 0)))
+        print(f"{len(keep)} seller(s) worth a hand-written email, best first.")
+        print("Role inboxes are included: find the owner's name before writing.\n")
+        for r in keep[: args.limit]:
+            rev = float(r.get("est_monthly_revenue") or 0)
+            print(f"  {r['seller_id']:<16} {(r.get('brand') or '')[:24]:<24} "
+                  f"{(r.get('email') or '')[:30]:<30} ${rev:,.0f}/mo  {r.get('website') or ''}")
+        print(f"\nNext: hubricon outreach brief --seller <seller_id>")
+        return
+
+    facts = outreach.seller_facts(db, args.seller)
+    if facts is None:
+        print(f"No seller {args.seller!r} on file.")
+        return
+    if args.action == "brief":
+        print(outreach.brief_text(facts))
+        return
+    if args.action == "draft":
+        first = args.first_name or facts["seller"].get("first_name")
+        if not first:
+            print("No first name. Find the owner's name and pass --first-name; "
+                  "a cold email that opens 'Hi Acme team' is not the founder lane.")
+            return
+        d = outreach.founder_email(facts, first, outbound.CALENDLY_URL)
+        print(f"To:      {d['to']}\nSubject: {d['subject']}\n\n{d['body']}")
+        print("--- send this by hand from your own mailbox, after editing it. ---")
+        return
+    if args.action == "partner":
+        if not args.partner or not args.referral:
+            print("Need --partner 'Name' and --referral 'the terms you are offering', e.g. "
+                  "--referral '15% of anything that renews'. Do not send a template that "
+                  "promises a number you have not decided.")
+            return
+        d = outreach.partner_email(facts, args.partner, args.referral)
+        print(f"Subject: {d['subject']}\n\n{d['body']}")
+        print(outreach.PARTNER_TARGETS)
+        return
+
+
 def cmd_harvest(args):
     """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
     from .harvest import run as harvest
@@ -1244,6 +1388,20 @@ def main():
     p.set_defaults(fn=cmd_operator)
 
     sub.add_parser("scoreboard", help="print the PMF scoreboard").set_defaults(fn=cmd_scoreboard)
+
+    p = sub.add_parser("doctor", help="why the cold campaign is or isn't sending (read-only)")
+    p.add_argument("--json", action="store_true", help="also dump the raw findings as JSON")
+    p.set_defaults(fn=cmd_doctor)
+
+    p = sub.add_parser("outreach", help="the manual lane: briefs and drafts you send by hand")
+    p.add_argument("action", choices=["dq", "targets", "brief", "draft", "partner"])
+    p.add_argument("--seller", help="seller_id, for brief/draft/partner")
+    p.add_argument("--first-name", dest="first_name", help="the owner's name, once you have found it")
+    p.add_argument("--partner", help="the partner's first name, for the partner template")
+    p.add_argument("--referral", help="the referral terms you are offering")
+    p.add_argument("--limit", type=int, default=25)
+    p.add_argument("--apply", action="store_true", help="dq: actually write the disqualifications")
+    p.set_defaults(fn=cmd_outreach)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles → brand sites → Instantly list")
     p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install",

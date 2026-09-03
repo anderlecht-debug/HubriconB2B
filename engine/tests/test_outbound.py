@@ -1,5 +1,6 @@
 from hubricon_engine import outbound
 from hubricon_engine.outbound import CAMPAIGN_NAME, campaign_spec
+from hubricon_engine.instantly import InstantlyError
 
 
 def test_campaign_spec_is_one_plain_text_email_with_compliance_footer():
@@ -192,3 +193,120 @@ def test_instantly_call_sets_json_content_type_only_with_a_body(monkeypatch):
     delete, post = seen
     assert delete[0] == "DELETE" and delete[2] is None and not any(k.lower() == "content-type" for k in delete[1])
     assert post[0] == "POST" and _json.loads(post[2]) == {"name": "x"} and any(k.lower() == "content-type" for k in post[1])
+
+
+# -- the diagnosis ---------------------------------------------------------------
+# On 2026-09-03 the campaign was activated twelve times, sent nothing, and left
+# no analytics row anywhere. These tests are the reason that cannot recur.
+
+class _StuckApi(_Api):
+    """Instantly answers POST /activate with a 200 and stays inactive.
+
+    That is what a suspended, unpaid or unhealthy workspace looks like from the
+    API: the call succeeds and the status does not move.
+    """
+
+    def __init__(self, status=-1):
+        super().__init__()
+        self.status = status
+
+    def campaigns(self):
+        return [{"id": "C1", "name": CAMPAIGN_NAME, "status": self.status}]
+
+
+def test_activation_records_the_status_it_read_back():
+    db, api = _DB(), _StuckApi(status=-1)
+    _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    prose = " ".join(notes)
+    assert "ACTIVATION DID NOT STICK" in prose
+    assert "-1" in prose and "accounts unhealthy" in prose
+    state = outbound.get_state(db, "instantly.campaign", {})
+    assert state["status"] == -1 and state["activation_attempts"] == 1
+    events = db.store.get("funnel_events", [])
+    payload = [e for e in events if e["kind"] == "campaign_activated"][-1]["payload"]
+    assert payload["status_before"] == -1 and payload["status_after"] == -1
+
+
+def test_a_successful_activation_says_so_plainly():
+    db, api = _DB(), _StuckApi(status=outbound.CAMPAIGN_ACTIVE)
+    _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert not any("DID NOT STICK" in n for n in notes)
+
+
+def test_a_missing_status_field_is_reported_not_looped_over():
+    class _NoStatus(_Api):
+        def campaigns(self):
+            return [{"id": "C1", "name": CAMPAIGN_NAME}]
+
+    db, api = _DB(), _NoStatus()
+    _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert any("no 'status' field" in n for n in notes)
+
+
+def test_campaign_summary_records_the_error_instead_of_swallowing_it():
+    class _Broken:
+        def campaign_analytics(self, cid):
+            raise InstantlyError(400, "/campaigns/analytics", "unknown parameter campaign_id")
+
+        def _call(self, *a, **k):
+            raise InstantlyError(400, "/campaigns/analytics", "unknown parameter id")
+
+    out = outbound.campaign_summary(_Broken(), "C1")
+    assert "error" in out and "400" in out["error"]
+
+
+def test_campaign_summary_falls_back_to_the_other_parameter_spelling():
+    class _NeedsId:
+        def campaign_analytics(self, cid):
+            return {}
+
+        def _call(self, method, path, params=None, **k):
+            assert params == {"id": "C1"}
+            return {"leads_count": 84, "contacted_count": 0}
+
+    out = outbound.campaign_summary(_NeedsId(), "C1")
+    assert out["leads_count"] == 84 and out["contacted_count"] == 0
+    assert "via" in out
+
+
+def test_health_flags_a_campaign_that_has_never_contacted_anyone():
+    class _Silent(_StuckApi):
+        def accounts(self):
+            return [{"email": "hagen@gethubricon.com", "status": 1, "warmup_status": 1}]
+
+        def leads_in_campaign(self, cid):
+            return [{"email": f"x{i}@y.com", "timestamp_last_contact": None} for i in range(84)]
+
+        def campaign_analytics(self, cid):
+            return {}
+
+        def _call(self, *a, **k):
+            return {}
+
+    h = outbound.health(_DB(), _Silent(), "C1")
+    prose = " ".join(h["verdicts"])
+    assert "never been contacted" in prose or "not one has ever been contacted" in prose
+    assert "not sending" in prose
+    assert h["leads"]["total"] == 84 and h["leads"]["contacted"] == 0
+
+
+def test_health_names_a_mailbox_missing_from_the_campaign():
+    class _Detached(_StuckApi):
+        def __init__(self):
+            super().__init__(status=outbound.CAMPAIGN_ACTIVE)
+
+        def accounts(self):
+            return [{"email": "hagen@gethubricon.com", "status": 1, "warmup_status": 1}]
+
+        def campaigns(self):
+            return [{"id": "C1", "name": CAMPAIGN_NAME, "status": self.status,
+                     "email_list": [], "campaign_schedule": {"x": 1}}]
+
+        def leads_in_campaign(self, cid):
+            return []
+
+        def campaign_analytics(self, cid):
+            return {"leads_count": 0}
+
+    h = outbound.health(_DB(), _Detached(), "C1")
+    assert any("no sending accounts" in v for v in h["verdicts"])

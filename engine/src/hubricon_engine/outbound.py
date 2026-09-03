@@ -10,11 +10,19 @@ Replies are pulled from the unibox into prospect_messages for triage.
 import os
 from datetime import datetime, timezone
 
-from . import triage
+from . import icp, triage
 from .instantly import CAMPAIGN_ACTIVE, Instantly, InstantlyError
 from .onboarding import guess_name_parts, is_internal
 
 CAMPAIGN_NAME = "Hubricon — Profit Teardown (PL FBA $1M–$20M)"
+# instantly.py names 0-3; the interesting ones are negative and it does not.
+# A campaign in any of these states accepts POST /activate with a 200 and then
+# reads back at the same status, which is why the operator activated the
+# campaign twelve times on 2026-09-03 and never sent an email.
+CAMPAIGN_STATUS_NAMES = {
+    0: "draft", 1: "active", 2: "paused", 3: "completed", 4: "running subsequences",
+    -1: "accounts unhealthy", -2: "bounce protect", -99: "account suspended",
+}
 CALENDLY_URL = os.environ.get("CALENDLY_URL", "https://calendly.com/hubricon/margin-audit")
 PER_MAILBOX_DAILY = 20          # a two-month-old domain: slow is the only safe speed
 CAMPAIGN_DAILY_CAP = 60
@@ -172,16 +180,46 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -
     set_state(db, "instantly.campaign", state)
     notes += sync_copy(db, api, cid, state, postal_address, dry)
 
-    if campaign.get("status") != CAMPAIGN_ACTIVE:
+    before = campaign.get("status")
+    if "status" not in campaign:
+        # A missing key is not the same as "not active": it would make the
+        # comparison below true forever and re-activate an active campaign
+        # every hour. Say so rather than silently looping.
+        notes.append(f"Instantly returned no 'status' field for campaign {cid}; "
+                     f"keys were {sorted(campaign)[:12]}.")
+    if before != CAMPAIGN_ACTIVE:
         if not senders:
             notes.append("Campaign exists but stays paused: no warmed mailbox yet.")
         elif dry:
             notes.append(f"[dry] would activate campaign {cid}")
         else:
             api.activate_campaign(cid)
-            notes.append(f"Activated campaign {cid}.")
-            log_event(db, "campaign_activated", payload={"id": cid})
+            # Read the status back. POST /activate answers 200 even when the
+            # workspace refuses to send (suspended, unpaid, mailboxes
+            # unhealthy), so the only way to know it took is to look again.
+            after_obj = next((c for c in api.campaigns() if c.get("id") == cid), None) or {}
+            after = after_obj.get("status")
+            state["activation_attempts"] = int(state.get("activation_attempts") or 0) + 1
+            state["status"], state["status_name"] = after, _status_name(after)
+            state["activated_at"] = _now()
+            set_state(db, "instantly.campaign", state)
+            log_event(db, "campaign_activated",
+                      payload={"id": cid, "status_before": before, "status_after": after,
+                               "status_name": _status_name(after),
+                               "attempt": state["activation_attempts"]})
+            if after == CAMPAIGN_ACTIVE:
+                notes.append(f"Activated campaign {cid}; Instantly now reports active.")
+            else:
+                notes.append(
+                    f"ACTIVATION DID NOT STICK: asked Instantly to activate {cid}, it still reports "
+                    f"status {after} ({_status_name(after)}) after attempt "
+                    f"{state['activation_attempts']}. This is an account-side block, not a code bug — "
+                    f"check billing, mailbox health and the campaign's sending accounts in the dashboard.")
     return cid, notes
+
+
+def _status_name(status) -> str:
+    return CAMPAIGN_STATUS_NAMES.get(status, f"unknown status {status!r}")
 
 
 def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | None, dry: bool) -> list[str]:
@@ -220,6 +258,7 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
         return 0, notes
     known = _known_emails(db)
     added = 0
+    held: dict = {}   # off-ICP rows, counted by reason and never enrolled
     for lst in lists:
         leads = api.leads_in_list(lst["id"])
         before = added
@@ -236,6 +275,27 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             if not first:
                 skipped_no_name += 1
                 continue  # "Hi {{firstName}}" must never render empty
+            # The ICP gate runs here rather than at push: a lead that never
+            # enters the campaign cannot spend a send on a two-month-old domain.
+            company, site = lead.get("company_name"), lead.get("website")
+            bucket, why = icp.off_icp(company, email, site)
+            if not bucket and icp.domain_mismatch(email, site):
+                bucket, why = "domain_mismatch", f"{email} is not on {site}"
+            if not bucket and icp.bad_greeting(first):
+                bucket, why = "bad_greeting", f'"Hi {first}," reads as a mistake'
+            if not bucket and icp.is_role_inbox(email):
+                bucket, why = "role_inbox", "reaches a support queue; needs a named owner first"
+            if bucket:
+                held[bucket] = held.get(bucket, 0) + 1
+                if not dry:
+                    db.table("prospects").upsert({
+                        "email": email, "first_name": first, "last_name": last,
+                        "company_name": company, "website": site,
+                        "source": "supersearch" if "supersearch" in (lst.get("name") or "").lower() else "instantly_list",
+                        "status": "dq", "fit_notes": f"{bucket} — {why}", "last_event_at": _now(),
+                    }, on_conflict="email").execute()
+                    known[email] = {"email": email}
+                continue
             if dry:
                 added += 1
                 continue
@@ -256,6 +316,9 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
         notes.append(f"  list '{lst.get('name')}': {len(leads)} lead(s) in Instantly, {added - before} enrolled now"
                      + (f", {skipped_no_name} without a first name" if skipped_no_name else ""))
     notes.append(f"{'[dry] would enroll' if dry else 'Enrolled'} {added} lead(s) from {len(lists)} list(s).")
+    if held:
+        notes.append("  held back as off-ICP (never enrolled): "
+                     + ", ".join(f"{k} {v}" for k, v in sorted(held.items())))
     return added, notes
 
 
@@ -424,11 +487,126 @@ def send_approved(db, api: Instantly, dry: bool) -> tuple[int, list[str]]:
     return sent, notes
 
 
+ANALYTICS_KEYS = ("leads_count", "contacted_count", "emails_sent_count", "reply_count", "bounced_count",
+                  "unsubscribed_count", "total_opportunities", "completed_count")
+
+
 def campaign_summary(api: Instantly, campaign_id: str) -> dict:
+    """Instantly's own counters for the campaign, or a description of why not.
+
+    This used to return {} on any error and the operator only stored a truthy
+    result, so a failing analytics call left no trace anywhere: on 2026-09-03
+    operator_state had no 'instantly.analytics' key at all after twenty hours
+    of hourly passes. An error is now a value, so it lands in the digest.
+    """
     try:
         a = api.campaign_analytics(campaign_id) or {}
-    except InstantlyError:
-        return {}
-    keys = ("leads_count", "contacted_count", "emails_sent_count", "reply_count", "bounced_count",
-            "unsubscribed_count", "total_opportunities", "completed_count")
-    return {k: a.get(k) for k in keys if a.get(k) is not None}
+    except InstantlyError as err:
+        a = {}
+        first_error = f"{err.status} on {err.path}: {(err.body or '')[:200]}"
+    else:
+        first_error = ""
+    out = {k: a.get(k) for k in ANALYTICS_KEYS if a.get(k) is not None}
+    if out:
+        return out
+    # instantly.py sends ?campaign_id=; the v2 docs name that parameter `id`.
+    # A wrong name is either rejected or ignored, and when it is ignored the
+    # endpoint answers for every campaign at once. Try the other spelling
+    # before concluding anything. The one-word fix belongs in instantly.py,
+    # which another session owns; this keeps working either way.
+    try:
+        alt = api._call("GET", "/campaigns/analytics", params={"id": campaign_id})
+        if isinstance(alt, list):
+            alt = next((c for c in alt if c.get("campaign_id") == campaign_id), alt[0] if alt else {})
+        alt = alt or {}
+        out = {k: alt.get(k) for k in ANALYTICS_KEYS if alt.get(k) is not None}
+        if out:
+            return {**out, "via": "id= (campaign_id= returned nothing)"}
+        return {"error": first_error or "analytics returned no counts", "keys": sorted(alt)[:20]}
+    except InstantlyError as err:
+        return {"error": first_error or f"{err.status} on {err.path}: {(err.body or '')[:200]}"}
+    except Exception as err:  # never let a diagnostic break the pass
+        return {"error": first_error or f"{type(err).__name__}: {err}"}
+
+
+def health(db, api: Instantly, campaign_id: str | None) -> dict:
+    """Everything we can learn about why the campaign is or is not sending.
+
+    Read-only. Written to operator_state['instantly.health'] every pass so the
+    answer is in the database rather than in a GitHub Actions log: the founder's
+    Mac has no INSTANTLY_API_KEY and no gh CLI, so the DB is the only channel
+    that reaches both machines.
+    """
+    out: dict = {"as_of": _now(), "campaign_id": campaign_id}
+    verdicts: list[str] = []
+
+    try:
+        accounts = api.accounts()
+    except InstantlyError as err:
+        accounts, verdicts = [], verdicts + [f"could not read mailboxes: {err}"]
+    out["mailboxes"] = [{"email": a.get("email"), "status": a.get("status"),
+                         "warmup_status": a.get("warmup_status"),
+                         "daily_limit": a.get("daily_limit")} for a in accounts]
+    ready = [a.get("email") for a in accounts if a.get("status") == 1 and a.get("warmup_status") == 1]
+    if not ready:
+        verdicts.append("no mailbox is both connected and past warmup — nothing can send")
+
+    campaign = None
+    if campaign_id:
+        try:
+            campaign = next((c for c in api.campaigns() if c.get("id") == campaign_id), None)
+        except InstantlyError as err:
+            verdicts.append(f"could not read the campaign: {err}")
+    if campaign is None:
+        verdicts.append("the campaign does not exist in Instantly")
+    else:
+        status = campaign.get("status")
+        attached = campaign.get("email_list") or []
+        out["campaign"] = {"status": status, "status_name": _status_name(status),
+                           "email_list": attached, "daily_limit": campaign.get("daily_limit"),
+                           "has_schedule": bool(campaign.get("campaign_schedule")),
+                           "keys": sorted(campaign)[:30]}
+        if status != CAMPAIGN_ACTIVE:
+            verdicts.append(f"campaign status {status} ({_status_name(status)}) — not sending")
+        if not attached:
+            verdicts.append("no sending accounts are attached to the campaign (email_list is empty)")
+        else:
+            missing = [e for e in ready if e not in attached]
+            if missing:
+                verdicts.append(f"warmed mailbox not attached to the campaign: {', '.join(missing)}")
+        if not campaign.get("campaign_schedule"):
+            verdicts.append("the campaign has no sending schedule — an active campaign with no schedule never sends")
+
+    if campaign_id:
+        try:
+            leads = api.leads_in_campaign(campaign_id)
+        except InstantlyError as err:
+            leads = []
+            verdicts.append(f"could not read campaign leads: {err}")
+        contacted = sum(1 for l in leads if l.get("timestamp_last_contact"))
+        verif: dict = {}
+        for l in leads:
+            v = l.get("verification_status")
+            verif[str(v)] = verif.get(str(v), 0) + 1
+        out["leads"] = {"total": len(leads), "contacted": contacted, "verification_status": verif,
+                        "keys": sorted(leads[0])[:30] if leads else []}
+        if leads and contacted == 0:
+            verdicts.append(f"{len(leads)} leads are enrolled and not one has ever been contacted")
+
+    out["analytics"] = campaign_summary(api, campaign_id) if campaign_id else {"error": "no campaign"}
+    if out["analytics"].get("error"):
+        verdicts.append(f"analytics unavailable: {out['analytics']['error']}")
+
+    try:
+        rows = db.table("prospects").select("status").execute().data
+        by_status: dict = {}
+        for r in rows:
+            by_status[r["status"]] = by_status.get(r["status"], 0) + 1
+        out["prospects"] = by_status
+        if by_status.get("contacted", 0) == 0 and sum(by_status.values()) > 0:
+            verdicts.append(f"{sum(by_status.values())} prospects on file, none marked contacted")
+    except Exception as err:
+        verdicts.append(f"could not read prospects: {err}")
+
+    out["verdicts"] = verdicts
+    return out
