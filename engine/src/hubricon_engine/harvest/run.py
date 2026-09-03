@@ -130,73 +130,73 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
     return "candidate", "brand matches seller"
 
 
-def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_products: int = MAX_PRODUCTS,
-          subcats: int = SUBCATS_PER_CATEGORY, cache: Cache | None = None, log=print,
-          depth: int = CRAWL_DEPTH) -> dict:
-    cache = cache or Cache()
-    categories = categories or pick_categories()
-    summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
-                     "sellers_seen": 0, "sellers_new": 0, "statuses": {}, "blocked": False}
+def _product_row(asin: str, prod: dict) -> dict:
+    return {
+        "asin": asin, "seller_id": prod["seller_id"], "brand": prod["brand"], "title": prod["title"],
+        "category": prod["category"], "bsr": prod["bsr"], "price": prod["price"],
+        "reviews": prod["reviews"], "weight_oz": prod["weight_oz"], "dims": prod["dims"],
+        "fulfilled_by_amazon": prod["fba"], "est_monthly_units": prod["est_monthly_units"],
+        "est_monthly_revenue": prod["est_monthly_revenue"], "seen_at": _now(),
+    }
+
+
+def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, depth: int,
+                    cache: Cache, log=print) -> dict:
+    """One category: its lists → product pages (up to `budget` fetches) → the
+    profiles of the third-party FBA sellers seen → rows. Writes to the
+    database at the end of the category, so a killed run keeps every
+    category it finished."""
+    part: dict = {"products_fetched": 0, "products_cached": 0, "sellers_seen": 0, "sellers_new": 0,
+                  "statuses": {}, "blocked": False}
     sellers: dict[str, dict] = {}
     product_rows: list[dict] = []
-    fetched = 0
     try:
-        for slug in categories:
-            log(f"Best Sellers: {slug}")
-            for asin in category_asins(fetcher, slug, subcats, depth):
-                if fetched >= max_products:
-                    break
-                prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
-                if prod is None:
-                    fetched += 1
-                    page = fetcher.get(f"{amazon.BASE}/dp/{asin}")
-                    if not page:
-                        continue
-                    prod = amazon.product(page, asin)
-                    prod.pop("related", None)
-                    prod["slug"] = slug
-                    cache.put("product", asin, prod)
-                    product_rows.append({
-                        "asin": asin, "seller_id": prod["seller_id"], "brand": prod["brand"], "title": prod["title"],
-                        "category": prod["category"], "bsr": prod["bsr"], "price": prod["price"],
-                        "reviews": prod["reviews"], "weight_oz": prod["weight_oz"], "dims": prod["dims"],
-                        "fulfilled_by_amazon": prod["fba"], "est_monthly_units": prod["est_monthly_units"],
-                        "est_monthly_revenue": prod["est_monthly_revenue"], "seen_at": _now(),
-                    })
-                else:
-                    summary["products_cached"] += 1
-                if prod["sold_by_amazon"] or not prod["seller_id"] or not prod["fba"] or not prod["brand"]:
-                    continue
-                agg = sellers.setdefault(prod["seller_id"], {
-                    "seller_id": prod["seller_id"], "seller_name": prod["seller_name"], "brand": prod["brand"],
-                    "brands": [], "asins": [], "reviews_max": 0, "top_bsr": None, "top_category": None, "slug": slug,
-                })
-                if prod["brand"] not in agg["brands"]:
-                    agg["brands"].append(prod["brand"])
-                agg["asins"].append({"asin": asin, "brand": prod["brand"], "bsr": prod["bsr"], "price": prod["price"],
-                                     "reviews": prod["reviews"], "est_monthly_revenue": prod["est_monthly_revenue"]})
-                agg["reviews_max"] = max(agg["reviews_max"], prod["reviews"] or 0)
-                if prod["bsr"] and (agg["top_bsr"] is None or prod["bsr"] < agg["top_bsr"]):
-                    agg["top_bsr"], agg["top_category"] = prod["bsr"], prod["category"]
-            if fetched >= max_products:
+        for asin in category_asins(fetcher, slug, subcats, depth):
+            if part["products_fetched"] >= budget:
                 break
+            prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
+            if prod is None:
+                part["products_fetched"] += 1
+                page = fetcher.get(f"{amazon.BASE}/dp/{asin}")
+                if not page:
+                    continue
+                prod = amazon.product(page, asin)
+                prod.pop("related", None)
+                prod["slug"] = slug
+                cache.put("product", asin, prod)
+            else:
+                part["products_cached"] += 1
+            product_rows.append(_product_row(asin, prod))
+            if prod["sold_by_amazon"] or not prod["seller_id"] or not prod["fba"] or not prod["brand"]:
+                continue
+            agg = sellers.setdefault(prod["seller_id"], {
+                "seller_id": prod["seller_id"], "seller_name": prod["seller_name"], "brand": prod["brand"],
+                "brands": [], "asins": [], "reviews_max": 0, "top_bsr": None, "top_category": None, "slug": slug,
+            })
+            if prod["brand"] not in agg["brands"]:
+                agg["brands"].append(prod["brand"])
+            agg["asins"].append({"asin": asin, "brand": prod["brand"], "bsr": prod["bsr"], "price": prod["price"],
+                                 "reviews": prod["reviews"], "est_monthly_revenue": prod["est_monthly_revenue"]})
+            agg["reviews_max"] = max(agg["reviews_max"], prod["reviews"] or 0)
+            if prod["bsr"] and (agg["top_bsr"] is None or prod["bsr"] < agg["top_bsr"]):
+                agg["top_bsr"], agg["top_category"] = prod["bsr"], prod["category"]
     except Blocked as err:
         log(f"  {err}")
-        summary["blocked"] = True
-    summary["products_fetched"] = fetched
+        part["blocked"] = True
     if product_rows:
         db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
 
-    existing = {r["seller_id"]: r for r in db.table("harvest_sellers").select("seller_id, status, brands, asins").execute().data}
+    existing = {r["seller_id"]: r for r in
+                db.table("harvest_sellers").select("seller_id, status, brands, asins").execute().data}
     rows: list[dict] = []
     for sid, agg in sellers.items():
         prof = cache.get("seller", sid, SELLER_CACHE_DAYS)
-        if prof is None and not summary["blocked"]:
+        if prof is None and not part["blocked"]:
             try:
                 page = fetcher.get(amazon.seller_url(sid))
             except Blocked as err:
                 log(f"  {err}")
-                summary["blocked"] = True
+                part["blocked"] = True
                 page = None
             if page:
                 prof = amazon.seller(page)
@@ -222,15 +222,39 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
             "est_monthly_revenue": round(sum(a.get("est_monthly_revenue") or 0 for a in agg["asins"]), 2),
             "status": status, "notes": note, "updated_at": _now(),
         })
-        summary["statuses"][status] = summary["statuses"].get(status, 0) + 1
+        part["statuses"][status] = part["statuses"].get(status, 0) + 1
         if not old:
-            summary["sellers_new"] += 1
-    summary["sellers_seen"] = len(sellers)
+            part["sellers_new"] += 1
+    part["sellers_seen"] = len(sellers)
     if rows:
         db.table("harvest_sellers").upsert(rows, on_conflict="seller_id").execute()
+    log(f"  {slug}: {part['products_fetched']} pages, {len(sellers)} sellers ({part['sellers_new']} new), "
+        + ", ".join(f"{k} {v}" for k, v in sorted(part["statuses"].items())))
+    return part
+
+
+def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_products: int = MAX_PRODUCTS,
+          subcats: int = SUBCATS_PER_CATEGORY, cache: Cache | None = None, log=print,
+          depth: int = CRAWL_DEPTH) -> dict:
+    cache = cache or Cache()
+    categories = categories or pick_categories()
+    summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
+                     "sellers_seen": 0, "sellers_new": 0, "statuses": {}, "blocked": False}
+    for slug in categories:
+        budget = max_products - summary["products_fetched"]
+        if budget <= 0 or summary["blocked"]:
+            break
+        log(f"Best Sellers: {slug}")
+        part = _crawl_category(db, fetcher, slug, budget, subcats, depth, cache, log)
+        for k in ("products_fetched", "products_cached", "sellers_seen", "sellers_new"):
+            summary[k] += part[k]
+        for k, v in part["statuses"].items():
+            summary["statuses"][k] = summary["statuses"].get(k, 0) + v
+        summary["blocked"] = summary["blocked"] or part["blocked"]
     summary["fetch"] = dict(fetcher.stats)
-    note = (f"crawl {', '.join(categories)}: {fetched} product pages, {len(sellers)} sellers "
-            f"({summary['sellers_new']} new), " + ", ".join(f"{k} {v}" for k, v in sorted(summary["statuses"].items())))
+    note = (f"crawl {', '.join(categories)}: {summary['products_fetched']} product pages, "
+            f"{summary['sellers_seen']} sellers ({summary['sellers_new']} new), "
+            + ", ".join(f"{k} {v}" for k, v in sorted(summary["statuses"].items())))
     log(note)
     _log_event(db, note, summary)
     return summary
