@@ -164,7 +164,8 @@ class FakeApi:
 
     def add_leads(self, list_id=None, campaign_id=None, leads=None):
         self.added.append((list_id, leads))
-        return {"ok": True}
+        return self.reply if hasattr(self, "reply") else {"status": "success", "total_sent": len(leads), "leads_uploaded": len(leads),
+                                                         "invalid_email_count": 0, "skipped_count": 0, "duplicated_leads": 0, "in_blocklist": 0}
 
 
 quiet = lambda *_: None  # noqa: E731
@@ -552,3 +553,19 @@ def test_category_asins_stops_reading_lists_once_it_has_enough():
     f = FakeFetcher({amazon.category_url("kitchen"): root, **lists})
     got = run.category_asins(f, "kitchen", subcats=6, depth=2, enough=40)
     assert len(got) == 62 and sum(1 for c in f.calls if "/zgbs/kitchen/" in c) == 2  # two lists, not three
+
+
+def test_push_records_instantly_counts_and_drops_a_rejected_batch():
+    db, api = FakeDB(), FakeApi()
+    db.store["harvest_sellers"] = _enriched_rows()
+    run.push(db, api, limit=40, log=quiet)
+    a = next(r for r in db.store["harvest_sellers"] if r["seller_id"] == "A")
+    assert a["status"] == "pushed" and "leads_uploaded 1" in a["notes"]
+    assert db.store["funnel_events"][-1]["payload"]["instantly"][0]["leads_uploaded"] == 1
+    # a batch Instantly refuses outright (all invalid) is parked, not retried every hour
+    db2, api2 = FakeDB(), FakeApi()
+    api2.reply = {"status": "success", "total_sent": 1, "leads_uploaded": 0, "invalid_email_count": 1, "skipped_count": 0}
+    db2.store["harvest_sellers"] = _enriched_rows()
+    assert run.push(db2, api2, limit=40, log=quiet) == 0
+    a2 = next(r for r in db2.store["harvest_sellers"] if r["seller_id"] == "A")
+    assert a2["status"] == "no_email" and "invalid_email_count 1" in a2["notes"]

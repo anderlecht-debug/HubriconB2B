@@ -337,20 +337,37 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
             f"{len(rows)} lead(s)")
         return 0 if api is None and not dry else len(rows)
     list_id = ensure_list(api)
-    pushed = 0
+    pushed, dropped = 0, 0
+    replies: list[dict] = []
     for i in range(0, len(rows), 100):
         batch = rows[i:i + 100]
         try:
-            api.add_leads(list_id=list_id, leads=[lead_payload(r) for r in batch])
+            res = api.add_leads(list_id=list_id, leads=[lead_payload(r) for r in batch]) or {}
         except InstantlyError as err:
             log(f"push: {err}")
             break
+        replies.append(res)
+        # Instantly answers with counts, not names: uploaded / invalid / skipped
+        # (already in the workspace) / duplicated / blocklisted. When nothing
+        # was uploaded the whole batch was rejected and must not be retried
+        # every hour; otherwise the rows are considered pushed and the counts
+        # ride along in the notes for the digest.
+        summary = ", ".join(f"{k} {res.get(k)}" for k in ("leads_uploaded", "invalid_email_count", "skipped_count",
+                                                          "duplicated_leads", "in_blocklist") if res.get(k) is not None)
+        if res.get("total_sent") and not res.get("leads_uploaded"):
+            for r in batch:
+                _update(db, r["seller_id"], status="no_email", notes=f"Instantly rejected the import: {summary}")
+            dropped += len(batch)
+            continue
         for r in batch:
-            _update(db, r["seller_id"], status="pushed", pushed_at=_now())
+            _update(db, r["seller_id"], status="pushed", pushed_at=_now(),
+                    notes=((r.get("notes") or "") + f"; Instantly: {summary}").strip("; "))
         pushed += len(batch)
-    note = f"push: {pushed} lead(s) → Instantly list '{LIST_NAME}'"
+    note = f"push: {pushed} lead(s) → Instantly list '{LIST_NAME}'" + (f", {dropped} rejected on import" if dropped else "")
+    if replies:
+        note += " (" + "; ".join(", ".join(f"{k} {v}" for k, v in r.items() if k != "blocklist_used") for r in replies) + ")"
     log(note)
-    _log_event(db, note, {"pushed": pushed})
+    _log_event(db, note, {"pushed": pushed, "dropped": dropped, "instantly": replies})
     return pushed
 
 

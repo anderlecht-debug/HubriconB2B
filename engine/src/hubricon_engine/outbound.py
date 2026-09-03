@@ -221,7 +221,10 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
     known = _known_emails(db)
     added = 0
     for lst in lists:
-        for lead in api.leads_in_list(lst["id"]):
+        leads = api.leads_in_list(lst["id"])
+        before = added
+        skipped_no_name = 0
+        for lead in leads:
             email = (lead.get("email") or "").strip().lower()
             if not email or email in known or is_internal(email):
                 continue
@@ -231,6 +234,7 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             if not first:
                 first, last = guess_name_parts(lead.get("name") or lead.get("full_name"))
             if not first:
+                skipped_no_name += 1
                 continue  # "Hi {{firstName}}" must never render empty
             if dry:
                 added += 1
@@ -249,6 +253,8 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             }, on_conflict="email").execute()
             known[email] = {"email": email}
             added += 1
+        notes.append(f"  list '{lst.get('name')}': {len(leads)} lead(s) in Instantly, {added - before} enrolled now"
+                     + (f", {skipped_no_name} without a first name" if skipped_no_name else ""))
     notes.append(f"{'[dry] would enroll' if dry else 'Enrolled'} {added} lead(s) from {len(lists)} list(s).")
     return added, notes
 
