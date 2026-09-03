@@ -460,9 +460,12 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
     before a mailbox spends a send on them; the prospect row becomes 'dq'."""
     # A row that was pushed carries the list lead's id when Instantly returned
     # one; the enrolled campaign lead is a second object, found by address.
+    # Any skip_* row that ever had an address may be in Instantly (pushed_at
+    # was not always kept); each is looked up once and the note records it.
     rows = [r for r in db.table("harvest_sellers").select("seller_id, brand, email, status, notes, instantly_lead_id, pushed_at")
             .in_("status", list(SKIP_STATUSES)).execute().data
-            if r.get("instantly_lead_id") or (r.get("pushed_at") and r.get("email"))]
+            if (r.get("instantly_lead_id") or r.get("email"))
+            and not any(m in (r.get("notes") or "") for m in ("removed from Instantly", "not in Instantly"))]
     if not rows:
         return 0
     if dry or api is None:
@@ -491,6 +494,9 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
             for p in prospects:
                 db.table("prospects").update({"status": "dq", "fit_notes": f"harvest: {r['status']} — {r.get('notes') or ''}"[:500],
                                               "updated_at": _now()}).eq("id", p["id"]).execute()
+            if not ids:
+                _update(db, r["seller_id"], notes=((r.get("notes") or "") + "; not in Instantly").strip("; "))
+                continue
             _update(db, r["seller_id"], instantly_lead_id=None, pushed_at=None,
                     notes=((r.get("notes") or "") + f"; removed from Instantly ({len(ids)} lead object(s))").strip("; "))
             removed += 1

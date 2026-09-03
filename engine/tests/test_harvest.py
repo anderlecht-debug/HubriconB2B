@@ -756,12 +756,16 @@ def test_prune_treats_an_already_deleted_lead_as_done():
 
 def test_prune_finds_a_pushed_row_without_a_stored_id_by_its_address():
     db, api = FakeDB(), FakeApi()
-    rows = _pushed_rows()[:1]
-    rows[0].update(status="skip_non_us", instantly_lead_id=None, pushed_at="2026-09-03T18:32:00+00:00")
+    rows = _pushed_rows()[:2]
+    rows[0].update(status="skip_non_us", instantly_lead_id=None, pushed_at=None)  # pushed_at was lost, address remains
+    rows[1].update(status="skip_size", instantly_lead_id=None, pushed_at=None)    # never actually reached Instantly
     db.store["harvest_sellers"] = rows
     api.by_email = {"hello@gorillagrip.com": [{"id": "found-1", "email": "hello@gorillagrip.com"}]}
     assert run.prune(db, api, log=quiet) == 1 and api.deleted == ["found-1"]
-    assert db.store["harvest_sellers"][0]["pushed_at"] is None
+    g, k = db.store["harvest_sellers"]
+    assert "removed from Instantly (1 lead object(s))" in g["notes"]
+    assert k["notes"].endswith("not in Instantly")
+    assert run.prune(db, api, log=quiet) == 0 and api.deleted == ["found-1"]  # both are settled; no lookups repeat
 
 
 # -- wayback: archived seller profiles ----------------------------------------------------
