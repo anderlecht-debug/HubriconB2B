@@ -253,7 +253,9 @@ def pack_text(db, limit: int, calendly_url: str) -> str:
                 f"    1. {site}/pages/about  —  the founder's story is usually signed",
                 f"    2. LinkedIn: \"{r.get('brand') or ''}\" founder OR owner",
                 "    3. Amazon storefront → \"About the seller\"",
-                f"    4. {r.get('business_name') or 'the legal name'} in your state's business registry",
+                f"    4. {r.get('business_name') or 'the legal name'} in the "
+                + (f"{r['state']} business registry" if r.get("state") else "state business registry")
+                + " — an LLC filing names its members",
             ]
         out += [""]
     out += ["=" * 78,
