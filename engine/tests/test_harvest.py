@@ -175,6 +175,9 @@ class FakeApi:
         self.lists.append(lst)
         return lst
 
+    def leads_by_email(self, email):
+        return [l for l in getattr(self, "by_email", {}).get(email.lower(), [])]
+
     def delete_lead(self, lead_id):
         self.deleted = getattr(self, "deleted", []) + [lead_id]
         if lead_id == "gone":
@@ -702,10 +705,11 @@ def test_prune_deletes_list_and_campaign_leads_and_dqs_the_prospect():
     db.store["prospects"] = [{"id": "p1", "email": "hello@gorillagrip.com", "instantly_lead_id": "camp-g", "status": "queued"},
                              {"id": "p2", "email": "support@kitessensu.com", "instantly_lead_id": "camp-k", "status": "queued"}]
     assert run.prune(db, api, dry=True, log=quiet) == 1 and not getattr(api, "deleted", [])
+    api.by_email = {"hello@gorillagrip.com": [{"id": "camp-g", "email": "hello@gorillagrip.com"}, {"id": "list-g2", "email": "hello@gorillagrip.com"}]}
     assert run.prune(db, api, log=quiet) == 1
-    assert sorted(api.deleted) == ["camp-g", "lead-g"]  # the list lead and the enrolled campaign lead, never KITESSENSU
+    assert sorted(api.deleted) == ["camp-g", "lead-g", "list-g2"]  # stored ids plus whatever Instantly holds under the address; never KITESSENSU
     g = db.store["harvest_sellers"][0]
-    assert g["instantly_lead_id"] is None and g["notes"].endswith("removed from Instantly")
+    assert g["instantly_lead_id"] is None and g["pushed_at"] is None and "removed from Instantly (3 lead object(s))" in g["notes"]
     assert db.store["prospects"][0]["status"] == "dq" and db.store["prospects"][1]["status"] == "queued"
     assert run.prune(db, api, log=quiet) == 0  # idempotent
     assert db.store["funnel_events"][-1]["note"].startswith("prune: 1 lead")
@@ -718,6 +722,16 @@ def test_prune_treats_an_already_deleted_lead_as_done():
     db.store["harvest_sellers"] = rows
     assert run.prune(db, api, log=quiet) == 1
     assert db.store["harvest_sellers"][0]["instantly_lead_id"] is None
+
+
+def test_prune_finds_a_pushed_row_without_a_stored_id_by_its_address():
+    db, api = FakeDB(), FakeApi()
+    rows = _pushed_rows()[:1]
+    rows[0].update(status="skip_non_us", instantly_lead_id=None, pushed_at="2026-09-03T18:32:00+00:00")
+    db.store["harvest_sellers"] = rows
+    api.by_email = {"hello@gorillagrip.com": [{"id": "found-1", "email": "hello@gorillagrip.com"}]}
+    assert run.prune(db, api, log=quiet) == 1 and api.deleted == ["found-1"]
+    assert db.store["harvest_sellers"][0]["pushed_at"] is None
 
 
 # -- wayback: archived seller profiles ----------------------------------------------------
@@ -781,6 +795,24 @@ def test_wayback_crawl_writes_profile_only_rows_sized_by_feedback():
     # the enrich step picks the candidate up like any live-crawled row
     f2 = FakeFetcher({"https://hydrojug.com/": '<html><title>HydroJug</title><a href="mailto:hello@hydrojug.com">x</a></html>'})
     assert run.enrich(db, f2, limit=10, resolver=lambda d: True, log=quiet) == {"enriched": 1}
+
+
+def test_profile_only_rows_keep_brands_and_drop_resellers_individuals_and_handles():
+    def verdict(name, business, r12=900):
+        prof = {"seller_name": name, "business_name": business, "country": "US", "ratings_12mo": r12, "ratings_lifetime": 5000}
+        return wayback.classify_profile("S", prof)[0]
+    assert verdict("HydroJug", "HYDROJUG LLC") == "candidate"
+    assert verdict("Tens Towels", "Tens Home") == "candidate"          # brand-ish two-word legal name, not a person
+    assert verdict("Blue Vase Books", "Blue Vase Markeplace LLC") == "skip_reseller"
+    assert verdict("UPSW Auto Parts", "Time Auto Parts Inc.") == "skip_reseller"
+    assert verdict("SSA Cards", "Super Special Awesome Cards") == "skip_reseller"
+    assert verdict("LuxuryMerchandise", "Lorenzo Juan Ramos Jr") == "skip_reseller"   # individual
+    assert verdict("webdelicollc", "Aruna sampath Wijesinghe") == "skip_reseller"
+    assert verdict("greatgirls321", "GREAT GIRLS LLC") == "skip_reseller"            # handle
+    assert verdict("KITESSENSU", "KITESSENSU LLC", r12=150) == "skip_size"           # under the profile-only floor
+    assert verdict("KITESSENSU", "KITESSENSU LLC", r12=None) == "skip_size"
+    assert wayback.looks_like_a_person("sherry savoy") and not wayback.looks_like_a_person("Gerbi Direct, Inc.")
+    assert not wayback.looks_like_a_person("Hillspoint Industries")
 
 
 def test_load_captures_downloads_once_and_reuses_the_file(tmp_path):

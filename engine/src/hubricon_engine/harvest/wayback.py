@@ -99,18 +99,77 @@ def profile_from_capture(fetcher: Fetcher, ts: str, url: str) -> dict | None:
     return prof
 
 
+# Without a listing to look at, the storefront and legal names carry the
+# private-label test. The archive's sellers skew to whoever got captured:
+# book and card resellers, auto-parts stores, individuals flipping stock.
+RESELLER_STOREFRONT_WORDS = (
+    "book", "comic", "card", "collectible", "auto part", "autoparts", "parts", "media", "dvd", "blu-ray", "vinyl",
+    "video game", "games", "used", "refurb", "vintage", "thrift", "liquidat", "closeout", "marketplace", "deal",
+    "bargain", "discount", "outlet", "wholesale", "distribut", "trading", "import", "export", "resale", "surplus",
+    "supply", "supplies", "electronics", "computer", "phones", "tires", "pawn", "estate", "seller", "sales", "mart",
+    "emporium", "depot", "warehouse", "variety", "general store", "dollar", "bazaar", "exchange", "auction", "shop",
+    "store", "stores", "merchandise", "goods", "trader", "traders", "wares", "finds", "treasures", "stuff", "things",
+)
+ENTITY_WORDS = {"llc", "l.l.c", "l.l.c.", "inc", "inc.", "corp", "corp.", "corporation", "co", "co.", "ltd", "ltd.",
+                "limited", "company", "group", "enterprises", "enterprise", "brands", "brand", "international",
+                "industries", "products", "holdings", "partners", "studio", "studios", "labs", "lab", "designs",
+                "design", "solutions", "trading", "ventures", "collective", "creations", "works", "home", "kitchen",
+                "beauty", "pet", "pets", "baby", "sports", "outdoor", "outdoors", "gear", "goods", "foods", "food",
+                "naturals", "organics", "wellness", "nutrition", "cosmetics", "skincare", "apparel", "wear", "toys",
+                "tools", "direct", "essentials", "living", "botanicals", "garden", "farm", "farms", "coffee", "tea",
+                "supply", "distribution", "imports", "usa", "america", "american", "global", "worldwide", "&", "and"}
+PROFILE_ONLY_MIN_RATINGS_12MO = 200  # ≈ $1M/yr; with no listing data the floor is the ICP floor
+
+
+def looks_like_a_person(business_name: str | None) -> bool:
+    """Amazon shows a sole proprietor's own name as the business name."""
+    words = [w.strip(",.") for w in (business_name or "").split()]
+    words = [w for w in words if w.lower() not in ("jr", "sr", "ii", "iii", "iv")]
+    if not 2 <= len(words) <= 3 or any(not w.isalpha() for w in words):
+        return False
+    return not any(w.lower() in ENTITY_WORDS for w in words)
+
+
+def looks_like_a_handle(storefront: str | None) -> bool:
+    """'greatgirls321', 'webdelicollc': a login, not a brand."""
+    s = (storefront or "").strip()
+    if not s:
+        return True
+    if any(ch.isdigit() for ch in s) or "_" in s:
+        return True
+    return " " not in s and len(s) > 12 and s == s.lower()
+
+
+def reseller_storefront(storefront: str | None, business_name: str | None) -> str | None:
+    joined = f" {storefront or ''} {business_name or ''} ".lower()
+    for w in RESELLER_STOREFRONT_WORDS:
+        if f" {w}" in joined or f"{w} " in joined or f"{w}s " in joined:
+            return w
+    return None
+
+
 def classify_profile(sid: str, prof: dict) -> tuple[str, str, dict]:
     """A profile-only seller: the storefront name stands in for the brand, so
-    the private-label test is moot and the account is sized by its feedback."""
+    the private-label test falls on the names, and the account is sized by
+    its feedback with the ICP floor rather than the crawl's."""
     name = prof.get("seller_name") or prof.get("business_name")
     agg = {"seller_id": sid, "seller_name": prof.get("seller_name"), "brand": name, "brands": [name] if name else [],
            "asins": [], "reviews_max": 0, "top_bsr": None, "top_category": None}
-    if prof.get("ratings_12mo") is None and prof.get("country") in (None, "US"):
-        return "skip_size", "no feedback count on the archived profile", agg
     status, note = classify(agg, prof)
-    if status == "candidate":
-        note = f"storefront name as brand; {prof.get('ratings_12mo'):,} seller ratings in 12 months"
-    return status, note, agg
+    if status != "candidate":
+        return status, note, agg
+    if prof.get("ratings_12mo") is None:
+        return "skip_size", "no feedback count on the archived profile", agg
+    if prof["ratings_12mo"] < PROFILE_ONLY_MIN_RATINGS_12MO:
+        return "skip_size", f"{prof['ratings_12mo']:,} seller ratings in 12 months; profile-only floor is {PROFILE_ONLY_MIN_RATINGS_12MO}", agg
+    if looks_like_a_person(prof.get("business_name")):
+        return "skip_reseller", "individual seller (legal name is a person)", agg
+    if looks_like_a_handle(prof.get("seller_name")):
+        return "skip_reseller", "storefront name is a handle, not a brand", agg
+    word = reseller_storefront(prof.get("seller_name"), prof.get("business_name"))
+    if word:
+        return "skip_reseller", f"reseller storefront ({word!r})", agg
+    return "candidate", f"storefront name as brand; {prof['ratings_12mo']:,} seller ratings in 12 months", agg
 
 
 def crawl(db, captures: dict[str, tuple[str, str]], limit: int = LIMIT, workers: int = WORKERS,

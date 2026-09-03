@@ -458,8 +458,11 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
     """Sellers re-qualified out after they were pushed still sit in the
     Instantly list (and, once enrolled, in the campaign). Delete both leads
     before a mailbox spends a send on them; the prospect row becomes 'dq'."""
-    rows = [r for r in db.table("harvest_sellers").select("seller_id, brand, email, status, notes, instantly_lead_id")
-            .in_("status", list(SKIP_STATUSES)).execute().data if r.get("instantly_lead_id")]
+    # A row that was pushed carries the list lead's id when Instantly returned
+    # one; the enrolled campaign lead is a second object, found by address.
+    rows = [r for r in db.table("harvest_sellers").select("seller_id, brand, email, status, notes, instantly_lead_id, pushed_at")
+            .in_("status", list(SKIP_STATUSES)).execute().data
+            if r.get("instantly_lead_id") or (r.get("pushed_at") and r.get("email"))]
     if not rows:
         return 0
     if dry or api is None:
@@ -468,10 +471,15 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
         return 0 if api is None and not dry else len(rows)
     removed = 0
     for r in rows:
-        ids = [r["instantly_lead_id"]]
+        ids = [r["instantly_lead_id"]] if r.get("instantly_lead_id") else []
         prospects = db.table("prospects").select("id, instantly_lead_id").eq("email", (r.get("email") or "").lower()).execute().data \
             if r.get("email") else []
         ids += [p["instantly_lead_id"] for p in prospects if p.get("instantly_lead_id") and p["instantly_lead_id"] not in ids]
+        if r.get("email"):
+            try:
+                ids += [l["id"] for l in api.leads_by_email(r["email"]) if l.get("id") and l["id"] not in ids]
+            except InstantlyError as err:
+                log(f"prune {r['brand']}: lookup failed: {err}")
         for lead_id in ids:
             try:
                 api.delete_lead(lead_id)
@@ -483,10 +491,10 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
             for p in prospects:
                 db.table("prospects").update({"status": "dq", "fit_notes": f"harvest: {r['status']} — {r.get('notes') or ''}"[:500],
                                               "updated_at": _now()}).eq("id", p["id"]).execute()
-            _update(db, r["seller_id"], instantly_lead_id=None,
-                    notes=((r.get("notes") or "") + "; removed from Instantly").strip("; "))
+            _update(db, r["seller_id"], instantly_lead_id=None, pushed_at=None,
+                    notes=((r.get("notes") or "") + f"; removed from Instantly ({len(ids)} lead object(s))").strip("; "))
             removed += 1
-            log(f"  removed {r['brand']} from Instantly ({r['status']})")
+            log(f"  removed {r['brand']} from Instantly ({r['status']}, {len(ids)} lead object(s))")
     note = f"prune: {removed} lead(s) removed from Instantly"
     log(note)
     _log_event(db, note, {"removed": removed, "brands": [r["brand"] for r in rows[:removed]]})

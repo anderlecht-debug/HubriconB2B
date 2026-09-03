@@ -173,6 +173,13 @@ class Instantly:
         # 0 out of office · -1 not interested · -2 wrong person · -3 lost
         return self._call("PATCH", f"/leads/{lead_id}", body={"lt_interest_status": lt_interest_status})
 
+    def leads_by_email(self, email: str) -> list[dict]:
+        """Every lead object carrying this address, across lists and campaigns
+        (a list upload and a campaign enrolment are two objects)."""
+        page = self._call("POST", "/leads/list", body={"search": email, "limit": 20})
+        items = page.get("items", page if isinstance(page, list) else []) if page else []
+        return [l for l in items if (l.get("email") or "").lower() == email.lower()]
+
     def delete_lead(self, lead_id: str) -> dict:
         """DELETE /leads/{id}: drop a lead from its list or campaign before it is
         emailed (the harvest prunes sellers that turned out to be giants)."""
