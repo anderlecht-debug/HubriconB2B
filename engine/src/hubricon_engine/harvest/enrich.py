@@ -64,14 +64,27 @@ def brand_token(brand: str | None) -> str:
     return norm_name(brand) or re.sub(r"[^a-z0-9]", "", (brand or "").lower())
 
 
+def short_token(brand: str | None) -> str | None:
+    """'MIND BODHI HEALTH & WELLNESS' → 'mindbodhi': a long brand name usually
+    lives at its first two words' domain and titles its site with them."""
+    words = [w for w in re.findall(r"[a-z0-9]+", (brand or "").lower()) if w not in ("the", "and", "of", "by")]
+    if len(words) >= 3 and len("".join(words[:2])) >= 5:
+        return "".join(words[:2])
+    return None
+
+
 def candidate_domains(brand: str | None) -> list[str]:
     t = brand_token(brand)
     raw = re.sub(r"[^a-z0-9]", "", (brand or "").lower())
     hyph = "-".join(re.findall(r"[a-z0-9]+", (brand or "").lower()))
     if len(t) < 3:
         return []
-    out = [f"{t}.com", f"{raw}.com", f"{hyph}.com", f"{t}usa.com", f"shop{t}.com", f"get{t}.com",
-           f"{t}brand.com", f"{t}store.com", f"{t}official.com", f"{t}.co", f"{t}products.com", f"my{t}.com"]
+    out = [f"{t}.com", f"{raw}.com", f"{hyph}.com"]
+    st = short_token(brand)
+    if st and st != t:
+        out.append(f"{st}.com")  # the first two words of a long name, tried before the long shots
+    out += [f"{t}usa.com", f"shop{t}.com", f"get{t}.com",
+            f"{t}brand.com", f"{t}store.com", f"{t}official.com", f"{t}.co", f"{t}products.com", f"my{t}.com"]
     return list(dict.fromkeys(d for d in out if not d.startswith((".", "-"))))
 
 
@@ -105,7 +118,8 @@ def site_matches(page: str | None, brand: str | None) -> bool:
     head = norm_name(re.sub(r"<[^>]+>", " ", low[:6000]))
     m = re.search(r"<title>([^<]*)", page, re.I)
     title = norm_name(m.group(1)) if m else ""
-    return bool(t) and (t in title or t in head)
+    tokens = [x for x in (t, short_token(brand)) if x]
+    return bool(tokens) and any(x in title or x in head for x in tokens)
 
 
 def decode_bing_link(href: str) -> str | None:
