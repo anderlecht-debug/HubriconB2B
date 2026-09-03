@@ -693,7 +693,20 @@ def health(db, api: Instantly, campaign_id: str | None) -> dict:
             verdicts.append(f"{len(leads)} leads are enrolled and not one has ever been contacted")
 
     out["analytics"] = campaign_summary(api, campaign_id) if campaign_id else {"error": "no campaign"}
-    if out["analytics"].get("error"):
+    if out["analytics"].get("error") and out.get("leads"):
+        # /campaigns/analytics has never returned counts for this workspace.
+        # The lead roster is better evidence anyway: it is what Instantly will
+        # actually send to, counted one row at a time, and we have already read
+        # it. Derive the numbers rather than reporting a blank.
+        lv = out["leads"]
+        out["analytics"] = {
+            "leads_count": lv["total"],
+            "contacted_count": lv["contacted"],
+            "reply_count": sum(1 for l in leads if l.get("email_reply_count")),
+            "via": "counted from the campaign's lead roster; "
+                   f"/campaigns/analytics said: {out['analytics']['error']}",
+        }
+    elif out["analytics"].get("error"):
         verdicts.append(f"analytics unavailable: {out['analytics']['error']}")
 
     try:
