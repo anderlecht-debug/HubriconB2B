@@ -6,6 +6,10 @@ seller profile since 1 September 2020; Best Sellers lists name the
 products, product pages name the brand and the seller, and the brand's own
 site publishes the address it wants customers to write to. Chaining those
 four public pages is the harvester (`hubricon harvest`, see OPERATIONS.md).
+The Internet Archive's captures of those seller profiles are a second copy
+of the same database that never touches Amazon (`hubricon harvest wayback`).
+The seller's own feedback count on the profile page sizes the account, which
+keeps the $100M brands (who will not answer a cold email) off the list.
 It replaces the lead-credit spend and keeps the cold-email lane fed.
 
 Cold email is capped by mailboxes, not by leads: two warmed mailboxes send

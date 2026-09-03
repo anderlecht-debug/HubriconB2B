@@ -80,6 +80,7 @@ class Pass:
             # until something with the Instantly key pushes them to the list.
             try:
                 from .harvest import run as harvest
+                harvest.prune(self.db, api, dry=self.dry, log=self.say)  # re-qualified giants come off the list
                 harvest.push(self.db, api, dry=self.dry, log=self.say)
             except Exception as err:  # never let the free channel break the paid one
                 self.warnings.append(f"Harvest push: {err}")

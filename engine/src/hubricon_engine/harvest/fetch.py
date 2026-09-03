@@ -66,7 +66,7 @@ class Fetcher:
 
     def __init__(self, min_interval: float = 7.0, jitter: float = 5.0, timeout: int = 40,
                  block_pause: float = 600.0, max_block_streak: int = 2, give_up: bool = False,
-                 block_pause_cap: float = 3600.0, max_interval: float = 30.0,
+                 block_pause_cap: float = 3600.0, max_interval: float = 30.0, throttle_pause: float = 20.0,
                  transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None):
         self.jar = http.cookiejar.CookieJar()
         self.transport = transport or _urllib_transport(self.jar)
@@ -77,11 +77,12 @@ class Fetcher:
         # never stops: give_up=False backs off 10 → 20 → 40 → 60 min, slows the
         # pace for the rest of the run, and carries on when Amazon relents.
         self.give_up, self.block_pause_cap, self.max_interval = give_up, block_pause_cap, max_interval
+        self.throttle_pause = throttle_pause  # other hosts (web.archive.org, Bing): 429/503 → wait once, retry once
         self.sleep, self.clock = sleep, clock
         self.ua = user_agent or random.choice(USER_AGENTS)
         self._last: dict[str, float] = {}
         self.block_streak = 0
-        self.stats = {"requests": 0, "ok": 0, "missing": 0, "errors": 0, "blocked": 0, "chars": 0}
+        self.stats = {"requests": 0, "ok": 0, "missing": 0, "errors": 0, "blocked": 0, "throttled": 0, "chars": 0}
 
     def _pace(self, host: str) -> None:
         last = self._last.get(host)
@@ -102,16 +103,22 @@ class Fetcher:
             **(headers or {}),
         }
         self.stats["requests"] += 1
-        try:
-            status, text = self.transport(url, hdrs, self.timeout)
-        except urllib.error.HTTPError as err:
-            if err.code in (429, 503) and "amazon." in host:
-                return self._blocked(url)
-            self.stats["missing" if err.code == 404 else "errors"] += 1
-            return None
-        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
-            self.stats["errors"] += 1
-            return None
+        for attempt in (1, 2):
+            try:
+                status, text = self.transport(url, hdrs, self.timeout)
+                break
+            except urllib.error.HTTPError as err:
+                if err.code in (429, 503) and "amazon." in host:
+                    return self._blocked(url)
+                if err.code in (429, 503) and attempt == 1:
+                    self.stats["throttled"] += 1
+                    self.sleep(self.throttle_pause)
+                    continue
+                self.stats["missing" if err.code == 404 else "errors"] += 1
+                return None
+            except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+                self.stats["errors"] += 1
+                return None
         self.stats["chars"] += len(text)
         if "amazon." in host and any(m in text for m in BLOCK_MARKERS):
             return self._blocked(url)

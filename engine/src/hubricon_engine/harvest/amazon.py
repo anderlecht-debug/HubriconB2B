@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 import math
+import os
 import re
 
 BASE = "https://www.amazon.com"
@@ -40,6 +41,18 @@ CATEGORY_SCALE = {
 }
 DEFAULT_SCALE = 0.6
 
+# Seller feedback as a size signal. Buyers rate the *seller* on roughly one
+# order in five hundred, so the 12-month count on the profile page tracks the
+# whole account, not one listing: on 2026-09-03 Gorilla Grip ($100M+) showed
+# 8,703, MED PRIDE 10,609, Boka and Comfy Package ~2,200, and $2–5M brands sat
+# in the low hundreds (KITESSENSU 208, RICCLE 398). The band below brackets
+# roughly $0.5M–$40M a year; `hubricon harvest requalify` re-reads profiles
+# with today's band. Every number derived from it is labeled an estimate.
+MIN_RATINGS_12MO = int(os.environ.get("HARVEST_MIN_RATINGS_12MO", "100"))
+MAX_RATINGS_12MO = int(os.environ.get("HARVEST_MAX_RATINGS_12MO", "5000"))
+MAX_RATINGS_LIFETIME = int(os.environ.get("HARVEST_MAX_RATINGS_LIFETIME", "80000"))
+REVENUE_PER_RATING_YEAR = float(os.environ.get("HARVEST_REVENUE_PER_RATING", "5000"))
+
 RESELLER_WORDS = ("trading", "wholesale", "distribut", "import", "deals", "outlet", "warehouse",
                   "liquidat", "surplus", "resale", "supply co", "supplies inc", "marketplace")
 OFFSHORE_WORDS = ("shenzhen", "guangzhou", "dongguan", "yiwu", "hangzhou", "shanghai", "ningbo",
@@ -58,6 +71,9 @@ BIG_PARENT_WORDS = (
     "pattern inc", "pattern.", "thrasio", "perch", "razor group", "heyday", "branded group", "unybrands",
     "suma brands", "elevate brands", "boosted commerce", "forum brands", "accel club", "d1 brands", "olsam",
     "berlin brands", "dragonfly", "moonshot brands", "acquco", "factory14", "benitago", "accelerator store",
+    "l'occitane", "puig", "coty", "revlon", "e.l.f.", "elf cosmetics", "spectrum brands", "scotts miracle",
+    "conair", "jarden", "lifetime brands", "hamilton beach", "whirlpool", "sharkninja", "irobot", "3m company",
+    "abaline paper", "hillspoint industries",
 )
 NAME_NOISE = ("llc", "inc", "co", "ltd", "corp", "corporation", "company", "store", "official",
               "shop", "usa", "us", "the", "brand", "brands", "group", "international", "direct",
@@ -198,10 +214,38 @@ def seller(page: str) -> dict:
         elif lines:
             out["address"] = ", ".join(lines)
             out["country"] = lines[-1] if re.fullmatch(r"[A-Z]{2}", lines[-1]) else None
+    # Feedback counts: "98% positive in the last 12 months (1,139 ratings)" in
+    # the header, lifetime in the ratings table. Missing when the seller has
+    # no feedback yet (or the page is a captcha stub).
+    m = re.search(r"in the last 12 months\s*\(([\d,]+) ratings?\)", page)
+    out["ratings_12mo"] = _int(m.group(1)) if m else None
+    m = re.search(r'id="rating-lifetime-num".{0,400}?ratings-reviews-count"[^>]*>\s*([\d,]+)', page, re.S)
+    out["ratings_lifetime"] = _int(m.group(1)) if m else None
     text = _text(page)
     out["emails"] = sorted({e.lower() for e in re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
                             if not e.lower().endswith(("amazon.com", ".png", ".jpg", ".gif"))})
     return out
+
+
+def seller_size(ratings_12mo: int | None, ratings_lifetime: int | None) -> tuple[str | None, str]:
+    """→ ('too_big' | 'too_small' | None, why) from the seller's feedback counts.
+    Unknown counts never disqualify; the listing-level checks still apply."""
+    if ratings_12mo is not None and ratings_12mo > MAX_RATINGS_12MO:
+        return "too_big", f"{ratings_12mo:,} seller ratings in 12 months (band {MIN_RATINGS_12MO}–{MAX_RATINGS_12MO:,}), est. > $40M/yr"
+    if ratings_lifetime is not None and ratings_lifetime > MAX_RATINGS_LIFETIME:
+        return "too_big", f"{ratings_lifetime:,} lifetime seller ratings (cap {MAX_RATINGS_LIFETIME:,})"
+    if ratings_12mo is not None and ratings_12mo < MIN_RATINGS_12MO:
+        return "too_small", f"{ratings_12mo:,} seller ratings in 12 months (band {MIN_RATINGS_12MO}–{MAX_RATINGS_12MO:,}), est. < $500k/yr"
+    return None, ""
+
+
+def revenue_from_ratings(ratings_12mo: int | None) -> float | None:
+    """Monthly sales estimate from the 12-month seller-feedback count, at the
+    calibration midpoint of REVENUE_PER_RATING_YEAR dollars a year per rating.
+    Rough by nature; used to rank rows and to clear the push floor."""
+    if ratings_12mo is None:
+        return None
+    return round(ratings_12mo * REVENUE_PER_RATING_YEAR / 12, 2)
 
 
 def seller_url(seller_id: str) -> str:

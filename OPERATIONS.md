@@ -102,6 +102,31 @@ brands through), `HARVEST_PUSH_LIMIT` (40). Sellers of record that are a
 conglomerate or an aggregator (Nestlé, Pattern, Thrasio…) are skipped by
 name, and child-category lists are read before a category's page 1, where
 the giants sit.
+**Size is judged by the seller's own feedback count** (since 2026-09-03):
+the profile page shows "N ratings in the last 12 months"; buyers rate the
+seller on roughly one order in five hundred, so the count tracks the whole
+account. Band `HARVEST_MIN_RATINGS_12MO`–`HARVEST_MAX_RATINGS_12MO`
+(100–5,000 ≈ $0.5M–$40M a year; Gorilla Grip shows 8,703, MED PRIDE
+10,609, a $2M brand ~200) plus a lifetime cap of 80,000. Listing-level
+estimates alone let $100M brands through because one listing under the
+ceiling says nothing about the other two hundred.
+
+```
+uv run hubricon harvest requalify      # re-read live profiles of pushed/enriched/candidate rows with today's band
+uv run hubricon harvest prune          # skip_* rows still in Instantly → deleted there (the operator does this hourly)
+uv run hubricon harvest wayback        # second source: archived seller profiles, no Amazon request (below)
+```
+
+**Second source, the Wayback Machine.** The Internet Archive holds ~1,800
+captures of `amazon.com/sp?seller=…` from 2021 on, each with the storefront
+name, business name and address, country and feedback counts. `hubricon
+harvest wayback` reads them from web.archive.org (three fetchers, ~2
+requests a second, never Amazon) into `harvest_sellers` with `source =
+'wayback'`; the storefront name stands in for the brand and the size
+estimate comes from the feedback count, so the row still has to earn a live
+website and contact address in `enrich`. The CDX listing is saved at
+`~/.hubricon/harvest/wayback-sellers.cdx`; delete it to re-list.
+
 Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run
 waits ten minutes once, then stops for the day; the digest says so.

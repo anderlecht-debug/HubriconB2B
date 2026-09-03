@@ -12,6 +12,7 @@ Endpoints (https://developer.instantly.ai, API v2, Growth plan and above):
   GET  /campaigns/analytics
   GET  /lead-lists, POST /leads/list   lead lists the founder built in Instantly
   POST /leads                          enroll a lead into the campaign
+  DELETE /leads/{id}                   drop a lead (harvest prune)
   PATCH /leads/{id}                    interest status
   GET  /emails                         unibox (replies), 20 req/min
   POST /emails/{id}/reply              reply from the same mailbox
@@ -171,6 +172,11 @@ class Instantly:
         # 1 interested · 2 meeting booked · 3 meeting completed · 4 closed ·
         # 0 out of office · -1 not interested · -2 wrong person · -3 lost
         return self._call("PATCH", f"/leads/{lead_id}", body={"lt_interest_status": lt_interest_status})
+
+    def delete_lead(self, lead_id: str) -> dict:
+        """DELETE /leads/{id}: drop a lead from its list or campaign before it is
+        emailed (the harvest prunes sellers that turned out to be giants)."""
+        return self._call("DELETE", f"/leads/{lead_id}")
 
     def create_lead_list(self, name: str) -> dict:
         return self._call("POST", "/lead-lists", body={"name": name})

@@ -1110,6 +1110,20 @@ def cmd_harvest(args):
 
         api = instantly.Instantly() if instantly.configured() else None
         harvest.push(db, api, limit=args.limit or harvest.PUSH_LIMIT, dry=args.dry_run)
+    elif args.action == "wayback":
+        from pathlib import Path
+
+        from .harvest import wayback
+
+        captures = wayback.load_captures(fetcher, Path(args.cdx_file) if args.cdx_file else None)
+        wayback.crawl(db, captures, limit=args.limit or wayback.LIMIT, workers=args.workers or wayback.WORKERS)
+    elif args.action == "requalify":
+        harvest.requalify(db, fetcher, limit=args.limit or harvest.REQUALIFY_LIMIT)
+    elif args.action == "prune":
+        from . import instantly
+
+        api = instantly.Instantly() if instantly.configured() else None
+        harvest.prune(db, api, dry=args.dry_run)
 
 
 def main():
@@ -1231,14 +1245,17 @@ def main():
 
     sub.add_parser("scoreboard", help="print the PMF scoreboard").set_defaults(fn=cmd_scoreboard)
 
-    p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers → seller profiles → brand sites → Instantly list")
-    p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install"])
+    p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles → brand sites → Instantly list")
+    p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install",
+                                      "wayback", "requalify", "prune"])
     p.add_argument("--categories", nargs="*", help="Best Sellers slugs (default: three, rotating by day)")
     p.add_argument("--within-oz", dest="within_oz", type=float, default=1.0,
                    help="report: ounces above a lighter FBA weight band that count as a cliff (default 1)")
     p.add_argument("--max-products", dest="max_products", type=int, help="product pages per run (default 150)")
     p.add_argument("--limit", type=int, help="rows to enrich / push this run")
-    p.add_argument("--dry-run", dest="dry_run", action="store_true", help="push: report, don't touch Instantly")
+    p.add_argument("--dry-run", dest="dry_run", action="store_true", help="push/prune: report, don't touch Instantly")
+    p.add_argument("--workers", type=int, help="wayback: parallel fetchers against web.archive.org (default 3)")
+    p.add_argument("--cdx-file", dest="cdx_file", help="wayback: saved CDX listing (default ~/.hubricon/harvest/wayback-sellers.cdx)")
     p.set_defaults(fn=cmd_harvest)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")

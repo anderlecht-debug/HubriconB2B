@@ -35,7 +35,16 @@ PRODUCT_AMZ = """<html><head><title>Echo Dot</title></head><body><span id="produ
 <script>var x = {"merchantId":"ATVPDKIKX0DER"};</script></body></html>"""
 
 SELLER_PAGE = """<html><body><h1 id="seller-name">HydroJug</h1>
-<div class="a-box"><div class="a-box-inner"><!-- Detailed Seller Information --> <div class="a-row a-spacing-small"><h3>Detailed Seller Information</h3></div><div class="a-row a-spacing-none"><span class="a-text-bold">Business Name: </span><span>HYDROJUG LLC</span></div><div class="a-row a-spacing-none"><span class="a-text-bold">Business Address: </span></div><div class="a-row a-spacing-none indent-left"><span>1 MAIN ST</span></div><div class="a-row a-spacing-none indent-left"><span>STE 2</span></div><div class="a-row a-spacing-none indent-left"><span>OGDEN</span></div><div class="a-row a-spacing-none indent-left"><span>UT</span></div><div class="a-row a-spacing-none indent-left"><span>84401</span></div><div class="a-row a-spacing-none indent-left"><span>US</span></div></div></div></body></html>"""
+<div class="a-box"><div class="a-box-inner"><!-- Detailed Seller Information --> <div class="a-row a-spacing-small"><h3>Detailed Seller Information</h3></div><div class="a-row a-spacing-none"><span class="a-text-bold">Business Name: </span><span>HYDROJUG LLC</span></div><div class="a-row a-spacing-none"><span class="a-text-bold">Business Address: </span></div><div class="a-row a-spacing-none indent-left"><span>1 MAIN ST</span></div><div class="a-row a-spacing-none indent-left"><span>STE 2</span></div><div class="a-row a-spacing-none indent-left"><span>OGDEN</span></div><div class="a-row a-spacing-none indent-left"><span>UT</span></div><div class="a-row a-spacing-none indent-left"><span>84401</span></div><div class="a-row a-spacing-none indent-left"><span>US</span></div></div></div>
+<a class="a-link-normal feedback-detail-description" href="#"><i class="a-icon a-icon-star a-star-5"><span class="a-icon-alt">5 out of 5 stars</span></i><b>98% positive</b> in the last 12 months (1,139 ratings)</a>
+<div id="rating-lifetime-num" class="a-row a-spacing-none"><span class="ratings-reviews-count">50,819</span><span class="ratings-reviews-word">ratings</span></div>
+</body></html>"""
+
+
+def seller_page(name="HydroJug", business="HYDROJUG LLC", country="US", r12="1,139", life="50,819"):
+    return (SELLER_PAGE.replace("HydroJug", name).replace("HYDROJUG LLC", business)
+            .replace("<span>US</span>", f"<span>{country}</span>").replace("(1,139 ratings)", f"({r12} ratings)")
+            .replace('ratings-reviews-count">50,819', f'ratings-reviews-count">{life}'))
 
 BESTSELLER_PAGE = """<html><body>
 <a href="/HydroJug-Traveler/dp/B0CQVWT2NH/ref=zg_bs_g_kitchen_d_sccl_1/000-0000000-0000000?psc=1">x</a>
@@ -76,6 +85,10 @@ class FakeTable:
 
     def gte(self, k, v):
         self._filters.append(lambda r: r.get(k) is not None and r.get(k) >= v)
+        return self
+
+    def in_(self, k, values):
+        self._filters.append(lambda r: r.get(k) in values)
         return self
 
     def order(self, k, desc=False):
@@ -162,6 +175,13 @@ class FakeApi:
         self.lists.append(lst)
         return lst
 
+    def delete_lead(self, lead_id):
+        self.deleted = getattr(self, "deleted", []) + [lead_id]
+        if lead_id == "gone":
+            from hubricon_engine.instantly import InstantlyError
+            raise InstantlyError(404, f"/leads/{lead_id}", "not found")
+        return {}
+
     def add_leads(self, list_id=None, campaign_id=None, leads=None):
         self.added.append((list_id, leads))
         return self.reply if hasattr(self, "reply") else {
@@ -204,6 +224,32 @@ def test_seller_profile_parses_the_public_business_identity():
     assert s["seller_name"] == "HydroJug" and s["business_name"] == "HYDROJUG LLC"
     assert (s["city"], s["state"], s["zip"], s["country"]) == ("OGDEN", "UT", "84401", "US")
     assert s["address"] == "1 MAIN ST, STE 2, OGDEN, UT 84401, US"
+    assert s["ratings_12mo"] == 1139 and s["ratings_lifetime"] == 50819
+    bare = amazon.seller("<html><h1 id='seller-name'>New Shop</h1></html>")
+    assert bare["ratings_12mo"] is None and bare["ratings_lifetime"] is None
+
+
+def test_seller_feedback_band_sizes_the_account():
+    assert amazon.seller_size(8703, 211_667)[0] == "too_big"      # Gorilla Grip, $100M+
+    assert amazon.seller_size(10_609, 107_044)[0] == "too_big"    # MED PRIDE
+    assert amazon.seller_size(2_195, 63_297) == (None, "")         # Comfy Package stays
+    assert amazon.seller_size(208, 836) == (None, "")              # KITESSENSU, ~$2M
+    assert amazon.seller_size(40, 90)[0] == "too_small"
+    assert amazon.seller_size(None, None) == (None, "")            # unknown never disqualifies
+    assert amazon.seller_size(500, 90_000)[0] == "too_big"         # lifetime cap alone
+    assert amazon.revenue_from_ratings(1200) == round(1200 * amazon.REVENUE_PER_RATING_YEAR / 12, 2)
+    assert amazon.revenue_from_ratings(None) is None
+
+
+def test_classify_uses_the_feedback_band_and_tolerates_profile_only_rows():
+    agg = {"seller_id": "S", "seller_name": "Gorilla Grip", "brand": "GORILLA GRIP", "brands": ["GORILLA GRIP"],
+           "asins": [{"asin": "A", "est_monthly_revenue": 40000, "price": 20}], "reviews_max": 30000}
+    prof = {"business_name": "Some Industries, LLC", "country": "US", "ratings_12mo": 8703, "ratings_lifetime": 211667}
+    status, note = run.classify(agg, prof)
+    assert status == "skip_size" and "8,703" in note
+    prof["ratings_12mo"], prof["ratings_lifetime"] = 900, 4000
+    assert run.classify(agg, prof)[0] == "candidate"
+    assert run.classify({**agg, "asins": []}, prof)[0] == "candidate"  # no listings known: still classifiable
 
 
 def test_weight_units_normalise_to_ounces():
@@ -605,3 +651,129 @@ def test_one_harvest_at_a_time(tmp_path):
     lock.unlink()
     out = run.run_all(FakeDB(), FakeFetcher({}), categories=["kitchen"], max_products=1, lock=lock, log=quiet)
     assert "crawl" in out and not lock.exists()  # released even though nothing was found
+
+
+# -- requalify / prune ---------------------------------------------------------------
+
+def _pushed_rows():
+    return [
+        {"seller_id": "G", "seller_name": "Gorilla Grip", "brand": "GORILLA GRIP", "brands": ["GORILLA GRIP"], "asins": [],
+         "reviews_max": 0, "status": "pushed", "email": "hello@gorillagrip.com", "instantly_lead_id": "lead-g",
+         "est_monthly_revenue": 236000, "country": "US", "notes": "brand matches seller"},
+        {"seller_id": "K", "seller_name": "KITESSENSU", "brand": "KITESSENSU", "brands": ["KITESSENSU"], "asins": [],
+         "reviews_max": 0, "status": "pushed", "email": "support@kitessensu.com", "instantly_lead_id": "lead-k",
+         "est_monthly_revenue": 26000, "country": "US", "notes": "brand matches seller"},
+    ]
+
+
+def test_requalify_rereads_profiles_and_demotes_giants(tmp_path):
+    db = FakeDB()
+    db.store["harvest_sellers"] = _pushed_rows()
+    f = FakeFetcher({amazon.seller_url("G"): seller_page("Gorilla Grip", "Hillspoint Industries, LLC", r12="8,703", life="211,667"),
+                     amazon.seller_url("K"): seller_page("KITESSENSU", "KITESSENSU LLC", r12="208", life="836")})
+    counts = run.requalify(db, f, limit=10, cache=Cache(tmp_path), log=quiet)
+    assert counts == {"skip_size": 1, "kept": 1}
+    g, k = db.store["harvest_sellers"]
+    assert g["status"] == "skip_size" and g["ratings_12mo"] == 8703 and g["instantly_lead_id"] == "lead-g"  # prune needs the id
+    assert k["status"] == "pushed" and k["ratings_12mo"] == 208
+    assert Cache(tmp_path).get("seller", "G")["ratings_12mo"] == 8703  # the crawl's cache learns the counts too
+
+
+def test_prune_deletes_list_and_campaign_leads_and_dqs_the_prospect():
+    db, api = FakeDB(), FakeApi()
+    rows = _pushed_rows()
+    rows[0]["status"], rows[0]["notes"] = "skip_size", "requalified: 8,703 seller ratings"
+    db.store["harvest_sellers"] = rows
+    db.store["prospects"] = [{"id": "p1", "email": "hello@gorillagrip.com", "instantly_lead_id": "camp-g", "status": "queued"},
+                             {"id": "p2", "email": "support@kitessensu.com", "instantly_lead_id": "camp-k", "status": "queued"}]
+    assert run.prune(db, api, dry=True, log=quiet) == 1 and not getattr(api, "deleted", [])
+    assert run.prune(db, api, log=quiet) == 1
+    assert sorted(api.deleted) == ["camp-g", "lead-g"]  # the list lead and the enrolled campaign lead, never KITESSENSU
+    g = db.store["harvest_sellers"][0]
+    assert g["instantly_lead_id"] is None and g["notes"].endswith("removed from Instantly")
+    assert db.store["prospects"][0]["status"] == "dq" and db.store["prospects"][1]["status"] == "queued"
+    assert run.prune(db, api, log=quiet) == 0  # idempotent
+    assert db.store["funnel_events"][-1]["note"].startswith("prune: 1 lead")
+
+
+def test_prune_treats_an_already_deleted_lead_as_done():
+    db, api = FakeDB(), FakeApi()
+    rows = _pushed_rows()[:1]
+    rows[0].update(status="skip_size", instantly_lead_id="gone")
+    db.store["harvest_sellers"] = rows
+    assert run.prune(db, api, log=quiet) == 1
+    assert db.store["harvest_sellers"][0]["instantly_lead_id"] is None
+
+
+# -- wayback: archived seller profiles ----------------------------------------------------
+
+from hubricon_engine.harvest import wayback  # noqa: E402
+
+CDX_TEXT = """https://www.amazon.com/sp?seller=A1AAAAAAAAAAAA 20220101000000 82000
+https://www.amazon.com/sp?seller=A1AAAAAAAAAAAA&sshmPath=shipping-rates 20250301000000 90000
+https://www.amazon.com/sp?seller=A1AAAAAAAAAAAA 20240601000000 91000
+https://www.amazon.com/sp?seller=A2BBBBBBBBBBBB 20250215032444 2053
+https://www.amazon.com/sp?seller=A3CCCCCCCCCCCC 20190101000000 88000
+https://www.amazon.com/sp?seller=a4dddddddddddd 20230505050505 77000
+garbage line
+"""
+
+
+def test_parse_cdx_keeps_the_newest_plain_capture_per_seller_and_drops_stubs():
+    caps = wayback.parse_cdx(CDX_TEXT)
+    assert caps["A1AAAAAAAAAAAA"] == ("20240601000000", "https://www.amazon.com/sp?seller=A1AAAAAAAAAAAA")  # plain beats the newer tab
+    assert "A2BBBBBBBBBBBB" not in caps  # 2 KB = Amazon's captcha stub
+    assert "A3CCCCCCCCCCCC" not in caps  # pre-2021: no business address on the page
+    assert caps["A4DDDDDDDDDDDD"][0] == "20230505050505"
+
+
+def _snap(caps, sid):
+    ts, url = caps[sid]
+    return wayback.SNAPSHOT.format(ts=ts, url=url)
+
+
+def test_wayback_crawl_writes_profile_only_rows_sized_by_feedback():
+    db = FakeDB()
+    db.store["harvest_sellers"] = [{"seller_id": "A0ONFILE00000", "status": "pushed"}]
+    caps = {
+        "A0ONFILE00000": ("20250101000000", "https://www.amazon.com/sp?seller=A0ONFILE00000"),   # already on file: untouched
+        "A1HYDRO000000": ("20240601000000", "https://www.amazon.com/sp?seller=A1HYDRO000000"),   # US, in band
+        "A2GIANT000000": ("20240701000000", "https://www.amazon.com/sp?seller=A2GIANT000000"),   # US, too big
+        "A3CHINA000000": ("20240801000000", "https://www.amazon.com/sp?seller=A3CHINA000000"),   # offshore
+        "A4STUB0000000": ("20240901000000", "https://www.amazon.com/sp?seller=A4STUB0000000"),   # captcha capture
+        "A5NOFEEDBACK0": ("20241001000000", "https://www.amazon.com/sp?seller=A5NOFEEDBACK0"),   # no ratings line
+    }
+    pages = {
+        _snap(caps, "A1HYDRO000000"): seller_page(),
+        _snap(caps, "A2GIANT000000"): seller_page("Mega Store", "MEGA CORP LLC", r12="12,000", life="300,000"),
+        _snap(caps, "A3CHINA000000"): seller_page("Foo Direct", "Shenzhen Foo Technology Co., Ltd", country="CN"),
+        _snap(caps, "A4STUB0000000"): "<html>Type the characters you see in this image</html>",
+        _snap(caps, "A5NOFEEDBACK0"): SELLER_PAGE.split("<a class=\"a-link-normal feedback")[0] + "</body></html>",
+    }
+    fake = FakeFetcher(pages)
+    s = wayback.crawl(db, caps, limit=10, workers=2, fetcher_factory=lambda: fake, log=quiet)
+    assert s["read"] == 4 and s["unreadable"] == 1
+    assert not any("A0ONFILE00000" in c for c in fake.calls)
+    by_id = {r["seller_id"]: r for r in db.store["harvest_sellers"]}
+    hydro = by_id["A1HYDRO000000"]
+    assert hydro["status"] == "candidate" and hydro["source"] == "wayback" and hydro["brand"] == "HydroJug"
+    assert hydro["business_name"] == "HYDROJUG LLC" and hydro["country"] == "US" and hydro["ratings_12mo"] == 1139
+    assert hydro["est_monthly_revenue"] == amazon.revenue_from_ratings(1139) and "archived profile 20240601" in hydro["notes"]
+    assert by_id["A2GIANT000000"]["status"] == "skip_size"
+    assert by_id["A3CHINA000000"]["status"] == "skip_non_us"
+    assert by_id["A5NOFEEDBACK0"]["status"] == "skip_size" and "no feedback" in by_id["A5NOFEEDBACK0"]["notes"]
+    assert db.store["funnel_events"][-1]["note"].startswith("wayback: 4 archived profiles")
+    # the enrich step picks the candidate up like any live-crawled row
+    f2 = FakeFetcher({"https://hydrojug.com/": '<html><title>HydroJug</title><a href="mailto:hello@hydrojug.com">x</a></html>'})
+    assert run.enrich(db, f2, limit=10, resolver=lambda d: True, log=quiet) == {"enriched": 1}
+
+
+def test_load_captures_downloads_once_and_reuses_the_file(tmp_path):
+    f = FakeFetcher({wayback.CDX + "&showNumPages=true": "2\n",
+                     wayback.CDX + "&page=0": CDX_TEXT.splitlines()[0] + "\n",
+                     wayback.CDX + "&page=1": CDX_TEXT.splitlines()[5] + "\n"})
+    path = tmp_path / "sellers.cdx"
+    caps = wayback.load_captures(f, path, log=quiet)
+    assert set(caps) == {"A1AAAAAAAAAAAA", "A4DDDDDDDDDDDD"} and path.exists()
+    f2 = FakeFetcher({})
+    assert wayback.load_captures(f2, path, log=quiet) == caps and not f2.calls
