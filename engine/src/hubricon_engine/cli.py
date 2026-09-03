@@ -1161,7 +1161,7 @@ def cmd_doctor(args):
 
 def cmd_outreach(args):
     """The manual lane. Prints briefs and drafts; never sends anything."""
-    from . import icp, outbound, outreach
+    from . import outbound, outreach
 
     db = dbmod.connect()
 
@@ -1176,22 +1176,25 @@ def cmd_outreach(args):
         return
 
     if args.action == "targets":
-        rows = db.table("harvest_sellers").select("*").in_(
-            "status", ["pushed", "enriched"]).execute().data
-        keep = []
-        for r in rows:
-            bucket, _ = icp.off_icp(r.get("brand") or r.get("seller_name"), r.get("email"), r.get("website"))
-            if bucket:
-                continue
-            keep.append(r)
-        keep.sort(key=lambda r: -(float(r.get("est_monthly_revenue") or 0)))
+        keep = outreach.targets(db, args.limit)
+        ready = sum(1 for r in keep if r["ready"])
         print(f"{len(keep)} seller(s) worth a hand-written email, best first.")
-        print("Role inboxes are included: find the owner's name before writing.\n")
-        for r in keep[: args.limit]:
+        print(f"{ready} are ready to write: a named owner and a number to open with.\n")
+        for r in keep:
             rev = float(r.get("est_monthly_revenue") or 0)
-            print(f"  {r['seller_id']:<16} {(r.get('brand') or '')[:24]:<24} "
-                  f"{(r.get('email') or '')[:30]:<30} ${rev:,.0f}/mo  {r.get('website') or ''}")
-        print(f"\nNext: hubricon outreach brief --seller <seller_id>")
+            print(f"  {outreach.target_label(r):<28} {(r.get('brand') or '')[:22]:<22} "
+                  f"{(r.get('email') or '')[:30]:<30} ${rev:,.0f}/mo  {r['seller_id']}")
+        print("\nNext: hubricon outreach pack --limit 8   (the whole batch, briefs and drafts)")
+        return
+
+    if args.action == "pack":
+        text = outreach.pack_text(db, args.limit, outbound.CALENDLY_URL)
+        if args.out:
+            with open(args.out, "w") as fh:
+                fh.write(text + "\n")
+            print(f"Wrote {args.out}")
+        else:
+            print(text)
         return
 
     facts = outreach.seller_facts(db, args.seller)
@@ -1390,13 +1393,14 @@ def main():
     p.set_defaults(fn=cmd_doctor)
 
     p = sub.add_parser("outreach", help="the manual lane: briefs and drafts you send by hand")
-    p.add_argument("action", choices=["dq", "targets", "brief", "draft", "partner"])
+    p.add_argument("action", choices=["dq", "targets", "pack", "brief", "draft", "partner"])
     p.add_argument("--seller", help="seller_id, for brief/draft/partner")
     p.add_argument("--first-name", dest="first_name", help="the owner's name, once you have found it")
     p.add_argument("--partner", help="the partner's first name, for the partner template")
     p.add_argument("--referral", help="the referral terms you are offering")
     p.add_argument("--limit", type=int, default=25)
     p.add_argument("--apply", action="store_true", help="dq: actually write the disqualifications")
+    p.add_argument("--out", help="pack: write the batch to this file instead of stdout")
     p.set_defaults(fn=cmd_outreach)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles → brand sites → Instantly list")

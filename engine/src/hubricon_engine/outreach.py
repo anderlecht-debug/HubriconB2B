@@ -160,6 +160,107 @@ def prune_dq(db, api, campaign_id: str | None = None, dry: bool = False, log=pri
     return gone
 
 
+# -- the daily batch -----------------------------------------------------------
+
+def targets(db, limit: int = 25) -> list[dict]:
+    """Harvested sellers worth a hand-written email, best first.
+
+    Ready-to-write rows come first: a seller we already have a person's name
+    for can be drafted now, while a role inbox costs ten minutes of looking
+    first. Within each group, biggest estimated revenue wins.
+    """
+    rows = db.table("harvest_sellers").select("*").in_("status", ["pushed", "enriched"]).execute().data
+    # Which sellers have a listing we can quote a fee cliff from. Two things
+    # gate a sendable email and they are independent: knowing who to write to,
+    # and having a number to open with.
+    with_hook = {p["seller_id"] for p in
+                 db.table("harvest_products").select("seller_id, weight_oz").execute().data
+                 if p.get("weight_oz") and amazon.fee_cliff(float(p["weight_oz"]))}
+    keep = []
+    for r in rows:
+        if icp.off_icp(r.get("brand") or r.get("seller_name"), r.get("email"), r.get("website"))[0]:
+            continue
+        named = bool(r.get("first_name")) and not icp.bad_greeting(r.get("first_name"))
+        if not named and not icp.is_role_inbox(r.get("email")):
+            named = True   # a personal address is a person, even unnamed
+        # An address on a domain that is not the brand's is the wrong person,
+        # however personal it looks: harvest resolved Rhino USA (rhinousa.com)
+        # to micah@micahrich.com. Marking that "ready" would send the batch's
+        # best-looking row to a stranger.
+        if icp.domain_mismatch(r.get("email"), r.get("website")):
+            named = False
+        hook = r["seller_id"] in with_hook
+        keep.append({**r, "named": named, "has_hook": hook, "ready": named and hook})
+    keep.sort(key=lambda r: (not r["ready"], not r["has_hook"], not r["named"],
+                             -(float(r.get("est_monthly_revenue") or 0))))
+    return keep[:limit]
+
+
+def target_label(r: dict) -> str:
+    if r["ready"]:
+        return "READY"
+    if r["named"]:
+        return "NEEDS A NUMBER"
+    if r["has_hook"]:
+        return "FIND THE OWNER"
+    return "FIND THE OWNER AND A NUMBER"
+
+
+def pack_text(db, limit: int, calendly_url: str) -> str:
+    """A day's worth of founder-lane work in one page.
+
+    The founder's call on 2026-09-03 was to hand-work these rather than cold
+    email them, so the bottleneck is no longer leads, it is the ten minutes a
+    person spends per brand. This puts the brief and the draft side by side so
+    that ten minutes is spent looking up a name, not running commands.
+    """
+    rows = targets(db, limit)
+    if not rows:
+        return "No sellers on file are ready for the founder lane yet. Run `hubricon harvest all` first."
+    ready = [r for r in rows if r["ready"]]
+    out = [
+        "FOUNDER LANE — today's batch",
+        f"  {len(ready)} of {len(rows)} are ready to write. Two things gate an email: "
+        "who to write to, and a number to open with.",
+        "  Five to eight a day. Ten at the very most. Send from your own mailbox, by hand.",
+        "",
+    ]
+    for i, r in enumerate(rows, 1):
+        facts = seller_facts(db, r["seller_id"])
+        if facts is None:
+            continue
+        out += ["=" * 78, f"{i}. {r.get('brand') or r.get('seller_name')}   [{target_label(r)}]",
+                "=" * 78, ""]
+        out += [brief_text(facts), ""]
+        if r["named"]:
+            d = founder_email(facts, r.get("first_name") or "there", calendly_url)
+            label = "DRAFT" if d["complete"] else "DRAFT — INCOMPLETE, needs a number before it can go"
+            out += ["  " + label, f"  To:      {d['to']}"
+                    + ("   (guessed address — Instantly's verifier has not seen this one)"
+                       if (r.get("email_confidence") == "pattern") else ""),
+                    f"  Subject: {d['subject']}", ""]
+            out += ["  " + line for line in d["body"].split("\n")]
+        else:
+            site = (r.get("website") or "").rstrip("/")
+            if icp.domain_mismatch(r.get("email"), r.get("website")):
+                out += [f"  NOTE: {r.get('email')} is not on {site}. The address we hold is probably",
+                        "  someone else's. Find the real one on the site before anything is sent.", ""]
+            out += [
+                "  FIND THE OWNER (about ten minutes), then:",
+                f"    hubricon outreach draft --seller {r['seller_id']} --first-name <name>",
+                "",
+                "  Where to look, in order:",
+                f"    1. {site}/pages/about  —  the founder's story is usually signed",
+                f"    2. LinkedIn: \"{r.get('brand') or ''}\" founder OR owner",
+                "    3. Amazon storefront → \"About the seller\"",
+                f"    4. {r.get('business_name') or 'the legal name'} in your state's business registry",
+            ]
+        out += [""]
+    out += ["=" * 78,
+            "Every one of these is yours to send. Nothing here emails anyone automatically."]
+    return "\n".join(out)
+
+
 # -- the per-seller brief ------------------------------------------------------
 
 def seller_facts(db, seller_id: str) -> dict | None:
@@ -253,9 +354,15 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
                 f"The FBA weight band below it ends at {best['band_edge']} oz, so every unit you ship "
                 f"pays the next band up. Public page, public weight — I have no access to your account.")
     else:
-        subject = f"{brand}: the margin question nobody answers"
-        hook = (f"I've been reading {brand}'s listings and the fee side looks like it's costing you "
-                f"more than it should.")
+        # No listing on file, so there is no checkable number. Refuse to write
+        # the plausible-sounding version: "the fee side looks like it's costing
+        # you more than it should" asserts a problem we have not measured, and
+        # a seller can tell the difference between that and an ounce count.
+        # Leave the gap visible so it cannot be sent by accident.
+        subject = f"{brand}: [ONE SPECIFIC NUMBER — see the brief]"
+        hook = ("[NO HOOK ON FILE. Open one of their listings, check the packed weight against the "
+                "FBA band below it, or find another number you can point at. Replace this whole "
+                "paragraph with it. Do not send this email without one.]")
     body = (
         f"Hi {first_name},\n\n"
         f"{hook}\n\n"
@@ -268,7 +375,7 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
         f"Worth a look? Reply and I'll send the upload page, or grab 20 minutes: {calendly_url}\n\n"
         f"Hagen Simmons\nHubricon\n"
     )
-    return {"to": s.get("email"), "subject": subject, "body": body}
+    return {"to": s.get("email"), "subject": subject, "body": body, "complete": best is not None}
 
 
 def _short_title(item: dict) -> str:

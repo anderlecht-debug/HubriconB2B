@@ -128,10 +128,17 @@ def test_the_draft_trims_amazon_keyword_stuffing():
 
 
 def test_a_seller_with_no_cliff_gets_no_invented_number():
+    """The plausible-sounding version is the dangerous one.
+
+    "the fee side looks like it's costing you more than it should" reads fine
+    and asserts a problem we have not measured. The gap stays visible instead.
+    """
     facts = _facts(weight=None, title="")
     d = outreach.founder_email(facts, "Sarah", "https://calendly.com/x")
-    assert "oz" not in d["subject"]
-    assert "band" not in d["body"]
+    assert d["complete"] is False
+    assert "Do not send this email without one" in d["body"]
+    assert "costing you more than it should" not in d["body"]
+    assert outreach.founder_email(_facts(), "Sarah", "https://calendly.com/x")["complete"] is True
 
 
 def test_the_partner_template_refuses_to_send_without_a_number():

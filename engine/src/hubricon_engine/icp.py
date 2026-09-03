@@ -87,8 +87,16 @@ _BUCKETS = (
 )
 
 # Addresses that reach a customer-service queue, not a person who can buy.
-# These are not disqualified as leads: they move to the founder lane, where a
-# human finds the owner's name first. See outreach.py.
+#
+# THE FOUNDER'S CALL, 2026-09-03. These are never cold-emailed. They go to the
+# founder lane, where a human finds the owner's name first. The two numbers
+# behind the decision: every one of the 35 harvest-sourced prospects had only a
+# role inbox, and SuperSearch could name the founder for just 4 of 38 brand
+# domains. Hand-working them is slower than the 250-lead target wants, and it
+# is the deliberate choice — two domains about two months old are the one asset
+# that cannot be rebought, and a support queue was never going to answer a
+# founder pitch. Do not relax this gate to hit a lead count. If it is ever
+# revisited, the bar to revisit it is three clients renewed past the free month.
 ROLE_LOCALS = frozenset((
     "info", "hello", "hi", "support", "contact", "help", "sales", "orders", "order",
     "service", "customerservice", "customer", "team", "admin", "office", "concierge",
