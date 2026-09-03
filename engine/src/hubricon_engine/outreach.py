@@ -27,6 +27,10 @@ from .harvest import amazon
 # worse than not emailing, and go to the founder lane for a human to fix.
 FOUNDER_LANE_BUCKETS = ("role_inbox", "bad_greeting", "domain_mismatch")
 
+# Written to fit_notes once a row is confirmed out of Instantly, so the hourly
+# pass does not look every disqualified address up again forever.
+DONE_MARK = "removed from Instantly"
+
 
 # -- who should never have been enrolled ---------------------------------------
 
@@ -103,8 +107,9 @@ def prune_dq(db, api, dry: bool = False, log=print) -> int:
     This runs in the hourly operator, which is the only place that holds the
     API key, and closes that gap.
     """
-    rows = db.table("prospects").select("email, instantly_lead_id").eq("status", "dq").execute().data
-    rows = [r for r in rows if r.get("instantly_lead_id")]
+    rows = [r for r in db.table("prospects").select("email, instantly_lead_id, fit_notes")
+            .eq("status", "dq").execute().data
+            if (r.get("instantly_lead_id") or r.get("email")) and DONE_MARK not in (r.get("fit_notes") or "")]
     if not rows:
         return 0
     if dry:
@@ -112,13 +117,34 @@ def prune_dq(db, api, dry: bool = False, log=print) -> int:
         return 0
     gone = 0
     for r in rows:
-        try:
-            api.delete_lead(r["instantly_lead_id"])
-        except Exception as err:
-            log(f"  could not remove {r['email']} from Instantly: {err}")
+        email = (r.get("email") or "").lower()
+        # A lead exists twice over there: once in the list it was uploaded to
+        # and once in the campaign it was enrolled into. Deleting the stored id
+        # removes one of them and leaves the other free to be emailed, which is
+        # the whole failure this function exists to prevent.
+        ids = [r["instantly_lead_id"]] if r.get("instantly_lead_id") else []
+        if email:
+            try:
+                ids += [l["id"] for l in api.leads_by_email(email) if l.get("id") and l["id"] not in ids]
+            except Exception as err:
+                log(f"  lookup failed for {email}: {err}")
+                continue
+        failed = False
+        for lead_id in ids:
+            try:
+                api.delete_lead(lead_id)
+            except Exception as err:
+                if getattr(err, "status", None) != 404:  # already gone is fine
+                    log(f"  could not remove {email} from Instantly: {err}")
+                    failed = True
+                    break
+        if failed:
             continue
-        db.table("prospects").update({"instantly_lead_id": None}).eq("email", r["email"]).execute()
-        gone += 1
+        note = ((r.get("fit_notes") or "") + f"; {DONE_MARK} ({len(ids)} lead object(s))").strip("; ")
+        db.table("prospects").update({"instantly_lead_id": None, "fit_notes": note[:500]}) \
+            .eq("email", r["email"]).execute()
+        if ids:
+            gone += 1
     log(f"Removed {gone} disqualified lead(s) from Instantly so the campaign cannot email them.")
     return gone
 

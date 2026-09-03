@@ -145,3 +145,74 @@ def test_the_partner_template_labels_the_estimate_and_the_source():
     assert "estimated from public rank" in d["body"]
     assert "15% of anything that renews" in d["body"]
     assert "Tens Towels's" not in d["body"], "possessive of a name ending in s"
+
+
+# -- prune_dq ------------------------------------------------------------------
+# A disqualified prospect that stays enrolled in Instantly still gets emailed.
+
+class _PruneDB:
+    def __init__(self, rows):
+        self.rows = rows
+        self.updates = []
+
+    def table(self, name):
+        return self
+
+    def select(self, *_):
+        return self
+
+    def eq(self, k, v):
+        self._key = (k, v)
+        return self
+
+    def execute(self):
+        return type("R", (), {"data": [dict(r) for r in self.rows]})()
+
+    def update(self, fields):
+        self.updates.append(fields)
+        return self
+
+
+class _PruneApi:
+    def __init__(self, extra=()):
+        self.deleted = []
+        self.extra = list(extra)
+
+    def leads_by_email(self, email):
+        return [{"id": i} for i in self.extra]
+
+    def delete_lead(self, lead_id):
+        self.deleted.append(lead_id)
+
+
+def test_prune_dq_deletes_the_campaign_lead_as_well_as_the_stored_one():
+    """Instantly holds a lead twice: in the list and in the campaign."""
+    db = _PruneDB([{"email": "x@y.com", "instantly_lead_id": "LIST1", "fit_notes": "agency"}])
+    api = _PruneApi(extra=["CAMPAIGN1"])
+    assert outreach.prune_dq(db, api, log=lambda *_: None) == 1
+    assert api.deleted == ["LIST1", "CAMPAIGN1"]
+
+
+def test_prune_dq_marks_the_row_so_it_is_not_looked_up_forever():
+    db = _PruneDB([{"email": "x@y.com", "instantly_lead_id": "L1", "fit_notes": "agency"}])
+    outreach.prune_dq(db, _PruneApi(), log=lambda *_: None)
+    assert outreach.DONE_MARK in db.updates[-1]["fit_notes"]
+    assert db.updates[-1]["instantly_lead_id"] is None
+
+
+def test_prune_dq_skips_rows_already_confirmed_gone():
+    db = _PruneDB([{"email": "x@y.com", "instantly_lead_id": None,
+                    "fit_notes": f"agency; {outreach.DONE_MARK} (2 lead object(s))"}])
+    api = _PruneApi()
+    assert outreach.prune_dq(db, api, log=lambda *_: None) == 0
+    assert api.deleted == []
+
+
+def test_prune_dq_leaves_the_row_alone_when_a_delete_fails():
+    class _Failing(_PruneApi):
+        def delete_lead(self, lead_id):
+            raise RuntimeError("500")
+
+    db = _PruneDB([{"email": "x@y.com", "instantly_lead_id": "L1", "fit_notes": "agency"}])
+    assert outreach.prune_dq(db, _Failing(), log=lambda *_: None) == 0
+    assert db.updates == [], "a failed delete must not be recorded as done"
