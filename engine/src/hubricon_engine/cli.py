@@ -1262,6 +1262,8 @@ def cmd_harvest(args):
         wayback.crawl(db, captures, limit=args.limit or wayback.LIMIT, workers=args.workers or wayback.WORKERS)
     elif args.action == "requalify":
         harvest.requalify(db, fetcher, limit=args.limit or harvest.REQUALIFY_LIMIT)
+    elif args.action == "listings":
+        harvest.listings(db, fetcher, limit=args.limit or harvest.LISTINGS_LIMIT)
     elif args.action == "prune":
         from . import instantly
 
@@ -1405,7 +1407,7 @@ def main():
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles → brand sites → Instantly list")
     p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install",
-                                      "wayback", "requalify", "prune"])
+                                      "wayback", "requalify", "prune", "listings"])
     p.add_argument("--categories", nargs="*", help="Best Sellers slugs (default: three, rotating by day)")
     p.add_argument("--within-oz", dest="within_oz", type=float, default=1.0,
                    help="report: ounces above a lighter FBA weight band that count as a cliff (default 1)")

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import plistlib
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -403,6 +404,87 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
     log(note)
     _log_event(db, note, {"pushed": pushed, "dropped": dropped, "instantly": replies})
     return pushed
+
+
+# -- listings: a live listing for a seller known only from its profile ---------------
+
+LISTINGS_LIMIT = int(os.environ.get("HARVEST_LISTINGS_LIMIT", "60"))
+LISTINGS_PER_SELLER = int(os.environ.get("HARVEST_LISTINGS_PER_SELLER", "2"))
+
+
+def storefront_url(seller_id: str) -> str:
+    return f"{amazon.BASE}/s?me={seller_id}&marketplaceID=ATVPDKIKX0DER"
+
+
+def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int = LISTINGS_PER_SELLER,
+             cache: Cache | None = None, log=print) -> dict:
+    """An archived profile names the seller but no product, so the founder lane
+    has nothing to quote. The seller's storefront (Amazon search by seller)
+    lists its ASINs; the first `per_seller` product pages give rank, price,
+    weight and the revenue estimate, and land in harvest_products like any
+    crawled listing. Three Amazon pages per seller, at the fetcher's pace."""
+    cache = cache or Cache()
+    counts: Counter = Counter()
+    rows = [r for r in db.table("harvest_sellers").select("*").in_("status", ["candidate", "enriched", "pushed"])
+            .eq("country", "US").order("est_monthly_revenue", desc=True).execute().data
+            if not r.get("asins")][:limit]
+    if not rows:
+        log("listings: every US row already carries a listing")
+        return {}
+    for row in rows:
+        try:
+            page = fetcher.get(storefront_url(row["seller_id"]))
+        except Blocked as err:
+            log(f"  {err}")
+            break
+        if not page:
+            counts["no_storefront"] += 1
+            continue
+        asins = list(dict.fromkeys(re.findall(r"/dp/([A-Z0-9]{10})", page)))[:per_seller]
+        agg_asins, brands, reviews_max, top = [], [], 0, (None, None)
+        product_rows = []
+        for asin in asins:
+            prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
+            if prod is None:
+                try:
+                    ppage = fetcher.get(f"{amazon.BASE}/dp/{asin}")
+                except Blocked as err:
+                    log(f"  {err}")
+                    ppage = None
+                if not ppage:
+                    continue
+                prod = amazon.product(ppage, asin)
+                prod.pop("related", None)
+                cache.put("product", asin, prod)
+            if prod.get("sold_by_amazon") or (prod.get("seller_id") or row["seller_id"]) != row["seller_id"]:
+                continue  # the buy box went to Amazon or another seller; not this seller's listing to quote
+            product_rows.append(_product_row(asin, {**prod, "seller_id": row["seller_id"]}))
+            agg_asins.append({"asin": asin, "brand": prod.get("brand"), "bsr": prod.get("bsr"), "price": prod.get("price"),
+                              "reviews": prod.get("reviews"), "est_monthly_revenue": prod.get("est_monthly_revenue")})
+            if prod.get("brand") and prod["brand"] not in brands:
+                brands.append(prod["brand"])
+            reviews_max = max(reviews_max, prod.get("reviews") or 0)
+            if prod.get("bsr") and (top[0] is None or prod["bsr"] < top[0]):
+                top = (prod["bsr"], prod.get("category"))
+        if not agg_asins:
+            counts["no_listing"] += 1
+            _update(db, row["seller_id"], notes=((row.get("notes") or "") + "; storefront read, no listing parsed").strip("; "))
+            continue
+        db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
+        upd = {"asins": agg_asins, "brands": brands or row.get("brands") or [], "reviews_max": reviews_max,
+               "top_bsr": top[0], "top_category": top[1],
+               "notes": ((row.get("notes") or "") + f"; {len(agg_asins)} live listing(s) from the storefront").strip("; ")}
+        if len(brands) == 1 and brands[0] and not amazon.looks_private_label(brands[0], row.get("seller_name"), row.get("business_name")):
+            upd["notes"] += f"; sells brand {brands[0]!r}"
+        if len(brands) == 1 and brands[0]:
+            upd["brand"] = brands[0]  # the product's brand is what the founder's email should name
+        _update(db, row["seller_id"], **upd)
+        counts["paired"] += 1
+        log(f"  {row['brand']}: {len(agg_asins)} listing(s), top rank {top[0]} in {top[1]}")
+    note = "listings: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "nothing read")
+    log(note)
+    _log_event(db, note, dict(counts))
+    return dict(counts)
 
 
 # -- owners: the named person behind a harvested brand ------------------------------

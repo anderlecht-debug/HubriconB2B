@@ -897,3 +897,26 @@ def test_owners_asks_supersearch_for_the_founder_at_each_pushed_domain_once():
     assert run.owners(db, api, daily=2, log=quiet, today="2026-09-03") == 0  # the daily cap holds
     assert run.owners(db, api, daily=2, log=quiet, today="2026-09-04") == 1  # a new day
     assert db.store["funnel_events"][-1]["note"].startswith("owners: asked SuperSearch")
+
+
+# -- listings for profile-only sellers -----------------------------------------------
+
+def test_listings_pairs_an_archived_seller_with_its_live_products(tmp_path):
+    db = FakeDB()
+    db.store["harvest_sellers"] = [
+        {"seller_id": "AXSP4G6IQFYIQ", "seller_name": "HydroJug", "brand": "HydroJug", "brands": ["HydroJug"], "asins": [],
+         "status": "pushed", "country": "US", "source": "wayback", "est_monthly_revenue": 50000, "notes": "archived profile"},
+        {"seller_id": "AOTHER000000", "seller_name": "Other", "brand": "Other", "brands": ["Other"], "asins": [{"asin": "X"}],
+         "status": "pushed", "country": "US", "source": "bestsellers", "est_monthly_revenue": 90000},
+    ]
+    storefront = '<html><a href="/HydroJug-Traveler/dp/B0CQVWT2NH/ref=sr_1_1">a</a><a href="/Echo/dp/B09B8V1LZ3/ref=sr_1_2">b</a></html>'
+    f = FakeFetcher({run.storefront_url("AXSP4G6IQFYIQ"): storefront,
+                     f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P, f"{amazon.BASE}/dp/B09B8V1LZ3": PRODUCT_AMZ})
+    counts = run.listings(db, f, limit=10, per_seller=2, cache=Cache(tmp_path), log=quiet)
+    assert counts == {"paired": 1}
+    row = db.store["harvest_sellers"][0]
+    assert row["asins"][0]["asin"] == "B0CQVWT2NH" and row["top_bsr"] == 400 and row["top_category"] == "Kitchen & Dining"
+    assert row["brand"] == "HydroJug" and "1 live listing(s)" in row["notes"]  # the Echo is Amazon's own offer, not this seller's
+    assert {r["asin"] for r in db.store["harvest_products"]} == {"B0CQVWT2NH"}
+    assert not any("AOTHER" in c for c in f.calls)  # rows that already carry a listing are left alone
+    assert run.listings(db, FakeFetcher({}), limit=10, cache=Cache(tmp_path), log=quiet) == {}
