@@ -154,10 +154,14 @@ class Instantly:
     def create_lead(self, campaign_id: str, email: str, first_name: str | None = None,
                     last_name: str | None = None, company_name: str | None = None,
                     website: str | None = None, custom: dict | None = None) -> dict:
+        # Every lead reaches the campaign from a lead list in this workspace,
+        # so skip_if_in_workspace would refuse all of them (it did, silently,
+        # until 2026-09-03: an active campaign with zero leads). The guard that
+        # matters is skip_if_in_campaign.
         body = {
             "campaign": campaign_id,
             "email": email,
-            "skip_if_in_workspace": True,
+            "skip_if_in_workspace": False,
             "skip_if_in_campaign": True,
             "verify_leads_on_import": True,
         }

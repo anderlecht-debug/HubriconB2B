@@ -398,3 +398,32 @@ def test_repair_never_touches_a_disqualified_prospect():
             raise AssertionError("a disqualified prospect must never be enrolled")
 
     assert outbound.repair_enrollment(db, _Api(), "C1", dry=False)[0] == 0
+
+
+def test_create_lead_does_not_refuse_addresses_that_sit_in_a_list_of_this_workspace(monkeypatch):
+    import json as _json
+    import urllib.request
+
+    from hubricon_engine import instantly as im
+
+    seen = {}
+
+    class _Res:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b"{}"
+
+    def fake_urlopen(req, timeout=None):
+        seen["body"] = _json.loads(req.data)
+        return _Res()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    im.Instantly(api_key="k").create_lead("camp", "a@b.com", "A")
+    assert seen["body"]["skip_if_in_workspace"] is False and seen["body"]["skip_if_in_campaign"] is True
