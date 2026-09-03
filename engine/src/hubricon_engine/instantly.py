@@ -62,14 +62,15 @@ class Instantly:
         if params:
             url += "?" + urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
         data = json.dumps(body).encode() if body is not None else None
-        req = urllib.request.Request(
-            url, data=data, method=method,
-            headers={"authorization": f"Bearer {self.key}", "content-type": "application/json",
-                     "accept": "application/json",
-                     # Cloudflare in front of api.instantly.ai answers "error 1010"
-                     # to Python's default user agent; a named client passes.
-                     "user-agent": "Hubricon-operator/1.0 (+https://www.hubricon.com)"},
-        )
+        headers = {"authorization": f"Bearer {self.key}", "accept": "application/json",
+                   # Cloudflare in front of api.instantly.ai answers "error 1010"
+                   # to Python's default user agent; a named client passes.
+                   "user-agent": "Hubricon-operator/1.0 (+https://www.hubricon.com)"}
+        if data is not None:
+            # Only with a body: a DELETE that declares JSON and sends nothing is
+            # refused ("Body cannot be empty when content-type is set").
+            headers["content-type"] = "application/json"
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
         for attempt in (1, 2):
             try:
                 with urllib.request.urlopen(req, timeout=self.timeout) as res:

@@ -159,3 +159,36 @@ def test_copy_update_respects_dry_run_and_needs_the_postal_footer():
     assert not api.updated and any(n.startswith("[dry] would update the campaign copy") for n in notes)
     _, notes = outbound.ensure_campaign(db, api, None, dry=False)
     assert not api.updated and any("POSTAL_ADDRESS" in n for n in notes)
+
+
+def test_instantly_call_sets_json_content_type_only_with_a_body(monkeypatch):
+    import json as _json
+    import urllib.request
+
+    from hubricon_engine import instantly as im
+
+    seen = []
+
+    class _Res:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b"{}"
+
+    def fake_urlopen(req, timeout=None):
+        seen.append((req.get_method(), dict(req.header_items()), req.data))
+        return _Res()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    api = im.Instantly(api_key="k")
+    api.delete_lead("L1")
+    api.create_lead_list("x")
+    delete, post = seen
+    assert delete[0] == "DELETE" and delete[2] is None and not any(k.lower() == "content-type" for k in delete[1])
+    assert post[0] == "POST" and _json.loads(post[2]) == {"name": "x"} and any(k.lower() == "content-type" for k in post[1])
