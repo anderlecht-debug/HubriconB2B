@@ -32,7 +32,7 @@ LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator en
 # keeps two mailboxes' 40 sends a day fed. Depth 2 reads the grandchildren
 # of a category (e.g. Kitchen → Bakeware → Muffin Pans), which is where the
 # $1M–$20M private-label brands rank; page 1 of a top category is the giants.
-MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "400"))
+MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "250"))  # per run; launchd runs twice a day
 CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "4"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
 CRAWL_DEPTH = int(os.environ.get("HARVEST_DEPTH", "2"))
@@ -272,8 +272,14 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
 
 # -- enrich ---------------------------------------------------------------------
 
-def _rows(db, status: str, limit: int | None = None, min_revenue: float | None = None) -> list[dict]:
+def _rows(db, status: str, limit: int | None = None, min_revenue: float | None = None,
+          us_only: bool = True) -> list[dict]:
+    """Rows in a status, best first. US only by default: a seller whose profile
+    could not be read (captcha day) has no country yet and waits for the
+    next crawl of its category rather than being emailed blind."""
     q = db.table("harvest_sellers").select("*").eq("status", status)
+    if us_only:
+        q = q.eq("country", "US")
     if min_revenue is not None:
         q = q.gte("est_monthly_revenue", min_revenue)
     q = q.order("est_monthly_revenue", desc=True)
@@ -440,13 +446,17 @@ def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products:
     return out
 
 
-def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hour: int = 6, minute: int = 10) -> dict:
+RUN_HOURS = (6, 18)  # two gentle runs beat one long one: Amazon rate-limits by the hour
+
+
+def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hours: tuple[int, ...] = RUN_HOURS,
+                  minute: int = 10) -> dict:
     log_dir = Path.home() / "Library" / "Logs"
     return {
         "Label": "com.hubricon.harvest",
         "ProgramArguments": [uv, "run", "hubricon", "harvest", "all"],
         "WorkingDirectory": str(engine_dir),
-        "StartCalendarInterval": {"Hour": hour, "Minute": minute},
+        "StartCalendarInterval": [{"Hour": h, "Minute": minute} for h in hours],
         "StandardOutPath": str(log_dir / "hubricon-harvest.log"),
         "StandardErrorPath": str(log_dir / "hubricon-harvest.err"),
         "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
@@ -454,15 +464,17 @@ def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hour: int 
     }
 
 
-def install_launchd(engine_dir: Path | None = None, hour: int = 6, minute: int = 10, runner=subprocess.run) -> str:
+def install_launchd(engine_dir: Path | None = None, hours: tuple[int, ...] = RUN_HOURS, minute: int = 10,
+                    runner=subprocess.run) -> str:
     engine_dir = engine_dir or Path(__file__).resolve().parents[3]
     uv = subprocess.run(["which", "uv"], capture_output=True, text=True).stdout.strip() or "/opt/homebrew/bin/uv"
     plist_path = Path.home() / "Library" / "LaunchAgents" / "com.hubricon.harvest.plist"
     plist_path.parent.mkdir(parents=True, exist_ok=True)
-    plist_path.write_bytes(plistlib.dumps(launchd_plist(engine_dir, uv, hour, minute)))
+    plist_path.write_bytes(plistlib.dumps(launchd_plist(engine_dir, uv, hours, minute)))
     domain = f"gui/{os.getuid()}"
     runner(["launchctl", "bootout", domain, str(plist_path)], capture_output=True)
     res = runner(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
     state = "loaded" if res.returncode == 0 else f"launchctl said: {(res.stderr or res.stdout).strip()}"
-    return (f"{plist_path}\n  runs `uv run hubricon harvest all` daily at {hour:02d}:{minute:02d} local "
+    when = " and ".join(f"{h:02d}:{minute:02d}" for h in hours)
+    return (f"{plist_path}\n  runs `uv run hubricon harvest all` daily at {when} local "
             f"(missed while asleep → runs at next wake); logs in ~/Library/Logs/hubricon-harvest.log\n  {state}")

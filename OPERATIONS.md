@@ -70,11 +70,16 @@ uv run hubricon harvest all --max-products 40   # first pass by hand, watch it w
 uv run hubricon harvest status
 ```
 
-Per day it reads four rotating categories two levels deep (Kitchen →
-Bakeware → Muffin Pans is where $1M–$20M brands rank; page 1 of Kitchen is
-the giants), up to ~400 product pages a few seconds apart, the profiles of
-the third-party FBA sellers it found, then the sites of the US founder-run
-brands among them. About an hour a night. Rows land in
+It runs twice a day (06:10 and 18:10). Each run reads four rotating
+categories two levels deep (Kitchen → Bakeware → Muffin Pans is where
+$1M–$20M brands rank; page 1 of Kitchen is the giants), up to ~250 product
+pages at 7–12 seconds apart, the profiles of the third-party FBA sellers it
+found, then the sites of the US founder-run brands among them. About an
+hour a run. The pace matters: on 2026-09-03 about 180 Amazon requests in
+35 minutes drew captchas, and the run stops for the rest of the day at the
+second captcha. Sellers whose profile could not be read that day carry no
+country and are neither enriched nor pushed until a later crawl of their
+category fills it in. Rows land in
 `harvest_sellers` as `candidate` → `enriched` (has an address) → `pushed`
 (in the Instantly list "Hubricon harvest (auto)", which the hourly operator
 enrolls like any other Hubricon list). Skips are recorded with a reason:
@@ -88,7 +93,7 @@ whatever is `enriched` on its next pass. Either way nothing is contacted
 twice: Instantly skips addresses already in the workspace, and the campaign
 stops for the whole company on any reply.
 
-Knobs (env): `HARVEST_MAX_PRODUCTS` (400), `HARVEST_CATEGORIES_PER_RUN` (4),
+Knobs (env): `HARVEST_MAX_PRODUCTS` (250 per run), `HARVEST_CATEGORIES_PER_RUN` (4),
 `HARVEST_DEPTH` (2), `HARVEST_SUBCATS` (6 child lists per level),
 `HARVEST_MIN_MONTHLY_REVENUE` (2500, estimated, below it a row waits),
 `HARVEST_MAX_ASIN_MONTHLY_REVENUE` (300000: one listing above it means a

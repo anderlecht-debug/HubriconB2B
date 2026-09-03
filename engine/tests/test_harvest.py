@@ -437,13 +437,15 @@ def test_crawl_stops_cleanly_when_amazon_blocks(tmp_path):
 def test_enrich_updates_rows_in_revenue_order(tmp_path):
     db = FakeDB()
     db.store["harvest_sellers"] = [
-        {"seller_id": "S1", "brand": "HydroJug", "business_name": "HYDROJUG LLC", "status": "candidate", "est_monthly_revenue": 95000},
-        {"seller_id": "S2", "brand": "Nowhere Brand", "business_name": None, "status": "candidate", "est_monthly_revenue": 5000},
+        {"seller_id": "S1", "brand": "HydroJug", "business_name": "HYDROJUG LLC", "status": "candidate", "est_monthly_revenue": 95000, "country": "US"},
+        {"seller_id": "S2", "brand": "Nowhere Brand", "business_name": None, "status": "candidate", "est_monthly_revenue": 5000, "country": "US"},
+        {"seller_id": "S3", "brand": "Unknown Land", "business_name": None, "status": "candidate", "est_monthly_revenue": 80000, "country": None},
     ]
     f = FakeFetcher({"https://hydrojug.com/": '<html><title>HydroJug</title><a href="mailto:hello@hydrojug.com">x</a></html>'})
     counts = run.enrich(db, f, limit=10, resolver=lambda d: True, log=quiet)
-    assert counts == {"enriched": 1, "no_website": 1}
-    s1, s2 = db.store["harvest_sellers"]
+    assert counts == {"enriched": 1, "no_website": 1}  # S3 has no country yet and is left alone
+    s1, s2, s3 = db.store["harvest_sellers"]
+    assert s3["status"] == "candidate"
     assert s1["status"] == "enriched" and s1["email"] == "hello@hydrojug.com" and s1["website"] == "https://hydrojug.com/"
     assert s2["status"] == "no_website"
 
@@ -451,10 +453,11 @@ def test_enrich_updates_rows_in_revenue_order(tmp_path):
 def _enriched_rows():
     return [
         {"seller_id": "A", "brand": "A Brand", "status": "enriched", "email": "hello@a.com", "est_monthly_revenue": 50000,
-         "website": "https://a.com/", "business_name": "A LLC", "email_confidence": "published"},
-        {"seller_id": "B", "brand": "B Brand", "status": "enriched", "email": "hello@b.com", "est_monthly_revenue": 1000},
-        {"seller_id": "C", "brand": "C Brand", "status": "enriched", "email": "hagen.hds@gmail.com", "est_monthly_revenue": 20000},
-        {"seller_id": "D", "brand": "D Brand", "status": "candidate", "email": None, "est_monthly_revenue": 90000},
+         "website": "https://a.com/", "business_name": "A LLC", "email_confidence": "published", "country": "US"},
+        {"seller_id": "B", "brand": "B Brand", "status": "enriched", "email": "hello@b.com", "est_monthly_revenue": 1000, "country": "US"},
+        {"seller_id": "C", "brand": "C Brand", "status": "enriched", "email": "hagen.hds@gmail.com", "est_monthly_revenue": 20000, "country": "US"},
+        {"seller_id": "D", "brand": "D Brand", "status": "candidate", "email": None, "est_monthly_revenue": 90000, "country": "US"},
+        {"seller_id": "E", "brand": "E Brand", "status": "enriched", "email": "hello@e.com", "est_monthly_revenue": 70000, "country": None},
     ]
 
 
@@ -472,6 +475,7 @@ def test_push_creates_the_list_batches_leads_and_marks_rows():
     assert by_id["A"]["status"] == "pushed" and by_id["A"]["pushed_at"]
     assert by_id["B"]["status"] == "enriched"  # below the revenue floor, waits
     assert by_id["C"]["status"] == "enriched"  # internal address, never pushed
+    assert by_id["E"]["status"] == "enriched"  # no country on file (profile unread): waits, never emailed blind
     assert run.push(db, api, limit=40, log=quiet) == 0  # idempotent
 
 
@@ -518,10 +522,11 @@ def test_status_text_and_launchd_plist():
     db = FakeDB()
     db.store["harvest_sellers"] = _enriched_rows()
     text = run.status_text(db)
-    assert "4 sellers on file" in text and "enriched 3" in text and "A Brand" in text
-    plist = run.launchd_plist(Path("/x/engine"), "/opt/homebrew/bin/uv", 6, 10)
+    assert "5 sellers on file" in text and "enriched 4" in text and "A Brand" in text
+    plist = run.launchd_plist(Path("/x/engine"), "/opt/homebrew/bin/uv", (6, 18), 10)
     assert plist["ProgramArguments"] == ["/opt/homebrew/bin/uv", "run", "hubricon", "harvest", "all"]
-    assert plist["StartCalendarInterval"] == {"Hour": 6, "Minute": 10} and plist["WorkingDirectory"] == "/x/engine"
+    assert plist["StartCalendarInterval"] == [{"Hour": 6, "Minute": 10}, {"Hour": 18, "Minute": 10}]
+    assert plist["WorkingDirectory"] == "/x/engine" and plist["EnvironmentVariables"]["PYTHONUNBUFFERED"] == "1"
 
 
 def test_page_budget_is_split_across_categories_and_unused_pages_roll_over(tmp_path):

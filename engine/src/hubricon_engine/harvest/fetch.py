@@ -58,10 +58,13 @@ def _urllib_transport(jar: http.cookiejar.CookieJar):
 class Fetcher:
     """`get(url)` → page text, or None when the page is missing, errored, or a captcha.
 
-    transport(url, headers, timeout) -> (status, text) is injectable for tests.
+    Pace: 7–12 s between requests to the same host. On 2026-09-03 about 180
+    Amazon requests in 35 minutes at 4–7 s drew captchas; roughly 350 an hour
+    is the ceiling we stay under. transport(url, headers, timeout) ->
+    (status, text) is injectable for tests.
     """
 
-    def __init__(self, min_interval: float = 4.0, jitter: float = 3.0, timeout: int = 40,
+    def __init__(self, min_interval: float = 7.0, jitter: float = 5.0, timeout: int = 40,
                  block_pause: float = 600.0, max_block_streak: int = 2,
                  transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None):
         self.jar = http.cookiejar.CookieJar()
