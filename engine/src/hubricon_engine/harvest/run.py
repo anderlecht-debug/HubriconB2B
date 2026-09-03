@@ -433,6 +433,10 @@ def requalify(db, fetcher: Fetcher, limit: int = REQUALIFY_LIMIT, statuses: tupl
                "brands": row.get("brands") or [row.get("brand")], "asins": row.get("asins") or [],
                "reviews_max": row.get("reviews_max") or 0}
         status, note = classify(agg, prof)
+        tld = enrichmod.offshore_domain(row.get("email")) or enrichmod.offshore_domain(
+            enrichmod._domain(row["website"]) if row.get("website") else None)
+        if status not in SKIP_STATUSES and tld:
+            status, note = "skip_non_us", f"site or contact address on a {tld} domain"
         upd = {"ratings_12mo": prof.get("ratings_12mo"), "ratings_lifetime": prof.get("ratings_lifetime"),
                "business_name": prof.get("business_name") or row.get("business_name"),
                "country": prof.get("country") or row.get("country")}

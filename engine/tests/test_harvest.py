@@ -300,6 +300,16 @@ def test_site_matches_requires_the_brand_and_rejects_parked_domains():
     assert not enrich.site_matches("<html><title>Something else</title></html>", "Anker")
 
 
+def test_offshore_domains_disqualify_site_and_inbox():
+    assert enrich.offshore_domain("akacompany.com.vn") == ".vn"
+    assert enrich.offshore_domain("bellavita@akacompany.com.vn") == ".vn"
+    assert enrich.offshore_domain("shop.example.co.uk") == ".co.uk"
+    assert enrich.offshore_domain("hydrojug.com") is None and enrich.offshore_domain(None) is None
+    f = FakeFetcher({"https://bellavita.com/": '<html><title>Bella Vita</title><a href="mailto:bellavita@akacompany.com.vn">x</a></html>'})
+    upd = enrich.enrich_seller(f, {"brand": "Bella Vita", "business_name": None}, resolver=lambda d: True)
+    assert upd["status"] == "skip_non_us" and ".vn" in upd["notes"]
+
+
 def test_founder_name_from_about_copy():
     assert enrich.founder_name("<p>Founded by Jane Doe in 2015, we make jugs.</p>") == ("Jane", "Doe")
     assert enrich.founder_name("<p>John Smith, founder of HydroJug, says hi.</p>") == ("John", "Smith")
@@ -671,9 +681,14 @@ def test_requalify_rereads_profiles_and_demotes_giants(tmp_path):
     db.store["harvest_sellers"] = _pushed_rows()
     f = FakeFetcher({amazon.seller_url("G"): seller_page("Gorilla Grip", "Hillspoint Industries, LLC", r12="8,703", life="211,667"),
                      amazon.seller_url("K"): seller_page("KITESSENSU", "KITESSENSU LLC", r12="208", life="836")})
+    db.store["harvest_sellers"].append({"seller_id": "V", "seller_name": "Bella Vita", "brand": "Bella Vita", "brands": ["Bella Vita"],
+                                        "asins": [], "reviews_max": 0, "status": "enriched", "email": "bellavita@akacompany.com.vn",
+                                        "est_monthly_revenue": 89000, "country": "US"})
+    f.pages[amazon.seller_url("V")] = seller_page("Bella Vita", "BELLA VITA INC", r12="3,057", life="5,266")
     counts = run.requalify(db, f, limit=10, cache=Cache(tmp_path), log=quiet)
-    assert counts == {"skip_size": 1, "kept": 1}
-    g, k = db.store["harvest_sellers"]
+    assert counts == {"skip_size": 1, "kept": 1, "skip_non_us": 1}
+    assert db.store["harvest_sellers"][2]["status"] == "skip_non_us"  # a .vn inbox outranks the profile's "US"
+    g, k = db.store["harvest_sellers"][:2]
     assert g["status"] == "skip_size" and g["ratings_12mo"] == 8703 and g["instantly_lead_id"] == "lead-g"  # prune needs the id
     assert k["status"] == "pushed" and k["ratings_12mo"] == 208
     assert Cache(tmp_path).get("seller", "G")["ratings_12mo"] == 8703  # the crawl's cache learns the counts too

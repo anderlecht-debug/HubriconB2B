@@ -74,6 +74,14 @@ BIG_PARENT_WORDS = (
     "l'occitane", "puig", "coty", "revlon", "e.l.f.", "elf cosmetics", "spectrum brands", "scotts miracle",
     "conair", "jarden", "lifetime brands", "hamilton beach", "whirlpool", "sharkninja", "irobot", "3m company",
     "abaline paper", "hillspoint industries",
+    # Famous DTC brands whose Amazon account is mid-size but whose company is
+    # not (Sol de Janeiro is L'Occitane's, Fellow is a $100M+ coffee brand):
+    # the founder's rule is that these never answer a cold email.
+    "sol de janeiro", "fellow industries", "fellow products", "touchland", "olaplex", "drunk elephant",
+    "glossier", "hydro flask", "yeti coolers", "stanley 1913", "owala", "liquid death", "athletic greens",
+    "ag1", "ridge wallet", "brooklinen", "parachute home", "allbirds", "bombas", "harry's", "dollar shave",
+    "native deodorant", "hero cosmetics", "mielle", "tula", "truly beauty", "vital proteins", "orgain",
+    "bloom nutrition", "cirkul", "blendjet", "ember technologies", "ninja kitchen", "ooni",
 )
 NAME_NOISE = ("llc", "inc", "co", "ltd", "corp", "corporation", "company", "store", "official",
               "shop", "usa", "us", "the", "brand", "brands", "group", "international", "direct",

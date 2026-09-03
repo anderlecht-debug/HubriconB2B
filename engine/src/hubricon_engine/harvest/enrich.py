@@ -52,6 +52,12 @@ NAME_STOPWORDS = {"our", "the", "meet", "about", "amazon", "store", "family", "t
                   "get", "join", "follow", "email", "phone", "call", "text", "chat", "quick", "links"}
 CONTACT_PATHS = ("", "/pages/contact", "/pages/contact-us", "/contact", "/contact-us",
                  "/pages/about", "/pages/about-us", "/about", "/about-us", "/pages/our-story")
+# A brand whose site or inbox lives on one of these country domains is run
+# from there whatever the Amazon profile says (Bella Vita Luxury: profile
+# "US", contact bellavita@akacompany.com.vn). The campaign is for US sellers.
+OFFSHORE_TLDS = (".cn", ".hk", ".tw", ".vn", ".in", ".pk", ".kr", ".jp", ".ru", ".ua", ".by", ".tr", ".id", ".my",
+                 ".th", ".ph", ".bd", ".ae", ".sa", ".il", ".sg", ".mx", ".br", ".ar", ".co.uk", ".uk", ".de", ".fr",
+                 ".it", ".es", ".nl", ".pl", ".se", ".dk", ".fi", ".no", ".au", ".nz", ".ca", ".za", ".eu")
 
 
 def brand_token(brand: str | None) -> str:
@@ -67,6 +73,17 @@ def candidate_domains(brand: str | None) -> list[str]:
     out = [f"{t}.com", f"{raw}.com", f"{hyph}.com", f"{t}usa.com", f"shop{t}.com", f"get{t}.com",
            f"{t}brand.com", f"{t}store.com", f"{t}official.com", f"{t}.co", f"{t}products.com", f"my{t}.com"]
     return list(dict.fromkeys(d for d in out if not d.startswith((".", "-"))))
+
+
+def offshore_domain(host_or_email: str | None) -> str | None:
+    """→ the country suffix when the domain sits outside the US, else None."""
+    if not host_or_email:
+        return None
+    host = host_or_email.rsplit("@", 1)[-1].lower().rstrip(".")
+    for tld in sorted(OFFSHORE_TLDS, key=len, reverse=True):
+        if host.endswith(tld):
+            return tld
+    return None
 
 
 def _domain(url: str) -> str:
@@ -241,8 +258,15 @@ def enrich_seller(fetcher, row: dict, resolver=None) -> dict:
     dom = c["domain"]
     upd: dict = {"website": site, "first_name": c["first_name"], "last_name": c["last_name"],
                  "person_source": c["person_source"], "notes": f"site via {how}"}
+    if offshore_domain(dom):
+        upd.update(status="skip_non_us", notes=upd["notes"] + f"; site on a {offshore_domain(dom)} domain")
+        return upd
     published = [e for e in c["emails"] if e.split("@", 1)[1].endswith(dom)] or c["emails"]
     if published:
+        if offshore_domain(published[0]):
+            upd.update(email=published[0], status="skip_non_us",
+                       notes=upd["notes"] + f"; contact address on a {offshore_domain(published[0])} domain")
+            return upd
         upd.update(email=published[0], email_confidence="published", status="enriched")
         return upd
     if mx_ok(dom, resolver):
