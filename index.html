@@ -581,6 +581,53 @@ h1,h2,h3{
 .principle h3{ font-size: 13.5px; letter-spacing: .02em; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); margin-bottom: 8px; }
 .principle p{ font-size: 12px; color: var(--ink-60); margin: 0; }
 .principle .k{ font-family: var(--font-head); font-size: 22px; color: var(--amber); display: block; margin-bottom: 12px; }
+/* ============================================================
+   05 · THE MATH — problem → formula → fix
+   ============================================================ */
+.math-list{ list-style: none; display: grid; gap: 12px; }
+.math-row{
+  display: grid; grid-template-columns: 1fr 1.35fr .9fr; gap: 26px;
+  padding: 24px 26px; align-items: start;
+}
+.math-row .k{ font-family: var(--font-head); font-size: 22px; color: var(--amber); display: block; margin-bottom: 10px; }
+.math-row h3{ font-size: 15px; letter-spacing: .01em; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); margin-bottom: 8px; }
+.m-problem p, .m-fix p{ font-size: 12.5px; color: var(--ink-60); margin: 0; }
+.m-formula .a-head{
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 9.5px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60);
+  border-bottom: 1px solid var(--rule-08); padding-bottom: 9px; margin-bottom: 12px;
+}
+.fx{
+  display: block; padding: 12px 14px; border-radius: 12px;
+  background: hsl(226 65% 6% / .6); border: 1px solid var(--rule-08);
+  font-family: var(--font-mono); font-size: 14px; line-height: 1.75; color: var(--ink-100);
+  white-space: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.fx .ln{ display: block; }
+.fx .ln.cont{ padding-left: 2.5ch; }
+.fx b{ color: var(--amber); font-weight: 400; }
+.fx sub, .fx sup{ font-size: .72em; }
+.m-vars{ margin-top: 10px; font-size: 11px; line-height: 1.6; color: var(--ink-60); }
+.m-lbl{ font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; display: block; }
+.math-more{ margin-top: 14px; padding: 20px 24px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.math-more div{ font-size: 11.5px; color: var(--ink-60); line-height: 1.6; }
+.math-more .m-lbl{ margin-bottom: 6px; }
+.math-more code{ display: block; color: var(--ink-100); font-size: 12.5px; margin-bottom: 4px; }
+@media (max-width: 920px){
+  .math-row{ grid-template-columns: 1fr; gap: 16px; padding: 22px 20px; }
+  .math-more{ grid-template-columns: 1fr 1fr; }
+}
+/* grid cells default to min-width:auto = their longest no-wrap line; let them shrink so .fx scrolls instead of the row */
+.math-row > div, .math-more > div{ min-width: 0; }
+@media (max-width: 560px){
+  .math-more{ grid-template-columns: 1fr; }
+  .fx{ font-size: 13px; }
+}
+@media (max-width: 430px){
+  .math-row{ padding: 20px 16px; }
+  .fx{ font-size: 12px; padding: 10px 10px; }
+  .fx .ln.cont{ padding-left: 2ch; }
+}
 
 /* ============================================================
    11 · FAQ
@@ -760,6 +807,7 @@ h1,h2,h3{
   <a class="nav-logo" href="#top">Hubric<em>o</em>n</a>
   <div class="nav-links">
     <a href="#deliverables">What you get</a>
+    <a href="#math">The math</a>
     <a href="#process">How it works</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
@@ -902,7 +950,210 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 05 · HOW IT WORKS ══════════════ -->
+<!-- ══════════════ 05 · THE MATH — problem → formula → fix ══════════════ -->
+<section class="sect" id="math" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">The problems you already know you have</div>
+    <h2 class="reveal-words">You know the symptom. Here's the equation that ends it.</h2>
+    <p class="reveal-unit reveal-sub">Every leak below is one you've already felt in a payout. Each one has a closed-form fix. These are the working formulas the Teardown runs on your catalog in 24 hours — the actual models, not illustrations.</p>
+  </div>
+
+  <ol class="math-list reveal-unit reveal-sub">
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">01</span>
+        <h3>“Sales are up. The payout isn't.”</h3>
+        <p>Fees, landed cost and ad spend live in three different reports. No single number tells you what a SKU actually keeps.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>MARGIN.DECOMP</span><span>Module 04 · True net margin</span></div>
+        <code class="fx">
+          <span class="ln"><b>Net<sub>SKU</sub></b> = Revenue</span>
+          <span class="ln cont">− Σ |Amazon fees|</span>
+          <span class="ln cont">− Units × c<sub>landed</sub></span>
+          <span class="ln cont">− Ads × Rev<sub>SKU</sub> / Rev<sub>total</sub></span>
+        </code>
+        <p class="m-vars">c<sub>landed</sub> = unit cost + inbound freight + packaging + other. Fees summed across every Amazon line type; ad spend allocated by revenue share within the period.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>Every SKU's true net margin — and the SKUs that go negative once ads are honestly allocated. Those get fixed or cut first.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">02</span>
+        <h3>“I raised prices and made less.”</h3>
+        <p>The price moved without anyone knowing how demand responds. Two-thirds of sellers raised in 2024; most of them lost money doing it.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>ELASTICITY.FIT</span><span>Module 02 · Price elasticity</span></div>
+        <code class="fx">
+          <span class="ln">ln Q = α + <b>ε</b> · ln P</span>
+          <span class="ln cont">(+ γ · ln Sessions)</span>
+          <span class="ln"><b>ε</b> ± 1.96 · SE → 95% range</span>
+        </code>
+        <p class="m-vars">Log-log OLS per SKU. Guardrails run first: at least 5 periods and a price that actually moved (CV ≥ 2%) — otherwise the answer is “not enough data”, never a number that looks like a finding.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>ε per SKU with its confidence interval. Below −1, a cut grows profit. Between −1 and 0, a careful increase converts almost straight into margin.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">03</span>
+        <h3>“Fine — what price, exactly?”</h3>
+        <p>Elasticity gives you the direction. Profit calculus gives you the destination, to the cent.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>PRICE.OPTIMUM</span><span>Price-testing program</span></div>
+        <code class="fx">
+          <span class="ln">Π(P) = Q₀ · (P / P₀)<sup>ε</sup></span>
+          <span class="ln cont">× (P · (1 − f) − c)</span>
+          <span class="ln">dΠ/dP = 0 ⇒</span>
+          <span class="ln"><b>P*</b> = [c / (1 − f)] · ε / (1 + ε)</span>
+        </code>
+        <p class="m-vars">Valid for elastic SKUs (ε &lt; −1). f = Amazon's fee rate, c = landed unit cost. Every move is capped at ±5% per cycle and Buy Box share is watched daily — walk toward the optimum, re-measure, never teleport.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>An exact new price per SKU, the expected profit delta per period, and its 95% range — then the next step once the result is measured.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">04</span>
+        <h3>“I can't tell where my ad spend stops paying.”</h3>
+        <p>Your PPC tool optimizes toward the ACoS you typed in. Nobody derived that number from your margin.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>SPEND.RESPONSE</span><span>Module 03 · Ad efficiency</span></div>
+        <code class="fx">
+          <span class="ln">Sales(s) = a · s<sup>h</sup> / (k<sup>h</sup> + s<sup>h</sup>)</span>
+          <span class="ln"><b>Break-even</b>: dSales/ds = 1 / m</span>
+          <span class="ln"><b>Bleed</b> = terms: spend &gt; $10, sales = 0</span>
+        </code>
+        <p class="m-vars">Hill saturation fit per campaign, log-curve fallback. m = contribution margin before ads, so ads break even on profit, not on revenue. The 20–40% of spend leaking to terms that never convert is listed by term, in dollars.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>The spend level where the next dollar returns less than it costs, and every leaking search term — negative-matched on the first cycle.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">05</span>
+        <h3>“I stock out. Then I overstock.”</h3>
+        <p>A reorder sized on average velocity ignores that lead time and demand are both random. One of them always surprises you.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>MONTE_CARLO.RUN</span><span>Module 01 · Probabilistic inventory</span></div>
+        <code class="fx">
+          <span class="ln">L ~ LogNormal(lead time, σ = 0.2)</span>
+          <span class="ln">r ~ N(μ, σ<sub>r</sub>) · D ~ Poisson(r · L)</span>
+          <span class="ln"><b>P(stockout)</b></span>
+          <span class="ln cont">= P(D &gt; on hand + inbound)</span>
+          <span class="ln"><b>ROP</b> = μ<sub>d</sub> μ<sub>L</sub></span>
+          <span class="ln cont">+ 1.645 · √(μ<sub>L</sub> σ<sub>d</sub>² + μ<sub>d</sub>² σ<sub>L</sub>²)</span>
+        </code>
+        <p class="m-vars">Ten thousand simulated lead-time demand paths per SKU. The closed-form reorder point (95% service, Z = 1.645) runs alongside as a cross-check — the two must agree.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>A stockout probability per SKU, a reorder date and a quantity — from the whole distribution of outcomes, not one average.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">06</span>
+        <h3>“How much safety stock is actually worth carrying?”</h3>
+        <p>A flat 95% service target treats a 40%-margin SKU and a 6%-margin SKU the same. The money doesn't.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>NEWSVENDOR</span><span>Inventory economics · fee cliffs</span></div>
+        <code class="fx">
+          <span class="ln"><b>q*</b> = C<sub>u</sub> / (C<sub>u</sub> + C<sub>o</sub>)</span>
+          <span class="ln">C<sub>u</sub> = unit margin + low-inventory fee</span>
+          <span class="ln">C<sub>o</sub> = storage + capital + obsolescence</span>
+          <span class="ln">Order-up-to = q*-quantile of D(L+7d)</span>
+        </code>
+        <p class="m-vars">The critical fractile: the in-stock probability the money justifies, SKU by SKU. Capital at 12%/yr, obsolescence 2% of cost per cycle, Amazon's aged-inventory and peak-season storage cliffs priced in.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>The service level each SKU earns — 99% for a fat margin, 85% for a thin one — the order quantity, the wire amount, and a hold-vs-liquidate call on excess.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">07</span>
+        <h3>“Amazon owes me money and I never file.”</h3>
+        <p>1–3% of FBA revenue is recoverable every year. About 40% of it dies of neglect because the claim windows are short.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>RECOVERY.EV</span><span>Reimbursement recovery</span></div>
+        <code class="fx">
+          <span class="ln"><b>EV</b> = P(approved) × units</span>
+          <span class="ln cont">× landed cost</span>
+          <span class="ln">Windows: 30→60 d · 60→120 d · 0→60 d</span>
+        </code>
+        <p class="m-vars">Warehouse loss and damage, refunds with no return, and damaged returns — reconciled from your own exports. P(approved) 0.85 / 0.70 / 0.60 by claim type, stated as assumptions. The Ledger books only what Amazon actually pays.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>A dated, valued claim list with deadlines — filed before they close.</p>
+      </div>
+    </li>
+
+    <li class="math-row glass">
+      <div class="m-problem">
+        <span class="k">08</span>
+        <h3>“Fees crept up and I noticed a quarter late.”</h3>
+        <p>A $0.30-per-unit fee change or a conversion drop is invisible inside a monthly total.</p>
+      </div>
+      <div class="m-formula">
+        <div class="a-head"><span>ANOMALY.SCAN</span><span>Change detection · every cycle</span></div>
+        <code class="fx">
+          <span class="ln"><b>z</b> = (x<sub>latest</sub> − median) / (1.4826 MAD)</span>
+          <span class="ln">CUSUM: S⁺ = max(0, S⁺ + z − k)</span>
+          <span class="ln cont">k = 0.5σ, alarm at h = 4σ</span>
+        </code>
+        <p class="m-vars">Robust z on every fee, conversion and spend series; Page's CUSUM finds the period a level shift began. Only a crossed threshold counts as a finding, and the dollar impact is computed for the adverse direction only.</p>
+      </div>
+      <div class="m-fix">
+        <span class="m-lbl">What it hands you</span>
+        <p>The date a fee, conversion rate or spend level shifted, and its dollar impact — caught in the cycle it happened, not the quarter after.</p>
+      </div>
+    </li>
+
+  </ol>
+
+  <div class="math-more glass reveal-unit reveal-sub" aria-label="Also on the ledger">
+    <div><span class="m-lbl">Cash runway</span><code>P(ruin) = paths below $0 ÷ 10,000</code>90 simulated days, payouts every 14 — the bridge-capital line, not a prophecy.</div>
+    <div><span class="m-lbl">Concentration</span><code>HHI = Σ s<sub>i</sub>²</code>Above 1,800 is “highly concentrated” by the DOJ/FTC rule — priced as the dollars at risk if your top listing is suppressed.</div>
+    <div><span class="m-lbl">A bad month</span><code>VaR<sub>95</sub> · CVaR<sub>95</sub></code>The 5th-worst month in 100, and how bad it is on average once you're there.</div>
+    <div><span class="m-lbl">Forecast honesty</span><code>MASE-ranked model ladder</code>Naive → SES → damped Holt → Croston-TSB → seasonal, chosen by rolling backtest. Value added over naive reported as computed, even when it's zero.</div>
+    <div><span class="m-lbl">Health Score</span><code>Σ w<sub>i</sub> · score<sub>i</sub></code>Six sub-scores, each deduction tied to the dollar figure behind it.</div>
+  </div>
+
+  <p class="bridge reveal-unit reveal-sub">Three of these run live on demo data further down — the inventory, elasticity and ad-response charts are the models, not artwork. The rest run the same way. You see all of them on your own numbers in <em>24 hours</em>.</p>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-amber" data-calendly="audit" data-section="math" href="#apply">
+      Run these on my catalog
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════ 06 · HOW IT WORKS ══════════════ -->
 <section class="sect" id="process" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">How it works</div>
@@ -946,11 +1197,11 @@ h1,h2,h3{
 </section>
 
 <main class="features">
-  <!-- ══════════════ 06 · METHOD 01 — INVENTORY ══════════════ -->
+  <!-- ══════════════ 07 · METHOD 01 — INVENTORY ══════════════ -->
   <section class="feature" id="inventory" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 01 / This is the actual model, not an illustration</div>
+        <div class="eyebrow reveal-unit reveal-early">Method 01 / Formula 05, running live</div>
         <h2 class="reveal-words">Know your stockout risk before it happens.</h2>
         <p class="reveal-unit reveal-sub">We simulate the next 90 days of demand against your supplier lead times — ten thousand times per SKU. You get a reorder date, a quantity, and the exact probability of stocking out if you wait. A stockout costs you rank you'll buy back with ads; overstock is trapped capital plus storage fees. Both sides of that trade are priced in the model — no Amazon-native tool does probabilistic inventory math.</p>
         <div class="reveal-unit reveal-cta">
@@ -972,11 +1223,11 @@ h1,h2,h3{
     </div>
   </section>
 
-  <!-- ══════════════ 07 · METHOD 02 — PRICING ══════════════ -->
+  <!-- ══════════════ 08 · METHOD 02 — PRICING ══════════════ -->
   <section class="feature flip" id="elasticity" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 02 / Pricing</div>
+        <div class="eyebrow reveal-unit reveal-early">Method 02 / Formulas 02–03, running live</div>
         <h2 class="reveal-words">Know how far a price can move before it costs you.</h2>
         <p class="reveal-unit reveal-sub">For every SKU we measure how demand responds to price — with a 95% confidence range, not a hunch. Two-thirds of sellers raised prices in 2024; most of them lost money doing it, and sellers report losing ~80% of Buy Boxes on the way up. We tell you which SKUs can carry an increase, then watch your Buy Box share daily so suppression is caught in days, not quarters.</p>
         <div class="reveal-unit reveal-cta">
@@ -997,11 +1248,11 @@ h1,h2,h3{
     </div>
   </section>
 
-  <!-- ══════════════ 08 · METHOD 03 — ADVERTISING ══════════════ -->
+  <!-- ══════════════ 09 · METHOD 03 — ADVERTISING ══════════════ -->
   <section class="feature" id="ads" data-reveal>
     <div class="feature-inner">
       <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 03 / Advertising</div>
+        <div class="eyebrow reveal-unit reveal-early">Method 03 / Formula 04, running live</div>
         <h2 class="reveal-words">Know where your next ad dollar stops paying.</h2>
         <p class="reveal-unit reveal-sub">Ad spend has a break-even point. We estimate your account's response curve and mark the spend level where one more dollar returns less than a dollar — and flag the 20–40% of budget that typically leaks to search terms that never convert, in dollars, by term. No PPC tool derives what your target ACoS should be — they optimize toward whatever number you typed in.</p>
         <div class="reveal-unit reveal-cta">
@@ -1024,7 +1275,7 @@ h1,h2,h3{
   </section>
 </main>
 
-<!-- ══════════════ 09 · COMPARISON ══════════════ -->
+<!-- ══════════════ 10 · COMPARISON ══════════════ -->
 <section class="sect" id="compare" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">Where we sit</div>
@@ -1052,7 +1303,7 @@ h1,h2,h3{
   <p class="src-line reveal-unit reveal-sub">Churn and pricing figures: industry benchmarks and published price lists, 2025–26</p>
 </section>
 
-<!-- ══════════════ 10 · FIT ══════════════ -->
+<!-- ══════════════ 11 · FIT ══════════════ -->
 <section class="sect" id="fit" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">Fit check</div>
@@ -1085,7 +1336,7 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 11 · PRICING & TERMS ══════════════ -->
+<!-- ══════════════ 12 · PRICING & TERMS ══════════════ -->
 <section class="sect" id="pricing" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">Pricing &amp; terms</div>
@@ -1145,7 +1396,7 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 12 · OPERATOR ══════════════ -->
+<!-- ══════════════ 13 · OPERATOR ══════════════ -->
 <section class="sect" id="operator" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">Who runs your numbers</div>
@@ -1160,7 +1411,7 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 13 · FAQ ══════════════ -->
+<!-- ══════════════ 14 · FAQ ══════════════ -->
 <section class="sect" id="faq" data-reveal>
   <div class="sect-head">
     <div class="eyebrow reveal-unit reveal-early">FAQ</div>
@@ -1196,7 +1447,7 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 14 · FOOTER & CLOSE ══════════════ -->
+<!-- ══════════════ 15 · FOOTER & CLOSE ══════════════ -->
 <footer class="close" id="apply" data-reveal>
   <canvas class="close-canvas" data-mesh="close" aria-hidden="true"></canvas>
   <div class="edge edge-top" aria-hidden="true"></div>
@@ -1215,6 +1466,7 @@ h1,h2,h3{
       <span class="footer-logo">HUBRICON</span>
       <nav aria-label="Footer">
         <a href="#deliverables">What you get</a>
+        <a href="#math">The math</a>
         <a href="#process">How it works</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
@@ -1444,12 +1696,18 @@ document.querySelectorAll(".reveal-words").forEach(el => {
   });
 });
 
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
-  });
-}, { threshold: 0.18 });
-document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
+/* A section taller than the viewport can never show 18% of itself at once, so
+   for those the threshold is scaled to "18% of the viewport is covered". */
+const REVEAL_RATIO = 0.18;
+document.querySelectorAll("[data-reveal]").forEach(s => {
+  const threshold = Math.min(REVEAL_RATIO, REVEAL_RATIO * innerHeight / Math.max(1, s.offsetHeight));
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.disconnect(); }
+    });
+  }, { threshold });
+  io.observe(s);
+});
 
 /* ============================================================
    DATA-MESH "VIDEO" BACKGROUNDS (canvas — self-contained)
