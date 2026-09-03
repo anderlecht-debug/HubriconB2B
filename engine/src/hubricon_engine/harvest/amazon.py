@@ -82,6 +82,7 @@ BIG_PARENT_WORDS = (
     "ag1", "ridge wallet", "brooklinen", "parachute home", "allbirds", "bombas", "harry's", "dollar shave",
     "native deodorant", "hero cosmetics", "mielle", "tula", "truly beauty", "vital proteins", "orgain",
     "bloom nutrition", "cirkul", "blendjet", "ember technologies", "ninja kitchen", "ooni",
+    "weiman", "nic industries", "cerakote", "carlyle", "berkshire", "goldman", "kkr",
 )
 NAME_NOISE = ("llc", "inc", "co", "ltd", "corp", "corporation", "company", "store", "official",
               "shop", "usa", "us", "the", "brand", "brands", "group", "international", "direct",
