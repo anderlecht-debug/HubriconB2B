@@ -84,6 +84,13 @@ class Pass:
                 harvest.push(self.db, api, dry=self.dry, log=self.say)
             except Exception as err:  # never let the free channel break the paid one
                 self.warnings.append(f"Harvest push: {err}")
+            # A prospect marked dq here is still enrolled over there until
+            # something with the API key deletes it. This is that something.
+            try:
+                from . import outreach
+                outreach.prune_dq(self.db, api, dry=self.dry, log=self.say)
+            except Exception as err:
+                self.warnings.append(f"DQ prune: {err}")
             for n in outbound.sync_campaign_leads(self.db, api, cid):
                 self.say(n)
             _, notes = outbound.sync_replies(self.db, api, cid, self.dry)
@@ -322,6 +329,16 @@ class Pass:
                 + ("REACHED" if s.get("pmf_reached") else "not yet"),
                 "",
             ]
+            by_source = s.get("by_source") or {}
+            if by_source:
+                lines.append("By channel (which of these is actually working)")
+                for src, c in sorted(by_source.items(), key=lambda kv: -kv[1].get("total", 0)):
+                    lines.append(f"  {src:<16} {c.get('total', 0):>4} on file   "
+                                 f"{c.get('contacted', 0):>4} contacted   "
+                                 f"{c.get('replied', 0):>3} replied   "
+                                 f"{c.get('interested', 0):>3} interested   "
+                                 f"{c.get('dq', 0):>4} disqualified")
+                lines.append("")
         analytics = outbound.get_state(self.db, "instantly.analytics", {}) or {}
         lines += ["Instantly campaign",
                   "  " + (", ".join(f"{k} {v}" for k, v in analytics.items() if k != "as_of")

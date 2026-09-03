@@ -145,6 +145,61 @@ public pages at a human's pace from a home connection, never pushes through
 a captcha, and never runs from a datacenter. That is the whole risk posture;
 the founder owns it.
 
+## When the campaign is silent: `hubricon doctor`
+
+On 2026-09-03 the campaign had 84 leads enrolled, had been activated twelve
+times, and had never sent an email. Nothing said so: the analytics call was
+failing and its error was being swallowed, so `operator_state` held no
+`instantly.analytics` key at all after twenty hours of hourly passes.
+
+That cannot recur. Every pass now writes `instantly.health` to `operator_state`
+with plain-English verdicts, and `hubricon doctor` reads it back. The founder's
+Mac has no `INSTANTLY_API_KEY` and no `gh` CLI, so the database is the only log
+that reaches both machines: run `doctor` locally and it reports what the cloud
+last saw, with the timestamp.
+
+If activation is not sticking, the answer is almost always in the Instantly
+dashboard, not in the code. Check in this order:
+
+1. **The campaign's status badge.** "Account Suspended", "Accounts Unhealthy"
+   and "Bounce Protect" are statuses the API reports as negative numbers.
+   `POST /activate` returns 200 for all of them and the status snaps back.
+2. **Billing.** Sending needs a live paid plan. A lapsed card puts the
+   workspace read-only while the API keeps answering 200.
+3. **Campaign → Accounts.** Are both mailboxes actually ticked on this
+   campaign? `email_list` can be dropped silently at creation.
+4. **Campaign → Schedule.** An active campaign with no valid schedule sends
+   nothing, forever.
+5. **Campaign → Leads.** Leads sitting under "Risky" or "Catch-all" are never
+   sent while `allow_risky_contacts` is false, which it should stay.
+
+## Two lanes, and which leads go in which
+
+The automated lane is Instantly. The manual lane is `hubricon outreach`, and it
+never sends anything: it prints briefs and drafts that Hagen edits and sends
+from his own mailbox.
+
+The split is not about lead quality, it is about the address. Of the 35
+harvest-sourced prospects on file on 2026-09-03, every single one was a role
+inbox (`info@`, `hello@`, `support@`) that reaches a customer-service queue.
+Those are worth real money and worth a human; they are worthless to a cold
+sequence. So the harvest is a founder-lane source, not a campaign source, until
+enrichment starts finding named owners.
+
+    hubricon outreach dq [--apply]     who should never have been enrolled
+    hubricon outreach targets          in-ICP sellers worth a hand-written email
+    hubricon outreach brief --seller   one page on a seller, with a verify checklist
+    hubricon outreach draft --seller --first-name   the email, to edit and send by hand
+    hubricon outreach partner --seller --partner --referral   the partner template
+
+`role_inbox`, `bad_greeting` and `domain_mismatch` mean the *data* is wrong, not
+the company. Rhino USA is squarely in the ICP and the harvest had resolved it to
+`micah@micahrich.com`. Those go to the founder lane, not the bin.
+
+**Resend is never used for outreach.** It carries client magic links, welcome
+mail, teardown notices and this digest on hubricon.com. Cold email through it
+would put the onboarding path's deliverability at risk to save some typing.
+
 ## What "PMF" means here, in numbers
 
 `hubricon scoreboard` (or the daily digest) prints:

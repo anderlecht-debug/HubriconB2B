@@ -364,7 +364,7 @@ def sync_campaign_leads(db, api: Instantly, campaign_id: str) -> list[str]:
     anyone Instantly has already emailed as 'contacted'."""
     notes: list[str] = []
     known = _known_emails(db)
-    new = contacted = 0
+    new = contacted = held_off_icp = 0
     for lead in api.leads_in_campaign(campaign_id):
         email = (lead.get("email") or "").strip().lower()
         if not email or is_internal(email):
@@ -373,19 +373,30 @@ def sync_campaign_leads(db, api: Instantly, campaign_id: str) -> list[str]:
                                               "email_open_count", "email_reply_count", "email_click_count"))
         if email not in known:
             first, last = lead.get("first_name"), lead.get("last_name")
+            # Leads can reach the campaign roster without passing through
+            # enroll_from_lists (the SuperSearch job, or the founder adding one
+            # by hand in Instantly), so the ICP gate runs on this path too.
+            # Already-contacted leads keep 'contacted': that is history, not a
+            # decision, and rewriting it would corrupt the scoreboard.
+            bucket, why = icp.off_icp(lead.get("company_name"), email, lead.get("website"))
+            status = "contacted" if touched else ("dq" if bucket else "queued")
             db.table("prospects").upsert({
                 "email": email, "first_name": first, "last_name": last,
                 "company_name": lead.get("company_name"), "website": lead.get("website"),
                 "source": "supersearch", "instantly_lead_id": lead.get("id"),
                 "instantly_campaign_id": campaign_id,
-                "status": "contacted" if touched else "queued", "last_event_at": _now(),
+                "status": status, "last_event_at": _now(),
+                **({"fit_notes": f"{bucket} — {why}"} if bucket else {}),
             }, on_conflict="email").execute()
+            if bucket:
+                held_off_icp += 1
             new += 1
         elif touched and known[email]["status"] == "queued":
             db.table("prospects").update({"status": "contacted", "last_event_at": _now()}).eq("email", email).execute()
             contacted += 1
     if new or contacted:
-        notes.append(f"Roster sync: {new} new prospect(s) from Instantly, {contacted} marked contacted.")
+        notes.append(f"Roster sync: {new} new prospect(s) from Instantly, {contacted} marked contacted"
+                     + (f", {held_off_icp} of the new ones disqualified as off-ICP" if held_off_icp else "") + ".")
     return notes
 
 

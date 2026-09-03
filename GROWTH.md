@@ -18,6 +18,31 @@ reaches thousands of sellers at once without buying anything. Each one
 takes founder time in minutes, not hours, and none of them ask a prospect
 for anything before the free month does.
 
+## 0. The founder lane (the first few clients come from here)
+
+Everything below this is a channel that scales. This one does not, and it is
+the one most likely to produce the first paying customer, so it goes first.
+
+The harvest finds brands and published addresses. Almost every address it finds
+is a role inbox, because that is what a brand publishes. A cold sequence to
+`hello@` is worth close to nothing; a human who spends ten minutes finding the
+owner's name and writes about that brand's own listing is worth a great deal.
+
+    hubricon outreach targets                       who is worth the ten minutes
+    hubricon outreach brief --seller <seller_id>    one page, with a verify checklist
+    hubricon outreach draft --seller <id> --first-name <name>
+
+The hook is the FBA fee cliff, because the seller can check it in thirty
+seconds: the packed weight, the band edge just below it, and the units that
+weight ships at every month. All three come off a public product page.
+
+Five to eight a day, ten at the most, sent by hand from Hagen's own mailbox
+after editing. Never through Instantly (a young domain should not learn what it
+is from the twenty highest-value names) and never through Resend (it carries
+client mail). The brief ends in a verification checklist because the harvest
+does get these wrong: it resolved Rhino USA to someone else's personal address
+and stored "Washington" as Sol de Janeiro's contact first name.
+
 ## 1. The data post (weekly, ~20 minutes)
 
 The harvest stores the public weight, dimensions, rank and price of every

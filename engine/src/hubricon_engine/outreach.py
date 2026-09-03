@@ -95,6 +95,34 @@ def apply_dq(db, rows: list[dict], api=None, log=print) -> int:
     return n
 
 
+def prune_dq(db, api, dry: bool = False, log=print) -> int:
+    """Delete disqualified prospects' leads from Instantly.
+
+    Marking a row dq in Postgres does nothing to Instantly: the lead stays
+    enrolled and would still be emailed the moment the campaign starts sending.
+    This runs in the hourly operator, which is the only place that holds the
+    API key, and closes that gap.
+    """
+    rows = db.table("prospects").select("email, instantly_lead_id").eq("status", "dq").execute().data
+    rows = [r for r in rows if r.get("instantly_lead_id")]
+    if not rows:
+        return 0
+    if dry:
+        log(f"[dry] would remove {len(rows)} disqualified lead(s) from Instantly")
+        return 0
+    gone = 0
+    for r in rows:
+        try:
+            api.delete_lead(r["instantly_lead_id"])
+        except Exception as err:
+            log(f"  could not remove {r['email']} from Instantly: {err}")
+            continue
+        db.table("prospects").update({"instantly_lead_id": None}).eq("email", r["email"]).execute()
+        gone += 1
+    log(f"Removed {gone} disqualified lead(s) from Instantly so the campaign cannot email them.")
+    return gone
+
+
 # -- the per-seller brief ------------------------------------------------------
 
 def seller_facts(db, seller_id: str) -> dict | None:
