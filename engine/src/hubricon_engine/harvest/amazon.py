@@ -26,8 +26,12 @@ CATEGORIES = [
     # its listings name a brand already on file and are skipped before a page
     # is spent, so the budget only keeps buying new sellers if the ground is
     # new. These carry the same founder-run private label as the first fifteen.
-    "tools", "electronics", "appliances", "pc", "fashion", "shoes", "jewelry",
-    "watches", "luggage",
+    # Verified against Amazon on 2026-09-04: a slug that is not a Best Sellers
+    # root answers with one ASIN and no child lists, so it costs a page and
+    # yields nothing. "tools", "shoes", "jewelry", "watches" and "luggage" all
+    # fail that test; "hi" is Tools & Home Improvement, and shoes, jewellery
+    # and watches are child lists of "fashion", which the crawl reaches by depth.
+    "hi", "electronics", "appliances", "pc", "fashion",
 ]
 
 # units/month from the top-level category rank. Below rank 1,000 the public
