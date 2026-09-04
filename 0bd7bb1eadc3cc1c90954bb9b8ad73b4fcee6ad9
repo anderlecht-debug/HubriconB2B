@@ -1,0 +1,16 @@
+Attribution correction.
+
+The change to engine/src/hubricon_engine/harvest/enrich.py in this commit, and
+its test in engine/tests/test_harvest.py, are the work of a parallel Claude
+session (hubriconb2b-76), not of the commit message above, which describes only
+the Shopify classifier change.
+
+Their change: only an address at the site's own domain counts as published,
+because a contact page often carries a supplier's or an agency's address and
+writing to it reaches the wrong company. Observed live on 2026-09-04, where a
+site published contact@sansoxygen.com. An offshore address anywhere on the page
+still disqualifies the row.
+
+Swept in because this session staged with 'git add -A' in a working tree shared
+by several sessions. That is the committer's fault. Staging is by path from
+1083b71 onward.
