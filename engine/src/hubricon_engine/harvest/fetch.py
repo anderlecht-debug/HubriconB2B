@@ -96,10 +96,18 @@ def _chrome_transport(chrome: str, profile_dir: str | None = None, hard_timeout:
         done = threading.Event()
 
         def pump():
+            # The end of the document has to be found in the accumulated tail,
+            # not in one chunk: "</html>" lands wherever the 64 KB boundary
+            # falls, so checking a single chunk's last 200 bytes missed it on
+            # nearly every page and each fetch then sat out the whole hard
+            # timeout with the DOM already in hand (2026-09-04: ~90 s a page
+            # against ~10 s once this was fixed).
+            tail = b""
             try:
                 for chunk in iter(lambda: proc.stdout.read1(65536), b""):
                     chunks.append(chunk)
-                    if b"</html>" in chunk[-200:].lower():
+                    tail = (tail + chunk)[-8192:]
+                    if b"</html>" in tail.lower():
                         break
             finally:
                 done.set()
