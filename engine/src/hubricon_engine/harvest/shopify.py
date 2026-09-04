@@ -694,6 +694,14 @@ def classify_meta(meta: dict) -> tuple[str | None, str]:
     return None, ""
 
 
+def big_parent_word(*names: str | None) -> str | None:
+    """Which conglomerate name matched, for the note. amazon.looks_big_parent
+    answers yes or no; a row that was skipped on a name should record which
+    one, so the judgement can be checked later."""
+    joined = " ".join(n or "" for n in names).lower()
+    return next((w for w in amazon.BIG_PARENT_WORDS if w in joined), None)
+
+
 def classify_catalog(meta: dict, products: list[dict], vendors: dict | None = None) -> tuple[str, str]:
     """The catalogue: is this one founder's brand, and is it brand-sized?"""
     vendors = vendors or vendor_profile(products)
@@ -713,8 +721,13 @@ def classify_catalog(meta: dict, products: list[dict], vendors: dict | None = No
     if not dominant and len(vendors["vendors"]) >= 3:
         return "skip_reseller", f"multi-brand catalog ({len(vendors['vendors'])} vendors, " \
                                 f"top {vendors['share']:.0%})"
-    if amazon.looks_big_parent(name, dominant):
-        return "skip_size", "corporate parent or aggregator behind the store"
+    word = big_parent_word(name, dominant)
+    if word:
+        # Say that this came off a list, not off the store's own numbers. A
+        # name list is a cost optimisation — it saves the pages a real
+        # measurement would cost — and it must never read like a finding, or
+        # nobody can tell a wrong skip from a right one.
+        return "skip_size", f"name on the conglomerate list ({word!r}), not a measured size"
     bucket, why = icp.off_icp(name, None, meta.get("domain"))
     if bucket:
         return "skip_reseller", why

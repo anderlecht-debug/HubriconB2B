@@ -309,12 +309,21 @@ def enrich_seller(fetcher, row: dict, resolver=None) -> dict:
     if offshore_domain(dom):
         upd.update(status="skip_non_us", notes=upd["notes"] + f"; site on a {offshore_domain(dom)} domain")
         return upd
-    published = [e for e in c["emails"] if e.split("@", 1)[1].endswith(dom)] or c["emails"]
+    # Only an address at the site's own domain counts as published. A page
+    # often carries someone else's — a supplier, an agency, a sister brand —
+    # and emailing it reaches the wrong company, which reads worse to the
+    # recipient than a guess at the right one (Mueller's site published
+    # contact@sansoxygen.com, 2026-09-04). Off-domain addresses fall through
+    # to the pattern guess at the brand's own domain.
+    # An offshore address anywhere on the site is a fact about the company,
+    # whether or not it sits at the company's own domain.
+    offshore = next(((e, offshore_domain(e)) for e in c["emails"] if offshore_domain(e)), None)
+    if offshore:
+        upd.update(email=offshore[0], status="skip_non_us",
+                   notes=upd["notes"] + f"; contact address on a {offshore[1]} domain")
+        return upd
+    published = [e for e in c["emails"] if e.split("@", 1)[1].endswith(dom)]
     if published:
-        if offshore_domain(published[0]):
-            upd.update(email=published[0], status="skip_non_us",
-                       notes=upd["notes"] + f"; contact address on a {offshore_domain(published[0])} domain")
-            return upd
         upd.update(email=published[0], email_confidence="published", status="enriched")
         return upd
     if mx_ok(dom, resolver):

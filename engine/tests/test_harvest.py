@@ -381,6 +381,16 @@ def test_site_matches_requires_the_brand_and_rejects_parked_domains():
     assert not enrich.site_matches("<html><title>Something else</title></html>", "Anker")
 
 
+def test_an_address_at_someone_elses_domain_is_not_the_brands_contact():
+    site = '<html><title>Mueller</title><a href="mailto:contact@sansoxygen.com">x</a></html>'
+    f = FakeFetcher({"https://mueller.com/": site})
+    upd = enrich.enrich_seller(f, {"brand": "Mueller", "business_name": None}, resolver=lambda d: True)
+    assert upd["email"] == "hello@mueller.com" and upd["email_confidence"] == "pattern"
+    f2 = FakeFetcher({"https://mueller.com/": site.replace("contact@sansoxygen.com", "hi@mueller.com")})
+    upd2 = enrich.enrich_seller(f2, {"brand": "Mueller", "business_name": None}, resolver=lambda d: True)
+    assert upd2["email"] == "hi@mueller.com" and upd2["email_confidence"] == "published"
+
+
 def test_offshore_domains_disqualify_site_and_inbox():
     assert enrich.offshore_domain("akacompany.com.vn") == ".vn"
     assert enrich.offshore_domain("bellavita@akacompany.com.vn") == ".vn"

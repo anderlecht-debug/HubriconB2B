@@ -759,3 +759,24 @@ def test_a_search_term_that_returns_nothing_says_so():
     ok = FakeFetcher({shopify.search_url("candles"): SEARCH_PAGE})
     shopify.discover(ok, FakeFetcher({}), terms=["candles"], log=lines.append)
     assert not any("nothing; check the term" in l for l in lines)
+
+
+def test_a_skip_that_came_off_a_name_list_says_so():
+    # A name list is a cost optimisation: it saves the pages a real measurement
+    # would cost. It must never read like a finding, or a wrong skip is
+    # indistinguishable from a right one when someone reviews the row later.
+    status, note = shopify.classify_catalog(
+        {"name": "Thrasio Home", "domain": "thrasiohome.com"},
+        [{"vendor": "Thrasio Home"}] * 5)
+    assert status == "skip_size"
+    assert "name on the conglomerate list" in note and "'thrasio'" in note
+    assert "not a measured size" in note
+
+    # a skip on the store's own numbers still reads as the finding it is
+    multi, note2 = shopify.classify_catalog(
+        {"name": "Big Retailer", "domain": "bigretailer.com"},
+        [{"vendor": v} for v in ("A", "B", "C", "D")] * 2)
+    assert multi == "skip_reseller" and "multi-brand catalog" in note2 and "vendors" in note2
+
+    assert shopify.big_parent_word("Nestle Purina", None) == "nestle"
+    assert shopify.big_parent_word("Riverbend Goods", "Riverbend Goods") is None
