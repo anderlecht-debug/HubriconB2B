@@ -780,3 +780,27 @@ def test_a_skip_that_came_off_a_name_list_says_so():
 
     assert shopify.big_parent_word("Nestle Purina", None) == "nestle"
     assert shopify.big_parent_word("Riverbend Goods", "Riverbend Goods") is None
+
+
+def test_only_the_stores_own_domain_counts_as_a_published_address():
+    # A contact page often carries a supplier's or an agency's address. Writing
+    # to it reaches the wrong company, which reads worse to the recipient than a
+    # guess at the right one. Same rule enrich.py applies on the Amazon side.
+    page = ('<html><title>Riverbend Goods</title><body>'
+            'Fulfilment by <a href="mailto:contact@somesupplier.com">our partner</a>'
+            '</body></html>')
+    f = FakeFetcher({"https://riverbendgoods.com/": page})
+    c = shopify.store_contact(f, "https://riverbendgoods.com/", "Riverbend Goods",
+                              resolver=lambda d: True)
+    assert c["email"] != "contact@somesupplier.com"
+    assert c["email"] == "hello@riverbendgoods.com" and c["email_confidence"] == "pattern"
+
+    # an offshore address anywhere on the page is a fact about the company,
+    # even when the store also publishes one at its own domain
+    off = ('<html><title>Riverbend Goods</title><body>'
+           '<a href="mailto:hello@riverbendgoods.com">us</a>'
+           '<a href="mailto:sales@riverbend.cn">factory</a></body></html>')
+    f2 = FakeFetcher({"https://riverbendgoods.com/": off})
+    c2 = shopify.store_contact(f2, "https://riverbendgoods.com/", "Riverbend Goods",
+                               resolver=lambda d: True)
+    assert c2["status"] == "skip_non_us" and ".cn" in c2["note"]

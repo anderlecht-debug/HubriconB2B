@@ -846,13 +846,22 @@ def store_contact(fetcher, website: str, brand: str | None, resolver=None) -> di
     if tld:
         out.update(status="skip_non_us", note=f"store domain is a {tld} domain")
         return out
-    published = [e for e in c["emails"] if e.split("@", 1)[1].endswith(dom)] or c["emails"]
+    # An offshore address anywhere on the site is a fact about the company,
+    # whether or not it sits at the company's own domain.
+    offshore = next(((e, enrichmod.offshore_domain(e)) for e in c["emails"]
+                     if enrichmod.offshore_domain(e)), None)
+    if offshore:
+        out.update(email=offshore[0], status="skip_non_us",
+                   note=f"contact address on a {offshore[1]} domain")
+        return out
+    # Only an address at the store's own domain counts as published. A contact
+    # page often carries someone else's — a supplier, an agency, a sister brand
+    # — and emailing it reaches the wrong company, which reads worse to the
+    # recipient than a guess at the right one. Same rule enrich.py applies to
+    # the Amazon side, and for the same reason: a site there published a
+    # supplier's address and we would have written to them (2026-09-04).
+    published = [e for e in c["emails"] if e.split("@", 1)[1].endswith(dom)]
     if published:
-        tld = enrichmod.offshore_domain(published[0])
-        if tld:
-            out.update(email=published[0], status="skip_non_us",
-                       note=f"published address on a {tld} domain")
-            return out
         out.update(email=published[0], email_confidence="published", status="enriched",
                    note="published contact address")
         return out
