@@ -236,3 +236,25 @@ def test_prune_dq_leaves_the_row_alone_when_a_delete_fails():
     db = _PruneDB([{"email": "x@y.com", "instantly_lead_id": "L1", "fit_notes": "agency"}])
     assert outreach.prune_dq(db, _Failing([{"id": "L1", "campaign": "C1"}]), "C1", log=lambda *_: None) == 0
     assert db.updates == [], "a failed delete must not be recorded as done"
+
+
+def test_a_short_token_must_start_a_word_or_it_rejects_real_brands():
+    # Found live on 2026-09-04: the Shopify harvest lost The Happy Planner
+    # because "thehappyplanner.com" contains "app". This gate runs at
+    # enrollment, so a false positive silently drops a lead nobody sees.
+    for name, site in [("Happy Brands", "thehappyplanner.com"),
+                       ("Rapid Gear", "rapidgear.com"),          # r-api-dgear
+                       ("Snapware", "snapware.com"),             # sn-app-ware
+                       ("Badass Beard Care", "badassbeardcare.com")]:
+        assert icp.off_icp(name, None, site) == (None, ""), name
+
+    # the businesses the gate exists to catch are still caught
+    for name, site, bucket in [("Acme PPC", "acmeppc.com", "agency"),
+                               ("Bright Agency", "brightagency.com", "agency"),
+                               ("AMZ Consulting", "amzconsulting.com", "agency"),
+                               ("Ship 3PL", "ship3pl.com", "logistics"),
+                               ("Helium 10", "helium10.com", "software")]:
+        assert icp.off_icp(name, None, site)[0] == bucket, name
+
+    # a long token still matches mid-word, which is what makes the above work
+    assert icp.off_icp("Global Prep Center", None, "x.com")[0] == "logistics"

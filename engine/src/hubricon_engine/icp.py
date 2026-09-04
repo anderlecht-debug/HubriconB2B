@@ -105,6 +105,25 @@ ROLE_LOCALS = frozenset((
 ))
 
 
+# A short word matched anywhere inside a domain rejects real brands: on
+# 2026-09-04 the harvest lost The Happy Planner to "app" (theh-app-yplanner)
+# and would lose any brand whose domain happens to contain "api" (r-api-dgear)
+# or "data". This gate runs at enrollment, so a false positive silently drops
+# a lead nobody ever sees — and this module's own rule is that a false
+# positive costs a customer while a false negative costs one email.
+#
+# So a token of four characters or fewer must start a word; longer ones may
+# still match anywhere, which keeps "distribut" catching "distribution" and
+# "consulting" catching "amzconsulting".
+_SHORT_TOKEN = 4
+
+
+def _matches(word: str, hay: str) -> bool:
+    if len(word) > _SHORT_TOKEN:
+        return word in hay
+    return re.search(r"(?<![a-z0-9])" + re.escape(word), hay) is not None
+
+
 def _hay(*parts: str | None) -> str:
     return " " + re.sub(r"\s+", " ", " ".join(p or "" for p in parts)).lower().strip() + " "
 
@@ -123,7 +142,7 @@ def off_icp(company_name: str | None, email: str | None = None, website: str | N
             return bucket, f"{bucket}: reviewed by hand on 2026-09-03, not a private-label brand"
     for bucket, words in _BUCKETS:
         for w in words:
-            if w in hay:
+            if _matches(w, hay):
                 return bucket, f"{bucket}: company name matches {w!r}"
     if email:
         local, _, domain = email.lower().partition("@")
