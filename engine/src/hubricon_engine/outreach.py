@@ -47,6 +47,10 @@ CLIFF_LABEL = {"amazon": "FBA fee band", "shopify": "USPS/UPS shipping band"}
 # Seller Central reports says louder than anything else that the email is spam.
 EXPORTS = {"amazon": "Five Seller Central exports",
            "shopify": "Five exports out of your Shopify admin"}
+# What we promise not to ask for. Amazon sells user permissions as seats; a
+# Shopify store grants staff accounts. Using the other platform's word is the
+# same tell as asking for the other platform's exports.
+NO_ACCESS = {"amazon": "No seat in your account", "shopify": "No staff account in your store"}
 
 
 def platform_of(row: dict | None) -> str:
@@ -397,6 +401,13 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
 
     Short, specific, one ask, no tracking. The claims match the website and the
     triage fact sheet: free teardown, $6,000/mo after, first month free.
+
+    The subject leads with the number, not with us and not with the brand name.
+    "Tens Towels: 3.2 oz over an FBA fee band" is a filing label; "3.2 oz is
+    costing Tens Towels on every unit" is the same fact with the consequence
+    attached, and the consequence is the reason anybody opens it. The number is
+    still the first thing in the body, still checkable in thirty seconds, and
+    still comes off a page the seller published themselves.
     """
     s, items = facts["seller"], facts["items"]
     platform = facts.get("platform") or platform_of(s)
@@ -404,15 +415,17 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
     best = next((i for i in items if i["over_by"] is not None), None)
     if best and platform == "shopify":
         below, above = shopify.band_names(best["band_edge"])
-        subject = f"{brand}: {best['over_by']:g} oz over a shipping band"
-        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz; the {below} band ends at "
-                f"{best['band_edge']} oz, so every unit pays the {above} rate on USPS and UPS. "
-                f"Public product page, public weight — I have no access to your store.")
+        subject = f"{best['over_by']:g} oz is costing {brand} on every unit"
+        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz. The {below} band ends "
+                f"at {best['band_edge']} oz — so {best['over_by']:g} ounces puts every unit you ship "
+                f"onto the {above} rate on USPS and UPS.\n\n"
+                f"I read that off your own product page. I have no access to your store.")
     elif best:
-        subject = f"{brand}: {best['over_by']:g} oz over an FBA fee band"
-        hook = (f"Your {_short_title(best)} lists at {best['weight_oz']:g} oz. "
-                f"The FBA weight band below it ends at {best['band_edge']} oz, so every unit you ship "
-                f"pays the next band up. Public page, public weight — I have no access to your account.")
+        subject = f"{best['over_by']:g} oz is costing {brand} on every unit"
+        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz. The FBA weight band "
+                f"below it ends at {best['band_edge']} oz — so {best['over_by']:g} ounces tips every "
+                f"unit you send into the next band up.\n\n"
+                f"I read that off your own listing. I have no access to your account.")
     else:
         # No listing on file, so there is no checkable number. Refuse to write
         # the plausible-sounding version: "the fee side looks like it's costing
@@ -426,15 +439,16 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
     who = "Amazon private-label brands" if platform != "shopify" else "founder-run Shopify brands"
     body = (
         f"Hi {first_name},\n\n"
+        f"One number, and you can check it in thirty seconds.\n\n"
         f"{hook}\n\n"
-        f"I run Hubricon. I do the margin math for {who}: what each price can "
-        f"take before units drop, where the next ad dollar stops paying, which SKU stocks out first.\n\n"
-        f"If it's useful I'll do a written Profit Teardown of {brand} for free. "
-        f"{EXPORTS.get(platform, EXPORTS['amazon'])}, about fifteen minutes on your side, and the report "
-        f"is back within 24 hours. No seat "
-        f"in your account, no card, and if it finds nothing worth fixing I'll tell you that and you "
-        f"keep the report.\n\n"
-        f"Worth a look? Reply and I'll send the upload page, or grab 20 minutes: {calendly_url}\n\n"
+        f"That's the sort of thing I do at Hubricon — the margin math for {who}. What your price can "
+        f"take before units drop. Where the next ad dollar stops paying. Which SKU stocks out first.\n\n"
+        f"If it's useful, I'll write a Profit Teardown of {brand} and send it to you free. "
+        f"{EXPORTS.get(platform, EXPORTS['amazon'])}, about fifteen minutes on your side, report back "
+        f"within 24 hours. {NO_ACCESS.get(platform, NO_ACCESS['amazon'])}, no card. If it finds "
+        f"nothing worth fixing, I'll "
+        f"say so — and the report is yours to keep either way.\n\n"
+        f"Want it? Reply and I'll send the upload page, or take 20 minutes here: {calendly_url}\n\n"
         f"Hagen Simmons\nHubricon\n"
     )
     return {"to": s.get("email"), "subject": subject, "body": body, "complete": best is not None}
@@ -482,12 +496,13 @@ def partner_email(facts: dict, partner_name: str, referral_terms: str) -> dict:
         seller_kind, band = "Amazon sellers", f"{best['band_edge']} oz FBA band"
         cost = "pays the next band's fee"
     body = (
-        f"{partner_name} — you work with {seller_kind}; I do margin analytics for a few of them.\n\n"
-        f"I pulled {_possessive(brand)} public listing ({best['asin']}): it ships at {best['weight_oz']:g} oz, "
-        f"{best['over_by']:g} oz over the {band}, so it {cost} on {units}. "
-        f"Public page, public weight — no account access.\n\n"
-        f"If it's useful to your clients: they get a free written Profit Teardown and a free first "
-        f"month, you get the anonymised results to publish and {referral_terms}. Want the one-pager?\n\n"
+        f"{partner_name} — you work with {seller_kind}. I do the margin math for a few of them.\n\n"
+        f"Here is the kind of thing it turns up. I pulled {_possessive(brand)} public listing "
+        f"({best['asin']}): it ships at {best['weight_oz']:g} oz, {best['over_by']:g} oz over the "
+        f"{band}, so it {cost} on {units}. Public page, public weight — no account access.\n\n"
+        f"What your clients get: a written Profit Teardown, free, then a free first month. What you "
+        f"get: the anonymized results to publish, and {referral_terms}.\n\n"
+        f"Want the one-pager?\n\n"
         f"Hagen Simmons\nHubricon\n"
     )
-    return {"subject": f"one number on {brand}'s listing", "body": body}
+    return {"subject": f"{best['over_by']:g} oz on {_possessive(brand)} public listing", "body": body}

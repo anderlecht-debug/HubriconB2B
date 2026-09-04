@@ -57,32 +57,56 @@ SUPERSEARCH_FILTERS = {
 
 
 def _footer(postal_address: str) -> str:
+    # Both opt-outs stay; the sentence is short because every word here is a
+    # word the copy above cannot spend (the step is capped at 130).
     return (f"<br/><br/>Hubricon · {postal_address}<br/>"
-            "Reply \"no\" and I'll stop emailing. There's also an unsubscribe link in the header.")
+            "Reply \"no\" and I'll stop emailing. Unsubscribe link in the header.")
 
 
 # Bump when the copy below changes: the operator PATCHes the live campaign's
 # sequence in place on its next pass (threads already sent keep their history).
-COPY_VERSION = "2026-09-03 one email, testimonial deal"
+COPY_VERSION = "2026-09-04 reader-first hook, platform-neutral"
 
 
 def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = CALENDLY_URL,
                   daily_limit: int | None = None) -> dict:
     """One plain-text email, no follow-ups (the founder's call, 2026-09-03: the
     first email is the one that gets answered; the rest is noise on a young
-    domain). Offer stated the Hormozi way — outcome, price, the honest reason
-    it's free, the risk reversal, one-word CTA. Every claim is on the website."""
+    domain).
+
+    The copy opens on the reader's experience, not on us and not on the offer:
+    a founder whose price and ads are both fine and whose payout still comes in
+    light knows that feeling before he knows what Hubricon is. Then the gap gets
+    a name, the offer answers it, and one word closes. Every claim is on the
+    website — first month free, no card, testimonial and anonymized results as
+    the price, teardown back in 24 hours.
+
+    ONE CTA. The booking link came out: a cold first touch that offers two doors
+    gets neither opened, and nobody books a call with a stranger before they
+    know what he found. calendly_url stays in the signature because the link is
+    still the second step — triage.draft_for sends it the moment someone replies.
+
+    NOT A WORD ABOUT WHICH PLATFORM. The earlier version said "{{companyName}}'s
+    Amazon account". Since 2026-09-04 the harvest pushes Shopify stores into
+    "Hubricon harvest (auto)" too, and enroll_from_lists takes every list whose
+    name matches — so that sentence told Shopify founders they sell on Amazon.
+    The steps below name a weight band and a SKU, which are true on both rate
+    cards (FBA weight bands; USPS/UPS bands), and name neither storefront.
+    """
     foot = _footer(postal_address)
     step1 = (
         "Hi {{firstName}},<br/><br/>"
-        "We run the math on {{companyName}}'s Amazon account and execute the profit fixes for you: "
-        "pricing, ads, inventory. You watch a three-minute brief every two weeks and keep the margin.<br/><br/>"
-        "Your first month is the full service, free. If we don't find you more than we cost, walk away owing "
-        "nothing. No card on file.<br/><br/>"
-        "Why free: Hubricon is new. The engine is built; the track record isn't. If it works, I ask for a "
-        "testimonial and permission to publish your anonymized results. That's the whole price.<br/><br/>"
-        "Reply TEARDOWN and the free Profit Teardown is back 24 hours after your exports land. "
-        f"Or book 20 minutes: {calendly_url}<br/><br/>"
+        "Your price is right. Your ads work. The payout still lands lighter than the "
+        "spreadsheet said.<br/><br/>"
+        "It's usually a few quiet numbers: a weight band you're an ounce over, a SKU that goes "
+        "negative once ads are allocated honestly.<br/><br/>"
+        "I find them in {{companyName}}'s numbers and fix them for you. Three-minute brief every "
+        "two weeks; you keep the margin.<br/><br/>"
+        "First month free, whole service. No card. Find less than we cost, walk away owing "
+        "nothing.<br/><br/>"
+        "Why free: Hubricon is new. The engine's built; the track record isn't. I'd trade a month "
+        "for a testimonial and your anonymized numbers.<br/><br/>"
+        "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"
         "Hagen Simmons<br/>Hubricon" + foot
     )
     limit = daily_limit or min(CAMPAIGN_DAILY_CAP, PER_MAILBOX_DAILY * max(1, len(senders)))
@@ -99,7 +123,11 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "sequences": [{
             "steps": [
                 {"type": "email", "delay": 0,
-                 "variants": [{"subject": "{{companyName}}: first month free, here's why", "body": step1}]},
+                 # The old subject led with our offer ("first month free, here's
+                 # why"), which reads as a pitch before it is read as anything
+                 # else. This one is about their money, and it is a claim the
+                 # email then makes good on.
+                 "variants": [{"subject": "the margin {{companyName}} already earned", "body": step1}]},
             ],
         }],
         "email_list": senders,
@@ -299,6 +327,7 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
         leads = api.leads_in_list(lst["id"])
         before = added
         skipped_no_name = 0
+        skipped_no_company = 0
         for lead in leads:
             email = (lead.get("email") or "").strip().lower()
             if not email or email in known or is_internal(email):
@@ -311,6 +340,16 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             if not first:
                 skipped_no_name += 1
                 continue  # "Hi {{firstName}}" must never render empty
+            # The same rule for the company, which the copy leans on harder:
+            # the subject IS "the margin {{companyName}} already earned", so an
+            # unset variable sends "the margin  already earned" and a body that
+            # says "I find them in 's numbers". enroll_one only sets the field
+            # when it is truthy, so a lead with no company reaches Instantly
+            # with the variable undefined. Harvest leads always carry a brand;
+            # SuperSearch and hand-built lists do not always.
+            if not (lead.get("company_name") or "").strip():
+                skipped_no_company += 1
+                continue
             # The ICP gate runs here rather than at push: a lead that never
             # enters the campaign cannot spend a send on a two-month-old domain.
             company, site = lead.get("company_name"), lead.get("website")
@@ -356,7 +395,8 @@ def enroll_from_lists(db, api: Instantly, campaign_id: str, dry: bool, cap: int 
             known[email] = {"email": email}
             added += 1
         notes.append(f"  list '{lst.get('name')}': {len(leads)} lead(s) in Instantly, {added - before} enrolled now"
-                     + (f", {skipped_no_name} without a first name" if skipped_no_name else ""))
+                     + (f", {skipped_no_name} without a first name" if skipped_no_name else "")
+                     + (f", {skipped_no_company} without a company name" if skipped_no_company else ""))
     notes.append(f"{'[dry] would enroll' if dry else 'Enrolled'} {added} lead(s) from {len(lists)} list(s).")
     if held:
         notes.append("  held back as off-ICP (never enrolled): "

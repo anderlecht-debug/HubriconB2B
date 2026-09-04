@@ -599,7 +599,10 @@ def test_the_founder_lane_hook_for_a_shopify_row_is_the_shipping_band():
 
     draft = outreach.founder_email(facts, "Nora", "https://cal.com/hubricon")
     assert draft["complete"] and draft["to"] == "hello@riverbendgoods.com"
-    assert draft["subject"] == "Riverbend Goods: 1.2 oz over a shipping band"
+    # The subject carries the number and what it costs, and never the word
+    # "FBA" — the whole point of the Shopify lane.
+    assert draft["subject"] == "1.2 oz is costing Riverbend Goods on every unit"
+    assert "FBA" not in draft["subject"]
     assert "the 2-lb rate on USPS and UPS" in draft["body"]
     assert "Shopify admin" in draft["body"] and "Seller Central" not in draft["body"]
     assert "no access to your store" in draft["body"]

@@ -62,6 +62,31 @@ def test_supersearch_filters_use_instantly_vocabulary():
     assert outbound.LIST_MATCH in outbound.SUPERSEARCH_LIST.lower()  # the auto list enrolls itself
 
 
+def test_the_cold_copy_names_no_selling_platform():
+    """The single campaign is fed by "Hubricon harvest (auto)", and since
+    2026-09-04 that list carries Shopify stores next to Amazon sellers.
+
+    The copy used to say "{{companyName}}'s Amazon account", which told a
+    Shopify founder he sells somewhere he does not — the loudest possible
+    signal that the mail is a blast. Whatever this email says has to be true on
+    both rate cards, so it says neither name.
+    """
+    spec = campaign_spec(["a@x.com"], "addr")
+    variant = spec["sequences"][0]["steps"][0]["variants"][0]
+    text = (variant["subject"] + " " + variant["body"]).lower()
+    for word in ("amazon", "fba", "shopify", "seller central", "storefront"):
+        assert word not in text, word
+    # and it still opens on something checkable on either platform
+    assert "weight band" in text
+
+
+def test_the_subject_is_about_their_money_not_our_offer():
+    subject = campaign_spec(["a@x.com"], "addr")["sequences"][0]["steps"][0]["variants"][0]["subject"]
+    assert "{{companyName}}" in subject          # personalised or it is a blast
+    assert len(subject.split()) <= 8             # Gmail truncates past this on mobile
+    assert "free" not in subject.lower()         # the offer belongs in the body
+
+
 def test_every_step_word_count_stays_short():
     spec = campaign_spec(["a@x.com"], "addr")
     for s in spec["sequences"][0]["steps"]:
@@ -427,3 +452,47 @@ def test_create_lead_does_not_refuse_addresses_that_sit_in_a_list_of_this_worksp
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
     im.Instantly(api_key="k").create_lead("camp", "a@b.com", "A")
     assert seen["body"]["skip_if_in_workspace"] is False and seen["body"]["skip_if_in_campaign"] is True
+
+
+# -- enrollment: a variable that renders empty is a spam signal ---------------
+
+class _ListApi:
+    """Just enough of Instantly to walk one lead list into the campaign."""
+
+    def __init__(self, leads):
+        self._leads = leads
+        self.enrolled = []
+
+    def lead_lists(self):
+        return [{"id": "L1", "name": "Hubricon harvest (auto)"}]
+
+    def leads_in_list(self, list_id):
+        return list(self._leads)
+
+    def _call(self, method, path, body=None):
+        self.enrolled.append(body)
+        return {"id": "lead-" + str(len(self.enrolled))}
+
+
+def test_a_lead_with_no_company_name_is_never_enrolled():
+    """The subject IS "the margin {{companyName}} already earned".
+
+    enroll_one only sends company_name when it is truthy, so a lead without one
+    reaches Instantly with the variable undefined and the mail goes out as
+    "the margin  already earned" — over a body that says "I find them in 's
+    numbers". first_name has had this guard since the copy was written; the
+    company variable carries more of the sentence and had none.
+    """
+    api = _ListApi([
+        {"email": "nora@riverbendgoods.com", "first_name": "Nora", "company_name": "Riverbend Goods",
+         "website": "https://riverbendgoods.com"},
+        # no company_name at all, and one that is only whitespace
+        {"email": "sam@driftwoodsupply.co", "first_name": "Sam", "website": "https://driftwoodsupply.co"},
+        {"email": "kim@northharborgoods.com", "first_name": "Kim", "company_name": "   ",
+         "website": "https://northharborgoods.com"},
+    ])
+    added, notes = outbound.enroll_from_lists(_DB(), api, "C1", dry=False)
+    assert added == 1
+    assert [b["email"] for b in api.enrolled] == ["nora@riverbendgoods.com"]
+    assert all(b.get("company_name") for b in api.enrolled)
+    assert any("2 without a company name" in n for n in notes)
