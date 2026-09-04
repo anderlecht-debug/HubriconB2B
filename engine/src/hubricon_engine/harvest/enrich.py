@@ -90,8 +90,11 @@ def candidate_domains(brand: str | None) -> list[str]:
     st = short_token(brand)
     if st and st != t:
         out.append(f"{st}.com")  # the first two words of a long name, tried before the long shots
+    # A brand that could not get the .com often sells on one of these; they
+    # cost an HTTP request each and no Amazon budget at all.
+    out += [f"{t}.net", f"{t}.shop", f"{t}.store", f"{t}.co", f"{t}.us"]
     out += [f"{t}usa.com", f"shop{t}.com", f"get{t}.com",
-            f"{t}brand.com", f"{t}store.com", f"{t}official.com", f"{t}.co", f"{t}products.com", f"my{t}.com"]
+            f"{t}brand.com", f"{t}store.com", f"{t}official.com", f"{t}products.com", f"my{t}.com"]
     return list(dict.fromkeys(d for d in out if not d.startswith((".", "-"))))
 
 
@@ -161,11 +164,16 @@ def find_website(fetcher, brand: str | None, business_name: str | None = None) -
     """→ (homepage url, how) trying <brand>.com and friends, then Bing."""
     if not brand or len(brand_token(brand)) < 3:
         return None, None
-    for dom in candidate_domains(brand)[:4]:
+    for dom in candidate_domains(brand)[:9]:
         page = fetcher.get(f"https://{dom}/")
         if page and site_matches(page, brand):
             return f"https://{dom}/", "direct"
-    queries = [f'"{brand}" official site'] + ([f"{brand} {business_name}"] if business_name else [])
+    # The brand's own name first, then the legal entity, then the phrasing a
+    # seller uses about itself. Each is one Bing page, none is an Amazon page.
+    queries = [f'"{brand}" official site']
+    if business_name:
+        queries += [f"{brand} {business_name}", f'"{business_name}"']
+    queries.append(f'"{brand}" brand amazon')
     for q in queries:
         page = fetcher.get("https://www.bing.com/search?q=" + urllib.parse.quote(q))
         for url in bing_results(page)[:6]:

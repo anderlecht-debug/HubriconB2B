@@ -3,6 +3,7 @@ contact enrichment, the polite fetcher, and the crawl → enrich → push pipeli
 against in-memory doubles. No network anywhere in here."""
 
 import base64
+import urllib.parse
 import urllib.error
 from datetime import date
 from pathlib import Path
@@ -350,6 +351,22 @@ def test_candidate_domains_start_with_the_obvious_one():
     assert d[:4] == ["mindbodhihealthwellness.com", "mindbodhihealthwellness.com", "mind-bodhi-health-wellness.com", "mindbodhi.com"] or "mindbodhi.com" in d[:4]
     assert enrich.short_token("MIND BODHI HEALTH & WELLNESS") == "mindbodhi" and enrich.short_token("Alpha Grillers") is None
     assert enrich.site_matches("<html><head><title>Mind Bodhi | Supplements</title></head></html>", "MIND BODHI HEALTH & WELLNESS")
+
+
+def test_candidate_domains_cover_the_tlds_a_brand_falls_back_to():
+    d = enrich.candidate_domains("Alpha Grillers")
+    assert d[0] == "alphagrillers.com"
+    for tld in (".net", ".shop", ".store", ".co", ".us"):
+        assert f"alphagrillers{tld}" in d
+    assert len(d) == len(set(d))
+
+
+def test_find_website_tries_the_legal_name_when_the_brand_finds_nothing():
+    site = '<html><head><title>Knox Gear | Official</title></head><body>x</body></html>'
+    pages = {"https://www.bing.com/search?q=" + urllib.parse.quote('"KNOX GEAR LLC"'): bing_page("https://knoxgearaudio.com/"),
+             "https://knoxgearaudio.com/": site}
+    f = FakeFetcher(pages)
+    assert enrich.find_website(f, "Knox Gear", "KNOX GEAR LLC") == ("https://knoxgearaudio.com/", "bing")
 
 
 def test_bing_links_are_unwrapped():
