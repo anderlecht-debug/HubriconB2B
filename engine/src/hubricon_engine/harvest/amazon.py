@@ -19,19 +19,19 @@ AMAZON_SELLER_NAMES = ("amazon.com", "amazon resale", "amazon warehouse", "amazo
 
 # Best Sellers category slugs where founder-run private label lives.
 CATEGORIES = [
-    "kitchen", "home-garden", "beauty", "hpc", "pet-supplies", "sporting-goods",
-    "toys-and-games", "baby-products", "office-products", "automotive", "lawn-garden",
-    "grocery", "arts-crafts", "industrial", "musical-instruments",
-    # Added 2026-09-04. Once a category has been crawled a few times most of
-    # its listings name a brand already on file and are skipped before a page
-    # is spent, so the budget only keeps buying new sellers if the ground is
-    # new. These carry the same founder-run private label as the first fifteen.
-    # Verified against Amazon on 2026-09-04: a slug that is not a Best Sellers
-    # root answers with one ASIN and no child lists, so it costs a page and
-    # yields nothing. "tools", "shoes", "jewelry", "watches" and "luggage" all
-    # fail that test; "hi" is Tools & Home Improvement, and shoes, jewellery
-    # and watches are child lists of "fashion", which the crawl reaches by depth.
-    "hi", "electronics", "appliances", "pc", "fashion",
+    # Ordered by measured lead rate, 2026-09-04 (share of sellers found that
+    # became a lead): Baby 20%, Beauty 16%, Automotive 12%, Home & Kitchen 11%,
+    # Health & Household 10%, Kitchen & Dining 9%, Patio/Lawn/Garden 8%.
+    # `pick_categories` rotates from the front, so the scheduled runs spend the
+    # day's Amazon pages on the ground that pays.
+    "baby-products", "beauty", "automotive", "home-garden", "hpc", "kitchen",
+    "lawn-garden", "pet-supplies", "grocery", "sporting-goods", "arts-crafts",
+    "toys-and-games", "musical-instruments", "industrial",
+    # Measured at zero: Office Products (20 sellers), Tools & Home Improvement
+    # (13) and Computers produced no leads at all, and a 125-page crawl of
+    # Computers returned 6 candidates against Kitchen's 9 from 34 pages. They
+    # are offshore sellers and resellers. Left here as a record, not crawled.
+    # "office-products", "hi", "pc", "electronics", "appliances", "fashion",
 ]
 
 # units/month from the top-level category rank. Below rank 1,000 the public
