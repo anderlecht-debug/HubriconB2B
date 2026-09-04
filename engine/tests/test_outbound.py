@@ -15,7 +15,7 @@ def test_campaign_spec_is_one_plain_text_email_with_compliance_footer():
     assert "<br/>" in body and "\n" not in body  # Instantly wants <br/> line breaks
     assert steps[0]["variants"][0]["subject"]
     # the offer, the honest reason it's free, the price of the seat, the risk reversal — all on the site
-    for claim in ("first month", "free", "testimonial", "anonymized", "walk away owing nothing", "24 hours",
+    for claim in ("first month", "free", "testimonial", "anonymized", "nothing owed", "24 hours",
                   "three-minute brief", "No card", "new"):
         assert claim.lower() in body.lower(), claim
     prose = body.replace(outbound.CALENDLY_URL, "")  # the booking slug is legacy, the prose is not
@@ -78,6 +78,19 @@ def test_the_cold_copy_names_no_selling_platform():
         assert word not in text, word
     # and it still opens on something checkable on either platform
     assert "weight band" in text
+
+
+def test_the_free_month_is_offered_the_way_the_site_offers_it():
+    """hubricon.com gates it: "If the numbers justify it, your first month runs
+    free." The cold mail used to state it flat.
+
+    A cold email that promises more than the page it sends people to is the one
+    promise a reader can check before replying, and the gap is the whole first
+    impression. So the condition arrives before the offer does, not after it.
+    """
+    body = campaign_spec(["a@x.com"], "addr")["sequences"][0]["steps"][0]["variants"][0]["body"].lower()
+    assert "first month" in body
+    assert "if i find enough" in body[:body.index("first month")]
 
 
 def test_the_subject_is_about_their_money_not_our_offer():

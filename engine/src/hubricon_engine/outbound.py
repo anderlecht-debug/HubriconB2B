@@ -65,7 +65,7 @@ def _footer(postal_address: str) -> str:
 
 # Bump when the copy below changes: the operator PATCHes the live campaign's
 # sequence in place on its next pass (threads already sent keep their history).
-COPY_VERSION = "2026-09-04 reader-first hook, platform-neutral"
+COPY_VERSION = "2026-09-04 reader-first hook, platform-neutral, conditioned free month"
 
 
 def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = CALENDLY_URL,
@@ -78,8 +78,15 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
     a founder whose price and ads are both fine and whose payout still comes in
     light knows that feeling before he knows what Hubricon is. Then the gap gets
     a name, the offer answers it, and one word closes. Every claim is on the
-    website — first month free, no card, testimonial and anonymized results as
-    the price, teardown back in 24 hours.
+    website — no card, testimonial and anonymized results as the price, teardown
+    back in 24 hours.
+
+    THE FREE MONTH ARRIVES CONDITIONED, because the page it links to conditions
+    it: "If the numbers justify it, your first month runs free." The earlier
+    version promised it flat, which is a bigger promise than the site makes and
+    the kind a reader checks. The condition is also the better sentence — an
+    unconditional giveaway from a stranger reads as a thing with a catch, and
+    "if I find enough to work with" says what the catch is.
 
     ONE CTA. The booking link came out: a cold first touch that offers two doors
     gets neither opened, and nobody books a call with a stranger before they
@@ -102,10 +109,10 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "negative once ads are allocated honestly.<br/><br/>"
         "I find them in {{companyName}}'s numbers and fix them for you. Three-minute brief every "
         "two weeks; you keep the margin.<br/><br/>"
-        "First month free, whole service. No card. Find less than we cost, walk away owing "
-        "nothing.<br/><br/>"
-        "Why free: Hubricon is new. The engine's built; the track record isn't. I'd trade a month "
-        "for a testimonial and your anonymized numbers.<br/><br/>"
+        "If I find enough to work with, your first month is the whole service, free. No card, "
+        "nothing owed.<br/><br/>"
+        "Why free: Hubricon is new. The engine's built; the track record isn't. That's the price: a "
+        "testimonial and your anonymized numbers.<br/><br/>"
         "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"
         "Hagen Simmons<br/>Hubricon" + foot
     )
