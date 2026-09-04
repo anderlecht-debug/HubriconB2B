@@ -83,7 +83,20 @@ BIG_PARENT_WORDS = (
     "native deodorant", "hero cosmetics", "mielle", "tula", "truly beauty", "vital proteins", "orgain",
     "bloom nutrition", "cirkul", "blendjet", "ember technologies", "ninja kitchen", "ooni",
     "weiman", "nic industries", "cerakote", "carlyle", "berkshire", "goldman", "kkr",
+    # Conglomerate consumer brands as they appear at the front of a Best
+    # Sellers title, so the listing is skipped before a page is spent on it.
+    # Distinctive strings only: a short one would match inside a real brand.
+    "nespresso", "keurig", "folgers", "gatorade", "huggies", "pampers", "febreze", "swiffer",
+    "charmin", "neutrogena", "cerave", "aveeno", "pantene", "listerine", "tylenol", "advil",
+    "quest nutrition", "optimum nutrition", "premier protein", "gerber", "similac", "enfamil",
 )
+# Thrift and charity resale operations are real Amazon sellers but never
+# private-label brands. The archive source surfaced thirteen Goodwill
+# affiliates plus an Easterseals arm in a single pass on 2026-09-04, each of
+# which would otherwise have consumed an enrichment pass and a send.
+NONPROFIT_WORDS = ("goodwill", "salvation army", "habitat for humanity", "easterseals", "easter seals",
+                   "st. vincent de paul", "st vincent de paul", "rescue mission", "thrift")
+
 NAME_NOISE = ("llc", "inc", "co", "ltd", "corp", "corporation", "company", "store", "official",
               "shop", "usa", "us", "the", "brand", "brands", "group", "international", "direct",
               "products", "home", "online", "retail", "global", "enterprises", "l.l.c")
@@ -102,15 +115,49 @@ def _int(s: str | None) -> int | None:
 
 # -- Best Sellers ---------------------------------------------------------------
 
+def bestseller_items(page: str) -> list[dict]:
+    """(asin, title) per card on a Best Sellers page. The title's first words
+    are the brand often enough to be worth reading before a product page is
+    fetched: a brand already judged, or a conglomerate, costs nothing to skip
+    and a page to confirm."""
+    items, seen = [], set()
+    for card in re.findall(r'id="gridItemRoot".{0,6000}?(?=id="gridItemRoot"|\Z)', page, re.S) or [page]:
+        for m in re.finditer(r"/dp/([A-Z0-9]{10})", card):
+            asin = m.group(1)
+            if asin in seen:
+                continue
+            seen.add(asin)
+            t = re.search(r"p13n-sc-css-line-clamp[^>]*>([^<]{5,200})", card) or \
+                re.search(r'<span [^>]*aria-label="([^"]{5,200})"', card)
+            items.append({"asin": asin, "title": _text(t.group(1))[:200] if t else None})
+            break
+    return items
+
+
 def bestseller_page(page: str) -> dict:
     asins = list(dict.fromkeys(re.findall(r"/dp/([A-Z0-9]{10})", page)))
     subs = list(dict.fromkeys(re.findall(r'href="(/[^"?#]*?/zgbs/[a-z0-9-]+/\d+)', page)))
     nxt = re.search(r'href="([^"]*zgbs/[^"]*pg=2[^"]*)"', page)
+    items = bestseller_items(page)
+    by_asin = {i["asin"]: i.get("title") for i in items}
     return {
         "asins": asins,
+        "items": [{"asin": a, "title": by_asin.get(a)} for a in asins],
         "subcategories": [BASE + s for s in subs],
         "next": BASE + html.unescape(nxt.group(1)) if nxt else None,
     }
+
+
+def leading_brand(title: str | None) -> list[str]:
+    """The normalised one, two and three word openings of a listing title. One
+    of them is the brand on most listings ("Bloom Nutrition Zero Sugar…")."""
+    words = re.findall(r"[A-Za-z0-9&']+", title or "")[:3]
+    out = []
+    for n in (1, 2, 3):
+        tok = norm_name(" ".join(words[:n]))
+        if len(tok) >= 4 and tok not in out:
+            out.append(tok)
+    return out
 
 
 def category_url(slug: str) -> str:
@@ -290,6 +337,12 @@ def looks_offshore(business_name: str | None, address: str | None) -> bool:
     joined = f"{business_name or ''} {address or ''}".lower()
     joined = re.sub(r"\s+([.,])", r"\1", joined)
     return any(w in re.sub(r"\s+", " ", joined) for w in OFFSHORE_WORDS)
+
+
+def looks_nonprofit(seller_name: str | None, business_name: str | None) -> bool:
+    """True for charity/thrift resellers — Goodwill affiliates and the like."""
+    joined = f"{seller_name or ''} {business_name or ''}".lower()
+    return any(w in joined for w in NONPROFIT_WORDS)
 
 
 def looks_big_parent(seller_name: str | None, business_name: str | None) -> bool:

@@ -74,6 +74,7 @@ class FakeTable:
     def __init__(self, store, name):
         self.rows = store.setdefault(name, [])
         self._filters, self._order, self._limit, self._op, self._payload = [], None, None, None, None
+        self._range = None
 
     def select(self, *_):
         self._op = "select"
@@ -89,6 +90,10 @@ class FakeTable:
 
     def gte(self, k, v):
         self._filters.append(lambda r: r.get(k) is not None and r.get(k) >= v)
+        return self
+
+    def range(self, start, end):
+        self._range = (start, end)
         return self
 
     def in_(self, k, values):
@@ -123,6 +128,8 @@ class FakeTable:
                 rows = sorted(rows, key=lambda r: r.get(k) or 0, reverse=desc)
             if self._limit:
                 rows = rows[: self._limit]
+            if self._range:
+                rows = rows[self._range[0]: self._range[1] + 1]
             return _Result([dict(r) for r in rows])
         if self._op == "upsert":
             rows, key = self._payload
@@ -491,6 +498,18 @@ def test_classify_keeps_us_founder_brands_and_skips_the_rest():
     assert run.classify(_agg(), None)[0] == "candidate"  # profile unavailable: still worth enriching
 
 
+def test_charity_and_thrift_sellers_are_skipped():
+    # The archive source surfaced 13 Goodwill affiliates in one pass on 2026-09-04.
+    us = {"country": "US", "address": "1 MAIN ST, OGDEN, UT 84401, US"}
+    for legal in ("Goodwill Industries of Southern California",
+                  "Easterseals-Goodwill Northern Rocky Mountain, Inc.",
+                  "Evergreen Goodwill of Northwest Washington"):
+        assert amazon.looks_nonprofit(None, legal), legal
+        assert run.classify(_agg(brand="Whatever", seller="Whatever"), {**us, "business_name": legal})[0] == "skip_reseller"
+    assert not amazon.looks_nonprofit("HydroJug", "HYDROJUG LLC")
+    assert not amazon.looks_nonprofit(None, "Amish Country Popcorn, Inc")
+
+
 def test_big_parents_and_aggregators_are_skipped():
     us = {"country": "US", "address": "1 MAIN ST, OGDEN, UT 84401, US"}
     assert run.classify(_agg(brand="Vital Proteins", seller="Vital Proteins"),
@@ -536,6 +555,31 @@ def _crawl_pages():
             f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P,
             f"{amazon.BASE}/dp/B09B8V1LZ3": PRODUCT_AMZ,
             amazon.seller_url("AXSP4G6IQFYIQ"): SELLER_PAGE}
+
+
+def test_listing_titles_name_the_brand_and_known_brands_are_not_fetched_again():
+    page = ('<div id="gridItemRoot" a><a href="/x/dp/B00000AAA1/ref=z">i</a>'
+            '<div class="_cDEzb_p13n-sc-css-line-clamp-3_g3dy1">Bloom Nutrition Zero Sugar Energy Drink</div></div>'
+            '<div id="gridItemRoot" b><a href="/y/dp/B00000BBB2/ref=z">i</a>'
+            '<div class="_cDEzb_p13n-sc-css-line-clamp-3_g3dy1">Nespresso Capsules Vertuo</div></div>')
+    items = amazon.bestseller_page(page)["items"]
+    assert items == [{"asin": "B00000AAA1", "title": "Bloom Nutrition Zero Sugar Energy Drink"},
+                     {"asin": "B00000BBB2", "title": "Nespresso Capsules Vertuo"}]
+    assert amazon.leading_brand("Bloom Nutrition Zero Sugar") == ["bloom", "bloomnutrition", "bloomnutritionzero"]
+    known = {"bloomnutrition"}
+    assert run.already_judged("Bloom Nutrition Zero Sugar Energy Drink", known)
+    assert run.already_judged("Nespresso Capsules Vertuo", set())          # a conglomerate, judged on sight
+    assert not run.already_judged("Banana Bunch (4-5 Count)", known)
+    assert not run.already_judged(None, known)
+
+
+def test_known_brand_tokens_pages_past_the_thousand_row_ceiling():
+    db = FakeDB()
+    db.store["harvest_sellers"] = ([{"seller_id": f"S{i}", "brand": f"Brand{i:04d}", "brands": []} for i in range(1200)]
+                                  + [{"seller_id": "X", "brand": "HydroJug", "brands": ["Alpha Grillers", "Ab"]}])
+    tokens = run.known_brand_tokens(db)
+    assert "hydrojug" in tokens and "alphagrillers" in tokens
+    assert "brand1199" in tokens and "ab" not in tokens  # every page read, short names dropped
 
 
 def test_crawl_writes_products_and_one_candidate_seller(tmp_path):

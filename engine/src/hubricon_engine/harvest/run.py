@@ -83,6 +83,12 @@ def _log_event(db, note: str, payload: dict) -> None:
 
 def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY,
                    depth: int = CRAWL_DEPTH, enough: int | None = None) -> list[str]:
+    """The ASINs of `category_items`, without their titles."""
+    return [i["asin"] for i in category_items(fetcher, slug, subcats, depth, enough)]
+
+
+def category_items(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEGORY,
+                   depth: int = CRAWL_DEPTH, enough: int | None = None) -> list[dict]:
     """ASINs to read, mid-size brands first: the deepest child lists, then the
     shallower ones, then the category's page 2, then its page 1 (where the
     conglomerates sit). `depth` 1 reads the children, 2 the grandchildren.
@@ -94,10 +100,10 @@ def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEG
     top = amazon.bestseller_page(root)
     seen = {amazon.category_url(slug)}
     frontier = top["subcategories"][:subcats]
-    levels: list[list[str]] = []
+    levels: list[list[dict]] = []
     collected = 0
     for _ in range(max(0, depth)):
-        this_level: list[str] = []
+        this_level: list[dict] = []
         next_frontier: list[str] = []
         for url in frontier:
             if url in seen or (enough is not None and collected >= enough):
@@ -107,22 +113,55 @@ def category_asins(fetcher: Fetcher, slug: str, subcats: int = SUBCATS_PER_CATEG
             if not page:
                 continue
             parsed = amazon.bestseller_page(page)
-            this_level += parsed["asins"]
-            collected += len(parsed["asins"])
+            this_level += parsed["items"]
+            collected += len(parsed["items"])
             next_frontier += [c for c in parsed["subcategories"] if c not in seen][:subcats]
         levels.append(this_level)
         frontier = next_frontier
         if not frontier:
             break
-    asins: list[str] = []
+    items: list[dict] = []
     for level in reversed(levels):
-        asins += level
+        items += level
     if top["next"]:
         page2 = fetcher.get(top["next"])
         if page2:
-            asins += amazon.bestseller_page(page2)["asins"]
-    asins += top["asins"]
-    return list(dict.fromkeys(asins))
+            items += amazon.bestseller_page(page2)["items"]
+    items += top["items"]
+    out: dict[str, dict] = {}
+    for i in items:
+        out.setdefault(i["asin"], i)
+    return list(out.values())
+
+
+def known_brand_tokens(db) -> set[str]:
+    """Every brand already judged, normalised. A Best Sellers list repeats the
+    same brands across its child lists, and a product page costs the same
+    whether it teaches us something or not."""
+    tokens: set[str] = set()
+    start, page = 0, 1000
+    while True:
+        rows = db.table("harvest_sellers").select("brand, brands").range(start, start + page - 1).execute().data
+        for r in rows:
+            names = list(r.get("brands") or [])
+            if r.get("brand"):
+                names.append(r["brand"])
+            tokens.update(t for t in (amazon.norm_name(n) for n in names if n) if len(t) >= 4)
+        if len(rows) < page:
+            return tokens
+        start += page
+
+
+def already_judged(title: str | None, known: set[str]) -> bool:
+    """True when the listing's opening words name a brand we have already
+    decided about, or a conglomerate we would skip on sight."""
+    if not title:
+        return False
+    tokens = amazon.leading_brand(title)
+    if any(t in known for t in tokens):
+        return True
+    words = " ".join(re.findall(r"[A-Za-z0-9&']+", title)[:3])
+    return amazon.looks_big_parent(words, None)
 
 
 def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
@@ -136,6 +175,8 @@ def classify(agg: dict, prof: dict | None) -> tuple[str, str]:
         return "skip_non_us", f"business address in {prof['country']}"
     if amazon.looks_offshore(business, prof.get("address")):
         return "skip_non_us", "offshore trading-company name"
+    if amazon.looks_nonprofit(seller_name, business):
+        return "skip_reseller", "charity or thrift resale operation, not a private-label brand"
     if amazon.looks_big_parent(seller_name, business):
         return "skip_size", "corporate parent or aggregator as seller of record"
     if amazon.looks_reseller(seller_name, business, len(brands)):
@@ -191,13 +232,18 @@ def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, 
     database at the end of the category, so a killed run keeps every
     category it finished."""
     part: dict = {"products_fetched": 0, "products_cached": 0, "sellers_seen": 0, "sellers_new": 0,
-                  "statuses": {}, "blocked": False}
+                  "skipped_known": 0, "statuses": {}, "blocked": False}
     sellers: dict[str, dict] = {}
     product_rows: list[dict] = []
     try:
-        for asin in category_asins(fetcher, slug, subcats, depth, enough=budget * 2):
+        known = known_brand_tokens(db)
+        for item in category_items(fetcher, slug, subcats, depth, enough=budget * 3):
             if part["products_fetched"] >= budget:
                 break
+            asin = item["asin"]
+            if already_judged(item.get("title"), known):
+                part["skipped_known"] += 1
+                continue
             prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
             if prod is None:
                 part["products_fetched"] += 1
@@ -263,7 +309,8 @@ def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, 
     part["sellers_seen"] = len(sellers)
     if rows:
         db.table("harvest_sellers").upsert(rows, on_conflict="seller_id").execute()
-    log(f"  {slug}: {part['products_fetched']} pages, {len(sellers)} sellers ({part['sellers_new']} new), "
+    log(f"  {slug}: {part['products_fetched']} pages, {part['skipped_known']} listings skipped as already judged, "
+        f"{len(sellers)} sellers ({part['sellers_new']} new), "
         + ", ".join(f"{k} {v}" for k, v in sorted(part["statuses"].items())))
     return part
 
@@ -274,7 +321,7 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
     cache = cache or Cache()
     categories = categories or pick_categories()
     summary: dict = {"categories": categories, "products_fetched": 0, "products_cached": 0,
-                     "sellers_seen": 0, "sellers_new": 0, "statuses": {}, "blocked": False}
+                     "sellers_seen": 0, "sellers_new": 0, "skipped_known": 0, "statuses": {}, "blocked": False}
     # Every category gets an equal share of the page budget; what one does not
     # use rolls over to the next, so one deep category cannot eat the night.
     per_category = max(10, max_products // max(1, len(categories)))
@@ -287,8 +334,8 @@ def crawl(db, fetcher: Fetcher, categories: list[str] | None = None, max_product
         log(f"Best Sellers: {slug} (budget {budget} pages)")
         part = _crawl_category(db, fetcher, slug, budget, subcats, depth, cache, log)
         carry = budget - part["products_fetched"]
-        for k in ("products_fetched", "products_cached", "sellers_seen", "sellers_new"):
-            summary[k] += part[k]
+        for k in ("products_fetched", "products_cached", "sellers_seen", "sellers_new", "skipped_known"):
+            summary[k] += part.get(k, 0)
         for k, v in part["statuses"].items():
             summary["statuses"][k] = summary["statuses"].get(k, 0) + v
         summary["blocked"] = summary["blocked"] or part["blocked"]
