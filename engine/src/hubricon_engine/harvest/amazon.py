@@ -22,6 +22,12 @@ CATEGORIES = [
     "kitchen", "home-garden", "beauty", "hpc", "pet-supplies", "sporting-goods",
     "toys-and-games", "baby-products", "office-products", "automotive", "lawn-garden",
     "grocery", "arts-crafts", "industrial", "musical-instruments",
+    # Added 2026-09-04. Once a category has been crawled a few times most of
+    # its listings name a brand already on file and are skipped before a page
+    # is spent, so the budget only keeps buying new sellers if the ground is
+    # new. These carry the same founder-run private label as the first fifteen.
+    "tools", "electronics", "appliances", "pc", "fashion", "shoes", "jewelry",
+    "watches", "luggage",
 ]
 
 # units/month from the top-level category rank. Below rank 1,000 the public
