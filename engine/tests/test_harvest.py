@@ -83,6 +83,10 @@ class FakeTable:
         self._filters.append(lambda r: r.get(k) == v)
         return self
 
+    def neq(self, k, v):
+        self._filters.append(lambda r: r.get(k) != v)
+        return self
+
     def gte(self, k, v):
         self._filters.append(lambda r: r.get(k) is not None and r.get(k) >= v)
         return self
@@ -288,6 +292,11 @@ def test_private_label_reseller_and_offshore_heuristics():
     assert amazon.looks_reseller("X", "Best Deals Warehouse", 1)
     assert not amazon.looks_reseller("HydroJug", "HYDROJUG LLC", 1)
     assert amazon.looks_offshore("Shenzhen Foo Technology Co., Ltd", None)
+    # Amazon prints the legal name as typed; PHI VILLA Holding Co ., LTD reached
+    # the live campaign on 2026-09-04 because of the space before the comma.
+    assert amazon.looks_offshore("PHI VILLA Holding Co ., LTD", None)
+    assert amazon.looks_offshore("Foo Co.,Ltd", None)
+    assert not amazon.looks_offshore("Amish Country Popcorn, Inc", "BERNE, IN, US")
     assert not amazon.looks_offshore("HYDROJUG LLC", "1 MAIN ST, OGDEN, UT 84401, US")
 
 
@@ -707,7 +716,10 @@ def test_one_harvest_at_a_time(tmp_path):
     assert run.acquire_lock(lock) is None  # this process holds it
     assert run.run_all(FakeDB(), FakeFetcher({}), lock=lock, log=quiet) == {"skipped": "locked"}
     lock.unlink()
-    out = run.run_all(FakeDB(), FakeFetcher({}), categories=["kitchen"], max_products=1, lock=lock, log=quiet)
+    # shopify=False: that pass builds its own live fetcher and reads the
+    # cached listing from ~/.hubricon, which would be a real crawl in here.
+    out = run.run_all(FakeDB(), FakeFetcher({}), categories=["kitchen"], max_products=1, lock=lock,
+                      log=quiet, shopify=False)
     assert "crawl" in out and not lock.exists()  # released even though nothing was found
 
 
@@ -944,3 +956,37 @@ def test_listings_keeps_reading_until_a_listing_has_a_packed_weight(tmp_path):
     row = db.store["harvest_sellers"][0]
     assert [a["asin"] for a in row["asins"]] == ["B0LIGHT001", "B0LIGHT002", "B0CQVWT2NH"]  # a third read for the weight, not a fourth
     assert not any("B0NEVER001" in c for c in f.calls)
+
+
+# -- profiles: seller ids from the archive index, read live ---------------------------
+
+def test_profiles_reads_live_pages_for_ids_not_yet_on_file(tmp_path):
+    db = FakeDB()
+    db.store["harvest_sellers"] = [{"seller_id": "AONFILE00001", "status": "pushed"}]
+    f = FakeFetcher({amazon.seller_url("AGOOD0000001"): seller_page("HydroJug", "HYDROJUG LLC", r12="1,139"),
+                     amazon.seller_url("ABIG00000001"): seller_page("Mega Store", "MEGA CORP LLC", r12="12,000", life="300,000")})
+    counts = run.profiles(db, f, ids=["AONFILE00001", "AGOOD0000001", "ABIG00000001", "AMISSING0001"],
+                          limit=10, cache=Cache(tmp_path), log=quiet)
+    assert counts == {"candidate": 1, "skip_size": 1, "unread": 1}
+    assert not any("AONFILE00001" in c for c in f.calls)  # already on file, never fetched
+    rows = {r["seller_id"]: r for r in db.store["harvest_sellers"]}
+    good = rows["AGOOD0000001"]
+    assert good["source"] == "profile" and good["status"] == "candidate" and good["ratings_12mo"] == 1139
+    assert good["est_monthly_revenue"] == amazon.revenue_from_ratings(1139) and "profile read live" in good["notes"]
+    assert rows["ABIG00000001"]["status"] == "skip_size"
+    assert db.store["funnel_events"][-1]["note"].startswith("profiles: ")
+    assert run.profiles(db, FakeFetcher({}), ids=["AONFILE00001"], limit=10, cache=Cache(tmp_path), log=quiet) == {}
+
+
+def test_seller_ids_are_enumerated_once_and_cached(tmp_path):
+    from hubricon_engine.harvest import wayback as wb
+
+    f = FakeFetcher({wb.AAG_CDX + "&showNumPages=true": "2\n",
+                     wb.AAG_CDX + "&page=0": "http://www.amazon.com/gp/aag/main?seller=A1AAAAAAAAAAAA&ie=UTF8 20220101 900\n",
+                     wb.AAG_CDX + "&page=1": "http://www.amazon.com/gp/aag/main/ref=x?seller=a2bbbbbbbbbbbb 20230101 900\n"
+                                             "http://www.amazon.com/gp/aag/main?seller=215&ie=UTF8 20230101 900\n"})
+    path = tmp_path / "ids.txt"
+    ids = wb.seller_ids(f, path, log=quiet)
+    assert ids == ["A1AAAAAAAAAAAA", "A2BBBBBBBBBBBB"]  # the short "215" is not a seller id
+    f2 = FakeFetcher({})
+    assert wb.seller_ids(f2, path, log=quiet) == ids and not f2.calls

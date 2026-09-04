@@ -283,8 +283,13 @@ def looks_reseller(seller_name: str | None, business_name: str | None, brand_cou
 
 
 def looks_offshore(business_name: str | None, address: str | None) -> bool:
+    # Amazon renders the legal name as typed, so the same suffix arrives as
+    # "Co., Ltd", "Co.,Ltd" and "Co ., LTD". PHI VILLA Holding Co ., LTD
+    # reached the live campaign on 2026-09-04 purely because of that space,
+    # so the haystack is normalised before matching.
     joined = f"{business_name or ''} {address or ''}".lower()
-    return any(w in joined for w in OFFSHORE_WORDS)
+    joined = re.sub(r"\s+([.,])", r"\1", joined)
+    return any(w in re.sub(r"\s+", " ", joined) for w in OFFSHORE_WORDS)
 
 
 def looks_big_parent(seller_name: str | None, business_name: str | None) -> bool:
