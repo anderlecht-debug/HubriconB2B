@@ -411,6 +411,7 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
 LISTINGS_LIMIT = int(os.environ.get("HARVEST_LISTINGS_LIMIT", "60"))
 LISTINGS_PER_SELLER = int(os.environ.get("HARVEST_LISTINGS_PER_SELLER", "2"))
 LISTINGS_MAX_ASINS = int(os.environ.get("HARVEST_LISTINGS_MAX_ASINS", "4"))  # keep reading until one carries a weight
+RUN_ALL_LISTINGS = int(os.environ.get("HARVEST_RUN_ALL_LISTINGS", "30"))  # per scheduled run, ~90 Amazon pages
 MIN_HOOK_WEIGHT_OZ = 2.0  # the lightest FBA band has no cheaper band below it, so no fee-cliff hook
 
 
@@ -768,6 +769,7 @@ def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products:
     try:
         fetcher = fetcher or Fetcher()
         out = {"crawl": crawl(db, fetcher, categories, max_products, log=log)}
+        out["listings"] = listings(db, fetcher, limit=RUN_ALL_LISTINGS, log=log)  # archived sellers get a listing to quote
         out["enrich"] = enrich(db, fetcher, log=log)
         api = Instantly() if os.environ.get("INSTANTLY_API_KEY") else None
         out["pushed"] = push(db, api, dry=dry, log=log)

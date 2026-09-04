@@ -291,6 +291,13 @@ def test_private_label_reseller_and_offshore_heuristics():
     assert not amazon.looks_offshore("HYDROJUG LLC", "1 MAIN ST, OGDEN, UT 84401, US")
 
 
+def test_sorry_page_counts_as_a_block():
+    sleeps = []
+    f = Fetcher(transport=lambda u, h, t: (200, "<html><title>Sorry! Something went wrong!</title></html>"),
+                sleep=sleeps.append, block_pause=1, give_up=False)
+    assert f.get("https://www.amazon.com/s?me=X") is None and f.stats["blocked"] == 1 and sleeps == [1]
+
+
 def test_chrome_transport_builds_a_headless_dump_dom_command(monkeypatch, tmp_path):
     from hubricon_engine.harvest import fetch as fetchmod
     seen = {}
