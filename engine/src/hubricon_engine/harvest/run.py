@@ -410,6 +410,12 @@ def push(db, api: Instantly | None, limit: int = PUSH_LIMIT, dry: bool = False,
 
 LISTINGS_LIMIT = int(os.environ.get("HARVEST_LISTINGS_LIMIT", "60"))
 LISTINGS_PER_SELLER = int(os.environ.get("HARVEST_LISTINGS_PER_SELLER", "2"))
+LISTINGS_MAX_ASINS = int(os.environ.get("HARVEST_LISTINGS_MAX_ASINS", "4"))  # keep reading until one carries a weight
+MIN_HOOK_WEIGHT_OZ = 2.0  # the lightest FBA band has no cheaper band below it, so no fee-cliff hook
+
+
+def _has_weighed_listing(asins: list[dict], weights: dict[str, float | None]) -> bool:
+    return any((weights.get(a.get("asin")) or 0) > MIN_HOOK_WEIGHT_OZ for a in asins or [])
 
 
 def storefront_url(seller_id: str) -> str:
@@ -425,11 +431,17 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
     crawled listing. Three Amazon pages per seller, at the fetcher's pace."""
     cache = cache or Cache()
     counts: Counter = Counter()
-    rows = [r for r in db.table("harvest_sellers").select("*").in_("status", ["candidate", "enriched", "pushed"])
-            .eq("country", "US").order("est_monthly_revenue", desc=True).execute().data
-            if not r.get("asins")][:limit]
+    candidates = db.table("harvest_sellers").select("*").in_("status", ["candidate", "enriched", "pushed"]) \
+        .eq("country", "US").order("est_monthly_revenue", desc=True).execute().data
+    # The founder lane's hook is the fee cliff, which needs a packed weight
+    # above the lightest band: a row whose listings carry none is read again.
+    weights = {p["asin"]: p.get("weight_oz") for p in
+               db.table("harvest_products").select("asin, weight_oz").execute().data}
+    rows = [r for r in candidates
+            if not r.get("asins") or (not _has_weighed_listing(r["asins"], weights)
+                                      and "storefront read" not in (r.get("notes") or ""))][:limit]
     if not rows:
-        log("listings: every US row already carries a listing")
+        log("listings: every US row already carries a weighed listing")
         return {}
     for row in rows:
         try:
@@ -440,10 +452,13 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
         if not page:
             counts["no_storefront"] += 1
             continue
-        asins = list(dict.fromkeys(re.findall(r"/dp/([A-Z0-9]{10})", page)))[:per_seller]
+        asins = list(dict.fromkeys(re.findall(r"/dp/([A-Z0-9]{10})", page)))[:LISTINGS_MAX_ASINS]
         agg_asins, brands, reviews_max, top = [], [], 0, (None, None)
         product_rows = []
+        weighed = False
         for asin in asins:
+            if len(agg_asins) >= per_seller and weighed:
+                break
             prod = cache.get("product", asin, PRODUCT_CACHE_DAYS)
             if prod is None:
                 try:
@@ -459,6 +474,7 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
             if prod.get("sold_by_amazon") or (prod.get("seller_id") or row["seller_id"]) != row["seller_id"]:
                 continue  # the buy box went to Amazon or another seller; not this seller's listing to quote
             product_rows.append(_product_row(asin, {**prod, "seller_id": row["seller_id"]}))
+            weighed = weighed or (prod.get("weight_oz") or 0) > MIN_HOOK_WEIGHT_OZ
             agg_asins.append({"asin": asin, "brand": prod.get("brand"), "bsr": prod.get("bsr"), "price": prod.get("price"),
                               "reviews": prod.get("reviews"), "est_monthly_revenue": prod.get("est_monthly_revenue")})
             if prod.get("brand") and prod["brand"] not in brands:
@@ -470,10 +486,12 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
             counts["no_listing"] += 1
             _update(db, row["seller_id"], notes=((row.get("notes") or "") + "; storefront read, no listing parsed").strip("; "))
             continue
+        counts["weighed" if weighed else "unweighed"] += 1
         db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
         upd = {"asins": agg_asins, "brands": brands or row.get("brands") or [], "reviews_max": reviews_max,
                "top_bsr": top[0], "top_category": top[1],
-               "notes": ((row.get("notes") or "") + f"; {len(agg_asins)} live listing(s) from the storefront").strip("; ")}
+               "notes": ((row.get("notes") or "") + f"; storefront read, {len(agg_asins)} live listing(s)"
+                         + ("" if weighed else ", none with a packed weight")).strip("; ")}
         if len(brands) == 1 and brands[0] and not amazon.looks_private_label(brands[0], row.get("seller_name"), row.get("business_name")):
             upd["notes"] += f"; sells brand {brands[0]!r}"
         if len(brands) == 1 and brands[0]:

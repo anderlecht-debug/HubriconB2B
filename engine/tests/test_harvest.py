@@ -912,11 +912,28 @@ def test_listings_pairs_an_archived_seller_with_its_live_products(tmp_path):
     storefront = '<html><a href="/HydroJug-Traveler/dp/B0CQVWT2NH/ref=sr_1_1">a</a><a href="/Echo/dp/B09B8V1LZ3/ref=sr_1_2">b</a></html>'
     f = FakeFetcher({run.storefront_url("AXSP4G6IQFYIQ"): storefront,
                      f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P, f"{amazon.BASE}/dp/B09B8V1LZ3": PRODUCT_AMZ})
+    db.store["harvest_products"] = [{"asin": "X", "weight_oz": 12.0}]  # the other row's listing already carries a weight
     counts = run.listings(db, f, limit=10, per_seller=2, cache=Cache(tmp_path), log=quiet)
-    assert counts == {"paired": 1}
+    assert counts == {"paired": 1, "weighed": 1}
     row = db.store["harvest_sellers"][0]
     assert row["asins"][0]["asin"] == "B0CQVWT2NH" and row["top_bsr"] == 400 and row["top_category"] == "Kitchen & Dining"
     assert row["brand"] == "HydroJug" and "1 live listing(s)" in row["notes"]  # the Echo is Amazon's own offer, not this seller's
-    assert {r["asin"] for r in db.store["harvest_products"]} == {"B0CQVWT2NH"}
-    assert not any("AOTHER" in c for c in f.calls)  # rows that already carry a listing are left alone
+    assert {r["asin"] for r in db.store["harvest_products"]} == {"X", "B0CQVWT2NH"}
+    assert not any("AOTHER" in c for c in f.calls)  # rows that already carry a weighed listing are left alone
     assert run.listings(db, FakeFetcher({}), limit=10, cache=Cache(tmp_path), log=quiet) == {}
+
+
+def test_listings_keeps_reading_until_a_listing_has_a_packed_weight(tmp_path):
+    db = FakeDB()
+    db.store["harvest_sellers"] = [{"seller_id": "AXSP4G6IQFYIQ", "seller_name": "HydroJug", "brand": "HydroJug", "brands": [],
+                                    "asins": [], "status": "enriched", "country": "US", "source": "wayback", "est_monthly_revenue": 1}]
+    light = PRODUCT_3P.replace("1.3 pounds", "1.5 ounces").replace("B0CQVWT2NH", "B0LIGHT001")
+    storefront = "".join(f'<a href="/x/dp/{a}/ref=sr">a</a>' for a in ("B0LIGHT001", "B0LIGHT002", "B0CQVWT2NH", "B0NEVER001"))
+    f = FakeFetcher({run.storefront_url("AXSP4G6IQFYIQ"): storefront, f"{amazon.BASE}/dp/B0LIGHT001": light,
+                     f"{amazon.BASE}/dp/B0LIGHT002": light.replace("B0LIGHT001", "B0LIGHT002"),
+                     f"{amazon.BASE}/dp/B0CQVWT2NH": PRODUCT_3P, f"{amazon.BASE}/dp/B0NEVER001": PRODUCT_3P})
+    counts = run.listings(db, f, limit=10, per_seller=2, cache=Cache(tmp_path), log=quiet)
+    assert counts == {"paired": 1, "weighed": 1}
+    row = db.store["harvest_sellers"][0]
+    assert [a["asin"] for a in row["asins"]] == ["B0LIGHT001", "B0LIGHT002", "B0CQVWT2NH"]  # a third read for the weight, not a fourth
+    assert not any("B0NEVER001" in c for c in f.calls)
