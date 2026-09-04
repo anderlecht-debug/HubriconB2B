@@ -1034,3 +1034,18 @@ def test_seller_ids_are_enumerated_once_and_cached(tmp_path):
     assert ids == ["A1AAAAAAAAAAAA", "A2BBBBBBBBBBBB"]  # the short "215" is not a seller id
     f2 = FakeFetcher({})
     assert wb.seller_ids(f2, path, log=quiet) == ids and not f2.calls
+
+
+def test_status_pages_past_the_thousand_row_cap():
+    """PostgREST returns at most 1,000 rows and says nothing about it, so on
+    2026-09-04 the digest read "1000 sellers on file" for a table of 1,837."""
+    db = FakeDB()
+    db.store["harvest_sellers"] = [
+        {"seller_id": f"S{i}", "status": "skip_non_us" if i % 2 else "pushed",
+         "est_monthly_revenue": i, "pushed_at": None, "source": "wayback", "platform": "amazon"}
+        for i in range(2350)]
+    s = run.status(db)
+    assert s["total"] == 2350
+    assert s["by_status"]["pushed"] + s["by_status"]["skip_non_us"] == 2350
+    paged = run.all_rows(db, "harvest_sellers", "status", page=500)
+    assert len(paged) == 2350 and paged[0]["seller_id"] == "S0"

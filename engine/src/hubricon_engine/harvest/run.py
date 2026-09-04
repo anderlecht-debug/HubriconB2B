@@ -828,9 +828,23 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
 
 # -- status / all / install -----------------------------------------------------
 
+def all_rows(db, table: str, columns: str, page: int = 1000) -> list[dict]:
+    """Every row, paged. PostgREST caps a response at 1,000 and says nothing
+    about it, so from 2026-09-04 the harvest reported exactly "1000 sellers on
+    file" every morning while the table actually held 1,837 — the digest looked
+    frozen when the crawl was working fine."""
+    out: list[dict] = []
+    start = 0
+    while True:
+        rows = db.table(table).select(columns).range(start, start + page - 1).execute().data
+        out.extend(rows)
+        if len(rows) < page:
+            return out
+        start += page
+
+
 def status(db) -> dict:
-    rows = db.table("harvest_sellers").select(
-        "status, est_monthly_revenue, pushed_at, source, platform").execute().data
+    rows = all_rows(db, "harvest_sellers", "status, est_monthly_revenue, pushed_at, source, platform")
     counts = Counter(r["status"] for r in rows)
     return {"total": len(rows), "by_status": dict(counts),
             "by_source": dict(Counter(r.get("source") or "bestsellers" for r in rows)),
