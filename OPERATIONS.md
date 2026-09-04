@@ -184,6 +184,15 @@ caps the Instantly lead credits spent a day; each row is asked about once
 (`person_source = supersearch:requested`). Rows that never get a named owner
 stay in the harvest list for the founder lane.
 
+**Which categories pay, measured 2026-09-04** (share of sellers found that
+became a lead): Baby 20% · Beauty & Personal Care 16% · Automotive 12% ·
+Home & Kitchen 11% · Health & Household 10% · Kitchen & Dining 9% · Patio,
+Lawn & Garden 8%. Office Products, Tools & Home Improvement and Computers
+produced nothing from 37 sellers between them, and a 125-page crawl of
+Computers returned 6 candidates against Kitchen's 9 from 34 pages. Computers
+and electronics are dominated by offshore sellers and resellers. Crawl the
+top of that list; the others are not worth the page budget.
+
 **What the archive is worth, measured 2026-09-04.** Best Sellers turns 204
 sellers into 34 leads (17%); the archive turns 1,503 into 27 (1.8%). Roughly
 20 Amazon pages buy a lead through Best Sellers. `harvest profiles`, which
