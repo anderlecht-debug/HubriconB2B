@@ -15,6 +15,7 @@ framed as a tracked test the Ledger then measures.
 
 from datetime import date, timedelta
 
+from . import channels
 from .models.pricing_engine import price_move
 
 STOCKOUT_ALERT = 0.25
@@ -30,6 +31,12 @@ ANOMALY_LABELS = {
     "referral_rate": "referral fee rate", "storage_fee": "storage fee",
     "sessions": "traffic", "unit_session_pct": "conversion", "buy_box_pct": "Buy Box share", "spend": "daily spend",
 }
+
+
+def _labels(channel: str | None) -> dict:
+    """Metric labels with the platform named; the FBA, referral and Buy Box
+    metrics only ever come from Amazon data, so those stand."""
+    return {**ANOMALY_LABELS, "fee_per_unit": f"total {channels.fee_label(channel)} per unit"}
 
 
 def _money(v: float) -> str:
@@ -70,7 +77,8 @@ def branded_spend(search_terms: list[dict], brand_terms: list[str]) -> tuple[flo
     return total, n
 
 
-def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None) -> dict:
+def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None,
+                         channel: str | None = "amazon") -> dict:
     p = float(r["stockout_probability"] or 0)
     rate = float(r["daily_velocity_mean"] or 0)
     position = int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
@@ -93,10 +101,11 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
         )
     elif unit_cost:
         wire = float(r["reorder_qty"]) * unit_cost
+        cliff = " and clears Amazon's low-inventory-fee window" if channels.has_fee_cliffs(channel) else ""
         text = (
             f"Wire {_money(wire)} to your supplier by {by_text} — {r['reorder_qty']} units of "
-            f"{r['sku']}. That keeps stockout risk under 5% and clears Amazon's "
-            f"low-inventory-fee window (lead time {r['lead_time_days']}d, current risk {p:.0%})."
+            f"{r['sku']}. That keeps stockout risk under 5%{cliff} "
+            f"(lead time {r['lead_time_days']}d, current risk {p:.0%})."
         )
     else:
         text = (
@@ -176,8 +185,9 @@ def _recovery_directive(recovery: dict | None) -> dict | None:
     }
 
 
-def _liquidation_directives(inv_econ: dict | None) -> list[dict]:
+def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon") -> list[dict]:
     out = []
+    program = "Amazon's liquidation program" if channels.has_fee_cliffs(channel) else "a clearance sale"
     for r in (inv_econ or {}).get("rows", []):
         if r.get("decision") != "liquidate":
             continue
@@ -190,7 +200,7 @@ def _liquidation_directives(inv_econ: dict | None) -> list[dict]:
             "score": 30 + gain / 100,
             "expected_impact_usd": round(gain, 2),
             "action_text": (
-                f"Liquidate {int(r['excess_units'])} excess units of {r['sku']}: Amazon's program returns about "
+                f"Liquidate {int(r['excess_units'])} excess units of {r['sku']}: {program} returns about "
                 f"{_money(float(r['liquidate_value']))} now, against {_money(float(r['hold_npv']))} from holding and "
                 f"selling them down with storage, the aged surcharge and capital priced in"
                 + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".")
@@ -199,8 +209,9 @@ def _liquidation_directives(inv_econ: dict | None) -> list[dict]:
     return out
 
 
-def _anomaly_directives(anomaly_rows: list[dict] | None) -> list[dict]:
+def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "amazon") -> list[dict]:
     """One instruction per (item, metric) for adverse shifts worth ≥ $100/period."""
+    labels, plat = _labels(channel), channels.label(channel)
     best: dict[tuple, dict] = {}
     for r in anomaly_rows or []:
         if not r.get("flagged") or (r.get("dollar_impact") or 0) < ANOMALY_MIN_IMPACT:
@@ -218,11 +229,14 @@ def _anomaly_directives(anomaly_rows: list[dict] | None) -> list[dict]:
         b, c = float(r.get("baseline") or 0), float(r.get("current") or 0)
         m = r["metric"]
         if m in ("fee_per_unit", "fba_fee_per_unit"):
+            fix = ("Verify the listing's weight and dimensions in Seller Central and request a re-measure; "
+                   "overcharged fees are reimbursable." if channels.has_fee_cliffs(channel) else
+                   "Check the order mix: smaller orders each carry the fixed processing fee, and a refund "
+                   "returns none of it. A minimum order value or a bundle moves it back.")
             out.append({"module": "margin", "score": 25 + impact / 100, "expected_impact_usd": round(impact, 2),
                         "action_text": (
-                            f"Amazon's {ANOMALY_LABELS[m]} on {r['item_id']} rose from ${b:.2f} to ${c:.2f} since {since} "
-                            f"— {_money(impact)}/period at last period's volume. Verify the listing's weight and "
-                            f"dimensions in Seller Central and request a re-measure; overcharged fees are reimbursable.")})
+                            f"{plat}'s {labels[m]} on {r['item_id']} rose from ${b:.2f} to ${c:.2f} since {since} "
+                            f"— {_money(impact)}/period at last period's volume. {fix}")})
         elif m == "referral_rate":
             out.append({"module": "margin", "score": 25 + impact / 100, "expected_impact_usd": round(impact, 2),
                         "action_text": (
@@ -232,7 +246,7 @@ def _anomaly_directives(anomaly_rows: list[dict] | None) -> list[dict]:
         elif m == "monthly_total":
             out.append({"module": "margin", "score": 20 + impact / 100, "expected_impact_usd": round(impact, 2),
                         "action_text": (
-                            f"Amazon's {r['item_id']} charges rose from {_money(b)} to {_money(c)} per month since "
+                            f"{plat}'s {r['item_id']} charges rose from {_money(b)} to {_money(c)} per month since "
                             f"{since}. We are tracing the lines to the SKUs behind the step.")})
         elif m == "unit_session_pct":
             out.append({"module": "general", "score": 15 + impact / 100, "expected_impact_usd": None,
@@ -263,7 +277,10 @@ def _anomaly_directives(anomaly_rows: list[dict] | None) -> list[dict]:
 
 def draft_directives(inventory, ads, elasticity, margins,
                      search_terms=None, brand_terms=None,
-                     recovery=None, inv_econ=None, anomaly_rows=None) -> list[dict]:
+                     recovery=None, inv_econ=None, anomaly_rows=None,
+                     channel: str | None = "amazon") -> list[dict]:
+    """`channel` names the platform the run was computed on (channels.py):
+    it changes the words, never the arithmetic."""
     today = date.today()
     latest_by_sku = _latest_margins_by_sku(margins)
     econ_by_sku = {r["sku"]: r for r in (inv_econ or {}).get("rows", [])}
@@ -272,12 +289,12 @@ def draft_directives(inventory, ads, elasticity, margins,
     rec = _recovery_directive(recovery)
     if rec:
         drafts.append(rec)
-    drafts += _liquidation_directives(inv_econ)
-    drafts += _anomaly_directives(anomaly_rows)
+    drafts += _liquidation_directives(inv_econ, channel)
+    drafts += _anomaly_directives(anomaly_rows, channel)
 
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
-            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"])))
+            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel))
 
     bleed_total = sum(t["spend"] or 0 for r in ads for t in (r["bleed_terms"] or []))
     if bleed_total > 0:

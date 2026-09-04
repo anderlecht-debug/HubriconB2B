@@ -2,7 +2,9 @@
 One line per settlement event with Amazon's fee decomposition. Timestamps
 keep the wall-clock Amazon prints ("Jul 1, 2026 3:12:44 AM PDT" ->
 2026-07-01T03:12:44, zone dropped, not converted); txn_date is the date
-part the models key on."""
+part the models key on. The channel leads the row_key hash (2026-09-04) so
+a Shopify Payments line can never collide with an Amazon settlement line
+for the same client."""
 
 import pandas as pd
 
@@ -51,8 +53,9 @@ def parse(df: pd.DataFrame, upload: dict):
                 **record,
                 "client_id": upload["client_id"],
                 "upload_id": upload["id"],
+                "channel": "amazon",
                 "row_key": row_key(
-                    txn_datetime, record["settlement_id"], record["txn_type"], record["order_id"],
+                    "amazon", txn_datetime, record["settlement_id"], record["txn_type"], record["order_id"],
                     record["sku"], record["description"], quantity, record["total"],
                 ),
                 "txn_datetime": txn_datetime,

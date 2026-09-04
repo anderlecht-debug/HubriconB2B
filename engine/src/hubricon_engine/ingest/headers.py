@@ -118,7 +118,9 @@ def parse_datetime(value) -> datetime | None:
         return None
     v = _TZ_SUFFIX.sub("", v)
     try:
-        return datetime.fromisoformat(v)  # 2026-07-14, 2026-07-14 10:21, ...T10:21:00+00:00
+        # 2026-07-14, 2026-07-14 10:21, ...T10:21:00+00:00, Shopify's
+        # "2026-07-03 14:22:10 -0400": an offset is dropped like a zone name
+        return datetime.fromisoformat(v).replace(tzinfo=None)
     except ValueError:
         pass
     if m := _SLASH.match(v):
@@ -156,6 +158,18 @@ def to_iso_datetime(value) -> str | None:
     """Full timestamp when the source carries one, else midnight of the date."""
     dt = parse_datetime(value)
     return None if dt is None else dt.isoformat()
+
+
+def is_total_row(value) -> bool:
+    """Google Ads downloads close with "Total: Account" / "Total: Filtered
+    campaigns" trailer lines in the first column; they are sums, not rows.
+
+    The colon is load-bearing (2026-09-04): a bare `startswith("total")`
+    also swallows "total gym mat" and a campaign called "Total Store", which
+    is silent data loss on exactly the search-terms report the ad model
+    reads. Google's trailers are always "Total:" or the bare word."""
+    v = str(value or "").strip().lower()
+    return v == "total" or v.startswith("total:")
 
 
 def row_key(*parts) -> str:

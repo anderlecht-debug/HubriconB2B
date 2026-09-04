@@ -74,3 +74,55 @@ def test_payload_is_json_safe():
     out = cashflow.run(_client(), [_inventory_row()], [_margin_row()],
                        np.random.default_rng(7), n_paths=200)
     json.dumps(out)  # numpy types or NaN would raise
+
+
+# --- the payout cycle is the platform's, not the model's ----------------------
+
+def _shopify(balance=10_000.0, opex=3_000.0):
+    return {"cash_on_hand": balance, "monthly_fixed_costs": opex, "platform": "shopify"}
+
+
+def test_amazon_stays_the_default_and_states_its_assumption():
+    out = cashflow.run(_client(balance=10_000.0), [_inventory_row()], [_margin_row()],
+                       np.random.default_rng(7), n_paths=500)
+    assert out["details"]["payout_cycle_days"] == 14
+    assert out["details"]["payout_days"][:3] == [14, 28, 42]
+    assert "14 days" in out["details"]["assumptions"][0]
+
+
+def test_shopify_pays_out_daily_so_there_is_no_fortnightly_trough():
+    """Shopify Payments settles every day: cash never waits thirteen days for
+    its first disbursement, so the deterministic trough is gone."""
+    amazon = cashflow.run(_client(balance=10_000.0), [_inventory_row()], [_margin_row()],
+                          np.random.default_rng(7), n_paths=500)
+    shopify = cashflow.run(_shopify(), [_inventory_row()], [_margin_row()],
+                           np.random.default_rng(7), n_paths=500)
+    assert shopify["details"]["payout_cycle_days"] == 1
+    assert shopify["details"]["payout_days"][:3] == [1, 2, 3]
+    assert shopify["min_p5_day"] == 1                      # day one is the low, not day 13
+    assert shopify["min_median"] > amazon["min_median"]     # no cash held back
+    assert shopify["details"]["assumptions"][0] == (
+        "Shopify Payments pays out daily; the ~2 business-day lag is ignored at this horizon")
+
+
+def test_an_explicit_channel_beats_the_clients_platform():
+    """A client selling on both is run once per channel, so the caller states
+    which one rather than letting the client record decide."""
+    both = {"cash_on_hand": 10_000.0, "monthly_fixed_costs": 3_000.0, "platform": "both"}
+    out = cashflow.run(both, [_inventory_row()], [_margin_row()], np.random.default_rng(7),
+                       n_paths=200, channel="shopify")
+    assert out["details"]["payout_cycle_days"] == 1
+    # unstated, a two-platform client falls back to the Amazon default
+    assert cashflow.run(both, [_inventory_row()], [_margin_row()], np.random.default_rng(7),
+                        n_paths=200)["details"]["payout_cycle_days"] == 14
+
+
+def test_simulate_takes_the_cycle_as_a_number():
+    """The simulation itself stays channel-blind: it is handed a cadence and a
+    sentence, never a platform."""
+    params = cashflow.sku_cash_params([_inventory_row()], [_margin_row()])
+    out = cashflow.simulate(params, [], 10_000.0, 3_000.0, np.random.default_rng(7),
+                            horizon_days=30, n_paths=200, payout_cycle_days=7,
+                            payout_note="weekly, per the contract")
+    assert out["details"]["payout_days"] == [7, 14, 21, 28]
+    assert out["details"]["assumptions"][0] == "weekly, per the contract"

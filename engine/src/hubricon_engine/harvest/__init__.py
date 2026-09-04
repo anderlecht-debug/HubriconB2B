@@ -11,6 +11,11 @@ Modules:
   fetch    polite HTTP (cookie jar, pacing, captcha detection, parsed-result cache)
   amazon   parsers for Best Sellers, product and seller-profile pages + a BSR→units curve
   enrich   brand → website (direct guess, then Bing) → published contact / founder name
+  wayback  archived seller profiles from the Internet Archive: the same rows, no Amazon request
+  shopify  US Shopify stores from the JSON every store publishes (/meta.json, /products.json,
+           JSON-LD review counts, the /policies/ pages) — a second platform in the same rows,
+           with the USPS/UPS shipping band as its version of the FBA fee cliff. Nothing
+           blocks it, so it keeps running on the days Amazon is answering with captchas.
   run      the crawl → enrich → push pipeline, status, and the launchd install
 
 The crawl must run from a residential connection (the founder's Mac):

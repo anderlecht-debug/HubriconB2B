@@ -7,12 +7,19 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from .. import channels
 from ..config import REPO_ROOT
 from ..directives import draft_directives
 from . import charts
 
 STOCKOUT_ALERT = 0.25
 TEMPLATES = Path(__file__).parent / "templates"
+
+
+def run_channel(run: dict, client: dict) -> str:
+    """The channel a run was computed on: recorded in model_runs.params for a
+    two-platform client, otherwise the client's own platform."""
+    return ((run.get("params") or {}).get("channel")) or channels.client_channel(client) or "amazon"
 
 
 def _fetch_results(db, table: str, run_id: str) -> list[dict]:
@@ -30,13 +37,14 @@ def _resolve_run(db, client_id: str, run_id: str | None) -> dict:
     return rows[0]
 
 
-def _top_actions(inventory, ads, elasticity, margins) -> list[dict]:
-    drafts = draft_directives(inventory, ads, elasticity, margins)
+def _top_actions(inventory, ads, elasticity, margins, channel: str = "amazon") -> list[dict]:
+    drafts = draft_directives(inventory, ads, elasticity, margins, channel=channel)
     return [{"tag": d["module"].upper(), "text": d["action_text"]} for d in drafts[:5]]
 
 
 def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = None) -> Path:
     run = _resolve_run(db, client["id"], run_id)
+    channel = run_channel(run, client)
     inventory = _fetch_results(db, "inventory_sim_results", run["id"])
     elasticity = _fetch_results(db, "elasticity_results", run["id"])
     ads = _fetch_results(db, "ad_efficiency_results", run["id"])
@@ -67,7 +75,9 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         client=client,
         run=run,
         today=date.today().isoformat(),
-        actions=_top_actions(inventory, ads, elasticity, margins),
+        actions=_top_actions(inventory, ads, elasticity, margins, channel),
+        fee_label=channels.fee_label(channel),
+        platform_label=channels.label(channel),
         totals=totals,
         latest_period=latest,
         inventory=sorted(inventory, key=lambda r: float(r["stockout_probability"] or 0), reverse=True),
@@ -79,7 +89,7 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         chart_stockout=charts.stockout_bars(inventory),
         chart_elasticity=charts.elasticity_scatter(elasticity),
         chart_ads=charts.ad_curves(ads),
-        chart_margin=charts.margin_bars(margins),
+        chart_margin=charts.margin_bars(margins, fee_label=channels.fee_label(channel)),
     )
 
     base = Path(out_dir) if out_dir else REPO_ROOT / "reports"

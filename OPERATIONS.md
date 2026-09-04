@@ -23,7 +23,7 @@ Three components, each doing only what it is placed to do:
 |---|---|---|---|
 | `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign, enrollment, reply sync + rule/Claude triage, sending replies, provisioning bookings and TEARDOWN requests, nudges, teardown runs, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
-| `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients |
+| `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients, once per channel a client sells on |
 | `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list |
 
 The routine never sends email. The operator never reads the inbox. Both talk
@@ -50,6 +50,60 @@ warmup on. The operator only sends from mailboxes whose warmup is active and
 sizes the daily limit to 20 per mailbox (cap 60). Lead lists whose name
 contains "Hubricon" are enrolled automatically; SuperSearch is asked for 25
 founders a day on top, best effort.
+
+## Two platforms: Amazon and Shopify
+
+Since 2026-09-04 a client sells on Amazon, on Shopify, or on both, and the
+same engine reads either. `clients.platform` says which
+(`amazon` / `shopify` / `both`); every canonical data row carries a
+`channel` (`amazon` / `shopify`) so a brand on both platforms holds the same
+SKU twice without the two colliding.
+
+    hubricon platform <client> shopify          # or amazon / both
+    hubricon run <client> --channel shopify     # a 'both' client runs once per channel
+
+**The models are channel-blind arithmetic.** A unit is a unit and a fee is a
+fee, so margin, elasticity, forecasting, the inventory simulation, ad
+response, anomaly detection and the Health Score run unchanged on either
+platform. `engine/src/hubricon_engine/channels.py` is the single place the
+*mechanics* differ, and nothing else is allowed to test the platform string:
+
+| What | Amazon | Shopify |
+|---|---|---|
+| Fee stack, in prose | referral, FBA fulfilment, storage | payment processing, shipping labels, apps, 3PL |
+| Payout cycle (the cash cone) | every 14 days | daily |
+| Fee cliffs (low-inventory, aged surcharge, peak storage) | priced in | none; the newsvendor still runs |
+| Reimbursement recovery | the whole desk | not applicable — no warehouse loses units on your behalf |
+| Watched during a price step | Buy Box share | conversion rate |
+| The seat | a Seller Central user, four permissions | a collaborator account: Orders, Products, Analytics, Reports, Marketing, Discounts |
+
+`margin_results.amazon_fees` keeps its column name on both channels — the
+column is older than the second platform. `channels.fee_label()` is what it
+is called in front of a client.
+
+**What the client sends.** The upload page reads `clients.platform` and shows
+only that platform's cards (`/api/intake` returns it). A Shopify brand sends
+its orders export, its products export (which is both the stock snapshot and,
+via Cost per item, the unit costs), its payouts export, and its Meta and/or
+Google Ads exports. The cost template gained a `fulfillment_per_unit_usd`
+column: pick, pack and postage per unit, which no Shopify report itemises and
+which FBA sellers leave blank.
+
+**Customer data.** A Shopify orders export carries the customer's name, email
+and address, because that is how the platform stores an order. The parser
+reads ten fields from it — order name, status, dates, refund total, SKU,
+quantity, price, discount — and writes a per-SKU monthly aggregate. No
+customer name, email, address, phone or payment detail is ever written to the
+database. The privacy page says exactly this, and the upload card tells the
+client they may delete those columns first.
+
+**Where the platform comes from.** The site's application gate asks "Where you
+sell" and rides the answer along on the Calendly booking; the operator reads
+it (`onboarding.platform_from_answers`) and writes it when it provisions the
+client. A stated answer beats the column default, but never overwrites a
+platform someone set by hand. A prospect the harvest found on a Shopify store
+is provisioned as Shopify when they reply TEARDOWN, so nobody is ever sent
+Seller Central instructions for a store they do not have.
 
 ## The free lead harvest (runs on the Mac)
 
@@ -116,6 +170,7 @@ uv run hubricon harvest requalify      # re-read live profiles of pushed/enriche
 uv run hubricon harvest prune          # skip_* rows still in Instantly → deleted there (the operator does this hourly)
 uv run hubricon harvest wayback        # second source: archived seller profiles, no Amazon request (below)
 uv run hubricon harvest listings       # profile-only sellers: read the storefront, keep two live listings (rank, price, weight)
+uv run hubricon harvest shopify        # third source: Shopify stores, no Amazon request at all (below)
 ```
 
 **The named owner comes from SuperSearch, not the website.** Public pages
@@ -138,6 +193,104 @@ requests a second, never Amazon) into `harvest_sellers` with `source =
 estimate comes from the feedback count, so the row still has to earn a live
 website and contact address in `enrich`. The CDX listing is saved at
 `~/.hubricon/harvest/wayback-sellers.cdx`; delete it to re-list.
+
+**Third source, Shopify stores.** Amazon is the adversary; Shopify is not.
+Every store serves `/meta.json` (name, city, province, country, currency,
+primary domain) and `/products.json?limit=250` (every product, its vendor,
+type, variants, prices, weights and dates), and the contact and legal pages
+it must publish carry the address and often the founder's name. `hubricon
+harvest shopify` walks that chain into `harvest_sellers` with `platform` and
+`source` both `shopify`; `harvest all` runs it after `listings`, fenced so an
+archive outage costs a log line and not the night's Amazon work.
+
+**Where the stores come from (`--source`, default `search`).** Shopify's own
+consumer marketplace, shop.app, lists brands that are paying, trading Shopify
+merchants, and search engines index those pages next to the brand's own
+domain. So the pass runs `site:shop.app <category>` over a rotating category
+list, takes the brand domains out of the results, and asks each one for
+`/meta.json`. A domain that answers is a live Shopify store, and it has its
+own domain — which is the difference between a lead we can write to and
+`hello@…myshopify.com`, which bounces.
+
+`--source archive` is the old path: the Wayback listing of myshopify.com
+homepages. It is kept because it costs nothing, but it is close to worthless.
+A store that succeeds buys a domain, so the archive captures that instead and
+the myshopify index keeps the dev stores, the abandoned shops and the hobby
+projects. Reading five of its handles on 2026-09-04 produced no lead with both
+a size estimate and a real inbox; the same day, five category searches produced
+four live US stores at their own domains from twenty-three probed candidates.
+
+What a live pass actually does, measured on 2026-09-04:
+
+- **It must go through Chrome.** Every `/meta.json` and `/products.json`
+  fetched with a plain urllib session answered **429** — large stores and
+  small, custom domains and myshopify ones alike — while the same URLs
+  returned their JSON in headless Chrome from the same connection. It is the
+  Amazon lesson again: the client is fingerprinted, not just the pace. The
+  fetcher takes `chrome_hosts`, and the Shopify pass passes `("",)` so every
+  host goes through Chrome. About six seconds a page, so a store's four or
+  five pages take under a minute.
+- **Chrome hands back the DOM, not the bytes.** `--dump-dom` wraps JSON in
+  `<pre>…</pre>` with the entities escaped, so `shopify.json_payload` unwraps
+  that before parsing. A password page or a React app is not a payload and
+  returns None.
+- **The catalogue is read from the myshopify host.** A headless storefront
+  (Hydrogen/Oxygen) serves a React app at its own domain, so `/products.json`
+  there answers with HTML — thehydrojug.com did exactly that, while
+  hydrojug.myshopify.com returned all 250 products. The brand's own domain is
+  still the row's website and where the contact pages are read.
+- **The primary domain can be the checkout host.** That same store reports
+  `checkout.thehydrojug.com` in meta.json; `store_domain` strips the label so
+  the founder-lane email never points at a checkout.
+- **The archive is read with plain HTTP, the stores with Chrome.** They are
+  two fetchers on purpose. `store_fetcher()` routes every host through Chrome,
+  and Chrome answers web.archive.org's plain-text page count with its viewer
+  (`<pre>42897</pre>` instead of `42897`), which reads as zero pages — the
+  first live run listed nothing at all for exactly this reason.
+- **Discovery samples the archive, it does not sweep it.** The Wayback CDX
+  index of `*.myshopify.com` homepages runs to **42,897 pages**, sorted
+  alphabetically: page 0 is `0-5-yas-…`, page 200 is `0c2e44-cb`. Reading the
+  first N returns nothing but Shopify's own generated dev stores, so the pass
+  spreads its page budget across the whole index and drops handles that are
+  blobs rather than names (`ctq2ua-gn` out, `ruggit-collars` in). Ask for the
+  page count on its own: add `fl=` or `collapse=` and the archive answers
+  `- -` instead of a number. The listing is cached at
+  `~/.hubricon/harvest/shopify-stores.cdx`; delete it to re-list.
+
+**A store with no custom domain is not a lead.** `myshopify.com` has an MX
+record, so a guessed `hello@<store>.myshopify.com` passes every cheap check
+and hard-bounces. Such rows are `no_email`, never `enriched`. The push's
+revenue floor would have caught them anyway (they carry no revenue estimate),
+but bounces are the one cost a two-month-old sending domain cannot absorb, so
+the guess is refused at the source.
+
+Two things are **not** calibrated, and the founder owns them:
+
+- `HARVEST_SHOPIFY_ORDERS_PER_REVIEW` (50) is a guess, unlike the Amazon
+  `REVENUE_PER_RATING` figure which was checked against named brands. The
+  whole `$500k–$40M` band rides on it. Check ten stores of known size and
+  adjust before pushing anything to Instantly.
+- **Many stores publish no review count.** The size estimate comes from
+  `aggregateRating` in a product page's JSON-LD, and a store whose review app
+  renders client-side has none — HydroJug, a brand far above the ceiling, came
+  back with no estimate at all. As on the Amazon side an unknown never
+  disqualifies, so such a row stays a candidate with no size on it and waits
+  in the founder lane rather than entering the campaign. Read the note before
+  writing to one.
+
+Knobs (env): `HARVEST_SHOPIFY_LIMIT` (120 stores a CLI run),
+`HARVEST_SHOPIFY_CDX_PAGES` (40 index pages sampled), `HARVEST_SHOPIFY_SAMPLE`
+(3 product pages a store), `HARVEST_SHOPIFY_ORDERS_PER_REVIEW` (50),
+`HARVEST_SHOPIFY_MIN_ANNUAL` / `HARVEST_SHOPIFY_MAX_ANNUAL` (500,000 /
+40,000,000), `HARVEST_RUN_ALL_SHOPIFY` (60 stores per scheduled run).
+
+The founder lane's hook changes with the platform: an Amazon seller gets the
+FBA weight band, a Shopify brand gets the USPS/UPS one ("ships at 17.2 oz; the
+1-lb band ends at 16 oz, so every unit pays the 2-lb rate"). `hubricon
+outreach` picks the right one from the row's platform, and the verify
+checklist points at the store's own product and contact-information pages.
+`harvest requalify` and `harvest listings` skip Shopify rows: there is no
+Amazon profile or storefront to re-read.
 
 Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run

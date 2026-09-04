@@ -30,10 +30,19 @@ const REPORT_TYPES = new Set([
   "inventory_ledger",
   "inventory_health",
   "transactions",
+  // the Shopify route: the store's own exports and the two ad platforms a
+  // Shopify brand actually buys (engine/src/hubricon_engine/ingest/shopify_*.py)
+  "shopify_orders",
+  "shopify_products",
+  "shopify_payouts",
+  "meta_ads",
+  "google_ads_campaign",
+  "google_ads_search_terms",
 ]);
 // business/economics/ppc exports and the row-level bleed reports cover a
 // date range; the two inventory reports are snapshots (period_start only);
-// cogs is timeless.
+// cogs is timeless. Shopify orders, payouts and the ad exports cover a
+// range; the products export is a snapshot (inventory on hand, cost per item).
 const RANGE_SCOPED = new Set([
   "business_report",
   "sku_economics",
@@ -43,8 +52,13 @@ const RANGE_SCOPED = new Set([
   "fba_reimbursements",
   "fba_returns",
   "inventory_ledger",
+  "shopify_orders",
+  "shopify_payouts",
+  "meta_ads",
+  "google_ads_campaign",
+  "google_ads_search_terms",
 ]);
-const SNAPSHOT_SCOPED = new Set(["fba_inventory", "inventory_health"]);
+const SNAPSHOT_SCOPED = new Set(["fba_inventory", "inventory_health", "shopify_products"]);
 
 function getDb() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -104,9 +118,12 @@ export async function GET(request) {
   if (notConfigured) return notConfigured;
 
   const token = new URL(request.url).searchParams.get("t");
-  const identity = await resolveToken(getDb(), token);
+  const db = getDb();
+  const identity = await resolveToken(db, token);
   if (!identity) return Response.json({ ok: false }, { status: 403 });
-  return Response.json({ ok: true, company: identity.company_name });
+  // Which export cards the page shows: 'amazon', 'shopify' or 'both'.
+  const { data: client } = await db.from("clients").select("platform").eq("id", identity.client_id).single();
+  return Response.json({ ok: true, company: identity.company_name, platform: client?.platform ?? "amazon" });
 }
 
 export async function POST(request) {

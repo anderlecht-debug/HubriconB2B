@@ -1,5 +1,9 @@
 # Growth: reaching sellers for free
 
+Two platforms, two free sources of the same kind of row. The Amazon half is
+below; the Shopify half is the section that follows it, and it exists because
+Amazon fights the crawl and Shopify does not.
+
 The paid "Amazon seller databases" resell public data. Amazon has required
 every professional seller to publish a business name and address on its
 seller profile since 1 September 2020; Best Sellers lists name the
@@ -17,6 +21,60 @@ about 40 first touches a day. The channels below are how the same offer
 reaches thousands of sellers at once without buying anything. Each one
 takes founder time in minutes, not hours, and none of them ask a prospect
 for anything before the free month does.
+
+## The second source: Shopify stores
+
+Amazon has been the problem, not the plan. It fingerprints the client as well
+as the pace, answers datacenter ranges with a captcha, and since 2026-09-03
+serves a soft-block page once a client is flagged — so the crawl spends its
+day backing off instead of reading pages.
+
+A Shopify store publishes more, to anyone, with no captcha at all. Every store
+serves `/meta.json` (shop name, city, province, country, currency, primary
+domain) and `/products.json` (every product, its vendor, type, variants,
+prices, weights and created dates) as plain JSON, because the storefront's own
+theme reads them. Review apps put an `aggregateRating` with a review count in
+the product page's JSON-LD, which sizes the account the way Amazon's
+seller-feedback count did. The contact and legal pages a store must publish —
+`/policies/contact-information`, `/policies/legal-notice`, `/pages/about` —
+carry the address and often the founder's name. That is the same four-page
+chain the Amazon harvest walks, without the adversary.
+
+Finding the stores is the part that took two tries. The Internet Archive lists
+captured `*.myshopify.com` homepages for free, but a brand that succeeds buys a
+domain, so what the archive keeps is Shopify's own dev stores and abandoned
+shops. Five of them yielded nothing worth writing to.
+
+What works is Shopify's own marketplace. Every brand on shop.app is a paying,
+trading merchant, and search engines index those pages beside the brand's own
+site — so `site:shop.app <category>` is a category-filtered list of real
+Shopify stores, and asking each domain for `/meta.json` confirms it in one
+request. They all have their own domain, which means a real inbox rather than
+`hello@…myshopify.com`, which bounces.
+
+One caveat, learned the hard way on 2026-09-04: the store endpoints answer 429
+to a plain HTTP client and serve their JSON happily to headless Chrome from the
+same connection. Same fingerprinting lesson Amazon taught, same fix. It still
+has to run from the Mac.
+
+    hubricon harvest shopify --limit 40
+
+The qualification bar is the same one: a US brand selling its own products,
+roughly $1M–$20M a year, run by someone who answers their own email. A store
+whose catalog carries three or more vendors with none dominant is a reseller;
+a two-product store is too small; a catalog of thousands is a marketplace.
+
+**The hook changes with the platform.** For an Amazon seller it is the FBA fee
+cliff: the packed weight, the band edge just below it, and the units that
+weight ships at every month. A Shopify brand pays no FBA fee — it pays USPS
+and UPS, whose bands are 4, 8, 12 and 16 ounces and then every pound. A
+product that ships at 17 ounces pays the two-pound rate on every unit. Same
+arithmetic, same thirty-second check by the seller, different rate card.
+
+Everything downstream is unchanged: the row lands in `harvest_sellers` beside
+the Amazon rows, earns a website and a contact address in `enrich`, and goes
+to the founder lane or the Instantly list on exactly the same rules — role
+inboxes are never cold-emailed.
 
 ## 0. The founder lane (the first few clients come from here)
 

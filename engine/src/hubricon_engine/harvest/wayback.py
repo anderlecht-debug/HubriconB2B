@@ -39,8 +39,38 @@ LIMIT = int(os.environ.get("HARVEST_WAYBACK_LIMIT", "400"))  # sellers per run; 
 # requests a second (2026-09-03); one fetcher at 3–5 s is the pace it accepts.
 WORKERS = int(os.environ.get("HARVEST_WAYBACK_WORKERS", "1"))
 INTERVAL = float(os.environ.get("HARVEST_WAYBACK_INTERVAL", "3.0"))
-SELLER_RE = re.compile(r"[?&]seller=([A-Z0-9]{10,16})", re.I)
+# Seller ids are 13 or 14 characters as a rule, but some are 21; a bounded
+# upper limit truncated those into ids that match no seller at all.
+SELLER_RE = re.compile(r"[?&]seller=([A-Za-z0-9]{10,22})(?![A-Za-z0-9])")
 DEFAULT_CDX_FILE = Path.home() / ".hubricon" / "harvest" / "wayback-sellers.cdx"
+# The archive indexes a second Amazon seller URL, gp/aag/main?seller=<id>. The
+# captures are redirect stubs with no business data, but the ids in them are
+# sellers we have never seen, and a live profile costs one Amazon page each
+# against roughly fifteen product pages for the same seller found through Best
+# Sellers. 135 index pages held 612 ids on 2026-09-04, 595 of them new.
+AAG_CDX = ("https://web.archive.org/cdx/search/cdx?url=amazon.com/gp/aag/main&matchType=prefix"
+           "&from=2021&filter=statuscode:200&filter=mimetype:text/html&fl=original,timestamp,length")
+DEFAULT_IDS_FILE = Path.home() / ".hubricon" / "harvest" / "seller-ids.txt"
+
+
+def seller_ids(fetcher: Fetcher, ids_file: Path | None = None, log=print) -> list[str]:
+    """Seller ids from the archive's index of gp/aag/main, saved to disk so the
+    enumeration is paid for once. Delete the file to re-list."""
+    path = Path(ids_file) if ids_file else DEFAULT_IDS_FILE
+    if path.exists():
+        return [line.strip().upper() for line in path.read_text().split() if line.strip()]
+    count = fetcher.get(AAG_CDX + "&showNumPages=true")
+    pages = int(count.strip()) if count and count.strip().isdigit() else 0
+    log(f"seller ids: reading {pages} CDX index pages of gp/aag/main")
+    found: list[str] = []
+    for i in range(pages):
+        text = fetcher.get(f"{AAG_CDX}&page={i}")
+        found += [m.upper() for m in SELLER_RE.findall(text or "")]
+    ids = sorted(dict.fromkeys(found))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(ids))
+    log(f"seller ids: {len(ids)} distinct seller ids saved to {path}")
+    return ids
 
 
 def parse_cdx(text: str) -> dict[str, tuple[str, str]]:

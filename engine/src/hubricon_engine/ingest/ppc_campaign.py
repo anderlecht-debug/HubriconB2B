@@ -25,6 +25,7 @@ def parse(df: pd.DataFrame, upload: dict):
             {
                 "client_id": upload["client_id"],
                 "upload_id": upload["id"],
+                "channel": "amazon",
                 "report_date": to_iso_date(record["report_date"]),
                 "campaign_id": record["campaign_id"] or record["campaign_name"],
                 "campaign_name": record["campaign_name"],

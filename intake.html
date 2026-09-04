@@ -100,6 +100,14 @@ input[type=month], input[type=date], select{
 .submit:hover{ filter: brightness(1.08); }
 .submit:disabled{ opacity: .45; cursor: default; filter: none; }
 
+.plat{
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--rule-20); border-radius: 999px; padding: 5px 14px;
+  font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-70);
+  margin-bottom: 18px;
+}
+.plat i{ width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+.card h2 .num{ color: var(--amber); }
 .note{ font-size: 12.5px; margin-top: 14px; }
 .status.done{ color: var(--ok); }
 .status.err{ color: var(--serious); }
@@ -124,28 +132,29 @@ input[type=month], input[type=date], select{
   <!-- the intake form -->
   <div id="form" class="hidden">
     <div class="head"><h1>Secure data intake</h1></div>
+    <p class="plat" id="plat"><i aria-hidden="true"></i><span id="plat-text"></span></p>
     <p class="sub">Private workspace for <b id="company" style="color:var(--ink-100)"></b>.
     Files upload straight into an isolated, encrypted store — nothing is sent by email.
-    Add what you have; you can reopen this link to send the rest (it expires after 90 days).</p>
+    Add what you have; you can reopen this link to send the rest (it expires after 90 days). The date range on each card only has to be roughly right.</p>
 
-    <div class="card" data-type="business_report">
-      <h2>1 · Sales &amp; traffic by product</h2>
+    <div class="card" data-type="business_report" data-platform="amazon">
+      <h2><span class="num"></span>Sales &amp; traffic by product</h2>
       <p class="why">One file per month, last 6 months — monthly files are what let us model your trend, not just a snapshot.</p>
       <p class="path">Seller Central → Reports → Business Reports → Detail Page Sales and Traffic by Child Item → set the range to one month → Download CSV. Repeat per month.</p>
       <div class="rows"></div>
       <button type="button" class="add-row">+ add another month</button>
     </div>
 
-    <div class="card" data-type="sku_economics">
-      <h2>2 · SKU economics (fees)</h2>
+    <div class="card" data-type="sku_economics" data-platform="amazon">
+      <h2><span class="num"></span>SKU economics (fees)</h2>
       <p class="why">Same months as above — this is where your true Amazon fees live.</p>
       <p class="path">Seller Central → Reports → SKU Economics → one month per file → Download CSV.</p>
       <div class="rows"></div>
       <button type="button" class="add-row">+ add another month</button>
     </div>
 
-    <div class="card" data-type="ppc">
-      <h2>3 · Advertising</h2>
+    <div class="card" data-type="ppc" data-platform="amazon">
+      <h2><span class="num"></span>Advertising</h2>
       <p class="why">Your Sponsored Products search-term report for roughly the last 60 days.</p>
       <p class="path">Advertising Console → Measurement &amp; Reporting → Sponsored ads reports → Create report → Sponsored Products / Search term → export.</p>
       <div class="row">
@@ -161,8 +170,8 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="fba_inventory">
-      <h2>4 · FBA inventory snapshot</h2>
+    <div class="card" data-type="fba_inventory" data-platform="amazon">
+      <h2><span class="num"></span>FBA inventory snapshot</h2>
       <p class="why">Today's snapshot is fine.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Inventory → FBA Inventory → Download.</p>
       <div class="row">
@@ -172,18 +181,98 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="cogs">
-      <h2>5 · Your costs</h2>
-      <p class="why">Amazon doesn't know what you pay for your product — margin math is impossible without this.
-      <a href="/cogs-template.csv" download>Download the template</a>, fill in one row per SKU (estimates are fine), upload it back.</p>
+    <div class="card" data-type="shopify_orders" data-scope="range" data-platform="shopify">
+      <h2><span class="num"></span>Orders</h2>
+      <p class="why">Every order and line item for the last 6 months — this is the sales, refund and discount history the models run on.
+      We read ten columns (dates, status, refund total, SKU, quantity, price, discount) and store a per-SKU monthly aggregate; no customer
+      name, email or address is ever written to our database. Delete those columns first if you'd rather they never leave your store.</p>
+      <p class="path">Shopify admin → Orders → Export → Selected date range (set it to the last 6 months) → Plain CSV file → Export orders.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="shopify_products" data-scope="snapshot" data-platform="shopify">
+      <h2><span class="num"></span>Products &amp; inventory</h2>
+      <p class="why">Today's export does two jobs: it's your stock snapshot, and if <b style="color:var(--ink-100)">Cost per item</b> is filled in it's also your unit costs.</p>
+      <p class="path">Shopify admin → Products → Export → All products → Plain CSV file → Export products.</p>
+      <div class="row">
+        <input type="date" data-role="snapshot" aria-label="Snapshot date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="shopify_payouts" data-scope="range" data-platform="shopify">
+      <h2><span class="num"></span>Payouts</h2>
+      <p class="why">The processing fee on every charge and refund. Without it we estimate your fees from the published rate; with it we use what you were actually charged. Last 90 days is ideal.</p>
+      <p class="path">Shopify admin → Finances → Payouts → Transactions → date range → Export → Transactions CSV.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="meta_ads" data-scope="range" data-platform="shopify">
+      <h2><span class="num"></span>Meta ads</h2>
+      <p class="why">Roughly the last 60 days, broken down by day — the daily points are what let us fit your spend-response curve.</p>
+      <p class="path">Meta Ads Manager → Campaigns → set the date range → Reports → Export → tick “Include today”, breakdown by Day → Export as .csv.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="google_ads_campaign" data-scope="range" data-platform="shopify">
+      <h2><span class="num"></span>Google ads — campaigns</h2>
+      <p class="why">Same 60 days, segmented by day. Skip both Google cards if you don't run Google Ads.</p>
+      <p class="path">Google Ads → Campaigns → set the date range → Segment → Time → Day → Download → .csv.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="google_ads_search_terms" data-scope="range" data-platform="shopify">
+      <h2><span class="num"></span>Google ads — search terms</h2>
+      <p class="why">Where the money actually went, term by term. This is the export that finds spend on terms that never convert.</p>
+      <p class="path">Google Ads → Insights and reports → Search terms → set the date range → Download → .csv.</p>
+      <div class="row">
+        <input type="date" data-role="start" aria-label="Report start date">
+        <span>→</span>
+        <input type="date" data-role="end" aria-label="Report end date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="cogs" data-platform="both">
+      <h2><span class="num"></span>Your costs</h2>
+      <p class="why">No platform knows what you actually pay for your product — margin math is impossible without this.
+      <a href="/cogs-template.csv" download>Download the template</a>, fill in one row per SKU (estimates are fine), upload it back.
+      <span id="cogs-shopify" class="hidden">If your Products export already carries <b style="color:var(--ink-100)">Cost per item</b>,
+      that covers unit cost; this template adds freight, packaging, pick/pack/postage and lead times.</span></p>
       <div class="row">
         <input type="file" id="cogs-file" accept=".csv,.txt,.tsv">
         <span class="status"></span>
       </div>
     </div>
 
-    <div class="card" data-type="fba_reimbursements" data-scope="range">
-      <h2>6 · Reimbursements</h2>
+    <div class="card" data-type="fba_reimbursements" data-scope="range" data-platform="amazon">
+      <h2><span class="num"></span>Reimbursements</h2>
       <p class="why">What Amazon has already paid you back for lost or damaged units — the baseline for finding what it still owes.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Payments → Reimbursements → widest date range offered → Download.</p>
       <div class="row">
@@ -195,8 +284,8 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="fba_returns" data-scope="range">
-      <h2>7 · Customer returns</h2>
+    <div class="card" data-type="fba_returns" data-scope="range" data-platform="amazon">
+      <h2><span class="num"></span>Customer returns</h2>
       <p class="why">Every returned unit and what Amazon did with it — units marked damaged and never restocked are money you can claim.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Customer Concessions → FBA customer returns → date range → Download.</p>
       <div class="row">
@@ -208,8 +297,8 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="inventory_ledger" data-scope="range">
-      <h2>8 · Inventory ledger</h2>
+    <div class="card" data-type="inventory_ledger" data-scope="range" data-platform="amazon">
+      <h2><span class="num"></span>Inventory ledger</h2>
       <p class="why">Amazon's own record of every unit lost, found, damaged or disposed of inside its warehouses.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Inventory → Inventory Ledger → Detail view → date range → Download.</p>
       <div class="row">
@@ -221,8 +310,8 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="inventory_health" data-scope="snapshot">
-      <h2>9 · Inventory age</h2>
+    <div class="card" data-type="inventory_health" data-scope="snapshot" data-platform="amazon">
+      <h2><span class="num"></span>Inventory age</h2>
       <p class="why">Today's snapshot — aged-inventory surcharges and low-stock fees show up here before they hit your statement.</p>
       <p class="path">Seller Central → Inventory → FBA Inventory → Download → “Inventory Age” (or Manage Inventory Health → Download).</p>
       <div class="row">
@@ -232,8 +321,8 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="transactions" data-scope="range">
-      <h2>10 · Payments transactions</h2>
+    <div class="card" data-type="transactions" data-scope="range" data-platform="amazon">
+      <h2><span class="num"></span>Payments transactions</h2>
       <p class="why">The settlement-level detail behind your payouts — every fee line Amazon charged, by type. Last 90 days is ideal.</p>
       <p class="path">Seller Central → Payments → Transaction View → set a custom date range → Download CSV.</p>
       <div class="row">
@@ -299,6 +388,24 @@ document.querySelectorAll("input[data-role=snapshot]").forEach((el) => {
   el.value = new Date().toISOString().slice(0, 10);
 });
 
+/* The client's platform decides which cards exist. A card the client can't
+   fill is removed, not just hidden, so nothing collects a file from it and
+   nobody wonders whether they were meant to find it. */
+const PLATFORM_LABEL = { amazon: "Amazon", shopify: "Shopify", both: "Amazon and Shopify" };
+function applyPlatform(platform){
+  const p = PLATFORM_LABEL[platform] ? platform : "amazon";
+  document.querySelectorAll(".card[data-platform]").forEach((card) => {
+    const want = card.dataset.platform;
+    if (want !== "both" && p !== "both" && want !== p) card.remove();
+  });
+  if (p !== "amazon") $("#cogs-shopify").classList.remove("hidden");
+  document.querySelectorAll(".card").forEach((card, i) => {
+    const num = $(".num", card);
+    if (num) num.textContent = (i + 1) + " · ";
+  });
+  $("#plat-text").textContent = "Selling on " + PLATFORM_LABEL[p];
+}
+
 function setStatus(el, text, cls){
   el.textContent = text;
   el.className = "status" + (cls ? " " + cls : "");
@@ -309,6 +416,7 @@ function collectJobs(){
   const jobs = [], problems = [];
   for (const type of ["business_report", "sku_economics"]){
     const card = document.querySelector(`.card[data-type=${type}]`);
+    if (!card) continue;
     for (const row of card.querySelectorAll(".row")){
       const file = $("input[type=file]", row).files[0];
       if (!file) continue;
@@ -319,21 +427,21 @@ function collectJobs(){
         spec: { report_type: type, period_start: start, period_end: end } });
     }
   }
-  const ppcFile = $("#ppc-file").files[0];
+  const ppcFile = $("#ppc-file")?.files[0];
   if (ppcFile){
     const start = $("#ppc-start").value, end = $("#ppc-end").value;
     if (!start || !end) problems.push(`Pick the date range for "${ppcFile.name}".`);
     else jobs.push({ file: ppcFile, statusEl: $(".status", $("#ppc-file").closest(".row")),
       spec: { report_type: $("#ppc-kind").value, period_start: start, period_end: end } });
   }
-  const invFile = $("#inv-file").files[0];
+  const invFile = $("#inv-file")?.files[0];
   if (invFile){
     const day = $("#inv-date").value;
     if (!day) problems.push(`Pick the snapshot date for "${invFile.name}".`);
     else jobs.push({ file: invFile, statusEl: $(".status", $("#inv-file").closest(".row")),
       spec: { report_type: "fba_inventory", period_start: day } });
   }
-  const cogsFile = $("#cogs-file").files[0];
+  const cogsFile = $("#cogs-file")?.files[0];
   if (cogsFile) jobs.push({ file: cogsFile, statusEl: $(".status", $("#cogs-file").closest(".row")),
     spec: { report_type: "cogs" } });
   /* bleed reports: cards tagged data-scope carry their own date inputs */
@@ -434,6 +542,7 @@ $("#submit").addEventListener("click", async () => {
     if (!res.ok || !data.ok)
       return deadLink("The link may have expired or been replaced. Reply to your Hubricon email for a fresh one.");
     $("#company").textContent = data.company || "your team";
+    applyPlatform(data.platform || "amazon");
     gate.classList.add("hidden");
     form.classList.remove("hidden");
   } catch {

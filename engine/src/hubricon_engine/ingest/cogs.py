@@ -1,4 +1,9 @@
-"""Hubricon COGS template -> cogs_inputs. Columns match cogs-template.csv."""
+"""Hubricon COGS template -> cogs_inputs. Columns match cogs-template.csv.
+
+fulfillment_per_unit_usd (2026-09-04) is pick, pack and postage per unit
+for a store that ships from its own shelf or a 3PL — a landed cost no
+platform report itemises. Amazon sellers leave it blank: FBA fees arrive
+in the SKU Economics export."""
 
 import pandas as pd
 
@@ -15,6 +20,11 @@ SPEC = {
     },
     "packaging_per_unit_usd": {"synonyms": ["packagingperunitusd", "packagingperunit"], "cleaner": clean_money},
     "other_cost_per_unit_usd": {"synonyms": ["othercostperunitusd", "otherperunit"], "cleaner": clean_money},
+    "fulfillment_per_unit_usd": {
+        "synonyms": ["fulfillmentperunitusd", "fulfillmentperunit", "pickpackpostageperunit",
+                     "shippingperunitusd", "shippingperunit"],
+        "cleaner": clean_money,
+    },
     "supplier_lead_time_days": {"synonyms": ["supplierleadtimedays", "leadtimedays"], "cleaner": clean_int},
     "notes": {"synonyms": ["notes"], "cleaner": clean_str},
 }

@@ -8,6 +8,9 @@ requalify  re-read the live profile of rows already past the gate and apply
         today's size band (seller feedback counts); giants become skip_size
 prune   skip_* rows that already sit in Instantly are deleted there (operator)
 wayback  see wayback.py: archived seller profiles as a second, Amazon-free source
+shopify  see shopify.py: US Shopify stores from their own public JSON, into the
+        same rows (platform 'shopify') and the same founder lane. Nothing
+        blocks it, so it runs whatever Amazon is doing to the crawl today.
 
 Crawl and enrich need a home connection (Amazon captchas datacenter ranges),
 so `hubricon harvest install` schedules them on the founder's Mac with
@@ -354,6 +357,10 @@ def lead_payload(row: dict) -> dict:
         "website": row.get("website") or "",
         "custom_variables": {
             "source": "harvest", "seller_id": row["seller_id"], "business_name": row.get("business_name") or "",
+            # Which storefront the lead sells on: a Shopify brand must never be
+            # sent copy about Amazon fees (channels.py holds the same rule for
+            # clients), and the sequence can branch on it.
+            "platform": row.get("platform") or "amazon",
             "est_monthly_revenue": row.get("est_monthly_revenue") or 0,
             "email_confidence": row.get("email_confidence") or "", "person_found": bool(row.get("first_name")),
         },
@@ -412,6 +419,9 @@ LISTINGS_LIMIT = int(os.environ.get("HARVEST_LISTINGS_LIMIT", "60"))
 LISTINGS_PER_SELLER = int(os.environ.get("HARVEST_LISTINGS_PER_SELLER", "2"))
 LISTINGS_MAX_ASINS = int(os.environ.get("HARVEST_LISTINGS_MAX_ASINS", "4"))  # keep reading until one carries a weight
 RUN_ALL_LISTINGS = int(os.environ.get("HARVEST_RUN_ALL_LISTINGS", "30"))  # per scheduled run, ~90 Amazon pages
+# Shopify stores per scheduled run: ~5 requests each at ~1 s, so about five
+# minutes on top of the Amazon hour, and none of it can draw a captcha.
+RUN_ALL_SHOPIFY = int(os.environ.get("HARVEST_RUN_ALL_SHOPIFY", "60"))
 MIN_HOOK_WEIGHT_OZ = 2.0  # the lightest FBA band has no cheaper band below it, so no fee-cliff hook
 
 
@@ -429,11 +439,16 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
     has nothing to quote. The seller's storefront (Amazon search by seller)
     lists its ASINs; the first `per_seller` product pages give rank, price,
     weight and the revenue estimate, and land in harvest_products like any
-    crawled listing. Three Amazon pages per seller, at the fetcher's pace."""
+    crawled listing. Three Amazon pages per seller, at the fetcher's pace.
+
+    Amazon rows only: a Shopify store has no Amazon storefront, and asking for
+    one would spend an Amazon request per store to learn nothing. Its listings
+    (and their shipping weights) come from its own /products.json.
+    """
     cache = cache or Cache()
     counts: Counter = Counter()
     candidates = db.table("harvest_sellers").select("*").in_("status", ["candidate", "enriched", "pushed"]) \
-        .eq("country", "US").order("est_monthly_revenue", desc=True).execute().data
+        .eq("country", "US").neq("platform", "shopify").order("est_monthly_revenue", desc=True).execute().data
     # The founder lane's hook is the fee cliff, which needs a packed weight
     # above the lightest band: a row whose listings carry none is read again.
     weights = {p["asin"]: p.get("weight_oz") for p in
@@ -501,6 +516,61 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
         counts["paired"] += 1
         log(f"  {row['brand']}: {len(agg_asins)} listing(s), top rank {top[0]} in {top[1]}")
     note = "listings: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "nothing read")
+    log(note)
+    _log_event(db, note, dict(counts))
+    return dict(counts)
+
+
+# -- profiles: seller ids from the archive index, read live --------------------------
+
+PROFILES_LIMIT = int(os.environ.get("HARVEST_PROFILES_LIMIT", "150"))
+
+
+def profiles(db, fetcher: Fetcher, ids: list[str] | None = None, limit: int = PROFILES_LIMIT,
+             ids_file: Path | None = None, cache: Cache | None = None, log=print) -> dict:
+    """Sellers the archive knows only by id: read the live profile page, one
+    Amazon request each. That is the cheapest seller on the site — a Best
+    Sellers crawl spends about fifteen product pages to reach one seller — and
+    the rows are judged by the profile-only rules, since no listing is known
+    yet (`listings` supplies one afterwards)."""
+    from .wayback import classify_profile, seller_ids
+
+    cache = cache or Cache()
+    ids = ids if ids is not None else seller_ids(fetcher, ids_file, log=log)
+    existing = {r["seller_id"] for r in db.table("harvest_sellers").select("seller_id").execute().data}
+    todo = [i for i in ids if i not in existing][:limit]
+    if not todo:
+        log("profiles: every known seller id is already on file")
+        return {}
+    log(f"profiles: {len(ids)} seller ids known, reading {len(todo)} not yet on file")
+    counts: Counter = Counter()
+    pending: list[dict] = []
+    for sid in todo:
+        try:
+            page = fetcher.get(amazon.seller_url(sid))
+        except Blocked as err:
+            log(f"  {err}")
+            break
+        if not page:
+            counts["unread"] += 1
+            continue
+        prof = amazon.seller(page)
+        if not prof.get("business_name") and not prof.get("seller_name"):
+            counts["unread"] += 1
+            continue
+        cache.put("seller", sid, prof)
+        status, note, agg = classify_profile(sid, prof)
+        pending.append(seller_row(sid, agg, prof, status, f"profile read live; {note}", source="profile",
+                                  est_monthly_revenue=amazon.revenue_from_ratings(prof.get("ratings_12mo"))))
+        counts[status] += 1
+        log(f"  {(prof.get('seller_name') or sid)[:28]:<28} {status:<14} "
+            f"{prof.get('ratings_12mo')} ratings/12mo, {prof.get('country')}")
+        if len(pending) >= 25:
+            db.table("harvest_sellers").upsert(pending, on_conflict="seller_id").execute()
+            pending.clear()
+    if pending:
+        db.table("harvest_sellers").upsert(pending, on_conflict="seller_id").execute()
+    note = "profiles: " + (", ".join(f"{k} {v}" for k, v in sorted(counts.items())) or "nothing read")
     log(note)
     _log_event(db, note, dict(counts))
     return dict(counts)
@@ -585,11 +655,17 @@ def requalify(db, fetcher: Fetcher, limit: int = REQUALIFY_LIMIT, statuses: tupl
     band. The first pass sized brands by one listing, which let Gorilla Grip
     (8,703 seller ratings a year) through; the seller's own feedback count
     catches that. Rows that fail become skip_*; `prune` then takes them off
-    Instantly. One Amazon request per row, at the fetcher's pace."""
+    Instantly. One Amazon request per row, at the fetcher's pace.
+
+    Shopify rows are skipped: there is no Amazon seller profile to re-read for
+    a store, and its size signal (the review count on its own product pages)
+    is re-derived by re-running `harvest shopify`, not here. They keep the
+    verdict the Shopify pass gave them.
+    """
     cache = cache or Cache()
     counts: Counter = Counter()
     rows = db.table("harvest_sellers").select("*").in_("status", list(statuses)) \
-        .order("est_monthly_revenue", desc=True).limit(limit).execute().data
+        .neq("platform", "shopify").order("est_monthly_revenue", desc=True).limit(limit).execute().data
     for row in rows:
         try:
             page = fetcher.get(amazon.seller_url(row["seller_id"]))
@@ -686,19 +762,24 @@ def prune(db, api: Instantly | None, dry: bool = False, log=print) -> int:
 # -- status / all / install -----------------------------------------------------
 
 def status(db) -> dict:
-    rows = db.table("harvest_sellers").select("status, est_monthly_revenue, pushed_at, source").execute().data
+    rows = db.table("harvest_sellers").select(
+        "status, est_monthly_revenue, pushed_at, source, platform").execute().data
     counts = Counter(r["status"] for r in rows)
     return {"total": len(rows), "by_status": dict(counts),
             "by_source": dict(Counter(r.get("source") or "bestsellers" for r in rows)),
+            # Rows written before 2026-09-04 carry no platform and are Amazon.
+            "by_platform": dict(Counter(r.get("platform") or "amazon" for r in rows)),
             "pushed": counts.get("pushed", 0), "ready": counts.get("enriched", 0),
             "candidates": counts.get("candidate", 0)}
 
 
 def status_text(db) -> str:
     s = status(db)
+    groups = [", ".join(f"{k} {v}" for k, v in sorted(s[key].items()))
+              for key in ("by_source", "by_platform") if s.get(key)]
     lines = [f"Harvest: {s['total']} sellers on file — "
              + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items()))
-             + (" (" + ", ".join(f"{k} {v}" for k, v in sorted(s["by_source"].items())) + ")" if s.get("by_source") else "")]
+             + (" (" + "; ".join(groups) + ")" if groups else "")]
     for r in _rows(db, "enriched", 10):
         lines.append(f"  ready  {r['brand']:<28} {r.get('email') or '':<34} est ${(r.get('est_monthly_revenue') or 0):,.0f}/mo")
     return "\n".join(lines)
@@ -706,9 +787,16 @@ def status_text(db) -> str:
 
 def fee_cliff_report(db, within_oz: float = 1.0) -> dict:
     """The weekly data post, from public weights: how many best-selling FBA
-    listings sit within `within_oz` of a lighter fee band."""
-    rows = db.table("harvest_products").select(
-        "asin, brand, category, weight_oz, price, est_monthly_units, fulfilled_by_amazon").execute().data
+    listings sit within `within_oz` of a lighter fee band.
+
+    Amazon only. The post's claim is about the FBA fee schedule, and a Shopify
+    product's weight sits against a carrier's rate card instead (see
+    shopify.shipping_cliff), so mixing the two would make the headline number
+    mean nothing. A Shopify version of this post is its own post.
+    """
+    rows = [r for r in db.table("harvest_products").select(
+        "asin, brand, category, weight_oz, price, est_monthly_units, fulfilled_by_amazon, platform").execute().data
+        if (r.get("platform") or "amazon") == "amazon"]
     weighed = [r for r in rows if r.get("weight_oz")]
     near = []
     for r in weighed:
@@ -761,7 +849,12 @@ def acquire_lock(path: Path | None = None) -> Path | None:
 
 
 def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products: int = MAX_PRODUCTS,
-            categories: list[str] | None = None, log=print, lock: Path | None = None) -> dict:
+            categories: list[str] | None = None, log=print, lock: Path | None = None,
+            store_fetcher: Fetcher | None = None, shopify: bool = True) -> dict:
+    """`store_fetcher` and `shopify` exist so a caller can keep this offline.
+    The Shopify pass builds its own live fetcher and reads the cached listing
+    from ~/.hubricon when neither is given, which is right in production and
+    is a live crawl inside a test — pass `shopify=False` there."""
     held = acquire_lock(lock)
     if held is None:
         log("harvest: another run is in progress on this machine; not starting a second one")
@@ -770,6 +863,24 @@ def run_all(db, fetcher: Fetcher | None = None, dry: bool = False, max_products:
         fetcher = fetcher or Fetcher()
         out = {"crawl": crawl(db, fetcher, categories, max_products, log=log)}
         out["listings"] = listings(db, fetcher, limit=RUN_ALL_LISTINGS, log=log)  # archived sellers get a listing to quote
+        # The Shopify pass is the one source Amazon cannot switch off, but it
+        # depends on the Internet Archive being up. An archive outage must not
+        # cost the night's Amazon work, so it is fenced: the pass is skipped
+        # with a line in the log and the run carries on to enrich and push.
+        if shopify:
+            try:
+                from . import shopify as shopifymod
+
+                # Its own fetcher: stores go through Chrome, the archive does not.
+                stores = store_fetcher or shopifymod.store_fetcher()
+                # Category searches of Shopify's own marketplace, not the
+                # archive: real trading brands at their own domains.
+                handles, metas = shopifymod.discover(shopifymod.archive_fetcher(), stores, log=log)
+                out["shopify"] = shopifymod.crawl(db, stores, handles, limit=RUN_ALL_SHOPIFY,
+                                                  log=log, metas=metas)
+            except Exception as err:  # noqa: BLE001 — any failure here is one source being down
+                log(f"shopify: skipped this run ({err})")
+                out["shopify"] = {"error": str(err)}
         out["enrich"] = enrich(db, fetcher, log=log)
         api = Instantly() if os.environ.get("INSTANTLY_API_KEY") else None
         out["pushed"] = push(db, api, dry=dry, log=log)

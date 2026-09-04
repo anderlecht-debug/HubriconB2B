@@ -38,10 +38,11 @@ def parse(df: pd.DataFrame, upload: dict):
                 **record,
                 "client_id": upload["client_id"],
                 "upload_id": upload["id"],
+                "channel": "amazon",
                 "period_start": upload["period_start"],
                 "period_end": upload["period_end"],
                 "raw": source,
             }
         )
     rows = dedupe_last(rows, ("sku",))
-    return "sku_economics", rows, "client_id,sku,period_start,period_end"
+    return "sku_economics", rows, "client_id,channel,sku,period_start,period_end"

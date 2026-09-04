@@ -75,9 +75,11 @@ def top_story(directives: list[dict], alerts: list[dict], elasticity: list[dict]
 
 def build_memo(company: str, first_name: str, deltas: dict | None,
                directives: list[dict], alerts: list[dict], elasticity: list[dict],
-               ledger_measured: float, ledger_count: int, issue_number: int) -> str:
+               ledger_measured: float, ledger_count: int, issue_number: int,
+               channel: str | None = "amazon") -> str:
     """The written letter — the Marks-memo tradition. Same facts as the
-    narration script, formatted as prose the founder edits, not reads."""
+    narration script, formatted as prose the founder edits, not reads.
+    `channel` only names the platform's fee stack (channels.fee_label)."""
     name = first_name or "there"
     issued = [d for d in directives if d.get("status") == "issued"]
 
@@ -95,7 +97,7 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
     elif deltas:
         paragraphs.append(
             f"This is your first full read: {_money(deltas['latest']['net'])} of true net profit "
-            f"last period after every Amazon fee, your landed costs, and advertising — the baseline "
+            f"last period after every {'Amazon' if (channel or 'amazon') == 'amazon' else 'Shopify'} fee, your landed costs, and advertising — the baseline "
             f"every future issue measures against."
         )
     else:

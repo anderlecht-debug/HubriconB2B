@@ -1,0 +1,7 @@
+Transaction Date,Type,Order,Card Brand,Card Source,Payout Status,Payout Date,Available On,Amount,Fee,Net,Checkout,Payment Method Name,Presentment Amount,Presentment Currency,Currency
+2026-07-20 10:15:22 -0400,charge,#1002,Visa,credit,paid,2026-07-22,2026-07-22,63.50,2.14,61.36,chk_1,Shopify Payments,63.50,USD,USD
+2026-07-25 16:40:03 -0400,charge,#1003,Mastercard,credit,paid,2026-07-27,2026-07-27,65.00,2.19,62.81,chk_2,Shopify Payments,65.00,USD,USD
+2026-07-27 09:02:11 -0400,refund,#1003,Mastercard,credit,paid,2026-07-29,2026-07-29,-20.00,0.00,-20.00,chk_2,Shopify Payments,-20.00,USD,USD
+2026-07-31 00:00:00 -0400,adjustment,,,,paid,2026-08-02,2026-08-02,-15.00,0.00,-15.00,,,-15.00,USD,USD
+2026-08-05 13:30:00 -0400,chargeback,#1002,Visa,credit,paid,2026-08-07,2026-08-07,-63.50,15.00,-78.50,chk_1,Shopify Payments,-63.50,USD,USD
+2026-07-20 10:15:22 -0400,charge,#1002,Visa,credit,paid,2026-07-22,2026-07-22,63.50,2.14,61.36,chk_1,Shopify Payments,63.50,USD,USD

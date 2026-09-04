@@ -433,7 +433,7 @@ footer{
     <div class="masthead">
       <span class="wordmark">Hubric<i>o</i>n</span>
       <div class="prepared">
-        Prepared for <b id="company">—</b><br>
+        Prepared for <b id="company">—</b><span id="plat"></span><br>
         Hubricon Quantitative · as of <span id="asof"></span><br>
         <button id="signout">Sign out</button>
       </div>
@@ -503,7 +503,7 @@ footer{
       <div class="panel">
         <svg class="chart" id="waterfall-svg" viewBox="0 0 920 260" role="img" aria-label="Latest period: revenue stepping down to net profit"></svg>
         <div id="stacks" style="margin-top:24px"></div>
-        <div class="legend"><span><i class="c1"></i>Amazon fees</span><span><i class="c2"></i>COGS</span><span><i class="c3"></i>Ad spend</span><span><i class="c4"></i>Net profit</span></div>
+        <div class="legend"><span><i class="c1"></i>Platform fees</span><span><i class="c2"></i>COGS</span><span><i class="c3"></i>Ad spend</span><span><i class="c4"></i>Net profit</span></div>
         <p class="hint" style="margin-top:12px">Latest period, computed from your own exports. Bars are proportional across SKUs; a red figure is a SKU that sold at a loss.</p>
       </div>
     </section>
@@ -894,7 +894,7 @@ function renderWaterfall(w){
   };
   bar(0, hi, Math.max(0, lo === 0 ? 0 : 0), "mutf", "Revenue", hi);
   let level = hi;
-  [["Amazon fees", Number(w.fees), "c1"], ["COGS", Number(w.cogs), "c2"], ["Ad spend", Number(w.ads), "c3"]]
+  [["Platform fees", Number(w.fees), "c1"], ["COGS", Number(w.cogs), "c2"], ["Ad spend", Number(w.ads), "c3"]]
     .forEach(([name, val, cls], j) => {
       const next = level - val;
       svg += `<line class="grid" x1="${(colX(j) + bw).toFixed(1)}" x2="${colX(j + 1).toFixed(1)}" y1="${sy(level).toFixed(1)}" y2="${sy(level).toFixed(1)}"/>`;
@@ -1123,7 +1123,7 @@ function renderValue(v){
   if (!v) return;
   $("#value-strip").classList.remove("hidden");
   $("#v-total").innerHTML = moneyCur(v.value_total);
-  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered from Amazon`;
+  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered in reimbursements`;
   $("#v-fees").innerHTML = moneyCur(v.fees_paid);
   $("#v-fees-d").textContent = v.billed_months
     ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
@@ -1268,7 +1268,7 @@ function renderInvEcon(ie){
     }
   } else liq.classList.add("hidden");
   const sl = (ie.service_levels || []).slice(0, 3).map((s) => `${esc(s.sku)} ${(Number(s.critical_fractile) * 100).toFixed(0)}%`).join(", ");
-  $("#inv-note").textContent = `Service levels are set by the money, SKU by SKU: q* = C_u ÷ (C_u + C_o), the cost of a lost sale against the cost of a unit left over — storage at the ${ie.fee_schedule_effective} rate card, capital, and the season priced in${sl ? ` (${sl})` : ""}. ${ie.inventory_age_on_file ? "Aged-inventory and storage figures are Amazon's own estimates from your Inventory Age export." : "Upload the Inventory Age export and Amazon's own surcharge estimates replace the rate-card figures."}`;
+  $("#inv-note").textContent = `Service levels are set by the money, SKU by SKU: q* = C_u ÷ (C_u + C_o), the cost of a lost sale against the cost of a unit left over — storage at the ${ie.fee_schedule_effective} rate card, capital, and the season priced in${sl ? ` (${sl})` : ""}. ${ie.inventory_age_on_file ? "Aged-inventory and storage figures are Amazon's own estimates from your Inventory Age export." : "Amazon accounts: upload the Inventory Age export and Amazon's own surcharge estimates replace the rate-card figures."}`;
   $("#inv-sect").classList.remove("hidden");
 }
 
@@ -1315,7 +1315,7 @@ function renderAnomalies(a){
     const px = (i) => (4 + i * (112 / Math.max(1, vs.length - 1))).toFixed(1);
     const py = (v) => (22 - ((v - lo) / ((hi - lo) || 1)) * 18).toFixed(1);
     const spark = vs.length > 1 ? `<svg class="spark2" viewBox="0 0 120 26"><polyline points="${vs.map((v, i) => `${px(i)},${py(v)}`).join(" ")}"/><circle cx="${px(vs.length - 1)}" cy="${py(vs[vs.length - 1])}" r="2.5"/></svg>` : "";
-    const what = { fee_per_unit: "Amazon fees per unit", fba_fee_per_unit: "FBA fee per unit", referral_rate: "referral fee rate",
+    const what = { fee_per_unit: "platform fees per unit", fba_fee_per_unit: "FBA fee per unit", referral_rate: "referral fee rate",
       storage_fee: "storage fee", sessions: "sessions", unit_session_pct: "conversion", buy_box_pct: "Buy Box share", spend: "daily ad spend" }[r.metric] || r.metric;
     const title = r.scope === "fee_type" ? `${r.item_id} charges per month` : `${what} on ${r.item_id}`;
     const pct = r.delta_pct != null ? (Math.abs(Number(r.delta_pct)) * 100).toFixed(0) + "%" : "";
@@ -1412,7 +1412,7 @@ function renderHorizon(rows){
   }
   const wires = (d.wires || []).length;
   $("#hz-note").textContent =
-    `${Number(hz.n_paths).toLocaleString()} simulated paths of your daily cash position — Amazon's 14-day payout cycle, ` +
+    `${Number(hz.n_paths).toLocaleString()} simulated paths of your daily cash position — ${Number(d.payout_cycle_days) === 1 ? "daily payouts" : `a ${d.payout_cycle_days || 14}-day payout cycle`}, ` +
     `your fixed costs, and ${wires} scheduled supplier wire${wires === 1 ? "" : "s"} included. ` +
     `Assumes ${money(Number(hz.starting_cash))} on hand and ${money(Number(hz.monthly_fixed_costs))}/mo fixed costs, as you reported. ` +
     `Refreshed with every weekly sweep.`;
@@ -1422,12 +1422,13 @@ function renderHorizon(rows){
 
 /* ── main load ── */
 async function load(){
-  const clients = await rest("/rest/v1/clients?select=id,company_name,goals,created_at");
+  const clients = await rest("/rest/v1/clients?select=id,company_name,goals,created_at,platform");
   if (!clients.length){
     return showLogin("Your login isn't linked to a workspace yet — reply to your Hubricon email and we'll connect it.", true);
   }
   const client = clients[0];
   $("#company").textContent = client.company_name || "Your workspace";
+  $("#plat").textContent = { shopify: " · Shopify", both: " · Amazon and Shopify" }[client.platform] || " · Amazon";
   $("#asof").textContent = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
   if (client.goals){
     $("#objective").classList.remove("hidden");

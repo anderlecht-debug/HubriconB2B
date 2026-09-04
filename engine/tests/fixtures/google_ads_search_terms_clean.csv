@@ -1,0 +1,8 @@
+Search terms report
+July 1, 2026 - July 31, 2026
+Search term,Match type,Added/Excluded,Campaign,Ad group,Currency code,Impressions,Clicks,Cost,Conversions,Conv. value
+widget blue 2 pack,Exact match,Added,Brand - Search,Widgets,USD,"1,204",88,41.20,4.00,310.55
+free widget sample,Broad match,None,Brand - Search,Widgets,USD,904,61,118.32,0.00,0.00
+acme widget,Phrase match (close variant),Added,Brand - Search,Widgets,USD,420,33,15.10,1.00,19.98
+Total: Search terms, --, --, --, --,USD,"2,528",182,174.62,5.00,330.53
+Total: Account, --, --, --, --,USD,"2,528",182,174.62,5.00,330.53

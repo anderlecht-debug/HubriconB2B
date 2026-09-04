@@ -17,8 +17,15 @@ report's "dollar-weighted driver decomposition".
 Grades: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, else E. The thresholds are
 stated, not learned — there is no training set of "healthy" sellers to
 learn from yet, and a stated rule can be argued with.
+
+The signal sub-score is the one place the platform shows up: the recovery
+exports it expects (ledger, returns, reimbursements, settlements) only exist
+because Amazon's warehouse loses units on a seller's behalf. A Shopify store
+has no claim window to miss, so the whole sub-score rides on core coverage
+rather than deducting for files that can never arrive (2026-09-04).
 """
 
+from .. import channels
 from .common import num
 
 WEIGHTS = {"margin": 0.25, "cash": 0.20, "concentration": 0.15,
@@ -54,7 +61,8 @@ def _latest(margin_rows):
 def compute(margin_rows: list[dict], cash: dict | None = None, risk: dict | None = None,
             inventory_rows: list[dict] | None = None, inv_econ: dict | None = None,
             ads_rows: list[dict] | None = None, forecast_rows: list[dict] | None = None,
-            recovery: dict | None = None, data_present: dict | None = None) -> dict:
+            recovery: dict | None = None, data_present: dict | None = None,
+            channel: str = "amazon") -> dict:
     subs: list[dict] = []
     excluded: list[str] = []
     latest, rows = _latest(margin_rows)
@@ -131,16 +139,22 @@ def compute(margin_rows: list[dict], cash: dict | None = None, risk: dict | None
 
     # — signal —
     present = data_present or {}
-    core = sum(1 for k in CORE_REPORTS if present.get(k)) / len(CORE_REPORTS)
+    # Scored against the exports this platform can actually produce, so a
+    # Shopify client is never marked down for the Amazon Business Report.
+    core_reports = channels.reports_available(CORE_REPORTS, channel)
+    core = sum(1 for k in core_reports if present.get(k)) / len(core_reports)
+    claims_possible = channels.has_recovery(channel)
     bleed_cov = sum(1 for k in BLEED_REPORTS if present.get(k)) / len(BLEED_REPORTS)
     ok_fc = [f for f in (forecast_rows or []) if f.get("status") == "ok" and f.get("mase") is not None]
     mase = sum(float(f["mase"]) for f in ok_fc) / len(ok_fc) if ok_fc else None
-    score = 60 * core + 40 * bleed_cov
+    score = 60 * core + 40 * bleed_cov if claims_possible else 100 * core
     if mase is not None and mase > 1:
         score -= 20
-    open_ev = float(((recovery or {}).get("summary") or {}).get("live_ev") or 0)
+    open_ev = float(((recovery or {}).get("summary") or {}).get("live_ev") or 0) if claims_possible else 0.0
+    coverage = (f"{core:.0%} of core exports and {bleed_cov:.0%} of recovery exports on file"
+                if claims_possible else f"{core:.0%} of core exports on file")
     subs.append({"key": "signal", "score": max(0.0, score), "dollars_at_stake": open_ev,
-                 "note": (f"{core:.0%} of core exports and {bleed_cov:.0%} of recovery exports on file"
+                 "note": (coverage
                           + (f"; forecast MASE {mase:.2f} vs naive 1.00" if mase is not None else "")
                           + (f"; ${open_ev:,.0f} of expected reimbursements unclaimed" if open_ev else ""))})
 

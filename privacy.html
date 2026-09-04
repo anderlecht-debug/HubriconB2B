@@ -60,7 +60,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   <h1>Privacy Policy</h1>
   <p class="meta">Effective September 2, 2026 · <a href="/terms">Terms of Service</a></p>
 
-  <p class="lede">Hubricon is a founder-operated quantitative service for Amazon sellers. This page says
+  <p class="lede">Hubricon is a founder-operated quantitative service for brands selling on Amazon and Shopify. This page says
   what we collect, why, who else touches it, and how to get it back or erased. It is written to be
   read, not skimmed past.</p>
   <p>Hubricon is operated by Hagen Simmons, doing business as Hubricon, in Dallas, Texas, United
@@ -69,7 +69,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
 
   <div class="panel">
     <ul>
-      <li><b>We collect the minimum the models need:</b> your Seller Central reports and, if you choose, files you upload.</li>
+      <li><b>We collect the minimum the models need:</b> your store's own reports and, if you choose, files you upload.</li>
       <li><b>We never sell data</b>, never share one client's data with another, and never use your data to train AI models.</li>
       <li><b>No client logins, no tracking cookies of our own, no email harvesting</b> on the website.</li>
       <li><b>Export is free, any time.</b> Deletion on request, within thirty days.</li>
@@ -94,16 +94,28 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   ask for, it came from a Hubricon address, it tells you who we are and where we are, and one reply or
   one click stops it. We honour opt-outs immediately.</p>
 
-  <h3>Clients: the Seller Central seat</h3>
-  <p>When you engage us, you add one Hubricon user to your Seller Central with exactly four permissions:
+  <h3>Clients: the seat on your store</h3>
+  <p>On Amazon, you add one Hubricon user to your Seller Central with exactly four permissions:
   Business Reports (view), Fulfillment reports (view), Pricing (view and edit), and Advertising Campaign
   Manager (view and edit). Through that seat we download sales and traffic reports, SKU economics and
   fee reports, advertising reports, inventory, reimbursement and returns reports, and settlement data,
   and we make the pricing and advertising changes you have authorised.</p>
-  <p>The seat cannot see banking, tax, account settings, or your customers. The reports we pull describe
-  your products, orders in aggregate, fees and campaigns. They do not include your customers' names,
-  addresses or payment details, and we never request reports that do. You can revoke the seat in one
-  click, any day.</p>
+  <p>On Shopify, you approve one collaborator account limited to Orders, Products, Analytics, Reports,
+  Marketing and Discounts. It has no access to Settings, Finances or payouts. Through it we read your
+  order, product, inventory and payout history and make the pricing and discount changes you have
+  authorised.</p>
+  <p>Neither seat can see banking, tax or account settings. On Amazon, the reports we pull describe your
+  products, orders in aggregate, fees and campaigns, and contain no customer names, addresses or payment
+  details.</p>
+  <p><b>Shopify orders are the one exception, and we handle it deliberately.</b> A Shopify order record
+  carries the customer's name, email and shipping address, because that is how the platform stores an
+  order. We do not want that data and we do not keep it. Our parser reads ten fields from an order —
+  order name, status, dates, refund total, SKU, quantity, price and discount — and writes a per-SKU,
+  per-month aggregate. No customer name, email, address, phone or payment detail is ever written to our
+  database. If you upload the orders CSV rather than granting a seat, you are welcome to delete the
+  customer columns first; the models never read them. The file you upload is stored as sent, in the
+  encrypted bucket described below, and is deleted with the rest of your data when you ask.</p>
+  <p>You can revoke either seat in one click, any day.</p>
 
   <h3>Clients: files you upload</h3>
   <p>If you would rather send files than grant a seat, you get a private upload link that expires after
@@ -151,7 +163,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   </table>
 
   <h2>5. Security</h2>
-  <p>Your Seller Central access is one named, permission-scoped user that you can revoke in one click.
+  <p>Your store access is one named, permission-scoped user that you can revoke in one click.
   Raw data and model outputs live in a database with row-level security where only our own server-side
   service has access. There are no client logins to compromise. Data is encrypted in transit and at
   rest. One person, the founder, holds access to production. Upload links are single-purpose and
@@ -171,7 +183,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   or object to a use of it. Email <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a>.
   It lands with the founder, and you get an answer within seven days. We do not sell or share personal
   information in the sense of the California Consumer Privacy Act. For clients in the European Union or
-  the United Kingdom, we act as your processor for Seller Central data and as a controller for booking
+  the United Kingdom, we act as your processor for your store's data and as a controller for booking
   and correspondence data, and the rights in the GDPR apply.</p>
 
   <h2>8. Cookies</h2>

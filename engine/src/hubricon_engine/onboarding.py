@@ -88,9 +88,38 @@ def ensure_portal_seat(db, client_id: str, email: str) -> str | None:
         return None
 
 
-def provision(db, email: str, name: str | None = None, company: str | None = None) -> tuple[dict, str, bool]:
+_PLATFORM_WORDS = {"amazon": "amazon", "shopify": "shopify", "both": "both"}
+
+
+def platform_from_answers(answers: dict | None) -> str | None:
+    """The 'Where you sell' answer from the site's application gate.
+
+    The gate rides its answers along on the Calendly booking as one
+    utm_content string ("rev:…|model:…|skus:…|fit:…|channel:Shopify"), and
+    the cloud routine may store that raw string or a parsed key. Read both
+    shapes; anything unrecognised returns None, which leaves the column's
+    'amazon' default alone rather than guessing."""
+    if not answers:
+        return None
+    direct = str(answers.get("channel") or answers.get("platform") or "").strip().lower()
+    if direct in _PLATFORM_WORDS:
+        return _PLATFORM_WORDS[direct]
+    for value in answers.values():
+        m = re.search(r"channel\s*[:=]\s*([A-Za-z]+)", str(value))
+        if m and m.group(1).lower() in _PLATFORM_WORDS:
+            return _PLATFORM_WORDS[m.group(1).lower()]
+    return None
+
+
+def provision(db, email: str, name: str | None = None, company: str | None = None,
+              platform: str | None = None) -> tuple[dict, str, bool]:
     """Find-or-create the client, mint a fresh intake link, seat them in the
-    portal. Returns (client, intake_link, created)."""
+    portal. Returns (client, intake_link, created).
+
+    `platform` is what the prospect said on the application gate. It is
+    written on creation, and later only when the row still carries the
+    column's 'amazon' default — a stated answer beats a default, but never
+    overwrites a platform someone set deliberately."""
     email = email.strip().lower()
     rows = db.table("clients").select("*").eq("contact_email", email).execute().data
     created = False
@@ -101,10 +130,12 @@ def provision(db, email: str, name: str | None = None, company: str | None = Non
             patch["contact_name"] = name
         if company and not client.get("company_name"):
             patch["company_name"] = company
+        if platform and platform != "amazon" and (client.get("platform") or "amazon") == "amazon":
+            patch["platform"] = platform
         if patch:
             client = db.table("clients").update(patch).eq("id", client["id"]).execute().data[0]
     else:
-        insert = {"contact_email": email, "status": "pending"}
+        insert = {"contact_email": email, "status": "pending", "platform": platform or "amazon"}
         if name:
             insert["contact_name"] = name
         if company:
@@ -122,20 +153,60 @@ def _first(name: str | None) -> str:
     return (name or "").strip().split(" ")[0] or "there"
 
 
-def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | None = None) -> dict:
+AMAZON_EXPORTS = [
+    'Sales & traffic by product — Reports → Business Reports → "Detail Page Sales and Traffic by Child Item". '
+    "One file PER MONTH for the last 6 months (this is what lets us model your trend, not just a snapshot).",
+    "Fees & SKU economics — Reports → SKU Economics → one file per month, same 6 months.",
+    "Advertising — Advertising Console → Measurement & Reporting → Sponsored ads reports → "
+    "Sponsored Products / Search term → last 60 days.",
+    "Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.",
+    "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, lead time). "
+    "Estimates are fine.",
+]
+SHOPIFY_EXPORTS = [
+    "Orders — Shopify admin → Orders → Export → custom date range, last 6 months → Plain CSV file. "
+    "Every order and line item; this is the sales, refund and discount history the models run on.",
+    "Products — Products → Export → All products → Plain CSV file. Check that Cost per item is filled in; "
+    "the same file is your inventory snapshot.",
+    "Payouts — Finances → Payouts → Transactions → Export → last 90 days. The processing fee on every charge.",
+    "Advertising — Meta Ads Manager → Campaigns → breakdown by Day → Export CSV; and/or Google Ads → "
+    "Campaigns (segment by Day) → Download CSV, plus Insights & reports → Search terms → Download CSV.",
+    "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, pick/pack/postage, "
+    "lead time). Estimates are fine.",
+]
+SEAT_HINT = {
+    "amazon": f"Add {EXEC_EMAIL} under Seller Central → Settings → User Permissions; the welcome page shows the exact four permissions.",
+    "shopify": "Reply with your store URL and we send a collaborator request to approve under Settings → Users → Collaborators; "
+               "the welcome page shows the exact permissions.",
+}
+
+
+def exports_for(platform: str | None) -> list[str]:
+    """The export list for the client's platform; a two-platform client gets both, labelled."""
+    p = (platform or "amazon").lower()
+    if p == "shopify":
+        return SHOPIFY_EXPORTS
+    if p == "both":
+        return ([f"Amazon — {e}" for e in AMAZON_EXPORTS[:-1]]
+                + [f"Shopify — {e}" for e in SHOPIFY_EXPORTS[:-1]] + [SHOPIFY_EXPORTS[-1]])
+    return AMAZON_EXPORTS
+
+
+def seat_hint(platform: str | None) -> str:
+    p = (platform or "amazon").lower()
+    if p == "both":
+        return SEAT_HINT["amazon"] + " On Shopify: " + SEAT_HINT["shopify"][0].lower() + SEAT_HINT["shopify"][1:]
+    return SEAT_HINT.get(p, SEAT_HINT["amazon"])
+
+
+def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | None = None,
+               platform: str | None = "amazon") -> dict:
     welcome = f"{INTAKE_BASE_URL}/welcome"
     portal = portal_url or f"{INTAKE_BASE_URL}/portal"
     greeting = f"Hi {_first(first_name)},"
-    exports = [
-        'Sales & traffic by product — Reports → Business Reports → "Detail Page Sales and Traffic by Child Item". '
-        "One file PER MONTH for the last 6 months (this is what lets us model your trend, not just a snapshot).",
-        "Fees & SKU economics — Reports → SKU Economics → one file per month, same 6 months.",
-        "Advertising — Advertising Console → Measurement & Reporting → Sponsored ads reports → "
-        "Sponsored Products / Search term → last 60 days.",
-        "Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.",
-        "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, lead time). "
-        "Estimates are fine.",
-    ]
+    exports = exports_for(platform)
+    n = "five" if len(exports) == 5 else str(len(exports))
+    seat = "Seller Central seat" if (platform or "amazon").lower() == "amazon" else "seat on your store"
     if kind == "welcome":
         return {
             "subject": "You're in — 15 minutes of exports and we take it from here",
@@ -143,13 +214,12 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "blocks": [
                 {"p": "Welcome aboard. Everything you need is on one page:"},
                 {"button": "Open your welcome page", "url": welcome},
-                {"p": "Fastest path, no Seller Central seat required: five exports through your private upload page. "
+                {"p": f"Fastest path, no {seat} required: {n} exports through your private upload page. "
                       "The models run the moment your last file lands, and your written Profit Teardown is in "
                       "your desk within 24 hours."},
                 {"button": "Open your secure upload page", "url": link},
                 {"ol": exports},
-                {"p": f"Prefer to grant a seat instead? Add {EXEC_EMAIL} under Settings → User Permissions; the "
-                      "welcome page shows the exact four permissions. Want to talk it through first? "
+                {"p": f"Prefer to grant a seat instead? {seat_hint(platform)} Want to talk it through first? "
                       f"Book 20 minutes: {CALENDLY_URL}"},
                 {"p": "Your first month is free. If we don't find you more than we cost, walk away owing nothing."},
             ],
@@ -159,7 +229,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "subject": "Your Profit Teardown — 15 minutes of exports and you're done",
             "greeting": greeting,
             "blocks": [
-                {"p": "No seat needed — five exports through your private upload page and we're off (no account required):"},
+                {"p": f"No seat needed — {n} exports through your private upload page and we're off (no account required):"},
                 {"button": "Open your private upload page", "url": link},
                 {"ol": exports},
                 {"p": "The models run the moment your last file lands — your written Profit Teardown is in your "
@@ -174,7 +244,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "blocks": [
                 {"p": "Quick nudge — your models are waiting on your files."},
                 {"button": "Open your secure upload page", "url": link},
-                {"p": "Five exports, about 15 minutes; the list is on the page. If something's in the way "
+                {"p": f"{n[0].upper() + n[1:]} exports, about 15 minutes; the list is on the page. If something's in the way "
                       "(a report you can't find, a seat you'd rather grant instead), reply here and I'll sort it."},
             ],
         }
@@ -255,8 +325,9 @@ def render_text(spec: dict) -> str:
     return "\n\n".join([spec["greeting"], *[_text_block(b) for b in spec["blocks"]], "Best,\nHagen — Hubricon"])
 
 
-def send(kind: str, to: str, first_name: str | None, link: str, portal_url: str | None = None) -> bool:
-    spec = email_spec(kind, first_name, link, portal_url)
+def send(kind: str, to: str, first_name: str | None, link: str, portal_url: str | None = None,
+         platform: str | None = "amazon") -> bool:
+    spec = email_spec(kind, first_name, link, portal_url, platform)
     return notify.send_email(to, spec["subject"], render_text(spec), html=render_html(spec),
                              sender=FROM, reply_to=os.environ.get("EMAIL_REPLY_TO", FROM))
 

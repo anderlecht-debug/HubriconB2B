@@ -115,3 +115,71 @@ def test_forecast_rate_takes_precedence_over_observed():
 
 def test_empty_inventory_is_insufficient():
     assert econ.run({}, [], today=TODAY)["status"] == "insufficient_data"
+
+
+# --- a store with no marketplace warehouse ------------------------------------
+
+def test_critical_fractile_without_fee_cliffs_is_margin_vs_capital_and_obsolescence():
+    """No marketplace storage in C_o, no low-inventory fee in C_u — the plain
+    newsvendor, which is the one a self-fulfilled store actually faces."""
+    cliffless = econ.critical_fractile(unit_margin=16.0, unit_cost=5.0, item_volume=0.1,
+                                       cycle_days=37, month=11, fee_cliffs=False)
+    assert cliffless["c_u"] == pytest.approx(16.0)
+    assert cliffless["c_u_parts"]["low_inventory_fee"] == 0.0
+    assert cliffless["c_o_parts"]["storage"] == 0.0
+    assert cliffless["c_o"] == pytest.approx(5.0 * 0.12 * 37 / 365 + 5.0 * 0.02)
+    # peak season is Amazon's, so November costs a Shopify store nothing extra
+    off_peak = econ.critical_fractile(16.0, 5.0, 0.1, 37, month=3, fee_cliffs=False)
+    assert off_peak["c_o"] == pytest.approx(cliffless["c_o"])
+
+
+def test_hold_value_without_fee_cliffs_carries_nothing():
+    """Charging Amazon's storage and aged surcharge to a self-fulfilled brand
+    would push it to dump stock it should keep."""
+    kw = dict(excess_units=500, mean_rate=1.0, unit_margin=3.0, unit_cost=6.0, price=20.0,
+              item_volume=0.4, start_age_days=200, today=TODAY)
+    amazon = econ.hold_vs_liquidate(**kw)
+    shopify = econ.hold_vs_liquidate(**kw, fee_cliffs=False)
+    assert shopify["hold_npv"] > amazon["hold_npv"]
+    assert shopify["liquidate_value"] == amazon["liquidate_value"]   # 10% of ASP either way
+
+
+def test_shopify_run_zeroes_the_cliffs_and_still_prices_the_order():
+    inv = [_inventory("A", on_hand=40)]
+    out = econ.run({"inventory_health": []}, inv, [_margin("A")], None,
+                   np.random.default_rng(3), 4000, TODAY, channel="shopify")
+    assert out["status"] == "ok" and out["summary"]["channel"] == "shopify"
+    row = out["rows"][0]
+
+    # the three Amazon step functions are zero, and say why rather than estimating
+    assert row["low_inventory_fee_risk"] is False
+    assert row["low_inventory_fee_month"] == 0.0
+    assert row["aged_surcharge_month"] == 0.0 and row["aged_units_181_plus"] == 0
+    assert row["storage_next_month"] == 0.0
+    assert row["peak_storage_premium_month"] == 0.0
+    assert row["aged_surcharge_basis"] == econ.NO_CLIFF_BASIS
+    assert row["storage_basis"] == econ.NO_CLIFF_BASIS
+    assert out["summary"]["bleed"]["total_month"] == 0.0
+    assert out["summary"]["fee_schedule_effective"] is None
+
+    # the newsvendor still runs: $30 price, 30% fees, $5 landed -> $16 unit margin
+    assert row["c_u"] == 16.0
+    assert row["c_u_parts"] == {"margin": 16.0, "low_inventory_fee": 0.0}
+    assert row["c_o_parts"] == {"storage": 0.0, "capital": 0.06, "obsolescence": 0.1}
+    assert row["order_up_to"] > 0 and row["critical_fractile"] > 0.5
+    assert row["details"]["basis"].startswith("Shopify:")
+    assert econ.NO_CLIFF_BASIS in row["details"]["basis"]
+
+
+def test_amazon_run_is_unchanged_by_the_channel_default():
+    health = [{"snapshot_date": "2026-08-30", "sku": "A", "available": 40, "item_volume": 0.1,
+               "inv_age_181_to_270": 20, "inv_age_271_to_365": 0, "inv_age_365_plus": 0}]
+    inv = [_inventory("A", on_hand=40)]
+    default = econ.run({"inventory_health": health}, inv, [_margin("A")], None,
+                       np.random.default_rng(3), 4000, TODAY)
+    named = econ.run({"inventory_health": health}, inv, [_margin("A")], None,
+                     np.random.default_rng(3), 4000, TODAY, channel="amazon")
+    assert default["rows"][0]["c_u"] == named["rows"][0]["c_u"]
+    assert default["summary"]["bleed"] == named["summary"]["bleed"]
+    assert default["rows"][0]["low_inventory_fee_month"] > 0   # 40 units at 3/day is thin cover
+    assert named["rows"][0]["details"]["basis"].startswith("Amazon:")

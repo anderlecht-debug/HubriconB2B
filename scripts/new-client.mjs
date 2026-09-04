@@ -3,7 +3,11 @@
  *
  *   npm install
  *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
- *     npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com
+ *     npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com [--platform shopify]
+ *
+ * --platform (amazon | shopify | both, default amazon) is recorded on the
+ * client and decides which export list and seat instructions the emails
+ * carry and which cards the upload page shows.
  *
  * Finds-or-creates the client by email (status 'pending' — the Stripe
  * webhook flips it to 'active' on conversion), revokes any previous intake
@@ -33,10 +37,16 @@ const { values: args } = parseArgs({
     email: { type: "string" },
     send: { type: "string" },
     to: { type: "string" },
+    platform: { type: "string" },
   },
 });
 if (!args.email) {
-  console.error('Usage: npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com [--send welcome|nudge|files] [--to you@example.com]');
+  console.error('Usage: npm run new-client -- --company "Acme Goods" --name "Jane Doe" --email jane@acme.com [--platform amazon|shopify|both] [--send welcome|nudge|files] [--to you@example.com]');
+  process.exit(1);
+}
+const PLATFORMS = ["amazon", "shopify", "both"];
+if (args.platform && !PLATFORMS.includes(args.platform)) {
+  console.error(`--platform must be one of ${PLATFORMS.join(", ")}`);
   process.exit(1);
 }
 const EMAIL_KINDS = ["welcome", "nudge", "files"];
@@ -59,7 +69,7 @@ const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_R
 
 let { data: client, error: findError } = await db
   .from("clients")
-  .select("id, company_name, contact_name, status")
+  .select("id, company_name, contact_name, status, platform")
   .eq("contact_email", email)
   .maybeSingle();
 if (findError) {
@@ -68,12 +78,21 @@ if (findError) {
 }
 
 if (client) {
-  console.log(`Client already exists: ${client.company_name ?? email} (${client.id}, ${client.status})`);
+  console.log(`Client already exists: ${client.company_name ?? email} (${client.id}, ${client.status}, ${client.platform ?? "amazon"})`);
+  if (args.platform && args.platform !== client.platform) {
+    const { error } = await db.from("clients").update({ platform: args.platform }).eq("id", client.id);
+    if (error) {
+      console.error("Platform update failed:", error.message);
+      process.exit(1);
+    }
+    client.platform = args.platform;
+    console.log(`Platform set to ${args.platform}.`);
+  }
 } else {
-  const insert = { contact_email: email, status: "pending" };
+  const insert = { contact_email: email, status: "pending", platform: args.platform ?? "amazon" };
   if (args.company) insert.company_name = args.company;
   if (args.name) insert.contact_name = args.name;
-  const { data, error } = await db.from("clients").insert(insert).select("id, company_name").single();
+  const { data, error } = await db.from("clients").insert(insert).select("id, company_name, platform").single();
   if (error) {
     console.error("Client creation failed:", error.message);
     process.exit(1);
@@ -110,6 +129,41 @@ const welcome = `${INTAKE_BASE_URL}/welcome`;
 const execEmail = process.env.EXECUTION_EMAIL ?? "hagen.simmons@hubricon.com";
 const firstName = (args.name ?? client.contact_name ?? "").split(/\s+/)[0] || "there";
 const greeting = `Hi ${firstName},`;
+const platform = args.platform ?? client.platform ?? "amazon";
+
+// The seat and the export list differ by platform; everything else is the same offer.
+const SEAT = {
+  amazon:
+    `The short version: add ${execEmail} as a user in your Seller Central (Settings → User Permissions — ` +
+    "the page shows the exact four permissions), and book your kickoff on the same page.",
+  shopify:
+    `The short version: reply with your store URL (and your collaborator request code, if your store sets one ` +
+    `under Settings → Users → Security). We send a collaborator request from ${execEmail}; you approve it under ` +
+    "Settings → Users → Collaborators (the page shows the exact permissions), and book your kickoff on the same page.",
+};
+SEAT.both = `${SEAT.amazon} Selling on Shopify too? ${SEAT.shopify.replace("The short version: reply", "Reply")}`;
+const AMAZON_EXPORTS = [
+  'Sales & traffic by product — Reports → Business Reports → "Detail Page Sales and Traffic by Child Item". ' +
+    "One file PER MONTH for the last 6 months (this is what lets us model your trend, not just a snapshot).",
+  "Fees & SKU economics — Reports → SKU Economics → one file per month, same 6 months.",
+  "Advertising — Advertising Console → Measurement & Reporting → Sponsored ads reports → " +
+    "Sponsored Products / Search term → last 60 days.",
+  "Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.",
+];
+const SHOPIFY_EXPORTS = [
+  "Orders — Shopify admin → Orders → Export → custom date range, last 6 months → Plain CSV file.",
+  "Products — Products → Export → All products → Plain CSV file (check that Cost per item is filled in; the same file is your inventory snapshot).",
+  "Payouts — Finances → Payouts → Transactions → Export → last 90 days.",
+  "Advertising — Meta Ads Manager → Campaigns → breakdown by Day → Export CSV; and/or Google Ads → Campaigns (segment by Day) → Download CSV, plus Insights & reports → Search terms → Download CSV.",
+];
+const COSTS =
+  "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, pick/pack/postage, lead time). " +
+  "Estimates are fine.";
+const EXPORTS =
+  platform === "shopify" ? [...SHOPIFY_EXPORTS, COSTS]
+  : platform === "both" ? [...AMAZON_EXPORTS.map((e) => `Amazon — ${e}`), ...SHOPIFY_EXPORTS.map((e) => `Shopify — ${e}`), COSTS]
+  : [...AMAZON_EXPORTS, COSTS];
+const COUNT = EXPORTS.length === 5 ? "five" : String(EXPORTS.length);
 
 // One definition per email; lib/email.mjs renders it as HTML and as text.
 const EMAILS = {
@@ -122,14 +176,12 @@ const EMAILS = {
       { button: "Open your welcome page", url: welcome },
       {
         p:
-          `The short version: add ${execEmail} as a user in your Seller Central (Settings → User Permissions — ` +
-          "the page shows the exact four permissions), and book your kickoff on the same page. Within 24 hours " +
-          "of that seat going live you'll have your Profit Teardown on video, and on the kickoff call I'll " +
-          "present your 90-day plan.",
+          `${SEAT[platform]} Within 24 hours of that seat going live you'll have your Profit Teardown on video, ` +
+          "and on the kickoff call I'll present your 90-day plan.",
       },
       {
         p:
-          "One five-minute homework: Amazon doesn't know your unit costs. Grab the template on your secure " +
+          "One five-minute homework: neither Amazon nor Shopify knows your landed unit costs. Grab the template on your secure " +
           "upload page and fill one row per SKU (estimates are fine):",
       },
       { button: "Open your secure upload page", url: link },
@@ -157,20 +209,9 @@ const EMAILS = {
     subject: "Your Profit Teardown — 15 minutes of exports and you're done",
     greeting,
     blocks: [
-      { p: "No seat needed — five exports through your private upload page and we're off (no account required):" },
+      { p: `No seat needed — ${COUNT} exports through your private upload page and we're off (no account required):` },
       { button: "Open your private upload page", url: link },
-      {
-        ol: [
-          'Sales & traffic by product — Reports → Business Reports → "Detail Page Sales and Traffic by Child Item". ' +
-            "One file PER MONTH for the last 6 months (this is what lets us model your trend, not just a snapshot).",
-          "Fees & SKU economics — Reports → SKU Economics → one file per month, same 6 months.",
-          "Advertising — Advertising Console → Measurement & Reporting → Sponsored ads reports → " +
-            "Sponsored Products / Search term → last 60 days.",
-          "Inventory — Reports → Fulfillment → FBA Inventory → today's snapshot.",
-          "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, lead time). " +
-            "Estimates are fine.",
-        ],
-      },
+      { ol: EXPORTS },
       {
         p:
           "The models run the moment your last file lands — your Profit Teardown, written and on video, " +

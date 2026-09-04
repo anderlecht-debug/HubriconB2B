@@ -61,3 +61,35 @@ def test_name_split():
     assert guess_name_parts("Priya Patel") == ("Priya", "Patel")
     assert guess_name_parts("Cher") == ("Cher", None)
     assert guess_name_parts("") == (None, None)
+
+
+def test_the_export_list_follows_the_platform():
+    amazon = render_text(email_spec("files", "Sam", "https://x/intake?t=1", platform="amazon"))
+    shopify = render_text(email_spec("files", "Sam", "https://x/intake?t=1", platform="shopify"))
+    both = render_text(email_spec("files", "Sam", "https://x/intake?t=1", platform="both"))
+    assert "SKU Economics" in amazon and "Shopify admin" not in amazon
+    assert "Shopify admin" in shopify and "Seller Central" not in shopify
+    assert "SKU Economics" not in shopify and "Meta Ads Manager" in shopify
+    # both platforms: every line says which one it belongs to, and the shared
+    # cost template is asked for once, not twice
+    assert "Amazon — " in both and "Shopify — " in both
+    assert both.count("one-row-per-SKU template") == 1
+    # the seat instructions follow too
+    assert "Seller Central" in render_text(email_spec("welcome", "Sam", "l", platform="amazon"))
+    assert "collaborator request" in render_text(email_spec("welcome", "Sam", "l", platform="shopify"))
+    # no platform stated is the column default: Amazon, exactly as before
+    assert render_text(email_spec("files", "Sam", "l")) == amazon.replace("https://x/intake?t=1", "l")
+
+
+def test_platform_read_from_the_application_gate():
+    from hubricon_engine.onboarding import platform_from_answers as p
+
+    # the gate's own utm_content string, however the routine stored it
+    assert p({"utm_content": "rev:$1M–$5M|model:Private label|skus:10–50 SKUs|fit:core|channel:Shopify"}) == "shopify"
+    assert p({"notes": "channel: Both"}) == "both"
+    assert p({"channel": "Amazon"}) == "amazon"
+    assert p({"platform": "shopify"}) == "shopify"
+    # nothing recognisable leaves the column default alone rather than guessing
+    assert p({"rev": "$1M–$5M"}) is None
+    assert p({"channel": "Walmart"}) is None
+    assert p({}) is None and p(None) is None

@@ -32,12 +32,20 @@ Liquidate vs hold.  For excess units, hold value is the discounted sum of
 margin earned as they sell at the median rate, less storage and surcharge
 along the way; liquidation is what Amazon's program returns today. The
 larger number is the recommendation, both are shown.
+
+Channels.  Every cliff above is Amazon's. A Shopify store ships from its own
+shelf or a 3PL: there is no marketplace storage rate, no low-inventory fee
+and no aged surcharge to price, and the 3PL's own rate is not on file, so
+those three lines are zero and say so rather than being estimated off
+Amazon's schedule (decided 2026-09-04). The newsvendor still runs on both —
+lost margin against capital and obsolescence is not a marketplace fact.
 """
 
 from datetime import date
 
 import numpy as np
 
+from .. import channels
 from . import fee_schedule as fees
 from .common import num
 
@@ -50,6 +58,7 @@ HOLD_HORIZON_DAYS = 90          # cover beyond this counts as excess
 MAX_HOLD_MONTHS = 24
 LIQUIDATION_RECOVERY_OF_PRICE = 0.10   # Amazon liquidation returns ~5–10% of ASP
 BUCKET_MID_AGE = {"inv_age_181_to_270": 225, "inv_age_271_to_365": 318, "inv_age_365_plus": 400}
+NO_CLIFF_BASIS = "no storage or fee cliff on file (Shopify: self-fulfilled or 3PL rate not stated)"
 
 
 def _latest_by_sku(rows: list[dict], key: str) -> dict[str, dict]:
@@ -60,13 +69,20 @@ def _latest_by_sku(rows: list[dict], key: str) -> dict[str, dict]:
 
 
 def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
-                      cycle_days: float, month: int, size_tier: str = "standard") -> dict:
-    """q* and its two ingredients, itemised so the Desk can show the arithmetic."""
-    storage = fees.storage_rate(month, size_tier) * item_volume * cycle_days / 30
+                      cycle_days: float, month: int, size_tier: str = "standard",
+                      fee_cliffs: bool = True) -> dict:
+    """q* and its two ingredients, itemised so the Desk can show the arithmetic.
+
+    fee_cliffs=False drops the two Amazon-only terms — marketplace storage
+    out of C_o, the low-inventory fee out of C_u — leaving lost margin
+    against capital and obsolescence, which is the newsvendor a Shopify
+    store actually faces."""
+    storage = fees.storage_rate(month, size_tier) * item_volume * cycle_days / 30 if fee_cliffs else 0.0
     capital = unit_cost * ANNUAL_CAPITAL_RATE * cycle_days / 365
     obsolescence = unit_cost * OBSOLESCENCE_RATE
     c_o = storage + capital + obsolescence
-    lilf = fees.LOW_INVENTORY_FEE_PER_UNIT.get(size_tier, fees.LOW_INVENTORY_FEE_PER_UNIT["standard"])["lt14"]
+    lilf = (fees.LOW_INVENTORY_FEE_PER_UNIT.get(size_tier, fees.LOW_INVENTORY_FEE_PER_UNIT["standard"])["lt14"]
+            if fee_cliffs else 0.0)
     c_u = max(0.0, unit_margin) + lilf
     q = c_u / (c_u + c_o) if (c_u + c_o) > 0 else FRACTILE_FLOOR
     return {
@@ -85,8 +101,13 @@ def demand_over_cycle(mean_rate: float, std_rate: float, lead_days: float,
 
 def hold_vs_liquidate(excess_units: int, mean_rate: float, unit_margin: float, unit_cost: float,
                       price: float, item_volume: float, start_age_days: float, today: date,
-                      size_tier: str = "standard") -> dict:
-    """NPV of selling the excess down at the median rate vs liquidating now."""
+                      size_tier: str = "standard", fee_cliffs: bool = True) -> dict:
+    """NPV of selling the excess down at the median rate vs liquidating now.
+
+    Without fee cliffs the carry is zero: no marketplace storage rate and no
+    aged surcharge apply, and a 3PL's own rate is not on file. Charging
+    Amazon's schedule to a self-fulfilled brand would understate hold value
+    and push it to dump stock it should keep."""
     remaining = float(excess_units)
     monthly_units = max(1e-9, mean_rate * 30)
     npv, months = 0.0, 0
@@ -98,9 +119,11 @@ def hold_vs_liquidate(excess_units: int, mean_rate: float, unit_margin: float, u
         month = month % 12 + 1
         age += 30
         sold = min(remaining, monthly_units)
-        carry = remaining * item_volume * (fees.storage_rate(month, size_tier) + fees.aged_surcharge_rate(int(age)))
-        if age > 365:
-            carry = max(carry, remaining * fees.AGED_SURCHARGE_MIN_PER_UNIT_365_PLUS)
+        carry = 0.0
+        if fee_cliffs:
+            carry = remaining * item_volume * (fees.storage_rate(month, size_tier) + fees.aged_surcharge_rate(int(age)))
+            if age > 365:
+                carry = max(carry, remaining * fees.AGED_SURCHARGE_MIN_PER_UNIT_365_PLUS)
         npv += (sold * unit_margin - carry) / discount ** months
         remaining -= sold
     liquidate = excess_units * price * LIQUIDATION_RECOVERY_OF_PRICE
@@ -113,9 +136,12 @@ def hold_vs_liquidate(excess_units: int, mean_rate: float, unit_margin: float, u
 
 def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None = None,
         forecast_rows: list[dict] | None = None, rng: np.random.Generator | None = None,
-        simulations: int = 20000, today: date | None = None) -> dict:
+        simulations: int = 20000, today: date | None = None,
+        channel: str = "amazon") -> dict:
     today = today or date.today()
     rng = rng or np.random.default_rng(42)
+    cliffs = channels.has_fee_cliffs(channel)
+    platform = channels.label(channel)
     latest_margin = _latest_by_sku(margin_rows or [], "period_start")
     health = _latest_by_sku(data.get("inventory_health", []) or [], "snapshot_date")
     forecasts = {f["item_id"]: f for f in (forecast_rows or []) if f.get("status") == "ok"}
@@ -168,46 +194,61 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             "item_volume_cuft": num(vol, 4), "volume_assumed": vol_assumed, "size_tier": size_tier,
         }
 
-        # — low-inventory-level fee exposure (Amazon: on-hand supply, not inbound) —
-        dos = on_hand / mean_rate
-        lilf_rate = fees.low_inventory_fee(dos, size_tier)
-        row["low_inventory_fee_risk"] = lilf_rate > 0
-        row["low_inventory_fee_month"] = num(lilf_rate * mean_rate * 30)
-        if h.get("low_inventory_level_fee_applied") is not None:
-            row["low_inventory_fee_applied_per_amazon"] = bool(h["low_inventory_level_fee_applied"])
-
-        # — aged inventory surcharge —
         aged_units = sum(int(h.get(k) or 0) for k in BUCKET_MID_AGE)
-        row["aged_units_181_plus"] = aged_units
-        if h.get("estimated_aged_surcharge") is not None:
-            row["aged_surcharge_month"] = num(float(h["estimated_aged_surcharge"]))
-            row["aged_surcharge_basis"] = "Amazon's estimate (Inventory Age export)"
-        else:
-            surcharge = sum(int(h.get(k) or 0) * vol * fees.aged_surcharge_rate(age) for k, age in BUCKET_MID_AGE.items())
-            row["aged_surcharge_month"] = num(surcharge)
-            row["aged_surcharge_basis"] = f"schedule estimate ({fees.EFFECTIVE})" if aged_units else "no aged units on file"
+        if cliffs:
+            # — low-inventory-level fee exposure (Amazon: on-hand supply, not inbound) —
+            dos = on_hand / mean_rate
+            lilf_rate = fees.low_inventory_fee(dos, size_tier)
+            row["low_inventory_fee_risk"] = lilf_rate > 0
+            row["low_inventory_fee_month"] = num(lilf_rate * mean_rate * 30)
+            if h.get("low_inventory_level_fee_applied") is not None:
+                row["low_inventory_fee_applied_per_amazon"] = bool(h["low_inventory_level_fee_applied"])
 
-        # — storage next month and the peak premium —
-        if h.get("estimated_storage_cost_next_month") is not None:
-            row["storage_next_month"] = num(float(h["estimated_storage_cost_next_month"]))
-            row["storage_basis"] = "Amazon's estimate"
+            # — aged inventory surcharge —
+            row["aged_units_181_plus"] = aged_units
+            if h.get("estimated_aged_surcharge") is not None:
+                row["aged_surcharge_month"] = num(float(h["estimated_aged_surcharge"]))
+                row["aged_surcharge_basis"] = "Amazon's estimate (Inventory Age export)"
+            else:
+                surcharge = sum(int(h.get(k) or 0) * vol * fees.aged_surcharge_rate(age) for k, age in BUCKET_MID_AGE.items())
+                row["aged_surcharge_month"] = num(surcharge)
+                row["aged_surcharge_basis"] = f"schedule estimate ({fees.EFFECTIVE})" if aged_units else "no aged units on file"
+
+            # — storage next month and the peak premium —
+            if h.get("estimated_storage_cost_next_month") is not None:
+                row["storage_next_month"] = num(float(h["estimated_storage_cost_next_month"]))
+                row["storage_basis"] = "Amazon's estimate"
+            else:
+                row["storage_next_month"] = num(on_hand * vol * fees.storage_rate(next_month, size_tier))
+                row["storage_basis"] = f"schedule estimate ({fees.EFFECTIVE})"
+            to_peak = fees.months_until_peak(today)
+            units_at_peak = max(0.0, position - mean_rate * 30 * to_peak) if to_peak <= 3 else 0.0
+            row["peak_storage_premium_month"] = num(
+                units_at_peak * vol * (fees.storage_rate(10, size_tier) - fees.storage_rate(9, size_tier)))
         else:
-            row["storage_next_month"] = num(on_hand * vol * fees.storage_rate(next_month, size_tier))
-            row["storage_basis"] = f"schedule estimate ({fees.EFFECTIVE})"
-        to_peak = fees.months_until_peak(today)
-        units_at_peak = max(0.0, position - mean_rate * 30 * to_peak) if to_peak <= 3 else 0.0
-        row["peak_storage_premium_month"] = num(
-            units_at_peak * vol * (fees.storage_rate(10, size_tier) - fees.storage_rate(9, size_tier)))
+            # No marketplace warehouse: nothing here is a cliff this client can
+            # step off, and inventing a 3PL rate would be worse than a zero.
+            row["low_inventory_fee_risk"] = False
+            row["low_inventory_fee_month"] = 0.0
+            row["aged_units_181_plus"] = 0
+            row["aged_surcharge_month"] = 0.0
+            row["aged_surcharge_basis"] = NO_CLIFF_BASIS
+            row["storage_next_month"] = 0.0
+            row["storage_basis"] = NO_CLIFF_BASIS
+            row["peak_storage_premium_month"] = 0.0
 
         if econ is None:
             row["status"] = "no_unit_economics"
-            row["details"] = {"basis": "No landed cost on file — fee exposure computed, service level and liquidation skipped."}
+            row["details"] = {"basis": (
+                f"{platform}: no landed cost on file — "
+                + ("fee exposure computed, " if cliffs else "")
+                + "service level and liquidation skipped.")}
             rows.append(row)
             continue
 
         # — the newsvendor —
         cf = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
-                               today.month, size_tier)
+                               today.month, size_tier, fee_cliffs=cliffs)
         demand = demand_over_cycle(mean_rate, std_rate, lead, rng, simulations)
         order_up_to = int(np.ceil(np.quantile(demand, cf["q"])))
         order_qty = max(0, order_up_to - position)
@@ -239,16 +280,18 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             if aged_units:
                 weighted_age = sum(int(h.get(k) or 0) * age for k, age in BUCKET_MID_AGE.items()) / aged_units
             hv = hold_vs_liquidate(excess, mean_rate, econ["unit_margin"], econ["unit_cost"], econ["price"],
-                                   vol, weighted_age, today, size_tier)
+                                   vol, weighted_age, today, size_tier, fee_cliffs=cliffs)
             row.update({
                 "hold_npv": num(hv["hold_npv"]), "liquidate_value": num(hv["liquidate_value"]),
                 "months_to_clear": hv["months_to_clear"], "decision": hv["decision"],
             })
         row["details"] = {"basis": (
-            f"q* = C_u/(C_u+C_o) = {cf['c_u']:.2f}/({cf['c_u']:.2f}+{cf['c_o']:.2f}) = {cf['q']:.1%}; "
+            f"{platform}: q* = C_u/(C_u+C_o) = {cf['c_u']:.2f}/({cf['c_u']:.2f}+{cf['c_o']:.2f}) = {cf['q']:.1%}; "
             f"order-up-to is that quantile of {simulations:,} simulated cycles of demand over "
-            f"{int(lead)}+{REVIEW_PERIOD_DAYS} days ({rate_source}). Volume "
-            f"{'assumed' if vol_assumed else 'from the Inventory Age export'} at {vol:.3f} cu ft."
+            f"{int(lead)}+{REVIEW_PERIOD_DAYS} days ({rate_source}). "
+            + (f"Volume {'assumed' if vol_assumed else 'from the Inventory Age export'} at {vol:.3f} cu ft."
+               if cliffs else
+               f"C_o is capital and obsolescence only — {NO_CLIFF_BASIS}.")
         )}
         rows.append(row)
 
@@ -264,6 +307,7 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         "as_of": today.isoformat(),
         "rows": rows,
         "summary": {
+            "channel": channel,
             "n_skus": len(rows),
             "bleed": {k: num(v) for k, v in bleed.items()},
             "n_low_inventory_fee_risk": sum(1 for r in rows if r.get("low_inventory_fee_risk")),
@@ -277,13 +321,16 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
                  "service_level": r["critical_fractile"]}
                 for r in rows if r.get("order_qty_econ")],
             "econ_wires_total": num(sum(r.get("wire_econ") or 0 for r in rows)),
-            "fee_schedule_effective": fees.EFFECTIVE,
+            "fee_schedule_effective": fees.EFFECTIVE if cliffs else None,
             "inventory_age_on_file": bool(health),
         },
         "assumptions": [
+            f"{platform} channel: "
+            + (f"Storage {fees.STORAGE_PER_CUFT['standard']['offpeak']}/{fees.STORAGE_PER_CUFT['standard']['peak']} $/cu ft "
+               f"off-peak/peak (standard), schedule effective {fees.EFFECTIVE}; Amazon's own estimates override when the Inventory Age export is on file"
+               if cliffs else
+               f"no low-inventory fee, aged surcharge or peak storage to price — {NO_CLIFF_BASIS}"),
             f"Capital at {ANNUAL_CAPITAL_RATE:.0%}/yr, obsolescence {OBSOLESCENCE_RATE:.0%} of cost per cycle",
-            f"Storage {fees.STORAGE_PER_CUFT['standard']['offpeak']}/{fees.STORAGE_PER_CUFT['standard']['peak']} $/cu ft "
-            f"off-peak/peak (standard), schedule effective {fees.EFFECTIVE}; Amazon's own estimates override when the Inventory Age export is on file",
             f"Liquidation recovers {LIQUIDATION_RECOVERY_OF_PRICE:.0%} of selling price",
             f"Default unit volume {fees.DEFAULT_ITEM_VOLUME_CUFT['standard']} cu ft when no export states it",
         ],

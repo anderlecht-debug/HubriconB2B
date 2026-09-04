@@ -6,6 +6,8 @@ threshold) or has meaningfully worsened since the previous run, and an
 identical message within the dedupe window is never re-sent.
 """
 
+from . import channels
+
 STOCKOUT_WARNING = 0.25
 STOCKOUT_CRITICAL = 0.50
 STOCKOUT_WORSENED = 0.10   # re-alert only if probability rose this much
@@ -130,6 +132,13 @@ ANOMALY_LABELS = {
 }
 
 
+def anomaly_labels(channel: str | None = "amazon") -> dict:
+    """The metric labels with the platform named: a Shopify brand's fee line
+    is Shopify Payments, not Amazon. The FBA/referral/Buy Box metrics only
+    ever come from Amazon data, so their labels stand."""
+    return {**ANOMALY_LABELS, "fee_per_unit": f"{channels.fee_label(channel)} per unit"}
+
+
 def _round_to(v: float, step: float) -> float:
     return round(float(v) / step) * step
 
@@ -160,7 +169,8 @@ def recovery_alerts(recovery: dict | None) -> list[dict]:
     return alerts
 
 
-def anomaly_alerts(anomaly_rows: list[dict] | None) -> list[dict]:
+def anomaly_alerts(anomaly_rows: list[dict] | None, channel: str | None = "amazon") -> list[dict]:
+    labels = anomaly_labels(channel)
     seen, alerts = set(), []
     for r in sorted((r for r in anomaly_rows or [] if r.get("flagged")),
                     key=lambda r: r.get("dollar_impact") or 0, reverse=True):
@@ -176,7 +186,7 @@ def anomaly_alerts(anomaly_rows: list[dict] | None) -> list[dict]:
         seen.add(key)
         since = str(r["since"])[:7] if r.get("since") else "recently"
         pct = abs(float(r.get("delta_pct") or 0)) * 100
-        label = ANOMALY_LABELS.get(r["metric"], r["metric"])
+        label = labels.get(r["metric"], r["metric"])
         alerts.append({
             "severity": "critical" if r["metric"] == "buy_box_pct" else "warning",
             "module": "anomaly",
@@ -207,12 +217,12 @@ def health_alerts(health: dict | None, previous_health: dict | None) -> list[dic
 
 def compute_alerts(current_inventory, previous_inventory, margin_rows, price_tests,
                    cash_row=None, recovery=None, anomaly_rows=None, health=None,
-                   previous_health=None) -> list[dict]:
+                   previous_health=None, channel: str | None = "amazon") -> list[dict]:
     return (
         cash_alerts(cash_row)
         + buybox_alerts(price_tests)
         + recovery_alerts(recovery)
-        + anomaly_alerts(anomaly_rows)
+        + anomaly_alerts(anomaly_rows, channel)
         + health_alerts(health, previous_health)
         + stockout_alerts(current_inventory, previous_inventory)
         + margin_flip_alerts(margin_rows)

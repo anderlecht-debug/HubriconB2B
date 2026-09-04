@@ -217,3 +217,25 @@ def test_margin_reconciles_by_hand():
 
     avg = margin.average_margin(results)
     assert avg == pytest.approx((650 + 200 + 1300 + 200) / 4000)
+
+
+def test_landed_cost_includes_pick_pack_and_postage():
+    """A Shopify store ships from its own shelf or a 3PL, so fulfilment is a
+    per-unit landed cost no export itemises; an Amazon seller leaves it blank
+    because FBA already charges it as a fee."""
+    econ = [{"sku": "A", "asin": None, "period_start": "2026-07-01", "period_end": "2026-07-31",
+             "units_sold": 100, "avg_sales_price": 20.0, "sales": 2000.0,
+             "referral_fees": -58.0, "fba_fulfillment_fees": None, "storage_fees": None,
+             "other_fees": None, "net_proceeds": 1942.0}]
+    shipped = [{"sku": "A", "unit_cost_usd": 4.0, "inbound_freight_per_unit_usd": 0.5,
+                "packaging_per_unit_usd": 0.5, "fulfillment_per_unit_usd": 3.25,
+                "other_cost_per_unit_usd": None}]
+    blank = [{**shipped[0], "fulfillment_per_unit_usd": None}]
+
+    with_fulfilment = margin.run(_data(sku_economics=econ, cogs_inputs=shipped))[0]
+    without = margin.run(_data(sku_economics=econ, cogs_inputs=blank))[0]
+    assert with_fulfilment["cogs"] == 825.0        # 100 x (4 + 0.5 + 0.5 + 3.25)
+    assert without["cogs"] == 500.0                # a blank is zero, never a guess
+    assert with_fulfilment["net_margin"] == 2000.0 - 58.0 - 825.0
+    # the payload key is the column name, older than the second platform
+    assert with_fulfilment["amazon_fees"] == 58.0

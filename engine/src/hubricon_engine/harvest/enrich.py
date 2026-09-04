@@ -50,7 +50,14 @@ NAME_STOPWORDS = {"our", "the", "meet", "about", "amazon", "store", "family", "t
                   "united", "states", "america", "american", "north", "south", "east", "west", "inc", "llc",
                   "customer", "service", "shipping", "returns", "policy", "privacy", "terms", "sign", "log",
                   "get", "join", "follow", "email", "phone", "call", "text", "chat", "quick", "links"}
+# The two /policies/ paths are Shopify's own and every Shopify store has
+# them; the contact-information one is where Shopify's merchant terms tell a
+# store to publish a legal name and a postal address, which is the closest
+# thing this platform has to the Amazon seller profile. They cost a 404 on a
+# site that is not on Shopify, and the loop below stops as soon as it has
+# both an email and a name, so most brands never reach them.
 CONTACT_PATHS = ("", "/pages/contact", "/pages/contact-us", "/contact", "/contact-us",
+                 "/policies/contact-information", "/policies/legal-notice",
                  "/pages/about", "/pages/about-us", "/about", "/about-us", "/pages/our-story")
 # A brand whose site or inbox lives on one of these country domains is run
 # from there whatever the Amazon profile says (Bella Vita Luxury: profile
@@ -239,16 +246,25 @@ def mx_ok(domain: str, resolver=None) -> bool:
         return False
 
 
-def site_contacts(fetcher, website: str, brand: str | None) -> dict:
-    """Read the home, contact and about pages: published emails and a founder's name."""
+def site_contacts(fetcher, website: str, brand: str | None, paths: tuple[str, ...] = CONTACT_PATHS) -> dict:
+    """Read the home, contact and about pages: published emails and a founder's name.
+
+    `paths` lets a caller put its platform's own pages first — the Shopify
+    crawl reads /policies/contact-information before anything themed, because
+    that is where a store's legal name and postal address live. The pages that
+    were read come back in `pages` so a caller can parse more out of them
+    (an address, a legal name) without fetching them twice.
+    """
     dom = _domain(website)
     emails: list[str] = []
     first = last = None
     source = None
-    for path in CONTACT_PATHS:
+    pages: dict[str, str] = {}
+    for path in paths:
         page = fetcher.get(website if not path else website.rstrip("/") + path)
         if not page:
             continue
+        pages[path] = page
         for e in page_emails(page, dom):
             if e not in emails:
                 emails.append(e)
@@ -259,13 +275,23 @@ def site_contacts(fetcher, website: str, brand: str | None) -> dict:
         if emails and first:
             break
     return {"emails": rank_emails(emails, dom, first), "first_name": first, "last_name": last,
-            "person_source": source, "domain": dom}
+            "person_source": source, "domain": dom, "pages": pages}
 
 
 def enrich_seller(fetcher, row: dict, resolver=None) -> dict:
-    """One candidate → website, contact, name. Returns the columns to update."""
+    """One candidate → website, contact, name. Returns the columns to update.
+
+    A row that already carries a website skips the search entirely (how =
+    "known"): a Shopify row's site is the store itself, straight out of
+    meta.json, so guessing <brand>.com and asking Bing would spend four
+    requests to rediscover a fact the row already holds — and would sometimes
+    "find" a different company's site instead.
+    """
     brand = row.get("brand")
-    site, how = find_website(fetcher, brand, row.get("business_name"))
+    if row.get("website"):
+        site, how = row["website"], "known"
+    else:
+        site, how = find_website(fetcher, brand, row.get("business_name"))
     if not site:
         return {"status": "no_website", "notes": "no site matched the brand (direct guesses + Bing)"}
     c = site_contacts(fetcher, site, brand)

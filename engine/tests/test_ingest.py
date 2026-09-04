@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from hubricon_engine.ingest import PARSERS
+from hubricon_engine.ingest import PARSERS, parse_all
 from hubricon_engine.ingest.headers import IngestError
 from hubricon_engine.ingest.readers import read_table
 
@@ -23,9 +23,12 @@ def _parse(report_type: str, fixture: str):
 def test_business_report():
     table, rows, key = _parse("business_report", "business_report_clean.csv")
     assert table == "asin_traffic"
-    assert key == "client_id,child_asin,period_start,period_end"
+    # channel joined the natural key on 2026-09-04 so a brand on both
+    # platforms can hold the same item twice
+    assert key == "client_id,channel,child_asin,period_start,period_end"
     assert len(rows) == 3
     blue = next(r for r in rows if r["child_asin"] == "B0CHILD001")
+    assert blue["channel"] == "amazon"
     assert blue["units_ordered"] == 310
     assert blue["ordered_product_sales"] == 6193.90
     assert blue["sessions"] == 1204
@@ -91,10 +94,16 @@ def test_all_parsed_rows_are_json_serializable():
         ("ppc_campaign", "ppc_campaign_clean.csv"),
         ("fba_inventory", "fba_inventory_clean.csv"),
         ("cogs", "cogs_clean.csv"),
+        ("shopify_orders", "shopify_orders_clean.csv"),
+        ("shopify_products", "shopify_products_clean.csv"),
+        ("shopify_payouts", "shopify_payouts_clean.csv"),
+        ("meta_ads", "meta_ads_clean.csv"),
+        ("google_ads_campaign", "google_ads_campaign_clean.csv"),
+        ("google_ads_search_terms", "google_ads_search_terms_clean.csv"),
     ]
     for report_type, fixture in cases:
-        _, rows, _ = _parse(report_type, fixture)
-        json.dumps(rows, allow_nan=False)  # raises on NaN/inf
+        for _, rows, _ in parse_all(report_type, read_table((FIXTURES / fixture).read_bytes()), UPLOAD):
+            json.dumps(rows, allow_nan=False)  # raises on NaN/inf
 
 
 def test_missing_required_column_reports_found_headers():

@@ -19,10 +19,19 @@ UPLOAD = {
     "period_start": "2026-07-01",
     "period_end": "2026-07-31",
 }
-ALL_REPORT_TYPES = {
-    "business_report", "sku_economics", "ppc_search_terms", "ppc_campaign", "fba_inventory", "cogs",
+# The intake's whole vocabulary. It must match the report_type check on
+# public.uploads (supabase/migrations/20260904000001_shopify_channel.sql):
+# a type the constraint admits but no parser handles is an upload that can
+# never be processed. "cogs" is the one template both platforms share.
+AMAZON_REPORT_TYPES = {
+    "business_report", "sku_economics", "ppc_search_terms", "ppc_campaign", "fba_inventory",
     "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health", "transactions",
 }
+SHOPIFY_REPORT_TYPES = {
+    "shopify_orders", "shopify_products", "shopify_payouts",
+    "meta_ads", "google_ads_campaign", "google_ads_search_terms",
+}
+ALL_REPORT_TYPES = AMAZON_REPORT_TYPES | SHOPIFY_REPORT_TYPES | {"cogs"}
 BLEED_CASES = [
     ("fba_reimbursements", "fba_reimbursements_clean.csv"),
     ("fba_returns", "fba_returns_clean.csv"),
@@ -37,9 +46,9 @@ def _parse(report_type: str, fixture: str | None = None, data: bytes | None = No
     return PARSERS[report_type].parse(read_table(raw), UPLOAD)
 
 
-def test_parsers_registry_covers_all_eleven_report_types():
+def test_parsers_registry_covers_every_report_type():
     assert set(PARSERS) == ALL_REPORT_TYPES
-    assert len(PARSERS) == 11
+    assert len(PARSERS) == 17  # 10 Amazon + 6 Shopify-side + the shared COGS template
 
 
 # --- shared date + key helpers ------------------------------------------------

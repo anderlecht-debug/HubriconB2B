@@ -1,10 +1,22 @@
 """True net margin per SKU per period, plus a simple velocity forecast.
 
-Revenue and Amazon fees come from SKU Economics; landed unit cost from the
-client's COGS sheet; ad spend is allocated to SKUs proportional to revenue
-share within the period (v1 approximation — replace with the advertised-
-product report when SP-API lands). Fee columns arrive with inconsistent
-signs across export versions, so magnitudes are summed.
+Revenue and platform fees come from SKU Economics (Amazon) or the orders
+export (Shopify); landed unit cost from the client's COGS sheet; ad spend is
+allocated to SKUs proportional to revenue share within the period (v1
+approximation — replace with the advertised-product report when SP-API
+lands). Fee columns arrive with inconsistent signs across export versions,
+so magnitudes are summed.
+
+The arithmetic is channel-blind — a unit is a unit and a fee is a fee — so
+this module takes no channel. Two things follow from that:
+
+  * landed unit cost sums fulfillment_per_unit_usd alongside freight,
+    packaging and the rest (2026-09-04). A Shopify store's pick, pack and
+    postage is a real per-unit cost no export itemises; an Amazon seller
+    leaves the column blank because FBA fees already arrive as fees.
+  * the output key stays `amazon_fees`. That is the column name in
+    margin_results and it is older than the second platform; what a client
+    is *told* it is called comes from channels.fee_label.
 """
 
 from collections import defaultdict
@@ -60,6 +72,7 @@ def run(data: dict, rng=None, simulations=None) -> list[dict]:
                         "unit_cost_usd",
                         "inbound_freight_per_unit_usd",
                         "packaging_per_unit_usd",
+                        "fulfillment_per_unit_usd",
                         "other_cost_per_unit_usd",
                     )
                 )

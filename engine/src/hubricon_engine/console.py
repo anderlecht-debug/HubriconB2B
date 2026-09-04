@@ -257,7 +257,7 @@ def build_console(company: str, directives: list[dict], cash: dict | None,
         pinch = (generated_on + timedelta(days=int(cash["min_p5_day"] or 0))).strftime("%b %d")
         cash_section = f'''<section class="panel">
   <header><h2>The cash horizon</h2>{chip}</header>
-  <p class="sub mono">{cash["n_paths"]:,} simulated 90-day paths · Amazon pays every {cash["details"]["payout_cycle_days"]} days ·
+  <p class="sub mono">{cash["n_paths"]:,} simulated 90-day paths · payouts every {cash["details"]["payout_cycle_days"]} day{"s" if int(cash["details"]["payout_cycle_days"]) != 1 else ""} ·
      p(dip below $0) = {p_ruin:.1%} · tightest around {pinch}</p>
   {cash_cone_svg(cash, generated_on)}
   <p class="note">Red ticks are supplier PO wires already on the schedule. Inputs — {_money(cash["starting_cash"])} on hand,

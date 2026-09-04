@@ -18,7 +18,8 @@ def resolve_client(db: Client, ident: str) -> dict:
     """Accepts a client uuid, uuid prefix, or contact email."""
     q = db.table("clients").select(
         "id, company_name, contact_email, status, contact_name, brand_terms, goals, "
-        "cash_on_hand, cash_as_of, monthly_fixed_costs, monthly_fee_usd, free_months, created_at"
+        "cash_on_hand, cash_as_of, monthly_fixed_costs, monthly_fee_usd, free_months, created_at, "
+        "platform, shopify_domain"
     )
     if "@" in ident:
         rows = q.eq("contact_email", ident.lower()).execute().data
@@ -40,19 +41,19 @@ def chunked_upsert(db: Client, table: str, rows: list[dict], on_conflict: str) -
     return len(rows)
 
 
-def fetch_all(db: Client, table: str, client_id: str, page: int = 1000) -> list[dict]:
-    """PostgREST caps responses, so page through the client's rows."""
+def fetch_all(db: Client, table: str, client_id: str, page: int = 1000,
+              filters: dict | None = None) -> list[dict]:
+    """PostgREST caps responses, so page through the client's rows.
+
+    filters are extra equality clauses — `{"channel": "shopify"}` keeps a
+    two-platform client's Amazon rows out of a Shopify run."""
     out: list[dict] = []
     start = 0
     while True:
-        rows = (
-            db.table(table)
-            .select("*")
-            .eq("client_id", client_id)
-            .range(start, start + page - 1)
-            .execute()
-            .data
-        )
+        q = db.table(table).select("*").eq("client_id", client_id)
+        for column, value in (filters or {}).items():
+            q = q.eq(column, value)
+        rows = q.range(start, start + page - 1).execute().data
         out.extend(rows)
         if len(rows) < page:
             return out

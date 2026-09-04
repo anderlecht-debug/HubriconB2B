@@ -110,8 +110,9 @@ def ad_curves(results: list[dict], max_panels: int = 4) -> str | None:
     return _to_b64(fig)
 
 
-def margin_bars(rows: list[dict]) -> str | None:
-    """Latest-period margin decomposition, top SKUs by revenue."""
+def margin_bars(rows: list[dict], fee_label: str = "Amazon fees") -> str | None:
+    """Latest-period margin decomposition, top SKUs by revenue. `fee_label`
+    names the platform's fee stack (channels.fee_label)."""
     if not rows:
         return None
     latest_start = max(r["period_start"] for r in rows)
@@ -128,7 +129,7 @@ def margin_bars(rows: list[dict]) -> str | None:
     net = np.array([float(r["net_margin"] or 0) for r in latest])[::-1]
     fig, ax = plt.subplots(figsize=(7.6, 0.5 * len(latest) + 1.4))
     left = np.zeros(len(latest))
-    for values, color, label in ((fees, RULE, "Amazon fees"), (cogs, INK_60, "COGS"),
+    for values, color, label in ((fees, RULE, fee_label), (cogs, INK_60, "COGS"),
                                  (ads, AMBER, "Ads"), (net, GREEN, "Net margin")):
         ax.barh(skus, values, left=left, color=color, label=label)
         left = left + np.clip(values, 0, None)

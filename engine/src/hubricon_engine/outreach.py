@@ -13,13 +13,20 @@ founder to read, edit and send from his own mailbox. That is deliberate:
 - The first few customers of a new company come from a human writing to a
   named person about their specific listing. That is what this produces.
 
-The hook is the FBA fee cliff, because a seller can check it in thirty seconds
-and it is computed from a public product page: the packed weight, the band edge
-below it, and the units that weight ships at every month.
+The hook is a fee cliff, because a seller can check it in thirty seconds and it
+is computed from a public product page: the packed weight, the band edge below
+it, and the units that weight ships at every month. Which cliff depends on
+where the brand sells, and the row says which (harvest_sellers.platform):
+
+- Amazon: the FBA fulfilment-fee weight bands (harvest.amazon.fee_cliff).
+- Shopify: the USPS Ground Advantage / UPS bands the brand pays a carrier
+  directly (harvest.shopify.shipping_cliff). Same arithmetic, different rate
+  card — and a Shopify brand must never be sent copy about "FBA fees" or asked
+  for Seller Central exports it does not have.
 """
 
 from . import icp
-from .harvest import amazon
+from .harvest import amazon, shopify
 
 # These three say the DATA is wrong, not that the company is wrong. Rhino USA
 # is squarely in the ICP; the harvest just resolved it to micah@micahrich.com.
@@ -30,6 +37,25 @@ FOUNDER_LANE_BUCKETS = ("role_inbox", "bad_greeting", "domain_mismatch")
 # Written to fit_notes once a row is confirmed out of Instantly, so the hourly
 # pass does not look every disqualified address up again forever.
 DONE_MARK = "removed from Instantly"
+
+# The step function that makes the hook, per platform, and the words for it.
+# A row written before 2026-09-04 carries no platform and is an Amazon seller.
+CLIFF_FN = {"amazon": amazon.fee_cliff, "shopify": shopify.shipping_cliff}
+PLATFORM_LABEL = {"amazon": "Amazon", "shopify": "Shopify"}
+CLIFF_LABEL = {"amazon": "FBA fee band", "shopify": "USPS/UPS shipping band"}
+# What the free teardown asks the brand to export. Asking a Shopify brand for
+# Seller Central reports says louder than anything else that the email is spam.
+EXPORTS = {"amazon": "Five Seller Central exports",
+           "shopify": "Five exports out of your Shopify admin"}
+
+
+def platform_of(row: dict | None) -> str:
+    return ((row or {}).get("platform") or "amazon").lower()
+
+
+def cliff_for(platform: str | None, weight_oz: float | None) -> tuple[int, float] | None:
+    """→ (band edge below, ounces over it) using this platform's rate card."""
+    return CLIFF_FN.get((platform or "amazon").lower(), amazon.fee_cliff)(weight_oz)
 
 
 # -- who should never have been enrolled ---------------------------------------
@@ -174,8 +200,8 @@ def targets(db, limit: int = 25) -> list[dict]:
     # gate a sendable email and they are independent: knowing who to write to,
     # and having a number to open with.
     with_hook = {p["seller_id"] for p in
-                 db.table("harvest_products").select("seller_id, weight_oz").execute().data
-                 if p.get("weight_oz") and amazon.fee_cliff(float(p["weight_oz"]))}
+                 db.table("harvest_products").select("seller_id, weight_oz, platform").execute().data
+                 if p.get("weight_oz") and cliff_for(p.get("platform"), float(p["weight_oz"]))}
     keep = []
     for r in rows:
         if icp.off_icp(r.get("brand") or r.get("seller_name"), r.get("email"), r.get("website"))[0]:
@@ -252,6 +278,8 @@ def pack_text(db, limit: int, calendly_url: str) -> str:
                 "  Where to look, in order:",
                 f"    1. {site}/pages/about  —  the founder's story is usually signed",
                 f"    2. LinkedIn: \"{r.get('brand') or ''}\" founder OR owner",
+                f"    3. {site}/policies/contact-information  —  Shopify makes every store publish one"
+                if platform_of(r) == "shopify" else
                 "    3. Amazon storefront → \"About the seller\"",
                 f"    4. {r.get('business_name') or 'the legal name'} in the "
                 + (f"{r['state']} business registry" if r.get("state") else "state business registry")
@@ -266,16 +294,22 @@ def pack_text(db, limit: int, calendly_url: str) -> str:
 # -- the per-seller brief ------------------------------------------------------
 
 def seller_facts(db, seller_id: str) -> dict | None:
-    """Everything the harvest holds about one seller, plus the fee cliff per ASIN."""
+    """Everything the harvest holds about one seller, plus the cliff per item.
+
+    The cliff comes from the seller's platform, not the product's: an Amazon
+    listing is measured against the FBA fee bands, a Shopify product against
+    the carrier's shipping bands.
+    """
     srows = db.table("harvest_sellers").select("*").eq("seller_id", seller_id).execute().data
     if not srows:
         return None
     s = srows[0]
+    platform = platform_of(s)
     prods = db.table("harvest_products").select("*").eq("seller_id", seller_id).execute().data
     items = []
     for p in prods:
         weight = float(p["weight_oz"]) if p.get("weight_oz") is not None else None
-        cliff = amazon.fee_cliff(weight)
+        cliff = cliff_for(platform, weight)
         items.append({
             "asin": p.get("asin"), "title": (p.get("title") or "")[:70], "price": p.get("price"),
             "weight_oz": weight, "bsr": p.get("bsr"), "units": p.get("est_monthly_units"),
@@ -283,7 +317,7 @@ def seller_facts(db, seller_id: str) -> dict | None:
             "band_edge": cliff[0] if cliff else None, "over_by": cliff[1] if cliff else None,
         })
     items.sort(key=lambda i: (i["over_by"] is None, i["over_by"] or 0))
-    return {"seller": s, "items": items}
+    return {"seller": s, "items": items, "platform": platform}
 
 
 def brief_text(facts: dict) -> str:
@@ -295,18 +329,25 @@ def brief_text(facts: dict) -> str:
     one of those would have been visible in ten seconds of looking.
     """
     s, items = facts["seller"], facts["items"]
+    platform = facts.get("platform") or platform_of(s)
+    shop = platform == "shopify"
+    site = (s.get("website") or "").rstrip("/")
     rev = s.get("est_monthly_revenue")
     lines = [
         f"{s.get('brand') or s.get('seller_name')}  ({s.get('seller_id')})",
+        f"  platform      {PLATFORM_LABEL.get(platform, 'Amazon')}",
         f"  storefront    {s.get('seller_name')}",
         f"  legal name    {s.get('business_name') or '—'}",
         f"  address       {', '.join(x for x in (s.get('city'), s.get('state'), s.get('country')) if x) or '—'}",
         f"  website       {s.get('website') or '—'}",
         f"  contact       {s.get('email') or '—'}  ({s.get('email_confidence') or 'none'})",
         f"  person        {s.get('first_name') or '—'} {s.get('last_name') or ''}".rstrip(),
+        f"  reviews       {s.get('reviews_max') or '?'} on the busiest listing we sampled" if shop else
         f"  feedback      {s.get('ratings_12mo') or '?'} in 12 months, {s.get('ratings_lifetime') or '?'} lifetime",
-        f"  est revenue   ${float(rev):,.0f}/mo (estimate from public rank and price)" if rev else
+        (f"  est revenue   ${float(rev):,.0f}/mo (estimate from public review counts and prices)" if shop else
+         f"  est revenue   ${float(rev):,.0f}/mo (estimate from public rank and price)") if rev else
         "  est revenue   unknown",
+        f"  category      {s.get('top_category') or '—'}" if shop else
         f"  category      {s.get('top_category') or '—'}, best rank {s.get('top_bsr') or '—'}",
         "",
         "  Listings we hold:",
@@ -323,21 +364,31 @@ def brief_text(facts: dict) -> str:
             lines.append(f"      {i['title']}")
     best = next((i for i in items if i["over_by"] is not None), None)
     lines += ["", "  The hook:"]
-    if best:
+    if best and shop:
+        below, above = shopify.band_names(best["band_edge"])
+        lines.append(f"    {best['asin']} ships at {best['weight_oz']:g} oz; the {below} band ends at "
+                     f"{best['band_edge']} oz, so every unit pays the {above} rate on USPS and UPS.")
+    elif best:
         lines.append(f"    {best['asin']} ships at {best['weight_oz']:g} oz. The band below ends at "
                      f"{best['band_edge']} oz, so it is {best['over_by']:g} oz into the next fee band "
                      f"on every unit.")
     else:
-        lines.append("    No fee-cliff hook for this seller. Find another specific, checkable number "
-                     "before writing, or skip them.")
-    lines += [
-        "",
-        "  Verify before sending (the harvest gets these wrong):",
-        "    [ ] the website really belongs to this brand",
-        "    [ ] a named owner exists — About page, LinkedIn, Amazon storefront 'About the seller'",
-        "    [ ] still roughly $1M-$20M/yr, not an aggregator or a household name",
-        "    [ ] the weight on the live listing still matches what we stored",
-    ]
+        lines.append(f"    No {CLIFF_LABEL.get(platform, CLIFF_LABEL['amazon'])} hook for this seller. Find "
+                     "another specific, checkable number before writing, or skip them.")
+    lines += ["", "  Verify before sending (the harvest gets these wrong):",
+              "    [ ] the website really belongs to this brand"]
+    if shop:
+        item = best or (items[0] if items else None)
+        lines += [f"    [ ] a named owner exists — {site}/pages/about, LinkedIn, "
+                  f"{site}/policies/contact-information",
+                  "    [ ] still roughly $1M-$20M/yr — the revenue above is estimated from review "
+                  "counts, which is rough",
+                  "    [ ] the packed weight still matches: "
+                  + (f"https://{item['asin']}" if item else f"{site}/products/…")]
+    else:
+        lines += ["    [ ] a named owner exists — About page, LinkedIn, Amazon storefront 'About the seller'",
+                  "    [ ] still roughly $1M-$20M/yr, not an aggregator or a household name",
+                  "    [ ] the weight on the live listing still matches what we stored"]
     return "\n".join(lines)
 
 
@@ -348,9 +399,16 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
     triage fact sheet: free teardown, $6,000/mo after, first month free.
     """
     s, items = facts["seller"], facts["items"]
+    platform = facts.get("platform") or platform_of(s)
     brand = s.get("brand") or s.get("seller_name")
     best = next((i for i in items if i["over_by"] is not None), None)
-    if best:
+    if best and platform == "shopify":
+        below, above = shopify.band_names(best["band_edge"])
+        subject = f"{brand}: {best['over_by']:g} oz over a shipping band"
+        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz; the {below} band ends at "
+                f"{best['band_edge']} oz, so every unit pays the {above} rate on USPS and UPS. "
+                f"Public product page, public weight — I have no access to your store.")
+    elif best:
         subject = f"{brand}: {best['over_by']:g} oz over an FBA fee band"
         hook = (f"Your {_short_title(best)} lists at {best['weight_oz']:g} oz. "
                 f"The FBA weight band below it ends at {best['band_edge']} oz, so every unit you ship "
@@ -362,16 +420,18 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
         # a seller can tell the difference between that and an ounce count.
         # Leave the gap visible so it cannot be sent by accident.
         subject = f"{brand}: [ONE SPECIFIC NUMBER — see the brief]"
-        hook = ("[NO HOOK ON FILE. Open one of their listings, check the packed weight against the "
-                "FBA band below it, or find another number you can point at. Replace this whole "
-                "paragraph with it. Do not send this email without one.]")
+        hook = (f"[NO HOOK ON FILE. Open one of their listings, check the packed weight against the "
+                f"{CLIFF_LABEL.get(platform, CLIFF_LABEL['amazon'])} below it, or find another number you "
+                f"can point at. Replace this whole paragraph with it. Do not send this email without one.]")
+    who = "Amazon private-label brands" if platform != "shopify" else "founder-run Shopify brands"
     body = (
         f"Hi {first_name},\n\n"
         f"{hook}\n\n"
-        f"I run Hubricon. I do the margin math for Amazon private-label brands: what each price can "
+        f"I run Hubricon. I do the margin math for {who}: what each price can "
         f"take before units drop, where the next ad dollar stops paying, which SKU stocks out first.\n\n"
-        f"If it's useful I'll do a written Profit Teardown of {brand} for free. Five Seller Central "
-        f"exports, about fifteen minutes on your side, and the report is back within 24 hours. No seat "
+        f"If it's useful I'll do a written Profit Teardown of {brand} for free. "
+        f"{EXPORTS.get(platform, EXPORTS['amazon'])}, about fifteen minutes on your side, and the report "
+        f"is back within 24 hours. No seat "
         f"in your account, no card, and if it finds nothing worth fixing I'll tell you that and you "
         f"keep the report.\n\n"
         f"Worth a look? Reply and I'll send the upload page, or grab 20 minutes: {calendly_url}\n\n"
@@ -407,17 +467,25 @@ def partner_email(facts: dict, partner_name: str, referral_terms: str) -> dict:
     email must never imply we know anything about the partner's client's account.
     """
     s, items = facts["seller"], facts["items"]
+    platform = facts.get("platform") or platform_of(s)
     brand = s.get("brand") or s.get("seller_name")
     best = next((i for i in items if i["over_by"] is not None), None)
     if not best:
         raise ValueError("partner_email needs a listing with a fee cliff to quote")
     units = f"about {float(best['units']):,.0f} units a month (estimated from public rank)" \
         if best.get("units") else "every unit it ships"
+    if platform == "shopify":
+        below, above = shopify.band_names(best["band_edge"])
+        seller_kind, band = "Shopify brands", f"{below} USPS/UPS band"
+        cost = f"pays the {above} rate"
+    else:
+        seller_kind, band = "Amazon sellers", f"{best['band_edge']} oz FBA band"
+        cost = "pays the next band's fee"
     body = (
-        f"{partner_name} — you work with Amazon sellers; I do margin analytics for a few of them.\n\n"
+        f"{partner_name} — you work with {seller_kind}; I do margin analytics for a few of them.\n\n"
         f"I pulled {_possessive(brand)} public listing ({best['asin']}): it ships at {best['weight_oz']:g} oz, "
-        f"{best['over_by']:g} oz over the {best['band_edge']} oz FBA band, so it pays the next band's "
-        f"fee on {units}. Public page, public weight — no account access.\n\n"
+        f"{best['over_by']:g} oz over the {band}, so it {cost} on {units}. "
+        f"Public page, public weight — no account access.\n\n"
         f"If it's useful to your clients: they get a free written Profit Teardown and a free first "
         f"month, you get the anonymised results to publish and {referral_terms}. Want the one-pager?\n\n"
         f"Hagen Simmons\nHubricon\n"

@@ -33,6 +33,7 @@ def parse(df: pd.DataFrame, upload: dict):
             {
                 "client_id": upload["client_id"],
                 "upload_id": upload["id"],
+                "channel": "amazon",
                 "snapshot_date": upload["period_start"],
                 "sku": record["sku"],
                 "fnsku": record["fnsku"],
@@ -44,4 +45,4 @@ def parse(df: pd.DataFrame, upload: dict):
             }
         )
     rows = dedupe_last(rows, ("sku",))
-    return "inventory_levels", rows, "client_id,sku,snapshot_date"
+    return "inventory_levels", rows, "client_id,channel,sku,snapshot_date"

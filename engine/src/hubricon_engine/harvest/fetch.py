@@ -144,13 +144,23 @@ class Fetcher:
     def __init__(self, min_interval: float = 7.0, jitter: float = 5.0, timeout: int = 40,
                  block_pause: float = 600.0, max_block_streak: int = 2, give_up: bool = False,
                  block_pause_cap: float = 3600.0, max_interval: float = 30.0, throttle_pause: float = 20.0,
-                 transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None):
+                 transport=None, sleep=time.sleep, clock=time.monotonic, user_agent: str | None = None,
+                 chrome_hosts: tuple[str, ...] = ("amazon.",)):
         self.jar = http.cookiejar.CookieJar()
         self.transport = transport or _urllib_transport(self.jar)
-        # Amazon pages through Chrome when it is installed (see chrome_binary);
-        # an injected transport (tests) is used for every host.
+        # Hosts in `chrome_hosts` page through Chrome when it is installed (see
+        # chrome_binary); everything else stays on plain HTTP, and an injected
+        # transport (tests) is used for every host.
+        #
+        # Amazon was the first to need it. Shopify is the second: on 2026-09-04
+        # every `/meta.json` and `/products.json` request from a plain urllib
+        # session answered 429 — big stores and small, custom domains and
+        # myshopify ones alike — while the same URLs returned their JSON in
+        # headless Chrome from the same connection. `chrome_hosts=("",)` matches
+        # every host, which is what the Shopify pass passes.
         chrome = chrome_binary() if transport is None else None
         self.amazon_transport = _chrome_transport(chrome) if chrome else None
+        self.chrome_hosts = chrome_hosts
         self.client = "chrome" if chrome else "urllib"
         self.min_interval, self.jitter, self.timeout = min_interval, jitter, timeout
         self.block_pause, self.max_block_streak = block_pause, max_block_streak
@@ -185,7 +195,8 @@ class Fetcher:
             **(headers or {}),
         }
         self.stats["requests"] += 1
-        transport = self.amazon_transport if (self.amazon_transport and "amazon." in host) else self.transport
+        via_chrome = self.amazon_transport and any(h in host for h in self.chrome_hosts)
+        transport = self.amazon_transport if via_chrome else self.transport
         for attempt in (1, 2):
             try:
                 status, text = transport(url, hdrs, self.timeout)

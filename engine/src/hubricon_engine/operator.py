@@ -17,6 +17,7 @@ import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 
+from . import channels
 from . import db as dbmod
 from . import instantly, onboarding, outbound
 from .briefing import build_memo, period_deltas
@@ -141,7 +142,8 @@ class Pass:
                 self.say(f"[dry] would provision {email} from booking {b['id'][:8]}")
                 continue
             company = (b.get("answers") or {}).get("company") or (b.get("answers") or {}).get("storefront")
-            client, link, created = onboarding.provision(self.db, email, b.get("invitee_name"), company)
+            platform = onboarding.platform_from_answers(b.get("answers"))
+            client, link, created = onboarding.provision(self.db, email, b.get("invitee_name"), company, platform)
             sent = self._touch(client, "welcome", link, force=True)
             self.db.table("bookings").update({
                 "client_id": client["id"], "provisioned_at": _iso(),
@@ -171,7 +173,12 @@ class Pass:
                 self.say(f"[dry] would provision {email} (replied TEARDOWN)")
                 continue
             name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x) or None
-            client, link, created = onboarding.provision(self.db, email, name, p.get("company_name"))
+            # A prospect the harvest found on a Shopify store must not be sent
+            # Seller Central instructions: the harvest row knows the platform.
+            harvested = (self.db.table("harvest_sellers").select("platform")
+                         .eq("email", email).limit(1).execute().data)
+            platform = (harvested[0].get("platform") if harvested else None) or "amazon"
+            client, link, created = onboarding.provision(self.db, email, name, p.get("company_name"), platform)
             sent = self._touch(client, "files", link, force=True)
             self.db.table("prospects").update({"client_id": client["id"], "last_event_at": _iso()}).eq("id", p["id"]).execute()
             outbound.log_event(self.db, "teardown_requested", prospect_id=p["id"], client_id=client["id"],
@@ -217,7 +224,8 @@ class Pass:
             done = self.db.table("client_touches").select("kind").eq("client_id", client["id"]).eq("kind", kind).execute().data
             if done:
                 return False
-        ok = onboarding.send(kind, client["contact_email"], client.get("contact_name"), link, PORTAL_URL)
+        ok = onboarding.send(kind, client["contact_email"], client.get("contact_name"), link, PORTAL_URL,
+                             platform=client.get("platform") or "amazon")
         if ok:
             self.db.table("client_touches").upsert(
                 {"client_id": client["id"], "kind": kind, "sent_at": _iso()}, on_conflict="client_id,kind"
@@ -274,7 +282,8 @@ class Pass:
         first_name = (c.get("contact_name") or "").split(" ")[0]
         company = c["company_name"] or c["contact_email"]
         deltas = period_deltas(margins)
-        memo = build_memo(company, first_name, deltas, [], [], elasticity, 0.0, 0, issue_number=1)
+        memo = build_memo(company, first_name, deltas, [], [], elasticity, 0.0, 0, issue_number=1,
+                          channel=channels.client_channel(c) or "amazon")
         if narrate.available():
             outputs = cli._load_outputs(self.db, run_id)
             try:

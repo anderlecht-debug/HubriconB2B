@@ -1,8 +1,10 @@
 """hubricon — operator CLI.
 
     hubricon clients
+    hubricon platform   <client> amazon|shopify|both [--shopify-domain d]
     hubricon ingest     <client> [--reparse] [--upload-id ID]
     hubricon run        <client> [--models margin,forecast,inventory,...] [--simulations N] [--seed N]
+                                 [--channel amazon|shopify]
     hubricon directives <client> [--run ID] [--issue]
     hubricon ledger     <client>
     hubricon measure    <client> --directive <id-prefix> --impact <usd> [--notes TEXT]
@@ -26,6 +28,7 @@ import numpy as np
 
 from . import __version__
 from . import chart_pack
+from . import channels
 from . import db as dbmod
 from . import narrate
 from . import storage
@@ -34,7 +37,7 @@ from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
 from .directives import draft_directives, resolve_brand_terms
 from .growth_plan import latest_period_totals, pace, propose_plan
-from .ingest import PARSERS
+from .ingest import PARSERS, parse_all
 from .notify import alert_email_body, email_configured, send_email
 from .price_tests import (
     DEFAULT_TEST_DAYS,
@@ -51,19 +54,24 @@ from .models import (
 )
 from .models.anomaly import summarize as summarize_anomalies
 
-DATA_TABLES = (
+# The six canonical tables that carry a `channel`: a run reads only its own
+# platform's rows out of them, so a brand selling on both never has its
+# Amazon units added to its Shopify ones.
+CHANNEL_TABLES = (
     "asin_traffic",
     "sku_economics",
     "ppc_search_terms",
     "ppc_spend",
     "inventory_levels",
-    "cogs_inputs",
-    "fba_reimbursements",
-    "fba_returns",
-    "inventory_ledger",
-    "inventory_health",
     "settlement_transactions",
 )
+# Amazon's bleed exports. They describe a warehouse holding a seller's units;
+# a Shopify store has none, so a Shopify run loads nothing from them rather
+# than reading Amazon rows into a Shopify picture.
+AMAZON_ONLY_TABLES = ("fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health")
+# The cost sheet is the client's own and belongs to the SKU, not a channel.
+SHARED_TABLES = ("cogs_inputs",)
+DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
@@ -133,15 +141,21 @@ def _ingest_client(db, client: dict, reparse: bool = False, upload_id: str | Non
         label = f"{upload['report_type']} {upload['original_filename']}"
         try:
             data = storage.download(db, upload["storage_path"])
-            table, rows, on_conflict = PARSERS[upload["report_type"]].parse(read_table(data), upload)
-            if not rows:
+            # one export may feed two tables (Shopify's products export is
+            # both the unit-cost sheet and the stock snapshot)
+            written = parse_all(upload["report_type"], read_table(data), upload)
+            total = sum(len(rows) for _, rows, _ in written)
+            if not total:
                 raise IngestError("No usable data rows after parsing")
-            dbmod.chunked_upsert(db, table, rows, on_conflict)
+            for table, rows, on_conflict in written:
+                if rows:
+                    dbmod.chunked_upsert(db, table, rows, on_conflict)
             db.table("uploads").update(
-                {"status": "parsed", "row_count": len(rows), "parse_error": None, "parsed_at": _now()}
+                {"status": "parsed", "row_count": total, "parse_error": None, "parsed_at": _now()}
             ).eq("id", upload["id"]).execute()
             parsed += 1
-            print(f"  parsed  {label}: {len(rows)} rows -> {table}")
+            print(f"  parsed  {label}: "
+                  + ", ".join(f"{len(rows)} rows -> {table}" for table, rows, _ in written if rows))
         except (ReadError, IngestError) as err:
             failures += 1
             db.table("uploads").update({"status": "failed", "parse_error": str(err)}).eq("id", upload["id"]).execute()
@@ -159,8 +173,15 @@ def cmd_ingest(args):
         sys.exit(f"{failures} upload(s) failed — fix the synonym maps and rerun with --reparse.")
 
 
-def _load_data(db, client_id: str) -> dict:
-    return {table: dbmod.fetch_all(db, table, client_id) for table in DATA_TABLES}
+def _load_data(db, client_id: str, channel: str = "amazon") -> dict:
+    """The canonical tables as one channel sees them. Every model reads this
+    dict, so filtering here is what keeps a two-platform client's Amazon and
+    Shopify numbers from being added together."""
+    data = {t: dbmod.fetch_all(db, t, client_id, filters={"channel": channel}) for t in CHANNEL_TABLES}
+    data.update({t: dbmod.fetch_all(db, t, client_id) for t in SHARED_TABLES})
+    data.update({t: (dbmod.fetch_all(db, t, client_id) if channel == "amazon" else [])
+                 for t in AMAZON_ONLY_TABLES})
+    return data
 
 
 def _pad(rows: list[dict], table: str) -> list[dict]:
@@ -214,10 +235,16 @@ def _sync_claims(db, client_id: str, run_id: str, rec: dict, today: date) -> lis
     return _fetch_claims(db, client_id)
 
 
-def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int) -> str:
-    data = _load_data(db, client["id"])
+def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
+                channel: str | None = None) -> str:
+    """One run over one channel. None means "read it off the client", which is
+    every single-platform client; a client on both is run once per channel by
+    the caller, and the channel is recorded in params so the report, the
+    directives and the memo can say which platform they are talking about."""
+    channel = channel or channels.client_channel(client) or "amazon"
+    data = _load_data(db, client["id"], channel)
     counts = {t: len(rows) for t, rows in data.items() if rows}
-    print(f"Data: {counts}")
+    print(f"Data ({channels.label(channel)}): {counts}")
 
     run = (
         db.table("model_runs")
@@ -226,7 +253,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
                 "client_id": client["id"],
                 "engine_version": __version__,
                 "git_sha": _git_sha(),
-                "params": {"models": sorted(wanted), "simulations": simulations, "seed": seed},
+                "params": {"models": sorted(wanted), "simulations": simulations, "seed": seed,
+                           "channel": channel},
             }
         )
         .execute()
@@ -263,7 +291,9 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
         if "ads" in wanted:
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin)
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
-        if "recovery" in wanted:
+        if "recovery" in wanted and not channels.has_recovery(channel):
+            print("  recovery: not applicable to Shopify (no reimbursement window)")
+        elif "recovery" in wanted:
             rec = recovery.run(data, today=today)
             _save_output(db, run_id, client["id"], "recovery", rec)
             claims = _sync_claims(db, client["id"], run_id, rec, today)
@@ -282,7 +312,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
         base_inventory = inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations)
         base_margins = margin_rows if margin_rows is not None else margin.run(data)
         if "invecon" in wanted:
-            inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng, simulations, today)
+            inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
+                                          simulations, today, channel=channel)
             _save_output(db, run_id, client["id"], "invecon", inv_econ)
             if inv_econ["status"] == "ok":
                 b = inv_econ["summary"]["bleed"]
@@ -299,7 +330,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
                      if v.get("status") == "ok" else "VaR skipped (no unit economics)")
                   + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "cash" in wanted:
-            cash = cashflow.run(client, base_inventory, base_margins, rng)
+            cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel)
             if cash is None:
                 print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
             else:
@@ -313,7 +344,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int)
         if "health" in wanted:
             data_present = {t: bool(data[t]) for t in DATA_TABLES}
             health = health_score.compute(base_margins, cash, risk_out, base_inventory, inv_econ,
-                                          ads_rows, forecast_rows, rec, data_present)
+                                          ads_rows, forecast_rows, rec, data_present, channel=channel)
             _save_output(db, run_id, client["id"], "health", health)
             if health["status"] == "ok":
                 top = health["top_drivers"][0] if health["top_drivers"] else None
@@ -360,7 +391,22 @@ def cmd_run(args):
     unknown = wanted - set(ALL_MODELS)
     if unknown:
         sys.exit(f"Unknown model(s): {', '.join(sorted(unknown))} — choose from {DEFAULT_MODELS}")
-    return _run_models(db, client, wanted, args.simulations, args.seed)
+
+    platform = client.get("platform")
+    wanted_channels = channels.channels_for(platform)
+    asked = getattr(args, "channel", None)
+    if asked and asked not in wanted_channels:
+        sys.exit(f"{client['company_name'] or client['contact_email']} sells on "
+                 f"{channels.both_label(platform)} — `--channel {asked}` has no data. "
+                 f"Set the platform first: `hubricon platform <client> {asked}` (or 'both').")
+    running = (asked,) if asked else wanted_channels
+
+    run_id = None
+    for channel in running:
+        if len(running) > 1:
+            print(f"== {channels.label(channel)}")
+        run_id = _run_models(db, client, wanted, args.simulations, args.seed, channel)
+    return run_id
 
 
 RESULT_KEYS = {
@@ -379,25 +425,41 @@ def _write_results(db, table: str, rows: list[dict], run_id: str, client_id: str
 
 
 def _latest_run(db, client_id: str, run_id: str | None) -> dict:
-    q = db.table("model_runs").select("id, started_at").eq("client_id", client_id)
+    q = db.table("model_runs").select("id, started_at, params").eq("client_id", client_id)
     rows = (q.eq("id", run_id) if run_id else q.eq("status", "succeeded").order("started_at", desc=True).limit(1)).execute().data
     if not rows:
         sys.exit("No succeeded model run for this client — `hubricon run` first.")
     return rows[0]
 
 
-def _draft_for_run(db, client: dict, run_id: str) -> list[dict]:
+def _run_channel(client: dict, run: dict | None = None) -> str:
+    """The channel a run was computed on: recorded in model_runs.params since
+    2026-09-04, otherwise the client's own platform — which is Amazon for
+    every run that predates the second platform."""
+    return (((run or {}).get("params") or {}).get("channel")
+            or channels.client_channel(client) or "amazon")
+
+
+def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) -> list[dict]:
     """Regenerate this run's draft directives idempotently; issued/answered
-    rows are untouched. Returns the inserted rows (possibly empty)."""
+    rows are untouched. Returns the inserted rows (possibly empty).
+
+    The channel decides the words, never the arithmetic — a Shopify brand is
+    never told to clear Amazon's low-inventory-fee window. Unstated, it is
+    read off the run."""
+    if channel is None:
+        run = db.table("model_runs").select("params").eq("id", run_id).limit(1).execute().data
+        channel = _run_channel(client, run[0] if run else None)
     results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
-    search_terms = db.table("ppc_search_terms").select("*").eq("client_id", client["id"]).execute().data
+    search_terms = dbmod.fetch_all(db, "ppc_search_terms", client["id"], filters={"channel": channel})
     outputs = _load_outputs(db, run_id)
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"],
                               search_terms=search_terms, brand_terms=resolve_brand_terms(client),
                               recovery=outputs.get("recovery"), inv_econ=outputs.get("invecon"),
-                              anomaly_rows=(outputs.get("anomaly") or {}).get("rows"))
+                              anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
+                              channel=channel)
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -424,7 +486,7 @@ def cmd_directives(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
     run = _latest_run(db, client["id"], args.run)
-    inserted = _draft_for_run(db, client, run["id"])
+    inserted = _draft_for_run(db, client, run["id"], _run_channel(client, run))
     if not inserted:
         print("No directives drafted — clean run.")
         return
@@ -784,7 +846,8 @@ def cmd_script(args):
     script = build_script(company, first_name, deltas, directives, alerts, elasticity,
                           ledger_measured, len(directives))
     memo = build_memo(company, first_name, deltas, directives, alerts, elasticity,
-                      ledger_measured, len(directives), issue_number=issue_count + 1)
+                      ledger_measured, len(directives), issue_number=issue_count + 1,
+                      channel=_run_channel(client, run))
 
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
@@ -952,31 +1015,32 @@ def cmd_console(args):
     print("Open it full-screen, hit record — it is internal; the client gets the Loom link.")
 
 
-def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
-    """Ingest -> run -> draft -> alert for one client. Returns digest facts."""
-    summary = {"client": client["company_name"] or client["contact_email"],
-               "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False}
-    summary["parsed"], summary["failed"] = _ingest_client(db, client)
+def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool) -> dict:
+    """One channel's run -> draft -> alert pass. Returns the digest facts the
+    client-level summary adds up."""
+    out = {"ran": False, "drafts": 0, "alerts": 0, "emailed": False}
 
-    has_data = bool(
-        db.table("sku_economics").select("id").eq("client_id", client["id"]).limit(1).execute().data
-        or db.table("asin_traffic").select("id").eq("client_id", client["id"]).limit(1).execute().data
-    )
-    if not has_data:
-        return summary
+    def has_rows(table: str) -> bool:
+        return bool(db.table(table).select("id").eq("client_id", client["id"])
+                    .eq("channel", channel).limit(1).execute().data)
 
-    # previous run's inventory picture, for crossed/worsened comparison
-    prev_runs = (db.table("model_runs").select("id").eq("client_id", client["id"])
-                 .eq("status", "succeeded").order("started_at", desc=True).limit(1).execute().data)
+    if not (has_rows("sku_economics") or has_rows("asin_traffic")):
+        return out  # nothing on this channel yet — no empty run to explain
+
+    # the previous run ON THIS CHANNEL, for crossed/worsened comparison —
+    # a Shopify stockout must not be measured against Amazon's last picture
+    recent_runs = (db.table("model_runs").select("id, params").eq("client_id", client["id"])
+                   .eq("status", "succeeded").order("started_at", desc=True).limit(10).execute().data)
+    prev_runs = [r for r in recent_runs if _run_channel(client, r) == channel]
     prev_inventory = (
         db.table("inventory_sim_results").select("*").eq("run_id", prev_runs[0]["id"]).execute().data
         if prev_runs else []
     )
     prev_health = _load_outputs(db, prev_runs[0]["id"] if prev_runs else None).get("health")
 
-    run_id = _run_models(db, client, set(ALL_MODELS), 20000, 42)
-    summary["ran"] = True
-    summary["drafts"] = len(_draft_for_run(db, client, run_id))
+    run_id = _run_models(db, client, set(ALL_MODELS), 20000, 42, channel)
+    out["ran"] = True
+    out["drafts"] = len(_draft_for_run(db, client, run_id, channel))
 
     inventory = db.table("inventory_sim_results").select("*").eq("run_id", run_id).execute().data
     margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
@@ -993,19 +1057,20 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
                                   cash_rows[0] if cash_rows else None,
                                   recovery=outputs.get("recovery"),
                                   anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
-                                  health=outputs.get("health"), previous_health=prev_health), recent)
-    summary["alerts"] = len(fresh)
+                                  health=outputs.get("health"), previous_health=prev_health,
+                                  channel=channel), recent)
+    out["alerts"] = len(fresh)
     if not fresh:
-        return summary
+        return out
 
     emailed = False
     if send_alerts and email_configured() and client.get("contact_email"):
         emailed = send_email(
             client["contact_email"],
             f"Hubricon watch: {len(fresh)} alert(s) on your catalog",
-            alert_email_body(summary["client"], fresh),
+            alert_email_body(label, fresh),
         )
-    summary["emailed"] = emailed
+    out["emailed"] = emailed
     db.table("alerts").insert([
         {**a, "client_id": client["id"], "run_id": run_id,
          "emailed_at": _now() if emailed else None}
@@ -1013,6 +1078,29 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
     ]).execute()
     for a in fresh:
         print(f"  ALERT [{a['severity']}] {a['message'][:90]}")
+    return out
+
+
+def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
+    """Ingest -> run -> draft -> alert for one client. Returns digest facts.
+
+    Uploads are parsed once — a file belongs to a client, and its parser
+    already stamps the channel — then the run step repeats per channel the
+    client sells on, so a brand on both platforms gets two honest reads
+    instead of one blended average."""
+    summary = {"client": client["company_name"] or client["contact_email"],
+               "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False}
+    summary["parsed"], summary["failed"] = _ingest_client(db, client)
+
+    running = channels.channels_for(client.get("platform"))
+    for channel in running:
+        if len(running) > 1:
+            print(f"  -- {channels.label(channel)}")
+        got = _sweep_channel(db, client, channel, summary["client"], send_alerts)
+        summary["ran"] = summary["ran"] or got["ran"]
+        summary["drafts"] += got["drafts"]
+        summary["alerts"] += got["alerts"]
+        summary["emailed"] = summary["emailed"] or got["emailed"]
     return summary
 
 
@@ -1061,6 +1149,23 @@ def cmd_sweep(args):
         print(f"\nDigest emailed to {founder}.")
     else:
         print(f"\nDigest NOT emailed to {founder} — see the error above.")
+
+
+def cmd_platform(args):
+    """Which store(s) a client runs. Everything downstream reads this: which
+    exports the intake admits, which channel a run reads, and whether the
+    client is ever told about Amazon fees."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    patch = {"platform": args.platform}
+    if args.shopify_domain:
+        patch["shopify_domain"] = args.shopify_domain.strip().lower()
+    db.table("clients").update(patch).eq("id", client["id"]).execute()
+    name = client["company_name"] or client["contact_email"]
+    print(f"{name} sells on {channels.both_label(args.platform)}.")
+    if patch.get("shopify_domain"):
+        print(f"  storefront: {patch['shopify_domain']}")
+    print(f"  next run reads: {', '.join(channels.label(c) for c in channels.channels_for(args.platform))}")
 
 
 def cmd_all(args):
@@ -1260,6 +1365,29 @@ def cmd_harvest(args):
 
         captures = wayback.load_captures(fetcher, Path(args.cdx_file) if args.cdx_file else None)
         wayback.crawl(db, captures, limit=args.limit or wayback.LIMIT, workers=args.workers or wayback.WORKERS)
+    elif args.action == "shopify":
+        from pathlib import Path
+
+        from .harvest import shopify
+
+        # Its own fetcher: through Chrome like the Amazon one (a plain client
+        # gets 429 from every store), but paced for hosts that are a different
+        # company each time rather than one counterparty counting requests.
+        store_fetcher = shopify.store_fetcher()
+        metas = None
+        if args.source == "archive":
+            # Free, and mostly Shopify's own dev stores. Its own plain-HTTP
+            # fetcher: web.archive.org is not Shopify and answers a browser
+            # with its JSON viewer instead of the bytes.
+            handles = shopify.load_handles(cdx_file=Path(args.cdx_file) if args.cdx_file else None)
+        else:
+            handles, metas = shopify.discover(shopify.archive_fetcher(), store_fetcher)
+        shopify.crawl(db, store_fetcher, handles, limit=args.limit or shopify.LIMIT, metas=metas)
+    elif args.action == "profiles":
+        from pathlib import Path
+
+        harvest.profiles(db, fetcher, limit=args.limit or harvest.PROFILES_LIMIT,
+                         ids_file=Path(args.ids_file) if getattr(args, "ids_file", None) else None)
     elif args.action == "requalify":
         harvest.requalify(db, fetcher, limit=args.limit or harvest.REQUALIFY_LIMIT)
     elif args.action == "listings":
@@ -1288,7 +1416,15 @@ def main():
     p.add_argument("--models", default=DEFAULT_MODELS, help=f"comma-separated subset of {DEFAULT_MODELS}")
     p.add_argument("--simulations", type=int, default=20000)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--channel", choices=list(channels.CHANNELS),
+                   help="which platform to read (default: every channel the client sells on)")
     p.set_defaults(fn=cmd_run)
+
+    p = sub.add_parser("platform", help="set which store(s) a client runs")
+    p.add_argument("client")
+    p.add_argument("platform", choices=list(channels.PLATFORMS))
+    p.add_argument("--shopify-domain", help="the store's myshopify domain")
+    p.set_defaults(fn=cmd_platform)
 
     p = sub.add_parser("recover", help="the reimbursement desk: list, file, paid, deny, dismiss")
     p.add_argument("client")
@@ -1405,17 +1541,23 @@ def main():
     p.add_argument("--out", help="pack: write the batch to this file instead of stdout")
     p.set_defaults(fn=cmd_outreach)
 
-    p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles → brand sites → Instantly list")
+    p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles / "
+                                       "Shopify stores → brand sites → Instantly list")
     p.add_argument("action", choices=["crawl", "enrich", "push", "all", "status", "report", "install",
-                                      "wayback", "requalify", "prune", "listings"])
+                                      "wayback", "shopify", "requalify", "prune", "listings", "profiles"])
     p.add_argument("--categories", nargs="*", help="Best Sellers slugs (default: three, rotating by day)")
+    p.add_argument("--ids-file", dest="ids_file",
+                   help="profiles: saved seller-id list (default ~/.hubricon/harvest/seller-ids.txt)")
     p.add_argument("--within-oz", dest="within_oz", type=float, default=1.0,
                    help="report: ounces above a lighter FBA weight band that count as a cliff (default 1)")
     p.add_argument("--max-products", dest="max_products", type=int, help="product pages per run (default 150)")
     p.add_argument("--limit", type=int, help="rows to enrich / push this run")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", help="push/prune: report, don't touch Instantly")
     p.add_argument("--workers", type=int, help="wayback: parallel fetchers against web.archive.org (default 3)")
-    p.add_argument("--cdx-file", dest="cdx_file", help="wayback: saved CDX listing (default ~/.hubricon/harvest/wayback-sellers.cdx)")
+    p.add_argument("--cdx-file", dest="cdx_file", help="wayback/shopify: saved CDX listing (default "
+                                                       "~/.hubricon/harvest/wayback-sellers.cdx, shopify-stores.cdx)")
+    p.add_argument("--source", choices=["search", "archive"], default="search",
+                   help="shopify: where stores come from (default: category searches of Shopify's own marketplace)")
     p.set_defaults(fn=cmd_harvest)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
@@ -1441,7 +1583,7 @@ def main():
     p.add_argument("client")
     p.set_defaults(
         fn=cmd_all, reparse=False, upload_id=None, models=DEFAULT_MODELS,
-        simulations=20000, seed=42, run=None, out=None,
+        simulations=20000, seed=42, run=None, out=None, channel=None,
     )
 
     args = parser.parse_args()

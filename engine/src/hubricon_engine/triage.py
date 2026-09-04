@@ -26,13 +26,13 @@ CATEGORIES = ("interested", "wants_teardown", "question", "not_now", "not_intere
 SILENT = {"not_interested", "unsubscribe", "ooo", "bounce"}
 
 FACTS = f"""Hubricon — what we may say to a prospect (nothing beyond this):
-- Hubricon is quantitative margin analytics for Amazon FBA private-label sellers doing roughly $1M–$20M/yr, run by its founder, Hagen Simmons.
-- The offer: a free, written Profit Teardown. The seller exports five reports from Seller Central through a private upload page (Business Reports by child item, SKU Economics, Sponsored Products search-term report, FBA inventory snapshot, and a one-row-per-SKU cost template). No Seller Central seat is required for the teardown.
+- Hubricon is quantitative margin analytics for product brands doing roughly $1M–$20M/yr on Amazon, on Shopify, or both, run by its founder, Hagen Simmons.
+- The offer: a free, written Profit Teardown. Amazon sellers export five reports from Seller Central through a private upload page (Business Reports by child item, SKU Economics, Sponsored Products search-term report, FBA inventory snapshot, and a one-row-per-SKU cost template). Shopify brands export their orders, products (with cost per item), payouts, and their Meta or Google ads reports through the same page. No seat on either platform is required for the teardown.
 - The models run when the last file lands; the written teardown is in their private desk within 24 hours.
-- What the models compute: per-SKU stockout probability from simulation (not velocity averages), how far each price can move before units fall off (elasticity), the ACoS where each ad campaign stops paying (break-even), true net margin per SKU after every fee, and a 90-day cash horizon.
+- What the models compute: per-SKU stockout probability from simulation (not velocity averages), how far each price can move before units fall off (elasticity), the ACoS or ROAS where each ad campaign stops paying (break-even), true net margin per SKU after every platform fee (Amazon referral, FBA and storage; Shopify payments, shipping and apps), and a 90-day cash horizon. Reimbursement recovery applies to Amazon accounts only.
 - After the teardown, the ongoing service is $6,000/month. First month free. If we don't find more than we cost, they walk away owing nothing. Cancel any time; they can export everything the day they leave.
 - Ongoing execution works under a standing mandate the seller sets: bounded price steps capped at 5%, ad and inventory changes within limits they approve. They see a three-minute video every two weeks and a decision ledger of every change with its measured impact.
-- Best fit: private label with real pricing power and 10+ SKUs, roughly $1M–$20M/yr. Smaller sellers, wholesale and arbitrage are still welcome on the call. Never tell a prospect they are not a fit and never turn one away: offer the 20-minute call and Hagen judges fit live.
+- Best fit: their own brand with real pricing power and 10+ SKUs, roughly $1M–$20M/yr, on Amazon, Shopify, or both. Smaller sellers, wholesale and arbitrage are still welcome on the call. Never tell a prospect they are not a fit and never turn one away: offer the 20-minute call and Hagen judges fit live.
 - Two ways in: reply TEARDOWN to get the upload page by email, or book 20 minutes at {CALENDLY_URL}.
 - Data handling: reports are uploaded to a private bucket, read only by the engine; nothing is shared or resold.
 - If a question can't be answered from these facts, say so plainly and offer the 20-minute call."""
@@ -160,7 +160,7 @@ def claude_available() -> bool:
 
 
 _SYSTEM = (
-    "You triage replies to a cold email from Hagen Simmons (Hubricon) to Amazon FBA brand founders. "
+    "You triage replies to a cold email from Hagen Simmons (Hubricon) to the founders of product brands that sell on Amazon or Shopify. "
     "Return only JSON: {\"category\": one of " + json.dumps(list(CATEGORIES)) + ", "
     "\"reply\": string or null, \"reason\": short string}. "
     "Rules: use the fact sheet as the only source of claims; never invent numbers, case studies, "

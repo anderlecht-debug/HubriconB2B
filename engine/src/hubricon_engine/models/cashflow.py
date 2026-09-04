@@ -8,10 +8,12 @@ numbers can never disagree about what demand is.
 
 Cash mechanics per simulated path over the horizon:
 
-    in  — Amazon disburses every PAYOUT_CYCLE_DAYS: the accumulated
-          (revenue − fees − ad spend) since the previous payout. The
-          client's actual settlement phase is unknown, so payouts land on
-          days 14, 28, … — an assumption surfaced in the payload.
+    in  — the platform disburses every payout_cycle_days: the accumulated
+          (revenue − fees − ad spend) since the previous payout. Amazon
+          settles fortnightly and the client's actual settlement phase is
+          unknown, so payouts land on days 14, 28, …; Shopify Payments pays
+          out daily. Either way the cycle and the assumption behind it come
+          from channels.py and are surfaced in the payload.
     out — fixed operating costs accrue daily (monthly_fixed_costs / 30);
           supplier POs leave as lump-sum wires on their scheduled dates.
 
@@ -27,9 +29,10 @@ Ruin here means the simulated account balance crossing zero — an honest
 
 import numpy as np
 
+from .. import channels
 from .common import num, period_days
 
-PAYOUT_CYCLE_DAYS = 14
+PAYOUT_CYCLE_DAYS = channels.PAYOUT_CYCLE_DAYS["amazon"]  # the default; 14 days
 DEFAULT_HORIZON_DAYS = 90
 DEFAULT_PATHS = 10000
 OPEX_DAYS_PER_MONTH = 30  # daily accrual approximation, surfaced in payload
@@ -98,11 +101,19 @@ def wire_schedule(inventory_rows: list[dict], margin_rows: list[dict],
 def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              monthly_fixed_costs: float, rng: np.random.Generator,
              horizon_days: int = DEFAULT_HORIZON_DAYS,
-             n_paths: int = DEFAULT_PATHS) -> dict:
+             n_paths: int = DEFAULT_PATHS,
+             payout_cycle_days: int = PAYOUT_CYCLE_DAYS,
+             payout_note: str | None = None) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
-    schedule that produced it."""
+    schedule that produced it.
+
+    payout_cycle_days and payout_note are the platform's disbursement
+    mechanics and the sentence that explains them — a number and a label, so
+    the simulation itself stays channel-blind. run() takes them from
+    channels.py; the defaults are Amazon's."""
     days = horizon_days
+    payout_cycle_days = max(1, int(payout_cycle_days))
     sales_net = np.zeros((n_paths, days))
     ad_daily_total = 0.0
     for p in params:
@@ -122,7 +133,7 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     net_daily = sales_net - ad_daily_total
     cum_net = np.cumsum(net_daily, axis=1)
     paid = np.zeros((n_paths, days))
-    payout_days = list(range(PAYOUT_CYCLE_DAYS - 1, days, PAYOUT_CYCLE_DAYS))
+    payout_days = list(range(payout_cycle_days - 1, days, payout_cycle_days))
     for k in payout_days:
         paid[:, k:] = cum_net[:, k][:, None]
     cash = starting_cash - np.cumsum(outflow)[None, :] + paid
@@ -145,10 +156,10 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             "p95": [num(float(v)) for v in p95],
             "wires": wires,
             "payout_days": [d + 1 for d in payout_days],
-            "payout_cycle_days": PAYOUT_CYCLE_DAYS,
+            "payout_cycle_days": payout_cycle_days,
             "skus_modeled": len(params),
             "assumptions": [
-                f"Amazon settlement phase unknown — payouts assumed on days {PAYOUT_CYCLE_DAYS}, {2 * PAYOUT_CYCLE_DAYS}, …",
+                payout_note or channels.payout_note("amazon"),
                 f"Fixed costs accrue daily (monthly / {OPEX_DAYS_PER_MONTH}); real due dates may be lumpier",
                 "Cash on hand and monthly fixed costs are client-stated, not modeled",
                 "Demand generator identical to the inventory simulation (rate-uncertain Poisson)",
@@ -159,9 +170,14 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
 
 def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
         rng: np.random.Generator, horizon_days: int = DEFAULT_HORIZON_DAYS,
-        n_paths: int = DEFAULT_PATHS) -> dict | None:
+        n_paths: int = DEFAULT_PATHS, channel: str | None = None) -> dict | None:
     """None when the client hasn't stated cash inputs or there's no revenue
-    machinery to simulate — the caller reports the skip, never fakes it."""
+    machinery to simulate — the caller reports the skip, never fakes it.
+
+    channel is the platform the run was computed on; None means "read it off
+    the client", which is right for every single-platform client and falls
+    back to Amazon for a client selling on both (the caller then passes each
+    channel explicitly)."""
     cash_on_hand = client.get("cash_on_hand")
     opex = client.get("monthly_fixed_costs")
     if cash_on_hand is None or opex is None:
@@ -169,6 +185,9 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
     params = sku_cash_params(inventory_rows, margin_rows)
     if not params:
         return None
+    channel = channel or channels.client_channel(client) or "amazon"
     wires = wire_schedule(inventory_rows, margin_rows, horizon_days)
     return simulate(params, wires, float(cash_on_hand), float(opex), rng,
-                    horizon_days=horizon_days, n_paths=n_paths)
+                    horizon_days=horizon_days, n_paths=n_paths,
+                    payout_cycle_days=channels.payout_cycle_days(channel),
+                    payout_note=channels.payout_note(channel))
