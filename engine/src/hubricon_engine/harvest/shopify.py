@@ -295,11 +295,26 @@ SEARCH_CATEGORIES = [
     "beard oil", "planners", "phone cases", "grill tools", "camping gear",
 ]
 SEARCH_TERMS_PER_RUN = int(os.environ.get("HARVEST_SHOPIFY_SEARCH_TERMS", "6"))
-# Domains that turn up beside real stores: publishers, directories, retailers.
-# The /meta.json probe is the real filter — this only saves the request.
+# Domains that turn up beside real stores and can never be one. Measured over
+# all 27 category searches on 2026-09-04: 116 candidate domains, and the
+# publishers alone were a fifth of them — nytimes, forbes, consumerreports,
+# goodhousekeeping, seriouseats, gq, even stackoverflow and a Texas government
+# site under "tea". Each costs a six-second Chrome probe to learn nothing.
+#
+# Retailers and household brands are deliberately NOT here: rei.com,
+# williams-sonoma.com and bombas.com really are stores, and it is the
+# classifier's job to size them out — Barnes & Noble was caught on its 131
+# vendors, which is the honest reason to reject it. A name list would only be
+# guessing at the same verdict a request away.
 SEARCH_SKIP_WORDS = ("wikipedia", "britannica", "review", "blog", "magazine", "guide",
                      "digest", "news", "vogue", "tripadvisor", "superpages", "yellowpages",
-                     "dictionary", "thespruce", "dogster", "petfinder", "wikihow")
+                     "dictionary", "thespruce", "dogster", "petfinder", "wikihow",
+                     "nytimes", "forbes", "consumerreports", "goodhousekeeping", "seriouseats",
+                     "foodnetwork", "menshealth", "stackoverflow", "outdoorgearlab",
+                     "findthisbest", "epicurious", "bonappetit", "allrecipes", "wirecutter",
+                     "buzzfeed", "reddit", "quora", "pinterest", "youtube", "medium.com")
+# A shop is never on one of these. Cheaper and more durable than naming sites.
+NEVER_A_STORE_TLDS = (".gov", ".edu", ".mil", ".int")
 
 
 def search_terms(n: int = SEARCH_TERMS_PER_RUN, today=None, slot: int | None = None) -> list[str]:
@@ -325,7 +340,7 @@ def search_domains(page: str | None) -> list[str]:
             continue
         if enrichmod.skip_domain(d) or enrichmod.offshore_domain(d):
             continue
-        if any(w in d for w in SEARCH_SKIP_WORDS):
+        if d.endswith(NEVER_A_STORE_TLDS) or any(w in d for w in SEARCH_SKIP_WORDS):
             continue
         out.append(d)
     return out
@@ -354,7 +369,11 @@ def discover(search_fetcher, store_fetcher, terms: list[str] | None = None,
         for d in found:
             if d not in domains:
                 domains.append(d)
-        log(f"  shopify search '{term}': {len(found)} candidate domain(s)")
+        # A term that returns nothing is reported, not passed over: a barren
+        # search and a broken one look identical from here, and the Amazon side
+        # lost five category slugs to exactly that silence.
+        log(f"  shopify search '{term}': {len(found)} candidate domain(s)"
+            + ("  <- nothing; check the term" if not found else ""))
     handles: list[str] = []
     metas: dict[str, dict] = {}
     for d in domains:

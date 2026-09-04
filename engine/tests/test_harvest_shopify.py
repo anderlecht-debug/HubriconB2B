@@ -730,3 +730,32 @@ def test_a_discovered_meta_is_not_fetched_twice():
     out = shopify.read_store(f, "riverbend-goods", resolver=lambda d: True, meta=meta)
     assert out["status"] == "enriched" and len(out["products"]) == 8
     assert not any(c.endswith("/meta.json") for c in f.calls)   # the search already paid for it
+
+
+def test_domains_that_can_never_be_a_store_are_dropped_before_the_probe():
+    # Measured across all 27 category searches on 2026-09-04: publishers were
+    # a fifth of the candidates, and each costs a six-second Chrome probe to
+    # learn nothing. A government or university host is never a shop.
+    page = "<html><body><ol>" + "".join(
+        f'<li class="b_algo"><h2><a href="https://{d}/">x</a></h2></li>' for d in (
+            "tea.texas.gov", "cs.stanford.edu", "www.nytimes.com", "www.forbes.com",
+            "stackoverflow.com", "seriouseats.com", "corgicandle.com", "bombas.com")
+    ) + "</ol></body></html>"
+    kept = shopify.search_domains(page)
+    # the two real stores survive; the retailer is left for the classifier to
+    # size out, because guessing at that verdict is what a name list would be
+    assert kept == ["corgicandle.com", "bombas.com"]
+
+
+def test_a_search_term_that_returns_nothing_says_so():
+    # A barren term and a broken one look identical from here — the Amazon side
+    # lost five Best Sellers slugs to exactly that silence.
+    lines = []
+    empty = FakeFetcher({})
+    shopify.discover(empty, FakeFetcher({}), terms=["nonsense term"], log=lines.append)
+    assert any("nothing; check the term" in l for l in lines)
+    # and a term that works is not flagged
+    lines.clear()
+    ok = FakeFetcher({shopify.search_url("candles"): SEARCH_PAGE})
+    shopify.discover(ok, FakeFetcher({}), terms=["candles"], log=lines.append)
+    assert not any("nothing; check the term" in l for l in lines)
