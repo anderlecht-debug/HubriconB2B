@@ -43,7 +43,17 @@ LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator en
 MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "250"))  # per run; launchd runs twice a day
 CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "4"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
-CRAWL_DEPTH = int(os.environ.get("HARVEST_DEPTH", "2"))
+# Depth is the single biggest lever on lead quality. Measured over 1,834
+# harvested sellers on 2026-09-04, the share still in play after screening
+# rose monotonically with how deep the brand's best rank sits:
+#   top 500        15%      2,001-10,000     30%
+#   501-2,000      21%      deeper than 10k  56%
+# A top-100 Best Sellers slot is a brand far past the $20M ceiling almost by
+# definition — every one researched by hand that day (Rhino USA, Catchmaster,
+# Dr. Bronner's, Eddie Bauer, American Soft Linen) failed on size. Narrow leaf
+# categories are where a $1M-$20M founder-run brand actually ranks, so the
+# crawl walks four levels down and reads the deepest lists first.
+CRAWL_DEPTH = int(os.environ.get("HARVEST_DEPTH", "4"))
 MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"))
 # One listing alone doing $300k/mo (est.) marks a brand well past the $20M
 # ceiling; the first pass showed $600k let Unilever-scale brands through.
