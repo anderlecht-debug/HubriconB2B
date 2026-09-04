@@ -532,7 +532,17 @@ def profiles(db, fetcher: Fetcher, ids: list[str] | None = None, limit: int = PR
     Amazon request each. That is the cheapest seller on the site — a Best
     Sellers crawl spends about fifteen product pages to reach one seller — and
     the rows are judged by the profile-only rules, since no listing is known
-    yet (`listings` supplies one afterwards)."""
+    yet (`listings` supplies one afterwards).
+
+    MEASURED AND REJECTED, 2026-09-04. Cheap per seller turned out to be
+    expensive per lead: ten of these read live gave one candidate, and that one
+    was a reseller; five of the ten had no seller feedback at all in twelve
+    months, meaning a dormant or dead account. That is ~120 Amazon pages per
+    lead against ~20 through Best Sellers, which finds sellers who are actually
+    ranking. The archive indexes whoever got captured, not whoever is trading.
+    The step is kept because the enumeration is already paid for and the
+    population may differ elsewhere, but do not spend the day's Amazon budget
+    here without re-measuring first."""
     from .wayback import classify_profile, seller_ids
 
     cache = cache or Cache()

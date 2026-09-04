@@ -184,6 +184,15 @@ caps the Instantly lead credits spent a day; each row is asked about once
 (`person_source = supersearch:requested`). Rows that never get a named owner
 stay in the harvest list for the founder lane.
 
+**What the archive is worth, measured 2026-09-04.** Best Sellers turns 204
+sellers into 34 leads (17%); the archive turns 1,503 into 27 (1.8%). Roughly
+20 Amazon pages buy a lead through Best Sellers. `harvest profiles`, which
+reads a live profile for each seller id the archive knows (one page per
+seller, the cheapest possible), came out at ~120 pages per lead because the
+population is dormant accounts and resellers. The archive indexes whoever
+got captured, not whoever is trading. Spend the day's Amazon budget on Best
+Sellers.
+
 **Second source, the Wayback Machine.** The Internet Archive holds ~1,800
 captures of `amazon.com/sp?seller=…` from 2021 on, each with the storefront
 name, business name and address, country and feedback counts. `hubricon
