@@ -40,6 +40,10 @@ BLOCK_MARKERS = (
     "Robot Check",
     "To discuss automated access to Amazon data",
     "Type the characters you see in this image",
+    # The 2 KB "Sorry! Something went wrong!" page is the soft block Amazon
+    # serves search and storefront requests once a client is flagged
+    # (2026-09-03 evening, after seven captchas); parsing it yields nothing.
+    "<title>Sorry! Something went wrong!</title>",
 )
 
 
