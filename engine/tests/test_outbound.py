@@ -237,6 +237,18 @@ def test_a_corrected_postal_address_reaches_the_live_campaign_on_its_own():
     assert len(api.updated) == 2
 
 
+def test_a_secret_pasted_with_a_newline_is_the_same_address():
+    """GitHub keeps the newline you pasted; the footer should not."""
+    db, api = _DB(), _Api()
+    outbound.ensure_campaign(db, api, "14509 Carlos St, Frisco TX 75035", dry=False)
+    assert len(api.updated) == 1
+    _, fields = api.updated[0]
+    assert "75035<br/>" in fields["sequences"][0]["steps"][0]["variants"][0]["body"]
+
+    outbound.ensure_campaign(db, api, "14509 Carlos St, Frisco TX 75035\n\n", dry=False)
+    assert len(api.updated) == 1, "trailing whitespace is not a copy change"
+
+
 def test_copy_update_respects_dry_run_and_needs_the_postal_footer():
     db, api = _DB(), _Api()
     _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=True)

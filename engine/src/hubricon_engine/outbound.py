@@ -185,7 +185,15 @@ def log_event(db, kind: str, note: str | None = None, **refs) -> None:
 # -- campaign ----------------------------------------------------------------
 
 def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -> tuple[str | None, list[str]]:
-    """Returns (campaign_id, notes). Creates and activates when it can; explains when it can't."""
+    """Returns (campaign_id, notes). Creates and activates when it can; explains when it can't.
+
+    The address is stripped here, once, for every path below. A secret pasted
+    into GitHub's textarea keeps the newline that came with it — the 2026-09-05
+    value arrived as `'…75035\\n\\n'` — and that trailing whitespace would
+    otherwise be embedded in the footer's HTML, stored as the copy fingerprint,
+    and re-pushed as a change the first time someone re-pasted it cleanly.
+    """
+    postal_address = (postal_address or "").strip() or None
     notes: list[str] = []
     state = get_state(db, "instantly.campaign", {}) or {}
     campaign = None
