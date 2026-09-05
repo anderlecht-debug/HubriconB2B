@@ -2264,6 +2264,87 @@ def cmd_teardown(args):
               f"{'loaded' if priors.CARRIER_GROUND_USD else 'EMPTY, so Shopify prospects are never sent.'}")
         return
 
+    if action == "add":
+        from .cold import intake
+        from .harvest import shopify as shopify_harvest
+
+        # stdin only on an explicit "-". Sniffing for a pipe means that running
+        # the command with no arguments — which is how anyone discovers what it
+        # wants — hangs forever with no output, waiting on a terminal nobody is
+        # typing into.
+        text = "" if args.ref == "-" else (args.ref or "")
+        if args.file:
+            text += "\n" + open(args.file).read()
+        if args.ref == "-":
+            text += "\n" + sys.stdin.read()
+        if args.email:
+            text += f",{args.email}"
+        if args.first_name:
+            text += f",{args.first_name}"
+        leads, bad = intake.parse(text)
+        if not leads:
+            print("Nothing to add. A lead is a domain, or an Amazon seller id — with an\n"
+                  "address and a first name if you found them, which is the whole point.\n\n"
+                  "  hubricon teardown add holtzleather.com\n"
+                  "  hubricon teardown add holtzleather.com --email nora@holtzleather.com "
+                  "--first-name Nora\n"
+                  "  hubricon teardown add --file leads.csv    one per line: domain, email, name\n"
+                  "  pbpaste | hubricon teardown add -         straight from the clipboard")
+            for line in bad:
+                print(f"  could not read: {line}")
+            return
+        print(f"{len(leads)} lead(s) to read."
+              + (f" {len(bad)} line(s) skipped." if bad else ""))
+        for line in bad:
+            print(f"  skipped: {line}")
+        amazon = [lead for lead in leads if lead.is_amazon]
+        stores = [lead for lead in leads if not lead.is_amazon]
+        keys = []
+        if stores:
+            # Through Chrome: a store answers a plain client with 429 and a
+            # browser with its JSON, the same lesson Amazon taught.
+            fetcher = shopify_harvest.store_fetcher()
+            for lead in stores:
+                try:
+                    key, note = intake.add_shopify(db, fetcher, lead)
+                except Exception as err:
+                    key, note = None, f"failed: {err}"
+                print(f"  {lead.handle:<34} {note}")
+                if key:
+                    keys.append(key)
+        if amazon:
+            from .harvest.fetch import Fetcher
+
+            fetcher = Fetcher()
+            for lead in amazon:
+                try:
+                    key, note = intake.add_amazon(db, fetcher, lead, log=lambda *_a: None)
+                except Exception as err:
+                    key, note = None, f"failed: {err}"
+                print(f"  {lead.ident:<34} {note}")
+                if key:
+                    keys.append(key)
+        if not keys:
+            print("\nNothing readable was found at those addresses.")
+            return
+        print(f"\nModelling {len(keys)}...")
+        summary = cold.build(db, limit=len(keys), only=keys, force=True)
+        if summary.get("stale"):
+            return
+        print(f"  {summary['built']} produced a teardown, "
+              f"{summary['no_finding']} produced nothing that cleared the bar, "
+              f"{summary['blocked']} are not contactable")
+        for reason, n in sorted(summary["reasons"].items(), key=lambda kv: -kv[1])[:5]:
+            print(f"      {n:>3}  {reason}")
+        rows = cold.queue(db, "draft", 50)
+        mine = [t for t in rows if t["prospect_key"] in set(keys)]
+        if mine:
+            print()
+            for t in mine:
+                print(_teardown_row(t))
+        print("\nNext: hubricon teardown review")
+        return
+
     if action == "suppress":
         if not args.who:
             print("Give an email or a domain: hubricon teardown suppress hello@acme.com "
@@ -2734,7 +2815,7 @@ def main():
                                         "Profit Teardowns from public pages")
     p.add_argument("action", nargs="?",
                    choices=["today", "build", "queue", "review", "show", "open", "approve",
-                            "reject", "sent", "name", "stats", "ratecard", "suppress"],
+                            "reject", "sent", "name", "add", "stats", "ratecard", "suppress"],
                    default="today",
                    help="default 'today': build what is buildable, then show what is waiting")
     p.add_argument("ref", nargs="?", help="a teardown id prefix, seller id, or brand name")
@@ -2749,7 +2830,8 @@ def main():
                    help="review: walk the blocked ones too, not only the ready ones")
     p.add_argument("--first-name", help="name: the owner you just found")
     p.add_argument("--last-name", help="name: their surname, if you have it")
-    p.add_argument("--email", help="name: their real address, replacing the role inbox")
+    p.add_argument("--email", help="name/add: their real address")
+    p.add_argument("--file", help="add: a file of leads — domain, email, first name per line")
     p.set_defaults(fn=cmd_teardown)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles / "

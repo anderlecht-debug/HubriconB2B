@@ -133,7 +133,7 @@ def with_history(db, snap: ProspectSnapshot) -> ProspectSnapshot:
 # -- build -------------------------------------------------------------------------
 
 def build(db, limit: int = 40, log=print, force: bool = False,
-          only: str | None = None, today: date | None = None) -> dict:
+          only: str | list[str] | None = None, today: date | None = None) -> dict:
     """Model every buildable prospect and leave a draft teardown for each winner.
 
     Returns a summary the caller prints. The two numbers that matter are how
@@ -148,7 +148,10 @@ def build(db, limit: int = 40, log=print, force: bool = False,
         return {"stale": warning}
 
     source = HarvestSource(db)
-    keys = [only] if only else source.keys(limit * 3)
+    if only:
+        keys = [only] if isinstance(only, str) else list(only)
+    else:
+        keys = source.keys(limit * 3)
     spent, budget = 0.0, settings.daily_budget_usd()
     counts = {"looked": 0, "built": 0, "no_finding": 0, "skipped": 0, "blocked": 0}
     reasons: dict[str, int] = {}

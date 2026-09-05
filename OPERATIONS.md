@@ -358,6 +358,40 @@ cold engine prices that ounce off Amazon's published fee schedule, puts the
 arithmetic and its chart on a page at `hubricon.com/t/<token>`, and writes the
 email that links to it. Same free lead source, a teardown instead of a hint.
 
+### The division of labour: you find them, the engine writes to them
+
+The crawl finds companies. It does not find *people*: a thousand harvested
+sellers yielded two named owners, because a founder's name lives in a sentence
+on an About page, or on LinkedIn, or nowhere. That was the binding constraint on
+this whole lane, and it is the one thing a person does in ninety seconds and a
+crawler cannot do at all.
+
+So the split is: **you find the lead, the engine does everything after it.**
+
+```
+hubricon teardown add holtzleather.com
+hubricon teardown add holtzleather.com --email nora@holtzleather.com --first-name Nora
+hubricon teardown add --file leads.csv          one per line: domain, email, name
+pbpaste | hubricon teardown add -               straight from the clipboard
+```
+
+A lead is a domain, or an Amazon seller id. With an address and a first name if
+you found them — which is the whole point, and which lets the engine skip the
+enrichment guesswork that gets addresses wrong. The file is forgiving: commas or
+tabs, a header row or not, columns in any order, `#` comments, blanks. A company
+listed twice is one lead. A line it cannot read is reported, not fatal.
+
+What happens then, in about twenty seconds a store: it resolves the domain to
+the store behind it, reads the catalogue and the contact pages, writes the same
+rows a crawl would have written, models every listing, and leaves a teardown in
+the review queue. A live run of two pasted domains read 308 products and
+produced a sendable teardown.
+
+This is cheaper than crawling in every sense. One store is three or four
+requests against a host that does not fight you, instead of a day of Best
+Sellers pages against one that does. Nothing needs the Mac to be awake on a
+schedule, and nothing gets fingerprinted.
+
 ### The one command
 
 ```
@@ -374,6 +408,7 @@ uv run hubricon teardown show <id>           one in full: the email and the page
 uv run hubricon teardown open <id>           the page exactly as the prospect sees it
 uv run hubricon teardown name <id> --first-name Dana --email dana@brand.com
 uv run hubricon teardown approve <id>        publishes the page; the URL goes live
+uv run hubricon teardown add <domain>        a lead you found: fetch, model, queue
 uv run hubricon teardown sent <id>           after you send it, by hand, from your mailbox
 uv run hubricon teardown stats               the gate: how often it stays silent, how often you keep it
 ```
