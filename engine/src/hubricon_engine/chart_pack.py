@@ -17,6 +17,7 @@ import numpy as np
 from .console import _select_price_curves
 from .directives import BRANDED_SPEND_MIN, INCREMENTALITY_MID, branded_spend
 from .models.anomaly import summarize as summarize_anomalies
+from .models import recovery as recovery_model
 from .models.common import num
 from .models.pricing_engine import profit
 
@@ -199,7 +200,11 @@ def value_section(value: dict | None) -> dict | None:
     if not value:
         return None
     keys = ("value_total", "measured", "measured_count", "recovered", "recovered_count", "fees_paid",
-            "billed_months", "monthly_fee", "roi_multiple", "identified_unbanked", "status", "engagement_start")
+            "billed_months", "monthly_fee", "roi_multiple", "identified_unbanked", "status", "engagement_start",
+            # The provenance the desk needs to stop telling an uninvoiced client
+            # they are "under three times", plus the audit split behind the total.
+            "fees_basis", "fees_billed", "engagement_start_source",
+            "recovered_unattributed", "measured_by_attribution")
     return {k: value.get(k) for k in keys}
 
 
@@ -217,21 +222,10 @@ def health_section(health: dict | None) -> dict | None:
 
 
 def claim_window_state(claim: dict, today: date) -> str:
-    """Where a stored claim sits today: the DB holds the lifecycle
-    (detected → filed → paid/denied); the window state is a function of
-    the calendar."""
-    status = claim.get("status") or "detected"
-    if status != "detected":
-        return status
-    deadline = date.fromisoformat(str(claim["deadline"])[:10]) if claim.get("deadline") else None
-    eligible = date.fromisoformat(str(claim["eligible_from"])[:10]) if claim.get("eligible_from") else today
-    if deadline and today > deadline:
-        return "expired"
-    if today < eligible:
-        return "not_yet_eligible"
-    if deadline and (deadline - today).days <= EXPIRING_WITHIN_DAYS:
-        return "expiring"
-    return "open"
+    """Kept as the chart pack's name for recovery.window_state, which is where
+    the definition now lives — the value ledger needs the same answer, and two
+    copies of a calendar rule is how a tile and its total drift apart."""
+    return recovery_model.window_state(claim, today)
 
 
 def money_found(claims: list[dict] | None, recovery: dict | None, today: date | None = None) -> dict | None:

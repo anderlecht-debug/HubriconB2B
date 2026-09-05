@@ -53,9 +53,13 @@ def test_build_script_hits_all_beats_with_real_numbers():
     assert "Jane — your net profit is up $1,200" in script    # hook, name + dollar first
     assert "$3,700" in script and "$17,000" in script          # the three numbers
     assert "Negative-match 11 terms." in script                # issued action listed
-    assert "Old test." not in script.split("## Actions")[1].split("## Close")[0] or True
+    # An already-measured directive is history, not a decision: it must not be
+    # read out as something waiting on the client. (The old form of this
+    # assertion ended in `or True` and could never fail.)
+    desk = script.split("## On your desk")[1].split("## The record")[0]
+    assert "Old test." not in desk
     assert "$1,240" in script                                  # ledger close
-    assert "approve or decline" in script
+    assert "Approve or decline" in script
 
 
 def test_build_memo_is_a_numbered_letter_with_real_numbers():
@@ -82,3 +86,27 @@ def test_build_memo_baseline_framing_on_first_issue():
 def test_build_script_first_period_hook():
     script = build_script("Acme", "", period_deltas(MARGINS[:2]), [], [], [], 0, 0)
     assert "first full read" in script and "$2,500" in script
+
+
+def test_beats_and_script_tell_the_same_story():
+    """The video speaks `speech` over a slide built from the same beat, so a
+    line in one that is missing from the other is a defect."""
+    from hubricon_engine.briefing import build_beats
+    directives = [{"status": "issued", "module": "advertising", "action_text": "Negative-match 11 terms.",
+                   "expected_impact_usd": 1940, "measured_impact_usd": None}]
+    beats = build_beats("Acme Goods", "Jane", period_deltas(MARGINS), directives, [], [], 1240, 2)
+    script = build_script("Acme Goods", "Jane", period_deltas(MARGINS), directives, [], [], 1240, 2)
+    assert [b["heading"] for b in beats] == ["Hook", "The three numbers", "The why",
+                                             "On your desk", "The record"]
+    for b in beats:
+        assert b["speech"] in script
+        # Spoken text is read aloud: no markdown, no stage directions.
+        assert "##" not in b["speech"] and "[" not in b["speech"]
+
+
+def test_a_quiet_period_still_has_something_to_say():
+    from hubricon_engine.briefing import build_beats
+    beats = build_beats("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [], 0, 0)
+    desk = next(b for b in beats if b["heading"] == "On your desk")
+    assert "Nothing needs your decision" in desk["speech"]
+    assert desk["points"] == []

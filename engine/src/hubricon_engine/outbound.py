@@ -65,7 +65,7 @@ def _footer(postal_address: str) -> str:
 
 # Bump when the copy below changes: the operator PATCHes the live campaign's
 # sequence in place on its next pass (threads already sent keep their history).
-COPY_VERSION = "2026-09-04 reader-first hook, platform-neutral, conditioned free month"
+COPY_VERSION = "2026-09-05 reader-first hook, platform-neutral, free month unconditional + day-30 gate"
 
 
 def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = CALENDLY_URL,
@@ -81,12 +81,15 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
     website — no card, testimonial and anonymized results as the price, teardown
     back in 24 hours.
 
-    THE FREE MONTH ARRIVES CONDITIONED, because the page it links to conditions
-    it: "If the numbers justify it, your first month runs free." The earlier
-    version promised it flat, which is a bigger promise than the site makes and
-    the kind a reader checks. The condition is also the better sentence — an
-    unconditional giveaway from a stranger reads as a thing with a catch, and
-    "if I find enough to work with" says what the catch is.
+    THE FREE MONTH IS UNCONDITIONAL AND THE INVOICE IS NOT. This was conditioned
+    ("if I find enough to work with") to match a line on the site, because a
+    cold email must never promise more than the page it links to. That line is
+    gone: terms.html §3 always said the free month is free regardless of
+    outcome, and since 2026-09-05 the day-30 check is code — the operator
+    compares the ledger to the fee and simply does not create a subscription
+    below it. So the honest sentence is now the stronger one, and it keeps the
+    reader's instinct that a giveaway has a catch by saying exactly where the
+    catch sits: not on the month, on the invoice at the end of it.
 
     ONE CTA. The booking link came out: a cold first touch that offers two doors
     gets neither opened, and nobody books a call with a stranger before they
@@ -109,8 +112,8 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "negative once ads are allocated honestly.<br/><br/>"
         "I find them in {{companyName}}'s numbers and fix them for you. Three-minute brief every "
         "two weeks; you keep the margin.<br/><br/>"
-        "If I find enough to work with, your first month is the whole service, free. No card, "
-        "nothing owed.<br/><br/>"
+        "Your first month is free. No card, nothing owed. If I don't find more than I cost, "
+        "no invoice.<br/><br/>"
         "Why free: Hubricon is new. The engine's built; the track record isn't. That's the price: a "
         "testimonial and your anonymized numbers.<br/><br/>"
         "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"

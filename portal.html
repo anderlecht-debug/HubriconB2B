@@ -154,12 +154,16 @@ input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
 .init .exp{ font-family: var(--serif); font-weight: 500; color: var(--ink); font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .part{ font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); display: block; margin-top: 2px; }
 
+/* the ledger's audit column: small, quiet, and always readable */
+#ledger .how{ max-width: 420px; font-size: 12.5px; color: var(--ink-60); line-height: 1.45; }
+#ledger .how b{ display: block; color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+
 /* the briefing */
 .issue-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .issue-no{ font-family: var(--serif); font-size: 14.5px; color: var(--amber); letter-spacing: .06em; }
 .issue-headline{ font-family: var(--serif); font-size: 20px; color: var(--ok); font-variant-numeric: tabular-nums; }
 .video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden; background: var(--panel-2); margin-bottom: 24px; }
-.video-wrap iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-wrap iframe, .video-wrap video{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--panel-2); }
 .letter{
   font-family: var(--serif); font-weight: 300; font-size: 17.5px; line-height: 1.85;
   color: var(--ink); max-width: 62ch;
@@ -573,7 +577,7 @@ footer{
           <span class="issue-no" id="issue-no"></span>
           <span class="issue-headline" id="issue-headline"></span>
         </div>
-        <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe></div>
+        <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe><video id="brief-video" class="hidden" controls preload="metadata" playsinline title="Your briefing"></video></div>
         <div class="letter" id="letter"></div>
         <p class="tldr" id="issue-tldr"></p>
       </div>
@@ -582,7 +586,7 @@ footer{
         <div class="onboard">
           <div class="step"><span class="when">Days 0–1</span><span>Data ingested · models calibrated · baseline recorded — this becomes the number every future issue measures against.</span></div>
           <div class="step"><span class="when">Days 1–30</span><span>Issue 001 delivered · first decisions on your desk · the watch begins (weekly sweeps, daily Buy Box tracking on any live test).</span></div>
-          <div class="step"><span class="when">Days 30–90</span><span>Monthly issue cadence · first measured results land on the ledger · price-testing program under way.</span></div>
+          <div class="step"><span class="when">Days 30–90</span><span>Fortnightly issue cadence · first measured results land on the ledger · price-testing program under way.</span></div>
         </div>
       </div>
     </div>
@@ -649,7 +653,7 @@ footer{
         <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
       </div>
       <div class="scroll"><table id="ledger">
-        <tr><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
+        <tr><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th><th>How we know</th></tr>
       </table></div>
       <div style="margin-top:26px">
         <span class="label" style="margin-bottom:8px">Issue archive</span>
@@ -669,7 +673,8 @@ footer{
     </details>
 
     <footer>
-      Your data is yours: request a complete export of everything we hold — raw files, tables, results, this ledger — at any time, free. That's policy, not a favor.<br>
+      Your data is yours: a complete export of everything we hold — raw files, tables, results, this ledger — at any time, free. That's policy, not a favor.
+      <a href="#" id="export-link">Request your export</a> and it lands in your inbox within one working day.<br>
       Reply to any Hubricon email to reach the person who builds your models. There is no support tier.
     </footer>
   </div>
@@ -786,14 +791,41 @@ function renderIssue(b){
   const month = fmonth(b.created_at);
   $("#issue-no").textContent = (b.issue_number ? `Issue No. ${String(b.issue_number).padStart(3, "0")}` : (b.title || "Your briefing")) + (month ? ` · ${month}` : "");
   $("#issue-headline").textContent = b.headline || "";
+  /* Two kinds of briefing video, and the desk shows whichever exists:
+     video_path is the generated walkthrough that now ships with every issue;
+     video_id is a Loom, for when the founder records over it in their own
+     voice. A Loom always wins, because a person chose to make it. */
   const vw = $("#video-wrap");
+  const frame = $("#brief-frame");
+  const player = $("#brief-video");
   if (b.video_id){
     vw.classList.remove("hidden");
+    frame.classList.remove("hidden");
+    player.classList.add("hidden");
+    player.removeAttribute("src");
     const src = `https://www.loom.com/embed/${b.video_id}?hide_owner=true&hideEmbedTopBar=true&hide_share=true`;
-    if ($("#brief-frame").src !== src) $("#brief-frame").src = src;
+    if (frame.src !== src) frame.src = src;
+  } else if (b.video_path){
+    vw.classList.remove("hidden");
+    frame.classList.add("hidden");
+    frame.removeAttribute("src");
+    player.classList.remove("hidden");
+    /* The bucket is private, so the file comes back through the session's own
+       token and is played from a blob rather than a public URL. */
+    if (player.dataset.path !== b.video_path){
+      player.dataset.path = b.video_path;
+      ensureSession().then(async (s) => {
+        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/intake/${b.video_path}`, {
+          headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${s.access_token}` },
+        });
+        if (!res.ok) return vw.classList.add("hidden");
+        player.src = URL.createObjectURL(new Blob([await res.blob()], { type: "video/mp4" }));
+      }).catch(() => vw.classList.add("hidden"));
+    }
   } else {
     vw.classList.add("hidden");
-    $("#brief-frame").removeAttribute("src");
+    frame.removeAttribute("src");
+    player.removeAttribute("src");
   }
   const letter = $("#letter");
   if (b.memo){
@@ -823,7 +855,43 @@ function renderIssue(b){
   }
 }
 
+/* ── the export (Terms §11: free, any time) ──
+   The zip is assembled server-side by `hubricon export`, because it includes
+   raw upload files the browser has no read policy for. The button opens the
+   request; nothing here promises a download it cannot deliver. */
+$("#export-link").addEventListener("click", async (ev) => {
+  ev.preventDefault();
+  const link = $("#export-link");
+  link.textContent = "Requesting…";
+  try {
+    const ok = await rest("/rest/v1/rpc/request_data_export", { method: "POST", body: "{}" });
+    link.textContent = ok ? "Requested — it's on its way" : "Email me and I'll send it";
+  } catch {
+    link.textContent = "Email me and I'll send it";
+    link.href = "mailto:hagen.simmons@hubricon.com?subject=Data%20export";
+  }
+});
+
 /* ── decisions ── */
+/* terms.html §6 sells a veto, so the desk has to say plainly what happens if
+   you do nothing. A standing-mandate item with an open window says when it
+   goes ahead; anything else waits for a yes and says so. */
+function vetoLine(d){
+  if (d.mandate !== "standing") {
+    return `<p class="stamp">This one waits for your explicit yes — nothing happens until you approve it.</p>`;
+  }
+  if (!d.veto_closes_at) {
+    return `<p class="stamp">Waiting on your answer. Nothing goes ahead until you say so.</p>`;
+  }
+  const closes = new Date(d.veto_closes_at);
+  if (closes <= new Date()) {
+    return `<p class="stamp">The window has closed — this is going ahead under your standing mandate.</p>`;
+  }
+  const when = closes.toLocaleString(undefined,
+    { weekday: "long", hour: "numeric", minute: "2-digit" });
+  return `<p class="stamp">Inside your standing mandate: unless you decline, this goes ahead ${esc(when)}.</p>`;
+}
+
 async function respond(id, approve, row){
   row.querySelectorAll("button").forEach((b) => (b.disabled = true));
   try {
@@ -1123,18 +1191,28 @@ function renderValue(v){
   if (!v) return;
   $("#value-strip").classList.remove("hidden");
   $("#v-total").innerHTML = moneyCur(v.value_total);
-  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered in reimbursements`;
+  /* Reimbursements Amazon paid on a claim WE filed are our result; ones it
+     paid on its own reconciliation are the client's money either way, and are
+     shown beside the total rather than inside it. */
+  const extra = Number(v.recovered_unattributed || 0);
+  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered on claims we filed`
+    + (extra > 0 ? ` · ${money(extra)} more reimbursed without a claim from us, not counted here` : "");
   $("#v-fees").innerHTML = moneyCur(v.fees_paid);
-  $("#v-fees-d").textContent = v.billed_months
-    ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
-    : "free month — nothing invoiced yet";
+  $("#v-fees-d").textContent = v.fees_basis === "invoiced"
+    ? `${v.billed_months} invoice${v.billed_months === 1 ? "" : "s"} paid`
+    : v.billed_months
+      ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
+      : "free month — nothing invoiced yet";
   $("#v-roi").textContent = v.roi_multiple != null ? `${Number(v.roi_multiple).toFixed(1)}×` : "—";
   const d = $("#v-roi-d");
   const line = {
     strong: ["up", "every dollar of fees returned more than five"],
     holding: ["", "holding — the standard we work to is five times"],
     at_risk: ["down", "under three times — the work deepens until it isn't"],
-    free_month: ["", "measured from the first invoice onward"],
+    /* Nothing has been invoiced, so there is no multiple to fall short of.
+       This used to read "under three times" to clients who had never been
+       billed, because the denominator was assumed from their signup date. */
+    free_month: ["", "your free month — the multiple starts at your first invoice"],
   }[v.status] || ["", ""];
   d.className = "d " + line[0];
   d.textContent = line[1] + (Number(v.identified_unbanked) > 0 ? ` · ${money(v.identified_unbanked)} identified, not yet banked` : "");
@@ -1529,6 +1607,7 @@ async function load(){
           <span class="stake">${d.expected_impact_usd ? "expected " + money(d.expected_impact_usd) : ""}</span>
         </div>
         <p class="stamp">Reviewed and signed off — Hubricon, ${fdate(d.issued_at || d.created_at)}</p>
+        ${vetoLine(d)}
       </div>`;
     row.querySelector(".primary").addEventListener("click", () => respond(d.id, true, row));
     row.querySelector(".decline").addEventListener("click", () => respond(d.id, false, row));
@@ -1635,6 +1714,11 @@ async function load(){
   for (const u of uploads) events.push({ t: u.parsed_at, what: `Ingested ${u.original_filename} — ${u.row_count ?? "?"} rows verified` });
   for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${a.message.slice(0, 90)}${a.message.length > 90 ? "…" : ""}` });
   for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Directive issued: ${d.action_text.slice(0, 80)}…` });
+  /* An auto-approval is not a click, and the log should never imply one. */
+  for (const d of directives.filter((x) => x.auto_approved_at).slice(0, 5))
+    events.push({ t: d.auto_approved_at, what: `Approved automatically — the veto window closed: ${d.action_text.slice(0, 70)}…` });
+  for (const d of directives.filter((x) => x.executed_at).slice(0, 5))
+    events.push({ t: d.executed_at, what: `Executed in your account: ${d.action_text.slice(0, 70)}…` });
   for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku} — Buy Box under daily watch` });
   events.sort((a, b) => String(b.t).localeCompare(String(a.t)));
   const log = $("#log");
@@ -1668,12 +1752,25 @@ async function load(){
   }
   const ledger = $("#ledger");
   ledger.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
+  /* "How we know" is the audit surface of the whole ledger: the attribution
+     tier plus the note naming the export line the number came from. Without
+     it the attribution standard is a private policy rather than something a
+     client can check. */
+  const TIER = {
+    direct: "Counterparty's own record",
+    isolated: "Measured on the line we named",
+    attributable: "Against a stated counterfactual",
+    none: "Not attributable — nothing banked",
+  };
   for (const d of directives.filter((x) => x.status !== "draft")){
+    const tier = d.attribution ? (TIER[d.attribution] || d.attribution) : "";
+    const note = d.measurement_notes || "";
     ledger.insertAdjacentHTML("beforeend", `<tr>
       <td>${esc(d.action_text)}</td>
       <td class="num">${d.expected_impact_usd ? money(d.expected_impact_usd) : "—"}</td>
       <td><span class="state ${esc(d.status)}">${esc(d.status)}</span></td>
       <td class="num ${Number(d.measured_impact_usd) > 0 ? "good" : ""}">${d.measured_impact_usd != null ? money(d.measured_impact_usd) : "—"}</td>
+      <td class="how">${tier ? `<b>${esc(tier)}</b>` : ""}${note ? `<span>${esc(note)}</span>` : (tier ? "" : "—")}</td>
     </tr>`);
   }
 

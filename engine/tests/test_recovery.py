@@ -122,3 +122,79 @@ def test_no_cost_on_file_falls_back_to_half_price_and_says_so():
 def test_empty_sources_are_insufficient_data_not_zero_money():
     out = recovery.run(_data(), today=TODAY)
     assert out["status"] == "insufficient_data" and out["claims"] == []
+
+
+# ── settlements: closing a claim from Amazon's own record (Phase 4) ──────────
+# The FIFO matcher always knew which reimbursement closed which loss and threw
+# the pairing away, so a PAID claim stopped being re-detected, sat at
+# 'detected', and was then stamped 'expired' — a win filed as a miss.
+
+def _reimb(days_ago, qty, sku="WIDGET-BLUE", rid="R1", cash=None, per_unit=None,
+           total=None, reason="Lost:Warehouse", case="CASE-1"):
+    return {"approval_date": _ago(days_ago), "reimbursement_id": rid, "case_id": case,
+            "reason": reason, "sku": sku, "quantity_reimbursed_total": qty,
+            "quantity_reimbursed_cash": qty if cash is None else cash,
+            "quantity_reimbursed_inventory": 0 if cash is None else qty - cash,
+            "amount_per_unit": per_unit, "amount_total": total}
+
+
+def test_settlement_pairs_a_reimbursement_to_the_claim_it_closed():
+    data = _data(
+        inventory_ledger=[_adj(40, -3, "M")],
+        fba_reimbursements=[_reimb(20, 3, per_unit=5.0)],
+    )
+    out = recovery.run(data, today=TODAY)
+    # Fully reimbursed, so it is no longer an open claim...
+    assert not [c for c in out["claims"] if c["claim_type"] == "warehouse_lost"]
+    # ...but it is now a settlement, keyed the way the stored claim was keyed.
+    key = recovery.claim_key("warehouse_lost", "WIDGET-BLUE", _ago(40))
+    s = out["settlements"][key]
+    assert s["units"] == 3 and s["paid_amount"] == 15.0
+    assert s["paid_at"] == _ago(20) and s["case_id"] == "CASE-1"
+    assert "reimbursed $15.00" in s["note"]
+
+
+def test_inventory_only_reimbursement_settles_the_claim_but_banks_nothing():
+    """Amazon reimburses in replacement units as often as in money. Units
+    replaced in kind are a real remedy but they are not dollars."""
+    data = _data(
+        inventory_ledger=[_adj(40, -4, "M")],
+        fba_reimbursements=[_reimb(15, 4, cash=0, per_unit=None, total=0)],
+    )
+    out = recovery.run(data, today=TODAY)
+    s = out["settlements"][recovery.claim_key("warehouse_lost", "WIDGET-BLUE", _ago(40))]
+    assert s["paid_amount"] == 0.0
+    assert s["inventory_units"] == 4
+    assert "replaced" in s["note"] and "no dollars are banked" in s["note"]
+
+
+def test_reimbursement_outside_the_match_window_settles_nothing():
+    # 120 days after the loss is past REIMBURSEMENT_MATCH_WINDOW_DAYS = 90.
+    data = _data(
+        inventory_ledger=[_adj(130, -3, "M")],
+        fba_reimbursements=[_reimb(5, 3, per_unit=5.0)],
+    )
+    out = recovery.run(data, today=TODAY)
+    assert out["settlements"] == {}
+
+
+def test_partial_settlement_leaves_the_rest_claimable():
+    data = _data(
+        inventory_ledger=[_adj(40, -5, "M")],
+        fba_reimbursements=[_reimb(20, 2, per_unit=5.0)],
+    )
+    out = recovery.run(data, today=TODAY)
+    claim = next(c for c in out["claims"] if c["claim_type"] == "warehouse_lost")
+    assert claim["units"] == 3                      # 5 lost − 2 settled
+    s = out["settlements"][recovery.claim_key("warehouse_lost", "WIDGET-BLUE", _ago(40))]
+    assert s["units"] == 2 and s["paid_amount"] == 10.0
+
+
+def test_cash_share_falls_back_to_amount_total_when_no_per_unit_figure():
+    data = _data(
+        inventory_ledger=[_adj(40, -2, "M")],
+        fba_reimbursements=[_reimb(20, 2, per_unit=None, total=17.0)],
+    )
+    out = recovery.run(data, today=TODAY)
+    s = out["settlements"][recovery.claim_key("warehouse_lost", "WIDGET-BLUE", _ago(40))]
+    assert s["paid_amount"] == 17.0

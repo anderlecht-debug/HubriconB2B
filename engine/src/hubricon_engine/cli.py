@@ -21,10 +21,13 @@
 """
 
 import argparse
+import json
 import os
+import re
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+import tempfile
+from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
 
@@ -33,7 +36,10 @@ from . import chart_pack
 from . import channels
 from . import db as dbmod
 from . import narrate
+from . import onboarding
 from . import storage
+from . import issue
+from . import measurement
 from . import value as valuemod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
@@ -41,6 +47,9 @@ from .directives import draft_directives, resolve_brand_terms
 from .growth_plan import latest_period_totals, pace, propose_plan
 from .ingest import PARSERS, parse_all
 from .notify import alert_email_body, email_configured, send_email
+
+# One definition of where the client's desk lives, shared with the operator.
+PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/portal"
 from .price_tests import (
     DEFAULT_TEST_DAYS,
     buybox_warning,
@@ -211,9 +220,58 @@ def _fetch_claims(db, client_id: str) -> list[dict]:
             .order("deadline").execute().data)
 
 
+def _fetch_invoices(db, client_id: str) -> list[dict]:
+    """What Stripe says we billed. Degrades to an empty list rather than
+    failing a whole run when the invoices migration has not been applied yet —
+    the ledger then reports its fee basis as 'assumed' and says so."""
+    try:
+        return (db.table("invoices").select("*").eq("client_id", client_id)
+                .order("period_start").execute().data)
+    except Exception as err:
+        print(f"  invoices unavailable ({err}); fees fall back to the assumed basis")
+        return []
+
+
+def _close_settled_claims(db, client_id: str, settled: dict, today: date) -> int:
+    """Mark claims Amazon actually paid.
+
+    The FIFO matcher in models/recovery has always known which reimbursement
+    closed which loss — it just used the answer to suppress re-detection and
+    threw the pairing away. So a claim Amazon PAID stopped being re-detected,
+    sat at 'detected', and was then stamped 'expired' by the sweep below: a
+    third-party-confirmed win recorded as a miss, with the dollars never
+    reaching the ledger. This closes them from Amazon's own record."""
+    if not settled:
+        return 0
+    rows = (db.table("recovery_claims").select("id, claim_key, status, filed_at, case_id, notes")
+            .eq("client_id", client_id).in_("status", ["detected", "filed"]).execute().data)
+    closed = 0
+    for row in rows:
+        s = settled.get(row["claim_key"])
+        if not s:
+            continue
+        patch = {
+            "status": "paid",
+            "paid_amount": s["paid_amount"],
+            "paid_at": s["paid_at"],
+            "case_id": row.get("case_id") or s.get("case_id"),
+            "notes": " ".join(x for x in (row.get("notes"), s["note"]) if x),
+        }
+        db.table("recovery_claims").update(patch).eq("id", row["id"]).execute()
+        closed += 1
+        # Only claims we filed reach value.recovered; an unfiled one closes for
+        # the client's record but is Amazon's own reconciliation, not our result.
+        banked = "banked" if row.get("filed_at") else "not banked — no filing of ours"
+        print(f"  claim {row['claim_key'][:8]} settled: ${s['paid_amount']:,.2f} ({banked})")
+    return closed
+
+
 def _sync_claims(db, client_id: str, run_id: str, rec: dict, today: date) -> list[dict]:
     """Detected claims land in recovery_claims without touching a claim's
-    lifecycle (filed/paid/denied are the operator's and Amazon's to set).
+    lifecycle (filed/denied are the operator's to set), then anything Amazon
+    has settled is closed from its own reimbursement records, and only then
+    does the expiry sweep run. That order matters: expiring before closing is
+    what filed paid claims as misses.
     Returns every claim on file for the client."""
     claims = rec.get("claims", [])
     if claims:
@@ -232,8 +290,10 @@ def _sync_claims(db, client_id: str, run_id: str, rec: dict, today: date) -> lis
             dbmod.chunked_upsert(db, "recovery_claims", new, on_conflict="client_id,claim_key")
         if seen:
             dbmod.chunked_upsert(db, "recovery_claims", seen, on_conflict="client_id,claim_key")
+    _close_settled_claims(db, client_id, rec.get("settlements") or {}, today)
+    # Belt and braces: never expire something already recorded as paid.
     (db.table("recovery_claims").update({"status": "expired"}).eq("client_id", client_id)
-     .eq("status", "detected").lt("deadline", today.isoformat()).execute())
+     .eq("status", "detected").is_("paid_at", "null").lt("deadline", today.isoformat()).execute())
     return _fetch_claims(db, client_id)
 
 
@@ -357,7 +417,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
         if claims is None:
             claims = _fetch_claims(db, client["id"])
-        value_out = valuemod.compute(client, directives, claims, today)
+        value_out = valuemod.compute(client, directives, claims,
+                                     _fetch_invoices(db, client["id"]), today)
         _save_output(db, run_id, client["id"], "value", value_out)
         print(f"  value ledger: ${float(value_out['value_total']):,.0f} delivered vs "
               f"${float(value_out['fees_paid']):,.0f} fees"
@@ -426,11 +487,23 @@ def _write_results(db, table: str, rows: list[dict], run_id: str, client_id: str
     print(f"  {table}: {len(padded)} rows")
 
 
-def _latest_run(db, client_id: str, run_id: str | None) -> dict:
+def _latest_run(db, client_id: str, run_id: str | None, channel: str | None = None,
+                required: bool = True) -> dict | None:
+    """The newest succeeded run, optionally on one channel only. `required`
+    off returns None instead of exiting — a two-platform client may have run
+    on one channel and not the other."""
     q = db.table("model_runs").select("id, started_at, params").eq("client_id", client_id)
-    rows = (q.eq("id", run_id) if run_id else q.eq("status", "succeeded").order("started_at", desc=True).limit(1)).execute().data
+    if run_id:
+        rows = q.eq("id", run_id).execute().data
+    else:
+        rows = (q.eq("status", "succeeded").order("started_at", desc=True)
+                .limit(1 if channel is None else 20).execute().data)
+        if channel is not None:
+            rows = [r for r in rows if ((r.get("params") or {}).get("channel") or "amazon") == channel][:1]
     if not rows:
-        sys.exit("No succeeded model run for this client — `hubricon run` first.")
+        if required:
+            sys.exit("No succeeded model run for this client — `hubricon run` first.")
+        return None
     return rows[0]
 
 
@@ -470,18 +543,93 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
     if active:
         for i in db.table("initiatives").select("id, module").eq("plan_id", active[0]["id"]).execute().data:
             initiative_by_module[i["module"]] = i["id"]
-    db.table("directives").delete().eq("client_id", client["id"]).eq("run_id", run_id).eq("status", "draft").execute()
+    # Scoped by CHANNEL, not run_id: every sweep opens a new model_runs row, so
+    # the old .eq("run_id", run_id) never matched anything and the same finding
+    # was re-drafted every Monday, ready to be issued — and counted — twice.
+    db.table("directives").delete().eq("client_id", client["id"]).eq("channel", channel) \
+        .eq("status", "draft").execute()
     if not drafts:
         return []
-    rows = [{
-        "client_id": client["id"],
-        "run_id": run_id,
-        "module": d["module"],
-        "action_text": d["action_text"],
-        "expected_impact_usd": d["expected_impact_usd"],
-        "initiative_id": initiative_by_module.get(d["module"]),
-    } for d in drafts]
+
+    # A finding already live as issued/approved is not re-drafted: the client
+    # has it, and a second row would double-count it on the ledger. The partial
+    # unique index enforces this too; filtering here keeps the insert from
+    # failing wholesale on one collision.
+    live = {r["dedupe_key"] for r in
+            db.table("directives").select("dedupe_key").eq("client_id", client["id"])
+            .eq("channel", channel).in_("status", ["issued", "approved"]).execute().data
+            if r.get("dedupe_key")}
+    rows, seen = [], set()
+    for d in drafts:
+        key = d["dedupe_key"]
+        if key in live or key in seen:
+            continue
+        seen.add(key)
+        rows.append({
+            "client_id": client["id"],
+            "run_id": run_id,
+            "channel": channel,
+            "module": d["module"],
+            "kind": d["kind"],
+            "dedupe_key": key,
+            "evidence": d["evidence"],
+            "mandate": d["mandate"],
+            "action_text": d["action_text"],
+            "expected_impact_usd": d["expected_impact_usd"],
+            "initiative_id": initiative_by_module.get(d["module"]),
+        })
+    if not rows:
+        return []
     return db.table("directives").insert(rows).execute().data
+
+
+def _refresh_value(db, client: dict, run_id: str) -> dict:
+    """Recompute the value ledger and its chart-pack slice after measurements
+    change. Without this the desk keeps showing the pre-measurement number
+    until the next run."""
+    directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+    v = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                         _fetch_invoices(db, client["id"]))
+    _save_output(db, run_id, client["id"], "value", v)
+    packs = (db.table("chart_packs").select("payload").eq("run_id", run_id).limit(1).execute().data)
+    if packs:
+        payload = {**packs[0]["payload"], "value": chart_pack.value_section(v)}
+        dbmod.chunked_upsert(db, "chart_packs",
+                             [{"run_id": run_id, "client_id": client["id"], "payload": payload}],
+                             on_conflict="run_id")
+    return v
+
+
+def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = True) -> list[dict]:
+    """Measure every approved directive against the client's own later exports.
+
+    Runs on the same data the models just read, so a sweep's measurements land
+    on the same run's value ledger. Returns the verdicts for the digest."""
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .eq("channel", channel).in_("status", list(measurement.MEASURABLE_STATUSES))
+                  .is_("measured_at", "null").execute().data)
+    if not directives:
+        return []
+    data = _load_data(db, client["id"], channel)
+    margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
+    ads_rows = db.table("ad_efficiency_results").select("*").eq("run_id", run_id).execute().data
+    claims = _fetch_claims(db, client["id"])
+
+    verdicts = measurement.measure(directives, data, margins, ads_rows, claims,
+                                   inv_econ=_load_outputs(db, run_id).get("invecon"))
+    if not apply:
+        return verdicts
+    by_id = {d["id"]: d for d in directives}
+    for v in verdicts:
+        patch = measurement.to_patch(v, run_id)
+        if patch is None:
+            continue
+        evidence = {**(by_id[v["directive_id"]].get("evidence") or {})}
+        if v.get("evidence_after"):
+            evidence["after"] = v["evidence_after"]
+        patch["evidence"] = evidence
+        db.table("directives").update(patch).eq("id", v["directive_id"]).execute()
+    return verdicts
 
 
 def cmd_directives(args):
@@ -536,23 +684,75 @@ def cmd_approve(args):
           + ("" if args.decline else "  → execute it, then record the outcome with `hubricon measure`."))
 
 
+# Only a directive that was actually authorised can bank dollars by hand. An
+# 'issued' one has no mandate behind it yet, a 'draft' was never shown to
+# anyone, and a 'declined' one was vetoed — measuring any of those puts money
+# on the ledger for work the client never agreed to. (measurement.py has its
+# own, narrower list for what the sweep measures automatically.)
+HAND_MEASURABLE_STATUSES = ("approved", "done", "closed")
+
+
 def cmd_measure(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
-    candidates = (db.table("directives").select("id, status, action_text")
+
+    if args.auto:
+        # What the sweep would bank, on demand — the way this gets developed
+        # and audited without waiting for Monday.
+        total = 0.0
+        for channel in channels.channels_for(client.get("platform")):
+            run = _latest_run(db, client["id"], None, channel=channel, required=False)
+            if not run:
+                print(f"{channels.label(channel)}: no succeeded run yet.")
+                continue
+            verdicts = _measure_for_run(db, client, run["id"], channel, apply=not args.dry_run)
+            print(f"\n{channels.label(channel)} — {len(verdicts)} directive(s) due measurement")
+            for v in verdicts:
+                usd = v["measured_impact_usd"]
+                money = f"${usd:>10,.2f}" if usd is not None else f"{'—':>11}"
+                print(f"  {money}  {v['verdict']:<12} {str(v['kind'] or ''):<20} [{v['attribution']}]")
+                print(f"              {v['measurement_notes']}")
+                if v["verdict"] == "measured":
+                    total += float(usd or 0)
+            if verdicts and not args.dry_run:
+                _refresh_value(db, client, run["id"])
+        print(f"\n{'Would bank' if args.dry_run else 'Banked'} ${total:,.2f}.")
+        return
+
+    if not args.directive or args.impact is None:
+        sys.exit("Pass --directive and --impact to record one by hand, or --auto to measure from the exports.")
+
+    candidates = (db.table("directives").select("id, status, action_text, measured_at, measurement_notes")
                   .eq("client_id", client["id"]).execute().data)
     rows = [r for r in candidates if r["id"].startswith(args.directive.lower())]
     if len(rows) != 1:
         sys.exit(f"Directive prefix {args.directive!r} matched {len(rows)} row(s) — need exactly 1.")
+    row = rows[0]
+    if row["status"] not in HAND_MEASURABLE_STATUSES and not args.force:
+        sys.exit(f"Directive {row['id'][:8]} is {row['status']!r}, not one of {HAND_MEASURABLE_STATUSES}. "
+                 f"Approve it first, or pass --force if this really happened out of band.")
+    if row.get("measured_at") and not args.remeasure:
+        sys.exit(f"Directive {row['id'][:8]} was already measured on {str(row['measured_at'])[:10]}. "
+                 f"Pass --remeasure to correct it; the old note is kept.")
+
+    # The override is stamped into the record, not hidden: a number banked
+    # outside the normal lifecycle has to be visible in the audit column.
+    notes = [n for n in (row.get("measurement_notes"), args.notes) if n]
+    if args.force and row["status"] not in HAND_MEASURABLE_STATUSES:
+        notes.append(f"Recorded by hand with --force while {row['status']!r}.")
+    if row.get("measured_at"):
+        notes.append(f"Remeasured on {_now()[:10]}.")
+
     patch = {
         "measured_impact_usd": args.impact,
         "measured_at": _now(),
         "status": "done",
+        "attribution": "direct",   # a founder-recorded number, not an engine measurement
     }
-    if args.notes:
-        patch["measurement_notes"] = args.notes
-    db.table("directives").update(patch).eq("id", rows[0]["id"]).execute()
-    print(f"Recorded ${args.impact:,.0f} on {rows[0]['id'][:8]} ({rows[0]['action_text'][:60]}…)")
+    if notes:
+        patch["measurement_notes"] = " ".join(notes)
+    db.table("directives").update(patch).eq("id", row["id"]).execute()
+    print(f"Recorded ${args.impact:,.0f} on {row['id'][:8]} ({row['action_text'][:60]}…)")
 
 
 def _find_claim(db, client_id: str, prefix: str) -> dict:
@@ -638,14 +838,22 @@ def cmd_value(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
     directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-    v = valuemod.compute(client, directives, _fetch_claims(db, client["id"]))
+    v = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                         _fetch_invoices(db, client["id"]))
     print(f"Value ledger — {client['company_name'] or client['contact_email']} (as of {v['as_of']})")
     print(f"  engagement since {v['engagement_start']} · {v['months_elapsed']} month(s) · "
           f"{v['billed_months']} billed at ${float(v['monthly_fee']):,.0f}")
     print(f"  measured on directives  ${float(v['measured']):>10,.0f}  ({v['measured_count']})")
+    if v["measured_by_attribution"]:
+        tiers = "  ".join(f"{k} ${val:,.0f}" for k, val in sorted(v["measured_by_attribution"].items()))
+        print(f"  {'':<24} {tiers}")
     print(f"  recovered from Amazon   ${float(v['recovered']):>10,.0f}  ({v['recovered_count']})")
+    if float(v["recovered_unattributed"] or 0):
+        # Amazon's own reconciliation. The client's record, not our result.
+        print(f"  {'':<24} ${float(v['recovered_unattributed']):,.0f} more reimbursed without a claim from us — "
+              f"shown, not banked")
     print(f"  value delivered         ${float(v['value_total']):>10,.0f}")
-    print(f"  fees to date            ${float(v['fees_paid']):>10,.0f}")
+    print(f"  fees to date            ${float(v['fees_paid']):>10,.0f}  [{v['fees_basis']}]")
     print(f"  return on fees          {str(round(float(v['roi_multiple']), 1)) + '×' if v['roi_multiple'] is not None else '— (free month)':>10}  [{v['status']}]")
     print(f"  identified, unbanked    ${float(v['identified_unbanked']):>10,.0f}  "
           f"(directives ${float(v['identified_parts']['directives']):,.0f}, claims ${float(v['identified_parts']['claims']):,.0f})")
@@ -793,7 +1001,8 @@ def cmd_plan(args):
         return
 
     # commit
-    db.table("plans").update({"status": "superseded"}).eq("client_id", client["id"]).eq("status", "active").execute()
+    (db.table("plans").update({"status": "superseded"}).eq("client_id", client["id"])
+     .in_("status", ["draft", "active"]).execute())
     plan_row = db.table("plans").insert({
         "client_id": client["id"],
         "label": args.label or proposal["label"],
@@ -814,6 +1023,297 @@ def cmd_plan(args):
         if ids:
             db.table("directives").update({"initiative_id": row["id"]}).in_("id", ids).execute()
     print(f"\nCommitted {plan_row['label']} — live in the portal.")
+
+
+def draft_plan_for_run(db, client: dict, run_id: str) -> dict | None:
+    """Draft the 90-day plan from the audit, ready for the kickoff call.
+
+    welcome.html promises the plan is "drafted straight from" the Teardown
+    within 24 hours and *presented* on the call — so it is written as a draft,
+    invisible to the client's desk (which reads status='active'), and the
+    founder commits it live. Nothing drafted one automatically before this, so
+    a client who booked the kickoff arrived at a plan placeholder."""
+    margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .in_("status", ["draft", "issued", "approved", "done"]).execute().data)
+    proposal = propose_plan(margins, directives)
+    if proposal is None:
+        return None
+    existing = (db.table("plans").select("id").eq("client_id", client["id"])
+                .in_("status", ["draft", "active"]).limit(1).execute().data)
+    if existing:
+        return None     # never overwrite a plan someone is already working from
+    b, t = proposal["baseline"], proposal["targets"]
+    try:
+        plan = db.table("plans").insert({
+            "client_id": client["id"], "label": proposal["label"], "status": "draft",
+            "starts_on": proposal["starts_on"], "ends_on": proposal["ends_on"],
+            "baseline_net": b["net"], "baseline_revenue": b["revenue"],
+            "baseline_margin_pct": b["margin_pct"],
+            "target_net": t["net"], "target_revenue": t["revenue"], "target_margin_pct": t["margin_pct"],
+        }).execute().data[0]
+    except Exception as err:
+        print(f"  plan not drafted: {err}")
+        return None
+    for sort, i in enumerate(proposal["initiatives"]):
+        db.table("initiatives").insert({
+            "client_id": client["id"], "plan_id": plan["id"], "title": i["title"],
+            "thesis": i["thesis"], "module": i["module"],
+            "expected_impact_usd": i["expected_impact_usd"], "sort": sort,
+        }).execute()
+    print(f"  90-day plan drafted: {proposal['label']}, "
+          f"${t['net']:,.0f} net target — commit it on the kickoff call.")
+    return plan
+
+
+def cmd_mandate(args):
+    """Record what the client authorised at kickoff.
+
+    welcome.html: "you decide which fixes we make without asking, and exactly
+    where your veto sits." Until this existed the mandate was a constant in
+    Python, which is not the same as something a client agreed to."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+
+    if args.show:
+        current = issue.load_mandate(db, client["id"])
+        stored = {r["module"] for r in
+                  (db.table("mandates").select("module").eq("client_id", client["id"]).execute().data or [])}
+        print(f"Standing mandate — {name}")
+        for module, m in current.items():
+            source = "agreed" if module in stored else "Terms default"
+            bound = f" · bound {m['bound']:.0%}" if m.get("bound") is not None else ""
+            print(f"  {module:<12} {'without asking' if m['standing'] else 'needs your yes':<16}"
+                  f"{bound}  veto {m['veto_hours']}h  [{source}]"
+                  + (f"\n  {'':<12} {m['bound_note']}" if m.get("bound_note") else ""))
+        return
+
+    row = {"client_id": client["id"], "module": args.module, "standing": args.standing,
+           "veto_hours": args.veto_hours, "agreed_note": args.note}
+    if args.bound is not None:
+        row["bound"] = args.bound
+    if args.bound_note:
+        row["bound_note"] = args.bound_note
+    db.table("mandates").upsert(row, on_conflict="client_id,module").execute()
+    print(f"{name}: {args.module} is now "
+          + (f"inside the standing mandate (veto window {args.veto_hours}h)"
+             if args.standing else "explicit — nothing happens without a yes")
+          + (f", bound {args.bound}" if args.bound is not None else "") + ".")
+
+
+def cmd_execute(args):
+    """Record that an approved directive was actually carried out.
+
+    welcome.html promises "Week 1 — first fixes go live in your account", and
+    nothing anywhere recorded that they had. The client sees this in their desk
+    log, and the sweep escalates anything approved and still not executed."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    rows = [r for r in db.table("directives").select("id, status, action_text, executed_at")
+            .eq("client_id", client["id"]).execute().data
+            if r["id"].startswith(args.directive.lower())]
+    if len(rows) != 1:
+        sys.exit(f"Directive prefix {args.directive!r} matched {len(rows)} row(s) — need exactly 1.")
+    row = rows[0]
+    if row["status"] != "approved":
+        sys.exit(f"Directive {row['id'][:8]} is {row['status']!r}. Only an approved directive is "
+                 f"ours to execute — that is what the mandate means.")
+    db.table("directives").update({
+        "executed_at": _now(),
+        "executed_by": args.by or os.environ.get("EXECUTION_EMAIL", "hagen.simmons@hubricon.com"),
+        "execution_ref": args.ref,
+    }).eq("id", row["id"]).execute()
+    print(f"Executed {row['id'][:8]} ({row['action_text'][:60]}…)"
+          + (f" — ref {args.ref}" if args.ref else ""))
+
+
+def cmd_watch(args):
+    """The daily reading on any live price test.
+
+    index.html, welcome.html and terms.html §6 all promise Buy Box share (or
+    Shopify conversion) is watched DAILY through a price step. The only reading
+    that ever existed was one hand-typed number read once a week, so this makes
+    the promise true through an enforced daily touch — and says loudly when a
+    day was missed."""
+    db = dbmod.connect()
+    today = date.today()
+    clients = ([dbmod.resolve_client(db, args.client)] if args.client
+               else db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data)
+    missed, watched = [], 0
+    for client in clients:
+        name = client["company_name"] or client["contact_email"]
+        live = (db.table("price_tests").select("*").eq("client_id", client["id"])
+                .eq("status", "running").execute().data)
+        for t in live:
+            if args.buybox is not None or args.conversion is not None:
+                db.table("price_test_watch").upsert({
+                    "client_id": client["id"], "price_test_id": t["id"],
+                    "observed_on": today.isoformat(), "buy_box_share": args.buybox,
+                    "conversion_rate": args.conversion, "note": args.note,
+                }, on_conflict="price_test_id,observed_on").execute()
+                watched += 1
+                print(f"{name} · {t['sku']}: recorded for {today}.")
+                continue
+            seen = (db.table("price_test_watch").select("observed_on")
+                    .eq("price_test_id", t["id"]).eq("observed_on", today.isoformat())
+                    .limit(1).execute().data)
+            if seen:
+                watched += 1
+            else:
+                missed.append(f"{name} · {t['sku']} (${t['baseline_price']} → ${t['test_price']})")
+
+    if missed:
+        print(f"{len(missed)} live price test(s) have no reading for {today}:")
+        for m in missed:
+            print(f"  - {m}")
+        print("\nRecord them: hubricon watch <client> --buybox <pct>")
+        if args.alert and (founder := os.environ.get("FOUNDER_EMAIL")) and email_configured():
+            send_email(founder, f"Buy Box reading missing on {len(missed)} live test(s)",
+                       "The site promises Buy Box share is watched daily through a price step.\n\n"
+                       + "\n".join(f"  - {m}" for m in missed)
+                       + "\n\nRecord them with: hubricon watch <client> --buybox <pct>\n")
+    else:
+        print(f"{watched} live price test(s), all read for {today}." if watched
+              else "No live price tests.")
+
+
+# Every table a client's export contains. Ordered so the zip reads like the
+# service does: what you sent us, what we computed, what we decided, what it
+# earned.
+EXPORT_TABLES = (
+    "uploads", "sku_economics", "asin_traffic", "ppc_search_terms", "ppc_spend",
+    "inventory_levels", "settlement_transactions", "cogs_inputs",
+    "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health",
+    "margin_results", "elasticity_results", "inventory_sim_results", "ad_efficiency_results",
+    "cash_horizon_results", "recovery_claims", "model_runs", "model_outputs", "chart_packs",
+    "directives", "price_tests", "alerts", "briefings", "plans", "initiatives",
+    "invoices", "mandates", "consents",
+)
+
+
+def cmd_export(args):
+    """Everything we hold on a client, as one zip.
+
+    "Your data and your ledger export free, any time" appears eleven times
+    across six surfaces — including Terms §11, Privacy §6 and the portal footer
+    — and until now there was no export command, endpoint or button anywhere.
+    Raw uploads included: the promise says "raw files, tables, results, this
+    ledger", not a summary."""
+    import csv
+    import io
+    import zipfile
+    from pathlib import Path
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "client"
+    out = Path(args.out or f"{slug}-hubricon-export-{date.today().isoformat()}.zip")
+
+    def rows_to_csv(rows: list[dict]) -> str:
+        if not rows:
+            return ""
+        cols = sorted({k for r in rows for k in r})
+        buf = io.StringIO()
+        w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            w.writerow({c: (json.dumps(r[c]) if isinstance(r.get(c), (dict, list)) else r.get(c))
+                        for c in cols})
+        return buf.getvalue()
+
+    manifest = [f"Hubricon export — {name}", f"Generated {datetime.now(timezone.utc).isoformat()}", ""]
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for table in EXPORT_TABLES:
+            try:
+                rows = dbmod.fetch_all(db, table, client["id"])
+            except Exception as err:
+                manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
+                continue
+            if not rows:
+                manifest.append(f"  {table}: empty")
+                continue
+            z.writestr(f"tables/{table}.csv", rows_to_csv(rows))
+            manifest.append(f"  tables/{table}.csv — {len(rows)} row(s)")
+
+        # The ledger, as its own file, because it is the thing most often asked for.
+        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+        ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                                  _fetch_invoices(db, client["id"]))
+        z.writestr("ledger.json", json.dumps(ledger, indent=2, default=str))
+        manifest.append(f"  ledger.json — ${float(ledger['value_total']):,.0f} measured against "
+                        f"${float(ledger['fees_paid']):,.0f} in fees [{ledger['fees_basis']}]")
+
+        if not args.no_files:
+            uploads = db.table("uploads").select("*").eq("client_id", client["id"]).execute().data
+            for u in uploads:
+                if not u.get("storage_path") or u["storage_path"] == "pending":
+                    continue
+                try:
+                    blob = storage.download(db, u["storage_path"])
+                except Exception as err:
+                    manifest.append(f"  raw/{u.get('original_filename')}: unavailable ({str(err)[:60]})")
+                    continue
+                z.writestr(f"raw/{u['id'][:8]}-{u.get('original_filename') or 'upload.csv'}", blob)
+            manifest.append(f"  raw/ — {len(uploads)} uploaded file(s) exactly as you sent them")
+
+        for path_field, label in (("report_path", "reports"), ("video_path", "videos")):
+            for b in db.table("briefings").select("*").eq("client_id", client["id"]).execute().data:
+                target = b.get(path_field)
+                if not target:
+                    continue
+                try:
+                    z.writestr(f"{label}/{target.rsplit('/', 1)[-1]}", storage.download(db, target))
+                except Exception:
+                    pass
+
+        z.writestr("MANIFEST.txt", "\n".join(manifest) + "\n")
+    print("\n".join(manifest))
+    print(f"\nWrote {out} ({out.stat().st_size / 1_000_000:.1f} MB). It is theirs, free, any time.")
+
+
+def cmd_request(args):
+    """Track a deletion, access or correction request against its promised clock.
+
+    privacy.html makes four dated commitments — deletion within 30 days, breach
+    notice within 72 hours, a DSAR answer within 7 days, and 14 days' notice of
+    a terms change — with no code behind any of them. A promise with a deadline
+    and no timer is a promise kept by luck."""
+    db = dbmod.connect()
+    if args.action == "open":
+        client = dbmod.resolve_client(db, args.client) if args.client else None
+        row = db.table("data_requests").insert({
+            "client_id": client["id"] if client else None,
+            "requester_email": args.email or (client or {}).get("contact_email"),
+            "kind": args.kind, "note": args.note,
+            "due_at": (datetime.now(timezone.utc)
+                       + timedelta(days=DATA_REQUEST_DAYS[args.kind])).isoformat(),
+        }).execute().data[0]
+        print(f"{args.kind} request {row['id'][:8]} opened — due {str(row['due_at'])[:10]} "
+              f"({DATA_REQUEST_DAYS[args.kind]} days, per the privacy policy).")
+        return
+
+    if args.action == "close":
+        rows = [r for r in db.table("data_requests").select("*").is_("closed_at", "null").execute().data
+                if r["id"].startswith(args.id.lower())]
+        if len(rows) != 1:
+            sys.exit(f"Prefix {args.id!r} matched {len(rows)} open request(s) — need exactly 1.")
+        db.table("data_requests").update({"closed_at": _now(), "outcome": args.outcome}).eq(
+            "id", rows[0]["id"]).execute()
+        print(f"Closed {rows[0]['id'][:8]}.")
+        return
+
+    open_rows = db.table("data_requests").select("*").is_("closed_at", "null").order("due_at").execute().data
+    if not open_rows:
+        print("No open data requests.")
+        return
+    now = datetime.now(timezone.utc)
+    for r in open_rows:
+        due = datetime.fromisoformat(str(r["due_at"]))
+        left = (due - now).days
+        flag = "OVERDUE" if left < 0 else f"{left}d left"
+        print(f"  {r['id'][:8]}  {r['kind']:<12} {r.get('requester_email') or '—':<32} {flag}")
 
 
 def cmd_brand(args):
@@ -888,6 +1388,215 @@ def cmd_script(args):
         print(f"\nNarrated letter fell back to the template: {result['reason']}")
 
 
+# privacy.html's four dated commitments, in one place so a policy edit is a
+# constant change rather than a hunt.
+DATA_REQUEST_DAYS = {
+    "deletion": 30,       # privacy.html §6: "deletion on request, within thirty days"
+    "access": 7,          # §7: "it lands with the founder, and you get an answer within seven days"
+    "correction": 7,
+    "breach_notice": 3,   # §5: "within seventy-two hours of confirming it"
+    "terms_notice": 14,   # terms.html §14: "clients get fourteen days' notice by email"
+}
+
+ISSUE_INTERVAL_DAYS = 14      # welcome.html: "a three-minute brief every two weeks"
+
+
+def _next_issue_number(db, client_id: str) -> int:
+    """Atomic where the RPC exists; count-then-add-one only as a fallback, so a
+    database that has not taken the migration still publishes."""
+    try:
+        return int(db.rpc("next_issue_number", {"p_client_id": client_id}).execute().data)
+    except Exception:
+        return (db.table("briefings").select("id", count="exact", head=True)
+                .eq("client_id", client_id).execute().count or 0) + 1
+
+
+def _issue_due(db, client: dict, today: date) -> tuple[bool, str]:
+    """Is this client's next issue due?
+
+    The cadence is anchored to THEIR retainer start, not a global fortnightly
+    cron, so "every two weeks" means fourteen days from their own day one."""
+    last = (db.table("briefings").select("created_at, issue_number")
+            .eq("client_id", client["id"]).order("created_at", desc=True).limit(1).execute().data)
+    if not last:
+        return False, "no first issue yet — the teardown publishes that"
+    since = (today - date.fromisoformat(str(last[0]["created_at"])[:10])).days
+    if since < ISSUE_INTERVAL_DAYS:
+        return False, f"issue No. {last[0]['issue_number']:03d} was {since}d ago"
+    return True, f"{since}d since issue No. {last[0]['issue_number']:03d}"
+
+
+def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> dict | None:
+    """Publish the next issue from the latest run: letter, report, video, email.
+
+    The models are not re-run — Monday's sweep already did that — so this reads
+    the newest succeeded run and re-cuts it as an issue."""
+    from pathlib import Path
+    from . import video as videomod
+    from .briefing import build_beats, build_memo, period_deltas
+    from .report.html_report import generate
+
+    run = _latest_run(db, client["id"], None, channel=channel, required=False)
+    if not run:
+        return None
+    issue_no = _next_issue_number(db, client["id"])
+    company = client["company_name"] or client["contact_email"]
+    first = (client.get("contact_name") or "").split(" ")[0]
+
+    margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+    elasticity = db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .eq("channel", channel).order("created_at", desc=True).limit(40).execute().data)
+    alerts = (db.table("alerts").select("*").eq("client_id", client["id"])
+              .order("created_at", desc=True).limit(10).execute().data)
+    ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                              _fetch_invoices(db, client["id"]))
+    deltas = period_deltas(margins)
+
+    memo = build_memo(company, first, deltas, directives, alerts, elasticity,
+                      float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
+                      issue_number=issue_no, channel=channel)
+    if narrate.available():
+        try:
+            outputs = _load_outputs(db, run["id"])
+            facts = narrate.build_facts(
+                company, first, deltas, directives, alerts,
+                float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
+                issue_number=issue_no, health=outputs.get("health"), value=outputs.get("value"),
+                recovery=outputs.get("recovery"),
+                forecast_rows=(outputs.get("forecast") or {}).get("rows"),
+                risk=outputs.get("risk"),
+                anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
+                inv_econ=outputs.get("invecon"))
+            result = narrate.narrate(facts)
+            if result.get("text"):
+                memo = result["text"]
+        except Exception as err:
+            print(f"  narration skipped: {err}")
+
+    report_path = None
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            local = generate(db, client, run["id"], out_dir=tmp)
+            report_path = f"reports/{client['id']}/issue-{issue_no:03d}.html"
+            db.storage.from_(storage.BUCKET).upload(
+                report_path, Path(local).read_bytes(),
+                {"content-type": "text/html", "upsert": "true"})
+        except Exception as err:
+            print(f"  report skipped: {err}")
+            report_path = None
+
+        # The video never blocks the letter: terms.html §2 owes them a written
+        # report inside 24 hours, and a TTS outage must not hold that hostage.
+        video_path = None
+        beats = build_beats(company, first, deltas, directives, alerts, elasticity,
+                            float(ledger["measured"] or 0), int(ledger["measured_count"] or 0))
+        made = videomod.render(company, issue_no, beats, Path(tmp) / f"issue-{issue_no:03d}.mp4")
+        if made:
+            video_path = f"reports/{client['id']}/issue-{issue_no:03d}.mp4"
+            db.storage.from_(storage.BUCKET).upload(
+                video_path, made.read_bytes(),
+                {"content-type": "video/mp4", "upsert": "true"})
+
+    headline = f"Issue No. {issue_no:03d}"
+    if deltas and deltas.get("net_delta") is not None:
+        headline += f" — net profit {'up' if deltas['net_delta'] >= 0 else 'down'} ${abs(deltas['net_delta']):,.0f}"
+    row = {"client_id": client["id"], "run_id": run["id"], "memo": memo, "issue_number": issue_no,
+           "report_path": report_path, "video_path": video_path, "title": "Briefing",
+           "headline": headline, "tldr": (memo.split("\n\n")[2][:280] if memo.count("\n\n") > 2 else None)}
+    try:
+        inserted = db.table("briefings").insert(row).execute().data[0]
+    except Exception as err:
+        print(f"  issue No. {issue_no:03d} not published: {err}")
+        return None
+
+    sent = _send_client_email(db, client, "issue_ready", inserted["id"],
+                              f"Issue No. {issue_no:03d} is in your desk",
+                              _issue_email_blocks(issue_no, headline, bool(video_path)), send)
+    parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
+    print(f"  Issue No. {issue_no:03d} published ({' + '.join(parts)})"
+          + (" and emailed" if sent else ""))
+    if not video_path:
+        # The site promises a three-minute video with every brief. Shipping the
+        # letter alone is the right fallback, but it is still a promise
+        # outstanding and has to be said out loud rather than absorbed.
+        print(f"  NOT KEPT: Issue No. {issue_no:03d} went out without the video the site promises. "
+              f"Record one: hubricon brief {client['contact_email']} --video <loom url>")
+    return {"issue_number": issue_no, "video": bool(video_path), "emailed": sent}
+
+
+def _issue_email_blocks(issue_no: int, headline: str, has_video: bool) -> list[dict]:
+    return [
+        {"p": f"Your latest briefing is ready — {headline.split('—')[-1].strip() if '—' in headline else 'the numbers are in'}."},
+        {"p": ("It's about three minutes on video, with the written letter and the full report "
+               "underneath it." if has_video else
+               "The written letter and the full report are both in your desk.")},
+        {"button": "Open your desk", "url": PORTAL_URL},
+        {"p": "Anything on your desk waiting for a decision is right below the briefing. "
+              "Reply to this email if you'd rather just tell me."},
+    ]
+
+
+def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
+                       blocks: list[dict], send: bool) -> bool:
+    """Send a recurring client email exactly once.
+
+    client_touches keys on (client_id, kind) and so can only fire a kind once
+    per client for all time; recurring mail is logged in client_emails against
+    the thing it is about."""
+    if not send or not email_configured() or not client.get("contact_email"):
+        return False
+    try:
+        already = (db.table("client_emails").select("id").eq("client_id", client["id"])
+                   .eq("kind", kind).eq("ref_id", str(ref_id)).limit(1).execute().data)
+        if already:
+            return False
+    except Exception:
+        pass    # log table missing (migration not applied): better to send than to go silent
+    from .notify import letter
+    text, html = letter(client.get("contact_name"), blocks)
+    ok = send_email(client["contact_email"], subject, text, html=html,
+                    sender=os.environ.get("EMAIL_FROM", "Hagen Simmons <hagen.simmons@hubricon.com>"),
+                    reply_to=os.environ.get("EMAIL_REPLY_TO",
+                                            os.environ.get("EMAIL_FROM", "hagen.simmons@hubricon.com")))
+    if ok:
+        try:
+            db.table("client_emails").insert({
+                "client_id": client["id"], "kind": kind, "ref_id": str(ref_id), "subject": subject,
+            }).execute()
+        except Exception as err:
+            print(f"  email log write failed ({err}) — the mail went out")
+    return ok
+
+
+def cmd_issue(args):
+    """Publish the issue for every client whose fortnight is up.
+
+    Runs daily; each client's clock is their own, so nobody waits for a global
+    cadence to come round."""
+    db = dbmod.connect()
+    today = date.today()
+    clients = ([dbmod.resolve_client(db, args.client)] if args.client
+               else db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data)
+    published = 0
+    for client in clients:
+        name = client["company_name"] or client["contact_email"]
+        if onboarding.is_internal(client["contact_email"], client.get("contact_name")) and not args.client:
+            continue
+        due, why = _issue_due(db, client, today)
+        if not due and not args.force:
+            print(f"{name}: not due — {why}")
+            continue
+        print(f"{name}: {why}")
+        if args.dry_run:
+            print("  [dry] would publish the next issue")
+            continue
+        for channel in channels.channels_for(client.get("platform")):
+            if _publish_issue(db, client, channel, send=args.send, today=today):
+                published += 1
+    print(f"\n{published} issue(s) published.")
+
+
 def cmd_brief(args):
     from pathlib import Path
 
@@ -903,8 +1612,7 @@ def cmd_brief(args):
     if not video_id and not memo:
         sys.exit("An issue needs a --video, a --memo-file, or both.")
 
-    issue = (db.table("briefings").select("id", count="exact", head=True)
-             .eq("client_id", client["id"]).execute().count or 0) + 1
+    issue = _next_issue_number(db, client["id"])
 
     report_path = None
     if args.report:
@@ -1017,10 +1725,12 @@ def cmd_console(args):
     print("Open it full-screen, hit record — it is internal; the client gets the Loom link.")
 
 
-def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool) -> dict:
+def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool,
+                   issue_drafts: bool = False) -> dict:
     """One channel's run -> draft -> alert pass. Returns the digest facts the
     client-level summary adds up."""
-    out = {"ran": False, "drafts": 0, "alerts": 0, "emailed": False}
+    out = {"ran": False, "drafts": 0, "alerts": 0, "emailed": False, "issued": 0,
+           "auto_approved": 0, "lapsed": 0, "measured": 0, "measured_usd": 0.0}
 
     def has_rows(table: str) -> bool:
         return bool(db.table(table).select("id").eq("client_id", client["id"])
@@ -1040,9 +1750,43 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
     )
     prev_health = _load_outputs(db, prev_runs[0]["id"] if prev_runs else None).get("health")
 
+    # Close any veto window that expired since last week BEFORE drafting, so a
+    # directive is never deleted and re-drafted out from under a client who was
+    # about to answer it.
+    closed = issue.close_veto_windows(db, client, channel)
+    out["auto_approved"] = closed["auto_approved"]
+    out["lapsed"] = closed["lapsed"]
+
     run_id = _run_models(db, client, set(ALL_MODELS), 20000, 42, channel)
     out["ran"] = True
     out["drafts"] = len(_draft_for_run(db, client, run_id, channel))
+
+    # welcome.html promises the first fixes go live in week one. Nothing
+    # tracked whether they did, so a slip only surfaced when a client noticed.
+    late = issue.overdue_executions(db, client, channel)
+    out["overdue"] = [f"{d['action_text'][:70]} ({d['days']}d since approval)" for d in late]
+
+    if issue_drafts:
+        # terms.html §6: stated with its expected dollars BEFORE it goes live.
+        res = issue.issue_drafts(db, client, channel, PORTAL_URL, send=send_alerts)
+        out["issued"] = res["issued"]
+        out["issue_notified"] = res["notified"]
+        out["held_back"] = res["held"]
+        if res["issued"] and not res["notified"]:
+            print(f"  {res['issued']} directive(s) issued but NOT notified — no veto window opened, "
+                  f"so none of them can auto-approve.")
+
+    # Measure what was approved before, from the exports that just landed, then
+    # recompute the ledger so this sweep's own findings are in it.
+    verdicts = _measure_for_run(db, client, run_id, channel)
+    out["measured"] = sum(1 for v in verdicts if v["verdict"] == "measured")
+    out["measured_usd"] = round(sum(float(v["measured_impact_usd"] or 0)
+                                    for v in verdicts if v["verdict"] == "measured"), 2)
+    for v in verdicts:
+        if v["verdict"] != "not_yet":
+            print(f"  {v['verdict']:<12} {str(v['kind'] or ''):<20} {v['measurement_notes'][:90]}")
+    if out["measured"]:
+        _refresh_value(db, client, run_id)
 
     inventory = db.table("inventory_sim_results").select("*").eq("run_id", run_id).execute().data
     margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
@@ -1067,10 +1811,19 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
 
     emailed = False
     if send_alerts and email_configured() and client.get("contact_email"):
+        text, html = alert_email_body(label, fresh, client.get("contact_name"), PORTAL_URL)
+        urgent = sum(1 for a in fresh if a.get("severity") == "critical")
+        subject = (f"{urgent} urgent item on {label}" if urgent == 1 else
+                   f"{urgent} urgent items on {label}" if urgent else
+                   f"This week's watch on {label}")
         emailed = send_email(
-            client["contact_email"],
-            f"Hubricon watch: {len(fresh)} alert(s) on your catalog",
-            alert_email_body(label, fresh),
+            client["contact_email"], subject, text, html=html,
+            sender=os.environ.get("EMAIL_FROM", "Hagen Simmons <hagen.simmons@hubricon.com>"),
+            # welcome.html: "reply to any Hubricon email and it lands with the
+            # person who builds your models". It did not, for the only email a
+            # client got regularly.
+            reply_to=os.environ.get("EMAIL_REPLY_TO",
+                                    os.environ.get("EMAIL_FROM", "hagen.simmons@hubricon.com")),
         )
     out["emailed"] = emailed
     db.table("alerts").insert([
@@ -1083,7 +1836,7 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
     return out
 
 
-def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
+def _sweep_client(db, client: dict, send_alerts: bool, issue_drafts: bool = False) -> dict:
     """Ingest -> run -> draft -> alert for one client. Returns digest facts.
 
     Uploads are parsed once — a file belongs to a client, and its parser
@@ -1091,18 +1844,20 @@ def _sweep_client(db, client: dict, send_alerts: bool) -> dict:
     client sells on, so a brand on both platforms gets two honest reads
     instead of one blended average."""
     summary = {"client": client["company_name"] or client["contact_email"],
-               "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False}
+               "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False,
+               "issued": 0, "auto_approved": 0, "lapsed": 0, "measured": 0, "measured_usd": 0.0}
     summary["parsed"], summary["failed"] = _ingest_client(db, client)
 
     running = channels.channels_for(client.get("platform"))
     for channel in running:
         if len(running) > 1:
             print(f"  -- {channels.label(channel)}")
-        got = _sweep_channel(db, client, channel, summary["client"], send_alerts)
+        got = _sweep_channel(db, client, channel, summary["client"], send_alerts, issue_drafts)
         summary["ran"] = summary["ran"] or got["ran"]
-        summary["drafts"] += got["drafts"]
-        summary["alerts"] += got["alerts"]
         summary["emailed"] = summary["emailed"] or got["emailed"]
+        for k in ("drafts", "alerts", "issued", "auto_approved", "lapsed", "measured", "measured_usd"):
+            summary[k] += got.get(k, 0)
+        summary.setdefault("overdue", []).extend(got.get("overdue", []))
     return summary
 
 
@@ -1121,7 +1876,8 @@ def cmd_sweep(args):
     for client in clients:
         print(f"== {client['company_name'] or client['contact_email']}")
         try:
-            digests.append(_sweep_client(db, client, send_alerts=args.alert))
+            digests.append(_sweep_client(db, client, send_alerts=args.alert,
+                                         issue_drafts=args.issue))
         except Exception as err:
             print(f"  SWEEP FAILED: {err}", file=sys.stderr)
             digests.append({"client": client["company_name"] or client["contact_email"],
@@ -1139,6 +1895,16 @@ def cmd_sweep(args):
                    f"{d['alerts']} alert(s)" + (" (emailed)" if d["emailed"] else "")
                    if d["ran"] else ", no data yet")
             )
+            if d.get("issued") or d.get("auto_approved") or d.get("lapsed"):
+                lines.append(f"      decisions: {d['issued']} issued"
+                             + (f", {d['auto_approved']} auto-approved on a closed veto window"
+                                if d["auto_approved"] else "")
+                             + (f", {d['lapsed']} lapsed unanswered" if d["lapsed"] else ""))
+            if d.get("measured"):
+                lines.append(f"      ledger: {d['measured']} directive(s) measured, "
+                             f"${d['measured_usd']:,.0f} banked from your clients' own exports")
+            for late in d.get("overdue", []):
+                lines.append(f"      OVERDUE — approved and not yet executed: {late}")
     digest = "\n".join(lines)
     print("\n" + digest)
 
@@ -1170,6 +1936,37 @@ def cmd_platform(args):
     print(f"  next run reads: {', '.join(channels.label(c) for c in channels.channels_for(args.platform))}")
 
 
+def cmd_retainer(args):
+    """When the retainer actually started.
+
+    terms.html §3: "the retainer starts on the day you say yes after the
+    Teardown." Nothing recorded that date, so the free-month clock ran from
+    provisioning — from the booking, before the Teardown existed. This is the
+    best evidence there is, and it outranks the date the Stripe webhook infers
+    from a first invoice."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+
+    if args.show:
+        v = valuemod.engagement_start(client, date.today())
+        print(f"{name}: retainer clock runs from {v[0].isoformat()} ({v[1]})")
+        if not client.get("retainer_started_at"):
+            print("  no agreed start date on file — the ledger reports its fee basis as unknown "
+                  "and treats them as in their free month.")
+        return
+
+    started = date.fromisoformat(args.started) if args.started else date.today()
+    db.table("clients").update({
+        "retainer_started_at": datetime.combine(started, datetime.min.time(), tzinfo=timezone.utc).isoformat(),
+        "retainer_source": args.source,
+    }).eq("id", client["id"]).execute()
+    free = int(client.get("free_months") if client.get("free_months") is not None else 1)
+    print(f"{name}: retainer starts {started.isoformat()} ({args.source}).")
+    print(f"  free month{'s' if free != 1 else ''} run to "
+          f"{(started + timedelta(days=30 * free)).isoformat()}; the guarantee is checked then.")
+
+
 def cmd_all(args):
     cmd_ingest(args)
     cmd_run(args)
@@ -1188,6 +1985,101 @@ def cmd_scoreboard(_args):
 
     db = dbmod.connect()
     print(json.dumps(db.rpc("pmf_scoreboard", {}).execute().data, indent=2, default=str))
+
+
+def promise_rows(db, one_client: str | None = None) -> list[tuple]:
+    """Which promises the machine can keep right now.
+
+    Every line on the site is now backed by a job, and a job with a missing
+    secret is a promise that fails quietly. Read-only. Shared by
+    `hubricon promises` and the operator's daily digest, so a gap reaches the
+    founder without anyone remembering to look."""
+    from . import billing, issue as issuemod, tts, video
+
+    rows = []
+
+    def add(promise, where, ok, detail):
+        rows.append((promise, where, ok, detail))
+
+    # -- the deliverables ----------------------------------------------------
+    can_video, why = video.available()
+    add("A video with every issue", "index, welcome, terms §2", can_video,
+        f"speech via {tts.provider()}" if can_video else why)
+
+    mail = email_configured()
+    add("A brief every two weeks", "welcome, index", mail,
+        "published daily by the issue job, emailed through Resend" if mail
+        else "RESEND_API_KEY missing — issues publish to the desk but no email goes out")
+    add("Corrections stated before they go live", "terms §6", mail,
+        "the veto notice needs email; without it nothing auto-approves, by design"
+        if not mail else "sweep --issue notifies, then opens the window")
+
+    stripe_ok = billing.stripe_configured() and bool(os.environ.get("STRIPE_PRICE_ID"))
+    add("No invoice unless we found more than we cost", "terms §3, 8 surfaces", stripe_ok,
+        "the day-30 pass creates the subscription" if stripe_ok
+        else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — a client who clears the bar is "
+             "flagged in the digest instead of billed. Nobody is ever wrongly billed.")
+
+    add("Free data + ledger export, any time", "terms §11, privacy §6, the desk", True,
+        "hubricon export <client>")
+
+    # -- the clocks ----------------------------------------------------------
+    try:
+        overdue = [r for r in db.table("data_requests").select("kind, due_at")
+                   .is_("closed_at", "null").execute().data
+                   if datetime.fromisoformat(str(r["due_at"])) < datetime.now(timezone.utc)]
+        add("Deletion in 30d · DSAR in 7d · breach in 72h", "privacy §5–7", not overdue,
+            "no open request is past its deadline" if not overdue
+            else f"{len(overdue)} request(s) PAST the deadline the privacy policy states")
+    except Exception as err:
+        add("Deletion in 30d · DSAR in 7d · breach in 72h", "privacy §5–7", False,
+            f"data_requests unreadable: {str(err)[:60]}")
+
+    # -- per client ----------------------------------------------------------
+    clients = ([dbmod.resolve_client(db, one_client)] if one_client
+               else db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data)
+    for c in clients:
+        if onboarding.is_internal(c["contact_email"], c.get("contact_name")) and not one_client:
+            continue
+        name = c["company_name"] or c["contact_email"]
+        add(f"{name}: the retainer clock", "terms §3", bool(c.get("retainer_started_at")),
+            f"runs from {str(c['retainer_started_at'])[:10]} ({c.get('retainer_source')})"
+            if c.get("retainer_started_at")
+            else "no agreed start date — billing will not start. `hubricon retainer <client>`")
+
+        late = []
+        for channel in channels.channels_for(c.get("platform")):
+            late += issuemod.overdue_executions(db, c, channel)
+        add(f"{name}: first fixes live in week one", "welcome", not late,
+            "nothing approved is waiting" if not late
+            else f"{len(late)} approved directive(s) not executed, oldest {late[0]['days']}d")
+
+        live = (db.table("price_tests").select("id, sku").eq("client_id", c["id"])
+                .eq("status", "running").execute().data)
+        if live:
+            today = date.today().isoformat()
+            unread = [t for t in live if not db.table("price_test_watch").select("id")
+                      .eq("price_test_id", t["id"]).eq("observed_on", today).limit(1).execute().data]
+            add(f"{name}: Buy Box watched daily", "index, terms §6", not unread,
+                "all live tests read today" if not unread
+                else f"{len(unread)} live test(s) unread today — `hubricon watch`")
+
+    return rows
+
+
+def cmd_promises(args):
+    db = dbmod.connect()
+    rows = promise_rows(db, args.client)
+    width = max(len(r[0]) for r in rows)
+    kept = sum(1 for r in rows if r[2])
+    print(f"Promises the machine can keep right now: {kept}/{len(rows)}\n")
+    for promise, where, ok, detail in rows:
+        print(f"  {'OK  ' if ok else 'GAP '} {promise:<{width}}  {where}")
+        print(f"  {'':<4} {'':<{width}}  {detail}")
+    if kept < len(rows):
+        print("\nA GAP is a promise on the site that nothing is currently keeping. "
+              "None of them bill a client wrongly; they under-deliver quietly, which is why "
+              "this command exists.")
 
 
 def cmd_doctor(args):
@@ -1686,10 +2578,72 @@ def main():
 
     p = sub.add_parser("measure", help="record the measured impact of a directive")
     p.add_argument("client")
-    p.add_argument("--directive", required=True, help="directive id prefix")
-    p.add_argument("--impact", required=True, type=float, help="measured impact in USD")
+    p.add_argument("--directive", help="directive id prefix")
+    p.add_argument("--impact", type=float, help="measured impact in USD")
+    p.add_argument("--auto", action="store_true",
+                   help="measure every approved directive from the client's own later exports")
+    p.add_argument("--dry-run", action="store_true", help="with --auto: print the verdicts, bank nothing")
     p.add_argument("--notes", help="how the measurement was made")
+    p.add_argument("--force", action="store_true",
+                   help="bank a directive that was never approved (stamped into the notes)")
+    p.add_argument("--remeasure", action="store_true",
+                   help="correct an already-measured directive (the old note is kept)")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("retainer", help="record when the retainer started (the client's yes)")
+    p.add_argument("client")
+    p.add_argument("--started", help="YYYY-MM-DD (default: today)")
+    p.add_argument("--source", default="client_yes",
+                   choices=["client_yes", "first_invoice", "teardown_delivered", "manual"])
+    p.add_argument("--show", action="store_true", help="print the clock without changing it")
+    p.set_defaults(fn=cmd_retainer)
+
+    p = sub.add_parser("promises", help="which promises the machine can keep right now, and which it cannot")
+    p.add_argument("--client", help="just this client")
+    p.set_defaults(fn=cmd_promises)
+
+    p = sub.add_parser("export", help="everything we hold on a client, as one zip (Terms §11)")
+    p.add_argument("client")
+    p.add_argument("--out", help="output path (default: <slug>-hubricon-export-<date>.zip)")
+    p.add_argument("--no-files", action="store_true", help="tables and ledger only, skip raw uploads")
+    p.set_defaults(fn=cmd_export)
+
+    p = sub.add_parser("request", help="track a deletion / access / correction request against its clock")
+    p.add_argument("action", choices=["open", "close", "list"], nargs="?", default="list")
+    p.add_argument("--client")
+    p.add_argument("--email", help="requester, when they are not a client")
+    p.add_argument("--kind", choices=sorted(DATA_REQUEST_DAYS), default="access")
+    p.add_argument("--note")
+    p.add_argument("--id", help="request id prefix, for close")
+    p.add_argument("--outcome")
+    p.set_defaults(fn=cmd_request)
+
+    p = sub.add_parser("mandate", help="record what the client authorised at kickoff")
+    p.add_argument("client")
+    p.add_argument("--module", choices=["pricing", "advertising", "inventory", "margin", "recovery", "general"])
+    p.add_argument("--standing", action="store_true", help="we may do this without asking")
+    p.add_argument("--explicit", dest="standing", action="store_false", help="nothing happens without a yes")
+    p.add_argument("--bound", type=float, help="numeric bound, e.g. 0.05 for a 5% price step")
+    p.add_argument("--bound-note", help="the bound in the client's own words")
+    p.add_argument("--veto-hours", type=int, default=72)
+    p.add_argument("--note", help="what was agreed, and when")
+    p.add_argument("--show", action="store_true", help="print the mandate without changing it")
+    p.set_defaults(fn=cmd_mandate, standing=False)
+
+    p = sub.add_parser("execute", help="record that an approved directive was carried out")
+    p.add_argument("client")
+    p.add_argument("--directive", required=True, help="directive id prefix")
+    p.add_argument("--ref", help="the change reference in Seller Central / Shopify")
+    p.add_argument("--by", help="who made the change (defaults to EXECUTION_EMAIL)")
+    p.set_defaults(fn=cmd_execute)
+
+    p = sub.add_parser("watch", help="the daily Buy Box / conversion reading on live price tests")
+    p.add_argument("--client", help="just this client")
+    p.add_argument("--buybox", type=float, help="Buy Box share, percent")
+    p.add_argument("--conversion", type=float, help="Shopify conversion rate, percent")
+    p.add_argument("--note")
+    p.add_argument("--alert", action="store_true", help="email the founder about missed readings")
+    p.set_defaults(fn=cmd_watch)
 
     p = sub.add_parser("plan", help="draft, commit, or check the client's 90-day growth plan")
     p.add_argument("client")
@@ -1710,6 +2664,13 @@ def main():
     p.add_argument("--no-ai", dest="no_ai", action="store_true", help="skip the Claude-narrated letter")
     p.add_argument("--facts", action="store_true", help="print the FACTS table the narrator may cite")
     p.set_defaults(fn=cmd_script)
+
+    p = sub.add_parser("issue", help="publish the fortnightly briefing (letter + report + video) and email it")
+    p.add_argument("--client", help="just this client")
+    p.add_argument("--send", action="store_true", help="actually email the client")
+    p.add_argument("--dry-run", action="store_true", help="say who is due, publish nothing")
+    p.add_argument("--force", action="store_true", help="publish even if the fortnight is not up")
+    p.set_defaults(fn=cmd_issue)
 
     p = sub.add_parser("brief", help="publish an Issue (video and/or letter, optional full report) to the portal")
     p.add_argument("client")
@@ -1741,6 +2702,9 @@ def main():
     p = sub.add_parser("sweep", help="always-on pass over every active client: ingest, run, draft, alert")
     p.add_argument("--client", help="sweep just this client")
     p.add_argument("--alert", action="store_true", help="send alert/digest emails (needs RESEND_API_KEY)")
+    p.add_argument("--issue", action="store_true",
+                   help="promote the top drafts to issued and tell the client before anything goes live "
+                        "(terms.html §6). Opt-in: run without it first and read what WOULD be issued.")
     p.set_defaults(fn=cmd_sweep)
 
     p = sub.add_parser("operator", help="hourly funnel pass: outbound, bookings, nudges, teardowns, digest")

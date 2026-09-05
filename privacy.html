@@ -71,7 +71,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
     <ul>
       <li><b>We collect the minimum the models need:</b> your store's own reports and, if you choose, files you upload.</li>
       <li><b>We never sell data</b>, never share one client's data with another, and never use your data to train AI models.</li>
-      <li><b>No client logins, no tracking cookies of our own, no email harvesting</b> on the website.</li>
+      <li><b>No passwords, no tracking cookies of our own, no email harvesting.</b> Your desk signs you in with a one-time link, so there is no password for us to store or for anyone to steal.</li>
       <li><b>Export is free, any time.</b> Deletion on request, within thirty days.</li>
     </ul>
   </div>
@@ -79,10 +79,12 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   <h2>1. What we collect, and why</h2>
 
   <h3>Visiting the website</h3>
-  <p>The application on our site asks three questions: revenue band, business model, catalog size.
-  We do not store the answers. They travel with your booking to Calendly so the call starts from
-  your numbers. Our host, Vercel, records anonymous, cookieless analytics: pages viewed, country,
-  device type, referrer. We run no advertising pixels and no retargeting.</p>
+  <p>The application on our site asks four questions: where you sell, revenue band, business model
+  and catalog size. They travel with your booking to Calendly so the call starts from your numbers,
+  and we keep them on your booking record so we know which platform to set you up on. The four
+  answers, and the fit note we derive from them, are also counted in our own analytics so we can see
+  which kinds of seller apply. Our host, Vercel, records anonymous, cookieless analytics: pages
+  viewed, country, device type, referrer. We run no advertising pixels and no retargeting.</p>
 
   <h3>Booking a call</h3>
   <p>Calendly collects your name, email, a phone number for the call, and your answers to the booking
@@ -157,18 +159,22 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
     <tr><td>Resend</td><td>Delivery of transactional email such as your welcome and alerts</td></tr>
     <tr><td>Calendly</td><td>Scheduling</td></tr>
     <tr><td>Stripe</td><td>Invoicing and ACH payment</td></tr>
-    <tr><td>Loom</td><td>Hosting of your recorded video briefs</td></tr>
-    <tr><td>Anthropic</td><td>Drafting the wording of written briefs, as described above</td></tr>
+    <tr><td>Loom</td><td>Hosting a video brief on the occasions the founder records one personally, in place of the generated one</td></tr>
+    <tr><td>ElevenLabs</td><td>Speaking the narration of your video brief. It receives the narration text, which contains figures from your own numbers; it never receives your raw reports or uploads</td></tr>
+    <tr><td>Instantly</td><td>Our cold outreach before you were a client: name, work email, company, and the text of any reply. Never used for client data</td></tr>
+    <tr><td>Anthropic</td><td>Drafting the wording of written briefs, and of replies to prospect enquiries, as described above</td></tr>
     <tr><td>GitHub</td><td>Runs our weekly monitoring job; your data passes through that job in memory and is not stored there</td></tr>
   </table>
 
   <h2>5. Security</h2>
   <p>Your store access is one named, permission-scoped user that you can revoke in one click.
-  Raw data and model outputs live in a database with row-level security where only our own server-side
-  service has access. There are no client logins to compromise. Data is encrypted in transit and at
-  rest. One person, the founder, holds access to production. Upload links are single-purpose and
-  expire. If we learn of a breach affecting your data, we tell you within seventy-two hours of
-  confirming it.</p>
+  Raw data and model outputs live in a database with row-level security. Your desk signs you in with a
+  one-time link sent to your own address — we never set, see or store a password, so there is no
+  password to steal, and row-level security scopes every read to your workspace alone. The engine's
+  own tables are reachable only by our server-side service, never by a signed-in session. Data is
+  encrypted in transit and at rest. One person, the founder, holds access to production. Upload links
+  are single-purpose and expire after ninety days. If we learn of a breach affecting your data, we
+  tell you within seventy-two hours of confirming it.</p>
 
   <h2>6. Retention and deletion</h2>
   <p>While you are a client we keep your data to run the service and maintain the Decision Ledger. When

@@ -119,7 +119,9 @@ def average_margin(results: list[dict]) -> float | None:
     ad-efficiency break-even threshold."""
     revenue = sum(r["revenue"] or 0 for r in results)
     net = sum(r["net_margin"] or 0 for r in results)
-    ads = sum(r["ad_spend_allocated"] or 0 for r in results)
+    # Nullable column, and callers pass margin rows from several places (a run,
+    # a chart pack, a fixture) — an absent allocation is zero, not a crash.
+    ads = sum(r.get("ad_spend_allocated") or 0 for r in results)
     if revenue <= 0:
         return None
     # margin before ad spend: ads are the lever being evaluated

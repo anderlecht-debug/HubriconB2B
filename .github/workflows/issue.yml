@@ -1,0 +1,64 @@
+name: Fortnightly issue
+
+# welcome.html promises "a three-minute brief every two weeks — that's your
+# entire time cost". Nothing sent one. This runs DAILY and publishes for each
+# client whose own fortnight is up, so the cadence is anchored to their start
+# date rather than to a global cron everybody has to wait for.
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 14:00 UTC — 9am Chicago, after the sweep has run
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Say who is due, publish nothing"
+        type: boolean
+        default: false
+      client:
+        description: "Just this client (slug, name or email)"
+        type: string
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45      # video rendering is the long pole
+    environment: Production
+    concurrency:
+      group: hubricon-issue
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      # ffmpeg and Chrome are both preinstalled on ubuntu-latest; naming them
+      # here means a runner image change shows up as a warning rather than as
+      # silently video-less issues.
+      - name: Check the video toolchain
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          command -v ffmpeg >/dev/null || echo "::warning::ffmpeg missing — issues will publish without video."
+          (command -v google-chrome || command -v chromium) >/dev/null \
+            || echo "::warning::no Chrome — issues will publish without video."
+          [ -n "$ELEVENLABS_API_KEY" ] \
+            || echo "::warning::ELEVENLABS_API_KEY is not set — set it, or HUBRICON_TTS=local for a local voice."
+      - name: Publish the issues that are due
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_REPLY_TO: ${{ secrets.EMAIL_REPLY_TO }}
+          ALERT_FROM: ${{ secrets.ALERT_FROM }}
+          FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+        run: |
+          flags="--send"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi
+          if [ -n "${{ inputs.client }}" ]; then flags="$flags --client '${{ inputs.client }}'"; fi
+          eval uv run hubricon issue $flags

@@ -125,65 +125,97 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
     return "\n".join(paragraphs)
 
 
-def build_script(company: str, first_name: str, deltas: dict | None,
-                 directives: list[dict], alerts: list[dict], elasticity: list[dict],
-                 ledger_measured: float, ledger_count: int) -> str:
+def build_beats(company: str, first_name: str, deltas: dict | None,
+                directives: list[dict], alerts: list[dict], elasticity: list[dict],
+                ledger_measured: float, ledger_count: int) -> list[dict]:
+    """The briefing as an ordered list of beats.
+
+    One structure, two renderers: `build_script` prints it as recording notes
+    for the founder, and video.py speaks `speech` over a slide built from
+    `heading`/`points`. Slide N and speech N therefore come from the same
+    object and cannot drift apart — which they would within a month if the
+    deck and the script were written separately.
+
+    `speech` is what gets said aloud, so it carries no markdown, no stage
+    directions and no bracketed asides."""
     name = first_name or company or "there"
-    issued = [d for d in directives if d.get("status") == "issued"]
+    issued = [d for d in directives if d.get("status") in ("issued", "approved")]
 
     if deltas and deltas["net_delta"] is not None:
         hook = (f"{name} — your net profit is {_signed(deltas['net_delta'])} versus the "
-                f"period before. Here's exactly where that came from, in four minutes.")
+                f"period before. Here's exactly where that came from.")
     elif deltas:
         hook = (f"{name} — first full read of your catalog: {_money(deltas['latest']['net'])} "
                 f"of true net profit last period, after every fee, your costs, and ads. "
                 f"Here's what the models found.")
     else:
-        hook = f"{name} — your numbers are in. Here's what the models found, in four minutes."
+        hook = f"{name} — your numbers are in. Here's what the models found."
 
+    beats = [{"heading": "Hook", "at": "0:00–0:20", "speech": hook, "points": []}]
+
+    numbers, spoken = [], []
+    if deltas:
+        d = deltas
+        numbers.append(("Net profit last period", _money(d["latest"]["net"])
+                        + (f" ({_signed(d['net_delta'])})" if d["net_delta"] is not None else "")))
+        numbers.append(("Revenue", _money(d["latest"]["revenue"])
+                        + (f" ({_signed(d['revenue_delta'])})" if d["revenue_delta"] is not None else "")))
+        if d["latest"]["pct"] is not None:
+            numbers.append(("Blended net margin", f"{d['latest']['pct']:.1%}"))
+        spoken.append(f"Net profit last period was {_money(d['latest']['net'])}"
+                      + (f", {_signed(d['net_delta'])} on the period before" if d["net_delta"] is not None else "")
+                      + f", on {_money(d['latest']['revenue'])} of revenue")
+        if d["latest"]["pct"] is not None:
+            spoken.append(f"that is a blended net margin of {d['latest']['pct']:.1%}")
+    numbers.append(("Measured on the Ledger", f"{_money(ledger_measured)} across {ledger_count}"))
+    spoken.append(f"and the Ledger stands at {_money(ledger_measured)} of measured impact across "
+                  f"{ledger_count} directive{'s' if ledger_count != 1 else ''}")
+    beats.append({"heading": "The three numbers", "at": "0:20–1:30",
+                  "speech": ("Three numbers. " + ", ".join(spoken) + ".") if spoken else
+                            "Your baseline numbers are on screen.",
+                  "points": numbers})
+
+    beats.append({"heading": "The why", "at": "1:30–3:30",
+                  "speech": top_story(directives, alerts, elasticity), "points": []})
+
+    if issued:
+        actions = [(d["module"].upper(),
+                    d["action_text"] + (f" — expected {_money(float(d['expected_impact_usd']))}"
+                                        if d.get("expected_impact_usd") else ""))
+                   for d in issued]
+        speech = (f"There {'is one decision' if len(issued) == 1 else f'are {len(issued)} decisions'} "
+                  f"waiting below this video. Each one states the action, the expected dollars, and how "
+                  f"we'll measure it. Approve or decline — nothing moves without you.")
+    else:
+        actions = []
+        speech = ("Nothing needs your decision this period. The watch continues either way, and I'll "
+                  "come to you the moment something does.")
+    beats.append({"heading": "On your desk", "at": "3:30–5:00", "speech": speech, "points": actions})
+
+    beats.append({"heading": "The record", "at": "last 20s",
+                  "speech": (f"The Ledger to date: {_money(ledger_measured)} of measured impact, in our "
+                             f"favour and against us. That's the whole story this period."),
+                  "points": []})
+    return beats
+
+
+def build_script(company: str, first_name: str, deltas: dict | None,
+                 directives: list[dict], alerts: list[dict], elasticity: list[dict],
+                 ledger_measured: float, ledger_count: int) -> str:
+    """Recording notes, for when the founder wants their own voice on an issue.
+    Rendered from the same beats the generated video speaks."""
+    beats = build_beats(company, first_name, deltas, directives, alerts, elasticity,
+                        ledger_measured, ledger_count)
     lines = [
         f"# Briefing script — {company}",
         "",
         "Recording notes: portal on screen, their name and headline visible in frame 1.",
         "One take, no polish, 4–6 minutes. Speed matters more than perfection.",
         "",
-        "## Hook (0:00–0:20)",
-        hook,
-        "",
-        "## The three numbers (0:20–1:30)",
     ]
-    if deltas:
-        d = deltas
-        lines.append(f"- Net profit last period: {_money(d['latest']['net'])}"
-                     + (f" ({_signed(d['net_delta'])})" if d["net_delta"] is not None else ""))
-        lines.append(f"- Revenue: {_money(d['latest']['revenue'])}"
-                     + (f" ({_signed(d['revenue_delta'])})" if d["revenue_delta"] is not None else ""))
-        if d["latest"]["pct"] is not None:
-            lines.append(f"- Blended net margin: {d['latest']['pct']:.1%}")
-    else:
-        lines.append("- (No margin periods yet — lead with the audit's headline findings.)")
-    lines += [
-        f"- Measured impact to date on the Ledger: {_money(ledger_measured)} across {ledger_count} directives",
-        "",
-        "## The why — teach ONE thing (1:30–3:30)",
-        top_story(directives, alerts, elasticity),
-        "",
-        "## Actions waiting below this video (3:30–5:00)",
-    ]
-    if issued:
-        for d in issued:
-            expected = (f" — expected {_money(float(d['expected_impact_usd']))}"
-                        if d.get("expected_impact_usd") else "")
-            lines.append(f"- [{d['module'].upper()}] {d['action_text']}{expected}")
+    for b in beats:
+        lines += [f"## {b['heading']} ({b['at']})", b["speech"]]
+        for point in b["points"]:
+            lines.append(f"- {point[0]}: {point[1]}" if isinstance(point, tuple) else f"- {point}")
         lines.append("")
-        lines.append('Say it explicitly: "these are waiting for your approve or decline, right below this video."')
-    else:
-        lines.append("- No directives awaiting review — say so, and preview what's being watched.")
-    lines += [
-        "",
-        "## Close (last 20s)",
-        f"Ledger to date: {_money(ledger_measured)} of measured impact. One sentence on "
-        f"what's being tested or watched next period. Stop recording.",
-        "",
-    ]
     return "\n".join(lines)

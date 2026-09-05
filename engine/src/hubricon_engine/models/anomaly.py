@@ -379,14 +379,19 @@ def _ratio(delta: float | None, base: float | None) -> float | None:
 
 
 def _spec(scope: str, item_id: str, metric: str, points: list[tuple[str, float]], *,
-          label: str, fmt, impact, digits: int = 2) -> dict:
+          label: str, fmt, impact, digits: int = 2, extra: dict | None = None) -> dict:
     """One series to scan: ``points`` are (t, value) already clean and
     sorted; ``impact(direction, before, after) -> (dollars | None, clause)``
-    values a flagged shift and explains the arithmetic."""
+    values a flagged shift and explains the arithmetic.
+
+    ``extra`` rides along into every row's ``details`` — the volume the impact
+    was valued at, so a later measurement pass can rebuild the same arithmetic
+    instead of guessing which denominator produced the dollars."""
     return {
         "scope": scope, "item_id": item_id, "metric": metric,
         "ts": [t for t, _ in points], "ys": [float(v) for _, v in points],
         "label": label, "fmt": fmt, "impact": impact, "digits": digits,
+        "extra": extra or {},
     }
 
 
@@ -401,7 +406,7 @@ def _row(spec: dict, detector: str, *, status: str = "ok", flagged: bool = False
         {"t": t, "v": num(v, digits)}
         for t, v in zip(spec["ts"][-SERIES_TAIL:], spec["ys"][-SERIES_TAIL:])
     ]
-    details = {"series": series, "params": params or {}, "basis": basis}
+    details = {"series": series, "params": params or {}, "basis": basis, **spec.get("extra", {})}
     if extra:
         details.update(extra)
     return {
@@ -649,15 +654,16 @@ def _sku_rows(econ: list[dict]) -> list[dict]:
                     referral_rate.append((t, fees["referral_fees"] / sales))
             if fees["storage_fees"] is not None:
                 storage.append((t, fees["storage_fees"]))
+        basis = {"units_basis": latest_units, "sales_basis": latest_sales}
         specs = [
             _spec("sku", sku, "fee_per_unit", fee_per_unit, label="fee per unit", fmt=_money,
-                  impact=_per_unit_impact(latest_units)),
+                  impact=_per_unit_impact(latest_units), extra=basis),
             _spec("sku", sku, "referral_rate", referral_rate, label="referral rate", fmt=_rate,
-                  impact=_rate_on_sales_impact(latest_sales), digits=4),
+                  impact=_rate_on_sales_impact(latest_sales), digits=4, extra=basis),
             _spec("sku", sku, "fba_fee_per_unit", fba_per_unit, label="FBA fee per unit", fmt=_money,
-                  impact=_per_unit_impact(latest_units)),
+                  impact=_per_unit_impact(latest_units), extra=basis),
             _spec("sku", sku, "storage_fee", storage, label="storage fee per period", fmt=_money,
-                  impact=_per_period_impact("period")),
+                  impact=_per_period_impact("period"), extra=basis),
         ]
         for spec in specs:
             if spec["ys"]:

@@ -65,6 +65,23 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
         "ledger_measured": {"value": _money(ledger_measured), "label": "measured impact to date on the Decision Ledger"},
         "ledger_count": {"value": str(ledger_count), "label": "number of directives issued to date"},
     }
+    # Split the ledger by how each dollar was proved, so a letter can say
+    # "confirmed by Amazon's own record" only where that is literally true.
+    # validate() already rejects any number the fact table did not supply; this
+    # makes the honest phrasings available rather than leaving the model to
+    # characterise a total it cannot see behind.
+    tiers = {}
+    for d in directives:
+        if d.get("measured_impact_usd") is None:
+            continue
+        tiers.setdefault(d.get("attribution") or "unrecorded", []).append(float(d["measured_impact_usd"]))
+    for tier, label in (("direct", "measured from a counterparty's own record (Amazon confirmed it)"),
+                        ("isolated", "measured on the exact line the directive named"),
+                        ("attributable", "measured against a stated counterfactual")):
+        if tiers.get(tier):
+            facts[f"measured_{tier}"] = {"value": _money(sum(tiers[tier])), "label": label}
+            facts[f"measured_{tier}_count"] = {"value": str(len(tiers[tier])),
+                                               "label": f"directives {label}"}
     if deltas:
         facts["net_latest"] = {"value": _money(deltas["latest"]["net"]), "label": "true net profit, latest period"}
         facts["revenue_latest"] = {"value": _money(deltas["latest"]["revenue"]), "label": "revenue, latest period"}

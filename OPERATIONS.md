@@ -446,6 +446,71 @@ bounce and complaint auto-pause) is not built, and should not be until those
 fifty have produced replies and at least one call. Phase 5 (video) is not built
 and should not be until the page converts.
 
+## The ledger measures itself
+
+The value ledger is the retention case, and until 2026-09-04 every dollar on it
+came from the founder typing `hubricon measure --impact`. Nobody types, so the
+ledger sat at zero and the portal told paying clients `0.0× — at risk`.
+
+`measurement.py` now runs inside the Monday sweep, reads each approved
+directive's captured `evidence` against the client's own later exports, and
+labels every dollar with how it was proved:
+
+| Tier | Means | Example |
+|---|---|---|
+| `direct` | A counterparty's own record shows the money moved | Amazon approved a reimbursement we filed |
+| `isolated` | The exact line the directive named, against its own prior level | A negative-matched term's spend went to zero |
+| `attributable` | Confounded by demand, so measured against a stated counterfactual at the **least favourable** end of our own confidence interval | A price step |
+| `none` | We could not isolate it, and we say so | A campaign that was paused wholesale |
+
+Four guards apply to every family: capped at what we promised, a $25 materiality
+floor, the effect must still be present in the latest export, and the same
+(sku, period) movement is credited to at most one directive.
+
+    hubricon measure <client> --auto --dry-run    # every verdict, banking nothing
+    hubricon measure <client> --auto              # what the sweep would bank, now
+
+The client sees all of this in the desk's **"how we know"** column, which
+renders `measurement_notes` beside every ledger row.
+
+**What still needs a person.** Recording the retainer start when someone says
+yes (`hubricon retainer <client>`), filing reimbursement claims
+(`hubricon recover <client> file`), executing approved directives in the client's
+account and recording it (`hubricon execute`), the daily Buy Box reading on a
+live price test (`hubricon watch`), and confirming when an ad spend step-up was
+intended. Everything else measures itself.
+
+## Keeping the promises the site makes
+
+Each of these used to depend on someone remembering. They are now jobs.
+
+| Promise | Where it is made | What keeps it |
+|---|---|---|
+| A three-minute video brief every two weeks | index.html, welcome.html, terms.html §2 | `.github/workflows/issue.yml` daily → `hubricon issue --send`; each client's fortnight runs from their own retainer date. The video is generated (slides from the same beats the narration speaks) and never blocks the letter |
+| Corrections stated with their dollars **before** they go live, vetoable by reply | terms.html §6 | `sweep --issue` → `issue.issue_drafts`. **If the notification does not send, no veto window opens and nothing can auto-approve** |
+| A standing mandate the client sets | welcome.html Step 2 | `hubricon mandate`; `issue.load_mandate` falls back to exactly what the Terms publish, never anything more permissive |
+| First fixes live in week one | welcome.html | `hubricon execute` records it; the sweep escalates anything approved and unexecuted past 7 days |
+| Buy Box watched daily through a price step | index.html, terms.html §6 | `hubricon watch --alert` |
+| "If we don't find you more than we cost, you walk away owing nothing" | 8 surfaces, terms.html §3 | The operator's day-30 pass is the **only** code that starts billing. Below the bar no subscription is created — there is no invoice to write off |
+| Free data + ledger export, any time | 11 times across 6 surfaces | `hubricon export <client>`; the desk's "Request your export" opens a tracked request |
+| Deletion in 30 days · DSAR in 7 · breach notice in 72h · 14 days' notice of a terms change | privacy.html, terms.html §14 | `hubricon request`; the operator escalates anything within two days of its deadline and shouts when one is overdue |
+| The 90-day plan drafted from the Teardown | welcome.html Step 2 | `draft_plan_for_run` inside the teardown; it stays `draft` until the founder commits it on the kickoff call |
+
+Secrets this adds, all optional — each degrades to a printed reason rather than
+a silent failure:
+
+| Secret | Without it |
+|---|---|
+| `ELEVENLABS_API_KEY` | Issues publish with the letter and report, no video (or set `HUBRICON_TTS=local` for a local voice) |
+| `STRIPE_PRICE_ID` | A client who clears the guarantee is flagged in the digest instead of being billed. Nobody is ever wrongly billed |
+
+    hubricon promises                # which promises the machine can keep, right now
+    hubricon promises --client <x>   # …and that client's own clocks
+
+Every gap it finds is repeated in the daily digest, because a promise that fails
+for want of a secret fails *quietly* — the client simply does not get the thing
+the site says they get, and nothing else would surface it.
+
 ## When the campaign is silent: `hubricon doctor`
 
 On 2026-09-03 the campaign had 84 leads enrolled, had been activated twelve

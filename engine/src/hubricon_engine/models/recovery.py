@@ -156,6 +156,133 @@ def _status(today: date, eligible_from: date, deadline: date) -> tuple[str, int]
     return "open", days_left
 
 
+def window_state(claim: dict, today: date) -> str:
+    """Where a STORED claim sits today.
+
+    The database holds the lifecycle (detected → filed → paid/denied); the
+    window state is a function of the calendar, and only a claim still sitting
+    at 'detected' has one. One definition, used by the chart pack and by the
+    value ledger, so a tile and the number beside it can never disagree."""
+    status = claim.get("status") or "detected"
+    if status != "detected":
+        return status
+    deadline = date.fromisoformat(str(claim["deadline"])[:10]) if claim.get("deadline") else None
+    eligible = date.fromisoformat(str(claim["eligible_from"])[:10]) if claim.get("eligible_from") else today
+    if deadline is None:
+        return "open" if today >= eligible else "not_yet_eligible"
+    return _status(today, eligible, deadline)[0]
+
+
+WAREHOUSE_REIMBURSEMENT_WORDS = ("lost", "damag", "warehouse", "inventory", "missing")
+
+
+def _consume_reimbursements(losses: list[dict], reimbursements: list[dict], on_match=None) -> None:
+    """FIFO: each reimbursement Amazon approved consumes the earliest open loss
+    for that SKU inside the match window.
+
+    Two callers want different halves of this. warehouse_claims wants only the
+    side effect — a loss Amazon already paid for must not be re-detected as an
+    open claim. `settlements` wants the pairing itself, because that pairing IS
+    the proof of payment: it is the only place the system holds Amazon's own
+    record that money moved. Dropping it on the floor is why a paid claim sat at
+    'detected' until its deadline passed and got stamped 'expired' — a win
+    filed as a miss.
+    """
+    for rb in sorted(reimbursements, key=lambda x: x.get("approval_date") or ""):
+        reason = (rb.get("reason") or "").lower()
+        if not any(w in reason for w in WAREHOUSE_REIMBURSEMENT_WORDS):
+            continue
+        qty = int(rb.get("quantity_reimbursed_total") or 0)
+        d = _d(rb.get("approval_date"))
+        if qty <= 0 or d is None:
+            continue
+        for loss in losses:
+            if qty <= 0:
+                break
+            if loss["sku"] != (rb.get("sku") or rb.get("fnsku")) or loss["source"] == "amazon_unreconciled_quantity":
+                continue
+            if loss["date"] <= d <= loss["date"] + timedelta(days=REIMBURSEMENT_MATCH_WINDOW_DAYS):
+                take = min(loss["units"], qty)
+                loss["units"] -= take
+                qty -= take
+                if on_match:
+                    on_match(loss, rb, take, d)
+
+
+def cash_reimbursed(rb: dict, units: int) -> float:
+    """The CASH share of a reimbursement, for `units` of it.
+
+    Amazon reimburses in replacement inventory as often as in money. Units
+    replaced in kind are a real remedy, but they are not dollars, and banking
+    them on a ledger that claims to measure money returned would be a lie the
+    client's own bank statement disproves."""
+    total_qty = int(rb.get("quantity_reimbursed_total") or 0)
+    cash_qty = rb.get("quantity_reimbursed_cash")
+    cash_qty = int(cash_qty) if cash_qty is not None else total_qty
+    if cash_qty <= 0 or total_qty <= 0:
+        return 0.0
+    per_unit = rb.get("amount_per_unit")
+    if per_unit is not None and float(per_unit) > 0:
+        return round(float(per_unit) * min(units, cash_qty), 2)
+    amount = float(rb.get("amount_total") or 0)
+    if amount <= 0:
+        return 0.0
+    # No per-unit figure: split the settled amount across the cash units only.
+    return round(amount * (min(units, cash_qty) / cash_qty), 2)
+
+
+def settlements(data: dict, today: date) -> dict[str, dict]:
+    """claim_key -> the reimbursement(s) that closed it, and the cash Amazon
+    actually sent.
+
+    Rebuilds the same losses `warehouse_claims` builds and the same claim_key
+    each would have carried, then records which reimbursement consumed it. A
+    claim that vanishes from detection because Amazon paid it is exactly the
+    claim that must be marked paid, not left to expire."""
+    ledger = data.get("inventory_ledger") or []
+    reimbursements = data.get("fba_reimbursements") or []
+    if not ledger or not reimbursements:
+        return {}
+
+    losses, founds = _ledger_losses(ledger)
+    losses.sort(key=lambda x: x["date"])
+    _consume_founds(losses, founds)
+
+    out: dict[str, dict] = {}
+
+    def record(loss, rb, units, approved_on):
+        key = claim_key(loss["type"], loss["sku"], loss["date"].isoformat())
+        cash = cash_reimbursed(rb, units)
+        entry = out.setdefault(key, {
+            "claim_key": key, "sku": loss["sku"], "claim_type": loss["type"],
+            "units": 0, "paid_amount": 0.0, "paid_at": None,
+            "case_id": rb.get("case_id"), "reimbursement_ids": [], "inventory_units": 0,
+        })
+        entry["units"] += units
+        entry["paid_amount"] = round(entry["paid_amount"] + cash, 2)
+        if cash <= 0:
+            entry["inventory_units"] += units
+        entry["case_id"] = entry["case_id"] or rb.get("case_id")
+        if rb.get("reimbursement_id"):
+            entry["reimbursement_ids"].append(rb["reimbursement_id"])
+        iso = approved_on.isoformat()
+        entry["paid_at"] = max(entry["paid_at"], iso) if entry["paid_at"] else iso
+
+    _consume_reimbursements(losses, reimbursements, on_match=record)
+
+    for entry in out.values():
+        if entry["paid_amount"] > 0 and entry["inventory_units"]:
+            entry["note"] = (f"Amazon settled {entry['units']} unit(s): "
+                             f"${entry['paid_amount']:,.2f} in cash, "
+                             f"{entry['inventory_units']} replaced in inventory.")
+        elif entry["paid_amount"] > 0:
+            entry["note"] = f"Amazon reimbursed ${entry['paid_amount']:,.2f} across {entry['units']} unit(s)."
+        else:
+            entry["note"] = (f"Amazon replaced {entry['units']} unit(s) in inventory rather than in cash — "
+                             f"the claim is settled, and no dollars are banked.")
+    return out
+
+
 def _claim(claim_type, sku, units, event_date: date, eligible_from: date, deadline: date,
            values: dict, today: date, order_id=None, fnsku=None, asin=None,
            unit_value_override=None, basis_override=None, evidence=None) -> dict:
@@ -184,7 +311,11 @@ def _claim(claim_type, sku, units, event_date: date, eligible_from: date, deadli
     }
 
 
-def warehouse_claims(ledger: list[dict], reimbursements: list[dict], values: dict, today: date) -> list[dict]:
+def _ledger_losses(ledger: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Reimbursable losses and offsetting "found" adjustments, read out of the
+    Inventory Ledger. Split out so the settlement pass rebuilds exactly the
+    same losses the claims were detected from — two readings of this file that
+    could drift apart is two different answers about what Amazon owes."""
     losses, founds = [], []
     for r in ledger:
         etype = (r.get("event_type") or "Adjustments").lower()
@@ -218,9 +349,11 @@ def warehouse_claims(ledger: list[dict], reimbursements: list[dict], values: dic
         losses.append({"sku": sku, "fnsku": r.get("fnsku"), "asin": r.get("asin"),
                        "date": d, "units": units, "type": cls, "source": source,
                        "reference": r.get("reference_id"), "reason": r.get("reason")})
+    return losses, founds
 
-    # FIFO offsets: found units and reimbursed units consume the earliest open loss
-    losses.sort(key=lambda x: x["date"])
+
+def _consume_founds(losses: list[dict], founds: list[dict]) -> None:
+    """A unit Amazon later found was never lost: FIFO, same as reimbursements."""
     for f in sorted(founds, key=lambda x: x["date"]):
         for loss in losses:
             if f["qty"] <= 0:
@@ -231,23 +364,14 @@ def warehouse_claims(ledger: list[dict], reimbursements: list[dict], values: dic
                 take = min(loss["units"], f["qty"])
                 loss["units"] -= take
                 f["qty"] -= take
-    for rb in sorted(reimbursements, key=lambda x: x.get("approval_date") or ""):
-        reason = (rb.get("reason") or "").lower()
-        if not any(w in reason for w in ("lost", "damag", "warehouse", "inventory", "missing")):
-            continue
-        qty = int(rb.get("quantity_reimbursed_total") or 0)
-        d = _d(rb.get("approval_date"))
-        if qty <= 0 or d is None:
-            continue
-        for loss in losses:
-            if qty <= 0:
-                break
-            if loss["sku"] != (rb.get("sku") or rb.get("fnsku")) or loss["source"] == "amazon_unreconciled_quantity":
-                continue
-            if loss["date"] <= d <= loss["date"] + timedelta(days=REIMBURSEMENT_MATCH_WINDOW_DAYS):
-                take = min(loss["units"], qty)
-                loss["units"] -= take
-                qty -= take
+
+
+def warehouse_claims(ledger: list[dict], reimbursements: list[dict], values: dict, today: date) -> list[dict]:
+    losses, founds = _ledger_losses(ledger)
+    # FIFO offsets: found units and reimbursed units consume the earliest open loss
+    losses.sort(key=lambda x: x["date"])
+    _consume_founds(losses, founds)
+    _consume_reimbursements(losses, reimbursements)
 
     claims = []
     for loss in losses:
@@ -412,6 +536,10 @@ def run(data: dict, rng=None, simulations=None, today: date | None = None) -> di
         "status": "ok" if any(data_present.values()) else "insufficient_data",
         "as_of": today.isoformat(),
         "claims": claims,
+        # Claims Amazon has already settled. They are absent from `claims`
+        # precisely BECAUSE they were paid — the FIFO offset consumed them — so
+        # without this the sweep would let each one expire as an unclaimed miss.
+        "settlements": settlements(data, today),
         "summary": {
             "n_claims": len(claims),
             "n_live": len(live),

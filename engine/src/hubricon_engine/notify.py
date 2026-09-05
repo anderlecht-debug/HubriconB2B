@@ -57,12 +57,63 @@ def send_email(to: str, subject: str, text: str, html: str | None = None,
         return False
 
 
-def alert_email_body(company: str, alerts: list[dict]) -> str:
-    lines = [f"Hubricon watch report for {company}:", ""]
-    for a in alerts:
-        lines.append(f"[{a['severity'].upper()}] {a['message']}")
-        lines.append("")
-    lines.append("Full detail in your portal: https://www.hubricon.com/portal")
-    lines.append("")
-    lines.append("— Hubricon (automated sweep; reply to reach a human)")
-    return "\n".join(lines)
+def letter(first_name: str | None, blocks: list[dict]) -> tuple[str, str]:
+    """Every client-facing email is the same typeset letter from the founder's
+    desk. The onboarding mail always was; the watch report and the decision
+    notice used to be plain-text machine output from a different address, which
+    is what the client's recurring experience of Hubricon actually looked like."""
+    from .onboarding import render_html, render_text
+    spec = {"greeting": f"Hi {(first_name or '').strip().split(' ')[0] or 'there'},", "blocks": blocks}
+    return render_text(spec), render_html(spec)
+
+
+def alert_email_body(company: str, alerts: list[dict], first_name: str | None = None,
+                     portal_url: str = "https://www.hubricon.com/portal") -> tuple[str, str]:
+    """The weekly watch, as a letter rather than a log dump.
+
+    Severity is said in words, not stamped as [CRITICAL], and the sign-off is a
+    person — welcome.html promises "reply to any Hubricon email and it lands
+    with the person who builds your models", and this is the email a client
+    actually receives most often."""
+    n = len(alerts)
+    opener = (f"The weekly sweep on {company} finished. "
+              + ("One thing needs your eye:" if n == 1 else f"{n} things need your eye:"))
+    blocks = [{"p": opener}, {"ol": [
+        (("Urgent — " if a.get("severity") == "critical" else "") + a["message"]) for a in alerts
+    ]}]
+    blocks.append({"p": "The full working is in your desk, with the numbers behind each one:"})
+    blocks.append({"button": "Open your desk", "url": portal_url})
+    blocks.append({"p": "Reply to this email if any of it looks wrong — it comes straight to me."})
+    return letter(first_name, blocks)
+
+
+def directive_email_body(client: dict, directives: list[dict], closes_at, portal_url: str) -> tuple[str, str]:
+    """The notice terms.html §6 promises: every planned correction, with its
+    expected dollars, BEFORE it goes live, and how to stop it.
+
+    Standing-mandate items say the window and what happens at the end of it.
+    Explicit ones say plainly that nothing happens without a yes — because
+    nothing does."""
+    standing = [d for d in directives if d.get("mandate") == "standing"]
+    explicit = [d for d in directives if d.get("mandate") != "standing"]
+
+    def line(d):
+        usd = d.get("expected_impact_usd")
+        money = f" (expected ${float(usd):,.0f})" if usd is not None else ""
+        return f"{d['action_text']}{money}"
+
+    blocks = [{"p": "Here is what we plan to do next, and what each one is worth. "
+                    "Nothing below has happened yet."}]
+    if standing:
+        when = closes_at.strftime("%A %-d %B at %-I%p").replace("AM", "am").replace("PM", "pm")             if hasattr(closes_at, "strftime") else str(closes_at)
+        blocks.append({"p": f"Inside your standing mandate — we go ahead after {when} unless you say no:"})
+        blocks.append({"ol": [line(d) for d in standing]})
+    if explicit:
+        blocks.append({"p": "Outside your mandate — these wait for your explicit yes, however long that takes:"})
+        blocks.append({"ol": [line(d) for d in explicit]})
+    blocks.append({"p": "Approve or decline any of them in your desk, or just reply to this email "
+                        "and say which ones you don't want:"})
+    blocks.append({"button": "Open your desk", "url": portal_url})
+    blocks.append({"p": "Every one of these lands on your Decision Ledger afterwards with what it "
+                        "actually earned — including the ones that come in under."})
+    return letter(client.get("contact_name"), blocks)

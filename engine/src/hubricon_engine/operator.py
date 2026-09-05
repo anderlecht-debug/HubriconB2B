@@ -15,7 +15,7 @@ Everything is idempotent, so an hourly run that finds nothing does nothing.
 import os
 import sys
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from . import channels
 from . import db as dbmod
@@ -23,7 +23,7 @@ from . import instantly, onboarding, outbound
 from .briefing import build_memo, period_deltas
 from .notify import email_configured, send_email
 
-PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/portal"
+PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/portal"  # mirrors cli.PORTAL_URL
 NUDGE_AFTER_DAYS = 3
 FILES_AFTER_DAYS = 7
 
@@ -277,6 +277,9 @@ class Pass:
 
         run_id = cli._run_models(self.db, c, set(cli.ALL_MODELS), 20000, 42)
         cli._draft_for_run(self.db, c, run_id)
+        # welcome.html: the 90-day plan is drafted from the Teardown within 24h
+        # and presented on the kickoff call. It stays a draft until then.
+        cli.draft_plan_for_run(self.db, c, run_id)
         margins = self.db.table("margin_results").select("*").eq("run_id", run_id).execute().data
         elasticity = self.db.table("elasticity_results").select("*").eq("run_id", run_id).execute().data
         first_name = (c.get("contact_name") or "").split(" ")[0]
@@ -300,24 +303,161 @@ class Pass:
             except Exception as err:
                 print(f"  narrated letter skipped: {err}")
 
+        video_path = None
         with tempfile.TemporaryDirectory() as tmp:
             path = generate(self.db, c, run_id=run_id, out_dir=tmp)
             report_path = f"reports/{c['id']}/issue-001.html"
             self.db.storage.from_(storage.BUCKET).upload(
                 report_path, path.read_bytes(), {"content-type": "text/html", "upsert": "true"})
+
+            # index.html, welcome.html, terms.html §2 and the portal all promise
+            # a recorded walkthrough with the Teardown. This line used to be
+            # `"video_id": None` and a note asking the founder to record a Loom.
+            from pathlib import Path as _Path
+            from . import video as videomod
+            from .briefing import build_beats
+            beats = build_beats(company, first_name, deltas, [], [], elasticity, 0.0, 0)
+            made = videomod.render(company, 1, beats, _Path(tmp) / "issue-001.mp4")
+            if made:
+                video_path = f"reports/{c['id']}/issue-001.mp4"
+                self.db.storage.from_(storage.BUCKET).upload(
+                    video_path, made.read_bytes(), {"content-type": "video/mp4", "upsert": "true"})
+
         self.db.table("briefings").insert({
-            "client_id": c["id"], "run_id": run_id, "video_id": None, "memo": memo, "issue_number": 1,
+            "client_id": c["id"], "run_id": run_id, "video_id": None, "video_path": video_path,
+            "memo": memo, "issue_number": 1,
             "report_path": report_path, "title": "Profit Teardown",
             "headline": "Issue No. 001 — your Profit Teardown",
         }).execute()
         sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True)
-        outbound.log_event(self.db, "teardown_delivered", client_id=c["id"], payload={"run_id": run_id, "emailed": sent})
+        outbound.log_event(self.db, "teardown_delivered", client_id=c["id"],
+                           payload={"run_id": run_id, "emailed": sent, "video": bool(video_path)})
         self.db.table("prospects").update({"status": "client", "last_event_at": _iso()}).eq("email", c["contact_email"]).execute()
-        self.say(f"Published Issue 001 for {company}; client {'emailed' if sent else 'NOT emailed'}.")
-        self.human.append(f"Teardown delivered to {company}. Optional: record a Loom and attach it with "
-                          f"`hubricon brief {c['contact_email']} --video <url>`.")
+        self.say(f"Published Issue 001 for {company}"
+                 + (" with video" if video_path else " (no video — see the warning)")
+                 + f"; client {'emailed' if sent else 'NOT emailed'}.")
+        if not video_path:
+            # The copy promises a recorded walkthrough. If the pipeline could
+            # not make one, that is a promise outstanding, not a nice-to-have.
+            self.warnings.append(
+                f"Issue 001 for {company} shipped WITHOUT the recorded walkthrough the site promises. "
+                f"Record one now: `hubricon brief {c['contact_email']} --video <url>`.")
 
-    # -- 6. digest -----------------------------------------------------------
+    # -- 6. the day-30 guarantee ---------------------------------------------
+    def billing(self) -> None:
+        """At day 30, compare the ledger to the fee and act on the answer.
+
+        terms.html §3 promises no invoice unless we found more than we cost.
+        This is the only code that starts billing, so the promise cannot be
+        broken by forgetting — below the bar there is no subscription, and
+        therefore no invoice to write off."""
+        from . import billing, cli, value
+
+        price_id = os.environ.get("STRIPE_PRICE_ID")
+        clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
+        for c in clients:
+            if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+                continue
+            due, why = billing.due_for_decision(c)
+            if not due:
+                continue
+
+            directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+            ledger = value.compute(c, directives, cli._fetch_claims(self.db, c["id"]),
+                                   cli._fetch_invoices(self.db, c["id"]))
+            v = billing.verdict(ledger, c)
+            company = c["company_name"] or c["contact_email"]
+
+            if self.dry:
+                self.say(f"[dry] {company}: {why}; ledger ${v['total']:,.0f} vs ${v['fee']:,.0f} — "
+                         f"{'would start billing' if v['clears'] else 'would NOT invoice'}")
+                continue
+
+            if not v["clears"]:
+                # This pass runs hourly and the client stays "due" until they
+                # clear, so the ref_id is the engagement, not the day — one
+                # letter about the guarantee, not one a day. The work carries
+                # on and later passes re-check, silently, until it clears.
+                first_time = c.get("billing_decision") != "short"
+                self.db.table("clients").update({
+                    "billing_decided_at": _iso(), "billing_decision": "short",
+                }).eq("id", c["id"]).execute()
+                cli._send_client_email(self.db, c, "guarantee_short",
+                                       str(c.get("retainer_started_at") or c["id"]),
+                                       "Your free month, and what we found",
+                                       billing.short_email_blocks(v, PORTAL_URL), self.send)
+                if first_time:
+                    self.human.append(
+                        f"{company} finished the free month at ${v['total']:,.0f} against a "
+                        f"${v['fee']:,.0f} fee. No invoice was raised — that is the guarantee. "
+                        f"Worth a call.")
+                continue
+
+            if not (price_id and billing.stripe_configured()):
+                self.warnings.append(
+                    f"{company} cleared the guarantee ({v['multiple']:.1f}x) but billing did not start: "
+                    f"set STRIPE_SECRET_KEY and STRIPE_PRICE_ID. Nothing is lost — the next pass bills "
+                    f"them once the secrets exist.")
+                continue
+            try:
+                sub = billing.start_billing(c, price_id)
+            except Exception as err:
+                self.warnings.append(f"{company} cleared the guarantee but Stripe refused: {err}")
+                continue
+            self.db.table("clients").update({
+                "stripe_subscription_id": sub["id"],
+                "stripe_customer_id": sub.get("customer") or c.get("stripe_customer_id"),
+                "status": "active", "billing_decided_at": _iso(), "billing_decision": "cleared",
+            }).eq("id", c["id"]).execute()
+            cli._send_client_email(self.db, c, "guarantee_cleared", sub["id"],
+                                   "Your free month, and your first invoice",
+                                   billing.cleared_email_blocks(v, PORTAL_URL), self.send)
+            # The stated price of the free month, asked for once and recorded.
+            for kind in ("testimonial", "anonymised_results"):
+                try:
+                    self.db.table("consents").upsert(
+                        {"client_id": c["id"], "kind": kind}, on_conflict="client_id,kind").execute()
+                except Exception:
+                    pass
+            self.say(f"{company} cleared the guarantee at {v['multiple']:.1f}x — billing started.")
+
+    def data_requests(self) -> None:
+        """Legal clocks, surfaced before they run out.
+
+        privacy.html gives a number of days for each of these. Nothing counted
+        them, so the only alarm was the requester following up."""
+        try:
+            rows = (self.db.table("data_requests").select("*").is_("closed_at", "null")
+                    .order("due_at").execute().data)
+        except Exception:
+            return      # table not migrated yet
+        now = _now()
+        for r in rows:
+            left = (datetime.fromisoformat(str(r["due_at"])) - now).days
+            who = r.get("requester_email") or "—"
+            if left < 0:
+                self.warnings.append(f"OVERDUE by {abs(left)}d: {r['kind']} request from {who} "
+                                     f"({r['id'][:8]}). The privacy policy gives a deadline; this is past it.")
+            elif left <= 2:
+                self.human.append(f"{r['kind']} request from {who} is due in {left}d ({r['id'][:8]}).")
+
+    def promises(self) -> None:
+        """Every promise the machine cannot currently keep, in the daily digest.
+
+        A missing secret makes a promise fail quietly — the client simply does
+        not get the thing the site says they get. This is the line that stops
+        that being discovered by the client."""
+        from . import cli
+        try:
+            rows = cli.promise_rows(self.db)
+        except Exception as err:
+            self.warnings.append(f"promise check failed: {err}")
+            return
+        for promise, where, ok, detail in rows:
+            if not ok:
+                self.warnings.append(f"PROMISE NOT KEPT — {promise} ({where}): {detail}")
+
+    # -- 7. digest -----------------------------------------------------------
     def scoreboard(self) -> dict:
         try:
             return self.db.rpc("pmf_scoreboard", {}).execute().data or {}
@@ -402,7 +542,7 @@ class Pass:
 def run(send: bool = False, dry: bool = False, digest: bool = False) -> str:
     db = dbmod.connect()
     p = Pass(db, send=send, dry=dry)
-    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.teardowns):
+    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.teardowns, p.billing, p.data_requests, p.promises):
         try:
             step()
         except Exception as err:  # keep going; the digest carries the failure

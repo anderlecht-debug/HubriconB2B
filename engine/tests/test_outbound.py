@@ -81,16 +81,23 @@ def test_the_cold_copy_names_no_selling_platform():
 
 
 def test_the_free_month_is_offered_the_way_the_site_offers_it():
-    """hubricon.com gates it: "If the numbers justify it, your first month runs
-    free." The cold mail used to state it flat.
+    """A cold email that promises more than the page it sends people to is the
+    one promise a reader can check before replying, and the gap is the whole
+    first impression.
 
-    A cold email that promises more than the page it sends people to is the one
-    promise a reader can check before replying, and the gap is the whole first
-    impression. So the condition arrives before the offer does, not after it.
+    The site conditions the INVOICE, not the month: terms.html §3 has always
+    said the free month is free regardless of outcome, and since 2026-09-05 the
+    day-30 check is code — the operator compares the ledger to the fee and does
+    not create a subscription below it. The cold mail says the same thing.
     """
     body = campaign_spec(["a@x.com"], "addr")["sequences"][0]["steps"][0]["variants"][0]["body"].lower()
-    assert "first month" in body
-    assert "if i find enough" in body[:body.index("first month")]
+    assert "first month is free" in body
+    # The catch is named, and it sits on the invoice rather than on the month.
+    after = body[body.index("first month is free"):]
+    assert "no invoice" in after
+    assert "if i don't find more than i cost" in after
+    # Never the older, bigger promise of a free month gated on nothing at all.
+    assert "if i find enough" not in body
 
 
 def test_the_subject_is_about_their_money_not_our_offer():

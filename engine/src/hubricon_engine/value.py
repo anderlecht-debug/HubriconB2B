@@ -4,54 +4,131 @@ The product's spine: a running, conservative, counterfactual-backed
 account of what Hubricon has put back into the client's business against
 what the client has paid. Three columns, never blended:
 
-    measured    directive outcomes recorded on the Decision Ledger
-                (hubricon measure) — actual, against baseline
-    recovered   reimbursement claims Amazon actually paid
-                (hubricon recover paid) — actual, from the client's bank
+    measured    directive outcomes measured against baseline from the
+                client's own later exports (measurement.py), or recorded
+                by hand (hubricon measure)
+    recovered   reimbursement claims Amazon paid on a claim WE filed
     identified  expected value not yet banked: issued directives without
                 a measurement, open claims at their expected value —
                 shown, never added to the total
 
-Fees follow the offer doctrine: the first month is free, then a flat
-monthly fee. The ROI multiple is measured value over fees invoiced to
-date; the thresholds are the ones the research set — a visible ≥ 5×
-makes churn irrational, under 3× is the signal to deepen the work.
+Two rules keep this a ledger rather than a sales deck:
+
+**Fees are observed, not assumed.** The multiple's denominator used to be
+`months since the row was created × $6,000`, which meant a prospect who never
+converted still accrued fees and was shown `0.0× — at risk` in their own desk.
+Fees now come from invoices actually issued; where none exist the basis says
+so, and an uninvoiced client is in their free month, not failing.
+
+**Recovered dollars must be attributed.** Amazon auto-reimburses a large share
+of warehouse loss unprompted, so counting every paid claim would credit us with
+money that would have arrived had we never existed. Only claims we filed reach
+the total; the rest are shown beside it as the client's record.
+
+The ROI thresholds are the ones the research set — a visible ≥ 5× makes churn
+irrational, under 3× is the signal to deepen the work.
 """
 
 from datetime import date
 
 from .models.common import num
+from .models.recovery import window_state
 
 DEFAULT_MONTHLY_FEE_USD = 6000.0
 DEFAULT_FREE_MONTHS = 1
 STRONG_MULTIPLE = 5.0
 AT_RISK_MULTIPLE = 3.0
 
+# Claim window states that still represent money in flight. 'expired' and
+# 'denied' are neither banked nor identified: the window closed.
+LIVE_CLAIM_STATES = ("open", "expiring", "not_yet_eligible", "filed")
+
 
 def months_elapsed(start: date, today: date) -> int:
     return max(0, (today.year - start.year) * 12 + (today.month - start.month) - (1 if today.day < start.day else 0))
 
 
-def compute(client: dict, directives: list[dict], claims: list[dict], today: date | None = None) -> dict:
-    today = today or date.today()
-    start = date.fromisoformat(str(client.get("created_at"))[:10]) if client.get("created_at") else today
+def engagement_start(client: dict, today: date) -> tuple[date, str]:
+    """When the retainer began, and how sure we are.
+
+    terms.html §3: "the retainer starts on the day you say yes after the
+    Teardown". `created_at` is when the row was provisioned — at booking, before
+    the Teardown and before the yes — so it is the last resort, not the default.
+    Where the true date is unknown we take the EARLIEST defensible one: an
+    earlier start means more billed months, a larger denominator and a smaller
+    multiple. Erring that way can never flatter us."""
+    started = client.get("retainer_started_at")
+    if started:
+        return date.fromisoformat(str(started)[:10]), (client.get("retainer_source") or "recorded")
+    if client.get("created_at"):
+        return date.fromisoformat(str(client["created_at"])[:10]), "provisioned"
+    return today, "unknown"
+
+
+def fee_side(client: dict, invoices: list[dict] | None, today: date) -> dict:
+    """The denominator, with its provenance stated.
+
+    Observed beats assumed, and unknown is never treated as accrued — a client
+    with no invoice and no start date has not been billed, so the ledger says
+    "free month" rather than "0.0×, at risk"."""
     fee = float(client.get("monthly_fee_usd") or DEFAULT_MONTHLY_FEE_USD)
     free = int(client.get("free_months") if client.get("free_months") is not None else DEFAULT_FREE_MONTHS)
+    start, source = engagement_start(client, today)
     months = months_elapsed(start, today)
-    billed_months = max(0, months - free)
-    fees_paid = billed_months * fee
+
+    real = [i for i in (invoices or []) if (i.get("status") or "") != "void"]
+    if real:
+        paid = sum(float(i.get("amount_paid") or 0) for i in real if i.get("status") == "paid")
+        billed = sum(float(i.get("amount_due") or 0) for i in real
+                     if i.get("status") in ("open", "paid", "uncollectible"))
+        return {"fees_paid": paid, "fees_billed": billed, "fees_basis": "invoiced",
+                "billed_months": len([i for i in real if i.get("status") == "paid"]),
+                "monthly_fee": fee, "months_elapsed": months,
+                "engagement_start": start, "engagement_start_source": source}
+
+    if client.get("retainer_started_at"):
+        billed_months = max(0, months - free)
+        return {"fees_paid": billed_months * fee, "fees_billed": billed_months * fee,
+                "fees_basis": "assumed", "billed_months": billed_months,
+                "monthly_fee": fee, "months_elapsed": months,
+                "engagement_start": start, "engagement_start_source": source}
+
+    # No invoice, no agreed start date: nothing has been billed, and saying
+    # otherwise is what put "0.0× — at risk" in front of paying clients.
+    return {"fees_paid": 0.0, "fees_billed": 0.0, "fees_basis": "unknown", "billed_months": 0,
+            "monthly_fee": fee, "months_elapsed": months,
+            "engagement_start": start, "engagement_start_source": source}
+
+
+def compute(client: dict, directives: list[dict], claims: list[dict],
+            invoices: list[dict] | None = None, today: date | None = None) -> dict:
+    today = today or date.today()
+    fees = fee_side(client, invoices, today)
+    fees_paid = fees["fees_paid"]
 
     measured_rows = [d for d in directives if d.get("measured_impact_usd") is not None]
     measured = sum(float(d["measured_impact_usd"]) for d in measured_rows)
-    paid_claims = [c for c in claims if c.get("status") == "paid" and c.get("paid_amount") is not None]
-    recovered = sum(float(c["paid_amount"]) for c in paid_claims)
+    by_attribution: dict[str, float] = {}
+    for d in measured_rows:
+        tier = d.get("attribution") or "unrecorded"
+        by_attribution[tier] = round(by_attribution.get(tier, 0.0) + float(d["measured_impact_usd"]), 2)
+
+    paid = [c for c in claims if c.get("status") == "paid" and c.get("paid_amount") is not None]
+    # Amazon paid it because we filed it: ours to claim. Amazon paid it on its
+    # own reconciliation: the client's record, not our result.
+    ours = [c for c in paid if c.get("filed_at") or c.get("case_id")]
+    recovered = sum(float(c["paid_amount"]) for c in ours)
+    recovered_unattributed = sum(float(c["paid_amount"]) for c in paid if c not in ours)
     value = measured + recovered
 
     unbanked_directives = sum(float(d["expected_impact_usd"]) for d in directives
                               if d.get("status") in ("issued", "approved") and d.get("measured_impact_usd") is None
                               and d.get("expected_impact_usd") is not None)
+    # Window state, not raw status: a claim still stored as 'detected' whose
+    # deadline has passed is expired money, and counting it overstates what is
+    # still in flight.
     unbanked_claims = sum(float(c.get("expected_value") or 0) for c in claims
-                          if c.get("status") in ("detected", "filed", "open", "expiring"))
+                          if window_state(c, today) in LIVE_CLAIM_STATES)
     identified = unbanked_directives + unbanked_claims
 
     multiple = value / fees_paid if fees_paid > 0 else None
@@ -66,21 +143,27 @@ def compute(client: dict, directives: list[dict], claims: list[dict], today: dat
 
     return {
         "as_of": today.isoformat(),
-        "engagement_start": start.isoformat(),
-        "months_elapsed": months,
-        "billed_months": billed_months,
-        "monthly_fee": num(fee),
+        "engagement_start": fees["engagement_start"].isoformat(),
+        "engagement_start_source": fees["engagement_start_source"],
+        "months_elapsed": fees["months_elapsed"],
+        "billed_months": fees["billed_months"],
+        "monthly_fee": num(fees["monthly_fee"]),
         "fees_paid": num(fees_paid),
+        "fees_billed": num(fees["fees_billed"]),
+        "fees_basis": fees["fees_basis"],
         "measured": num(measured),
         "measured_count": len(measured_rows),
+        "measured_by_attribution": by_attribution,
         "recovered": num(recovered),
-        "recovered_count": len(paid_claims),
+        "recovered_count": len(ours),
+        "recovered_unattributed": num(recovered_unattributed),
         "value_total": num(value),
         "roi_multiple": num(multiple, 2),
         "identified_unbanked": num(identified),
         "identified_parts": {"directives": num(unbanked_directives), "claims": num(unbanked_claims)},
         "status": status,
         "thresholds": {"strong": STRONG_MULTIPLE, "at_risk": AT_RISK_MULTIPLE},
-        "basis": ("Measured = directive outcomes recorded against baseline; recovered = reimbursements Amazon paid; "
-                  "fees = flat monthly fee after the free month. Identified value is shown, never added."),
+        "basis": ("Measured = directive outcomes measured against baseline from your own later exports; "
+                  "recovered = reimbursements Amazon paid on claims we filed; fees = what was actually "
+                  "invoiced where invoices are on file. Identified value is shown, never added."),
     }
