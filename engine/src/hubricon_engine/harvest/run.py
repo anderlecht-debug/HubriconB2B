@@ -285,6 +285,9 @@ def _crawl_category(db, fetcher: Fetcher, slug: str, budget: int, subcats: int, 
         part["blocked"] = True
     if product_rows:
         db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
+        # harvest_products is overwritten in place; this keeps the reading too,
+        # which is what gives the cold engine a price history (cold/run.py).
+        _keep_history(db, product_rows, log)
 
     existing = {r["seller_id"]: r for r in
                 db.table("harvest_sellers").select("seller_id, status, brands, asins").execute().data}
@@ -490,6 +493,18 @@ def storefront_url(seller_id: str) -> str:
     return f"{amazon.BASE}/s?me={seller_id}&marketplaceID=ATVPDKIKX0DER"
 
 
+def _keep_history(db, product_rows: list[dict], log=print) -> None:
+    """Append today's reading of each listing beside the overwritten row.
+
+    Imported here rather than at module scope: harvest.shopify imports this
+    module, and cold.findings imports harvest.shopify, so a top-level import of
+    cold.run would close the cycle.
+    """
+    from ..cold.run import record_observations
+
+    record_observations(db, product_rows, log=log)
+
+
 def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int = LISTINGS_PER_SELLER,
              cache: Cache | None = None, log=print) -> dict:
     """An archived profile names the seller but no product, so the founder lane
@@ -561,6 +576,7 @@ def listings(db, fetcher: Fetcher, limit: int = LISTINGS_LIMIT, per_seller: int 
             continue
         counts["weighed" if weighed else "unweighed"] += 1
         db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
+        _keep_history(db, product_rows, log)
         upd = {"asins": agg_asins, "brands": brands or row.get("brands") or [], "reviews_max": reviews_max,
                "top_bsr": top[0], "top_category": top[1],
                "notes": ((row.get("notes") or "") + f"; storefront read, {len(agg_asins)} live listing(s)"

@@ -24,7 +24,8 @@ Three components, each doing only what it is placed to do:
 | `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign, enrollment, reply sync + rule/Claude triage, sending replies, provisioning bookings and TEARDOWN requests, nudges, teardown runs, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
 | `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients, once per channel a client sells on |
-| `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list |
+| `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
+| `hubricon teardown` | the founder's Mac, by hand | `.env` (Supabase, `POSTAL_ADDRESS`) | the cold engine: a priced finding on a harvested seller, a page at `/t/<token>`, and the email that links to it. Sends nothing; records what you sent |
 
 The routine never sends email. The operator never reads the inbox. Both talk
 through Supabase (`bookings`, `prospect_messages`, `funnel_events`,
@@ -328,6 +329,123 @@ public pages at a human's pace from a home connection, never pushes through
 a captcha, and never runs from a datacenter. That is the whole risk posture;
 the founder owns it.
 
+## The cold engine: `hubricon teardown`
+
+The founder lane's old hook was an ounce count — "your listing is 0.6 oz over an
+FBA band" — with no dollar attached to it. A seller cannot act on an ounce. The
+cold engine prices that ounce off Amazon's published fee schedule, puts the
+arithmetic and its chart on a page at `hubricon.com/t/<token>`, and writes the
+email that links to it. Same free lead source, a teardown instead of a hint.
+
+### The one command
+
+```
+cd engine
+uv run hubricon teardown
+```
+
+Builds whatever is buildable and then shows what is waiting, split into what is
+ready to send and what needs ten minutes of looking first. Then:
+
+```
+uv run hubricon teardown review              read them one at a time, decide s/n
+uv run hubricon teardown show <id>           one in full: the email and the page URL
+uv run hubricon teardown open <id>           the page exactly as the prospect sees it
+uv run hubricon teardown name <id> --first-name Dana --email dana@brand.com
+uv run hubricon teardown approve <id>        publishes the page; the URL goes live
+uv run hubricon teardown sent <id>           after you send it, by hand, from your mailbox
+uv run hubricon teardown stats               the gate: how often it stays silent, how often you keep it
+```
+
+Nothing here sends an email. `sent` records that you did, which is what makes
+the ninety-day and three-touch rules real — a hand-sent email nobody wrote down
+is a prospect the automated lane will mail again next week.
+
+`POSTAL_ADDRESS` has to be in `.env` on the Mac as well as in the GitHub
+environment. CAN-SPAM requires it in the message and the engine refuses to draft
+without one.
+
+### What it will and will not claim
+
+Five detectors, all computed from pages the seller published themselves:
+
+| Finding | The claim | Where the dollars come from |
+|---|---|---|
+| `price_band_edge` | a listing at $10.49 nets less than the same listing at $9.99 | the 2026 schedule prices every weight band three times, by sale price; crossing $10 costs 82c–$1.01 a unit |
+| `size_tier_edge` | one dimension over the small-standard envelope moves every unit to large-standard rates | the two tiers' fee at that weight |
+| `dim_weight_overage` | past a cubic foot the fee is set by the box, not the product | the fee at dimensional weight against the fee at real weight |
+| `fee_band_edge` | the published item weight is already over a band edge, before Amazon's packaging | the band step on the schedule |
+| `price_cut_no_rank_gain` | a price cut that bought no rank | the cut, net of the referral fee |
+
+`price_band_edge` is the strongest and needs nothing but the price the seller
+set: two published rates and their own listing. `fee_band_edge` is the honest
+version of the old hook — a product page publishes the *item* weight and Amazon
+bills the *packed* weight, so the engine says the unit is **at least** in the
+band above and prices the step conditionally, rather than asserting a band it
+cannot see.
+
+**Roughly half of prospects should produce nothing.** `hubricon teardown stats`
+prints that rate and says so when it looks wrong. Sending nothing is a correct
+output; a wrong number sent to a $5M seller costs more than the channel earns,
+and this ICP talks to each other constantly.
+
+### The rate card
+
+Every dollar the engine claims comes from one table.
+
+```
+uv run hubricon teardown ratecard
+```
+
+prints it beside its effective window and tells you where to check it. It is the
+2026 US non-peak schedule, 15 Jan – 14 Oct, plus the 3.5% fuel surcharge that
+started 17 April. **On 15 October the peak card takes over and this one goes
+stale**: the engine stops pricing anything and says so rather than quoting a low
+number. Update `engine/src/hubricon_engine/cold/priors.py` and it starts again.
+
+### Shopify prospects get no teardown yet
+
+A Shopify brand's shipping cost is zone-priced and often negotiated, and this
+repo holds no carrier rate card. The detector states the billable-weight fact
+and prices nothing, so `select` never lets it out — deliberately. Load the USPS
+Ground Advantage price list into `priors.CARRIER_GROUND_USD` and the Shopify
+lane turns on with no other change. Until then Shopify sellers stay in the
+founder lane's `hubricon outreach` briefs.
+
+### Price history, for free
+
+`harvest_products` holds one row per listing and the crawl overwrites it, so
+last week's price is gone — which is why the price-history detectors normally
+need a paid provider. Since 2026-09-04 every crawl also appends what it saw to
+`harvest_product_observations`, one row per listing per day. The twice-daily
+passes therefore build the price and rank series a subscription would have sold
+us, and `price_cut_no_rank_gain` starts firing about a fortnight after the first
+run. Nothing to configure; it happens on every `hubricon harvest`.
+
+### Guardrails
+
+`cold/compliance.py` is the only path to a send, and a send object cannot be
+constructed without a clearance from it — a caller who forgets the check gets an
+exception rather than a delivered email. It checks, in order: `COLD_DRY_RUN`
+(on by default), an address, not one of ours, the global `suppressions` table,
+jurisdiction (EU/UK suppressed — no documented legitimate-interest basis yet),
+a postal address, ninety days and three touches per prospect, and the per-domain
+daily cap.
+
+```
+uv run hubricon teardown suppress someone@brand.com --reason "replied: remove me"
+```
+
+honours an objection immediately, across every lane.
+
+### The gate this is at
+
+COLD_ENGINE.md Phase 3: the founder sends fifty by hand from his own mailbox and
+handles every reply. Phase 4 (automated dispatch, sending-domain rotation,
+bounce and complaint auto-pause) is not built, and should not be until those
+fifty have produced replies and at least one call. Phase 5 (video) is not built
+and should not be until the page converts.
+
 ## When the campaign is silent: `hubricon doctor`
 
 On 2026-09-03 the campaign had 84 leads enrolled, had been activated twelve
@@ -368,6 +486,10 @@ inbox (`info@`, `hello@`, `support@`) that reaches a customer-service queue.
 Those are worth real money and worth a human; they are worthless to a cold
 sequence. So the harvest is a founder-lane source, not a campaign source, until
 enrichment starts finding named owners.
+
+Since 2026-09-04 the founder lane's email comes from `hubricon teardown`, which
+prices the hook and gives it a page. `hubricon outreach` still holds the
+disqualification pass, the target list and the partner template:
 
     hubricon outreach dq [--apply]     who should never have been enrolled
     hubricon outreach targets          in-ICP sellers worth a hand-written email

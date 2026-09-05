@@ -64,7 +64,7 @@ from .. import icp
 from . import amazon
 from . import enrich as enrichmod
 from .fetch import Fetcher
-from .run import _log_event, _now
+from .run import _keep_history, _log_event, _now
 
 # -- knobs ----------------------------------------------------------------------
 
@@ -1070,6 +1070,7 @@ def crawl(db, fetcher, handles: list[str], limit: int = LIMIT, log=print, resolv
         product_rows = [product_row(domain, seller_id(handle), p) for p in got["sampled"]]
         if product_rows:
             db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
+            _keep_history(db, product_rows, log)
             summary["products"] += len(product_rows)
         db.table("harvest_sellers").upsert([row], on_conflict="seller_id").execute()
         counts[status] += 1

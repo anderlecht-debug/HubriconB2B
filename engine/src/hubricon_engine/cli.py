@@ -15,6 +15,8 @@
     hubricon report     <client> [--run ID] [--out DIR]
     hubricon all        <client>
 
+    hubricon teardown   [build|review|show|open|approve|sent|stats|ratecard]
+
 <client> is a client uuid, uuid prefix, or contact email.
 """
 
@@ -1331,6 +1333,229 @@ def cmd_outreach(args):
         return
 
 
+def _teardown_row(t: dict) -> str:
+    seller = t.get("seller") or {}
+    brand = (seller.get("brand") or seller.get("seller_name") or t["prospect_key"])[:22]
+    finding = t.get("finding") or {}
+    hi, lo = t.get("dollars_high"), t.get("dollars_low")
+    money = f"${float(lo or 0):,.0f}-${float(hi or 0):,.0f}/mo" if hi else "per-unit only"
+    state = "READY" if t.get("ready") else (t.get("blocker") or "")
+    return (f"  {t['id'][:8]}  {brand:<22} {finding.get('kind', '?'):<20} {money:>19}  "
+            f"{state}")
+
+
+def cmd_teardown(args):
+    """The cold engine: a defensible finding about a stranger, as a page and an email."""
+    from .cold import compliance, page as coldpage, priors, run as cold, settings
+
+    action = getattr(args, "action", None) or "today"
+    db = dbmod.connect()
+
+    if action == "ratecard":
+        warning = priors.stale()
+        print(f"{priors.FBA_SOURCE}\n  in force  {priors.FBA_EFFECTIVE} to {priors.FBA_THROUGH}"
+              f"\n  surcharge {priors.FUEL_SURCHARGE:.1%} from {priors.FUEL_SURCHARGE_FROM}")
+        print(f"  status    {warning or 'inside its window'}\n")
+        for name, table in (("small standard", priors.SMALL_STANDARD_OZ),
+                            ("large standard", priors.LARGE_STANDARD_OZ)):
+            print(f"{name}   (upper edge)      <$10    $10-50     >$50")
+            for edge, fees in table:
+                print(f"    {edge:>3} oz{'':<18}" + "".join(f"{f:>9.2f}" for f in fees))
+            print()
+        print("Large standard above 3 lb: "
+              + " / ".join(f"${b:,.2f}" for b in priors.LARGE_STANDARD_OVER_3LB_BASE)
+              + f" plus ${priors.LARGE_STANDARD_OVER_3LB_PER_4OZ:.2f} per 4 oz over 3 lb.\n")
+        print("Verify against Seller Central -> Fulfilment by Amazon fees -> US, and edit\n"
+              "engine/src/hubricon_engine/cold/priors.py if a figure has moved. Every dollar\n"
+              "the cold engine claims comes from this table.")
+        print(f"\nShopify / carrier card: {priors.CARRIER_SOURCE}. "
+              f"{'loaded' if priors.CARRIER_GROUND_USD else 'EMPTY, so Shopify prospects are never sent.'}")
+        return
+
+    if action == "suppress":
+        if not args.who:
+            print("Give an email or a domain: hubricon teardown suppress hello@acme.com "
+                  "--reason 'asked us to stop'")
+            return
+        who = args.who.strip().lower()
+        field = "email" if "@" in who else "domain"
+        compliance.suppress(db, reason=args.reason or "manual", **{field: who})
+        print(f"Suppressed {field} {who}. Nothing will be sent to it again, by any lane.")
+        return
+
+    if action == "stats":
+        s = cold.stats(db)
+        print("COLD ENGINE\n")
+        print(f"  modelled              {s['modelled']} prospect(s)")
+        thin = s["no_price"] + s["no_weight"]
+        print(f"  no listing on file    {s['no_price']}")
+        print(f"  listing, no weight    {s['no_weight']}")
+        if thin:
+            print(f"      -> {thin} of {s['modelled']} are thin data, not a silent engine. "
+                  f"Fix with: hubricon harvest listings")
+        print(f"  judged on real data   {s['judged']}")
+        print(f"    produced a finding  {s['selected']}"
+              + (f"   ({1 - s['silent_rate']:.0%})" if s["silent_rate"] is not None else ""))
+        if s["silent_rate"] is not None:
+            if s["silent_rate"] < 0.25:
+                verdict = ("SUSPICIOUS - a gate that refuses almost nothing is not a gate. "
+                           "Check COLD_MIN_CONFIDENCE.")
+            elif s["silent_rate"] <= 0.85:
+                verdict = "healthy"
+            else:
+                verdict = ("expected on snapshot-only data: four of five detectors need a "
+                           "weight near a band edge")
+            print(f"    stayed silent       {s['silent_rate']:.0%}   {verdict}")
+        for reason, n in list(s["why_silent"].items())[:6]:
+            print(f"        {n:>3}  {reason}")
+        queue = ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items()))
+        print(f"\n  queue                 {queue or 'empty'}")
+        if s["approval_rate"] is not None:
+            bar = "PASSES" if s["approval_rate"] >= 0.90 else "the Phase 2 gate wants 45 of 50"
+            print(f"  you kept              {s['kept']} of {s['reviewed']} reviewed "
+                  f"({s['approval_rate']:.0%})   {bar}")
+        if s["events"]:
+            print("  pages                 " + ", ".join(f"{k} {v}" for k, v in
+                                                         sorted(s["events"].items())))
+        return
+
+    if action in ("show", "open", "approve", "reject", "sent", "name"):
+        t = cold.resolve(db, args.ref)
+        if not t:
+            print(f"No teardown matches {args.ref!r}. Try `hubricon teardown queue`.")
+            return
+        if action == "show":
+            seller = t["seller"]
+            print(f"{seller.get('brand') or t['prospect_key']}   [{t['status']}]   {t['id'][:8]}")
+            print(f"  page      {t['url']}")
+            print(f"  expires   {str(t['expires_at'])[:10]}")
+            print(f"  finding   {(t['finding'] or {}).get('kind')}   "
+                  f"confidence {(t['finding'] or {}).get('confidence')}")
+            for r in (t["run"].get("rejected") or []):
+                print(f"      also found {r['kind']}: {r['reason']}")
+            print(f"\nTo:      {t['seller'].get('email')}")
+            print(f"Subject: {t['subject']}\n")
+            print(t["body"])
+            print("\n--- send this by hand, from your own mailbox, after editing it. ---")
+            print(f"Then: hubricon teardown sent {t['id'][:8]}")
+            return
+        if action == "open":
+            path = os.path.join(os.environ.get("TMPDIR", "/tmp"), f"teardown-{t['id'][:8]}.html")
+            with open(path, "w") as fh:
+                fh.write(t["html"])
+            subprocess.run(["open", path], check=False)
+            print(f"Opened {path}\n(this is byte-for-byte the page the prospect sees at {t['url']})")
+            return
+        if action == "name":
+            ok, why = cold.name_owner(db, t["id"], first_name=args.first_name,
+                                      last_name=args.last_name, email=args.email)
+            print(why if ok else f"Not saved: {why}")
+            if ok:
+                print(f"  hubricon teardown show {t['id'][:8]}")
+            return
+        if action == "approve":
+            cold.decide(db, t["id"], "approved", args.note)
+            print(f"Approved. The page is live at {t['url']}\n"
+                  f"Send the email, then: hubricon teardown sent {t['id'][:8]}")
+            return
+        if action == "reject":
+            cold.decide(db, t["id"], "rejected", args.note)
+            print("Rejected." + (f" Noted: {args.note}" if args.note else
+                                 " Pass --note next time; the note is how the gate gets fixed."))
+            return
+        ok, why = cold.mark_sent(db, t["id"], sending_domain=args.domain)
+        print(("Sent: " if ok else "NOT recorded: ") + why)
+        return
+
+    if action == "review":
+        rows = [r for r in cold.queue(db, "draft", args.limit) if r["ready"] or args.all]
+        if not rows:
+            print("Nothing waiting that is ready to send. `hubricon teardown` shows what is\n"
+                  "blocked and why; --all walks the blocked ones too.")
+            return
+        print(f"{len(rows)} waiting. For each: [s]end it, [n]o, [o]pen the page, [q]uit.\n")
+        kept = 0
+        for i, t in enumerate(rows, 1):
+            full = cold.resolve(db, t["id"])
+            seller = full["seller"]
+            print("=" * 78)
+            print(f"{i}/{len(rows)}  {seller.get('brand') or full['prospect_key']}   "
+                  f"{seller.get('email') or 'NO ADDRESS'}   {full['url']}")
+            if full["blocker"]:
+                print(f"BLOCKED: {full['blocker']}")
+            print("=" * 78)
+            print(f"Subject: {full['subject']}\n")
+            print(full["body"])
+            while True:
+                choice = input("\n[s]end / [n]o / [o]pen / [q]uit > ").strip().lower()[:1]
+                if choice == "o":
+                    path = os.path.join(os.environ.get("TMPDIR", "/tmp"),
+                                        f"teardown-{full['id'][:8]}.html")
+                    with open(path, "w") as fh:
+                        fh.write(full["html"])
+                    subprocess.run(["open", path], check=False)
+                    continue
+                break
+            if choice == "q":
+                break
+            if choice == "s":
+                cold.decide(db, full["id"], "approved")
+                kept += 1
+                print(f"  approved. Send it, then: hubricon teardown sent {full['id'][:8]}")
+            else:
+                note = input("  why not? (this is how the gate gets fixed) > ").strip()
+                cold.decide(db, full["id"], "rejected", note)
+        print(f"\nKept {kept}. `hubricon teardown stats` shows the running rate; the Phase 2 "
+              f"gate is 45 of 50 unedited.")
+        return
+
+    if action in ("today", "build"):
+        if action == "today":
+            print("Building whatever is buildable, then showing you what is waiting.\n")
+        summary = cold.build(db, limit=args.limit, force=args.force, only=args.seller)
+        if summary.get("stale"):
+            return
+        print(f"Looked at {summary['looked']} prospect(s):")
+        print(f"  {summary['built']:>4}  produced a teardown")
+        print(f"  {summary['no_finding']:>4}  produced nothing that cleared the bar")
+        print(f"  {summary['blocked']:>4}  are not contactable (suppressed, off-ICP, jurisdiction)")
+        print(f"  {summary['skipped']:>4}  already have a recent teardown")
+        if summary["reasons"]:
+            print("\n  why the silent ones were silent:")
+            for reason, n in sorted(summary["reasons"].items(), key=lambda kv: -kv[1])[:8]:
+                print(f"      {n:>3}  {reason}")
+        if summary["next"]:
+            print("\n  what would unblock them:")
+            for n, command, why in summary["next"]:
+                print(f"      {n:>3}  {command:<28} {why}")
+        print(f"\n  spend this run  ${summary['spent_usd']:.4f} "
+              f"(budget ${settings.daily_budget_usd():,.2f}/day)")
+        if action == "build":
+            print("\nNext: hubricon teardown review")
+            return
+
+    rows = cold.queue(db, "draft", getattr(args, "limit", 25))
+    if not rows:
+        print("\nNothing is waiting for review.")
+        return
+    ready = [r for r in rows if r["ready"]]
+    blocked = [r for r in rows if not r["ready"]]
+    print(f"\nWAITING FOR YOU — {len(ready)} ready to send, {len(blocked)} need something "
+          f"first.\n")
+    for t in ready:
+        print(_teardown_row(t))
+    if not ready:
+        print("  (none — every teardown below needs an owner's name or a real address)")
+    if blocked:
+        print("\n  Built, but not sendable yet. Ten minutes each on the brand's About page,\n"
+              "  LinkedIn, or the state business registry turns one of these into a send:\n")
+        for t in blocked[:12]:
+            print(_teardown_row(t))
+    print("\n  hubricon teardown review          read the ready ones and decide, one at a time")
+    print("  hubricon teardown show <id>       one of them in full")
+    print("  hubricon teardown open <id>       the page as the prospect sees it")
+
+
 def cmd_harvest(args):
     """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
     from .harvest import run as harvest
@@ -1540,6 +1765,28 @@ def main():
     p.add_argument("--apply", action="store_true", help="dq: actually write the disqualifications")
     p.add_argument("--out", help="pack: write the batch to this file instead of stdout")
     p.set_defaults(fn=cmd_outreach)
+
+    p = sub.add_parser("teardown", help="the cold engine: build, review and send unsolicited "
+                                        "Profit Teardowns from public pages")
+    p.add_argument("action", nargs="?",
+                   choices=["today", "build", "queue", "review", "show", "open", "approve",
+                            "reject", "sent", "name", "stats", "ratecard", "suppress"],
+                   default="today",
+                   help="default 'today': build what is buildable, then show what is waiting")
+    p.add_argument("ref", nargs="?", help="a teardown id prefix, seller id, or brand name")
+    p.add_argument("who", nargs="?", help="for suppress: an email address or a domain")
+    p.add_argument("--limit", type=int, default=25)
+    p.add_argument("--seller", help="build one prospect by seller id")
+    p.add_argument("--force", action="store_true", help="rebuild even if a recent draft exists")
+    p.add_argument("--note", help="why you rejected it, in your words")
+    p.add_argument("--domain", help="the sending domain, for the per-domain daily cap")
+    p.add_argument("--reason", help="for suppress: why")
+    p.add_argument("--all", action="store_true",
+                   help="review: walk the blocked ones too, not only the ready ones")
+    p.add_argument("--first-name", help="name: the owner you just found")
+    p.add_argument("--last-name", help="name: their surname, if you have it")
+    p.add_argument("--email", help="name: their real address, replacing the role inbox")
+    p.set_defaults(fn=cmd_teardown)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles / "
                                        "Shopify stores → brand sites → Instantly list")
