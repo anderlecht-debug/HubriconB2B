@@ -102,6 +102,13 @@ ROLE_LOCALS = frozenset((
     "service", "customerservice", "customer", "team", "admin", "office", "concierge",
     "care", "inquiries", "enquiries", "shop", "store", "mail", "general", "press",
     "consumerrelations", "hey", "howdy",
+    # Added 2026-09-05, when a shared inbox stopped being a reason not to send.
+    # Recognising one is now what picks the right copy — a note that names
+    # nobody and asks to be passed on — so an unrecognised shared inbox is a
+    # draft that opens "Hi [FIRST NAME]" and never goes out. Every one of these
+    # was found on a real harvested store.
+    "customercare", "customersupport", "clientcare", "wholesale", "questions",
+    "connect", "reachus", "letstalk", "hola", "welcome", "yourfriends", "friends",
 ))
 
 

@@ -981,6 +981,35 @@ def product_row(domain: str, sid: str, product: dict) -> dict:
     }
 
 
+def catalogue_rows(domain: str, sid: str, got: dict) -> list[dict]:
+    """Every product the store publishes, not the three we read pages for.
+
+    `/products.json` returns the whole catalogue — up to 250 items with their
+    vendor, type, price and weight — in *one* request, and the first version of
+    this wrote only the three products it had also fetched HTML pages for, to
+    attach a review count. The other two hundred were parsed, held in memory and
+    thrown away.
+
+    Keeping them costs nothing and pays twice: a teardown can show the brand its
+    whole shelf rather than a sample of it, and the weights feed the category
+    benchmark that makes the page credible. Only the sampled products carry a
+    review count; the rest carry None, which is honest and is what the page
+    already renders.
+
+    Gated on the store having got past catalogue classification, so a reseller
+    or a marketplace still contributes nothing.
+    """
+    if not got.get("sampled"):
+        return []
+    reviews = {p["handle"]: p.get("reviews") for p in got["sampled"]}
+    rows = []
+    for p in got.get("products") or []:
+        row = product_row(domain, sid, p)
+        row["reviews"] = reviews.get(p["handle"])
+        rows.append(row)
+    return rows
+
+
 # -- the crawl ---------------------------------------------------------------------
 
 def read_store(fetcher, handle: str, sample: int = SAMPLE, resolver=None, meta: dict | None = None) -> dict:
@@ -1082,7 +1111,7 @@ def crawl(db, fetcher, handles: list[str], limit: int = LIMIT, log=print, resolv
         row = store_row(handle, meta, got["products"], got["sampled"], vendors, est,
                         got["contact"], status, f"{head}; {got['note']}")
         domain = store_domain(handle, got["meta"])
-        product_rows = [product_row(domain, seller_id(handle), p) for p in got["sampled"]]
+        product_rows = catalogue_rows(domain, seller_id(handle), got)
         if product_rows:
             db.table("harvest_products").upsert(product_rows, on_conflict="asin").execute()
             _keep_history(db, product_rows, log)

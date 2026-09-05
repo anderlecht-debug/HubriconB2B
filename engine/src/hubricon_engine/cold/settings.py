@@ -93,6 +93,24 @@ def max_touches() -> int:
     return _i("COLD_MAX_TOUCHES", 3)
 
 
+def allow_role_inbox() -> bool:
+    """Whether a teardown may be sent to info@ / hello@ / support@.
+
+    The founder's call on 2026-09-03 was no, and it was right for what was being
+    sent then: an ounce count in a plain email, which a support queue bins. The
+    call on 2026-09-05 was to relax it, because what arrives now is a teardown
+    page carrying the brand's own shelf and its category — the kind of thing a
+    support queue forwards rather than bins, and the only way the lane reaches
+    the volume it needs (27 of the 55 usable rows on file are role inboxes and
+    two are named people).
+
+    The copy changes with the address rather than pretending: a role inbox gets
+    a note that names no one and asks to be passed to whoever owns pricing.
+    Set COLD_ALLOW_ROLE_INBOX=false to put the old rule back.
+    """
+    return _b("COLD_ALLOW_ROLE_INBOX", True)
+
+
 def suppressed_jurisdictions() -> set[str]:
     """The EU, the UK, the EEA and Switzerland, suppressed outright.
 

@@ -162,3 +162,83 @@ def test_the_category_benchmark_needs_a_sample_worth_quoting():
     assert "The same mistake, Baby-wide" in with_bench
     assert f"{deep.measured:,}" in with_bench
     assert "same mistake" not in without, "a thin sample is left off, not rounded up"
+
+
+def test_a_long_catalogue_is_shown_not_dumped():
+    """A Shopify store publishes up to 250 products. The table is evidence that
+    we looked at the shelf, not an inventory report."""
+    from hubricon_engine.cold import shelf as shelfmod
+    many = snapshot(items=[item(ref=f"B{i:09d}", title=f"Listing {i}", price=24.99,
+                                item_weight_oz=12.4, dims_in=(11.0, 8.0, 1.5),
+                                est_monthly_units=800.0) for i in range(28)])
+    f = select.best(findings.detect(many, today=TODAY), many)
+    html = page.render(f, many, token="t", cta_url="https://x",
+                       expires_on=date(2026, 10, 20),
+                       shelf_rows=shelfmod.shelf(many, TODAY))
+    assert html.count("<tr>") <= page.SHELF_ROWS + 2
+    assert "and 18 more listings we can see" in html
+    assert "Across the 28 listings we can see" in html
+
+
+def test_the_shopify_benchmark_uses_the_carrier_ladder_not_the_fba_one():
+    """A pound boundary under a Shopify parcel and an FBA band under an Amazon
+    one. Mixing the two would put the wrong edge under someone's business."""
+    from hubricon_engine.cold import shelf as shelfmod
+    rows = ([{"platform": "shopify", "weight_oz": 17.0 + i * 0.2, "category": "Bags"}
+             for i in range(40)]
+            + [{"platform": "amazon", "weight_oz": 4.5, "category": "Bags", "dims": None}] * 40)
+    shop = shelfmod.benchmark(rows, "Bags", your_weight_oz=17.2, platform="shopify")
+    amz = shelfmod.benchmark(rows, "Bags", your_weight_oz=4.5, platform="amazon")
+    assert shop.category == "Shopify brands"      # product_type is free text; no shared taxonomy
+    assert shop.measured == 40 and amz.measured == 40
+    assert shop.your_over_by == 1.2               # over the 16 oz pound boundary
+    assert amz.your_over_by == 0.5                # over the 4 oz FBA band
+
+
+def test_the_shelf_columns_match_the_cells_on_both_platforms():
+    """Header and cells were written out separately and drifted: a Shopify page
+    printed 'Amazon's fee' over a column of dashes and a band width under a
+    heading that said size tier."""
+    from hubricon_engine.cold import shelf as shelfmod
+    import re as _re
+    # Amazon needs dimensions for a known size tier; Shopify has none to give.
+    for plat, ref, weight, dims, price in (
+            ("amazon", "B00TEST0001", 12.4, (11.0, 8.0, 1.5), 24.99),
+            # A carrier range spans zones, so its top end is wide; at $24.99 the
+            # claim would exceed a quarter of the listing's revenue and select
+            # would rightly refuse it.
+            ("shopify", "b.com/products/harbor-tote", 17.2, None, 68.0)):
+        snap = snapshot(platform=plat, items=[item(ref=ref, price=price, item_weight_oz=weight,
+                                                   dims_in=dims, est_monthly_units=900.0)])
+        f = select.best(findings.detect(snap, today=TODAY), snap)
+        html = page.render(f, snap, token="t", cta_url="https://x",
+                           expires_on=date(2026, 10, 20),
+                           shelf_rows=shelfmod.shelf(snap, TODAY))
+        head = _re.search(r"<thead><tr>(.*?)</tr></thead>", html, _re.S).group(1)
+        first = _re.search(r"<tbody><tr>(.*?)</tr>", html, _re.S).group(1)
+        # count the tags, not the literal "<td>": the last cell is styled.
+        assert head.count("<th") == first.count("<td"), plat
+        if plat == "shopify":
+            assert "Amazon" not in head
+            assert "harbor-tote" in first and "b.com/products" not in first
+
+
+def test_a_shopify_listing_is_named_by_its_handle_not_its_whole_url():
+    # A forty-character URL forced the first column so wide that every other one
+    # scrolled off the page.
+    from hubricon_engine.cold import shelf as shelfmod
+    snap = snapshot(platform="shopify",
+                    items=[item(ref="www.holtzleather.com/products/american-walnut-cutting-board",
+                                price=48.0, item_weight_oz=17.2, dims_in=None)])
+    row = shelfmod.shelf(snap, TODAY)[0]
+    assert row.label == "american-walnut-cutting-board"
+    assert row.ref.startswith("www.holtzleather.com")
+
+
+def test_the_shelf_leads_with_the_listings_that_have_something_to_say():
+    from hubricon_engine.cold import shelf as shelfmod
+    snap = snapshot(platform="shopify", items=[
+        item(ref="b.com/products/aaa-heavy", price=40.0, item_weight_oz=40.0, dims_in=None),
+        item(ref="b.com/products/zzz-near", price=40.0, item_weight_oz=17.2, dims_in=None)])
+    assert [r.label for r in shelfmod.shelf(snap, TODAY)][0] == "zzz-near", \
+        "alphabetical order put ten arbitrary handles at the top of the evidence"

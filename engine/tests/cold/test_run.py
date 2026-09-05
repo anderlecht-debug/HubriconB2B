@@ -11,11 +11,16 @@ def test_a_row_with_a_named_owner_on_their_own_domain_is_ready():
                          "first_name": "Dana"}) is None
 
 
-def test_a_role_inbox_is_inventory_not_a_draft_to_send():
-    # The founder's standing call, 2026-09-03: info@ reaches a support queue and
-    # is never cold emailed, however good the finding behind it is.
-    stop = cold.blocker({"email": "info@testbrand.com", "website": "https://testbrand.com",
-                         "first_name": "Dana"})
+def test_a_role_inbox_is_sendable_and_carries_its_own_copy():
+    """The founder's call moved on 2026-09-05. What arrives now is a teardown
+    page with the brand's own shelf on it, which a support queue forwards rather
+    than bins — and 27 of the 55 usable rows on file are role inboxes."""
+    assert cold.blocker({"email": "info@testbrand.com", "website": "https://testbrand.com"}) is None
+
+
+def test_the_old_role_inbox_rule_is_one_setting_away(monkeypatch):
+    monkeypatch.setenv("COLD_ALLOW_ROLE_INBOX", "false")
+    stop = cold.blocker({"email": "info@testbrand.com", "website": "https://testbrand.com"})
     assert stop and "role inbox" in stop
 
 
@@ -25,7 +30,10 @@ def test_an_address_on_someone_elses_domain_is_the_wrong_person():
     assert stop and "is not on" in stop
 
 
-def test_no_name_means_no_send():
+def test_a_personal_mailbox_with_no_name_behind_it_still_blocks():
+    # "Hi there" to a named human's own address reads as a mail merge, which is
+    # the one thing the page is trying not to be. A shared inbox is different:
+    # it has no name to get wrong.
     stop = cold.blocker({"email": "dana@testbrand.com", "website": "https://testbrand.com"})
     assert stop and "name" in stop
 
@@ -105,3 +113,38 @@ def test_history_returns_observations_in_the_order_they_were_seen():
     hist = cold._history(type("DB", (), {"table": lambda self, _n: Q()})(), ["B001"])
     assert hist["B001"] == [Observation(date(2026, 8, 1), 12.0, 900),
                             Observation(date(2026, 8, 20), 10.5, 910)]
+
+
+def test_a_rebuild_supersedes_the_draft_it_replaces():
+    """`--force` used to leave both drafts in the queue, so the same prospect
+    could be sent two teardowns about the same listing."""
+    updates = []
+
+    class Table:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def select(self, *_a, **_k):
+            return self
+
+        def eq(self, col, val):
+            self.rows = [r for r in self.rows if r.get(col) == val]
+            return self
+
+        def update(self, patch):
+            updates.append(patch)
+            return self
+
+        def order(self, *_a, **_k):
+            return self
+
+        def execute(self):
+            return type("R", (), {"data": self.rows})()
+
+    drafts = [{"id": "old-1", "prospect_key": "A1", "status": "draft"},
+              {"id": "sent-1", "prospect_key": "A1", "status": "sent"}]
+    stale = [r for r in drafts if r["status"] == "draft"]
+    assert len(stale) == 1, "only the draft is a candidate to supersede"
+    tbl = Table([dict(r) for r in drafts])
+    found = tbl.select("id").eq("prospect_key", "A1").eq("status", "draft").execute().data
+    assert [r["id"] for r in found] == ["old-1"], "a sent teardown is a decision, not a draft"

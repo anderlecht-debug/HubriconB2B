@@ -432,10 +432,20 @@ def test_crawl_writes_a_shopify_seller_and_its_sampled_products():
     assert "password-protected" in by_id["closed-store.myshopify.com"]["notes"]
     assert not any("maple-mercantile.myshopify.com/products" in c for c in f.calls)
 
+    # The whole catalogue is kept, not the three products we also fetched HTML
+    # pages for. /products.json returned all eight in one request; writing only
+    # the sampled three parsed the other five and threw them away, which cost
+    # the teardown its shelf and the benchmark its sample for nothing.
     prods = {p["asin"]: p for p in db.store["harvest_products"]}
-    assert set(prods) == {"riverbendgoods.com/products/harbor-tote",
-                          "riverbendgoods.com/products/cedar-caddy",
-                          "riverbendgoods.com/products/harbor-mug"}
+    assert len(prods) == 8
+    assert "riverbendgoods.com/products/harbor-tote" in prods
+    assert all(p["seller_id"] == "riverbend-goods.myshopify.com" for p in prods.values())
+    # Only a sampled product can carry a review count, and only when its page
+    # published one. The rest say None rather than borrowing a number from a
+    # sibling, which is what would make the shelf table lie.
+    sampled = {"harbor-tote", "cedar-caddy", "harbor-mug"}
+    reviewed = {p["asin"].rsplit("/", 1)[-1] for p in prods.values() if p["reviews"] is not None}
+    assert reviewed and reviewed <= sampled
     tote = prods["riverbendgoods.com/products/harbor-tote"]
     assert tote["platform"] == "shopify" and tote["fulfilled_by_amazon"] is False
     assert tote["weight_oz"] == 17.99 and tote["price"] == 48.0 and tote["reviews"] == 1204

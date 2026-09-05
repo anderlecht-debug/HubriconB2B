@@ -85,9 +85,22 @@ def test_a_missing_postal_address_is_visible_rather_than_silent(monkeypatch):
     assert "POSTAL_ADDRESS is not set" in copy.email(f, snap, "Dana", None, CAL)["body"]
 
 
+def test_a_role_inbox_gets_a_note_that_names_nobody_and_asks_for_a_hand_off():
+    f, _ = chosen(price=10.49)
+    shared = snapshot(first_name=None, email="info@testbrand.com",
+                      items=[item(price=10.49)])
+    message = copy.email(f, shared, None, "https://hubricon.com/t/tok", CAL)
+    assert message["complete"], "a shared inbox has no name to get wrong"
+    assert "FIRST NAME" not in message["body"]
+    assert "Hi there" not in message["body"]
+    assert "whoever looks after pricing" in message["body"]
+    assert "forwarding it" in message["body"]
+
+
 def test_a_draft_with_no_first_name_is_incomplete_and_says_so():
     f, _ = chosen(price=10.49)
-    nameless = snapshot(first_name=None, items=[item(price=10.49)])
+    nameless = snapshot(first_name=None, email="dana@testbrand.com",
+                        items=[item(price=10.49)])
     message = copy.email(f, nameless, None, None, CAL)
     assert not message["complete"]
     assert "FIRST NAME" in message["body"]

@@ -41,6 +41,26 @@ def chunked_upsert(db: Client, table: str, rows: list[dict], on_conflict: str) -
     return len(rows)
 
 
+def fetch_rows(db: Client, table: str, columns: str = "*", page: int = 1000,
+               filters: dict | None = None) -> list[dict]:
+    """Every row of a table, paged. PostgREST caps a response at 1,000 and says
+    nothing about it, so a plain `.select().execute()` quietly returns a
+    prefix — which is how the teardown's category benchmark came to be computed
+    from 54% of the products on file, with no error anywhere. Any read of a
+    table that grows has to come through here."""
+    out: list[dict] = []
+    start = 0
+    while True:
+        q = db.table(table).select(columns)
+        for column, value in (filters or {}).items():
+            q = q.eq(column, value)
+        rows = q.range(start, start + page - 1).execute().data
+        out.extend(rows)
+        if len(rows) < page:
+            return out
+        start += page
+
+
 def fetch_all(db: Client, table: str, client_id: str, page: int = 1000,
               filters: dict | None = None) -> list[dict]:
     """PostgREST caps responses, so page through the client's rows.

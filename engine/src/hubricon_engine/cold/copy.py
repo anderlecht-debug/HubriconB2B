@@ -29,7 +29,7 @@ teardown page repeats them under the chart.
 
 from __future__ import annotations
 
-from .. import onboarding
+from .. import icp, onboarding
 from . import compliance, settings
 from .findings import Finding
 from .snapshot import ProspectSnapshot
@@ -45,6 +45,20 @@ def _money(v: float) -> str:
 def _cents(v: float) -> str:
     """Per-unit money reads better in cents under a dollar: '57c', '$1.08'."""
     return f"{v * 100:.0f}c" if v < 1 else f"${v:,.2f}"
+
+
+def _oz(value: float) -> str:
+    """Ounces as a person would say them.
+
+    A merchant who set a shipping weight of 16.014 oz reads "0.014 oz is costing
+    you" as a machine being clever, and stops reading. The fact is that they are
+    a hair over the line, which is a better sentence and the same claim.
+    """
+    if value < 0.1:
+        return "a fraction of an ounce"
+    if value < 1:
+        return f"{value:.1f} oz"
+    return f"{value:,.1f} oz".replace(".0 oz", " oz")
 
 
 def _short_title(finding: Finding) -> str:
@@ -159,16 +173,18 @@ def _carrier_band_hook(f: Finding) -> tuple[str, str]:
     """
     e = f.evidence
     item = _short_title(f)
-    subject = f"{e['over_by_oz']:g} oz is costing {{brand}} on every parcel"
+    over = _oz(e["over_by_oz"])
+    subject = (f"{{brand}} is {over} over a shipping band" if over.startswith("a ")
+               else f"{over} is costing {{brand}} on every parcel")
     cost = ""
     if f.per_unit_high > 0:
         cost = (f" That is {_cents(f.per_unit_low)} a parcel to the nearest zones and "
                 f"{_cents(f.per_unit_high)} to the far ones.")
     body = (
         f"Your {item} publishes a weight of {e['your_weight_oz']:g} oz. USPS rounds anything over "
-        f"{e['edge']} oz up to {e['band_above']}, so those {e['over_by_oz']:g} ounces put every "
-        f"parcel you send onto the {e['band_above']} rate — where {e['band_below']} would have "
-        f"paid one flat rate however heavy it was.{cost}\n\n"
+        f"{e['edge']} oz up to {e['band_above']}, and you are {over} over it — so every parcel "
+        f"you send bills at the {e['band_above']} rate, where {e['band_below']} would have paid "
+        f"one flat rate however heavy it was.{cost}\n\n"
         f"I read the weight off your own product page. I have no access to your store."
     )
     return subject, body
@@ -229,8 +245,20 @@ def email(f: Finding, snap: ProspectSnapshot, first_name: str | None,
     brand = snap.display_name
     subject, opening = hook(f, brand)
     greeting = first_name or snap.first_name
+    role = icp.is_role_inbox(snap.email) and not greeting
     monthly = _monthly_phrase(f)
-    parts = [f"Hi {greeting or '[FIRST NAME — find it before sending]'},", "", opening]
+    if greeting:
+        opener = f"Hi {greeting},"
+    elif role:
+        # A shared inbox. Naming nobody is more honest than guessing, and asking
+        # for the hand-off is the whole job of the first line: the person who
+        # reads this queue is not the person who sets prices.
+        opener = (f"Hi — this one is for whoever looks after pricing or fulfilment at {brand}. "
+                  f"If that is not you, forwarding it takes ten seconds and it is worth their "
+                  f"thirty.")
+    else:
+        opener = "Hi [FIRST NAME — find it before sending],"
+    parts = [opener, "", opening]
     if monthly:
         parts += ["", f"At the volume that listing looks to do, {monthly}. That range is wide "
                       f"because the volume is estimated from your public rank, not measured — "
@@ -260,8 +288,9 @@ def email(f: Finding, snap: ProspectSnapshot, first_name: str | None,
         "subject": subject,
         "body": "\n".join(parts),
         "template_id": TEMPLATE_ID,
-        "complete": bool(greeting) and not onboarding.is_internal(snap.email, brand),
-        "missing": None if greeting else "a first name — the founder lane does not send 'Hi there'",
+        "complete": bool(greeting or role) and not onboarding.is_internal(snap.email, brand),
+        "missing": None if (greeting or role) else
+                   "a first name — a personal mailbox is not sent 'Hi there'",
     }
 
 

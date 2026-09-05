@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from . import priors
+from ..harvest import shopify as shopify_harvest
 from .snapshot import Item, ProspectSnapshot, parse_dims, size_tier
 
 # Below this a percentage is noise dressed up as a finding, so the benchmark is
@@ -43,8 +44,9 @@ NEAR_EDGE_OZ = 1.0
 
 @dataclass(frozen=True)
 class ShelfRow:
-    """One listing, priced against the published card."""
+    """One listing, priced against its own platform's published card."""
     ref: str
+    label: str
     title: str | None
     url: str
     price: float | None
@@ -54,10 +56,12 @@ class ShelfRow:
     edge: float | None
     over_by: float | None
     monthly_units: float | None
+    platform: str = "amazon"
 
     @property
     def near_edge(self) -> bool:
-        return self.over_by is not None and self.over_by <= NEAR_EDGE_OZ
+        limit = CARRIER_NEAR_EDGE_OZ if self.platform == "shopify" else NEAR_EDGE_OZ
+        return self.over_by is not None and self.over_by <= limit
 
 
 def tier_label(tier: str | None) -> str:
@@ -65,32 +69,70 @@ def tier_label(tier: str | None) -> str:
             "oversize": "oversize"}.get(tier or "", "unknown")
 
 
-def describe(item: Item, today: date | None = None) -> ShelfRow:
-    """One listing as the fee schedule sees it. Every field may be None; a page
-    that cannot show a column simply does not show it."""
+def _label(ref: str, platform: str) -> str:
+    """What to print in the table's first column.
+
+    An ASIN is ten characters. A Shopify ref is the product's whole URL path,
+    which at forty-odd characters forced the column so wide that every other one
+    scrolled off the page — the table rendered as a list of URLs and nothing
+    else. The handle alone identifies the product to its own owner.
+    """
+    if platform == "shopify" and "/products/" in ref:
+        return ref.rsplit("/products/", 1)[-1]
+    return ref
+
+
+def describe(item: Item, platform: str = "amazon", today: date | None = None) -> ShelfRow:
+    """One listing as its own platform's card sees it.
+
+    Running Amazon's ladder over a Shopify catalogue was worse than useless: it
+    returned None for every column, so the shelf table on a Shopify teardown
+    printed a list of product handles with nothing beside them.
+    """
     today = today or date.today()
-    tier = item.tier
     weight = item.billable_weight_oz
+    if platform == "shopify":
+        cliff = shopify_harvest.shipping_cliff(weight)
+        edge = float(cliff[0]) if cliff else None
+        return ShelfRow(
+            ref=item.ref, label=_label(item.ref, platform), title=item.title, url=item.url,
+            price=item.price, weight_oz=weight, tier=None, fee=None, edge=edge,
+            over_by=cliff[1] if cliff else None,
+            monthly_units=item.est_monthly_units, platform=platform)
+    tier = item.tier
     fee = (priors.fulfilment_fee(tier, weight, item.price, today)
            if tier in ("small_standard", "large_standard") and weight else None)
     edge = priors.band_edge_below(tier, weight) if tier in ("small_standard", "large_standard") \
         else None
     return ShelfRow(
-        ref=item.ref, title=item.title, url=item.url, price=item.price,
-        weight_oz=weight, tier=tier, fee=fee, edge=edge,
+        ref=item.ref, label=_label(item.ref, platform), title=item.title, url=item.url,
+        price=item.price, weight_oz=weight, tier=tier, fee=fee, edge=edge,
         over_by=round(weight - edge, 2) if (edge is not None and weight) else None,
-        monthly_units=item.est_monthly_units,
-    )
+        monthly_units=item.est_monthly_units, platform=platform)
 
 
 def shelf(snap: ProspectSnapshot, today: date | None = None) -> list[ShelfRow]:
-    """Every listing we hold for this seller, dearest fee first."""
-    rows = [describe(i, today) for i in snap.items]
-    rows.sort(key=lambda r: (-(r.fee or 0), r.ref))
+    """Every listing we hold, the ones with something to say about them first.
+
+    A 250-product Shopify catalogue only prints its first ten rows, so the order
+    decides what the reader sees. Listings sitting near an edge lead, then the
+    dearest, then the heaviest — alphabetical by URL, which is what it used to
+    be, put ten arbitrary handles at the top of the evidence.
+    """
+    rows = [describe(i, snap.platform, today) for i in snap.items]
+    rows.sort(key=lambda r: (not r.near_edge, -(r.fee or 0), -(r.weight_oz or 0), r.ref))
     return rows
 
 
 # -- the category around it ---------------------------------------------------------
+
+# The buckets a distribution is drawn in, per ladder. FBA bands are two to four
+# ounces wide, so half-ounce buckets are the right grain; a carrier pound is
+# sixteen, so they are not.
+FBA_BUCKETS = [0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0]
+CARRIER_BUCKETS = [0, 1.0, 2.0, 4.0, 8.0, 12.0]
+CARRIER_NEAR_EDGE_OZ = 2.0
+
 
 @dataclass(frozen=True)
 class Benchmark:
@@ -104,6 +146,19 @@ class Benchmark:
     @property
     def worth_showing(self) -> bool:
         return self.measured >= MIN_CATEGORY_SAMPLE
+
+
+def _over_by_carrier(weight_oz: float | None) -> float | None:
+    """Ounces above the pound boundary below this parcel, on the carrier ladder.
+
+    Shopify's own product types are free text a merchant invents, so there is no
+    shared taxonomy to slice by — and none is needed, because the pound boundary
+    is the same for every parcel whatever is in it. The benchmark is therefore
+    across every Shopify product the crawl has weighed rather than within a
+    category.
+    """
+    cliff = shopify_harvest.shipping_cliff(weight_oz)
+    return cliff[1] if cliff else None
 
 
 def _over_by(weight_oz: float | None, dims: str | None = None) -> float | None:
@@ -142,39 +197,60 @@ def _over_by(weight_oz: float | None, dims: str | None = None) -> float | None:
 
 def benchmark(rows: list[dict], category: str | None,
               your_weight_oz: float | None = None,
-              your_dims: str | None = None) -> Benchmark | None:
-    """How the seller's category behaves, from every listing the crawl has read.
+              your_dims: str | None = None,
+              platform: str = "amazon") -> Benchmark | None:
+    """How the ground around this seller behaves, from everything the crawl read.
 
-    `rows` are raw `harvest_products` records — passed in rather than queried so
-    this stays a pure function and the page can be rendered from a fixture.
+    Two shapes, because the two platforms are billed on different ladders and
+    mixing them would put an FBA band edge under a Shopify parcel:
+
+      amazon    within the listing's own Best Sellers category, on the FBA
+                weight bands. Categories are Amazon's taxonomy, so they mean
+                the same thing across sellers.
+      shopify   across every Shopify product on file, on the carrier's pound
+                boundary. A merchant's product_type is free text they invented,
+                so there is no shared category to slice by — and none is needed,
+                because a pound is a pound whatever is in the box.
+
+    `rows` are raw `harvest_products` records, passed in rather than queried so
+    this stays a pure function the page can be rendered from a fixture.
     """
-    if not category:
-        return None
-    wanted = category.strip().lower()
-    measured = [w for w in
-                (_over_by(float(r["weight_oz"]), r.get("dims")) for r in rows
-                 if r.get("weight_oz") and (r.get("category") or "").strip().lower() == wanted)
-                if w is not None]
+    shopify = (platform or "amazon").lower() == "shopify"
+    if shopify:
+        pool = [r for r in rows if (r.get("platform") or "amazon") == "shopify"]
+        measure = lambda r: _over_by_carrier(float(r["weight_oz"]))    # noqa: E731
+        label, edges, near_oz = "Shopify brands", CARRIER_BUCKETS, CARRIER_NEAR_EDGE_OZ
+        mine = _over_by_carrier(your_weight_oz)
+    else:
+        if not category:
+            return None
+        wanted = category.strip().lower()
+        pool = [r for r in rows
+                if (r.get("platform") or "amazon") == "amazon"
+                and (r.get("category") or "").strip().lower() == wanted]
+        measure = lambda r: _over_by(float(r["weight_oz"]), r.get("dims"))   # noqa: E731
+        label, edges, near_oz = category, FBA_BUCKETS, NEAR_EDGE_OZ
+        mine = _over_by(your_weight_oz, your_dims)
+    measured = [w for w in (measure(r) for r in pool if r.get("weight_oz")) if w is not None]
     if not measured:
         return None
-    near = sum(1 for m in measured if m <= NEAR_EDGE_OZ)
-    edges = [0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0]
-    buckets = []
-    for lo, hi in zip(edges, edges[1:] + [999.0]):
-        buckets.append((lo, hi, sum(1 for m in measured if lo <= m < hi)))
+    near = sum(1 for m in measured if m <= near_oz)
+    buckets = [(lo, hi, sum(1 for m in measured if lo <= m < hi))
+               for lo, hi in zip(edges, edges[1:] + [999.0])]
     return Benchmark(
-        category=category, measured=len(measured), near=near,
-        share=round(near / len(measured), 3), buckets=buckets,
-        your_over_by=_over_by(your_weight_oz, your_dims),
+        category=label, measured=len(measured), near=near,
+        share=round(near / len(measured), 3), buckets=buckets, your_over_by=mine,
     )
 
 
 def load_benchmark(db, category: str | None, your_weight_oz: float | None = None,
-                   your_dims: str | None = None) -> Benchmark | None:
-    if not category:
+                   your_dims: str | None = None, platform: str = "amazon") -> Benchmark | None:
+    if not category and (platform or "amazon").lower() != "shopify":
         return None
-    rows = db.table("harvest_products").select("category, weight_oz, dims").execute().data
-    return benchmark(rows, category, your_weight_oz, your_dims)
+    from .. import db as dbmod
+
+    rows = dbmod.fetch_rows(db, "harvest_products", "category, weight_oz, dims, platform")
+    return benchmark(rows, category, your_weight_oz, your_dims, platform)
 
 
 def shelf_total(findings_for_shelf) -> tuple[float, float]:

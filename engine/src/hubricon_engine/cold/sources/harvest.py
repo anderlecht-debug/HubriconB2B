@@ -97,8 +97,11 @@ class HarvestSource:
         self.db = db
 
     def keys(self, limit: int = 50) -> list[str]:
-        rows = (self.db.table("harvest_sellers").select("seller_id, est_monthly_revenue")
-                .in_("status", list(USABLE)).execute().data)
+        from ... import db as dbmod
+
+        rows = [r for r in dbmod.fetch_rows(self.db, "harvest_sellers",
+                                            "seller_id, est_monthly_revenue, status")
+                if r.get("status") in USABLE]
         rows.sort(key=lambda r: -(float(r.get("est_monthly_revenue") or 0)))
         return [r["seller_id"] for r in rows[:limit]]
 

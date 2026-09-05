@@ -251,6 +251,18 @@ def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: dat
     quote, which shelf.py decides rather than this.
     """
     finding = verdict.chosen
+    # A rebuild supersedes the draft it replaces. Without this, `--force` left
+    # both in the queue and the same prospect could be sent two teardowns about
+    # the same listing. Only drafts are superseded: approved, sent and rejected
+    # are decisions somebody made, and a rebuild does not get to undo them.
+    superseded = (db.table("teardowns").select("id").eq("prospect_key", snap.key)
+                  .eq("status", "draft").execute().data)
+    for old in superseded:
+        db.table("teardowns").update({
+            "status": "expired",
+            "review_note": f"superseded by a rebuild on {today}",
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("id", old["id"]).execute()
     token = secrets.token_urlsafe(24)
     expires = today + timedelta(days=settings.teardown_ttl_days())
     url = copymod.teardown_url(token)
@@ -261,7 +273,8 @@ def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: dat
                      if p.get("asin") == finding.asin_or_sku), {})
     bench = shelfmod.load_benchmark(
         db, lead_item.category if lead_item else None,
-        lead_item.billable_weight_oz if lead_item else None, lead_row.get("dims"))
+        lead_item.billable_weight_oz if lead_item else None, lead_row.get("dims"),
+        snap.platform)
     html = page.render(finding, snap, token=token, cta_url=f"{url}?cta=1",
                        expires_on=expires, generated_on=today,
                        also=verdict.also, shelf_rows=rows, bench=bench)
@@ -283,12 +296,15 @@ def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: dat
 def blocker(seller: dict) -> str | None:
     """What stands between this teardown and the founder pressing send.
 
-    The founder's standing call on 2026-09-03: a role inbox is never cold
-    emailed. `info@` reaches a customer-service queue, and a teardown addressed
-    to a queue is worth close to nothing — the same page sent to the owner is
-    worth a great deal. So a role-inbox row is inventory rather than a draft to
-    send, and the queue says which it is instead of quietly presenting one as
-    the other.
+    A wrong address still blocks: `micah@micahrich.com` for rhinousa.com is bad
+    data, not a policy choice, and no rule change makes it sendable.
+
+    A role inbox no longer blocks (settings.allow_role_inbox, the founder's call
+    on 2026-09-05). It gets its own copy instead of a pretend greeting: a note
+    that names nobody and asks to be passed to whoever owns pricing. A personal
+    address with no name behind it still blocks, because "Hi there" to a named
+    human's mailbox reads as a mail merge, which is the one thing the page is
+    trying not to be.
     """
     email, website = seller.get("email"), seller.get("website")
     if not email:
@@ -296,6 +312,8 @@ def blocker(seller: dict) -> str | None:
     if icp.domain_mismatch(email, website):
         return f"{email} is not on {website} — find the real one on the site"
     if icp.is_role_inbox(email):
+        if settings.allow_role_inbox():
+            return None
         return "role inbox — find the owner (About page, LinkedIn, storefront)"
     if not seller.get("first_name") or icp.bad_greeting(seller.get("first_name")):
         return "no owner's name — find it before sending"

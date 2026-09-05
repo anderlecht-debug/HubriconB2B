@@ -39,8 +39,11 @@ UNITS_LOW, UNITS_HIGH = 0.5, 1.5
 
 # A weight band is only worth naming if a seller could plausibly shave under it.
 # Six ounces into a band is a redesign, and nobody acts on a redesign because a
-# stranger emailed them.
+# stranger emailed them. The carrier limit is wider because its bands are: a
+# pound is sixteen ounces, so trimming three off a nineteen-ounce parcel is a
+# lighter box, while three off an FBA unit in a two-ounce band is the product.
 MAX_SHAVEABLE_OZ = 2.0
+MAX_SHAVEABLE_CARRIER_OZ = 3.0
 # Below this the finding is real and not worth anybody's attention.
 MIN_PER_UNIT_USD = 0.08
 # A near miss on a size-tier envelope. Beyond this the box is the wrong box.
@@ -451,6 +454,10 @@ def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Findin
     if not cliff:
         return None
     edge, over_by = cliff
+    if over_by > MAX_SHAVEABLE_CARRIER_OZ:
+        # Twelve ounces into the two-pound band is not a packaging change, it is
+        # a different product. True, useless, and it reads as a machine talking.
+        return None
     below, above = shopify_harvest.band_names(edge)
     priced = priors.CARRIER_GROUND_USD.get(edge)
     if not priced:
@@ -461,8 +468,9 @@ def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Findin
         per_unit_low, per_unit_high = priced
     lo, hi = _monthly(per_unit_low, per_unit_high, item.est_monthly_units)
     assumptions = [
-        f"the weight published on your own product page ({weight:g} oz); carriers bill the "
-        f"greater of packed and dimensional weight, so this is a floor",
+        f"the shipping weight set on your own product ({weight:g} oz) — the one Shopify hands "
+        f"the carrier at checkout, so it is what gets billed rather than an estimate of it; "
+        f"a carrier still bills the greater of that and dimensional weight",
         f"USPS rounds anything over {edge} oz up to {above}, so trimming {over_by:g} oz moves "
         f"every parcel to the {below} rate",
     ]

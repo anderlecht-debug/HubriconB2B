@@ -29,6 +29,9 @@ from . import charts, shelf as shelfmod
 from .findings import Finding
 from .snapshot import ProspectSnapshot
 
+# How many listings the shelf table prints before it starts counting.
+SHELF_ROWS = 10
+
 MECHANISM = {
     "price_band_edge":
         "Amazon's 2026 schedule prices every fulfilment band three times, by sale price. "
@@ -117,53 +120,83 @@ def headline(f: Finding) -> tuple[str, str]:
 
 
 def _shelf_section(rows: list, by_ref: dict, snap: ProspectSnapshot) -> str:
-    """Every listing we hold, priced against the published card, with a total.
+    """Every listing we hold, priced against its own platform's card, totalled.
 
     One SKU a few cents off is not a reason to answer a stranger. The same
     arithmetic running across the shelf, totalled, is — and it says we looked at
     the shelf rather than at one lucky listing.
+
+    The columns differ by platform because the cards do: Amazon bills a size
+    tier and a fee per unit, a carrier bills a pound band per parcel. Header and
+    cells are built from one list so they cannot drift apart, which they did the
+    first time these were written out separately.
     """
     if not rows:
         return ""
-    body = []
-    for r in rows:
+    shopify = snap.platform == "shopify"
+    # A Shopify catalogue runs to 250 products. The table is evidence that we
+    # looked at the shelf, not an inventory report, so it shows the ones with
+    # something to say and counts the rest.
+    shown, hidden = rows[:SHELF_ROWS], max(0, len(rows) - SHELF_ROWS)
+
+    def giving(r):
         finding = by_ref.get(r.ref)
-        weight = f"{r.weight_oz:g} oz" if r.weight_oz else "—"
-        fee = _money(r.fee) if r.fee else "—"
-        band = (f"{r.over_by:g} oz over {r.edge:g} oz" if r.over_by is not None else "—")
         if finding and finding.dollars_high > 0:
-            giving = f"{_money(finding.dollars_low)}–{_money(finding.dollars_high)}/mo"
-        elif finding:
-            giving = f"{_cents(finding.per_unit_low)}/unit"
-        elif not r.weight_oz:
-            giving = "no published weight"
-        else:
-            giving = "—"
-        title = (r.title or "")[:52]
-        body.append(
-            f'<tr><td><span class="mono">{_e(r.ref)}</span><span class="tt">{_e(title)}</span></td>'
-            f'<td>{_money(r.price) if r.price else "—"}</td><td>{_e(weight)}</td>'
-            f'<td>{_e(shelfmod.tier_label(r.tier))}</td><td>{_e(fee)}</td>'
-            f'<td>{_e(band)}</td><td class="give">{_e(giving)}</td></tr>')
-    lo, hi = shelfmod.shelf_total([f for f in by_ref.values()])
-    total = ""
+            return f"{_money(finding.dollars_low)}–{_money(finding.dollars_high)}/mo"
+        if finding:
+            return f"{_cents(finding.per_unit_low)}+/unit"
+        if not r.weight_oz:
+            return "no published weight"
+        return "—"
+
+    def cells(r):
+        weight = f"{r.weight_oz:g} oz" if r.weight_oz else "—"
+        price = _money(r.price) if r.price else "—"
+        if shopify:
+            band = (f"{r.over_by:g} oz over {r.edge:g} oz" if r.over_by is not None
+                    else "under a pound")
+            return [(r.label, r.title), price, weight, band, giving(r)]
+        tier = shelfmod.tier_label(r.tier)
+        fee = _money(r.fee) if r.fee else "—"
+        band = f"{r.over_by:g} oz over {r.edge:g} oz" if r.over_by is not None else "—"
+        return [(r.label, r.title), price, weight, tier, fee, band, giving(r)]
+
+    cols = (["Listing", "Price", "Weight", "Billed at", "Giving up"] if shopify
+            else ["Listing", "Price", "Weight", "Size tier", "Amazon's fee", "Band", "Giving up"])
+    head = "".join(f"<th>{_e(c)}</th>" for c in cols)
+    body = []
+    for r in shown:
+        tds = []
+        for i, cell in enumerate(cells(r)):
+            last = i == len(cols) - 1
+            if isinstance(cell, tuple):
+                tds.append(f'<td><span class="mono">{_e(cell[0])}</span>'
+                           f'<span class="tt">{_e((cell[1] or "")[:52])}</span></td>')
+            else:
+                tds.append(f'<td{" class=\"give\"" if last else ""}>{_e(cell)}</td>')
+        body.append(f"<tr>{''.join(tds)}</tr>")
+    if hidden:
+        body.append(f'<tr class="more"><td colspan="{len(cols)}">and {hidden} more listing'
+                    f'{"s" if hidden != 1 else ""} we can see, priced the same way</td></tr>')
+    lo, hi = shelfmod.shelf_total(list(by_ref.values()))
     if hi > 0:
-        total = (f'<tr class="tot"><td colspan="6">Across the {len(rows)} listing'
-                 f'{"s" if len(rows) != 1 else ""} we can see</td>'
-                 f'<td class="give">{_money(lo)}–{_money(hi)}/mo</td></tr>')
+        body.append(f'<tr class="tot"><td colspan="{len(cols) - 1}">Across the {len(rows)} '
+                    f'listing{"s" if len(rows) != 1 else ""} we can see</td>'
+                    f'<td class="give">{_money(lo)}–{_money(hi)}/mo</td></tr>')
     near = sum(1 for r in rows if r.near_edge)
-    lead = (f"{near} of the {len(rows)} listings we hold sit within an ounce of a cheaper fee "
-            f"band." if near else
-            f"Here is every listing we hold for you, priced against the published card.")
+    what = ("sit within a couple of ounces of dropping a whole shipping band" if shopify
+            else "sit within an ounce of a cheaper fee band")
+    lead = (f"{near} of the {len(rows)} listings we hold {what}." if near else
+            "Here is every listing we hold for you, priced against the published card.")
+    card = "the carrier's published card" if shopify else "Amazon's published card"
     return f"""
   <section class="panel">
     <h2>Your shelf, as the fee schedule sees it</h2>
     <p class="sub" style="margin-bottom:16px">{_e(lead)} Weights and prices are the ones you
-       publish; the fee is Amazon's card, not an estimate of it.</p>
+       publish; the rate is {_e(card)}, not an estimate of it.</p>
     <div class="scroll"><table>
-      <thead><tr><th>Listing</th><th>Price</th><th>Weight</th><th>Size tier</th>
-        <th>Amazon's fee</th><th>Band</th><th>Giving up</th></tr></thead>
-      <tbody>{"".join(body)}{total}</tbody>
+      <thead><tr>{head}</tr></thead>
+      <tbody>{"".join(body)}</tbody>
     </table></div>
   </section>"""
 
@@ -180,13 +213,19 @@ def _benchmark_section(bench) -> str:
     chart = charts.category_bands(bench)
     if not chart:
         return ""
+    shopify = bench.category == "Shopify brands"
+    heading = ("The same mistake, across Shopify" if shopify
+               else f"The same mistake, {_e(bench.category)}-wide")
+    near = (f"within {shelfmod.CARRIER_NEAR_EDGE_OZ:g} ounces of dropping a whole shipping band"
+            if shopify else "within an ounce of a cheaper fulfilment band")
+    what = "products from Shopify storefronts" if shopify else f"{_e(bench.category)} listings"
     return f"""
   <section class="panel">
-    <h2>The same mistake, {_e(bench.category)}-wide</h2>
+    <h2>{heading}</h2>
     <p class="sub" style="margin-bottom:8px">We have read and weighed
-       <strong>{bench.measured:,}</strong> {_e(bench.category)} listings from their public pages.
-       <strong>{bench.share:.0%}</strong> of them ship within an ounce of a cheaper fulfilment
-       band — the same few cents, paid by most of the category. Yours is marked.</p>
+       <strong>{bench.measured:,}</strong> {what} from their public pages.
+       <strong>{bench.share:.0%}</strong> of them ship {near} — the same few cents, paid by most
+       of them. Yours is marked.</p>
     <div class="chart">{chart}</div>
     <p class="caption">Nobody publishes this. We measure it because it is the first thing we
        look at, and it is why the number above is a reading rather than a guess.</p>
@@ -281,6 +320,7 @@ td .tt{{ display: block; white-space: normal; color: var(--ink-faint); font-size
 td.give{{ font-weight: 600; color: var(--serious); }}
 tr.tot td{{ border-bottom: 0; border-top: 1px solid var(--rule); padding-top: 13px;
   font-weight: 600; color: var(--ink); }}
+tr.more td{{ color: var(--ink-faint); font-style: italic; }}
 .cta{{ background: var(--ink); color: hsl(222 28% 96%); border-radius: 14px;
   padding: 30px 32px; margin-top: 26px; }}
 .cta h2{{ color: #fff; }}

@@ -198,10 +198,19 @@ def test_a_shopify_parcel_already_under_a_pound_has_nothing_to_drop_into():
         assert findings.detect(snap, today=TODAY) == [], f"{weight} oz must produce nothing"
 
 
+def test_a_carrier_overage_nobody_could_trim_is_not_a_finding():
+    """Twelve ounces into the two-pound band is a different product, not a
+    packaging change. True, useless, and it reads as a machine talking."""
+    snap = snapshot(platform="shopify", key="testbrand",
+                    items=[item(ref="testbrand.com/products/x", price=95.0,
+                                item_weight_oz=28.8, dims_in=None)])
+    assert findings.detect(snap, today=TODAY) == []
+
+
 def test_a_shopify_edge_the_card_has_no_row_for_is_stated_but_never_priced():
     snap = snapshot(platform="shopify", key="testbrand",
                     items=[item(ref="testbrand.com/products/x", price=95.0,
-                                item_weight_oz=52.0, dims_in=None)])
+                                item_weight_oz=50.0, dims_in=None)])
     f = one(findings.detect(snap, today=TODAY), "carrier_band_edge")
     assert f.evidence["edge"] == 48
     assert f.dollars_high == 0.0 and f.per_unit_high == 0.0
