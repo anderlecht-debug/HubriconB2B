@@ -23,7 +23,7 @@ teardown the page asks for.
 from __future__ import annotations
 
 import html
-from datetime import date, datetime
+from datetime import date
 
 from . import charts
 from .findings import Finding
@@ -87,12 +87,16 @@ def headline(f: Finding) -> tuple[str, str]:
     """
     wide = f.per_unit_high > f.per_unit_low
     per_unit = _cents(f.per_unit_low)
-    tail = (f", and up to {_cents(f.per_unit_high)} depending how far it ships" if wide else "")
-    least = "at least " if wide else ""
+    # Why the range is a range differs by finding, and saying which is the
+    # difference between a hedge and an explanation.
+    spread = ("depending how far the parcel travels" if f.kind == "carrier_band_edge"
+              else "depending on your packed size tier")
+    lead = f"at least, per unit — and up to {_cents(f.per_unit_high)} {spread}" if wide \
+        else "per unit"
     if f.dollars_high > 0:
-        return per_unit, (f"{least}per unit{tail} — which at this listing's estimated volume is "
-                          f"{_money(f.dollars_low)} to {_money(f.dollars_high)} a month")
-    return per_unit, f"{least}per unit{tail}, on every one you ship"
+        return per_unit, (f"{lead}. At this listing's estimated volume that is "
+                          f"{_money(f.dollars_low)} to {_money(f.dollars_high)} a month.")
+    return per_unit, f"{lead}, on every one you ship."
 
 
 def render(f: Finding, snap: ProspectSnapshot, *, token: str, cta_url: str,

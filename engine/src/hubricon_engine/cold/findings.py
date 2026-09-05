@@ -25,7 +25,7 @@ they have, the bracket reads as caution rather than hedging.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
 from ..harvest import shopify as shopify_harvest
@@ -371,6 +371,11 @@ def size_tier_edge(item: Item, snap: ProspectSnapshot, today: date) -> Finding |
 
 # -- price_cut_no_rank_gain (history) ----------------------------------------------
 
+MIN_HISTORY_DAYS = 14       # under a fortnight cannot tell a cut from a lightning deal
+MIN_PRICE_CUT = 0.05        # 5% — below this is repricer noise
+MIN_RANK_GAIN = 0.10        # a cut that moved rank 10% did buy something
+
+
 def price_cut_no_rank_gain(item: Item, snap: ProspectSnapshot, today: date) -> Finding | None:
     """A price cut that bought no rank. Margin given away for nothing.
 
@@ -418,11 +423,6 @@ def price_cut_no_rank_gain(item: Item, snap: ProspectSnapshot, today: date) -> F
         },
         asin_or_sku=item.ref, item_title=item.title, item_url=item.url,
     )
-
-
-MIN_HISTORY_DAYS = 14
-MIN_PRICE_CUT = 0.05        # 5% — below this is repricer noise
-MIN_RANK_GAIN = 0.10        # a cut that moved rank 10% did buy something
 
 
 # -- the Shopify lane --------------------------------------------------------------

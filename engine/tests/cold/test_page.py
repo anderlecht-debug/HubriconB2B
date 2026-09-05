@@ -5,7 +5,7 @@ from datetime import date
 
 import pytest
 
-from hubricon_engine.cold import findings, page, select
+from hubricon_engine.cold import charts, findings, page, select
 from builders import item, snapshot
 
 TODAY = date(2026, 6, 1)
@@ -73,3 +73,35 @@ def test_a_brand_name_with_html_in_it_cannot_break_the_page():
     html = page.render(f, snap, token="t", cta_url="https://x", expires_on=date(2026, 10, 20))
     assert "<script>alert" not in html
     assert "&lt;script&gt;" in html
+
+
+# -- the chart may not put a number on the page it cannot stand behind -------------
+
+def _y_ticks(svg: str) -> list[str]:
+    import re
+    return re.findall(r'text-anchor="end" font-size="11" fill="#5A6480">([^<]+)</text>', svg)
+
+
+def test_the_price_chart_plots_what_they_keep_when_the_fee_is_known():
+    f, _, _ = built(price=10.49, est_monthly_units=1200.0)
+    svg = charts.net_vs_price(f.evidence)
+    values = [float(t.lstrip("$")) for t in _y_ticks(svg)]
+    # $10.49 less a 15% referral less a ~$3.91 fulfilment fee is about $5.70.
+    assert all(4.0 < v < 8.0 for v in values), values
+    assert "YOU KEEP, PER UNIT" in svg
+
+
+def test_the_price_chart_goes_relative_when_the_fee_is_not_known():
+    """Without a weight the absolute fee is unknown, but the step between price
+    columns is not. Plotting an absolute anyway put a figure on the page that was
+    too high by the whole fulfilment fee — the one thing a teardown must not do.
+    The step cancels out of a difference, so the relative curve is exact."""
+    snap = snapshot(items=[item(price=10.49, item_weight_oz=None, dims_in=None,
+                                est_monthly_units=1200.0)])
+    f = select.best(findings.detect(snap, today=TODAY), snap)
+    svg = charts.net_vs_price(f.evidence)
+    assert "AGAINST PRICING AT $9.99" in svg
+    assert "YOU KEEP" not in svg
+    values = [float(t.replace("+", "")) for t in _y_ticks(svg)]
+    assert min(values) < 0 < max(values), values
+    assert all(abs(v) < 3.0 for v in values), "a difference, not a price"

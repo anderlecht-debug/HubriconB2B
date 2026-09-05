@@ -14,13 +14,11 @@ again next week.
 
 from __future__ import annotations
 
-import json
 import secrets
 from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 
 from .. import icp, outbound
-from ..harvest import amazon
 from . import compliance, copy as copymod, page, priors, select, settings
 from .findings import Finding, detect
 from .sources.harvest import HarvestSource

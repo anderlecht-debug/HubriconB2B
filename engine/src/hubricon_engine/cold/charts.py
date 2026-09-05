@@ -117,23 +117,31 @@ def net_vs_price(ev: dict) -> str:
     This is the most persuasive picture the engine makes, because the reader
     does not have to take anything on trust: net revenue is their own price
     minus two published rates, and it visibly steps down at the edge.
+
+    Two versions, and the difference matters. When the listing's size tier and
+    weight are known the fee is a number off the card, so the axis is what they
+    actually keep per unit. When they are not, the *absolute* fee is unknown but
+    the *step* between price columns is not — so the axis becomes the difference
+    against pricing under the edge, where the unknown fee cancels out of both
+    sides and every point on the curve is still exactly right. Plotting an
+    absolute in that case would put a number on the page that is too high by
+    the whole fulfilment fee, which is the one thing this page must never do.
     """
     edge, rate = ev["edge"], ev["referral_rate"]
     tier, weight = ev.get("tier"), ev.get("weight_oz")
+    absolute = bool(tier and weight)
+    target = ev["target_price"]
     lo_p, hi_p = edge - 1.5, max(ev["break_even_price"] + 0.9, ev["your_price"] + 0.6)
 
-    def fee_at(price: float) -> float:
-        if tier and weight:
-            f = priors.fulfilment_fee(tier, weight, price)
-            if f is not None:
-                return f
-        band = priors.price_band(price)
-        return ev["fee_jump_high"] if band and band >= 1 else 0.0
-
-    base = fee_at(edge - 0.01)
     def net(price: float) -> float:
-        return price * (1 - rate) - (fee_at(price) if (tier and weight) else
-                                     (base + (ev["fee_jump_high"] if price >= edge else 0.0)))
+        if absolute:
+            fee = priors.fulfilment_fee(tier, weight, price)
+            if fee is not None:
+                return price * (1 - rate) - fee
+        # Relative to the target price. The fee appears on both sides and
+        # cancels, leaving only the published column step.
+        step = ev["fee_jump_high"] if price >= edge else 0.0
+        return (price - target) * (1 - rate) - step
 
     steps = [lo_p + (hi_p - lo_p) * i / 200 for i in range(201)]
     pts = [(p, net(p)) for p in steps]
@@ -148,10 +156,16 @@ def net_vs_price(ev: dict) -> str:
         path.append(("M" if prev is None else "L") + f"{x:.1f},{y:.1f}")
         prev = (p, n)
 
+    money = (lambda v: f"${v:,.2f}") if absolute else (lambda v: f"{v:+,.2f}".replace("+0.00", "0"))
     ticks_x = [(_x(v, lo_p, hi_p), f"${v:,.2f}") for v in nice_ticks(lo_p, hi_p)]
-    ticks_y = [(_y(v, y_lo, y_hi), f"${v:,.2f}") for v in nice_ticks(y_lo, y_hi, 4)]
+    ticks_y = [(_y(v, y_lo, y_hi), money(v)) for v in nice_ticks(y_lo, y_hi, 4)]
 
-    body = _frame("your sale price", "you keep, per unit", ticks_x, ticks_y)
+    label = ("you keep, per unit" if absolute
+             else f"per unit, against pricing at ${target:,.2f}")
+    body = _frame("your sale price", label, ticks_x, ticks_y)
+    if not absolute and y_lo < 0 < y_hi:
+        body.append(f'<line x1="{PAD_L}" y1="{_y(0, y_lo, y_hi):.1f}" x2="{W - PAD_R}" '
+                    f'y2="{_y(0, y_lo, y_hi):.1f}" stroke="{RULE}" stroke-width="1"/>')
     body.append(f'<line x1="{_x(edge, lo_p, hi_p):.1f}" y1="{PAD_T}" '
                 f'x2="{_x(edge, lo_p, hi_p):.1f}" y2="{H - PAD_B}" stroke="{RULE}" '
                 f'stroke-width="1" stroke-dasharray="3 4"/>')
@@ -159,8 +173,8 @@ def net_vs_price(ev: dict) -> str:
                 f'fill="{INK_FAINT}">Amazon\'s ${edge:,.0f} fee band</text>')
     body.append(f'<path d="{"".join(path)}" fill="none" stroke="{C1}" stroke-width="2.5" '
                 f'stroke-linejoin="round"/>')
-    body += _marker(_x(ev["target_price"], lo_p, hi_p), _y(net(ev["target_price"]), y_lo, y_hi),
-                    f"at ${ev['target_price']:,.2f}", OK, align="end")
+    body += _marker(_x(target, lo_p, hi_p), _y(net(target), y_lo, y_hi),
+                    f"at ${target:,.2f}", OK, align="end")
     body += _marker(_x(ev["your_price"], lo_p, hi_p), _y(net(ev["your_price"]), y_lo, y_hi),
                     f"you: ${ev['your_price']:,.2f}", SERIOUS, above=False, align="start")
     return _svg(body, "Net revenue per unit against sale price")

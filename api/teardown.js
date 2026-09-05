@@ -21,6 +21,27 @@ const APPLY_URL = process.env.TEARDOWN_CTA_URL || "https://hubricon.com/#apply";
 const VISIBLE = new Set(["approved", "sent"]);
 const EVENTS = new Set(["page_view", "cta_click", "video_watch"]);
 
+/**
+ * Whoever opened this, it was not a person.
+ *
+ * Corporate mail security (Proofpoint, Mimecast, Defender Safe Links) and the
+ * link unfurlers in chat apps fetch every URL in an inbound message before a
+ * human sees it. On a cold channel that is not a rounding error: it can be most
+ * of the fetches, and a page-view count that includes them would tell the
+ * founder the page is working when nobody has read it. Views are the only
+ * signal Phase 3 has, so the count errs towards missing a real reader rather
+ * than inventing one. A CTA click is not filtered — a scanner does not follow a
+ * link it has to press.
+ */
+const NOT_A_READER =
+  /bot|crawl|spider|slurp|preview|scan|monitor|fetch|curl|wget|python-requests|headless|phantom|proofpoint|mimecast|barracuda|symantec|forcepoint|safelinks|ms-office|microsoft office|outlook|googleimageproxy|facebookexternalhit|slackbot|whatsapp|telegram|discord|linkedin|twitterbot|bingpreview|yandex|ahrefs|semrush/i;
+
+function isReader(userAgent) {
+  const ua = String(userAgent || "").trim();
+  // No user agent at all is a script, not a browser.
+  return ua.length > 0 && !NOT_A_READER.test(ua);
+}
+
 function supabase() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -100,9 +121,10 @@ export async function GET(request) {
     });
   }
 
-  await logEvent(db, teardown.id, "page_view", {
-    ua: (request.headers.get("user-agent") || "").slice(0, 200),
-  });
+  const ua = request.headers.get("user-agent") || "";
+  if (isReader(ua)) {
+    await logEvent(db, teardown.id, "page_view", { ua: ua.slice(0, 200) });
+  }
   return new Response(teardown.html, {
     status: 200,
     headers: {

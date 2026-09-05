@@ -25,7 +25,7 @@ prevents:
                      not established, so they are suppressed rather than risked
     postal address   CAN-SPAM requires one in the message; no address, no send
     frequency        90 days between touches, three touches ever
-    domain cap       per sending domain per day, enforced in code not policy
+    domain cap       per sending domain per rolling 24 hours, in code not policy
 """
 
 from __future__ import annotations
@@ -113,7 +113,13 @@ def touch_history(db, prospect_key: str) -> list[dict]:
             .eq("prospect_key", prospect_key).order("sent_at", desc=True).execute().data)
 
 
-def sends_today(db, sending_domain: str) -> int:
+def sends_in_last_day(db, sending_domain: str) -> int:
+    """A rolling 24 hours rather than a calendar day.
+
+    A calendar day lets a domain send its whole cap at 23:00 and the next day's
+    at 01:00, which is twice the intended rate through the part of the day that
+    matters to a mailbox provider. The rolling window cannot be gamed that way.
+    """
     since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     return len((db.table("outreach_sends").select("id")
                 .eq("sending_domain", sending_domain).gte("sent_at", since).execute().data))
@@ -182,7 +188,7 @@ def authorise(db, snap: ProspectSnapshot, *, sending_domain: str | None = None,
 
     if sending_domain:
         checked.append("sending-domain daily cap")
-        used = sends_today(db, sending_domain)
+        used = sends_in_last_day(db, sending_domain)
         if used >= settings.domain_daily_cap():
             return deny(f"{sending_domain} has sent {used} today; the cap is "
                         f"{settings.domain_daily_cap()}")

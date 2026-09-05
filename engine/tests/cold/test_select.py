@@ -120,3 +120,20 @@ def test_the_verdict_names_the_winner_and_the_runners_up():
     assert verdict.chosen is strong
     assert [r.finding.kind for r in verdict.rejected] == ["fee_band_edge"]
     assert "a stronger finding" in verdict.rejected[0].reason
+
+
+def test_the_strongest_finding_wins_even_with_no_volume_on_either():
+    """Every Shopify row lands here. When both candidates have no monthly figure
+    the score fell to zero for both and the winner was whichever the sort left
+    first, so the best finding about a company was chosen by luck."""
+    snap = snapshot(platform="shopify", items=[
+        item(ref="b.com/products/small", price=20.0, item_weight_oz=17.0, dims_in=None,
+             est_monthly_units=None, est_monthly_revenue=None),
+        item(ref="b.com/products/big", price=90.0, item_weight_oz=33.0, dims_in=None,
+             est_monthly_units=None, est_monthly_revenue=None)])
+    found = findings.detect(snap, today=TODAY)
+    assert len(found) == 2
+    assert len({select.score(f) for f in found}) == 2, "two different findings must not tie"
+    # The 17 oz parcel drops to the flat sub-pound rate and saves more per unit
+    # than the 33 oz one dropping from 3 lb to 2 lb.
+    assert select.best(found, snap).asin_or_sku == "b.com/products/small"

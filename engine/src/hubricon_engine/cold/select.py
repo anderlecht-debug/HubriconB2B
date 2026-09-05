@@ -42,8 +42,17 @@ class Verdict:
 
 
 def score(f: Finding) -> float:
-    """Expected value: how much it is worth, discounted by how sure we are."""
+    """Expected value: how much it is worth, discounted by how sure we are.
+
+    Falls back to the per-unit figure when no volume is on file, which is every
+    Shopify row — the harvest reads a catalogue, not a sales rank. Without the
+    fallback every candidate for those prospects scores zero and the winner is
+    whichever the sort happened to leave first, so the strongest finding about a
+    company would be chosen by luck.
+    """
     mid = (f.dollars_low + f.dollars_high) / 2
+    if mid <= 0:
+        mid = (f.per_unit_low + f.per_unit_high) / 2
     return f.confidence * mid
 
 
