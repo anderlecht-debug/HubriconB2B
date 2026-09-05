@@ -445,6 +445,13 @@ teardown on its own pass**, because it is the thing that holds
 `INSTANTLY_API_KEY` — your Mac does not. So the loop is: `add` the leads,
 `review` them, `approve` the ones you want, and the next hourly pass sends them.
 
+`COLD_DRY_RUN: "false"` is set on that job in `operator.yml`, and it has to be:
+the flag defaults to on and is checked once per teardown, so without it the
+campaign is created, the mailboxes are synced, the caps are right, and every
+approved teardown is denied one at a time — a lane that looks healthy and sends
+nothing. It was exactly that for the first hours it existed. On the Mac the flag
+is still on by default, which is why `teardown send` there needs it spelled out.
+
 Caps: `COLD_PER_MAILBOX_DAILY` (default 30) times the number of mailboxes past
 warmup. Two mailboxes is 60 a day, which is the number you are aiming at. Add
 mailboxes and the ceiling rises with them; the campaign's sender list and limits

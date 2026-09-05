@@ -77,6 +77,14 @@ jobs:
           POSTAL_ADDRESS: ${{ secrets.POSTAL_ADDRESS }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
+          # The cold engine's safety flag defaults to on, and it is checked once
+          # per teardown: without this line every approved teardown is denied at
+          # dispatch with "COLD_DRY_RUN is on" while the campaign, the mailboxes
+          # and the caps all look healthy — the same silent shape as a missing
+          # key. So it is set explicitly rather than left to a default. The gate
+          # that matters is unchanged: only rows the founder marked `approved`
+          # are ever pushed, and compliance still runs on each one.
+          COLD_DRY_RUN: "false"
         run: |
           flags="--send"
           if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi
