@@ -74,8 +74,33 @@ def test_the_card_says_when_it_is_out_of_its_window():
     assert priors.stale(date(2025, 12, 1))
 
 
-def test_the_shopify_carrier_card_is_empty_on_purpose():
-    # Loading it turns the Shopify lane on; inventing it would be the failure
-    # mode COLD_ENGINE.md §0 names. See priors.CARRIER_GROUND_USD.
-    assert priors.CARRIER_GROUND_USD == {}
-    assert priors.CARRIER_EFFECTIVE is None
+# -- the carrier card ---------------------------------------------------------------
+
+def test_the_carrier_card_matches_notice_123():
+    # USPS Postal Explorer, Ground Advantage Commercial, effective 2026-07-12.
+    assert priors.CARRIER_GROUND_COMMERCIAL[0][0] == 6.93     # under a pound, zone 1
+    assert priors.CARRIER_GROUND_COMMERCIAL[0][7] == 8.40     # under a pound, zone 8
+    assert priors.CARRIER_GROUND_COMMERCIAL[32][7] == 12.87   # billed at 2 lb, zone 8
+    assert priors.CARRIER_EFFECTIVE == date(2026, 7, 12)
+    assert all(len(row) == len(priors.CARRIER_ZONES)
+               for row in priors.CARRIER_GROUND_COMMERCIAL.values())
+
+
+def test_the_pound_edge_is_measured_against_the_round_up():
+    """A parcel over a pound bills at *two* pounds, so the saving from dropping
+    under 16 oz is measured against the flat sub-pound rate, not the one-pound
+    rate that only an exactly-16.000 oz parcel pays. Measuring it the obvious
+    way would understate the finding by about half."""
+    now, under = priors.carrier_rows(16)
+    assert now == priors.CARRIER_GROUND_COMMERCIAL[32]
+    assert under == priors.CARRIER_GROUND_COMMERCIAL[0]
+    assert priors.CARRIER_GROUND_USD[16] == (0.96, 4.47)      # zone 3 to zone 8
+    assert priors.CARRIER_GROUND_USD[32] == (0.58, 2.88)
+
+
+def test_an_edge_with_no_row_on_the_card_stays_unpriced():
+    # 48 oz needs the 4 lb row, which is not on file. Absent, not guessed.
+    assert priors.carrier_rows(48) is None
+    assert 48 not in priors.CARRIER_GROUND_USD
+    # And 0 is a row of the card, not an edge a parcel can sit above.
+    assert 0 not in priors.CARRIER_GROUND_USD

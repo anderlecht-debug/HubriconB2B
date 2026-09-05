@@ -19,10 +19,16 @@ it, and the units that weight ships at every month. Which cliff depends on
 where the brand sells, and the row says which (harvest_sellers.platform):
 
 - Amazon: the FBA fulfilment-fee weight bands (harvest.amazon.fee_cliff).
-- Shopify: the USPS Ground Advantage / UPS bands the brand pays a carrier
-  directly (harvest.shopify.shipping_cliff). Same arithmetic, different rate
-  card — and a Shopify brand must never be sent copy about "FBA fees" or asked
-  for Seller Central exports it does not have.
+- Shopify: the pound boundary the brand pays a carrier directly
+  (harvest.shopify.shipping_cliff). Same arithmetic, different rate card — and a
+  Shopify brand must never be sent copy about "FBA fees" or asked for Seller
+  Central exports it does not have.
+
+  That hook used to quote the 4, 8 and 12 oz tiers. USPS collapsed all four
+  sub-pound tiers into one flat rate on 2026-07-12, so those sentences stopped
+  being true; harvest/shopify.py no longer emits the edges and nothing here can
+  compose the claim. What is left is the pound, which is worth more anyway
+  because USPS rounds anything over it up to two.
 """
 
 from . import icp
@@ -51,6 +57,19 @@ EXPORTS = {"amazon": "Five Seller Central exports",
 # Shopify store grants staff accounts. Using the other platform's word is the
 # same tell as asking for the other platform's exports.
 NO_ACCESS = {"amazon": "No seat in your account", "shopify": "No staff account in your store"}
+
+
+def _carrier_saving(edge_oz: int) -> str | None:
+    """'$0.96 to $4.47' — what dropping under this edge saves per parcel.
+
+    Read from cold/priors.py so the founder lane and the cold engine quote one
+    rate card between them. An edge the card has no row for returns None and the
+    sentence simply omits the money rather than estimating it.
+    """
+    from .cold import priors
+
+    band = priors.CARRIER_GROUND_USD.get(edge_oz)
+    return f"${band[0]:,.2f} to ${band[1]:,.2f}" if band else None
 
 
 def platform_of(row: dict | None) -> str:
@@ -370,8 +389,11 @@ def brief_text(facts: dict) -> str:
     lines += ["", "  The hook:"]
     if best and shop:
         below, above = shopify.band_names(best["band_edge"])
-        lines.append(f"    {best['asin']} ships at {best['weight_oz']:g} oz; the {below} band ends at "
-                     f"{best['band_edge']} oz, so every unit pays the {above} rate on USPS and UPS.")
+        saving = _carrier_saving(best["band_edge"])
+        lines.append(f"    {best['asin']} ships at {best['weight_oz']:g} oz. USPS rounds anything "
+                     f"over {best['band_edge']} oz up to {above}, so trimming "
+                     f"{best['over_by']:g} oz drops every parcel to the {below} rate."
+                     + (f" That is {saving} a parcel, zone depending." if saving else ""))
     elif best:
         lines.append(f"    {best['asin']} ships at {best['weight_oz']:g} oz. The band below ends at "
                      f"{best['band_edge']} oz, so it is {best['over_by']:g} oz into the next fee band "
@@ -415,11 +437,13 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
     best = next((i for i in items if i["over_by"] is not None), None)
     if best and platform == "shopify":
         below, above = shopify.band_names(best["band_edge"])
-        subject = f"{best['over_by']:g} oz is costing {brand} on every unit"
-        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz. The {below} band ends "
-                f"at {best['band_edge']} oz — so {best['over_by']:g} ounces puts every unit you ship "
-                f"onto the {above} rate on USPS and UPS.\n\n"
-                f"I read that off your own product page. I have no access to your store.")
+        saving = _carrier_saving(best["band_edge"])
+        subject = f"{best['over_by']:g} oz is costing {brand} on every parcel"
+        hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz. USPS rounds anything "
+                f"over {best['band_edge']} oz up to {above}, so those {best['over_by']:g} ounces "
+                f"put every parcel you send onto the {above} rate instead of the {below} rate"
+                + (f" — {saving} each, depending how far it travels." if saving else ".")
+                + f"\n\nI read that off your own product page. I have no access to your store.")
     elif best:
         subject = f"{best['over_by']:g} oz is costing {brand} on every unit"
         hook = (f"Your {_short_title(best)} ships at {best['weight_oz']:g} oz. The FBA weight band "
@@ -490,8 +514,8 @@ def partner_email(facts: dict, partner_name: str, referral_terms: str) -> dict:
         if best.get("units") else "every unit it ships"
     if platform == "shopify":
         below, above = shopify.band_names(best["band_edge"])
-        seller_kind, band = "Shopify brands", f"{below} USPS/UPS band"
-        cost = f"pays the {above} rate"
+        seller_kind, band = "Shopify brands", f"{best['band_edge']} oz mark USPS rounds up from"
+        cost = f"ships at the {above} rate rather than the {below} one"
     else:
         seller_kind, band = "Amazon sellers", f"{best['band_edge']} oz FBA band"
         cost = "pays the next band's fee"

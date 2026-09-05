@@ -48,8 +48,10 @@ MECHANISM = {
         "A price cut is a purchase: margin spent to buy units. When the rank does not move, "
         "nothing was bought.",
     "carrier_band_edge":
-        "Carrier pricing is banded at 4, 8, 12 and 16 ounces and then by the pound. A parcel "
-        "an ounce over a band pays the whole of the next one.",
+        "USPS rounds anything over a pound up to the next whole pound, so a parcel at 16.5 oz "
+        "is billed at two pounds while the same parcel at 15.9 oz is billed at the flat "
+        "sub-pound rate. How much that costs depends on how far it travels, which is why the "
+        "chart shows every zone rather than an average.",
 }
 
 BLIND_SPOTS = [
@@ -77,14 +79,20 @@ def _cents(v: float) -> str:
 
 
 def headline(f: Finding) -> tuple[str, str]:
-    """(the big number, the line under it)."""
+    """(the big number, the line under it).
+
+    A range leads with its floor rather than its midpoint. "at least 96¢" is a
+    claim a reader can check and find conservative; a midpoint is a number they
+    can find wrong in either direction.
+    """
+    wide = f.per_unit_high > f.per_unit_low
     per_unit = _cents(f.per_unit_low)
-    if f.per_unit_high > f.per_unit_low:
-        per_unit = f"{_cents(f.per_unit_low)}–{_cents(f.per_unit_high)}"
+    tail = (f", and up to {_cents(f.per_unit_high)} depending how far it ships" if wide else "")
+    least = "at least " if wide else ""
     if f.dollars_high > 0:
-        return per_unit, (f"per unit, which at this listing's estimated volume is "
+        return per_unit, (f"{least}per unit{tail} — which at this listing's estimated volume is "
                           f"{_money(f.dollars_low)} to {_money(f.dollars_high)} a month")
-    return per_unit, "per unit, on every one you ship"
+    return per_unit, f"{least}per unit{tail}, on every one you ship"
 
 
 def render(f: Finding, snap: ProspectSnapshot, *, token: str, cta_url: str,

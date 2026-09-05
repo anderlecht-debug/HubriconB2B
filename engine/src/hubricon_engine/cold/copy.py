@@ -150,14 +150,26 @@ def _price_cut_hook(f: Finding) -> tuple[str, str]:
 
 
 def _carrier_band_hook(f: Finding) -> tuple[str, str]:
+    """The pound boundary, not an ounce tier.
+
+    USPS collapsed the four sub-pound tiers into one flat rate on 2026-07-12, so
+    the ounce-band sentence this business used to send is now false. What is
+    left is bigger: anything over a pound rounds up to two, and the alternative
+    is the flat sub-pound rate rather than the pound rate nobody pays.
+    """
     e = f.evidence
     item = _short_title(f)
     subject = f"{e['over_by_oz']:g} oz is costing {{brand}} on every parcel"
+    cost = ""
+    if f.per_unit_high > 0:
+        cost = (f" That is {_cents(f.per_unit_low)} a parcel to the nearest zones and "
+                f"{_cents(f.per_unit_high)} to the far ones.")
     body = (
-        f"Your {item} publishes a weight of {e['your_weight_oz']:g} oz. The {e['band_below']} "
-        f"band ends at {e['edge']} oz, so every unit ships on the {e['band_above']} rate at USPS "
-        f"and UPS.\n\n"
-        f"I read that off your own product page. I have no access to your store."
+        f"Your {item} publishes a weight of {e['your_weight_oz']:g} oz. USPS rounds anything over "
+        f"{e['edge']} oz up to {e['band_above']}, so those {e['over_by_oz']:g} ounces put every "
+        f"parcel you send onto the {e['band_above']} rate — where {e['band_below']} would have "
+        f"paid one flat rate however heavy it was.{cost}\n\n"
+        f"I read the weight off your own product page. I have no access to your store."
     )
     return subject, body
 

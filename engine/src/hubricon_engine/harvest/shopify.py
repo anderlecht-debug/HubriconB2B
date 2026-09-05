@@ -650,19 +650,28 @@ def estimate_annual(review_counts: list[int | None], n_products: int, asp: float
 
 # -- the shipping cliff: the founder-lane hook on this platform --------------------
 
-# USPS Ground Advantage and UPS Ground both price in ounces to a pound and in
-# whole pounds after that: 4, 8, 12, 16 oz, then every pound to 70 lb. A
-# package one ounce over an edge pays the next band's rate on every unit, and
-# trimming that ounce of packaging drops it a band — the same shape as the FBA
-# fee cliff (amazon.fee_cliff) with a different rate card, so the founder-lane
-# hook works the same way and the seller can check it in thirty seconds.
-SHIPPING_BAND_EDGES_OZ = [4, 8, 12, 16] + [16 * lb for lb in range(2, 71)]
-MIN_HOOK_WEIGHT_OZ = 4.0  # below the lightest band there is no cheaper band to drop into
+# Where a Shopify brand's parcel actually changes price.
+#
+# This list used to start at 4, 8 and 12 oz, because until 2026-07-12 USPS
+# Ground Advantage priced those tiers separately and the founder-lane hook was
+# built on them. On that date USPS collapsed all four sub-pound tiers into one:
+# at published Commercial rates every parcel under a pound costs the same within
+# a zone, whatever it weighs. "You are 1.5 oz over the 8 oz band" became a false
+# statement about a stranger's business, so those edges are gone from here —
+# which removes the claim from `hubricon outreach` and the cold engine at once,
+# since both read this list.
+#
+# The pound boundary survives and is worth far more than any ounce tier was,
+# because USPS rounds anything over a pound up to the next whole pound: a parcel
+# at 16.5 oz is billed at two pounds, and the same parcel at 15.9 oz is billed
+# at the flat sub-pound rate. cold/priors.py prices that step from Notice 123.
+SHIPPING_BAND_EDGES_OZ = [16 * lb for lb in range(1, 71)]
+MIN_HOOK_WEIGHT_OZ = 16.0  # under a pound the rate is flat: nothing to drop into
 
 
 def shipping_cliff(weight_oz: float | None) -> tuple[int, float] | None:
-    """→ (band edge below, ounces above it), or None when unknown or in the
-    lightest band. Mirrors amazon.fee_cliff so outreach can pick one by platform."""
+    """→ (band edge below, ounces above it), or None when unknown or already
+    under a pound. Mirrors amazon.fee_cliff so outreach can pick one by platform."""
     if not weight_oz or weight_oz <= SHIPPING_BAND_EDGES_OZ[0]:
         return None
     below = max(e for e in SHIPPING_BAND_EDGES_OZ if e < weight_oz)
@@ -670,12 +679,18 @@ def shipping_cliff(weight_oz: float | None) -> tuple[int, float] | None:
 
 
 def band_names(edge_oz: int) -> tuple[str, str]:
-    """('1-lb', '2-lb') for the 16 oz edge, ('8-oz', '12-oz') for the 8 oz one:
-    what the carrier's rate card calls the band a listing just left and the one
-    it now pays. The founder's email quotes these, not the ounce count alone."""
-    nxt = next((e for e in SHIPPING_BAND_EDGES_OZ if e > edge_oz), edge_oz + 16)
-    name = lambda oz: f"{oz // 16}-lb" if oz >= 16 and oz % 16 == 0 else f"{oz}-oz"  # noqa: E731
-    return name(edge_oz), name(nxt)
+    """(what it would pay under the edge, what it pays now) for the 16 oz edge
+    and every pound after it.
+
+    The pair is not two adjacent rows of the rate card, because of the round-up:
+    a parcel over one pound bills at *two*, so the brand's realistic alternative
+    to the 2 lb rate is the flat sub-pound rate rather than the 1 lb rate that
+    only an exactly-16.000 oz parcel ever pays. Naming the 1 lb rate here would
+    understate the saving by about half.
+    """
+    pounds = edge_oz // 16
+    below = "under a pound" if pounds == 1 else f"{pounds} lb"
+    return below, f"{pounds + 1} lb"
 
 
 # -- classification ---------------------------------------------------------------

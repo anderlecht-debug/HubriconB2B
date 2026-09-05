@@ -45,6 +45,18 @@ def min_monthly_usd() -> float:
     return _f("COLD_MIN_MONTHLY_USD", 250.0)
 
 
+def min_per_unit_only_usd() -> float:
+    """When a listing carries no volume estimate there is no monthly figure, so
+    the per-unit number has to carry the email on its own. A parcel-level saving
+    this size is worth a stranger's attention without one; below it, silence.
+
+    The Shopify harvest reads a catalogue rather than a sales rank, so most of
+    its rows arrive with no volume at all. Without this the whole platform would
+    be gated out by a monthly floor it can never meet.
+    """
+    return _f("COLD_MIN_PER_UNIT_ONLY_USD", 0.50)
+
+
 def max_claim_share() -> float:
     """A finding may not claim more than this share of the listing's own
     estimated monthly revenue. The volume curve occasionally produces a silly
@@ -82,9 +94,14 @@ def max_touches() -> int:
 
 
 def suppressed_jurisdictions() -> set[str]:
-    """EU/UK prospects need a documented legitimate-interest basis we do not yet
-    have (COLD_ENGINE.md §2.3, open question 3). Suppressing costs little volume
-    and is the cheap answer until someone decides otherwise."""
+    """The EU, the UK, the EEA and Switzerland, suppressed outright.
+
+    COLD_ENGINE.md §2.3 needs a documented legitimate-interest basis for these
+    and this business has not established one. Its open question 3 asked whether
+    to suppress the jurisdiction entirely for v1; the founder's answer on
+    2026-09-04 was yes. It costs almost no volume — the harvest is US-gated
+    already — and it is one environment variable to reverse.
+    """
     raw = os.environ.get("COLD_SUPPRESSED_JURISDICTIONS")
     if raw is not None:
         return {c.strip().upper() for c in raw.split(",") if c.strip()}

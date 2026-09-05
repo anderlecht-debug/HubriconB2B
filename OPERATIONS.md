@@ -376,6 +376,7 @@ Five detectors, all computed from pages the seller published themselves:
 | `dim_weight_overage` | past a cubic foot the fee is set by the box, not the product | the fee at dimensional weight against the fee at real weight |
 | `fee_band_edge` | the published item weight is already over a band edge, before Amazon's packaging | the band step on the schedule |
 | `price_cut_no_rank_gain` | a price cut that bought no rank | the cut, net of the referral fee |
+| `carrier_band_edge` (Shopify) | a parcel over a pound is billed at two | USPS Notice 123, zones 1–8 |
 
 `price_band_edge` is the strongest and needs nothing but the price the seller
 set: two published rates and their own listing. `fee_band_edge` is the honest
@@ -403,14 +404,34 @@ started 17 April. **On 15 October the peak card takes over and this one goes
 stale**: the engine stops pricing anything and says so rather than quoting a low
 number. Update `engine/src/hubricon_engine/cold/priors.py` and it starts again.
 
-### Shopify prospects get no teardown yet
+### Shopify: the pound, not the ounce
 
-A Shopify brand's shipping cost is zone-priced and often negotiated, and this
-repo holds no carrier rate card. The detector states the billable-weight fact
-and prices nothing, so `select` never lets it out — deliberately. Load the USPS
-Ground Advantage price list into `priors.CARRIER_GROUND_USD` and the Shopify
-lane turns on with no other change. Until then Shopify sellers stay in the
-founder lane's `hubricon outreach` briefs.
+**A claim this business was making stopped being true on 12 July 2026.** Until
+then USPS Ground Advantage priced 4, 8, 12 and 15.99 oz separately, and the
+Shopify hook quoted those tiers. On that date USPS collapsed all four into one:
+at published Commercial rates every parcel under a pound now costs the same
+within a zone, whatever it weighs. "You are 1.5 oz over the 8 oz band" is a
+false statement about a stranger's business, so those edges are gone from
+`harvest/shopify.py` — which removes the sentence from `hubricon outreach` and
+the cold engine at once, since both read the same list.
+
+What survives is larger, because USPS rounds anything over a pound up to the
+next whole pound. A parcel at 16.5 oz is billed at **two** pounds; the same
+parcel at 15.9 oz is billed at the flat sub-pound rate. That step is **96¢ to
+$4.47** — the range is the spread across zones 1 to 8, and the teardown page
+draws all eight rather than averaging them, because a brand's zone mix is not
+public and guessing at it is the one thing worth refusing.
+
+The card is USPS Notice 123 Commercial prices (`pe.usps.com`), effective
+2026-07-12, in `cold/priors.py`. Commercial rather than Retail because that is
+what a brand buying labels through Shopify Shipping or Pirate Ship pays; Retail
+is two to four dollars dearer and would overstate every claim. The 48 oz edge
+and above needs the 4 lb row, which is not on file, so it stays unpriced and is
+never sent.
+
+Shopify rows usually carry no volume estimate — the harvest reads a catalogue,
+not a sales rank — so those findings stand on the per-unit number alone,
+gated by `COLD_MIN_PER_UNIT_ONLY_USD` (default 50¢) instead of the monthly floor.
 
 ### Price history, for free
 
@@ -441,10 +462,21 @@ honours an objection immediately, across every lane.
 ### The gate this is at
 
 COLD_ENGINE.md Phase 3: the founder sends fifty by hand from his own mailbox and
-handles every reply. Phase 4 (automated dispatch, sending-domain rotation,
-bounce and complaint auto-pause) is not built, and should not be until those
-fifty have produced replies and at least one call. Phase 5 (video) is not built
-and should not be until the page converts.
+handles every reply.
+
+**Phase 4 is not happening this quarter.** It needs three to five dedicated
+sending domains warmed for three weeks before the first send, and never
+hubricon.com or gethubricon.com — those carry client mail. The founder's call on
+2026-09-04 was not to register them this quarter, so the cold lane stays
+hand-sent: `hubricon teardown` builds and `sent` records, and nothing in the
+repo dispatches. The dispatch code, domain rotation and bounce/complaint
+auto-pause are deliberately unbuilt rather than built and disabled. Phase 5
+(video) waits on the page converting.
+
+Answers to COLD_ENGINE.md §6, recorded 2026-09-04: no Keepa (the harvest is the
+source); EU/UK suppressed entirely; contact emails come from the harvest's
+enrichment, recorded in `harvest_sellers.contact_source`; no sending domains
+this quarter.
 
 ## The ledger measures itself
 

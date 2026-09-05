@@ -10,7 +10,7 @@ from datetime import date, datetime, timezone
 
 import pytest
 
-from hubricon_engine.cold import findings, priors
+from hubricon_engine.cold import findings, priors, priors
 from builders import item, snapshot
 
 TODAY = date(2026, 6, 1)     # inside the rate card's window, after the fuel surcharge
@@ -173,16 +173,39 @@ def test_a_product_far_over_one_axis_is_a_redesign_not_a_near_miss():
     assert "size_tier_edge" not in kinds(findings.detect(snapshot(items=[it]), today=TODAY))
 
 
-# -- the Shopify lane is deliberately unpriced -------------------------------------
+# -- the Shopify lane --------------------------------------------------------------
 
-def test_a_shopify_listing_states_the_weight_fact_and_prices_nothing():
+def test_a_shopify_parcel_over_a_pound_is_priced_across_the_zones():
     snap = snapshot(platform="shopify", key="testbrand",
                     items=[item(ref="testbrand.com/products/x", price=28.0,
                                 item_weight_oz=17.5, dims_in=None)])
-    fs = findings.detect(snap, today=TODAY)
-    assert kinds(fs) <= {"carrier_band_edge"}
-    for f in fs:
-        assert f.dollars_high == 0.0, "no carrier rate card is loaded, so nothing can be priced"
+    f = one(findings.detect(snap, today=TODAY), "carrier_band_edge")
+    assert f.evidence["edge"] == 16
+    assert (f.per_unit_low, f.per_unit_high) == priors.CARRIER_GROUND_USD[16]
+    assert f.evidence["band_below"] == "under a pound"
+    assert f.evidence["band_above"] == "2 lb"
+    assert any("zones 1 to 8" in a for a in f.assumptions), f.assumptions
+
+
+def test_a_shopify_parcel_already_under_a_pound_has_nothing_to_drop_into():
+    """USPS collapsed the 4 / 8 / 12 / 15.99 oz tiers into one flat rate on
+    2026-07-12. A 9 oz parcel costs exactly what a 4 oz one does, so the old
+    ounce-tier hook is not a smaller finding — it is a false one."""
+    for weight in (4.5, 9.0, 15.5):
+        snap = snapshot(platform="shopify", key="testbrand",
+                        items=[item(ref="testbrand.com/products/x", price=28.0,
+                                    item_weight_oz=weight, dims_in=None)])
+        assert findings.detect(snap, today=TODAY) == [], f"{weight} oz must produce nothing"
+
+
+def test_a_shopify_edge_the_card_has_no_row_for_is_stated_but_never_priced():
+    snap = snapshot(platform="shopify", key="testbrand",
+                    items=[item(ref="testbrand.com/products/x", price=95.0,
+                                item_weight_oz=52.0, dims_in=None)])
+    f = one(findings.detect(snap, today=TODAY), "carrier_band_edge")
+    assert f.evidence["edge"] == 48
+    assert f.dollars_high == 0.0 and f.per_unit_high == 0.0
+    assert f.confidence < 0.7, "an unpriced finding must also fall under the confidence floor"
 
 
 # -- the rate card's own window ----------------------------------------------------

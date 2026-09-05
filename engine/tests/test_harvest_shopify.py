@@ -303,16 +303,35 @@ def test_store_age_and_the_revenue_estimate_are_arithmetic_we_can_check():
 
 # -- the hook ------------------------------------------------------------------------
 
+def test_the_sub_pound_ounce_tiers_are_gone_and_cannot_be_quoted():
+    """USPS collapsed the 4 / 8 / 12 / 15.99 oz tiers into one flat sub-pound
+    rate at published Commercial prices on 2026-07-12.
+
+    This test is the guard on a claim that used to be true and stopped being so.
+    Every ounce-tier sentence the founder lane and the cold engine can compose
+    is built from these edges, so an edge that no longer exists here cannot
+    reach a stranger's inbox from anywhere.
+    """
+    for weight in (4.5, 8.5, 12.5, 15.9):
+        assert shopify.shipping_cliff(weight) is None, \
+            f"{weight} oz has no cheaper band to drop into: under a pound the rate is flat"
+    assert shopify.MIN_HOOK_WEIGHT_OZ == 16.0
+
+
 def test_shipping_cliff_edges_follow_the_carrier_rate_card():
-    assert shopify.shipping_cliff(3.9) is None            # the lightest band has nothing below it
-    assert shopify.shipping_cliff(4.5) == (4, 0.5)
-    assert shopify.shipping_cliff(17.2) == (16, 1.2)      # a pound and a bit: pays the 2-lb rate
+    assert shopify.shipping_cliff(3.9) is None
+    assert shopify.shipping_cliff(17.2) == (16, 1.2)      # over a pound: rounds up to the 2 lb rate
     assert shopify.shipping_cliff(33.0) == (32, 1.0)
     assert shopify.shipping_cliff(None) is None and shopify.shipping_cliff(0) is None
-    assert shopify.band_names(16) == ("1-lb", "2-lb")
-    assert shopify.band_names(32) == ("2-lb", "3-lb")
-    assert shopify.band_names(8) == ("8-oz", "12-oz")
-    assert shopify.MIN_HOOK_WEIGHT_OZ == 4.0
+
+
+def test_the_band_names_account_for_the_round_up():
+    # A parcel over a pound bills at two, so what a 17 oz product is really
+    # choosing between is the 2 lb rate and the flat sub-pound rate — not the
+    # 1 lb rate, which only an exactly-16.000 oz parcel ever pays. Naming the
+    # 1 lb rate here would understate the saving by about half.
+    assert shopify.band_names(16) == ("under a pound", "2 lb")
+    assert shopify.band_names(32) == ("2 lb", "3 lb")
 
 
 # -- classification --------------------------------------------------------------------
@@ -591,8 +610,10 @@ def test_the_founder_lane_hook_for_a_shopify_row_is_the_shipping_band():
     assert (facts["items"][0]["band_edge"], facts["items"][0]["over_by"]) == (16, 1.2)
 
     brief = outreach.brief_text(facts)
-    assert "ships at 17.2 oz; the 1-lb band ends at 16 oz, so every unit pays the 2-lb rate " \
-           "on USPS and UPS." in brief
+    assert "ships at 17.2 oz. USPS rounds anything over 16 oz up to 2 lb, so trimming 1.2 oz " \
+           "drops every parcel to the under a pound rate." in brief
+    # And it says what that is worth, from the one rate card both lanes read.
+    assert "$0.96 to $4.47 a parcel" in brief
     assert "platform      Shopify" in brief and "FBA" not in brief
     assert "https://riverbendgoods.com/policies/contact-information" in brief
     assert "Amazon storefront" not in brief
@@ -601,14 +622,16 @@ def test_the_founder_lane_hook_for_a_shopify_row_is_the_shipping_band():
     assert draft["complete"] and draft["to"] == "hello@riverbendgoods.com"
     # The subject carries the number and what it costs, and never the word
     # "FBA" — the whole point of the Shopify lane.
-    assert draft["subject"] == "1.2 oz is costing Riverbend Goods on every unit"
+    assert draft["subject"] == "1.2 oz is costing Riverbend Goods on every parcel"
     assert "FBA" not in draft["subject"]
-    assert "the 2-lb rate on USPS and UPS" in draft["body"]
+    assert "onto the 2 lb rate instead of the under a pound rate" in draft["body"]
+    assert "$0.96 to $4.47 each" in draft["body"]
     assert "Shopify admin" in draft["body"] and "Seller Central" not in draft["body"]
     assert "no access to your store" in draft["body"]
 
     partner = outreach.partner_email(facts, "Dana", "20% of the first year")
-    assert "1-lb USPS/UPS band" in partner["body"] and "FBA" not in partner["body"]
+    assert "16 oz mark USPS rounds up from" in partner["body"] and "FBA" not in partner["body"]
+    assert "the 2 lb rate rather than the under a pound one" in partner["body"]
 
     rows = outreach.targets(db, limit=5)
     assert rows[0]["seller_id"] == "riverbend-goods.myshopify.com" and rows[0]["has_hook"]

@@ -118,22 +118,86 @@ REFERRAL_BY_CATEGORY = {
     "cell phones & accessories": 0.08,
 }
 
-# -- Shopify: the carrier side -----------------------------------------------------
+# -- Shopify: USPS Ground Advantage -------------------------------------------------
 #
-# Deliberately empty. A Shopify brand's shipping cost is a zone-priced,
-# often-negotiated rate, and the published USPS Ground Advantage and UPS Ground
-# cards are per-zone tables this repo does not hold. Inventing a step cost to
-# make the Shopify lane produce a dollar figure is exactly the failure mode
-# COLD_ENGINE.md §0 names, so the Shopify detector states the billable-weight
-# fact and prices nothing — which means `select` never lets it out.
+# Source: USPS Postal Explorer, Notice 123 Price List, Ground Advantage
+#         Commercial prices, effective 2026-07-12. Zone 8 cross-checked against
+#         two independent published reproductions, which agree to the cent.
+#         Commercial rather than Retail because that is what a brand buying
+#         labels through Shopify Shipping or Pirate Ship actually pays; Retail
+#         is roughly two to four dollars dearer and would overstate every claim.
 #
-# To turn the Shopify lane on: download the Ground Advantage retail price list
-# (usps.com/business/prices.htm → Ground Advantage CSV), fill the table below
-# with the zone-1–4 price for each band edge, and set CARRIER_EFFECTIVE. The
-# detector picks it up with no other change.
-CARRIER_SOURCE = "USPS Ground Advantage retail price list (not yet loaded)"
-CARRIER_EFFECTIVE: date | None = None
-CARRIER_GROUND_USD: dict[int, tuple[float, float]] = {}   # band edge oz -> (zone 1-4 low, high)
+# **The ounce tiers are gone.** Until 2026-07-12 Ground Advantage priced 4, 8,
+# 12 and 15.999 oz separately, and this repo's Shopify hook was built on that
+# ladder. USPS collapsed all four into one: at published Commercial rates every
+# parcel under a pound now costs the same within a zone, whatever it weighs. So
+# "your product is 1.5 oz over the 8 oz band" stopped being true that day, and
+# harvest/shopify.py no longer emits those edges.
+#
+# What survives is the pound boundary, and it is much larger than any ounce tier
+# ever was, because USPS rounds anything over a pound up to the next whole
+# pound. A parcel at 16.5 oz is billed at two pounds; the same parcel at 15.9 oz
+# is billed at the flat sub-pound rate. The step below is measured between those
+# two, which is what a brand would actually save by trimming the ounce.
+#
+#     under 1 lb   6.93  6.94  7.30  7.46  7.69  7.86  8.07  8.40   (zones 1-8)
+#     1 lb         7.61  7.68  8.00  8.15  8.74  9.63  9.98 10.67
+#     2 lb         7.99  8.08  8.26  8.51  9.95 11.58 12.00 12.87
+#     3 lb         8.64  8.66  9.14  9.67 11.57 13.59 14.36 15.75
+#
+# The range at each edge is the spread across those eight zones. It is wide
+# because a brand's zone mix is not public and we will not guess at it: the low
+# end is what a purely local shipper saves and the high end what a coast-to-coast
+# one does. The copy says exactly that.
+CARRIER_SOURCE = ("USPS Ground Advantage Commercial prices, Notice 123, effective 2026-07-12 "
+                  "(pe.usps.com)")
+CARRIER_EFFECTIVE: date | None = date(2026, 7, 12)
+CARRIER_ZONES = (1, 2, 3, 4, 5, 6, 7, 8)
+
+# The card itself, keyed by the ounce weight a parcel is billed *at*. 0 is the
+# flat sub-pound rate; 16 is the exactly-one-pound rate that only a 16.000 oz
+# parcel ever pays; 32 and 48 are what a parcel over one and over two pounds
+# rounds up to. Kept as the published rows rather than as deltas so the teardown
+# page can draw the seller the actual card.
+CARRIER_GROUND_COMMERCIAL: dict[int, list[float]] = {
+    0:  [6.93, 6.94, 7.30, 7.46, 7.69, 7.86, 8.07, 8.40],
+    16: [7.61, 7.68, 8.00, 8.15, 8.74, 9.63, 9.98, 10.67],
+    32: [7.99, 8.08, 8.26, 8.51, 9.95, 11.58, 12.00, 12.87],
+    48: [8.64, 8.66, 9.14, 9.67, 11.57, 13.59, 14.36, 15.75],
+}
+
+
+def carrier_rows(edge_oz: int) -> tuple[list[float], list[float]] | None:
+    """(what it pays now, what it would pay under the edge) across zones 1-8.
+
+    The round-up is the whole point: a parcel over `edge_oz` bills at the *next*
+    pound, and its realistic alternative is the band below the edge — for the
+    16 oz edge that is the flat sub-pound rate, not the one-pound rate a
+    16.000 oz parcel would pay.
+    """
+    now = CARRIER_GROUND_COMMERCIAL.get(edge_oz + 16)
+    under = CARRIER_GROUND_COMMERCIAL.get(0 if edge_oz == 16 else edge_oz)
+    return (now, under) if now and under else None
+
+
+def _carrier_steps() -> dict[int, tuple[float, float]]:
+    out = {}
+    # Only real band edges. 0 is a row of the card, not somewhere a parcel can
+    # sit above, and shipping_cliff never emits it.
+    for edge in (e for e in CARRIER_GROUND_COMMERCIAL if e >= 16):
+        rows = carrier_rows(edge)
+        if not rows:
+            continue
+        steps = [round(a - b, 2) for a, b in zip(*rows)]
+        out[edge] = (min(steps), max(steps))
+    return out
+
+
+# band edge oz -> (saving per parcel in the nearest zone, in the farthest).
+# Derived, so the card above stays the single place a figure is edited. An edge
+# with no row — 48 oz and up, which needs the 4 lb row — is absent, stays
+# unpriced, and select refuses to send an unpriced finding.
+CARRIER_GROUND_USD: dict[int, tuple[float, float]] = _carrier_steps()
 
 
 def stale(today: date | None = None) -> str | None:

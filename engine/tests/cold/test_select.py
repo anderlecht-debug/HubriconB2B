@@ -55,11 +55,35 @@ def test_an_unpriced_finding_never_leads():
     assert select.best([unpriced], snapshot()) is None
 
 
-def test_a_shopify_snapshot_selects_nothing_until_a_carrier_card_is_loaded():
+def test_a_shopify_parcel_over_a_pound_now_leads():
     snap = snapshot(platform="shopify",
                     items=[item(ref="b.com/products/x", price=28.0, item_weight_oz=17.5,
                                 dims_in=None)])
-    assert select.best(findings.detect(snap, today=TODAY), snap) is None
+    chosen = select.best(findings.detect(snap, today=TODAY), snap)
+    assert chosen is not None and chosen.kind == "carrier_band_edge"
+
+
+def test_a_shopify_finding_with_no_volume_stands_on_its_per_unit_number():
+    """The Shopify harvest reads a catalogue, not a sales rank, so most of its
+    rows carry no volume. Judging those against a monthly floor they can never
+    meet would gate out the whole platform."""
+    snap = snapshot(platform="shopify",
+                    items=[item(ref="b.com/products/x", price=28.0, item_weight_oz=17.5,
+                                dims_in=None, est_monthly_units=None,
+                                est_monthly_revenue=None)])
+    chosen = select.best(findings.detect(snap, today=TODAY), snap)
+    assert chosen is not None
+    assert chosen.dollars_high == 0.0 and chosen.per_unit_low >= 0.96
+
+
+def test_a_small_per_unit_saving_with_no_volume_behind_it_is_refused(monkeypatch):
+    monkeypatch.setenv("COLD_MIN_PER_UNIT_ONLY_USD", "2.00")
+    verdict = select.review([finding(dollars_low=0.0, dollars_high=0.0,
+                                     evidence={"chart": "carrier_bands", "per_unit_low": 0.96,
+                                               "per_unit_high": 4.47, "monthly_units": None})],
+                            snapshot())
+    assert verdict.chosen is None
+    assert "no volume estimate" in verdict.rejected[0].reason
 
 
 def test_no_findings_at_all_is_a_normal_outcome():

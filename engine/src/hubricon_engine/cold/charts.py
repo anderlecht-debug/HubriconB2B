@@ -280,8 +280,54 @@ def price_vs_rank(ev: dict) -> str:
     return _svg(body, "Price and sales rank over time")
 
 
+# -- the carrier card, zone by zone ------------------------------------------------
+
+def carrier_bands(ev: dict) -> str:
+    """What they pay against what they would pay, across all eight zones.
+
+    The zone spread is the honest part of this finding — we do not know where a
+    brand ships — so the chart shows the whole spread rather than hiding it
+    behind an average. The shaded gap between the two lines *is* the claim.
+    """
+    rows = priors.carrier_rows(ev.get("edge"))
+    if not rows:
+        return ""
+    now, under = rows
+    zones = priors.CARRIER_ZONES
+    lo_z, hi_z = zones[0], zones[-1]
+    y_lo, y_hi = min(under) - 0.6, max(now) + 0.8
+
+    pts = lambda series: " ".join(  # noqa: E731
+        f"{_x(z, lo_z, hi_z):.1f},{_y(v, y_lo, y_hi):.1f}" for z, v in zip(zones, series))
+    body = _frame("delivery zone — 1 is local, 8 is coast to coast",
+                  "usps ground advantage, per parcel",
+                  [(_x(z, lo_z, hi_z), str(z)) for z in zones],
+                  [(_y(v, y_lo, y_hi), f"${v:,.2f}") for v in nice_ticks(y_lo, y_hi, 4)])
+    band = (pts(now) + " " +
+            " ".join(f"{_x(z, lo_z, hi_z):.1f},{_y(v, y_lo, y_hi):.1f}"
+                     for z, v in reversed(list(zip(zones, under)))))
+    body.append(f'<polygon points="{band}" fill="{SERIOUS}" opacity="0.10"/>')
+    body.append(f'<polyline points="{pts(now)}" fill="none" stroke="{SERIOUS}" stroke-width="2.5"/>')
+    body.append(f'<polyline points="{pts(under)}" fill="none" stroke="{OK}" stroke-width="2.5" '
+                f'stroke-dasharray="5 4"/>')
+    body.append(f'<text x="{_x(zones[-1], lo_z, hi_z):.0f}" y="{_y(now[-1], y_lo, y_hi) - 12:.0f}" '
+                f'text-anchor="end" font-size="12" font-weight="600" fill="{SERIOUS}">'
+                f'you: {ev.get("band_above", "")} rate</text>')
+    body.append(f'<text x="{_x(zones[-1], lo_z, hi_z):.0f}" y="{_y(under[-1], y_lo, y_hi) + 20:.0f}" '
+                f'text-anchor="end" font-size="12" font-weight="600" fill="{OK}">'
+                f'{ev.get("band_below", "")}</text>')
+    mid = len(zones) // 2
+    gap = now[mid] - under[mid]
+    body.append(f'<text x="{_x(zones[mid], lo_z, hi_z):.0f}" '
+                f'y="{(_y(now[mid], y_lo, y_hi) + _y(under[mid], y_lo, y_hi)) / 2 + 4:.0f}" '
+                f'text-anchor="middle" font-size="12" font-weight="600" fill="{INK}">'
+                f'${gap:,.2f}</text>')
+    return _svg(body, "USPS Ground Advantage cost per parcel by zone")
+
+
 CHARTS = {
     "net_vs_price": net_vs_price,
+    "carrier_bands": carrier_bands,
     "fee_vs_weight": fee_vs_weight,
     "size_tier": size_tier,
     "price_vs_rank": price_vs_rank,

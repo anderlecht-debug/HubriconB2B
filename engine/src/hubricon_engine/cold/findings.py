@@ -428,14 +428,21 @@ MIN_RANK_GAIN = 0.10        # a cut that moved rank 10% did buy something
 # -- the Shopify lane --------------------------------------------------------------
 
 def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Finding | None:
-    """The billable weight is over a carrier band edge — stated, never priced.
+    """A Shopify parcel over a pound, priced off the USPS Ground Advantage card.
 
-    A Shopify brand's shipping cost is zone-priced and often negotiated, and
-    this repo holds no carrier rate card (priors.CARRIER_GROUND_USD is empty on
-    purpose). So the fact is recorded with no dollar figure, which means
-    `select` will never let it out: a Shopify prospect gets no cold teardown
-    until the Ground Advantage card is loaded. Loading it turns this on with no
-    other change.
+    USPS rounds anything over a pound up to the next whole pound, so a product
+    at 16.5 oz is billed at two pounds while the same product at 15.9 oz is
+    billed at the flat sub-pound rate. That is the largest single step on the
+    card and the only one a brand can cross by trimming packaging.
+
+    The figure is a range across zones 1 to 8 rather than a point, because a
+    brand's zone mix is not public and guessing at it would be the one thing
+    worth refusing. The low end is what a local shipper saves and the high end
+    what a coast-to-coast one does, and the copy says exactly that.
+
+    Before 2026-07-12 this also fired on the 4, 8 and 12 oz tiers. USPS
+    collapsed them into one flat rate that day, so those edges are gone from
+    harvest/shopify.py and cannot be quoted from anywhere.
     """
     weight = item.billable_weight_oz
     if not weight:
@@ -446,25 +453,41 @@ def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Findin
     edge, over_by = cliff
     below, above = shopify_harvest.band_names(edge)
     priced = priors.CARRIER_GROUND_USD.get(edge)
-    per_unit_low, per_unit_high = (priced if priced else (0.0, 0.0))
+    if not priced:
+        # An edge the card holds no row for. Stated, never priced, and `select`
+        # refuses an unpriced finding — so nothing is sent about it.
+        per_unit_low, per_unit_high = 0.0, 0.0
+    else:
+        per_unit_low, per_unit_high = priced
     lo, hi = _monthly(per_unit_low, per_unit_high, item.est_monthly_units)
+    assumptions = [
+        f"the weight published on your own product page ({weight:g} oz); carriers bill the "
+        f"greater of packed and dimensional weight, so this is a floor",
+        f"USPS rounds anything over {edge} oz up to {above}, so trimming {over_by:g} oz moves "
+        f"every parcel to the {below} rate",
+    ]
+    if priced:
+        assumptions += [
+            f"{priors.CARRIER_SOURCE}",
+            f"a range across zones 1 to 8, because your zone mix is not public: "
+            f"${per_unit_low:,.2f} a parcel to the nearest zones and ${per_unit_high:,.2f} to "
+            f"the farthest",
+        ]
+    else:
+        assumptions.append("no rate card row for this weight, so this finding carries no "
+                           "dollar figure and is not sent")
     return Finding(
         kind="carrier_band_edge",
         dollars_low=lo, dollars_high=hi,
-        confidence=0.55 if not priced else 0.72,
-        assumptions=[
-            f"the weight published on your product page; carriers bill the greater of packed "
-            f"and dimensional weight, so this is a floor",
-            f"the {below} band ends at {edge} oz, so every unit pays the {above} rate",
-            (priors.CARRIER_SOURCE if priced else
-             "no carrier rate card is loaded, so this finding carries no dollar figure"),
-        ],
+        confidence=0.74 if priced else 0.55,
+        assumptions=assumptions,
         evidence={
-            "chart": "fee_vs_weight",
+            "chart": "carrier_bands",
             "edge": edge, "your_weight_oz": weight, "over_by_oz": over_by,
             "band_below": below, "band_above": above,
             "per_unit_low": per_unit_low, "per_unit_high": per_unit_high,
             "monthly_units": item.est_monthly_units, "price": item.price,
+            "rate_card": priors.CARRIER_SOURCE if priced else None,
         },
         asin_or_sku=item.ref, item_title=item.title, item_url=item.url,
     )
