@@ -38,7 +38,7 @@ GitHub → repo → Settings → Environments → **Production** → add:
 | Secret | Why |
 |---|---|
 | `INSTANTLY_API_KEY` | Instantly → Settings → Integrations → API keys → v2 key with `all:all`. Outbound is OFF until this exists. Needs the Growth plan or above. |
-| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. |
+| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. It must be real, and it must match the one in `.env` on the Mac — the two write different messages. Change it and the live campaign's copy is re-pushed on the next pass; teardowns already drafted keep the address they were built with, so rebuild those. |
 | `ANTHROPIC_API_KEY` | Optional. Lets the hourly run answer prospect questions itself instead of waiting up to 2 h for the routine. Same key as `.env`. |
 | `ANTHROPIC_WORKSPACE_ID` | Goes with the key above (`wrkspc_…`, shown beside the key in the Console; same value as `.env`). Identity-linked keys are refused without it, and the questions silently wait for the routine. |
 

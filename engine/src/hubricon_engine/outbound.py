@@ -212,6 +212,7 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -
         notes.append(f"Created campaign {CAMPAIGN_NAME!r} ({campaign.get('id')}) sending from {', '.join(senders)}")
         log_event(db, "campaign_created", payload={"id": campaign.get("id"), "senders": senders})
         state["copy_version"] = COPY_VERSION  # born from the current copy
+        state["copy_address"] = postal_address  # ...and from the address in it
 
     cid = campaign.get("id")
     state = {**state, "id": cid, "name": campaign.get("name"), "senders": senders}
@@ -263,19 +264,33 @@ def _status_name(status) -> str:
 def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | None, dry: bool) -> list[str]:
     """The live campaign follows campaign_spec. When COPY_VERSION moves, the
     sequence is PATCHed in place: threads already sent keep their history, and
-    nobody receives a follow-up the new copy no longer has."""
-    if state.get("copy_version") == COPY_VERSION:
+    nobody receives a follow-up the new copy no longer has.
+
+    The postal address is the second thing that decides those bytes, and it
+    lives in a secret rather than in this file — so it is compared too. Gating
+    on COPY_VERSION alone meant a corrected POSTAL_ADDRESS never reached the
+    campaign: on 2026-09-05 the secret held a test fixture, 36 emails went out
+    carrying a mailing address that does not exist, and fixing the secret would
+    have changed nothing until someone thought to bump a constant. Comparing the
+    address makes the correction land by itself on the next pass.
+    """
+    address_changed = (state.get("copy_address") or None) != (postal_address or None)
+    if state.get("copy_version") == COPY_VERSION and not address_changed:
         return []
     if not postal_address:
         return ["Campaign copy not updated: POSTAL_ADDRESS is empty (the footer needs it)."]
+    why = ("the postal address changed" if state.get("copy_version") == COPY_VERSION
+           else f"the copy moved to {COPY_VERSION!r}")
     spec = campaign_spec(state.get("senders") or [], postal_address)
     if dry:
-        return [f"[dry] would update the campaign copy to {COPY_VERSION!r}"]
+        return [f"[dry] would update the campaign copy — {why}"]
     api.update_campaign(cid, {"sequences": spec["sequences"]})
-    set_state(db, "instantly.campaign", {**state, "copy_version": COPY_VERSION})
+    set_state(db, "instantly.campaign", {**state, "copy_version": COPY_VERSION,
+                                         "copy_address": postal_address})
     log_event(db, "campaign_copy_updated", payload={"id": cid, "copy_version": COPY_VERSION,
+                                                    "postal_address": postal_address,
                                                     "steps": len(spec["sequences"][0]["steps"])})
-    return [f"Updated the campaign copy to {COPY_VERSION!r}: "
+    return [f"Updated the campaign copy — {why}: "
             f"{len(spec['sequences'][0]['steps'])} step(s), no follow-ups."]
 
 

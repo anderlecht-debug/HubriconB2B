@@ -217,6 +217,26 @@ def test_existing_campaign_gets_the_new_copy_once():
     assert len(api.updated) == 1 and not api.activated
 
 
+def test_a_corrected_postal_address_reaches_the_live_campaign_on_its_own():
+    """The failure this exists for: the secret held a test fixture, 36 emails
+    went out with a mailing address that does not exist, and COPY_VERSION had
+    not moved — so fixing the secret would have PATCHed nothing."""
+    db, api = _DB(), _Api()
+    outbound.ensure_campaign(db, api, "PO Box 1, Austin TX 78701", dry=False)
+    assert len(api.updated) == 1
+
+    outbound.ensure_campaign(db, api, "14509 Carlos St, Frisco TX 75035", dry=False)
+    assert len(api.updated) == 2, "a changed address must re-push the copy"
+    _, fields = api.updated[1]
+    body = fields["sequences"][0]["steps"][0]["variants"][0]["body"]
+    assert "14509 Carlos St, Frisco TX 75035" in body and "PO Box 1" not in body
+    assert outbound.get_state(db, "instantly.campaign")["copy_address"] == \
+        "14509 Carlos St, Frisco TX 75035"
+    # ...and then settles: same address, same version, no third call
+    outbound.ensure_campaign(db, api, "14509 Carlos St, Frisco TX 75035", dry=False)
+    assert len(api.updated) == 2
+
+
 def test_copy_update_respects_dry_run_and_needs_the_postal_footer():
     db, api = _DB(), _Api()
     _, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=True)
