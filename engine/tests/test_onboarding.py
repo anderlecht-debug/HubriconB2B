@@ -81,6 +81,30 @@ def test_the_export_list_follows_the_platform():
     assert render_text(email_spec("files", "Sam", "l")) == amazon.replace("https://x/intake?t=1", "l")
 
 
+def test_the_shopify_email_warns_about_the_two_exports_that_catch_people_out():
+    """A filtered export ships a slice, and a dated export never downloads —
+    Shopify emails it. Both are why an intake stalls; Amazon has neither."""
+    shopify = render_text(email_spec("files", "Sam", "l", platform="shopify"))
+    both = render_text(email_spec("welcome", "Sam", "l", platform="both"))
+    amazon = render_text(email_spec("files", "Sam", "l", platform="amazon"))
+    for body in (shopify, both):
+        assert "clear any filter" in body
+        assert "emailed to you and to the store owner" in body
+    assert "emailed to you" not in amazon
+    # a multi-location store is told why the products file has no quantities
+    assert "Products → Inventory → Export" in shopify
+
+
+def test_the_welcome_link_carries_the_platform():
+    """/welcome leads with the seat the client actually has to grant."""
+    link = lambda platform: [b for b in email_spec("welcome", "Sam", "l", platform=platform)["blocks"]
+                             if b.get("button") == "Open your welcome page"][0]["url"]
+    assert link("shopify").endswith("/welcome?p=shopify")
+    assert link("both").endswith("/welcome?p=both")
+    assert link("amazon").endswith("/welcome")   # the page's own default shows both seats
+    assert link(None).endswith("/welcome")
+
+
 def test_platform_read_from_the_application_gate():
     from hubricon_engine.onboarding import platform_from_answers as p
 

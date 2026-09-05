@@ -17,7 +17,7 @@ import pandas as pd
 import pytest
 
 from hubricon_engine.ingest import PARSERS, parse_all
-from hubricon_engine.ingest.headers import is_total_row, row_key
+from hubricon_engine.ingest.headers import IngestError, is_total_row, row_key
 from hubricon_engine.ingest.readers import read_table
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -244,6 +244,38 @@ def test_products_skip_image_lines_and_unstated_costs():
     assert "WIDGET-RED" not in {r["sku"] for r in cogs_rows}
 
 
+def test_products_write_no_stock_row_for_a_variant_with_no_quantity():
+    """Shopify prints Variant Inventory Qty only for a single-location store,
+    so a multi-location export blanks it. A row of nulls would make the Health
+    Score read 'inventory on file' while the models have nothing to run on —
+    the stock has to come from the inventory export instead."""
+    df = pd.DataFrame(
+        [
+            {"Handle": "kit", "Title": "Starter Kit", "Variant SKU": "KIT-S",
+             "Variant Inventory Qty": "", "Cost per item": "3.00"},
+            {"Handle": "kit", "Title": "Starter Kit", "Variant SKU": "KIT-OUT",
+             "Variant Inventory Qty": "0", "Cost per item": "3.00"},
+        ]
+    )
+    (_, cogs_rows, _), (_, inv_rows, _) = parse_all("shopify_products", df, UPLOAD)
+    # the cost is still read from both: only the stock row is withheld
+    assert {r["sku"] for r in cogs_rows} == {"KIT-S", "KIT-OUT"}
+    # out of stock is a stated zero, and it is not the same as a blank
+    assert [(r["sku"], r["fulfillable_quantity"]) for r in inv_rows] == [("KIT-OUT", 0)]
+
+
+def test_products_say_what_is_missing_when_the_export_states_neither_cost_nor_stock():
+    """The multi-location store that never filled in Cost per item: the file
+    is well-formed and holds nothing we can use. 'No usable data rows' is true
+    and useless, so the parse error names both things to go and do — it is
+    what the founder reads off uploads.parse_error."""
+    df = pd.DataFrame([{"Handle": "kit", "Title": "Starter Kit", "Variant SKU": "KIT-S",
+                        "Variant Inventory Qty": "", "Cost per item": ""}])
+    with pytest.raises(IngestError) as err:
+        parse_all("shopify_products", df, UPLOAD)
+    assert "Cost per item" in str(err.value) and "Inventory > Export" in str(err.value)
+
+
 def test_products_forward_fill_the_title_onto_later_variants():
     """Shopify prints Title on a product's first line only; the variants
     beneath it inherit it, which is what makes their product_name readable."""
@@ -257,6 +289,76 @@ def test_products_forward_fill_the_title_onto_later_variants():
     )
     (_, cogs_rows, _), _ = parse_all("shopify_products", df, UPLOAD)
     assert [r["product_name"] for r in cogs_rows] == ["Starter Kit — Small", "Starter Kit — Large"]
+
+
+# --- shopify_inventory --------------------------------------------------------
+# The fixture is the export a two-location store produces (Main Warehouse and
+# 3PL East), worked out by hand:
+#   WIDGET-BLUE  300 + 112 available, 100 incoming, 12 + 3 committed, 5 + 0 unavailable
+#   WIDGET-RED    88 available at one location, a second location line entirely blank
+#   GADGET-PRO   no Available column value at all: 30 on hand less 4 committed, 1 unavailable
+#   GHOST-1      every state blank -> no row
+#   (one line carries a Handle and quantities but no SKU -> no row)
+
+
+def _inventory(fixture: str = "shopify_inventory_clean.csv") -> dict[str, dict]:
+    table, rows, on_conflict = _one("shopify_inventory", fixture)
+    assert (table, on_conflict) == ("inventory_levels", "client_id,channel,sku,snapshot_date")
+    return {r["sku"]: r for r in rows}
+
+
+def test_inventory_sums_a_variant_across_its_locations():
+    rows = _inventory()
+    blue = rows["WIDGET-BLUE"]
+    assert blue["fulfillable_quantity"] == 412        # 300 + 112 sellable
+    assert blue["inbound_quantity"] == 100            # on a transfer, not landed
+    assert blue["reserved_quantity"] == 20            # (12 + 3) committed + 5 held back
+    assert blue["raw"]["on_hand"] == 432
+    assert blue["asin"] == "widget"                   # the handle bridges sku -> product page
+    assert blue["raw"]["product_name"] == "Widget — Blue"
+    assert [loc["location"] for loc in blue["raw"]["locations"]] == ["Main Warehouse", "3PL East"]
+
+
+def test_inventory_quantities_are_integers_not_floats():
+    """pandas promotes an int column that also holds blanks to float; an
+    integer column and a row-key hash both care."""
+    for row in _inventory().values():
+        for key in ("fulfillable_quantity", "inbound_quantity", "reserved_quantity"):
+            assert row[key] is None or isinstance(row[key], int)
+
+
+def test_inventory_ignores_a_location_line_that_states_nothing():
+    red = _inventory()["WIDGET-RED"]
+    assert red["fulfillable_quantity"] == 88
+    assert len(red["raw"]["locations"]) == 2
+    assert all(v is None for k, v in red["raw"]["locations"][1].items() if k != "location")
+
+
+def test_inventory_derives_sellable_stock_when_the_export_omits_available():
+    """Shopify's own identity: on hand = available + committed + unavailable.
+    Passing On hand off as sellable would promise units already spoken for."""
+    pro = _inventory()["GADGET-PRO"]
+    assert pro["fulfillable_quantity"] == 25          # 30 on hand - 4 committed - 1 unavailable
+    assert pro["reserved_quantity"] == 5
+    assert pro["raw"]["product_name"] == "Gadget Pro"  # Shopify's placeholder option is not a name
+
+
+def test_inventory_skips_a_variant_with_no_stated_state_and_a_line_with_no_sku():
+    rows = _inventory()
+    assert set(rows) == {"WIDGET-BLUE", "WIDGET-RED", "GADGET-PRO"}
+
+
+def test_inventory_never_lets_derived_stock_go_negative():
+    df = pd.DataFrame([{"SKU": "ODD-1", "Location": "Main", "On hand": "3", "Committed": "5"}])
+    _, rows, _ = parse_all("shopify_inventory", df, UPLOAD)[0]
+    assert rows[0]["fulfillable_quantity"] == 0
+
+
+def test_inventory_rows_carry_the_shopify_channel_and_the_snapshot_date():
+    for row in _inventory().values():
+        assert row["channel"] == "shopify"
+        assert row["snapshot_date"] == UPLOAD["period_start"]
+        assert row["fnsku"] is None
 
 
 # --- shopify_payouts ----------------------------------------------------------
@@ -389,6 +491,7 @@ def test_parse_all_normalises_one_and_two_table_parsers():
     for report_type, fixture, n_tables in [
         ("shopify_orders", "shopify_orders_clean.csv", 1),
         ("shopify_products", "shopify_products_clean.csv", 2),
+        ("shopify_inventory", "shopify_inventory_clean.csv", 1),
         ("shopify_payouts", "shopify_payouts_clean.csv", 1),
         ("meta_ads", "meta_ads_clean.csv", 1),
         ("google_ads_campaign", "google_ads_campaign_clean.csv", 1),
@@ -404,5 +507,5 @@ def test_parse_all_normalises_one_and_two_table_parsers():
 
 
 def test_every_shopify_parser_is_registered():
-    assert {"shopify_orders", "shopify_products", "shopify_payouts",
+    assert {"shopify_orders", "shopify_products", "shopify_inventory", "shopify_payouts",
             "meta_ads", "google_ads_campaign", "google_ads_search_terms"} <= set(PARSERS)

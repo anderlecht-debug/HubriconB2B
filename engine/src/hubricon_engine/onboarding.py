@@ -164,16 +164,30 @@ AMAZON_EXPORTS = [
     "Estimates are fine.",
 ]
 SHOPIFY_EXPORTS = [
-    "Orders — Shopify admin → Orders → Export → custom date range, last 6 months → Plain CSV file. "
-    "Every order and line item; this is the sales, refund and discount history the models run on.",
-    "Products — Products → Export → All products → Plain CSV file. Check that Cost per item is filled in; "
-    "the same file is your inventory snapshot.",
-    "Payouts — Finances → Payouts → Transactions → Export → last 90 days. The processing fee on every charge.",
+    "Orders — Shopify admin → Orders → clear any filters → Export → Orders by date, last 6 months → "
+    "Plain CSV file → Export orders (not \"Export transaction histories\"). Every order and line item; this is "
+    "the sales, refund and discount history the models run on.",
+    "Products — Products → Export → All products → Plain CSV file. Fill in Cost per item before you export if "
+    "it is blank — it is the difference between a margin and a guess. On a single-location store this file is "
+    "your stock snapshot too; with two or more locations also send Products → Inventory → Export → All "
+    "locations, because Shopify leaves stock quantities out of the products file whenever a store has more "
+    "than one location.",
+    "Payouts — Finances → Payouts → View transactions → Export → last 90 days. The fee on every charge; "
+    "without it we estimate at Shopify Payments' published rate. Only exists on Shopify Payments.",
     "Advertising — Meta Ads Manager → Campaigns → breakdown by Day → Export CSV; and/or Google Ads → "
     "Campaigns (segment by Day) → Download CSV, plus Insights & reports → Search terms → Download CSV.",
     "Your costs — the page has a one-row-per-SKU template (unit cost, freight, packaging, pick/pack/postage, "
     "lead time). Estimates are fine.",
 ]
+# The two Shopify behaviours that otherwise cost a client an afternoon: an
+# export sends only what a filter left on screen, and a dated export never
+# downloads — Shopify emails it.
+SHOPIFY_EXPORT_NOTE = (
+    "Two things about Shopify exports, so nothing catches you out: clear any filter or search on the page "
+    "first, because an export sends only what is on screen; and expect the file by email rather than in your "
+    "browser — anything with a date range on it is emailed to you and to the store owner within a minute or "
+    "two. The upload page checks each file's columns as you pick it and says so if something looks off."
+)
 SEAT_HINT = {
     "amazon": f"Add {EXEC_EMAIL} under Seller Central → Settings → User Permissions; the welcome page shows the exact four permissions.",
     "shopify": "Reply with your store URL and we send a collaborator request to approve under Settings → Users → Collaborators; "
@@ -192,6 +206,12 @@ def exports_for(platform: str | None) -> list[str]:
     return AMAZON_EXPORTS
 
 
+def export_note(platform: str | None) -> str | None:
+    """What to know before clicking Export. Shopify has two behaviours worth
+    a sentence; Seller Central just downloads the file."""
+    return SHOPIFY_EXPORT_NOTE if (platform or "amazon").lower() in ("shopify", "both") else None
+
+
 def seat_hint(platform: str | None) -> str:
     p = (platform or "amazon").lower()
     if p == "both":
@@ -201,10 +221,13 @@ def seat_hint(platform: str | None) -> str:
 
 def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | None = None,
                platform: str | None = "amazon") -> dict:
-    welcome = f"{INTAKE_BASE_URL}/welcome"
+    # The welcome page leads with the seat the client actually has to grant.
+    p = (platform or "amazon").lower()
+    welcome = f"{INTAKE_BASE_URL}/welcome" + (f"?p={p}" if p in ("shopify", "both") else "")
     portal = portal_url or f"{INTAKE_BASE_URL}/portal"
     greeting = f"Hi {_first(first_name)},"
     exports = exports_for(platform)
+    note = export_note(platform)
     n = "five" if len(exports) == 5 else str(len(exports))
     seat = "Seller Central seat" if (platform or "amazon").lower() == "amazon" else "seat on your store"
     if kind == "welcome":
@@ -219,6 +242,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                       "your desk within 24 hours."},
                 {"button": "Open your secure upload page", "url": link},
                 {"ol": exports},
+                *([{"p": note}] if note else []),
                 {"p": f"Prefer to grant a seat instead? {seat_hint(platform)} Want to talk it through first? "
                       f"Book 20 minutes: {CALENDLY_URL}"},
                 {"p": "Your first month is free. If we don't find you more than we cost, walk away owing nothing."},
@@ -232,6 +256,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 {"p": f"No seat needed — {n} exports through your private upload page and we're off (no account required):"},
                 {"button": "Open your private upload page", "url": link},
                 {"ol": exports},
+                *([{"p": note}] if note else []),
                 {"p": "The models run the moment your last file lands — your written Profit Teardown is in your "
                       "desk within 24 hours."},
                 {"p": "Your first month is free. If we don't find you more than we cost, walk away owing nothing."},

@@ -28,7 +28,7 @@ AMAZON_REPORT_TYPES = {
     "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health", "transactions",
 }
 SHOPIFY_REPORT_TYPES = {
-    "shopify_orders", "shopify_products", "shopify_payouts",
+    "shopify_orders", "shopify_products", "shopify_inventory", "shopify_payouts",
     "meta_ads", "google_ads_campaign", "google_ads_search_terms",
 }
 ALL_REPORT_TYPES = AMAZON_REPORT_TYPES | SHOPIFY_REPORT_TYPES | {"cogs"}
@@ -48,7 +48,7 @@ def _parse(report_type: str, fixture: str | None = None, data: bytes | None = No
 
 def test_parsers_registry_covers_every_report_type():
     assert set(PARSERS) == ALL_REPORT_TYPES
-    assert len(PARSERS) == 17  # 10 Amazon + 6 Shopify-side + the shared COGS template
+    assert len(PARSERS) == 18  # 10 Amazon + 7 Shopify-side + the shared COGS template
 
 
 # --- shared date + key helpers ------------------------------------------------

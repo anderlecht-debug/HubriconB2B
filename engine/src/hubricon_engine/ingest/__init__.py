@@ -27,6 +27,7 @@ from . import (
     meta_ads,
     ppc_campaign,
     ppc_search_terms,
+    shopify_inventory,
     shopify_orders,
     shopify_payouts,
     shopify_products,
@@ -51,6 +52,7 @@ PARSERS = {
     # Shopify brand actually buys
     "shopify_orders": shopify_orders,
     "shopify_products": shopify_products,
+    "shopify_inventory": shopify_inventory,
     "shopify_payouts": shopify_payouts,
     "meta_ads": meta_ads,
     "google_ads_campaign": google_ads_campaign,

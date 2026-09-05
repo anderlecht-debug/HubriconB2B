@@ -1,0 +1,8 @@
+Handle,Title,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Option3 Name,Option3 Value,SKU,HS Code,COO,Location,Incoming,Unavailable,Committed,Available,On hand
+widget,Widget,Color,Blue,,,,,WIDGET-BLUE,3926.90,CN,Main Warehouse,100,5,12,300,317
+widget,Widget,Color,Blue,,,,,WIDGET-BLUE,3926.90,CN,3PL East,0,0,3,112,115
+widget,Widget,Color,Red,,,,,WIDGET-RED,3926.90,CN,Main Warehouse,0,0,2,88,90
+widget,Widget,Color,Red,,,,,WIDGET-RED,3926.90,CN,3PL East,,,,,
+gadget-pro,Gadget Pro,Title,Default Title,,,,,GADGET-PRO,8543.70,VN,Main Warehouse,0,1,4,,30
+gadget-pro,Gadget Pro,Title,Default Title,,,,,GHOST-1,8543.70,VN,Main Warehouse,,,,,
+widget,Widget,Color,Green,,,,,,3926.90,CN,Main Warehouse,0,0,0,7,7

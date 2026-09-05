@@ -138,26 +138,30 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
       <span class="email-box" id="exec-email">hagen.simmons@hubricon.com</span>
       <button class="copy" id="copy-btn">Copy email</button>
     </div>
-    <span class="path">Amazon: Seller Central → Settings → User Permissions → Invite new user</span>
-    <p style="margin-top:12px">When the invite goes through, grant exactly these permissions and
-    nothing else:</p>
-    <ul class="perm">
-      <li><b>Reports → Business Reports</b>: view</li>
-      <li><b>Reports → Fulfillment reports</b>: view</li>
-      <li><b>Pricing</b>: view &amp; edit</li>
-      <li><b>Advertising → Campaign Manager</b>: view &amp; edit</li>
-      <li class="no"><b>Everything else stays off.</b> Banking, settings, account info. Locked out by design.</li>
-    </ul>
-    <p style="margin-top:18px"><b style="color:var(--ink)">On Shopify instead?</b> Reply to your welcome
-    email with your store URL (and your collaborator request code, if your store sets one under
-    Settings → Users → Security). We send a collaborator request from the same email above; you approve
-    it under Settings → Users → Collaborators and grant exactly these:</p>
-    <ul class="perm">
-      <li><b>Orders</b>, <b>Analytics</b>, <b>Reports</b>, <b>Marketing</b>: view</li>
-      <li><b>Products</b> and <b>Discounts</b>: edit (that is how a price step happens)</li>
-      <li class="no"><b>Settings, Finances and Payouts stay off.</b> A collaborator account never touches them.</li>
-    </ul>
-    <p class="why">Selling on both? Grant both seats; the models read each channel on its own and the
+    <div id="seat-amazon">
+      <span class="path">Amazon: Seller Central → Settings → User Permissions → Invite new user</span>
+      <p style="margin-top:12px">When the invite goes through, grant exactly these permissions and
+      nothing else:</p>
+      <ul class="perm">
+        <li><b>Reports → Business Reports</b>: view</li>
+        <li><b>Reports → Fulfillment reports</b>: view</li>
+        <li><b>Pricing</b>: view &amp; edit</li>
+        <li><b>Advertising → Campaign Manager</b>: view &amp; edit</li>
+        <li class="no"><b>Everything else stays off.</b> Banking, settings, account info. Locked out by design.</li>
+      </ul>
+    </div>
+    <div id="seat-shopify">
+      <p style="margin-top:18px"><b style="color:var(--ink)" id="shopify-lead">On Shopify instead?</b> Reply to your welcome
+      email with your store URL (and your collaborator request code, if your store sets one under
+      Settings → Users → Security). We send a collaborator request from the same email above; you approve
+      it under Settings → Users → Collaborators and grant exactly these:</p>
+      <ul class="perm">
+        <li><b>Orders</b>, <b>Analytics</b>, <b>Reports</b>, <b>Marketing</b>: view</li>
+        <li><b>Products</b> and <b>Discounts</b>: edit (that is how a price step happens)</li>
+        <li class="no"><b>Settings, Finances and Payouts stay off.</b> A collaborator account never touches them.</li>
+      </ul>
+    </div>
+    <p class="why" id="seat-both">Selling on both? Grant both seats; the models read each channel on its own and the
     briefs say which one a number came from.</p>
     <p class="why">Want it gone? One click on that same screen revokes the seat, any day you
     choose. And the narrow scope is the whole point. You hand over the work without handing
@@ -228,6 +232,17 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
 </div>
 
 <script>
+/* The onboarding email links here with ?p=shopify / ?p=both, so a client
+   reads the seat they actually have to grant instead of scrolling past the
+   other platform's instructions. No parameter shows both, as it always did. */
+(function(){
+  const p = new URLSearchParams(location.search).get("p");
+  if (p !== "shopify" && p !== "amazon") return;
+  document.getElementById(p === "shopify" ? "seat-amazon" : "seat-shopify").remove();
+  document.getElementById("seat-both").remove();
+  if (p === "shopify") document.getElementById("shopify-lead").textContent = "Your Shopify seat.";
+})();
+
 document.getElementById("copy-btn").addEventListener("click", async () => {
   const btn = document.getElementById("copy-btn");
   try {

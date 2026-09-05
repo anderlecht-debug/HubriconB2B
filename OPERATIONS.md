@@ -84,11 +84,32 @@ is called in front of a client.
 
 **What the client sends.** The upload page reads `clients.platform` and shows
 only that platform's cards (`/api/intake` returns it). A Shopify brand sends
-its orders export, its products export (which is both the stock snapshot and,
-via Cost per item, the unit costs), its payouts export, and its Meta and/or
-Google Ads exports. The cost template gained a `fulfillment_per_unit_usd`
-column: pick, pack and postage per unit, which no Shopify report itemises and
-which FBA sellers leave blank.
+its orders export, its products export (unit costs via Cost per item, and the
+stock snapshot when the store has a single location), its inventory export
+when it has more than one, its payouts export, and its Meta and/or Google Ads
+exports. The cost template gained a `fulfillment_per_unit_usd` column: pick,
+pack and postage per unit, which no Shopify report itemises and which FBA
+sellers leave blank.
+
+**The three Shopify behaviours the intake is built around**, because each one
+otherwise costs a client an afternoon and the founder an email:
+
+| Shopify does this | What the page does about it |
+|---|---|
+| An export sends only what is on screen — a filter or a search silently ships a slice | The primer above the first card says to clear filters first, and so does the onboarding email |
+| A dated export never downloads; it is emailed to the exporter *and* the store owner | Same primer. Without it a client waits for a browser download that is never coming |
+| `Variant Inventory Qty` is printed only for a single-location store ([Shopify's CSV guide](https://help.shopify.com/en/manual/products/import-export/using-csv)) | A separate `shopify_inventory` card and parser sums Products → Inventory → Export across locations. The products parser now writes no stock row at all for a blank quantity, so coverage cannot read "inventory on file" while the models have nothing |
+
+Three more things make the page cheap to get right: every date input arrives
+prefilled to the window its card asks for (`data-window="months:6"` /
+`"days:90"`); the orders card repeats, so a store whose six-month export
+exceeds the 50 MB cap can send a month per row and land identical rows; and
+the browser reads each picked file's header and checks it against the same
+required columns the parser will demand. A file on the wrong card is named
+and blocked before upload rather than discovered a day later — the four lists
+that has to keep in step (parsers, `/api/intake`, the check constraint, the
+page's cards and signatures) are held together by
+`engine/tests/test_intake_page.py`.
 
 **Customer data.** A Shopify orders export carries the customer's name, email
 and address, because that is how the platform stores an order. The parser

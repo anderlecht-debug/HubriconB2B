@@ -84,12 +84,12 @@ input[type=month], input[type=date], select{
   color: var(--ink-100); font-family: inherit; font-size: 12.5px; padding: 7px 10px;
   color-scheme: dark;
 }
-.add-row{
+.add-row, .add-range{
   background: none; border: 1px dashed var(--rule-20); border-radius: 8px;
   color: var(--ink-70); font-family: inherit; font-size: 12px;
   padding: 6px 12px; cursor: pointer;
 }
-.add-row:hover{ border-color: var(--amber); color: var(--amber); }
+.add-row:hover, .add-range:hover{ border-color: var(--amber); color: var(--amber); }
 
 .submit{
   display: inline-block; background: var(--amber); color: hsl(225 72% 7%);
@@ -109,9 +109,18 @@ input[type=month], input[type=date], select{
 .plat i{ width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
 .card h2 .num{ color: var(--amber); }
 .note{ font-size: 12.5px; margin-top: 14px; }
+.card .hint{ font-size: 12.5px; color: var(--ink-70); background: var(--amber-soft);
+  border-radius: 10px; padding: 10px 14px; margin: 0 0 14px; }
+.card .hint b{ color: var(--ink-100); }
+.primer{ border-radius: 20px; border: 1px solid var(--rule-20); padding: 20px 24px; margin-bottom: 18px; }
+.primer h2{ margin-bottom: 10px; }
+.primer ol{ margin: 0 0 4px; padding-left: 20px; font-size: 13.5px; }
+.primer li{ margin-bottom: 8px; }
+.primer b{ color: var(--ink-100); }
 .status.done{ color: var(--ok); }
 .status.err{ color: var(--serious); }
 .status.busy{ color: var(--amber); }
+.status.warn{ color: var(--amber); }
 .banner{
   border-radius: 14px; padding: 16px 18px; margin: 22px 0; font-size: 13.5px;
   background: var(--amber-soft); color: var(--ink-100); display: none;
@@ -135,7 +144,9 @@ input[type=month], input[type=date], select{
     <p class="plat" id="plat"><i aria-hidden="true"></i><span id="plat-text"></span></p>
     <p class="sub">Private workspace for <b id="company" style="color:var(--ink-100)"></b>.
     Files upload straight into an isolated, encrypted store — nothing is sent by email.
-    Add what you have; you can reopen this link to send the rest (it expires after 90 days). The date range on each card only has to be roughly right.</p>
+    Add what you have; you can reopen this link to send the rest (it expires after 90 days).
+    Every card's dates are already filled in to match the export it asks for — change them if you exported a
+    different span, because anything outside the dates you give us is ignored.</p>
 
     <div class="card" data-type="business_report" data-platform="amazon">
       <h2><span class="num"></span>Sales &amp; traffic by product</h2>
@@ -181,25 +192,36 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="shopify_orders" data-scope="range" data-platform="shopify">
-      <h2><span class="num"></span>Orders</h2>
-      <p class="why">Every order and line item for the last 6 months — this is the sales, refund and discount history the models run on.
-      We read ten columns (dates, status, refund total, SKU, quantity, price, discount) and store a per-SKU monthly aggregate; no customer
+    <!-- Shopify. Every rule in this primer is a real Shopify behaviour that
+         otherwise costs a client an afternoon and a support email: a filtered
+         export that quietly ships a slice, a file that never downloads because
+         Shopify emailed it, a .zip nobody expected. -->
+    <div class="primer" data-platform="shopify">
+      <h2>Before you export: three things Shopify does</h2>
+      <ol>
+        <li><b>Clear your filters first.</b> An export sends what is on screen. With a search box, a status filter or a tag still applied, the CSV quietly contains that slice and nothing else.</li>
+        <li><b>The file arrives by email, not in your browser.</b> Any export you set a date range on — and any list longer than 50 rows — is emailed to you and to the store owner, usually within a couple of minutes. Nothing downloading on the page is normal. Go to your inbox.</li>
+        <li><b>Send the .csv itself.</b> Choose <b>Plain CSV file</b> when Shopify offers the choice. If what lands is a .zip, unzip it and upload the .csv inside.</li>
+      </ol>
+      <p class="note"><b style="color:var(--ink-100)">Two files unblock everything: Orders and Products.</b> The rest sharpen the numbers — send what you have and reopen this link for the rest. About ten minutes of clicking, and most of the wait is email.</p>
+    </div>
+
+    <div class="card" data-type="shopify_orders" data-scope="range" data-repeat data-window="months:6" data-platform="shopify">
+      <h2><span class="num"></span>Orders — last 6 months</h2>
+      <p class="why">Every order and line item. This is the sales, refund and discount history every model runs on, and six months is what lets us fit your trend and your season instead of photographing one week.
+      We read ten columns (order name, dates, status, refund total, SKU, quantity, price, discount) and store a per-SKU monthly aggregate; no customer
       name, email or address is ever written to our database. Delete those columns first if you'd rather they never leave your store.</p>
-      <p class="path">Shopify admin → Orders → Export → Selected date range (set it to the last 6 months) → Plain CSV file → Export orders.</p>
-      <div class="row">
-        <input type="date" data-role="start" aria-label="Report start date">
-        <span>→</span>
-        <input type="date" data-role="end" aria-label="Report end date">
-        <input type="file" accept=".csv,.txt,.tsv">
-        <span class="status"></span>
-      </div>
+      <p class="path">Shopify admin → Orders → clear any filters → Export → <b>Orders by date</b> → set the range → Plain CSV file → <b>Export orders</b> (not “Export transaction histories”).</p>
+      <p class="hint"><b>One file for all six months is ideal</b>, and the dates below are already set. If your store is busy enough that the file comes back over 50 MB, export one month at a time and add a range here for each — six monthly files land exactly like one six-month file.</p>
+      <div class="rows"></div>
+      <button type="button" class="add-range">+ add another date range</button>
     </div>
 
     <div class="card" data-type="shopify_products" data-scope="snapshot" data-platform="shopify">
-      <h2><span class="num"></span>Products &amp; inventory</h2>
-      <p class="why">Today's export does two jobs: it's your stock snapshot, and if <b style="color:var(--ink-100)">Cost per item</b> is filled in it's also your unit costs.</p>
+      <h2><span class="num"></span>Products &amp; costs</h2>
+      <p class="why">Today's export carries the one number no platform can work out for you: <b style="color:var(--ink-100)">Cost per item</b>. If that field is empty in Shopify, fill it in before you export — it is the difference between a margin and a guess. Ship from one location and this file is your stock snapshot too.</p>
       <p class="path">Shopify admin → Products → Export → All products → Plain CSV file → Export products.</p>
+      <p class="hint"><b>Ship from more than one location?</b> A 3PL plus your own shelf counts as two. Shopify prints stock quantities in this file only for single-location stores, so send the inventory export below as well.</p>
       <div class="row">
         <input type="date" data-role="snapshot" aria-label="Snapshot date">
         <input type="file" accept=".csv,.txt,.tsv">
@@ -207,10 +229,22 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="shopify_payouts" data-scope="range" data-platform="shopify">
-      <h2><span class="num"></span>Payouts</h2>
-      <p class="why">The processing fee on every charge and refund. Without it we estimate your fees from the published rate; with it we use what you were actually charged. Last 90 days is ideal.</p>
-      <p class="path">Shopify admin → Finances → Payouts → Transactions → date range → Export → Transactions CSV.</p>
+    <div class="card" data-type="shopify_inventory" data-scope="snapshot" data-platform="shopify">
+      <h2><span class="num"></span>Inventory — only with 2+ locations</h2>
+      <p class="why">One location? Skip this; your Products export already carried the stock. With two or more, Shopify prints no quantities in that file at all, and this is the only export that says what is really on the shelf — without it, reorder points, stockout risk and tied-up cash have nothing to run on. We sum your locations; the split is kept.</p>
+      <p class="path">Shopify admin → Products → Inventory → Export → All locations → Plain CSV file.</p>
+      <div class="row">
+        <input type="date" data-role="snapshot" aria-label="Snapshot date">
+        <input type="file" accept=".csv,.txt,.tsv">
+        <span class="status"></span>
+      </div>
+    </div>
+
+    <div class="card" data-type="shopify_payouts" data-scope="range" data-window="days:90" data-platform="shopify">
+      <h2><span class="num"></span>Payouts — the fees you really paid</h2>
+      <p class="why">The processing fee on every charge and refund. Without it we estimate at Shopify Payments' published 2.9% + 30¢, which is the Basic-plan card rate — on Grow or Advanced that estimate overstates your fees and understates your margin on every SKU. Ninety days of the real thing fixes it.</p>
+      <p class="path">Shopify admin → Finances → Payouts → View transactions → Export → set the range → Plain CSV. (Same screen via Settings → Payments → View payouts → Transactions.)</p>
+      <p class="hint"><b>Only exists on Shopify Payments.</b> On another processor there is no such export — skip the card and we use the published rate.</p>
       <div class="row">
         <input type="date" data-role="start" aria-label="Report start date">
         <span>→</span>
@@ -220,9 +254,9 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="meta_ads" data-scope="range" data-platform="shopify">
+    <div class="card" data-type="meta_ads" data-scope="range" data-window="days:60" data-platform="shopify">
       <h2><span class="num"></span>Meta ads</h2>
-      <p class="why">Roughly the last 60 days, broken down by day — the daily points are what let us fit your spend-response curve.</p>
+      <p class="why">Roughly the last 60 days, broken down by day — the daily points are what let us fit your spend-response curve and find where more spend stops paying. Skip if you don't run Meta ads.</p>
       <p class="path">Meta Ads Manager → Campaigns → set the date range → Reports → Export → tick “Include today”, breakdown by Day → Export as .csv.</p>
       <div class="row">
         <input type="date" data-role="start" aria-label="Report start date">
@@ -233,7 +267,7 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="google_ads_campaign" data-scope="range" data-platform="shopify">
+    <div class="card" data-type="google_ads_campaign" data-scope="range" data-window="days:60" data-platform="shopify">
       <h2><span class="num"></span>Google ads — campaigns</h2>
       <p class="why">Same 60 days, segmented by day. Skip both Google cards if you don't run Google Ads.</p>
       <p class="path">Google Ads → Campaigns → set the date range → Segment → Time → Day → Download → .csv.</p>
@@ -246,7 +280,7 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="google_ads_search_terms" data-scope="range" data-platform="shopify">
+    <div class="card" data-type="google_ads_search_terms" data-scope="range" data-window="days:60" data-platform="shopify">
       <h2><span class="num"></span>Google ads — search terms</h2>
       <p class="why">Where the money actually went, term by term. This is the export that finds spend on terms that never convert.</p>
       <p class="path">Google Ads → Insights and reports → Search terms → set the date range → Download → .csv.</p>
@@ -271,7 +305,7 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="fba_reimbursements" data-scope="range" data-platform="amazon">
+    <div class="card" data-type="fba_reimbursements" data-scope="range" data-window="days:540" data-platform="amazon">
       <h2><span class="num"></span>Reimbursements</h2>
       <p class="why">What Amazon has already paid you back for lost or damaged units — the baseline for finding what it still owes.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Payments → Reimbursements → widest date range offered → Download.</p>
@@ -284,7 +318,7 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="fba_returns" data-scope="range" data-platform="amazon">
+    <div class="card" data-type="fba_returns" data-scope="range" data-window="days:540" data-platform="amazon">
       <h2><span class="num"></span>Customer returns</h2>
       <p class="why">Every returned unit and what Amazon did with it — units marked damaged and never restocked are money you can claim.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Customer Concessions → FBA customer returns → date range → Download.</p>
@@ -297,7 +331,7 @@ input[type=month], input[type=date], select{
       </div>
     </div>
 
-    <div class="card" data-type="inventory_ledger" data-scope="range" data-platform="amazon">
+    <div class="card" data-type="inventory_ledger" data-scope="range" data-window="days:540" data-platform="amazon">
       <h2><span class="num"></span>Inventory ledger</h2>
       <p class="why">Amazon's own record of every unit lost, found, damaged or disposed of inside its warehouses.</p>
       <p class="path">Seller Central → Reports → Fulfillment → Inventory → Inventory Ledger → Detail view → date range → Download.</p>
@@ -383,28 +417,253 @@ document.querySelectorAll(".add-row").forEach((btn) => {
   addMonthRow(card);
   btn.addEventListener("click", () => addMonthRow(card));
 });
-$("#inv-date").value = new Date().toISOString().slice(0, 10);
-document.querySelectorAll("input[data-role=snapshot]").forEach((el) => {
-  el.value = new Date().toISOString().slice(0, 10);
+
+const TODAY = new Date();
+const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+/* A card's default window, from data-window="days:90" | "months:6". Typing six
+   dates by hand is the kind of small friction that turns a fifteen-minute job
+   into a tomorrow job, and a wrong-by-a-week range costs nothing: the parsers
+   clip every file to the window it was uploaded under. */
+function defaultWindow(spec){
+  const [unit, n] = String(spec || "days:90").split(":");
+  const end = new Date(TODAY);
+  const start = new Date(TODAY);
+  if (unit === "months"){
+    start.setMonth(start.getMonth() - (Number(n) - 1));
+    start.setDate(1);            // whole calendar months, so no month is half-counted
+  } else {
+    start.setDate(start.getDate() - Number(n));
+  }
+  return [iso(start), iso(end)];
+}
+
+/* One more range on a repeatable card: the calendar month before the earliest
+   range already there. Clicking it walks backwards a month at a time, which is
+   exactly what a store splitting a too-large export needs to do. */
+function addRangeRow(card){
+  const rows = $(".rows", card);
+  const existing = [...rows.querySelectorAll("input[data-role=start]")].map((el) => el.value).filter(Boolean);
+  let start, end;
+  if (existing.length){
+    const earliest = existing.sort()[0];
+    const [y, m] = earliest.split("-").map(Number);
+    const first = new Date(y, m - 2, 1);
+    start = iso(first);
+    end = iso(new Date(y, m - 1, 0));
+  } else {
+    [start, end] = defaultWindow(card.dataset.window);
+  }
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<input type="date" data-role="start" value="${start}" aria-label="Report start date">
+    <span>→</span>
+    <input type="date" data-role="end" value="${end}" aria-label="Report end date">
+    <input type="file" accept=".csv,.txt,.tsv">
+    <span class="status"></span>`;
+  rows.appendChild(row);
+}
+document.querySelectorAll(".add-range").forEach((btn) => {
+  const card = btn.closest(".card");
+  addRangeRow(card);
+  btn.addEventListener("click", () => addRangeRow(card));
 });
+
+/* Every date input arrives filled in. Snapshots are today; ranges take their
+   card's window. */
+$("#inv-date").value = iso(TODAY);
+{
+  const [start, end] = defaultWindow("days:60");
+  $("#ppc-start").value = start;
+  $("#ppc-end").value = end;
+}
+document.querySelectorAll("input[data-role=snapshot]").forEach((el) => { el.value = iso(TODAY); });
+for (const card of document.querySelectorAll(".card[data-scope=range]")){
+  const [start, end] = defaultWindow(card.dataset.window);
+  for (const row of card.querySelectorAll(".row")){
+    const s = $("input[data-role=start]", row), e = $("input[data-role=end]", row);
+    if (s && !s.value) s.value = start;
+    if (e && !e.value) e.value = end;
+  }
+}
 
 /* The client's platform decides which cards exist. A card the client can't
    fill is removed, not just hidden, so nothing collects a file from it and
-   nobody wonders whether they were meant to find it. */
+   nobody wonders whether they were meant to find it. The Shopify primer is
+   tagged the same way and disappears with its cards. */
 const PLATFORM_LABEL = { amazon: "Amazon", shopify: "Shopify", both: "Amazon and Shopify" };
 function applyPlatform(platform){
   const p = PLATFORM_LABEL[platform] ? platform : "amazon";
-  document.querySelectorAll(".card[data-platform]").forEach((card) => {
-    const want = card.dataset.platform;
-    if (want !== "both" && p !== "both" && want !== p) card.remove();
+  document.querySelectorAll("[data-platform]").forEach((el) => {
+    const want = el.dataset.platform;
+    if (want !== "both" && p !== "both" && want !== p) el.remove();
   });
   if (p !== "amazon") $("#cogs-shopify").classList.remove("hidden");
-  document.querySelectorAll(".card").forEach((card, i) => {
+  // Numbered over the cards that survived, counting only cards that carry a
+  // number — the primer sits among them and must not consume one.
+  let n = 0;
+  document.querySelectorAll(".card").forEach((card) => {
     const num = $(".num", card);
-    if (num) num.textContent = (i + 1) + " · ";
+    if (num) num.textContent = ++n + " · ";
   });
   $("#plat-text").textContent = "Selling on " + PLATFORM_LABEL[p];
 }
+
+/* --- does this file look like the export the card asked for? -------------
+   The columns below are the ones each parser requires
+   (engine/src/hubricon_engine/ingest/*.py, the "required" entries in each
+   SPEC), normalized the way the parser normalizes a header: lowercased with
+   everything but letters and digits stripped. So a file that passes here
+   cannot fail the server for a missing column, and one that fails here would
+   have failed tomorrow by email — which is the whole point of checking now,
+   while the client still has the Shopify tab open.
+
+   One group is not a parser requirement: the products and inventory exports
+   both carry a Handle and a SKU, so the products signature also asks for a
+   column only the products export has. That can warn on a file that would
+   have parsed, which is why a failed signature never blocks an upload — it
+   only says what looks wrong, and the client decides. */
+const SIGNATURES = {
+  business_report: [["childasin", "asin"], ["unitsordered"], ["orderedproductsales"]],
+  sku_economics: [["sku", "msku", "merchantsku", "sellersku"]],
+  ppc_search_terms: [["campaignname", "campaign"], ["customersearchterm", "searchterm"], ["spend", "cost", "totalspend"]],
+  ppc_campaign: [["date", "startdate", "day"], ["campaignname", "campaign"], ["spend", "cost", "totalspend"]],
+  fba_inventory: [["sku", "sellersku", "msku", "merchantsku"]],
+  cogs: [["sku"], ["unitcostusd", "unitcost"]],
+  fba_reimbursements: [["reimbursementid"], ["reason"]],
+  fba_returns: [["returndate", "date"], ["quantity", "qty", "returnedquantity"]],
+  inventory_ledger: [["date", "adjusteddate", "eventdate", "transactiondate"], ["quantity", "qty"]],
+  transactions: [["datetime", "date", "posteddate", "postedate"], ["type", "transactiontype"], ["total"]],
+  shopify_orders: [["name", "ordername", "order"], ["createdat", "created"], ["lineitemquantity"], ["lineitemprice"]],
+  shopify_products: [["handle"], ["variantsku", "sku"], ["variantprice", "variantinventorytracker", "costperitem"]],
+  shopify_inventory: [["sku", "variantsku"], ["available", "onhand"]],
+  shopify_payouts: [["transactiondate", "date", "datetime"], ["type", "transactiontype"], ["net"]],
+  meta_ads: [["reportingstarts", "reportingstart", "day", "date"], ["campaignname", "campaign"], ["amountspentusd", "amountspent", "spend"]],
+  google_ads_campaign: [["day", "date"], ["campaign", "campaignname"], ["cost", "spend"]],
+  google_ads_search_terms: [["campaign", "campaignname"], ["searchterm"], ["cost", "spend"]],
+};
+const CARD_NAME = {
+  business_report: "Sales & traffic by product", sku_economics: "SKU economics",
+  ppc_search_terms: "Advertising", ppc_campaign: "Advertising", fba_inventory: "FBA inventory snapshot",
+  cogs: "Your costs", fba_reimbursements: "Reimbursements", fba_returns: "Customer returns",
+  inventory_ledger: "Inventory ledger", inventory_health: "Inventory age", transactions: "Payments transactions",
+  shopify_orders: "Orders", shopify_products: "Products & costs", shopify_inventory: "Inventory",
+  shopify_payouts: "Payouts", meta_ads: "Meta ads", google_ads_campaign: "Google ads — campaigns",
+  google_ads_search_terms: "Google ads — search terms",
+};
+const HEADER_BYTES = 131072;   // the header is on line one; a preamble is never this long
+const HEADER_SCAN_LINES = 20;  // matches the reader's preamble tolerance
+const DELIMITERS = [",", "\t", ";"];
+const verdicts = new WeakMap();
+
+const normalizeHeader = (h) => h.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/* Quote-aware split, so a quoted sentence with commas stays one field. */
+function splitLine(line, delimiter){
+  const fields = [];
+  let field = "", quoted = false;
+  for (let i = 0; i < line.length; i++){
+    const c = line[i];
+    if (c === '"'){
+      if (quoted && line[i + 1] === '"'){ field += '"'; i++; }
+      else quoted = !quoted;
+    } else if (c === delimiter && !quoted){ fields.push(field); field = ""; }
+    else field += c;
+  }
+  fields.push(field);
+  return fields;
+}
+
+function headerLines(text){
+  const lines = [];
+  for (const line of text.split(/\r?\n/)){
+    if (!line.trim()) continue;
+    const delimiter = DELIMITERS.reduce((best, d) =>
+      line.split(d).length > line.split(best).length ? d : best, ",");
+    const fields = splitLine(line, delimiter);
+    if (fields.length >= 3) lines.push(fields.map(normalizeHeader));
+    if (lines.length >= HEADER_SCAN_LINES) break;
+  }
+  return lines;
+}
+
+const matches = (headers, type) =>
+  (SIGNATURES[type] || []).every((group) => group.some((c) => headers.includes(c)));
+
+/* The report types this client actually has cards for — never send anybody
+   looking for a card their platform does not show. */
+function typesOnPage(){
+  const types = new Set();
+  for (const card of document.querySelectorAll(".card")){
+    if (card.dataset.type === "ppc") CARD_CHOICES.ppc.forEach((t) => types.add(t));
+    else types.add(card.dataset.type);
+  }
+  return types;
+}
+const CARD_CHOICES = { ppc: ["ppc_search_terms", "ppc_campaign"] };
+
+function judge(headerRows, type, onPage){
+  if (!SIGNATURES[type]) return { kind: "unknown" };
+  for (const headers of headerRows) if (matches(headers, type)) return { kind: "ok" };
+  // Not this card's export. If it is unmistakably another card's — two or more
+  // required columns, so "has a SKU column" can never accuse anybody — say which.
+  // The line the file is judged on is the one that came closest, so a report
+  // that opens with a prose preamble is not diagnosed by its first sentence.
+  const score = (h) => SIGNATURES[type].filter((g) => g.some((c) => h.includes(c))).length;
+  const headers = [...headerRows].sort((a, b) => score(b) - score(a))[0] || [];
+  const others = Object.keys(SIGNATURES).filter(
+    (t) => t !== type && SIGNATURES[t].length >= 2 && (!onPage || onPage.has(t))
+      && headerRows.some((h) => matches(h, t)));
+  if (others.length){
+    const best = others.sort((a, b) => SIGNATURES[b].length - SIGNATURES[a].length)[0];
+    return { kind: "wrong", message: `That looks like the “${CARD_NAME[best]}” export, not “${CARD_NAME[type]}”. ` +
+      "Drop it on that card instead — or if it really is the right file, tell us and we'll take it from there." };
+  }
+  const missing = SIGNATURES[type]
+    .filter((group) => !group.some((c) => headers.includes(c)))
+    .map((group) => group[0]);
+  return { kind: "warn", message: `We couldn't find the column(s) “${missing.join("”, “")}” in this file. ` +
+    "Usually that means a filter was on, or a different export got picked. Upload it anyway if you're sure — " +
+    "we'll tell you if it doesn't parse." };
+}
+
+async function inspect(input){
+  const file = input.files[0];
+  const type = reportTypeOf(input);
+  const statusEl = $(".status", input.closest(".row"));
+  verdicts.delete(input);
+  if (!file || !type || !SIGNATURES[type]) return setStatus(statusEl, "");
+  let verdict;
+  try {
+    const text = await file.slice(0, HEADER_BYTES).text();
+    verdict = judge(headerLines(text), type, typesOnPage());
+  } catch {
+    return setStatus(statusEl, "");  // unreadable here is the server's problem, not the client's
+  }
+  verdicts.set(input, verdict);
+  if (verdict.kind === "ok"){ setStatus(statusEl, "right export ✓", ""); clearSettledBanner(); }
+  else if (verdict.kind === "wrong"){ setStatus(statusEl, "wrong card", "err"); showBanner(verdict.message, true); }
+  else if (verdict.kind === "warn"){ setStatus(statusEl, "columns look off", "warn"); showBanner(verdict.message, false); }
+}
+
+/* Once nothing is misfiled any more, stop saying something is. */
+function clearSettledBanner(){
+  const stillWrong = [...document.querySelectorAll("input[type=file]")]
+    .some((el) => el.files[0] && verdicts.get(el)?.kind !== "ok");
+  if (!stillWrong) banner.style.display = "none";
+}
+
+/* The report type a file input belongs to: the ppc card picks its own. */
+function reportTypeOf(input){
+  const card = input.closest(".card");
+  if (!card) return null;
+  return card.dataset.type === "ppc" ? $("#ppc-kind").value : card.dataset.type;
+}
+
+form.addEventListener("change", (e) => {
+  if (e.target.matches("input[type=file]")) inspect(e.target);
+});
+$("#ppc-kind").addEventListener("change", () => { if ($("#ppc-file").files[0]) inspect($("#ppc-file")); });
 
 function setStatus(el, text, cls){
   el.textContent = text;
@@ -444,22 +703,36 @@ function collectJobs(){
   const cogsFile = $("#cogs-file")?.files[0];
   if (cogsFile) jobs.push({ file: cogsFile, statusEl: $(".status", $("#cogs-file").closest(".row")),
     spec: { report_type: "cogs" } });
-  /* bleed reports: cards tagged data-scope carry their own date inputs */
+  /* Cards tagged data-scope carry their own date inputs: the bleed reports,
+     the Shopify exports, the ad exports. Rows are walked rather than the card,
+     because a repeatable card (a six-month orders export split into months)
+     holds one file and one range per row. */
   for (const card of document.querySelectorAll(".card[data-scope=range]")){
-    const file = $("input[type=file]", card).files[0];
-    if (!file) continue;
-    const start = $("input[data-role=start]", card).value, end = $("input[data-role=end]", card).value;
-    if (!start || !end) problems.push(`Pick the date range for "${file.name}".`);
-    else jobs.push({ file, statusEl: $(".status", card),
-      spec: { report_type: card.dataset.type, period_start: start, period_end: end } });
+    for (const row of card.querySelectorAll(".row")){
+      const file = $("input[type=file]", row).files[0];
+      if (!file) continue;
+      const start = $("input[data-role=start]", row).value, end = $("input[data-role=end]", row).value;
+      if (!start || !end) problems.push(`Pick the date range for "${file.name}".`);
+      else jobs.push({ file, statusEl: $(".status", row),
+        spec: { report_type: card.dataset.type, period_start: start, period_end: end } });
+    }
   }
   for (const card of document.querySelectorAll(".card[data-scope=snapshot]")){
-    const file = $("input[type=file]", card).files[0];
-    if (!file) continue;
-    const day = $("input[data-role=snapshot]", card).value;
-    if (!day) problems.push(`Pick the snapshot date for "${file.name}".`);
-    else jobs.push({ file, statusEl: $(".status", card),
-      spec: { report_type: card.dataset.type, period_start: day } });
+    for (const row of card.querySelectorAll(".row")){
+      const file = $("input[type=file]", row).files[0];
+      if (!file) continue;
+      const day = $("input[data-role=snapshot]", row).value;
+      if (!day) problems.push(`Pick the snapshot date for "${file.name}".`);
+      else jobs.push({ file, statusEl: $(".status", row),
+        spec: { report_type: card.dataset.type, period_start: day } });
+    }
+  }
+  // A file sitting on the wrong card is the one mistake worth stopping for:
+  // it uploads cleanly, parses into nothing, and costs a day to discover.
+  for (const card of document.querySelectorAll(".card")){
+    for (const input of card.querySelectorAll("input[type=file]")){
+      if (input.files[0] && verdicts.get(input)?.kind === "wrong") problems.push(verdicts.get(input).message);
+    }
   }
   return { jobs, problems };
 }

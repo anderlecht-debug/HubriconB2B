@@ -34,6 +34,7 @@ const REPORT_TYPES = new Set([
   // Shopify brand actually buys (engine/src/hubricon_engine/ingest/shopify_*.py)
   "shopify_orders",
   "shopify_products",
+  "shopify_inventory",
   "shopify_payouts",
   "meta_ads",
   "google_ads_campaign",
@@ -42,7 +43,8 @@ const REPORT_TYPES = new Set([
 // business/economics/ppc exports and the row-level bleed reports cover a
 // date range; the two inventory reports are snapshots (period_start only);
 // cogs is timeless. Shopify orders, payouts and the ad exports cover a
-// range; the products export is a snapshot (inventory on hand, cost per item).
+// range; the products and inventory exports are snapshots (stock on hand at
+// the moment of export, and — from the products file — cost per item).
 const RANGE_SCOPED = new Set([
   "business_report",
   "sku_economics",
@@ -58,7 +60,12 @@ const RANGE_SCOPED = new Set([
   "google_ads_campaign",
   "google_ads_search_terms",
 ]);
-const SNAPSHOT_SCOPED = new Set(["fba_inventory", "inventory_health", "shopify_products"]);
+const SNAPSHOT_SCOPED = new Set([
+  "fba_inventory",
+  "inventory_health",
+  "shopify_products",
+  "shopify_inventory",
+]);
 
 function getDb() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {

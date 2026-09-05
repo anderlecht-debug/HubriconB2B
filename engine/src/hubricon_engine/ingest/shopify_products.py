@@ -14,6 +14,14 @@ period_start is the snapshot date. Variant Grams rides along in raw for
 the day a shipping-rate table needs it. asin holds the product Handle,
 which bridges a Shopify SKU to its product page the way an ASIN does.
 
+Shopify prints Variant Inventory Qty only for a store with ONE location; a
+multi-location store exports the column blank and sends its stock through
+the inventory export instead (shopify_inventory). A variant with no stated
+quantity therefore writes no inventory row — a row of nulls would make the
+Health Score's coverage read 'inventory on file' while the newsvendor has
+nothing to run on, and a variant that is genuinely out of stock exports 0,
+not a blank.
+
 Cost per item is Shopify's own unit-cost field. A variant that states one
 lands in cogs_inputs as unit_cost_usd, and ONLY that column plus the
 identity columns: PostgREST upsert sets the columns provided, so a richer
@@ -24,7 +32,7 @@ blank must never overwrite a stated number (decided 2026-09-04).
 
 import pandas as pd
 
-from .headers import as_int, clean_int, clean_money, clean_str, dedupe_last, map_columns
+from .headers import IngestError, as_int, clean_int, clean_money, clean_str, dedupe_last, map_columns
 
 SPEC = {
     "handle": {"synonyms": ["handle"], "required": True, "cleaner": clean_str},
@@ -59,6 +67,7 @@ def parse(df: pd.DataFrame, upload: dict):
     products: dict[str, dict] = {}
     cogs_rows: list[dict] = []
     inventory_rows: list[dict] = []
+    variants = 0
     for record, source in zip(mapped.to_dict(orient="records"), df.to_dict(orient="records")):
         handle = record["handle"]
         if not handle:
@@ -69,6 +78,7 @@ def parse(df: pd.DataFrame, upload: dict):
                 product[k] = record[k]
         if not record["sku"]:
             continue  # image-only line, or a variant nothing can join on
+        variants += 1
         name = product_name(product["title"],
                             (record["option1_value"], record["option2_value"], record["option3_value"]))
         if record["cost"] is not None:
@@ -83,6 +93,8 @@ def parse(df: pd.DataFrame, upload: dict):
                     "raw": source,
                 }
             )
+        if record["inventory_qty"] is None:
+            continue  # see the note on Variant Inventory Qty above
         inventory_rows.append(
             {
                 "client_id": upload["client_id"],
@@ -97,6 +109,15 @@ def parse(df: pd.DataFrame, upload: dict):
                 "reserved_quantity": None,
                 "raw": source,
             }
+        )
+    if variants and not cogs_rows and not inventory_rows:
+        # The file parsed and held variants, but stated neither a cost nor a
+        # quantity. "No usable data rows" would be true and useless; this says
+        # which two things to go and do.
+        raise IngestError(
+            "The products export states no Cost per item and no Variant Inventory Qty. Fill in Cost per "
+            "item in Shopify before exporting, and — if the store has more than one location, which is "
+            "why the quantity column is blank — send Products > Inventory > Export as well."
         )
     return [
         ("cogs_inputs", dedupe_last(cogs_rows, ("sku",)), "client_id,sku"),
