@@ -196,10 +196,34 @@ def test_dry_run_names_who_would_go_and_sends_nothing():
     assert db.store["teardowns"][0]["status"] == "approved"
 
 
-def test_the_global_dry_run_flag_stops_it_too(monkeypatch):
+def test_the_global_dry_run_flag_stops_a_real_send(monkeypatch):
     monkeypatch.setenv("COLD_DRY_RUN", "true")
     db, api = a_db(), FakeAPI()
-    assert dispatch.push(db, api)[0] == 0 and not api.leads
+    sent, notes = dispatch.push(db, api)
+    assert sent == 0 and not api.leads
+    assert any("COLD_DRY_RUN" in n for n in notes)
+    assert db.store["teardowns"][0]["status"] == "approved"
+
+
+def test_a_rehearsal_still_rehearses_while_the_flag_is_on(monkeypatch):
+    """The default state is COLD_DRY_RUN=true, so a dry run there is the first
+    thing anyone runs. It used to answer 'COLD_DRY_RUN is on' for every prospect
+    and name none of them, which is no rehearsal at all."""
+    monkeypatch.setenv("COLD_DRY_RUN", "true")
+    db, api = a_db(), FakeAPI()
+    sent, notes = dispatch.push(db, api, dry=True)
+    assert sent == 1 and not api.leads
+    assert any("hello@riverbend.com" in n for n in notes)
+    assert db.store["teardowns"][0]["status"] == "approved"
+
+
+def test_a_rehearsal_still_honours_every_other_guard(monkeypatch):
+    monkeypatch.setenv("COLD_DRY_RUN", "true")
+    db, api = a_db(), FakeAPI()
+    db.store["suppressions"] = [{"email": "hello@riverbend.com", "reason": "asked us to stop"}]
+    sent, notes = dispatch.push(db, api, dry=True)
+    assert sent == 0
+    assert any("asked us to stop" in n for n in notes)
 
 
 def test_no_api_key_is_reported_rather_than_looking_like_silence():

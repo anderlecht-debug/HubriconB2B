@@ -173,7 +173,16 @@ def push(db, api: Instantly | None, dry: bool = False, limit: int = 100,
         # The domain is Instantly's to choose from the pool, so the cap check is
         # against the pool rather than one name. Instantly enforces the per
         # mailbox limit itself; this is the belt to its braces.
-        clearance = compliance.authorise(db, snap, sending_domain=_pool_domain(senders))
+        #
+        # `allow_dry_run=dry` because a rehearsal is not a send. Without it the
+        # first thing anyone runs — a dry run while COLD_DRY_RUN is still on,
+        # which is the default — answered "COLD_DRY_RUN is on" for every
+        # prospect and named none of them, which is no rehearsal at all. Every
+        # other guard still runs: suppression, jurisdiction, frequency, the
+        # postal address. Only the flag's own veto is stood down, and the
+        # branch below still writes nothing.
+        clearance = compliance.authorise(db, snap, sending_domain=_pool_domain(senders),
+                                         allow_dry_run=dry)
         if not clearance.ok:
             notes.append(f"{snap.display_name}: not sent — {clearance.reason}")
             continue
