@@ -107,6 +107,16 @@ class Pass:
             _, notes = outbound.send_approved(self.db, api, self.dry)
             for n in notes:
                 self.say(n)
+            # Teardowns the founder approved, into their own campaign. Its copy
+            # is one merge field, so the bytes he read are the bytes that go.
+            try:
+                from .cold import dispatch as cold_dispatch
+
+                _, notes = cold_dispatch.push(self.db, api, dry=self.dry, log=self.say)
+                for n in notes:
+                    self.say(n)
+            except Exception as err:
+                self.warnings.append(f"Teardown dispatch: {err}")
             # Always write both, even when they are only an error: a missing
             # key is indistinguishable from a healthy silence, and that is
             # exactly how twenty hours of zero sends went unnoticed.

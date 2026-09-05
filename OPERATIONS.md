@@ -421,6 +421,41 @@ is a prospect the automated lane will mail again next week.
 environment. CAN-SPAM requires it in the message and the engine refuses to draft
 without one.
 
+### Sending: Instantly does it, on both warmed domains
+
+Approved teardowns go out through Instantly, in their own campaign —
+**"Hubricon — Profit Teardown (per-prospect)"** — beside the existing one. It is
+where both warmed domains already live, and COLD_ENGINE.md §2.4's three
+requirements (domain rotation, per-domain daily caps, automatic pause on bounce
+or complaint) are things Instantly already does. A second dispatcher would mean
+warming domains twice and reconciling two records of who was contacted.
+
+**That campaign's subject and body are a single merge field each.** The bytes a
+prospect reads are the bytes you approved. A campaign holding fixed prose with
+numbers merged into it would put a second author between the finding and the
+inbox, and any divergence would be invisible until a stranger read it.
+
+```
+uv run hubricon teardown send --dry-run     who would go, and what they would get
+COLD_DRY_RUN=false hubricon teardown send   dispatch now, from this machine
+```
+
+You do not have to run it. **The hourly operator dispatches every approved
+teardown on its own pass**, because it is the thing that holds
+`INSTANTLY_API_KEY` — your Mac does not. So the loop is: `add` the leads,
+`review` them, `approve` the ones you want, and the next hourly pass sends them.
+
+Caps: `COLD_PER_MAILBOX_DAILY` (default 30) times the number of mailboxes past
+warmup. Two mailboxes is 60 a day, which is the number you are aiming at. Add
+mailboxes and the ceiling rises with them; the campaign's sender list and limits
+are re-synced on every pass, so a mailbox that finishes warming is used without
+anyone touching anything.
+
+Every lead still goes through `can_contact` immediately before it is pushed. A
+teardown that fails keeps its approved status and is reported in the digest
+rather than silently skipped — you decided to send it, so the reason it could
+not go is something you need to see.
+
 ### What it will and will not claim
 
 Five detectors, all computed from pages the seller published themselves:

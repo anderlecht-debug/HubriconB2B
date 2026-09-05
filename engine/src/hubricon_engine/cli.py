@@ -2345,6 +2345,27 @@ def cmd_teardown(args):
         print("\nNext: hubricon teardown review")
         return
 
+    if action == "send":
+        from . import instantly
+        from .cold import dispatch
+
+        rehearse = args.dry_run or settings.dry_run()
+        if settings.dry_run() and not args.dry_run:
+            print("COLD_DRY_RUN is on, so nothing leaves. That is the safety, not a fault.\n"
+                  "  hubricon teardown send --dry-run           rehearse: who would go\n"
+                  "  COLD_DRY_RUN=false hubricon teardown send  actually dispatch\n")
+        api = instantly.Instantly() if instantly.configured() else None
+        n, notes = dispatch.push(db, api, dry=rehearse, limit=args.limit)
+        for note in notes:
+            print(f"  {note}")
+        waiting = len(dispatch.approved(db))
+        print(f"\n{n} teardown(s) {'would go' if rehearse else 'dispatched'}; "
+              f"{waiting} approved and waiting.")
+        if api is None:
+            print("No INSTANTLY_API_KEY here. The hourly operator holds it and dispatches on "
+                  "its own pass, so approving is enough.")
+        return
+
     if action == "suppress":
         if not args.who:
             print("Give an email or a domain: hubricon teardown suppress hello@acme.com "
@@ -2815,7 +2836,8 @@ def main():
                                         "Profit Teardowns from public pages")
     p.add_argument("action", nargs="?",
                    choices=["today", "build", "queue", "review", "show", "open", "approve",
-                            "reject", "sent", "name", "add", "stats", "ratecard", "suppress"],
+                            "reject", "sent", "name", "add", "send", "stats", "ratecard",
+                            "suppress"],
                    default="today",
                    help="default 'today': build what is buildable, then show what is waiting")
     p.add_argument("ref", nargs="?", help="a teardown id prefix, seller id, or brand name")
@@ -2832,6 +2854,7 @@ def main():
     p.add_argument("--last-name", help="name: their surname, if you have it")
     p.add_argument("--email", help="name/add: their real address")
     p.add_argument("--file", help="add: a file of leads — domain, email, first name per line")
+    p.add_argument("--dry-run", action="store_true", help="send: rehearse, change nothing")
     p.set_defaults(fn=cmd_teardown)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles / "
