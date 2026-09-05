@@ -25,7 +25,7 @@ from __future__ import annotations
 import html
 from datetime import date
 
-from . import charts
+from . import charts, shelf as shelfmod
 from .findings import Finding
 from .snapshot import ProspectSnapshot
 
@@ -54,16 +54,33 @@ MECHANISM = {
         "chart shows every zone rather than an average.",
 }
 
-BLIND_SPOTS = [
+BLIND_SPOTS_TAIL = [
     ("Your landed cost", "Every figure here is a fee, not a margin. What the change is worth "
                          "depends on what the unit costs you, which is not public."),
     ("Your packed weight", "Listings publish the item weight. Amazon bills the packed weight, "
                            "which adds its own packaging — so the band above is a floor."),
     ("Your ad spend", "Fulfilment is one line. Where the next ad dollar stops paying is usually "
                       "a larger number, and it is not visible from outside."),
-    ("Everything else you sell", "This is one listing. A catalogue has the same arithmetic "
-                                 "running on every SKU at once."),
 ]
+
+
+def _blind_spots(shelf_rows: list) -> list[tuple[str, str]]:
+    """The last one depends on how much of the shelf we can see.
+
+    Saying "this is one listing" under a table of four listings reads as
+    boilerplate, and boilerplate is what the rest of this page is trying not to
+    be. The honest version names what is still missing: the SKUs the crawl has
+    not reached."""
+    seen = len(shelf_rows or [])
+    if seen > 1:
+        tail = ("Everything else you sell",
+                f"We can see {seen} of your listings from the outside. Your catalogue is larger "
+                f"than that, and the same arithmetic runs on every SKU in it at once.")
+    else:
+        tail = ("Everything else you sell",
+                "This is one listing. A catalogue has the same arithmetic running on every SKU "
+                "at once.")
+    return BLIND_SPOTS_TAIL + [tail]
 
 
 def _e(s) -> str:
@@ -99,8 +116,87 @@ def headline(f: Finding) -> tuple[str, str]:
     return per_unit, f"{lead}, on every one you ship."
 
 
+def _shelf_section(rows: list, by_ref: dict, snap: ProspectSnapshot) -> str:
+    """Every listing we hold, priced against the published card, with a total.
+
+    One SKU a few cents off is not a reason to answer a stranger. The same
+    arithmetic running across the shelf, totalled, is — and it says we looked at
+    the shelf rather than at one lucky listing.
+    """
+    if not rows:
+        return ""
+    body = []
+    for r in rows:
+        finding = by_ref.get(r.ref)
+        weight = f"{r.weight_oz:g} oz" if r.weight_oz else "—"
+        fee = _money(r.fee) if r.fee else "—"
+        band = (f"{r.over_by:g} oz over {r.edge:g} oz" if r.over_by is not None else "—")
+        if finding and finding.dollars_high > 0:
+            giving = f"{_money(finding.dollars_low)}–{_money(finding.dollars_high)}/mo"
+        elif finding:
+            giving = f"{_cents(finding.per_unit_low)}/unit"
+        elif not r.weight_oz:
+            giving = "no published weight"
+        else:
+            giving = "—"
+        title = (r.title or "")[:52]
+        body.append(
+            f'<tr><td><span class="mono">{_e(r.ref)}</span><span class="tt">{_e(title)}</span></td>'
+            f'<td>{_money(r.price) if r.price else "—"}</td><td>{_e(weight)}</td>'
+            f'<td>{_e(shelfmod.tier_label(r.tier))}</td><td>{_e(fee)}</td>'
+            f'<td>{_e(band)}</td><td class="give">{_e(giving)}</td></tr>')
+    lo, hi = shelfmod.shelf_total([f for f in by_ref.values()])
+    total = ""
+    if hi > 0:
+        total = (f'<tr class="tot"><td colspan="6">Across the {len(rows)} listing'
+                 f'{"s" if len(rows) != 1 else ""} we can see</td>'
+                 f'<td class="give">{_money(lo)}–{_money(hi)}/mo</td></tr>')
+    near = sum(1 for r in rows if r.near_edge)
+    lead = (f"{near} of the {len(rows)} listings we hold sit within an ounce of a cheaper fee "
+            f"band." if near else
+            f"Here is every listing we hold for you, priced against the published card.")
+    return f"""
+  <section class="panel">
+    <h2>Your shelf, as the fee schedule sees it</h2>
+    <p class="sub" style="margin-bottom:16px">{_e(lead)} Weights and prices are the ones you
+       publish; the fee is Amazon's card, not an estimate of it.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Listing</th><th>Price</th><th>Weight</th><th>Size tier</th>
+        <th>Amazon's fee</th><th>Band</th><th>Giving up</th></tr></thead>
+      <tbody>{"".join(body)}{total}</tbody>
+    </table></div>
+  </section>"""
+
+
+def _benchmark_section(bench) -> str:
+    """Where they sit in their own category, from our own crawl.
+
+    This is the section no competitor can copy, because it needs the dataset
+    behind it. It also earns the rest of the page: a seller who believes we
+    measure the category believes the number about their listing.
+    """
+    if not bench or not bench.worth_showing:
+        return ""
+    chart = charts.category_bands(bench)
+    if not chart:
+        return ""
+    return f"""
+  <section class="panel">
+    <h2>The same mistake, {_e(bench.category)}-wide</h2>
+    <p class="sub" style="margin-bottom:8px">We have read and weighed
+       <strong>{bench.measured:,}</strong> {_e(bench.category)} listings from their public pages.
+       <strong>{bench.share:.0%}</strong> of them ship within an ounce of a cheaper fulfilment
+       band — the same few cents, paid by most of the category. Yours is marked.</p>
+    <div class="chart">{chart}</div>
+    <p class="caption">Nobody publishes this. We measure it because it is the first thing we
+       look at, and it is why the number above is a reading rather than a guess.</p>
+  </section>"""
+
+
 def render(f: Finding, snap: ProspectSnapshot, *, token: str, cta_url: str,
-           expires_on: date, generated_on: date | None = None) -> str:
+           expires_on: date, generated_on: date | None = None,
+           also: list[Finding] | None = None, shelf_rows: list | None = None,
+           bench=None) -> str:
     """One self-contained HTML page: no external request, no font, no script.
 
     There is no tracking pixel and no beacon, and not only for taste. The view
@@ -111,13 +207,16 @@ def render(f: Finding, snap: ProspectSnapshot, *, token: str, cta_url: str,
     """
     generated_on = generated_on or date.today()
     brand = snap.display_name
+    by_ref = {x.asin_or_sku: x for x in ([f] + list(also or [])) if x.asin_or_sku}
+    shelf_html = _shelf_section(shelf_rows or [], by_ref, snap)
+    bench_html = _benchmark_section(bench)
     big, under = headline(f)
     chart = charts.render(f.evidence)
     listing_url = f.item_url or ""
     assumptions = "".join(f"<li>{_e(a)}</li>" for a in f.assumptions)
     blind = "".join(
         f'<div class="miss"><span class="miss-h">{_e(h)}</span>{_e(b)}</div>'
-        for h, b in BLIND_SPOTS)
+        for h, b in _blind_spots(shelf_rows or []))
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -170,6 +269,18 @@ ul.assume li:before{{ content: ""; position: absolute; left: 2px; top: .66em;
 .miss{{ border-top: 1px solid var(--hairline); padding: 12px 0; }}
 .miss:first-child{{ border-top: 0; }}
 .miss-h{{ display: block; color: var(--ink); font-weight: 600; font-size: 14px; }}
+.scroll{{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+table{{ border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 620px; }}
+th{{ text-align: left; font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 600; padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--rule); white-space: nowrap; }}
+td{{ padding: 11px 12px 11px 0; border-bottom: 1px solid var(--hairline);
+  vertical-align: baseline; white-space: nowrap; font-variant-numeric: tabular-nums; }}
+td .tt{{ display: block; white-space: normal; color: var(--ink-faint); font-size: 12.5px;
+  max-width: 34ch; }}
+td.give{{ font-weight: 600; color: var(--serious); }}
+tr.tot td{{ border-bottom: 0; border-top: 1px solid var(--rule); padding-top: 13px;
+  font-weight: 600; color: var(--ink); }}
 .cta{{ background: var(--ink); color: hsl(222 28% 96%); border-radius: 14px;
   padding: 30px 32px; margin-top: 26px; }}
 .cta h2{{ color: #fff; }}
@@ -203,6 +314,9 @@ footer{{ margin-top: 28px; font-size: 12.5px; color: var(--ink-faint); line-heig
        if listing_url else ""}
     </div>
   </section>
+
+  {shelf_html}
+  {bench_html}
 
   <section class="panel">
     <h2>What this assumed</h2>

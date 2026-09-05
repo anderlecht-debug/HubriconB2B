@@ -339,6 +339,50 @@ def carrier_bands(ev: dict) -> str:
     return _svg(body, "USPS Ground Advantage cost per parcel by zone")
 
 
+# -- the category around them ------------------------------------------------------
+
+def category_bands(bench) -> str:
+    """How far every listing we have measured in this category sits above the
+    band edge below it, with theirs marked.
+
+    The chart nobody else can draw, because nobody else has the crawl. It is the
+    difference between "you are 0.6 oz over" and "we measure this category for a
+    living, and here is where you sit in it."
+    """
+    buckets = bench.buckets
+    if not buckets or not bench.measured:
+        return ""
+    n = len(buckets)
+    top = max(count for _, _, count in buckets) or 1
+    slot = (W - PAD_L - PAD_R) / n
+    bar_w = slot * 0.62
+    body = _frame("ounces above the next cheapest fee band", "listings we have measured", [],
+                  [(_y(v, 0, top * 1.18), f"{v:,.0f}") for v in nice_ticks(0, top * 1.18, 3)])
+    yours = bench.your_over_by
+    for i, (lo, hi, count) in enumerate(buckets):
+        x = PAD_L + i * slot + (slot - bar_w) / 2
+        y = _y(count, 0, top * 1.18)
+        mine = yours is not None and lo <= yours < hi
+        colour = SERIOUS if mine else C1
+        body.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" '
+                    f'height="{H - PAD_B - y:.1f}" fill="{colour}" '
+                    f'opacity="{0.9 if mine else 0.28}"/>')
+        label = f"{lo:g}–{hi:g}" if hi < 900 else f"{lo:g}+"
+        body.append(f'<text x="{x + bar_w / 2:.1f}" y="{H - PAD_B + 17}" text-anchor="middle" '
+                    f'font-size="11" fill="{INK_FAINT}">{label}</text>')
+        if mine:
+            body.append(f'<text x="{x + bar_w / 2:.1f}" y="{y - 10:.1f}" text-anchor="middle" '
+                        f'font-size="12" font-weight="600" fill="{SERIOUS}">you</text>')
+    body.append(f'<text x="{W - PAD_R}" y="{PAD_T + 4}" text-anchor="end" font-size="11.5" '
+                f'fill="{INK_FAINT}">{bench.measured:,} listings measured in '
+                f'{_esc(bench.category)}</text>')
+    return _svg(body, "Distribution of listings above the nearest fee band edge")
+
+
+def _esc(s: str) -> str:
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
 CHARTS = {
     "net_vs_price": net_vs_price,
     "carrier_bands": carrier_bands,

@@ -105,3 +105,60 @@ def test_the_price_chart_goes_relative_when_the_fee_is_not_known():
     values = [float(t.replace("+", "")) for t in _y_ticks(svg)]
     assert min(values) < 0 < max(values), values
     assert all(abs(v) < 3.0 for v in values), "a difference, not a price"
+
+
+# -- the shelf and the category around it ------------------------------------------
+
+def _two_listing_snapshot():
+    return snapshot(items=[
+        item(ref="B00LEAD0001", title="Lead listing", price=24.99, item_weight_oz=12.4,
+             dims_in=(11.0, 8.0, 1.5), est_monthly_units=1500.0),
+        item(ref="B00OTHER002", title="No weight published", price=19.99,
+             item_weight_oz=None, dims_in=None, est_monthly_units=400.0)])
+
+
+def _render(snap, **kw):
+    from hubricon_engine.cold import shelf as shelfmod
+    f = select.best(findings.detect(snap, today=TODAY), snap)
+    return f, page.render(f, snap, token="t", cta_url="https://x",
+                          expires_on=date(2026, 10, 20), generated_on=date(2026, 9, 5),
+                          shelf_rows=shelfmod.shelf(snap, TODAY), **kw)
+
+
+def test_the_shelf_shows_every_listing_and_totals_them():
+    f, html = _render(_two_listing_snapshot())
+    assert "Your shelf, as the fee schedule sees it" in html
+    assert "B00LEAD0001" in html and "B00OTHER002" in html
+    assert "Across the 2 listings we can see" in html
+
+
+def test_a_listing_we_cannot_price_says_why_rather_than_showing_a_dash():
+    _, html = _render(_two_listing_snapshot())
+    assert "no published weight" in html
+
+
+def test_the_last_blind_spot_does_not_contradict_the_shelf():
+    """"This is one listing" under a table of two reads as boilerplate, and
+    boilerplate is what the rest of the page is trying not to be."""
+    _, one = _render(snapshot(items=[item(price=24.99, item_weight_oz=12.4,
+                                          dims_in=(11.0, 8.0, 1.5))]))
+    _, two = _render(_two_listing_snapshot())
+    assert "This is one listing." in one
+    assert "This is one listing." not in two
+    assert "We can see 2 of your listings" in two
+
+
+def test_the_category_benchmark_needs_a_sample_worth_quoting():
+    from hubricon_engine.cold import shelf as shelfmod
+    # Dimensions make the size tier certain, so every row counts. Without them
+    # the ladders disagree at most weights and the sample halves.
+    rows = [{"category": "Baby", "weight_oz": 4.1 + i * 0.1, "dims": "10 x 8 x 2 inches"}
+            for i in range(40)]
+    deep = shelfmod.benchmark(rows, "Baby", your_weight_oz=4.6)
+    thin = shelfmod.benchmark(rows[:5], "Baby", your_weight_oz=4.6)
+    assert deep.worth_showing and not thin.worth_showing
+    _, with_bench = _render(_two_listing_snapshot(), bench=deep)
+    _, without = _render(_two_listing_snapshot(), bench=thin)
+    assert "The same mistake, Baby-wide" in with_bench
+    assert f"{deep.measured:,}" in with_bench
+    assert "same mistake" not in without, "a thin sample is left off, not rounded up"
