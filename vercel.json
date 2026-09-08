@@ -1,6 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/t/:token", "destination": "/api/teardown?t=:token" }
+    { "source": "/t/:token", "destination": "/api/teardown?t=:token" },
+    { "source": "/say/:token", "destination": "/api/consent?t=:token" }
   ]
 }

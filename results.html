@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon — Published results</title>
+<meta name="description" content="Every result Hubricon publishes comes off a client's own Decision Ledger, with their consent, anonymised by category and revenue band. Nothing here is a projection.">
+<link rel="canonical" href="https://www.hubricon.com/results">
+<meta name="theme-color" content="#050A1F">
+<style>
+:root{--bg:#050A1F;--panel:hsl(228 40% 10%);--hair:hsl(222 40% 60% / .16);--ink:hsl(222 30% 96%);
+--soft:hsl(222 22% 78%);--faint:hsl(222 16% 58%);--amber:#ffc000;--ok:hsl(150 58% 58%)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--soft);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:40px 20px 90px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto}
+a{color:var(--amber)}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--faint)}
+h1{font:500 clamp(28px,5vw,40px)/1.12 "Iowan Old Style",Georgia,serif;color:var(--ink);margin:8px 0 12px;letter-spacing:-.01em}
+.lede{max-width:60ch;color:var(--soft)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:30px 0}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:22px 24px}
+.card .amt{font:500 40px/1 "Iowan Old Style",Georgia,serif;color:var(--ink);letter-spacing:-.03em;font-variant-numeric:tabular-nums;display:block;margin:6px 0 10px}
+.card .who{color:var(--ink);font-weight:600}
+.card .how{font-size:13.5px;color:var(--faint);margin-top:10px;border-top:1px solid var(--hair);padding-top:10px}
+.empty{background:var(--panel);border:1px dashed var(--hair);border-radius:14px;padding:26px 28px;margin:30px 0;max-width:60ch}
+.empty b{color:var(--ink)}
+.method{margin-top:36px;padding-top:24px;border-top:1px solid var(--hair);font-size:14.5px;color:var(--faint);max-width:64ch}
+.method b{color:var(--soft)}
+.btn{display:inline-block;margin-top:22px;background:var(--amber);color:#1a1205;font-weight:650;padding:13px 24px;border-radius:9px;text-decoration:none}
+@media (max-width:560px){body{padding:26px 14px 70px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="eyebrow">Hubricon · the record</span>
+  <h1>What the ledgers say, published with permission.</h1>
+  <p class="lede">Every card below is a number a client's own Decision Ledger measured from their own later exports, or a reimbursement Amazon paid on a claim we filed. Clients choose whether it appears here; it is shown by category and revenue band, rounded down, with no brand named. Nothing on this page is a forecast.</p>
+
+  <div id="grid" class="grid" hidden></div>
+  <div id="empty" class="empty" hidden>
+    <b>No published result yet.</b> The first client to clear the free month and say yes to publication
+    appears here on the next hourly pass. Until then the honest number of published results is zero, and
+    we would rather show you zero than a sample.
+  </div>
+
+  <a class="btn" href="/#apply">Get your own numbers run, free</a>
+
+  <div class="method">
+    <p><b>How a card gets here.</b> A correction is stated with its expected dollars before it goes live. Later, the client's next exports are read back and each dollar is graded — confirmed by the platform's own record, measured on the exact line, or measured against a stated counterfactual — and capped at what was promised. Reimbursements count only when Amazon paid a claim we filed. The client then decides, on a private page, whether the result may be published. A withdrawn consent removes the card instantly.</p>
+  </div>
+</div>
+<script>
+"use strict";
+const SUPABASE_URL = "https://cgqvdnhgbfxikzdqqaws.supabase.co";
+const SUPABASE_KEY = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
+const HOW = {
+  direct: "confirmed by the platform's own record",
+  isolated: "measured on the exact line the directive named",
+  attributable: "measured against a stated counterfactual",
+  recovered: "paid by Amazon on a claim we filed",
+  gate: "the ledger against the invoice",
+};
+const KIND = {
+  first_recovered: "first reimbursement recovered",
+  gate_cleared: "cleared the free-month gate",
+  roi_3x: "ledger above three times the fee",
+  roi_5x: "ledger above five times the fee",
+  direct_measured: "a correction, measured",
+};
+const money = (v) => "$" + Math.floor(Number(v) || 0).toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+(async () => {
+  const grid = document.getElementById("grid"), empty = document.getElementById("empty");
+  let rows = [];
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/public_results`, {
+      method: "POST", body: "{}",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "content-type": "application/json" },
+    });
+    rows = res.ok ? (await res.json()) || [] : [];
+  } catch { rows = []; }
+  if (!rows.length) { empty.hidden = false; return; }
+  grid.innerHTML = rows.map((r) => `
+    <div class="card">
+      <span class="eyebrow">${esc(r.month)} · ${esc(r.platform || "amazon")}</span>
+      <span class="amt">${money(r.amount_usd)}</span>
+      <span class="who">A ${esc(r.industry)} brand, ${esc(r.revenue_band || "$1M–$20M")}</span>
+      <div>${esc(KIND[r.kind] || r.kind)}</div>
+      <div class="how">How we know: ${esc(HOW[r.how_we_know] || r.how_we_know)}</div>
+    </div>`).join("");
+  grid.hidden = false;
+})();
+</script>
+</body>
+</html>
