@@ -33,13 +33,15 @@ def stripe_configured() -> bool:
     return bool(os.environ.get("STRIPE_SECRET_KEY"))
 
 
-def _stripe(path: str, data: dict | None = None) -> dict:
+def _stripe(path: str, data: dict | None = None, idempotency_key: str | None = None) -> dict:
     key = os.environ["STRIPE_SECRET_KEY"]
     url = f"{STRIPE_API}/{path}"
     body = urllib.parse.urlencode(data, doseq=True).encode() if data is not None else None
     req = urllib.request.Request(url, data=body, method="POST" if body is not None else "GET")
     req.add_header("Authorization", f"Bearer {key}")
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    if idempotency_key:
+        req.add_header("Idempotency-Key", idempotency_key)
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
             return json.loads(res.read())

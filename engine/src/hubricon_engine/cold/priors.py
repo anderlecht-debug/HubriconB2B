@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from .. import calibration
+
 # -- Amazon: US FBA fulfilment fees ------------------------------------------------
 #
 # The 2026 schedule prices every band three times, by the item's *sale price*:
@@ -224,7 +226,14 @@ def price_band(price: float | None) -> int | None:
 
 
 def referral_rate(category: str | None) -> float:
-    return REFERRAL_BY_CATEGORY.get((category or "").strip().lower(), REFERRAL_DEFAULT)
+    """The published rate for the category — or, where consenting clients'
+    own fee lines have been read, the rate Amazon actually charged them
+    (calibration.py). The finding says which it used."""
+    cat = (category or "").strip().lower()
+    learned = calibration.get(f"amazon.referral_rate.{cat}")
+    if learned is not None:
+        return float(learned)
+    return REFERRAL_BY_CATEGORY.get(cat, REFERRAL_DEFAULT)
 
 
 def _surcharged(fee: float, today: date) -> float:

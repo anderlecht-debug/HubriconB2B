@@ -51,3 +51,14 @@ jobs:
           ALERT_FROM: ${{ secrets.ALERT_FROM }}
           FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
         run: uv run hubricon sweep --alert
+      # What consenting clients' real accounts say the cold engine's guesses
+      # should be (calibration.py). Reads only clients who granted the
+      # separate 'calibration' consent; writes 'insufficient' until enough
+      # accounts stand behind a figure. Never fails the sweep.
+      - name: Calibrate the cold engine from consenting accounts
+        if: always()
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: uv run hubricon calibrate || echo "::warning::calibration did not run"

@@ -855,6 +855,142 @@ account and recording it (`hubricon execute`), the daily Buy Box reading on a
 live price test (`hubricon watch`), and confirming when an ad spend step-up was
 intended. Everything else measures itself.
 
+## The loop past paid: proof, the ask, the month, and what it teaches the cold engine
+
+The business is meant to run as a loop — effort, customers, results, word of
+mouth, customers — and until 2026-09-08 it stopped at "results". The day-30
+pass inserted two unanswered `consents` rows and nothing asked, collected,
+published or credited anything. Five modules close it, all inside the jobs
+that already run:
+
+```
+value.compute ──► proof.detect ──► results ──► (consent) ──► public_results()
+                                                    │              │
+                    referral.ask_if_due ◄───────────┘              ├──► results.html
+                    rides the Issue, once                          ├──► the campaign copy (outbound)
+                           │                                       └──► the teardown page + email (cold)
+                    /say/<token> ──► consents, testimonial, referral link
+                           │
+                    ?ref=<code> on a booking ──► referral.attribute
+                           │
+                    referred client clears day 30 ──► referral.credit_referrer
+```
+
+### Proof (`proof.py`, hourly, after billing)
+
+Every verified event the ledger supports becomes a row in `results`: the first
+reimbursement Amazon paid on a claim **we filed**, each directive measured
+`direct`, the day-30 gate clearing, the ledger crossing three or five times the
+fee. `proof.detect` is pure and keys off `value_total` and `roi_multiple` —
+never `billing.verdict`'s total, which counts identified-but-unbanked value and
+is the right bar for an invoice and the wrong one for a claim to a stranger.
+
+Nothing is public without `anonymised_results` consent. `public_results()` is
+the **first function in the schema anon may execute**; it returns one card per
+brand (category, revenue band, platform, amount rounded down to the hundred,
+how we know, month), re-checks consent on every read, and never returns a
+client id. `results.html` renders it; index.html shows the same cards in its
+proof section and hides the section while the list is empty.
+
+A card needs an industry word, which the crawl cannot know:
+
+```
+uv run hubricon proof                       # every result row, and the line the copy carries
+uv run hubricon proof set <client> --industry kitchen --revenue-band '$1M–$5M'
+uv run hubricon proof line                  # the sentence, or "(none)"
+```
+
+**The proof line.** One sentence, two templates in `proof.py`, every figure a
+`{{placeholder}}` filled from the RPC and checked with `narrate.validate` — the
+same guard the Issue letter runs under, so the line can never carry a number
+the ledger did not. It goes three places by itself: the campaign email
+(`outbound.campaign_spec(proof_line=…)` replaces the "track record isn't"
+paragraph, and `effective_copy_version` folds a hash of the line into the copy
+version so `sync_copy` PATCHes Instantly on the next pass — a withdrawn consent
+moves it back the same way), the cold teardown email, and the teardown page
+above its button.
+
+### The ask (`referral.py`, rides the Issue)
+
+`referral.ask_due` is true at the moment of maximum value — the ledger at three
+times the fee, or the first recovered dollar — with no consent answered. The
+ask is one more paragraph in the fortnightly Issue email (`cli._publish_issue`),
+sent once (`client_touches` kind `consent_ask`), never chased. It links to
+`/say/<token>` (`api/consent.js`), minted by the intake-token machinery, where
+the client ticks or leaves each consent — anonymised results, named results,
+calibration, testimonial — writes two lines, and finds their own referral link.
+An unticked box is written as `false`; either answer is fine and both are
+recorded.
+
+### The month
+
+The link is `hubricon.com/?ref=<code>`. index.html keeps the code in
+`sessionStorage` and appends `|ref:<code>` to the Calendly `utm_content`, so it
+arrives in `bookings.answers` like the platform does. `operator.bookings` calls
+`referral.attribute`: `bookings.ref_code`, `clients.referred_by_client_id` (or
+`referred_by_partner_id`), a `prospects` row with `source = referral|partner`,
+and a line in the digest so the founder knows who sent them before the call.
+
+The credit is paid at the referred client's **own** day-30 gate, in the same
+pass that starts their billing, and nowhere else. A referrer already on a
+subscription gets a Stripe customer-balance credit for one month
+(`Idempotency-Key: referral-<referred id>`), which applies itself to their next
+ACH invoice; a referrer still in their free month, or one whose gate came back
+`short`, gets `free_months + 1`, which `billing.due_for_decision` honours.
+Partners are never auto-paid: the digest says "pay the partner per terms".
+
+```
+uv run hubricon partner add books --name "A2X Bookkeeping" --kind bookkeeper --terms "one month per renewal"
+uv run hubricon partner email books <seller_id>      # drafts GROWTH.md channel 4, with their link
+```
+
+### Speed (`speed.py`)
+
+Three set-once timestamps on the client row — `exports_landed_at` (the first
+pass that found typed data), `first_issue_at` (Issue 001), `first_value_at`
+(the first measured or recovered dollar) — make the 24-hour promise a number.
+`hubricon promises` fails a client who has waited longer than
+`speed.SLA_HOURS` for Issue 001, and the digest carries the medians. The
+promise is Issue 001 inside 24 hours; time to the first dollar is reported and
+never promised.
+
+### Calibration (`calibration.py`, Monday, after the sweep)
+
+The cold engine prices a stranger's listing from published cards and two
+guesses: units per sales rank, and orders per Shopify review. A client's own
+exports are the only ground truth those guesses will get.
+
+terms.html §10 says we never use one client's data to advise another, so:
+**nothing is read from a client who has not granted the separate
+`calibration` consent** on the /say page, and what is written is an aggregate
+— a slope, a rate, a ratio — with the number of clients and observations on
+the row. Below the floor (two accounts, thirty observations; one account for a
+referral rate, which only verifies a published card) the row says
+`insufficient` with a null value and the published figure stands. Readers
+(`priors.referral_rate`, `harvest/amazon.estimate_units`,
+`harvest/shopify.estimate_annual`) fall back to the card when nothing is
+loaded, and a finding that used a learned figure says so in its assumptions
+and carries `Finding.provenance`.
+
+```
+uv run hubricon calibrate          # compute and write; the sweep does this weekly
+uv run hubricon calibrate show
+```
+
+### The scoreboard, continued (`loop.py`)
+
+`pmf_scoreboard()` now runs past paid: asks sent, consents, testimonials,
+results published, referral links, referral bookings, referred clients paying,
+partner bookings, median hours to Issue 001, and the teardown lane joined to
+what came back (`teardowns_sent / replied / booked`, written by
+`loop.attribute_reply` from the reply sync and `loop.attribute_booking` from
+the booking pass). `renewed` runs from `retainer_started_at` — the same clock
+billing uses — rather than `created_at`.
+
+```
+uv run hubricon loop               # every arrow as a conversion from the one before
+```
+
 ## Keeping the promises the site makes
 
 Each of these used to depend on someone remembering. They are now jobs.

@@ -42,6 +42,8 @@ from . import storage
 from . import issue
 from . import measurement
 from . import value as valuemod
+from . import calibration, proof, referral, speed
+from . import loop as loopmod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
 from .directives import draft_directives, resolve_brand_terms
@@ -1511,9 +1513,20 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
         print(f"  issue No. {issue_no:03d} not published: {err}")
         return None
 
+    # The price of the free month is asked for here — on the first Issue after
+    # the ledger has earned the asking, once, as one more paragraph in a
+    # letter the client already opens (referral.py).
+    try:
+        ask = referral.ask_if_due(db, client, ledger, _fetch_claims(db, client["id"]), send)
+    except Exception as err:
+        print(f"  consent ask skipped: {err}")
+        ask = []
     sent = _send_client_email(db, client, "issue_ready", inserted["id"],
                               f"Issue No. {issue_no:03d} is in your desk",
-                              _issue_email_blocks(issue_no, headline, bool(video_path)), send)
+                              _issue_email_blocks(issue_no, headline, bool(video_path)) + ask, send)
+    if sent and ask:
+        referral.mark_asked(db, client)
+        print("  the consent and referral ask rode this issue")
     parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
     print(f"  Issue No. {issue_no:03d} published ({' + '.join(parts)})"
           + (" and emailed" if sent else ""))
@@ -1981,6 +1994,89 @@ def cmd_operator(args):
     operator.run(send=args.send, dry=args.dry_run, digest=args.digest)
 
 
+def cmd_proof(args):
+    """Verified results: what the ledgers proved, and the words that let a card publish."""
+    db = dbmod.connect()
+    if args.action == "set":
+        if not args.client:
+            sys.exit("usage: hubricon proof set <client> --industry <word> [--revenue-band <band>]")
+        c = dbmod.resolve_client(db, args.client)
+        try:
+            patch = proof.set_profile(db, c["id"], args.industry, args.revenue_band)
+        except ValueError as err:
+            sys.exit(str(err))
+        print(f"{c['company_name'] or c['contact_email']}: {patch or 'nothing changed'}")
+        return
+    if args.action == "line":
+        print(proof.line(db) or "(no published result yet — the copy carries no proof line)")
+        return
+    if args.action == "cards":
+        cards = proof.cards(db)
+        print(json.dumps(cards, indent=2) if cards else "[]  (nothing consented and published yet)")
+        return
+    rows = (db.table("results").select("*, clients(company_name, contact_email, industry)")
+            .order("created_at", desc=True).execute().data)
+    if not rows:
+        print("No verified result yet. The operator writes one the first time a ledger proves a dollar.")
+        return
+    for r in rows:
+        c = r.get("clients") or {}
+        who = c.get("company_name") or c.get("contact_email") or r["client_id"][:8]
+        print(f"  {who:<28} {proof.describe(r)}"
+              + ("" if c.get("industry") else "   ← no industry word; `hubricon proof set`"))
+    print(f"\nProof line the copy carries now: {proof.line(db) or '(none)'}")
+
+
+def cmd_loop(_args):
+    """Every arrow of the loop as a conversion from the one before it."""
+    db = dbmod.connect()
+    print(loopmod.table(db.rpc("pmf_scoreboard", {}).execute().data or {}))
+
+
+def cmd_calibrate(args):
+    """What consenting clients' real accounts say the cold engine's guesses should be."""
+    db = dbmod.connect()
+    if args.action == "show":
+        rows = db.table("calibration").select("*").order("key").execute().data
+        if not rows:
+            print("Nothing calibrated yet — `hubricon calibrate` runs it; the sweep runs it weekly.")
+        for r in rows:
+            v = f"{float(r['value']):.4g}" if r.get("value") is not None else "—"
+            print(f"  {r['key']:<44} {v:>10}  {r['method']} · {r['n_clients']} client(s), {r['n_obs']} obs")
+        return
+    rows = calibration.compute(db)
+    live = sum(1 for r in rows if r["value"] is not None)
+    print(f"\n{live} of {len(rows)} calibration row(s) carry a value; the rest say why not.")
+
+
+def cmd_partner(args):
+    """Referral partners: the people who already hold a list of sellers."""
+    db = dbmod.connect()
+    if args.action == "add":
+        if not (args.code and args.name):
+            sys.exit("usage: hubricon partner add <code> --name <name> [--email x] [--kind bookkeeper|prep|lender|agency|other] [--terms ...]")
+        row = referral.add_partner(db, args.code, args.name, args.email, args.kind, args.terms)
+        print(f"{row['name']} ({row['code']}): their link is {referral.link(row['code'])}")
+        return
+    if args.action == "email":
+        from . import outreach
+        rows = db.table("partners").select("*").eq("code", args.code or "").limit(1).execute().data
+        if not rows or not args.seller:
+            sys.exit("usage: hubricon partner email <code> <seller_id>")
+        p = rows[0]
+        facts = outreach.seller_facts(db, args.seller)
+        m = outreach.partner_email(facts, p["name"], p.get("terms") or "a referral month on anything that renews")
+        print(f"To: {m.get('to') or p.get('contact_email') or ''}\nSubject: {m.get('subject')}\n\n{m.get('body')}")
+        print(f"\nTheir link, for the clients they introduce: {referral.link(p['code'])}")
+        return
+    rows = db.table("partners").select("*").order("created_at").execute().data
+    if not rows:
+        print("No partners yet — `hubricon partner add <code> --name <name>`.")
+    for p in rows:
+        print(f"  {p['code']:<12} {p['name']:<30} {p['kind']:<10} {referral.link(p['code'])}"
+              + (f"   {p['terms']}" if p.get("terms") else ""))
+
+
 def cmd_scoreboard(_args):
     import json
 
@@ -2054,6 +2150,16 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         add(f"{name}: first fixes live in week one", "welcome", not late,
             "nothing approved is waiting" if not late
             else f"{len(late)} approved directive(s) not executed, oldest {late[0]['days']}d")
+
+        landed = c.get("exports_landed_at")
+        if landed:
+            first = c.get("first_issue_at")
+            waited = speed.hours(landed, first or datetime.now(timezone.utc))
+            within = waited is not None and waited <= speed.SLA_HOURS
+            add(f"{name}: the Teardown inside {speed.SLA_HOURS} hours of the exports", "welcome, index, terms §2",
+                within,
+                f"Issue 001 landed {waited}h after the exports" if first
+                else f"exports landed {waited}h ago and Issue 001 has not published — `hubricon operator`")
 
         live = (db.table("price_tests").select("id, sku").eq("client_id", c["id"])
                 .eq("status", "running").execute().data)
@@ -2565,6 +2671,7 @@ def cmd_source(args):
         return
 
     db = dbmod.connect()
+    calibration.load(db)      # learned curves and ratios, when any exist
     if args.action == "status":
         print(sourcing.status_text(db))
         return
@@ -2631,6 +2738,7 @@ def cmd_harvest(args):
         print(harvest.install_launchd())
         return
     db = dbmod.connect()
+    calibration.load(db)      # learned curves and ratios, when any exist
     if args.action == "status":
         print(harvest.status_text(db))
         return
@@ -2889,6 +2997,29 @@ def main():
     p.set_defaults(fn=cmd_operator)
 
     sub.add_parser("scoreboard", help="print the PMF scoreboard").set_defaults(fn=cmd_scoreboard)
+
+    sub.add_parser("loop", help="the loop stage by stage: every arrow as a conversion").set_defaults(fn=cmd_loop)
+
+    p = sub.add_parser("proof", help="verified results: list them, set a client's industry word, print the proof line")
+    p.add_argument("action", nargs="?", default="list", choices=["list", "set", "line", "cards"])
+    p.add_argument("client", nargs="?")
+    p.add_argument("--industry", help="one of: " + ", ".join(proof.INDUSTRIES))
+    p.add_argument("--revenue-band", dest="revenue_band", help="e.g. '$1M–$5M'")
+    p.set_defaults(fn=cmd_proof)
+
+    p = sub.add_parser("calibrate", help="learn the cold engine's guesses from consenting clients' real accounts")
+    p.add_argument("action", nargs="?", default="run", choices=["run", "show"])
+    p.set_defaults(fn=cmd_calibrate)
+
+    p = sub.add_parser("partner", help="referral partners: add, list, draft the intro email")
+    p.add_argument("action", nargs="?", default="list", choices=["add", "list", "email"])
+    p.add_argument("code", nargs="?")
+    p.add_argument("seller", nargs="?")
+    p.add_argument("--name")
+    p.add_argument("--email")
+    p.add_argument("--kind", default="other", choices=["bookkeeper", "prep", "lender", "agency", "other"])
+    p.add_argument("--terms")
+    p.set_defaults(fn=cmd_partner)
 
     p = sub.add_parser("doctor", help="why the cold campaign is or isn't sending (read-only)")
     p.add_argument("--json", action="store_true", help="also dump the raw findings as JSON")

@@ -12,6 +12,7 @@ import html
 import math
 import os
 import re
+from .. import calibration
 
 BASE = "https://www.amazon.com"
 AMAZON_MERCHANT_IDS = {"ATVPDKIKX0DER"}  # Amazon.com itself
@@ -193,11 +194,22 @@ def weight_to_oz(s: str | None) -> float | None:
     return round(n, 3)
 
 
-def estimate_units(bsr: int | None, category: str | None) -> float | None:
-    """Monthly units from a top-level category rank. An estimate, labeled as such."""
+def estimate_units(bsr: int | None, category: str | None,
+                   curve: tuple[float, float] | None = None) -> float | None:
+    """Monthly units from a top-level category rank. An estimate, labeled as such.
+
+    The fitted curve below is "comfortably wrong by a factor of two either
+    way". Where consenting clients' real unit counts have been read against
+    the ranks the crawl observed (calibration.py), the category's learned
+    curve is used instead — passed in, or read from the loaded cache."""
     if not bsr or bsr < 1:
         return None
-    scale = CATEGORY_SCALE.get((category or "").strip().lower(), DEFAULT_SCALE)
+    cat = (category or "").strip().lower()
+    curve = curve or calibration.curve(cat)
+    if curve:
+        a, b = curve
+        return round(10 ** (a - b * math.log10(bsr)), 1)
+    scale = CATEGORY_SCALE.get(cat, DEFAULT_SCALE)
     knee = 10 ** (CURVE_A - CURVE_B * math.log10(HEAD_KNEE))
     if bsr >= HEAD_KNEE:
         units = 10 ** (CURVE_A - CURVE_B * math.log10(bsr))

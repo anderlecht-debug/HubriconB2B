@@ -8,6 +8,8 @@ Replies are pulled from the unibox into prospect_messages for triage.
 """
 
 import os
+import hashlib
+import html
 from datetime import datetime, timezone
 
 from . import icp, triage
@@ -68,8 +70,21 @@ def _footer(postal_address: str) -> str:
 COPY_VERSION = "2026-09-05 reader-first hook, platform-neutral, free month unconditional + day-30 gate"
 
 
+def effective_copy_version(proof_line: str | None) -> str:
+    """COPY_VERSION, plus a fingerprint of the proof line when there is one.
+
+    The proof line is the first sentence in this email that changes without a
+    commit — it moves when a client consents, or withdraws. Folding it into
+    the version is what makes `sync_copy` PATCH the live campaign on the next
+    hourly pass after the first result publishes, with nobody bumping a
+    constant."""
+    if not proof_line:
+        return COPY_VERSION
+    return f"{COPY_VERSION}+proof:{hashlib.sha1(proof_line.encode()).hexdigest()[:8]}"
+
+
 def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = CALENDLY_URL,
-                  daily_limit: int | None = None) -> dict:
+                  daily_limit: int | None = None, proof_line: str | None = None) -> dict:
     """One plain-text email, no follow-ups (the founder's call, 2026-09-03: the
     first email is the one that gets answered; the rest is noise on a young
     domain).
@@ -104,6 +119,19 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
     cards (FBA weight bands; USPS/UPS bands), and name neither storefront.
     """
     foot = _footer(postal_address)
+    # "The track record isn't [built]" is true until the day it is false, and
+    # on that day it becomes the one claim in this email a reader can check.
+    # With a published result the paragraph says what the record is instead.
+    why_free = (
+        "Why free: Hubricon is new. The engine's built; the track record isn't. That's the price: a "
+        "testimonial and your anonymized numbers.<br/><br/>"
+    )
+    if proof_line:
+        why_free = (
+            f"{html.escape(proof_line, quote=False)}<br/><br/>"
+            "Why free: the price of the seat is what it was for them — a testimonial and your "
+            "anonymized numbers.<br/><br/>"
+        )
     step1 = (
         "Hi {{firstName}},<br/><br/>"
         "Your price is right. Your ads work. The payout still lands lighter than the "
@@ -114,8 +142,7 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "two weeks; you keep the margin.<br/><br/>"
         "Your first month is free. No card, nothing owed. If I don't find more than I cost, "
         "no invoice.<br/><br/>"
-        "Why free: Hubricon is new. The engine's built; the track record isn't. That's the price: a "
-        "testimonial and your anonymized numbers.<br/><br/>"
+        + why_free +
         "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"
         "Hagen Simmons<br/>Hubricon" + foot
     )
@@ -184,7 +211,8 @@ def log_event(db, kind: str, note: str | None = None, **refs) -> None:
 
 # -- campaign ----------------------------------------------------------------
 
-def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -> tuple[str | None, list[str]]:
+def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool,
+                    proof_line: str | None = None) -> tuple[str | None, list[str]]:
     """Returns (campaign_id, notes). Creates and activates when it can; explains when it can't.
 
     The address is stripped here, once, for every path below. A secret pasted
@@ -212,20 +240,20 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool) -
             notes.append("Campaign not created: no mailbox in Instantly is connected AND past warmup yet. "
                          "It will be created automatically on the first run after warmup finishes.")
             return None, notes
-        spec = campaign_spec(senders, postal_address)
+        spec = campaign_spec(senders, postal_address, proof_line=proof_line)
         if dry:
             notes.append(f"[dry] would create campaign {CAMPAIGN_NAME!r} from {len(senders)} mailbox(es)")
             return None, notes
         campaign = api.create_campaign(spec)
         notes.append(f"Created campaign {CAMPAIGN_NAME!r} ({campaign.get('id')}) sending from {', '.join(senders)}")
         log_event(db, "campaign_created", payload={"id": campaign.get("id"), "senders": senders})
-        state["copy_version"] = COPY_VERSION  # born from the current copy
+        state["copy_version"] = effective_copy_version(proof_line)  # born from the current copy
         state["copy_address"] = postal_address  # ...and from the address in it
 
     cid = campaign.get("id")
     state = {**state, "id": cid, "name": campaign.get("name"), "senders": senders}
     set_state(db, "instantly.campaign", state)
-    notes += sync_copy(db, api, cid, state, postal_address, dry)
+    notes += sync_copy(db, api, cid, state, postal_address, dry, proof_line)
 
     before = campaign.get("status")
     if "status" not in campaign:
@@ -269,7 +297,8 @@ def _status_name(status) -> str:
     return CAMPAIGN_STATUS_NAMES.get(status, f"unknown status {status!r}")
 
 
-def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | None, dry: bool) -> list[str]:
+def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | None, dry: bool,
+              proof_line: str | None = None) -> list[str]:
     """The live campaign follows campaign_spec. When COPY_VERSION moves, the
     sequence is PATCHed in place: threads already sent keep their history, and
     nobody receives a follow-up the new copy no longer has.
@@ -282,20 +311,21 @@ def sync_copy(db, api: Instantly, cid: str, state: dict, postal_address: str | N
     have changed nothing until someone thought to bump a constant. Comparing the
     address makes the correction land by itself on the next pass.
     """
+    version = effective_copy_version(proof_line)
     address_changed = (state.get("copy_address") or None) != (postal_address or None)
-    if state.get("copy_version") == COPY_VERSION and not address_changed:
+    if state.get("copy_version") == version and not address_changed:
         return []
     if not postal_address:
         return ["Campaign copy not updated: POSTAL_ADDRESS is empty (the footer needs it)."]
-    why = ("the postal address changed" if state.get("copy_version") == COPY_VERSION
-           else f"the copy moved to {COPY_VERSION!r}")
-    spec = campaign_spec(state.get("senders") or [], postal_address)
+    why = ("the postal address changed" if state.get("copy_version") == version
+           else f"the copy moved to {version!r}")
+    spec = campaign_spec(state.get("senders") or [], postal_address, proof_line=proof_line)
     if dry:
         return [f"[dry] would update the campaign copy — {why}"]
     api.update_campaign(cid, {"sequences": spec["sequences"]})
-    set_state(db, "instantly.campaign", {**state, "copy_version": COPY_VERSION,
+    set_state(db, "instantly.campaign", {**state, "copy_version": version,
                                          "copy_address": postal_address})
-    log_event(db, "campaign_copy_updated", payload={"id": cid, "copy_version": COPY_VERSION,
+    log_event(db, "campaign_copy_updated", payload={"id": cid, "copy_version": version,
                                                     "postal_address": postal_address,
                                                     "steps": len(spec["sequences"][0]["steps"])})
     return [f"Updated the campaign copy — {why}: "
@@ -617,6 +647,13 @@ def sync_replies(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, 
         log_event(db, "reply_received", note=verdict["category"], prospect_id=prospect["id"],
                   payload={"by": verdict["by"], "reply_status": verdict["reply_status"],
                            **({"reason": verdict["reason"]} if verdict.get("reason") else {})})
+        # A reply from an address a teardown went to is that teardown's reply:
+        # the one join that lets `teardown stats` say which findings convert.
+        try:
+            from . import loop
+            loop.attribute_reply(db, sender, verdict["category"])
+        except Exception as err:
+            notes.append(f"teardown attribution for {sender}: {err}")
         new += 1
     if new:
         notes.append(f"{'[dry] would ingest' if dry else 'Ingested'} {new} new repl{'y' if new == 1 else 'ies'}.")

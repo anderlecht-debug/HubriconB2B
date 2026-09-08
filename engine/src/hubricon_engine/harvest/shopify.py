@@ -57,6 +57,8 @@ import os
 import re
 import urllib.parse
 from collections import Counter
+
+from .. import calibration
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -623,7 +625,7 @@ def has_reviews(page: str | None) -> bool:
 
 
 def estimate_annual(review_counts: list[int | None], n_products: int, asp: float | None,
-                    age_years: float, orders_per_review: float = ORDERS_PER_REVIEW) -> float | None:
+                    age_years: float, orders_per_review: float | None = None) -> float | None:
     """Annual sales estimate, in dollars, from the sampled review counts.
 
         Σ reviews(sampled) × (catalogue / sampled) × orders-per-review × ASP
@@ -640,6 +642,10 @@ def estimate_annual(review_counts: list[int | None], n_products: int, asp: float
     contributes nothing; when no sampled page carried one at all the answer is
     None (unknown), never zero.
     """
+    # The guess of 50 is replaced by what consenting Shopify clients' real
+    # orders said (calibration.py), when that has been measured.
+    if orders_per_review is None:
+        orders_per_review = calibration.get("shopify.orders_per_review", ORDERS_PER_REVIEW)
     known = [c for c in review_counts if c is not None]
     if not known or not asp or not n_products:
         return None

@@ -129,3 +129,12 @@ def test_the_narration_script_says_the_same_numbers_as_the_email():
 def test_the_teardown_url_is_built_from_the_configured_base(monkeypatch):
     monkeypatch.setenv("COLD_TEARDOWN_BASE_URL", "https://example.test/t/")
     assert copy.teardown_url("abc") == "https://example.test/t/abc"
+
+
+def test_the_proof_line_sits_before_the_offer_and_is_absent_until_there_is_one():
+    f, snap = chosen(price=10.49, est_monthly_units=1200.0)
+    without = copy.email(f, snap, "Dana", "https://hubricon.com/t/tok", CAL)["body"]
+    line = "A kitchen brand in the $1M–$5M range took the free month and has $12,300 on its ledger so far."
+    with_line = copy.email(f, snap, "Dana", "https://hubricon.com/t/tok", CAL, proof_line=line)["body"]
+    assert line not in without and line in with_line
+    assert with_line.index("That is the sort of thing I do") < with_line.index(line) < with_line.index("If it is useful")

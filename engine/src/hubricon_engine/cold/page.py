@@ -235,7 +235,7 @@ def _benchmark_section(bench) -> str:
 def render(f: Finding, snap: ProspectSnapshot, *, token: str, cta_url: str,
            expires_on: date, generated_on: date | None = None,
            also: list[Finding] | None = None, shelf_rows: list | None = None,
-           bench=None) -> str:
+           bench=None, proof_line: str | None = None) -> str:
     """One self-contained HTML page: no external request, no font, no script.
 
     There is no tracking pixel and no beacon, and not only for taste. The view
@@ -325,6 +325,8 @@ tr.more td{{ color: var(--ink-faint); font-style: italic; }}
   padding: 30px 32px; margin-top: 26px; }}
 .cta h2{{ color: #fff; }}
 .cta p{{ color: hsl(222 22% 78%); max-width: 52ch; }}
+.cta .proof{{ color: #fff; border-top: 1px solid hsl(222 22% 40%); margin-top: 16px;
+  padding-top: 14px; }}
 .btn{{ display: inline-block; margin-top: 18px; background: var(--amber); color: #1a1205;
   font-weight: 650; padding: 13px 24px; border-radius: 9px; text-decoration: none;
   font-size: 15px; }}
@@ -378,6 +380,7 @@ footer{{ margin-top: 28px; font-size: 12.5px; color: var(--ink-faint); line-heig
     <p>Five exports, about fifteen minutes on your side, a written teardown back within 24 hours.
        No seat in your account, no card. If it finds nothing worth fixing, we say so — and the
        report is yours to keep either way.</p>
+    {f'<p class="proof">{_e(proof_line)}</p>' if proof_line else ""}
     <a class="btn" href="{_e(cta_url)}">Get the full teardown, free</a>
   </div>
 

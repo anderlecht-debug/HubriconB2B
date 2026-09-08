@@ -242,3 +242,17 @@ def test_the_shelf_leads_with_the_listings_that_have_something_to_say():
         item(ref="b.com/products/zzz-near", price=40.0, item_weight_oz=17.2, dims_in=None)])
     assert [r.label for r in shelfmod.shelf(snap, TODAY)][0] == "zzz-near", \
         "alphabetical order put ten arbitrary handles at the top of the evidence"
+
+
+def test_the_proof_line_renders_above_the_button_and_never_unescaped():
+    from datetime import date as _date
+    from hubricon_engine.cold import page as _page, findings as _findings, select as _select
+    from builders import item as _item, snapshot as _snapshot
+    snap = _snapshot(items=[_item(price=10.49, est_monthly_units=1200.0)])
+    f = _select.best(_findings.detect(snap, today=_date(2026, 6, 1)), snap)
+    html = _page.render(f, snap, token="tok", cta_url="https://x/t/tok?cta=1", expires_on=_date(2026, 7, 15),
+                        proof_line="A <kitchen> brand took the free month and has $12,300 on its ledger.")
+    assert 'class="proof"' in html and "&lt;kitchen&gt;" in html and "$12,300" in html
+    assert html.index('class="proof"') < html.index("Get the full teardown, free")
+    bare = _page.render(f, snap, token="tok", cta_url="https://x/t/tok?cta=1", expires_on=_date(2026, 7, 15))
+    assert 'class="proof"' not in bare

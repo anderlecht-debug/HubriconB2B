@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from .. import calibration
 from ..harvest import shopify as shopify_harvest
 from . import priors
 from .snapshot import ProspectSnapshot, Item
@@ -66,6 +67,10 @@ class Finding:
     asin_or_sku: str | None = None
     item_title: str | None = None
     item_url: str | None = None
+    # "calibrated on 3 client accounts (412 observations)" when a figure in
+    # this finding came from consenting clients' real data rather than a
+    # published card; None otherwise. The page prints it beside the assumption.
+    provenance: str | None = None
 
     @property
     def per_unit_low(self) -> float:
@@ -165,9 +170,12 @@ def price_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Finding 
         return None
     exact = jump[0] == jump[1]
     lo, hi = _monthly(per_unit_low, per_unit_high, item.est_monthly_units)
+    learned = calibration.describe(f"amazon.referral_rate.{(item.category or '').strip().lower()}")
     assumptions = [
         _card_assumption(today),
-        f"a {rate:.0%} referral fee, Amazon's published rate for {item.category or 'this category'}",
+        f"a {rate:.0%} referral fee, "
+        + (f"the rate Amazon actually charged, {learned}" if learned
+           else f"Amazon's published rate for {item.category or 'this category'}"),
         _volume_assumption(item),
     ]
     if not exact:
@@ -190,6 +198,7 @@ def price_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Finding 
             "break_even_price": round(below + jump[1] / (1 - rate), 2),
         },
         asin_or_sku=item.ref, item_title=item.title, item_url=item.url,
+        provenance=learned,
     )
 
 

@@ -18,7 +18,7 @@ import secrets
 from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 
-from .. import icp, outbound
+from .. import calibration, icp, outbound, proof
 from . import compliance, copy as copymod, page, priors, select, settings, shelf as shelfmod
 from .findings import Finding, detect
 from .sources.harvest import HarvestSource
@@ -147,6 +147,16 @@ def build(db, limit: int = 40, log=print, force: bool = False,
         log("  Nothing will be priced until priors.py is updated. Stopping.")
         return {"stale": warning}
 
+    # What consenting clients' real accounts said the guesses should be, and
+    # the one sentence of record the copy may carry. Both are optional and
+    # both are read once per build, never per prospect.
+    calibration.load(db)
+    try:
+        proof_line = proof.line(db)
+    except Exception as err:
+        log(f"! proof line unavailable ({err}); teardowns go out without it")
+        proof_line = None
+
     source = HarvestSource(db)
     if only:
         keys = [only] if isinstance(only, str) else list(only)
@@ -213,7 +223,7 @@ def build(db, limit: int = 40, log=print, force: bool = False,
             reasons[top[:48]] = reasons.get(top[:48], 0) + 1
             continue
 
-        _write_teardown(db, snap, verdict, run["id"], today)
+        _write_teardown(db, snap, verdict, run["id"], today, proof_line)
         counts["built"] += 1
 
     counts["spent_usd"] = round(spent, 4)
@@ -245,7 +255,8 @@ def next_steps(reasons: dict[str, int]) -> list[tuple[int, str, str]]:
     return sorted(out, reverse=True)
 
 
-def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: date) -> dict:
+def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: date,
+                    proof_line: str | None = None) -> dict:
     """Render the page once, from the leading finding plus everything around it.
 
     The shelf and the category benchmark are what turn one ounce count into an
@@ -269,7 +280,8 @@ def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: dat
     token = secrets.token_urlsafe(24)
     expires = today + timedelta(days=settings.teardown_ttl_days())
     url = copymod.teardown_url(token)
-    message = copymod.email(finding, snap, snap.first_name, url, outbound.CALENDLY_URL)
+    message = copymod.email(finding, snap, snap.first_name, url, outbound.CALENDLY_URL,
+                            proof_line=proof_line)
     rows = shelfmod.shelf(snap, today)
     lead_item = next((i for i in snap.items if i.ref == finding.asin_or_sku), None)
     lead_row = next((p for p in snap.payload.get("products", [])
@@ -280,7 +292,7 @@ def _write_teardown(db, snap: ProspectSnapshot, verdict, run_id: str, today: dat
         snap.platform)
     html = page.render(finding, snap, token=token, cta_url=f"{url}?cta=1",
                        expires_on=expires, generated_on=today,
-                       also=verdict.also, shelf_rows=rows, bench=bench)
+                       also=verdict.also, shelf_rows=rows, bench=bench, proof_line=proof_line)
     return db.table("teardowns").insert({
         "prospect_key": snap.key,
         "cold_run_id": run_id,

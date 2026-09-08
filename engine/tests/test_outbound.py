@@ -548,3 +548,36 @@ def test_a_lead_with_no_company_name_is_never_enrolled():
     assert [b["email"] for b in api.enrolled] == ["nora@riverbendgoods.com"]
     assert all(b.get("company_name") for b in api.enrolled)
     assert any("2 without a company name" in n for n in notes)
+
+
+def test_a_published_result_replaces_the_no_track_record_paragraph():
+    """'The track record isn't [built]' is true until it is false, and on that
+    day it is the one claim in the email a reader can check. With a proof line
+    the paragraph says what the record is; the price of the seat stays."""
+    line = "A kitchen brand in the $1M–$5M range took the free month and has $12,300 on its ledger so far."
+    body = campaign_spec(["a@x.com"], "addr", proof_line=line)["sequences"][0]["steps"][0]["variants"][0]["body"]
+    assert line in body
+    assert "track record isn't" not in body
+    assert "testimonial" in body and "anonymized" in body       # the price of the seat is unchanged
+    assert "Reply TEARDOWN" in body
+    plain = campaign_spec(["a@x.com"], "addr")["sequences"][0]["steps"][0]["variants"][0]["body"]
+    assert "track record isn't" in plain and "$12,300" not in plain
+
+
+def test_the_copy_version_moves_with_the_proof_line_and_repushes_once():
+    db, api = _DB(), _Api()
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    n = len(api.updated)
+    line = "A pet brand in the $5M–$20M range took the free month and has $4,100 on its ledger so far."
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False, proof_line=line)
+    assert len(api.updated) == n + 1, "a new proof line must PATCH the live copy"
+    state = outbound.get_state(db, "instantly.campaign")
+    assert state["copy_version"] == outbound.effective_copy_version(line) != outbound.COPY_VERSION
+    body = api.updated[-1][1]["sequences"][0]["steps"][0]["variants"][0]["body"]
+    assert "$4,100" in body
+    # settles: same line, no further call
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False, proof_line=line)
+    assert len(api.updated) == n + 1
+    # and a withdrawn consent (no line) moves it back
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False, proof_line=None)
+    assert len(api.updated) == n + 2 and outbound.get_state(db, "instantly.campaign")["copy_version"] == outbound.COPY_VERSION

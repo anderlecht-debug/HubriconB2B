@@ -6,8 +6,11 @@
   4. Nudges    — clients who haven't uploaded after 3 / 7 days, once each.
   5. Teardown  — new uploads parsed; first successful run → Issue 001 in the
                  desk, report file in storage, "it's ready" email.
-  6. Digest    — the PMF scoreboard and anything only a human can do
-                 (show up to a call), emailed to the founder once a day.
+  6. Billing   — the day-30 gate; the only code that starts a subscription.
+  7. Proof     — every verified dollar becomes a result row; consented rows
+                 go public and the cold copy picks up the record by itself.
+  8. Digest    — the PMF scoreboard, the loop past paid, speed to value, and
+                 anything only a human can do, emailed to the founder daily.
 
 Everything is idempotent, so an hourly run that finds nothing does nothing.
 """
@@ -19,7 +22,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from . import channels
 from . import db as dbmod
-from . import instantly, onboarding, outbound
+from . import instantly, onboarding, outbound, proof, referral, speed
 from .briefing import build_memo, period_deltas
 from .notify import email_configured, send_email
 
@@ -66,7 +69,15 @@ class Pass:
             return
         api = instantly.Instantly()
         try:
-            cid, notes = outbound.ensure_campaign(self.db, api, os.environ.get("POSTAL_ADDRESS"), self.dry)
+            # The one sentence of record the copy may carry, read here so the
+            # campaign PATCHes itself the pass after a result is published.
+            try:
+                proof_line = proof.line(self.db)
+            except Exception as err:
+                proof_line = None
+                self.warnings.append(f"Proof line unavailable: {err}")
+            cid, notes = outbound.ensure_campaign(self.db, api, os.environ.get("POSTAL_ADDRESS"), self.dry,
+                                                  proof_line)
             for n in notes:
                 self.say(n)
             if not cid:
@@ -154,6 +165,7 @@ class Pass:
             company = (b.get("answers") or {}).get("company") or (b.get("answers") or {}).get("storefront")
             platform = onboarding.platform_from_answers(b.get("answers"))
             client, link, created = onboarding.provision(self.db, email, b.get("invitee_name"), company, platform)
+            self._attribute_booking(client, b, email)
             sent = self._touch(client, "welcome", link, force=True)
             self.db.table("bookings").update({
                 "client_id": client["id"], "provisioned_at": _iso(),
@@ -170,6 +182,34 @@ class Pass:
                               f"at {when_s}. Welcome email {'sent' if sent else 'NOT sent'}; upload link live."
                               f"{fit_note}")
             self.say(f"Provisioned {email} ({'new' if created else 'existing'} client) from a booking.")
+
+    def _attribute_booking(self, client: dict, b: dict, email: str) -> None:
+        """Who sent this booking and what it came from. Never fatal: a booking
+        is provisioned whether or not its provenance can be read."""
+        try:
+            band = proof.revenue_band_from_answers(b.get("answers"))
+            if band and not client.get("revenue_band"):
+                self.db.table("clients").update({"revenue_band": band}).eq("id", client["id"]).execute()
+                client["revenue_band"] = band
+        except Exception as err:
+            self.warnings.append(f"Revenue band for {email}: {err}")
+        try:
+            hit = referral.attribute(self.db, client, b)
+            if hit and hit.get("matched"):
+                who = hit["who"].get("company_name") or hit["who"].get("name") or hit["code"]
+                self.say(f"{email} booked on {who}'s link ({hit['matched']}).")
+                self.human.append(f"{email} was sent by {who} — say so on the call.")
+            elif hit:
+                self.warnings.append(f"{email} booked with ref code {hit['code']!r}, which matches nobody.")
+        except Exception as err:
+            self.warnings.append(f"Referral attribution for {email}: {err}")
+        try:
+            from . import loop
+            tid = loop.attribute_booking(self.db, email, b["id"])
+            if tid:
+                self.say(f"{email} booked after a teardown ({tid[:8]}).")
+        except Exception as err:
+            self.warnings.append(f"Teardown attribution for {email}: {err}")
 
     # -- 3. TEARDOWN replies -------------------------------------------------
     def teardown_requests(self) -> None:
@@ -271,6 +311,10 @@ class Pass:
             )
             if not has_data:
                 continue
+            # The clock the 24-hour promise runs from: the first pass that
+            # found typed data on file, set once and never moved.
+            if not self.dry and speed.set_once(self.db, c, "exports_landed_at"):
+                outbound.log_event(self.db, "exports_landed", client_id=c["id"])
             if self.dry:
                 self.say(f"[dry] would run the models and publish Issue 001 for {c['contact_email']}")
                 continue
@@ -339,6 +383,7 @@ class Pass:
             "report_path": report_path, "title": "Profit Teardown",
             "headline": "Issue No. 001 — your Profit Teardown",
         }).execute()
+        speed.set_once(self.db, c, "first_issue_at")
         sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True)
         outbound.log_event(self.db, "teardown_delivered", client_id=c["id"],
                            payload={"run_id": run_id, "emailed": sent, "video": bool(video_path)})
@@ -422,6 +467,9 @@ class Pass:
             cli._send_client_email(self.db, c, "guarantee_cleared", sub["id"],
                                    "Your free month, and your first invoice",
                                    billing.cleared_email_blocks(v, PORTAL_URL), self.send)
+            # The brand that sent them, if one did, earns its month now — not
+            # at the booking, not at the yes: at the gate, when there is revenue.
+            self._credit_referrer(c)
             # The stated price of the free month, asked for once and recorded.
             for kind in ("testimonial", "anonymised_results"):
                 try:
@@ -430,6 +478,64 @@ class Pass:
                 except Exception:
                     pass
             self.say(f"{company} cleared the guarantee at {v['multiple']:.1f}x — billing started.")
+
+    def _credit_referrer(self, c: dict) -> None:
+        from . import cli
+        company = c.get("company_name") or c["contact_email"]
+        try:
+            credit = referral.credit_referrer(self.db, c)
+        except Exception as err:
+            self.warnings.append(f"Referral credit for {company} failed: {err}")
+            return
+        if not credit:
+            return
+        if credit.get("partner_id"):
+            self.human.append(f"{company} came through a partner ({credit['partner_id'][:8]}) and has "
+                              "cleared the gate — pay the partner per the terms you agreed.")
+            return
+        r = credit["referrer"]
+        cli._send_client_email(self.db, r, "referral_credit", c["id"], "Your referral month",
+                               credit["blocks"], self.send)
+        self.say(f"{r.get('company_name') or r['contact_email']} earned a referral month for {company}: "
+                 f"{credit['how']}.")
+
+    # -- 7. proof ----------------------------------------------------------------
+    def proof(self) -> None:
+        """Every verified dollar becomes a result row; consented rows go public.
+
+        Runs after billing so a gate that cleared this pass is a card this pass.
+        Keys off value_total and roi_multiple — never the gate's own bar, which
+        counts identified-but-unbanked value and is the right bar for an
+        invoice and the wrong one for a claim made to a stranger."""
+        from . import cli, value
+        clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
+        for c in clients:
+            if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+                continue
+            company = c["company_name"] or c["contact_email"]
+            directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+            claims = cli._fetch_claims(self.db, c["id"])
+            if not directives and not claims:
+                continue
+            ledger = value.compute(c, directives, claims, cli._fetch_invoices(self.db, c["id"]))
+            if float(ledger.get("value_total") or 0) > 0 and not self.dry:
+                speed.set_once(self.db, c, "first_value_at")
+            rows = proof.detect(c, ledger, directives, claims)
+            if not rows:
+                continue
+            if self.dry:
+                self.say(f"[dry] would record {len(rows)} result(s) for {company}")
+                continue
+            n = proof.record(self.db, rows)
+            if n:
+                self.say(f"Recorded {n} result(s) for {company}.")
+                if not c.get("industry"):
+                    self.human.append(f"{company} has a verified result and no industry word, so it cannot be "
+                                      f"published: `hubricon proof set {c['contact_email']} --industry <word>`.")
+        if not self.dry:
+            published = proof.publish(self.db)
+            if published:
+                self.say(f"Published {published} consented result(s); the campaign copy follows next pass.")
 
     def data_requests(self) -> None:
         """Legal clocks, surfaced before they run out.
@@ -495,6 +601,8 @@ class Pass:
                 + ("REACHED" if s.get("pmf_reached") else "not yet"),
                 "",
             ]
+            from . import loop
+            lines += loop.digest_lines(s)
             by_source = s.get("by_source") or {}
             if by_source:
                 lines.append("By channel (which of these is actually working)")
@@ -532,6 +640,13 @@ class Pass:
                           + ", ".join(f"{k} {v}" for k, v in sorted(h["by_status"].items())), ""]
         except Exception:
             pass
+        try:
+            roster = [c for c in self.db.table("clients").select("*").in_("status", ["pending", "active"])
+                      .execute().data if not onboarding.is_internal(c["contact_email"], c.get("contact_name"))]
+            if roster:
+                lines += speed.digest_lines(roster) + [""]
+        except Exception:
+            pass
         queue = self.review_queue()
         if queue:
             lines += [f"{len(queue)} repl{'y' if len(queue) == 1 else 'ies'} waiting for a written answer "
@@ -552,7 +667,8 @@ class Pass:
 def run(send: bool = False, dry: bool = False, digest: bool = False) -> str:
     db = dbmod.connect()
     p = Pass(db, send=send, dry=dry)
-    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.teardowns, p.billing, p.data_requests, p.promises):
+    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.teardowns, p.billing, p.proof,
+                 p.data_requests, p.promises):
         try:
             step()
         except Exception as err:  # keep going; the digest carries the failure

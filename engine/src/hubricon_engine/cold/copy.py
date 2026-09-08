@@ -265,7 +265,7 @@ def assumptions_block(f: Finding) -> str:
 
 
 def email(f: Finding, snap: ProspectSnapshot, first_name: str | None,
-          teardown_url: str | None, calendly_url: str) -> dict:
+          teardown_url: str | None, calendly_url: str, proof_line: str | None = None) -> dict:
     """The message the founder reads, edits and sends.
 
     Returns `complete=False` when something is missing that a human must supply
@@ -304,6 +304,13 @@ def email(f: Finding, snap: ProspectSnapshot, first_name: str | None,
         f"That is the sort of thing I do at Hubricon — the margin math for "
         f"{AUDIENCE.get(snap.platform, AUDIENCE['amazon'])}. What your price can take before "
         f"units drop. Where the next ad dollar stops paying. Which SKU stocks out first.",
+    ]
+    # One sentence of record, only once there is one (proof.line). It is a
+    # rendered template whose figures came off a consenting client's ledger
+    # through the same number guard the Issue letter runs under.
+    if proof_line:
+        parts += ["", proof_line]
+    parts += [
         "",
         f"If it is useful I will run the same thing on your real numbers and send it back free. "
         f"{EXPORTS.get(snap.platform, EXPORTS['amazon'])}, about fifteen minutes on your side, "
