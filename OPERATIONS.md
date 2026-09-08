@@ -350,6 +350,251 @@ public pages at a human's pace from a home connection, never pushes through
 a captcha, and never runs from a datacenter. That is the whole risk posture;
 the founder owns it.
 
+## Sourcing Shopify leads: `hubricon source`
+
+The harvest finds companies on Amazon. `hubricon teardown` models a Shopify
+store and writes the email. What was missing between them was a way to *find*
+Shopify stores at any volume: `harvest shopify` runs six Bing searches against
+`site:shop.app` and samples a Wayback index of `*.myshopify.com` homepages,
+about 120 stores a run with every page through Chrome at six seconds each.
+
+`hubricon source` is the funnel in front of that. Three narrowing stages, and
+only the first is genuinely unlimited:
+
+```
+DISCOVERY        Tranco top-1M -> DNS -> HTTP     free
+QUALIFICATION    ~2% survive                      free
+CONTACT          ~40% of those resolve            free, and honest about the rest
+```
+
+```
+cd engine
+uv run hubricon source discover --limit 2000    # domains -> live Shopify stores
+uv run hubricon source qualify --limit 200      # catalogue, stack, score
+uv run hubricon source contact --limit 60       # a named person, published address
+uv run hubricon source sheet                    # -> Google Sheet + leads.csv
+uv run hubricon source push --dry-run           # -> Instantly holding pen
+uv run hubricon source promote                  # -> harvest_sellers, for the teardown
+uv run hubricon source all                      # all of the above, one pass
+uv run hubricon source status
+uv run hubricon source install                  # launchd: 07:40 and 19:40
+```
+
+### Nothing here sends anything
+
+This lane exists to fill a sheet and a list, not an outbox, and that is
+enforced rather than intended. `outbound.enroll_from_lists` enrols **any**
+Instantly list whose name contains `INSTANTLY_LIST_MATCH` (default `hubricon`)
+into the live campaign, and the hourly operator runs with `COLD_DRY_RUN=false`
+— so a list called "Hubricon sourcing" would start cold-emailing strangers
+within the hour. Four fences, each with a test in `tests/test_sourcing.py`:
+
+1. The list is named **`Sourcing holding pen (manual enroll only)`**. No
+   "hubricon" token, so the enrolment cannot match it. It is a constant in
+   `sourcing/push.py`, not an environment knob.
+2. `push` re-reads the name Instantly reports and raises `WouldEnroll` if it
+   has been renamed to something enrollable. A rename becomes an error.
+3. Only `add_leads(list_id=…)`. `campaign_id` is never passed and `create_lead`
+   — the per-prospect dispatch path — is never called from this package.
+4. Only `published`, non-role addresses are pushed at all.
+
+`promote` writes rows into `harvest_sellers` at **`candidate`**, not
+`enriched`, because `harvest/run.py::push` selects `enriched` and pushes it to
+the auto-enrolled list. From there a teardown is built as a `draft` and goes
+through `hubricon teardown review` / `approve` like every other one.
+
+It does **not** overwrite a skip. `promote` re-reads the store through
+`harvest/shopify.py::read_store`, and where that returns `skip_reseller`,
+`skip_non_us` or `skip_size`, the verdict stands and the store is not promoted —
+its judgement is the one the cold engine trusts, not this package's score. The
+first live run wrote `candidate` unconditionally and promoted Boston Scally,
+which `read_store` had just rejected as a multi-brand catalogue; that is
+laundering a reseller into the prospect table on our own say-so, and the two
+classifiers disagreeing is information rather than something to paper over.
+
+### Where the domains come from
+
+**Not the Meta Ad Library**, which LEAD_SOURCING.md ranks first. Meta's own
+`ads_archive` documentation: *"Ads that did not reach any location in the EU
+will only return if they are about social issues, elections or politics."*
+`ad_type=ALL` — ordinary product ads — is an EU-only dataset, and
+`COLD_SUPPRESSED_JURISDICTIONS` suppresses EU/UK/EEA/CH entirely for want of a
+documented legitimate-interest basis. The only geography the API covers is the
+only one we will not write to. There is no free ad-spend signal on this
+platform; the app stack stands in for it.
+
+**Not Common Crawl** either. Free to read, but the columnar index wants Athena
+(billed per query) or a local pull in the hundreds of gigabytes, and what comes
+back is a domain with no size signal at all.
+
+**Tranco plus DNS**, measured 2026-09-05. Every Shopify store on its own domain
+either resolves into `23.227.38.0/24` or CNAMEs `www` to `shops.myshopify.com`
+— `allbirds.com` → `23.227.38.32`, `gymshark.com` → `23.227.38.65`. The Tranco
+top-1M is a free download, a million DNS lookups is minutes of concurrency, and
+**not one request touches a store**. The rank is not a by-product: it is the
+traffic proxy that a bulk web crawl cannot give, and it carries most of the
+weight in the score.
+
+DNS is precise but not complete. A store behind Cloudflare or Vercel shows its
+proxy instead (`ridge.com` → `104.20.21.75`, `bombas.com` → `76.76.21.21`, both
+real Shopify stores), so a second pass asks `/meta.json` — one request that
+settles both "is this Shopify" and "what is the myshopify handle", which is the
+row key everywhere downstream. `--source search` still runs the shop.app route,
+which reaches brands Tranco's ranks never see.
+
+**Where in the ranking the stores are**, measured 2026-09-07 over the full
+top-1M, 600 domains sampled per band, DNS only:
+
+| rank band | Shopify | what is in it |
+|---|---|---|
+| 1 – 10,000 | 0.00% | Google, Microsoft, the CDNs. Nothing. |
+| 10,000 – 50,000 | 0.50% | Toys R Us, Native Instruments — brands, not DTC |
+| 50,000 – 150,000 | 1.00% | Smartwool, Orthofeet |
+| 150,000 – 400,000 | 2.83% | Scotch & Soda, Storelli |
+| 400,000 – 1,000,000 | 4.50% | the long tail, and increasingly non-US |
+
+So the head of the list is waste and the tail is mostly foreign, and the window
+(`SOURCING_RANK_FROM` / `_TO`, 20,000–600,000) is where a US brand doing
+$1M–$20M actually ranks. Extrapolated, the whole list holds roughly **35,000
+Shopify stores**. A live pass over ranks 150,000–210,514 returned **1,250 stores
+from 40,000 domains** and did not touch one of them to do it.
+
+A cursor in `operator_state` (`sourcing.tranco_cursor`) remembers where the last
+pass stopped, so successive runs walk down the ranking instead of re-probing the
+head; it wraps to the top of the window when it runs off the end, because the
+list is rebuilt daily and a store that was not there in March is there now.
+**Every DNS hit is written as a row**, not just the ones a pass has HTTP budget
+to probe — the first live run kept 25 of 1,250 and moved the cursor past the
+rest, which would have lost them for good. The unprobed rows carry no handle and
+`qualify` fills it in when it reaches them.
+
+### Plain HTTP first, Chrome only on a refusal
+
+`harvest/shopify.py` sends every Shopify request through Chrome, on the
+strength of a 2026-09-04 pass where every plain `/meta.json` answered 429.
+Re-measured 2026-09-05 across seven stores and three user agents — a browser
+UA, a named bot UA, and `Python-urllib/3.12`:
+
+| store | meta.json | products.json |
+|---|---|---|
+| allbirds.com | 200 | 200 |
+| brooklinen.com | 200 | 200 |
+| drinkolipop.com | 200 | 200 |
+| gymshark.com | 404 | 403 |
+| ridge.com | 403 | 403 |
+| bombas.com | 429 | 429 |
+
+The agent made no difference anywhere and the store made all of it: what
+refuses is the edge in front of the store, and what answers answers anything.
+So `sourcing/fetch.py` tries plain HTTP and escalates only on a refusal — a 404
+is not a refusal and does not spend a browser launch. Shopify's own robots.txt
+disallows neither endpoint (checked the same day), and the pass runs at one
+request a second per host with a contact URL in the agent string.
+
+### The score, and the fact that it is not calibrated yet
+
+Free signals only, weighted, in `sourcing/score.py`: Tranco rank band, the paid
+apps the storefront loads, catalogue depth and vendor coherence, median price,
+Shopify Plus artifacts, catalogue velocity, and the existing review-based
+revenue estimate. The stack is the interesting one — nobody installs Elevar or
+Northbeam without media spend worth attributing, or Attentive without a list
+worth texting, so a monthly invoice is a spend proxy in a way a free theme with
+no apps is a spend proxy in the other direction. Allbirds returns Elevar,
+Attentive and Yotpo from one homepage fetch; Gymshark returns Rebuy.
+
+**Read past the first page of the catalogue.** Shopify caps `/products.json` at
+250 products, and reading one page made every large catalogue look like exactly
+250 items — which silently disabled the best junk filter available, since the
+scorer throws out a catalogue over 800 SKUs as a supplier feed and nothing could
+ever reach 800. `SOURCING_CATALOG_PAGES` (4) fixes it, and only stores that
+filled the first page cost more than one request. It paid for itself on the
+first re-run: `donsfurniture.com` had scored 74 and qualified on a truncated
+count, and reads as 1,000+ products and disqualified once the pages are read.
+
+**The country is asked first, before a catalogue page is read.** The engine is
+US-only and the cold engine suppresses EU/UK/EEA/CH, so a non-US store is not a
+prospect at any score — and the deeper Tranco bands are full of them. Without
+that gate the scorer put `oglmove.com`, a Hong Kong store, at 76 and a whole
+contact pass was spent on a company we can never write to. An *unknown* country
+still never disqualifies, the same rule the harvest applies; `promote` catches
+those when it re-reads the store.
+
+**Two numbers are guesses and the founder owns them.** `SOURCING_MIN_SCORE`
+(55) and the rank bands in `score.py` have never been checked against a labelled
+set. Do that before trusting a single lead:
+
+```
+uv run hubricon source calibrate --file labels.csv   # csv of domain,good
+```
+
+It prints precision and recall at each threshold. Recall is cheap here — there
+are always more domains — so take the threshold whose *precision* is
+acceptable. The same afternoon should settle
+`HARVEST_SHOPIFY_ORDERS_PER_REVIEW` (50), which this pass inherits and which
+the Shopify section above already flags as an uncalibrated guess the whole
+$500k–$40M band rides on.
+
+### Contact: published only, and role inboxes never
+
+Two rules, both of them decisions rather than code:
+
+**A guessed address is never sent to.** Shopify merchants overwhelmingly run
+Google Workspace with catch-all, so `dana@brand.com` is accepted by the domain
+whether or not anybody reads it, and every free check — syntax, MX, disposable
+lists — passes it. Paid verification is the only thing that separates a real
+mailbox from a catch-all and there is none in this build, so a guess is stored
+with `email_confidence = 'pattern'`, written to the sheet marked "do not send",
+and refused at the push. It is there so a future batch verification has
+something to verify.
+
+**A role inbox is founder-lane inventory, not campaign inventory.** The
+2026-09-03 decision stands: `info@`, `hello@` and `support@` reach a
+customer-service queue and are never cold-emailed. They still go on the sheet,
+with `sendable = no` and the reason, because a qualified brand is worth ninety
+seconds of a person's time even when the crawler could not find its owner.
+
+A store with no custom domain is refused at the source: `myshopify.com` has an
+MX record, so a guess there resolves and hard-bounces, and bounces are the one
+cost a two-month-old sending domain cannot absorb.
+
+### The Google Sheet
+
+One Apps Script web app, no GCP project and no service-account key. Paste
+`scripts/sheet-sync.gs` into the sheet (Extensions → Apps Script), deploy it as
+a web app with **Execute as: me** and **Who has access: anyone with the link**,
+and put the URL and the shared secret in `.env` as `SOURCING_SHEET_URL` /
+`SOURCING_SHEET_SECRET`. Rows upsert on `domain`, so re-running refreshes the
+sheet rather than duplicating it. `~/.hubricon/sourcing/leads.csv` is written
+every pass regardless, so a webhook that is not set up yet never loses a run.
+
+If the engine reports "answered HTML rather than JSON", the deployment has the
+wrong access setting — that is the one setup slip worth knowing about.
+
+### One new finding: `permanent_discount`
+
+Shopify rows had two detectors and in practice one: `carrier_band_edge` only
+fires above a pound, and `price_cut_no_rank_gain` needs history these rows
+rarely have. So most sourced stores would have produced no teardown at all,
+and sourcing more of them would have changed nothing.
+
+`/products.json` publishes `compare_at_price` beside `price`, so when a store
+lists a product at $32 against its own $45 anchor, the $13 is arithmetic rather
+than estimation — no rate card required, which makes it the cheapest honest
+finding on the platform. It fires only when most of the catalogue is priced the
+same way (one discounted product is marketing; a whole shelf is a price), and
+its confidence turns on price history: three readings of the same price a
+fortnight apart earns the word "permanent", and until then the finding sits
+below `COLD_MIN_CONFIDENCE` and `select` will not send it. `compare_at_price`
+is now stored on `harvest_products` and the observation rows accrue on every
+pass, so the fortnight starts the first time a store is promoted.
+
+**`price_ladder_gap` was not built.** A gap in the price ladder is real and
+visible in one API call, but the dollars behind it are counterfactual AOV,
+which no published rate card prices — and `cold/findings.py` refuses anything
+it cannot price, so the finding would have been generated and then rejected
+every time. The gap is on the sheet as `ladder_gap` instead, where it is a hook
+for a person rather than a claim from a machine.
+
 ## The cold engine: `hubricon teardown`
 
 The founder lane's old hook was an ounce count — "your listing is 0.6 oz over an

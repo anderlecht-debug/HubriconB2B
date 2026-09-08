@@ -96,6 +96,10 @@ class Item:
     title: str | None = None
     category: str | None = None
     price: float | None = None
+    # The store's own anchor, where it publishes one. Shopify serves it in
+    # /products.json as `compare_at_price`; Amazon publishes nothing like it,
+    # so an Amazon item leaves this None and `permanent_discount` stays silent.
+    compare_at_price: float | None = None
     reviews: int | None = None
     rank: int | None = None
     item_weight_oz: float | None = None
@@ -111,6 +115,19 @@ class Item:
         # a light product in a big box can be pushed out of a tier by its own
         # dimensions alone.
         return size_tier(self.dims_in, self.billable_weight_oz)
+
+    @property
+    def discount_share(self) -> float | None:
+        """How far under its own anchor this item is listed, 0-1.
+
+        None when there is no anchor, or the anchor is at or below the price —
+        which is the ordinary state of a product that is not on sale.
+        """
+        if not self.price or not self.compare_at_price:
+            return None
+        if self.compare_at_price <= self.price:
+            return None
+        return round((self.compare_at_price - self.price) / self.compare_at_price, 4)
 
     @property
     def dim_weight_oz(self) -> float | None:

@@ -501,9 +501,112 @@ def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Findin
     )
 
 
+# -- permanent_discount ------------------------------------------------------------
+
+# Below this the "sale" is a rounding error on the price, not a policy.
+MIN_DISCOUNT_SHARE = 0.10
+# A catalogue this far marked down is not running a promotion, it is running a
+# price. One product on sale is marketing; two thirds of the shelf is a habit.
+CATALOGUE_DISCOUNT_SHARE = 0.5
+# What it takes to call the price settled rather than currently promoted: this
+# many observations of the same price, spanning at least this many days.
+STABLE_OBSERVATIONS = 3
+STABLE_DAYS = 14
+
+
+def _catalogue_discount_share(snap: ProspectSnapshot) -> float | None:
+    """How much of the shelf is listed under its own anchor."""
+    priced = [i for i in snap.items if i.price]
+    if not priced:
+        return None
+    marked = [i for i in priced if i.discount_share]
+    return round(len(marked) / len(priced), 3)
+
+
+def _price_is_settled(item: Item) -> tuple[bool, int, int]:
+    """-> (settled, observations at this price, days they span).
+
+    "Permanent" is a claim about time, and time is the one thing a single
+    snapshot cannot see. `harvest_product_observations` is appended on every
+    pass precisely so that this can be answered later; until it can, the
+    finding exists but is not confident enough to send, which is the correct
+    behaviour rather than a gap.
+    """
+    seen = [o for o in item.history if o.price is not None]
+    if len(seen) < STABLE_OBSERVATIONS:
+        return False, len(seen), 0
+    same = [o for o in seen if abs((o.price or 0) - (item.price or 0)) < 0.005]
+    if len(same) < STABLE_OBSERVATIONS:
+        return False, len(same), 0
+    span = (max(o.seen_on for o in same) - min(o.seen_on for o in same)).days
+    return span >= STABLE_DAYS, len(same), span
+
+
+def permanent_discount(item: Item, snap: ProspectSnapshot, today: date) -> Finding | None:
+    """A product listed under its own compare-at price, on a shelf where that
+    is the norm rather than the exception.
+
+    Shopify publishes both numbers, so the per-unit figure is subtraction, not
+    estimation: the store says the product is worth $45 and sells it at $32,
+    and the $13 is margin it has decided in advance to give away. What the
+    anchor buys in return is supposed to be urgency — and an anchor that has
+    been there every day for a month buys nothing, because no customer has
+    ever seen the product at $45.
+
+    Two things keep this honest. The catalogue share gate means one genuinely
+    discounted product is never called a policy. And the confidence turns on
+    price history: with three readings of the same price a fortnight apart the
+    price is settled and we say so; without them the arithmetic is still right
+    but "permanent" is not yet earned, and `select` will not send it.
+    """
+    share = item.discount_share
+    if not share or share < MIN_DISCOUNT_SHARE:
+        return None
+    catalogue = _catalogue_discount_share(snap)
+    if not catalogue or catalogue < CATALOGUE_DISCOUNT_SHARE:
+        return None
+    per_unit = round((item.compare_at_price or 0) - (item.price or 0), 2)
+    if per_unit < MIN_PER_UNIT_USD:
+        return None
+    settled, readings, span = _price_is_settled(item)
+    lo, hi = _monthly(per_unit, per_unit, item.est_monthly_units)
+    assumptions = [
+        f"your own two published numbers on this product: a compare-at of "
+        f"${item.compare_at_price:,.2f} against a price of ${item.price:,.2f}, so the "
+        f"difference is ${per_unit:,.2f} a unit and is not an estimate",
+        f"{catalogue:.0%} of your published catalogue is listed below its own compare-at, "
+        f"which is what makes this a price rather than a promotion",
+    ]
+    if settled:
+        assumptions.append(
+            f"this price has been the same on {readings} readings of your catalogue over "
+            f"{span} days, so the anchor is not doing the job an anchor is for")
+    else:
+        assumptions.append(
+            "we have not yet watched this price long enough to call it permanent — that "
+            "takes a fortnight of readings, and this finding is held back until then")
+    return Finding(
+        kind="permanent_discount",
+        dollars_low=lo, dollars_high=hi,
+        # Below COLD_MIN_CONFIDENCE until the history earns it: the arithmetic
+        # is certain, the word "permanent" is not.
+        confidence=0.78 if settled else 0.55,
+        assumptions=assumptions,
+        evidence={
+            "chart": "net_vs_price",
+            "price": item.price, "compare_at": item.compare_at_price,
+            "discount_share": share, "catalogue_discount_share": catalogue,
+            "per_unit_low": per_unit, "per_unit_high": per_unit,
+            "readings": readings, "days_observed": span, "settled": settled,
+            "monthly_units": item.est_monthly_units,
+        },
+        asin_or_sku=item.ref, item_title=item.title, item_url=item.url,
+    )
+
+
 AMAZON_DETECTORS = (price_band_edge, fee_band_edge, dim_weight_overage, size_tier_edge,
                     price_cut_no_rank_gain)
-SHOPIFY_DETECTORS = (carrier_band_edge, price_cut_no_rank_gain)
+SHOPIFY_DETECTORS = (carrier_band_edge, permanent_discount, price_cut_no_rank_gain)
 
 
 def detect(snap: ProspectSnapshot, today: date | None = None) -> list[Finding]:

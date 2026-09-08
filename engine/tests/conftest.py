@@ -18,6 +18,8 @@ import pytest
 
 from hubricon_engine.harvest import enrich as enrichmod
 from hubricon_engine.harvest import fetch as fetchmod
+from hubricon_engine.sourcing import discover as discovermod
+from hubricon_engine.sourcing import sheet as sheetmod
 
 
 class NetworkAccessInTest(RuntimeError):
@@ -40,3 +42,10 @@ def _no_network(monkeypatch):
     # DNS: the enrichment's MX check shells out to dig
     monkeypatch.setattr(enrichmod.subprocess, "run", refuse)
     monkeypatch.setattr(enrichmod.socket, "gethostbyname", refuse)
+    # Sourcing has three more ways out: its own dig for the Shopify DNS
+    # fingerprint, the Tranco download, and the Google Sheet webhook. Each
+    # takes an injectable seam (resolver=, opener=), and these make forgetting
+    # to pass one an error rather than a live request.
+    monkeypatch.setattr(discovermod.subprocess, "run", refuse)
+    monkeypatch.setattr(discovermod, "_open", refuse)
+    monkeypatch.setattr(sheetmod.urllib.request, "urlopen", refuse)

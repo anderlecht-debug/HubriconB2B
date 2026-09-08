@@ -45,6 +45,8 @@ def _item(row: dict, platform: str, website: str | None) -> Item:
         title=row.get("title"),
         category=row.get("category"),
         price=price,
+        compare_at_price=(float(row["compare_at_price"])
+                          if row.get("compare_at_price") is not None else None),
         reviews=row.get("reviews"),
         rank=row.get("bsr"),
         item_weight_oz=float(row["weight_oz"]) if row.get("weight_oz") is not None else None,

@@ -16,6 +16,7 @@
     hubricon all        <client>
 
     hubricon teardown   [build|review|show|open|approve|sent|stats|ratecard]
+    hubricon source     [discover|qualify|contact|sheet|push|promote|all|status|calibrate|install]
 
 <client> is a client uuid, uuid prefix, or contact email.
 """
@@ -2550,6 +2551,78 @@ def cmd_teardown(args):
     print("  hubricon teardown open <id>       the page as the prospect sees it")
 
 
+def cmd_source(args):
+    """Shopify lead sourcing: discovery, qualification, contact, and the two sinks.
+
+    Runs on the Mac, like the harvest. Nothing here sends an email: `push`
+    writes to a holding-pen list the operator's enrolment cannot match, and
+    `promote` lands rows at `candidate`, where the auto-push does not look.
+    """
+    from .sourcing import run as sourcing
+
+    if args.action == "install":
+        print(sourcing.install_launchd())
+        return
+
+    db = dbmod.connect()
+    if args.action == "status":
+        print(sourcing.status_text(db))
+        return
+    if args.action == "calibrate":
+        if not args.file:
+            sys.exit("hubricon source calibrate needs --file: a csv of domain,good "
+                     "(good = 1 for a store you judge in-ICP). Label a hundred by hand; "
+                     "an uncalibrated scorer produces confident garbage.")
+        print(sourcing.calibrate(db, args.file))
+        return
+
+    api = None
+    if args.action in ("push", "all") and not args.dry_run:
+        from .instantly import Instantly, configured as instantly_configured
+
+        api = Instantly() if instantly_configured() else None
+        if api is None:
+            print("  INSTANTLY_API_KEY is not set on this machine — the push is a rehearsal. "
+                  "The hourly operator holds the key.")
+
+    if args.action == "sheet":
+        sourcing.sheet(db, dry=args.dry_run)
+        return
+    if args.action == "push":
+        sourcing.push(db, api, dry=args.dry_run, limit=args.limit or 200)
+        return
+
+    from .sourcing.fetch import dual_fetcher
+
+    fetcher = dual_fetcher()
+    if args.action == "discover":
+        search = _search_fetcher() if args.source in ("search", "both") else None
+        sourcing.discover(db, fetcher, limit=args.limit or sourcing.DISCOVER_LIMIT,
+                          source=args.source, search_fetcher=search)
+    elif args.action == "qualify":
+        sourcing.qualify(db, fetcher, limit=args.limit or sourcing.QUALIFY_LIMIT)
+    elif args.action == "contact":
+        sourcing.contact(db, fetcher, limit=args.limit or sourcing.CONTACT_LIMIT,
+                         search_fetcher=_search_fetcher())
+    elif args.action == "promote":
+        from .harvest import shopify as shopify_harvest
+
+        sourcing.promote(db, shopify_harvest.store_fetcher(),
+                         limit=args.limit or sourcing.PROMOTE_LIMIT)
+    elif args.action == "all":
+        sourcing.run_all(db, fetcher, api, dry=args.dry_run, limit=args.limit, source=args.source)
+    print()
+    print(sourcing.status_text(db))
+
+
+def _search_fetcher():
+    """Plain HTTP for Bing: a search engine does not want a browser, and Chrome
+    wraps its results in a viewer (harvest/shopify.py's archive lesson)."""
+    from .harvest import shopify as shopify_harvest
+
+    return shopify_harvest.archive_fetcher()
+
+
 def cmd_harvest(args):
     """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
     from .harvest import run as harvest
@@ -2856,6 +2929,18 @@ def main():
     p.add_argument("--file", help="add: a file of leads — domain, email, first name per line")
     p.add_argument("--dry-run", action="store_true", help="send: rehearse, change nothing")
     p.set_defaults(fn=cmd_teardown)
+
+    p = sub.add_parser("source", help="Shopify lead sourcing: Tranco+DNS discovery -> "
+                                      "qualification -> a named contact -> Google Sheet + Instantly")
+    p.add_argument("action", choices=["discover", "qualify", "contact", "sheet", "push",
+                                      "promote", "all", "status", "calibrate", "install"])
+    p.add_argument("--limit", type=int, help="rows this pass should work on")
+    p.add_argument("--source", choices=["tranco", "search", "both"], default="tranco",
+                   help="discover: where domains come from (default: the Tranco top-1M plus a DNS pass)")
+    p.add_argument("--file", help="calibrate: csv of domain,good — a hundred stores you judged by hand")
+    p.add_argument("--dry-run", dest="dry_run", action="store_true",
+                   help="sheet/push: report, write nothing to Google or Instantly")
+    p.set_defaults(fn=cmd_source)
 
     p = sub.add_parser("harvest", help="free leads: Amazon Best Sellers / archived seller profiles / "
                                        "Shopify stores → brand sites → Instantly list")

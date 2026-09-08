@@ -190,6 +190,36 @@ def _carrier_band_hook(f: Finding) -> tuple[str, str]:
     return subject, body
 
 
+def _permanent_discount_hook(f: Finding) -> tuple[str, str]:
+    """The anchor that has stopped working.
+
+    Both numbers are the store's own and the gap between them is subtraction,
+    so this is the one Shopify finding that needs no rate card at all. What it
+    does need is restraint about the word "permanent": the copy only claims it
+    when the price history has earned it, and otherwise describes what is on
+    the page today.
+    """
+    e = f.evidence
+    item = _short_title(f)
+    share = e.get("catalogue_discount_share") or 0
+    per_unit = _money(f.per_unit_low)
+    subject = f"{{brand}} is giving away {per_unit} a unit on its own compare-at price"
+    if e.get("settled"):
+        history = (f" I have read your catalogue {e['readings']} times over {e['days_observed']} days "
+                   f"and that price has not moved once, so the compare-at is not creating urgency — "
+                   f"nobody has ever been offered the product at it.")
+    else:
+        history = (" I have not watched it long enough to say whether that is permanent, so treat "
+                   "this as the arithmetic rather than the conclusion.")
+    body = (
+        f"Your {item} is listed at {_money(e['price'])} against your own compare-at of "
+        f"{_money(e['compare_at'])}. That is {per_unit} a unit you have decided in advance to give "
+        f"away, and {share:.0%} of your published catalogue is priced the same way.{history}\n\n"
+        f"Both numbers came off your own product pages. I have no access to your store."
+    )
+    return subject, body
+
+
 HOOKS = {
     "price_band_edge": _price_band_hook,
     "fee_band_edge": _fee_band_hook,
@@ -197,6 +227,7 @@ HOOKS = {
     "size_tier_edge": _size_tier_hook,
     "price_cut_no_rank_gain": _price_cut_hook,
     "carrier_band_edge": _carrier_band_hook,
+    "permanent_discount": _permanent_discount_hook,
 }
 
 
