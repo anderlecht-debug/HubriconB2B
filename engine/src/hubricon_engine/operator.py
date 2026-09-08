@@ -29,6 +29,7 @@ from .notify import email_configured, send_email
 PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/portal"  # mirrors cli.PORTAL_URL
 NUDGE_AFTER_DAYS = 3
 FILES_AFTER_DAYS = 7
+DOWNSELL_AFTER_DAYS = 14     # the smaller door, once, to an Amazon seller whose exports never came
 
 
 def _now() -> datetime:
@@ -251,7 +252,11 @@ class Pass:
             if not start:
                 continue
             age = (_now() - start).days
-            if age >= FILES_AFTER_DAYS and "files" not in touches:
+            amazon = (c.get("platform") or "amazon") in ("amazon", "both")
+            if (age >= DOWNSELL_AFTER_DAYS and "downsell" not in touches and amazon
+                    and (c.get("plan") or "retainer") == "retainer"):
+                self._reonboard(c, "downsell")
+            elif age >= FILES_AFTER_DAYS and "files" not in touches:
                 self._reonboard(c, "files")
             elif age >= NUDGE_AFTER_DAYS and "nudge" not in touches:
                 self._reonboard(c, "nudge")
@@ -413,6 +418,15 @@ class Pass:
         for c in clients:
             if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
                 continue
+            # The smaller door: no retainer, a share of what Amazon paid back,
+            # invoiced at month end. Never enters the day-30 machinery.
+            if (c.get("plan") or "retainer") == "recovery":
+                self._recovery_billing(c, cli, billing, value)
+                continue
+            # Already on the retainer: every new invoice meets the same bar.
+            if c.get("stripe_subscription_id"):
+                self._rolling_gate(c, cli, billing, value)
+                continue
             due, why = billing.due_for_decision(c)
             if not due:
                 continue
@@ -437,10 +451,12 @@ class Pass:
                 self.db.table("clients").update({
                     "billing_decided_at": _iso(), "billing_decision": "short",
                 }).eq("id", c["id"]).execute()
+                amazon = (c.get("platform") or "amazon") in ("amazon", "both")
                 cli._send_client_email(self.db, c, "guarantee_short",
                                        str(c.get("retainer_started_at") or c["id"]),
                                        "Your free month, and what we found",
-                                       billing.short_email_blocks(v, PORTAL_URL), self.send)
+                                       billing.short_email_blocks(v, PORTAL_URL, recovery_door=amazon,
+                                                                  share=c.get("recovery_share")), self.send)
                 if first_time:
                     self.human.append(
                         f"{company} finished the free month at ${v['total']:,.0f} against a "
@@ -478,6 +494,115 @@ class Pass:
                 except Exception:
                     pass
             self.say(f"{company} cleared the guarantee at {v['multiple']:.1f}x — billing started.")
+
+    def _rolling_gate(self, c: dict, cli, billing, value) -> None:
+        """terms §3: our invoices never run ahead of the ledger.
+
+        Every invoice Stripe has raised and nobody has judged is measured by
+        the day-30 bar — measured plus identified since the retainer began
+        against everything billed through it. Covered is written on the row;
+        not covered is voided (or credited if ACH already settled) and the
+        client is told in one letter. Decided exactly once per invoice."""
+        company = c["company_name"] or c["contact_email"]
+        invoices = cli._fetch_invoices(self.db, c["id"])
+        pending = billing.unjudged_invoices(invoices, c)
+        if not pending:
+            return
+        directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+        ledger = value.compute(c, directives, cli._fetch_claims(self.db, c["id"]), invoices)
+        for inv in pending:
+            v = billing.rolling_verdict(ledger, invoices, inv, c)
+            label = f"invoice {inv.get('number') or str(inv.get('stripe_invoice_id'))[:12]}"
+            if self.dry:
+                self.say(f"[dry] {company}: {label} — ledger ${v['total']:,.0f} vs ${v['fees_billed']:,.0f} billed — "
+                         f"{'covered' if v['covered'] else 'would be WAIVED'}")
+                continue
+            if v["covered"]:
+                self.db.table("invoices").update({
+                    "gate_decision": "covered", "gate_decided_at": _iso(),
+                    "gate_value": round(v["total"], 2), "gate_fees": round(v["fees_billed"], 2),
+                }).eq("id", inv["id"]).execute()
+                self.say(f"{company}: {label} covered — ledger ${v['total']:,.0f} against ${v['fees_billed']:,.0f} billed.")
+                continue
+            if not billing.stripe_configured():
+                self.warnings.append(f"{company}: {label} is NOT covered by the ledger (${v['total']:,.0f} vs "
+                                     f"${v['fees_billed']:,.0f}) and cannot be waived: STRIPE_SECRET_KEY missing.")
+                continue
+            try:
+                how = billing.waive_invoice(inv, c)
+            except Exception as err:
+                self.warnings.append(f"{company}: {label} should be waived but Stripe refused: {err}")
+                continue
+            self.db.table("invoices").update({
+                "gate_decision": "waived", "gate_decided_at": _iso(), "gate_note": how,
+                "gate_value": round(v["total"], 2), "gate_fees": round(v["fees_billed"], 2),
+                **({"status": "void", "voided_at": _iso()} if how == "voided" else {}),
+            }).eq("id", inv["id"]).execute()
+            cli._send_client_email(self.db, c, "month_waived", str(inv.get("stripe_invoice_id")),
+                                   "This month is on us",
+                                   billing.waived_email_blocks(v, how, PORTAL_URL), self.send)
+            self.human.append(f"{company}: {label} {how} — the ledger (${v['total']:,.0f}) had fallen behind "
+                              f"the bills (${v['fees_billed']:,.0f}). The work has to catch up; worth a call.")
+            self.say(f"{company}: {label} {how} — the ledger had not covered it.")
+
+    def _recovery_billing(self, c: dict, cli, billing, value) -> None:
+        """The recovery-only plan: at month end, one invoice for the share of
+        what Amazon actually paid on our claims, and nothing else. Also the way
+        back up: when the ledger identifies more than the fee beyond
+        reimbursements, the digest says to offer the retainer."""
+        company = c["company_name"] or c["contact_email"]
+        claims = cli._fetch_claims(self.db, c["id"])
+        due = billing.recovery_due(claims, date.today(), share=c.get("recovery_share"))
+        try:
+            directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+            ledger = value.compute(c, directives, claims, cli._fetch_invoices(self.db, c["id"]))
+            beyond = float((ledger.get("identified_parts") or {}).get("directives") or 0)
+            if beyond >= float(c.get("monthly_fee_usd") or value.DEFAULT_MONTHLY_FEE_USD):
+                self.human.append(f"{company} is on recovery-only and the ledger identifies ${beyond:,.0f} beyond "
+                                  f"reimbursements — offer the retainer.")
+        except Exception:
+            pass
+        if not due:
+            return
+        if due.get("deferred"):
+            self.say(f"{company}: {due['deferred']}.")
+            return
+        if self.dry:
+            self.say(f"[dry] {company}: would invoice ${due['amount']:,.2f} ({due['share'] * 100:.0f}% of "
+                     f"${due['recovered']:,.2f} recovered, {due['period_start']}–{due['period_end']})")
+            return
+        if not billing.stripe_configured():
+            self.warnings.append(f"{company}: ${due['amount']:,.2f} of recovery share is due and cannot be invoiced: "
+                                 "STRIPE_SECRET_KEY missing. Nothing is lost — the next pass invoices it.")
+            return
+        try:
+            inv = billing.invoice_recovery_share(c, due)
+        except Exception as err:
+            self.warnings.append(f"{company}: recovery invoice failed: {err}")
+            return
+        row = self.db.table("recovery_invoices").insert({
+            "client_id": c["id"], "period_start": due["period_start"].isoformat(),
+            "period_end": due["period_end"].isoformat(), "recovered_usd": due["recovered"],
+            "share": due["share"], "amount_usd": due["amount"], "n_claims": due["n_claims"],
+            "stripe_invoice_id": inv.get("id"), "hosted_invoice_url": inv.get("hosted_invoice_url"),
+        }).execute().data[0]
+        self.db.table("recovery_claims").update({"recovery_invoice_id": row["id"]}) \
+            .in_("id", [k["id"] for k in due["claims"]]).execute()
+        patch = {}
+        if not c.get("stripe_customer_id") and inv.get("customer"):
+            patch["stripe_customer_id"] = inv["customer"]
+        if not c.get("retainer_started_at"):
+            patch.update({"retainer_started_at": _iso(), "retainer_source": "first_invoice"})
+        if patch:
+            self.db.table("clients").update(patch).eq("id", c["id"]).execute()
+        cli._send_client_email(self.db, c, "recovery_invoice", str(inv.get("id")),
+                               "What Amazon paid back, and our share",
+                               billing.recovery_email_blocks(due, inv.get("hosted_invoice_url"), PORTAL_URL), self.send)
+        outbound.log_event(self.db, "recovery_invoiced", client_id=c["id"],
+                           payload={"amount_usd": due["amount"], "recovered_usd": due["recovered"],
+                                    "n_claims": due["n_claims"], "invoice": inv.get("id")})
+        self.say(f"{company}: invoiced ${due['amount']:,.2f} — {due['share'] * 100:.0f}% of ${due['recovered']:,.2f} "
+                 f"Amazon paid on {due['n_claims']} claim(s).")
 
     def _credit_referrer(self, c: dict) -> None:
         from . import cli

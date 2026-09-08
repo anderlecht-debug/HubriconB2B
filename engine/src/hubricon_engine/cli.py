@@ -1981,6 +1981,31 @@ def cmd_retainer(args):
           f"{(started + timedelta(days=30 * free)).isoformat()}; the guarantee is checked then.")
 
 
+def cmd_downsell(args):
+    """Move a client onto the recovery-only plan, or back onto the retainer.
+
+    A plan is a contract, so the switch is a founder's command rather than a
+    keyword the triage reads: the prospect replies RECOVERY, a person confirms
+    it, and this records it. From the next pass the client is billed a share of
+    what Amazon actually paid on our claims, at month end, and nothing else."""
+    from . import billing
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if args.retainer:
+        db.table("clients").update({"plan": "retainer"}).eq("id", client["id"]).execute()
+        print(f"{name}: back on the retainer. The day-30 gate (or the rolling gate) applies from the next pass; "
+              f"record the yes with `hubricon retainer {args.client}` if the clock should restart.")
+        return
+    share = float(args.share) if args.share is not None else billing.RECOVERY_SHARE
+    if not 0 < share <= 0.5:
+        sys.exit("--share must be a fraction between 0 and 0.5 (0.25 = a quarter of what lands)")
+    db.table("clients").update({"plan": "recovery", "recovery_share": share}).eq("id", client["id"]).execute()
+    print(f"{name}: recovery-only at {share * 100:.0f}% of reimbursements Amazon pays on claims we file, "
+          f"invoiced at month end (minimum ${billing.RECOVERY_MIN_INVOICE_USD:,.0f}, smaller amounts roll forward). "
+          f"No retainer, no day-30 subscription. Claims: `hubricon recover {args.client} list|file|paid`.")
+
+
 def cmd_all(args):
     cmd_ingest(args)
     cmd_run(args)
@@ -2119,6 +2144,11 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
 
     add("Free data + ledger export, any time", "terms §11, privacy §6, the desk", True,
         "hubricon export <client>")
+    add("Our invoices never run ahead of your ledger", "terms §3, index, welcome", stripe_ok,
+        "every new invoice is judged by the day-30 bar; one the ledger has not covered is voided" if stripe_ok
+        else "STRIPE_SECRET_KEY missing — an uncovered invoice is flagged in the digest instead of voided")
+    add("Recovery-only clients pay only on money that landed", "terms §4", True,
+        "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
     # -- the clocks ----------------------------------------------------------
     try:
@@ -2880,6 +2910,12 @@ def main():
                    choices=["client_yes", "first_invoice", "teardown_delivered", "manual"])
     p.add_argument("--show", action="store_true", help="print the clock without changing it")
     p.set_defaults(fn=cmd_retainer)
+
+    p = sub.add_parser("downsell", help="the smaller door: recovery-only at a share of what Amazon pays back, or --retainer")
+    p.add_argument("client")
+    p.add_argument("--share", type=float, help="fraction of recovered dollars, default RECOVERY_SHARE (0.25)")
+    p.add_argument("--retainer", action="store_true", help="move the client back onto the flat retainer")
+    p.set_defaults(fn=cmd_downsell)
 
     p = sub.add_parser("promises", help="which promises the machine can keep right now, and which it cannot")
     p.add_argument("--client", help="just this client")

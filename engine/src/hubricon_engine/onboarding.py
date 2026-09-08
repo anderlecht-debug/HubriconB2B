@@ -285,6 +285,28 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                       f"grab 20 minutes: {CALENDLY_URL}"},
             ],
         }
+    if kind == "downsell":
+        # The smaller door, named once, two weeks in, to an Amazon seller whose
+        # exports never came. No retainer to commit to: a share of the
+        # reimbursements Amazon actually pays on claims we file, nothing else.
+        from .billing import RECOVERY_SHARE
+        pct = f"{RECOVERY_SHARE * 100:.0f}%"
+        return {
+            "subject": "A smaller door, if the $6,000 is the hurdle",
+            "greeting": greeting,
+            "blocks": [
+                {"p": "Two weeks in and your exports have not landed, which usually means one of two things: "
+                      "the fifteen minutes has not come free, or committing to a retainer with a stranger "
+                      "does not sit right yet. Both are fair."},
+                {"p": f"So here is the smaller door. Skip the retainer. Grant the seat or send three exports "
+                      f"(the reimbursement, returns and inventory ledger reports), and we file every "
+                      f"reimbursement Amazon owes you. You pay {pct} of what actually lands in your account — "
+                      f"nothing else, nothing up front, and nothing at all in a month where nothing lands."},
+                {"button": "Open your secure upload page", "url": link},
+                {"p": "Reply RECOVERY and I will set you up on that plan. The full desk stays open to you "
+                      "whenever the numbers make the case for it, and the ledger will say when they do."},
+            ],
+        }
     raise ValueError(f"unknown email kind {kind!r}")
 
 

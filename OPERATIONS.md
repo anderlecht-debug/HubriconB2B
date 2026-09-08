@@ -991,6 +991,73 @@ billing uses — rather than `created_at`.
 uv run hubricon loop               # every arrow as a conversion from the one before
 ```
 
+## The rolling gate, and the smaller door
+
+Two founder decisions, 2026-09-08. Both live in `billing.py` and run inside
+the hourly `operator.billing` pass, which stays the only code that bills.
+
+### Our invoices never run ahead of the ledger
+
+Day 30 was the only month the guarantee covered. Now every invoice Stripe
+raises for a retainer is judged by the same bar as day 30 — measured plus
+identified value since the retainer began — against everything billed through
+that invoice (`billing.rolling_verdict`). The decision is written on the
+`invoices` row (`gate_decision`, `gate_value`, `gate_fees`), so it is taken
+exactly once. Covered is silent apart from the digest; not covered is
+**voided** if the invoice is still open, or **credited** to the customer
+balance if ACH already settled it (`billing.waive_invoice`), and the client
+gets one letter saying which and why. Void invoices drop out of the ledger's
+fee denominator, so a waived month is a month that was never billed.
+
+Read-only until `STRIPE_SECRET_KEY` is set: without it an uncovered invoice
+is a digest warning, never a silent bill. terms §3, welcome and the index
+guarantee say the sentence; `hubricon promises` tracks it.
+
+### The smaller door: recovery-only
+
+Hormozi's downsell, for the founder who will not commit to $6,000 with a
+stranger. No retainer. We file the reimbursements Amazon owes them and
+invoice a share (`RECOVERY_SHARE`, 0.25) of what Amazon **actually paid on
+claims we filed**, at month end, nothing else (`billing.recovery_due`,
+`billing.invoice_recovery_share`). Nothing landed, no invoice; under
+`RECOVERY_MIN_INVOICE_USD` (50) it rolls forward. Each paid claim carries the
+`recovery_invoices` row that billed it, so it is billed once. It is a `plan`
+on the client row, not a second product: same intake, same ledger, same proof
+cards, same ask.
+
+**Where it sits in the funnel:**
+
+```
+cold email / teardown page ─► TEARDOWN reply or booking ─► welcome + upload page
+        │                                │
+        │                     day 3 nudge · day 7 files             (unchanged)
+        │                                │
+        │                     day 14, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
+        │
+   stretch-fit call (<$1M) ─► founder offers recovery-only on the call ─► `hubricon downsell <client>`
+                                         │
+   exports land ─► Issue 001 ─► day-30 gate ─┬─ clears ─► retainer ─► rolling gate on every invoice
+                                             └─ short  ─► the letter names the smaller door ─► reply RECOVERY
+                                                                                              ─► `hubricon downsell`
+   recovery plan: claims filed ─► Amazon pays ─► month end ─► one invoice for the share ─► ledger · proof · the ask
+   the way back up: identified value beyond reimbursements ≥ the fee ─► digest: "offer the retainer"
+```
+
+The switch is a command, never a keyword the triage acts on: a plan is a
+contract, and a person confirms it.
+
+```
+uv run hubricon downsell <client>                # recovery-only at RECOVERY_SHARE
+uv run hubricon downsell <client> --share 0.2    # a different share, agreed in writing
+uv run hubricon downsell <client> --retainer     # back onto the flat fee
+```
+
+The site never shows the downsell. It is offered by a person on a call, by the
+day-14 email, and by the day-30 letter — the three places a founder has said
+"not at that price" without saying it. Shopify has no reimbursements and so no
+smaller door yet; a Shopify founder who stalls gets the day-7 files email and
+nothing further.
+
 ## Keeping the promises the site makes
 
 Each of these used to depend on someone remembering. They are now jobs.
