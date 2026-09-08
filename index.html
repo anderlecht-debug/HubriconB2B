@@ -296,6 +296,12 @@ h1,h2,h3{
   margin: 0 auto; padding: 110px 0;
 }
 .sect + .sect{ border-top: 1px solid var(--rule-08); }
+.sect[hidden]{ display: none; }
+.proof-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.proof-card{ padding: 24px 26px; display: flex; flex-direction: column; gap: 6px; }
+.proof-card b{ color: var(--ink-100); }
+.proof-amt{ font-family: var(--font-head); font-size: 40px; line-height: 1; color: var(--ink-100); letter-spacing: -.02em; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+.proof-how{ font-size: 13px; color: var(--ink-60); border-top: 1px solid var(--rule-08); padding-top: 10px; margin-top: 6px; }
 .sect-head{ max-width: 760px; margin-bottom: 46px; }
 .sect-head h2{ font-size: clamp(32px, 3.8vw, 52px); margin-bottom: 16px; }
 .sect-head p{ color: var(--ink-60); max-width: 60ch; }
@@ -892,14 +898,14 @@ h1,h2,h3{
   <div class="hero-inner">
     <span class="badge glass reveal-unit reveal-early"><i aria-hidden="true"></i>Quantitative analytics for Amazon and Shopify brands · $1M–$20M/yr</span>
     <h1 class="reveal-words">We find the profit your Amazon and Shopify numbers are hiding.</h1>
-    <p class="hero-sub reveal-unit reveal-sub">We run the math on your Amazon account, your Shopify store, or both — and <b style="color:var(--ink-100)">execute the profit fixes for you</b>: pricing, ads, inventory. You watch a three-minute brief every two weeks and keep the margin. <b style="color:var(--ink-100)">First month free</b> — if we don't find you more than we cost, walk away owing nothing.</p>
+    <p class="hero-sub reveal-unit reveal-sub">We run the math on your Amazon account, your Shopify store, or both — and <b style="color:var(--ink-100)">execute the profit fixes for you</b>: pricing, ads, inventory, and the reimbursements Amazon owes you. <b style="color:var(--ink-100)">Your written Teardown lands inside 24 hours of your exports.</b> You spend fifteen minutes once, then three minutes every two weeks, and keep the margin. <b style="color:var(--ink-100)">First month free, no card</b> — at day 30 the ledger decides, not us: if we didn't find more than we cost, no invoice exists.</p>
     <div class="cta-row reveal-unit reveal-cta">
       <a class="btn btn-amber" data-calendly="audit" data-section="hero" href="#apply">
         Get your free Profit Teardown
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
       </a>
     </div>
-    <p class="microcopy reveal-unit reveal-cta"><b>$0</b> · first month free · four answers start the call · Teardown on video in 24 hours</p>
+    <p class="microcopy reveal-unit reveal-cta"><b>$0</b> · first month free · four answers start the call · Teardown on video inside 24 hours · no card, ever</p>
   </div>
 
   <div class="hero-ticker" aria-hidden="true">
@@ -907,8 +913,21 @@ h1,h2,h3{
     <span>EXECUTION <b>DONE FOR YOU</b></span>
     <span>TERMS <b>MONTH-TO-MONTH</b></span>
     <span>FIRST MONTH <b>FREE</b></span>
+    <span>TEARDOWN <b>INSIDE 24 HOURS</b></span>
+    <span>RESULTS <b>PUBLISHED WITH CONSENT</b></span>
   </div>
 </header>
+
+<!-- ══════════════ 02b · PROOF — the record, published with consent ══════════════ -->
+<section class="sect" id="proof" data-reveal hidden>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">The record</div>
+    <h2 class="reveal-words">What the ledgers say, published with permission.</h2>
+    <p class="reveal-unit reveal-sub">Every card is a number a client's own Decision Ledger measured from their own later exports, or a reimbursement Amazon paid on a claim we filed. Shown by category and revenue band, rounded down, with no brand named. Nothing here is a forecast.</p>
+  </div>
+  <div class="proof-grid reveal-unit reveal-sub" id="proof-grid"></div>
+  <p class="reveal-unit reveal-sub" style="margin-top:18px"><a href="/results" style="color:var(--amber)">Every published result, and how each one was measured →</a></p>
+</section>
 
 <!-- ══════════════ 03 · MARKET REALITY ══════════════ -->
 <section class="sect" id="numbers" data-reveal>
@@ -1014,6 +1033,128 @@ h1,h2,h3{
     </a>
   </div>
 </section>
+
+<!-- ══════════════ 06 · HOW IT WORKS ══════════════ -->
+<section class="sect" id="process" data-reveal>
+  <div class="sect-head">
+    <div class="eyebrow reveal-unit reveal-early">How it works</div>
+    <h2 class="reveal-words">One seat. The models run. Teardown back in 24 hours.</h2>
+  </div>
+  <div class="steps reveal-unit reveal-sub">
+    <div class="step glass">
+      <span class="when">Day 0</span>
+      <h3>Apply</h3>
+      <p>A two-minute application — where you sell, revenue, model, catalog size — then you book the 20-minute call on the spot. Your answers ride along on the booking, so the call starts from your numbers. Every brand that applies gets a seat.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">2 minutes</span>
+      <h3>One seat</h3>
+      <p>Add one email to your Seller Central, or approve one collaborator request in your Shopify admin — a permissions-scoped seat covering reports, pricing, and ads. That seat is how the corrections get made in your account. For the numbers themselves, about fifteen minutes of exports through a secure upload page, once — the list is on the page and every step is spelled out.</p>
+      <p class="callout">Banking, settings, and everything else stay untouchable — and you revoke the seat in one click, any day. Prefer to send files instead? A secure upload page exists for exactly that — Seller Central reports or Shopify exports, your choice.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">Within 24 hours</span>
+      <h3>Teardown delivered</h3>
+      <p>The models start the moment your seat goes live — ten thousand simulations per SKU. Written report plus a recorded walkthrough of your numbers, back in 24 hours.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">Your call</span>
+      <h3>Decide</h3>
+      <p>Say yes and your first month runs free — full service, corrections executed, ledger running. At day 30 we compare what we found against what we cost, and if it did not clear the fee there is no invoice. If the Teardown finds nothing worth fixing, we tell you so — and you keep the full report.</p>
+    </div>
+    <div class="step glass">
+      <span class="when">Every 2 weeks</span>
+      <h3>We execute</h3>
+      <p>Models refresh, corrections get executed for you under a standing mandate — you hold the veto. A three-minute brief tells you what changed and what it earned. Price tests watched against Buy Box share daily.</p>
+    </div>
+  </div>
+  <p class="bridge reveal-unit reveal-sub">Your total cost in time: one 20-minute call, two minutes granting a seat, then about <em>three minutes a cycle</em> watching your brief. We do the rest — including the clicking.</p>
+  <div class="sect-cta reveal-unit reveal-cta">
+    <a class="btn btn-amber" data-calendly="audit" data-section="process" href="#apply">
+      Get your free Profit Teardown
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+  </div>
+</section>
+
+<main class="features">
+  <!-- ══════════════ 07 · METHOD 01 — INVENTORY ══════════════ -->
+  <section class="feature" id="inventory" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Method 01 / Formula 05, running live</div>
+        <h2 class="reveal-words">Know your stockout risk before it happens.</h2>
+        <p class="reveal-unit reveal-sub">We simulate the next 90 days of demand against your supplier lead times — ten thousand times per SKU. You get a reorder date, a quantity, and the exact probability of stocking out if you wait. A stockout costs you rank you'll buy back with ads; overstock is trapped capital plus storage fees. Both sides of that trade are priced in the model — no Amazon or Shopify-native tool does probabilistic inventory math.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" data-calendly="audit" data-section="inventory" href="#apply">
+            See this run on your catalog
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>MONTE_CARLO.RUN</b><span>n = 10,000 · horizon 90d</span></div>
+        <div class="media-body" id="chart-mc"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>P50 units on hand</span>
+          <span><i class="swatch band"></i>P5–P95 envelope</span>
+          <span><i class="swatch dash"></i>Safety stock</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ══════════════ 08 · METHOD 02 — PRICING ══════════════ -->
+  <section class="feature flip" id="elasticity" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Method 02 / Formulas 02–03, running live</div>
+        <h2 class="reveal-words">Know how far a price can move before it costs you.</h2>
+        <p class="reveal-unit reveal-sub">For every SKU we measure how demand responds to price — with a 95% confidence range, not a hunch. Two-thirds of sellers raised prices in 2024; most of them lost money doing it, and sellers report losing ~80% of Buy Boxes on the way up. We tell you which SKUs can carry an increase, then watch your Buy Box share on Amazon or your conversion rate on Shopify daily, so a step too far is caught in days, not quarters.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" data-calendly="audit" data-section="elasticity" href="#apply">
+            See this run on your catalog
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>ELASTICITY.MAP</b><span>SKU B0-7841 · ε = −3.68</span></div>
+        <div class="media-body" id="chart-el"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>Net profit index</span>
+          <span><i class="swatch dash"></i>Current baseline = 100</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ══════════════ 09 · METHOD 03 — ADVERTISING ══════════════ -->
+  <section class="feature" id="ads" data-reveal>
+    <div class="feature-inner">
+      <div class="feature-copy">
+        <div class="eyebrow reveal-unit reveal-early">Method 03 / Formula 04, running live</div>
+        <h2 class="reveal-words">Know where your next ad dollar stops paying.</h2>
+        <p class="reveal-unit reveal-sub">Ad spend has a break-even point. We estimate your account's response curve and mark the spend level where one more dollar returns less than a dollar — and flag the 20–40% of budget that typically leaks to search terms that never convert, in dollars, by term. No ad tool, Amazon or Meta, derives what your target ACoS or ROAS should be — they optimize toward whatever number you typed in.</p>
+        <div class="reveal-unit reveal-cta">
+          <a class="btn btn-glass" data-calendly="audit" data-section="ads" href="#apply">
+            See this run on your catalog
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+      <figure class="feature-media glass reveal-unit reveal-media">
+        <div class="media-head"><b>SPEND.RESPONSE</b><span>ad spend response · $k / mo</span></div>
+        <div class="media-body" id="chart-ba"></div>
+        <figcaption class="media-foot">
+          <span><i class="swatch"></i>Incremental revenue</span>
+          <span><i class="swatch dash"></i>Break-even (ROAS 1.0)</span>
+          <span><i class="swatch bleed"></i>▲ Bleed zone — cut</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+</main>
 
 <!-- ══════════════ 05 · THE MATH — problem → formula → fix ══════════════ -->
 <section class="sect" id="math" data-reveal>
@@ -1223,128 +1364,6 @@ h1,h2,h3{
   </div>
 </section>
 
-<!-- ══════════════ 06 · HOW IT WORKS ══════════════ -->
-<section class="sect" id="process" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">How it works</div>
-    <h2 class="reveal-words">One seat. The models run. Teardown back in 24 hours.</h2>
-  </div>
-  <div class="steps reveal-unit reveal-sub">
-    <div class="step glass">
-      <span class="when">Day 0</span>
-      <h3>Apply</h3>
-      <p>A two-minute application — where you sell, revenue, model, catalog size — then you book the 20-minute call on the spot. Your answers ride along on the booking, so the call starts from your numbers. Every brand that applies gets a seat.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">2 minutes</span>
-      <h3>One seat</h3>
-      <p>Add one email to your Seller Central, or approve one collaborator request in your Shopify admin — a permissions-scoped seat covering reports, pricing, and ads. That seat is how the corrections get made in your account. For the numbers themselves, about fifteen minutes of exports through a secure upload page, once — the list is on the page and every step is spelled out.</p>
-      <p class="callout">Banking, settings, and everything else stay untouchable — and you revoke the seat in one click, any day. Prefer to send files instead? A secure upload page exists for exactly that — Seller Central reports or Shopify exports, your choice.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">Within 24 hours</span>
-      <h3>Teardown delivered</h3>
-      <p>The models start the moment your seat goes live — ten thousand simulations per SKU. Written report plus a recorded walkthrough of your numbers, back in 24 hours.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">Your call</span>
-      <h3>Decide</h3>
-      <p>Say yes and your first month runs free — full service, corrections executed, ledger running. At day 30 we compare what we found against what we cost, and if it did not clear the fee there is no invoice. If the Teardown finds nothing worth fixing, we tell you so — and you keep the full report.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">Every 2 weeks</span>
-      <h3>We execute</h3>
-      <p>Models refresh, corrections get executed for you under a standing mandate — you hold the veto. A three-minute brief tells you what changed and what it earned. Price tests watched against Buy Box share daily.</p>
-    </div>
-  </div>
-  <p class="bridge reveal-unit reveal-sub">Your total cost in time: one 20-minute call, two minutes granting a seat, then about <em>three minutes a cycle</em> watching your brief. We do the rest — including the clicking.</p>
-  <div class="sect-cta reveal-unit reveal-cta">
-    <a class="btn btn-amber" data-calendly="audit" data-section="process" href="#apply">
-      Get your free Profit Teardown
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-    </a>
-  </div>
-</section>
-
-<main class="features">
-  <!-- ══════════════ 07 · METHOD 01 — INVENTORY ══════════════ -->
-  <section class="feature" id="inventory" data-reveal>
-    <div class="feature-inner">
-      <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 01 / Formula 05, running live</div>
-        <h2 class="reveal-words">Know your stockout risk before it happens.</h2>
-        <p class="reveal-unit reveal-sub">We simulate the next 90 days of demand against your supplier lead times — ten thousand times per SKU. You get a reorder date, a quantity, and the exact probability of stocking out if you wait. A stockout costs you rank you'll buy back with ads; overstock is trapped capital plus storage fees. Both sides of that trade are priced in the model — no Amazon or Shopify-native tool does probabilistic inventory math.</p>
-        <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="audit" data-section="inventory" href="#apply">
-            See this run on your catalog
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-          </a>
-        </div>
-      </div>
-      <figure class="feature-media glass reveal-unit reveal-media">
-        <div class="media-head"><b>MONTE_CARLO.RUN</b><span>n = 10,000 · horizon 90d</span></div>
-        <div class="media-body" id="chart-mc"></div>
-        <figcaption class="media-foot">
-          <span><i class="swatch"></i>P50 units on hand</span>
-          <span><i class="swatch band"></i>P5–P95 envelope</span>
-          <span><i class="swatch dash"></i>Safety stock</span>
-        </figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- ══════════════ 08 · METHOD 02 — PRICING ══════════════ -->
-  <section class="feature flip" id="elasticity" data-reveal>
-    <div class="feature-inner">
-      <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 02 / Formulas 02–03, running live</div>
-        <h2 class="reveal-words">Know how far a price can move before it costs you.</h2>
-        <p class="reveal-unit reveal-sub">For every SKU we measure how demand responds to price — with a 95% confidence range, not a hunch. Two-thirds of sellers raised prices in 2024; most of them lost money doing it, and sellers report losing ~80% of Buy Boxes on the way up. We tell you which SKUs can carry an increase, then watch your Buy Box share on Amazon or your conversion rate on Shopify daily, so a step too far is caught in days, not quarters.</p>
-        <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="audit" data-section="elasticity" href="#apply">
-            See this run on your catalog
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-          </a>
-        </div>
-      </div>
-      <figure class="feature-media glass reveal-unit reveal-media">
-        <div class="media-head"><b>ELASTICITY.MAP</b><span>SKU B0-7841 · ε = −3.68</span></div>
-        <div class="media-body" id="chart-el"></div>
-        <figcaption class="media-foot">
-          <span><i class="swatch"></i>Net profit index</span>
-          <span><i class="swatch dash"></i>Current baseline = 100</span>
-        </figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- ══════════════ 09 · METHOD 03 — ADVERTISING ══════════════ -->
-  <section class="feature" id="ads" data-reveal>
-    <div class="feature-inner">
-      <div class="feature-copy">
-        <div class="eyebrow reveal-unit reveal-early">Method 03 / Formula 04, running live</div>
-        <h2 class="reveal-words">Know where your next ad dollar stops paying.</h2>
-        <p class="reveal-unit reveal-sub">Ad spend has a break-even point. We estimate your account's response curve and mark the spend level where one more dollar returns less than a dollar — and flag the 20–40% of budget that typically leaks to search terms that never convert, in dollars, by term. No ad tool, Amazon or Meta, derives what your target ACoS or ROAS should be — they optimize toward whatever number you typed in.</p>
-        <div class="reveal-unit reveal-cta">
-          <a class="btn btn-glass" data-calendly="audit" data-section="ads" href="#apply">
-            See this run on your catalog
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-          </a>
-        </div>
-      </div>
-      <figure class="feature-media glass reveal-unit reveal-media">
-        <div class="media-head"><b>SPEND.RESPONSE</b><span>ad spend response · $k / mo</span></div>
-        <div class="media-body" id="chart-ba"></div>
-        <figcaption class="media-foot">
-          <span><i class="swatch"></i>Incremental revenue</span>
-          <span><i class="swatch dash"></i>Break-even (ROAS 1.0)</span>
-          <span><i class="swatch bleed"></i>▲ Bleed zone — cut</span>
-        </figcaption>
-      </figure>
-    </div>
-  </section>
-</main>
-
 <!-- ══════════════ 10 · COMPARISON ══════════════ -->
 <section class="sect" id="compare" data-reveal>
   <div class="sect-head">
@@ -1434,7 +1453,7 @@ h1,h2,h3{
     <div class="price-card glass">
       <span class="price-tag">Step two · The Co-Pilot Retainer · first month free</span>
       <div class="price-num">$6,000<small>/MO FLAT</small></div>
-      <p class="worth"><b style="color:var(--ink-100)">Your first month is free — the full service, corrections executed, ledger running.</b> If we don't find you more than we cost, walk away owing nothing; if we deliver, a short testimonial and your anonymized results are the price of the seat.</p>
+      <p class="worth"><b style="color:var(--ink-100)">Your first month is free — the full service, corrections executed, ledger running.</b> If we don't find you more than we cost, walk away owing nothing; if we deliver, a short testimonial and your anonymized results are the price of the seat — and when a founder you send stays past their own day 30, your next month is on us.</p>
       <p class="worth">What this replaces, at the prices those things actually sell for:</p>
       <ul class="vs">
         <li><span class="what"><b>SKU-level finance modeling</b> — margin, elasticity, forecasting</span><span class="rate">Fractional CFO<br>$3,000–$12,000/mo</span></li>
@@ -1493,7 +1512,7 @@ h1,h2,h3{
     <details class="glass" data-q="data"><summary>What data do I need to send?</summary>
       <p>About fifteen minutes of exports, once. On Amazon: the Business Report, SKU Economics, your advertising reports and an FBA inventory snapshot. On Shopify: orders, products with cost per item, payouts, and your Meta or Google ads exports. Your private upload page lists each one with the exact clicks to get it. The one thing no platform knows is your costs: a one-row-per-SKU template (unit cost, freight, fulfilment, lead times), estimates welcome. After that the seat does the rest, and we never ask you for homework again.</p></details>
     <details class="glass" data-q="catch"><summary>The Teardown is free — what's the catch?</summary>
-      <p>So is your first month — and the catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. We're building the track record in public, and your account is how we prove it. No obligation, and nothing renews against your will.</p></details>
+      <p>So is your first month — and the catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. We're building the track record in public, and your account is how we prove it. You also get a link of your own: a founder you send gets the same free month, and when they stay past their day 30, your next month is on us. No obligation, and nothing renews against your will.</p></details>
     <details class="glass" data-q="time"><summary>How much of my time does this take?</summary>
       <p>One 20-minute application call, two minutes granting the seat, five minutes on a cost template, then roughly three minutes a cycle watching your brief. The modeling, the measurement, and the execution all happen on our side — you're buying the abdication of the mental load, not another task.</p></details>
     <details class="glass" data-q="speed"><summary>How long until I see value?</summary>
@@ -1570,7 +1589,7 @@ h1,h2,h3{
   "mainEntity": [
     {"@type": "Question", "name": "Do you need access to my Seller Central or Shopify admin?", "acceptedAnswer": {"@type": "Answer", "text": "One permissions-scoped seat on whichever platform you run — that's the whole setup, and it powers everything. On Amazon: Reports (view) lets the models read your numbers; pricing and Campaign Manager (view & edit) let us execute the corrections. On Shopify: a collaborator account with Orders, Analytics, Reports and Marketing to view, and Products and Discounts to edit, nothing under Settings or Payments. Banking and account settings stay untouchable on both, and you revoke the seat in one click, any day. Prefer not to grant it? You can send a handful of CSV exports through a secure upload page instead."}},
     {"@type": "Question", "name": "What data do I need to send?", "acceptedAnswer": {"@type": "Answer", "text": "About fifteen minutes of exports, once. On Amazon: the Business Report, SKU Economics, your advertising reports and an FBA inventory snapshot. On Shopify: orders, products with cost per item, payouts, and your Meta or Google ads exports. Your private upload page lists each one with the exact clicks to get it. The one thing no platform knows is your costs: a one-row-per-SKU template (unit cost, freight, fulfilment, lead times), estimates welcome. After that the seat does the rest, and we never ask you for homework again."}},
-    {"@type": "Question", "name": "The Teardown is free — what's the catch?", "acceptedAnswer": {"@type": "Answer", "text": "So is your first month — and the catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. We're building the track record in public, and your account is how we prove it. No obligation, and nothing renews against your will."}},
+    {"@type": "Question", "name": "The Teardown is free — what's the catch?", "acceptedAnswer": {"@type": "Answer", "text": "So is your first month — and the catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. We're building the track record in public, and your account is how we prove it. A founder you send gets the same free month, and when they stay past their day 30, your next month is on us. No obligation, and nothing renews against your will."}},
     {"@type": "Question", "name": "How much of my time does this take?", "acceptedAnswer": {"@type": "Answer", "text": "One 20-minute application call, two minutes granting the seat, five minutes on a cost template, then roughly three minutes a cycle watching your brief. The modeling, the measurement, and the execution all happen on our side — you're buying the abdication of the mental load, not another task."}},
     {"@type": "Question", "name": "How long until I see value?", "acceptedAnswer": {"@type": "Answer", "text": "Within 24 hours of your seat going live — the models run the moment we can read your account. Your first corrections are executed inside the free month, and price tests read out in days because Buy Box share, or conversion rate on Shopify, is tracked daily."}},
     {"@type": "Question", "name": "What are the contract terms?", "acceptedAnswer": {"@type": "Answer", "text": "Your first month is free. After that: $6,000/month flat, month-to-month, cancel anytime. Invoiced by email via ACH, net-7 — no card on file, so nothing can renew against your will. Never a percentage of your ad spend. Your data and your ledger export free, anytime."}},
@@ -1627,8 +1646,21 @@ function fitTag(a) {
   return "core";
 }
 
+/* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
+   rides the booking beside the platform, so the operator can credit the sender
+   when this brand clears its own day 30. */
+const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
+try {
+  const incoming = new URLSearchParams(location.search).get("ref");
+  if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
+} catch (e) {}
+function refCode() {
+  try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
+}
+
 function auditUrl(a) {
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}`;
+  const ref = refCode();
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
   return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
 }
 
@@ -1771,6 +1803,36 @@ document.querySelectorAll(".reveal-words").forEach(el => {
 /* A section taller than the viewport can never show 18% of itself at once, so
    for those the threshold is scaled to "18% of the viewport is covered". */
 const REVEAL_RATIO = 0.18;
+/* ── Proof: one card per consenting brand, from public_results() — the only
+      anon-callable function in the schema. No rows, no section. ── */
+(async () => {
+  const sect = document.getElementById("proof"), grid = document.getElementById("proof-grid");
+  if (!sect || !grid) return;
+  const HOW = { direct: "confirmed by the platform's own record", isolated: "measured on the exact line the directive named",
+    attributable: "measured against a stated counterfactual", recovered: "paid by Amazon on a claim we filed", gate: "the ledger against the invoice" };
+  const KIND = { first_recovered: "first reimbursement recovered", gate_cleared: "cleared the free-month gate",
+    roi_3x: "ledger above three times the fee", roi_5x: "ledger above five times the fee", direct_measured: "a correction, measured" };
+  const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  let rows = [];
+  try {
+    const res = await fetch("https://cgqvdnhgbfxikzdqqaws.supabase.co/rest/v1/rpc/public_results", {
+      method: "POST", body: "{}",
+      headers: { apikey: "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X", Authorization: "Bearer sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X", "content-type": "application/json" },
+    });
+    rows = res.ok ? (await res.json()) || [] : [];
+  } catch (e) { rows = []; }
+  if (!rows.length) return;
+  grid.innerHTML = rows.slice(0, 6).map((r) => `
+    <div class="proof-card glass">
+      <span class="eyebrow">${esc(r.month)} · ${esc(r.platform || "amazon")}</span>
+      <span class="proof-amt">$${Math.floor(Number(r.amount_usd) || 0).toLocaleString("en-US")}</span>
+      <b>A ${esc(r.industry)} brand, ${esc(r.revenue_band || "$1M–$20M")}</b>
+      <span>${esc(KIND[r.kind] || r.kind)}</span>
+      <span class="proof-how">How we know: ${esc(HOW[r.how_we_know] || r.how_we_know)}</span>
+    </div>`).join("");
+  sect.hidden = false;
+})();
+
 document.querySelectorAll("[data-reveal]").forEach(s => {
   const threshold = Math.min(REVEAL_RATIO, REVEAL_RATIO * innerHeight / Math.max(1, s.offsetHeight));
   const io = new IntersectionObserver(entries => {
