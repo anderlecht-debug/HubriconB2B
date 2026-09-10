@@ -225,10 +225,17 @@ class Pass:
                 continue
             name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x) or None
             # A prospect the harvest found on a Shopify store must not be sent
-            # Seller Central instructions: the harvest row knows the platform.
+            # Seller Central instructions: the harvest row knows the platform,
+            # and so does the 60-second Teardown's capture (tool_runs) for a
+            # merchant who arrived through /teardown rather than the cold lane.
             harvested = (self.db.table("harvest_sellers").select("platform")
                          .eq("email", email).limit(1).execute().data)
-            platform = (harvested[0].get("platform") if harvested else None) or "amazon"
+            platform = (harvested[0].get("platform") if harvested else None)
+            if not platform:
+                runs = (self.db.table("tool_runs").select("platform").eq("email", email)
+                        .order("created_at", desc=True).limit(1).execute().data)
+                platform = runs[0].get("platform") if runs else None
+            platform = platform or "amazon"
             client, link, created = onboarding.provision(self.db, email, name, p.get("company_name"), platform)
             sent = self._touch(client, "files", link, force=True)
             self.db.table("prospects").update({"client_id": client["id"], "last_event_at": _iso()}).eq("id", p["id"]).execute()

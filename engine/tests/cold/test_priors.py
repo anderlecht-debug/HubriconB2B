@@ -96,8 +96,21 @@ def test_the_peak_card_takes_over_on_15_october():
     assert priors.fulfilment_fee("small_standard", 3.0, 9.49, date(2027, 2, 1)) is None
 
 
+def test_shopify_payments_is_the_published_plan_rate_on_the_whole_charge():
+    assert priors.payments_fee("basic", 30.00) == pytest.approx(30 * 0.029 + 0.30)
+    assert priors.payments_fee("Advanced", 100.00) == pytest.approx(2.80)
+    assert priors.payments_fee("plus", 10.00) == pytest.approx(0.525)
+    assert priors.payments_fee(None, 30.00) == priors.payments_fee("basic", 30.00)
+    assert priors.payments_fee("no such plan", 30.00) == priors.payments_fee("basic", 30.00)
+    assert priors.payments_fee("basic", 0) is None and priors.payments_fee("basic", None) is None
+
+
 def test_the_ratecard_json_is_the_table():
     d = priors.ratecard_dict(date(2026, 9, 8))
+    assert d["shopify"]["payments"]["basic"] == {"rate": 0.029, "fixed": 0.30}
+    assert d["shopify"]["third_party_surcharge"]["grow"] == 0.01 and d["shopify"]["default_plan"] == "basic"
+    assert d["carrier"]["band_edges_oz"][:3] == [16, 32, 48] and d["carrier"]["near_edge_oz"] == 2.0
+    assert d["carrier"]["buckets"] == [0, 1.0, 2.0, 4.0, 8.0, 12.0]
     cards = d["fba"]["cards"]
     assert cards["non_peak"]["small_standard"][0] == [2, [2.43, 3.32, 3.58]]
     assert cards["peak"]["large_standard"][-1] == [48, [6.26, 7.08, 7.34]]

@@ -1258,3 +1258,28 @@ page, so a tool lead gets the full Teardown path with no new job.
 The result is reproducible from its URL — the inputs ride in the hash — so
 "copy a link" and "send me this" both work without storing anything a
 visitor did not ask to keep.
+
+**The Shopify side (2026-09-09).** Same page, a platform toggle. A Shopify
+product has no size tier and no rank, so the inputs are the product's own
+numbers — price, compare-at, the shipping weight on the variant, units an
+order, what the store charges for shipping, the plan (sets the Shopify
+Payments rate), and orders a month typed by the merchant, which is why no
+Shopify monthly figure is bracketed. The cards are USPS Ground Advantage
+commercial by zone (already in priors) and Shopify Payments by plan (added to
+priors, `payments_fee`). Outputs: one order through payments and the carrier
+as a zone range with the subsidy chart, the pound cliff (`carrier_band_edge`
+ported), the anchor gap (`permanent_discount` without the history it needs
+to say "permanent"), break-even ROAS and the price floor, and the Shopify
+benchmark on the pound boundary — which prints its store count, because 455
+weighed parcels from 11 stores is those stores, not the market.
+
+`?product=<url>` prefills: first the crawl's row (`asin` holds
+`<domain>/products/<handle>` for Shopify rows), then the store's own
+`/products/<handle>.json` and `/products.json?limit=250` with a browser
+identity and a four-second timeout. Hosts are validated (public DNS names
+only, never an address or a private suffix, and the redirect target is
+re-checked) because the server fetches a URL a stranger typed. Stores that
+refuse a datacenter fall back to typing; that case is expected and the page
+says so. The capture creates the prospect exactly as the Amazon side does;
+`teardown_requests` reads the platform from `tool_runs` when the harvest
+does not know the address, so a Shopify merchant gets Shopify instructions.

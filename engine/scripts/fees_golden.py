@@ -77,6 +77,51 @@ def main() -> None:
             "want": [{"kind": f.kind, "perUnitLow": f.per_unit_low, "perUnitHigh": f.per_unit_high,
                       "dollarsLow": f.dollars_low, "dollarsHigh": f.dollars_high, "confidence": f.confidence}
                      for f in found]})
+    # -- the Shopify lane ----------------------------------------------------------
+    from hubricon_engine.cold import shelf
+    from hubricon_engine.harvest import shopify
+    cases["carrier"] = {
+        "cliff": [{"args": [w], "want": list(shopify.shipping_cliff(w)) if shopify.shipping_cliff(w) else None,
+                   "names": list(shopify.band_names(shopify.shipping_cliff(w)[0])) if shopify.shipping_cliff(w) else None}
+                  for w in (15.9, 16.0, 16.5, 17.2, 31.9, 33.0, 48.5, 100.0, None)],
+        "rows": {str(e): (list(priors.carrier_rows(e)) if priors.carrier_rows(e) else None) for e in (16, 32, 48)},
+        "steps": {str(k): list(v) for k, v in priors.CARRIER_GROUND_USD.items()},
+    }
+    cases["payments"] = [{"args": [plan, amt], "want": priors.payments_fee(plan, amt)}
+                         for plan, amt in (("basic", 30.0), ("grow", 30.0), ("advanced", 100.0), ("plus", 10.0),
+                                           (None, 30.0), ("nope", 30.0), ("basic", 0))]
+    def sitem(ref, price, compare_at, oz, units):
+        return Item(ref=f"shop.example/products/{ref}", url="u", title=ref, price=price, compare_at_price=compare_at,
+                    item_weight_oz=oz, est_monthly_units=units, est_monthly_revenue=None)
+    shops = {
+        "one_over_pound": [sitem("a", 32.0, None, 17.2, 400)],
+        "anchor_on_a_marked_shelf": [sitem("a", 32.0, 45.0, 12.0, 300), sitem("b", 20.0, 28.0, 8.0, None), sitem("c", 15.0, None, 6.0, None)],
+        "anchor_on_a_clean_shelf": [sitem("a", 32.0, 45.0, 12.0, 300), sitem("b", 20.0, None, 8.0, None), sitem("c", 15.0, None, 6.0, None), sitem("d", 9.0, None, 4.0, None)],
+        "both": [sitem("a", 32.0, 45.0, 33.0, 250)],
+        "too_far_over": [sitem("a", 32.0, None, 22.0, 400)],
+        "under_a_pound": [sitem("a", 32.0, None, 12.0, 400)],
+        "off_the_card": [sitem("a", 60.0, None, 49.0, 100)],
+    }
+    cases["shopify_detect"] = []
+    for name, items in shops.items():
+        snap = ProspectSnapshot(key=name, platform="shopify", provider="golden", items=tuple(items))
+        found = [f for f in findings.detect(snap, today=TODAY) if f.asin_or_sku == items[0].ref]
+        cases["shopify_detect"].append({
+            "name": name,
+            "args": {"price": items[0].price, "compareAtPrice": items[0].compare_at_price, "weightOz": items[0].item_weight_oz,
+                     "orders": None, "units": 1, "estMonthlyUnits": items[0].est_monthly_units,
+                     "catalogueShare": findings._catalogue_discount_share(snap)},
+            "want": [{"kind": f.kind, "perUnitLow": f.per_unit_low, "perUnitHigh": f.per_unit_high,
+                      "dollarsLow": f.dollars_low, "dollarsHigh": f.dollars_high, "confidence": f.confidence,
+                      "edge": f.evidence.get("edge")} for f in found]})
+    rows = [{"platform": "shopify", "seller_id": f"s{i % 7}", "weight_oz": 14 + (i % 9) * 0.7} for i in range(60)]
+    rows += [{"platform": "amazon", "seller_id": "x", "weight_oz": 17.0}] * 5
+    b = shelf.benchmark(rows, None, your_weight_oz=17.2, platform="shopify")
+    cases["shopify_bench"] = {"rows": rows, "your_weight_oz": 17.2,
+                              "want": {"measured": b.measured, "near": b.near, "share": b.share,
+                                       "buckets": [list(x) for x in b.buckets], "your_over_by": b.your_over_by}}
+    thin = shelf.benchmark(rows[:20], None, your_weight_oz=17.2, platform="shopify")
+    cases["shopify_bench_thin"] = {"rows": rows[:20], "want": None if thin is None else "not none"}
     OUT.write_text(json.dumps(cases, indent=1))
     print(f"wrote {OUT} — " + ", ".join(f"{k} {len(v)}" for k, v in cases.items()))
 

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The 60-second Teardown — what one Amazon listing gives up, priced off Amazon's own card | Hubricon</title>
-<meta name="description" content="Type five numbers off your Amazon product page. Get the fee stack on one unit, the fee cliff you may be an ounce over, your break-even ACoS, what October 15 costs your exact unit, and ten thousand simulated months — every figure from a published rate card, every estimate labelled.">
+<title>The 60-second Teardown — what one listing gives up, priced off the published card | Hubricon</title>
+<meta name="description" content="Type five numbers off your Amazon listing or your Shopify product. Get the fee stack, the cliff you may be an ounce over, your break-even ACoS or ROAS, what October 15 costs your exact unit, and ten thousand simulated months — every figure from a published rate card, every estimate labelled.">
 <link rel="canonical" href="https://www.hubricon.com/teardown">
 <meta property="og:title" content="The 60-second Teardown — Hubricon">
 <meta property="og:description" content="Five numbers off your product page. The fee cliff, the break-even ACoS, the October 15 delta and ten thousand months, priced off Amazon's own card.">
@@ -77,6 +77,10 @@ b{ color: var(--ink-100); font-weight: 600; }
 .row select{ width: auto; }
 .c12{ grid-column: span 12; } .c6{ grid-column: span 6; } .c4{ grid-column: span 4; } .c3{ grid-column: span 3; }
 .asin-row{ display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+.toggle{ display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: hsl(224 55% 10% / .7); border: 1px solid var(--rule-20); margin-bottom: 22px; }
+.tog{ font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 9px 16px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-60); cursor: pointer; }
+.tog.on{ background: var(--amber); color: var(--bg); }
+.f small label{ display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
 .hint{ font-size: 12px; color: var(--ink-60); }
 .hint.ok{ color: var(--ok); } .hint.bad{ color: var(--serious); }
 .form-foot{ display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
@@ -158,9 +162,9 @@ footer nav{ display: flex; gap: 16px; }
 </nav>
 
 <header class="head wrap">
-  <div class="eyebrow">The 60-second Teardown · Amazon listings</div>
-  <h1>What one listing gives up, priced off Amazon's own card.</h1>
-  <p>Type five numbers off your product page. You get the fee stack on one unit, the fee cliff you may be an ounce over, your break-even ACoS, what 15 October does to this exact unit, and ten thousand simulated months.</p>
+  <div class="eyebrow">The 60-second Teardown · Amazon listings and Shopify products</div>
+  <h1>What one listing gives up, priced off the published card.</h1>
+  <p>Type five numbers off your product page. On Amazon: the fee stack on one unit, the fee cliff you may be an ounce over, your break-even ACoS, what 15 October does to this exact unit, and ten thousand simulated months. On Shopify: one order through Shopify Payments and the carrier, the pound you may be an ounce over, what your shipping rate loses by zone, the anchor gap, and your break-even ROAS.</p>
   <p>Nothing is fetched from Amazon and nothing is stored unless you ask us to send it. Every dollar is arithmetic on a published rate; every estimate says where it comes from.</p>
 </header>
 
@@ -168,7 +172,11 @@ footer nav{ display: flex; gap: 16px; }
   <div id="stale" class="notice" hidden></div>
 
   <form id="form" class="form glass-strong" autocomplete="off">
-    <div class="grid">
+    <div class="toggle" role="tablist" aria-label="Platform">
+      <button type="button" class="tog on" data-platform="amazon" role="tab" aria-selected="true">Amazon listing</button>
+      <button type="button" class="tog" data-platform="shopify" role="tab" aria-selected="false">Shopify product</button>
+    </div>
+    <div id="amazon-fields" class="grid">
       <div class="f c12">
         <label for="asin">ASIN <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional — we may have weighed it already</span></label>
         <div class="asin-row">
@@ -189,6 +197,26 @@ footer nav{ display: flex; gap: 16px; }
         <select id="category" name="category"></select></div>
       <div class="f c4"><label for="bsr">Best Sellers Rank</label><input id="bsr" name="bsr" type="number" step="1" min="1" inputmode="numeric" placeholder="4,500"><small>The top-level rank in that category. It sets the monthly volume estimate, which is always a bracket.</small></div>
       <div class="f c4"><label for="cogs">Landed unit cost <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional</span></label><input id="cogs" name="cogs" type="number" step="0.01" min="0" inputmode="decimal" placeholder="6.50"><small>Unit cost + freight + packaging. Unlocks the break-even ACoS, the price floor and the ten thousand months. Estimates are fine.</small></div>
+    </div>
+    <div id="shopify-fields" class="grid" hidden>
+      <div class="f c12">
+        <label for="shop-url">Product URL <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional — we read the product's public JSON</span></label>
+        <div class="asin-row">
+          <input id="shop-url" placeholder="https://yourstore.com/products/your-product" maxlength="300" spellcheck="false">
+          <button type="button" class="btn btn-white" id="shop-lookup">Look it up</button>
+        </div>
+        <small id="shop-hint" class="hint">Every Shopify store publishes each product's price, compare-at and the shipping weight you set. Some stores refuse a request from a datacenter; if so, type the numbers — they are on the variant in your admin.</small>
+      </div>
+      <div class="f c3"><label for="s-price">Price</label><input id="s-price" type="number" step="0.01" min="0.5" inputmode="decimal" placeholder="32.00"></div>
+      <div class="f c3"><label for="s-compare">Compare-at price</label><input id="s-compare" type="number" step="0.01" min="0" inputmode="decimal" placeholder="45.00"><small>Optional. The struck-through anchor, if the product shows one.</small></div>
+      <div class="f c3"><label for="s-weight">Shipping weight</label>
+        <div class="row"><input id="s-weight" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="17.2"><select id="s-wunit" aria-label="weight unit"><option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option></select></div>
+        <small>The weight on the variant — what Shopify hands the carrier at checkout.</small></div>
+      <div class="f c3"><label for="s-units">Units per order</label><input id="s-units" type="number" step="1" min="1" value="1" inputmode="numeric"><small>Typical basket of this product.</small></div>
+      <div class="f c3"><label for="s-ship">You charge for shipping</label><input id="s-ship" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0"><small>Per order. Free shipping is 0.</small></div>
+      <div class="f c3"><label for="s-plan">Shopify plan</label><select id="s-plan"></select><small><label><input type="checkbox" id="s-third"> Not on Shopify Payments (adds the gateway surcharge)</label></small></div>
+      <div class="f c3"><label for="s-orders">Orders a month</label><input id="s-orders" type="number" step="1" min="1" inputmode="numeric" placeholder="400"><small>Your number, not an estimate. It sets every monthly figure, and is labelled as yours.</small></div>
+      <div class="f c3"><label for="s-cogs">Landed unit cost <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional</span></label><input id="s-cogs" type="number" step="0.01" min="0" inputmode="decimal" placeholder="9.00"><small>Unlocks the break-even ROAS and the price floor.</small></div>
     </div>
     <div class="form-foot">
       <button type="submit" class="btn btn-amber" id="run">Run the Teardown
@@ -213,7 +241,14 @@ footer nav{ display: flex; gap: 16px; }
       <div class="two">
         <div>
           <p class="sub" style="color:var(--ink-70);margin-bottom:10px">This page priced one unit off Amazon's card. The full Profit Teardown reads your own reports and finds what no listing shows:</p>
-          <ul>
+          <ul id="bridge-shopify" hidden>
+            <li>True net margin per product after payments, shipping labels, apps and 3PL charges, with ads honestly allocated — the products that go negative.</li>
+            <li>Meta and Google bleed by ad set and search term, in dollars: the spend that never converts.</li>
+            <li>Your demand curve per product with a 95% range, and price steps watched against conversion rate daily.</li>
+            <li>Stockout probability and a risk-priced reorder per SKU, from ten thousand simulated demand paths.</li>
+            <li>Whether the compare-at anchor is a promotion or a policy, from a fortnight of readings across the catalogue.</li>
+          </ul>
+          <ul id="bridge-amazon">
             <li>True net margin per SKU after every fee line and honestly allocated ads — the SKUs that go negative.</li>
             <li>Ad bleed by search term, in dollars: the 20–40% of spend that never converts.</li>
             <li>Stockout probability and a risk-priced reorder per SKU, from ten thousand simulated demand paths.</li>
@@ -251,6 +286,10 @@ footer nav{ display: flex; gap: 16px; }
       <dt>Monthly volume</dt><dd>A power-law fit of units to top-level sales rank, scaled per category. It is wrong by a factor of two either way, so every monthly figure is a bracket of half to one and a half times the estimate, and the simulation draws volume from a lognormal with that spread.</dd>
       <dt>Ten thousand months</dt><dd>10,000 draws of monthly units (lognormal, σ = ln 2 / 1.645) and landed cost (±10%), times the unit contribution on the card. What is shown is the 10th, 50th and 90th percentile of monthly profit and the share of months that lose money.</dd>
       <dt>Your category</dt><dd>Every listing our crawl has read and weighed in the same Best Sellers category, measured the same way, in half-ounce buckets above the band edge. Shown only from 30 listings up; nothing about any listing but yours leaves the server.</dd>
+      <dt>Shopify: one order</dt><dd>Shopify Payments takes its plan rate plus 30¢ on the whole charge, shipping included; a store not on Shopify Payments pays the plan's gateway surcharge on top. Shipping cost is the USPS Ground Advantage commercial row the parcel bills at — flat under a pound, then the whole pound above it — shown for every zone because a merchant's zone mix is not public. What is kept is a range between the nearest and farthest zone.</dd>
+      <dt>Shopify: the pound</dt><dd>USPS rounds anything over a pound up to the next whole pound. A parcel at 16.5 oz bills at two pounds; the same parcel at 15.9 oz bills at the flat sub-pound rate. The saving is the difference between those two rows, by zone; named only within 3 oz of the boundary.</dd>
+      <dt>Shopify: the anchor</dt><dd>Compare-at minus price is subtraction, not estimation. Whether it is a promotion or a policy depends on how much of the catalogue is marked down (read from the store's public catalogue when it answers) and on a fortnight of readings, which this page does not have — so it is shown as a gap, and the full Teardown decides.</dd>
+      <dt>Break-even ROAS</dt><dd><code>goods revenue ÷ (charged − payments − shipping − landed cost × units)</code>, per order, as a range across zones. The price floor is the unit price at which that contribution is zero.</dd>
       <dt>Sources</dt><dd id="sources"></dd>
     </dl>
   </section>
@@ -288,6 +327,36 @@ $("category").innerHTML = ['<option value="">Choose a category…</option>', ...
 const staleMsg = rc && fees.stale(rc, TODAY);
 if (staleMsg) { $("stale").hidden = false; $("stale").textContent = `We will not price anything today: ${staleMsg}. Run the full Teardown instead.`; $("run").disabled = true; }
 
+let platform = "amazon";
+function setPlatform(p) {
+  platform = p === "shopify" ? "shopify" : "amazon";
+  document.querySelectorAll(".tog").forEach((b) => { const on = b.dataset.platform === platform; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+  $("amazon-fields").hidden = platform !== "amazon"; $("shopify-fields").hidden = platform !== "shopify";
+  $("price").required = platform === "amazon"; $("weight").required = platform === "amazon";
+  $("bridge-amazon").hidden = platform !== "amazon"; $("bridge-shopify").hidden = platform !== "shopify";
+  $("results").classList.remove("on");
+}
+document.querySelectorAll(".tog").forEach((b) => b.addEventListener("click", () => setPlatform(b.dataset.platform)));
+if (rc?.shopify) $("s-plan").innerHTML = Object.entries(rc.shopify.payments).map(([k, v]) => `<option value="${k}"${k === rc.shopify.default_plan ? " selected" : ""}>${k[0].toUpperCase() + k.slice(1)} · ${(v.rate * 100).toFixed(v.rate * 100 % 1 ? 2 : 1)}% + ${Math.round(v.fixed * 100)}¢</option>`).join("");
+
+function readShopifyForm() {
+  const w = Number($("s-weight").value); const u = $("s-wunit").value;
+  const weightOz = u === "lb" ? w * 16 : u === "g" ? w / 28.3495 : w;
+  return {
+    handle: $("shop-url").value.trim().slice(0, 300) || null,
+    price: Number($("s-price").value) || null,
+    compareAtPrice: Number($("s-compare").value) || null,
+    weightOz: weightOz > 0 ? Math.round(weightOz * 100) / 100 : null,
+    units: Math.max(1, Math.round(Number($("s-units").value) || 1)),
+    shipCharge: Math.max(0, Number($("s-ship").value) || 0),
+    plan: $("s-plan").value || "basic",
+    thirdParty: $("s-third").checked,
+    orders: Number($("s-orders").value) || null,
+    cogs: Number($("s-cogs").value) || null,
+    catalogueShare: window.__catalogueShare ?? null,
+  };
+}
+
 function readForm() {
   const w = Number($("weight").value); const u = $("wunit").value;
   const weightOz = u === "lb" ? w * 16 : u === "g" ? w / 28.3495 : w;
@@ -304,6 +373,7 @@ function readForm() {
 }
 
 function encodeHash(i) {
+  if (platform === "shopify") return fees.resultHashShopify(i);
   const p = new URLSearchParams();
   if (i.asin) p.set("a", i.asin); p.set("p", i.price); p.set("w", i.itemWeightOz);
   if (i.dims) p.set("d", i.dims.join("x")); if (i.category) p.set("c", i.category); if (i.bsr) p.set("r", i.bsr); if (i.cogs) p.set("k", i.cogs);
@@ -312,6 +382,15 @@ function encodeHash(i) {
 function fillFromHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   if (!p.get("p")) return false;
+  if (p.get("s") === "1") {
+    setPlatform("shopify");
+    $("shop-url").value = p.get("h") || ""; $("s-price").value = p.get("p"); $("s-compare").value = p.get("ca") || "";
+    $("s-weight").value = p.get("w"); $("s-wunit").value = "oz"; $("s-units").value = p.get("u") || "1";
+    $("s-ship").value = p.get("sc") || ""; if (p.get("pl")) $("s-plan").value = p.get("pl"); $("s-third").checked = p.get("tp") === "1";
+    $("s-orders").value = p.get("o") || ""; $("s-cogs").value = p.get("k") || "";
+    return true;
+  }
+  setPlatform("amazon");
   $("asin").value = p.get("a") || ""; $("price").value = p.get("p"); $("weight").value = p.get("w"); $("wunit").value = "oz";
   const d = (p.get("d") || "").split("x"); if (d.length === 3) { $("d1").value = d[0]; $("d2").value = d[1]; $("d3").value = d[2]; }
   $("category").value = p.get("c") || ""; $("bsr").value = p.get("r") || ""; $("cogs").value = p.get("k") || "";
@@ -333,6 +412,20 @@ $("lookup").addEventListener("click", async () => {
     if (d.bsr) $("bsr").value = d.bsr;
     window.__brand = d.brand || null;
     hint.className = "hint ok"; hint.textContent = `Found it: ${d.title ? d.title.split(" ").slice(0, 8).join(" ") : asin}, as our crawl read it on ${new Date(d.seen_at).toLocaleDateString("en-US")}. Check the numbers, then run it.`;
+  } catch { hint.className = "hint bad"; hint.textContent = "Could not reach the lookup. Type the numbers instead."; }
+});
+
+$("shop-lookup").addEventListener("click", async () => {
+  const url = $("shop-url").value.trim(); const hint = $("shop-hint");
+  if (!/^https?:\/\/[^\s/]+\/products\/[^\s/?#]+/i.test(url)) { hint.className = "hint bad"; hint.textContent = "Paste the product's own URL — it ends in /products/<handle>."; return; }
+  hint.className = "hint"; hint.textContent = "Reading the store's public product JSON…";
+  try {
+    const r = await fetch(`/api/quick?product=${encodeURIComponent(url)}`); const d = await r.json();
+    if (!r.ok || !d.found) { hint.className = "hint"; hint.textContent = d.reason || "The store did not answer. Type the numbers from the variant in your admin; the result is the same."; return; }
+    if (d.price) $("s-price").value = d.price; if (d.compare_at_price) $("s-compare").value = d.compare_at_price;
+    if (d.weight_oz) { $("s-weight").value = d.weight_oz; $("s-wunit").value = "oz"; }
+    window.__catalogueShare = d.catalogue_discount_share ?? null; window.__brand = d.vendor || null;
+    hint.className = "hint ok"; hint.textContent = `Found it${d.title ? `: ${d.title.split(" ").slice(0, 8).join(" ")}` : ""} (${d.source === "live" ? "read from the store just now" : "as our crawl read it"}${d.catalogue_discount_share != null ? `; ${Math.round(d.catalogue_discount_share * 100)}% of the catalogue shows a compare-at` : ""}). Check the numbers, add your orders, then run it.`;
   } catch { hint.className = "hint bad"; hint.textContent = "Could not reach the lookup. Type the numbers instead."; }
 });
 
@@ -552,7 +645,122 @@ async function run(inputs) {
 
   // sources and the result link
   $("sources").innerHTML = `${esc(cardLine(cardIn))}. ${esc(cardLine(peakCard))}. Referral rates: Amazon's published US referral fee schedule by category. Rate card generated ${esc(rc.generated)} from the same table the Hubricon engine prices with.`;
-  window.__last = { inputs, item, u, found, sim, headline: lead ? findingTitle(lead)[0] : (u?.keep != null ? `keeps ${money(u.keep)} of ${money(u.price)}` : "unpriced") };
+  window.__last = { platform: "amazon", inputs, item, u, found, sim, headline: lead ? findingTitle(lead)[0] : (u?.keep != null ? `keeps ${money(u.keep)} of ${money(u.price)}` : "unpriced") };
+  history.replaceState(null, "", encodeHash(inputs));
+  $("results").classList.add("on");
+  $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+const ZONES = [1, 2, 3, 4, 5, 6, 7, 8];
+function zoneChart(econ) {
+  const cost = econ.shipByZone; if (!cost) return "";
+  const top = Math.max(...cost, econ.shipCharge) * 1.22; const slot = (W - PL - PR) / 8, bw = slot * 0.6;
+  const body = frame("usps zone (1 = nearest, 8 = farthest)", "shipping, per order", ZONES.map((z, i) => [PL + i * slot + slot / 2, `zone ${z}`]), niceTicks(0, top, 4).map((v) => [Y(v, 0, top), money(v)]));
+  cost.forEach((c, i) => { const x = PL + i * slot + (slot - bw) / 2, y = Y(c, 0, top); const loses = c > econ.shipCharge; body.push(`<rect x="${x}" y="${y}" width="${bw}" height="${H - PB - y}" fill="${loses ? SERIOUS : OK}" opacity=".85"/>`); body.push(`<text x="${x + bw / 2}" y="${y - 6}" text-anchor="middle" font-size="10.5" fill="${FAINT}">${money(c)}</text>`); });
+  const yc = Y(econ.shipCharge, 0, top);
+  body.push(`<line x1="${PL}" y1="${yc}" x2="${W - PR}" y2="${yc}" stroke="${C1}" stroke-width="2" stroke-dasharray="4 4"/>`);
+  body.push(`<text x="${PL + 6}" y="${yc - 6}" font-size="11.5" font-weight="600" fill="${C1}">${econ.shipCharge > 0 ? `you charge ${money(econ.shipCharge)}` : "you charge nothing"}</text>`);
+  return svg(body, "Carrier cost by zone against what you charge");
+}
+function carrierBandsChart(ev) {
+  const [now, under] = ev.rows || [null, null]; if (!now) return "";
+  const top = Math.max(...now) * 1.2, bottom = Math.min(...under) * 0.85; const slot = (W - PL - PR) / 8;
+  const body = frame("usps zone", "per parcel, ground advantage commercial", ZONES.map((z, i) => [PL + i * slot + slot / 2, `zone ${z}`]), niceTicks(bottom, top, 4).map((v) => [Y(v, bottom, top), money(v)]));
+  const path = (arr, colour) => { const d = arr.map((v, i) => `${i ? "L" : "M"}${PL + i * slot + slot / 2},${Y(v, bottom, top)}`).join(""); return `<path d="${d}" fill="none" stroke="${colour}" stroke-width="2.5" stroke-linejoin="round"/>`; };
+  body.push(path(now, SERIOUS)); body.push(path(under, OK));
+  now.forEach((v, i) => body.push(`<circle cx="${PL + i * slot + slot / 2}" cy="${Y(v, bottom, top)}" r="4" fill="${SERIOUS}"/>`));
+  under.forEach((v, i) => body.push(`<circle cx="${PL + i * slot + slot / 2}" cy="${Y(v, bottom, top)}" r="4" fill="${OK}"/>`));
+  body.push(`<text x="${W - PR}" y="${PT + 4}" text-anchor="end" font-size="11.5" fill="${SERIOUS}">you, at ${ev.bandAbove}</text>`);
+  body.push(`<text x="${W - PR}" y="${PT + 20}" text-anchor="end" font-size="11.5" fill="${OK}">${ev.bandBelow}</text>`);
+  return svg(body, "What the parcel pays now against the band below, by zone");
+}
+const range = (a, b, d = 2) => a === b ? money(a, d) : `${money(a, d)}–${money(b, d)}`;
+
+async function runShopify(inputs) {
+  const R = fees.analyseShopify(rc, inputs); const { item, econ, found } = R;
+  const cliff = found.find((f) => f.kind === "carrier_band_edge"), anchor = found.find((f) => f.kind === "permanent_discount");
+  const perParcel = (f) => f.perUnitHigh > f.perUnitLow ? `${cents(f.perUnitLow)}–${cents(f.perUnitHigh)}` : cents(f.perUnitLow);
+  const typedMonthly = (f) => f.monthlyTypedHigh > 0 ? `${range(f.monthlyTypedLow, f.monthlyTypedHigh, 0)} a month at the ${num(item.orders)} orders you typed` : null;
+
+  const tiles = [];
+  if (econ?.keepLow != null) tiles.push(`<div class="tile glass"><span class="k">Kept per order, before cost</span><div class="v amber">${range(econ.keepLow, econ.keepHigh)}</div><p>of ${money(econ.charged)} charged, after Shopify Payments and the carrier; the range is zone 1 to zone 8.</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">Kept per order</span><div class="v">?</div><p>${econ ? "This weight is past the carrier rows we hold, so shipping stays unpriced." : "A price and a shipping weight are needed."}</p></div>`);
+  if (cliff) tiles.push(`<div class="tile glass"><span class="k">The pound, per parcel</span><div class="v amber">${perParcel(cliff)}</div><p>${typedMonthly(cliff) || "Per parcel; add your orders for the monthly figure."}</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">The pound</span><div class="v good">None</div><p>${item.billableWeightOz && item.billableWeightOz <= 16 ? "Under a pound the rate is flat: nothing to drop into." : "Not within 3 oz of a pound boundary."}</p></div>`);
+  if (econ?.subsidyByZone) tiles.push(`<div class="tile glass"><span class="k">Zones where shipping loses money</span><div class="v ${econ.zonesSubsidised > 4 ? "bad" : econ.zonesSubsidised ? "amber" : "good"}">${econ.zonesSubsidised} of 8</div><p>${econ.shipCharge > 0 ? `You charge ${money(econ.shipCharge)}; the carrier charges ${range(econ.shipLow, econ.shipHigh)}.` : `Free shipping costs you ${range(econ.shipLow, econ.shipHigh)} an order, by zone.`}</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">Zones where shipping loses money</span><div class="v">?</div><p>Unpriced past the loaded carrier rows.</p></div>`);
+  $("hero-num").innerHTML = tiles.join("");
+
+  const s1 = $("s-stack");
+  if (econ?.shipByZone) {
+    s1.innerHTML = `<span class="label">01 · One order, through Shopify Payments and the carrier</span><h2>${money(econ.charged)} charged. ${range(econ.keepLow, econ.keepHigh)} kept.</h2>
+      <p class="sub">Two published cards, nothing else. Shopify Payments on the ${econ.plan} plan takes ${pct(econ.paymentsRate, econ.paymentsRate * 100 % 1 ? 2 : 1)} + ${money(econ.paymentsFixed)} on the whole charge${inputs.thirdParty ? " (including the gateway surcharge for not using Shopify Payments)" : ""}; the carrier bills a ${item.billableWeightOz <= 16 ? "sub-pound" : `${Math.ceil(item.billableWeightOz / 16)} lb`} parcel by zone.</p>
+      <div class="two"><div><table><thead><tr><th></th><th class="r">Zone 1</th><th class="r">Zone 8</th></tr></thead><tbody>
+        <tr><td>Goods · ${item.unitsPerOrder} × ${money(econ.price)}</td><td class="r">${money(econ.goods)}</td><td class="r">${money(econ.goods)}</td></tr>
+        <tr><td>Shipping you charge</td><td class="r">${money(econ.shipCharge)}</td><td class="r">${money(econ.shipCharge)}</td></tr>
+        <tr><td>Shopify Payments · ${pct(econ.paymentsRate, 2)} + ${money(econ.paymentsFixed)}</td><td class="r">−${money(econ.payments)}</td><td class="r">−${money(econ.payments)}</td></tr>
+        <tr><td>Carrier · USPS Ground Advantage</td><td class="r">−${money(econ.shipLow)}</td><td class="r">−${money(econ.shipHigh)}</td></tr>
+        <tr class="tot"><td><b>You keep, before ads and cost</b></td><td class="r"><b>${money(econ.keepHigh)}</b></td><td class="r"><b>${money(econ.keepLow)}</b></td></tr>
+      </tbody></table></div>
+      <div><div class="chart">${zoneChart(econ)}</div></div></div>
+      ${assume([rc.shopify.source, rc.carrier.source, `the parcel bills at the ${item.billableWeightOz <= 16 ? "flat sub-pound" : `${Math.ceil(item.billableWeightOz / 16)} lb`} row on the shipping weight you entered; a carrier still bills the greater of that and dimensional weight`, "your zone mix is not public, so every figure is shown from the nearest zone to the farthest"])}`;
+  } else {
+    s1.innerHTML = `<span class="label">01 · One order</span><h2>${econ ? "Shipping unpriced at this weight." : "A price and a weight are the minimum."}</h2><p class="sub">${econ ? "The carrier card we hold runs to three pounds; heavier parcels are priced from your own label history in the full Teardown." : ""}</p>`;
+  }
+
+  const s2 = $("s-cliff");
+  if (cliff) {
+    const e = cliff.evidence;
+    s2.innerHTML = `<span class="label">02 · The pound</span><h2>${e.overByOz} oz is costing you on every parcel.</h2>
+      <p class="sub">Your product ships at ${e.yourWeightOz} oz. USPS rounds anything over ${e.edge} oz up to ${e.bandAbove}, and you are ${e.overByOz} oz over it — so every parcel bills at the ${e.bandAbove} rate, where ${e.bandBelow} would have paid ${e.bandBelow === "under a pound" ? "one flat rate however heavy it was" : "the row below"}. That is ${perParcel(cliff)} a parcel, nearest zone to farthest.</p>
+      ${typedMonthly(cliff) ? `<div class="big"><span>${typedMonthly(cliff)}</span></div>` : ""}
+      <div class="chart">${carrierBandsChart(e)}</div>${assume(cliff.assumptions)}`;
+  } else {
+    s2.innerHTML = `<span class="label">02 · The pound</span><h2>${item.billableWeightOz && item.billableWeightOz <= 16 ? "Under a pound. The rate is flat." : "No pound boundary within reach."}</h2>
+      <p class="sub">${item.billableWeightOz && item.billableWeightOz <= 16 ? "USPS collapsed the sub-pound ounce tiers into one commercial rate on 12 July 2026, so trimming an ounce here saves nothing on the label. Watch the pound if the packaging grows." : "The parcel is more than 3 oz into its pound, which is a different box, not a trim."} That is a good result, and it is exactly what we would have told you in an email.</p>`;
+  }
+
+  const s3 = $("s-breakeven");
+  if (anchor) {
+    const e = anchor.evidence; const gateLine = e.catalogueDiscountShare != null ? `${pct(e.catalogueDiscountShare)} of the catalogue we read shows a compare-at, which makes this a price, not a promotion.` : "Whether that is a promotion or a policy depends on how much of the catalogue is marked down, which this page could not read.";
+    s3.innerHTML = `<span class="label">03 · The anchor</span><h2>${money(anchor.perUnitLow)} of every unit is given to an anchor.</h2>
+      <p class="sub">The product page says this is worth ${money(e.compareAt)} and sells it at ${money(e.price)}: ${pct(e.discountShare)} off, ${money(anchor.perUnitLow)} a unit decided in advance. An anchor buys urgency; an anchor that is there every day buys nothing, because no customer has seen the product at ${money(e.compareAt)}. ${gateLine}</p>
+      ${anchor.monthlyTypedHigh ? `<div class="big"><span>${money(anchor.monthlyTypedLow, 0)} a month at the ${num(item.orders)} orders you typed</span></div>` : ""}${assume(anchor.assumptions)}`;
+  } else {
+    s3.innerHTML = `<span class="label">03 · The anchor</span><h2>${item.compareAtPrice && item.compareAtPrice > item.price ? "A small anchor, not a finding." : "No anchor gap."}</h2><p class="sub">${item.compareAtPrice && item.compareAtPrice > item.price ? "Under 10% off is a rounding on the price, not a policy." : "The product is not listed under its own compare-at, which is the ordinary state of a product that is not on sale."}</p>`;
+  }
+
+  const s4 = $("s-peak");
+  if (econ?.contributionLow != null) {
+    s4.innerHTML = `<span class="label">04 · Break-even ROAS and the price floor</span><h2>${econ.breakEvenRoasLow ? `Your ads break even between ${econ.breakEvenRoasLow.toFixed(2)} and ${econ.breakEvenRoasHigh ? econ.breakEvenRoasHigh.toFixed(2) : "∞"} ROAS.` : "This order loses money before a single ad."}</h2>
+      <p class="sub">Meta and Google optimise toward the ROAS you typed in. This one is derived: after Shopify Payments, the carrier and your landed cost, an order contributes ${range(econ.contributionLow, econ.contributionHigh)} depending on zone, which is ${money(econ.goods)} of goods over that contribution. Below the lower figure a campaign is profitable in every zone; above the higher one it loses money in every zone.</p>
+      <div class="kv">
+        <div><span class="k">Contribution per order</span><div class="v ${econ.contributionLow < 0 ? "bad" : ""}">${range(econ.contributionLow, econ.contributionHigh)}</div><small>charged − payments − shipping − cost</small></div>
+        <div><span class="k">Break-even ROAS</span><div class="v amber">${econ.breakEvenRoasLow ? `${econ.breakEvenRoasLow.toFixed(2)}${econ.breakEvenRoasHigh && econ.breakEvenRoasHigh !== econ.breakEvenRoasLow ? `–${econ.breakEvenRoasHigh.toFixed(2)}` : ""}` : "—"}</div><small>ads break even on profit, not revenue</small></div>
+        <div><span class="k">Price floor, per unit</span><div class="v">${range(econ.priceFloorLow, econ.priceFloorHigh)}</div><small>where an order contributes nothing, nearest to farthest zone</small></div>
+      </div>
+      ${assume([rc.shopify.source, rc.carrier.source, `the landed cost you entered, ${money(econ.cogs)} a unit, ${item.unitsPerOrder} unit${item.unitsPerOrder === 1 ? "" : "s"} an order`, "apps, returns and packaging are not in this figure; the full Teardown allocates them from your payouts and orders"])}`;
+  } else {
+    s4.innerHTML = `<span class="label">04 · Break-even ROAS and the price floor</span><h2>Locked behind one number.</h2><div class="unlock">Enter your <b>landed unit cost</b> above and run it again. It unlocks the break-even ROAS for this product, as a range across zones, and the price at which an order contributes nothing.${econ?.shipByZone ? "" : " It also needs a weight the carrier card covers."}</div>`;
+  }
+
+  $("s-sim").innerHTML = `<span class="label">05 · What the month you typed adds up to</span>${item.orders ? `<h2>${num(item.orders)} orders. ${econ?.keepLow != null ? `${range(econ.keepLow * item.orders, econ.keepHigh * item.orders, 0)} kept before cost.` : ""}</h2><p class="sub">Every monthly figure on this page multiplies a per-order number off the card by the orders you typed. Nothing here is estimated from a rank or a review count; the range is only the zone mix.${cliff?.monthlyTypedHigh ? ` The pound alone is ${range(cliff.monthlyTypedLow, cliff.monthlyTypedHigh, 0)} of it.` : ""}${anchor?.monthlyTypedHigh ? ` The anchor gives away ${money(anchor.monthlyTypedLow, 0)}.` : ""}</p>` : `<h2>Add your orders a month.</h2><div class="unlock">With <b>orders a month</b> typed, every per-order figure here becomes a monthly one — and it stays yours, not an estimate.</div>`}`;
+
+  const s6 = $("s-bench"); s6.hidden = true;
+  if (item.billableWeightOz) {
+    try {
+      const r = await fetch(`/api/quick?bench=shopify&oz=${item.billableWeightOz}`); const b = await r.json();
+      if (b && b.measured >= 30 && b.buckets) {
+        s6.hidden = false;
+        s6.innerHTML = `<span class="label">06 · Shopify brands we have weighed</span><h2>${pct(b.share)} of Shopify products we have weighed sit within 2 oz of dropping a whole pound.</h2>
+          <p class="sub">We have read and weighed <b>${num(b.measured)}</b> products over a pound from ${b.stores ? `<b>${num(b.stores)}</b> Shopify stores'` : "Shopify stores'"} public catalogues and measured each one the same way as yours. ${b.yourOverBy != null ? `Yours is marked: ${oz(b.yourOverBy)} above the pound below it.` : "Yours is under a pound, where the rate is flat."}${b.stores && b.stores < 30 ? " That is a small number of stores, so read it as those stores, not the market." : ""}</p>
+          <div class="chart">${categoryBands({ ...b, category: "Shopify products" })}</div>`;
+      }
+    } catch { /* bonus */ }
+  }
+
+  $("sources").innerHTML = `${esc(rc.shopify.source)}. ${esc(rc.carrier.source)}. ${esc(cardLine(cardIn))}. Rate card generated ${esc(rc.generated)} from the same table the Hubricon engine prices with.`;
+  window.__last = { platform: "shopify", inputs, item, u: econ, found, sim: null, headline: cliff ? `${cliff.evidence.overByOz} oz over a pound` : econ?.keepLow != null ? `keeps ${range(econ.keepLow, econ.keepHigh)} of ${money(econ.charged)}` : "unpriced" };
   history.replaceState(null, "", encodeHash(inputs));
   $("results").classList.add("on");
   $("results").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -560,7 +768,13 @@ async function run(inputs) {
 
 $("form").addEventListener("submit", (e) => {
   e.preventDefault();
-  const i = readForm(); const err = $("form-err");
+  const err = $("form-err");
+  if (platform === "shopify") {
+    const i = readShopifyForm();
+    if (!i.price || !i.weightOz) { err.hidden = false; err.textContent = "A price and a shipping weight are the minimum. Everything else sharpens the answer."; return; }
+    err.hidden = true; runShopify(i); return;
+  }
+  const i = readForm();
   if (!i.price || !i.itemWeightOz) { err.hidden = false; err.textContent = "A sale price and an item weight are the minimum. Everything else sharpens the answer."; return; }
   err.hidden = true; run(i);
 });
@@ -577,7 +791,7 @@ $("capture").addEventListener("submit", async (e) => {
   try {
     const L = window.__last;
     const r = await fetch("/api/quick", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-      email, first_name: $("cap-name").value.trim(), asin: L.inputs.asin, platform: "amazon", website: $("cap-web").value,
+      email, first_name: $("cap-name").value.trim(), asin: L.platform === "amazon" ? L.inputs.asin : null, platform: L.platform, website: $("cap-web").value,
       inputs: L.inputs,
       summary: { headline: L.headline, brand: window.__brand || null, keep: L.u?.keep ?? null, keepPct: L.u?.keepPct ?? null, breakEvenAcos: L.u?.breakEvenAcos ?? null, peakDelta: L.u?.peakDelta ?? null, findings: L.found.map((f) => ({ kind: f.kind, perUnitLow: f.perUnitLow, perUnitHigh: f.perUnitHigh, dollarsLow: f.dollarsLow, dollarsHigh: f.dollarsHigh })), sim: L.sim ? { p10: L.sim.p10, p50: L.sim.p50, p90: L.sim.p90, pLoss: L.sim.pLoss } : null },
     }) });
@@ -590,7 +804,7 @@ $("capture").addEventListener("submit", async (e) => {
   } catch (err) { btn.disabled = false; msg.className = "hint bad"; msg.textContent = `Could not save that: ${err.message}. Use the button on the left instead.`; }
 });
 
-if (rc && fillFromHash()) run(readForm());
+if (rc && fillFromHash()) { if (platform === "shopify") runShopify(readShopifyForm()); else run(readForm()); }
 </script>
 </body>
 </html>

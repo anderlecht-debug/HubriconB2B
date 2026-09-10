@@ -279,6 +279,39 @@ def _carrier_steps() -> dict[int, tuple[float, float]]:
 CARRIER_GROUND_USD: dict[int, tuple[float, float]] = _carrier_steps()
 
 
+# -- Shopify: Shopify Payments -------------------------------------------------------
+#
+# Source: help.shopify.com → "Shopify Payments rates in the United States by
+#         card type" and the plan pricing page. Standard domestic online card
+#         rates per plan, and the surcharge a store pays on every order when it
+#         takes payment through a third-party gateway instead. Verified
+#         2026-09-09 against two published reproductions that agree. Premium
+#         cards (Amex, business) run about 0.6 points dearer and are not priced
+#         here; in-person rates are a different card and are not either.
+PAYMENTS_SOURCE = ("Shopify Payments online card rates by plan, United States "
+                   "(help.shopify.com), verified 2026-09-09")
+PAYMENTS_VERIFIED = date(2026, 9, 9)
+SHOPIFY_PAYMENTS: dict[str, tuple[float, float]] = {   # plan -> (rate, fixed $ per order)
+    "basic": (0.029, 0.30),
+    "grow": (0.027, 0.30),
+    "advanced": (0.025, 0.30),
+    "plus": (0.0225, 0.30),
+}
+# Per-order surcharge for not using Shopify Payments. Plus's figure is the one
+# on the plan page; the three below it are in every reproduction.
+THIRD_PARTY_GATEWAY_SURCHARGE = {"basic": 0.02, "grow": 0.01, "advanced": 0.005, "plus": 0.002}
+DEFAULT_PLAN = "basic"
+
+
+def payments_fee(plan: str | None, amount: float | None) -> float | None:
+    """What Shopify Payments keeps on one order charged at `amount` — the whole
+    charge, shipping included, because that is what the processor sees."""
+    if amount is None or amount <= 0:
+        return None
+    rate, fixed = SHOPIFY_PAYMENTS.get((plan or DEFAULT_PLAN).lower(), SHOPIFY_PAYMENTS[DEFAULT_PLAN])
+    return round(amount * rate + fixed, 4)
+
+
 def stale(today: date | None = None) -> str | None:
     """Plain English if no loaded Amazon card covers the day."""
     today = today or date.today()
@@ -380,11 +413,23 @@ def ratecard_dict(today: date | None = None) -> dict:
         "referral_default": REFERRAL_DEFAULT, "referral_min_usd": REFERRAL_MIN_USD,
         "referral_by_category": dict(REFERRAL_BY_CATEGORY),
     }
+    from ..harvest import shopify as harvest_shopify
+    from . import shelf as shelfmod
     carrier = {
         "source": CARRIER_SOURCE,
         "effective": CARRIER_EFFECTIVE.isoformat() if CARRIER_EFFECTIVE else None,
         "zones": list(CARRIER_ZONES),
         "ground_commercial": {str(k): v for k, v in CARRIER_GROUND_COMMERCIAL.items()},
+        "band_edges_oz": list(harvest_shopify.SHIPPING_BAND_EDGES_OZ),
+        "near_edge_oz": shelfmod.CARRIER_NEAR_EDGE_OZ,
+        "buckets": list(shelfmod.CARRIER_BUCKETS),
+        "max_shaveable_oz": 3.0,
+    }
+    shopify = {
+        "source": PAYMENTS_SOURCE, "verified": PAYMENTS_VERIFIED.isoformat(),
+        "payments": {k: {"rate": r, "fixed": f} for k, (r, f) in SHOPIFY_PAYMENTS.items()},
+        "third_party_surcharge": dict(THIRD_PARTY_GATEWAY_SURCHARGE),
+        "default_plan": DEFAULT_PLAN,
     }
     units = {
         "a": harvest_amazon.CURVE_A, "b": harvest_amazon.CURVE_B,
@@ -395,7 +440,8 @@ def ratecard_dict(today: date | None = None) -> dict:
         "note": "monthly units from a top-level category rank; a power-law fit that is wrong by "
                 "a factor of two either way, so every monthly figure is a bracket",
     }
-    return {"generated": today.isoformat(), "fba": fba, "carrier": carrier, "units_curve": units}
+    return {"generated": today.isoformat(), "fba": fba, "carrier": carrier, "shopify": shopify,
+            "units_curve": units}
 
 
 def band_edge_below(tier: str, weight_oz: float | None) -> float | None:

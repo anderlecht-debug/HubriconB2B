@@ -555,5 +555,831 @@
    },
    "want": []
   }
- ]
+ ],
+ "carrier": {
+  "cliff": [
+   {
+    "args": [
+     15.9
+    ],
+    "want": null,
+    "names": null
+   },
+   {
+    "args": [
+     16.0
+    ],
+    "want": null,
+    "names": null
+   },
+   {
+    "args": [
+     16.5
+    ],
+    "want": [
+     16,
+     0.5
+    ],
+    "names": [
+     "under a pound",
+     "2 lb"
+    ]
+   },
+   {
+    "args": [
+     17.2
+    ],
+    "want": [
+     16,
+     1.2
+    ],
+    "names": [
+     "under a pound",
+     "2 lb"
+    ]
+   },
+   {
+    "args": [
+     31.9
+    ],
+    "want": [
+     16,
+     15.9
+    ],
+    "names": [
+     "under a pound",
+     "2 lb"
+    ]
+   },
+   {
+    "args": [
+     33.0
+    ],
+    "want": [
+     32,
+     1.0
+    ],
+    "names": [
+     "2 lb",
+     "3 lb"
+    ]
+   },
+   {
+    "args": [
+     48.5
+    ],
+    "want": [
+     48,
+     0.5
+    ],
+    "names": [
+     "3 lb",
+     "4 lb"
+    ]
+   },
+   {
+    "args": [
+     100.0
+    ],
+    "want": [
+     96,
+     4.0
+    ],
+    "names": [
+     "6 lb",
+     "7 lb"
+    ]
+   },
+   {
+    "args": [
+     null
+    ],
+    "want": null,
+    "names": null
+   }
+  ],
+  "rows": {
+   "16": [
+    [
+     7.99,
+     8.08,
+     8.26,
+     8.51,
+     9.95,
+     11.58,
+     12.0,
+     12.87
+    ],
+    [
+     6.93,
+     6.94,
+     7.3,
+     7.46,
+     7.69,
+     7.86,
+     8.07,
+     8.4
+    ]
+   ],
+   "32": [
+    [
+     8.64,
+     8.66,
+     9.14,
+     9.67,
+     11.57,
+     13.59,
+     14.36,
+     15.75
+    ],
+    [
+     7.99,
+     8.08,
+     8.26,
+     8.51,
+     9.95,
+     11.58,
+     12.0,
+     12.87
+    ]
+   ],
+   "48": null
+  },
+  "steps": {
+   "16": [
+    0.96,
+    4.47
+   ],
+   "32": [
+    0.58,
+    2.88
+   ]
+  }
+ },
+ "payments": [
+  {
+   "args": [
+    "basic",
+    30.0
+   ],
+   "want": 1.17
+  },
+  {
+   "args": [
+    "grow",
+    30.0
+   ],
+   "want": 1.11
+  },
+  {
+   "args": [
+    "advanced",
+    100.0
+   ],
+   "want": 2.8
+  },
+  {
+   "args": [
+    "plus",
+    10.0
+   ],
+   "want": 0.525
+  },
+  {
+   "args": [
+    null,
+    30.0
+   ],
+   "want": 1.17
+  },
+  {
+   "args": [
+    "nope",
+    30.0
+   ],
+   "want": 1.17
+  },
+  {
+   "args": [
+    "basic",
+    0
+   ],
+   "want": null
+  }
+ ],
+ "shopify_detect": [
+  {
+   "name": "one_over_pound",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": null,
+    "weightOz": 17.2,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 400,
+    "catalogueShare": 0.0
+   },
+   "want": [
+    {
+     "kind": "carrier_band_edge",
+     "perUnitLow": 0.96,
+     "perUnitHigh": 4.47,
+     "dollarsLow": 192.0,
+     "dollarsHigh": 2682.0,
+     "confidence": 0.74,
+     "edge": 16
+    }
+   ]
+  },
+  {
+   "name": "anchor_on_a_marked_shelf",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": 45.0,
+    "weightOz": 12.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 300,
+    "catalogueShare": 0.667
+   },
+   "want": [
+    {
+     "kind": "permanent_discount",
+     "perUnitLow": 13.0,
+     "perUnitHigh": 13.0,
+     "dollarsLow": 1950.0,
+     "dollarsHigh": 5850.0,
+     "confidence": 0.55,
+     "edge": null
+    }
+   ]
+  },
+  {
+   "name": "anchor_on_a_clean_shelf",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": 45.0,
+    "weightOz": 12.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 300,
+    "catalogueShare": 0.25
+   },
+   "want": []
+  },
+  {
+   "name": "both",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": 45.0,
+    "weightOz": 33.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 250,
+    "catalogueShare": 1.0
+   },
+   "want": [
+    {
+     "kind": "permanent_discount",
+     "perUnitLow": 13.0,
+     "perUnitHigh": 13.0,
+     "dollarsLow": 1625.0,
+     "dollarsHigh": 4875.0,
+     "confidence": 0.55,
+     "edge": null
+    },
+    {
+     "kind": "carrier_band_edge",
+     "perUnitLow": 0.58,
+     "perUnitHigh": 2.88,
+     "dollarsLow": 72.5,
+     "dollarsHigh": 1080.0,
+     "confidence": 0.74,
+     "edge": 32
+    }
+   ]
+  },
+  {
+   "name": "too_far_over",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": null,
+    "weightOz": 22.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 400,
+    "catalogueShare": 0.0
+   },
+   "want": []
+  },
+  {
+   "name": "under_a_pound",
+   "args": {
+    "price": 32.0,
+    "compareAtPrice": null,
+    "weightOz": 12.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 400,
+    "catalogueShare": 0.0
+   },
+   "want": []
+  },
+  {
+   "name": "off_the_card",
+   "args": {
+    "price": 60.0,
+    "compareAtPrice": null,
+    "weightOz": 49.0,
+    "orders": null,
+    "units": 1,
+    "estMonthlyUnits": 100,
+    "catalogueShare": 0.0
+   },
+   "want": [
+    {
+     "kind": "carrier_band_edge",
+     "perUnitLow": 0.0,
+     "perUnitHigh": 0.0,
+     "dollarsLow": 0.0,
+     "dollarsHigh": 0.0,
+     "confidence": 0.55,
+     "edge": 48
+    }
+   ]
+  }
+ ],
+ "shopify_bench": {
+  "rows": [
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "amazon",
+    "seller_id": "x",
+    "weight_oz": 17.0
+   },
+   {
+    "platform": "amazon",
+    "seller_id": "x",
+    "weight_oz": 17.0
+   },
+   {
+    "platform": "amazon",
+    "seller_id": "x",
+    "weight_oz": 17.0
+   },
+   {
+    "platform": "amazon",
+    "seller_id": "x",
+    "weight_oz": 17.0
+   },
+   {
+    "platform": "amazon",
+    "seller_id": "x",
+    "weight_oz": 17.0
+   }
+  ],
+  "your_weight_oz": 17.2,
+  "want": {
+   "measured": 39,
+   "near": 21,
+   "share": 0.538,
+   "buckets": [
+    [
+     0,
+     1.0,
+     14
+    ],
+    [
+     1.0,
+     2.0,
+     7
+    ],
+    [
+     2.0,
+     4.0,
+     18
+    ],
+    [
+     4.0,
+     8.0,
+     0
+    ],
+    [
+     8.0,
+     12.0,
+     0
+    ],
+    [
+     12.0,
+     999.0,
+     0
+    ]
+   ],
+   "your_over_by": 1.2
+  }
+ },
+ "shopify_bench_thin": {
+  "rows": [
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 14.7
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 15.4
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 16.1
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s6",
+    "weight_oz": 16.8
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s0",
+    "weight_oz": 17.5
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s1",
+    "weight_oz": 18.2
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s2",
+    "weight_oz": 18.9
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s3",
+    "weight_oz": 19.6
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s4",
+    "weight_oz": 14.0
+   },
+   {
+    "platform": "shopify",
+    "seller_id": "s5",
+    "weight_oz": 14.7
+   }
+  ],
+  "want": "not none"
+ }
 }
