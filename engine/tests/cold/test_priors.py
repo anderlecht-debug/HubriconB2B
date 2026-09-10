@@ -70,8 +70,41 @@ def test_band_edge_below_is_the_edge_you_could_drop_under():
 
 def test_the_card_says_when_it_is_out_of_its_window():
     assert priors.stale(date(2026, 6, 1)) is None
-    assert "peak" in priors.stale(date(2026, 11, 1))
+    assert priors.stale(date(2026, 11, 1)) is None, "the peak card covers Q4"
     assert priors.stale(date(2025, 12, 1))
+    assert "2027-01-14" in priors.stale(date(2027, 2, 1))
+
+
+def test_the_peak_card_takes_over_on_15_october():
+    # Amazon's own worked example: a small-standard 2–4 oz unit under $10 goes
+    # from $2.49 to $2.68 on the peak card. Both dates are after the surcharge.
+    assert priors.card_for(date(2026, 10, 14)).name == "non_peak"
+    assert priors.card_for(date(2026, 10, 15)).name == "peak"
+    assert priors.card_for(date(2027, 1, 14)).name == "peak"
+    assert priors.card_for(date(2027, 1, 15)) is None
+    before = priors.fulfilment_fee("small_standard", 3.0, 9.49, date(2026, 10, 14))
+    after = priors.fulfilment_fee("small_standard", 3.0, 9.49, date(2026, 10, 15))
+    assert before == pytest.approx(2.49 * 1.035, abs=1e-4)
+    assert after == pytest.approx(2.68 * 1.035, abs=1e-4)
+    # The explicit card lets September price the October unit.
+    peak = priors.card_named("peak")
+    assert priors.fulfilment_fee("small_standard", 3.0, 9.49, date(2026, 9, 8), card=peak) == after
+    # Above 3 lb the peak base steps up and the per-4-oz increment is kept.
+    assert priors.fulfilment_fee("large_standard", 50.0, 25.0, date(2026, 12, 1)) == \
+        pytest.approx((7.51 + 0.08) * 1.035, abs=1e-4)      # $10–50 column
+    # Nothing is priced off a day no card covers.
+    assert priors.fulfilment_fee("small_standard", 3.0, 9.49, date(2027, 2, 1)) is None
+
+
+def test_the_ratecard_json_is_the_table():
+    d = priors.ratecard_dict(date(2026, 9, 8))
+    cards = d["fba"]["cards"]
+    assert cards["non_peak"]["small_standard"][0] == [2, [2.43, 3.32, 3.58]]
+    assert cards["peak"]["large_standard"][-1] == [48, [6.26, 7.08, 7.34]]
+    assert cards["peak"]["effective"] == "2026-10-15" and cards["peak"]["through"] == "2027-01-14"
+    assert d["fba"]["referral_by_category"]["electronics"] == 0.08
+    assert d["carrier"]["ground_commercial"]["16"][7] == 10.67
+    assert d["units_curve"]["a"] == 5.925 and d["units_curve"]["bracket"] == [0.5, 1.5]
 
 
 # -- the carrier card ---------------------------------------------------------------

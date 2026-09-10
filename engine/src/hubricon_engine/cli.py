@@ -2381,19 +2381,24 @@ def cmd_teardown(args):
     db = dbmod.connect()
 
     if action == "ratecard":
+        if getattr(args, "json", False):
+            import json as _json
+            print(_json.dumps(priors.ratecard_dict(), indent=1))
+            return
         warning = priors.stale()
-        print(f"{priors.FBA_SOURCE}\n  in force  {priors.FBA_EFFECTIVE} to {priors.FBA_THROUGH}"
-              f"\n  surcharge {priors.FUEL_SURCHARGE:.1%} from {priors.FUEL_SURCHARGE_FROM}")
-        print(f"  status    {warning or 'inside its window'}\n")
-        for name, table in (("small standard", priors.SMALL_STANDARD_OZ),
-                            ("large standard", priors.LARGE_STANDARD_OZ)):
-            print(f"{name}   (upper edge)      <$10    $10-50     >$50")
-            for edge, fees in table:
-                print(f"    {edge:>3} oz{'':<18}" + "".join(f"{f:>9.2f}" for f in fees))
-            print()
-        print("Large standard above 3 lb: "
-              + " / ".join(f"${b:,.2f}" for b in priors.LARGE_STANDARD_OVER_3LB_BASE)
-              + f" plus ${priors.LARGE_STANDARD_OVER_3LB_PER_4OZ:.2f} per 4 oz over 3 lb.\n")
+        in_force = priors.card_for()
+        print(f"  surcharge {priors.FUEL_SURCHARGE:.1%} from {priors.FUEL_SURCHARGE_FROM}")
+        print(f"  status    {warning or f'inside the {in_force.name} window'}\n")
+        for card in priors.CARDS:
+            print(f"{card.source}\n  in force  {card.effective} to {card.through}\n")
+            for name, table in (("small standard", card.small), ("large standard", card.large)):
+                print(f"{name}   (upper edge)      <$10    $10-50     >$50")
+                for edge, fees in table:
+                    print(f"    {edge:>3} oz{'':<18}" + "".join(f"{f:>9.2f}" for f in fees))
+                print()
+            print("Large standard above 3 lb: "
+                  + " / ".join(f"${b:,.2f}" for b in card.over_3lb_base)
+                  + f" plus ${priors.LARGE_STANDARD_OVER_3LB_PER_4OZ:.2f} per 4 oz over 3 lb.\n")
         print("Verify against Seller Central -> Fulfilment by Amazon fees -> US, and edit\n"
               "engine/src/hubricon_engine/cold/priors.py if a figure has moved. Every dollar\n"
               "the cold engine claims comes from this table.")
@@ -3095,6 +3100,8 @@ def main():
     p.add_argument("--email", help="name/add: their real address")
     p.add_argument("--file", help="add: a file of leads — domain, email, first name per line")
     p.add_argument("--dry-run", action="store_true", help="send: rehearse, change nothing")
+    p.add_argument("--json", action="store_true",
+                   help="ratecard: print every published figure as JSON (this is /ratecard.json)")
     p.set_defaults(fn=cmd_teardown)
 
     p = sub.add_parser("source", help="Shopify lead sourcing: Tranco+DNS discovery -> "

@@ -1,0 +1,559 @@
+{
+ "fees": [
+  {
+   "args": [
+    "small_standard",
+    3.0,
+    9.49,
+    "2026-09-08",
+    null
+   ],
+   "want": 2.5772
+  },
+  {
+   "args": [
+    "small_standard",
+    3.0,
+    9.49,
+    "2026-10-15",
+    null
+   ],
+   "want": 2.7738
+  },
+  {
+   "args": [
+    "small_standard",
+    3.0,
+    9.49,
+    "2026-09-08",
+    "peak"
+   ],
+   "want": 2.7738
+  },
+  {
+   "args": [
+    "small_standard",
+    12.0,
+    24.99,
+    "2026-09-08",
+    null
+   ],
+   "want": 3.9123
+  },
+  {
+   "args": [
+    "small_standard",
+    16.0,
+    55.0,
+    "2026-09-08",
+    null
+   ],
+   "want": 4.3677
+  },
+  {
+   "args": [
+    "small_standard",
+    16.5,
+    55.0,
+    "2026-09-08",
+    null
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "large_standard",
+    4.0,
+    12.0,
+    "2026-09-08",
+    null
+   ],
+   "want": 3.8605
+  },
+  {
+   "args": [
+    "large_standard",
+    17.2,
+    24.99,
+    "2026-09-08",
+    null
+   ],
+   "want": 5.2164
+  },
+  {
+   "args": [
+    "large_standard",
+    48.0,
+    24.99,
+    "2026-09-08",
+    null
+   ],
+   "want": 6.9034
+  },
+  {
+   "args": [
+    "large_standard",
+    50.0,
+    25.0,
+    "2026-12-01",
+    null
+   ],
+   "want": 7.8556
+  },
+  {
+   "args": [
+    "large_standard",
+    57.0,
+    25.0,
+    "2026-09-08",
+    null
+   ],
+   "want": 7.4623
+  },
+  {
+   "args": [
+    "large_standard",
+    400.0,
+    25.0,
+    "2026-09-08",
+    null
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "small_standard",
+    3.0,
+    9.49,
+    "2027-02-01",
+    null
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "small_standard",
+    3.0,
+    9.49,
+    "2026-03-01",
+    null
+   ],
+   "want": 2.49
+  }
+ ],
+ "edges": [
+  {
+   "args": [
+    "small_standard",
+    12.3
+   ],
+   "want": 12.0
+  },
+  {
+   "args": [
+    "small_standard",
+    12.0
+   ],
+   "want": 10.0
+  },
+  {
+   "args": [
+    "small_standard",
+    1.5
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "large_standard",
+    52.0
+   ],
+   "want": 48.0
+  },
+  {
+   "args": [
+    "large_standard",
+    57.0
+   ],
+   "want": 56.0
+  },
+  {
+   "args": [
+    "large_standard",
+    4.0
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "large_standard",
+    4.01
+   ],
+   "want": 4.0
+  }
+ ],
+ "tiers": [
+  {
+   "args": [
+    "9 x 6 x 2 inches",
+    13.0
+   ],
+   "want": "large_standard",
+   "dims": [
+    9.0,
+    6.0,
+    2.0
+   ],
+   "dim_weight_oz": null
+  },
+  {
+   "args": [
+    "15 x 12 x 0.75 inches",
+    16.0
+   ],
+   "want": "small_standard",
+   "dims": [
+    15.0,
+    12.0,
+    0.75
+   ],
+   "dim_weight_oz": null
+  },
+  {
+   "args": [
+    "15 x 12 x 0.8 inches",
+    16.0
+   ],
+   "want": "large_standard",
+   "dims": [
+    15.0,
+    12.0,
+    0.8
+   ],
+   "dim_weight_oz": null
+  },
+  {
+   "args": [
+    "18 x 14 x 8 inches",
+    300.0
+   ],
+   "want": "large_standard",
+   "dims": [
+    18.0,
+    14.0,
+    8.0
+   ],
+   "dim_weight_oz": 232.06
+  },
+  {
+   "args": [
+    "19 x 14 x 8 inches",
+    100.0
+   ],
+   "want": "oversize",
+   "dims": [
+    19.0,
+    14.0,
+    8.0
+   ],
+   "dim_weight_oz": 244.95
+  },
+  {
+   "args": [
+    "14 x 13 x 13 inches",
+    40.0
+   ],
+   "want": "oversize",
+   "dims": [
+    14.0,
+    13.0,
+    13.0
+   ],
+   "dim_weight_oz": 272.35
+  },
+  {
+   "args": [
+    null,
+    10.0
+   ],
+   "want": null,
+   "dims": null,
+   "dim_weight_oz": null
+  }
+ ],
+ "units": [
+  {
+   "args": [
+    5000,
+    "kitchen & dining"
+   ],
+   "want": 439.2
+  },
+  {
+   "args": [
+    1200,
+    "baby"
+   ],
+   "want": 1020.6
+  },
+  {
+   "args": [
+    30000,
+    "home & kitchen"
+   ],
+   "want": 101.7
+  },
+  {
+   "args": [
+    800,
+    "beauty & personal care"
+   ],
+   "want": 2255.8
+  },
+  {
+   "args": [
+    150,
+    "automotive"
+   ],
+   "want": 2832.2
+  },
+  {
+   "args": [
+    250000,
+    "unknown cat"
+   ],
+   "want": 9.5
+  },
+  {
+   "args": [
+    null,
+    "baby"
+   ],
+   "want": null
+  }
+ ],
+ "detect": [
+  {
+   "args": {
+    "price": 10.49,
+    "category": "kitchen & dining",
+    "bsr": 5000,
+    "itemWeightOz": 13.0,
+    "dims": "9 x 6 x 2 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 13.0,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 439.2
+   },
+   "want": [
+    {
+     "kind": "price_band_edge",
+     "perUnitLow": 0.4237,
+     "perUnitHigh": 0.4237,
+     "dollarsLow": 93.04,
+     "dollarsHigh": 279.13,
+     "confidence": 0.9
+    },
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.414,
+     "perUnitHigh": 0.414,
+     "dollarsLow": 90.91,
+     "dollarsHigh": 272.74,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 24.99,
+    "category": "baby",
+    "bsr": 1200,
+    "itemWeightOz": 17.2,
+    "dims": "12 x 9 x 3 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 17.2,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 1020.6
+   },
+   "want": [
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.4554,
+     "perUnitHigh": 0.4554,
+     "dollarsLow": 232.39,
+     "dollarsHigh": 697.17,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 52.0,
+    "category": "home & kitchen",
+    "bsr": 30000,
+    "itemWeightOz": 8.5,
+    "dims": "14 x 11 x 1.2 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 8.5,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 101.7
+   },
+   "want": [
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.2588,
+     "perUnitHigh": 0.2588,
+     "dollarsLow": 13.16,
+     "dollarsHigh": 39.48,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 19.99,
+    "category": "beauty & personal care",
+    "bsr": 800,
+    "itemWeightOz": 3.2,
+    "dims": null
+   },
+   "item": {
+    "tier": null,
+    "billableWeightOz": 3.2,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 2255.8
+   },
+   "want": []
+  },
+  {
+   "args": {
+    "price": 35.0,
+    "category": "automotive",
+    "bsr": 20000,
+    "itemWeightOz": 20.0,
+    "dims": "18 x 12 x 9 inches"
+   },
+   "item": {
+    "tier": "oversize",
+    "billableWeightOz": 223.77,
+    "dimWeightOz": 223.77,
+    "estMonthlyUnits": 72.5
+   },
+   "want": []
+  },
+  {
+   "args": {
+    "price": 12.99,
+    "category": "kitchen & dining",
+    "bsr": 9000,
+    "itemWeightOz": 6.0,
+    "dims": "15 x 12 x 0.9 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 6.0,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 262.6
+   },
+   "want": [
+    {
+     "kind": "size_tier_edge",
+     "perUnitLow": 0.5175,
+     "perUnitHigh": 0.5175,
+     "dollarsLow": 67.95,
+     "dollarsHigh": 203.84,
+     "confidence": 0.78
+    },
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.2277,
+     "perUnitHigh": 0.2277,
+     "dollarsLow": 29.9,
+     "dollarsHigh": 89.69,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 29.99,
+    "category": "home & kitchen",
+    "bsr": 4000,
+    "itemWeightOz": 12.6,
+    "dims": "10 x 8 x 6 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 12.6,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 593.2
+   },
+   "want": [
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.414,
+     "perUnitHigh": 0.414,
+     "dollarsLow": 122.79,
+     "dollarsHigh": 368.38,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 9.49,
+    "category": "baby",
+    "bsr": 700,
+    "itemWeightOz": 4.4,
+    "dims": "8 x 5 x 1 inches"
+   },
+   "item": {
+    "tier": "large_standard",
+    "billableWeightOz": 4.4,
+    "dimWeightOz": null,
+    "estMonthlyUnits": 1456.6
+   },
+   "want": [
+    {
+     "kind": "size_tier_edge",
+     "perUnitLow": 0.5899,
+     "perUnitHigh": 0.5899,
+     "dollarsLow": 429.62,
+     "dollarsHigh": 1288.87,
+     "confidence": 0.78
+    },
+    {
+     "kind": "fee_band_edge",
+     "perUnitLow": 0.2277,
+     "perUnitHigh": 0.2277,
+     "dollarsLow": 165.83,
+     "dollarsHigh": 497.5,
+     "confidence": 0.72
+    }
+   ]
+  },
+  {
+   "args": {
+    "price": 44.0,
+    "category": "pet supplies",
+    "bsr": 15000,
+    "itemWeightOz": 40.0,
+    "dims": "20 x 16 x 14 inches"
+   },
+   "item": {
+    "tier": "oversize",
+    "billableWeightOz": 515.68,
+    "dimWeightOz": 515.68,
+    "estMonthlyUnits": 149.3
+   },
+   "want": []
+  }
+ ]
+}

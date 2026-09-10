@@ -102,8 +102,12 @@ def _volume_assumption(item: Item) -> str:
 
 
 def _card_assumption(today: date) -> str:
-    return (f"Amazon's published US FBA fulfilment fee schedule, {priors.FBA_EFFECTIVE} to "
-            f"{priors.FBA_THROUGH}, including the 3.5% fuel and logistics surcharge")
+    card = priors.card_for(today)
+    window = (f"{card.effective} to {card.through}" if card
+              else f"{priors.FBA_EFFECTIVE} to {priors.FBA_THROUGH}")
+    which = "holiday peak " if card and card.name == "peak" else ""
+    return (f"Amazon's published US FBA {which}fulfilment fee schedule, {window}, "
+            f"including the 3.5% fuel and logistics surcharge")
 
 
 # -- price_band_edge ---------------------------------------------------------------
@@ -124,11 +128,13 @@ def _price_band_jump_range(tier: str | None, weight_oz: float | None,
         if hi is None or lo is None:
             return None
         return round(hi - lo, 4), round(hi - lo, 4)
+    card = priors.card_for(today)
+    if card is None:
+        return None
     deltas = []
-    for table in (priors.SMALL_STANDARD_OZ, priors.LARGE_STANDARD_OZ):
+    for table in (card.small, card.large):
         deltas += [fees[band_to] - fees[band_from] for _, fees in table]
-    deltas.append(priors.LARGE_STANDARD_OVER_3LB_BASE[band_to]
-                  - priors.LARGE_STANDARD_OVER_3LB_BASE[band_from])
+    deltas.append(card.over_3lb_base[band_to] - card.over_3lb_base[band_from])
     mult = 1 + (priors.FUEL_SURCHARGE if today >= priors.FUEL_SURCHARGE_FROM else 0.0)
     return round(min(deltas) * mult, 4), round(max(deltas) * mult, 4)
 

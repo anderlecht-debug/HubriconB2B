@@ -1212,3 +1212,49 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
   application never declines; every non-test booking is provisioned and
   welcomed. The routine's fit flag (`bookings.qualified` / `dq_reason`) is
   informational and shows up in the digest as "sell on this call".
+
+## The 60-second Teardown (`/teardown`)
+
+The lead magnet in front of the call. A visitor types five numbers off their
+own product page — price, item weight, package dimensions, category, rank,
+and optionally a landed cost — and the page prices one unit off Amazon's own
+card, in the browser: the fee stack, the cliff (the same four detectors the
+cold engine runs), the break-even ACoS and price floor, what 15 October does
+to that unit, ten thousand simulated months, and where the listing sits among
+everything the crawl has weighed in its category. Then the bridge: what a
+public page cannot show, and the full Teardown.
+
+Nothing is fetched from Amazon. Amazon soft-blocks datacenter fetches and the
+harvest reads pages from the Mac, so the page never tries; the numbers are on
+the listing under "Product information" and typing them is the sixty seconds.
+
+**One table, two languages.** `engine/.../cold/priors.py` stays the only place
+a published figure is edited. `hubricon teardown ratecard --json > ratecard.json`
+writes the browser's copy; `lib/fees.js` is a port of priors/findings/shelf
+over that JSON, used by the page and by `api/quick.js`. `lib/fees.test.mjs`
+pins the port to `lib/fees.golden.json`, values the Python produced:
+
+    cd engine && uv run hubricon teardown ratecard --json > ../ratecard.json
+    node --test lib/fees.test.mjs
+
+When a card changes: edit priors.py, run the pytest suite, regenerate the
+JSON, regenerate the golden file, run the node test:
+
+    cd engine && uv run python scripts/fees_golden.py    # writes ../lib/fees.golden.json The peak card (15 Oct 2026 – 14 Jan 2027) was
+loaded on 2026-09-08 from a published reproduction and cross-checked against
+one of Amazon's own worked examples; verify the rest against Seller Central
+before 15 October. `priors.card_for(today)` picks the card in force, so the
+cold engine no longer goes dark on the 15th.
+
+**The API route.** `api/quick.js`: `?asin=` prefills from `harvest_products`
+(public numbers the crawl already read); `?bench=<category>&oz=&dims=`
+computes the category benchmark from `harvest_products` and returns
+aggregates only, from 30 listings up; `POST` records a run in `tool_runs`
+and creates (or advances) a `prospects` row at `wants_teardown`, source
+`tool`. That is the whole deep follow-up: the hourly operator already
+provisions every `wants_teardown` prospect and emails the private upload
+page, so a tool lead gets the full Teardown path with no new job.
+
+The result is reproducible from its URL — the inputs ride in the hash — so
+"copy a link" and "send me this" both work without storing anything a
+visitor did not ask to keep.

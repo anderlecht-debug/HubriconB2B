@@ -220,8 +220,19 @@ def test_a_shopify_edge_the_card_has_no_row_for_is_stated_but_never_priced():
 # -- the rate card's own window ----------------------------------------------------
 
 def test_nothing_is_priced_off_a_rate_card_outside_its_window():
-    fs = findings.detect(snapshot(items=[item(price=10.49)]), today=date(2026, 11, 20))
-    assert fs == [], "the peak fee card applies; the non-peak card must not be used"
+    fs = findings.detect(snapshot(items=[item(price=10.49)]), today=date(2027, 2, 1))
+    assert fs == [], "no loaded card covers 2027; nothing may be priced"
+
+
+def test_q4_prices_off_the_peak_card_and_says_so():
+    nov = one(findings.detect(snapshot(items=[item(price=10.49)]), today=date(2026, 11, 20)),
+              "price_band_edge")
+    sep = one(findings.detect(snapshot(items=[item(price=10.49)]), today=date(2026, 9, 20)),
+              "price_band_edge")
+    assert any("holiday peak" in a for a in nov.assumptions)
+    assert not any("holiday peak" in a for a in sep.assumptions)
+    # The $10 column step is a little wider on the peak card, so the finding grows.
+    assert nov.evidence["fee_jump_high"] >= sep.evidence["fee_jump_high"]
 
 
 # -- volume ------------------------------------------------------------------------

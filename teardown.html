@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The 60-second Teardown — what one Amazon listing gives up, priced off Amazon's own card | Hubricon</title>
+<meta name="description" content="Type five numbers off your Amazon product page. Get the fee stack on one unit, the fee cliff you may be an ounce over, your break-even ACoS, what October 15 costs your exact unit, and ten thousand simulated months — every figure from a published rate card, every estimate labelled.">
+<link rel="canonical" href="https://www.hubricon.com/teardown">
+<meta property="og:title" content="The 60-second Teardown — Hubricon">
+<meta property="og:description" content="Five numbers off your product page. The fee cliff, the break-even ACoS, the October 15 delta and ten thousand months, priced off Amazon's own card.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<style>
+:root{
+  --bg: hsl(225 72% 7%); --bg-raise: hsl(224 60% 11%);
+  --amber: hsl(45 100% 50%); --amber-soft: hsl(45 100% 50% / .12);
+  --serious: hsl(8 72% 58%); --ok: hsl(152 55% 48%);
+  --ink-100: hsl(220 40% 98%); --ink-70: hsl(220 40% 98% / .7); --ink-60: hsl(220 40% 98% / .6);
+  --rule-20: hsl(220 40% 98% / .2); --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; }
+body{ background: var(--bg); color: var(--ink-60); font-family: var(--font-mono); font-size: 14.5px; line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b{ color: var(--ink-100); font-weight: 600; }
+.wrap{ width: min(1120px, 100% - 48px); margin: 0 auto; }
+.glass, .glass-strong{ position: relative; border-radius: 20px; }
+.glass::before, .glass-strong::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none; }
+.glass{ background: hsl(224 55% 14% / .32); }
+.glass::before{ background: linear-gradient(175deg, hsl(220 60% 85% / .32) 0%, hsl(224 60% 20% / .06) 38%, hsl(224 60% 20% / .06) 62%, hsl(45 90% 65% / .14) 100%); }
+.glass-strong{ background: hsl(224 55% 16% / .45); box-shadow: 0 14px 44px hsl(226 80% 3% / .55), inset 0 1px 0 hsl(220 60% 90% / .1); }
+.glass-strong::before{ padding: 1.2px; background: linear-gradient(170deg, hsl(220 70% 92% / .6) 0%, hsl(224 60% 24% / .12) 42%, hsl(224 60% 24% / .12) 58%, hsl(45 100% 62% / .45) 100%); }
+.btn{ display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; padding: 13px 22px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
+.btn svg{ width: 13px; height: 13px; }
+.btn:active{ transform: scale(.98); }
+.btn-white{ background: var(--ink-100); color: var(--bg); }
+.btn-amber{ color: var(--amber); background: hsl(45 100% 50% / .13); box-shadow: 0 10px 36px hsl(45 100% 40% / .22), inset 0 1px 0 hsl(45 100% 72% / .38); }
+.btn-amber:hover{ background: hsl(45 100% 50% / .2); }
+.btn[disabled]{ opacity: .5; cursor: wait; }
+.eyebrow{ display: flex; align-items: center; gap: 12px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .22em; color: var(--amber); margin-bottom: 18px; }
+.eyebrow::after{ content:""; height: 1px; width: 64px; background: var(--rule-20); }
+.label{ font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--amber); }
+
+/* nav */
+.nav{ position: sticky; top: 14px; z-index: 50; margin: 14px auto 0; width: min(1120px, 100% - 48px); display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px 12px 10px 22px; }
+.nav-logo{ font-family: var(--font-head); font-size: 22px; color: var(--ink-100); letter-spacing: .02em; }
+.nav-logo em{ color: var(--amber); font-style: normal; }
+.nav-links{ display: flex; gap: 22px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; }
+.nav-links a:hover{ color: var(--ink-100); }
+
+/* header */
+.head{ padding: 76px 0 40px; }
+.head h1{ font-size: clamp(38px, 5.4vw, 72px); max-width: 16ch; margin-bottom: 18px; }
+.head p{ max-width: 62ch; color: var(--ink-70); font-size: 15px; }
+.head p + p{ margin-top: 10px; color: var(--ink-60); font-size: 13px; }
+
+/* form */
+.form{ padding: 30px 32px; margin-bottom: 26px; }
+.grid{ display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px 18px; }
+.f{ display: flex; flex-direction: column; gap: 6px; }
+.f label{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-70); }
+.f small{ font-size: 11px; color: var(--ink-60); line-height: 1.5; }
+.f input, .f select{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px; font-family: var(--font-mono); font-size: 14px; }
+.f input:focus, .f select:focus{ border-color: var(--amber); outline: none; }
+.f select{ appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-60) 50%), linear-gradient(135deg, var(--ink-60) 50%, transparent 50%); background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 34px; }
+.row{ display: flex; gap: 8px; }
+.row input{ min-width: 0; }
+.row select{ width: auto; }
+.c12{ grid-column: span 12; } .c6{ grid-column: span 6; } .c4{ grid-column: span 4; } .c3{ grid-column: span 3; }
+.asin-row{ display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+.hint{ font-size: 12px; color: var(--ink-60); }
+.hint.ok{ color: var(--ok); } .hint.bad{ color: var(--serious); }
+.form-foot{ display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
+.form-foot .note{ font-size: 12px; color: var(--ink-60); max-width: 60ch; }
+
+/* results */
+.results{ display: none; scroll-margin-top: 96px; }
+.results.on{ display: block; }
+.hero-num{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 8px 0 26px; }
+.tile{ padding: 22px 24px; }
+.tile .v{ font-family: var(--font-head); font-size: clamp(34px, 4vw, 52px); color: var(--ink-100); line-height: 1; margin: 6px 0 4px; }
+.tile .v.bad{ color: var(--serious); } .tile .v.good{ color: var(--ok); } .tile .v.amber{ color: var(--amber); }
+.tile .k{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
+.tile p{ font-size: 12px; color: var(--ink-60); }
+.sect{ padding: 26px 32px; margin-bottom: 16px; }
+.sect h2{ font-size: clamp(22px, 2.6vw, 32px); margin-bottom: 6px; }
+.sect .sub{ color: var(--ink-70); max-width: 68ch; margin-bottom: 14px; }
+.sect .big{ font-family: var(--font-head); font-size: clamp(26px, 3vw, 40px); color: var(--ink-100); line-height: 1.05; margin: 8px 0 6px; }
+.sect .big span{ color: var(--amber); }
+.two{ display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: start; }
+table{ border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td{ text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule-08); vertical-align: top; }
+th{ font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); font-weight: 400; }
+td.r, th.r{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td b{ font-weight: 600; }
+tr.tot td{ border-top: 1px solid var(--rule-20); border-bottom: 0; color: var(--ink-100); }
+.chart{ margin: 12px 0 8px; border-radius: 12px; overflow: hidden; }
+.chart svg{ width: 100%; height: auto; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.assume{ margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule-20); font-size: 11.5px; color: var(--ink-60); }
+.assume b{ color: var(--ink-70); font-weight: 400; letter-spacing: .12em; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 4px; }
+.assume ul{ padding-left: 16px; }
+.assume li{ margin: 2px 0; }
+.finding{ padding: 18px 0; border-top: 1px solid var(--rule-08); }
+.finding:first-of-type{ border-top: 0; padding-top: 4px; }
+.finding .t{ color: var(--ink-100); font-size: 15px; margin-bottom: 4px; }
+.finding .m{ font-size: 12.5px; color: var(--ink-70); }
+.unlock{ padding: 14px 16px; border: 1px dashed var(--rule-20); border-radius: 12px; font-size: 12.5px; color: var(--ink-70); }
+.unlock b{ color: var(--amber); }
+.kv{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 10px 0 4px; }
+.kv div{ padding: 12px 14px; background: hsl(224 55% 10% / .5); border-radius: 12px; }
+.kv .k{ font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
+.kv .v{ font-family: var(--font-head); font-size: 26px; color: var(--ink-100); line-height: 1.1; margin-top: 2px; }
+.kv .v.amber{ color: var(--amber); } .kv .v.bad{ color: var(--serious); } .kv .v.good{ color: var(--ok); }
+.kv small{ font-size: 11px; color: var(--ink-60); display: block; }
+
+/* bridge */
+.bridge{ padding: 34px 36px; margin: 26px 0 16px; }
+.bridge h2{ font-size: clamp(28px, 3.4vw, 44px); margin-bottom: 10px; max-width: 20ch; }
+.bridge .two{ grid-template-columns: 1fr 1fr; }
+.bridge ul{ padding-left: 18px; color: var(--ink-70); font-size: 13px; }
+.bridge li{ margin: 6px 0; }
+.capture{ display: grid; gap: 10px; }
+.capture input{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 12px; font-family: var(--font-mono); font-size: 14px; }
+.capture .ok-msg{ color: var(--ok); font-size: 13px; }
+.cta-row{ display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+.method{ padding: 26px 32px; margin: 16px 0 60px; font-size: 12.5px; }
+.method h2{ font-size: 24px; margin-bottom: 10px; }
+.method dl{ display: grid; grid-template-columns: 200px 1fr; gap: 8px 18px; }
+.method dt{ color: var(--ink-100); }
+.method code{ color: var(--amber); font-size: 12px; }
+footer{ padding: 30px 0 50px; font-size: 11.5px; color: var(--ink-60); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+footer nav{ display: flex; gap: 16px; }
+.notice{ padding: 14px 18px; border-radius: 12px; background: hsl(8 72% 58% / .12); border: 1px solid hsl(8 72% 58% / .4); color: var(--ink-100); font-size: 13px; margin-bottom: 16px; }
+@media (max-width: 900px){ .c6, .c4, .c3{ grid-column: span 12; } .two, .bridge .two{ grid-template-columns: 1fr; } .hero-num{ grid-template-columns: 1fr; } .nav-links{ display: none; } .method dl{ grid-template-columns: 1fr; } .sect, .form, .bridge, .method{ padding: 20px 18px; } }
+@media (prefers-reduced-motion: reduce){ *{ transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<nav class="nav glass" aria-label="Primary">
+  <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+  <div class="nav-links">
+    <a href="#method">How it's priced</a>
+    <a href="/#pricing">The desk</a>
+    <a href="/#faq">FAQ</a>
+  </div>
+  <a class="btn btn-white" href="/#apply">Get the full Teardown
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+</nav>
+
+<header class="head wrap">
+  <div class="eyebrow">The 60-second Teardown · Amazon listings</div>
+  <h1>What one listing gives up, priced off Amazon's own card.</h1>
+  <p>Type five numbers off your product page. You get the fee stack on one unit, the fee cliff you may be an ounce over, your break-even ACoS, what 15 October does to this exact unit, and ten thousand simulated months.</p>
+  <p>Nothing is fetched from Amazon and nothing is stored unless you ask us to send it. Every dollar is arithmetic on a published rate; every estimate says where it comes from.</p>
+</header>
+
+<main class="wrap">
+  <div id="stale" class="notice" hidden></div>
+
+  <form id="form" class="form glass-strong" autocomplete="off">
+    <div class="grid">
+      <div class="f c12">
+        <label for="asin">ASIN <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional — we may have weighed it already</span></label>
+        <div class="asin-row">
+          <input id="asin" name="asin" placeholder="B0…" maxlength="10" spellcheck="false">
+          <button type="button" class="btn btn-white" id="lookup">Look it up</button>
+        </div>
+        <small id="asin-hint" class="hint">If we haven't read that page, the numbers are on it under <b>Product information</b>: item weight, package dimensions, and Best Sellers Rank.</small>
+      </div>
+      <div class="f c3"><label for="price">Sale price</label><input id="price" name="price" type="number" step="0.01" min="0.5" inputmode="decimal" placeholder="24.99" required></div>
+      <div class="f c3"><label for="weight">Item weight</label>
+        <div class="row"><input id="weight" name="weight" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="12.6" required>
+        <select id="wunit" name="wunit" aria-label="weight unit"><option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option></select></div>
+        <small>As published on the listing. Amazon bills the packed weight, which is at least this.</small></div>
+      <div class="f c6"><label>Package dimensions, inches</label>
+        <div class="row"><input id="d1" name="d1" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="12" aria-label="length"><input id="d2" name="d2" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="8" aria-label="width"><input id="d3" name="d3" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="2" aria-label="height"></div>
+        <small>Optional, but without them we will not guess your size tier — it is worth about a dollar a unit, so the fulfilment fee stays unpriced.</small></div>
+      <div class="f c4"><label for="category">Category</label>
+        <select id="category" name="category"></select></div>
+      <div class="f c4"><label for="bsr">Best Sellers Rank</label><input id="bsr" name="bsr" type="number" step="1" min="1" inputmode="numeric" placeholder="4,500"><small>The top-level rank in that category. It sets the monthly volume estimate, which is always a bracket.</small></div>
+      <div class="f c4"><label for="cogs">Landed unit cost <span style="color:var(--ink-60);letter-spacing:0;text-transform:none">· optional</span></label><input id="cogs" name="cogs" type="number" step="0.01" min="0" inputmode="decimal" placeholder="6.50"><small>Unit cost + freight + packaging. Unlocks the break-even ACoS, the price floor and the ten thousand months. Estimates are fine.</small></div>
+    </div>
+    <div class="form-foot">
+      <button type="submit" class="btn btn-amber" id="run">Run the Teardown
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
+      <span class="note">Runs in your browser. Amazon and Shopify brands doing $1M–$20M a year get the full Teardown on their real exports, free, in 24 hours — the button at the bottom.</span>
+    </div>
+    <p id="form-err" class="hint bad" hidden style="margin-top:10px"></p>
+  </form>
+
+  <section id="results" class="results" aria-live="polite">
+    <div id="hero-num" class="hero-num"></div>
+    <section class="sect glass" id="s-stack"></section>
+    <section class="sect glass" id="s-cliff"></section>
+    <section class="sect glass" id="s-breakeven"></section>
+    <section class="sect glass" id="s-peak"></section>
+    <section class="sect glass" id="s-sim"></section>
+    <section class="sect glass" id="s-bench" hidden></section>
+
+    <section class="bridge glass-strong" id="bridge">
+      <span class="label">What a public page cannot tell us</span>
+      <h2>Your exports tell us the rest. In 24 hours, free.</h2>
+      <div class="two">
+        <div>
+          <p class="sub" style="color:var(--ink-70);margin-bottom:10px">This page priced one unit off Amazon's card. The full Profit Teardown reads your own reports and finds what no listing shows:</p>
+          <ul>
+            <li>True net margin per SKU after every fee line and honestly allocated ads — the SKUs that go negative.</li>
+            <li>Ad bleed by search term, in dollars: the 20–40% of spend that never converts.</li>
+            <li>Stockout probability and a risk-priced reorder per SKU, from ten thousand simulated demand paths.</li>
+            <li>The reimbursements Amazon owes you — 1–3% of FBA revenue a year, with the claim windows.</li>
+            <li>Your demand curve per SKU, with a 95% range, so a price step is measured, not guessed.</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn btn-amber" href="/#apply" id="cta-full">Get the full Teardown, free
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+            <button type="button" class="btn btn-white" id="copy">Copy a link to this result</button>
+          </div>
+        </div>
+        <div>
+          <form id="capture" class="capture glass" style="padding:20px 22px">
+            <span class="label">Or have it sent</span>
+            <p style="color:var(--ink-70);font-size:13px">Leave an address and you get a link to this result plus your private upload page for the full Teardown. It comes from Hagen, within about an hour, and nothing else follows unless you reply.</p>
+            <input id="cap-name" placeholder="First name" maxlength="80">
+            <input id="cap-web" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+            <input id="cap-email" type="email" placeholder="you@yourbrand.com" required maxlength="200">
+            <button type="submit" class="btn btn-amber" id="cap-btn">Send me this</button>
+            <p id="cap-msg" class="hint" hidden></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <section class="method glass" id="method">
+    <h2>How every number here is priced</h2>
+    <dl>
+      <dt>The fee stack</dt><dd>Referral = price × Amazon's published rate for the category (min <code>$0.30</code>). Fulfilment = the row of Amazon's US FBA schedule for your size tier, shipping weight and price column (<code>&lt;$10 · $10–50 · &gt;$50</code>), plus the 3.5% fuel and logistics surcharge in force since 17 April 2026. Size tier from the packed dimensions and the greater of item weight and dimensional weight (<code>L×W×H ÷ 139</code>, past one cubic foot).</dd>
+      <dt>The cliff</dt><dd>The heaviest band edge below your weight, on your tier's ladder, and the fee difference between the two rows. Named only when you are within 2 oz of it; a redesign is not a finding. The price-band version is two published rates and the price you set: <code>(price − edge)(1 − referral) − fee step</code>.</dd>
+      <dt>Break-even ACoS</dt><dd><code>(price(1 − referral) − fulfilment − landed cost) ÷ price</code>. Ads break even on profit, not on revenue. The price floor is the price at which that contribution is zero: <code>(cost + fulfilment) ÷ (1 − referral)</code>.</dd>
+      <dt>15 October</dt><dd>The same row on Amazon's 2026 holiday peak schedule (15 Oct 2026 – 14 Jan 2027). The price that holds your margin flat is <code>price + Δfee ÷ (1 − referral)</code>.</dd>
+      <dt>Monthly volume</dt><dd>A power-law fit of units to top-level sales rank, scaled per category. It is wrong by a factor of two either way, so every monthly figure is a bracket of half to one and a half times the estimate, and the simulation draws volume from a lognormal with that spread.</dd>
+      <dt>Ten thousand months</dt><dd>10,000 draws of monthly units (lognormal, σ = ln 2 / 1.645) and landed cost (±10%), times the unit contribution on the card. What is shown is the 10th, 50th and 90th percentile of monthly profit and the share of months that lose money.</dd>
+      <dt>Your category</dt><dd>Every listing our crawl has read and weighed in the same Best Sellers category, measured the same way, in half-ounce buckets above the band edge. Shown only from 30 listings up; nothing about any listing but yours leaves the server.</dd>
+      <dt>Sources</dt><dd id="sources"></dd>
+    </dl>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span>© 2026 Hubricon · www.hubricon.com · The 60-second Teardown</span>
+  <nav><a href="/">Home</a><a href="/#pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+</footer>
+
+<script type="module">
+import * as fees from "/lib/fees.js";
+
+const $ = (id) => document.getElementById(id);
+const money = (v, d = 2) => (v == null || Number.isNaN(v)) ? "—" : (v < 0 ? "−" : "") + "$" + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const cents = (v) => v == null ? "—" : (v < 1 ? `${Math.round(v * 100)}c` : money(v));
+const pct = (v, d = 0) => v == null ? "—" : `${(v * 100).toFixed(d)}%`;
+const oz = (v) => v == null ? "—" : `${Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 })} oz`;
+const num = (v) => v == null ? "—" : Math.round(v).toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const tierName = (t) => ({ small_standard: "small standard", large_standard: "large standard", oversize: "oversize" })[t] || "unknown";
+const TODAY = new Date();
+
+let rc;
+try {
+  rc = await (await fetch("/ratecard.json", { cache: "no-cache" })).json();
+} catch (e) {
+  $("stale").hidden = false; $("stale").textContent = "The rate card could not be loaded. Reload the page, or run the full Teardown instead.";
+}
+
+// -- the form -------------------------------------------------------------------
+const CATS = Object.keys(rc?.fba?.referral_by_category || {}).sort();
+$("category").innerHTML = ['<option value="">Choose a category…</option>', ...CATS.map((c) => `<option value="${esc(c)}">${esc(c.replace(/\b\w/g, (m) => m.toUpperCase()))}</option>`), '<option value="other">Other (15% referral)</option>'].join("");
+
+const staleMsg = rc && fees.stale(rc, TODAY);
+if (staleMsg) { $("stale").hidden = false; $("stale").textContent = `We will not price anything today: ${staleMsg}. Run the full Teardown instead.`; $("run").disabled = true; }
+
+function readForm() {
+  const w = Number($("weight").value); const u = $("wunit").value;
+  const weightOz = u === "lb" ? w * 16 : u === "g" ? w / 28.3495 : w;
+  const d = [$("d1").value, $("d2").value, $("d3").value].map(Number);
+  const dims = d.every((x) => x > 0) ? d : null;
+  return {
+    asin: $("asin").value.trim().toUpperCase() || null,
+    price: Number($("price").value) || null,
+    itemWeightOz: weightOz > 0 ? Math.round(weightOz * 100) / 100 : null,
+    dims, category: $("category").value === "other" ? "" : $("category").value,
+    bsr: Number($("bsr").value) || null,
+    cogs: Number($("cogs").value) || null,
+  };
+}
+
+function encodeHash(i) {
+  const p = new URLSearchParams();
+  if (i.asin) p.set("a", i.asin); p.set("p", i.price); p.set("w", i.itemWeightOz);
+  if (i.dims) p.set("d", i.dims.join("x")); if (i.category) p.set("c", i.category); if (i.bsr) p.set("r", i.bsr); if (i.cogs) p.set("k", i.cogs);
+  return "#" + p.toString();
+}
+function fillFromHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (!p.get("p")) return false;
+  $("asin").value = p.get("a") || ""; $("price").value = p.get("p"); $("weight").value = p.get("w"); $("wunit").value = "oz";
+  const d = (p.get("d") || "").split("x"); if (d.length === 3) { $("d1").value = d[0]; $("d2").value = d[1]; $("d3").value = d[2]; }
+  $("category").value = p.get("c") || ""; $("bsr").value = p.get("r") || ""; $("cogs").value = p.get("k") || "";
+  return true;
+}
+
+$("lookup").addEventListener("click", async () => {
+  const asin = $("asin").value.trim().toUpperCase();
+  const hint = $("asin-hint");
+  if (!/^[A-Z0-9]{10}$/.test(asin)) { hint.className = "hint bad"; hint.textContent = "An ASIN is ten letters and digits, like B0C1234XYZ."; return; }
+  hint.className = "hint"; hint.textContent = "Looking…";
+  try {
+    const r = await fetch(`/api/quick?asin=${asin}`);
+    if (!r.ok) { hint.className = "hint"; hint.innerHTML = "We haven't read that page yet — the numbers are on it under <b>Product information</b>. Type them in and run it; the result is the same."; return; }
+    const d = await r.json();
+    if (d.price) $("price").value = d.price; if (d.weight_oz) { $("weight").value = d.weight_oz; $("wunit").value = "oz"; }
+    const dims = fees.parseDims(d.dims); if (dims) { $("d1").value = dims[0]; $("d2").value = dims[1]; $("d3").value = dims[2]; }
+    if (d.category && CATS.includes(String(d.category).toLowerCase())) $("category").value = String(d.category).toLowerCase();
+    if (d.bsr) $("bsr").value = d.bsr;
+    window.__brand = d.brand || null;
+    hint.className = "hint ok"; hint.textContent = `Found it: ${d.title ? d.title.split(" ").slice(0, 8).join(" ") : asin}, as our crawl read it on ${new Date(d.seen_at).toLocaleDateString("en-US")}. Check the numbers, then run it.`;
+  } catch { hint.className = "hint bad"; hint.textContent = "Could not reach the lookup. Type the numbers instead."; }
+});
+
+// -- charts: the published card as background, the listing as one marked point -----
+const W = 660, H = 300, PL = 62, PR = 22, PT = 26, PB = 44;
+const INK = "#F3F5FA", FAINT = "rgba(243,245,250,.55)", HAIR = "rgba(243,245,250,.09)", RULE = "rgba(243,245,250,.28)";
+const C1 = "#FFC000", SERIOUS = "#E2664F", OK = "#3DBB7A";
+const X = (v, lo, hi) => PL + ((v - lo) / (hi - lo || 1)) * (W - PL - PR);
+const Y = (v, lo, hi) => H - PB - ((v - lo) / (hi - lo || 1)) * (H - PT - PB);
+function niceTicks(lo, hi, target = 4) {
+  const span = hi - lo || 1; const raw = span / target; const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= target + 1) || mag;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1000) / 1000); return out;
+}
+function frame(xl, yl, tx, ty) {
+  const o = [];
+  for (const [px, l] of ty) { o.push(`<line x1="${PL}" y1="${px}" x2="${W - PR}" y2="${px}" stroke="${HAIR}"/>`); o.push(`<text x="${PL - 9}" y="${px + 4}" text-anchor="end" font-size="11" fill="${FAINT}">${l}</text>`); }
+  for (const [px, l] of tx) o.push(`<text x="${px}" y="${H - PB + 18}" text-anchor="middle" font-size="11" fill="${FAINT}">${l}</text>`);
+  o.push(`<line x1="${PL}" y1="${H - PB}" x2="${W - PR}" y2="${H - PB}" stroke="${RULE}"/>`);
+  o.push(`<text x="${W - PR}" y="${H - 6}" text-anchor="end" font-size="10.5" fill="${FAINT}" letter-spacing="0.08em">${xl.toUpperCase()}</text>`);
+  o.push(`<text x="6" y="${PT - 10}" font-size="10.5" fill="${FAINT}" letter-spacing="0.08em">${yl.toUpperCase()}</text>`);
+  return o;
+}
+const svg = (body, title) => `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body.join("")}</svg>`;
+function marker(x, y, label, colour, above = true, align) {
+  const dy = above ? -14 : 22; let anchor = "middle", xt = x;
+  if (align === "end") { anchor = "end"; xt = x - 13; } else if (align === "start") { anchor = "start"; xt = x + 13; } else if (x < PL + 60) { anchor = "start"; xt = x - 6; } else if (x > W - PR - 60) { anchor = "end"; xt = x + 6; }
+  return [`<circle cx="${x}" cy="${y}" r="5" fill="${colour}"/>`, `<circle cx="${x}" cy="${y}" r="9.5" fill="none" stroke="${colour}" stroke-width="1.5" opacity=".4"/>`, `<text x="${xt}" y="${y + dy}" text-anchor="${anchor}" font-size="12" font-weight="600" fill="${colour}">${esc(label)}</text>`];
+}
+function feeVsWeight(card, tier, price, here, target) {
+  tier = tier === "small_standard" ? tier : "large_standard";
+  const lo = Math.max(0.5, Math.min(here, target ?? here) - 6), hi = Math.max(here, target ?? here) + 6;
+  const table = tier === "small_standard" ? card.small_standard : card.large_standard;
+  const edges = table.map(([e]) => e).filter((e) => lo - 4 <= e && e <= hi + 4);
+  const pts = []; for (let i = 0; i <= 240; i++) { const w = lo + (hi - lo) * i / 240; const f = fees.fulfilmentFee(rc, tier, w, price, TODAY, card); if (f != null) pts.push([w, f]); }
+  if (!pts.length) return "";
+  const ys = pts.map(([, f]) => f); const ylo = Math.min(...ys) - 0.15, yhi = Math.max(...ys) + 0.25;
+  let d = "", prev = null;
+  for (const [w, f] of pts) { const x = X(w, lo, hi), y = Y(f, ylo, yhi); if (prev != null && Math.abs(prev - f) > 0.005) d += `L${x},${Y(prev, ylo, yhi)}`; d += (prev == null ? "M" : "L") + `${x},${y}`; prev = f; }
+  const body = frame("shipping weight", "amazon's fee, per unit", edges.map((e) => [X(e, lo, hi), `${e} oz`]), niceTicks(ylo, yhi).map((v) => [Y(v, ylo, yhi), money(v)]));
+  body.push(`<path d="${d}" fill="none" stroke="${C1}" stroke-width="2.5" stroke-linejoin="round"/>`);
+  if (target) { const ft = fees.fulfilmentFee(rc, tier, target, price, TODAY, card); if (ft) body.push(...marker(X(target, lo, hi), Y(ft, ylo, yhi), `under ${target} oz`, OK, true, "end")); }
+  const fh = fees.fulfilmentFee(rc, tier, here, price, TODAY, card); if (fh) body.push(...marker(X(here, lo, hi), Y(fh, ylo, yhi), `you: ${here} oz`, SERIOUS, true, "start"));
+  return svg(body, "Amazon's published fulfilment fee by shipping weight");
+}
+function netVsPrice(card, ev) {
+  const { edge, referralRate: rate, tier, weightOz: weight, targetPrice: target } = ev; const absolute = Boolean(tier && weight);
+  const lo = edge - 1.5, hi = Math.max(ev.breakEvenPrice + 0.9, ev.yourPrice + 0.6);
+  const net = (p) => { if (absolute) { const f = fees.fulfilmentFee(rc, tier, weight, p, TODAY, card); if (f != null) return p * (1 - rate) - f; } return (p - target) * (1 - rate) - (p >= edge ? ev.feeJumpHigh : 0); };
+  const pts = []; for (let i = 0; i <= 200; i++) { const p = lo + (hi - lo) * i / 200; pts.push([p, net(p)]); }
+  const ys = pts.map(([, n]) => n); const ylo = Math.min(...ys) - 0.25, yhi = Math.max(...ys) + 0.25;
+  let d = "", prev = null;
+  for (const [p, n] of pts) { const x = X(p, lo, hi), y = Y(n, ylo, yhi); if (prev && Math.abs(prev[1] - n) > 0.2) d += `L${x},${Y(prev[1], ylo, yhi)}`; d += (prev == null ? "M" : "L") + `${x},${y}`; prev = [p, n]; }
+  const fmt = absolute ? money : (v) => (v >= 0 ? "+" : "−") + money(Math.abs(v)).replace("$", "$");
+  const body = frame("your sale price", absolute ? "you keep, per unit" : `per unit, against pricing at ${money(target)}`, niceTicks(lo, hi).map((v) => [X(v, lo, hi), money(v)]), niceTicks(ylo, yhi).map((v) => [Y(v, ylo, yhi), fmt(v)]));
+  body.push(`<line x1="${X(edge, lo, hi)}" y1="${PT}" x2="${X(edge, lo, hi)}" y2="${H - PB}" stroke="${RULE}" stroke-dasharray="3 4"/>`);
+  body.push(`<text x="${X(edge, lo, hi) + 6}" y="${PT + 12}" font-size="11" fill="${FAINT}">Amazon's $${edge} fee band</text>`);
+  body.push(`<path d="${d}" fill="none" stroke="${C1}" stroke-width="2.5" stroke-linejoin="round"/>`);
+  body.push(...marker(X(target, lo, hi), Y(net(target), ylo, yhi), `at ${money(target)}`, OK, true, "end"));
+  body.push(...marker(X(ev.yourPrice, lo, hi), Y(net(ev.yourPrice), ylo, yhi), `you: ${money(ev.yourPrice)}`, SERIOUS, false, "start"));
+  return svg(body, "Net revenue per unit against sale price");
+}
+function sizeTierBars(ev) {
+  const top = Math.max(ev.largeFee, ev.smallFee) * 1.25; const bw = 140, x1 = PL + 90, x2 = PL + 330;
+  const body = frame("", "amazon's fee, per unit", [[x1 + bw / 2, "small standard"], [x2 + bw / 2, "large standard (you)"]], niceTicks(0, top, 4).map((v) => [Y(v, 0, top), money(v)]));
+  body.push(`<rect x="${x1}" y="${Y(ev.smallFee, 0, top)}" width="${bw}" height="${H - PB - Y(ev.smallFee, 0, top)}" fill="${OK}" opacity=".85"/>`);
+  body.push(`<rect x="${x2}" y="${Y(ev.largeFee, 0, top)}" width="${bw}" height="${H - PB - Y(ev.largeFee, 0, top)}" fill="${SERIOUS}" opacity=".85"/>`);
+  body.push(`<text x="${x1 + bw / 2}" y="${Y(ev.smallFee, 0, top) - 8}" text-anchor="middle" font-size="12" font-weight="600" fill="${OK}">${money(ev.smallFee)}</text>`);
+  body.push(`<text x="${x2 + bw / 2}" y="${Y(ev.largeFee, 0, top) - 8}" text-anchor="middle" font-size="12" font-weight="600" fill="${SERIOUS}">${money(ev.largeFee)}</text>`);
+  body.push(`<text x="${W - PR}" y="${PT + 4}" text-anchor="end" font-size="11" fill="${FAINT}">${esc(ev.axis)} ${ev.actualIn} in against a ${ev.limitIn} in limit</text>`);
+  return svg(body, "Small standard against large standard, per unit");
+}
+function histogram(sim) {
+  const top = Math.max(...sim.hist.map((h) => h.count)) * 1.15; const lo = sim.hist[0].lo, hi = sim.hist[sim.hist.length - 1].hi;
+  const body = frame("monthly profit on this listing", "months out of 10,000", niceTicks(lo, hi, 5).map((v) => [X(v, lo, hi), money(v, 0)]), niceTicks(0, top, 3).map((v) => [Y(v, 0, top), num(v)]));
+  const slot = (W - PL - PR) / sim.hist.length;
+  sim.hist.forEach((h, i) => { const inBand = h.hi > sim.p10 && h.lo < sim.p90; const loss = h.hi <= 0; body.push(`<rect x="${PL + i * slot + 1}" y="${Y(h.count, 0, top)}" width="${slot - 2}" height="${H - PB - Y(h.count, 0, top)}" fill="${loss ? SERIOUS : C1}" opacity="${inBand ? .9 : .32}"/>`); });
+  for (const [v, l, c] of [[sim.p10, "P10", FAINT], [sim.p50, "P50", INK], [sim.p90, "P90", FAINT]]) { body.push(`<line x1="${X(v, lo, hi)}" y1="${PT}" x2="${X(v, lo, hi)}" y2="${H - PB}" stroke="${c}" stroke-dasharray="3 4"/>`); body.push(`<text x="${X(v, lo, hi) + 5}" y="${PT + 12}" font-size="11" fill="${c}">${l} ${money(v, 0)}</text>`); }
+  if (lo < 0 && hi > 0) body.push(`<line x1="${X(0, lo, hi)}" y1="${PT}" x2="${X(0, lo, hi)}" y2="${H - PB}" stroke="${SERIOUS}" opacity=".7"/>`);
+  return svg(body, "Distribution of simulated monthly profit");
+}
+function categoryBands(b) {
+  const top = Math.max(...b.buckets.map(([, , c]) => c)) * 1.18 || 1; const n = b.buckets.length; const slot = (W - PL - PR) / n, bw = slot * 0.62;
+  const body = frame("ounces above the next cheapest fee band", "listings we have measured", [], niceTicks(0, top, 3).map((v) => [Y(v, 0, top), num(v)]));
+  b.buckets.forEach(([lo, hi, c], i) => { const x = PL + i * slot + (slot - bw) / 2, y = Y(c, 0, top); const mine = b.yourOverBy != null && lo <= b.yourOverBy && b.yourOverBy < hi; body.push(`<rect x="${x}" y="${y}" width="${bw}" height="${H - PB - y}" fill="${mine ? SERIOUS : C1}" opacity="${mine ? .9 : .28}"/>`); body.push(`<text x="${x + bw / 2}" y="${H - PB + 17}" text-anchor="middle" font-size="11" fill="${FAINT}">${hi < 900 ? `${lo}–${hi}` : `${lo}+`}</text>`); if (mine) body.push(`<text x="${x + bw / 2}" y="${y - 10}" text-anchor="middle" font-size="12" font-weight="600" fill="${SERIOUS}">you</text>`); });
+  body.push(`<text x="${W - PR}" y="${PT + 4}" text-anchor="end" font-size="11.5" fill="${FAINT}">${num(b.measured)} listings measured in ${esc(b.category)}</text>`);
+  return svg(body, "Distribution of listings above the nearest fee band edge");
+}
+
+// -- render -----------------------------------------------------------------------
+const assume = (list) => `<div class="assume"><b>Assumptions</b><ul>${list.map((a) => `<li>${esc(a)}</li>`).join("")}</ul></div>`;
+const cardIn = fees.cardFor(rc, TODAY), peakCard = fees.cardNamed(rc, "peak");
+const cardLine = (c) => `${c.source}, ${c.effective} to ${c.through}`;
+
+function findingTitle(f) {
+  const e = f.evidence;
+  switch (f.kind) {
+    case "price_band_edge": return [`${money(e.yourPrice)} nets you less per unit than ${money(e.targetPrice)} does`, `Amazon prices every weight band three times by sale price. Crossing $${e.edge} adds ${cents(e.feeJumpLow)}${e.feeJumpHigh > e.feeJumpLow ? `–${cents(e.feeJumpHigh)}` : ""} a unit in fulfilment, and the ${cents(e.yourPrice - e.targetPrice)} of extra price does not cover it after the ${pct(e.referralRate)} referral fee. Break-even is ${money(e.breakEvenPrice)}: between $${e.edge} and that, the higher price is the worse price.`];
+    case "fee_band_edge": return [`${e.overByOz} oz is costing you on every unit`, `Your published item weight is ${e.yourWeightOz} oz. The fulfilment band below it ends at ${e.edge} oz — and that is before Amazon adds its own packaging, so the unit is at least ${e.overByOz} oz into the band above. The step is ${cents(f.perUnitLow)}${f.perUnitHigh > f.perUnitLow ? ` to ${cents(f.perUnitHigh)}` : ""} a unit on the published schedule.`];
+    case "dim_weight_overage": return ["You are paying fulfilment on the box, not the product", `${e.itemWeightOz / 16 < 1 ? oz(e.itemWeightOz) : `${(e.itemWeightOz / 16).toFixed(2)} lb`} of product ships in a ${e.dims.join(" × ")} in box: ${num(e.cubicIn)} cubic inches, which past a cubic foot Amazon bills on dimensional weight — ${(e.dimWeightOz / 16).toFixed(1)} lb — rather than on what is inside it. That is ${cents(f.perUnitLow)} a unit more than the same product billed on its real weight.`];
+    case "size_tier_edge": return [`${e.overByIn} of an inch is moving this unit into a dearer size tier`, `At ${e.weightOz} oz the unit is inside Amazon's small-standard weight limit. The box is not: the ${e.axis} is ${e.actualIn} in against a ${e.limitIn} in limit, and that single dimension puts it in large standard at ${cents(f.perUnitLow)} a unit more (${money(e.largeFee)} against ${money(e.smallFee)}). Every other dimension already fits, so it is a packaging change, not a product one.`];
+  }
+  return ["", ""];
+}
+function findingChart(f) {
+  const e = f.evidence;
+  if (e.chart === "net_vs_price") return netVsPrice(cardIn, e);
+  if (e.chart === "fee_vs_weight") return feeVsWeight(cardIn, e.tier, e.price, e.yourWeightOz, e.edge);
+  if (e.chart === "size_tier") return sizeTierBars(e);
+  return "";
+}
+const monthly = (f) => f.dollarsHigh > 0 ? (f.dollarsLow > 0 ? `${money(f.dollarsLow, 0)}–${money(f.dollarsHigh, 0)} a month` : `up to ${money(f.dollarsHigh, 0)} a month`) : null;
+
+async function run(inputs) {
+  const item = fees.describeItem(rc, inputs);
+  const found = fees.detect(rc, item, TODAY);
+  const u = fees.unitEconomics(rc, item, inputs.cogs, TODAY);
+  const lead = found[0];
+  const tierKnown = item.tier === "small_standard" || item.tier === "large_standard";
+
+  // headline tiles
+  const tiles = [];
+  if (u && u.keep != null) tiles.push(`<div class="tile glass"><span class="k">Amazon keeps, on one unit</span><div class="v bad">${pct(u.amazonTakePct)}</div><p>${money(u.referral + u.fee)} of ${money(u.price)}: referral plus fulfilment on the ${cardIn.name === "peak" ? "holiday peak" : "current"} card.</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">Amazon keeps, on one unit</span><div class="v">${pct(u?.referralRate)}+</div><p>The referral fee. Add package dimensions to price the fulfilment fee — we will not guess a size tier.</p></div>`);
+  if (lead) tiles.push(`<div class="tile glass"><span class="k">The cliff, per unit</span><div class="v amber">${cents(lead.perUnitLow)}${lead.perUnitHigh > lead.perUnitLow ? `–${cents(lead.perUnitHigh)}` : ""}</div><p>${monthly(lead) ? `${monthly(lead)} at this listing's estimated volume.` : "Per unit; add a rank for the monthly bracket."}</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">The cliff</span><div class="v good">None</div><p>${tierKnown && item.itemWeightOz ? `This unit sits ${oz(fees.overBy(rc, cardIn, item.itemWeightOz, item.dims))} inside its band — no shaveable edge, no price-band trap.` : "Nothing we can price without more of the listing."}</p></div>`);
+  if (u && u.peakDelta != null) tiles.push(`<div class="tile glass"><span class="k">From 15 October</span><div class="v ${u.peakDelta > 0 ? "bad" : "good"}">${u.peakDelta > 0 ? "+" : ""}${cents(u.peakDelta)}</div><p>per unit on the holiday peak card${u.peakWindowHigh ? `; ${money(u.peakWindowLow, 0)}–${money(u.peakWindowHigh, 0)} over the three-month window` : ""}.</p></div>`);
+  else tiles.push(`<div class="tile glass"><span class="k">From 15 October</span><div class="v">?</div><p>Dimensions needed to price the peak card on this unit.</p></div>`);
+  $("hero-num").innerHTML = tiles.join("");
+
+  // 1. the fee stack
+  const s1 = $("s-stack");
+  if (u && u.fee != null) {
+    s1.innerHTML = `<span class="label">01 · The fee stack on one unit</span><h2>${money(u.price)} in. ${money(u.keep)} out.</h2>
+      <p class="sub">Two published rates, nothing else. ${tierName(item.tier)} tier from your dimensions; billed on ${item.dimWeightOz && item.dimWeightOz > item.itemWeightOz ? `dimensional weight, ${oz(item.billableWeightOz)}` : `${oz(item.billableWeightOz)}`}; the ${u.price < 10 ? "under $10" : u.price <= 50 ? "$10–50" : "over $50"} price column.</p>
+      <div class="two"><div><table><thead><tr><th></th><th class="r">${cardIn.name === "peak" ? "Peak card" : "Now"}</th><th class="r">${cardIn.name === "peak" ? "" : "From 15 Oct"}</th></tr></thead><tbody>
+        <tr><td>Sale price</td><td class="r">${money(u.price)}</td><td class="r">${cardIn.name === "peak" ? "" : money(u.price)}</td></tr>
+        <tr><td>Referral fee · ${pct(u.referralRate)}</td><td class="r">−${money(u.referral)}</td><td class="r">${cardIn.name === "peak" ? "" : "−" + money(u.referral)}</td></tr>
+        <tr><td>FBA fulfilment · ${tierName(item.tier)}, incl. 3.5% surcharge</td><td class="r">−${money(u.fee)}</td><td class="r">${cardIn.name === "peak" ? "" : "−" + money(u.feePeak)}</td></tr>
+        <tr class="tot"><td><b>You keep, before ads and cost</b></td><td class="r"><b>${money(u.keep)}</b> · ${pct(u.keepPct)}</td><td class="r">${cardIn.name === "peak" ? "" : `<b>${money(u.price - u.referral - u.feePeak)}</b>`}</td></tr>
+      </tbody></table></div>
+      <div><div class="chart">${feeVsWeight(cardIn, item.tier, u.price, item.billableWeightOz, fees.bandEdgeBelow(rc, cardIn, item.tier, item.billableWeightOz))}</div></div></div>
+      ${assume([cardLine(cardIn), `a ${pct(u.referralRate)} referral fee, Amazon's published rate for ${item.category || "this category"}`, "the dimensions you entered are the packed dimensions Amazon measures, and the weight is a floor: Amazon bills the packed weight"])}`;
+  } else {
+    s1.innerHTML = `<span class="label">01 · The fee stack on one unit</span><h2>Referral: ${money(u.referral)}. Fulfilment: unpriced.</h2>
+      <p class="sub">${item.tier === "oversize" ? "This box is oversize, which is off the standard card this page prices. The full Teardown reads your fee report instead." : "Without package dimensions we do not know the size tier, and the tier is worth about a dollar a unit. We would rather show nothing than a plausible number."} ${item.tier !== "oversize" ? "Add the three dimensions above and run it again." : ""}</p>`;
+  }
+
+  // 2. the cliff
+  const s2 = $("s-cliff");
+  if (found.length) {
+    s2.innerHTML = `<span class="label">02 · The cliff</span><h2>${found.length === 1 ? "One edge, on the published schedule." : `${found.length} edges, on the published schedule.`}</h2>
+      <p class="sub">A per-unit figure you can check against your own fee report in thirty seconds. The monthly figure multiplies it by a volume estimated from the rank, which is why it is a bracket.</p>
+      ${found.map((f) => { const [t, m] = findingTitle(f); return `<div class="finding"><div class="t">${esc(t)}</div><div class="m">${esc(m)}</div>${monthly(f) ? `<div class="big"><span>${monthly(f)}</span></div>` : ""}<div class="chart">${findingChart(f)}</div>${assume(f.assumptions)}</div>`; }).join("")}`;
+  } else {
+    const ob = tierKnown ? fees.overBy(rc, cardIn, item.itemWeightOz, item.dims) : null;
+    s2.innerHTML = `<span class="label">02 · The cliff</span><h2>No cliff on this listing.</h2>
+      <p class="sub">${ob != null ? `The unit is ${oz(ob)} above the band edge below it, which is more than anyone shaves off a product because a stranger said so, and the price sits clear of Amazon's $10 and $50 fee columns.` : "Nothing on the standard card is within reach of this listing as entered."} That is a good result, and it is exactly what we would have told you in an email.</p>
+      ${tierKnown && u?.fee != null ? `<div class="chart">${feeVsWeight(cardIn, item.tier, u.price, item.billableWeightOz, fees.bandEdgeBelow(rc, cardIn, item.tier, item.billableWeightOz))}</div>` : ""}`;
+  }
+
+  // 3. break-even
+  const s3 = $("s-breakeven");
+  if (u && u.contribution != null) {
+    const be = u.breakEvenAcos;
+    s3.innerHTML = `<span class="label">03 · Break-even ACoS and the price floor</span><h2>Any campaign above ${pct(Math.max(be, 0), 1)} ACoS loses money on this unit.</h2>
+      <p class="sub">Your ad tool optimises toward whatever target you typed in. This one is derived: after Amazon's two fees and your landed cost, each unit contributes ${money(u.contribution)}, which is ${pct(Math.max(be, 0), 1)} of the price. Spend more than that per dollar of sales and the sale costs you money.</p>
+      <div class="kv">
+        <div><span class="k">Contribution per unit</span><div class="v ${u.contribution < 0 ? "bad" : ""}">${money(u.contribution)}</div><small>price − referral − fulfilment − landed cost</small></div>
+        <div><span class="k">Break-even ACoS</span><div class="v amber">${pct(Math.max(be, 0), 1)}</div><small>ads break even on profit, not revenue</small></div>
+        <div><span class="k">Price floor</span><div class="v">${money(u.priceFloor)}</div><small>the price at which the unit contributes nothing${u.priceFloorPeak ? `; ${money(u.priceFloorPeak)} on the peak card` : ""}</small></div>
+      </div>
+      ${assume([cardLine(cardIn), `the landed cost you entered, ${money(u.cogs)} a unit`, "storage, returns and refunds are not in this figure; the full Teardown allocates them from your reports"])}`;
+  } else {
+    s3.innerHTML = `<span class="label">03 · Break-even ACoS and the price floor</span><h2>Locked behind one number.</h2>
+      <div class="unlock">Enter your <b>landed unit cost</b> above and run it again. It unlocks the break-even ACoS for this listing, the price at which the unit contributes nothing, and ten thousand simulated months. ${u?.fee == null ? "It also needs the dimensions, for the fulfilment fee." : ""}</div>`;
+  }
+
+  // 4. peak
+  const s4 = $("s-peak");
+  if (u && u.peakDelta != null) {
+    s4.innerHTML = `<span class="label">04 · 15 October</span><h2>${u.peakDelta > 0 ? `${cents(u.peakDelta)} more per unit, for three months.` : "The peak card does not move this unit."}</h2>
+      <p class="sub">Amazon's holiday peak fulfilment fees run 15 October 2026 to 14 January 2027 on the same weight bands. On this unit the row goes from ${money(u.fee)} to ${money(u.feePeak)}${u.peakWindowHigh ? `; at this listing's estimated volume that is ${money(u.peakWindowLow, 0)}–${money(u.peakWindowHigh, 0)} across the window` : ""}.${u.priceToHoldMargin ? ` The price that keeps your margin flat is ${money(u.priceToHoldMargin)} — and if that crosses a fee column, the cliff above applies.` : ""}</p>
+      <div class="kv"><div><span class="k">Now</span><div class="v">${money(u.fee)}</div><small>${cardIn.name === "peak" ? "peak card" : "non-peak card"}</small></div><div><span class="k">Peak card</span><div class="v ${u.peakDelta > 0 ? "bad" : ""}">${money(u.feePeak)}</div><small>15 Oct – 14 Jan</small></div>${u.priceToHoldMargin ? `<div><span class="k">Price that holds margin</span><div class="v amber">${money(u.priceToHoldMargin)}</div><small>+ Δfee ÷ (1 − referral)</small></div>` : ""}</div>
+      ${assume([cardLine(peakCard), "the per-4-oz step above 3 lb is assumed unchanged; verify against Seller Central", item.estMonthlyUnits ? `about ${num(item.estMonthlyUnits)} units a month from the rank, bracketed half to one and a half times` : "no volume estimate, so no window figure"])}`;
+  } else {
+    s4.innerHTML = `<span class="label">04 · 15 October</span><h2>Unpriced without the dimensions.</h2><p class="sub">The peak card is the same ladder, dearer. Add the box and we price both.</p>`;
+  }
+
+  // 5. simulation
+  const s5 = $("s-sim");
+  const sim = u && u.contribution != null && item.estMonthlyUnits ? fees.simulateMonthly({ units: item.estMonthlyUnits, price: u.price, referral: u.referral, fee: u.fee, cogs: u.cogs }) : null;
+  if (sim) {
+    s5.innerHTML = `<span class="label">05 · Ten thousand months</span><h2>Half the months land between ${money(sim.p10, 0)} and ${money(sim.p90, 0)}.</h2>
+      <p class="sub">A point estimate hides the thing a founder actually needs: how wide the answer is. We drew this listing's monthly volume ten thousand times around the rank estimate, with your landed cost drifting ten percent, and priced every month on the card. ${sim.pLoss > 0 ? `<b>${pct(sim.pLoss, 1)} of months lose money.</b>` : "No simulated month loses money at this cost."}</p>
+      <div class="kv"><div><span class="k">P10</span><div class="v">${money(sim.p10, 0)}</div></div><div><span class="k">Median</span><div class="v amber">${money(sim.p50, 0)}</div></div><div><span class="k">P90</span><div class="v">${money(sim.p90, 0)}</div></div><div><span class="k">Months at a loss</span><div class="v ${sim.pLoss > 0 ? "bad" : "good"}">${pct(sim.pLoss, 1)}</div></div></div>
+      <div class="chart">${histogram(sim)}</div>
+      ${assume([`about ${num(item.estMonthlyUnits)} units a month from rank #${num(item.rank)} in ${item.category || "this category"}, drawn lognormally so 5% and 95% of months land at half and double that`, `landed cost ${money(u.cogs)} ±10%`, cardLine(cardIn), "no ad spend, storage or returns in these paths — the full Teardown puts them in from your reports"])}`;
+  } else {
+    s5.innerHTML = `<span class="label">05 · Ten thousand months</span><h2>Needs a rank and a cost.</h2><div class="unlock">With a <b>Best Sellers Rank</b> for the volume and a <b>landed unit cost</b> for the margin, this section draws ten thousand months for this listing and shows how wide the answer really is.</div>`;
+  }
+
+  // 6. the category, asynchronously
+  const s6 = $("s-bench"); s6.hidden = true;
+  if (item.category && item.itemWeightOz) {
+    try {
+      const q = new URLSearchParams({ bench: item.category, oz: item.itemWeightOz }); if (item.dims) q.set("dims", item.dims.join(" x ") + " inches");
+      const r = await fetch(`/api/quick?${q}`); const b = await r.json();
+      if (b && b.measured >= 30 && b.buckets) {
+        s6.hidden = false;
+        s6.innerHTML = `<span class="label">06 · Your category</span><h2>${pct(b.share)} of ${esc(b.category)} listings we have weighed sit within an ounce of a cheaper band.</h2>
+          <p class="sub">We have read and weighed <b>${num(b.measured)}</b> ${esc(b.category)} listings from their public pages and measured each one the same way as yours. ${b.yourOverBy != null ? `Yours is marked: ${oz(b.yourOverBy)} above the edge below it.` : "Yours could not be placed without dimensions."} Nobody publishes this. We measure it because it is the first thing we look at.</p>
+          <div class="chart">${categoryBands(b)}</div>`;
+      }
+    } catch { /* the benchmark is a bonus, never a blocker */ }
+  }
+
+  // sources and the result link
+  $("sources").innerHTML = `${esc(cardLine(cardIn))}. ${esc(cardLine(peakCard))}. Referral rates: Amazon's published US referral fee schedule by category. Rate card generated ${esc(rc.generated)} from the same table the Hubricon engine prices with.`;
+  window.__last = { inputs, item, u, found, sim, headline: lead ? findingTitle(lead)[0] : (u?.keep != null ? `keeps ${money(u.keep)} of ${money(u.price)}` : "unpriced") };
+  history.replaceState(null, "", encodeHash(inputs));
+  $("results").classList.add("on");
+  $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const i = readForm(); const err = $("form-err");
+  if (!i.price || !i.itemWeightOz) { err.hidden = false; err.textContent = "A sale price and an item weight are the minimum. Everything else sharpens the answer."; return; }
+  err.hidden = true; run(i);
+});
+
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; setTimeout(() => ($("copy").textContent = "Copy a link to this result"), 1800); } catch { prompt("Copy this link", location.href); }
+});
+
+$("capture").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("cap-msg"), btn = $("cap-btn"); const email = $("cap-email").value.trim();
+  if (!window.__last) { msg.hidden = false; msg.className = "hint bad"; msg.textContent = "Run the Teardown first, so there is something to send."; return; }
+  btn.disabled = true; msg.hidden = false; msg.className = "hint"; msg.textContent = "Saving…";
+  try {
+    const L = window.__last;
+    const r = await fetch("/api/quick", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      email, first_name: $("cap-name").value.trim(), asin: L.inputs.asin, platform: "amazon", website: $("cap-web").value,
+      inputs: L.inputs,
+      summary: { headline: L.headline, brand: window.__brand || null, keep: L.u?.keep ?? null, keepPct: L.u?.keepPct ?? null, breakEvenAcos: L.u?.breakEvenAcos ?? null, peakDelta: L.u?.peakDelta ?? null, findings: L.found.map((f) => ({ kind: f.kind, perUnitLow: f.perUnitLow, perUnitHigh: f.perUnitHigh, dollarsLow: f.dollarsLow, dollarsHigh: f.dollarsHigh })), sim: L.sim ? { p10: L.sim.p10, p50: L.sim.p50, p90: L.sim.p90, pLoss: L.sim.pLoss } : null },
+    }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "failed");
+    msg.className = "hint ok"; msg.textContent = d.emailed
+      ? "Sent. Your result is in your inbox now; your private upload page for the full Teardown follows from Hagen within about an hour. Nothing else follows unless you reply."
+      : "Saved. Your link and your private upload page for the full Teardown come from Hagen within about an hour. Nothing else follows unless you reply.";
+    btn.textContent = "Sent";
+  } catch (err) { btn.disabled = false; msg.className = "hint bad"; msg.textContent = `Could not save that: ${err.message}. Use the button on the left instead.`; }
+});
+
+if (rc && fillFromHash()) run(readForm());
+</script>
+</body>
+</html>

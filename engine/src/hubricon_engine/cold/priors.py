@@ -36,7 +36,7 @@ from .. import calibration
 #         (warehousingcosts.com, goatconsulting.com) which agree to the cent.
 FBA_SOURCE = "Amazon US FBA fulfilment fees, 2026 non-peak schedule"
 FBA_EFFECTIVE = date(2026, 1, 15)
-FBA_THROUGH = date(2026, 10, 14)   # 15 Oct – 14 Jan is the peak card, which is dearer
+FBA_THROUGH = date(2026, 10, 14)   # the peak card below takes over on 15 Oct
 
 # A 3.5% fuel and logistics surcharge applies to every US FBA fulfilment fee
 # from 2026-04-17. It scales both sides of a band comparison, so it changes a
@@ -77,6 +77,83 @@ LARGE_STANDARD_OZ = (
 # Above 3 lb and up to 20 lb, large standard is a base plus a linear rate.
 LARGE_STANDARD_OVER_3LB_BASE = (6.15, 6.97, 7.23)
 LARGE_STANDARD_OVER_3LB_PER_4OZ = 0.08
+
+# -- the holiday peak card, 15 Oct 2026 – 14 Jan 2027 -------------------------------
+#
+# Same bands, same three price columns, dearer by $0.19–$0.54 a unit on the
+# standard tiers (Amazon quotes the average increase as $0.32). Loaded on
+# 2026-09-08 so the engine keeps pricing through Q4 instead of going dark on
+# 15 October, and so the 60-second Teardown can tell a seller what the switch
+# costs their exact unit before it happens.
+#
+# Source: Amazon's 2026 US holiday peak fulfilment fee schedule, reproduced at
+#         amzprep.com/holiday-peak-fulfillment-fees (full table) and
+#         cross-checked against Amazon's own worked example quoted by
+#         forestshipping.com (small standard 2–4 oz under $10: $2.49 → $2.68,
+#         which is this table's row exactly). Verify the rest against Seller
+#         Central before 15 October; the per-4-oz step above 3 lb is assumed
+#         unchanged at $0.08 because no reproduction prints it.
+PEAK_SOURCE = "Amazon US FBA fulfilment fees, 2026 holiday peak schedule"
+PEAK_EFFECTIVE = date(2026, 10, 15)
+PEAK_THROUGH = date(2027, 1, 14)
+SMALL_STANDARD_PEAK_OZ = (
+    (2,  (2.62, 3.51, 3.77)),
+    (4,  (2.68, 3.61, 3.87)),
+    (6,  (2.76, 3.65, 3.91)),
+    (8,  (2.86, 3.74, 4.00)),
+    (10, (2.98, 3.89, 4.15)),
+    (12, (3.03, 3.99, 4.25)),
+    (14, (3.14, 4.13, 4.39)),
+    (16, (3.17, 4.18, 4.44)),
+)
+LARGE_STANDARD_PEAK_OZ = (
+    (4,  (3.15, 3.97, 4.23)),
+    (8,  (3.39, 4.21, 4.47)),
+    (12, (3.66, 4.48, 4.74)),
+    (16, (4.07, 4.89, 5.15)),
+    (20, (4.52, 5.34, 5.60)),
+    (24, (4.91, 5.73, 5.99)),
+    (28, (5.07, 5.89, 6.15)),
+    (32, (5.33, 6.15, 6.41)),
+    (36, (5.47, 6.29, 6.55)),
+    (40, (5.67, 6.49, 6.75)),
+    (44, (5.84, 6.66, 6.92)),
+    (48, (6.26, 7.08, 7.34)),
+)
+LARGE_STANDARD_PEAK_OVER_3LB_BASE = (6.69, 7.51, 7.77)
+
+
+class Card:
+    """One FBA fee schedule with the window it is in force for."""
+    __slots__ = ("name", "source", "effective", "through", "small", "large", "over_3lb_base")
+
+    def __init__(self, name, source, effective, through, small, large, over_3lb_base):
+        self.name, self.source, self.effective, self.through = name, source, effective, through
+        self.small, self.large, self.over_3lb_base = small, large, over_3lb_base
+
+
+CARDS = (
+    Card("non_peak", FBA_SOURCE, FBA_EFFECTIVE, FBA_THROUGH,
+         SMALL_STANDARD_OZ, LARGE_STANDARD_OZ, LARGE_STANDARD_OVER_3LB_BASE),
+    Card("peak", PEAK_SOURCE, PEAK_EFFECTIVE, PEAK_THROUGH,
+         SMALL_STANDARD_PEAK_OZ, LARGE_STANDARD_PEAK_OZ, LARGE_STANDARD_PEAK_OVER_3LB_BASE),
+)
+
+
+def card_for(today: date | None = None) -> Card | None:
+    """The schedule in force on a day, or None when no loaded card covers it."""
+    today = today or date.today()
+    for card in CARDS:
+        if card.effective <= today <= card.through:
+            return card
+    return None
+
+
+def card_named(name: str) -> Card:
+    for card in CARDS:
+        if card.name == name:
+            return card
+    raise KeyError(name)
 
 # Size tiers are decided on the *packed* dimensions and the shipping weight.
 # Crossing an envelope is the expensive move: a unit that leaves small standard
@@ -203,15 +280,15 @@ CARRIER_GROUND_USD: dict[int, tuple[float, float]] = _carrier_steps()
 
 
 def stale(today: date | None = None) -> str | None:
-    """Plain English if the Amazon card is outside the window it was priced for."""
+    """Plain English if no loaded Amazon card covers the day."""
     today = today or date.today()
-    if today < FBA_EFFECTIVE:
-        return f"the FBA rate card starts {FBA_EFFECTIVE}; today is {today}"
-    if today > FBA_THROUGH:
-        return (f"the FBA rate card covers {FBA_EFFECTIVE} to {FBA_THROUGH} and today is {today}. "
-                f"Amazon's peak card (15 Oct – 14 Jan) is dearer, so every figure below it is low. "
-                f"Re-read the schedule before sending anything.")
-    return None
+    if card_for(today) is not None:
+        return None
+    first, last = CARDS[0], CARDS[-1]
+    if today < first.effective:
+        return f"the FBA rate card starts {first.effective}; today is {today}"
+    return (f"the loaded FBA rate cards end {last.through} and today is {today}. "
+            f"Amazon's next schedule must be read into priors.py before anything is priced.")
 
 
 def price_band(price: float | None) -> int | None:
@@ -241,33 +318,84 @@ def _surcharged(fee: float, today: date) -> float:
 
 
 def fulfilment_fee(tier: str, weight_oz: float, price: float | None,
-                   today: date | None = None) -> float | None:
+                   today: date | None = None, card: Card | None = None) -> float | None:
     """$ per unit Amazon charges to fulfil one of these, or None off the card.
 
     `tier` is 'small_standard' or 'large_standard'; anything bigger is off this
-    card and returns None rather than a plausible number.
+    card and returns None rather than a plausible number. The card is the one
+    in force on `today` unless one is passed — the 60-second Teardown prices
+    the same unit on both cards to show what 15 October costs.
     """
     today = today or date.today()
+    card = card or card_for(today)
     band = price_band(price)
-    if band is None or weight_oz is None or weight_oz <= 0:
+    if card is None or band is None or weight_oz is None or weight_oz <= 0:
         return None
     if tier == "small_standard":
         if weight_oz > SMALL_STANDARD_MAX_OZ:
             return None
-        for edge, fees in SMALL_STANDARD_OZ:
+        for edge, fees in card.small:
             if weight_oz <= edge:
                 return _surcharged(fees[band], today)
         return None
     if tier == "large_standard":
         if weight_oz > LARGE_STANDARD_MAX_OZ:
             return None
-        for edge, fees in LARGE_STANDARD_OZ:
+        for edge, fees in card.large:
             if weight_oz <= edge:
                 return _surcharged(fees[band], today)
         over_4oz_steps = -(-(weight_oz - 48) // 4)          # ceil: part of a step bills whole
-        fee = LARGE_STANDARD_OVER_3LB_BASE[band] + LARGE_STANDARD_OVER_3LB_PER_4OZ * over_4oz_steps
+        fee = card.over_3lb_base[band] + LARGE_STANDARD_OVER_3LB_PER_4OZ * over_4oz_steps
         return _surcharged(fee, today)
     return None
+
+
+def ratecard_dict(today: date | None = None) -> dict:
+    """Every published figure the engine prices with, as plain data.
+
+    Written to /ratecard.json by `hubricon teardown ratecard --json` so the
+    60-second Teardown in the browser prices a unit off exactly this table.
+    The JSON is generated, never edited: this file stays the single source.
+    """
+    from ..harvest import amazon as harvest_amazon
+    today = today or date.today()
+    fba = {
+        "cards": {
+            c.name: {
+                "source": c.source, "effective": c.effective.isoformat(),
+                "through": c.through.isoformat(),
+                "small_standard": [[e, list(f)] for e, f in c.small],
+                "large_standard": [[e, list(f)] for e, f in c.large],
+                "over_3lb_base": list(c.over_3lb_base),
+                "over_3lb_per_4oz": LARGE_STANDARD_OVER_3LB_PER_4OZ,
+            } for c in CARDS
+        },
+        "fuel_surcharge": FUEL_SURCHARGE, "fuel_surcharge_from": FUEL_SURCHARGE_FROM.isoformat(),
+        "price_band_edges": list(PRICE_BAND_EDGES),
+        "small_standard_max_oz": SMALL_STANDARD_MAX_OZ,
+        "small_standard_envelope_in": list(SMALL_STANDARD_ENVELOPE_IN),
+        "large_standard_max_oz": LARGE_STANDARD_MAX_OZ,
+        "large_standard_envelope_in": list(LARGE_STANDARD_ENVELOPE_IN),
+        "dim_divisor": DIM_DIVISOR, "dim_weight_min_cuft": DIM_WEIGHT_MIN_CUFT,
+        "referral_default": REFERRAL_DEFAULT, "referral_min_usd": REFERRAL_MIN_USD,
+        "referral_by_category": dict(REFERRAL_BY_CATEGORY),
+    }
+    carrier = {
+        "source": CARRIER_SOURCE,
+        "effective": CARRIER_EFFECTIVE.isoformat() if CARRIER_EFFECTIVE else None,
+        "zones": list(CARRIER_ZONES),
+        "ground_commercial": {str(k): v for k, v in CARRIER_GROUND_COMMERCIAL.items()},
+    }
+    units = {
+        "a": harvest_amazon.CURVE_A, "b": harvest_amazon.CURVE_B,
+        "head_knee": harvest_amazon.HEAD_KNEE, "head_exp": harvest_amazon.HEAD_EXP,
+        "category_scale": dict(harvest_amazon.CATEGORY_SCALE),
+        "default_scale": harvest_amazon.DEFAULT_SCALE,
+        "bracket": [0.5, 1.5],
+        "note": "monthly units from a top-level category rank; a power-law fit that is wrong by "
+                "a factor of two either way, so every monthly figure is a bracket",
+    }
+    return {"generated": today.isoformat(), "fba": fba, "carrier": carrier, "units_curve": units}
 
 
 def band_edge_below(tier: str, weight_oz: float | None) -> float | None:
