@@ -422,7 +422,7 @@ def founder_email(facts: dict, first_name: str, calendly_url: str) -> dict:
     """A draft for the founder to edit and send from his own mailbox.
 
     Short, specific, one ask, no tracking. The claims match the website and the
-    triage fact sheet: free teardown, $6,000/mo after, first month free.
+    triage fact sheet: free teardown, $6,000/mo after, month one at no charge.
 
     The subject leads with the number, not with us and not with the brand name.
     "Tens Towels: 3.2 oz over an FBA fee band" is a filing label; "3.2 oz is

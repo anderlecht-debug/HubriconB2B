@@ -45,7 +45,7 @@ def test_welcome_email_leads_with_the_upload_page():
     html = render_html(spec)
     assert text.startswith("Hi Priya,")
     assert text.index(link) < text.index("Prefer to grant a seat")  # upload path first, seat second
-    assert "24 hours" in text and "first month is free" in text
+    assert "24 hours" in text and "month one runs at no charge" in text
     assert link in html and "<ol" in html and "Hubricon" in html
 
 

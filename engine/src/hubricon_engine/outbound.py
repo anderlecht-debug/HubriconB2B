@@ -67,7 +67,7 @@ def _footer(postal_address: str) -> str:
 
 # Bump when the copy below changes: the operator PATCHes the live campaign's
 # sequence in place on its next pass (threads already sent keep their history).
-COPY_VERSION = "2026-09-05 reader-first hook, platform-neutral, free month unconditional + day-30 gate"
+COPY_VERSION = "2026-09-08 $6,000 offer: conditional invoice every month, month one at no charge"
 
 
 def effective_copy_version(proof_line: str | None) -> str:
@@ -123,13 +123,13 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
     # on that day it becomes the one claim in this email a reader can check.
     # With a published result the paragraph says what the record is instead.
     why_free = (
-        "Why free: Hubricon is new. The engine's built; the track record isn't. That's the price: a "
+        "Why no charge: Hubricon's new; the engine's built, the track record isn't. The price: a "
         "testimonial and your anonymized numbers.<br/><br/>"
     )
     if proof_line:
         why_free = (
             f"{html.escape(proof_line, quote=False)}<br/><br/>"
-            "Why free: the price of the seat is what it was for them — a testimonial and your "
+            "Why no charge: the price of the seat is what it was for them — a testimonial and your "
             "anonymized numbers.<br/><br/>"
         )
     step1 = (
@@ -140,8 +140,11 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "negative once ads are allocated honestly.<br/><br/>"
         "I find them in {{companyName}}'s numbers and fix them for you. Three-minute brief every "
         "two weeks; you keep the margin.<br/><br/>"
-        "Your first month is free. No card, nothing owed. If I don't find more than I cost, "
-        "no invoice.<br/><br/>"
+        # 2026-09-08, the founder's call: the price leads and the guarantee is the
+        # rule the ledger and billing.py actually keep (cumulative, terms §3), with
+        # month one demoted from headline to feature. Same economics as before.
+        "$6,000 a month, flat; month one at no charge. Any invoice the ledger hasn't earned is void. "
+        "No card, nothing owed.<br/><br/>"
         + why_free +
         "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"
         "Hagen Simmons<br/>Hubricon" + foot

@@ -245,7 +245,8 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 *([{"p": note}] if note else []),
                 {"p": f"Prefer to grant a seat instead? {seat_hint(platform)} Want to talk it through first? "
                       f"Book 20 minutes: {CALENDLY_URL}"},
-                {"p": "Your first month is free. If we don't find you more than we cost, walk away owing nothing."},
+                {"p": "The desk is $6,000 a month, flat, and month one runs at no charge. If we don't find you more than we cost, "
+      "walk away owing nothing — and after that, no invoice ever runs ahead of what your ledger proves."},
             ],
         }
     if kind == "files":
@@ -259,7 +260,8 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 *([{"p": note}] if note else []),
                 {"p": "The models run the moment your last file lands — your written Profit Teardown is in your "
                       "desk within 24 hours."},
-                {"p": "Your first month is free. If we don't find you more than we cost, walk away owing nothing."},
+                {"p": "The desk is $6,000 a month, flat, and month one runs at no charge. If we don't find you more than we cost, "
+      "walk away owing nothing — and after that, no invoice ever runs ahead of what your ledger proves."},
             ],
         }
     if kind == "nudge":
