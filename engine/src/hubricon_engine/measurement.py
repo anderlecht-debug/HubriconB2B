@@ -455,6 +455,18 @@ def measure_fee_bleed(d: dict, inv_econ: dict | None, since: date, today: date) 
 
 # ── Tier C: attributable, against a stated counterfactual ────────────────────
 
+def _split_fees(row: dict) -> tuple[float, float]:
+    """(proportional, fixed) fee dollars for one margin row. A row with no
+    itemised split — an older run, or a channel that reports one blended fee
+    line — puts everything in the proportional bucket, which is what the
+    engine assumed before the split existed."""
+    split = row.get("fee_split") or {}
+    if split.get("basis") == "itemized":
+        return (float(split.get("proportional_fees") or 0),
+                float(split.get("fixed_fees") or 0))
+    return float(row.get("amazon_fees") or 0), 0.0
+
+
 def _observed(rows: list[dict]) -> dict | None:
     """Actual profit for a set of margin rows: revenue less fees, cost and ads.
     The factual side is never modelled — only the counterfactual is."""
@@ -468,6 +480,11 @@ def _observed(rows: list[dict]) -> dict | None:
         "units": units, "revenue": revenue,
         "price": revenue / units,
         "fees": sum(float(r.get("amazon_fees") or 0) for r in rows),
+        # the same split pricing_engine priced the promise with, summed over
+        # the measured window, so the counterfactual charges a fixed FBA fee
+        # per unit rather than a percentage of a price that changed
+        "proportional_fees": sum(_split_fees(r)[0] for r in rows),
+        "fixed_fees": sum(_split_fees(r)[1] for r in rows),
         "cogs": sum(float(r.get("cogs") or 0) for r in rows),
         "ads": sum(float(r.get("ad_spend_allocated") or 0) for r in rows),
         "net": sum(float(r.get("net_margin") or 0) for r in rows),
@@ -476,7 +493,7 @@ def _observed(rows: list[dict]) -> dict | None:
 
 
 def _counterfactual_profit(eps: float, p0: float, p1: float, units_after: float,
-                           unit_cost: float, fee_rate: float) -> float:
+                           unit_cost: float, fee_rate: float, fixed_fee: float = 0.0) -> float:
     """What the SKU would have earned at the old price, given the volume it
     actually did at the new one.
 
@@ -485,7 +502,7 @@ def _counterfactual_profit(eps: float, p0: float, p1: float, units_after: float,
     counterfactual identically, so it cancels. Rolling forward from a stale
     baseline period would credit us with the weather."""
     q_cf = units_after * (p0 / p1) ** eps if p1 > 0 else units_after
-    return q_cf * (p0 * (1 - fee_rate) - unit_cost)
+    return q_cf * (p0 * (1 - fee_rate) - unit_cost - fixed_fee)
 
 
 def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
@@ -515,7 +532,8 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     unit_cost = after["cogs"] / after["units"] if after["cogs"] else None
     if unit_cost is None or unit_cost <= 0:
         return _closed(d, f"No landed cost on file for {sku}; the counterfactual cannot be priced honestly.")
-    fee_rate = min(0.9, max(0.0, after["fees"] / after["revenue"]))
+    fee_rate = min(0.9, max(0.0, after["proportional_fees"] / after["revenue"]))
+    fixed_fee = after["fixed_fees"] / after["units"] if after["units"] > 0 else 0.0
 
     eps = ev.get("elasticity")
     ci = ev.get("ci95") or []
@@ -526,7 +544,8 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     factual = after["revenue"] - after["fees"] - after["cogs"]
     # Bank the LEAST favourable reading of our own fit: a wide confidence
     # interval costs us credit, which is the incentive we want.
-    deltas = [factual - _counterfactual_profit(float(e), p0, p1, after["units"], unit_cost, fee_rate)
+    deltas = [factual - _counterfactual_profit(float(e), p0, p1, after["units"], unit_cost,
+                                               fee_rate, fixed_fee)
               for e in candidates]
     delta = min(deltas)
 

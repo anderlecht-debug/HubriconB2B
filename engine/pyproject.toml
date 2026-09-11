@@ -18,7 +18,10 @@ dependencies = [
 hubricon = "hubricon_engine.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = [
+    "pytest>=8.0",
+    "sympy>=1.14.0",
+]
 
 [build-system]
 requires = ["hatchling"]

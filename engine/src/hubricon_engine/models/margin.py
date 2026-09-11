@@ -27,6 +27,52 @@ from .common import num, period_days
 FEE_FIELDS = ("referral_fees", "fba_fulfillment_fees", "storage_fees", "other_fees")
 FORECAST_WINDOW = 3
 
+# Which fee columns scale with the price and which do not. A referral fee is a
+# percentage of the sale, so it belongs in the proportional rate f. FBA
+# fulfilment is charged per unit by size and weight and does not move when the
+# price does, so it belongs in the fixed per-unit term F; monthly storage is
+# charged on cubic feet, which is also indifferent to price, and is allocated
+# across the period's units. `other_fees` is a residual bucket whose
+# composition the export does not name: it is left in the proportional rate,
+# which biases the price optimum DOWN (see pricing_engine.optimal_price), the
+# conservative direction.
+PROPORTIONAL_FEE_FIELDS = ("referral_fees", "other_fees")
+FIXED_FEE_FIELDS = ("fba_fulfillment_fees", "storage_fees")
+
+
+def fee_split(row: dict, revenue: float, units: float) -> dict:
+    """Split a period's fees into a proportional rate and a fixed per-unit
+    charge, or say plainly that the export did not separate them.
+
+    A channel whose export itemises fees (Amazon SKU Economics) gets
+    basis "itemized". A channel that reports one blended fee line (Shopify
+    Orders, whose processing fee is 2.9% of the sale plus $0.30 an order and
+    arrives summed) gets basis "assumed_proportional": the whole fee is
+    treated as price-proportional, which is what the engine did before this
+    split existed, and the report says so.
+    """
+    itemized = row.get("referral_fees") is not None and any(
+        row.get(f) is not None for f in FIXED_FEE_FIELDS
+    )
+    if not itemized or revenue <= 0 or units <= 0:
+        total = sum(abs(row[f] or 0) for f in FEE_FIELDS)
+        return {
+            "basis": "assumed_proportional",
+            "proportional_rate": num(total / revenue, 6) if revenue > 0 else None,
+            "fixed_per_unit": 0.0,
+            "proportional_fees": num(total),
+            "fixed_fees": 0.0,
+        }
+    proportional = sum(abs(row.get(f) or 0) for f in PROPORTIONAL_FEE_FIELDS)
+    fixed = sum(abs(row.get(f) or 0) for f in FIXED_FEE_FIELDS)
+    return {
+        "basis": "itemized",
+        "proportional_rate": num(proportional / revenue, 6),
+        "fixed_per_unit": num(fixed / units, 6),
+        "proportional_fees": num(proportional),
+        "fixed_fees": num(fixed),
+    }
+
 
 def _period_ad_spend(data: dict, start: str, end: str) -> float:
     daily = [
@@ -92,6 +138,7 @@ def run(data: dict, rng=None, simulations=None) -> list[dict]:
                     "units": units,
                     "revenue": num(revenue),
                     "amazon_fees": num(fees),
+                    "fee_split": fee_split(row, float(revenue), float(units)),
                     "cogs": num(cogs_total),
                     "ad_spend_allocated": num(ads),
                     "net_margin": num(net),

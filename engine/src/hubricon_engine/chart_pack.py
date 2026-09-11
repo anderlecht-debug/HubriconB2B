@@ -19,7 +19,7 @@ from .directives import BRANDED_SPEND_MIN, INCREMENTALITY_MID, branded_spend
 from .models.anomaly import summarize as summarize_anomalies
 from .models import recovery as recovery_model
 from .models.common import num
-from .models.pricing_engine import profit
+from .models.pricing_engine import fee_terms, profit
 
 MAX_FANS = 3
 MAX_CLAIMS = 8
@@ -119,7 +119,8 @@ def profit_curves(margins: list[dict], fits: list[dict]) -> list[dict]:
         lo_p, hi_p = c["p0"] * 0.85, c["p0"] * 1.15
         grid = np.linspace(lo_p, hi_p, CURVE_POINTS)
         curve = [{"p": num(float(p)), "profit": num(profit(c["eps"], c["p0"], c["q0"],
-                                                          c["unit_cost"], c["fee_rate"], float(p)))}
+                                                          c["unit_cost"], c["fee_rate"], float(p),
+                                                          c["fixed_fee"]))}
                  for p in grid]
         move = c["move"]
         out.append({

@@ -15,7 +15,7 @@ Fonts link with real fallbacks.
 from datetime import date, timedelta
 from html import escape
 
-from .models.pricing_engine import price_move, profit
+from .models.pricing_engine import fee_terms, price_move, profit
 
 NAVY_DEEP = "#050A1F"
 PANEL = "rgba(255,255,255,0.03)"
@@ -124,11 +124,12 @@ def cash_cone_svg(cash: dict, today: date) -> str:
 
 
 def profit_curve_svg(sku: str, eps: float, p0: float, q0: float,
-                     unit_cost: float, fee_rate: float, move: dict) -> str:
+                     unit_cost: float, fee_rate: float, move: dict,
+                     fixed_fee: float = 0.0) -> str:
     lo_p, hi_p = p0 * 0.85, p0 * 1.15
     n = 80
     prices = [lo_p + (hi_p - lo_p) * i / (n - 1) for i in range(n)]
-    profits = [profit(eps, p0, q0, unit_cost, fee_rate, p) for p in prices]
+    profits = [profit(eps, p0, q0, unit_cost, fee_rate, p, fixed_fee) for p in prices]
 
     w, h, m = 470, 300, {"l": 74, "r": 18, "t": 30, "b": 40}
     lo_y, hi_y = min(profits), max(profits)
@@ -140,7 +141,7 @@ def profit_curve_svg(sku: str, eps: float, p0: float, q0: float,
     step_p = move["p_new"]
     peak_in_view = star_p is not None and lo_p <= star_p <= hi_p
     dot_p = star_p if peak_in_view else step_p
-    dot_y = profit(eps, p0, q0, unit_cost, fee_rate, dot_p)
+    dot_y = profit(eps, p0, q0, unit_cost, fee_rate, dot_p, fixed_fee)
     if peak_in_view:
         dot_label = "P* — the optimum"
     elif star_p is not None:
@@ -232,7 +233,11 @@ def _select_price_curves(margins: list[dict], elasticity_rows: list[dict], limit
             "p0": revenue / units,
             "q0": units,
             "unit_cost": float(row["cogs"]) / units,
-            "fee_rate": min(0.9, max(0.0, float(row["amazon_fees"] or 0) / revenue)),
+            # the split, not the blended rate: fixed FBA fees do not scale
+            # with the price, and the curve the client looks at has to agree
+            # with the optimum the engine quotes
+            "fee_rate": fee_terms(row)[0],
+            "fixed_fee": fee_terms(row)[1],
             "move": move,
         })
     picks.sort(key=lambda p: abs(p["move"]["expected_delta"] or 0), reverse=True)
@@ -276,7 +281,7 @@ def build_console(company: str, directives: list[dict], cash: dict | None,
         charts = "".join(
             f'''<figure><figcaption class="mono">{escape(c["sku"])} · ε = {c["eps"]:.2f} ·
   expected {"+" if (c["move"]["expected_delta"] or 0) >= 0 else "−"}{_money(c["move"]["expected_delta"])}/period</figcaption>
-  {profit_curve_svg(c["sku"], c["eps"], c["p0"], c["q0"], c["unit_cost"], c["fee_rate"], c["move"])}</figure>'''
+  {profit_curve_svg(c["sku"], c["eps"], c["p0"], c["q0"], c["unit_cost"], c["fee_rate"], c["move"], c["fixed_fee"])}</figure>'''
             for c in curves
         )
         pricing_section = f'''<section class="panel">

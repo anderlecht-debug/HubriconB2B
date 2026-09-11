@@ -239,3 +239,54 @@ def test_landed_cost_includes_pick_pack_and_postage():
     assert with_fulfilment["net_margin"] == 2000.0 - 58.0 - 825.0
     # the payload key is the column name, older than the second platform
     assert with_fulfilment["amazon_fees"] == 58.0
+
+
+def test_fee_split_separates_proportional_from_fixed_when_the_export_itemises():
+    """Amazon's SKU Economics names each fee, so the price optimum can charge
+    the referral fee as a percentage and the FBA fee as a constant."""
+    econ = [{"sku": "A", "asin": "B0A", "period_start": "2026-07-01", "period_end": "2026-07-31",
+             "units_sold": 100, "avg_sales_price": 20.0, "sales": 2000.0,
+             "referral_fees": -300.0, "fba_fulfillment_fees": -330.0, "storage_fees": -20.0,
+             "other_fees": -10.0, "net_proceeds": 1340.0}]
+    row = margin.run(_data(sku_economics=econ))[0]
+    split = row["fee_split"]
+    assert split["basis"] == "itemized"
+    assert split["proportional_rate"] == pytest.approx(310.0 / 2000.0)   # referral + other
+    assert split["fixed_per_unit"] == pytest.approx(350.0 / 100.0)       # FBA + storage
+    # the split reconciles with the blended total it replaces
+    assert split["proportional_fees"] + split["fixed_fees"] == pytest.approx(row["amazon_fees"])
+
+
+def test_fee_split_says_so_when_the_export_blends_the_fees():
+    """Shopify's orders export reports one processing-fee line. The engine
+    falls back to the old assumption and records that it did, rather than
+    inventing a split."""
+    econ = [{"sku": "A", "asin": None, "period_start": "2026-07-01", "period_end": "2026-07-31",
+             "units_sold": 100, "avg_sales_price": 20.0, "sales": 2000.0,
+             "referral_fees": -88.0, "fba_fulfillment_fees": None, "storage_fees": None,
+             "other_fees": None, "net_proceeds": 1912.0}]
+    split = margin.run(_data(sku_economics=econ))[0]["fee_split"]
+    assert split["basis"] == "assumed_proportional"
+    assert split["proportional_rate"] == pytest.approx(88.0 / 2000.0)
+    assert split["fixed_per_unit"] == 0.0
+
+
+def test_price_move_uses_the_split_and_quotes_a_higher_optimum_than_the_blend():
+    """End to end: the same SKU, priced off the itemised split, lands on a
+    higher optimum than the blended rate produced — and the payload names
+    which basis it used, so the report can say so."""
+    from hubricon_engine.models.pricing_engine import price_move
+
+    econ = [{"sku": "A", "asin": "B0A", "period_start": "2026-07-01", "period_end": "2026-07-31",
+             "units_sold": 100, "avg_sales_price": 20.0, "sales": 2000.0,
+             "referral_fees": -300.0, "fba_fulfillment_fees": -330.0, "storage_fees": 0.0,
+             "other_fees": 0.0, "net_proceeds": 1370.0}]
+    cogs = [{"sku": "A", "asin": "B0A", "unit_cost_usd": 5.0}]
+    row = margin.run(_data(sku_economics=econ, cogs_inputs=cogs))[0]
+    fit = {"elasticity": -2.0, "details": {"ci95": [-2.4, -1.6]}}
+
+    split_move = price_move(row, fit)
+    blended_move = price_move({**row, "fee_split": None}, fit)
+    assert split_move["fee_split"] == "itemized"
+    assert blended_move["fee_split"] == "assumed_proportional"
+    assert split_move["destination"] > blended_move["destination"]

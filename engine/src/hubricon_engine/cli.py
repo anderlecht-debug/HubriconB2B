@@ -113,8 +113,8 @@ RESULT_COLUMNS = {
         "marginal_roas", "breakeven_spend", "recommended_spend", "bleed_terms", "details",
     ),
     "margin_results": (
-        "sku", "asin", "period_start", "period_end", "units", "revenue", "amazon_fees", "cogs",
-        "ad_spend_allocated", "net_margin", "net_margin_pct", "forecast",
+        "sku", "asin", "period_start", "period_end", "units", "revenue", "amazon_fees", "fee_split",
+        "cogs", "ad_spend_allocated", "net_margin", "net_margin_pct", "forecast",
     ),
 }
 
