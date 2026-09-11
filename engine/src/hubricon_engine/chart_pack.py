@@ -101,9 +101,14 @@ def elasticity_curves(fits: list[dict], max_skus: int = 4) -> list[dict]:
             lo_u, hi_u = u_at(float(ci[0])), u_at(float(ci[1]))
             band = [{"p": num(float(p)), "lo": num(float(min(a, b)), 1), "hi": num(float(max(a, b)), 1)}
                     for p, a, b in zip(grid, lo_u, hi_u)]
+        d = f.get("details") or {}
         out.append({
             "sku": f["item_id"],
             "eps": num(e, 3),
+            # both estimates travel together: the shrunk one is what the
+            # optimizer used, the raw one is what this SKU's own history said
+            "eps_raw": d.get("epsilon_raw"),
+            "shrinkage_weight": d.get("shrinkage_weight"),
             "ci95": [num(float(c), 3) for c in ci] if ci else None,
             "r2": num(float(f.get("r_squared") or 0), 3),
             "points": [{"p": num(float(p)), "u": num(float(u), 1)} for p, u in zip(prices, units)],

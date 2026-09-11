@@ -15,6 +15,21 @@ is the whole point at n = 5 where a single high-leverage period otherwise
 dominates the fit silently. The point estimate is untouched: only the
 covariance changes.
 
+A per-SKU ε is then SHRUNK toward a pooled estimate before any optimizer sees
+it. A noisy parameter fed to a nonlinear optimum is the Markowitz pathology:
+the optimizer does not know the parameter is noisy, so it emits a confident
+number built on sampling error. Empirical Bayes is the standard answer — each
+SKU's estimate moves toward the catalog's common elasticity by exactly the
+ratio of its own sampling variance to the dispersion between SKUs, so a thin
+SKU borrows strength from its neighbours and a well-measured one keeps its
+own answer. `epsilon_raw`, `epsilon_shrunk` and `shrinkage_weight` all ride in
+`details`; the optimizer consumes the shrunk value and the report shows both.
+
+The pool is the whole catalog within a level (ASIN-level fits pool with ASIN
+fits, SKU with SKU). No category taxonomy reaches the engine today, so
+`run(groups=...)` takes one if a later export carries it; absent that, the
+catalog is the group, which is stated in the payload rather than implied.
+
 The interval is a Student-t interval, not a normal one. At MIN_PERIODS = 5
 with an intercept and a price term the residual degrees of freedom are 3, and
 the two-sided 97.5% quantile of t(3) is 3.182 — not 1.96. Using the normal
@@ -35,6 +50,10 @@ CI_LEVEL = 0.95
 # (1 − hᵢ) the correction is a division by numerical noise, so the fit falls
 # back to the classical covariance and says which it used.
 MIN_LEVERAGE_SLACK = 1e-6
+# Shrinkage needs something to shrink toward. Below three fitted items in a
+# pool the between-item dispersion is not estimable, so nothing is shrunk and
+# the payload says why.
+MIN_POOL_ITEMS = 3
 
 MIN_PERIODS = 5
 MIN_PRICE_CV = 0.02
@@ -126,7 +145,103 @@ def _fit(points: list[dict]) -> dict:
     }
 
 
-def run(data: dict, rng=None, simulations=None) -> list[dict]:
+def _tau_squared(estimates: np.ndarray, variances: np.ndarray) -> float:
+    """Between-item dispersion of the true elasticities, DerSimonian–Laird.
+
+    τ² = max(0, (Q − (k − 1)) / (Σw − Σw²/Σw)) with w = 1/se² and Q the
+    weighted heterogeneity sum of squares. τ² = 0 is a real answer, not a
+    failure: it says the spread of the fitted ε's is no wider than their own
+    sampling noise already explains, and in that case the pooled estimate is
+    the better description of every item in it. The payload publishes τ² and
+    each item's weight so a fully pooled catalog is visible rather than
+    silent."""
+    w = 1.0 / variances
+    w_sum = float(w.sum())
+    if w_sum <= 0:
+        return 0.0
+    weighted_mean = float((w * estimates).sum() / w_sum)
+    q = float((w * (estimates - weighted_mean) ** 2).sum())
+    denom = w_sum - float((w**2).sum()) / w_sum
+    if denom <= 0:
+        return 0.0
+    return max(0.0, (q - (len(estimates) - 1)) / denom)
+
+
+def _shrink(rows: list[dict], group_of) -> None:
+    """Empirical-Bayes shrinkage of each fitted ε toward its pool, in place.
+
+    ε_shrunk = w·ε̂ + (1 − w)·μ with w = τ² / (τ² + se²) — the ratio of
+    between-item dispersion to this item's own sampling variance, which is
+    exactly James–Stein with a per-item variance. The posterior standard error
+    carries both terms: w·se² from the item's own fit plus (1 − w)²·var(μ)
+    from the pooled mean it borrowed, so borrowing strength is not free.
+
+    An item fitted exactly (se = 0) is never shrunk: there is no sampling
+    error to pull on."""
+    pools: dict[object, list[dict]] = {}
+    for r in rows:
+        if r.get("status") == "ok" and r.get("elasticity") is not None:
+            pools.setdefault(group_of(r), []).append(r)
+
+    for key, members in pools.items():
+        estimates = np.array([float(r["elasticity"]) for r in members], dtype=float)
+        ses = np.array([float(r["std_err"] or 0.0) for r in members], dtype=float)
+        # a zero SE would be infinite precision; floor it at the smallest
+        # positive SE in the pool so the weighting stays finite
+        positive = ses[ses > 0]
+        floor = float(positive.min()) if positive.size else 1.0
+        variances = np.maximum(ses, floor) ** 2
+        detail = {"pool": key[-1], "pool_n": len(members)}
+
+        if len(members) < MIN_POOL_ITEMS:
+            for r in members:
+                r["details"].update({**detail, "epsilon_raw": r["elasticity"],
+                                     "epsilon_shrunk": r["elasticity"],
+                                     "shrinkage_weight": 1.0,
+                                     "pooled_epsilon": None, "tau2": None,
+                                     "shrinkage": "none_pool_too_small"})
+            continue
+
+        tau2 = _tau_squared(estimates, variances)
+        precision = 1.0 / (variances + tau2)
+        mu = float((precision * estimates).sum() / precision.sum())
+        var_mu = float(1.0 / precision.sum())
+
+        for r, est, var in zip(members, estimates, variances):
+            own_se = float(r["std_err"] or 0.0)
+            if own_se <= 0:
+                weight = 1.0
+            elif tau2 + var <= 0:
+                weight = 1.0
+            else:
+                weight = tau2 / (tau2 + var)
+            shrunk = weight * est + (1.0 - weight) * mu
+            post_var = weight * var + (1.0 - weight) ** 2 * var_mu
+            post_se = float(np.sqrt(max(post_var, 0.0)))
+            t_crit = float(r["details"].get("t_critical") or 0.0)
+            r["details"].update({
+                **detail,
+                "epsilon_raw": num(est, 4),
+                "epsilon_shrunk": num(shrunk, 4),
+                "shrinkage_weight": num(weight, 4),
+                "pooled_epsilon": num(mu, 4),
+                "tau2": num(tau2, 6),
+                "std_err_raw": r["std_err"],
+                "ci95_raw": r["details"]["ci95"],
+                "shrinkage": "empirical_bayes",
+            })
+            # the optimizer consumes the shrunk value; the raw one stays on
+            # the record beside it
+            r["elasticity"] = num(shrunk, 4)
+            r["std_err"] = num(post_se, 4)
+            r["details"]["ci95"] = [num(shrunk - t_crit * post_se, 4),
+                                    num(shrunk + t_crit * post_se, 4)]
+
+
+def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = None) -> list[dict]:
+    """`groups` maps item_id -> pool name (a category, when a later export
+    carries one). Absent, every item of a level pools with the rest of the
+    catalog."""
     results = []
 
     by_asin: dict[str, list[dict]] = {}
@@ -157,4 +272,10 @@ def run(data: dict, rng=None, simulations=None) -> list[dict]:
         ]
         results.append({"level": "sku", "item_id": sku, **_fit(points)})
 
+    groups = groups or {}
+
+    def pool_key(row: dict):
+        return (row["level"], groups.get(row["item_id"], "catalog"))
+
+    _shrink(results, pool_key)
     return results
