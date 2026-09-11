@@ -4,11 +4,22 @@ Log-log OLS: log(units) ~ log(price) [+ log(sessions)], so the price
 coefficient is the elasticity. Guardrails run before any fitting — too few
 periods or too little price movement is reported as a status, never as a
 number that looks like a finding.
+
+The interval is a Student-t interval, not a normal one. At MIN_PERIODS = 5
+with an intercept and a price term the residual degrees of freedom are 3, and
+the two-sided 97.5% quantile of t(3) is 3.182 — not 1.96. Using the normal
+quantile on a five-period SKU published an interval roughly 40% too narrow,
+which is the one direction an honesty rule must never fail in. The critical
+value and the degrees of freedom behind it ride along in `details` so the
+report can show the arithmetic.
 """
 
 import numpy as np
+from scipy import stats
 
 from .common import num
+
+CI_LEVEL = 0.95
 
 MIN_PERIODS = 5
 MIN_PRICE_CV = 0.02
@@ -59,10 +70,16 @@ def _fit(points: list[dict]) -> dict:
 
     e = float(beta[1])
     se = float(np.sqrt(covariance[1, 1]))
+    # dof = 3 on a five-period SKU with a price term and an intercept. The
+    # t quantile there is 3.18; the normal's 1.96 would understate the
+    # interval by 38%.
+    t_crit = float(stats.t.ppf(0.5 + CI_LEVEL / 2, dof))
     base["details"]["controls"] = ["sessions"] if use_control else []
     base["details"]["control_dropped_collinear"] = with_sessions and not use_control
+    base["details"]["dof"] = int(dof)
+    base["details"]["t_critical"] = num(t_crit, 4)
     # the interval is the honesty: a wide CI is reported, never hidden
-    base["details"]["ci95"] = [num(e - 1.96 * se, 4), num(e + 1.96 * se, 4)]
+    base["details"]["ci95"] = [num(e - t_crit * se, 4), num(e + t_crit * se, 4)]
     return {
         **base,
         "status": "ok",
