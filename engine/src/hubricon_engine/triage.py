@@ -26,13 +26,15 @@ CATEGORIES = ("interested", "wants_teardown", "question", "not_now", "not_intere
 SILENT = {"not_interested", "unsubscribe", "ooo", "bounce"}
 
 FACTS = f"""Hubricon — what we may say to a prospect (nothing beyond this):
-- Hubricon is quantitative margin analytics for product brands doing roughly $1M–$20M/yr on Amazon, on Shopify, or both, run by its founder, Hagen Simmons.
+- Hubricon is Managed Profit for product brands doing roughly $1M–$20M/yr on Amazon, on Shopify, or both: the money decisions (prices, ads, inventory, and on Amazon the reimbursement claims) made for them inside their own account by the founder, Hagen Simmons, with every move written on a Profit Record — dollars expected before it goes live, dollars measured after, from their own exports.
 - The offer: a free, written Profit Teardown. Amazon sellers export five reports from Seller Central through a private upload page (Business Reports by child item, SKU Economics, Sponsored Products search-term report, FBA inventory snapshot, and a one-row-per-SKU cost template). Shopify brands export their orders, products (with cost per item), payouts, and their Meta or Google ads reports through the same page. No seat on either platform is required for the teardown.
-- The models run when the last file lands; the written teardown is in their private desk within 24 hours.
+- The models run when the last file lands; the written teardown is in Hubricon (their private sign-in) within 24 hours.
 - What the models compute: per-SKU stockout probability from simulation (not velocity averages), how far each price can move before units fall off (elasticity), the ACoS or ROAS where each ad campaign stops paying (break-even), true net margin per SKU after every platform fee (Amazon referral, FBA and storage; Shopify payments, shipping and apps), and a 90-day cash horizon. Reimbursement recovery applies to Amazon accounts only.
-- After the teardown, the ongoing service is $6,000/month, flat. Month one runs at no charge. Every invoice is conditional: it stands only if the ledger has measured and identified more value since day one than we have billed; otherwise it is void. If we don't find more than we cost, they walk away owing nothing. Cancel any time; they can export everything the day they leave.
-- Ongoing execution works under a standing mandate the seller sets: bounded price steps capped at 5%, ad and inventory changes within limits they approve. They see a three-minute video every two weeks and a decision ledger of every change with its measured impact.
+- After the teardown, Managed Profit is $6,000/month, flat. Month one (the Proving Month) is free. Every invoice is conditional: it stands only if the Profit Record has proven and found more value since day one than we have billed; otherwise it is void. If we don't find more than we cost, they walk away owing nothing. Cancel any time; they can export everything the day they leave.
+- Ongoing execution works under a standing mandate the seller sets: bounded price steps capped at 5% per cycle and ad corrections inside limits they set on the kickoff call; a bigger price step, a new campaign or a reorder waits for their written yes, and lapses after three weeks without one. They get a short video every two weeks, an email three days before any move goes live, and a Profit Record of every move with its measured impact.
 - Best fit: their own brand with real pricing power and 10+ SKUs, roughly $1M–$20M/yr, on Amazon, Shopify, or both. Smaller sellers, wholesale and arbitrage are still welcome on the call. Never tell a prospect they are not a fit and never turn one away: offer the 20-minute call and Hagen judges fit live.
+- The 60-second Teardown at https://www.hubricon.com/teardown prices one Amazon listing or Shopify product off the published rate card in the browser, no call, nothing stored unless they ask us to send it.
+- Referral: a client's own link gives another founder the same free Proving Month; when that founder's first invoice stands after their day 30, the referring client's next month is credited.
 - Two ways in: reply TEARDOWN to get the upload page by email, or book 20 minutes at {CALENDLY_URL}.
 - Data handling: reports are uploaded to a private bucket, read only by the engine; nothing is shared or resold.
 - If a question can't be answered from these facts, say so plainly and offer the 20-minute call."""
@@ -144,7 +146,7 @@ def draft_for(category: str, first_name: str | None) -> str | None:
         return (
             f"Done, {name}. Your private upload page is on its way in a separate email from {EXEC_EMAIL} "
             "(subject: \"Your Profit Teardown — 15 minutes of exports and you're done\"). Five exports, "
-            "and the written teardown is in your desk within 24 hours of the last file landing.\n\n"
+            "and the written teardown is in Hubricon within 24 hours of the last file landing.\n\n"
             "If it hasn't shown up in a few minutes, check spam or reply here.\n\nHagen"
         )
     if category == "not_now":

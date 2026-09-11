@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
  *   POST /say/<token>   -> records the answers, shows the link again
  *
  * terms.html §9 prices the free month in a testimonial and anonymised results.
- * The engine asks for them once, in the Issue email that follows the first
+ * The engine asks for them once, in the Profit Brief email that follows the first
  * measured or recovered dollars (engine/src/hubricon_engine/referral.py), and
  * this is the only place the answer is written. The token is minted by the
  * same private-link machinery as the upload page and validated the same way.
@@ -93,9 +93,9 @@ function form(identity, existing, code, token) {
   const named = has("testimonial")?.testimonial_named_ok ? "checked" : "";
   return page(
     `The price of the free month — ${identity.company_name || "Hubricon"}`,
-    `<span class="label">Hubricon · ${esc(identity.company_name || "your desk")}</span>
+    `<span class="label">Hubricon · ${esc(identity.company_name || "your account")}</span>
 <h1>The whole price of your free month, in a minute.</h1>
-<p class="sub">We said we would ask for two things if the ledger earned it. Each box is a separate
+<p class="sub">We said we would ask for two things if your Profit Record earned it. Each box is a separate
 yes; an unticked box is a no, and either is fine. You can come back and change any of them
 while this link lives.</p>
 <form method="post" action="/api/consent?t=${esc(token)}">
@@ -186,7 +186,7 @@ export async function POST(request) {
   const { data: existing } = await db.from("consents").select("*").eq("client_id", identity.client_id);
   return page(
     "Saved — thank you",
-    `<span class="label">Hubricon · ${esc(identity.company_name || "your desk")}</span>
+    `<span class="label">Hubricon · ${esc(identity.company_name || "your account")}</span>
 <h1>Saved. Thank you.</h1>
 <p class="sub">Your answers are recorded exactly as ticked. Anything you allowed appears on the public
 results page on the next hourly pass; anything you did not stays private. Change your mind any
@@ -198,7 +198,7 @@ time at the same link.</p>
   <span class="link">${esc(SITE)}/?ref=${esc(code)}</span>
 </div>
 <p><a href="/api/consent?t=${esc(url.searchParams.get("t"))}">Back to your answers</a> ·
-<a href="${esc(SITE)}/portal">Open your desk</a></p>
+<a href="${esc(SITE)}/portal">Open Hubricon</a></p>
 <footer>${(existing ?? []).filter((r) => r.granted).length} of ${KINDS.length} permissions granted.</footer>`
   );
 }

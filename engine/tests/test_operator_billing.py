@@ -38,8 +38,9 @@ def _measured(n, usd):
 
 
 def test_a_covered_invoice_is_marked_and_an_uncovered_one_is_voided_once(monkeypatch):
-    calls = []
+    calls, letters = [], []
     monkeypatch.setattr(billing, "_stripe", lambda path, data=None, idempotency_key=None: calls.append(path) or {})
+    monkeypatch.setattr(cli, "_send_client_email", lambda db, c, kind, ref, subject, blocks, send: letters.append((kind, subject)) or False)
     db = FakeDB(clients=[_client()], invoices=[_inv(1, "paid", "2026-09-01"), _inv(2, "open", "2026-10-01")],
                 directives=_measured(1, 7000.0), recovery_claims=[], client_emails=[], funnel_events=[])
     p = operator.Pass(db, send=False, dry=False)
@@ -49,6 +50,8 @@ def test_a_covered_invoice_is_marked_and_an_uncovered_one_is_voided_once(monkeyp
     assert by["i2"]["gate_decision"] == "waived" and by["i2"]["gate_note"] == "voided" and by["i2"]["status"] == "void"
     assert calls == ["invoices/in_2/void"]
     assert any("in_2 voided" in h or "voided" in h for h in p.human)
+    # The subject is the verdict itself: the Record against the bills.
+    assert letters == [("month_waived", "Invoice this month void — $7,000 on the Record against $12,000 billed")]
     # a second pass judges nothing again
     p2 = operator.Pass(db, send=False, dry=False)
     p2._rolling_gate(dict(db.rows("clients")[0]), cli, billing, value)
@@ -156,3 +159,117 @@ def test_the_downsell_email_names_the_share_and_asks_for_the_word():
     assert f"{billing.RECOVERY_SHARE * 100:.0f}% of what actually lands" in text
     assert "Reply RECOVERY" in text and "nothing up front" in text
     assert "smaller door" in spec["subject"].lower()
+
+
+def _day_31_client(**kw):
+    started = (date.today() - timedelta(days=31)).isoformat() + "T00:00:00Z"
+    return _client(status="pending", stripe_subscription_id=None, retainer_started_at=started, **kw)
+
+
+def test_the_day_30_subjects_are_the_verdict_short_and_cleared(monkeypatch):
+    """Becker's build item: the subject line IS the arithmetic — the Record
+    against the fee, and whether an invoice stands."""
+    letters = []
+    monkeypatch.setattr(cli, "_send_client_email",
+                        lambda db, c, kind, ref, subject, blocks, send: letters.append((kind, subject)) or False)
+    monkeypatch.setattr(billing, "_stripe", lambda *a, **k: pytest.fail("no Stripe call expected"))
+    monkeypatch.setenv("STRIPE_PRICE_ID", "price_x")
+
+    # Short: nothing proven, nothing found -> no invoice, and the subject says so.
+    db = FakeDB(clients=[_day_31_client()], directives=[], recovery_claims=[], invoices=[],
+                client_emails=[], funnel_events=[], consents=[])
+    operator.Pass(db, send=False, dry=False).billing()
+    assert letters == [("guarantee_short", "Proving Month — $0 on your Profit Record against $6,000: no invoice")]
+    assert db.rows("clients")[0]["billing_decision"] == "short"
+
+    # Cleared: $7,000 proven -> billing starts, and the subject says the invoice stands.
+    letters.clear()
+    monkeypatch.setattr(billing, "start_billing", lambda c, price_id: {"id": "sub_new", "customer": "cus_1"})
+    db = FakeDB(clients=[_day_31_client()], directives=_measured(1, 7000.0), recovery_claims=[], invoices=[],
+                client_emails=[], funnel_events=[], consents=[], referrals=[])
+    operator.Pass(db, send=False, dry=False).billing()
+    assert letters[0] == ("guarantee_cleared",
+                          "Proving Month cleared — $7,000 on your Profit Record against $6,000: your first invoice stands")
+    assert db.rows("clients")[0]["stripe_subscription_id"] == "sub_new"
+
+
+# -- the Profit Record footer on every other client email --------------------------------
+
+def test_every_client_email_closes_on_the_record_line_except_the_three_billing_letters(monkeypatch):
+    sent = []
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setattr(cli, "send_email", lambda to, subject, text, html=None, **k: sent.append((subject, text, html)) or True)
+    made = {"id": "d1", "client_id": "c1", "status": "approved", "executed_at": "2026-09-01T00:00:00Z",
+            "measured_impact_usd": None, "expected_impact_usd": 2400.0}
+    db = FakeDB(clients=[_client()], directives=_measured(1, 5415.0) + [made], recovery_claims=[],
+                invoices=[_inv(1, "paid", "2026-09-01")], client_emails=[])
+    client = dict(db.rows("clients")[0])
+    line = ("Your Profit Record: $5,415 proven since day one · $2,400 found and filed, not yet banked · "
+            "$6,000 billed to date · 0.9× proven ÷ billed.")
+
+    assert cli._send_client_email(db, client, "issue_ready", "b1", "Profit Brief No. 002", [{"p": "It is ready."}], True)
+    subject, text, html = sent[-1]
+    assert line in text and line in html and text.index("It is ready.") < text.index(line)
+
+    for kind in ("guarantee_cleared", "guarantee_short", "month_waived"):
+        assert cli._send_client_email(db, client, kind, f"ref-{kind}", "verdict", [{"p": "The arithmetic."}], True)
+        assert "Your Profit Record:" not in sent[-1][1]
+    assert cli.RECORD_FOOTER_EXEMPT == {"guarantee_cleared", "guarantee_short", "month_waived"}
+
+    # A footer failure never blocks the letter.
+    monkeypatch.setattr(cli, "_fetch_claims", lambda db, cid: (_ for _ in ()).throw(RuntimeError("claims table missing")))
+    assert cli._send_client_email(db, client, "issue_ready", "b2", "Profit Brief No. 003", [{"p": "Still ready."}], True)
+    assert "Still ready." in sent[-1][1] and "Your Profit Record:" not in sent[-1][1]
+
+
+def test_the_issue_email_leads_with_the_record_not_the_periods_net_profit():
+    """The briefings row keeps the net-profit headline for the portal; the
+    inbox gets the numbers the invoice is judged on. 'Net profit down $300'
+    is a period proxy — the Record is proven and found since day one."""
+    headline = "Profit Brief No. 007 — net profit down $300"
+    subject = cli._issue_subject(7, headline, 13870, 2400)
+    assert subject == "Profit Brief No. 007 — $13,870 proven, $2,400 found on your Record"
+    assert "proven" in subject and "net profit" not in subject
+    # Found alone is enough to lead with the Record; an empty Record falls back as before.
+    assert cli._issue_subject(7, headline, 0, 2400) == "Profit Brief No. 007 — $0 proven, $2,400 found on your Record"
+    assert cli._issue_subject(7, headline, 0, 0) == "Profit Brief No. 007 — net profit down $300"
+    assert cli._issue_subject(7, "Profit Brief No. 007", 0, 0) == "Profit Brief No. 007 is in Hubricon"
+
+    blocks = cli._issue_email_blocks(7, 13870, 2400, has_video=True)
+    assert blocks[0] == {"p": "Your Profit Brief is ready — $13,870 proven on your Record since day one, "
+                              "$2,400 found and filed."}
+    body = " ".join(b.get("p", "") for b in blocks)
+    assert "net profit" not in body and "short video" in body
+    assert "Before it goes live" in body                     # the veto section is named as the portal names it
+    assert cli._issue_email_blocks(7, 0, 0, has_video=False)[0]["p"] == \
+        "Your Profit Brief is ready — $0 proven on your Record since day one, $0 found and filed."
+
+
+# -- the legal clocks in the digest ----------------------------------------------------
+
+def test_a_data_request_is_named_the_day_it_opens_not_only_when_its_clock_is_short():
+    """privacy.html gives each request a deadline. The founder hears about a
+    request the day it is opened (with the export to run), and again in the
+    last two days; a request three days old with weeks to run is quiet."""
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    fresh = {"id": "req-fresh-1", "kind": "access", "requester_email": "dana@acme.test",
+             "opened_at": (now - timedelta(hours=1)).isoformat(),
+             "due_at": (now + timedelta(days=7)).isoformat(), "closed_at": None}
+    settled = {"id": "req-settled", "kind": "deletion", "requester_email": "sam@beta.test",
+               "opened_at": (now - timedelta(days=3)).isoformat(),
+               "due_at": (now + timedelta(days=27)).isoformat(), "closed_at": None}
+    closing = {"id": "req-closing", "kind": "correction", "requester_email": "kim@gamma.test",
+               "opened_at": (now - timedelta(days=5)).isoformat(),
+               "due_at": (now + timedelta(days=1)).isoformat(), "closed_at": None}
+    done = {"id": "req-done", "kind": "access", "requester_email": "old@delta.test",
+            "opened_at": (now - timedelta(hours=2)).isoformat(),
+            "due_at": (now + timedelta(days=7)).isoformat(), "closed_at": now.isoformat()}
+    p = operator.Pass(FakeDB(data_requests=[fresh, settled, closing, done]), send=False, dry=False)
+    p.data_requests()
+    assert p.human == [
+        "correction request from kim@gamma.test is due in 0d (req-clos).",
+        "New access request from dana@acme.test — due in 6d (req-fres). Run: hubricon export <client>",
+    ]
+    assert p.warnings == []
+    assert not any("sam@beta.test" in h or "old@delta.test" in h for h in p.human)

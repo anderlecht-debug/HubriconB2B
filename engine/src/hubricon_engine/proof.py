@@ -45,20 +45,20 @@ INDUSTRIES = ("kitchen", "home", "beauty", "health", "supplements", "pet", "baby
 
 HOW_LABEL = {
     "direct": "confirmed by the platform's own record",
-    "isolated": "measured on the exact line the directive named",
+    "isolated": "measured on the exact line the move named",
     "attributable": "measured against a stated counterfactual",
     "recovered": "paid by Amazon on a claim we filed",
-    "gate": "the ledger against the invoice",
+    "gate": "the Profit Record against the invoice",
 }
 
 # The proof line. Two templates, no digits, every figure a placeholder that
 # `facts()` fills from the RPC; `line()` refuses to render either if the
 # number guard objects.
 ONE_RESULT = ("A {{proof_industry}} brand in the {{proof_band}} range took the free month and has "
-              "{{proof_total}} on its ledger so far, measured from its own exports. "
+              "{{proof_total}} on its Profit Record so far, measured from its own exports. "
               "The record is at {{proof_url}}.")
 MANY_RESULTS = ("{{proof_count}} brands have taken the free month and have {{proof_total}} on "
-                "their ledgers between them, measured from their own exports. "
+                "their Profit Records between them, measured from their own exports. "
                 "The records are at {{proof_url}}.")
 
 _BAND = re.compile(r"rev\s*[:=]\s*([^|]+)")

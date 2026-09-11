@@ -644,11 +644,24 @@ def cmd_directives(args):
         print("No directives drafted — clean run.")
         return
 
+    state = "draft (review, then rerun with --issue)"
     if args.issue:
-        ids = [r["id"] for r in inserted]
-        db.table("directives").update({"status": "issued", "issued_at": _now()}).in_("id", ids).execute()
+        # terms.html §6 sells a veto: a directive is only ever "issued" through
+        # issue_drafts, which emails the client first and opens the window only
+        # for the moves that email reached. Without a mail key nothing can be
+        # sent, so nothing is issued: the drafts stay drafts, and saying so out
+        # loud beats a portal row nobody was told about.
+        if not email_configured():
+            print("not notified — window not opened: RESEND_API_KEY is not set, so the drafts stay drafts.")
+        else:
+            res = issue.issue_drafts(db, client, _run_channel(client, run), PORTAL_URL, send=True)
+            if res["issued"] and res["notified"]:
+                state = "issued and notified (veto window open)"
+            elif res["issued"]:
+                state = "issued but NOT notified — no veto window opened, so none of them can auto-approve"
+            if res["held"]:
+                state += f"; {res['held']} draft(s) held for the next issue"
 
-    state = "issued" if args.issue else "draft (review, then rerun with --issue)"
     print(f"{len(inserted)} directive(s) {state}:")
     for r in inserted:
         expected = f"~${float(r['expected_impact_usd']):,.0f}" if r["expected_impact_usd"] else "—"
@@ -1395,13 +1408,19 @@ def cmd_script(args):
 # constant change rather than a hunt.
 DATA_REQUEST_DAYS = {
     "deletion": 30,       # privacy.html §6: "deletion on request, within thirty days"
-    "access": 7,          # §7: "it lands with the founder, and you get an answer within seven days"
+    # §7: "it lands with the founder, and you get an answer within seven days".
+    # A data-subject request opened by hand answers in seven. The client's own
+    # "Request your export" button in Hubricon writes the same kind with a
+    # tighter clock — one working day, terms §11 — because that export is the
+    # hedge the site sells against a one-person shop. Each row carries its own
+    # due date, and the promise audit reads the row, so the two never collide.
+    "access": 7,
     "correction": 7,
     "breach_notice": 3,   # §5: "within seventy-two hours of confirming it"
     "terms_notice": 14,   # terms.html §14: "clients get fourteen days' notice by email"
 }
 
-ISSUE_INTERVAL_DAYS = 14      # welcome.html: "a three-minute brief every two weeks"
+ISSUE_INTERVAL_DAYS = 14      # welcome.html: "a short video after, every two weeks"
 
 
 def _next_issue_number(db, client_id: str) -> int:
@@ -1458,7 +1477,9 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
 
     memo = build_memo(company, first, deltas, directives, alerts, elasticity,
                       float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
-                      issue_number=issue_no, channel=channel)
+                      issue_number=issue_no, channel=channel,
+                      ledger_found=float(ledger["identified_unbanked"] or 0),
+                      fees_billed=float(ledger["fees_billed"] or 0))
     if narrate.available():
         try:
             outputs = _load_outputs(db, run["id"])
@@ -1493,7 +1514,9 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
         # report inside 24 hours, and a TTS outage must not hold that hostage.
         video_path = None
         beats = build_beats(company, first, deltas, directives, alerts, elasticity,
-                            float(ledger["measured"] or 0), int(ledger["measured_count"] or 0))
+                            float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
+                            ledger_found=float(ledger["identified_unbanked"] or 0),
+                            fees_billed=float(ledger["fees_billed"] or 0))
         made = videomod.render(company, issue_no, beats, Path(tmp) / f"issue-{issue_no:03d}.mp4")
         if made:
             video_path = f"reports/{client['id']}/issue-{issue_no:03d}.mp4"
@@ -1501,16 +1524,16 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
                 video_path, made.read_bytes(),
                 {"content-type": "video/mp4", "upsert": "true"})
 
-    headline = f"Issue No. {issue_no:03d}"
+    headline = f"Profit Brief No. {issue_no:03d}"
     if deltas and deltas.get("net_delta") is not None:
         headline += f" — net profit {'up' if deltas['net_delta'] >= 0 else 'down'} ${abs(deltas['net_delta']):,.0f}"
     row = {"client_id": client["id"], "run_id": run["id"], "memo": memo, "issue_number": issue_no,
-           "report_path": report_path, "video_path": video_path, "title": "Briefing",
+           "report_path": report_path, "video_path": video_path, "title": "Profit Brief",
            "headline": headline, "tldr": (memo.split("\n\n")[2][:280] if memo.count("\n\n") > 2 else None)}
     try:
         inserted = db.table("briefings").insert(row).execute().data[0]
     except Exception as err:
-        print(f"  issue No. {issue_no:03d} not published: {err}")
+        print(f"  Profit Brief No. {issue_no:03d} not published: {err}")
         return None
 
     # The price of the free month is asked for here — on the first Issue after
@@ -1521,34 +1544,54 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
     except Exception as err:
         print(f"  consent ask skipped: {err}")
         ask = []
+    proven = float(ledger["value_total"] or 0)
+    found = float(ledger["identified_unbanked"] or 0)
     sent = _send_client_email(db, client, "issue_ready", inserted["id"],
-                              f"Issue No. {issue_no:03d} is in your desk",
-                              _issue_email_blocks(issue_no, headline, bool(video_path)) + ask, send)
+                              _issue_subject(issue_no, headline, proven, found),
+                              _issue_email_blocks(issue_no, proven, found, bool(video_path)) + ask, send)
     if sent and ask:
         referral.mark_asked(db, client)
         print("  the consent and referral ask rode this issue")
     parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
-    print(f"  Issue No. {issue_no:03d} published ({' + '.join(parts)})"
+    print(f"  Profit Brief No. {issue_no:03d} published ({' + '.join(parts)})"
           + (" and emailed" if sent else ""))
     if not video_path:
         # The site promises a three-minute video with every brief. Shipping the
         # letter alone is the right fallback, but it is still a promise
         # outstanding and has to be said out loud rather than absorbed.
-        print(f"  NOT KEPT: Issue No. {issue_no:03d} went out without the video the site promises. "
+        print(f"  NOT KEPT: Profit Brief No. {issue_no:03d} went out without the video the site promises. "
               f"Record one: hubricon brief {client['contact_email']} --video <loom url>")
     return {"issue_number": issue_no, "video": bool(video_path), "emailed": sent}
 
 
-def _issue_email_blocks(issue_no: int, headline: str, has_video: bool) -> list[dict]:
+def _issue_subject(issue_no: int, headline: str, proven: float, found: float) -> str:
+    """The subject line is the Record, not the period's net profit: what has
+    been proven and what has been found since day one. The briefings row keeps
+    `headline` (net profit up/down) for the portal; the inbox gets the number
+    the invoice is judged on. Before the Record has anything on it, the subject
+    falls back to the headline's tail, or to plain 'is in Hubricon'."""
+    if proven + found > 0:
+        return f"Profit Brief No. {issue_no:03d} — ${proven:,.0f} proven, ${found:,.0f} found on your Record"
+    tail = headline.split("—")[-1].strip() if "—" in headline else ""
+    return (f"Profit Brief No. {issue_no:03d} — {tail}" if tail
+            else f"Profit Brief No. {issue_no:03d} is in Hubricon")
+
+
+def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: bool) -> list[dict]:
     return [
-        {"p": f"Your latest briefing is ready — {headline.split('—')[-1].strip() if '—' in headline else 'the numbers are in'}."},
-        {"p": ("It's about three minutes on video, with the written letter and the full report "
+        {"p": f"Your Profit Brief is ready — ${proven:,.0f} proven on your Record since day one, "
+              f"${found:,.0f} found and filed."},
+        {"p": ("It's a short video, with the written letter and the full report "
                "underneath it." if has_video else
-               "The written letter and the full report are both in your desk.")},
-        {"button": "Open your desk", "url": PORTAL_URL},
-        {"p": "Anything on your desk waiting for a decision is right below the briefing. "
+               "The written letter and the full report are both in Hubricon.")},
+        {"button": "Open Hubricon", "url": PORTAL_URL},
+        {"p": "Anything waiting for your yes is right below the brief, under 'Before it goes live'. "
               "Reply to this email if you'd rather just tell me."},
     ]
+
+
+# Letters whose body already IS the three Profit Record numbers.
+RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived"})
 
 
 def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
@@ -1568,6 +1611,17 @@ def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
     except Exception:
         pass    # log table missing (migration not applied): better to send than to go silent
     from .notify import letter
+    if kind not in RECORD_FOOTER_EXEMPT:
+        # Every client email closes on the Profit Record — the same three
+        # numbers as the strip in Hubricon. The billing letters already carry
+        # them as their subject; the footer never blocks a send.
+        try:
+            directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+            ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                                      _fetch_invoices(db, client["id"]))
+            blocks = list(blocks) + [{"p": valuemod.record_line(ledger)}]
+        except Exception as err:
+            print(f"  Profit Record footer skipped ({err})")
     text, html = letter(client.get("contact_name"), blocks)
     ok = send_email(client["contact_email"], subject, text, html=html,
                     sender=os.environ.get("EMAIL_FROM", "Hagen Simmons <hagen.simmons@hubricon.com>"),
@@ -1652,7 +1706,7 @@ def cmd_brief(args):
         "headline": args.headline,
     }).execute()
     parts = [p for p, on in (("video", video_id), ("letter", memo), ("report", report_path)) if on]
-    print(f"Issue No. {issue:03d} ({' + '.join(parts)}) published to the portal for "
+    print(f"Profit Brief No. {issue:03d} ({' + '.join(parts)}) published to the portal for "
           f"{client['company_name'] or client['contact_email']}.")
 
 
@@ -1825,7 +1879,15 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
 
     emailed = False
     if send_alerts and email_configured() and client.get("contact_email"):
-        text, html = alert_email_body(label, fresh, client.get("contact_name"), PORTAL_URL)
+        try:
+            ledger = valuemod.compute(client, db.table("directives").select("*").eq("client_id", client["id"]).execute().data,
+                                      _fetch_claims(db, client["id"]), _fetch_invoices(db, client["id"]))
+            record = valuemod.record_line(ledger)
+        except Exception as err:
+            print(f"  Profit Record footer skipped ({err})")
+            record = None
+        text, html = alert_email_body(label, fresh, client.get("contact_name"), PORTAL_URL,
+                                      record_line=record)
         urgent = sum(1 for a in fresh if a.get("severity") == "critical")
         subject = (f"{urgent} urgent item on {label}" if urgent == 1 else
                    f"{urgent} urgent items on {label}" if urgent else
@@ -2131,7 +2193,7 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
     mail = email_configured()
     add("A brief every two weeks", "welcome, index", mail,
         "published daily by the issue job, emailed through Resend" if mail
-        else "RESEND_API_KEY missing — issues publish to the desk but no email goes out")
+        else "RESEND_API_KEY missing — briefs publish to Hubricon but no email goes out")
     add("Corrections stated before they go live", "terms §6", mail,
         "the veto notice needs email; without it nothing auto-approves, by design"
         if not mail else "sweep --issue notifies, then opens the window")
@@ -2142,9 +2204,9 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — a client who clears the bar is "
              "flagged in the digest instead of billed. Nobody is ever wrongly billed.")
 
-    add("Free data + ledger export, any time", "terms §11, privacy §6, the desk", True,
+    add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
         "hubricon export <client>")
-    add("Our invoices never run ahead of your ledger", "terms §3, index, welcome", stripe_ok,
+    add("An invoice the Profit Record hasn't covered is void", "terms §3, index, welcome", stripe_ok,
         "every new invoice is judged by the day-30 bar; one the ledger has not covered is voided" if stripe_ok
         else "STRIPE_SECRET_KEY missing — an uncovered invoice is flagged in the digest instead of voided")
     add("Recovery-only clients pay only on money that landed", "terms §4", True,
@@ -3003,7 +3065,7 @@ def main():
     p.add_argument("--report", help="path to the full written report HTML to attach")
     p.add_argument("--tldr", help="3-4 sentence summary shown under the video")
     p.add_argument("--headline", help="one headline stat, e.g. '+$9,200 vs July'")
-    p.add_argument("--title", help="issue title (default 'Issue No. N')")
+    p.add_argument("--title", help="brief title (default 'Profit Brief No. N')")
     p.add_argument("--no-run", action="store_true", help="don't link the latest model run")
     p.set_defaults(fn=cmd_brief)
 

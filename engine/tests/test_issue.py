@@ -169,3 +169,83 @@ def test_defaults_match_what_the_terms_page_already_says():
     assert issue.DEFAULT_MANDATE["advertising"]["standing"] is True
     for module in ("inventory", "margin", "recovery", "general"):
         assert issue.DEFAULT_MANDATE[module]["standing"] is False
+
+
+def test_the_veto_email_carries_the_record_line_and_a_footer_failure_never_blocks_it(monkeypatch):
+    sent = []
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda to, subject, text, html=None, **k: sent.append(text) or True)
+    monkeypatch.setattr("hubricon_engine.cli._fetch_claims", lambda db, cid: [])
+    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", lambda db, cid: [])
+    db = FakeDB([_d(1), _d(2, status="done", executed_at="2026-09-01T00:00:00Z", measured_impact_usd=None)])
+    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    assert res["notified"] is True
+    # d2 is made and unmeasured ($200 expected): found, not yet banked.
+    assert "Your Profit Record: $0 proven since day one · $200 found and filed, not yet banked · $0 billed to date." in sent[-1]
+
+    def boom(db, cid):
+        raise RuntimeError("invoices table missing")
+
+    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", boom)
+    db = FakeDB([_d(3)])
+    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    assert res["notified"] is True and "Your Profit Record:" not in sent[-1]
+
+
+def _directives_args(db, monkeypatch, issue_flag: bool):
+    """`hubricon directives <client> --issue` on the fake database: the run,
+    the drafting and the client lookup are stubbed; issuance is not."""
+    from types import SimpleNamespace
+    from hubricon_engine import cli
+    monkeypatch.setattr(cli.dbmod, "connect", lambda: db)
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: CLIENT)
+    monkeypatch.setattr(cli, "_latest_run", lambda _db, _cid, _run_id: {"id": "run1", "params": {"channel": "amazon"}})
+    monkeypatch.setattr(cli, "_draft_for_run", lambda _db, _client, _run_id, _channel: list(db.rows("directives")))
+    monkeypatch.setattr(cli, "_fetch_claims", lambda _db, _cid: [])
+    monkeypatch.setattr(cli, "_fetch_invoices", lambda _db, _cid: [])
+    return SimpleNamespace(client=CLIENT["contact_email"], run=None, issue=issue_flag)
+
+
+def test_the_issue_flag_only_ever_issues_through_the_veto_email(monkeypatch, capsys):
+    """`--issue` used to flip drafts to 'issued' with a bare update: rows in the
+    portal nobody was told about, and no window. Now it goes through
+    issue_drafts, so the email goes first and the window opens only for the
+    moves it reached; and with no mail key nothing is issued at all."""
+    from hubricon_engine import cli
+    calls = []
+    real = issue.issue_drafts
+
+    def spy(db, client, channel, portal_url, send=False, **kw):
+        calls.append({"statuses_before": [d["status"] for d in db.rows("directives")],
+                      "client": client, "channel": channel, "portal_url": portal_url, "send": send})
+        return real(db, client, channel, portal_url, send=send, **kw)
+
+    monkeypatch.setattr(issue, "issue_drafts", spy)
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: False)
+    monkeypatch.setattr(cli, "email_configured", lambda: False)
+
+    # No mail key: the drafts stay drafts, nothing is updated, and it is said out loud.
+    db = FakeDB([_d(1), _d(2)])
+    cli.cmd_directives(_directives_args(db, monkeypatch, issue_flag=True))
+    assert calls == [] and db.writes == []
+    assert [d["status"] for d in db.rows("directives")] == ["draft", "draft"]
+    assert "not notified — window not opened" in capsys.readouterr().out
+
+    # Mail configured: issue_drafts is the only path to 'issued', with the veto window behind it.
+    sent = []
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda to, subject, text, html=None, **k: sent.append(subject) or True)
+    monkeypatch.setattr(cli, "email_configured", lambda: True)
+    db = FakeDB([_d(1), _d(2)])
+    cli.cmd_directives(_directives_args(db, monkeypatch, issue_flag=True))
+    assert len(calls) == 1 and calls[0]["statuses_before"] == ["draft", "draft"]
+    assert calls[0]["client"] is CLIENT and calls[0]["channel"] == "amazon"
+    assert calls[0]["portal_url"] == cli.PORTAL_URL and calls[0]["send"] is True
+    assert all(d["status"] == "issued" and d["veto_closes_at"] and d["notified_at"] for d in db.rows("directives"))
+    assert len(sent) == 1 and "go live" in sent[0]
+    assert "issued and notified (veto window open)" in capsys.readouterr().out
+
+    # Without the flag nothing is issued and nothing is sent.
+    db = FakeDB([_d(1)])
+    cli.cmd_directives(_directives_args(db, monkeypatch, issue_flag=False))
+    assert len(calls) == 1 and db.rows("directives")[0]["status"] == "draft" and len(sent) == 1

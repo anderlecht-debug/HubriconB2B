@@ -108,12 +108,12 @@ def ask_blocks(say_url: str, referral_url: str) -> list[dict]:
     return [
         {"p": "One more thing, and it is the whole price of your free month. We said we would ask "
               "for a short testimonial and for permission to publish your results with the numbers "
-              "anonymised. The ledger now says we have earned the asking. Either answer is fine, "
+              "anonymised. Your Profit Record now says we have earned the asking. Either answer is fine, "
               "and it takes a minute:"},
         {"button": "Say yes, or no, here", "url": say_url},
         {"p": "On that page is also a link that is yours. If another founder should see their own "
               "numbers the way you have, send it to them: their first month is free exactly as "
-              "yours was, and if they stay past their day thirty, your next month is on us. "
+              "yours was, and when their first invoice stands after their day thirty, your next month is on us. "
               f"It is {referral_url}"},
     ]
 
@@ -214,7 +214,7 @@ def credit_referrer(db, referred: dict, stripe=None) -> dict | None:
         call = stripe or billing._stripe
         call(f"customers/{referrer['stripe_customer_id']}/balance_transactions",
              {"amount": int(round(-fee * 100)), "currency": "usd",
-              "description": f"Referral month — {company} stayed past day 30"},
+              "description": f"Referral month — {company}'s first invoice stands"},
              idempotency_key=f"referral-{referred['id']}")
         how = "credited against the next invoice"
     else:
@@ -230,10 +230,10 @@ def credit_referrer(db, referred: dict, stripe=None) -> dict | None:
 
 def credit_email_blocks(company: str, how: str) -> list[dict]:
     return [
-        {"p": f"{company} took the free month on your link and has stayed past their day thirty. "
+        {"p": f"{company} took the free month on your link and their first invoice now stands after their day thirty. "
               f"We said your next month would be on us when that happened, and it is: "
               f"{'it has been ' + how if 'credited' in how else 'it has been ' + how}."},
-        {"p": "Thank you. A founder sending a founder is the only way this desk was ever going "
+        {"p": "Thank you. A founder sending a founder is the only way Hubricon was ever going "
               "to grow, and you did it."},
     ]
 

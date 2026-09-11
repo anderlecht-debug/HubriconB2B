@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hubricon — Private Desk</title>
+<title>Hubricon</title>
 <meta name="robots" content="noindex">
 </head>
 <body>
@@ -243,8 +243,8 @@ input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
 
 /* value delivered vs fees */
 .value-strip{
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
-  border-top: 1px solid var(--hairline); margin-top: 24px; padding-top: 20px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  border-bottom: 1px solid var(--hairline); margin-bottom: 24px; padding-bottom: 20px;
 }
 .value-strip .v{ padding: 0 18px; border-left: 1px solid var(--hairline); }
 .value-strip .v:first-child{ border-left: 0; padding-left: 0; }
@@ -391,6 +391,7 @@ details.panel .inner{ padding: 0 26px 22px; }
   background: hsl(45 100% 50% / .1); color: var(--ink); display: none; }
 .banner.err{ background: hsl(8 65% 60% / .12); }
 .hidden{ display: none; }
+[hidden]{ display: none !important; } /* the hidden attribute must beat .label's display:block */
 .login-box{ max-width: 430px; margin: 12vh auto 0; }
 .login-box p{ margin: 12px 0 20px; }
 .login-row{ display: flex; gap: 10px; }
@@ -422,8 +423,8 @@ footer{
 
   <!-- login -->
   <div id="login" class="login-box">
-    <h1>Private Desk</h1>
-    <p>Enter the email your workspace was set up with — we'll send a one-time sign-in link. No passwords, and you'll stay signed in on this device.</p>
+    <h1>Sign in to Hubricon</h1>
+    <p>Enter the email your account was set up with — we'll send a one-time sign-in link. No passwords, and you'll stay signed in on this device.</p>
     <div class="login-row">
       <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
       <button class="primary" id="send">Send link</button>
@@ -431,14 +432,14 @@ footer{
     <div class="banner" id="login-banner"></div>
   </div>
 
-  <!-- the desk -->
+  <!-- Hubricon: the Profit Record and everything behind it -->
   <div id="app" class="hidden">
 
     <div class="masthead">
       <span class="wordmark">Hubric<i>o</i>n</span>
       <div class="prepared">
-        Prepared for <b id="company">—</b><span id="plat"></span><br>
-        Hubricon Quantitative · as of <span id="asof"></span><br>
+        <b id="company">—</b><span id="plat"></span><br>
+        Hubricon · Managed Profit · as of <span id="asof"></span><br>
         <button id="signout">Sign out</button>
       </div>
     </div>
@@ -446,7 +447,13 @@ footer{
 
     <!-- 1 · the position -->
     <div class="panel position" id="position">
-      <span class="label" id="pos-label">Measured impact since engagement began</span>
+      <div class="value-strip" id="value-strip">
+        <div class="v"><span class="label">Proven since day one</span><span class="fig" id="v-total">$0</span><span class="d" id="v-total-d">nothing proven yet — measurement starts with your first move</span></div>
+        <div class="v"><span class="label">Found, not yet banked</span><span class="fig" id="v-found">$0</span><span class="d" id="v-found-d">nothing found and unbanked right now</span></div>
+        <div class="v"><span class="label">Billed to date</span><span class="fig" id="v-fees">$0</span><span class="d" id="v-fees-d">Proving Month — nothing invoiced yet</span></div>
+        <div class="v"><span class="label">Proven ÷ billed</span><span class="fig" id="v-roi">—</span><span class="d" id="v-roi-d">the multiple starts at your first invoice</span></div>
+      </div>
+      <span class="label" id="pos-label">Proven on your Profit Record since day one</span>
       <div class="fig pos-num good" id="pos-num">$0</div>
       <div class="pos-sub" id="pos-sub"></div>
       <svg class="spark" id="spark" width="240" height="44" viewBox="0 0 240 44" style="display:none" aria-hidden="true"></svg>
@@ -458,29 +465,8 @@ footer{
       <div id="trend" class="hidden" style="margin-top:24px; border-top:1px solid var(--hairline); padding-top:20px">
         <svg class="chart" id="trend-svg" viewBox="0 0 920 170" role="img" aria-label="Net profit and revenue by month"></svg>
       </div>
-      <div class="value-strip hidden" id="value-strip">
-        <div class="v"><span class="label">Value delivered</span><span class="fig" id="v-total">—</span><span class="d" id="v-total-d"></span></div>
-        <div class="v"><span class="label">Fees to date</span><span class="fig" id="v-fees">—</span><span class="d" id="v-fees-d"></span></div>
-        <div class="v"><span class="label">Return on fees</span><span class="fig" id="v-roi">—</span><span class="d" id="v-roi-d"></span></div>
-      </div>
     </div>
 
-    <!-- 1b · the health score -->
-    <section id="health-sect" class="hidden">
-      <div class="sect-label"><span class="label">The Health Score</span></div>
-      <div class="panel">
-        <div class="health">
-          <div>
-            <span class="label">Out of one hundred</span>
-            <div class="score" id="hs-score">—</div>
-            <span class="grade" id="hs-grade"></span>
-            <p class="hint" id="hs-note" style="margin-top:12px; max-width: 24ch"></p>
-          </div>
-          <div id="hs-drivers"></div>
-        </div>
-        <p class="hint" style="margin-top:18px">Six sub-scores, each with the dollars behind its deduction, weighted over whichever ones your data supports. The thresholds are stated rules, not a black box — argue with any of them.</p>
-      </div>
-    </section>
 
     <!-- 2 · the plan -->
     <div class="sect-label"><span class="label">The plan</span></div>
@@ -497,7 +483,7 @@ footer{
         </div>
       </div>
       <div id="plan-pending">
-        <p class="next-delivery"><b style="color:var(--ink)">Your 90-day plan is drafted from your audit</b> and presented on your kickoff call: quarterly targets for profit, revenue, and margin, plus the three-to-four initiatives that get you there. Every decision on this desk executes a step of that plan.</p>
+        <p class="next-delivery"><b style="color:var(--ink)">Your 90-day plan is drafted from your Teardown</b> and presented on your kickoff call: quarterly targets for profit, revenue, and margin, plus the three or four moves that get you there. Every move on your Profit Record executes a step of that plan.</p>
       </div>
     </div>
 
@@ -527,7 +513,7 @@ footer{
       <div class="sect-label"><span class="label">The mathematics of your prices</span></div>
       <div class="panel">
         <div id="pricing-rows"></div>
-        <p class="hint" style="margin-top:14px">The demand curve is fitted to your observed months (the dots) with its 95% confidence band — that band is us showing our work. The profit curve follows from it and your true unit economics: the gold dot is the move on your desk, P* the destination. Steps are capped at 5% per cycle, Buy Box watched daily.</p>
+        <p class="hint" style="margin-top:14px">The demand curve is fitted to your observed months (the dots) with its 95% confidence band — that band is us showing our work. The profit curve follows from it and your true unit economics: the gold dot is the move waiting for your yes, P* the destination. Steps are capped at 5% per cycle, Buy Box watched while the step is live.</p>
       </div>
     </section>
 
@@ -570,33 +556,33 @@ footer{
     </section>
 
     <!-- 3 · the briefing -->
-    <div class="sect-label"><span class="label">The briefing</span></div>
+    <div class="sect-label"><span class="label">The Profit Brief</span></div>
     <div class="panel" id="issue-panel">
       <div id="issue-body" class="hidden">
         <div class="issue-head">
           <span class="issue-no" id="issue-no"></span>
           <span class="issue-headline" id="issue-headline"></span>
         </div>
-        <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your briefing" allowfullscreen loading="lazy"></iframe><video id="brief-video" class="hidden" controls preload="metadata" playsinline title="Your briefing"></video></div>
+        <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your Profit Brief" allowfullscreen loading="lazy"></iframe><video id="brief-video" class="hidden" controls preload="metadata" playsinline title="Your Profit Brief"></video></div>
         <div class="letter" id="letter"></div>
         <p class="tldr" id="issue-tldr"></p>
       </div>
       <div id="issue-pending">
-        <p class="next-delivery"><b style="color:var(--ink)">Issue No. 001 is in preparation.</b> It lands within 24 hours of your data completing — a written letter, your recorded walkthrough, and the full report.</p>
+        <p class="next-delivery"><b style="color:var(--ink)">Your Profit Teardown — Profit Brief No. 001 — is in preparation.</b> It lands within 24 hours of your data completing — a written letter, your recorded walkthrough, and the full report.</p>
         <div class="onboard">
-          <div class="step"><span class="when">Days 0–1</span><span>Data ingested · models calibrated · baseline recorded — this becomes the number every future issue measures against.</span></div>
-          <div class="step"><span class="when">Days 1–30</span><span>Issue 001 delivered · first decisions on your desk · the watch begins (weekly sweeps, daily Buy Box tracking on any live test).</span></div>
-          <div class="step"><span class="when">Days 30–90</span><span>Fortnightly issue cadence · first measured results land on the ledger · price-testing program under way.</span></div>
+          <div class="step"><span class="when">Days 0–1</span><span>Data ingested · models calibrated · baseline recorded before anything is touched — this becomes the number every future brief measures against, so a good month can never be mistaken for our work.</span></div>
+          <div class="step"><span class="when">Days 1–30</span><span>Profit Brief No. 001 delivered · first moves emailed before they go live · a Profit Brief every two weeks from there · the watch begins (weekly sweeps, Buy Box read on any live price test).</span></div>
+          <div class="step"><span class="when">Days 30–90</span><span>The Record decides at day 30 · first proven results land on your Profit Record · price-testing program under way.</span></div>
         </div>
       </div>
     </div>
 
     <!-- 3 · decisions -->
-    <div class="sect-label"><span class="label">Decisions on your desk</span></div>
+    <div class="sect-label"><span class="label">Before it goes live</span></div>
     <div class="panel" id="desk-panel"><div id="desk"></div></div>
 
     <!-- 4 · the watch -->
-    <div class="sect-label"><span class="label">The watch — what your infrastructure is doing</span></div>
+    <div class="sect-label"><span class="label">What we're watching</span></div>
     <div class="panel">
       <div id="horizon" class="hidden">
         <div class="hz-head">
@@ -626,7 +612,7 @@ footer{
       <div id="riskmap" class="hidden">
         <div class="hz-head"><span class="label">Inventory risk — every SKU on one map</span></div>
         <svg class="chart" id="risk-svg" viewBox="0 0 920 250" role="img" aria-label="Stockout probability vs days of cover per SKU"></svg>
-        <p class="hz-note">Days of cover run out toward the right; the dashed line is our 25% directive threshold. A SKU above it already has a reorder instruction on your desk.</p>
+        <p class="hz-note">Days of cover run out toward the right; the dashed line is our 25% threshold. A SKU above it already has a reorder waiting for your yes.</p>
       </div>
       <div class="watch-grid">
         <div>
@@ -641,29 +627,46 @@ footer{
     </div>
 
     <!-- 5 · the record -->
-    <div class="sect-label"><span class="label">The record</span></div>
+    <div class="sect-label"><span class="label">Your Profit Record — every move gets a receipt</span></div>
     <div class="panel">
       <p class="tenure" id="tenure"></p>
       <div id="dumbbells" class="hidden" style="margin-bottom:22px">
         <span class="label" style="margin-bottom:10px">Promised vs measured — every claim, drawn</span>
-        <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per directive"></svg>
+        <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per move"></svg>
       </div>
       <div class="candor" id="candor" style="display:none">
         <div class="c win"><b id="wins-num">$0</b><span id="wins-text">measured wins</span></div>
         <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
       </div>
       <div class="scroll"><table id="ledger">
-        <tr><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th><th>How we know</th></tr>
+        <tr><th>Move</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th><th>How we know</th></tr>
       </table></div>
       <div style="margin-top:26px">
-        <span class="label" style="margin-bottom:8px">Issue archive</span>
-        <div id="archive"><p class="hint">Your first issue will appear here.</p></div>
+        <span class="label" style="margin-bottom:8px">Profit Brief archive</span>
+        <div id="archive"><p class="hint">Your first Profit Brief will appear here.</p></div>
       </div>
     </div>
 
+    <!-- 5b · the health score -->
+    <section id="health-sect" class="hidden">
+      <div class="sect-label"><span class="label">The Health Score</span></div>
+      <div class="panel">
+        <div class="health">
+          <div>
+            <span class="label">Out of one hundred</span>
+            <div class="score" id="hs-score">—</div>
+            <span class="grade" id="hs-grade"></span>
+            <p class="hint" id="hs-note" style="margin-top:12px; max-width: 24ch"></p>
+          </div>
+          <div id="hs-drivers"></div>
+        </div>
+        <p class="hint" style="margin-top:18px">Six parts, each with the dollars behind its deduction, weighted over whichever ones your data supports. The thresholds are stated rules, not a black box — argue with any of them.</p>
+      </div>
+    </section>
+
     <!-- 6 · evidence -->
-    <div class="sect-label"><span class="label">The evidence</span></div>
-    <p class="report-link hidden" id="report-link-wrap">Full written report: <a href="#" id="report-link">Issue —</a></p>
+    <div class="sect-label"><span class="label">The full report</span></div>
+    <p class="report-link hidden" id="report-link-wrap">Full written report: <a href="#" id="report-link">Profit Brief —</a></p>
 
     <details class="panel">
       <summary>Price tests</summary>
@@ -673,7 +676,7 @@ footer{
     </details>
 
     <footer>
-      Your data is yours: a complete export of everything we hold — raw files, tables, results, this ledger — at any time, free. That's policy, not a favor.
+      Your data is yours: a complete export of everything we hold — raw files, tables, results, your Profit Record — at any time, free. That's policy, not a favor.
       <a href="#" id="export-link">Request your export</a> and it lands in your inbox within one working day.<br>
       Reply to any Hubricon email to reach the person who builds your models. There is no support tier.
     </footer>
@@ -789,8 +792,10 @@ function renderIssue(b){
   $("#issue-pending").classList.add("hidden");
   $("#issue-body").classList.remove("hidden");
   const month = fmonth(b.created_at);
-  $("#issue-no").textContent = (b.issue_number ? `Issue No. ${String(b.issue_number).padStart(3, "0")}` : (b.title || "Your briefing")) + (month ? ` · ${month}` : "");
-  $("#issue-headline").textContent = b.headline || "";
+  $("#issue-no").textContent = (b.issue_number ? `Profit Brief No. ${String(b.issue_number).padStart(3, "0")}` : (b.title || "Your Profit Brief")) + (month ? ` · ${month}` : "");
+  /* #issue-no already prints the number; a headline stored as
+     "Profit Brief No. 001 — net profit up $X" shows only its tail here */
+  $("#issue-headline").textContent = String(b.headline || "").replace(/^(?:Issue|Profit Brief) No\.\s*\d+\s*(?:[—–-]\s*)?/i, "");
   /* Two kinds of briefing video, and the desk shows whichever exists:
      video_path is the generated walkthrough that now ships with every issue;
      video_id is a Loom, for when the founder records over it in their own
@@ -829,7 +834,7 @@ function renderIssue(b){
   }
   const letter = $("#letter");
   if (b.memo){
-    const paras = b.memo.split(/\n\s*\n/).filter((p) => p.trim() && !/^Issue No\./i.test(p.trim()));
+    const paras = b.memo.split(/\n\s*\n/).filter((p) => p.trim() && !/^(Issue|Profit Brief) No\./i.test(p.trim()));
     letter.innerHTML = paras.map((p) =>
       `<p class="${p.trim().startsWith("—") ? "signoff" : ""}">${esc(p.trim())}</p>`).join("");
   } else {
@@ -839,7 +844,7 @@ function renderIssue(b){
   const rl = $("#report-link-wrap");
   if (b.report_path){
     rl.classList.remove("hidden");
-    $("#report-link").textContent = `Issue No. ${String(b.issue_number ?? 1).padStart(3, "0")} — open`;
+    $("#report-link").textContent = `Profit Brief No. ${String(b.issue_number ?? 1).padStart(3, "0")} — open`;
     $("#report-link").onclick = async (ev) => {
       ev.preventDefault();
       const s = await ensureSession();
@@ -1098,7 +1103,7 @@ function renderAdCurves(list){
 }
 
 function renderBleed(b){
-  $("#bleed-total").textContent = `${money(b.total)} in the last export window across ${b.n_terms} search terms — negative-matched by us, measured on the ledger.`;
+  $("#bleed-total").textContent = `${money(b.total)} in the last export window across ${b.n_terms} search terms — negative-matched by us, measured on your Profit Record.`;
   const wrap = $("#bleed-rows"); wrap.innerHTML = "";
   const maxS = Math.max(...b.terms.map((t) => Number(t.spend)));
   b.terms.forEach((t, i) => {
@@ -1145,7 +1150,7 @@ function renderRiskMap(points){
   for (const t of [90, 60, 30, 15, 0])
     svg += `<text class="ax" x="${sx(t).toFixed(1)}" y="${H - 12}" text-anchor="middle">${t}d</text>`;
   svg += `<line class="badl" x1="${L}" x2="${W - R}" y1="${sy(0.25).toFixed(1)}" y2="${sy(0.25).toFixed(1)}"/>
-    <text class="lbl" x="${W - R}" y="${(sy(0.25) - 7).toFixed(1)}" text-anchor="end">directive threshold — 25%</text>`;
+    <text class="lbl" x="${W - R}" y="${(sy(0.25) - 7).toFixed(1)}" text-anchor="end">reorder threshold — 25%</text>`;
   for (const r of points){
     const p = Number(r.p), cover = Number(r.cover);
     const danger = p >= 0.5 && cover < 15;
@@ -1195,27 +1200,31 @@ function renderValue(v){
      paid on its own reconciliation are the client's money either way, and are
      shown beside the total rather than inside it. */
   const extra = Number(v.recovered_unattributed || 0);
-  $("#v-total-d").textContent = `${money(v.measured)} measured on directives · ${money(v.recovered)} recovered on claims we filed`
+  $("#v-total-d").textContent = `${money(v.measured)} proven on moves · ${money(v.recovered)} recovered on claims we filed`
     + (extra > 0 ? ` · ${money(extra)} more reimbursed without a claim from us, not counted here` : "");
-  $("#v-fees").innerHTML = moneyCur(v.fees_paid);
+  $("#v-fees").innerHTML = moneyCur(Number(v.fees_billed) || 0);
   $("#v-fees-d").textContent = v.fees_basis === "invoiced"
-    ? `${v.billed_months} invoice${v.billed_months === 1 ? "" : "s"} paid`
+    ? `${v.billed_months} invoice${v.billed_months === 1 ? "" : "s"} raised · ${money(v.fees_paid)} paid`
     : v.billed_months
       ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
-      : "free month — nothing invoiced yet";
-  $("#v-roi").textContent = v.roi_multiple != null ? `${Number(v.roi_multiple).toFixed(1)}×` : "—";
+      : "Proving Month — nothing invoiced yet";
+  $("#v-found").innerHTML = moneyCur(Number(v.identified_unbanked) || 0);
+  $("#v-found-d").textContent = Number(v.identified_unbanked) > 0
+    ? "moves made and claims filed, at their expected dollars — counted toward the bar until the export or Amazon reads them back"
+    : "nothing found and unbanked right now";
+  const billed = Number(v.fees_billed) || 0; $("#v-roi").textContent = billed > 0 ? `${(Number(v.value_total) / billed).toFixed(1)}×` : "—";
   const d = $("#v-roi-d");
   const line = {
-    strong: ["up", "every dollar of fees returned more than five"],
-    holding: ["", "holding — the standard we work to is five times"],
-    at_risk: ["down", "under three times — the work deepens until it isn't"],
+    strong: ["up", "every dollar billed came back more than five times over"],
+    holding: ["", "covered — every invoice to date stands on the Record"],
+    at_risk: ["down", "below three to one — any invoice the Record hasn't covered is void, and the work deepens until it is"],
     /* Nothing has been invoiced, so there is no multiple to fall short of.
        This used to read "under three times" to clients who had never been
        billed, because the denominator was assumed from their signup date. */
-    free_month: ["", "your free month — the multiple starts at your first invoice"],
+    free_month: ["", "your Proving Month — the multiple starts at your first invoice"],
   }[v.status] || ["", ""];
   d.className = "d " + line[0];
-  d.textContent = line[1] + (Number(v.identified_unbanked) > 0 ? ` · ${money(v.identified_unbanked)} identified, not yet banked` : "");
+  d.textContent = line[1];
 }
 
 /* ── the health score ── */
@@ -1267,7 +1276,7 @@ function renderMoneyFound(mf){
       <span class="when"><span class="chip ${chip[0]}">${chip[1]}</span></span>
     </div>`);
   }
-  $("#mf-note").textContent = `${mf.n_claims} discrepancies reconciled across your inventory ledger, returns, reimbursements and settlements. Values use your landed cost where on file; expected value applies stated approval odds per claim type. We file, Amazon pays, the ledger records what actually arrived.`;
+  $("#mf-note").textContent = `${mf.n_claims} discrepancies reconciled across your inventory ledger, returns, reimbursements and settlements. Values use your landed cost where on file; expected value applies stated approval odds per claim type. We file, Amazon pays, your Profit Record shows what actually arrived.`;
   $("#found-sect").classList.remove("hidden");
 }
 
@@ -1506,6 +1515,7 @@ async function load(){
   }
   const client = clients[0];
   $("#company").textContent = client.company_name || "Your workspace";
+  document.title = `${client.company_name || "Your workspace"} · Hubricon`;
   $("#plat").textContent = { shopify: " · Shopify", both: " · Amazon and Shopify" }[client.platform] || " · Amazon";
   $("#asof").textContent = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
   if (client.goals){
@@ -1556,19 +1566,15 @@ async function load(){
   const since = fmonth(client.created_at);
   const packValue = packRows[0]?.payload?.value;
   if (packValue && Number(packValue.value_total) > 0){
-    $("#pos-label").textContent = `Value delivered since ${since}`;
-    $("#pos-num").innerHTML = moneyCur(packValue.value_total);
-    $("#pos-sub").textContent = `${packValue.measured_count} measured directive${packValue.measured_count === 1 ? "" : "s"} and ${packValue.recovered_count} reimbursement${packValue.recovered_count === 1 ? "" : "s"} recovered · every figure verified against your own data`;
+    ["#pos-label","#pos-num","#pos-sub"].forEach((s) => { $(s).hidden = true; });
   } else if (measured > 0 || measuredRows.length){
-    $("#pos-label").textContent = `Measured impact since ${since}`;
-    $("#pos-num").innerHTML = moneyCur(measured);
-    $("#pos-sub").textContent = `${measuredRows.length} measured directive${measuredRows.length === 1 ? "" : "s"} · every figure verified against your own data`;
+    ["#pos-label","#pos-num","#pos-sub"].forEach((s) => { $(s).hidden = true; });
   } else {
-    $("#pos-label").textContent = "Your engagement";
+    $("#pos-label").textContent = "Your Proving Month";
     $("#pos-num").textContent = since || "—";
     $("#pos-num").classList.remove("good");
     $("#pos-num").style.fontSize = "clamp(28px, 5vw, 40px)";
-    $("#pos-sub").textContent = "Baseline period — measurement begins with your first approved directive, and every claim lands on the ledger below.";
+    $("#pos-sub").textContent = "Baseline period — your baseline is recorded before anything is touched. Measurement begins with your first approved move, and every claim lands on your Profit Record below.";
   }
   /* sparkline of cumulative measured impact */
   if (measuredRows.length >= 2){
@@ -1584,13 +1590,13 @@ async function load(){
       <circle cx="${(4 + (series.length - 1) * step).toFixed(1)}" cy="${(40 - 34).toFixed(1)}" r="3" class="spark-dot"/>`;
   }
 
-  /* decisions on the desk */
+  /* before it goes live */
   const awaiting = directives.filter((d) => d.status === "issued");
   const executed = directives.filter((d) => ["approved", "done"].includes(d.status)).length;
   const desk = $("#desk");
   desk.innerHTML = "";
   if (!awaiting.length){
-    desk.innerHTML = `<p class="hint">Nothing awaiting you — ${executed} decision${executed === 1 ? "" : "s"} executed to date. The watch continues below.</p>`;
+    desk.innerHTML = `<p class="hint">Nothing awaiting you — ${executed} move${executed === 1 ? "" : "s"} executed to date. The watch continues below.</p>`;
   }
   awaiting.forEach((d, i) => {
     const row = document.createElement("div");
@@ -1695,7 +1701,7 @@ async function load(){
     });
   }
   for (const t of ptests.filter((t) => t.status === "running")){
-    watchItems.push({ order: 1, html: `<span class="what">${esc(t.sku)} — price test</span><span class="chip watching">watching Buy Box daily</span>` });
+    watchItems.push({ order: 1, html: `<span class="what">${esc(t.sku)} — price test</span><span class="chip watching">Buy Box watched while live</span>` });
   }
   watchItems.sort((a, b) => a.order - b.order).slice(0, 8).forEach((w) => {
     const el = document.createElement("div");
@@ -1713,13 +1719,13 @@ async function load(){
   const events = [];
   for (const u of uploads) events.push({ t: u.parsed_at, what: `Ingested ${u.original_filename} — ${u.row_count ?? "?"} rows verified` });
   for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${a.message.slice(0, 90)}${a.message.length > 90 ? "…" : ""}` });
-  for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Directive issued: ${d.action_text.slice(0, 80)}…` });
+  for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Move issued: ${d.action_text.slice(0, 80)}…` });
   /* An auto-approval is not a click, and the log should never imply one. */
   for (const d of directives.filter((x) => x.auto_approved_at).slice(0, 5))
     events.push({ t: d.auto_approved_at, what: `Approved automatically — the veto window closed: ${d.action_text.slice(0, 70)}…` });
   for (const d of directives.filter((x) => x.executed_at).slice(0, 5))
     events.push({ t: d.executed_at, what: `Executed in your account: ${d.action_text.slice(0, 70)}…` });
-  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku} — Buy Box under daily watch` });
+  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku} — Buy Box watched while the step is live` });
   events.sort((a, b) => String(b.t).localeCompare(String(a.t)));
   const log = $("#log");
   log.innerHTML = events.length ? "" : `<p class="hint">Work appears here as it happens.</p>`;
@@ -1732,7 +1738,7 @@ async function load(){
 
   /* the record */
   const issues = briefs.length;
-  $("#tenure").textContent = `Client since ${since || "—"} · ${issues} issue${issues === 1 ? "" : "s"} · ${directives.length} directive${directives.length === 1 ? "" : "s"} · ${executed} executed`;
+  $("#tenure").textContent = `Client since ${since || "—"} · ${issues} brief${issues === 1 ? "" : "s"} · ${directives.length} move${directives.length === 1 ? "" : "s"} · ${executed} executed`;
   const wins = measuredRows.filter((d) => Number(d.measured_impact_usd) > 0);
   if (measuredRows.length){
     $("#candor").style.display = "";

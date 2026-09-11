@@ -47,6 +47,11 @@ def test_the_ask_carries_the_say_page_and_the_referral_link_once():
     text = " ".join(b.get("p", "") + b.get("url", "") for b in blocks)
     assert "/say/" in text and f"?ref={client['referral_code']}" in text
     assert "testimonial" in text and "next month is on us" in text
+    # The month is earned when the referred founder's first invoice stands — the
+    # gate, not the calendar. 'Stays past day thirty' would credit a month that
+    # was void.
+    assert "when their first invoice stands after their day thirty, your next month is on us" in text
+    assert "stay past" not in text
     referral.mark_asked(db, client)
     assert {k["kind"] for k in db.rows("consents")} == set(referral.CONSENT_KINDS)
     assert db.rows("client_touches")[0]["kind"] == "consent_ask"
@@ -98,8 +103,12 @@ def test_a_billing_referrer_gets_a_balance_credit_with_an_idempotency_key():
     assert credit["how"].startswith("credited") and credit["fee"] == 6000.0
     path, data, key = calls[0]
     assert path == "customers/cus_1/balance_transactions" and data["amount"] == -600000 and key == "referral-c2"
+    assert data["description"] == "Referral month — Beta's first invoice stands"
     assert db.rows("clients")[1]["referral_credit_applied_at"]
     assert "Beta" in credit["blocks"][0]["p"]
+    assert credit["blocks"][0]["p"].startswith(
+        "Beta took the free month on your link and their first invoice now stands after their day thirty.")
+    assert "stayed past" not in " ".join(b["p"] for b in credit["blocks"])
     # once
     assert referral.credit_referrer(db, dict(db.rows("clients")[1]), stripe=stripe) is None
     assert len(calls) == 1

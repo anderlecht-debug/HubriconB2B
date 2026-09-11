@@ -155,7 +155,7 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
         text = (
             f"Order {r['reorder_qty']} units of {r['sku']} by {by_text} — {p:.0%} stockout risk "
             f"without it (lead time {r['lead_time_days']}d). Upload unit costs and the next "
-            f"directive states the exact PO amount to wire."
+            f"move states the exact PO amount to wire."
         )
     return _draft(
         "inventory", "inventory_reorder", r["sku"],
@@ -207,7 +207,7 @@ def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
                 f"Move {sku} ${move['p0']:.2f} → ${move['p_new']:.2f} "
                 f"({'+' if step >= 0 else '−'}${abs(step):.2f}{dest}). "
                 f"Expected {sign}{_money(move['expected_delta'])}/period{rng}. "
-                f"Run as a tracked test — Buy Box watched daily."
+                f"Run as a tracked test — Buy Box watched while the step is live."
             ),
             evidence={
                 "sku": sku,
@@ -237,7 +237,7 @@ def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
             action_text=(
                 f"Price-test {sku} +3%: demand is price-insensitive (ε = {eps:.2f}), so volume "
                 f"loss should be smaller than the margin gain. Upload unit costs and the next "
-                f"directive states the exact optimum. Buy Box watched daily."
+                f"move states the exact optimum. Buy Box watched while the step is live."
             ),
             evidence={
                 "sku": sku,
@@ -276,7 +276,7 @@ def _recovery_directive(recovery: dict | None) -> dict | None:
         action_text=(
             f"Authorize us to file {len(live)} reimbursement claim{'s' if len(live) != 1 else ''} with Amazon — "
             f"{_money(value)} at face value, {_money(ev)} expected after approval odds.{closes} "
-            f"We file through your account; the ledger records what Amazon actually pays."
+            f"We file through your account, with your yes; your Profit Record books only what Amazon actually pays."
         ),
         evidence={
             "claim_keys": keys,
@@ -595,7 +595,7 @@ def draft_directives(inventory, ads, elasticity, margins,
                 f"You're paying for your own brand: {_money(spend)} across {n_terms} branded "
                 f"search terms last window. Industry incrementality studies put 25–60% of that "
                 f"as sales you'd capture organically anyway. Pause exact-match branded targeting "
-                f"as a tracked test — expected savings ≈ {_money(saving)}/period, and the Ledger "
+                f"as a tracked test — expected savings ≈ {_money(saving)}/period, and the Profit Record "
                 f"measures the truth."
             ),
             evidence={

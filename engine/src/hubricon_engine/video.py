@@ -84,7 +84,7 @@ def slide_html(company: str, issue_number: int, beat: dict, index: int, total: i
   .foot{{display:flex;justify-content:space-between;font-size:14px;color:{INK_35}}}
 </style></head><body>
   <div class="top"><span class="brand">Hubricon</span>
-    <span>{escape(company)} · Issue No. {issue_number:03d}</span></div>
+    <span>{escape(company)} · Profit Brief No. {issue_number:03d}</span></div>
   <div><h1>{escape(beat['heading'])}</h1>
     <p class="speech">{escape(beat['speech'])}</p>{points}</div>
   <div class="foot"><span>{escape(company)}</span><span>{index} / {total}</span></div>

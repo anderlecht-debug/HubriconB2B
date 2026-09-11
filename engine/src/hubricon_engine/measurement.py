@@ -70,6 +70,27 @@ UNBANKABLE_KINDS = {
 
 def _verdict(d: dict, verdict: str, notes: str, *, usd=None, attribution="none",
              evidence_after=None, window=None) -> dict:
+    """Guard 1 lives here, so no family can skip it.
+
+    The site says every dollar is "capped at what we promised", and it says it
+    about the Profit Record as a whole. Each measurement used to apply its own
+    min() and `measure_ad_bleed` never did, which made the page stricter than
+    the code on the most common move we make. Capping centrally means a new
+    measurement family is born compliant instead of being audited into it.
+
+    The cap is one-directional: a miss is banked in full, an overshoot is
+    banked at the promise and the excess is named in the evidence so the note
+    can say what really happened. `direct` is exempt by design — a claim pays
+    what Amazon pays, which legitimately exceeds our expected value."""
+    evidence_after = dict(evidence_after or {})
+    promised = d.get("expected_impact_usd")
+    if (usd is not None and promised is not None
+            and attribution in ("isolated", "attributable")):
+        promised = float(promised)
+        if float(usd) > promised:
+            evidence_after["measured_before_cap"] = round(float(usd), 2)
+            evidence_after["capped_at_promise"] = round(promised, 2)
+            usd = round(promised, 2)
     return {
         "directive_id": d.get("id"),
         "kind": d.get("kind"),
@@ -77,7 +98,7 @@ def _verdict(d: dict, verdict: str, notes: str, *, usd=None, attribution="none",
         "measured_impact_usd": usd,
         "attribution": attribution,
         "measurement_notes": notes,
-        "evidence_after": evidence_after or {},
+        "evidence_after": evidence_after,
         "window": window,
     }
 
@@ -257,6 +278,12 @@ def measure_ad_bleed(d: dict, search_terms: list[dict], since: date, today: date
             f"prior rate — ${saved:,.2f} saved.")
     if dead:
         note += f" Excludes {', '.join(sorted(map(str, dead)))}, which went dark for other reasons."
+    # Guard 1 caps the banked figure in _verdict; say so in the note rather than
+    # letting the client read a number here that the Record does not carry.
+    promised = d.get("expected_impact_usd")
+    if promised is not None and saved > float(promised):
+        note += (f" Banked at the ${float(promised):,.2f} we promised — the extra "
+                 f"${saved - float(promised):,.2f} is recorded, not claimed.")
     return _verdict(d, "measured", note, usd=round(saved, 2), attribution="isolated",
                     evidence_after={"after_spend": round(sum(after_term_spend.values()), 2),
                                     "prorated_baseline": round(sum(baseline_by_term.values()) * scale, 2),

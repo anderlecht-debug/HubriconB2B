@@ -50,7 +50,13 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           ALERT_FROM: ${{ secrets.ALERT_FROM }}
           FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
-        run: uv run hubricon sweep --alert
+        run: uv run hubricon sweep --alert --issue
+      # --issue is what makes "Before it goes live" a schedule rather than a
+      # habit: it promotes the top drafts to issued and emails the client the
+      # planned moves with their expected dollars BEFORE anything happens.
+      # Nothing auto-approves on a send that failed — issue.py leaves
+      # veto_closes_at NULL when the notice does not go out, so a silent inbox
+      # can never become a yes.
       # What consenting clients' real accounts say the cold engine's guesses
       # should be (calibration.py). Reads only clients who granted the
       # separate 'calibration' consent; writes 'insufficient' until enough

@@ -393,7 +393,7 @@ class Pass:
             "client_id": c["id"], "run_id": run_id, "video_id": None, "video_path": video_path,
             "memo": memo, "issue_number": 1,
             "report_path": report_path, "title": "Profit Teardown",
-            "headline": "Issue No. 001 — your Profit Teardown",
+            "headline": "Profit Brief No. 001 — your Profit Teardown",
         }).execute()
         speed.set_once(self.db, c, "first_issue_at")
         sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True)
@@ -461,7 +461,8 @@ class Pass:
                 amazon = (c.get("platform") or "amazon") in ("amazon", "both")
                 cli._send_client_email(self.db, c, "guarantee_short",
                                        str(c.get("retainer_started_at") or c["id"]),
-                                       "Your free month, and what we found",
+                                       f"Proving Month — ${v['total']:,.0f} on your Profit Record against "
+                                       f"${v['fee']:,.0f}: no invoice",
                                        billing.short_email_blocks(v, PORTAL_URL, recovery_door=amazon,
                                                                   share=c.get("recovery_share")), self.send)
                 if first_time:
@@ -488,7 +489,8 @@ class Pass:
                 "status": "active", "billing_decided_at": _iso(), "billing_decision": "cleared",
             }).eq("id", c["id"]).execute()
             cli._send_client_email(self.db, c, "guarantee_cleared", sub["id"],
-                                   "Your free month, and your first invoice",
+                                   f"Proving Month cleared — ${v['total']:,.0f} on your Profit Record against "
+                                   f"${v['fee']:,.0f}: your first invoice stands",
                                    billing.cleared_email_blocks(v, PORTAL_URL), self.send)
             # The brand that sent them, if one did, earns its month now — not
             # at the booking, not at the yes: at the gate, when there is revenue.
@@ -546,7 +548,8 @@ class Pass:
                 **({"status": "void", "voided_at": _iso()} if how == "voided" else {}),
             }).eq("id", inv["id"]).execute()
             cli._send_client_email(self.db, c, "month_waived", str(inv.get("stripe_invoice_id")),
-                                   "This month is on us",
+                                   f"Invoice {inv.get('number') or 'this month'} void — ${v['total']:,.0f} on the "
+                                   f"Record against ${v['fees_billed']:,.0f} billed",
                                    billing.waived_email_blocks(v, how, PORTAL_URL), self.send)
             self.human.append(f"{company}: {label} {how} — the ledger (${v['total']:,.0f}) had fallen behind "
                               f"the bills (${v['fees_billed']:,.0f}). The work has to catch up; worth a call.")
@@ -686,6 +689,11 @@ class Pass:
             if left < 0:
                 self.warnings.append(f"OVERDUE by {abs(left)}d: {r['kind']} request from {who} "
                                      f"({r['id'][:8]}). The privacy policy gives a deadline; this is past it.")
+            elif r.get("opened_at") and (now - datetime.fromisoformat(str(r["opened_at"]))).total_seconds() < 86400:
+                # A request is named the day it is opened, not only in the two days
+                # before its clock runs out; the export is the founder's to run.
+                self.human.append(f"New {r['kind']} request from {who} — due in {left}d ({r['id'][:8]}). "
+                                  f"Run: hubricon export <client>")
             elif left <= 2:
                 self.human.append(f"{r['kind']} request from {who} is due in {left}d ({r['id'][:8]}).")
 

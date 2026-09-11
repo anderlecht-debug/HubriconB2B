@@ -3,7 +3,7 @@ from hubricon_engine import narrate
 FACTS = {
     "first_name": {"value": "Dana", "label": "client first name"},
     "net_latest": {"value": "$4,842", "label": "net profit"},
-    "decisions_on_desk": {"value": "2", "label": "decisions"},
+    "moves_before_they_go_live": {"value": "2", "label": "moves"},
 }
 
 
@@ -17,7 +17,7 @@ def test_validate_catches_every_way_a_number_sneaks_in():
 
 
 def test_render_substitutes_only_known_placeholders():
-    assert narrate.render("Dear {{first_name}}, {{net_latest}} on {{ decisions_on_desk }} decisions.", FACTS) == \
+    assert narrate.render("Dear {{first_name}}, {{net_latest}} on {{ moves_before_they_go_live }} decisions.", FACTS) == \
         "Dear Dana, $4,842 on 2 decisions."
 
 
@@ -59,3 +59,8 @@ def test_build_facts_only_emits_formatted_strings():
     assert facts["net_latest"]["value"] == "$4,842" and facts["margin_pct_latest"]["value"] == "16.0%"
     assert facts["health_score"]["value"] == "71" and facts["decision_1_expected"]["value"] == "$121 per period"
     assert facts["net_direction"]["value"] == "up"
+    assert facts["moves_before_they_go_live"]["value"] == "1" and "decisions_on_desk" not in facts
+    assert facts["value_total"]["label"] == "proven to date on the Profit Record (moves + recovered)"
+    assert facts["identified_unbanked"]["label"] == "found and filed, not yet measured or paid"
+    labels = " ".join(f["label"] for f in facts.values())
+    assert "directive" not in labels and "ledger" not in labels.lower().replace("profit record", "")

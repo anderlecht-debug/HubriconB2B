@@ -3,6 +3,8 @@
 Nothing here needs a person at Hubricon during the week. The only thing the
 founder still does by hand is show up to a call a prospect booked.
 
+Internal names: issue = Profit Brief (client-facing), directive = move, ledger/value ledger = Profit Record, desk/portal = Hubricon. DB columns and CLI verbs keep the internal names.
+
 ## The loop
 
 ```
@@ -11,7 +13,7 @@ Instantly campaign ──► reply ──► triage ──► TEARDOWN? ──�
       │                                   └► question ──► answered from the fact sheet
    lead lists + SuperSearch                                     │
                                                                 ▼
-                                           uploads ──► models ──► Issue 001 in the desk ──► "it's ready" email
+                                           uploads ──► models ──► Profit Brief No. 001 in Hubricon ──► "it's ready" email
                                                                 │
                                                                 ▼
                                                  Stripe (paid) ──► renewed past the free month = PMF signal
@@ -74,7 +76,7 @@ platform. `engine/src/hubricon_engine/channels.py` is the single place the
 | Fee stack, in prose | referral, FBA fulfilment, storage | payment processing, shipping labels, apps, 3PL |
 | Payout cycle (the cash cone) | every 14 days | daily |
 | Fee cliffs (low-inventory, aged surcharge, peak storage) | priced in | none; the newsvendor still runs |
-| Reimbursement recovery | the whole desk | not applicable — no warehouse loses units on your behalf |
+| Reimbursement recovery | the whole Amazon claims channel | not applicable — no warehouse loses units on your behalf |
 | Watched during a price step | Buy Box share | conversion rate |
 | The seat | a Seller Central user, four permissions | a collaborator account: Orders, Products, Analytics, Reports, Marketing, Discounts |
 
@@ -845,7 +847,7 @@ floor, the effect must still be present in the latest export, and the same
     hubricon measure <client> --auto --dry-run    # every verdict, banking nothing
     hubricon measure <client> --auto              # what the sweep would bank, now
 
-The client sees all of this in the desk's **"how we know"** column, which
+The client sees all of this in Hubricon's **"How we know"** column, which
 renders `measurement_notes` beside every ledger row.
 
 **What still needs a person.** Recording the retainer start when someone says
@@ -1010,7 +1012,7 @@ gets one letter saying which and why. Void invoices drop out of the ledger's
 fee denominator, so a waived month is a month that was never billed.
 
 Read-only until `STRIPE_SECRET_KEY` is set: without it an uncovered invoice
-is a digest warning, never a silent bill. terms §3, welcome and the index
+is a digest warning, never a silent bill. As of 2026-09-11 no workflow passes `STRIPE_SECRET_KEY` or `STRIPE_PRICE_ID` to the scheduled operator (`grep -rn STRIPE .github/workflows/` is empty), so the day-30 pass and the rolling void both stop at the digest; the index Layer 2 copy was softened to match and the "voided within the hour" sentence may return once the two secrets are added to the Production environment and the env block of the operator.yml "Run the operator" step. terms §3, welcome and the index
 guarantee say the sentence; `hubricon promises` tracks it.
 
 ### The smaller door: recovery-only
@@ -1058,19 +1060,144 @@ day-14 email, and by the day-30 letter — the three places a founder has said
 smaller door yet; a Shopify founder who stalls gets the day-7 files email and
 nothing further.
 
+## Turning on the 90-second demo
+
+The top of the funnel is built around a demo video that does not exist yet.
+Everything for it is in place: a red call to action in the nav, the hero, the
+mobile sticky bar, the pricing card, the close and the results page, plus the
+overlay it opens in. All of it is hidden behind one constant.
+
+    index.html    const DEMO_VIDEO = null;   →   const DEMO_VIDEO = "/demo.mp4";
+    results.html  const DEMO_VIDEO = null;   →   const DEMO_VIDEO = "/demo.mp4";
+
+Drop the file at the repo root as `demo.mp4`, change those two lines, and six
+red buttons appear at once. Any URL a `<video>` can play works, so a hosted file
+is fine too. While it is null no play button renders anywhere, which is
+deliberate: a page must never offer a demo that plays nothing.
+
+Red is the only solid-filled colour on a site that is otherwise navy and amber,
+and it is used for nothing else, so the eye has no competition for it. Keep it
+that way. If a second thing turns red the device stops working.
+
+The overlay reports two events to analytics: `demo_open` with the section it was
+opened from (nav, hero, sticky, pricing, close), and `demo_finished` when the
+video plays to the end. Watched-to-the-end is the strongest intent signal on the
+page; the booking rate of that group is the number worth reading first.
+
+## The ten decisions taken on 2026-09-11
+
+Three judged rounds (Hormozi, Becker, a burned $6M seller, an honesty audit and
+a consistency audit) rewrote every client surface around Managed Profit and the
+Profit Record, and left ten questions the copy could not answer by itself. All
+ten are now decided. The rule applied to each was the one both Hormozi and
+Becker would apply: arm the machine rather than rely on remembering, take the
+stronger promise where the code can keep it, and make the number stricter rather
+than the claim louder.
+
+**1. The veto queue is armed.** `sweep.yml` now runs `hubricon sweep --alert
+--issue`, so the Monday pass drafts the moves, emails the client what is planned
+with its expected dollars, and opens the window. "Before it goes live" is a
+schedule now, not a habit. Nothing auto-approves on a send that failed:
+`issue.py` leaves `veto_closes_at` NULL when the notice does not go out, so a
+silent inbox can never become a yes.
+
+**2. The operator can reach Stripe.** `operator.yml` now passes
+`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID`. The values themselves are the one
+thing only you can do: add both to Settings → Environments → Production. Until
+they are there the day-30 pass and the rolling gate still stop at a digest
+warning, and nobody is ever wrongly billed, but no invoice is voided either.
+
+**3. Buy Box is read on a schedule.** `issue.yml` runs `hubricon watch --alert`
+daily. The command always existed; nothing ever ran it, so a missed reading was
+silent. A missed day now emails you the same day, which is what makes the word
+on the page true.
+
+**4. The export promise went back to one working day.** Migration
+`20260911000001_export_one_working_day.sql` replaces the seven-day clock with
+`next_working_day()`, which skips the weekend so a Friday request is due Monday.
+Open requests were pulled forward. terms §11, Hubricon's footer and the pricing
+card all say one working day again. This export is the hedge the site sells
+against a one-person shop, so it gets the strongest honest version.
+
+**5. The cap at the promise is enforced centrally.** It was documented as a
+guard on every measurement family and applied by each family on its own, and
+`measure_ad_bleed` never applied it — which made the page stricter than the code
+on the most common move we make. `_verdict()` now caps every isolated or
+attributable measurement at `expected_impact_usd` and records the excess as
+`measured_before_cap`. `direct` stays exempt: a claim pays what Amazon pays.
+
+**6. Both gates read the same, and a tie goes to the client.**
+`rolling_verdict` used `>=` while `verdict` used `>`, so the two disagreed on an
+exact tie and no single sentence could describe both. Both are `>` now: an
+invoice is raised only when the Record is ahead of it.
+
+**7. The seat stays at four permissions.** Filing a case needs a fifth, which
+sellers report Amazon labels "Manage Your Cases" under Settings → View & Edit.
+Two reasons not to take it. Amazon's help page for user permissions is behind a
+login and the label could not be verified first-hand, and a wrong instruction on
+welcome.html breaks onboarding on day one. More importantly it buys less than it
+used to: since 1 November 2024 Amazon auto-reimburses most warehouse loss and
+most return claims without a case at all. "Exactly four permissions, banking
+untouchable" is load-bearing in the trust argument and is not worth weakening
+for a handful of exception claims a client can submit in one click. If you ever
+want it, verify the label on your own screen first, then it is welcome.html
+Step 1, terms §6 and privacy §1 together.
+
+**8. The claims pitch was rewritten around the 2024 rule change.** Amazon's own
+staff post confirms auto-reimbursement since 1 November 2024, paid at its cost
+figure rather than your landed cost. The page no longer sells "Amazon owes you
+1–3% and nobody files". It sells what is actually true and what
+`models/recovery.py` actually does: reconcile four of the client's own exports
+against what Amazon already paid, and file what it missed or underpaid inside
+the 60 and 120-day windows.
+
+**9. The statistics now name who says them, and one was deleted.** Research
+found no independent study behind any of the three benchmarks. "About 40% dies
+unfiled" has a broken citation chain — the pages that print it cite a source
+that does not contain it — so it is gone from every surface. Non-converting ad
+spend is attributed to the agencies that publish audit data and sell against the
+number, and the arithmetic now banks the low end. The recoverable-revenue share
+is attributed to GETIDA, which is paid a share of what it finds, with a note
+that the estimate predates auto-reimbursement. The fractional-CFO range is
+attributed to what those firms publish as their own pricing, with a note that
+independent salary data runs higher. Saying that out loud is worth more than a
+citation that does not survive being clicked.
+
+**10. The peak card is verified.** Amazon's own announcement confirms the
+window (15 October 2026 – 14 January 2027), confirms the shape (an uplift on the
+standard card, "averaging $0.32 per unit", not a replacement schedule), and
+gives a worked example — small standard, 2–4 oz, under $10, $2.49 → $2.68 —
+which is `priors.py`'s 4 oz row to the cent. Differencing the whole table gives
+$0.19 to $0.54 a unit, mean $0.29 across 63 cells. Still assumed: the per-4-oz
+step above 3 lb.
+
+Two things remain that no decision here can close. Running `npm run
+stripe:setup` renames the live product to "Managed Profit" in place, finding it
+under its old name and keeping the price id, but it needs the secret key and so
+it needs you. And `/results` is honestly empty until a first Proving Month
+closes and that client says yes to publishing. Every judge across three rounds
+scored that as the largest remaining gap, and the only lever on it is the first
+five brands.
+
+Still not printed anywhere, by design, because it is not built: owner-logged
+moves on the Record, a "N periods of your data behind these estimates" badge,
+measured rows linking to the export line they came from, an Ad Bleed List rung
+between the 60-second Teardown and the call, and any seat count, since no
+ceiling is ratified and no brand is refused.
+
 ## Keeping the promises the site makes
 
 Each of these used to depend on someone remembering. They are now jobs.
 
 | Promise | Where it is made | What keeps it |
 |---|---|---|
-| A three-minute video brief every two weeks | index.html, welcome.html, terms.html §2 | `.github/workflows/issue.yml` daily → `hubricon issue --send`; each client's fortnight runs from their own retainer date. The video is generated (slides from the same beats the narration speaks) and never blocks the letter |
+| A short video with every Profit Brief, every two weeks | index.html, welcome.html, terms.html §2 | `.github/workflows/issue.yml` daily → `hubricon issue --send`; each client's fortnight runs from their own retainer date. The video is generated (slides from the same beats the narration speaks) and never blocks the letter |
 | Corrections stated with their dollars **before** they go live, vetoable by reply | terms.html §6 | `sweep --issue` → `issue.issue_drafts`. **If the notification does not send, no veto window opens and nothing can auto-approve** |
 | A standing mandate the client sets | welcome.html Step 2 | `hubricon mandate`; `issue.load_mandate` falls back to exactly what the Terms publish, never anything more permissive |
 | First fixes live in week one | welcome.html | `hubricon execute` records it; the sweep escalates anything approved and unexecuted past 7 days |
 | Buy Box watched daily through a price step | index.html, terms.html §6 | `hubricon watch --alert` |
 | "If we don't find you more than we cost, you walk away owing nothing" | 8 surfaces, terms.html §3 | The operator's day-30 pass is the **only** code that starts billing. Below the bar no subscription is created — there is no invoice to write off |
-| Free data + ledger export, any time | 11 times across 6 surfaces | `hubricon export <client>`; the desk's "Request your export" opens a tracked request |
+| Free data + Profit Record export, any time | 11 times across 6 surfaces | `hubricon export <client>`; Hubricon's "Request your export" opens a tracked request |
 | Deletion in 30 days · DSAR in 7 · breach notice in 72h · 14 days' notice of a terms change | privacy.html, terms.html §14 | `hubricon request`; the operator escalates anything within two days of its deadline and shouts when one is overdue |
 | The 90-day plan drafted from the Teardown | welcome.html Step 2 | `draft_plan_for_run` inside the teardown; it stays `draft` until the founder commits it on the kickoff call |
 

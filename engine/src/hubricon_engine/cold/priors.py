@@ -87,12 +87,28 @@ LARGE_STANDARD_OVER_3LB_PER_4OZ = 0.08
 # costs their exact unit before it happens.
 #
 # Source: Amazon's 2026 US holiday peak fulfilment fee schedule, reproduced at
-#         amzprep.com/holiday-peak-fulfillment-fees (full table) and
-#         cross-checked against Amazon's own worked example quoted by
-#         forestshipping.com (small standard 2–4 oz under $10: $2.49 → $2.68,
-#         which is this table's row exactly). Verify the rest against Seller
-#         Central before 15 October; the per-4-oz step above 3 lb is assumed
-#         unchanged at $0.08 because no reproduction prints it.
+#         amzprep.com/holiday-peak-fulfillment-fees (full table).
+#
+# VERIFIED 2026-09-11 against Amazon's own announcement — the News_Amazon staff
+# post "Holiday 2026: Same fees, same eligibility, earlier deadlines" on the
+# Seller Central forums, and Supply Chain Dive's 13 July 2026 report of it.
+# Three things checked, all of which hold:
+#   1. The window. Amazon states 15 October 2026 – 14 January 2027; that is
+#      PEAK_EFFECTIVE and PEAK_THROUGH exactly.
+#   2. The shape. Amazon describes "the same per unit increase over non-peak
+#      rates as last year, averaging $0.32 per unit" — an uplift on the standard
+#      card, not a replacement schedule. Differencing this table against the
+#      non-peak one gives a per-unit uplift of $0.19 to $0.54, mean $0.29 across
+#      all 63 cells, which is that description. (The mean sits a little under
+#      Amazon's $0.32 because their average is over the whole catalogue of size
+#      tiers, including oversize rows this card does not carry.)
+#   3. Amazon's own worked example: small standard, 2–4 oz, under $10 goes
+#      $2.49 → $2.68. That is this table's 4 oz row, first price column, to the
+#      cent.
+# The 3.5% fuel and logistics surcharge in force since 17 April 2026 stacks on
+# top of the peak fee and is applied separately by the fee model, not here.
+# Still assumed rather than verified: the per-4-oz step above 3 lb, unchanged at
+# $0.08, because no reproduction of the peak card prints it.
 PEAK_SOURCE = "Amazon US FBA fulfilment fees, 2026 holiday peak schedule"
 PEAK_EFFECTIVE = date(2026, 10, 15)
 PEAK_THROUGH = date(2027, 1, 14)

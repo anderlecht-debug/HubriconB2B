@@ -35,7 +35,7 @@ NUMBER_WORDS = {
     "double", "triple", "twice",
 }
 
-SYSTEM = """You are the writing desk of Hubricon, a quantitative CFO service for product brands that sell on Amazon, on Shopify, or both. You draft the client's monthly Issue letter. Name the client's platform only as the FACTS name it; never assume Amazon.
+SYSTEM = """You write the client letters for Hubricon, a Managed Profit service for product brands that sell on Amazon, on Shopify, or both: the money decisions made for them inside their account, every move written on a Profit Record. You draft the client's Profit Brief. Name the client's platform only as the FACTS name it; never assume Amazon.
 
 The one rule you never break: you do not write numbers. No digits, no currency or percent signs, no number words (two, hundred, half, percent...). Every figure appears only as a placeholder in double braces, {{key}}, using a key from the FACTS list exactly as given. If a fact you want is not in FACTS, describe it without a number or leave it out. Never invent a key.
 
@@ -62,8 +62,8 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
         "company": {"value": company, "label": "client company name"},
         "first_name": {"value": first_name or "there", "label": "client first name"},
         "issue_number": {"value": f"{issue_number:03d}", "label": "this issue's number"},
-        "ledger_measured": {"value": _money(ledger_measured), "label": "measured impact to date on the Decision Ledger"},
-        "ledger_count": {"value": str(ledger_count), "label": "number of directives issued to date"},
+        "ledger_measured": {"value": _money(ledger_measured), "label": "proven to date on the Profit Record"},
+        "ledger_count": {"value": str(ledger_count), "label": "number of moves issued to date"},
     }
     # Split the ledger by how each dollar was proved, so a letter can say
     # "confirmed by Amazon's own record" only where that is literally true.
@@ -76,12 +76,12 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             continue
         tiers.setdefault(d.get("attribution") or "unrecorded", []).append(float(d["measured_impact_usd"]))
     for tier, label in (("direct", "measured from a counterparty's own record (Amazon confirmed it)"),
-                        ("isolated", "measured on the exact line the directive named"),
+                        ("isolated", "measured on the exact line the move named"),
                         ("attributable", "measured against a stated counterfactual")):
         if tiers.get(tier):
             facts[f"measured_{tier}"] = {"value": _money(sum(tiers[tier])), "label": label}
             facts[f"measured_{tier}_count"] = {"value": str(len(tiers[tier])),
-                                               "label": f"directives {label}"}
+                                               "label": f"moves {label}"}
     if deltas:
         facts["net_latest"] = {"value": _money(deltas["latest"]["net"]), "label": "true net profit, latest period"}
         facts["revenue_latest"] = {"value": _money(deltas["latest"]["revenue"]), "label": "revenue, latest period"}
@@ -94,13 +94,13 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             facts["revenue_delta"] = {"value": _money(abs(deltas["revenue_delta"])), "label": "size of the revenue change vs the prior period (unsigned; pair with revenue_direction)"}
             facts["revenue_direction"] = {"value": "up" if deltas["revenue_delta"] >= 0 else "down", "label": "direction of the revenue change"}
     issued = [d for d in directives if d.get("status") == "issued"]
-    facts["decisions_on_desk"] = {"value": str(len(issued)), "label": "decisions awaiting the client's approval"}
+    facts["moves_before_they_go_live"] = {"value": str(len(issued)), "label": "moves waiting for the client's yes"}
     for i, d in enumerate(issued[:4], start=1):
-        facts[f"decision_{i}"] = {"value": d["action_text"].rstrip("."), "label": f"decision {i} on the desk, verbatim instruction (no closing period)"}
+        facts[f"decision_{i}"] = {"value": d["action_text"].rstrip("."), "label": f"move {i} waiting for the client's yes, verbatim instruction (no closing period)"}
         if d.get("expected_impact_usd") is not None:
             facts[f"decision_{i}_expected"] = {"value": _money(d["expected_impact_usd"]) + " per period", "label": f"expected impact of decision {i}"}
         else:
-            facts[f"decision_{i}_expected"] = {"value": "no dollar estimate in advance; the ledger measures it after the fact",
+            facts[f"decision_{i}_expected"] = {"value": "no dollar estimate in advance; the Profit Record measures it after the fact",
                                                "label": f"expected impact of decision {i} (use this phrase verbatim, do not explain further)"}
     critical = [a for a in alerts if a.get("severity") == "critical"]
     if critical:
@@ -112,11 +112,11 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             facts[f"health_driver_{i}"] = {"value": d["label"].lower(), "label": f"health driver {i} name"}
             facts[f"health_driver_{i}_dollars"] = {"value": _money(d["dollars_at_stake"]), "label": f"dollars behind health driver {i}"}
     if value:
-        facts["value_total"] = {"value": _money(value["value_total"]), "label": "measured value delivered to date (directives + recovered)"}
+        facts["value_total"] = {"value": _money(value["value_total"]), "label": "proven to date on the Profit Record (moves + recovered)"}
         facts["fees_paid"] = {"value": _money(value["fees_paid"]), "label": "fees invoiced to date"}
         if value.get("roi_multiple") is not None:
             facts["roi_multiple"] = {"value": f"{float(value['roi_multiple']):.1f}×", "label": "value delivered divided by fees paid"}
-        facts["identified_unbanked"] = {"value": _money(value["identified_unbanked"]), "label": "identified value not yet measured or paid"}
+        facts["identified_unbanked"] = {"value": _money(value["identified_unbanked"]), "label": "found and filed, not yet measured or paid"}
     if recovery and recovery.get("status") == "ok":
         s = recovery["summary"]
         facts["recovery_live_value"] = {"value": _money(s["live_value"]), "label": "face value of open reimbursement claims"}
@@ -184,11 +184,11 @@ def _prompt(facts: dict, structure: str) -> str:
             f"Write:\n{structure}\n\nReturn the letter only, no preamble.")
 
 
-LETTER_STRUCTURE = """An Issue letter of five to seven short paragraphs:
-1. 'Issue No. {{issue_number}}' on its own line, then 'Dear {{first_name}},'.
+LETTER_STRUCTURE = """A Profit Brief of five to seven short paragraphs:
+1. 'Profit Brief No. {{issue_number}}' on its own line, then 'Dear {{first_name}},'.
 2. The headline: net profit and its direction versus the prior period, on what revenue and margin.
 3. The one thing to understand this month — the critical alert if there is one, otherwise the largest opportunity (recovery claims, anomalies, inventory bleed, or the Health Score's top driver), with its dollars.
-4. One short paragraph per decision on the desk: the instruction verbatim, then its expected impact placeholder. After the last one, a single sentence on how the ledger measures them.
+4. One short paragraph per move waiting for the client's yes: the instruction verbatim, then its expected impact placeholder. After the last one, a single sentence on how the Profit Record measures them.
 5. The Health Score and grade, naming the drivers costing the most.
 6. The record: value delivered against fees paid, and what is identified but not yet banked.
 7. Sign-off."""

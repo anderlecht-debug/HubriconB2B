@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hubricon — Published results</title>
-<meta name="description" content="Every result Hubricon publishes comes off a client's own Decision Ledger, with their consent, anonymised by category and revenue band. Nothing here is a projection.">
+<meta name="description" content="Every result Hubricon publishes comes off a client's own Profit Record, with their consent, anonymised by category and revenue band. Nothing here is a projection.">
 <link rel="canonical" href="https://www.hubricon.com/results">
 <meta name="theme-color" content="#050A1F">
 <style>
@@ -26,27 +26,62 @@ h1{font:500 clamp(28px,5vw,40px)/1.12 "Iowan Old Style",Georgia,serif;color:var(
 .empty b{color:var(--ink)}
 .method{margin-top:36px;padding-top:24px;border-top:1px solid var(--hair);font-size:14.5px;color:var(--faint);max-width:64ch}
 .method b{color:var(--soft)}
-.btn{display:inline-block;margin-top:22px;background:var(--amber);color:#1a1205;font-weight:650;padding:13px 24px;border-radius:9px;text-decoration:none}
-@media (max-width:560px){body{padding:26px 14px 70px}.card{padding:18px}}
+.btn{display:inline-flex;align-items:center;gap:9px;background:var(--amber);color:#1a1205;font-weight:650;padding:13px 24px;border-radius:999px;text-decoration:none;font-size:13px}
+/* the demo is the only red and the only solid fill on this page too */
+.btn[hidden]{display:none !important}
+.btn-signal{background:hsl(4 92% 57%);color:#fff;box-shadow:0 12px 38px hsl(4 92% 45% / .42)}
+.btn-signal:hover{background:hsl(4 96% 66%)}
+.btn-signal .play{width:18px;height:18px;border-radius:50%;background:hsl(0 0% 100% / .22);display:grid;place-items:center;flex:none}
+.btn-signal .play svg{width:8px;height:8px;margin-left:1.5px;fill:currentColor}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+/* the running total sits above the wall, so the page has a number even when the
+   wall is one card long */
+.total{display:flex;gap:0;border:1px solid var(--hair);border-radius:14px;overflow:hidden;margin:26px 0 0;background:var(--panel)}
+.total div{flex:1 1 0;padding:18px 22px;border-left:1px solid var(--hair);min-width:0}
+.total div:first-child{border-left:0}
+.total b{display:block;font:500 30px/1 "Iowan Old Style",Georgia,serif;color:var(--ok);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.total.zero b{color:var(--faint)}
+.total span{display:block;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:7px}
+.card{transition:border-color .2s}
+.card:hover{border-color:hsl(45 100% 50% / .35)}
+.card .kind{font-size:13.5px;color:var(--soft)}
+@media (max-width:700px){.total{flex-wrap:wrap}.total div{flex:1 1 50%;border-top:1px solid var(--hair)}}
+@media (max-width:560px){body{padding:26px 14px 70px}.card{padding:18px}.total div{padding:14px 16px}.total b{font-size:24px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <span class="eyebrow">Hubricon · the record</span>
-  <h1>What the ledgers say, published with permission.</h1>
-  <p class="lede">Every card below is a number a client's own Decision Ledger measured from their own later exports, or a reimbursement Amazon paid on a claim we filed. Clients choose whether it appears here; it is shown by category and revenue band, rounded down, with no brand named. Nothing on this page is a forecast.</p>
+  <span class="eyebrow"><a href="/" style="text-decoration:none;color:inherit">Hubricon</a> · The Record, published</span>
+  <h1>Every dollar here was measured on a client's own exports.</h1>
+  <p class="lede">Not a case study, not a projection, not a screenshot. Each card is one number a client's own Profit Record measured from the reports they pulled after the move, or a reimbursement Amazon actually paid on a claim we filed. Shown by category and revenue band, rounded down, no brand named, published only where the client said yes.</p>
+
+  <!-- The number first, so the page reads as a total rather than a list. At zero
+       it says zero, which is the whole point of the page. -->
+  <div class="total zero" id="total">
+    <div><b id="t-sum">$0</b><span>proven and published</span></div>
+    <div><b id="t-count">0</b><span>results on the wall</span></div>
+    <div><b id="t-brands">0</b><span>brands</span></div>
+  </div>
 
   <div id="grid" class="grid" hidden></div>
   <div id="empty" class="empty" hidden>
-    <b>No published result yet.</b> The first client to clear the free month and say yes to publication
-    appears here on the next hourly pass. Until then the honest number of published results is zero, and
-    we would rather show you zero than a sample.
+    <b>Nothing here yet, and we would rather show you that than a sample.</b>
+    The first card posts when the first Proving Month closes and that client says yes to publishing it.
+    Until then the number above is zero and the bet stands in its place: an invoice your own Profit Record
+    has not covered is void, so what you risk does not depend on what this page says.
   </div>
 
-  <a class="btn" href="/#apply">Get your own numbers run, free</a>
+  <div class="ctas">
+    <a class="btn btn-signal" data-demo href="/#demo" hidden>
+      <span class="play" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M2 1l8 5-8 5z"/></svg></span>
+      Watch the 90-second demo
+    </a>
+    <a class="btn" href="/#apply">Get your own numbers run, free</a>
+  </div>
 
   <div class="method">
-    <p><b>How a card gets here.</b> A correction is stated with its expected dollars before it goes live. Later, the client's next exports are read back and each dollar is graded — confirmed by the platform's own record, measured on the exact line, or measured against a stated counterfactual — and capped at what was promised. Reimbursements count only when Amazon paid a claim we filed. The client then decides, on a private page, whether the result may be published. A withdrawn consent removes the card instantly.</p>
+    <p><b>How a card gets here.</b> A move is stated with its expected dollars before it goes live. Later, the client's next exports are read back and each dollar is graded — confirmed by the platform's own record, measured on the exact line, or measured against a stated counterfactual — and capped at what we promised. A move we cannot isolate banks nothing and says so. Reimbursements count only when Amazon paid a claim we filed. The client then decides, on a private page, whether the result may be published, and a withdrawn consent removes the card at once.</p>
+    <p style="margin-top:14px"><b>Why you should not need this page.</b> A wall of other people's numbers is the weakest kind of proof: you cannot audit one of them. Your own Proving Month is the strong kind. It runs for thirty days at no charge, on your catalogue, and at the end of it the only Record that decides anything is yours. <a href="/#guarantee">The four layers of that, in writing</a>.</p>
   </div>
 </div>
 <script>
@@ -55,16 +90,16 @@ const SUPABASE_URL = "https://cgqvdnhgbfxikzdqqaws.supabase.co";
 const SUPABASE_KEY = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
 const HOW = {
   direct: "confirmed by the platform's own record",
-  isolated: "measured on the exact line the directive named",
+  isolated: "measured on the exact line the move named",
   attributable: "measured against a stated counterfactual",
   recovered: "paid by Amazon on a claim we filed",
-  gate: "the ledger against the invoice",
+  gate: "the Profit Record against the invoice",
 };
 const KIND = {
   first_recovered: "first reimbursement recovered",
   gate_cleared: "cleared the free-month gate",
-  roi_3x: "ledger above three times the fee",
-  roi_5x: "ledger above five times the fee",
+  roi_3x: "Profit Record above three times the fee",
+  roi_5x: "Profit Record above five times the fee",
   direct_measured: "a correction, measured",
 };
 const money = (v) => "$" + Math.floor(Number(v) || 0).toLocaleString("en-US");
@@ -80,16 +115,35 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
     rows = res.ok ? (await res.json()) || [] : [];
   } catch { rows = []; }
   if (!rows.length) { empty.hidden = false; return; }
+
+  /* The total above the wall. Brands are counted by the band-and-industry pair
+     the RPC exposes, which is the most we can distinguish without identifying
+     anyone — so it under-counts rather than over-counts, which is the right
+     direction for a number on this page. */
+  const sum = rows.reduce((t, r) => t + (Number(r.amount_usd) || 0), 0);
+  const brands = new Set(rows.map((r) => `${r.industry}|${r.revenue_band}`)).size;
+  document.getElementById("t-sum").textContent = money(sum);
+  document.getElementById("t-count").textContent = String(rows.length);
+  document.getElementById("t-brands").textContent = String(brands);
+  document.getElementById("total").classList.remove("zero");
+
   grid.innerHTML = rows.map((r) => `
     <div class="card">
       <span class="eyebrow">${esc(r.month)} · ${esc(r.platform || "amazon")}</span>
       <span class="amt">${money(r.amount_usd)}</span>
       <span class="who">A ${esc(r.industry)} brand, ${esc(r.revenue_band || "$1M–$20M")}</span>
-      <div>${esc(KIND[r.kind] || r.kind)}</div>
+      <div class="kind">${esc(KIND[r.kind] || r.kind)}</div>
       <div class="how">How we know: ${esc(HOW[r.how_we_know] || r.how_we_know)}</div>
     </div>`).join("");
   grid.hidden = false;
 })();
+
+/* The demo button, driven by the same single constant index.html uses. Set both
+   to the same path when the video exists; until then no play button appears. */
+const DEMO_VIDEO = null;
+if (DEMO_VIDEO) {
+  document.querySelectorAll("[data-demo]").forEach((el) => { el.hidden = false; el.href = "/#demo"; });
+}
 </script>
 </body>
 </html>

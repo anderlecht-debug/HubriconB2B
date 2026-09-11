@@ -136,14 +136,14 @@ def campaign_spec(senders: list[str], postal_address: str, calendly_url: str = C
         "Hi {{firstName}},<br/><br/>"
         "Your price is right. Your ads work. The payout still lands lighter than the "
         "spreadsheet said.<br/><br/>"
-        "It's usually a few quiet numbers: a weight band you're an ounce over, a SKU that goes "
+        "Usually a few quiet numbers: a weight band you're an ounce over, a SKU that goes "
         "negative once ads are allocated honestly.<br/><br/>"
-        "I find them in {{companyName}}'s numbers and fix them for you. Three-minute brief every "
+        "I find them in {{companyName}}'s numbers and fix them in your account. A short video every "
         "two weeks; you keep the margin.<br/><br/>"
         # 2026-09-08, the founder's call: the price leads and the guarantee is the
         # rule the ledger and billing.py actually keep (cumulative, terms §3), with
         # month one demoted from headline to feature. Same economics as before.
-        "$6,000 a month, flat; month one at no charge. Any invoice the ledger hasn't earned is void. "
+        "$6,000 a month, flat; month one free. Any invoice your Profit Record hasn't covered is void. "
         "No card, nothing owed.<br/><br/>"
         + why_free +
         "Reply TEARDOWN; yours is back 24 hours after your exports land.<br/><br/>"

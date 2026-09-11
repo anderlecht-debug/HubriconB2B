@@ -1,9 +1,19 @@
 """FBA reimbursement recovery — the money Amazon already owes the client.
 
-Industry benchmark: 1–3% of FBA revenue is recoverable each year, and
-roughly 40% of it dies of neglect because Amazon's claim windows are
-short. This model reconciles four sources the client's own seat exports
-and turns every discrepancy into a dated, valued, deadline-aware claim:
+Since 1 November 2024 Amazon auto-reimburses most FBA units it loses or
+damages in its own warehouses, and most customer-return claims, without a
+case. That is the fact this model is built around: it exists to find what
+the automatic pass MISSED or underpaid, not to re-file what Amazon has
+already settled, which is why every family below nets out reimbursements
+already paid for the same SKU.
+
+The often-quoted "1–3% of FBA revenue is recoverable each year" comes from
+GETIDA, a recovery service paid a share of what it finds, and it predates
+that change; the companion claim that "40% dies unfiled" has no traceable
+source at all and is not repeated on any Hubricon surface. Neither number
+is used by this model. It reconciles four sources the client's own seat
+exports and turns every real discrepancy into a dated, valued,
+deadline-aware claim:
 
     warehouse_lost / warehouse_damaged
         Inventory Ledger adjustments with a loss reason, net of "found"

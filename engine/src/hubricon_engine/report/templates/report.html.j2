@@ -67,7 +67,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   </div>
 
   <div class="card">
-    <h2>Directives</h2>
+    <h2>Moves</h2>
     {% if actions %}
     <ol class="actions">
       {% for a in actions %}
@@ -75,7 +75,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
       {% endfor %}
     </ol>
     {% else %}
-    <p>No urgent directives this run — the follow-up sections carry the detail.</p>
+    <p>No urgent moves this run — the follow-up sections carry the detail.</p>
     {% endif %}
   </div>
 </section>
@@ -83,15 +83,15 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 {% if ledger %}
 <section>
   <div class="card">
-    <h2>Decision Ledger</h2>
-    <p class="small" style="margin-top:2px">Every directive we issue is recorded with its expected impact, your decision, and the measured outcome — cumulative, across the whole engagement.</p>
+    <h2>The Profit Record</h2>
+    <p class="small" style="margin-top:2px">Every move we make is written on your Profit Record with the dollars expected, your decision, and the dollars measured on your own later exports — cumulative, since day one.</p>
     <div class="kpis" style="margin:14px 0 4px">
-      <div class="kpi"><b class="good">${{ "{:,.0f}".format(ledger_measured) }}</b><span>measured impact to date</span></div>
-      <div class="kpi"><b>{{ ledger|length }}</b><span>directives issued</span></div>
+      <div class="kpi"><b class="good">${{ "{:,.0f}".format(ledger_measured) }}</b><span>proven to date</span></div>
+      <div class="kpi"><b>{{ ledger|length }}</b><span>moves issued</span></div>
       <div class="kpi"><b>{{ ledger|selectattr("status", "in", ["approved", "done"])|list|length }}</b><span>approved or completed</span></div>
     </div>
     <table>
-      <tr><th>Module</th><th>Directive</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
+      <tr><th>Module</th><th>Move</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
       {% for d in ledger[:12] %}
       <tr>
         <td>{{ d.module|upper }}</td>
@@ -216,7 +216,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 {% endif %}
 
 <footer>
-  Hubricon Quantitative · methodology: Monte Carlo lead-time demand (lognormal lead times, gamma-Poisson demand),
+  Hubricon · Managed Profit · methodology: Monte Carlo lead-time demand (lognormal lead times, gamma-Poisson demand),
   log-log OLS elasticity with traffic controls where available, Hill saturation fits for ad response.
   Items without enough data are reported as such, never estimated. All models audited.
 </footer>

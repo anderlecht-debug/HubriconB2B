@@ -14,6 +14,22 @@ OUR_EMAIL = (
 )
 
 
+def test_the_facts_describe_the_mandate_and_the_referral_month_the_engine_actually_runs():
+    """FACTS is the whole of what the reply drafter may say. It must describe
+    the mandate as issue.py enforces it (5% per cycle standing, explicit moves
+    that lapse after three weeks) and the referral month as referral.py pays
+    it (at the referred founder's first standing invoice, not a calendar day)."""
+    from hubricon_engine.issue import EXPLICIT_LAPSE_DAYS
+    mandate = next(line for line in triage.FACTS.splitlines() if line.startswith("- Ongoing execution"))
+    assert ("bounded price steps capped at 5% per cycle and ad corrections inside limits they set on the "
+            "kickoff call; a bigger price step, a new campaign or a reorder waits for their written yes, "
+            "and lapses after three weeks without one") in mandate
+    assert "within limits they approve" not in mandate and EXPLICIT_LAPSE_DAYS == 21
+    referral = next(line for line in triage.FACTS.splitlines() if line.startswith("- Referral"))
+    assert "when that founder's first invoice stands after their day 30" in referral
+    assert "stays past" not in referral
+
+
 def test_strip_quoted_removes_history_so_our_keyword_never_classifies():
     body = "Thanks, not the right time for us." + OUR_EMAIL
     assert strip_quoted(body) == "Thanks, not the right time for us."

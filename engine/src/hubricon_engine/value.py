@@ -40,8 +40,14 @@ STRONG_MULTIPLE = 5.0
 AT_RISK_MULTIPLE = 3.0
 
 # Claim window states that still represent money in flight. 'expired' and
-# 'denied' are neither banked nor identified: the window closed.
+# 'denied' are neither banked nor identified: the window closed. The portal's
+# in-flight display uses this set.
 LIVE_CLAIM_STATES = ("open", "expiring", "not_yet_eligible", "filed")
+# Claim states that count as "found" on the Profit Record — the printed rule is
+# "what we proved, plus what we found and filed", so only a claim actually
+# filed with Amazon (not yet paid) is found money. A claim merely detected in
+# a report is a lead, not a receipt.
+IDENTIFIED_CLAIM_STATES = ("filed",)
 
 
 def months_elapsed(start: date, today: date) -> int:
@@ -100,6 +106,11 @@ def fee_side(client: dict, invoices: list[dict] | None, today: date) -> dict:
             "engagement_start": start, "engagement_start_source": source}
 
 
+def _is_made(d: dict) -> bool:
+    """Has this move actually happened in the client's account?"""
+    return bool(d.get("executed_at")) or d.get("status") == "done"
+
+
 def compute(client: dict, directives: list[dict], claims: list[dict],
             invoices: list[dict] | None = None, today: date | None = None) -> dict:
     today = today or date.today()
@@ -121,14 +132,21 @@ def compute(client: dict, directives: list[dict], claims: list[dict],
     recovered_unattributed = sum(float(c["paid_amount"]) for c in paid if c not in ours)
     value = measured + recovered
 
+    # "Found" = a move actually made (executed, or recorded done) at its
+    # expected dollars, not yet measured. A move that is only issued or
+    # approved has not happened yet, so it is not found money and cannot
+    # cover an invoice. A move the sweep closed as unmeasurable has been
+    # measured and found nothing; it is not found money either.
     unbanked_directives = sum(float(d["expected_impact_usd"]) for d in directives
-                              if d.get("status") in ("issued", "approved") and d.get("measured_impact_usd") is None
+                              if _is_made(d) and d.get("measured_impact_usd") is None
+                              and d.get("measured_at") is None
+                              and d.get("status") not in ("closed", "lapsed")
                               and d.get("expected_impact_usd") is not None)
-    # Window state, not raw status: a claim still stored as 'detected' whose
-    # deadline has passed is expired money, and counting it overstates what is
-    # still in flight.
+    # Window state, not raw status: only a claim actually filed and not yet
+    # paid is found money. A 'detected' claim, open or not, is not yet filed;
+    # an expired or denied one is neither banked nor found.
     unbanked_claims = sum(float(c.get("expected_value") or 0) for c in claims
-                          if window_state(c, today) in LIVE_CLAIM_STATES)
+                          if window_state(c, today) in IDENTIFIED_CLAIM_STATES)
     identified = unbanked_directives + unbanked_claims
 
     multiple = value / fees_paid if fees_paid > 0 else None
@@ -163,7 +181,19 @@ def compute(client: dict, directives: list[dict], claims: list[dict],
         "identified_parts": {"directives": num(unbanked_directives), "claims": num(unbanked_claims)},
         "status": status,
         "thresholds": {"strong": STRONG_MULTIPLE, "at_risk": AT_RISK_MULTIPLE},
-        "basis": ("Measured = directive outcomes measured against baseline from your own later exports; "
-                  "recovered = reimbursements Amazon paid on claims we filed; fees = what was actually "
-                  "invoiced where invoices are on file. Identified value is shown, never added."),
+        "basis": ("Measured = move outcomes measured against baseline from your own later exports; "
+                  "recovered = reimbursements Amazon paid on claims we filed; found = moves made and "
+                  "claims filed, at their expected dollars, not yet measured or paid; fees = what was "
+                  "actually invoiced where invoices are on file."),
     }
+
+
+def record_line(ledger: dict) -> str:
+    """The Profit Record in one line, for the foot of every client email: the
+    same four numbers the strip in Hubricon shows, in the same words."""
+    proven = float(ledger.get("value_total") or 0)
+    found = float(ledger.get("identified_unbanked") or 0)
+    billed = float(ledger.get("fees_billed") or 0)
+    return (f"Your Profit Record: ${proven:,.0f} proven since day one · "
+            f"${found:,.0f} found and filed, not yet banked · ${billed:,.0f} billed to date"
+            + (f" · {proven / billed:.1f}× proven ÷ billed." if billed > 0 else "."))

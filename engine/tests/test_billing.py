@@ -49,10 +49,24 @@ def test_exactly_the_fee_does_not_clear_it():
 
 def test_the_short_email_says_no_invoice_exists_not_that_one_was_waived():
     v = billing.verdict({"value_total": 900, "identified_unbanked": 100}, {"monthly_fee_usd": 6000})
-    text = " ".join(b.get("p", "") for b in billing.short_email_blocks(v, "https://x/portal"))
+    blocks = billing.short_email_blocks(v, "https://x/portal")
+    text = " ".join(b.get("p", "") for b in blocks)
     assert "there is no invoice" in text
     assert "isn't a discount or a credit" in text
     assert "nothing was raised at all" in text
+    # The three lines use the names in force, and the retired words never appear.
+    listed = next(b["ol"] for b in blocks if "ol" in b)
+    assert listed == ["Proven on your Profit Record, from your own exports: $900",
+                      "Found and filed, not yet banked: $100",
+                      "Against Managed Profit: $6,000 a month"]
+    whole = text + " " + " ".join(listed)
+    assert "Decision Ledger" not in whole and "retainer" not in whole
+    # The door back in is the same arithmetic, later: the Record clearing the fee, then an invoice.
+    later = ("If the Record clears $6,000 later — a claim Amazon pays, a price step that reads out — "
+             "the first invoice comes then, by email, with this same arithmetic on top of it. Not before.")
+    assert later in text
+    paras = [b["p"] for b in blocks if "p" in b]
+    assert paras.index(later) == len(paras) - 1                 # the last word before any smaller door
 
 
 def test_the_cleared_email_shows_the_arithmetic_before_the_invoice():
@@ -61,8 +75,12 @@ def test_the_cleared_email_shows_the_arithmetic_before_the_invoice():
     listed = next(b["ol"] for b in blocks if "ol" in b)
     assert any("$20,000" in x for x in listed) and any("$4,000" in x for x in listed)
     assert any("$6,000" in x for x in listed)
+    assert "Found and filed, not yet banked: $4,000" in listed
     text = " ".join(b.get("p", "") for b in blocks)
     assert "4.0× the fee" in text and "net seven days" in text
+    # The Proving Month was already Managed Profit; what starts now is the paid months.
+    assert "so the paid months start and your first invoice comes by email" in text
+    assert "Managed Profit starts" not in text
 
 
 def test_the_terms_are_the_ones_the_site_publishes():
@@ -97,12 +115,23 @@ def test_fees_billed_through_counts_up_to_this_invoice_and_skips_void_ones():
     assert billing.fees_billed_through([VOID, INV1, INV2], INV2) == 12000
 
 
-def test_the_rolling_bar_is_level_with_the_bills_not_above_them():
-    ledger = {"value_total": 9000, "identified_unbanked": 3000}
+def test_the_rolling_bar_is_ahead_of_the_bills_and_a_tie_goes_to_the_client():
+    """Both gates now read the same. `verdict` has always required the Record to
+    EXCEED the fee ("$6,000 or under and there is no invoice"); `rolling_verdict`
+    used to settle for level, so the two disagreed on an exact tie and no single
+    sentence could describe both. A tie is now uncovered, which is the reading
+    that costs us the invoice rather than the client."""
+    ledger = {"value_total": 9000, "identified_unbanked": 3001}
     v = billing.rolling_verdict(ledger, [INV1, INV2], INV2, CLIENT)
-    assert v["fees_billed"] == 12000 and v["total"] == 12000 and v["covered"] is True   # level is covered
+    assert v["fees_billed"] == 12000 and v["total"] == 12001 and v["covered"] is True
+    level = billing.rolling_verdict({"value_total": 9000, "identified_unbanked": 3000},
+                                    [INV1, INV2], INV2, CLIENT)
+    assert level["total"] == 12000 and level["covered"] is False        # a tie is not covered
     short = billing.rolling_verdict({"value_total": 9000, "identified_unbanked": 2999}, [INV1, INV2], INV2, CLIENT)
     assert short["covered"] is False
+    # The day-30 gate reads the same way, so one sentence describes both.
+    assert billing.verdict({"value_total": 6000, "identified_unbanked": 0}, CLIENT)["clears"] is False
+    assert billing.verdict({"value_total": 6001, "identified_unbanked": 0}, CLIENT)["clears"] is True
 
 
 def test_an_open_invoice_is_voided_and_a_paid_one_is_credited_with_an_idempotency_key():
@@ -117,12 +146,15 @@ def test_an_open_invoice_is_voided_and_a_paid_one_is_credited_with_an_idempotenc
     assert billing.waive_invoice(INV1, CLIENT, stripe=stripe) == "credited"
     path, data, key = calls[-1]
     assert path == "customers/cus_1/balance_transactions" and data["amount"] == -600000 and key == "gate-in_1"
+    assert data["description"] == "Month not covered by the Profit Record — invoice in_1"
 
 
 def test_the_waived_letter_says_void_or_credited_and_never_discount():
     v = billing.rolling_verdict({"value_total": 5000, "identified_unbanked": 0}, [INV1, INV2], INV2, CLIENT)
-    text = " ".join(b.get("p", "") for b in billing.waived_email_blocks(v, "voided", "https://x/portal"))
-    assert "the invoice is void" in text and "never run ahead of your ledger" in text and "discount" not in text
+    blocks = billing.waived_email_blocks(v, "voided", "https://x/portal")
+    text = " ".join(b.get("p", "") for b in blocks)
+    assert "the invoice is void" in text and "hasn't covered is void" in text and "discount" not in text
+    assert "Found and filed, not yet banked: $0" in next(b["ol"] for b in blocks if "ol" in b)
     text = " ".join(b.get("p", "") for b in billing.waived_email_blocks(v, "credited", "https://x/portal"))
     assert "credited to your next one" in text
 
@@ -133,6 +165,7 @@ def test_the_short_letter_names_the_smaller_door_only_when_asked():
     assert "RECOVERY" not in plain
     door = " ".join(b.get("p", "") for b in billing.short_email_blocks(v, "https://x/portal", recovery_door=True, share=0.2))
     assert "Reply RECOVERY" in door and "20% of what actually lands" in door and "nothing until it lands" in door
+    assert door.index("Not before.") < door.index("Reply RECOVERY")    # the later-invoice line precedes the door
 
 
 # -- the recovery-only plan ---------------------------------------------------------------
@@ -193,4 +226,5 @@ def test_a_recovery_invoice_is_one_item_one_invoice_finalized_and_sent_with_no_s
     assert invoice["metadata[hubricon_plan]"] == "recovery" and "subscriptions" not in paths
     assert inv["customer"] == "cus_new" and inv["hosted_invoice_url"] == "https://pay/in_r1"
     text = " ".join(b.get("p", "") for b in billing.recovery_email_blocks(due, inv["hosted_invoice_url"], "https://x"))
-    assert "$2,000.00" in text and "$500.00" in text and "no retainer on this plan" in text
+    assert "$2,000.00" in text and "$500.00" in text and "no monthly fee on this plan" in text
+    assert "retainer" not in text

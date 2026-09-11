@@ -128,15 +128,15 @@ def cleared_email_blocks(v: dict, portal_url: str) -> list[dict]:
     return [
         {"p": f"Your free month is up, and here is the arithmetic we said we'd be judged on."},
         {"ol": [
-            f"Measured on your Decision Ledger, from your own exports: ${v['measured']:,.0f}",
-            f"Found and not yet banked: ${v['identified']:,.0f}",
-            f"Against the retainer: ${v['fee']:,.0f} a month",
+            f"Proven on your Profit Record, from your own exports: ${v['measured']:,.0f}",
+            f"Found and filed, not yet banked: ${v['identified']:,.0f}",
+            f"Against Managed Profit: ${v['fee']:,.0f} a month",
         ]},
-        {"p": f"That is {v['multiple']:.1f}× the fee, so the retainer starts and your first invoice "
+        {"p": f"That is {v['multiple']:.1f}× the fee, so the paid months start and your first invoice "
               f"comes by email — ACH, net seven days, no card on file, nothing charged automatically. "
               f"Cancel with one email whenever you like."},
         {"button": "See every line behind that number", "url": portal_url},
-        {"p": "Each entry on the ledger says how we know it, and which export it came from. "
+        {"p": "Each entry on your Profit Record says how we know it, and which export it came from. "
               "If any of it looks wrong, reply and tell me — I'd rather fix the number than keep it."},
     ]
 
@@ -146,9 +146,9 @@ def short_email_blocks(v: dict, portal_url: str, recovery_door: bool = False,
     blocks = [
         {"p": "Your free month is up, and we did not clear the bar we set ourselves."},
         {"ol": [
-            f"Measured on your Decision Ledger: ${v['measured']:,.0f}",
-            f"Found and not yet banked: ${v['identified']:,.0f}",
-            f"Against the retainer: ${v['fee']:,.0f} a month",
+            f"Proven on your Profit Record, from your own exports: ${v['measured']:,.0f}",
+            f"Found and filed, not yet banked: ${v['identified']:,.0f}",
+            f"Against Managed Profit: ${v['fee']:,.0f} a month",
         ]},
         {"p": "So there is no invoice. That is what we promised — if we don't find you more than we "
               "cost, you walk away owing nothing — and it isn't a discount or a credit; nothing was "
@@ -156,11 +156,13 @@ def short_email_blocks(v: dict, portal_url: str, recovery_door: bool = False,
         {"button": "See the full working", "url": portal_url},
         {"p": "I'd like to keep going and earn it, and the work carries on either way until you tell "
               "me to stop. But that's your call to make, not mine, and either answer is fine."},
+        {"p": "If the Record clears $6,000 later — a claim Amazon pays, a price step that reads out — "
+              "the first invoice comes then, by email, with this same arithmetic on top of it. Not before."},
     ]
     if recovery_door:
         pct = f"{(share if share is not None else RECOVERY_SHARE) * 100:.0f}%"
         blocks.append({"p": "There is also a smaller door, if you would rather keep only the reimbursement "
-                            "desk: we keep filing what Amazon owes you, and you pay " + pct +
+                            "filing (Recovery Only): we keep filing what Amazon owes you, and you pay " + pct +
                             " of what actually lands in your account — nothing else, and nothing until it "
                             "lands. Reply RECOVERY and I will switch you over."})
     return blocks
@@ -196,15 +198,20 @@ def fees_billed_through(invoices: list[dict], inv: dict) -> float:
 
 def rolling_verdict(ledger: dict, invoices: list[dict], inv: dict, client: dict) -> dict:
     """Is this invoice covered? Same bar as day 30 — measured plus identified —
-    against everything billed through it. Covered means the ledger is at least
-    level with the bills: our invoices never run ahead of it."""
+    against everything billed through it.
+
+    Strictly ahead, not merely level. This used to be `>=` while the day-30
+    gate was `>`, so the two disagreed on an exact tie and no sentence on the
+    site could describe both. The site now says the same thing in both places,
+    and a tie resolves the way every ambiguity in this guarantee resolves:
+    for the client. An invoice is raised only when the Record is ahead of it."""
     fees = fees_billed_through(invoices, inv)
     measured = float(ledger.get("value_total") or 0)
     identified = float(ledger.get("identified_unbanked") or 0)
     total = measured + identified
     return {"fee": float(client.get("monthly_fee_usd") or 6000.0), "measured": measured,
             "identified": identified, "total": total, "fees_billed": fees,
-            "covered": total >= fees, "invoice": inv.get("stripe_invoice_id"),
+            "covered": total > fees, "invoice": inv.get("stripe_invoice_id"),
             "amount": float(inv.get("amount_due") or 0), "period_start": inv.get("period_start"),
             "period_end": inv.get("period_end"), "status": inv.get("status")}
 
@@ -222,7 +229,7 @@ def waive_invoice(inv: dict, client: dict, stripe=None) -> str:
     customer = inv.get("stripe_customer_id") or client.get("stripe_customer_id")
     call(f"customers/{customer}/balance_transactions",
          {"amount": int(round(-amount * 100)), "currency": inv.get("currency") or "usd",
-          "description": f"Month not covered by the ledger — invoice {inv.get('number') or sid}"},
+          "description": f"Month not covered by the Profit Record — invoice {inv.get('number') or sid}"},
          idempotency_key=f"gate-{sid}")
     return "credited"
 
@@ -230,10 +237,10 @@ def waive_invoice(inv: dict, client: dict, stripe=None) -> str:
 def waived_email_blocks(v: dict, how: str, portal_url: str) -> list[dict]:
     when = f" for {str(v['period_start'])[:10]} to {str(v['period_end'])[:10]}" if v.get("period_start") else ""
     return [
-        {"p": "We said our invoices would never run ahead of your ledger, and this month they did."},
+        {"p": "We said an invoice your Profit Record hasn't covered is void, and this month that is what happened."},
         {"ol": [
-            f"Measured on your Decision Ledger since the retainer began: ${v['measured']:,.0f}",
-            f"Found and not yet banked: ${v['identified']:,.0f}",
+            f"Proven on your Profit Record since day one: ${v['measured']:,.0f}",
+            f"Found and filed, not yet banked: ${v['identified']:,.0f}",
             f"Billed through this invoice{when}: ${v['fees_billed']:,.0f}",
         ]},
         {"p": ("So the invoice is void and there is nothing to pay for the month."
@@ -241,7 +248,7 @@ def waived_email_blocks(v: dict, how: str, portal_url: str) -> list[dict]:
                "That invoice had already settled, so the same amount is credited to your next one, "
                "which will show it as paid down to zero.")},
         {"button": "See the working", "url": portal_url},
-        {"p": "The work carries on. The ledger has to catch up with the bills before another invoice "
+        {"p": "The work carries on. Your Profit Record has to catch up with the bills before another invoice "
               "stands, and that is on us, not you."},
     ]
 
@@ -294,7 +301,7 @@ def invoice_recovery_share(client: dict, due: dict, stripe=None) -> dict:
     ACH, net seven days. Nothing recurring is created."""
     call = stripe or _stripe
     customer = ensure_customer(client, call)
-    label = (f"Reimbursement desk — {due['share'] * 100:.0f}% of ${due['recovered']:,.2f} Amazon paid on "
+    label = (f"Recovery Only — {due['share'] * 100:.0f}% of ${due['recovered']:,.2f} Amazon paid on "
              f"{due['n_claims']} claim(s) we filed, {due['period_start']} to {due['period_end']}")
     call("invoiceitems", {"customer": customer, "amount": int(round(due["amount"] * 100)),
                           "currency": "usd", "description": label})
@@ -325,10 +332,10 @@ def recovery_email_blocks(due: dict, invoice_url: str | None, portal_url: str) -
         {"p": f"Amazon paid ${due['recovered']:,.2f} on {due['n_claims']} claim(s) we filed between "
               f"{due['period_start']:%B %-d} and {due['period_end']:%B %-d, %Y}."},
         {"p": f"Our share is {due['share'] * 100:.0f}% of what landed: ${due['amount']:,.2f}. That is the whole "
-              f"invoice — there is no retainer on this plan, and a month in which nothing lands produces no "
+              f"invoice — there is no monthly fee on this plan, and a month in which nothing lands produces no "
               f"invoice at all. ACH, net seven days, no card on file."},
         *([{"button": "Open the invoice", "url": invoice_url}] if invoice_url else []),
-        {"button": "See each claim on your desk", "url": portal_url},
+        {"button": "See each claim in Hubricon", "url": portal_url},
         {"p": "Every claim says which report it came from and what Amazon's own record shows. If any of it "
               "looks wrong, reply and tell me."},
     ]

@@ -45,7 +45,7 @@ def test_welcome_email_leads_with_the_upload_page():
     html = render_html(spec)
     assert text.startswith("Hi Priya,")
     assert text.index(link) < text.index("Prefer to grant a seat")  # upload path first, seat second
-    assert "24 hours" in text and "month one runs at no charge" in text
+    assert "24 hours" in text and "month one is free" in text
     assert link in html and "<ol" in html and "Hubricon" in html
 
 
@@ -55,6 +55,20 @@ def test_all_kinds_render_and_greet_unknown_names():
         assert render_text(spec).startswith("Hi there,")
         assert spec["subject"]
     assert "https://x/portal" in render_text(email_spec("teardown_ready", "Sam", "l", "https://x/portal"))
+
+
+def test_the_teardown_email_opens_the_record_at_zero_before_anything_is_touched():
+    """Day 0 is the baseline. The client hears that the Record starts at $0
+    and that every later move is measured against today, so a number on it
+    later is never mistaken for one that was already there."""
+    spec = email_spec("teardown_ready", "Sam", "l", "https://x/portal")
+    paras = [b["p"] for b in spec["blocks"] if "p" in b]
+    baseline = ("Your Profit Record starts today at $0: the baseline is recorded before anything is "
+                "touched, so every later move is measured against it.")
+    assert baseline in paras
+    signin = next(p for p in paras if p.startswith("Sign in with this email address"))
+    assert paras.index(baseline) == paras.index(signin) + 1
+    assert baseline in render_text(spec)
 
 
 def test_name_split():

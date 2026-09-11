@@ -239,14 +239,14 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 {"button": "Open your welcome page", "url": welcome},
                 {"p": f"Fastest path, no {seat} required: {n} exports through your private upload page. "
                       "The models run the moment your last file lands, and your written Profit Teardown is in "
-                      "your desk within 24 hours."},
+                      "Hubricon within 24 hours."},
                 {"button": "Open your secure upload page", "url": link},
                 {"ol": exports},
                 *([{"p": note}] if note else []),
                 {"p": f"Prefer to grant a seat instead? {seat_hint(platform)} Want to talk it through first? "
                       f"Book 20 minutes: {CALENDLY_URL}"},
-                {"p": "The desk is $6,000 a month, flat, and month one runs at no charge. If we don't find you more than we cost, "
-      "walk away owing nothing — and after that, no invoice ever runs ahead of what your ledger proves."},
+                {"p": "Managed Profit is $6,000 a month, flat, and month one is free. If we don't find you more than we cost, "
+      "walk away owing nothing — and after that, any invoice your Profit Record hasn't covered is void."},
             ],
         }
     if kind == "files":
@@ -258,10 +258,10 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 {"button": "Open your private upload page", "url": link},
                 {"ol": exports},
                 *([{"p": note}] if note else []),
-                {"p": "The models run the moment your last file lands — your written Profit Teardown is in your "
-                      "desk within 24 hours."},
-                {"p": "The desk is $6,000 a month, flat, and month one runs at no charge. If we don't find you more than we cost, "
-      "walk away owing nothing — and after that, no invoice ever runs ahead of what your ledger proves."},
+                {"p": "The models run the moment your last file lands — your written Profit Teardown is in "
+                      "Hubricon within 24 hours."},
+                {"p": "Managed Profit is $6,000 a month, flat, and month one is free. If we don't find you more than we cost, "
+      "walk away owing nothing — and after that, any invoice your Profit Record hasn't covered is void."},
             ],
         }
     if kind == "nudge":
@@ -280,9 +280,11 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "subject": "Your Profit Teardown is ready",
             "greeting": greeting,
             "blocks": [
-                {"p": "The models have run on your files. Your written Profit Teardown, Issue No. 001, is in your desk:"},
-                {"button": "Open your desk", "url": portal},
+                {"p": "The models have run on your files. Your written Profit Teardown, Profit Brief No. 001, is in Hubricon:"},
+                {"button": "Open Hubricon", "url": portal},
                 {"p": "Sign in with this email address; the link arrives in seconds and works once."},
+                {"p": "Your Profit Record starts today at $0: the baseline is recorded before anything is "
+                      "touched, so every later move is measured against it."},
                 {"p": "Read it, then tell me where you disagree. If you want the plan walked through live, "
                       f"grab 20 minutes: {CALENDLY_URL}"},
             ],
@@ -298,15 +300,15 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "greeting": greeting,
             "blocks": [
                 {"p": "Two weeks in and your exports have not landed, which usually means one of two things: "
-                      "the fifteen minutes has not come free, or committing to a retainer with a stranger "
+                      "the fifteen minutes has not come free, or committing $6,000 a month to a stranger "
                       "does not sit right yet. Both are fair."},
-                {"p": f"So here is the smaller door. Skip the retainer. Grant the seat or send three exports "
+                {"p": f"So here is the smaller door. Skip Managed Profit for now. Grant the seat or send three exports "
                       f"(the reimbursement, returns and inventory ledger reports), and we file every "
                       f"reimbursement Amazon owes you. You pay {pct} of what actually lands in your account — "
                       f"nothing else, nothing up front, and nothing at all in a month where nothing lands."},
                 {"button": "Open your secure upload page", "url": link},
-                {"p": "Reply RECOVERY and I will set you up on that plan. The full desk stays open to you "
-                      "whenever the numbers make the case for it, and the ledger will say when they do."},
+                {"p": "Reply RECOVERY and I will set you up on that plan. Managed Profit stays open to you "
+                      "whenever the numbers make the case for it, and your Profit Record will say when they do."},
             ],
         }
     raise ValueError(f"unknown email kind {kind!r}")

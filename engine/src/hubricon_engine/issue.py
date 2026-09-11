@@ -151,10 +151,11 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     notified = False
     if send and email_configured() and client.get("contact_email"):
         closes = now + timedelta(hours=window_hours)
-        text, html = directive_email_body(client, chosen, closes, portal_url)
+        text, html = directive_email_body(client, chosen, closes, portal_url,
+                                          record_line=_record_line(db, client))
         notified = send_email(
             client["contact_email"],
-            f"{len(chosen)} decision{'s' if len(chosen) != 1 else ''} on your desk",
+            veto_subject(chosen, closes),
             text, html=html,
         )
     out["notified"] = notified
@@ -171,7 +172,35 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     return out
 
 
-EXECUTION_SLA_DAYS = 7      # welcome.html: "Week 1 — first fixes go live"
+def _record_line(db, client: dict) -> str | None:
+    """The Profit Record footer for the veto email. Never blocks the notice:
+    the window only opens for people who were told, so a footer failure must
+    not turn into a missed email."""
+    try:
+        from . import value
+        from .cli import _fetch_claims, _fetch_invoices   # lazy: cli imports the world
+        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+        return value.record_line(value.compute(client, directives, _fetch_claims(db, client["id"]),
+                                               _fetch_invoices(db, client["id"])))
+    except Exception:
+        return None
+
+
+def veto_subject(chosen: list[dict], closes) -> str:
+    """The subject is the picture of the fortnight: how many moves, when they go
+    live, and what they are expected to earn. Explicit-mandate moves never go
+    live on their own, so a batch of only those says what it waits for."""
+    n = len(chosen)
+    noun = f"{n} move{'s' if n != 1 else ''}"
+    total = sum(float(d.get("expected_impact_usd") or 0) for d in chosen)
+    money = f" — ${total:,.0f} expected" if total > 0 else ""
+    if all(d.get("mandate") != "standing" for d in chosen):
+        return f"{noun} waiting for your yes{money}"
+    when = closes.strftime("%A") if hasattr(closes, "strftime") else str(closes)
+    return f"{noun} in your account go live {when} unless you say no{money}"
+
+
+EXECUTION_SLA_DAYS = 7      # welcome.html: "Weeks 1–2 — first moves go live"; terms §3: inside fourteen days. We hold ourselves to seven.
 
 
 def overdue_executions(db, client: dict, channel: str, today=None) -> list[dict]:

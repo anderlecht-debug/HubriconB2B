@@ -68,7 +68,8 @@ def letter(first_name: str | None, blocks: list[dict]) -> tuple[str, str]:
 
 
 def alert_email_body(company: str, alerts: list[dict], first_name: str | None = None,
-                     portal_url: str = "https://www.hubricon.com/portal") -> tuple[str, str]:
+                     portal_url: str = "https://www.hubricon.com/portal",
+                     record_line: str | None = None) -> tuple[str, str]:
     """The weekly watch, as a letter rather than a log dump.
 
     Severity is said in words, not stamped as [CRITICAL], and the sign-off is a
@@ -81,13 +82,16 @@ def alert_email_body(company: str, alerts: list[dict], first_name: str | None = 
     blocks = [{"p": opener}, {"ol": [
         (("Urgent — " if a.get("severity") == "critical" else "") + a["message"]) for a in alerts
     ]}]
-    blocks.append({"p": "The full working is in your desk, with the numbers behind each one:"})
-    blocks.append({"button": "Open your desk", "url": portal_url})
+    blocks.append({"p": "The full working is in Hubricon, with the numbers behind each one:"})
+    blocks.append({"button": "Open Hubricon", "url": portal_url})
     blocks.append({"p": "Reply to this email if any of it looks wrong — it comes straight to me."})
+    if record_line:
+        blocks.append({"p": record_line})
     return letter(first_name, blocks)
 
 
-def directive_email_body(client: dict, directives: list[dict], closes_at, portal_url: str) -> tuple[str, str]:
+def directive_email_body(client: dict, directives: list[dict], closes_at, portal_url: str,
+                         record_line: str | None = None) -> tuple[str, str]:
     """The notice terms.html §6 promises: every planned correction, with its
     expected dollars, BEFORE it goes live, and how to stop it.
 
@@ -109,11 +113,15 @@ def directive_email_body(client: dict, directives: list[dict], closes_at, portal
         blocks.append({"p": f"Inside your standing mandate — we go ahead after {when} unless you say no:"})
         blocks.append({"ol": [line(d) for d in standing]})
     if explicit:
-        blocks.append({"p": "Outside your mandate — these wait for your explicit yes, however long that takes:"})
+        blocks.append({"p": "Outside your mandate — these wait for your explicit yes; after three weeks "
+                            "without an answer they lapse and nothing happens:"})
         blocks.append({"ol": [line(d) for d in explicit]})
-    blocks.append({"p": "Approve or decline any of them in your desk, or just reply to this email "
-                        "and say which ones you don't want:"})
-    blocks.append({"button": "Open your desk", "url": portal_url})
-    blocks.append({"p": "Every one of these lands on your Decision Ledger afterwards with what it "
+    blocks.append({"p": "Approve or decline any of them in Hubricon, or just reply to this email "
+                        "and say which ones you don't want. If this email had not reached you, "
+                        "nothing would move."})
+    blocks.append({"button": "Open Hubricon", "url": portal_url})
+    blocks.append({"p": "Every one of these lands on your Profit Record afterwards with what it "
                         "actually earned — including the ones that come in under."})
+    if record_line:
+        blocks.append({"p": record_line})
     return letter(client.get("contact_name"), blocks)

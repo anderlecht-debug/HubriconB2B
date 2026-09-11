@@ -15,7 +15,12 @@ if (!key) {
 }
 const stripe = new Stripe(key);
 
-const PRODUCT_NAME = "Hubricon Quantitative CFO Protocol";
+const PRODUCT_NAME = "Hubricon Managed Profit";
+// The product was created under this name before the 2026-09-10 repositioning.
+// It is found by either name and renamed in place, never duplicated: the live
+// STRIPE_PRICE_ID hangs off it.
+const LEGACY_PRODUCT_NAME = "Hubricon Quantitative CFO Protocol";
+const PRODUCT_DESCRIPTION = "$6,000 a month, flat — proven or void: an invoice the client's Profit Record has not covered is void.";
 const MONTHLY_USD_CENTS = 600000; // $6,000.00 / month
 // www, never the apex: hubricon.com 308-redirects and Stripe treats
 // redirected webhook deliveries as failures.
@@ -26,12 +31,14 @@ const WEBHOOK_EVENTS = [
   "customer.subscription.deleted",
 ];
 
-let product = (await stripe.products.list({ active: true, limit: 100 })).data.find(
-  (p) => p.name === PRODUCT_NAME
-);
+const products = (await stripe.products.list({ active: true, limit: 100 })).data;
+let product = products.find((p) => p.name === PRODUCT_NAME) || products.find((p) => p.name === LEGACY_PRODUCT_NAME);
 if (!product) {
-  product = await stripe.products.create({ name: PRODUCT_NAME });
+  product = await stripe.products.create({ name: PRODUCT_NAME, description: PRODUCT_DESCRIPTION });
   console.log("Created product:", product.id);
+} else if (product.name !== PRODUCT_NAME || product.description !== PRODUCT_DESCRIPTION) {
+  product = await stripe.products.update(product.id, { name: PRODUCT_NAME, description: PRODUCT_DESCRIPTION });
+  console.log("Renamed product in place:", product.id);
 } else {
   console.log("Product already exists:", product.id);
 }
@@ -45,7 +52,7 @@ if (!price) {
     unit_amount: MONTHLY_USD_CENTS,
     currency: "usd",
     recurring: { interval: "month" },
-    nickname: "Monthly retainer",
+    nickname: "Managed Profit — monthly",
   });
   console.log("Created price:", price.id);
 } else {

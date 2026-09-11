@@ -32,7 +32,10 @@ def test_free_month_then_fees_and_roi_multiple():
     assert out["fees_basis"] == "assumed"
     assert out["value_total"] == 35000 and out["recovered"] == 5000
     assert out["roi_multiple"] == round(35000 / 18000, 2) and out["status"] == "at_risk"
-    assert out["identified_unbanked"] == 5200
+    # The printed rule is "what we proved, plus what we found and filed": the
+    # $4,000 move is only issued (not made) and the $1,200 claim is detected,
+    # not filed, so neither is found money yet.
+    assert out["identified_unbanked"] == 0
 
 
 def test_uninvoiced_client_is_in_their_free_month_not_at_risk():
@@ -106,3 +109,74 @@ def test_status_thresholds():
     new = value.compute({"retainer_started_at": "2026-08-20", "monthly_fee_usd": 6000}, [], [],
                         today=date(2026, 9, 1))
     assert new["status"] == "free_month" and new["roi_multiple"] is None
+
+
+def test_found_is_moves_made_and_claims_filed_at_expected_dollars_only():
+    """index.html: 'what we proved, plus what we found and filed'. Found = a move
+    actually made (executed_at set, or status done) at its expected dollars and
+    not yet measured, plus a claim actually filed and not yet paid. Issued,
+    approved, detected and expired rows are not found money and cannot cover
+    an invoice."""
+    client = {"retainer_started_at": "2026-05-01", "monthly_fee_usd": 6000}
+    directives = [
+        {"status": "approved", "executed_at": "2026-08-20T10:00:00Z",
+         "measured_impact_usd": None, "expected_impact_usd": 700},          # made, unmeasured: counts
+        {"status": "done", "measured_impact_usd": None, "expected_impact_usd": 300},   # done: counts
+        {"status": "done", "executed_at": "2026-08-01", "measured_impact_usd": 900,
+         "expected_impact_usd": 1000},                                      # measured: proven, not found
+        {"status": "issued", "measured_impact_usd": None, "expected_impact_usd": 4000},    # not made
+        {"status": "approved", "measured_impact_usd": None, "expected_impact_usd": 2500},  # not made
+        {"status": "done", "measured_impact_usd": None, "expected_impact_usd": None},      # no number
+    ]
+    claims = [
+        {"status": "filed", "expected_value": 1200, "filed_at": "2026-08-10",
+         "eligible_from": "2026-06-01", "deadline": "2026-12-01"},          # filed: counts
+        {"status": "detected", "expected_value": 800,
+         "eligible_from": "2026-06-01", "deadline": "2026-12-01"},          # open, unfiled: no
+        {"status": "expired", "expected_value": 650, "filed_at": "2026-02-10",
+         "eligible_from": "2026-01-01", "deadline": "2026-08-01"},          # expired: no
+        {"status": "denied", "expected_value": 400, "filed_at": "2026-07-01"},            # denied: no
+    ]
+    out = value.compute(client, directives, claims, today=date(2026, 9, 1))
+    assert value.IDENTIFIED_CLAIM_STATES == ("filed",)
+    assert out["identified_parts"] == {"directives": 1000.0, "claims": 1200.0}
+    assert out["identified_unbanked"] == 2200
+    assert out["measured"] == 900 and out["value_total"] == 900     # found is shown, never added
+    assert "found = moves made and claims filed" in out["basis"]
+    # LIVE_CLAIM_STATES is untouched: the portal still shows detected claims in flight.
+    assert "open" in value.LIVE_CLAIM_STATES and "filed" in value.LIVE_CLAIM_STATES
+
+
+def test_a_move_closed_as_unmeasurable_is_not_found_money():
+    """The sweep closes a move it could not measure with measured_at set and
+    no dollars. That move has been measured and found nothing: it is neither
+    proven nor found, and its expected dollars can never cover an invoice."""
+    client = {"retainer_started_at": "2026-05-01", "monthly_fee_usd": 6000}
+    closed = {"status": "closed", "executed_at": "2026-08-20T10:00:00Z", "measured_at": "2026-09-01T00:00:00Z",
+              "measured_impact_usd": None, "expected_impact_usd": 4000}
+    out = value.compute(client, [closed], [], today=date(2026, 9, 1))
+    assert out["identified_unbanked"] == 0 and out["measured"] == 0 and out["value_total"] == 0
+    # A lapsed move never happened; measured_at alone is also enough to retire the promise.
+    lapsed = {"status": "lapsed", "executed_at": "2026-08-20T10:00:00Z",
+              "measured_impact_usd": None, "expected_impact_usd": 4000}
+    dated = {"status": "approved", "executed_at": "2026-08-20T10:00:00Z", "measured_at": "2026-09-01T00:00:00Z",
+             "measured_impact_usd": None, "expected_impact_usd": 4000}
+    assert value.compute(client, [lapsed, dated], [], today=date(2026, 9, 1))["identified_unbanked"] == 0
+    # ...while the same move, made and simply not yet measured, still counts.
+    open_move = {"status": "approved", "executed_at": "2026-08-20T10:00:00Z",
+                 "measured_impact_usd": None, "expected_impact_usd": 4000}
+    assert value.compute(client, [open_move], [], today=date(2026, 9, 1))["identified_unbanked"] == 4000
+
+
+def test_record_line_is_the_portal_strip_in_one_sentence():
+    line = value.record_line({"value_total": 5415.4, "identified_unbanked": 2400, "fees_billed": 0})
+    assert line == ("Your Profit Record: $5,415 proven since day one · $2,400 found and filed, "
+                    "not yet banked · $0 billed to date.")
+    assert "×" not in line                      # nothing billed: no multiple to state
+    assert value.record_line({}) == ("Your Profit Record: $0 proven since day one · $0 found and filed, "
+                                     "not yet banked · $0 billed to date.")
+    # Once something is billed the fourth number is the strip's multiple, proven over billed.
+    billed = value.record_line({"value_total": 13870, "identified_unbanked": 2400, "fees_billed": 6000})
+    assert billed.endswith("· 2.3× proven ÷ billed.")
+    assert billed == ("Your Profit Record: $13,870 proven since day one · $2,400 found and filed, "
+                      "not yet banked · $6,000 billed to date · 2.3× proven ÷ billed.")

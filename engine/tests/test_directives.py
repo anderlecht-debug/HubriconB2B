@@ -66,6 +66,9 @@ def test_pricing_directive_is_exact_with_destination_and_range():
     inelastic = next(t for t in texts if "INELASTIC" in t)
     assert "$100.00 → $103.00" in inelastic           # +3% bounded step, computed dollars
     assert not any("FLAT" in t for t in texts)
+    # No job watches the Buy Box daily; the measurement pass reads it while the step runs.
+    for t in (exact, inelastic):
+        assert "Buy Box watched while the step is live." in t and "watched daily" not in t
 
 
 def test_inelastic_with_cogs_carries_computed_dollars():
@@ -80,6 +83,8 @@ def test_branded_spend_detector_and_directive():
     d = next(x for x in drafts if "your own brand" in x["action_text"])
     assert "$125" in d["action_text"] and "25–60%" in d["action_text"]
     assert d["expected_impact_usd"] == 50.0           # 0.4 midpoint
+    assert d["action_text"].endswith("and the Profit Record measures the truth.")   # the name in force
+    assert "Ledger" not in d["action_text"]
     # no brand terms -> no directive
     assert not any("your own brand" in x["action_text"] for x in _draft())
 

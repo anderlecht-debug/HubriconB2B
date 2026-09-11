@@ -16,7 +16,7 @@ def test_campaign_spec_is_one_plain_text_email_with_compliance_footer():
     assert steps[0]["variants"][0]["subject"]
     # the offer, the honest reason it's free, the price of the seat, the risk reversal — all on the site
     for claim in ("$6,000", "month one", "no charge", "testimonial", "anonymized", "nothing owed", "24 hours",
-                  "three-minute brief", "No card", "new"):
+                  "short video", "No card", "new"):
         assert claim.lower() in body.lower(), claim
     prose = body.replace(outbound.CALENDLY_URL, "")  # the booking slug is legacy, the prose is not
     assert "audit" not in prose.lower()  # banned client-facing word
@@ -91,10 +91,10 @@ def test_the_free_month_is_offered_the_way_the_site_offers_it():
     not create a subscription below it. The cold mail says the same thing.
     """
     body = campaign_spec(["a@x.com"], "addr")["sequences"][0]["steps"][0]["variants"][0]["body"].lower()
-    assert "$6,000 a month" in body and "month one at no charge" in body
-    assert body.index("$6,000 a month") < body.index("month one at no charge")  # the price leads; the free month is a feature of it
+    assert "$6,000 a month" in body and "month one free" in body
+    assert body.index("$6,000 a month") < body.index("month one free")  # the price leads; the free month is a feature of it
     # The catch is named, and it sits on the invoice rather than on the month.
-    after = body[body.index("month one at no charge"):]
+    after = body[body.index("month one free"):]
     assert "is void" in after
     # Never the older, bigger promise of a free month gated on nothing at all.
     assert "if i find enough" not in body

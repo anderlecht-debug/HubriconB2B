@@ -62,3 +62,19 @@ jobs:
           if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi
           if [ -n "${{ inputs.client }}" ]; then flags="$flags --client '${{ inputs.client }}'"; fi
           eval uv run hubricon issue $flags
+      # index.html, welcome.html and terms.html §6 promise Buy Box share (or
+      # Shopify conversion) is read DAILY through a price step. `hubricon watch`
+      # has always been able to check it; nothing ever ran it, so a missed day
+      # was silent. Now a missed reading escalates to the founder the same day,
+      # which is what makes the word "daily" true. Never fails the run: a
+      # missing reading is a promise to keep, not a broken build.
+      - name: The daily Buy Box reading on live price tests
+        if: always()
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ secrets.ALERT_FROM }}
+          FOUNDER_EMAIL: ${{ secrets.FOUNDER_EMAIL }}
+        run: uv run hubricon watch --alert || echo "::warning::the Buy Box watch did not run"

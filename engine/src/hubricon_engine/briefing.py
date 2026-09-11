@@ -70,20 +70,21 @@ def top_story(directives: list[dict], alerts: list[dict], elasticity: list[dict]
         return (f"The finding worth teaching this month: {e['item_id']} is price-insensitive "
                 f"(ε = {float(e['elasticity']):.2f}) — a careful increase converts almost "
                 f"directly into margin, and we can test it safely.")
-    return "This month is a clean bill of health — walk the numbers and bank the ledger."
+    return "This month is a clean bill of health — walk the numbers and bank the Record."
 
 
 def build_memo(company: str, first_name: str, deltas: dict | None,
                directives: list[dict], alerts: list[dict], elasticity: list[dict],
                ledger_measured: float, ledger_count: int, issue_number: int,
-               channel: str | None = "amazon") -> str:
+               channel: str | None = "amazon", ledger_found: float = 0.0,
+               fees_billed: float = 0.0) -> str:
     """The written letter — the Marks-memo tradition. Same facts as the
     narration script, formatted as prose the founder edits, not reads.
     `channel` only names the platform's fee stack (channels.fee_label)."""
     name = first_name or "there"
     issued = [d for d in directives if d.get("status") == "issued"]
 
-    paragraphs = [f"Issue No. {issue_number:03d}", "", f"Dear {name},", ""]
+    paragraphs = [f"Profit Brief No. {issue_number:03d}", "", f"Dear {name},", ""]
 
     if deltas and deltas["net_delta"] is not None:
         d = deltas
@@ -108,7 +109,7 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
     if issued:
         paragraphs.append(
             f"There {'is one decision' if len(issued) == 1 else f'are {len(issued)} decisions'} "
-            f"on your desk below — each states the exact action, the expected dollars, and how "
+            f"waiting for your yes below — each states the exact move, the expected dollars, and how "
             f"we'll measure it. Approve or decline; nothing moves without you."
         )
     else:
@@ -116,8 +117,9 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
 
     paragraphs += [
         "",
-        f"The record to date: {_money(ledger_measured)} of measured impact across "
-        f"{ledger_count} directives. Every claim we make ends up on that ledger, "
+        f"Your Profit Record to date: {_money(ledger_measured)} proven across "
+        f"{ledger_count} moves · {_money(ledger_found)} found and filed, not yet banked · "
+        f"{_money(fees_billed)} billed. Every claim we make ends up on that Record, "
         f"in our favor or against us.",
         "",
         "— Hubricon",
@@ -127,7 +129,8 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
 
 def build_beats(company: str, first_name: str, deltas: dict | None,
                 directives: list[dict], alerts: list[dict], elasticity: list[dict],
-                ledger_measured: float, ledger_count: int) -> list[dict]:
+                ledger_measured: float, ledger_count: int, ledger_found: float = 0.0,
+                fees_billed: float = 0.0) -> list[dict]:
     """The briefing as an ordered list of beats.
 
     One structure, two renderers: `build_script` prints it as recording notes
@@ -139,7 +142,11 @@ def build_beats(company: str, first_name: str, deltas: dict | None,
     `speech` is what gets said aloud, so it carries no markdown, no stage
     directions and no bracketed asides."""
     name = first_name or company or "there"
-    issued = [d for d in directives if d.get("status") in ("issued", "approved")]
+    # Waiting for a decision means issued, exactly as the letter counts it
+    # (build_memo). An approved move is past deciding: it is inside the standing
+    # yes with the window closed, and is named as going live, not as waiting.
+    issued = [d for d in directives if d.get("status") == "issued"]
+    approved = [d for d in directives if d.get("status") == "approved" and not d.get("executed_at")]
 
     if deltas and deltas["net_delta"] is not None:
         hook = (f"{name} — your net profit is {_signed(deltas['net_delta'])} versus the "
@@ -167,9 +174,12 @@ def build_beats(company: str, first_name: str, deltas: dict | None,
                       + f", on {_money(d['latest']['revenue'])} of revenue")
         if d["latest"]["pct"] is not None:
             spoken.append(f"that is a blended net margin of {d['latest']['pct']:.1%}")
-    numbers.append(("Measured on the Ledger", f"{_money(ledger_measured)} across {ledger_count}"))
-    spoken.append(f"and the Ledger stands at {_money(ledger_measured)} of measured impact across "
-                  f"{ledger_count} directive{'s' if ledger_count != 1 else ''}")
+    numbers.append(("Proven on your Profit Record", f"{_money(ledger_measured)} across {ledger_count}"))
+    numbers.append(("Found and filed, not yet banked", _money(ledger_found)))
+    numbers.append(("Billed to date", _money(fees_billed)))
+    spoken.append(f"and your Profit Record stands at {_money(ledger_measured)} proven across "
+                  f"{ledger_count} move{'s' if ledger_count != 1 else ''}, {_money(ledger_found)} found "
+                  f"and filed but not yet banked, against {_money(fees_billed)} billed")
     beats.append({"heading": "The three numbers", "at": "0:20–1:30",
                   "speech": ("Three numbers. " + ", ".join(spoken) + ".") if spoken else
                             "Your baseline numbers are on screen.",
@@ -190,10 +200,15 @@ def build_beats(company: str, first_name: str, deltas: dict | None,
         actions = []
         speech = ("Nothing needs your decision this period. The watch continues either way, and I'll "
                   "come to you the moment something does.")
-    beats.append({"heading": "On your desk", "at": "3:30–5:00", "speech": speech, "points": actions})
+    if approved:
+        actions.append(("GOING LIVE", f"{len(approved)} move(s) inside your standing yes, window closed — "
+                                      f"going live this week"))
+    beats.append({"heading": "Before it goes live", "at": "3:30–5:00", "speech": speech, "points": actions})
 
     beats.append({"heading": "The record", "at": "last 20s",
-                  "speech": (f"The Ledger to date: {_money(ledger_measured)} of measured impact, in our "
+                  "speech": (f"Your Profit Record to date: {_money(ledger_measured)} proven across "
+                             f"{ledger_count} move{'s' if ledger_count != 1 else ''}, {_money(ledger_found)} "
+                             f"found and filed, not yet banked, {_money(fees_billed)} billed — in our "
                              f"favour and against us. That's the whole story this period."),
                   "points": []})
     return beats
