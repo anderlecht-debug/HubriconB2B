@@ -5,6 +5,16 @@ coefficient is the elasticity. Guardrails run before any fitting — too few
 periods or too little price movement is reported as a status, never as a
 number that looks like a finding.
 
+Standard errors are HC3 heteroskedasticity-consistent, not classical. Log-log
+demand residuals are not constant-variance across a SKU's price range — a SKU
+sells in different volumes at the top and bottom of its range and the noise
+scales with it — so the classical σ²(X'X)⁻¹ misstates the interval in a
+direction that depends on where the price moved. HC3 (MacKinnon & White 1985)
+divides each squared residual by (1 − hᵢ)², the small-sample correction, which
+is the whole point at n = 5 where a single high-leverage period otherwise
+dominates the fit silently. The point estimate is untouched: only the
+covariance changes.
+
 The interval is a Student-t interval, not a normal one. At MIN_PERIODS = 5
 with an intercept and a price term the residual degrees of freedom are 3, and
 the two-sided 97.5% quantile of t(3) is 3.182 — not 1.96. Using the normal
@@ -20,6 +30,11 @@ from scipy import stats
 from .common import num
 
 CI_LEVEL = 0.95
+# HC3 divides each squared residual by (1 − hᵢ)². A period whose leverage is
+# 1 is fitted exactly and carries no residual information; below this floor on
+# (1 − hᵢ) the correction is a division by numerical noise, so the fit falls
+# back to the classical covariance and says which it used.
+MIN_LEVERAGE_SLACK = 1e-6
 
 MIN_PERIODS = 5
 MIN_PRICE_CV = 0.02
@@ -27,6 +42,24 @@ MIN_PRICE_CV = 0.02
 # price effect and returns a confidently wrong near-zero elasticity — drop
 # the control in that case and say so.
 CONTROL_COLLINEARITY_LIMIT = 0.98
+
+
+def _hc3(X: np.ndarray, residuals: np.ndarray, xtx_inv: np.ndarray,
+         classical: np.ndarray) -> tuple[np.ndarray, str]:
+    """HC3 sandwich covariance, or the classical one where HC3 degenerates.
+
+    V_HC3 = (X'X)⁻¹ X' diag(eᵢ² / (1 − hᵢ)²) X (X'X)⁻¹ with hᵢ the i-th
+    diagonal of the hat matrix. Returns (covariance, estimator name) so the
+    payload never has to guess which one produced the interval it carries."""
+    hat = np.einsum("ij,jk,ik->i", X, xtx_inv, X)
+    slack = 1.0 - hat
+    if not np.all(np.isfinite(slack)) or np.min(slack) <= MIN_LEVERAGE_SLACK:
+        return classical, "classical_hc3_degenerate"
+    omega = (residuals / slack) ** 2
+    hc3 = xtx_inv @ (X.T * omega) @ X @ xtx_inv
+    if not np.all(np.isfinite(hc3)) or hc3[1, 1] < 0:
+        return classical, "classical_hc3_degenerate"
+    return hc3, "HC3"
 
 
 def _fit(points: list[dict]) -> dict:
@@ -64,12 +97,16 @@ def _fit(points: list[dict]) -> dict:
     residuals = y - X @ beta
     dof = n - X.shape[1]
     sigma2 = float(residuals @ residuals) / dof if dof > 0 else 0.0
-    covariance = sigma2 * np.linalg.inv(X.T @ X)
+    xtx_inv = np.linalg.inv(X.T @ X)
+    classical = sigma2 * xtx_inv
+    covariance, se_estimator = _hc3(X, residuals, xtx_inv, classical)
     ss_total = float(np.sum((y - y.mean()) ** 2))
     r_squared = 1 - float(residuals @ residuals) / ss_total if ss_total > 0 else 0.0
 
     e = float(beta[1])
     se = float(np.sqrt(covariance[1, 1]))
+    base["details"]["se_estimator"] = se_estimator
+    base["details"]["std_err_classical"] = num(float(np.sqrt(classical[1, 1])), 4)
     # dof = 3 on a five-period SKU with a price term and an intercept. The
     # t quantile there is 3.18; the normal's 1.96 would understate the
     # interval by 38%.
