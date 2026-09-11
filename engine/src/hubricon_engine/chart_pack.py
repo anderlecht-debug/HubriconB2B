@@ -135,7 +135,14 @@ def profit_curves(margins: list[dict], fits: list[dict]) -> list[dict]:
             "p_new": num(move["p_new"]),
             "p_star": num(move["destination"]) if move.get("destination") else None,
             "expected_delta": num(move["expected_delta"]),
-            "delta_range": [num(v) for v in move["delta_range"]] if move.get("delta_range") else None,
+            # P5 / P95 of the simulated distribution, plus how often it goes
+            # the wrong way — the band the page draws is the band the
+            # directive promised
+            "delta_range": ([num(v) for v in move["delta_range"]]
+                            if move.get("delta_range") and move["delta_range"][0] is not None
+                            else None),
+            "p_loss": move.get("p_loss"),
+            "mc_se": move.get("mc_se"),
             "curve": curve,
         })
     return out

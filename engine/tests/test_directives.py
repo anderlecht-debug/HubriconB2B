@@ -62,7 +62,12 @@ def test_pricing_directive_is_exact_with_destination_and_range():
     exact = next(t for t in texts if "RISKY" in t)
     assert "$20.00 → $19.00" in exact                 # -5% cap toward the $11.76 optimum
     assert "optimum $11.76" in exact
-    assert "95% range" in exact
+    # The range is a 90% band (P5 to P95) out of the parametric bootstrap over
+    # every uncertain input, and it is named as such — "95% range" was wrong at
+    # both ends: wrong level, and built from two elasticity endpoints rather
+    # than from uncertainty in the elasticity, the baseline volume and the fees.
+    assert "90% range" in exact
+    assert "chance it goes the other way" in exact
     inelastic = next(t for t in texts if "INELASTIC" in t)
     assert "$100.00 → $103.00" in inelastic           # +3% bounded step, computed dollars
     assert not any("FLAT" in t for t in texts)

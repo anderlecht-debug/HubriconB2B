@@ -20,7 +20,7 @@ from datetime import date, timedelta
 from . import channels
 from .models import fee_schedule
 from .models.margin import average_margin
-from .models.pricing_engine import INELASTIC_STEP, STEP_CAP, price_move
+from .models.pricing_engine import INELASTIC_STEP, STEP_CAP, fee_terms, price_move
 
 # What the standing mandate covers, read off terms.html §6 — "price steps of
 # up to five percent per SKU per two-week cycle" and advertising corrections —
@@ -177,8 +177,26 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
     )
 
 
-def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
-    move = price_move(margin_row, fit)
+def _fee_history(sku: str, margins: list[dict]) -> list[tuple[float, float]]:
+    """Every period's (proportional rate, fixed per-unit fee) for one SKU.
+
+    Its dispersion is what the profit-delta simulation draws the fee structure
+    from: a SKU whose FBA fee moved $0.40 between periods has more uncertainty
+    in its promise than one whose fees have not moved, and the published range
+    should show it."""
+    out = []
+    for m in margins or []:
+        if m.get("sku") != sku:
+            continue
+        if float(m.get("units") or 0) <= 0 or float(m.get("revenue") or 0) <= 0:
+            continue
+        f, big_f, _ = fee_terms(m)
+        out.append((f, big_f))
+    return out
+
+
+def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None = None) -> dict | None:
+    move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []))
     sku = fit["item_id"]
     if move and move.get("status") == "near_unit_elastic":
         return _near_unit_elastic_directive(move, fit, margin_row, sku)
@@ -186,10 +204,20 @@ def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
         step = move["p_new"] - move["p0"]
         dest = f"; optimum ${move['destination']:.2f}" if move["destination"] else ""
         rng = ""
-        if move["delta_range"]:
+        if move["delta_range"] and move["delta_range"][0] is not None:
             lo, hi = move["delta_range"]
-            rng = (f" (95% range {'+' if lo >= 0 else '−'}{_money(lo)} to "
-                   f"{'+' if hi >= 0 else '−'}{_money(hi)})")
+            # P5 to P95 is a 90% band. Calling it a 95% range was wrong twice
+            # over — wrong level, and built from two elasticity endpoints
+            # rather than from the uncertainty in everything.
+            rng = (f" (90% range {'+' if lo >= 0 else '−'}{_money(lo)} to "
+                   f"{'+' if hi >= 0 else '−'}{_money(hi)}")
+            if move.get("p_loss") is not None:
+                loss = float(move["p_loss"])
+                # 0 out of 6,000 draws is not proof of impossibility, so the
+                # floor is "under 1%" and never "0%"
+                rng += ("; under a 1% chance it goes the other way" if loss < 0.01
+                        else f"; a {loss:.0%} chance it goes the other way")
+            rng += ")"
         sign = "+" if move["expected_delta"] >= 0 else "−"
         # A step inside the cap is what the client already authorised; anything
         # larger is a different promise and needs its own yes.
@@ -218,6 +246,9 @@ def _pricing_directive(fit: dict, margin_row: dict) -> dict | None:
                 # pass rebuilds the counterfactual with the SAME numbers that
                 # made the promise instead of a later, different fit.
                 "elasticity": float(fit["elasticity"]),
+                "elasticity_raw": (fit.get("details") or {}).get("epsilon_raw"),
+                "shrinkage_weight": (fit.get("details") or {}).get("shrinkage_weight"),
+                "std_err": fit.get("std_err"),
                 "ci95": (fit.get("details") or {}).get("ci95"),
                 "baseline_units": float(margin_row.get("units") or 0),
                 "baseline_revenue": float(margin_row.get("revenue") or 0),
@@ -653,7 +684,7 @@ def draft_directives(inventory, ads, elasticity, margins,
         margin_row = latest_by_sku.get(fit["item_id"])
         if not margin_row:
             continue
-        d = _pricing_directive(fit, margin_row)
+        d = _pricing_directive(fit, margin_row, margins)
         if d:
             drafts.append(d)
 

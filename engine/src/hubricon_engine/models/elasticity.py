@@ -126,6 +126,12 @@ def _fit(points: list[dict]) -> dict:
     se = float(np.sqrt(covariance[1, 1]))
     base["details"]["se_estimator"] = se_estimator
     base["details"]["std_err_classical"] = num(float(np.sqrt(classical[1, 1])), 4)
+    # The residual scale of log demand: how far a period's units land from the
+    # fitted curve, in log points. This is the SKU's own period-to-period
+    # demand variability, and it is what the profit-delta simulation draws q0
+    # from — the baseline volume a promise is priced against is not known
+    # exactly either.
+    base["details"]["residual_sd_log"] = num(float(np.sqrt(sigma2)), 6)
     # dof = 3 on a five-period SKU with a price term and an intercept. The
     # t quantile there is 3.18; the normal's 1.96 would understate the
     # interval by 38%.
