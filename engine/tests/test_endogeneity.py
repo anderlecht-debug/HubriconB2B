@@ -41,7 +41,8 @@ The endogeneity is the INCREMENT on top: +0.44 at the reaction strength that
 hurts most. Both run the same way — toward zero, toward "raise the price, demand
 barely cares" — which is the dangerous direction, because it is the direction
 that makes the engine recommend increases. A SKU whose true elasticity is −2.0
-can read −1.6, and at −1.6 the model puts the optimum 17% higher than at −2.0.
+can read −1.6, and at −1.6 the model puts the optimum 33% higher than at −2.0 —
+exactly 4/3, independent of cost and fees.
 
 The engine does not correct this, and cannot with the data it has: correcting it
 needs an instrument, something that moves price without moving demand. What it
@@ -158,13 +159,20 @@ def test_the_bias_direction_is_stable_across_reaction_strengths():
 
 def test_the_bias_is_large_enough_to_move_a_recommendation():
     """Why it matters in dollars: a 0.4 bias toward zero moves the quoted optimum
-    by about a sixth. That is not a rounding difference, it is the difference
-    between a cut and a rise."""
+    by a THIRD, not by a sixth. That is not a rounding difference, it is the
+    difference between a cut and a rise.
+
+    The ratio is [ε₁/(1+ε₁)] / [ε₂/(1+ε₂)] = (1.6/0.6)/(2.0/1.0) = 4/3 exactly,
+    and the cost and fee terms cancel — so this is pinned tightly at several
+    economics rather than loosely at one. The previous version of this test
+    asserted only `> 1.15`, which is why the docs said 17% for a day."""
     from hubricon_engine.models.pricing_engine import optimal_price
 
-    true_optimum = optimal_price(-2.0, 5.0, FEE_RATE, FIXED_FEE)
-    biased_optimum = optimal_price(-1.6, 5.0, FEE_RATE, FIXED_FEE)
-    assert biased_optimum > true_optimum * 1.15
+    for cost, fee, fixed in ((5.0, FEE_RATE, FIXED_FEE), (5.0, 0.0, 0.0),
+                             (8.0, 0.08, 3.3), (1.0, 0.30, 0.5)):
+        ratio = (optimal_price(-1.6, cost, fee, fixed)
+                 / optimal_price(-2.0, cost, fee, fixed))
+        assert ratio == pytest.approx(4 / 3, rel=1e-9), (cost, fee, fixed, ratio)
 
 
 def test_the_pole_guard_catches_the_most_biased_skus():
@@ -205,6 +213,10 @@ def test_a_seller_facing_sentence_exists_for_this():
     assert "what this engine cannot tell you" in lower
     assert "in response to how demand was running" in lower
     assert "the single most dangerous assumption" in lower
+    # the withdrawal is on the record in the methods document too, with both
+    # reasons, rather than the claim being quietly deleted
+    assert "corrected 2026-09-12" in lower
+    assert "not an instrument" in lower
     # the measured size of the bias, so the doc and the simulation cannot drift
     assert "+0.59" in text or "+0.44" in text
 
@@ -215,4 +227,19 @@ def test_a_seller_facing_sentence_exists_for_this():
                        / "report" / "templates" / "report.html.j2").read_text().split())
     assert "What this number is, and what it is not" in report
     assert "in response to how demand was running" in report
-    assert "correcting it needs a price change made for a reason unrelated to demand" in report
+    assert "It is not corrected." in report
+    # the measured consequence, in the client's units
+    assert "a third too high" in report
+    # the bound, which is what the client can actually act on
+    assert "ceiling on the best price rather than a target" in report
+
+    # AND the false claim stays gone. Until 2026-09-12 this report told every
+    # client "correcting it needs a price change made for a reason unrelated to
+    # demand. Every step on this report is exactly that." The second sentence was
+    # false: the steps are chosen by the same fit, so they are not exogenous to
+    # demand, and a 14-day step blends below MIN_PRICE_CV so the estimator cannot
+    # even see them. A test that pinned the claim is what let it ship, so this
+    # one pins its absence.
+    for withdrawn in ("Every step on this report is exactly that",
+                      "become the clean history the next fit is built on"):
+        assert withdrawn not in report, withdrawn

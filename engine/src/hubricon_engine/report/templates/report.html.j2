@@ -176,10 +176,16 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   prices you set and the volumes that followed. Those prices were chosen by you, often in
   response to how demand was running &mdash; and when that happens the fit reads demand as
   <i>less</i> price-sensitive than it is. On simulated sellers who reprice off last month's
-  numbers, the error is about 0.4 of an &epsilon; in that direction, which is the direction that
-  argues for raising prices. It is not corrected, because correcting it needs a price change made
-  for a reason unrelated to demand. Every step on this report is exactly that: the moves we make
-  become the clean history the next fit is built on.</p>
+  numbers the error runs about 0.4 of an &epsilon; in that direction, which is the direction
+  that argues for raising prices: a SKU whose true &epsilon; is &minus;2.0 read as &minus;1.6
+  puts the price we would quote you a third too high. <b>It is not corrected.</b> Correcting it
+  needs a price change made for a reason unrelated to demand, and the moves on this report are
+  not that &mdash; we choose them from this same fit. What we do instead is refuse to quote a
+  price where the range is too wide to support one, step small where we know least, watch your
+  Buy Box while a step is live, and book your Profit Record at the cautious end of our own
+  range. Where we name a price at all, treat it as a ceiling on the best price rather than a
+  target: the direction this error runs means the true optimum is at or below the figure we
+  quote, never above it.</p>
 </section>
 {% endif %}
 

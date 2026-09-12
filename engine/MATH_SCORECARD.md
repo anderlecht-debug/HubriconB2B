@@ -622,11 +622,26 @@ measured outcome, capped at what the SKU's profit actually did.
 
 ### What data from the seller would retire it
 
-The engine's own price steps. Each deliberate 3–5% move is a price change made for
-a reason unrelated to demand — an instrument, and the only one this problem
-admits. The table below is the measured fraction of SKUs for which a price optimum
-can be named at all, as history accumulates (200 simulated SKUs per row, 22%
-demand noise):
+**Corrected 2026-09-12, and the correction matters more than the original claim.**
+This said the engine's own steps are that instrument. They are not, for two
+measured reasons: the step is a deterministic function of the fitted elasticity
+(so a price change caused by an estimate caused by demand is not exogenous to
+demand), and a 14-day step blended into a calendar month of `sku_economics` gives
+a price coefficient of variation near 0.011 against `MIN_PRICE_CV` = 0.02 — so the
+estimator returns `insufficient_price_variation` and cannot see the step at all.
+The compounding claim was not merely unproven; at the current export cadence the
+compounding rate is zero. See MATH_METHODS.md §2.
+
+What would retire the assumption is still a price change made for a reason
+unrelated to demand, plus a price series fine enough to see it — a deliberately
+randomised component of the step, and either a fortnightly export or the daily
+realised price that already sits unread in `settlement_transactions`. Both are
+cheap. Neither is built.
+
+The table below still stands, because it is about price VARIATION and says nothing
+about where the variation comes from. It is the measured fraction of SKUs for
+which a price optimum can be named at all (200 simulated SKUs per row, 22% demand
+noise):
 
 | periods | price variation (log CV) | optimum nameable | median SE(ε) |
 |---|---|---|---|
@@ -643,9 +658,12 @@ variation gets less. A seller who arrives with 10% of price variation over seven
 months gets a destination on one SKU in six. After five cycles of deliberate ±5%
 steps — roughly 18% variation, twelve periods — it is three in five.
 
-That is the product's compounding mechanic, and it is now a measurement rather
-than a hope: **the engine's own instructions are what make its next answer
-sharper, and the table says by how much.**
+Price variation buys identification; the table says how much. What it does NOT say
+is that the engine's own instructions supply that variation — they do not today,
+for the two reasons above. **The table is a specification for what would have to
+change, not a description of what already happens.** Read the earlier version of
+this paragraph as the cautionary example it is: it was the most flattering reading
+of a real table, and the flattering reading was false.
 
 ### What it costs to run
 

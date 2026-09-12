@@ -6,7 +6,24 @@ The wedge in practice: instead of a seller raising prices blind (67% did in
 baseline, a predicted outcome from the elasticity model when one exists,
 and the Buy Box monitored so suppression is caught in days, not quarters.
 Completed tests create deliberate price variation, which feeds back into
-the next elasticity fit — the moat compounding mechanically.
+the next elasticity fit.
+
+That last clause used to end "— the moat compounding mechanically", and it was
+not true. Measured 2026-09-12, two things stop it:
+
+  * A test's price is chosen by the fit (pricing_engine.price_move solves the
+    step against the fitted elasticity, its standard error and the SKU's
+    margin), so the resulting price variation is not independent of the demand
+    shocks that bias the fit. It is deliberate, which is not the same as
+    exogenous, and only the second one identifies anything.
+  * DEFAULT_TEST_DAYS = 14 inside a calendar month of sku_economics blends to a
+    monthly average price with a coefficient of variation near 0.011, under
+    elasticity.MIN_PRICE_CV = 0.02 — so a completed test can leave the SKU
+    reporting `insufficient_price_variation` and carrying no elasticity at all.
+    A test held for a whole period, or a daily price series read from
+    settlement_transactions, is what would make the variation visible.
+
+Both are fixable and neither is fixed. See engine/MATH_METHODS.md section 2.
 """
 
 BUYBOX_DROP_WARNING = 10.0  # percentage points lost vs. baseline that triggers the alarm

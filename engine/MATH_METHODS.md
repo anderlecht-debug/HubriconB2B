@@ -160,7 +160,11 @@ The endogeneity is the **increment** on top, up to +0.44.
 Both run the same way — toward zero, toward "raise the price, demand barely
 cares" — which is the dangerous direction, because it is the direction that
 argues for increases. A SKU whose true elasticity is −2.0 can read −1.6, and at
-−1.6 the model puts the optimum 17% higher than at −2.0.
+−1.6 the model puts the optimum **33% higher** than at −2.0 — the ratio is
+[1.6/0.6]/[2.0/1.0] = 4/3 exactly, independent of cost and of the fee structure.
+(This document said 17% until 2026-09-12. It was simply wrong, and the test that
+was supposed to pin it asserted only `> 1.15`, so nothing caught it. The most
+dangerous assumption is twice as dangerous as the first write-up said.)
 
 **It is not corrected, and cannot be with the data on file.** Correcting
 simultaneity needs an instrument: something that moves price without moving
@@ -174,10 +178,32 @@ instead:
    carries more estimation error than the group the engine is willing to quote.
 2. The step is sized by a risk-averse objective, so an uncertain fit produces a
    small move a later export can correct.
-3. **Every price step the engine issues is itself a price change made for a reason
-   unrelated to demand.** The Decision Ledger's own history is the instrument,
-   `price_tests.py` records it, and the engine manufactures it one cycle at a
-   time. This is the data that retires the assumption.
+3. ~~Every price step the engine issues is itself a price change made for a
+   reason unrelated to demand, so the Ledger's own history is the instrument.~~
+
+   **Corrected 2026-09-12.** This said the engine's own steps ARE that instrument and
+   that it manufactures one each cycle. That is false twice over, and both
+   reasons are now measured:
+
+   (a) A step is a deterministic function of ε̂, its standard error, the fee
+       structure and the trailing margin — every one of them a function of the
+       same demand shocks that bias ε̂. A price change caused by an estimate
+       caused by demand is not exogenous to demand. Selecting on the
+       cap-bound stratum does not rescue it: the rail binds precisely when the
+       fit says the optimum is far away, so selection INTO that stratum is on ε̂.
+   (b) Even if it were exogenous, the estimator cannot see it. A step held for
+       `price_tests.DEFAULT_TEST_DAYS` = 14 inside a calendar month of
+       `sku_economics` blends to a monthly average price whose coefficient of
+       variation is about 0.011 — under `MIN_PRICE_CV` = 0.02 — so the SKU comes
+       back `insufficient_price_variation` and gets no number at all. Measured:
+       eight months with three 14-day 5% steps gives price_cv 0.0112; the same
+       steps held for a whole month each give 0.0244 and fit.
+
+   What would make the claim true is a deliberately randomised component of the
+   step whose draw is independent of the data, plus a price series fine enough
+   to see it. Neither exists today. Until they do, the bias is not corrected and
+   not correctable, and the mitigations below are all there is.
+
 
 **The other limits.** Constant elasticity is a local approximation; it is used
 only inside a ±5% band around the observed price and extrapolation beyond the
@@ -598,7 +624,10 @@ If you read one section, read this one.
 1. **Whether a price change caused what followed.** The elasticity is fitted from
    prices the seller chose, in response to demand. The bias is measured (§2), it
    runs toward "raise the price", and it is not corrected. The engine's own steps
-   are the only instrument it will ever have.
+   are NOT an instrument for it — see §2, corrected 2026-09-12 — because the step
+   is chosen by the fit and because a fortnight-long step is invisible to a
+   monthly estimator. Making them one is a design question, not a property the
+   engine already has.
 2. **A price optimum, for most SKUs, on a first upload.** With seven periods and
    20% demand noise, the elasticity cannot be separated from −1 for roughly five
    SKUs in six, and the engine declines to name a destination for them. It still
@@ -636,7 +665,18 @@ drops; and the Profit Record books the 25th percentile of the measured outcome,
 capped at what the SKU's profit actually did, so a move that did not work cannot
 be banked as one that did.
 
-**The data that retires it**: the engine's own step history. Each cycle of
-deliberate 3–5% moves is a price change made for a reason unrelated to demand, and
-after enough of them the elasticity can be fitted on those moves alone. That is an
-instrument, and it is the only one this problem admits.
+**The data that would retire it**, and what stands in the way. A price change made
+for a reason unrelated to demand is the only instrument this problem admits, and
+the engine does not currently make one: its steps are chosen by the fit, and a
+fortnight-long step blends away below the estimator's own price-variation floor.
+Two things would have to change — a deliberately randomised component of the step
+whose draw is independent of the data, and a price series fine enough to see a
+14-day move. Both are cheap; neither is built; and the claim that the engine
+already compounds its own identification was wrong and has been withdrawn from
+this document, from MATH_SCORECARD.md and from the client report.
+
+There is a second route that needs no experiment on anyone's prices, because the
+seller's own repricing habit is itself measurable from their export: if the
+strength with which they react to last month's demand can be estimated, the bias
+it induces becomes a nuisance parameter to subtract rather than an assumption to
+disclose. Whether that works is under measurement, not yet claimed.
