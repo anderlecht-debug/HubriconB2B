@@ -422,13 +422,14 @@ def _var_section(margin_rows: list[dict], forecast_rows: list[dict] | None,
          and len(rates) == max(len(v) for v in history.values())}
         if history else {}
     )
-    rates = dependence.correlated_rates(
-        rng, [p["rate"] for p in params], [p["sd"] for p in params],
-        (n_paths,), float(correlation["rho"]))
-    units = rng.poisson(rates * days)
-    net = (np.array([p["contribution"] for p in params]) @ units
-           - float(sum(p["ads"] for p in params)))
-    rev = np.array([p["price"] for p in params]) @ units
+    net = np.zeros(n_paths)
+    rev = np.zeros(n_paths)
+    for i, rates in dependence.rate_stream(
+            rng, [p["rate"] for p in params], [p["sd"] for p in params],
+            (n_paths,), float(correlation["rho"])):
+        units = rng.poisson(rates * days)
+        net += units * params[i]["contribution"] - params[i]["ads"]
+        rev += units * params[i]["price"]
     expected = float(net.mean())
     losses = expected - net
     var95, cvar95 = _var_cvar_raw(losses, 0.95)

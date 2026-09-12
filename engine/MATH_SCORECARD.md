@@ -9,7 +9,7 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **971 tests, all passing, ~75 seconds.**
+Suite at time of writing: **973 tests, all passing, ~80 seconds.**
 
 ---
 
@@ -281,7 +281,28 @@ this iteration is the reason dimension 4 is a 10 rather than an 8: without the
 replay harness every calibration number in this file would be a claim about a
 simulation rather than about the engine's own promises.
 
-### Iteration 11 — the last published number with no interval
+### Iteration 11 — the correlated draws did not fit in memory
+
+**Objection, self-raised against iteration 6.** The common-factor generator
+returned a `(n_skus, n_paths, days)` array. On a 400-SKU catalog over 10,000 paths
+and 90 days that is **2.9 GB**, and the cash cone would have died on the first
+real client large enough to need it. The per-SKU loop the old independent code used
+had kept memory at the shape of one SKU's draw; vectorising across SKUs threw that
+away.
+
+**Change.** `dependence.rate_stream` and `multiplier_stream` yield one SKU's draw
+at a time, holding the common factor and discarding each SKU's own shock after
+use, in exactly the draw order the materialising form uses — so streaming and
+materialising give bit-identical numbers and the tests can check one while the
+engine uses the other. All three call sites stream.
+
+**Evidence.** `test_streaming_and_materialising_give_identical_draws` pins the
+equality; `test_a_large_catalog_cash_cone_does_not_materialise_the_panel` runs the
+cone at a width where the panel would be 288 MB and asserts the peak allocation
+stays under 25 one-SKU arrays. **Score.** Dependence & tail 10 confirmed — and a
+reminder that a correct model that cannot run is not a correct model.
+
+### Iteration 12 — the last published number with no interval
 
 **Objection, self-raised against dimension 3.** Dimension 3 says *every* published
 number carries an interval. The ad-efficiency break-even did not: `curve_fit`
@@ -549,7 +570,7 @@ ad-response break-even, the last published number that had none; a spend-variati
 refusal for campaigns whose spend never moved; and two regressions in the
 measurement pass that the harness caught, both introduced by the Layer 1 fixes.
 
-The suite went from 770 tests to 971.
+The suite went from 770 tests to 973.
 
 ### What the horse race showed
 

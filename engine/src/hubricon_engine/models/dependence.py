@@ -113,6 +113,39 @@ def estimate_pairwise_corr(panel: dict[str, list[float]]) -> dict:
     }
 
 
+def multiplier_stream(rng: np.random.Generator, sigmas, shape, rho: float):
+    """One SKU's mean-one lognormal multipliers at a time, sharing one factor.
+
+    Materialising (n_skus, n_paths, days) is what a 400-SKU cash cone over 10,000
+    paths and 90 days would do, and that is 2.9 GB. The common factor is drawn
+    once and held; each SKU's own shock is drawn, used and discarded, so the
+    memory is the shape of one SKU's draw however wide the catalog is.
+
+    The draw ORDER is identical to `correlated_multipliers`, so streaming and
+    materialising give bit-identical numbers from the same generator — which is
+    what lets the tests check one and the engine use the other."""
+    sigmas = np.asarray(sigmas, dtype=float)
+    rho = float(min(1.0, max(0.0, rho)))
+    common = rng.standard_normal(shape)
+    for sigma in sigmas:
+        if sigma <= 0:
+            yield np.ones_like(common)
+            continue
+        own = rng.standard_normal(shape)
+        z = rho * common + np.sqrt(1.0 - rho**2) * own
+        yield np.exp(sigma * z - 0.5 * sigma**2)
+
+
+def rate_stream(rng: np.random.Generator, mean_rates, sd_rates, shape, rho: float):
+    """(index, rate array) per SKU, one at a time. The streaming form of
+    `correlated_rates`, and the one every production caller uses."""
+    mean_rates = np.asarray(mean_rates, dtype=float)
+    sigmas = [log_sigma(m, s)
+              for m, s in zip(mean_rates, np.asarray(sd_rates, dtype=float))]
+    for i, multiplier in enumerate(multiplier_stream(rng, sigmas, shape, rho)):
+        yield i, mean_rates[i] * multiplier
+
+
 def correlated_multipliers(rng: np.random.Generator, sigmas, shape, rho: float) -> np.ndarray:
     """Mean-one lognormal multipliers with a shared factor.
 

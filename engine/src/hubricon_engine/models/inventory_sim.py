@@ -203,11 +203,13 @@ def aggregate(results: list[dict], data: dict, rng: np.random.Generator,
     for (label, rho), seed in zip((("correlated", correlation["rho"]),
                                    ("independent", 0.0)), seeds):
         stream = np.random.default_rng(seed)
-        rates = dependence.correlated_rates(stream, means, sds, (simulations,), rho)
-        lead_draws = stream.lognormal(mean=np.log(leads)[:, None], sigma=LEAD_TIME_CV,
-                                      size=(len(usable), simulations))
-        demand = stream.poisson(rates * lead_draws)
-        count = (demand > positions[:, None]).sum(axis=0).astype(float)
+        # streamed per SKU: the count is all that is needed, not the panel
+        count = np.zeros(simulations, dtype=float)
+        for i, rates in dependence.rate_stream(stream, means, sds, (simulations,), rho):
+            lead_draws = stream.lognormal(mean=np.log(leads[i]), sigma=LEAD_TIME_CV,
+                                          size=simulations)
+            demand = stream.poisson(rates * lead_draws)
+            count += demand > positions[i]
         tail = expected_shortfall(count, 0.05, tail="upper")
         out[label] = {
             "expected_stockouts": num(float(count.mean()), 3),

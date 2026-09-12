@@ -256,3 +256,55 @@ def test_the_monthly_var_carries_the_correlation_and_its_error_bars():
     assert var["mc_se"]["var_95"] is not None
     assert var["cvar_95"] >= var["var_95"]        # coherence, always
     assert any("common factor" in a for a in var["assumptions"])
+
+
+# ── it has to fit in memory on a real catalog ─────────────────────────────
+
+def test_streaming_and_materialising_give_identical_draws():
+    """The engine streams; the tests check the materialised form. They have to be
+    the same numbers or one of them is testing something the engine does not do."""
+    sigmas = [0.2, 0.35, 0.1, 0.5]
+    block = dependence.correlated_multipliers(
+        np.random.default_rng(12), sigmas, (500,), 0.6)
+    streamed = np.array(list(dependence.multiplier_stream(
+        np.random.default_rng(12), sigmas, (500,), 0.6)))
+    assert np.array_equal(block, streamed)
+
+    rates_block = dependence.correlated_rates(
+        np.random.default_rng(13), [10.0, 20.0, 5.0], [3.0, 8.0, 2.0], (400,), 0.5)
+    rates_streamed = np.array([r for _, r in dependence.rate_stream(
+        np.random.default_rng(13), [10.0, 20.0, 5.0], [3.0, 8.0, 2.0], (400,), 0.5)])
+    assert np.array_equal(rates_block, rates_streamed)
+
+
+def test_a_large_catalog_cash_cone_does_not_materialise_the_panel():
+    """The regression this streaming exists to prevent. A 400-SKU catalog over
+    10,000 paths and 90 days is 2.9 GB if the (SKU, path, day) array is built at
+    once, and nothing needs it at once. The cone is run at production width and
+    the peak allocation is checked against the one-SKU shape."""
+    import tracemalloc
+
+    # scaled down from the 400 × 10,000 × 90 that would be 2.9 GB: the shape of
+    # the bug is what matters, and at 200 × 2,000 × 90 the panel would still be
+    # 288 MB against a ceiling of 36
+    n_skus, n_paths, days = 200, 2_000, 90
+    params = [{"sku": f"B{i:03d}", "mean_rate": 8.0 + (i % 5), "std_rate": 3.0,
+               "price": 20.0, "fee_rate": 0.15, "ad_daily": 1.0}
+              for i in range(n_skus)]
+    one_sku_bytes = n_paths * days * 8
+
+    assert n_skus * one_sku_bytes > 250e6, "the fixture must be big enough to matter"
+
+    tracemalloc.start()
+    out = cashflow.simulate(params, [], 250_000.0, 40_000.0,
+                            np.random.default_rng(2), horizon_days=days,
+                            n_paths=n_paths, payout_cycle_days=14,
+                            correlation={"rho": 0.6, "pairwise_corr": 0.36,
+                                         "basis": "test"})
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    assert out["p_ruin"] is not None
+    # a generous ceiling: a handful of (paths × days) arrays live at once, never
+    # a (SKUs × paths × days) one, which would be 400 times this
+    assert peak < one_sku_bytes * 25, f"peak {peak / 1e9:.2f} GB"

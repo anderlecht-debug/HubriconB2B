@@ -156,14 +156,15 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     correlation = correlation or dependence.estimate_pairwise_corr({})
     rho = float(correlation.get("rho") or 0.0)
 
-    # every SKU's rate for a given (path, day) shares one common factor, so a
-    # bad day is bad across the catalog rather than averaging out
-    rates = dependence.correlated_rates(
-        rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
-        (n_paths, days), rho)
-    units = rng.poisson(rates)
-    revenue_per_unit = np.array([p["price"] * (1 - p["fee_rate"]) for p in params])
-    sales_net = np.tensordot(revenue_per_unit, units, axes=(0, 0))
+    # Every SKU's rate for a given (path, day) shares one common factor, so a bad
+    # day is bad across the catalog rather than averaging out. Streamed one SKU at
+    # a time: the whole (n_skus, n_paths, days) array is 2.9 GB on a 400-SKU
+    # catalog, and nothing needs it at once.
+    sales_net = np.zeros((n_paths, days))
+    for i, rates in dependence.rate_stream(
+            rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
+            (n_paths, days), rho):
+        sales_net += rng.poisson(rates) * params[i]["price"] * (1 - params[i]["fee_rate"])
     ad_daily_total = float(sum(p["ad_daily"] for p in params))
 
     outflow = np.full(days, monthly_fixed_costs / OPEX_DAYS_PER_MONTH)
