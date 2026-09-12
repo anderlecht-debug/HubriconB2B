@@ -695,7 +695,17 @@ def draft_directives(inventory, ads, elasticity, margins,
     for r in ads:
         if r["status"] == "ok" and r["current_spend"] and r["breakeven_spend"] \
                 and float(r["current_spend"]) > float(r["breakeven_spend"]):
-            excess = float(r["current_spend"]) - float(r["breakeven_spend"])
+            # Size the trim off the CONSERVATIVE end of the break-even's own
+            # interval when the fit produced one: a higher break-even means a
+            # smaller trim and a smaller promise, which is the direction to be
+            # wrong in on a number the client is billed against.
+            uncertainty = (r.get("details") or {}).get("uncertainty") or {}
+            breakeven = float(r["breakeven_spend"])
+            if uncertainty.get("breakeven_p95") is not None:
+                breakeven = max(breakeven, float(uncertainty["breakeven_p95"]))
+            if float(r["current_spend"]) <= breakeven:
+                continue   # the interval reaches current spend: no honest trim
+            excess = float(r["current_spend"]) - breakeven
             # Promise the NET saving, not the gross. Those dollars were buying
             # something; a promise measurement can never confirm is a promise
             # we should not make.
@@ -708,13 +718,20 @@ def draft_directives(inventory, ads, elasticity, margins,
                 expected=round(net, 2) if net > 0 else None,
                 action_text=(
                     f"Trim “{r['campaign_name']}” toward its marginal break-even: "
-                    f"${float(r['breakeven_spend']):,.0f} vs ${float(r['current_spend']):,.0f} today. "
+                    f"${breakeven:,.0f} vs ${float(r['current_spend']):,.0f} today. "
                     f"The last dollars in are buying less than a dollar back."
+                    + (f" The fitted break-even sits between ${float(uncertainty['breakeven_p5']):,.0f} "
+                       f"and ${float(uncertainty['breakeven_p95']):,.0f}; we trim to the cautious end."
+                       if uncertainty.get("breakeven_p5") is not None else "")
                 ),
                 evidence={
                     "campaign_name": r["campaign_name"],
                     "current_spend": float(r["current_spend"]),
                     "breakeven_spend": float(r["breakeven_spend"]),
+                    "breakeven_used": round(breakeven, 2),
+                    "breakeven_p5": uncertainty.get("breakeven_p5"),
+                    "breakeven_p95": uncertainty.get("breakeven_p95"),
+                    "p_below_breakeven": uncertainty.get("p_below_breakeven"),
                     "marginal_roas": roas or None,
                     "avg_margin": avg_margin,
                     "horizon_days": MEASUREMENT_HORIZON_DAYS,
