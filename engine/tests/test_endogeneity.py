@@ -199,6 +199,20 @@ def test_a_seller_facing_sentence_exists_for_this():
     methods = Path(__file__).resolve().parents[1] / "MATH_METHODS.md"
     assert methods.exists(), "MATH_METHODS.md is part of the deliverable"
     text = methods.read_text()
-    assert "what this cannot tell you" in text.lower()
-    # the endogeneity limitation, named in plain words
-    assert "in response to" in text.lower()
+    lower = " ".join(text.split()).lower()
+    # the explicit limits section, and the endogeneity named in plain words
+    assert "cannot tell you" in lower
+    assert "what this engine cannot tell you" in lower
+    assert "in response to how demand was running" in lower
+    assert "the single most dangerous assumption" in lower
+    # the measured size of the bias, so the doc and the simulation cannot drift
+    assert "+0.59" in text or "+0.44" in text
+
+    # and the seller-facing version of the same sentence, on the report itself.
+    # Whitespace is normalised: the template wraps its prose, and a line break is
+    # not a change in what the client reads.
+    report = " ".join((Path(__file__).resolve().parents[1] / "src" / "hubricon_engine"
+                       / "report" / "templates" / "report.html.j2").read_text().split())
+    assert "What this number is, and what it is not" in report
+    assert "in response to how demand was running" in report
+    assert "correcting it needs a price change made for a reason unrelated to demand" in report

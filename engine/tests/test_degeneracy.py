@@ -320,3 +320,54 @@ def test_the_thinnest_plausible_input_returns_statuses_not_numbers():
     # the cash cone has no client inputs and says so by returning nothing
     assert cashflow.run({"cash_on_hand": None, "monthly_fixed_costs": None},
                         inv, margins, np.random.default_rng(0)) is None
+
+
+# ── the documents are part of the engine ──────────────────────────────────
+
+def test_the_methods_and_scorecard_exist_and_state_their_limits():
+    """The two documents are deliverables, and the claims in them are load-bearing:
+    `index.html` and the client report both point at MATH_METHODS.md. A test keeps
+    them from quietly disappearing or losing the sections that make them honest."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    methods = (root / "MATH_METHODS.md").read_text()
+    scorecard = (root / "MATH_SCORECARD.md").read_text()
+
+    for heading in ("## 10. What this engine cannot tell you",
+                    "### The single most dangerous assumption",
+                    "## 3. The price optimum and how far to walk"):
+        assert heading in methods, heading
+    # every model section has to say what it cannot do, not just what it does
+    assert methods.count("cannot tell you") >= 6
+
+    for heading in ("## Scores", "## Iteration history", "## Outcome Alignment",
+                    "## The refusal test", "## Closing summary"):
+        assert heading in scorecard, heading
+    # the uncomfortable finding is on the record rather than smoothed away
+    assert "does not beat the plug-in" in scorecard
+    assert "most dangerous assumption that remains" in scorecard
+
+
+def test_the_published_formulas_match_the_code():
+    """`index.html` §05 is a claim about what runs on a client's catalog. If the
+    code's formula and the page's formula diverge, the page is a false statement —
+    so the page is asserted against the constants the code actually uses."""
+    from pathlib import Path
+
+    from hubricon_engine.models import anomaly
+    from hubricon_engine.models.pricing_engine import STEP_CAP
+
+    page = " ".join((Path(__file__).resolve().parents[2] / "index.html").read_text().split())
+
+    # the optimum, with the fixed fee in it
+    assert "P*</b> = [(c + F) / (1 − f)] · ε / (1 + ε)" in page
+    # the contribution per unit, with the fixed fee subtracted
+    assert "(P · (1 − f) − c − F)" in page
+    # the interval's critical value is no longer claimed to be 1.96
+    assert "± 1.96 · SE" not in page
+    assert "t<sub>0.975, dof</sub>" in page
+    # the false-discovery gate and its q
+    assert f"finding ⟺ q ≤ {anomaly.FDR_Q:.2f}" in page
+    # the hard cap the page quotes is the one the code enforces
+    assert f"{STEP_CAP:.0%}" in page
