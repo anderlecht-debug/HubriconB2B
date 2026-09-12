@@ -9,7 +9,19 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **973 tests, all passing, ~80 seconds.**
+Suite at time of writing: **973 tests, all passing, ~80 seconds** — up from 770
+before this work. The 193 new ones live in fifteen files:
+
+```
+test_pricing_derivation  21   test_degeneracy            25
+test_pricing_pole_guard  17   test_dependence            20
+test_elasticity_inference 13  test_anomaly_fdr           15
+test_delta_propagation    9   test_calibration_math      15
+test_robust_step         12   test_horse_race             6
+test_mc                   7   test_endogeneity            7
+test_replay              13   test_ad_curve_uncertainty   8
+test_reproducibility      5
+```
 
 ---
 
@@ -22,7 +34,7 @@ Suite at time of writing: **973 tests, all passing, ~80 seconds.**
 | 3 | Uncertainty propagation | **10** | `tests/test_delta_propagation.py` — every uncertain input demonstrably widens the band; `tests/test_mc.py` checks the quantile standard error against 400 independent reruns and against the analytic normal formula; `tests/test_ad_curve_uncertainty.py` closed the last published number that had no interval |
 | 4 | Calibration | **10** | `tests/test_calibration_math.py` — 1,000 synthetic SKUs, the whole pipeline, scored against realized deltas; elasticity interval coverage 94.4–96.6%; profit-delta band 91.6–94.0% at seven periods; an unconditional check that the coverage is not an artifact of selection |
 | 5 | Decision quality under uncertainty | **9** | `tests/test_horse_race.py` — five rules, 40 sellers × 25 SKUs, three regimes. **The robust policy does not beat the plug-in on raw realised profit.** It ties per directive, wins the tail in every regime, and wins on bankable dollars once the true elasticity drifts. Scored 9 because that is a split result and a simulation cannot settle it. Full table below. |
-| 6 | Degeneracy coverage | **10** | `tests/test_degeneracy.py` — 21 tests, one per degenerate path, each with a named status; two NaN/inf sweeps over 144 and 12 parameter combinations |
+| 6 | Degeneracy coverage | **10** | `tests/test_degeneracy.py` — 25 tests, one per degenerate path, each with a named status; two NaN/inf sweeps over 144 and 12 parameter combinations |
 | 7 | Multiple-testing discipline | **10** | `tests/test_anomaly_fdr.py` — 500 noise SKUs, 4,000 tests, 548 detector flags, 0 survivors; null p-values uniform for all four statistics; a planted step still clears the control |
 | 8 | Dependence & tail modelling | **10** | `tests/test_dependence.py` — the generator's correlation and marginals verified; rho recovered at four known values; the simultaneous-stockout tail 10 → 15 at the 95th percentile; the cash trough deeper and its shortfall deeper still; MC errors on every published percentile |
 | 9 | Reproducibility | **10** | `tests/test_reproducibility.py` — the whole cycle byte-identical on two runs; a caller's own generator cannot move a published promise; a re-measurement reproduces what it banked |
