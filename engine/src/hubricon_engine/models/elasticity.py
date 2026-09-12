@@ -42,7 +42,7 @@ report can show the arithmetic.
 import numpy as np
 from scipy import stats
 
-from .common import num
+from .common import num, period_days
 
 CI_LEVEL = 0.95
 # HC3 divides each squared residual by (1 − hᵢ)². A period whose leverage is
@@ -81,8 +81,44 @@ def _hc3(X: np.ndarray, residuals: np.ndarray, xtx_inv: np.ndarray,
     return hc3, "HC3"
 
 
+def _exposure_days(rows: list[dict]) -> list[int] | None:
+    """Period length per row, or None if ANY row's dates will not parse.
+
+    All-or-nothing on purpose. Normalising some rows and not others is the very
+    correlation between period length and price that the normalisation exists to
+    remove, so a partially parseable series is fitted unnormalised and says so in
+    `details.exposure_normalised` rather than being silently half-corrected."""
+    days = []
+    for row in rows:
+        try:
+            days.append(period_days(str(row["period_start"]), str(row["period_end"])))
+        except (ValueError, TypeError, KeyError):
+            return None
+    return days
+
+
 def _fit(points: list[dict]) -> dict:
-    """points: [{price, units, sessions?}] — one per period."""
+    """points: [{price, units, sessions?, days?}] — one per period.
+
+    `days` normalises units to a DAILY rate before the log is taken, and omitting
+    it is a trap rather than an imprecision. The regressand is log units, so a
+    period of a different length shifts it by log(days), and if that shift
+    correlates with the price — which is exactly what happens when a price step is
+    held for one reporting window — it loads straight onto the price coefficient.
+    Closed form for a step of size s held one whole a-day window against a b-day
+    baseline:
+
+        eps_hat = eps + log(a / b) / log(1 + s)
+
+    Measured against this function with real 15/16-day calendar fortnights and a 5%
+    step: bias −1.32. At 14 against 16: −2.74. That is one to three whole units of
+    elasticity, pointing at "cut the price", on a catalog of ordinary monthly
+    exports the moment anybody asks for fortnightly ones — and a calendar fortnight
+    inside a 31-day month forces 15/16, so it is unavoidable rather than unlucky.
+
+    On equal-length periods the correction is worth about 1.5% on the standard error
+    and nothing on the bias, which is why it reads as a nicety. It is not one: it is
+    the gate on any change to export cadence."""
     usable = [p for p in points if p["price"] and p["price"] > 0 and p["units"] and p["units"] > 0]
     n = len(usable)
     base = {"n_periods": n, "details": {"points": [
@@ -97,7 +133,8 @@ def _fit(points: list[dict]) -> dict:
     if price_cv < MIN_PRICE_CV:
         return {**base, "status": "insufficient_price_variation"}
 
-    y = np.log([p["units"] for p in usable])
+    # units per day, not units per period — see the docstring
+    y = np.log([float(p["units"]) / max(1e-9, float(p.get("days") or 1)) for p in usable])
     cols = [np.ones(n), np.log(prices)]
     with_sessions = all(p.get("sessions") and p["sessions"] > 0 for p in usable)
     use_control = False
@@ -132,6 +169,9 @@ def _fit(points: list[dict]) -> dict:
     # from — the baseline volume a promise is priced against is not known
     # exactly either.
     base["details"]["residual_sd_log"] = num(float(np.sqrt(sigma2)), 6)
+    period_lengths = sorted({int(p.get("days") or 1) for p in usable})
+    base["details"]["period_days"] = period_lengths
+    base["details"]["exposure_normalised"] = any(p.get("days") for p in usable)
     # dof = 3 on a five-period SKU with a price term and an intercept. The
     # t quantile there is 3.18; the normal's 1.96 would understate the
     # interval by 38%.
@@ -254,13 +294,16 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
     for row in data["asin_traffic"]:
         by_asin.setdefault(row["child_asin"], []).append(row)
     for asin, rows in sorted(by_asin.items()):
+        ordered = sorted(rows, key=lambda r: r["period_start"])
+        exposure = _exposure_days(ordered)
         points = [
             {
                 "price": (row["ordered_product_sales"] or 0) / row["units_ordered"] if row["units_ordered"] else None,
                 "units": row["units_ordered"],
                 "sessions": row["sessions"],
+                "days": exposure[i] if exposure else None,
             }
-            for row in sorted(rows, key=lambda r: r["period_start"])
+            for i, row in enumerate(ordered)
         ]
         results.append({"level": "asin", "item_id": asin, **_fit(points)})
 
@@ -268,13 +311,16 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
     for row in data["sku_economics"]:
         by_sku.setdefault(row["sku"], []).append(row)
     for sku, rows in sorted(by_sku.items()):
+        ordered = sorted(rows, key=lambda r: r["period_start"])
+        exposure = _exposure_days(ordered)
         points = [
             {
                 "price": row["avg_sales_price"]
                 or ((row["sales"] or 0) / row["units_sold"] if row["units_sold"] else None),
                 "units": row["units_sold"],
+                "days": exposure[i] if exposure else None,
             }
-            for row in sorted(rows, key=lambda r: r["period_start"])
+            for i, row in enumerate(ordered)
         ]
         results.append({"level": "sku", "item_id": sku, **_fit(points)})
 

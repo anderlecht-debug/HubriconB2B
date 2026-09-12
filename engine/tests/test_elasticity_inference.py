@@ -13,8 +13,19 @@ from scipy import stats
 from hubricon_engine.models import elasticity
 
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def _month(i: int) -> tuple[str, str]:
-    return f"2026-{i:02d}-01", f"2026-{i:02d}-28"
+    return _period(i)[0], _period(i)[1]
 
 
 def _econ_rows(prices, units, sku="S1"):
@@ -292,3 +303,67 @@ def test_a_well_measured_sku_keeps_its_own_answer():
     precise = fits["S019"]
     assert precise["details"]["shrinkage_weight"] > 0.95
     assert precise["elasticity"] == pytest.approx(-3.2, abs=0.05)
+
+
+# ── exposure: periods of unequal length ───────────────────────────────────
+
+def _uneven_rows(prices, days, e_true, sku="X1", daily_rate=300.0):
+    """One row per period, with the period's own length, and units that are the
+    daily demand rate TIMES that length — which is what an export contains."""
+    rows = []
+    for i, (p, d) in enumerate(zip(prices, days), start=1):
+        units = daily_rate * (p / 20.0) ** e_true * d
+        revenue = float(p) * units
+        rows.append({"sku": sku, "asin": "B0" + sku,
+                     "period_start": f"2026-{i:02d}-01", "period_end": f"2026-{i:02d}-{d:02d}",
+                     "units_sold": units, "avg_sales_price": float(p), "sales": revenue,
+                     "referral_fees": 0, "fba_fulfillment_fees": 0, "storage_fees": 0,
+                     "other_fees": 0, "net_proceeds": revenue})
+    return rows
+
+
+@pytest.mark.parametrize("step_days,base_days", [(15, 16), (14, 16), (16, 15)])
+def test_a_step_held_for_a_shorter_period_does_not_bias_the_slope(step_days, base_days):
+    """The trap in the obvious improvement, closed.
+
+    The regressand is log units. A period of a different length shifts it by
+    log(days), and when that shift correlates with the price — exactly what happens
+    when a price step is held for one reporting window — it loads onto the price
+    coefficient. Closed form for a step of size s held one whole a-day window
+    against a b-day baseline:
+
+        ε̂ = ε + log(a/b) / log(1+s)
+
+    At a = 15, b = 16, s = 5% that is −1.32; at 14 against 16, −2.74. One to three
+    whole units of elasticity, pointing at "cut the price". And a calendar fortnight
+    inside a 31-day month forces 15/16, so anyone who asks a client for fortnightly
+    exports to sharpen the fit ships this unless units are normalised to a daily
+    rate first. That is why the normalisation is a gate on the cadence change and
+    not a nicety — on equal periods it is worth about 1.5% of the standard error and
+    nothing at all on the bias."""
+    e_true, step = -2.0, 0.05
+    prices = [20.0] * 4 + [20.0 * (1 + step)] * 4
+    days = [base_days] * 4 + [step_days] * 4
+    r = elasticity.run(_data(_uneven_rows(prices, days, e_true)))[0]
+
+    assert r["status"] == "ok"
+    assert r["details"]["exposure_normalised"] is True
+    assert sorted(r["details"]["period_days"]) == sorted({step_days, base_days})
+    assert r["elasticity"] == pytest.approx(e_true, abs=1e-6)
+
+    # and the bias the normalisation avoids is the closed form, not a vague worry
+    predicted = np.log(step_days / base_days) / np.log(1 + step)
+    assert abs(predicted) > 0.9
+    unnormalised = np.polyfit(
+        np.log(prices),
+        np.log([300.0 * (p / 20.0) ** e_true * d for p, d in zip(prices, days)]), 1)[0]
+    assert unnormalised == pytest.approx(e_true + predicted, abs=1e-6)
+
+
+def test_equal_length_periods_are_unaffected_by_the_normalisation():
+    """It must not move anything on the ordinary case, or it is not a correction."""
+    e_true = -2.2
+    prices = [18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 21.5, 19.5]
+    same = elasticity.run(_data(_uneven_rows(prices, [28] * 8, e_true)))[0]
+    assert same["elasticity"] == pytest.approx(e_true, abs=1e-6)
+    assert same["details"]["period_days"] == [28]

@@ -59,11 +59,36 @@ def test_a_straddling_interval_fires_the_guard_even_on_a_confident_point():
     assert near_unit_elastic(-1.45, 0.01, [-2.6, -0.3]) is True
 
 
-def test_a_fit_that_states_no_uncertainty_is_taken_at_its_word():
-    """A hand-built fixture, or a fit from before the guard existed, carries
-    neither interval nor standard error. The guard does not invent an
-    uncertainty in order to refuse."""
-    assert near_unit_elastic(-1.05, None, None) is False
+def test_a_fitted_row_with_no_stated_uncertainty_is_refused_not_trusted():
+    """The inversion of an earlier assertion, and the reason is a measured defect.
+
+    This used to assert that a row carrying neither interval nor standard error was
+    taken at its word, on the reasoning that a hand-built fixture states no
+    uncertainty and the guard should not invent one in order to refuse. The hole:
+    `common.num` maps ±inf and NaN to None, so a fit whose standard error came back
+    UNBOUNDED arrives looking identical to a fixture claiming to be exact. Measured
+    before the fix — a SKU at ε̂ = −1.05 with a non-finite SE produced a $123.53
+    destination on a $20 item, a full 5% step, a dollar promise and p_loss = 0.0,
+    which the directive renders as "under a 1% chance it goes the other way".
+
+    Absent uncertainty on a fitted row means unbounded, not exact."""
+    assert near_unit_elastic(-1.05, None, None) is True
+    assert near_unit_elastic(-1.05, None, [None, None]) is True
+    assert near_unit_elastic(-1.05, float("inf"), None) is True
+    assert near_unit_elastic(-1.05, float("nan"), None) is True
+    # and the whole move is refused rather than quoted
+    from hubricon_engine.models.pricing_engine import price_move
+    assert price_move({**MARGIN, "period_start": "2026-07-01", "period_end": "2026-07-31"},
+                      {"status": "ok", "elasticity": -1.05, "std_err": None,
+                       "details": {"ci95": [None, None]}}) is None
+
+
+def test_an_explicit_exact_elasticity_is_still_taken_at_its_word():
+    """The escape hatch the fix leaves open: a caller asserting a known exact
+    elasticity — a test fixture, or a counterfactual evaluated at a named value —
+    passes fitted=False and is not second-guessed."""
+    assert near_unit_elastic(-1.05, None, None, fitted=False) is False
+    assert near_unit_elastic(-2.40, None, None, fitted=False) is False
 
 
 # ── what the engine returns at the pole ───────────────────────────────────

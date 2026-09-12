@@ -23,6 +23,17 @@ from hubricon_engine.models.null_calibration import (
 )
 
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def _noise_panel(n_skus=500, n_periods=10, seed=5):
     """Fees that wander, units that wander, nothing that steps."""
     rng = np.random.default_rng(seed)
@@ -37,7 +48,7 @@ def _noise_panel(n_skus=500, n_periods=10, seed=5):
             sales = float(price[j] * units[j])
             rows.append({
                 "sku": sku, "asin": "A" + sku,
-                "period_start": f"2026-{j + 1:02d}-01", "period_end": f"2026-{j + 1:02d}-28",
+                "period_start": _period(j + 1)[0], "period_end": _period(j + 1)[1],
                 "units_sold": float(units[j]), "avg_sales_price": float(price[j]),
                 "sales": sales,
                 "referral_fees": -float(referral[j]) * sales,
@@ -56,7 +67,7 @@ def _traffic_noise(n_asins=150, n_periods=10, seed=9):
         for j in range(n_periods):
             rows.append({
                 "child_asin": f"B{i:04d}", "parent_asin": None,
-                "period_start": f"2026-{j + 1:02d}-01", "period_end": f"2026-{j + 1:02d}-28",
+                "period_start": _period(j + 1)[0], "period_end": _period(j + 1)[1],
                 "sessions": float(rng.normal(4000, 450)),
                 "unit_session_pct": float(rng.normal(9.0, 0.9)),
                 "buy_box_pct": float(np.clip(rng.normal(92, 4), 0, 100)),
@@ -138,7 +149,7 @@ def test_a_real_fee_step_survives_the_control_on_a_large_catalog():
         fee = 3.0 if j < 6 else 4.2
         planted.append({
             "sku": "REAL", "asin": "AREAL",
-            "period_start": f"2026-{j + 1:02d}-01", "period_end": f"2026-{j + 1:02d}-28",
+            "period_start": _period(j + 1)[0], "period_end": _period(j + 1)[1],
             "units_sold": units, "avg_sales_price": price, "sales": sales,
             "referral_fees": -0.15 * sales, "fba_fulfillment_fees": -fee * units,
             "storage_fees": -12.0, "other_fees": 0.0, "net_proceeds": sales,

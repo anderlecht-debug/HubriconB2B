@@ -17,9 +17,19 @@ ADS = [
      "bleed_terms": [{"search_term": "waste", "spend": 100.0, "clicks": 40}]},
     {"campaign_name": "Fine", "status": "ok", "current_spend": 40.0, "breakeven_spend": 60.0, "bleed_terms": []},
 ]
+# A status-"ok" row out of elasticity.run ALWAYS carries std_err, ci95, dof and
+# t_critical — the fit cannot succeed without producing them. These fixtures
+# omitted them until 2026-09-12, which made them exercise a shape the engine never
+# emits; since a fitted row with no stated uncertainty is now refused outright (see
+# pricing_engine.near_unit_elastic), the omission became visible. Fixed here rather
+# than weakening the rule: the fixture now matches the contract.
 ELASTICITY = [
-    {"level": "sku", "item_id": "INELASTIC", "status": "ok", "elasticity": -0.5, "details": {}},
-    {"level": "sku", "item_id": "RISKY", "status": "ok", "elasticity": -2.0, "details": {"ci95": [-2.4, -1.6]}},
+    {"level": "sku", "item_id": "INELASTIC", "status": "ok", "elasticity": -0.5,
+     "std_err": 0.08, "details": {"ci95": [-0.75, -0.25], "dof": 5, "t_critical": 2.571,
+                                  "residual_sd_log": 0.12}},
+    {"level": "sku", "item_id": "RISKY", "status": "ok", "elasticity": -2.0,
+     "std_err": 0.144, "details": {"ci95": [-2.4, -1.6], "dof": 5, "t_critical": 2.571,
+                                   "residual_sd_log": 0.12}},
     {"level": "sku", "item_id": "FLAT", "status": "insufficient_price_variation", "elasticity": None},
 ]
 MARGINS = [

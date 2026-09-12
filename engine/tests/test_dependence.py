@@ -21,6 +21,17 @@ from hubricon_engine.models import cashflow, dependence, inventory_sim, margin, 
 
 # ── the generator ─────────────────────────────────────────────────────────
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def test_marginals_keep_the_mean_and_sd_they_were_given():
     """The −σ²/2 correction, tested. Without it a 35%-CV SKU's simulated demand
     runs 6% above the level it was calibrated to, silently."""
@@ -123,7 +134,7 @@ def _catalog(n_skus=24, lead=45, shared=0.8, seed=3, on_hand=600, periods=8):
         for j in range(periods):
             units = max(1.0, 300 * np.exp(shared * common[j] + rng.normal(0, 0.25)))
             econ.append({"sku": sku, "asin": "A" + sku,
-                         "period_start": f"2026-{j + 1:02d}-01", "period_end": f"2026-{j + 1:02d}-28",
+                         "period_start": _period(j + 1)[0], "period_end": _period(j + 1)[1],
                          "units_sold": units, "avg_sales_price": 20.0, "sales": 20.0 * units,
                          "referral_fees": -0.15 * 20.0 * units,
                          "fba_fulfillment_fees": -1.5 * units,

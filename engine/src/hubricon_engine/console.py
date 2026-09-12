@@ -226,6 +226,12 @@ def _select_price_curves(margins: list[dict], elasticity_rows: list[dict], limit
         move = price_move(row, fit)
         if not move:
             continue
+        if move["status"] == "near_unit_elastic":
+            # The directive for this SKU says "no dollar figure we would stand
+            # behind". Printing "expected +$X/period" under a chart of the same
+            # move contradicts it in the client's own portal — the engine must not
+            # refuse a number in one surface and publish it in another.
+            continue
         units, revenue = float(row["units"] or 0), float(row["revenue"] or 0)
         picks.append({
             "sku": fit["item_id"],

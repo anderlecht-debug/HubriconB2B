@@ -9,7 +9,7 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **973 tests, all passing, ~80 seconds** — up from 770
+Suite at time of writing: **979 tests, all passing, ~95 seconds** — up from 770
 before this work. The 193 new ones live in fifteen files:
 
 ```
@@ -165,12 +165,13 @@ properly: the demand shock is AR(1) and the seller reprices off **last** month's
 demand, because nobody has next month's data. Endogeneity bites only when both
 hold.
 
-**Finding.** Median bias +0.59 at the worst reaction strength, against a +0.15
-no-reaction baseline — so +0.44 of endogeneity, toward zero, toward "raise the
-price". And the +0.15 baseline is **not** endogeneity: it is small-sample
-attenuation from 5% of log price variation, present with or without reaction, and
-conflating the two would have overstated the endogeneity threefold. Both are in
-the table in `MATH_METHODS.md` §2, separated. **Mitigations, measured rather than
+**Finding, as first reported and then corrected.** The original finding was a
+median bias of +0.59 against a +0.15 no-reaction baseline, with the warning that
+conflating attenuation with endogeneity "would have overstated the endogeneity
+threefold". **Iteration 13 overturned that: there is no baseline.** Over 96 seeds
+the φ = 0 cell is +0.022 and twelve independent 8-seed blocks of it span −0.117 to
++0.145. The whole +0.51 at φ = 0.4 is endogeneity. The careful separation was
+itself the error, and it made the danger look smaller than it is. **Mitigations, measured rather than
 asserted:** the pole guard disproportionately catches the worst-biased SKUs
 (`test_the_pole_guard_catches_the_most_biased_skus`). **Not corrected**, and the
 reason is stated: correcting it needs an instrument and no export is one.
@@ -333,6 +334,99 @@ covariance, which reads as perfect certainty — the worst possible failure mode
 a published interval. A spend-variation guard now runs before the fit, mirroring
 the price-variation guard on elasticity. **Score.** Uncertainty propagation 9 → 10.
 
+### Iteration 13 — five claims simulated and adversarially verified; the correction did not ship
+
+**Objection, self-raised.** Iteration 4 measured the endogeneity and named it the
+most dangerous assumption. A design pass then proposed correcting it from data
+already on disk: measure the seller's reaction strength φ, profile the demand
+persistence ρ, quasi-difference, and subtract the implied bias — no experiment on
+anyone's prices. Five claims were simulated, each then adversarially verified by a
+second agent whose job was to overturn it.
+
+**It was overturned, and four beliefs went with it.**
+
+*The attenuation baseline does not exist* (see iteration 4 above). 96 seeds: +0.022.
+The test that pinned +0.15 passed 5 of 12 seed blocks. The problem is bigger than
+reported, not smaller.
+
+*The correction is a tuned constant wearing an estimator's clothes.* Bias removal is
+strongly monotone in the ρ fed to it — residual bias +0.421 / +0.194 / −0.099 at
+ρ = 0.137 / 0.26 / 0.60 — and the profiled estimator recovers 0.26–0.48 against a
+true 0.60. It works *because* of that error, which cancels the quasi-differenced
+estimator's own incidental-parameter bias. Improving the ρ estimator (Prais–Winsten
+with the Nickell fixed point, which lands in tolerance in 48/48 cells) *breaks* the
+correction. A correction that degrades when you fix its inputs is not a correction.
+
+*Its allocation rule is actively harmful, and the damage is invisible in the metric
+it optimises.* The rule hands the largest correction to the SKUs that were never
+repriced. On a mixed catalog (half φ = 0, half φ = 0.8) the catalog median bias goes
++0.431 → −0.011, which reads as a total success, while RMSE goes 0.758 → 2.252
+(+197%) and the non-reacting SKUs go +0.028 → −2.363. **42% of SKUs made worse**,
+with the induced error pointing at "cut the price" and landing on the thinnest data.
+
+*"The correction makes the engine louder" validates nothing.* A placebo shift of the
+same magnitude into cells with no bias to remove goes louder by +37.3pp — more than
+the real correction's +21.7pp. Subtracting any positive number from ε̂ moves it off
+the pole mechanically.
+
+**And the one-sided bound failed too, 25 minutes after it shipped.** The asymptotic
+inequality is exact (P = 1.000 in long panels, verified to three decimals against a
+T = 1500 simulation). Per SKU, on the shrunk estimate the engine actually uses and
+the SKUs it actually quotes: it holds 0.797 at (φ=0.4, ρ=0.6) and **0.373 at
+(φ=0.4, ρ=0)** — inside the claim's own stated domain. A bound wrong for a quarter
+to two-thirds of the SKUs it is printed on is not a bound. Withdrawn from the client
+report and replaced with a catalogue-level statement that names its own limits.
+
+**What survived.** The φ diagnostic: one pooled within-SKU regression of log price
+on the lagged per-SKU demand *residual* recovers the reaction strength to 0.016
+absolute at every T down to 7, on two independent implementations, with a 1–4%
+false-positive rate. Two conditions are load-bearing and were undefined in the
+proposal: the proxy must be the residual (demeaned log units attenuates φ sixfold
+and pushes the false-positive rate to 12–22%) and the gate must be one-sided. It is
+blind to a catalog with +0.8 and −0.8 SKUs in equal measure.
+
+**Score.** Estimator validity stays 10 — the limit is now documented more accurately
+than before, which is what the dimension measures — and calibration stays 10 because
+the thing that failed was a proposal, not a shipped estimate. Iteration 14 is the
+shipped consequence.
+
+### Iteration 14 — the measurement was the bottleneck, not the estimator
+
+**Finding.** Three things about what the estimator can SEE turned out to matter more
+than anything about the estimator itself.
+
+*A reverting price test is invisible, by identity.* Under the units-weighted monthly
+average that ingest actually builds, a 14-day step that reverts gives a monthly price
+whose coefficient of variation is 0.011 against `MIN_PRICE_CV` = 0.02 — so the SKU
+returns `insufficient_price_variation` and carries no elasticity at all. An
+**adopted** step, which is what the engine's walk makes, gives 0.024 and fits. The
+withdrawal in iteration 13's commit was therefore too broad and is corrected here:
+price *tests* are invisible, directive *steps* are not.
+
+*Unequal period lengths biased the slope catastrophically, and this one is FIXED.*
+`elasticity._fit` passed `units_sold` through unnormalised — `period_start` and
+`period_end` were read only to sort. For a step held one whole a-day window against
+a b-day baseline, ε̂ = ε + ln(a/b)/ln(1+s). At a 15-day step against a 16-day
+baseline with s = 5% that is **−1.32**; at 14 against 16, **−2.74**. A calendar
+fortnight inside a 31-day month forces 15/16. So the obvious improvement — ask for
+fortnightly exports, which buys a 2.13× reduction in the standard error — was a trap
+that would have shipped an elasticity biased by one to three whole units toward
+price cuts. Units are now normalised to a daily rate, all-or-nothing across an
+item's series (normalising some periods and not others is the very
+price/length correlation the fix removes), with the bias it avoids pinned as the
+closed form at three splits. On equal periods it moves nothing, which is exactly why
+it would have been dropped as a nicety.
+
+Fixing it exposed a latent bug in ten test fixtures that wrote `f"2026-{i:02d}-01"`
+and therefore produced a thirteenth month past a year of history. Nothing had ever
+read those dates before.
+
+*The engine's step distribution is narrower than reported.* 71.8% of steps sit at
+the rail over twelve seeds, not 57%.
+
+**Score.** Estimator validity and calibration confirmed at 10 with the corrections
+applied; the cadence work is on the list at the end of this file rather than done.
+
 ---
 
 ## Outcome Alignment
@@ -351,9 +445,9 @@ price-step directives issued         115      117
   of which quoting a destination      95       16
   of which carrying a dollar promise 115       16
 step size: median                     5.0%     5.0%
-step size: 25th percentile             5.0%    3.0%
+step size: 25th percentile             5.0%    4.5%
 steps set by the statistics, not
-  the contractual rail                 0       50 of 117
+  the contractual rail                 0       28% of them
 anomaly tests run                    960      960
   detector flags                      24       24
   reaching a seller as a finding      24        0
@@ -361,6 +455,14 @@ anomaly tests run                    960      960
 
 **The headline:** the same number of instructions, 83% fewer prices quoted to the
 cent, 86% fewer dollar promises. Fewer and truer, and the trade is argued below.
+
+**Corrected 2026-09-12.** The step-size figures above were measured on ONE seed and
+two of them did not replicate. Over twelve seeds and 703 moves the 25th-percentile
+step is 4.5%, not 3.0%, and 71.8% of steps sit at the contractual rail rather than
+57%. So the claim that the statistics rather than the rail now set the step is true
+for about 28% of moves, not 43%. The rail is still doing most of the work, and
+saying otherwise was a one-seed artifact of the same kind as the attenuation
+baseline.
 
 ### 1.1 — The fee split
 
@@ -582,7 +684,7 @@ ad-response break-even, the last published number that had none; a spend-variati
 refusal for campaigns whose spend never moved; and two regressions in the
 measurement pass that the harness caught, both introduced by the Layer 1 fixes.
 
-The suite went from 770 tests to 973.
+The suite went from 770 tests to 979.
 
 ### What the horse race showed
 

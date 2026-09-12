@@ -134,28 +134,41 @@ weight goes to zero) rather than silent.
 ### What the elasticity cannot tell you
 
 **It is a correlation, and the price was not randomised.** The prices in the
-regression were chosen by the seller, often in response to how demand was running.
+regression were chosen by the seller, often in response to how demand was running —
+and a price that moved *because* demand moved says less about demand than a price
+that moved for no reason at all.
 When demand is persistent and the seller reprices off last month's numbers,
 `cov(ln P, shock) > 0` and the fitted curve reads demand as **less**
 price-sensitive than it is.
 
-Measured, on ~480 synthetic SKUs per cell over nine periods, as the median
+Measured over 96 seeds × 60 SKUs per cell, nine periods, as the median
 estimation error (fitted minus true):
 
 | demand persistence rho | reaction strength phi | bias |
 |---|---|---|
-| 0.0 | 0.0 | +0.14 |
+| 0.6 | 0.0 | +0.02 |
+| 0.6 | 0.4 | **+0.51** |
 | 0.0 | 0.6 | −0.16 |
-| 0.6 | 0.0 | +0.15 |
-| 0.6 | 0.4 | **+0.59** |
-| 0.6 | 0.6 | +0.45 |
-| 0.6 | 1.2 | +0.26 |
 
-Two separate things are in that table and they must not be confused. The +0.14 at
-phi = 0 is **small-sample attenuation**, not endogeneity: with 5% of log price
-variation across nine periods the slope is pulled toward zero, which for a
-negative slope reads as a positive bias. It is present with or without reaction.
-The endogeneity is the **increment** on top, up to +0.44.
+**Corrected 2026-09-12.** This table previously reported a +0.15 "small-sample
+attenuation baseline" at phi = 0 and described the endogeneity as the increment on
+top — and warned that the two "must not be confused". There was only one thing.
+The +0.15 was an artifact of eight seeds: twelve independent 8-seed blocks of that
+cell run from −0.117 to +0.145 with a between-block sd of 0.079, and the pooled
+figure over 96 seeds is **+0.022**. The test that pinned +0.15 passed 5 of those 12
+blocks.
+
+So the bias at phi = 0.4, rho = 0.6 is the whole **+0.51**, and essentially all of
+it is endogeneity. The comfort that most of the error was just thin data was never
+real, and the assumption is correspondingly more dangerous than the first write-up
+said — as is its consequence, which was also understated (33% on the quoted
+optimum, not 17%).
+
+The sign at rho = 0 matters and is not a curiosity: with no persistence, reacting
+to last month biases ε̂ the OTHER way (−0.16). A correction triggered on reaction
+strength alone would therefore do harm on a non-persistent catalog, which is why
+any such correction needs a persistence test too — and why the one designed on
+2026-09-12 was not shipped (see below).
 
 Both run the same way — toward zero, toward "raise the price, demand barely
 cares" — which is the dangerous direction, because it is the direction that

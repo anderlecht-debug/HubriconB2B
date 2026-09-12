@@ -146,6 +146,8 @@ import numpy as np
 from .common import num, period_days
 from .mc import quantiles_with_se
 
+import math
+
 STEP_CAP = 0.05          # hard outer rail on a cycle's move — what the client authorised
 INELASTIC_STEP = 0.03    # legacy bounded step; retained for callers that quote it
 MIN_MOVE = 0.005         # under half a percent of a move: leave it alone
@@ -250,21 +252,53 @@ def profit_delta(eps: float, p0: float, q0: float, unit_cost: float, fee_rate: f
     return profit(eps, *args, p_new, fixed_fee) - profit(eps, *args, p0, fixed_fee)
 
 
-def near_unit_elastic(eps: float, std_err: float | None, ci: list | tuple | None) -> bool:
+def near_unit_elastic(eps: float, std_err: float | None, ci: list | tuple | None,
+                      fitted: bool = True) -> bool:
     """Is this fit too close to the pole at eps = −1 to name a destination?
 
-    True when the 95% interval straddles −1, or when epŝ is within
-    POLE_GUARD_SIGMAS standard errors of it. A fit carrying neither an
-    interval nor a standard error states no uncertainty at all — a hand-built
-    fixture, or a fit from before this guard existed — and is taken at its
-    word rather than refused on a guess about how uncertain it might be."""
+    True when the 95% interval straddles −1, when epŝ is within
+    POLE_GUARD_SIGMAS standard errors of it, and ALSO when a fitted row carries no
+    usable uncertainty at all.
+
+    That last clause closes a hole this guard had until 2026-09-12. The original
+    took a missing standard error as a claim of certainty, reasoning that a
+    hand-built fixture states no uncertainty and should be taken at its word. But
+    `common.num` maps ±inf and NaN to None, so a fit whose standard error came back
+    UNBOUNDED arrives here looking exactly like a fixture claiming to be exact —
+    and the guard let it through. Measured: a SKU at epŝ = −1.05 whose SE was
+    non-finite produced a destination of $123.53 on a $20 item, a full 5% step, a
+    dollar promise, and p_loss = 0.0, which the directive prose renders as "under a
+    1% chance it goes the other way". Maximum confidence exactly where there is no
+    information — the precise failure this guard exists to prevent.
+
+    A FITTED row with no interval and no positive finite standard error is now
+    refused. `fitted=False` restores take-it-at-its-word for a caller that
+    genuinely is asserting an exact elasticity: a test fixture, or a counterfactual
+    evaluated at a named value."""
     if ci and len(ci) == 2 and ci[0] is not None and ci[1] is not None:
         lo, hi = sorted(float(c) for c in ci)
+        if not (math.isfinite(lo) and math.isfinite(hi)):
+            return True
         if lo <= -1.0 <= hi:
             return True
     if std_err is not None and float(std_err) > 0:
+        if not math.isfinite(float(std_err)):
+            return True
         return abs(1.0 + eps) < POLE_GUARD_SIGMAS * float(std_err)
-    return False
+    # no usable uncertainty on a fitted row: unbounded, not exact
+    return bool(fitted)
+
+
+def _has_stated_uncertainty(elasticity_row: dict) -> bool:
+    """Does this row state ANY usable uncertainty? A row that does not cannot be
+    given a zero-width posterior — see near_unit_elastic's docstring."""
+    se = elasticity_row.get("std_err")
+    if se is not None and float(se) > 0 and math.isfinite(float(se)):
+        return True
+    ci = (elasticity_row.get("details") or {}).get("ci95")
+    return bool(ci and len(ci) == 2 and ci[0] is not None and ci[1] is not None
+                and math.isfinite(float(ci[0])) and math.isfinite(float(ci[1]))
+                and float(ci[1]) != float(ci[0]))
 
 
 def _posterior_se(elasticity_row: dict) -> tuple[float, float | None]:
@@ -513,7 +547,11 @@ def price_move(margin_row: dict, elasticity_row: dict,
     std_err, dof = _posterior_se(elasticity_row)
 
     destination = None
-    if near_unit_elastic(eps, elasticity_row.get("std_err") or std_err, ci):
+    # a fitted row with no stated uncertainty is unbounded, not exact
+    if not _has_stated_uncertainty(elasticity_row) and elasticity_row.get("status") == "ok":
+        return None
+    if near_unit_elastic(eps, elasticity_row.get("std_err") or std_err, ci,
+                         fitted=elasticity_row.get("status") == "ok"):
         # No destination: the distance is unbounded this close to the pole. The
         # direction is NOT asserted either. The pole proof in the docstring pins
         # it upward for an epŝ genuinely near −1, but the guard also fires on a

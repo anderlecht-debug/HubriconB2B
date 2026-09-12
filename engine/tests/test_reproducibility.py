@@ -30,6 +30,17 @@ from hubricon_engine.models import (
 FEE_RATE, FIXED_FEE, UNIT_COST = 0.15, 1.50, 5.00
 
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def _catalog(n_skus=10, n_periods=8, seed=17):
     rng = np.random.default_rng(seed)
     common = rng.normal(0, 0.22, size=n_periods)
@@ -42,7 +53,7 @@ def _catalog(n_skus=10, n_periods=8, seed=17):
         for j, (p, u) in enumerate(zip(prices, units), start=1):
             revenue = float(p) * float(u)
             econ.append({"sku": sku, "asin": "B0" + sku,
-                         "period_start": f"2026-{j:02d}-01", "period_end": f"2026-{j:02d}-28",
+                         "period_start": _period(j)[0], "period_end": _period(j)[1],
                          "units_sold": float(u), "avg_sales_price": float(p),
                          "sales": revenue, "referral_fees": -FEE_RATE * revenue,
                          "fba_fulfillment_fees": -FIXED_FEE * float(u),

@@ -67,6 +67,17 @@ from hubricon_engine.models import elasticity
 FEE_RATE, FIXED_FEE, BASE_PRICE = 0.15, 1.50, 20.0
 
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def _reactive_catalog(seed, phi, rho, n_skus=60, n_periods=9, demand_sd=0.22):
     """Exports from a seller who reprices in response to last month's demand."""
     rng = np.random.default_rng(seed)
@@ -86,7 +97,7 @@ def _reactive_catalog(seed, phi, rho, n_skus=60, n_periods=9, demand_sd=0.22):
             revenue = float(p) * float(u)
             econ.append({
                 "sku": sku, "asin": "B0" + sku,
-                "period_start": f"2026-{j:02d}-01", "period_end": f"2026-{j:02d}-28",
+                "period_start": _period(j)[0], "period_end": _period(j)[1],
                 "units_sold": float(u), "avg_sales_price": float(p), "sales": revenue,
                 "referral_fees": -FEE_RATE * revenue,
                 "fba_fulfillment_fees": -FIXED_FEE * float(u),
@@ -112,49 +123,75 @@ def _bias(phi, rho, seeds=range(700, 708)):
 
 
 BASELINE_PHI = 0.0
+# Eight seeds is not a measurement. The between-8-seed-block sd of the median bias
+# is 0.079, so a cell measured on one block carries a ±0.16 two-sigma band — wide
+# enough to invent a +0.15 "baseline" that does not exist. Every cell here is
+# measured over this many seeds, and the tolerances come from that dispersion.
+WIDE_SEEDS = range(700, 796)
 
 
-def test_thin_data_alone_attenuates_the_slope_toward_zero():
-    """The baseline that must be separated from endogeneity before any claim
-    about endogeneity is made. With no reaction at all, nine periods and 5% of
-    log price variation still pull ε̂ toward zero by about 0.14. That is
-    small-sample attenuation, it is the same with or without reaction, and it is
-    the price of thin data."""
-    bias, n = _bias(phi=BASELINE_PHI, rho=0.6)
-    assert n > 400
-    assert 0.05 < bias < 0.25, bias
-    # persistence on its own changes nothing
-    independent, _ = _bias(phi=BASELINE_PHI, rho=0.0)
+def test_there_is_no_attenuation_baseline_worth_naming():
+    """The correction that matters most, pinned.
+
+    This test used to assert 0.05 < bias < 0.25 at φ = 0 and call the result
+    small-sample attenuation. Over 96 seeds the figure is +0.022 and the old
+    assertion passes 5 of 12 independent 8-seed blocks. There is no baseline; the
+    whole measured bias at φ > 0 is endogeneity, and the problem is therefore
+    bigger than the first write-up said, not smaller."""
+    bias, n = _bias(phi=BASELINE_PHI, rho=0.6, seeds=WIDE_SEEDS)
+    assert n > 5000
+    assert abs(bias) < 0.06, bias
+    # persistence on its own still changes nothing, and now that is a real claim
+    independent, _ = _bias(phi=BASELINE_PHI, rho=0.0, seeds=WIDE_SEEDS)
     assert independent == pytest.approx(bias, abs=0.06)
+
+
+def test_an_eight_seed_block_cannot_measure_this_cell():
+    """The methodological finding, kept as a test so the mistake cannot recur.
+
+    Twelve independent 8-seed blocks of the φ = 0 cell span −0.117 to +0.145. Any
+    claim about this cell from one block is noise, and this engine published one
+    for a day."""
+    blocks = [_bias(phi=BASELINE_PHI, rho=0.6, seeds=range(s, s + 8))[0]
+              for s in range(700, 796, 8)]
+    spread = max(blocks) - min(blocks)
+    assert spread > 0.2, blocks
+    assert np.std(blocks, ddof=1) > 0.05
+    # and the pooled estimate is far tighter than any single block
+    pooled, _ = _bias(phi=BASELINE_PHI, rho=0.6, seeds=WIDE_SEEDS)
+    assert abs(pooled) < min(abs(b) for b in blocks if abs(b) > 0.1)
 
 
 def test_reacting_to_an_independent_shock_does_not_bias_toward_zero():
     """Reacting to last month tells you nothing about this month when demand has
-    no memory, so the price is effectively still exogenous and the attenuation
-    baseline is not made worse."""
-    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.0)
-    reactive, _ = _bias(phi=0.6, rho=0.0)
-    assert reactive < baseline
+    no memory, so the price is effectively still exogenous. Note the sign: with no
+    persistence the reaction biases ε̂ the OTHER way, which is why a correction
+    triggered on reaction strength alone would do harm on a non-persistent
+    catalog."""
+    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.0, seeds=WIDE_SEEDS)
+    reactive, _ = _bias(phi=0.6, rho=0.0, seeds=WIDE_SEEDS)
+    assert reactive < baseline - 0.1
 
 
 def test_reactive_pricing_on_persistent_demand_biases_epsilon_toward_zero():
-    """The finding, measured as the increment over the matched baseline so the
-    attenuation is not double-counted as endogeneity. Demand reads measurably
-    LESS elastic than it is, which is the direction that makes the engine
-    recommend price increases."""
-    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.6)
-    reactive, _ = _bias(phi=0.4, rho=0.6)
-    assert reactive - baseline > 0.25, f"{reactive:.3f} vs baseline {baseline:.3f}"
+    """The finding, over 96 seeds. Demand reads measurably LESS elastic than it
+    is, which is the direction that makes the engine recommend price increases —
+    and with no attenuation baseline to net off, the whole half-unit is
+    endogeneity."""
+    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.6, seeds=WIDE_SEEDS)
+    reactive, _ = _bias(phi=0.4, rho=0.6, seeds=WIDE_SEEDS)
+    assert reactive > 0.40, reactive
+    assert reactive - baseline > 0.35, f"{reactive:.3f} vs baseline {baseline:.3f}"
     assert reactive - baseline < 1.0
 
 
 def test_the_bias_direction_is_stable_across_reaction_strengths():
     """Not an artifact of one φ: every reaction strength on persistent demand
     biases the same way, above the no-reaction baseline."""
-    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.6, seeds=range(700, 704))
+    baseline, _ = _bias(phi=BASELINE_PHI, rho=0.6, seeds=range(700, 748))
     for phi in (0.4, 0.6, 1.2):
-        bias, _ = _bias(phi=phi, rho=0.6, seeds=range(700, 704))
-        assert bias > baseline, f"phi={phi}: {bias:.3f} vs {baseline:.3f}"
+        bias, _ = _bias(phi=phi, rho=0.6, seeds=range(700, 748))
+        assert bias > baseline + 0.1, f"phi={phi}: {bias:.3f} vs {baseline:.3f}"
 
 
 def test_the_bias_is_large_enough_to_move_a_recommendation():
@@ -217,8 +254,18 @@ def test_a_seller_facing_sentence_exists_for_this():
     # reasons, rather than the claim being quietly deleted
     assert "corrected 2026-09-12" in lower
     assert "not an instrument" in lower
-    # the measured size of the bias, so the doc and the simulation cannot drift
-    assert "+0.59" in text or "+0.44" in text
+    # the measured size of the bias, so the doc and the simulation cannot drift.
+    # Was "+0.59 or +0.44" until 2026-09-12; both were 8-seed figures and the
+    # second was an increment over a baseline that turned out not to exist.
+    assert "+0.51" in text
+    assert "+0.022" in text          # the φ=0 cell over 96 seeds
+    # the withdrawn "+0.15 attenuation baseline" may still appear — but only inside
+    # the paragraph that withdraws it, never as a live figure. Checking for its
+    # absence would push the correction history out of the document, which is the
+    # opposite of what this engine wants; so check the withdrawal is attached to it.
+    if "+0.15" in text:
+        window = text[max(0, text.index("+0.15") - 900):text.index("+0.15") + 900]
+        assert "Corrected 2026-09-12" in window or "artifact" in window
 
     # and the seller-facing version of the same sentence, on the report itself.
     # Whitespace is normalised: the template wraps its prose, and a line break is
@@ -230,8 +277,16 @@ def test_a_seller_facing_sentence_exists_for_this():
     assert "It is not corrected." in report
     # the measured consequence, in the client's units
     assert "a third too high" in report
-    # the bound, which is what the client can actually act on
-    assert "ceiling on the best price rather than a target" in report
+    # and the per-SKU bound claim must NOT be there. It was shipped for 25
+    # minutes on 2026-09-12 on the strength of an asymptotic argument, then
+    # measured: on the SKUs the engine actually quotes, using the shrunk estimate
+    # it actually uses, "quoted >= true optimum" holds 0.797 at (phi=0.4,
+    # rho=0.6) and 0.373 at (phi=0.4, rho=0) — and rho=0 is inside the claim's
+    # own stated domain. A bound that is wrong for a quarter to two-thirds of the
+    # SKUs it is printed on is not a bound.
+    assert "ceiling on the best price rather than a target" not in report
+    # what replaced it is a catalogue-level statement with its own limits named
+    assert "statement about the catalogue and not about" in report
 
     # AND the false claim stays gone. Until 2026-09-12 this report told every
     # client "correcting it needs a price change made for a reason unrelated to

@@ -4,8 +4,19 @@ import pytest
 from hubricon_engine.models import ad_efficiency, elasticity, inventory_sim, margin
 
 
+def _period(i: int, length: int = 28) -> tuple[str, str]:
+    """(start, end) for the i-th period, 1-indexed, rolling into the next year.
+
+    Fixtures used to write f"2026-{i:02d}-01" directly, which produces month 13
+    past a year of history. Nothing caught it until elasticity._fit began reading
+    period_end to normalise units by period length (2026-09-12) — a real export
+    never has a thirteenth month."""
+    year, month = 2026 + (i - 1) // 12, (i - 1) % 12 + 1
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{length:02d}"
+
+
 def _month(i: int) -> tuple[str, str]:
-    return f"2026-{i:02d}-01", f"2026-{i:02d}-28"
+    return _period(i)[0], _period(i)[1]
 
 
 def _econ_rows(prices, units, sku="S1"):
