@@ -3061,7 +3061,7 @@ def main():
     p.add_argument("--module", choices=["pricing", "advertising", "inventory", "margin", "recovery", "general"])
     p.add_argument("--standing", action="store_true", help="we may do this without asking")
     p.add_argument("--explicit", dest="standing", action="store_false", help="nothing happens without a yes")
-    p.add_argument("--bound", type=float, help="numeric bound, e.g. 0.05 for a 5% price step")
+    p.add_argument("--bound", type=float, help="numeric bound, e.g. 0.05 for a 5%% price step")
     p.add_argument("--bound-note", help="the bound in the client's own words")
     p.add_argument("--veto-hours", type=int, default=72)
     p.add_argument("--note", help="what was agreed, and when")

@@ -9,7 +9,7 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **969 tests, all passing, ~75 seconds.**
+Suite at time of writing: **971 tests, all passing, ~75 seconds.**
 
 ---
 
@@ -450,7 +450,10 @@ risk budget, whether the cap or the statistics bound the step, and how many
 candidates were feasible.
 
 **Reversibility.** Every step is inside the ±5% a cycle the terms authorise, so the
-next cycle can undo it in full. Buy Box share is watched while it is live.
+next cycle can undo it in full without a new signature — which is the whole reason
+the hard cap survives as a rail even though the statistics normally bind first.
+Asserted in `test_every_price_step_is_undoable_within_one_cycle`, along with the
+baseline price being on the record so the undo is exact.
 
 ### 1.8 — False-discovery control
 
@@ -546,7 +549,7 @@ ad-response break-even, the last published number that had none; a spend-variati
 refusal for campaigns whose spend never moved; and two regressions in the
 measurement pass that the harness caught, both introduced by the Layer 1 fixes.
 
-The suite went from 770 tests to 969.
+The suite went from 770 tests to 971.
 
 ### What the horse race showed
 

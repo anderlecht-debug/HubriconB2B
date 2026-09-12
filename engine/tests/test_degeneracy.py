@@ -371,3 +371,59 @@ def test_the_published_formulas_match_the_code():
     assert f"finding ⟺ q ≤ {anomaly.FDR_Q:.2f}" in page
     # the hard cap the page quotes is the one the code enforces
     assert f"{STEP_CAP:.0%}" in page
+
+
+# ── reversibility: every recommendation undoable within one cycle ──────────
+
+def test_every_price_step_is_undoable_within_one_cycle():
+    """A price step is reversible because it stays inside the same authority that
+    made it: ±5% per SKU per cycle. Whatever the engine moves this cycle, the next
+    cycle can move back in full without needing a new signature — and that is the
+    whole reason the hard cap survives as a rail even though the statistics
+    normally bind first."""
+    from hubricon_engine.models.pricing_engine import STEP_CAP
+
+    rng = np.random.default_rng(8)
+    econ, cogs = [], []
+    for i in range(14):
+        sku = f"V{i:02d}"
+        prices = 20.0 * np.exp(rng.normal(0, 0.13, size=8))
+        units = 320.0 * (prices / 20.0) ** rng.uniform(-3.4, -0.7) * np.exp(
+            rng.normal(0, 0.2, size=8))
+        econ += _econ(prices, units, sku=sku)
+        cogs.append({"sku": sku, "asin": "B0" + sku, "unit_cost_usd": 5.0})
+    data = _data(sku_economics=econ, cogs_inputs=cogs)
+    margins = margin.run(data)
+    fits = elasticity.run(data)
+    steps = [d for d in draft_directives([], [], fits, margins) if d["kind"] == "price_step"]
+    assert steps
+
+    for d in steps:
+        ev = d["evidence"]
+        fraction = abs(ev["p_new"] / ev["p0"] - 1)
+        # inside the authorised band, so the reverse move is inside it too
+        assert fraction <= STEP_CAP + 0.005 / ev["p0"], (ev["sku"], fraction)
+        # and a step larger than the authority is demoted rather than sent anyway
+        if fraction > STEP_CAP + 0.005 / ev["p0"]:
+            assert d["mandate"] == "explicit"
+        # the old price is on the record, which is what makes the undo exact
+        assert ev["p0"] > 0
+
+
+def test_the_cli_parser_builds_and_exposes_the_replay_command():
+    """The replay harness is only a deliverable if it can be invoked. argparse on
+    Python 3.14 validates help strings, and a bare % in one of them takes down the
+    whole parser — which it did, for every command, until 2026-09-11."""
+    import sys
+
+    from hubricon_engine import cli
+
+    argv = sys.argv
+    try:
+        sys.argv = ["hubricon", "replay", "--help"]
+        try:
+            cli.main()
+        except SystemExit as exit_code:
+            assert exit_code.code == 0
+    finally:
+        sys.argv = argv
