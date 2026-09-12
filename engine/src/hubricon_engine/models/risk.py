@@ -22,8 +22,12 @@ every number has a name a client's accountant or insurer would recognise:
                                right-censored rather than pretending they died.
 
 The Monte Carlo behind `run()["var"]` uses the same demand generator as the
-inventory simulation and the cash-flow cone (rate-uncertain Poisson), so the
-three can never disagree about what demand is.
+inventory simulation and the cash-flow cone — a moment-matched lognormal rate
+with a demand factor shared across SKUs (models/dependence.py), then Poisson
+counts — so the three can never disagree about what demand is, nor about how
+much of a bad month arrives at once. Drawing each SKU independently is what makes
+an aggregate VaR too comfortable: forty SKUs' good and bad months cancel almost
+perfectly under independence and do not cancel at all in a slow season.
 
 Honesty discipline: every section carries a `status`; thin inputs yield
 `insufficient_data` and no number that looks like a finding; every modelling
@@ -37,7 +41,9 @@ from datetime import date, timedelta
 
 import numpy as np
 
+from . import dependence
 from .common import num, period_days
+from .mc import quantile_se
 
 DEFAULT_PATHS = 10000
 FALLBACK_RATE_CV = 0.35  # single observed period: same assumption as inventory_sim
@@ -410,21 +416,32 @@ def _var_section(margin_rows: list[dict], forecast_rows: list[dict] | None,
     if not params:
         return _insufficient("no SKU in the latest margin period with units, revenue and a demand rate")
 
-    net = np.zeros(n_paths)
-    rev = np.zeros(n_paths)
-    for p in params:
-        rates = np.clip(rng.normal(p["rate"], p["sd"], size=n_paths), 0, None)
-        units = rng.poisson(rates * days)
-        net += units * p["contribution"] - p["ads"]
-        rev += units * p["price"]
+    correlation = dependence.estimate_pairwise_corr(
+        {sku: rates for sku, rates in history.items()
+         if len(rates) >= dependence.MIN_PANEL_PERIODS
+         and len(rates) == max(len(v) for v in history.values())}
+        if history else {}
+    )
+    rates = dependence.correlated_rates(
+        rng, [p["rate"] for p in params], [p["sd"] for p in params],
+        (n_paths,), float(correlation["rho"]))
+    units = rng.poisson(rates * days)
+    net = (np.array([p["contribution"] for p in params]) @ units
+           - float(sum(p["ads"] for p in params)))
+    rev = np.array([p["price"] for p in params]) @ units
     expected = float(net.mean())
     losses = expected - net
     var95, cvar95 = _var_cvar_raw(losses, 0.95)
     var99, cvar99 = _var_cvar_raw(losses, 0.99)
 
     assumptions = [
-        "Demand per SKU: daily rate ~ normal(point, sd) truncated at 0, units ~ Poisson(rate × days) — "
+        "Demand per SKU: daily rate ~ lognormal matched to (point, sd), units ~ Poisson(rate × days) — "
         "the same generator as the inventory simulation and cash-flow cone",
+        f"Demand shares a common factor across SKUs: pairwise log-demand correlation "
+        f"{correlation['pairwise_corr']}, "
+        + ("measured from this catalog's own history" if correlation["basis"] == "estimated"
+           else "a conservative default — the history is too thin to measure one")
+        + ". Independent draws would put the tail far closer to the mean than it is.",
         f"Unit contribution (revenue − Amazon fees − COGS) / units and ad spend are frozen at the latest "
         f"period ({start} to {end}); only unit volume is uncertain",
         "Loss = expected net − simulated net; VaR/CVaR are dollars below expectation, not absolute losses",
@@ -449,6 +466,14 @@ def _var_section(margin_rows: list[dict], forecast_rows: list[dict] | None,
         "p50_net": num(float(np.quantile(net, 0.50))),
         "revenue_p5": num(float(np.quantile(rev, 0.05))),
         "revenue_p50": num(float(np.quantile(rev, 0.50))),
+        # every published percentile carries the error bar of the simulation
+        # that produced it
+        "mc_se": {
+            "var_95": num(quantile_se(losses, 0.95), 2),
+            "var_99": num(quantile_se(losses, 0.99), 2),
+            "p5_net": num(quantile_se(net, 0.05), 2),
+        },
+        "demand_correlation": correlation,
         "n_paths": int(n_paths),
         "skus_modeled": len(params),
         "period_start": start,

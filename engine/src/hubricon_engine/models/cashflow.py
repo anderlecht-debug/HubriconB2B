@@ -23,6 +23,22 @@ point, then a steady-state cycle every reorder_qty / velocity days. COGS
 never hits cash per-sale — inventory already on hand was paid for; future
 inventory is paid for by exactly these wires.
 
+Demand shares a common factor across SKUs (models/dependence.py). Drawing each
+SKU's demand independently was the single most expensive assumption in this
+model: the cone is an AGGREGATE of forty or four hundred SKUs, and independent
+draws let their good and bad months cancel almost perfectly, so the 5th
+percentile of the cash path came out far too comfortable. A seller deciding
+whether they need bridge capital was reading the wrong number.
+
+The trough is reported with its EXPECTED SHORTFALL, not only its 5th percentile.
+A percentile is a threshold, not a risk measure — it says nothing about whether
+the 1% case is a little worse or catastrophically worse, and it is not
+sub-additive, so percentiles of parts do not bound the percentile of the whole
+(Artzner et al. 1999; Rockafellar & Uryasev 2000). The mean of the worst
+twentieth of troughs is the number a runway decision needs. Every published
+percentile also carries its Monte Carlo standard error, because a P5 read off
+10,000 paths is an estimate and the seller is entitled to know how firm it is.
+
 Ruin here means the simulated account balance crossing zero — an honest
 "you would need bridge capital" line, never a bankruptcy prophecy.
 """
@@ -30,7 +46,9 @@ Ruin here means the simulated account balance crossing zero — an honest
 import numpy as np
 
 from .. import channels
+from . import dependence
 from .common import num, period_days
+from .mc import expected_shortfall, quantile_se
 
 PAYOUT_CYCLE_DAYS = channels.PAYOUT_CYCLE_DAYS["amazon"]  # the default; 14 days
 DEFAULT_HORIZON_DAYS = 90
@@ -72,6 +90,26 @@ def sku_cash_params(inventory_rows: list[dict], margin_rows: list[dict]) -> list
     return [p for p in params if p["mean_rate"] > 0]
 
 
+def _rate_panel(margin_rows: list[dict]) -> dict[str, list[float]]:
+    """{sku: [daily rate per shared period]} from the margin rows — the panel the
+    catalog's demand correlation is estimated on. Only periods every SKU has are
+    used, because a cross-sectional correlation needs a rectangle."""
+    per_sku: dict[str, dict[str, float]] = {}
+    for m in margin_rows or []:
+        units = m.get("units")
+        if units is None or float(units) <= 0:
+            continue
+        days = period_days(str(m["period_start"]), str(m["period_end"]))
+        per_sku.setdefault(m["sku"], {})[str(m["period_start"])] = float(units) / days
+    if not per_sku:
+        return {}
+    shared = set.intersection(*(set(v) for v in per_sku.values()))
+    if len(shared) < dependence.MIN_PANEL_PERIODS:
+        return {}
+    order = sorted(shared)
+    return {sku: [v[p] for p in order] for sku, v in per_sku.items()}
+
+
 def wire_schedule(inventory_rows: list[dict], margin_rows: list[dict],
                   horizon_days: int = DEFAULT_HORIZON_DAYS) -> list[dict]:
     """Deterministic supplier-PO outflows: same reorder points, quantities
@@ -103,7 +141,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              horizon_days: int = DEFAULT_HORIZON_DAYS,
              n_paths: int = DEFAULT_PATHS,
              payout_cycle_days: int = PAYOUT_CYCLE_DAYS,
-             payout_note: str | None = None) -> dict:
+             payout_note: str | None = None,
+             correlation: dict | None = None) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
     schedule that produced it.
@@ -114,13 +153,18 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     channels.py; the defaults are Amazon's."""
     days = horizon_days
     payout_cycle_days = max(1, int(payout_cycle_days))
-    sales_net = np.zeros((n_paths, days))
-    ad_daily_total = 0.0
-    for p in params:
-        rates = np.clip(rng.normal(p["mean_rate"], p["std_rate"], size=(n_paths, days)), 0, None)
-        units = rng.poisson(rates)
-        sales_net += units * p["price"] * (1 - p["fee_rate"])
-        ad_daily_total += p["ad_daily"]
+    correlation = correlation or dependence.estimate_pairwise_corr({})
+    rho = float(correlation.get("rho") or 0.0)
+
+    # every SKU's rate for a given (path, day) shares one common factor, so a
+    # bad day is bad across the catalog rather than averaging out
+    rates = dependence.correlated_rates(
+        rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
+        (n_paths, days), rho)
+    units = rng.poisson(rates)
+    revenue_per_unit = np.array([p["price"] * (1 - p["fee_rate"]) for p in params])
+    sales_net = np.tensordot(revenue_per_unit, units, axes=(0, 0))
+    ad_daily_total = float(sum(p["ad_daily"] for p in params))
 
     outflow = np.full(days, monthly_fixed_costs / OPEX_DAYS_PER_MONTH)
     for w in wires:
@@ -141,19 +185,40 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     p5, p50, p95 = (np.quantile(cash, q, axis=0) for q in (0.05, 0.50, 0.95))
     ruined = (cash.min(axis=1) < 0).mean()
     min_p5_day = int(np.argmin(p5))
+
+    # The trough of each path, and the tail mean of those troughs. This is the
+    # number a runway decision is made on: not "the 5th-worst month in a
+    # hundred" but "how deep does it get once you are in that fifth percentile".
+    trough = cash.min(axis=1)
+    trough_tail = expected_shortfall(trough, 0.05, tail="lower")
+    ruin_se = float(np.sqrt(max(0.0, ruined * (1 - ruined)) / n_paths))
     return {
         "horizon_days": days,
         "n_paths": n_paths,
         "starting_cash": num(starting_cash),
         "monthly_fixed_costs": num(monthly_fixed_costs),
         "p_ruin": num(float(ruined), 4),
+        "p_ruin_mc_se": num(ruin_se, 5),
         "min_p5": num(float(p5[min_p5_day])),
         "min_p5_day": min_p5_day + 1,
         "min_median": num(float(p50.min())),
+        # the coherent pair: the familiar percentile, and the tail mean behind it
+        "trough_p5": num(trough_tail["threshold"]),
+        "trough_expected_shortfall": num(trough_tail["shortfall"]),
+        "trough_expected_shortfall_se": num(trough_tail["se"], 3),
+        "trough_median": num(float(np.median(trough))),
         "details": {
             "p5": [num(float(v)) for v in p5],
             "p50": [num(float(v)) for v in p50],
             "p95": [num(float(v)) for v in p95],
+            # the error bar on every published percentile, at the trough day —
+            # where the cone is read and where the decision is made
+            "mc_se_at_trough": {
+                "p5": num(quantile_se(cash[:, min_p5_day], 0.05), 2),
+                "p50": num(quantile_se(cash[:, min_p5_day], 0.50), 2),
+                "p95": num(quantile_se(cash[:, min_p5_day], 0.95), 2),
+            },
+            "demand_correlation": correlation,
             "wires": wires,
             "payout_days": [d + 1 for d in payout_days],
             "payout_cycle_days": payout_cycle_days,
@@ -162,7 +227,15 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
                 payout_note or channels.payout_note("amazon"),
                 f"Fixed costs accrue daily (monthly / {OPEX_DAYS_PER_MONTH}); real due dates may be lumpier",
                 "Cash on hand and monthly fixed costs are client-stated, not modeled",
-                "Demand generator identical to the inventory simulation (rate-uncertain Poisson)",
+                "Demand generator identical to the inventory simulation "
+                "(lognormal rate, Poisson counts)",
+                f"Demand shares a common factor across SKUs: pairwise log-demand "
+                f"correlation {correlation.get('pairwise_corr')}, "
+                + ("measured from this catalog's own history"
+                   if correlation.get("basis") == "estimated"
+                   else "a conservative default — the history is too thin to measure one"),
+                "The trough is reported with its expected shortfall (the mean of the "
+                "worst 5% of troughs), not only its 5th percentile",
             ],
         },
     }
@@ -187,7 +260,9 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
         return None
     channel = channel or channels.client_channel(client) or "amazon"
     wires = wire_schedule(inventory_rows, margin_rows, horizon_days)
+    correlation = dependence.estimate_pairwise_corr(_rate_panel(margin_rows))
     return simulate(params, wires, float(cash_on_hand), float(opex), rng,
                     horizon_days=horizon_days, n_paths=n_paths,
                     payout_cycle_days=channels.payout_cycle_days(channel),
-                    payout_note=channels.payout_note(channel))
+                    payout_note=channels.payout_note(channel),
+                    correlation=correlation)

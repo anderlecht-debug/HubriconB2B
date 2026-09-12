@@ -350,6 +350,17 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                          if f["status"] == "ok" and f["level"] == "sku"}
             inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides)
             _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
+            # the joint view: how many SKUs run out in the same lead time once
+            # demand shares a common factor, beside the independent figure the
+            # per-SKU rows imply
+            inventory_panel = inventory_sim.aggregate(inventory_rows, data, rng,
+                                                      simulations=simulations)
+            _save_output(db, run_id, client["id"], "inventory_panel", inventory_panel)
+            if inventory_panel.get("status") == "ok":
+                c, i = inventory_panel["correlated"], inventory_panel["independent"]
+                print(f"  inventory panel: {c['expected_stockouts']:.1f} SKUs expected out of "
+                      f"stock, {c['p95_stockouts']:.0f} at the 95th percentile "
+                      f"(independent draws would say {i['p95_stockouts']:.0f})")
         if "elasticity" in wanted:
             elast_rows = elasticity.run(data)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])

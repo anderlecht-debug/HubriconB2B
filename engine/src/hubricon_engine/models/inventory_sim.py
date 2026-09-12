@@ -1,17 +1,32 @@
-"""Monte Carlo inventory simulation, per SKU.
+"""Monte Carlo inventory simulation, per SKU and across the catalog.
 
 Demand during a replenishment lead time is simulated as
-    lead_time ~ lognormal(median = supplier lead time, sigma = 0.2)
-    daily_rate ~ normal(mean, std) truncated at 0  (moments from observed periods)
-    demand    ~ poisson(daily_rate * lead_time)
+    lead_time  ~ lognormal(median = supplier lead time, sigma = 0.2)
+    daily_rate ~ lognormal matched to the observed mean and sd, with a shared
+                 demand factor across SKUs (models/dependence.py)
+    demand     ~ poisson(daily_rate * lead_time)
 against the current inventory position (fulfillable + inbound). With a single
 observed period the rate std is assumed at 35% of the mean — both assumptions
 are surfaced in the details payload.
+
+The rate was a normal truncated at zero until 2026-09-11. Clipping a normal at
+zero raises its mean above the one it was calibrated to and removes the skew
+demand actually has, and it bit hardest on the thin volatile SKUs where the
+stockout question is live. The lognormal is moment-matched, so the marginal mean
+and variance are the ones the data showed, and it cannot go negative.
+
+`aggregate` is the panel view and it is the reason the shared factor exists. A
+per-SKU stockout probability is a marginal statement and correlation does not
+change it. "How many of my SKUs run out in the same month" is a joint statement,
+and under independence the answer is far too comfortable — the payload reports
+both so the difference is visible.
 """
 
 import numpy as np
 
+from . import dependence
 from .common import latest_snapshot, num, period_days, sku_asin_bridge
+from .mc import expected_shortfall, quantile_se
 
 DEFAULT_LEAD_TIME_DAYS = 45
 FALLBACK_RATE_CV = 0.35
@@ -39,6 +54,27 @@ def _daily_rates(rows: list[dict], units_key: str) -> list[float]:
             continue
         rates.append(float(units) / period_days(row["period_start"], row["period_end"]))
     return rates
+
+
+def _log_rate_panel(econ_by_sku: dict[str, list[dict]]) -> dict[str, list[float]]:
+    """{sku: [daily rate per period]} over the periods every SKU shares, which
+    is what a cross-sectional correlation has to be computed on."""
+    per_sku: dict[str, dict[str, float]] = {}
+    for sku, rows in econ_by_sku.items():
+        for row in rows:
+            units = row.get("units_sold")
+            if units is None:
+                continue
+            rate = float(units) / period_days(row["period_start"], row["period_end"])
+            if rate > 0:
+                per_sku.setdefault(sku, {})[row["period_start"]] = rate
+    if not per_sku:
+        return {}
+    shared = set.intersection(*(set(v) for v in per_sku.values())) if per_sku else set()
+    if len(shared) < dependence.MIN_PANEL_PERIODS:
+        return {}
+    order = sorted(shared)
+    return {sku: [v[p] for p in order] for sku, v in per_sku.items()}
 
 
 def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
@@ -84,10 +120,15 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
         position = fulfillable + inbound
 
         lead_times = rng.lognormal(mean=np.log(lead), sigma=0.2, size=simulations)
-        sim_rates = np.clip(rng.normal(mean_rate, std_rate, size=simulations), 0, None)
+        # marginal draws: rho = 0 here on purpose. A single SKU's stockout
+        # probability is a marginal statement and a shared factor cannot change
+        # it; the joint question is answered by `aggregate` below.
+        sim_rates = dependence.correlated_rates(
+            rng, [mean_rate], [std_rate], (simulations,), 0.0)[0]
         demand = rng.poisson(sim_rates * lead_times)
 
         reorder_point = int(np.ceil(np.quantile(demand, SERVICE_LEVEL)))
+        p_out = float(np.mean(demand > position))
         results.append(
             {
                 "sku": sku,
@@ -96,7 +137,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                 "lead_time_days": lead,
                 "on_hand_units": fulfillable,
                 "inbound_units": inbound,
-                "stockout_probability": num(float(np.mean(demand > position)), 4),
+                "stockout_probability": num(p_out, 4),
                 "days_of_cover": num(position / mean_rate, 1),
                 "reorder_point": reorder_point,
                 "reorder_qty": int(np.ceil(mean_rate * (lead + TARGET_COVER_EXTRA_DAYS))),
@@ -112,7 +153,77 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                     "lead_time_assumed": sku not in cogs_by_sku
                     or cogs_by_sku[sku].get("supplier_lead_time_days") is None,
                     "rate_std_assumed": len(rates) < 2,
+                    "rate_distribution": "lognormal, moments matched to observed",
+                    "stockout_probability_mc_se": num(
+                        float(np.sqrt(max(0.0, p_out * (1 - p_out)) / simulations)), 5),
+                    "reorder_point_mc_se": num(
+                        quantile_se(demand.astype(float), SERVICE_LEVEL), 3),
                 },
             }
         )
     return results
+
+
+def aggregate(results: list[dict], data: dict, rng: np.random.Generator,
+              simulations: int = 20000) -> dict:
+    """How many SKUs run out in the same lead time, with the catalog's own
+    demand correlation and without it.
+
+    A per-SKU stockout probability says nothing about whether the bad months
+    arrive together. Demand shocks are shared — a slow season is slow across the
+    catalog — so the count of simultaneous stockouts has a much fatter upper tail
+    than independence implies. Both are reported, along with the expected
+    shortfall of the count: the mean number out of stock in the worst 5% of
+    months, which is the number a replenishment budget should be sized against,
+    not the 95th percentile at its edge.
+    """
+    usable = [r for r in results
+              if (r.get("daily_velocity_mean") or 0) > 0 and r.get("lead_time_days")]
+    if not usable:
+        return {"status": "insufficient_data",
+                "reason": "no SKU with a positive demand rate"}
+
+    econ_by_sku: dict[str, list[dict]] = {}
+    for row in data.get("sku_economics") or []:
+        econ_by_sku.setdefault(row["sku"], []).append(row)
+    correlation = dependence.estimate_pairwise_corr(_log_rate_panel(econ_by_sku))
+
+    means = [float(r["daily_velocity_mean"]) for r in usable]
+    sds = [float(r["daily_velocity_std"] or 0) for r in usable]
+    positions = np.array([int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
+                          for r in usable])
+    leads = np.array([float(r["lead_time_days"]) for r in usable])
+
+    out = {"status": "ok", "skus": len(usable), "simulations": int(simulations),
+           "correlation": correlation}
+    # two independent streams derived from the caller's generator: the comparison
+    # must be between the two dependence models, not between two draw sets that
+    # happen to share numbers
+    seeds = [int(v) for v in rng.integers(0, 2**62, size=2)]
+    for (label, rho), seed in zip((("correlated", correlation["rho"]),
+                                   ("independent", 0.0)), seeds):
+        stream = np.random.default_rng(seed)
+        rates = dependence.correlated_rates(stream, means, sds, (simulations,), rho)
+        lead_draws = stream.lognormal(mean=np.log(leads)[:, None], sigma=LEAD_TIME_CV,
+                                      size=(len(usable), simulations))
+        demand = stream.poisson(rates * lead_draws)
+        count = (demand > positions[:, None]).sum(axis=0).astype(float)
+        tail = expected_shortfall(count, 0.05, tail="upper")
+        out[label] = {
+            "expected_stockouts": num(float(count.mean()), 3),
+            "p95_stockouts": num(float(np.quantile(count, 0.95)), 1),
+            "p95_mc_se": num(quantile_se(count, 0.95), 3),
+            "expected_shortfall_stockouts": num(tail["shortfall"], 3),
+            "expected_shortfall_mc_se": num(tail["se"], 3),
+            "p_at_least_one": num(float((count >= 1).mean()), 4),
+            "p_three_or_more": num(float((count >= 3).mean()), 4),
+        }
+    out["basis"] = (
+        f"{len(usable)} SKUs, {simulations:,} simulated lead times. Demand shares a "
+        f"common factor with pairwise log-demand correlation "
+        f"{correlation['pairwise_corr']:.2f} "
+        f"({'measured from ' + str(correlation['panel_periods']) + ' shared periods' if correlation['basis'] == 'estimated' else 'a conservative default: the history is too thin to measure one'}). "
+        f"The independent figures are what the engine reported before and are kept "
+        f"beside these so the difference is visible."
+    )
+    return out
