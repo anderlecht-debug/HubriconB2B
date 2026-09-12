@@ -635,6 +635,26 @@ That is the product's compounding mechanic, and it is now a measurement rather
 than a hope: **the engine's own instructions are what make its next answer
 sharper, and the table says by how much.**
 
+### What it costs to run
+
+A 400-SKU catalog with nine periods of history and eight campaigns, measured
+end to end:
+
+```
+margin            0.2s     inventory panel   1.5s
+elasticity        0.4s     anomaly           2.4s   (3,216 tests)
+ad efficiency     1.0s     cash cone        37.2s   (10,000 paths x 90 days)
+inventory sim     2.3s     monthly VaR       0.5s
+                           directives        2.5s   (793 drafted)
+TOTAL            48s       peak memory      85 MB
+```
+
+The cash cone is three quarters of it and always was: 400 SKUs × 10,000 paths × 90
+days is 360 million Poisson draws, and that cost is the model, not the dependence
+work. Measured directly, the common-factor generator is 15% slower than the
+independent one it replaced. The per-SKU loop keeps peak memory at the shape of one
+SKU's draw (see iteration 11).
+
 ### What is still worth doing, in order
 
 1. **Ingest the advertised-product report (SP-API).** Revenue-share ad allocation

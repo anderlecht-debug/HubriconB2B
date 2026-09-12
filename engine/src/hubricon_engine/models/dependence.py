@@ -127,12 +127,15 @@ def multiplier_stream(rng: np.random.Generator, sigmas, shape, rho: float):
     sigmas = np.asarray(sigmas, dtype=float)
     rho = float(min(1.0, max(0.0, rho)))
     common = rng.standard_normal(shape)
+    # the shared part is the same for every SKU, so it is scaled once rather than
+    # once per SKU — on a 400-SKU cone that is 400 fewer passes over 900k floats
+    shared = rho * common
+    idiosyncratic = np.sqrt(1.0 - rho**2)
     for sigma in sigmas:
         if sigma <= 0:
             yield np.ones_like(common)
             continue
-        own = rng.standard_normal(shape)
-        z = rho * common + np.sqrt(1.0 - rho**2) * own
+        z = shared + idiosyncratic * rng.standard_normal(shape)
         yield np.exp(sigma * z - 0.5 * sigma**2)
 
 
