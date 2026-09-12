@@ -277,11 +277,13 @@ def test_price_move_uses_the_split_and_quotes_a_higher_optimum_than_the_blend():
     which basis it used, so the report can say so."""
     from hubricon_engine.models.pricing_engine import price_move
 
+    # a low landed cost puts the optimum well clear of the current price, so
+    # both fee treatments produce a move and their destinations can be compared
     econ = [{"sku": "A", "asin": "B0A", "period_start": "2026-07-01", "period_end": "2026-07-31",
              "units_sold": 100, "avg_sales_price": 20.0, "sales": 2000.0,
              "referral_fees": -300.0, "fba_fulfillment_fees": -330.0, "storage_fees": 0.0,
              "other_fees": 0.0, "net_proceeds": 1370.0}]
-    cogs = [{"sku": "A", "asin": "B0A", "unit_cost_usd": 5.0}]
+    cogs = [{"sku": "A", "asin": "B0A", "unit_cost_usd": 2.0}]
     row = margin.run(_data(sku_economics=econ, cogs_inputs=cogs))[0]
     fit = {"elasticity": -2.0, "details": {"ci95": [-2.4, -1.6]}}
 

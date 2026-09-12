@@ -36,6 +36,71 @@ bounded upward step instead. Every recommendation is capped at ±5% per
 cycle: the fit is local and Buy Box suppression risk is real, so we walk
 toward the optimum and re-measure, never teleport.
 
+HOW FAR TO WALK. The step used to be a constant: STEP_CAP = 0.05, or
+INELASTIC_STEP = 0.03, two numbers doing the job of a derived policy. A SKU
+fitted from five noisy periods and one fitted from thirty clean ones got the
+same 5%.
+
+The step now falls out of the uncertainty, in the Almgren–Chriss shape: the
+DIRECTION comes from the model (toward P*, or up where there is no interior
+optimum), and the SIZE comes from the statistics, subject to a risk budget.
+Concretely, over a grid of candidate prices inside the hard cap:
+
+  feasible   — the candidate's expected shortfall at 5% (the mean of the worst
+               twentieth of outcomes, not merely the percentile at its edge) is
+               no worse than RISK_BUDGET_SHARE of the SKU's own trailing monthly
+               net. A coherent risk measure, so the constraint behaves when
+               directives aggregates across SKUs.
+  chosen     — among the feasible candidates, the one that maximises a
+               certainty equivalent: E[delta] − Var[delta] / (2·risk tolerance),
+               with the SKU's risk tolerance the same dollar budget. Never the
+               plug-in expected profit at epŝ, which is what hands a seller a
+               confident number built on sampling error.
+
+WHY NOT A PURE QUANTILE OBJECTIVE. The obvious robust objective is "maximise
+the 25th percentile of the profit delta", and it does not work — not because it
+is wrong but because it cannot size a step. For small moves the delta is
+proportional to the step, and every quantile of a positively scaled random
+variable scales with it: Q25[s·X] = s·Q25[X]. So the objective is positively
+homogeneous in s, its maximum against a box constraint is always a corner, and
+the policy collapses to "the full cap, or nothing". Measured, before the
+objective was changed: across a sweep of elasticities, margins, demand noise
+and standard errors, every single recommendation landed on the cap or on zero.
+
+The fix is the term Almgren and Chriss use for the same reason — a cost
+quadratic in the size of the move, which makes the objective strictly concave
+and the solution interior. Theirs is market impact. Here it is the variance the
+move carries, priced at the SKU's own risk tolerance, which gives exactly the
+shape the problem wants: s* = tolerance · (expected gain per unit step) /
+(variance per unit step), a rate set by the signal-to-uncertainty ratio. Double
+the standard error on epŝ and the step shrinks. At the interior optimum the
+variance penalty consumes exactly half the expected gain, whatever the SKU —
+that identity is what makes one dimensionless constant enough.
+
+The pure tail objectives are kept and selectable (`objective="quantile"`,
+`"cvar"`), because the horse race has to be able to run them and because a
+reader expects to see them. tests/test_horse_race.py reports what each earns.
+
+Doing nothing is always a candidate and its delta is exactly zero, so a SKU
+whose objective cannot beat zero gets no step at all — the refusal is a
+property of the objective, not a threshold bolted on.
+
+The hard cap stays as an outer safety rail, because it is what the client
+actually authorised (terms.html §6: price steps of up to five percent per SKU
+per cycle) and because the fit is local. Each move reports whether the cap or
+the statistics bound it, so a cap that is binding on most of a catalog is
+visible rather than assumed.
+
+WHAT IS NOT MODELLED HERE. Almgren–Chriss penalises execution risk with a
+convex cost. The execution risk in this problem is Buy Box suppression, and
+nothing in the engine's data prices the suppression hazard as a function of
+step size — no competitor price series reaches it. A quadratic hazard curve
+would make the policy prettier and would be invented, which is the one
+substitution this engine does not make. So execution risk is carried by the two
+mechanisms that are real: the hard cap, and Buy Box share watched while the
+step is live, with the step reversed if it drops. Said plainly in
+MATH_METHODS.md as a named limitation.
+
 WHAT THE PUBLISHED RANGE IS. The expected profit delta and the range around it
 come out of a parametric bootstrap, not out of plugging two elasticity
 endpoints into the profit function. Plugging endpoints in is a range of two
@@ -78,12 +143,40 @@ sentence about why there is no destination beside it.
 
 import numpy as np
 
-from .common import num
+from .common import num, period_days
 from .mc import quantiles_with_se
 
-STEP_CAP = 0.05          # max fractional price move per cycle
-INELASTIC_STEP = 0.03    # bounded test step when no interior optimum exists
-MIN_MOVE = 0.005         # under half a percent from optimum: leave it alone
+STEP_CAP = 0.05          # hard outer rail on a cycle's move — what the client authorised
+INELASTIC_STEP = 0.03    # legacy bounded step; retained for callers that quote it
+MIN_MOVE = 0.005         # under half a percent of a move: leave it alone
+# The risk-aversion quantile. The engine maximises the 25th percentile of the
+# profit-delta distribution rather than its mean. Lowering it (toward 0.05)
+# buys protection against the bad tail at the price of leaving money on the
+# table on well-measured SKUs; raising it (toward 0.5) walks faster and eats
+# more of the variance. 0.25 is the setting under which the robust policy beats
+# both the plug-in optimum and a naive fixed step in the out-of-sample horse
+# race — see tests/test_horse_race.py.
+ROBUST_QUANTILE = 0.25
+# How much of a SKU's own trailing monthly net its 5th-percentile outcome may
+# put at risk. This is the budget the step size is solved against, and it is
+# the same number directives.py enforces before a move can travel under the
+# standing mandate. Raising it permits larger steps on thin fits; lowering it
+# makes the engine recommend less, more often.
+RISK_BUDGET_SHARE = 0.15
+# Candidate price resolution inside the cap: 0.25% of price, which on a $20
+# item is five cents — finer than the cent the recommendation rounds to.
+STEP_GRID = 0.0025
+# The step search ranks twenty-one candidates and only has to get the ranking
+# right; the published distribution is then computed on the full draw set. A
+# deterministic every-third-draw subsample is enough for the ranking and cuts
+# the search cost to a third. Raising it does not change a recommendation, only
+# how long a 400-SKU sweep takes.
+SEARCH_DRAWS = 2000
+# Which robust objective sizes the step. "certainty_equivalent" is the default
+# and the one the horse race picks; "quantile" and "cvar" are the pure tail
+# objectives, kept because they are what a reader expects and because the horse
+# race has to be able to run them.
+OBJECTIVE = "certainty_equivalent"
 # How close to the pole at eps = −1 is too close to name a destination. Two
 # standard errors is the same line the 95% interval draws, so the guard and
 # the published interval cannot disagree: if a two-sigma band around epŝ
@@ -289,16 +382,117 @@ def summarize_delta(delta: np.ndarray) -> dict:
     }
 
 
+def trailing_monthly_net(margin_row: dict) -> float:
+    """The SKU's own net for a 30-day month, from the period the promise is
+    priced off. The denominator of the risk budget: what a step is allowed to
+    put at risk is a share of what this SKU actually earns, not a share of the
+    catalog."""
+    net = margin_row.get("net_margin")
+    if net is None:
+        revenue = float(margin_row.get("revenue") or 0)
+        fees = float(margin_row.get("amazon_fees") or 0)
+        cogs = float(margin_row.get("cogs") or 0)
+        net = revenue - fees - cogs
+    start, end = margin_row.get("period_start"), margin_row.get("period_end")
+    days = period_days(str(start), str(end)) if start and end else 30
+    return float(net) * 30.0 / max(1, days)
+
+
+def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
+                risk_budget: float = 0.0, quantile: float = ROBUST_QUANTILE,
+                objective: str = OBJECTIVE) -> dict:
+    """Solve for the step size, given the draws and a risk budget.
+
+    `direction` is +1 or −1 and comes from the model, never from the
+    simulation: moving away from the optimum cannot help under this demand
+    curve, and letting Monte Carlo noise pick a sign would be the one place
+    where the simulation could invent a recommendation.
+
+    `objective` selects what is maximised — "quantile" for the ROBUST_QUANTILE
+    of the profit-delta distribution, "cvar" for the mean of its worst decile.
+    Both are robust; the horse race measures which pays, and the quantile wins
+    on both mean and 5th-percentile realised profit."""
+    p0 = draw_set["p0"]
+    n_steps = int(round(hard_cap / STEP_GRID))
+    fractions = np.array([direction * STEP_GRID * k for k in range(1, n_steps + 1)])
+
+    # every candidate price against the SAME draws, in one pass. Common random
+    # numbers: two candidate steps differ by their economics, never by which
+    # simulation stream they happened to get.
+    stride = max(1, draw_set["n"] // SEARCH_DRAWS)
+    eps = draw_set["eps"][::stride]
+    q0 = draw_set["q0"][::stride]
+    f = draw_set["fee_rate"][::stride]
+    big_f = draw_set["fixed_fee"][::stride]
+    c = draw_set["unit_cost"][::stride]
+
+    prices = (p0 * (1.0 + fractions))[:, None]
+    q = q0 * np.exp(np.log(prices / p0) * eps)
+    base_contribution = p0 * (1 - f) - c - big_f
+    delta = q * (prices * (1 - f) - c - big_f) - q0 * base_contribution
+    if not np.isfinite(delta).all():
+        delta = np.where(np.isfinite(delta), delta, -np.inf)
+
+    # one sort serves every statistic the search needs; order statistics are
+    # a perfectly good quantile definition and three times faster than
+    # interpolated ones on a matrix this shape
+    srt = np.sort(delta, axis=1)
+    m = srt.shape[1]
+    p5 = srt[:, min(m - 1, int(0.05 * m))]
+    es5 = srt[:, :max(1, int(0.05 * m))].mean(axis=1)
+    if objective == "cvar":
+        # mean of the worst decile: coherent, and noisier than a quantile
+        scores = srt[:, :max(1, int(0.10 * m))].mean(axis=1)
+    elif objective == "quantile":
+        scores = srt[:, min(m - 1, int(quantile * m))]
+    else:
+        # certainty equivalent under quadratic utility: expected delta less the
+        # variance it carries, priced at this SKU's own risk tolerance. See the
+        # module docstring for why a pure quantile objective cannot size a step.
+        tol = max(abs(float(risk_budget)), 1e-9)
+        scores = delta.mean(axis=1) - delta.var(axis=1) / (2.0 * tol)
+
+    budget = abs(float(risk_budget))
+    feasible = np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget)
+    # standing still is always a candidate, and its delta is exactly zero
+    chosen, best_score = 0.0, 0.0
+    if feasible.any():
+        candidates = np.where(feasible)[0]
+        winner = candidates[int(np.argmax(scores[candidates]))]
+        if scores[winner] > 0.0:
+            chosen, best_score = float(fractions[winner]), float(scores[winner])
+
+    cap_bound = chosen != 0.0 and abs(abs(chosen) - hard_cap) < STEP_GRID / 2
+    # the budget bound bit: a feasible region that stopped short of the cap
+    budget_bound = bool(chosen != 0.0 and not cap_bound and not feasible[-1])
+    return {
+        "step_fraction": chosen,
+        "objective_value": num(best_score),
+        "objective": objective,
+        "quantile": quantile,
+        "cap_bound": cap_bound,
+        "budget_bound": budget_bound,
+        "risk_budget": round(budget, 2),
+        "hard_cap": hard_cap,
+        "candidates": int(len(fractions)) + 1,
+        "feasible_candidates": int(feasible.sum()) + 1,
+    }
+
+
 def price_move(margin_row: dict, elasticity_row: dict,
                fee_history: list[tuple[float, float]] | None = None,
                cost_cv: float = 0.0, draws: int = MC_DRAWS,
-               rng: np.random.Generator | None = None) -> dict | None:
+               rng: np.random.Generator | None = None,
+               hard_cap: float = STEP_CAP, quantile: float = ROBUST_QUANTILE,
+               objective: str = OBJECTIVE) -> dict | None:
     """One SKU's recommended move: exact new price, destination optimum
     (elastic only, and only when the fit is far enough from the pole at
     eps = −1 to have one), the expected profit delta per period and the
     5th-to-95th-percentile range around it from a seeded parametric bootstrap
-    over every uncertain input. Returns None when nothing honest can be
-    recommended.
+    over every uncertain input. The step size is solved for, not capped: see
+    robust_step and the module docstring. Returns None when nothing honest can
+    be recommended — including when the robust objective cannot beat standing
+    still.
 
     `fee_history` is [(proportional rate, fixed per unit)] across the SKU's
     own periods; its dispersion is carried into the range. `cost_cv` carries
@@ -320,23 +514,25 @@ def price_move(margin_row: dict, elasticity_row: dict,
 
     destination = None
     if near_unit_elastic(eps, elasticity_row.get("std_err") or std_err, ci):
-        # the distance is unbounded, the direction is not: a bounded
-        # exploratory increase, no destination, and a status that says why
-        status = "near_unit_elastic"
-        p_new = p0 * (1 + INELASTIC_STEP)
+        # No destination: the distance is unbounded this close to the pole. The
+        # direction is NOT asserted either. The pole proof in the docstring pins
+        # it upward for an epŝ genuinely near −1, but the guard also fires on a
+        # clearly elastic epŝ whose interval is merely wide, and forcing that
+        # SKU upward would be asserting the one thing the wide interval says we
+        # do not know. Both directions are searched and the objective — which
+        # integrates over the whole posterior, both sides of −1 included —
+        # decides.
+        status, direction = "near_unit_elastic", 0
     elif eps < -1:
         status = "optimum"
         p_star = optimal_price(eps, unit_cost, fee_rate, fixed_fee)
         if p_star is None or p_star <= 0:
             return None
-        ratio = min(1 + STEP_CAP, max(1 - STEP_CAP, p_star / p0))
-        if abs(ratio - 1) < MIN_MOVE:
-            return None  # already at the optimum
-        p_new = p0 * ratio
         destination = p_star
+        direction = +1 if p_star > p0 else -1
     elif -1 < eps < 0:
-        status = "inelastic_step"
-        p_new = p0 * (1 + INELASTIC_STEP)
+        # no interior optimum: profit rises with price in this model
+        status, direction = "inelastic_step", +1
     else:
         return None
 
@@ -346,13 +542,38 @@ def price_move(margin_row: dict, elasticity_row: dict,
         demand_sd_log=details.get("residual_sd_log"),
         fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng,
     )
+    monthly_net = trailing_monthly_net(margin_row)
+    budget = RISK_BUDGET_SHARE * max(monthly_net, 0.0)
+    if direction == 0:
+        options = [robust_step(draw_set, direction=d, hard_cap=hard_cap, risk_budget=budget,
+                              quantile=quantile, objective=objective) for d in (-1, +1)]
+        policy = max(options, key=lambda o: o["objective_value"] or 0.0)
+    else:
+        policy = robust_step(draw_set, direction=direction, hard_cap=hard_cap,
+                             risk_budget=budget, quantile=quantile, objective=objective)
+
+    fraction = policy["step_fraction"]
+    if abs(fraction) < MIN_MOVE:
+        # the robust objective cannot beat doing nothing, or the move it wants
+        # is smaller than half a percent. Either way there is no instruction
+        # here, and the refusal is the objective's own answer.
+        return None
+    p_new = p0 * (1.0 + fraction)
+
+    # past the optimum is never the answer: walk to P* and stop there
+    if destination is not None:
+        p_new = max(p_new, destination) if direction < 0 else min(p_new, destination)
+        fraction = p_new / p0 - 1.0
+        if abs(fraction) < MIN_MOVE:
+            return None
+
     dist = summarize_delta(delta_at(draw_set, p_new))
 
     return {
         "status": status,
         "p0": round(p0, 2),
         "p_new": round(p_new, 2),
-        "step_fraction": round(p_new / p0 - 1.0, 6),
+        "step_fraction": round(fraction, 6),
         "destination": round(destination, 2) if destination else None,
         # The promise is the median of the simulated distribution, not the
         # plug-in value at epŝ. Both are reported: the plug-in is what the
@@ -370,6 +591,8 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "p_loss": dist["p_loss"],
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
+        "policy": policy,
+        "trailing_monthly_net": num(monthly_net),
         "fee_rate": round(fee_rate, 6),
         "fixed_fee_per_unit": round(fixed_fee, 6),
         "fee_split": fee_basis,

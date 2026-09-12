@@ -69,7 +69,11 @@ def test_pricing_directive_is_exact_with_destination_and_range():
     assert "90% range" in exact
     assert "chance it goes the other way" in exact
     inelastic = next(t for t in texts if "INELASTIC" in t)
-    assert "$100.00 → $103.00" in inelastic           # +3% bounded step, computed dollars
+    # The step is solved for now, not set to a constant: this fixture states no
+    # uncertainty at all, so the objective has nothing to be cautious about and
+    # walks to the contractual rail. tests/test_pricing_engine.py pins the
+    # property that matters — an uncertain fit steps less than the rail.
+    assert "$100.00 → $105.00" in inelastic
     assert not any("FLAT" in t for t in texts)
     # No job watches the Buy Box daily; the measurement pass reads it while the step runs.
     for t in (exact, inelastic):

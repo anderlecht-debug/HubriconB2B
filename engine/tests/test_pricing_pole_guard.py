@@ -74,15 +74,30 @@ def test_no_destination_is_emitted_at_the_pole():
     assert move["destination"] is None
 
 
-def test_the_direction_survives_the_pole_and_the_step_is_bounded():
+def test_the_objective_still_finds_the_upward_direction_at_the_pole():
     """P* > P0 for every ε near −1 on a SKU with a positive contribution
-    margin, from either side of the pole — so the move is up, and that is the
-    one thing worth saying."""
+    margin, from either side of the pole. The engine does not assert that — it
+    searches both directions and lets the robust objective answer, because the
+    same guard also fires on a clearly elastic ε̂ whose interval is merely wide.
+    For a fit genuinely at the pole, the objective finds the upward move."""
     for eps in (-1.12, -1.04, -1.0, -0.96, -0.88):
         move = price_move(MARGIN, _fit(eps, 0.18))
         assert move["status"] == "near_unit_elastic"
         assert move["p_new"] > move["p0"]
         assert 0 < move["step_fraction"] <= 0.05
+
+
+def test_a_wide_interval_on_a_clearly_elastic_fit_is_not_forced_upward():
+    """ε̂ = −2.6 with a standard error of 0.9: the guard fires because −1 is
+    inside two sigma, so no destination is published. But the point estimate is
+    far from the pole and its optimum is well below the current price, so
+    forcing the move upward would assert the one thing the wide interval says
+    we do not know. The objective picks the cut."""
+    move = price_move(MARGIN, _fit(-2.6, 0.9))
+    assert move is not None
+    assert move["status"] == "near_unit_elastic"
+    assert move["destination"] is None
+    assert move["p_new"] < move["p0"]
 
 
 def test_the_direction_claim_holds_against_the_profit_function_itself():
@@ -112,6 +127,6 @@ def test_the_pole_directive_promises_no_dollars():
     d = _pricing_directive({**_fit(-1.10, 0.20), "item_id": "S1"},
                            {**MARGIN, "period_start": "2026-07-01"})
     assert d["expected_impact_usd"] is None
-    assert "direction but not the distance" in d["action_text"]
-    assert "optimum" not in d["action_text"].replace("no optimum to quote", "")
+    assert "cannot separate" in d["action_text"]
+    assert "no destination to quote" in d["action_text"]
     assert d["evidence"]["destination"] is None

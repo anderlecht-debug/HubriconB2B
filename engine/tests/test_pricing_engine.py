@@ -41,11 +41,36 @@ def test_price_move_caps_step_and_reports_destination():
     assert lo <= move["expected_delta"] <= hi or lo <= hi  # range ordered
 
 
-def test_price_move_inelastic_bounded_step_with_computed_dollars():
+def test_price_move_inelastic_has_no_destination_and_steps_up_to_the_rail():
+    """An inelastic fit that states NO uncertainty — no standard error, no
+    interval — has nothing for the robust objective to be cautious about, so the
+    step goes to the contractual rail. This replaces an assertion that the step
+    was exactly the old INELASTIC_STEP constant of 3%: the step is now solved
+    for rather than set, and a fit claiming certainty gets the full authorised
+    move. The companion test below is the one that matters — as soon as the fit
+    states real uncertainty, the step comes in off the rail."""
     move = price_move(ELASTIC_MARGIN, {"elasticity": -0.5, "details": {}})
-    assert move["p_new"] == pytest.approx(20.60, abs=0.01)  # +3% bounded step
-    assert move["destination"] is None
+    assert move["destination"] is None           # no interior optimum exists
+    assert move["step_fraction"] == pytest.approx(0.05)
+    assert move["policy"]["cap_bound"] is True
     assert move["expected_delta"] > 0            # inelastic: raising price gains
+
+
+def test_an_uncertain_inelastic_fit_never_steps_further_than_a_certain_one():
+    """The same SKU, the same elasticity, with an honest standard error on it.
+
+    On this fixture the gain at the rail is so much larger than the variance it
+    carries that the rail still binds — which is the right answer, not a
+    failure: a SKU earning $12 a unit on a price-insensitive product is not
+    taking a risk by moving 5%. The monotonicity property, and the regime where
+    the statistics bind instead of the rail, are measured across a whole grid in
+    tests/test_robust_step.py."""
+    certain = price_move(ELASTIC_MARGIN, {"elasticity": -0.5, "details": {}})
+    uncertain = price_move(ELASTIC_MARGIN, {
+        "elasticity": -0.5, "std_err": 0.35,
+        "details": {"ci95": [-1.47, 0.47], "dof": 3, "t_critical": 3.182,
+                    "residual_sd_log": 0.45}})
+    assert uncertain is None or uncertain["step_fraction"] <= certain["step_fraction"]
 
 
 def test_price_move_refuses_without_landed_cost():

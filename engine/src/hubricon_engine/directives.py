@@ -289,14 +289,20 @@ def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None =
 
 
 def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: str) -> dict:
-    """The fit sits on the pole at ε = −1, so there is no destination to
-    quote — only a direction, which survives the pole (pricing_engine's
-    docstring has the proof). A bounded exploratory step, a status instead of
-    a number, and no dollar promise: the expected delta at a pole-adjacent ε
-    is not a figure measurement could ever be scored against."""
+    """The fit cannot be separated from ε = −1, so there is no destination to
+    quote — the optimum diverges at that point and any price we printed would be
+    an artifact of where the estimate happened to land.
+
+    What survives is a step: the size comes from the robust objective, which
+    integrates over the whole range the data allows, and it is small when that
+    range is wide. No dollar promise travels with it, because the expected delta
+    at a pole-adjacent ε is not a figure measurement could be scored against."""
     eps = float(fit["elasticity"])
     ci = (fit.get("details") or {}).get("ci95")
-    band = f" (95% range {ci[0]:.2f} to {ci[1]:.2f})" if ci and ci[0] is not None else ""
+    band = f", and the history supports anywhere from {ci[0]:.2f} to {ci[1]:.2f}" \
+        if ci and ci[0] is not None else ""
+    step = move["step_fraction"]
+    verb = "Raise" if step > 0 else "Cut"
     return _draft(
         "pricing", "price_step", sku,
         score=18,
@@ -305,16 +311,19 @@ def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: s
         # the point estimate happened to land.
         expected=None,
         action_text=(
-            f"Raise {sku} {move['step_fraction']:.0%} as an exploratory step: "
-            f"${move['p0']:.2f} → ${move['p_new']:.2f}. Its demand sits right on the line "
-            f"where a price rise pays for itself (ε = {eps:.2f}{band}), so we know the "
-            f"direction but not the distance — there is no optimum to quote until the next "
-            f"two periods narrow the range. Buy Box watched while the step is live."
+            f"{verb} {sku} {abs(step):.1%} as a measured step: ${move['p0']:.2f} → "
+            f"${move['p_new']:.2f}. We cannot separate this SKU's demand from the break-even "
+            f"point where a price move pays for itself (ε = {eps:.2f}{band}), and the optimum "
+            f"is unbounded at that point — so there is no destination to quote and no dollar "
+            f"figure we would stand behind. The step is sized to what the range allows; the "
+            f"next two periods narrow it. Buy Box watched while the step is live."
         ),
         evidence={
             "sku": sku,
             **move,
             "elasticity": eps,
+            "elasticity_raw": (fit.get("details") or {}).get("epsilon_raw"),
+            "shrinkage_weight": (fit.get("details") or {}).get("shrinkage_weight"),
             "ci95": ci,
             "std_err": fit.get("std_err"),
             "baseline_units": float(margin_row.get("units") or 0),
