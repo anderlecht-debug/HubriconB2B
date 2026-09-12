@@ -55,12 +55,30 @@ buckets and emits one row per (series, detector), flagged or not — an
 unflagged row still carries the baseline so the Desk can say "fee per unit
 stable at $3.42".
 
+MULTIPLICITY. A detector threshold on one series is a statement about one
+series. This module runs four detectors over every SKU's four fee lines, every
+ASIN's three traffic metrics, every campaign's daily spend and every settlement
+fee bucket: a 400-SKU catalog is thousands of tests a sweep. At n = 6 the
+robust-z threshold of 3.5 sits at roughly the 88th percentile of its own null —
+so on a catalog of short series it fires on noise many times a cycle, with a
+dollar figure attached each time. That is the fastest way to lose a seller's
+trust, and it costs more than a missed finding because the seller stops reading.
+
+So every test now carries a p-value against a simulated null (see
+models/null_calibration.py — three of the four statistics have no closed form at
+these lengths), Benjamini–Hochberg runs across the whole sweep's test family,
+and a row is a FINDING only if its q-value clears FDR_Q. The detector's own
+verdict survives as ``detector_flagged`` so the arithmetic stays inspectable;
+``flagged`` is the one the Desk and the directives read, and every row carries
+``p_value``, ``q_value``, ``n_tests`` and the effective threshold so the
+multiplicity is visible rather than assumed.
+
 Honesty discipline: nothing is a finding unless a detector crossed its
-threshold; ``dollar_impact`` exists only for the adverse direction (fees
-up, conversion or sessions down, spend up) and ``details["basis"]`` spells
-out the arithmetic in words. A small shift on a very quiet series will
-cross a standardised threshold — ``delta_pct`` is there so the caller can
-apply materiality on top.
+threshold AND survived the sweep's false-discovery control; ``dollar_impact``
+exists only for the adverse direction (fees up, conversion or sessions down,
+spend up) and ``details["basis"]`` spells out the arithmetic in words. A small
+shift on a very quiet series will cross a standardised threshold —
+``delta_pct`` is there so the caller can apply materiality on top.
 """
 
 import math
@@ -70,6 +88,14 @@ from datetime import date, timedelta
 import numpy as np
 
 from .common import num
+from .null_calibration import benjamini_hochberg, p_value
+
+# The false-discovery rate the sweep is controlled at. Of the alerts that do
+# reach a seller, this is the share that may be noise. Tightening it (toward
+# 0.01) means fewer alerts and more missed real shifts; loosening it (toward
+# 0.20) means the opposite. 0.05 is chosen because an alert carries a dollar
+# figure and an instruction, so a one-in-twenty error rate is already generous.
+FDR_Q = 0.05
 
 MAD_SCALE = 1.4826        # median absolute deviation -> sigma under normality
 MEAN_AD_SCALE = 1.2533    # mean absolute deviation -> sigma; fallback when MAD is 0
@@ -173,6 +199,7 @@ def cusum(y, k: float = CUSUM_K, h: float = CUSUM_H, min_n: int = MIN_N) -> dict
     z = (y - mu) / sd
 
     s_pos = s_neg = 0.0
+    s_max = 0.0
     start_pos = start_neg = 0
     crossed = None  # (index crossed, direction, index the run began)
     for i in range(n):
@@ -182,6 +209,9 @@ def cusum(y, k: float = CUSUM_K, h: float = CUSUM_H, min_n: int = MIN_N) -> dict
             start_neg = i
         s_pos = max(0.0, s_pos + z[i] - k)
         s_neg = max(0.0, s_neg - z[i] - k)
+        # the path maximum is the statistic the null is calibrated on: h is the
+        # decision rule, this is the evidence
+        s_max = max(s_max, s_pos, s_neg)
         if crossed is None:
             if s_pos >= h:
                 crossed = (i, "up", start_pos)
@@ -203,6 +233,7 @@ def cusum(y, k: float = CUSUM_K, h: float = CUSUM_H, min_n: int = MIN_N) -> dict
         "crossed_index": crossed_index,
         "s_pos": num(s_pos, 4),
         "s_neg": num(s_neg, 4),
+        "s_max": num(s_max, 4),
         "shift_estimate": num(shift, 6),
         "baseline_mean": num(mu, 6),
         "baseline_sd": num(sd, 6),
@@ -259,6 +290,7 @@ def changepoint(y, min_segment: int = MIN_SEGMENT, penalty="bic") -> dict:
         "delta": num(delta, 6),
         "delta_pct": num(delta / abs(before), 4) if before != 0 else None,
         "llr": num(llr, 4),
+        "statistic": num(2.0 * llr, 4),
         "bic_gain": num(bic_gain, 4),
         "penalty": num(threshold, 4),
         "min_segment": min_segment,
@@ -342,11 +374,13 @@ def spikes(remainder, threshold: float = Z_THRESHOLD, min_n: int = MIN_N) -> dic
     base = {"status": "ok", "n": n, "median": num(median, 6), "scale": num(scale, 6),
             "threshold": threshold}
     if scale <= 0:
-        return {**base, "flagged": False, "indices": [], "values": [], "z": []}
+        return {**base, "flagged": False, "max_abs_z": None, "indices": [],
+                "values": [], "z": []}
     z = (r - median) / scale
     hits = np.where(np.abs(z) >= threshold)[0]
     return {
         **base,
+        "max_abs_z": num(float(np.max(np.abs(z))), 4),
         "flagged": bool(len(hits)),
         "indices": hits.tolist(),
         "values": [num(float(r[i]), 6) for i in hits],
@@ -400,7 +434,13 @@ def _row(spec: dict, detector: str, *, status: str = "ok", flagged: bool = False
          baseline: float | None = None, current: float | None = None,
          delta: float | None = None, delta_pct: float | None = None,
          dollar_impact: float | None = None, params: dict | None = None,
-         basis: str | None = None, extra: dict | None = None) -> dict:
+         basis: str | None = None, extra: dict | None = None,
+         statistic: float | None = None, p: float | None = None,
+         p_basis: str = "unavailable") -> dict:
+    """`flagged` here is the DETECTOR's verdict. The row's published `flagged`
+    is decided by apply_fdr once the whole sweep's test family is known, so a
+    row that crossed its own threshold but not the sweep's is demoted rather
+    than silently dropped."""
     digits = spec["digits"]
     series = [
         {"t": t, "v": num(v, digits)}
@@ -415,7 +455,12 @@ def _row(spec: dict, detector: str, *, status: str = "ok", flagged: bool = False
         "metric": spec["metric"],
         "detector": detector,
         "status": status,
+        "detector_flagged": bool(flagged),
         "flagged": bool(flagged),
+        "statistic": num(statistic, 4),
+        "p_value": num(p, 8),
+        "p_basis": p_basis,
+        "q_value": None,
         "direction": direction if flagged else None,
         "since": since if flagged else None,
         "baseline": num(baseline, digits),
@@ -450,12 +495,15 @@ def _cusum_row(spec: dict, ys: list[float] | None = None, params: dict | None = 
     res = cusum(values, h=h)
     if res["status"] != "ok":
         return _row(spec, "cusum", status="insufficient_data", params={"min_n": MIN_N, **(params or {})})
-    keep = ("k", "h", "baseline_n", "baseline_mean", "baseline_sd", "s_pos", "s_neg",
+    keep = ("k", "h", "baseline_n", "baseline_mean", "baseline_sd", "s_pos", "s_neg", "s_max",
             "start_index", "crossed_index", "shift_estimate")
     p = {**{k: res[k] for k in keep}, **(params or {})}
+    stat = res["s_max"]
+    pv, basis_kind = p_value("cusum", res["n"], stat, k=res["k"])
     if not res["flagged"]:
         return _row(spec, "cusum", baseline=res["baseline_mean"], current=spec["ys"][-1],
-                    params=p, basis=_stable_basis(spec, res["baseline_mean"], spec["ys"][-1]))
+                    params=p, basis=_stable_basis(spec, res["baseline_mean"], spec["ys"][-1]),
+                    statistic=stat, p=pv, p_basis=basis_kind)
     before = res["baseline_mean"]
     after = before + res["shift_estimate"]
     since = spec["ts"][res["start_index"]]
@@ -463,7 +511,7 @@ def _cusum_row(spec: dict, ys: list[float] | None = None, params: dict | None = 
     return _row(spec, "cusum", flagged=True, direction=res["direction"], since=since,
                 baseline=before, current=after, delta=after - before,
                 delta_pct=_ratio(after - before, before), dollar_impact=impact,
-                params=p, basis=basis)
+                params=p, basis=basis, statistic=stat, p=pv, p_basis=basis_kind)
 
 
 def _changepoint_row(spec: dict) -> dict:
@@ -471,13 +519,16 @@ def _changepoint_row(spec: dict) -> dict:
     if res["status"] != "ok":
         return _row(spec, "changepoint", status="insufficient_data",
                     params={"min_segment": MIN_SEGMENT})
-    p = {k: res[k] for k in ("index", "llr", "bic_gain", "penalty", "min_segment")}
+    p = {k: res[k] for k in ("index", "llr", "statistic", "bic_gain", "penalty", "min_segment")}
     top = sorted(res["posterior"], key=lambda c: c["weight"], reverse=True)[:POSTERIOR_TOP]
     extra = {"posterior": [{"t": spec["ts"][c["index"]], "weight": c["weight"]} for c in top]}
+    stat = res["statistic"]
+    pv, basis_kind = p_value("changepoint", res["n"], stat, min_segment=res["min_segment"])
     if not res["flagged"]:
         overall = float(np.mean(spec["ys"]))
         return _row(spec, "changepoint", baseline=overall, current=spec["ys"][-1], params=p,
-                    basis=_stable_basis(spec, overall, spec["ys"][-1]), extra=extra)
+                    basis=_stable_basis(spec, overall, spec["ys"][-1]), extra=extra,
+                    statistic=stat, p=pv, p_basis=basis_kind)
     before, after = res["before_mean"], res["after_mean"]
     direction = _direction(after - before)
     since = spec["ts"][res["index"]]
@@ -485,7 +536,8 @@ def _changepoint_row(spec: dict) -> dict:
     return _row(spec, "changepoint", flagged=True, direction=direction, since=since,
                 baseline=before, current=after, delta=after - before,
                 delta_pct=_ratio(after - before, before), dollar_impact=impact,
-                params=p, basis=basis, extra=extra)
+                params=p, basis=basis, extra=extra,
+                statistic=stat, p=pv, p_basis=basis_kind)
 
 
 def _robust_z_row(spec: dict) -> dict:
@@ -494,10 +546,18 @@ def _robust_z_row(spec: dict) -> dict:
         return _row(spec, "robust_z", status="insufficient_data", params={"min_n": MIN_N})
     p = {k: res[k] for k in ("z", "median", "mad", "scale", "threshold")}
     median, last = res["median"], spec["ys"][-1]
+    stat = abs(res["z"]) if res["z"] is not None else None
+    pv, basis_kind = p_value("robust_z", res["n"], stat)
+    if stat is None and res["flagged"]:
+        # a baseline with no spread at all: the departure is unmistakable and no
+        # finite statistic describes it, so it is exempted from the family
+        # rather than given a p-value it does not have
+        pv, basis_kind = 0.0, "degenerate_no_spread"
     if not res["flagged"]:
         return _row(spec, "robust_z", baseline=median, current=last, params=p,
                     basis=(f"{spec['label']} latest {spec['fmt'](last)} is in line with a "
-                           f"typical {spec['fmt'](median)}"))
+                           f"typical {spec['fmt'](median)}"),
+                    statistic=stat, p=pv, p_basis=basis_kind)
     impact, clause = spec["impact"](res["direction"], median, last)
     z_text = f"robust z {res['z']:+.1f}" if res["z"] is not None else "baseline had no spread"
     basis = (f"{spec['label']} latest {spec['fmt'](last)} against a typical "
@@ -507,7 +567,7 @@ def _robust_z_row(spec: dict) -> dict:
     return _row(spec, "robust_z", flagged=True, direction=res["direction"], since=spec["ts"][-1],
                 baseline=median, current=last, delta=last - median,
                 delta_pct=_ratio(last - median, median), dollar_impact=impact,
-                params=p, basis=basis)
+                params=p, basis=basis, statistic=stat, p=pv, p_basis=basis_kind)
 
 
 def _spikes_row(spec: dict, decomposition: dict) -> dict:
@@ -521,6 +581,8 @@ def _spikes_row(spec: dict, decomposition: dict) -> dict:
     expected = np.array(ys) - np.array(decomposition["remainder"])
     cutoff = len(ys) - SPIKE_RECENT_DAYS
     recent = [(i, z) for i, z in zip(res["indices"], res["z"]) if i >= cutoff]
+    stat = res.get("max_abs_z")
+    pv, basis_kind = p_value("spikes", res["n"], stat)
     p = {
         "z_threshold": Z_THRESHOLD,
         "recent_days": SPIKE_RECENT_DAYS,
@@ -538,7 +600,8 @@ def _spikes_row(spec: dict, decomposition: dict) -> dict:
         earlier = f" ({len(res['indices'])} earlier in the series)" if res["indices"] else ""
         return _row(spec, "spikes", baseline=typical, current=ys[-1], params=p, extra=extra,
                     basis=(f"daily spend stayed within its weekday pattern over the last "
-                           f"{SPIKE_RECENT_DAYS} days{earlier}"))
+                           f"{SPIKE_RECENT_DAYS} days{earlier}"),
+                    statistic=stat, p=pv, p_basis=basis_kind)
     biggest, z_big = max(recent, key=lambda iz: abs(iz[1]))
     exp_big = float(expected[biggest])
     delta = ys[biggest] - exp_big
@@ -551,7 +614,8 @@ def _spikes_row(spec: dict, decomposition: dict) -> dict:
     return _row(spec, "spikes", flagged=True, direction=_direction(delta), since=ts[min(i for i, _ in recent)],
                 baseline=typical, current=ys[biggest], delta=delta,
                 delta_pct=_ratio(delta, exp_big), dollar_impact=excess if excess > 0 else None,
-                params=p, basis=basis, extra=extra)
+                params=p, basis=basis, extra=extra,
+                statistic=stat, p=pv, p_basis=basis_kind)
 
 
 # ── impact closures (adverse direction only) ──────────────────────────────
@@ -813,15 +877,60 @@ def _settlement_rows(txns: list[dict]) -> list[dict]:
     return rows
 
 
-def run(data: dict, rng=None, simulations=None) -> list[dict]:
+def apply_fdr(rows: list[dict], q: float = FDR_Q) -> list[dict]:
+    """Benjamini–Hochberg across the whole sweep, in place.
+
+    The test family is every row that produced a p-value. A row whose detector
+    crossed its threshold but whose q-value does not clear `q` is demoted: its
+    `flagged` goes false and the finding fields — direction, since, delta, dollar
+    impact — are cleared, because a number that survives only by ignoring how
+    many tests produced it is exactly the kind of finding this engine does not
+    publish. Its `basis` is rewritten to say so rather than going blank, and
+    `detector_flagged` keeps the detector's own verdict on the record.
+
+    Rows exempt from the family (a baseline with no spread, where no finite
+    statistic exists) keep their verdict and are counted in `n_tests` so the
+    published multiplicity is the real one."""
+    family = [r for r in rows if r.get("p_value") is not None
+              and r.get("p_basis") not in ("unavailable", "degenerate_no_spread")]
+    n_tests = len([r for r in rows if r.get("p_value") is not None])
+    rejected, q_values, cutoff = benjamini_hochberg([float(r["p_value"]) for r in family], q)
+
+    for row, keep, q_value in zip(family, rejected, q_values):
+        row["q_value"] = num(q_value, 6)
+        if row["detector_flagged"] and not keep:
+            row["flagged"] = False
+            basis = row["details"].get("basis") or ""
+            row["details"]["basis"] = (
+                f"{basis.rstrip('.')} — but across {n_tests:,} tests this sweep that is "
+                f"inside what noise alone produces (q = {q_value:.2f}), so it is not "
+                f"reported as a finding"
+            ) if basis else (
+                f"inside what noise alone produces across {n_tests:,} tests this sweep "
+                f"(q = {q_value:.2f})"
+            )
+            for field in ("direction", "since", "delta", "delta_pct", "dollar_impact"):
+                row[field] = None
+    for row in rows:
+        row["n_tests"] = n_tests
+        row["fdr_q"] = q
+        row["fdr_p_threshold"] = num(cutoff, 8)
+    return rows
+
+
+def run(data: dict, rng=None, simulations=None, q: float = FDR_Q) -> list[dict]:
     """One row per (series, detector) — see the module docstring for the
-    row shape. Tables that are missing or empty are skipped, never faked."""
+    row shape. Tables that are missing or empty are skipped, never faked.
+
+    Benjamini–Hochberg runs across the whole sweep before anything is returned:
+    `flagged` means "crossed its own threshold AND survived the sweep's
+    false-discovery control at q", never the first alone."""
     rows: list[dict] = []
     rows += _sku_rows(data.get("sku_economics") or [])
     rows += _asin_rows(data.get("asin_traffic") or [])
     rows += _campaign_rows(data.get("ppc_spend") or [])
     rows += _settlement_rows(data.get("settlement_transactions") or [])
-    return rows
+    return apply_fdr(rows, q)
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -838,6 +947,12 @@ def summarize(rows: list[dict]) -> dict:
         "scanned": len(rows),
         "insufficient": sum(1 for r in rows if r.get("status") == "insufficient_data"),
         "flagged": len(flagged),
+        # what the detectors alone would have said, so the cost of the
+        # multiplicity control is visible rather than invisible
+        "detector_flagged": sum(1 for r in rows if r.get("detector_flagged")),
+        "n_tests": rows[0].get("n_tests") if rows else 0,
+        "fdr_q": rows[0].get("fdr_q") if rows else None,
+        "fdr_p_threshold": rows[0].get("fdr_p_threshold") if rows else None,
         "dollar_impact_total": num(at_stake),
         "top": top,
     }
