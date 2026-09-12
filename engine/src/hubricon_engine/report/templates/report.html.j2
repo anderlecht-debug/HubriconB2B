@@ -142,31 +142,51 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   {% set scored = elasticity|selectattr("status", "equalto", "ok")|selectattr("level", "equalto", "sku")|list %}
   {% if scored %}
   <table>
-    <tr><th>SKU</th><th class="num">&epsilon;</th><th class="num">95% CI</th><th class="num">R&sup2;</th><th class="num">Periods</th></tr>
+    <tr><th>SKU</th><th class="num">&epsilon; used</th><th class="num">95% range</th>
+        <th class="num">&epsilon; from this SKU alone</th><th class="num">Own weight</th>
+        <th class="num">R&sup2;</th><th class="num">Periods</th></tr>
     {% for r in scored[:12] %}
     <tr>
       <td>{{ r.item_id }}</td>
       <td class="num">{{ r.elasticity }}</td>
-      <td class="num">{% if r.details and r.details.ci95 %}[{{ r.details.ci95[0] }}, {{ r.details.ci95[1] }}]{% else %}—{% endif %}</td>
+      <td class="num">{% if r.details and r.details.ci95 %}[{{ r.details.ci95[0] }}, {{ r.details.ci95[1] }}]{% else %}&mdash;{% endif %}</td>
+      <td class="num">{% if r.details and r.details.epsilon_raw is not none %}{{ r.details.epsilon_raw }}{% else %}&mdash;{% endif %}</td>
+      <td class="num">{% if r.details and r.details.shrinkage_weight is not none %}{{ "%.0f%%"|format(r.details.shrinkage_weight|float * 100) }}{% else %}&mdash;{% endif %}</td>
       <td class="num">{{ r.r_squared }}</td>
       <td class="num">{{ r.n_periods }}</td>
     </tr>
     {% endfor %}
   </table>
+  <p class="small">Two elasticities per SKU, because one of them would be a guess dressed as a
+  measurement. &ldquo;&epsilon; from this SKU alone&rdquo; is what its own price history says;
+  &ldquo;&epsilon; used&rdquo; pulls that toward the rest of your catalog by exactly as much as
+  its own history is uncertain, and &ldquo;own weight&rdquo; is how much of its own answer it kept.
+  A SKU with five months and a price that barely moved keeps little; one with three years keeps
+  nearly all of it. The range is a Student-t interval on heteroskedasticity-robust
+  (HC3) standard errors &mdash; at five periods the right critical value is 3.18, not 1.96,
+  and using 1.96 would print a range 38% narrower than the data supports.</p>
   {% endif %}
   {% set skipped = elasticity|rejectattr("status", "equalto", "ok")|list %}
   {% if skipped %}
-  <p class="small">{{ skipped|length }} item(s) not scored —
+  <p class="small">{{ skipped|length }} item(s) not scored &mdash;
   {{ skipped|selectattr("status", "equalto", "insufficient_price_variation")|list|length }} had effectively one price all year
   (that itself is a finding: no price testing has happened), the rest lacked enough monthly history.</p>
   {% endif %}
+  <p class="small"><b>What this number is, and what it is not.</b> &epsilon; is fitted from the
+  prices you set and the volumes that followed. Those prices were chosen by you, often in
+  response to how demand was running &mdash; and when that happens the fit reads demand as
+  <i>less</i> price-sensitive than it is. On simulated sellers who reprice off last month's
+  numbers, the error is about 0.4 of an &epsilon; in that direction, which is the direction that
+  argues for raising prices. It is not corrected, because correcting it needs a price change made
+  for a reason unrelated to demand. Every step on this report is exactly that: the moves we make
+  become the clean history the next fit is built on.</p>
 </section>
 {% endif %}
 
 {% if price_tests %}
 <section>
   <h2>Price-testing program</h2>
-  <p>Deliberate, tracked price moves — Buy Box share watched so suppression is caught in days, and every completed test feeds the next elasticity fit.</p>
+  <p>Deliberate, tracked price moves &mdash; Buy Box share watched so suppression is caught in days, and every completed test feeds the next elasticity fit. The size of each step is not a house rule: it is solved for against how much your own history actually pins down, inside the &plusmn;5% a cycle your terms authorise.</p>
   <table>
     <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box before → during</th><th>Status</th><th>Outcome</th></tr>
     {% for t in price_tests %}
@@ -216,9 +236,15 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 {% endif %}
 
 <footer>
-  Hubricon · Managed Profit · methodology: Monte Carlo lead-time demand (lognormal lead times, gamma-Poisson demand),
-  log-log OLS elasticity with traffic controls where available, Hill saturation fits for ad response.
-  Items without enough data are reported as such, never estimated. All models audited.
+  Hubricon &middot; Managed Profit &middot; methodology: Monte Carlo lead-time demand (lognormal lead
+  times, lognormal demand rates sharing a common factor across SKUs, Poisson counts); log-log OLS
+  elasticity with traffic controls where available, HC3 standard errors, Student-t intervals, and
+  each SKU's estimate shrunk toward your catalog by the ratio of its own sampling variance to the
+  spread between your SKUs; price steps sized against the 5th-percentile outcome rather than the
+  average one; Hill saturation fits for ad response; fee-change alerts false-discovery controlled
+  across the whole sweep, so the number of tests behind an alert is priced in rather than ignored.
+  Every published percentile carries the simulation error behind it. Items without enough data are
+  reported as such, never estimated. Derivations and limits: engine/MATH_METHODS.md.
 </footer>
 
 </div>

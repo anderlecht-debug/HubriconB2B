@@ -1044,7 +1044,7 @@ function profitSvg(c){
       svg += `<circle class="hollow" cx="${sx(c.p_star).toFixed(1)}" cy="${starY.toFixed(1)}" r="6"/>
         <text class="lbl" x="${sx(c.p_star).toFixed(1)}" y="${(starY + 20).toFixed(1)}" text-anchor="middle">P* $${Number(c.p_star).toFixed(2)}</text>`;
     } else {
-      svg += `<text class="lbl" x="${W - R}" y="${T + 24}" text-anchor="end">optimum $${Number(c.p_star).toFixed(2)} — walked in 5% steps</text>`;
+      svg += `<text class="lbl" x="${W - R}" y="${T + 24}" text-anchor="end">optimum $${Number(c.p_star).toFixed(2)} — walked in steps sized to the uncertainty, ≤5% a cycle</text>`;
     }
   }
   return svg;
@@ -1058,9 +1058,12 @@ function renderPricing(picks, elas){
   const wrap = $("#pricing-rows"); wrap.innerHTML = "";
   for (const it of items){
     const bits = [];
-    if (it.fit) bits.push(`ε = ${Number(it.fit.eps).toFixed(2)}${it.fit.ci95 ? ` (95%: ${Number(it.fit.ci95[0]).toFixed(2)} … ${Number(it.fit.ci95[1]).toFixed(2)})` : ""}`);
+    if (it.fit) bits.push(`ε = ${Number(it.fit.eps).toFixed(2)}${it.fit.ci95 ? ` (95%: ${Number(it.fit.ci95[0]).toFixed(2)} … ${Number(it.fit.ci95[1]).toFixed(2)})` : ""}${it.fit.eps_raw != null && it.fit.shrinkage_weight != null ? `; this SKU's own history says ${Number(it.fit.eps_raw).toFixed(2)}, and it keeps ${Math.round(it.fit.shrinkage_weight * 100)}% of that` : ""}`);
     if (it.curve && it.curve.expected_delta != null)
-      bits.push(`expected ${it.curve.expected_delta >= 0 ? "+" : "−"}${money(Math.abs(it.curve.expected_delta))}/period${it.curve.delta_range ? ` (95% range ${money(it.curve.delta_range[0])} … ${money(it.curve.delta_range[1])})` : ""}`);
+      // P5 to P95 of the simulated profit-delta distribution: a 90% band, and
+      // named as one. The engine stopped publishing a "95% range" built from two
+      // elasticity endpoints on 2026-09-11.
+      bits.push(`expected ${it.curve.expected_delta >= 0 ? "+" : "−"}${money(Math.abs(it.curve.expected_delta))}/period${it.curve.delta_range ? ` (90% range ${money(it.curve.delta_range[0])} … ${money(it.curve.delta_range[1])}${it.curve.p_loss != null ? `; ${it.curve.p_loss < 0.01 ? "under a 1%" : `a ${Math.round(it.curve.p_loss * 100)}%`} chance it goes the other way` : ""})` : ""}`);
     const div = document.createElement("div");
     div.className = "p-row";
     div.innerHTML = `<div class="p-cap"><span class="p-sku">${esc(it.sku)}</span><span class="hint">${bits.join(" · ")}</span></div>
