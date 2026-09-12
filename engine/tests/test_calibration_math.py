@@ -273,3 +273,78 @@ def test_the_loss_probability_is_calibrated():
     # and it discriminates between SKUs rather than only averaging out
     risky = predicted > np.median(predicted)
     assert realized[risky].mean() > realized[~risky].mean() + 0.05
+
+
+# ── recovery of a known elasticity, including at the pole ─────────────────
+
+def _recovery(e_true, n_skus=400, n_periods=9, demand_sd=0.18, seed=31):
+    """Fit a catalog whose every SKU has the SAME true elasticity, so recovery
+    and interval coverage can both be measured against one number."""
+    rng = np.random.default_rng(seed)
+    econ = []
+    for i in range(n_skus):
+        prices = BASE_PRICE * np.exp(rng.normal(0, 0.10, size=n_periods))
+        units = 400.0 * (prices / BASE_PRICE) ** e_true * np.exp(
+            rng.normal(0, demand_sd, size=n_periods))
+        econ += _rows(f"R{i:04d}", prices, units)
+    data = {"asin_traffic": [], "sku_economics": econ, "ppc_search_terms": [],
+            "ppc_spend": [], "inventory_levels": [], "cogs_inputs": []}
+    return [f for f in elasticity.run(data)
+            if f["level"] == "sku" and f["status"] == "ok"]
+
+
+@pytest.mark.parametrize("e_true", [-3.0, -2.0, -1.5, -1.05, -0.95, -0.4])
+def test_the_pipeline_recovers_a_known_elasticity(e_true):
+    """Across the whole range, including either side of the pole at −1: the
+    median raw fit lands on the truth and the interval covers it nominally.
+
+    The raw estimate is the one checked for unbiasedness. The shrunk estimate is
+    deliberately biased toward the pool — that is what shrinkage is — and on a
+    catalog where every SKU shares one true ε the pool IS the truth, so shrinkage
+    makes it more accurate, not less. Both are asserted."""
+    fits = _recovery(e_true)
+    assert len(fits) > 350
+    raw = np.array([f["details"]["epsilon_raw"] for f in fits])
+    shrunk = np.array([f["details"]["epsilon_shrunk"] for f in fits])
+
+    assert np.median(raw) == pytest.approx(e_true, abs=0.12)
+    # shrinkage toward a pool centred on the truth tightens the spread
+    assert shrunk.std() < raw.std()
+    assert abs(np.median(shrunk) - e_true) <= abs(np.median(raw) - e_true) + 0.05
+
+    covered = np.mean([f["details"]["ci95_raw"][0] <= e_true <= f["details"]["ci95_raw"][1]
+                       for f in fits])
+    assert 0.92 <= covered <= 0.99, f"eps={e_true}: raw interval coverage {covered:.3f}"
+
+
+def test_near_the_pole_the_engine_recovers_epsilon_and_still_refuses_a_destination():
+    """Recovery and refusal are not in tension. At ε = −1.05 the fit finds the
+    elasticity, and the pole guard still declines to name a price — because
+    ε/(1+ε) is 21 there and the interval spans values where it is 3 and values
+    where it is unbounded."""
+    from hubricon_engine.models.pricing_engine import near_unit_elastic
+
+    fits = _recovery(-1.05)
+    raw = np.array([f["details"]["epsilon_raw"] for f in fits])
+    assert np.median(raw) == pytest.approx(-1.05, abs=0.12)
+
+    guarded = np.mean([near_unit_elastic(float(f["elasticity"]), f["std_err"],
+                                        f["details"]["ci95"]) for f in fits])
+    assert guarded > 0.95, f"only {guarded:.1%} of pole-adjacent fits were guarded"
+
+    # and the destination is withheld end to end
+    margin_rows = [_margin_row(f["item_id"], BASE_PRICE, 400.0) for f in fits[:40]]
+    moves = [price_move(row, fit) for row, fit in zip(margin_rows, fits[:40])]
+    assert moves.count(None) < len(moves)
+    assert all(m["destination"] is None for m in moves if m)
+
+
+def test_a_clearly_elastic_catalog_is_not_over_guarded():
+    """The guard must not swallow the cases it was not built for: at ε = −3 with
+    nine periods, most fits should name a destination."""
+    from hubricon_engine.models.pricing_engine import near_unit_elastic
+
+    fits = _recovery(-3.0, n_skus=300, n_periods=14, demand_sd=0.12)
+    guarded = np.mean([near_unit_elastic(float(f["elasticity"]), f["std_err"],
+                                        f["details"]["ci95"]) for f in fits])
+    assert guarded < 0.2, f"{guarded:.1%} of clearly elastic fits were guarded"

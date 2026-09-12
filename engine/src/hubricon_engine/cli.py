@@ -646,6 +646,39 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
     return verdicts
 
 
+def cmd_replay(args):
+    """Replay every measured directive and score the promises against outcomes.
+
+    The backtest above the measurement pass: not "did this move work" but "is the
+    number we put on these moves calibrated". On a client with no measured history
+    yet it reports pending, which is the honest answer and the reason the harness
+    exists before the history does."""
+    from . import replay as replaymod
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    channel = args.channel or channels.client_channel(client) or "amazon"
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .eq("channel", channel).order("created_at").execute().data)
+    if not directives:
+        print("No directives on file for this client — nothing to replay.")
+        return
+
+    if args.rescore:
+        # score what the ledger already banked, without re-measuring
+        card = replaymod.score(directives)
+    else:
+        run = _latest_run(db, client["id"], args.run)
+        data = _load_data(db, client["id"], channel)
+        margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+        ads_rows = (db.table("ad_efficiency_results").select("*")
+                    .eq("run_id", run["id"]).execute().data)
+        claims = _fetch_claims(db, client["id"])
+        card = replaymod.replay(directives, data, margins, ads_rows, claims,
+                               inv_econ=_load_outputs(db, run["id"]).get("invecon"))
+    print(replaymod.render(card))
+
+
 def cmd_directives(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
@@ -2980,6 +3013,14 @@ def main():
     p.add_argument("--remeasure", action="store_true",
                    help="correct an already-measured directive (the old note is kept)")
     p.set_defaults(fn=cmd_measure)
+
+    p = sub.add_parser("replay", help="score past promises against measured outcomes")
+    p.add_argument("client")
+    p.add_argument("--channel")
+    p.add_argument("--run", help="run id to take margins and ad curves from")
+    p.add_argument("--rescore", action="store_true",
+                   help="score what the ledger already banked instead of re-measuring")
+    p.set_defaults(fn=cmd_replay)
 
     p = sub.add_parser("retainer", help="record when the retainer started (the client's yes)")
     p.add_argument("client")

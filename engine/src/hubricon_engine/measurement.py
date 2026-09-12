@@ -46,6 +46,9 @@ once is never trusted again.
 
 from datetime import date
 
+import numpy as np
+from scipy import stats
+
 MEASURE_MIN_USD = 25.0          # below this, close it rather than bank noise
 MIN_AFTER_DAYS = 14             # an after-window shorter than this proves nothing
 PRICE_TOLERANCE = 0.02          # observed vs instructed price, before we call it unexecuted
@@ -53,6 +56,15 @@ CAMPAIGN_ALIVE_SHARE = 0.05     # under this share of baseline spend, the campai
 SCHEDULE_CHANGE_SHARE = 0.5     # this share of the catalog moving together is Amazon, not us
 BUYBOX_DROP_ALERT = 10.0        # percentage points; mirrors alerts.BUYBOX_DROP_ALERT
 UNIT_ELASTIC = -1.0             # assumed when no fit exists: the most demand-destroying ordinary case
+# Which quantile of the measured-delta distribution gets banked on the Profit
+# Record. The same risk quantile pricing_engine sizes a step against, so the
+# engine is conservative in one consistent way rather than two different ones:
+# the client is never billed on the optimistic reading of our own fit, and a move
+# that worked is not booked as a loss because one end of a wide interval says it
+# might not have. Lowering it books less; raising it toward 0.5 books the median.
+MEASURE_QUANTILE = 0.25
+MEASURE_DRAWS = 8000
+MEASURE_SEED = 20260911         # the Record must reproduce, so the draws are fixed
 
 # Executed, but nothing a later export could honestly value. We prove the work
 # happened and bank nothing — directives.py already refuses to promise dollars
@@ -505,6 +517,81 @@ def _counterfactual_profit(eps: float, p0: float, p1: float, units_after: float,
     return q_cf * (p0 * (1 - fee_rate) - unit_cost - fixed_fee)
 
 
+def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: float,
+                                 unit_cost: float, fee_rate: float, fixed_fee: float,
+                                 factual: float) -> dict | None:
+    """The measured delta as a distribution, and the conservative quantile of it
+    that gets banked.
+
+    The old rule was to bank the least favourable of the elasticity interval's two
+    endpoints. That was defensible while the interval was a narrow ±1.96·classical
+    SE. It stopped being defensible the day the interval became an HC3 Student-t
+    interval on a shrunk estimate: the replay harness measured 24 price cuts on
+    SKUs whose true elasticity was −2.4, every one of which made money, and the
+    endpoint rule booked eighteen of them as LOSSES — because the upper end of a
+    wide interval sits near −1, where the counterfactual says the seller would
+    have sold almost as much at the old higher price.
+
+    Taking an extreme of a wide interval is not conservatism, it is a wrong
+    answer. So the whole posterior is integrated and the banked figure is its
+    MEASURE_QUANTILE — the same risk quantile the step was sized against — so the
+    Profit Record is still never billed on the optimistic end, and a move that
+    worked is not recorded as a loss. Returns None when the directive carries no
+    posterior to integrate, which sends the caller back to the endpoint rule."""
+    se = ev.get("std_err")
+    dof = (ev.get("mc_inputs") or {}).get("eps_dof")
+    eps = ev.get("elasticity")
+    ci = ev.get("ci95") or []
+    if eps is None:
+        return None
+    if se is None and len(ci) == 2 and ci[0] is not None and ci[1] is not None:
+        # no standard error on file: read one off the interval it did record,
+        # using the critical value the fit would have drawn it with
+        half = abs(float(ci[1]) - float(ci[0])) / 2.0
+        critical = float(stats.t.ppf(0.975, dof)) if dof and float(dof) >= 1 else 1.96
+        se = half / critical
+    if not se or float(se) <= 0:
+        return None
+
+    rng = np.random.default_rng(MEASURE_SEED)
+    shock = (rng.standard_t(dof, size=MEASURE_DRAWS) if dof and dof >= 1
+             else rng.standard_normal(MEASURE_DRAWS))
+    draws = float(eps) + float(se) * shock
+    q_cf = units_after * (p0 / p1) ** draws if p1 > 0 else np.full(MEASURE_DRAWS, units_after)
+    counterfactual = q_cf * (p0 * (1 - fee_rate) - unit_cost - fixed_fee)
+    delta = factual - counterfactual
+    delta = delta[np.isfinite(delta)]
+    if delta.size == 0:
+        return None
+    return {
+        "banked": float(np.quantile(delta, MEASURE_QUANTILE)),
+        "p5": round(float(np.quantile(delta, 0.05)), 2),
+        "p50": round(float(np.quantile(delta, 0.50)), 2),
+        "p95": round(float(np.quantile(delta, 0.95)), 2),
+        "epsilon_range": [round(float(np.quantile(draws, 0.05)), 4),
+                          round(float(np.quantile(draws, 0.95)), 4)],
+        "draws": int(delta.size),
+        "seed": MEASURE_SEED,
+    }
+
+
+def _observed_profit_change(ev: dict, after: dict, factual: float) -> float | None:
+    """Per-period change in this SKU's own profit before ads, baseline to after.
+
+    None when the baseline the promise recorded is incomplete — a landed cost or
+    a fee total absent means no honest before figure exists, and a ceiling built
+    on a guess would be worse than no ceiling."""
+    units = ev.get("baseline_units")
+    revenue = ev.get("baseline_revenue")
+    cogs = ev.get("baseline_cogs")
+    fees = ev.get("baseline_fees")
+    if not units or revenue is None or cogs is None or fees is None:
+        return None
+    baseline_profit = float(revenue) - float(fees) - float(cogs)
+    periods = max(1, len(after.get("periods") or [1]))
+    return factual / periods - baseline_profit
+
+
 def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
                        since: date, today: date) -> dict:
     ev = d.get("evidence") or {}
@@ -537,17 +624,42 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
 
     eps = ev.get("elasticity")
     ci = ev.get("ci95") or []
-    candidates = [e for e in ([eps] + list(ci)) if e is not None]
-    if not candidates:
-        candidates = [UNIT_ELASTIC]
 
     factual = after["revenue"] - after["fees"] - after["cogs"]
-    # Bank the LEAST favourable reading of our own fit: a wide confidence
-    # interval costs us credit, which is the incentive we want.
-    deltas = [factual - _counterfactual_profit(float(e), p0, p1, after["units"], unit_cost,
-                                               fee_rate, fixed_fee)
-              for e in candidates]
-    delta = min(deltas)
+    distribution = _counterfactual_distribution(ev, p0, p1, after["units"], unit_cost,
+                                                fee_rate, fixed_fee, factual)
+    if distribution is not None:
+        delta = distribution["banked"]
+        candidates = distribution["epsilon_range"]
+        reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+                   f"(median ${distribution['p50']:,.2f}, 5th ${distribution['p5']:,.2f})")
+    else:
+        # A directive from before the fit carried a standard error: no posterior
+        # to integrate, so fall back to the least favourable of the endpoints it
+        # did record.
+        candidates = [e for e in ([eps] + list(ci)) if e is not None] or [UNIT_ELASTIC]
+        delta = min(factual - _counterfactual_profit(float(e), p0, p1, after["units"],
+                                                     unit_cost, fee_rate, fixed_fee)
+                    for e in candidates)
+        reading = "taken at the least favourable end of the recorded interval"
+
+    # A SECOND cap, and the stronger one: never bank more than this SKU's profit
+    # actually rose. The model counterfactual anchors on the after-period's real
+    # units and rolls them back with the elasticity that made the promise — which
+    # is reproducible, and blind to the case where the volume response simply did
+    # not happen. The replay harness found it: with a price cut and no volume
+    # response at all, the counterfactual still says "you would have sold 12%
+    # less at the old price" and books a gain on a move that lost margin.
+    #
+    # The raw before/after change in profit is not a measurement — it carries the
+    # season, the competitors and the weather, which is why it is not what gets
+    # banked. But as a CEILING it can only ever reduce a claim, and the direction
+    # it can be wrong in is the direction that costs us credit. So: the model
+    # reading, capped at what actually happened.
+    observed_change = _observed_profit_change(ev, after, factual)
+    if observed_change is not None and delta > observed_change:
+        delta = observed_change
+        reading += f", and capped at the ${observed_change:,.2f} this SKU's own profit actually rose"
 
     promised = d.get("expected_impact_usd")
     capped = delta
@@ -569,20 +681,28 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
 
     if abs(capped) < MEASURE_MIN_USD and not buybox_note:
         return _closed(d, f"The step moved less than ${MEASURE_MIN_USD:,.0f} on {sku}; not material.",
-                       evidence_after={"delta": round(delta, 2)})
+                       # same key as the measured path: a later audit reads one
+                       # field whatever the verdict was
+                       evidence_after={"delta": round(delta, 2), "uncapped": round(delta, 2)})
 
     note = (f"{sku} sold {after['units']:,.0f} units at ${p1:,.2f} in {window[0]} → {window[1]}, "
             f"earning ${factual:,.2f} before ads. At the old ${p0:,.2f}, the fitted curve "
             f"(ε {min(candidates):.2f} to {max(candidates):.2f}) puts the same demand at "
-            f"${factual - delta:,.2f} — a difference of ${delta:,.2f}, taken at the least favourable "
-            f"end of the confidence interval.{buybox_note}")
+            f"${factual - delta:,.2f} — a difference of ${delta:,.2f}, {reading}.{buybox_note}")
     if capped != delta:
         note += f" Capped at the ${float(promised):,.2f} we promised."
+    after_blob = {"p1": round(p1, 2), "units_after": after["units"],
+                  "factual_profit": round(factual, 2), "uncapped": round(delta, 2),
+                  "elasticities": candidates}
+    if distribution is not None:
+        after_blob["measured_distribution"] = {
+            "p5": distribution["p5"], "p25": distribution["banked"],
+            "p50": distribution["p50"], "p95": distribution["p95"],
+            "quantile_banked": MEASURE_QUANTILE, "draws": distribution["draws"],
+            "seed": distribution["seed"],
+        }
     return _verdict(d, "measured", note, usd=round(capped, 2), attribution="attributable",
-                    evidence_after={"p1": round(p1, 2), "units_after": after["units"],
-                                    "factual_profit": round(factual, 2), "uncapped": round(delta, 2),
-                                    "elasticities": candidates},
-                    window=window)
+                    evidence_after=after_blob, window=window)
 
 
 def measure_negative_margin(d: dict, margins: list[dict], inventory: list[dict],

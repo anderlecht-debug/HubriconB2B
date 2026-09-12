@@ -1,3 +1,5 @@
+import pytest
+
 from hubricon_engine.directives import (
     branded_spend,
     draft_directives,
@@ -197,3 +199,131 @@ def test_a_genuinely_larger_step_still_needs_an_explicit_yes():
     big = _draft("pricing", "price_step", "X", 1, 100.0, "t",
                  {"p0": 10.0, "p_new": 11.0}, mandate="explicit")
     assert big["mandate"] == "explicit"
+
+
+# ── the downside guard ────────────────────────────────────────────────────
+
+def _guard_fixture(monthly_net, delta_p5):
+    """A drafted price step with a known 5th-percentile outcome and a SKU with a
+    known monthly net, so the guard can be exercised directly."""
+    from hubricon_engine.directives import _draft
+
+    units, price = 100.0, 20.0
+    revenue = units * price
+    margin_row = {"sku": "G1", "units": units, "revenue": revenue,
+                  "amazon_fees": 0.0, "cogs": revenue - monthly_net,
+                  "net_margin": monthly_net,
+                  "period_start": "2026-07-01", "period_end": "2026-07-30"}
+    draft = _draft("pricing", "price_step", "G1", 20.0, 50.0, "move it",
+                   {"sku": "G1", "delta_p5": delta_p5})
+    return draft, margin_row
+
+
+def test_downside_guard_leaves_a_small_risk_inside_the_standing_mandate():
+    from hubricon_engine.directives import downside_guard
+
+    draft, row = _guard_fixture(monthly_net=2000.0, delta_p5=-100.0)
+    out = downside_guard(draft, row)
+    assert out["mandate"] == "standing"
+    guard = out["evidence"]["downside_guard"]
+    assert guard["within_budget"] is True
+    assert guard["budget_usd"] == pytest.approx(300.0)     # 15% of $2,000
+    assert guard["downside_usd"] == pytest.approx(100.0)
+
+
+def test_downside_guard_routes_a_large_risk_to_an_explicit_yes():
+    """Regardless of step size: the guard is about the size of the bad case, not
+    the size of the move."""
+    from hubricon_engine.directives import downside_guard
+
+    draft, row = _guard_fixture(monthly_net=2000.0, delta_p5=-700.0)
+    out = downside_guard(draft, row)
+    assert out["mandate"] == "explicit"
+    assert out["evidence"]["downside_guard"]["within_budget"] is False
+    assert "worst realistic case" in out["mandate_reason"]
+    assert "$300" in out["mandate_reason"]                 # the budget, in words
+
+
+def test_downside_guard_treats_a_positive_fifth_percentile_as_no_risk():
+    from hubricon_engine.directives import downside_guard
+
+    draft, row = _guard_fixture(monthly_net=2000.0, delta_p5=25.0)
+    out = downside_guard(draft, row)
+    assert out["mandate"] == "standing"
+    assert out["evidence"]["downside_guard"]["downside_usd"] == 0.0
+
+
+def test_downside_guard_gives_a_loss_making_sku_no_budget_at_all():
+    """A SKU already losing money has no monthly net to risk, so any quantified
+    downside needs a signature."""
+    from hubricon_engine.directives import downside_guard
+
+    draft, row = _guard_fixture(monthly_net=-400.0, delta_p5=-10.0)
+    out = downside_guard(draft, row)
+    assert out["evidence"]["downside_guard"]["budget_usd"] == 0.0
+    assert out["mandate"] == "explicit"
+
+
+def test_downside_guard_does_not_invent_a_downside_it_was_not_given():
+    """A draft with no simulated distribution is left alone. Gating on a number
+    the engine would have had to make up is the thing it does not do."""
+    from hubricon_engine.directives import _draft, downside_guard
+
+    draft = _draft("advertising", "campaign_trim", "C", 10.0, 500.0, "trim it",
+                   {"campaign_name": "C"})
+    out = downside_guard(draft, {"units": 1, "revenue": 1.0, "net_margin": 1000.0,
+                                 "period_start": "2026-07-01", "period_end": "2026-07-30"})
+    assert out["mandate"] == "standing"
+    assert "downside_guard" not in out["evidence"]
+
+
+def test_every_drafted_price_step_carries_the_guard_and_the_solver_makes_it_slack():
+    """End to end, and the finding is the relationship between the two rules.
+
+    The step size is already solved against the same risk budget, so by the time
+    a price step is drafted its 5th-percentile outcome is normally a GAIN — on
+    this eight-SKU catalog every one of them is. The guard is therefore slack in
+    normal operation, which is the designed outcome: it is a backstop against a
+    directive arriving from anywhere else, not the thing that sizes the move.
+    What matters is that every step carries its own downside on the record so the
+    claim is checkable rather than asserted."""
+    import numpy as np
+
+    from hubricon_engine.models import elasticity, margin
+    from hubricon_engine.models.pricing_engine import RISK_BUDGET_SHARE
+    from hubricon_engine.directives import DOWNSIDE_GUARD_SHARE
+
+    # one constant, two enforcement points: how far to walk, and whether we may
+    # walk without asking
+    assert DOWNSIDE_GUARD_SHARE == RISK_BUDGET_SHARE
+
+    rng = np.random.default_rng(4)
+    econ = []
+    for i in range(8):
+        prices = 20.0 * np.exp(rng.normal(0, 0.12, size=8))
+        units = 300.0 * (prices / 20.0) ** -2.6 * np.exp(rng.normal(0, 0.2, size=8))
+        for j, (p, u) in enumerate(zip(prices, units), start=1):
+            revenue = float(p) * float(u)
+            econ.append({"sku": f"D{i}", "asin": f"B0D{i}",
+                         "period_start": f"2026-{j:02d}-01", "period_end": f"2026-{j:02d}-28",
+                         "units_sold": float(u), "avg_sales_price": float(p),
+                         "sales": revenue, "referral_fees": -0.15 * revenue,
+                         "fba_fulfillment_fees": -1.5 * float(u), "storage_fees": 0.0,
+                         "other_fees": 0.0, "net_proceeds": revenue})
+    data = {"asin_traffic": [], "sku_economics": econ, "ppc_search_terms": [],
+            "ppc_spend": [], "inventory_levels": [],
+            "cogs_inputs": [{"sku": f"D{i}", "asin": f"B0D{i}", "unit_cost_usd": 5.0}
+                            for i in range(8)]}
+    margins = margin.run(data)
+    fits = elasticity.run(data)
+    steps = [d for d in draft_directives([], [], fits, margins) if d["kind"] == "price_step"]
+    assert len(steps) >= 5
+
+    for d in steps:
+        guard = d["evidence"]["downside_guard"]
+        assert guard["trailing_monthly_net"] > 0
+        assert guard["delta_p5"] is not None
+        assert guard["share"] == DOWNSIDE_GUARD_SHARE
+        # the solver already refused anything whose bad case was a material loss
+        assert guard["within_budget"] is True
+        assert guard["downside_usd"] == 0.0

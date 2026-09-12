@@ -20,7 +20,14 @@ from datetime import date, timedelta
 from . import channels
 from .models import fee_schedule
 from .models.margin import average_margin
-from .models.pricing_engine import INELASTIC_STEP, STEP_CAP, fee_terms, price_move
+from .models.pricing_engine import (
+    INELASTIC_STEP,
+    RISK_BUDGET_SHARE,
+    STEP_CAP,
+    fee_terms,
+    price_move,
+    trailing_monthly_net,
+)
 
 # What the standing mandate covers, read off terms.html §6 — "price steps of
 # up to five percent per SKU per two-week cycle" and advertising corrections —
@@ -28,6 +35,14 @@ from .models.pricing_engine import INELASTIC_STEP, STEP_CAP, fee_terms, price_mo
 # price step past the cap is demoted to explicit at the point it is drafted.
 STANDING = {"ad_bleed_terms", "campaign_trim", "branded_pause", "spend_step", "price_step"}
 
+# How much of a SKU's own trailing monthly net a single directive's
+# 5th-percentile outcome may put at risk before the move stops travelling under
+# the standing mandate and needs the client's explicit yes. The same share the
+# step size is solved against in pricing_engine, enforced a second time here
+# because the two rules answer to different things: one is how far to walk, this
+# is whether we may walk without asking. A directive can exceed it only by the
+# client's own decision.
+DOWNSIDE_GUARD_SHARE = RISK_BUDGET_SHARE
 STOCKOUT_ALERT = 0.25
 MEASUREMENT_HORIZON_DAYS = 30
 BRANDED_SPEND_MIN = 25.0
@@ -77,6 +92,43 @@ def _draft(module: str, kind: str, subject, score: float, expected: float | None
         "dedupe_key": dedupe_key(module, kind, subject),
         "mandate": mandate or ("standing" if kind in STANDING else "explicit"),
     }
+
+
+def downside_guard(draft: dict, margin_row: dict | None,
+                   share: float = DOWNSIDE_GUARD_SHARE) -> dict:
+    """Route a draft to an explicit yes when its bad case is too big, in place.
+
+    A directive that carries a simulated profit-delta distribution carries its
+    own 5th percentile. If the loss at that percentile exceeds `share` of the
+    SKU's trailing monthly net, the move is no longer inside what the standing
+    mandate covers — whatever its step size — and it goes to the client for a
+    signature with the reason on the record.
+
+    Drafts with no delta distribution are left alone: this guard is about a
+    quantified downside, and inventing one in order to gate on it would be the
+    thing the engine does not do."""
+    evidence = draft.get("evidence") or {}
+    p5 = evidence.get("delta_p5")
+    if p5 is None or margin_row is None:
+        return draft
+    monthly_net = trailing_monthly_net(margin_row)
+    budget = share * max(monthly_net, 0.0)
+    downside = max(0.0, -float(p5))
+    evidence["downside_guard"] = {
+        "delta_p5": float(p5),
+        "downside_usd": round(downside, 2),
+        "trailing_monthly_net": round(monthly_net, 2),
+        "budget_usd": round(budget, 2),
+        "share": share,
+        "within_budget": downside <= budget,
+    }
+    if downside > budget:
+        draft["mandate"] = "explicit"
+        draft["mandate_reason"] = (
+            f"the worst realistic case risks {_money(downside)} against "
+            f"{_money(budget)} ({share:.0%} of this SKU's {_money(monthly_net)} monthly net)"
+        )
+    return draft
 
 
 def _latest_margins_by_sku(margins: list[dict]) -> dict[str, dict]:
@@ -574,9 +626,14 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
 def draft_directives(inventory, ads, elasticity, margins,
                      search_terms=None, brand_terms=None,
                      recovery=None, inv_econ=None, anomaly_rows=None,
-                     channel: str | None = "amazon") -> list[dict]:
+                     channel: str | None = "amazon",
+                     downside_share: float = DOWNSIDE_GUARD_SHARE) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
-    it changes the words, never the arithmetic."""
+    it changes the words, never the arithmetic.
+
+    `downside_share` is the downside guard: a directive whose 5th-percentile
+    outcome risks more than this share of its SKU's trailing monthly net is
+    routed to an explicit yes whatever its step size."""
     today = date.today()
     latest_by_sku = _latest_margins_by_sku(margins)
     econ_by_sku = {r["sku"]: r for r in (inv_econ or {}).get("rows", [])}
@@ -695,7 +752,7 @@ def draft_directives(inventory, ads, elasticity, margins,
             continue
         d = _pricing_directive(fit, margin_row, margins)
         if d:
-            drafts.append(d)
+            drafts.append(downside_guard(d, margin_row, downside_share))
 
     if margins:
         latest = max(m["period_start"] for m in margins)

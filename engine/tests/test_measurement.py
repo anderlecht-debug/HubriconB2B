@@ -49,14 +49,34 @@ def test_a_price_step_that_was_never_executed_banks_nothing():
 
 
 def test_a_wide_confidence_interval_costs_us_credit():
-    """We bank the least favourable reading of our own fit, so uncertainty is
-    expensive for us rather than for the client."""
-    ev = {"sku": "W1", "p0": 10.0, "p_new": 10.5, "elasticity": -0.5}
+    """Uncertainty is expensive for us rather than for the client, and it is now
+    expensive SMOOTHLY.
+
+    This used to assert that two intervals both came back "measured" with the
+    wider one lower. It is replaced by a strictly stronger claim over a whole
+    sweep of widths: the banked figure falls monotonically as the interval widens,
+    and it falls because the engine integrates its own posterior and banks the
+    25th percentile — not because it takes the worse of two endpoints, which the
+    replay harness showed books losses on moves that made money once the interval
+    is honestly wide (engine/MATH_SCORECARD.md, iteration 2)."""
+    ev = {"sku": "W1", "p0": 10.0, "p_new": 10.5, "elasticity": -0.5, "std_err": None}
     margins = [_margin("W1", "2026-07-01", 95, 997.5, 150.0, 380.0)]     # sold at $10.50
-    tight = m.measure_price_step(_d("price_step", {**ev, "ci95": [-0.6, -0.4]}), margins, [], date(2026, 6, 15), TODAY)
-    wide = m.measure_price_step(_d("price_step", {**ev, "ci95": [-3.5, -0.4]}), margins, [], date(2026, 6, 15), TODAY)
-    assert tight["verdict"] == wide["verdict"] == "measured"
-    assert wide["measured_impact_usd"] < tight["measured_impact_usd"]
+    banked = []
+    for half in (0.05, 0.2, 0.6, 1.5):
+        out = m.measure_price_step(
+            _d("price_step", {**ev, "ci95": [-0.5 - half, -0.5 + half]}),
+            margins, [], date(2026, 6, 15), TODAY)
+        # below the materiality floor the directive closes rather than banking
+        # noise, and the uncapped figure is still on the record
+        uncapped = (out.get("evidence_after") or {}).get("uncapped")
+        banked.append(out.get("measured_impact_usd") if uncapped is None else uncapped)
+    assert all(b is not None for b in banked), banked
+    assert banked == sorted(banked, reverse=True), banked
+    assert banked[0] > banked[-1]
+
+    # and the widest one is still a positive number, not a loss booked on a move
+    # that earned money
+    assert banked[-1] > 0
 
 
 def test_a_price_step_is_capped_at_what_we_promised():
