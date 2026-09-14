@@ -116,9 +116,14 @@ while this link lives.</p>
   <label class="row"><input type="checkbox" name="testimonial" ${on("testimonial")}>
     <span><b>Yes, you may quote me.</b> Two honest lines are plenty. Attributed by first name and
     category unless you tick the box below.</span></label>
-  <textarea name="testimonial_text" placeholder="What changed, in your words.">${esc(testimonial)}</textarea>
+  <textarea name="testimonial_text" placeholder="What changed in how you run the business, in your words. Thirty words is plenty.">${esc(testimonial)}</textarea>
   <label class="row"><input type="checkbox" name="testimonial_named_ok" ${named}>
     <span><b>You may attribute it to my name and brand.</b></span></label>
+  <p class="sub" style="margin-top:16px"><b style="color:var(--ink)">Before, in your words.</b> Optional. One or two
+  sentences about what this looked like before: a Sunday night with five reports, a question from your
+  accountant you could not answer, a decision you kept putting off. If we ever tell your story, it starts
+  here, and only with what you wrote.</p>
+  <textarea name="before_text" placeholder="Before Hubricon, I…">${esc(has("testimonial")?.before_text || "")}</textarea>
 </div>
 <button class="btn" type="submit">Save my answers</button>
 </form>
@@ -164,13 +169,14 @@ export async function POST(request) {
   const yes = (k) => body.get(k) === "on" || body.get(k) === "true";
   const now = new Date().toISOString();
   const text = String(body.get("testimonial_text") ?? "").trim().slice(0, 1200);
+  const before = String(body.get("before_text") ?? "").trim().slice(0, 800);
   const rows = KINDS.map((kind) => ({
     client_id: identity.client_id,
     kind,
     granted: yes(kind),
     answered_at: now,
     ...(kind === "testimonial"
-      ? { testimonial: text || null, testimonial_named_ok: yes("testimonial_named_ok") }
+      ? { testimonial: text || null, testimonial_named_ok: yes("testimonial_named_ok"), before_text: before || null }
       : {}),
   }));
   const { error } = await db.from("consents").upsert(rows, { onConflict: "client_id,kind" });

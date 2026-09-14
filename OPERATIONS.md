@@ -150,7 +150,7 @@ uv run hubricon harvest status
 
 It runs twice a day (06:10 and 18:10). Each run reads four rotating
 categories two levels deep (Kitchen → Bakeware → Muffin Pans is where
-$1M–$20M brands rank; page 1 of Kitchen is the giants), up to ~250 product
+$3M–$20M brands rank; page 1 of Kitchen is the giants), up to ~250 product
 pages at 7–12 seconds apart, the profiles of the third-party FBA sellers it
 found, then the sites of the US founder-run brands among them. About an
 hour a run. The pace matters: on 2026-09-03 about 180 Amazon requests in
@@ -457,7 +457,7 @@ top-1M, 600 domains sampled per band, DNS only:
 
 So the head of the list is waste and the tail is mostly foreign, and the window
 (`SOURCING_RANK_FROM` / `_TO`, 20,000–600,000) is where a US brand doing
-$1M–$20M actually ranks. Extrapolated, the whole list holds roughly **35,000
+$3M–$20M can rank. Extrapolated, the whole list holds roughly **35,000
 Shopify stores**. A live pass over ranks 150,000–210,514 returned **1,250 stores
 from 40,000 domains** and did not touch one of them to do it.
 
@@ -1036,7 +1036,8 @@ cold email / teardown page ─► TEARDOWN reply or booking ─► welcome + upl
         │                                │
         │                     day 14, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
         │
-   stretch-fit call (<$1M) ─► founder offers recovery-only on the call ─► `hubricon downsell <client>`
+   site gate: under $3M or not own brand ─► no calendar ─┬─ Amazon: Recovery Only request ─► recovery_welcome ─► reply ─► `hubricon downsell`
+                                                          └─ 60-second Teardown + position list (funnel_events 'position_list')
                                          │
    exports land ─► Issue 001 ─► day-30 gate ─┬─ clears ─► retainer ─► rolling gate on every invoice
                                              └─ short  ─► the letter names the smaller door ─► reply RECOVERY
@@ -1054,11 +1055,35 @@ uv run hubricon downsell <client> --share 0.2    # a different share, agreed in 
 uv run hubricon downsell <client> --retainer     # back onto the flat fee
 ```
 
-The site never shows the downsell. It is offered by a person on a call, by the
-day-14 email, and by the day-30 letter — the three places a founder has said
-"not at that price" without saying it. Shopify has no reimbursements and so no
-smaller door yet; a Shopify founder who stalls gets the day-7 files email and
-nothing further.
+The site shows the downsell in one place: the application's below-the-bar
+screen, to an Amazon seller under $3M or on someone else's brand, who is not
+offered a call there. The request becomes a prospect at `wants_teardown` with a
+`recovery-only (site gate)` note (`api/gate.js`); the operator sends
+`recovery_welcome` (the upload page and the plan) instead of `files`, and none of
+the Teardown nudges or the day-14 downsell follow it. The plan is still switched
+by `hubricon downsell` when they reply. Everywhere else it is offered by the
+day-14 email and the day-30 letter, the places a founder has said "not at that
+price" without saying it. Shopify has no reimbursements and so no smaller door
+yet; a Shopify founder who stalls gets the day-7 files email and nothing further.
+
+### The case study (index.html §3b)
+
+One client, told in full, or nothing on the page at all. It ships only for a
+real client whose Proving Month has closed, who ticked the testimonial and a
+publication box on their consent page and wrote both the quote (thirty words
+or fewer) and the before-state there in their own words, and whose Record
+carries a recorded miss. `named_results` names the brand; `anonymised_results`
+alone publishes it as "a <category> brand".
+
+```
+uv run hubricon casestudy <client>             # the section as it would read, and every reason it cannot ship yet
+uv run hubricon casestudy <client> --publish   # writes case_studies only when no reason is left
+uv run hubricon casestudy <client> --unpublish
+```
+
+`public_case_study()` re-checks consent on every read, so a revoked box takes
+the section down without anyone running anything. Every SKU, ASIN and FNSKU on
+the Record rows is masked before the row is written.
 
 ## Turning on the 90-second demo
 

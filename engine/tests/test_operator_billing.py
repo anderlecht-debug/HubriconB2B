@@ -161,6 +161,27 @@ def test_the_downsell_email_names_the_share_and_asks_for_the_word():
     assert "smaller door" in spec["subject"].lower()
 
 
+def test_a_founder_who_chose_recovery_on_the_site_gets_none_of_the_teardown_nudges(monkeypatch):
+    sent = []
+    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind: sent.append((c["id"], kind)))
+    old = (date.today() - timedelta(days=15)).isoformat() + "T00:00:00Z"
+    db = FakeDB(
+        clients=[{"id": "g", "contact_email": "g@x.com", "status": "pending", "platform": "amazon", "created_at": old}],
+        uploads=[],
+        client_touches=[{"client_id": "g", "kind": "recovery_welcome", "sent_at": old}],
+    )
+    operator.Pass(db, send=False, dry=False).nudges()
+    assert sent == []
+
+
+def test_the_recovery_welcome_names_the_share_and_asks_for_a_confirming_reply():
+    spec = onboarding.email_spec("recovery_welcome", "Dana", "https://x/intake?t=tok", "https://x/portal")
+    text = " ".join(b.get("p", "") for b in spec["blocks"])
+    assert f"{billing.RECOVERY_SHARE * 100:.0f}% of what actually lands" in text
+    assert "Reply to this email to confirm" in text and "nothing up front" in text
+    assert "https://x/intake?t=tok" in [b.get("url") for b in spec["blocks"]]
+
+
 def _day_31_client(**kw):
     started = (date.today() - timedelta(days=31)).isoformat() + "T00:00:00Z"
     return _client(status="pending", stripe_subscription_id=None, retainer_started_at=started, **kw)

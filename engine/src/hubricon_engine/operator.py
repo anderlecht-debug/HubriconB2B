@@ -16,6 +16,7 @@ Everything is idempotent, so an hourly run that finds nothing does nothing.
 """
 
 import os
+import re
 import sys
 import tempfile
 from datetime import date, datetime, timedelta, timezone
@@ -30,6 +31,9 @@ PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/p
 NUDGE_AFTER_DAYS = 3
 FILES_AFTER_DAYS = 7
 DOWNSELL_AFTER_DAYS = 14     # the smaller door, once, to an Amazon seller whose exports never came
+# api/gate.js writes this at the head of fit_notes when an Amazon seller under the
+# $3M bar asks for Recovery Only on the site's below-the-bar screen.
+RECOVERY_NOTE = "recovery-only (site gate)"
 
 
 def _now() -> datetime:
@@ -224,24 +228,34 @@ class Pass:
                 self.say(f"[dry] would provision {email} (replied TEARDOWN)")
                 continue
             name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x) or None
-            # A prospect the harvest found on a Shopify store must not be sent
-            # Seller Central instructions: the harvest row knows the platform,
-            # and so does the 60-second Teardown's capture (tool_runs) for a
-            # merchant who arrived through /teardown rather than the cold lane.
-            harvested = (self.db.table("harvest_sellers").select("platform")
-                         .eq("email", email).limit(1).execute().data)
-            platform = (harvested[0].get("platform") if harvested else None)
-            if not platform:
-                runs = (self.db.table("tool_runs").select("platform").eq("email", email)
-                        .order("created_at", desc=True).limit(1).execute().data)
-                platform = runs[0].get("platform") if runs else None
-            platform = platform or "amazon"
+            note = p.get("fit_notes") or ""
+            recovery = note.startswith(RECOVERY_NOTE)
+            if recovery:
+                # Recovery Only is Amazon's door; the gate answer says whether
+                # the brand also sells on Shopify.
+                m = re.search(r"channel:(\w+)", note)
+                platform = "both" if m and m.group(1).lower() == "both" else "amazon"
+            else:
+                # A prospect the harvest found on a Shopify store must not be sent
+                # Seller Central instructions: the harvest row knows the platform,
+                # and so does the 60-second Teardown's capture (tool_runs) for a
+                # merchant who arrived through /teardown rather than the cold lane.
+                harvested = (self.db.table("harvest_sellers").select("platform")
+                             .eq("email", email).limit(1).execute().data)
+                platform = (harvested[0].get("platform") if harvested else None)
+                if not platform:
+                    runs = (self.db.table("tool_runs").select("platform").eq("email", email)
+                            .order("created_at", desc=True).limit(1).execute().data)
+                    platform = runs[0].get("platform") if runs else None
+                platform = platform or "amazon"
             client, link, created = onboarding.provision(self.db, email, name, p.get("company_name"), platform)
-            sent = self._touch(client, "files", link, force=True)
+            sent = self._touch(client, "recovery_welcome" if recovery else "files", link, force=True)
             self.db.table("prospects").update({"client_id": client["id"], "last_event_at": _iso()}).eq("id", p["id"]).execute()
-            outbound.log_event(self.db, "teardown_requested", prospect_id=p["id"], client_id=client["id"],
+            outbound.log_event(self.db, "recovery_provisioned" if recovery else "teardown_requested",
+                               prospect_id=p["id"], client_id=client["id"],
                                payload={"created": created, "files_sent": sent})
-            self.say(f"Provisioned {email} from a TEARDOWN reply; upload page {'sent' if sent else 'NOT sent'}.")
+            self.say(f"Provisioned {email} from {'a Recovery Only request on the site' if recovery else 'a TEARDOWN reply'}; "
+                     f"upload page {'sent' if sent else 'NOT sent'}.")
 
     # -- 4. nudges -----------------------------------------------------------
     def nudges(self) -> None:
@@ -255,6 +269,12 @@ class Pass:
                 continue
             touches = {t["kind"]: _parse_ts(t["sent_at"]) for t in
                        self.db.table("client_touches").select("*").eq("client_id", c["id"]).execute().data}
+            if "recovery_welcome" in touches:
+                # They chose the smaller door themselves, below the bar. The
+                # Teardown nudges pitch the $6,000 door they were just told the
+                # arithmetic rules out, and the day-14 downsell offers the one
+                # they came in by; the founder follows up by hand.
+                continue
             start = touches.get("welcome") or touches.get("files") or _parse_ts(c["created_at"])
             if not start:
                 continue

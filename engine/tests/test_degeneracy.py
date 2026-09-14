@@ -361,15 +361,16 @@ def test_the_methods_and_scorecard_exist_and_state_their_limits():
 
 
 def test_the_published_formulas_match_the_code():
-    """`index.html` §05 is a claim about what runs on a client's catalog. If the
-    code's formula and the page's formula diverge, the page is a false statement —
-    so the page is asserted against the constants the code actually uses."""
+    """`method.html` (moved there from index.html §05) is a claim about what runs on
+    a client's catalog. If the code's formula and the page's formula diverge, the
+    page is a false statement — so the page is asserted against the constants the
+    code actually uses."""
     from pathlib import Path
 
     from hubricon_engine.models import anomaly
     from hubricon_engine.models.pricing_engine import STEP_CAP
 
-    page = " ".join((Path(__file__).resolve().parents[2] / "index.html").read_text().split())
+    page = " ".join((Path(__file__).resolve().parents[2] / "method.html").read_text().split())
 
     # the optimum, with the fixed fee in it
     assert "P*</b> = [(c + F) / (1 − f)] · ε / (1 + ε)" in page

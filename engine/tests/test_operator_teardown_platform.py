@@ -41,3 +41,20 @@ def test_the_harvest_row_wins_over_the_tool_and_nothing_known_means_amazon(monke
     assert seen["platform"] == "shopify"
     seen, _ = _run(monkeypatch, harvest=[], runs=[])
     assert seen["platform"] == "amazon"
+
+
+def test_a_recovery_request_from_the_site_gets_the_recovery_email_not_the_teardown_one(monkeypatch):
+    """api/gate.js writes the note; the gate's channel answer beats a stale harvest row."""
+    db = FakeDB(
+        prospects=[{"id": "p1", "email": "owner@brand.com", "status": "wants_teardown", "client_id": None,
+                    "fit_notes": "recovery-only (site gate) · channel:Both · rev:Under $3M · model:Private label"}],
+        harvest_sellers=[{"email": "owner@brand.com", "platform": "shopify"}], tool_runs=[], funnel_events=[],
+        client_touches=[],
+    )
+    seen = {}
+    monkeypatch.setattr(onboarding, "provision", lambda _db, email, name, company, platform: (
+        seen.__setitem__("platform", platform) or ({"id": "c1", "contact_email": email}, "https://x/upload", True)))
+    monkeypatch.setattr(operator.Pass, "_touch", lambda self, client, kind, link, force=False: seen.__setitem__("kind", kind) or True)
+    operator.Pass(db, send=False, dry=False).teardown_requests()
+    assert seen == {"platform": "both", "kind": "recovery_welcome"}
+    assert db.rows("funnel_events")[-1]["kind"] == "recovery_provisioned"

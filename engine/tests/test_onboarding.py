@@ -50,7 +50,7 @@ def test_welcome_email_leads_with_the_upload_page():
 
 
 def test_all_kinds_render_and_greet_unknown_names():
-    for kind in ("welcome", "files", "nudge", "teardown_ready"):
+    for kind in ("welcome", "files", "nudge", "teardown_ready", "downsell", "recovery_welcome"):
         spec = email_spec(kind, None, "https://x/intake?t=1", "https://x/portal")
         assert render_text(spec).startswith("Hi there,")
         assert spec["subject"]

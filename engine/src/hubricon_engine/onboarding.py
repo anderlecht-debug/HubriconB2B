@@ -311,6 +311,28 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                       "whenever the numbers make the case for it, and your Profit Record will say when they do."},
             ],
         }
+    if kind == "recovery_welcome":
+        # The door a founder under the $3M bar chose on the site's application
+        # (api/gate.js). The same plan as the day-14 downsell, named as the thing
+        # they asked for rather than as a consolation.
+        from .billing import RECOVERY_SHARE
+        pct = f"{RECOVERY_SHARE * 100:.0f}%"
+        return {
+            "subject": "Recovery Only: the reimbursements Amazon owes you",
+            "greeting": greeting,
+            "blocks": [
+                {"p": "You asked for Recovery Only on hubricon.com. Here is the whole of it."},
+                {"p": f"Grant the seat or send three exports (the reimbursement, returns and inventory ledger "
+                      f"reports), and we file every reimbursement Amazon owes you and did not pay on its own. "
+                      f"You pay {pct} of what actually lands in your account — nothing else, nothing up front, "
+                      f"and nothing at all in a month where nothing lands."},
+                {"button": "Open your secure upload page", "url": link},
+                {"p": "Reply to this email to confirm and I will put your account on that plan. Nothing is "
+                      "invoiced before you do."},
+                {"p": "When the brand is past $3M a year, Managed Profit is there, and your Profit Record will "
+                      "say when the numbers make the case for it."},
+            ],
+        }
     raise ValueError(f"unknown email kind {kind!r}")
 
 

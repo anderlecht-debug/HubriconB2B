@@ -22,7 +22,7 @@ day one. It is run by one person.
 
 ## Who the customer is
 
-A private-label brand doing roughly **$1M–$20M a year** on Amazon, on Shopify, or
+A private-label brand doing **$3M–$20M a year** on Amazon, on Shopify, or
 on both. Ten or more SKUs. Their own brand, not wholesale or arbitrage. Someone
 who owns the goals and is tired of being the only person in the building who runs
 the numbers.
@@ -45,8 +45,16 @@ Nobody in that stack can answer "which decision made the profit". That gap is th
 entire business.
 
 **Who it is not for:** someone who wants day-to-day creative campaign management,
-or another dashboard subscription. Under $1M or not private label, the call still
-happens and the fit gets discussed honestly — nobody is refused a call.
+or another dashboard subscription. Under $3M, or not their own brand, the site's
+application does not book a call. The floor is derived from the guarantee, not
+chosen: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
+recoverable) a $2M brand has roughly $3,600 a month to find and a $3M brand roughly
+$5,400, so below $3M every invoice voids and the service runs unpaid. Those founders
+get the 60-second Teardown; an Amazon seller also gets Recovery Only (a share of what
+Amazon pays on claims we file, no retainer), which lands as a prospect the operator
+sends `recovery_welcome`; and, once it exists, Capital Position, with an address for
+its weekly page kept until then (`funnel_events` kind `position_list`). Exceptions
+happen by email, never in the UI.
 
 ---
 

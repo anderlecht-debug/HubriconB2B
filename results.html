@@ -131,7 +131,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
     <div class="card">
       <span class="eyebrow">${esc(r.month)} · ${esc(r.platform || "amazon")}</span>
       <span class="amt">${money(r.amount_usd)}</span>
-      <span class="who">A ${esc(r.industry)} brand, ${esc(r.revenue_band || "$1M–$20M")}</span>
+      <span class="who">A ${esc(r.industry)} brand, ${esc(r.revenue_band || "$3M–$20M")}</span>
       <div class="kind">${esc(KIND[r.kind] || r.kind)}</div>
       <div class="how">How we know: ${esc(HOW[r.how_we_know] || r.how_we_know)}</div>
     </div>`).join("");

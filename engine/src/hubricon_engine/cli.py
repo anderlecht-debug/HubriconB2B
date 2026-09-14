@@ -2112,6 +2112,35 @@ def cmd_downsell(args):
           f"No retainer, no day-30 subscription. Claims: `hubricon recover {args.client} list|file|paid`.")
 
 
+def cmd_casestudy(args):
+    """index.html §3b: one client's case study, told in full, or nothing.
+
+    Prints the section as it would read and every reason it may not ship.
+    --publish writes it only when there are no reasons left; public_case_study()
+    then serves it and re-checks consent on every read. --unpublish takes it down."""
+    from . import case_study
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if args.unpublish:
+        case_study.unpublish(db, client["id"])
+        print(f"{name}: case study unpublished. The section is gone on the next page load.")
+        return
+    run = case_study.publish if args.publish else case_study.build
+    row, problems = run(db, client["id"], allow_no_miss=args.allow_no_miss)
+    print(case_study.render_text(row))
+    if problems:
+        print("\nNot publishable yet:")
+        for p in problems:
+            print(f"  - {p}")
+        if args.publish:
+            sys.exit(1)
+    elif args.publish:
+        print(f"\n{name}: published. hubricon.com shows it on the next page load.")
+    else:
+        print("\nEvery rule passes. Run again with --publish to put it on hubricon.com.")
+
+
 def cmd_all(args):
     cmd_ingest(args)
     cmd_run(args)
@@ -3035,6 +3064,14 @@ def main():
     p.add_argument("--share", type=float, help="fraction of recovered dollars, default RECOVERY_SHARE (0.25)")
     p.add_argument("--retainer", action="store_true", help="move the client back onto the flat retainer")
     p.set_defaults(fn=cmd_downsell)
+
+    p = sub.add_parser("casestudy", help="index.html §3b: one real client's case study, previewed, published or taken down")
+    p.add_argument("client")
+    p.add_argument("--publish", action="store_true", help="publish when every rule passes; otherwise print why and exit 1")
+    p.add_argument("--unpublish", action="store_true", help="take the section off the site")
+    p.add_argument("--allow-no-miss", action="store_true",
+                   help="publish a Record with no recorded miss, only when that really is the whole Record")
+    p.set_defaults(fn=cmd_casestudy)
 
     p = sub.add_parser("promises", help="which promises the machine can keep right now, and which it cannot")
     p.add_argument("--client", help="just this client")
