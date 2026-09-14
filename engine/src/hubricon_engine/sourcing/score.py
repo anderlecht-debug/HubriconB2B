@@ -1,6 +1,6 @@
 """The qualification gate. This is the constraint, not discovery.
 
-Domains are effectively free and effectively unlimited. Domains that do $1M+
+Domains are effectively free and effectively unlimited. Domains that do $3M+
 and where a $6,000/month decision can actually be reached are the job. So the
 score runs before contact resolution and before anything is written to, and
 only what clears the threshold costs a request more.
@@ -23,7 +23,7 @@ scorer produces confident garbage: hand-label a hundred stores, run it, and
 read the threshold off the output rather than guessing one. Two numbers in
 particular are unverified until that happens — the rank bands below, and
 `HARVEST_SHOPIFY_ORDERS_PER_REVIEW` (50), which OPERATIONS.md flags as a guess
-that the whole $500k-$40M band rides on.
+that the whole $1.5M-$40M band rides on.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ from ..harvest import shopify as shopify_harvest
 
 MIN_SCORE = float(os.environ.get("SOURCING_MIN_SCORE", "55"))
 
-# Rank -> points. The band is a *window*, not a ladder: the ICP is $1M-$20M,
+# Rank -> points. The band is a *window*, not a ladder: the ICP is $3M-$20M,
 # so a store can rank too well as easily as too poorly. The first live qualify
 # pass (2026-09-07) scored barnesandnoble.com at 73 and passed it, because the
 # bands then read "higher is better" — a national retailer three orders of
@@ -44,14 +44,17 @@ MIN_SCORE = float(os.environ.get("SOURCING_MIN_SCORE", "55"))
 # counts on product pages and `qualify` does not fetch product pages, so it is
 # None for every row here; the rank is carrying the whole judgement and has to
 # encode both ends of the band. These edges are still the least defended
-# numbers in the module: calibrate them.
+# numbers in the module: calibrate them. When the floor moved from $1M to $3M
+# (2026-09-13) the weight moved up the list with it: a $3M store out-ranks a $1M
+# one, so the long tail that was carrying the old floor lost points and the
+# large-but-in-band tier gained a little. The shift is directional, not measured.
 RANK_BANDS = (
     (5_000, -25.0),        # Amazon, Barnes & Noble. Not a prospect, an advertiser.
     (30_000, -8.0),        # a national brand, comfortably past the $20M ceiling
-    (80_000, 18.0),        # large, plausibly still in band
-    (250_000, 34.0),       # where a $1M-$20M US DTC brand actually ranks
-    (500_000, 30.0),
-    (1_000_000, 16.0),
+    (80_000, 20.0),        # large, plausibly still in band
+    (250_000, 34.0),       # where a $3M-$20M US DTC brand actually ranks
+    (500_000, 24.0),
+    (1_000_000, 8.0),      # the long tail: mostly under the floor
 )
 RANK_UNKNOWN = 14.0     # the search route finds real stores Tranco never ranked
 

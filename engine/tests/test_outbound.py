@@ -203,6 +203,41 @@ class _Api:
         raise AssertionError("the campaign already exists")
 
 
+def test_a_campaign_under_its_old_band_name_is_renamed_in_place_not_duplicated():
+    """The ICP floor moved from $1M to $3M, and the band is in the campaign's name.
+    Looking it up by the exact new name alone would miss the live campaign and
+    create a second one mailing the same leads; the family prefix finds it, and
+    the name is patched once."""
+    class _OldName(_Api):
+        def __init__(self):
+            super().__init__()
+            self.name = "Hubricon — Profit Teardown (PL FBA $1M–$20M)"
+
+        def campaigns(self):
+            return [{"id": "C1", "name": self.name, "status": outbound.CAMPAIGN_ACTIVE}]
+
+        def find_campaign(self, name):
+            return next((c for c in self.campaigns() if c["name"] == name), None)
+
+        def update_campaign(self, cid, fields):
+            self.name = fields.get("name", self.name)
+            return super().update_campaign(cid, fields)
+
+    db, api = _DB(), _OldName()
+    cid, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert cid == "C1"
+    assert [f for _, f in api.updated if "name" in f] == [{"name": CAMPAIGN_NAME}]
+    assert any(n.startswith("Renamed campaign C1") for n in notes)
+    outbound.ensure_campaign(db, api, "123 Main St", dry=False)
+    assert len([f for _, f in api.updated if "name" in f]) == 1
+
+
+def test_supersearch_asks_only_for_the_band_wholly_above_the_floor():
+    """Instantly's bands have no edge at $3M. "$1 - 10M" would enroll the brands
+    whose every invoice voids, and nothing downstream could tell them apart."""
+    assert outbound.SUPERSEARCH_FILTERS["revenue"] == ["$10 - 50M"]
+
+
 def test_existing_campaign_gets_the_new_copy_once():
     db, api = _DB(), _Api()
     cid, notes = outbound.ensure_campaign(db, api, "123 Main St", dry=False)

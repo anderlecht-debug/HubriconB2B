@@ -577,7 +577,7 @@ def test_the_email_hook_renders_from_the_stores_own_two_numbers():
 
 
 def test_a_store_can_rank_too_well_for_the_band():
-    """The ICP is $1M-$20M, so the rank is a window and not a ladder. The first
+    """The ICP is $3M-$20M, so the rank is a window and not a ladder. The first
     live qualify pass scored barnesandnoble.com (Tranco #2,197) at 73 and passed
     it, because the bands then read "higher is better"."""
     giant, parts = score.score({

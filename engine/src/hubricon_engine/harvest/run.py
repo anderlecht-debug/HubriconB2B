@@ -39,7 +39,7 @@ LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator en
 # and roughly one in twenty pages yields a pushable founder-run brand, so this
 # keeps two mailboxes' 40 sends a day fed. Depth 2 reads the grandchildren
 # of a category (e.g. Kitchen → Bakeware → Muffin Pans), which is where the
-# $1M–$20M private-label brands rank; page 1 of a top category is the giants.
+# $3M–$20M private-label brands rank; page 1 of a top category is the giants.
 MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "250"))  # per run; launchd runs twice a day
 CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "4"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
@@ -51,7 +51,7 @@ SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
 # A top-100 Best Sellers slot is a brand far past the $20M ceiling almost by
 # definition — every one researched by hand that day (Rhino USA, Catchmaster,
 # Dr. Bronner's, Eddie Bauer, American Soft Linen) failed on size. Narrow leaf
-# categories are where a $1M-$20M founder-run brand actually ranks, so the
+# categories are where a $3M-$20M founder-run brand actually ranks, so the
 # crawl walks four levels down and reads the deepest lists first.
 CRAWL_DEPTH = int(os.environ.get("HARVEST_DEPTH", "4"))
 MIN_MONTHLY_REVENUE = float(os.environ.get("HARVEST_MIN_MONTHLY_REVENUE", "2500"))

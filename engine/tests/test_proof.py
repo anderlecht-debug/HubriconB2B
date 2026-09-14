@@ -16,6 +16,10 @@ def _ledger(total, multiple=None, identified=0.0):
 def test_the_gate_answer_reads_the_booking_string_in_both_shapes():
     assert proof.revenue_band_from_answers({"utm": "rev:$1M–$5M|model:Private label|fit:core"}) == "$1M–$5M"
     assert proof.revenue_band_from_answers({"rev": "Under $1M"}) == "under $1M"
+    # the chips since the floor moved to $3M, and the retired ones still read
+    assert proof.revenue_band_from_answers({"utm": "rev:$3M–$5M|model:Private label|fit:core"}) == "$3M–$5M"
+    assert proof.revenue_band_from_answers({"rev": "Under $3M"}) == "under $3M"
+    assert proof.revenue_band_from_answers({"utm": "rev:$5M–$20M|fit:core"}) == "$5M–$20M"
     assert proof.revenue_band_from_answers({"utm": "model:x"}) is None
     assert proof.revenue_band_from_answers(None) is None
 

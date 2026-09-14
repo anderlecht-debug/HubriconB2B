@@ -62,12 +62,14 @@ PRODUCTS_JSON = json.dumps({"products": [
 ]})
 
 # Judge.me: two JSON-LD blocks, the count quoted with a thousands separator.
+# Riverbend is the in-band brand the crawl tests keep: 3,204 reviews puts it near
+# $2.7M a year, clear of the $1.5M band floor half the $3M ICP floor sets.
 PRODUCT_PAGE_REVIEWS = """<html><head><title>Harbor Tote &mdash; Riverbend Goods</title>
 <script type="application/ld+json">{"@context":"https://schema.org/","@type":"Organization",
  "name":"Riverbend Goods","url":"https://riverbendgoods.com"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org/","@type":"Product",
  "name":"Harbor Tote","sku":"RB-HT","offers":{"@type":"Offer","price":"48.00","priceCurrency":"USD"},
- "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","reviewCount":"1,204"}}</script>
+ "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","reviewCount":"3,204"}}</script>
 </head><body><div class="jdgm-widget jdgm-rev-widg" data-id="1"></div></body></html>"""
 
 # Loox: one block, the count as a bare number.
@@ -276,7 +278,7 @@ def test_products_json_gives_vendors_prices_and_shipping_weights():
 
 
 def test_review_count_reads_every_shape_the_apps_publish():
-    assert shopify.review_count(PRODUCT_PAGE_REVIEWS) == 1204   # "1,204": quoted, with a separator
+    assert shopify.review_count(PRODUCT_PAGE_REVIEWS) == 3204   # "3,204": quoted, with a separator
     assert shopify.review_count(PRODUCT_PAGE_BARE) == 96        # a bare number
     assert shopify.review_count(PRODUCT_PAGE_NO_REVIEWS) is None  # no aggregateRating: unknown, not zero
     assert shopify.review_count(None) is None
@@ -419,7 +421,7 @@ def test_crawl_writes_a_shopify_seller_and_its_sampled_products():
     assert row["email"] == "hello@riverbendgoods.com" and row["email_confidence"] == "published"
     assert (row["first_name"], row["last_name"]) == ("Nora", "Fielding")
     assert [a["asin"] for a in row["asins"]] == ["harbor-tote", "cedar-caddy", "harbor-mug"]
-    assert row["asins"][0]["reviews"] == 1204 and row["reviews_max"] == 1204
+    assert row["asins"][0]["reviews"] == 3204 and row["reviews_max"] == 3204
     assert row["top_category"] == "Bags" and row["top_bsr"] is None
     assert row["ratings_12mo"] is None and row["est_monthly_units"] is None
     assert row["est_monthly_revenue"] > 0
@@ -448,7 +450,7 @@ def test_crawl_writes_a_shopify_seller_and_its_sampled_products():
     assert reviewed and reviewed <= sampled
     tote = prods["riverbendgoods.com/products/harbor-tote"]
     assert tote["platform"] == "shopify" and tote["fulfilled_by_amazon"] is False
-    assert tote["weight_oz"] == 17.99 and tote["price"] == 48.0 and tote["reviews"] == 1204
+    assert tote["weight_oz"] == 17.99 and tote["price"] == 48.0 and tote["reviews"] == 3204
     assert tote["brand"] == "Riverbend Goods" and tote["category"] == "Bags" and tote["bsr"] is None
     assert tote["seller_id"] == "riverbend-goods.myshopify.com"
     assert db.store["funnel_events"][-1]["note"].startswith("shopify: 3 store(s) read")

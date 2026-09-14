@@ -60,7 +60,7 @@ has to run from the Mac.
     hubricon harvest shopify --limit 40
 
 The qualification bar is the same one: a US brand selling its own products,
-roughly $1M–$20M a year, run by someone who answers their own email. A store
+$3M–$20M a year, run by someone who answers their own email. A store
 whose catalog carries three or more vendors with none dominant is a reseller;
 a two-product store is too small; a catalog of thousands is a marketplace.
 

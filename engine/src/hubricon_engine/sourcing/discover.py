@@ -73,7 +73,7 @@ DNS_WORKERS = int(os.environ.get("SOURCING_DNS_WORKERS", "32"))
 #   400,000 - 1,000,000 4.50%     the long tail, and increasingly non-US
 #
 # So the head of the list is pure waste and the tail is mostly foreign. The
-# default window is where a US brand doing $1M-$20M actually ranks. Widen it
+# default window is where a US brand doing $3M-$20M can rank. Widen it
 # by moving RANK_TO out; the cursor below will walk into the new ground on its
 # own. Extrapolated, the whole list holds roughly 35,000 Shopify stores.
 RANK_FROM = int(os.environ.get("SOURCING_RANK_FROM", "20000"))

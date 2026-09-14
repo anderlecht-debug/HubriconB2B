@@ -1,6 +1,6 @@
 """Who is actually in the ICP — one classifier, used on the way in and on the way out.
 
-Hubricon sells to Amazon private-label brands doing roughly $1M-$20M a year.
+Hubricon sells to Amazon private-label brands doing $3M-$20M a year.
 It does not sell to the people who sell services to those brands.
 
 The SuperSearch keyword exclusions in outbound.SUPERSEARCH_FILTERS were meant
@@ -17,6 +17,13 @@ strings so it can be tested without a database or an API key.
 """
 
 import re
+
+# The ICP band, in dollars a year. The floor is derived from proven-or-void, not
+# chosen: on the site's own published inputs a brand under $3M has less than
+# $6,000 a month to find, so every invoice would void. Every size gate in the
+# harvest and sourcing reads it from here, so the next move is one number.
+ICP_FLOOR_USD = 3_000_000
+ICP_CEILING_USD = 20_000_000
 
 # Service businesses that sell TO Amazon sellers. A brand sells products.
 _AGENCY = (

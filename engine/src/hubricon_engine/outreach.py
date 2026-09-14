@@ -407,13 +407,13 @@ def brief_text(facts: dict) -> str:
         item = best or (items[0] if items else None)
         lines += [f"    [ ] a named owner exists — {site}/pages/about, LinkedIn, "
                   f"{site}/policies/contact-information",
-                  "    [ ] still roughly $1M-$20M/yr — the revenue above is estimated from review "
+                  "    [ ] still roughly $3M-$20M/yr — the revenue above is estimated from review "
                   "counts, which is rough",
                   "    [ ] the packed weight still matches: "
                   + (f"https://{item['asin']}" if item else f"{site}/products/…")]
     else:
         lines += ["    [ ] a named owner exists — About page, LinkedIn, Amazon storefront 'About the seller'",
-                  "    [ ] still roughly $1M-$20M/yr, not an aggregator or a household name",
+                  "    [ ] still roughly $3M-$20M/yr, not an aggregator or a household name",
                   "    [ ] the weight on the live listing still matches what we stored"]
     return "\n".join(lines)
 

@@ -16,7 +16,12 @@ from . import icp, triage
 from .instantly import CAMPAIGN_ACTIVE, Instantly, InstantlyError
 from .onboarding import guess_name_parts, is_internal
 
-CAMPAIGN_NAME = "Hubricon — Profit Teardown (PL FBA $1M–$20M)"
+CAMPAIGN_NAME = "Hubricon — Profit Teardown (PL FBA $3M–$20M)"
+# Every name this campaign has carried starts with this. The ICP band in the
+# suffix moves (the floor rose to $3M on 2026-09-13), and a lookup by the exact
+# new name alone would miss the live campaign and create a second one mailing
+# the same leads. The family finds it; ensure_campaign renames it in place.
+CAMPAIGN_FAMILY = "Hubricon — Profit Teardown (PL FBA "
 # instantly.py names 0-3; the interesting ones are negative and it does not.
 # A campaign in any of these states accepts POST /activate with a 200 and then
 # reads back at the same status, which is why the operator activated the
@@ -33,7 +38,13 @@ SUPERSEARCH_DAILY = int(os.environ.get("SUPERSEARCH_DAILY", "25"))
 
 SUPERSEARCH_LIST = "Hubricon SuperSearch (auto)"
 # Instantly's own filter vocabulary (enums from api.instantly.ai/openapi/api_v2.json).
-# Revenue bands are the ICP verbatim: $1M–$50M private-label brands run by their founder.
+# Revenue: the ICP is $3M–$20M, and Instantly's enum has no edge at either end.
+# "$1 - 10M" straddles the floor, and nothing on a SuperSearch lead (or anywhere
+# downstream of one) can tell a $2M brand from a $6M one, so asking for that band
+# enrolls the brands whose every invoice voids. The floor is the guarantee's and
+# the ceiling is a preference, so SuperSearch asks only for the band wholly above
+# the floor and accepts that some of it is past $20M. $3–10M brands come from the
+# harvest, which sizes every seller against icp.ICP_FLOOR_USD before a push.
 SUPERSEARCH_FILTERS = {
     "title": {"include": ["Founder", "Co-Founder", "CEO", "Owner", "President"], "includeMode": "CONTAINS"},
     # The first 25 leads (2026-09-02) were half agencies, tools, 3PLs and
@@ -49,7 +60,7 @@ SUPERSEARCH_FILTERS = {
     },
     "industry": {"exclude": ["Business Services", "Software & Internet", "Transportation & Storage",
                              "Financial Services", "Education", "Media & Entertainment"]},
-    "revenue": ["$1 - 10M", "$10 - 50M"],
+    "revenue": ["$10 - 50M"],
     "employeeCount": ["0 - 25", "25 - 100"],
     "locations": {"include": [{"country": "United States"}]},
     "location_mode": "company",
@@ -231,7 +242,8 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool,
     if state.get("id"):
         campaign = next((c for c in api.campaigns() if c.get("id") == state["id"]), None)
     if campaign is None:
-        campaign = api.find_campaign(CAMPAIGN_NAME)
+        campaign = api.find_campaign(CAMPAIGN_NAME) or next(
+            (c for c in api.campaigns() if (c.get("name") or "").startswith(CAMPAIGN_FAMILY)), None)
 
     senders = [a["email"] for a in api.ready_senders()]
     if campaign is None:
@@ -254,6 +266,15 @@ def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool,
         state["copy_address"] = postal_address  # ...and from the address in it
 
     cid = campaign.get("id")
+    old_name = campaign.get("name")
+    if old_name and old_name != CAMPAIGN_NAME:
+        if dry:
+            notes.append(f"[dry] would rename campaign {cid} from {old_name!r} to {CAMPAIGN_NAME!r}")
+        else:
+            api.update_campaign(cid, {"name": CAMPAIGN_NAME})
+            campaign = {**campaign, "name": CAMPAIGN_NAME}
+            notes.append(f"Renamed campaign {cid} from {old_name!r} to {CAMPAIGN_NAME!r} (same campaign, same leads).")
+            log_event(db, "campaign_renamed", payload={"id": cid, "from": old_name, "to": CAMPAIGN_NAME})
     state = {**state, "id": cid, "name": campaign.get("name"), "senders": senders}
     set_state(db, "instantly.campaign", state)
     notes += sync_copy(db, api, cid, state, postal_address, dry, proof_line)

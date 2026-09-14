@@ -12,7 +12,7 @@ import html
 import math
 import os
 import re
-from .. import calibration
+from .. import calibration, icp
 
 BASE = "https://www.amazon.com"
 AMAZON_MERCHANT_IDS = {"ATVPDKIKX0DER"}  # Amazon.com itself
@@ -56,13 +56,16 @@ DEFAULT_SCALE = 0.6
 # order in five hundred, so the 12-month count on the profile page tracks the
 # whole account, not one listing: on 2026-09-03 Gorilla Grip ($100M+) showed
 # 8,703, MED PRIDE 10,609, Boka and Comfy Package ~2,200, and $2–5M brands sat
-# in the low hundreds (KITESSENSU 208, RICCLE 398). The band below brackets
-# roughly $0.5M–$40M a year; `hubricon harvest requalify` re-reads profiles
-# with today's band. Every number derived from it is labeled an estimate.
-MIN_RATINGS_12MO = int(os.environ.get("HARVEST_MIN_RATINGS_12MO", "100"))
+# in the low hundreds (KITESSENSU 208, RICCLE 398). The count is rough, so the
+# band's low edge sits at half the ICP floor rather than on it (300 ratings at
+# $5,000 a rating is $1.5M against icp.ICP_FLOOR_USD of $3M) and runs to about
+# $40M; `hubricon harvest requalify` re-reads profiles with today's band. Every
+# number derived from it is labeled an estimate.
+REVENUE_PER_RATING_YEAR = float(os.environ.get("HARVEST_REVENUE_PER_RATING", "5000"))
+MIN_RATINGS_12MO = int(os.environ.get("HARVEST_MIN_RATINGS_12MO",
+                                      str(round(icp.ICP_FLOOR_USD / 2 / REVENUE_PER_RATING_YEAR))))
 MAX_RATINGS_12MO = int(os.environ.get("HARVEST_MAX_RATINGS_12MO", "5000"))
 MAX_RATINGS_LIFETIME = int(os.environ.get("HARVEST_MAX_RATINGS_LIFETIME", "80000"))
-REVENUE_PER_RATING_YEAR = float(os.environ.get("HARVEST_REVENUE_PER_RATING", "5000"))
 
 RESELLER_WORDS = ("trading", "wholesale", "distribut", "import", "deals", "outlet", "warehouse",
                   "liquidat", "surplus", "resale", "supply co", "supplies inc", "marketplace")
@@ -313,7 +316,8 @@ def seller_size(ratings_12mo: int | None, ratings_lifetime: int | None) -> tuple
     if ratings_lifetime is not None and ratings_lifetime > MAX_RATINGS_LIFETIME:
         return "too_big", f"{ratings_lifetime:,} lifetime seller ratings (cap {MAX_RATINGS_LIFETIME:,})"
     if ratings_12mo is not None and ratings_12mo < MIN_RATINGS_12MO:
-        return "too_small", f"{ratings_12mo:,} seller ratings in 12 months (band {MIN_RATINGS_12MO}–{MAX_RATINGS_12MO:,}), est. < $500k/yr"
+        return "too_small", (f"{ratings_12mo:,} seller ratings in 12 months (band {MIN_RATINGS_12MO}–{MAX_RATINGS_12MO:,}), "
+                             f"est. < ${MIN_RATINGS_12MO * REVENUE_PER_RATING_YEAR / 1e6:.1f}M/yr")
     return None, ""
 
 

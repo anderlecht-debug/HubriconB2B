@@ -26,6 +26,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from .. import icp
 from . import amazon
 from .fetch import BLOCK_MARKERS, Fetcher
 from .run import _log_event, classify, seller_row
@@ -148,7 +149,8 @@ ENTITY_WORDS = {"llc", "l.l.c", "l.l.c.", "inc", "inc.", "corp", "corp.", "corpo
                 "naturals", "organics", "wellness", "nutrition", "cosmetics", "skincare", "apparel", "wear", "toys",
                 "tools", "direct", "essentials", "living", "botanicals", "garden", "farm", "farms", "coffee", "tea",
                 "supply", "distribution", "imports", "usa", "america", "american", "global", "worldwide", "&", "and"}
-PROFILE_ONLY_MIN_RATINGS_12MO = 200  # ≈ $1M/yr; with no listing data the floor is the ICP floor
+# With no listing data the floor is the ICP floor itself, not half of it: 600 at $5,000 a rating.
+PROFILE_ONLY_MIN_RATINGS_12MO = round(icp.ICP_FLOOR_USD / amazon.REVENUE_PER_RATING_YEAR)
 
 
 def looks_like_a_person(business_name: str | None) -> bool:

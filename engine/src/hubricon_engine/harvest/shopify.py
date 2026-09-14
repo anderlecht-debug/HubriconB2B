@@ -78,7 +78,9 @@ SAMPLE = int(os.environ.get("HARVEST_SHOPIFY_SAMPLE", "3"))          # product p
 # feedback). Calibrated loosely and used only to band a store; the row says
 # "est." everywhere it appears.
 ORDERS_PER_REVIEW = float(os.environ.get("HARVEST_SHOPIFY_ORDERS_PER_REVIEW", "50"))
-MIN_ANNUAL = float(os.environ.get("HARVEST_SHOPIFY_MIN_ANNUAL", "500000"))
+# The floor is half the ICP floor, for the same reason as the Amazon band: the
+# estimate is rough, and the push floor and the call settle the rest.
+MIN_ANNUAL = float(os.environ.get("HARVEST_SHOPIFY_MIN_ANNUAL", str(icp.ICP_FLOOR_USD / 2)))
 MAX_ANNUAL = float(os.environ.get("HARVEST_SHOPIFY_MAX_ANNUAL", "40000000"))
 MIN_PRODUCTS, MAX_PRODUCTS = 3, 2000   # under: a hobby store; over: a marketplace, not a brand
 DOMINANT_SHARE = 0.7                   # one vendor this far into the catalogue is a private label

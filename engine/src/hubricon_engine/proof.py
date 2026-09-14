@@ -62,11 +62,16 @@ MANY_RESULTS = ("{{proof_count}} brands have taken the free month and have {{pro
                 "The records are at {{proof_url}}.")
 
 _BAND = re.compile(r"rev\s*[:=]\s*([^|]+)")
+# The gate's revenue chips. The floor moved from $1M to $3M on 2026-09-13 (it is
+# derived from proven-or-void, not chosen); the two retired chips stay readable
+# so a booking made before that date still reports its band.
 BANDS = {
-    "under $1m": "under $1M",
-    "$1m–$5m": "$1M–$5M", "$1m-$5m": "$1M–$5M",
+    "under $3m": "under $3M",
+    "$3m–$5m": "$3M–$5M", "$3m-$5m": "$3M–$5M",
     "$5m–$20m": "$5M–$20M", "$5m-$20m": "$5M–$20M",
     "$20m+": "$20M+",
+    "under $1m": "under $1M",
+    "$1m–$5m": "$1M–$5M", "$1m-$5m": "$1M–$5M",
 }
 
 

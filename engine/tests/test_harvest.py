@@ -256,7 +256,9 @@ def test_seller_feedback_band_sizes_the_account():
     assert amazon.seller_size(8703, 211_667)[0] == "too_big"      # Gorilla Grip, $100M+
     assert amazon.seller_size(10_609, 107_044)[0] == "too_big"    # MED PRIDE
     assert amazon.seller_size(2_195, 63_297) == (None, "")         # Comfy Package stays
-    assert amazon.seller_size(208, 836) == (None, "")              # KITESSENSU, ~$2M
+    assert amazon.seller_size(208, 836)[0] == "too_small"          # KITESSENSU, ~$2M: under the $3M floor's band
+    assert amazon.seller_size(398, 2_000) == (None, "")            # RICCLE stays in band
+    assert amazon.MIN_RATINGS_12MO == 300                          # half of icp.ICP_FLOOR_USD at $5,000 a rating
     assert amazon.seller_size(40, 90)[0] == "too_small"
     assert amazon.seller_size(None, None) == (None, "")            # unknown never disqualifies
     assert amazon.seller_size(500, 90_000)[0] == "too_big"         # lifetime cap alone
@@ -811,7 +813,8 @@ def test_requalify_rereads_profiles_and_demotes_giants(tmp_path):
     db = FakeDB()
     db.store["harvest_sellers"] = _pushed_rows()
     f = FakeFetcher({amazon.seller_url("G"): seller_page("Gorilla Grip", "Hillspoint Industries, LLC", r12="8,703", life="211,667"),
-                     amazon.seller_url("K"): seller_page("KITESSENSU", "KITESSENSU LLC", r12="208", life="836")})
+                     # the kept brand needs an in-band count: at the $3M floor 208 ratings is under the band
+                     amazon.seller_url("K"): seller_page("KITESSENSU", "KITESSENSU LLC", r12="398", life="836")})
     db.store["harvest_sellers"].append({"seller_id": "V", "seller_name": "Bella Vita", "brand": "Bella Vita", "brands": ["Bella Vita"],
                                         "asins": [], "reviews_max": 0, "status": "enriched", "email": "bellavita@akacompany.com.vn",
                                         "est_monthly_revenue": 89000, "country": "US"})
@@ -826,7 +829,7 @@ def test_requalify_rereads_profiles_and_demotes_giants(tmp_path):
     assert db.store["harvest_sellers"][2]["status"] == "skip_non_us"  # a .vn inbox outranks the profile's "US"
     g, k = db.store["harvest_sellers"][:2]
     assert g["status"] == "skip_size" and g["ratings_12mo"] == 8703 and g["instantly_lead_id"] == "lead-g"  # prune needs the id
-    assert k["status"] == "pushed" and k["ratings_12mo"] == 208
+    assert k["status"] == "pushed" and k["ratings_12mo"] == 398
     assert Cache(tmp_path).get("seller", "G")["ratings_12mo"] == 8703  # the crawl's cache learns the counts too
 
 
