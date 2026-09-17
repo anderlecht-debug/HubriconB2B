@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hubricon — Managed Profit for Amazon and Shopify Brands</title>
-<meta name="description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M a year: prices, ad bleed, reorders and the claims Amazon owes you, made for you inside your account and proven on your own reports. $6,000 a month flat, month one free, and an invoice your Profit Record hasn't covered is void. Free Profit Teardown in 24 hours.">
+<title>Hubricon — More profit than our bill, or you don't pay</title>
+<meta name="description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M: we make the five money decisions in your account and grade each on your own reports. $6,000/mo flat. Month one free. Proven or Void.">
 <link rel="canonical" href="https://www.hubricon.com/">
 <meta name="theme-color" content="#050A1F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.hubricon.com/">
-<meta property="og:title" content="Hubricon — Managed Profit for Amazon and Shopify Brands">
-<meta property="og:description" content="More than $6,000 a month of profit, found in your account and proven on your own reports. Or you don't pay. For Amazon and Shopify brands doing $3M–$20M a year. Free Profit Teardown in 24 hours.">
+<meta property="og:title" content="Hubricon — More profit than our bill, or you don't pay">
+<meta property="og:description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M a year. $6,000/mo flat. Month one free. Proven or Void.">
 <meta property="og:image" content="https://www.hubricon.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hubricon — Managed Profit for Amazon and Shopify Brands">
-<meta name="twitter:description" content="More than $6,000 a month of profit, found in your account and proven on your own reports. Or you don't pay. For brands doing $3M–$20M a year.">
+<meta name="twitter:title" content="Hubricon — More profit than our bill, or you don't pay">
+<meta name="twitter:description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M a year. $6,000/mo flat. Month one free. Proven or Void.">
 <meta name="twitter:image" content="https://www.hubricon.com/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,409 +26,188 @@
   "@type": "ProfessionalService",
   "name": "Hubricon",
   "url": "https://www.hubricon.com/",
-  "description": "Managed Profit for Amazon and Shopify product brands doing $3M–$20M a year: prices, advertising, inventory and Amazon reimbursement claims decided by per-SKU models, executed for the client inside their own account, and every move recorded on a Profit Record with the dollars expected before and the dollars measured after from the client's own exports. Founder-operated.",
+  "description": "Managed Profit for Amazon and Shopify product brands doing $3M–$20M a year: prices, advertising, inventory, fee cliffs and Amazon reimbursement claims decided per SKU, executed for the client inside their own account, and every move recorded on a Profit Record with the dollars expected before and the dollars measured after from the client's own exports. Founder-operated.",
   "priceRange": "$6,000/month flat",
   "founder": {"@type": "Person", "name": "Hagen Simmons", "jobTitle": "Founder", "image": "https://www.hubricon.com/hagen.jpg"},
   "areaServed": "US"
 }
 </script>
-</head>
-<body>
-
 <style>
 /* ============================================================
-   Hubricon — the home page closes the Teardown, not the retainer.
-   Eight sections, one action. Everything the page stopped arguing
-   lives on /method, verbatim. Single theme: cinematic deep navy.
+   Hubricon — the acquisition.com skeleton in Hubricon's skin.
+   Bar, nav, hero, four numbers, one guarantee, four cards, one
+   price, four questions, the founder, the application, footer.
    ============================================================ */
 :root{
-  --bg:        hsl(225 72% 7%);            /* #050A1F */
-  --bg-raise:  hsl(224 60% 11%);
-  --amber:     hsl(45 100% 50%);           /* #FFC000 */
-  --amber-soft:hsl(45 100% 50% / .12);
-  --serious:   hsl(8 72% 58%);
-  --ok:        hsl(152 55% 48%);
-  --ink-100: hsl(220 40% 98% / 1);
-  --ink-70:  hsl(220 40% 98% / .7);
-  --ink-60:  hsl(220 40% 98% / .6);
-  --rule-20: hsl(220 40% 98% / .2);
+  --bg: hsl(225 72% 7%);            /* #050A1F */
+  --band: hsl(224 62% 10%);         /* alternating section band */
+  --raise: hsl(224 58% 13%);
+  --amber: hsl(45 100% 50%);        /* #FFC000 */
+  --amber-soft: hsl(45 100% 50% / .12);
+  --serious: hsl(8 72% 58%);
+  --ok: hsl(152 55% 52%);
+  --ink-100: hsl(220 40% 98%);
+  --ink-70: hsl(220 40% 98% / .72);
+  --ink-60: hsl(220 40% 98% / .58);
+  --rule-20: hsl(220 40% 98% / .18);
   --rule-08: hsl(220 40% 98% / .08);
   --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
   --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --w: min(1120px, calc(100% - 32px));
 }
-
 *{ box-sizing: border-box; margin: 0; padding: 0; }
-html{ scroll-behavior: smooth; }
-body{
-  background: var(--bg); color: var(--ink-60);
-  font-family: var(--font-mono); font-weight: 400; font-size: 14.5px; line-height: 1.7;
-  overflow-x: hidden; -webkit-font-smoothing: antialiased;
-}
+html{ scroll-behavior: smooth; scroll-padding-top: 120px; }
+body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 ::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
 a{ color: inherit; text-decoration: none; }
 svg{ display: block; }
+img, video{ display: block; max-width: 100%; }
 :focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-h1,h2,h3{
-  font-family: var(--font-head); font-weight: 400; color: var(--ink-100);
-  text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance;
-}
-
-/* film grain */
-.grain{
-  position: fixed; inset: -50%; z-index: 90; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: .045; animation: grain 1.4s steps(4) infinite;
-}
-@keyframes grain{
-  0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); }
-  50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); }
-}
-
-/* liquid glass */
-.glass, .glass-strong{ position: relative; border-radius: 20px; }
-.glass::before, .glass-strong::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
-}
-.glass{ background: hsl(224 55% 14% / .32); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-.glass::before{ background: linear-gradient(175deg, hsl(220 60% 85% / .32) 0%, hsl(224 60% 20% / .06) 38%, hsl(224 60% 20% / .06) 62%, hsl(45 90% 65% / .14) 100%); }
-.glass-strong{
-  background: hsl(224 55% 16% / .45); -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
-  box-shadow: 0 14px 44px hsl(226 80% 3% / .55), inset 0 1px 0 hsl(220 60% 90% / .1);
-}
-.glass-strong::before{ padding: 1.2px; background: linear-gradient(170deg, hsl(220 70% 92% / .6) 0%, hsl(224 60% 24% / .12) 42%, hsl(224 60% 24% / .12) 58%, hsl(45 100% 62% / .45) 100%); }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b{ color: var(--ink-100); font-weight: 700; }
+.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.link:hover{ color: var(--ink-100); }
+.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
 
 /* buttons */
-.btn{
-  display: inline-flex; align-items: center; gap: 9px;
-  font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .1em;
-  padding: 13px 22px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap;
-  transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s;
-}
-.btn svg{ width: 13px; height: 13px; transition: transform .25s var(--ease-out); }
-.btn:hover svg{ transform: translate(2px,-2px); }
+.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
+.btn svg{ width: 13px; height: 13px; }
 .btn:active{ transform: scale(.98); }
 .btn[disabled]{ opacity: .45; cursor: not-allowed; }
+.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
+.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
 .btn-white{ background: var(--ink-100); color: var(--bg); }
-.btn-white:hover{ box-shadow: 0 0 0 5px hsl(220 40% 98% / .12); }
-.btn-amber{
-  color: var(--amber); background: hsl(45 100% 50% / .13);
-  -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
-  box-shadow: 0 10px 36px hsl(45 100% 40% / .22), inset 0 1px 0 hsl(45 100% 72% / .38);
-  position: relative;
-}
-.btn-amber::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.2px;
-  background: linear-gradient(170deg, hsl(45 100% 78% / .8) 0%, hsl(45 90% 40% / .12) 45%, hsl(45 90% 40% / .12) 60%, hsl(45 100% 62% / .55) 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
-}
-.btn-amber:hover{ background: hsl(45 100% 50% / .2); box-shadow: 0 12px 48px hsl(45 100% 42% / .32), inset 0 1px 0 hsl(45 100% 76% / .45); }
-.btn-glass{ color: var(--ink-100); background: hsl(224 55% 16% / .35); position: relative; }
-.btn-glass::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
-  background: linear-gradient(175deg, hsl(220 60% 85% / .3) 0%, hsl(224 60% 20% / .05) 45%, hsl(224 60% 20% / .05) 60%, hsl(220 60% 70% / .16) 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
-}
-.btn-glass:hover{ background: hsl(224 55% 22% / .5); }
+.btn-glass{ color: var(--ink-100); background: hsl(224 55% 16% / .5); border: 1px solid var(--rule-20); }
+.btn-lg{ font-size: 15px; padding: 20px 40px; }
 
-/* nav — fixed floating glass pill */
-.nav{
-  position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 80;
-  width: min(1080px, calc(100% - 28px));
-  display: flex; align-items: center; justify-content: space-between; gap: 18px;
-  padding: 9px 9px 9px 24px; border-radius: 999px;
-  opacity: 0; translate: 0 -14px; animation: navIn .9s var(--ease-out) .2s forwards;
-}
-@keyframes navIn{ to{ opacity: 1; translate: 0 0; } }
-.nav-logo{ font-family: var(--font-head); font-size: 20px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
+/* announcement bar + nav */
+.bar{ background: var(--amber); color: var(--bg); text-align: center; font-size: 13px; font-weight: 700; padding: 11px 16px; }
+.bar a{ display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.bar .new{ background: var(--bg); color: var(--amber); border-radius: 999px; padding: 2px 9px; font-size: 10px; letter-spacing: .12em; }
+.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
+.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+.nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
 .nav-logo em{ font-style: normal; color: var(--amber); }
-.nav-links{ display: flex; flex: 1; justify-content: center; gap: 24px; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; white-space: nowrap; min-width: 0; }
-.nav-links a{ color: var(--ink-70); transition: color .2s; padding: 6px 2px; }
+.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+.nav-links a{ color: var(--ink-70); transition: color .2s; }
 .nav-links a:hover{ color: var(--ink-100); }
-.nav .btn{ padding: 11px 18px; flex: none; }
+.nav .btn{ padding: 12px 20px; font-size: 12px; }
 @media (max-width: 920px){ .nav-links{ display: none; } }
-@media (max-width: 430px){
-  .nav{ padding: 7px 7px 7px 16px; }
-  .nav-logo{ font-size: 17px; }
-  .nav .btn{ padding: 10px 13px; font-size: 10px; letter-spacing: .06em; gap: 0; }
-  .nav .btn svg{ display: none; }
-}
+@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
 
-/* ============================================================
-   01 · HERO — the bet, the terms, the gate
-   ============================================================ */
-.hero{
-  position: relative; display: flex; align-items: center; justify-content: center;
-  text-align: center; overflow: hidden; padding: 176px 0 96px;
-}
-.hero-canvas, .close-canvas{ position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
-.edge{ position: absolute; left: 0; right: 0; height: 200px; z-index: 2; pointer-events: none; }
-.edge-top{ top: 0; background: linear-gradient(180deg, var(--bg), transparent); }
-.edge-bottom{ bottom: 0; background: linear-gradient(0deg, var(--bg), transparent); }
-.hero-inner{
-  position: relative; z-index: 3; width: min(1040px, calc(100% - 48px));
-  display: flex; flex-direction: column; align-items: center; gap: 28px;
-}
-.badge{
-  display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; padding: 8px 18px;
-  font-size: 10.5px; text-transform: uppercase; letter-spacing: .2em; color: var(--ink-70);
-}
-.badge i{ width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px 2px hsl(45 100% 50% / .5); animation: pulse 2.4s ease-in-out infinite; flex: none; }
-@keyframes pulse{ 0%,100%{ opacity: 1; } 50%{ opacity: .35; } }
-.hero h1{ font-size: clamp(32px, 4.8vw, 64px); max-width: 22ch; }
-.hero-sub{ color: var(--ink-70); font-size: clamp(14px, 1.35vw, 16px); max-width: 58ch; }
-.hero-sub b{ color: var(--ink-100); font-weight: 700; }
-.cta-row{ display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
-.offer{ display: grid; grid-template-columns: repeat(4, auto); justify-content: center; border-radius: 18px; overflow: hidden; }
-.offer div{ padding: 14px 24px; border-left: 1px solid var(--rule-08); }
-.offer div:first-child{ border-left: 0; }
-.offer b{ display: block; font-family: var(--font-head); font-size: 19px; font-weight: 400; color: var(--ink-100); letter-spacing: .02em; line-height: 1.15; white-space: nowrap; }
-.hero-qual{ max-width: 54ch; font-size: 12.5px; line-height: 1.65; color: var(--ink-60); padding-top: 6px; }
+/* sections */
+.sect{ position: relative; padding: 104px 0; }
+.sect.band{ background: var(--band); border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
+.in{ width: var(--w); margin: 0 auto; }
+.center{ text-align: center; }
+.h2{ font-size: clamp(36px, 5vw, 64px); max-width: 20ch; margin: 0 auto 14px; }
+.lede{ font-size: clamp(15px, 1.3vw, 18px); max-width: 60ch; margin: 0 auto; }
+.eyebrow{ font-size: 11px; text-transform: uppercase; letter-spacing: .22em; color: var(--amber); margin-bottom: 18px; }
+.tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
+.cta{ margin-top: 40px; display: flex; justify-content: center; }
 
-/* ============================================================
-   SECTION SHELL — more air, fewer words
-   ============================================================ */
-.sect{ position: relative; z-index: 3; width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 150px 0; }
-.sect + .sect{ border-top: 1px solid var(--rule-08); }
-.sect-head{ max-width: 800px; margin-bottom: 52px; }
-.sect-head h2{ font-size: clamp(34px, 4.2vw, 58px); margin-bottom: 18px; }
-.sect-head p{ color: var(--ink-60); max-width: 60ch; }
-.sect-cta{ margin-top: 48px; display: flex; gap: 16px 28px; align-items: center; flex-wrap: wrap; }
-.eyebrow{ display: flex; align-items: center; gap: 12px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .22em; color: var(--amber); margin-bottom: 22px; }
-.eyebrow::after{ content:""; height: 1px; width: 64px; background: var(--rule-20); }
-.src-line{ margin-top: 16px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); opacity: .75; }
-.links-row{ display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 12px; }
-.links-row a{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+/* hero */
+.hero{ position: relative; overflow: hidden; padding: 64px 0 72px; }
+.hero::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 60% at 50% 30%, hsl(45 100% 50% / .10), transparent 70%); }
+.hero-photo{ position: absolute; right: 0; bottom: 0; height: 100%; width: auto; max-width: 28%; object-fit: cover; object-position: top;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%); mask-image: linear-gradient(to right, transparent 0%, #000 55%); opacity: .9; }
+@supports (mask-composite: intersect) or (-webkit-mask-composite: source-in){
+  .hero-photo{ -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%), linear-gradient(to top, transparent 0%, #000 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0%, #000 55%), linear-gradient(to top, transparent 0%, #000 22%); mask-composite: intersect; } }
+.hero-in{ position: relative; width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px; }
+@media (min-width: 921px){ .hero-in{ width: min(760px, calc(100% - 32px)); } }
+.badge{ display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: .18em; color: var(--ink-70); border: 1px solid var(--rule-20); background: hsl(224 55% 14% / .6); }
+.badge i{ width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px 2px hsl(45 100% 50% / .5); }
+.hero h1{ font-size: clamp(48px, 7vw, 104px); max-width: 17ch; }
+.hero-sub{ font-size: clamp(16px, 1.5vw, 20px); color: var(--ink-70); max-width: 46ch; }
+@media (max-width: 920px){ .hero-photo{ display: none; } }
 
-/* ============================================================
-   02 · THE 60-SECOND TEARDOWN, embedded
-   ============================================================ */
-.sect-tool{ padding-top: 40px; }
-.qt{ padding: 30px 32px; border-radius: 24px; max-width: 1000px; }
-.qt-toggle{ display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: hsl(224 55% 10% / .7); border: 1px solid var(--rule-20); margin-bottom: 22px; }
-.qt-tog{ font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 9px 16px; border-radius: 999px; border: 0; background: transparent; color: var(--ink-60); cursor: pointer; }
-.qt-tog.on{ background: var(--amber); color: var(--bg); }
-.qt-grid{ display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px 18px; }
-.qt-grid[hidden]{ display: none; }
-.qt-f{ display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.qt-f label{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-70); }
-.qt-f label i{ font-style: normal; letter-spacing: 0; text-transform: none; color: var(--ink-60); }
-.qt input, .qt select, .gate-capture input{
-  width: 100%; min-width: 0; background: hsl(224 55% 10% / .7); color: var(--ink-100);
-  border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px;
-  font-family: var(--font-mono); font-size: 16px;
-}
-.qt input:focus, .qt select:focus, .gate-capture input:focus{ border-color: var(--amber); outline: none; }
-/* spinners eat a third of a phone-width field and nobody steps a price by 0.01 */
-.qt input[type=number]{ -moz-appearance: textfield; appearance: textfield; }
-.qt input[type=number]::-webkit-inner-spin-button, .qt input[type=number]::-webkit-outer-spin-button{ -webkit-appearance: none; margin: 0; }
-.qt select{
-  appearance: none; -webkit-appearance: none; padding-right: 34px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-60) 50%), linear-gradient(135deg, var(--ink-60) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat;
-}
-.qt-row{ display: flex; gap: 8px; }
-.qt-row select{ width: auto; flex: none; }
-.qt-lookup{ display: grid; grid-template-columns: 1fr auto; gap: 10px; }
-.qt small{ font-size: 11.5px; line-height: 1.5; color: var(--ink-60); }
-.qt small.ok{ color: var(--ok); }
-.qt small.bad{ color: var(--serious); }
-.c12{ grid-column: span 12; } .c6{ grid-column: span 6; } .c3{ grid-column: span 3; }
-.qt-foot{ display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; margin-top: 24px; }
-.qt-foot span{ font-size: 12px; color: var(--ink-60); }
-.qt-err{ margin-top: 12px; font-size: 12.5px; color: var(--serious); }
-.qt-result{ margin-top: 28px; padding-top: 26px; border-top: 1px solid var(--rule-08); scroll-margin-top: 96px; }
-.qt-tiles{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.tile{ padding: 22px 24px; }
-.tile .k{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
-.tile .v{ font-family: var(--font-head); font-size: clamp(34px, 4vw, 50px); color: var(--ink-100); line-height: 1; margin: 8px 0 6px; }
-.tile .v.bad{ color: var(--serious); } .tile .v.good{ color: var(--ok); } .tile .v.amber{ color: var(--amber); }
-.tile p{ font-size: 12px; color: var(--ink-60); }
-.qt-line{ margin-top: 24px; font-size: clamp(15px, 1.5vw, 17px); color: var(--ink-100); max-width: 60ch; }
-.qt-after{ margin-top: 18px; display: flex; flex-wrap: wrap; gap: 14px 26px; align-items: center; }
-.qt-more{ font-size: 12px; color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
-.qt-bare{ padding: 0; max-width: none; }
+/* four numbers */
+.stats{ padding: 56px 0; }
+.stats .in{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.stat{ border-left: 3px solid var(--amber); padding: 6px 0 6px 20px; }
+.stat b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: clamp(38px, 4vw, 56px); line-height: 1; color: var(--ink-100); }
+.stat span{ display: block; margin-top: 8px; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); }
 
-/* ============================================================
-   03 · THE PROFIT RECORD
-   ============================================================ */
-.says-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 980px; }
-.says{ padding: 26px 28px; }
-.says h3{ font-size: 11px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; }
-.says.them h3{ color: var(--ink-60); }
-.says.us h3{ color: var(--amber); }
-.says p{ font-size: 14px; color: var(--ink-70); }
-.says.us p{ color: var(--ink-100); }
-.sample-tag{ display: inline-block; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 2px 10px; }
-.record-demo{ max-width: 980px; padding: 22px 24px; margin-top: 18px; }
-.record-demo .sample-tag{ margin-bottom: 8px; }
-.record-demo table{ width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.record-demo th{ text-align: left; font-weight: 400; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-60); padding: 6px 8px; border-bottom: 1px solid var(--rule-20); }
-.record-demo th.num{ text-align: right; }
-.record-demo td{ padding: 9px 8px; border-bottom: 1px solid var(--rule-08); color: var(--ink-70); vertical-align: top; }
-.record-demo td.num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.record-demo .pos{ color: hsl(150 55% 60%); }
-.record-demo .miss{ color: hsl(8 72% 62%); }
-.record-demo td.pend{ white-space: normal; color: var(--ink-60); }
-.record-demo .how{ font-size: 11px; color: var(--ink-60); }
-.record-demo .r-foot{ display: flex; justify-content: space-between; gap: 16px; padding-top: 12px; font-size: 12px; color: var(--ink-60); flex-wrap: wrap; }
-.record-demo .r-foot b{ color: var(--ink-100); font-family: var(--font-head); font-size: 20px; font-weight: 400; letter-spacing: .02em; }
-.record-void{ margin-top: 34px; font-size: clamp(16px, 1.7vw, 19px); color: var(--ink-100); max-width: 60ch; }
-.cohort{ margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--rule-08); max-width: 980px; display: flex; flex-direction: column; gap: 12px; }
-.cohort p{ font-size: 13.5px; color: var(--ink-70); }
-.cohort p b{ color: var(--ink-100); }
+/* the guarantee */
+.guarantee{ position: relative; width: var(--w); margin: 0 auto; padding: 48px 52px; border-radius: 24px; background: var(--raise); border: 1px solid hsl(45 100% 50% / .45); box-shadow: 0 0 0 1px hsl(45 100% 50% / .08), 0 30px 80px hsl(45 100% 40% / .10);
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px 56px; align-items: center; }
+.guarantee h2{ font-size: clamp(36px, 4.6vw, 62px); max-width: 15ch; }
+.terms{ list-style: none; display: grid; gap: 16px; counter-reset: t; }
+.terms li{ position: relative; padding-left: 44px; counter-increment: t; font-size: 15px; }
+.terms li::before{ content: counter(t, decimal-leading-zero); position: absolute; left: 0; top: -3px; font-family: var(--font-head); font-size: 22px; color: var(--amber); }
 
-/* 03b · the case study, when one exists */
-.case-before{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(26px, 3.2vw, 42px); line-height: 1.08; letter-spacing: .015em; color: var(--ink-100); max-width: 28ch; }
-.case-before::before{ content: "\201C"; color: var(--amber); }
-.case-before::after{ content: "\201D"; color: var(--amber); }
-.case-numbers{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 980px; }
-.case-number{ padding: 22px 24px; }
-.case-number .k{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
-.case-number b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: clamp(34px, 4vw, 50px); color: var(--ink-100); line-height: 1; margin: 8px 0; }
-.case-number p{ font-size: 12px; color: var(--ink-60); }
-.case-quote{ margin-top: 40px; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.5; color: var(--ink-100); max-width: 52ch; border-left: 2px solid var(--amber); padding-left: 18px; }
-@media (max-width: 760px){ .case-numbers{ grid-template-columns: 1fr; } }
+/* four cards */
+.cards{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; }
+.card{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.card h3{ font-size: 21px; letter-spacing: .03em; }
+.card p{ font-size: 15px; color: var(--ink-70); }
+.art{ background: hsl(226 65% 6% / .7); border: 1px solid var(--rule-08); border-radius: 14px; padding: 14px; font-size: 12px; min-height: 200px; display: flex; flex-direction: column; gap: 8px; }
+.art .tag{ align-self: flex-start; }
+.mini-row{ display: grid; grid-template-columns: 62px 1fr 38px; gap: 8px; align-items: center; }
+.mini-row .lbl{ color: var(--ink-60); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row .val{ text-align: right; color: var(--ink-100); font-variant-numeric: tabular-nums; }
+.track{ display: flex; height: 9px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.track i{ display: block; height: 100%; }
+.s-fee{ background: hsl(224 40% 40%); } .s-cogs{ background: hsl(220 20% 60% / .55); } .s-ads{ background: hsl(45 100% 50% / .8); } .s-net{ background: hsl(150 55% 55% / .9); } .s-loss{ background: hsl(8 72% 58% / .9); }
+.chip{ display: inline-block; border-radius: 8px; padding: 6px 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+.chip.on{ background: var(--amber); color: var(--bg); }
+.chip.ok{ border: 1px solid hsl(150 55% 55% / .6); color: var(--ok); }
+.chip.no{ border: 1px solid hsl(8 72% 58% / .6); color: var(--serious); }
+.art .line{ color: var(--ink-70); font-size: 11.5px; line-height: 1.5; }
+.art .big{ font-family: var(--font-head); font-size: 26px; color: var(--ink-100); line-height: 1; }
+.art .big.ok{ color: var(--ok); }
+.art .kv{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.art .kv span{ font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); display: block; margin-bottom: 4px; }
+.art .chips{ display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* ============================================================
-   04 · WHAT YOU GET — three artifacts
-   ============================================================ */
-.deliv-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.deliv{ padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-.deliv .sample-tag{ align-self: flex-start; }
-.deliv h3{ font-size: 17px; letter-spacing: .04em; }
-.deliv > p{ font-size: 13px; color: var(--ink-60); }
-.artifact{ background: hsl(226 65% 6% / .6); border: 1px solid var(--rule-08); border-radius: 14px; padding: 16px; font-size: 11px; }
-.artifact .a-head{ display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border-bottom: 1px solid var(--rule-08); padding-bottom: 9px; margin-bottom: 12px; }
-.mini-row{ display: grid; grid-template-columns: 86px 1fr 52px; gap: 8px; align-items: center; margin-bottom: 8px; }
-.mini-row .lbl{ color: var(--ink-70); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-row .val{ text-align: right; color: var(--ink-100); font-variant-numeric: tabular-nums; font-size: 10.5px; }
-.mini-track{ display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 1px; }
-.mini-track i{ display: block; height: 100%; }
-.seg-fees{ background: hsl(224 40% 34%); }
-.seg-cogs{ background: hsl(220 20% 60% / .55); }
-.seg-ads{ background: hsl(45 100% 50% / .75); }
-.seg-net{ background: hsl(150 55% 55% / .85); }
-.seg-loss{ background: hsl(8 72% 58% / .85); }
-.mini-legend{ display: flex; gap: 12px; flex-wrap: wrap; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); margin-top: 10px; }
-.mini-legend span{ display: inline-flex; align-items: center; gap: 5px; }
-.mini-legend i{ width: 10px; height: 6px; border-radius: 2px; display: inline-block; }
-.mock-directive .tagline{ font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
-.mock-directive .d-text{ color: var(--ink-70); font-size: 11.5px; line-height: 1.6; margin: 8px 0 12px; }
-.mock-btns{ display: flex; gap: 8px; align-items: center; }
-.mock-btn{ font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border-radius: 8px; padding: 6px 12px; border: 1px solid var(--amber); background: var(--amber); color: var(--bg); font-weight: 700; white-space: nowrap; }
-.mock-exp{ font-size: 10px; color: var(--ink-60); margin-left: auto; }
-.mock-strip{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 4px; }
-.mock-total{ display: flex; flex-direction: column; gap: 2px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); }
-.mock-total b{ font-family: var(--font-head); font-size: 22px; color: var(--ink-100); font-weight: 400; letter-spacing: .01em; }
-.mock-total:first-child b{ color: hsl(150 55% 60%); }
+/* price */
+.price{ width: min(560px, 100%); margin: 40px auto 0; background: var(--raise); border: 1px solid hsl(45 100% 50% / .45); border-radius: 24px; padding: 40px 40px 36px; text-align: center; box-shadow: 0 0 0 1px hsl(45 100% 50% / .08), 0 30px 80px hsl(45 100% 40% / .10); }
+.price .num{ font-family: var(--font-head); font-size: clamp(64px, 8vw, 104px); color: var(--ink-100); line-height: 1; }
+.price .num small{ font-size: .22em; color: var(--ink-60); letter-spacing: .1em; margin-left: .3em; }
+.price ul{ list-style: none; margin: 22px 0 28px; display: grid; gap: 8px; font-size: 15px; color: var(--ink-70); }
+.price .fine{ margin-top: 18px; font-size: 13px; color: var(--ink-60); }
+.anchor{ margin: 28px auto 0; max-width: 60ch; font-size: 16px; color: var(--ink-70); }
 
-/* ============================================================
-   05 · HOW IT WORKS
-   ============================================================ */
-.steps{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: step; }
-.step{ padding: 24px 22px; position: relative; counter-increment: step; }
-.step::after{ content: counter(step, decimal-leading-zero); position: absolute; top: 16px; right: 18px; font-family: var(--font-head); font-size: 26px; color: hsl(45 100% 50% / .5); }
-.step .when{ font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; display: block; padding-right: 44px; }
-.step h3{ font-size: 15px; letter-spacing: .02em; margin-bottom: 8px; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); line-height: 1.35; }
-.step p{ font-size: 12.5px; color: var(--ink-60); }
-
-/* ============================================================
-   06 · PRICE & PROVEN OR VOID
-   ============================================================ */
-.price-block{ padding: 40px 44px; max-width: 1000px; }
-.price-tag{ font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--amber); display: block; }
-.price-num{ font-family: var(--font-head); font-size: clamp(48px, 5.4vw, 72px); color: var(--ink-100); line-height: 1; margin-top: 10px; }
-.price-num small{ font-size: .3em; color: var(--ink-60); letter-spacing: .08em; margin-left: .3em; }
-.pov{ list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 30px 44px; margin-top: 34px; padding-top: 30px; border-top: 1px solid var(--rule-08); counter-reset: pov; }
-.pov li{ position: relative; padding-left: 42px; counter-increment: pov; }
-.pov li::before{ content: counter(pov, decimal-leading-zero); position: absolute; left: 0; top: -3px; font-family: var(--font-head); font-size: 22px; color: hsl(45 100% 50% / .6); }
-.pov h3{ font-family: var(--font-mono); font-weight: 700; text-transform: none; font-size: 14.5px; letter-spacing: .01em; line-height: 1.35; margin-bottom: 6px; }
-.pov p{ font-size: 13px; color: var(--ink-70); max-width: 50ch; }
-.not-promise{ margin-top: 34px; font-size: 13.5px; color: var(--ink-70); max-width: 64ch; border-left: 2px solid var(--amber); padding-left: 16px; }
-.not-promise b{ color: var(--ink-100); }
-.why6k{ margin-top: 32px; border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
-.why6k summary{ cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; font-size: 13px; color: var(--ink-100); }
-.why6k summary::-webkit-details-marker{ display: none; }
-.why6k summary::after{ content: "+"; font-family: var(--font-head); font-size: 18px; color: var(--amber); transition: transform .25s var(--ease-out); }
-.why6k[open] summary::after{ transform: rotate(45deg); }
-.why6k-body{ padding-bottom: 20px; }
-.why6k-body > p{ font-size: 13px; color: var(--ink-70); max-width: 64ch; margin-bottom: 8px; }
-.vs{ list-style: none; }
-.vs li{ display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 10px 0; border-top: 1px solid var(--rule-08); font-size: 13px; }
-.vs li:first-child{ border-top: 0; }
-.vs .what{ position: relative; padding-left: 22px; color: var(--ink-70); }
-.vs .what::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
-.vs .what b{ color: var(--ink-100); font-weight: 700; }
-.vs .rate{ font-size: 10.5px; color: var(--ink-60); text-align: right; letter-spacing: .04em; text-transform: uppercase; flex: 0 1 auto; max-width: 44%; }
-.vs-total{ margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--rule-20); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); }
-.vs-total b{ color: var(--ink-100); font-family: var(--font-head); font-size: 20px; font-weight: 400; letter-spacing: .02em; white-space: nowrap; }
-.vs-total b.strike{ color: var(--ink-60); text-decoration: line-through; text-decoration-color: hsl(8 72% 58% / .8); text-decoration-thickness: 2px; }
-
-/* ============================================================
-   07 · THE PERSON IN YOUR ACCOUNT
-   ============================================================ */
-.scarcity{ margin: 8px 0 72px; font-family: var(--font-head); text-transform: uppercase; font-size: clamp(22px, 2.6vw, 34px); line-height: 1.12; letter-spacing: .015em; color: var(--ink-100); max-width: 30ch; }
-.founder{ display: grid; grid-template-columns: 260px 1fr; gap: 36px; align-items: start; padding: 30px 34px; margin-bottom: 18px; }
-.founder-photo{ margin: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--bg-raise); }
-.founder-photo img{ display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
-.founder.no-photo{ grid-template-columns: 1fr; }
-.founder.no-photo .founder-photo{ display: none; }
-.founder-body{ display: flex; flex-direction: column; gap: 14px; }
-.founder-cred{ font-size: 12.5px; color: var(--ink-100); letter-spacing: .01em; }
-.founder-body p{ font-size: 14.5px; line-height: 1.65; color: var(--ink-70); max-width: 60ch; }
-.founder-body p.founder-cred{ font-size: 12.5px; color: var(--ink-100); }
-.founder-sign{ font-size: 12px; color: var(--ink-60) !important; }
-.founder-video{ width: 100%; max-width: 420px; border-radius: 12px; margin-top: 4px; background: #000; display: block; }
-.principles{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.principle{ padding: 20px 22px; }
-.principle .k{ font-family: var(--font-head); font-size: 20px; color: var(--amber); display: block; margin-bottom: 10px; }
-.principle h3{ font-size: 13.5px; letter-spacing: .02em; text-transform: none; font-family: var(--font-mono); font-weight: 700; color: var(--ink-100); margin-bottom: 6px; line-height: 1.35; }
-.principle p{ font-size: 12px; color: var(--ink-60); }
-.fit{ margin-top: 72px; }
-.fit-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 980px; }
-.fit-card{ padding: 26px 28px; }
-.fit-card h3{ font-size: 15px; letter-spacing: .06em; margin-bottom: 14px; }
-.fit-card ul{ list-style: none; }
-.fit-card li{ padding: 8px 0 8px 22px; position: relative; font-size: 13px; color: var(--ink-70); border-top: 1px solid var(--rule-08); }
-.fit-card li:first-child{ border-top: 0; }
-.fit-card.for li::before{ content: "—"; position: absolute; left: 0; color: var(--amber); }
-.fit-card.notfor h3{ color: var(--ink-70); }
-.fit-card.notfor li::before{ content: "×"; position: absolute; left: 2px; color: var(--ink-60); }
-.fit-gate{ margin-top: 18px; font-size: 13px; color: var(--ink-70); }
-
-/* ============================================================
-   08 · FAQ & CLOSE
-   ============================================================ */
-.faq{ max-width: 860px; }
-.faq details{ border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
-.faq summary{ cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; font-size: 13.5px; color: var(--ink-100); }
+/* four questions */
+.faq{ max-width: 900px; margin: 40px auto 0; border-top: 1px dashed var(--rule-20); }
+.faq details{ border-bottom: 1px dashed var(--rule-20); }
+.faq summary{ cursor: pointer; list-style: none; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 24px 4px; font-family: var(--font-head); font-size: clamp(20px, 2.2vw, 26px); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-100); }
 .faq summary::-webkit-details-marker{ display: none; }
-.faq summary::after{ content: "+"; font-family: var(--font-head); font-size: 18px; color: var(--amber); transition: transform .25s var(--ease-out); flex: none; }
+.faq summary::after{ content: "+"; font-size: 26px; color: var(--amber); transition: transform .25s var(--ease-out); flex: none; }
 .faq details[open] summary::after{ transform: rotate(45deg); }
-.faq details > p{ padding: 0 22px 18px; font-size: 13px; color: var(--ink-60); max-width: 68ch; }
-.faq details > p a{ color: var(--amber); }
+.faq details > p{ padding: 0 4px 24px; font-size: 15px; color: var(--ink-70); max-width: 66ch; }
 
-.close{ position: relative; overflow: hidden; padding: 170px 0 0; text-align: center; }
-.close-inner{ position: relative; z-index: 3; width: min(980px, calc(100% - 48px)); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 40px; }
-.close h2{ font-style: italic; font-size: clamp(38px, 5.6vw, 80px); max-width: 16ch; }
-.clocks{ display: grid; grid-template-columns: 1fr 1fr; width: min(760px, 100%); text-align: left; border-top: 1px solid var(--rule-20); border-bottom: 1px solid var(--rule-20); }
-.clocks p{ padding: 16px 20px; font-size: 12.5px; color: var(--ink-70); }
-.clocks p + p{ border-left: 1px solid var(--rule-08); }
-.clocks p[hidden]{ display: none; }
-.clocks b{ display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); font-weight: 400; margin-bottom: 4px; }
+/* the founder */
+.founder{ display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; max-width: 1000px; margin: 0 auto; }
+.founder video{ width: 100%; aspect-ratio: 1460 / 828; object-fit: cover; object-position: 50% 22%; border-radius: 20px; background: #000; border: 4px solid var(--raise); }
+.founder h2{ font-size: clamp(36px, 4.6vw, 58px); margin-bottom: 18px; }
+.founder p{ font-size: 16px; max-width: 48ch; margin-bottom: 18px; }
+
+/* the application */
+.close{ position: relative; overflow: hidden; padding: 110px 0 0; text-align: center; }
+.close::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 45% at 50% 30%, hsl(45 100% 50% / .09), transparent 70%); }
+.close-in{ position: relative; width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 34px; }
+.close h2{ font-size: clamp(40px, 6vw, 84px); max-width: 16ch; }
+.gate-inline{ width: min(700px, 100%); border-radius: 24px; padding: 36px 38px; text-align: left; background: var(--raise); border: 1px solid var(--rule-20); }
+.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
+
+/* footer */
+.footer{ margin-top: 110px; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+.footer .nav-logo{ font-size: 26px; }
+.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
+.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
+.footer ul a:hover{ color: var(--ink-100); }
+.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
 
 /* the gate */
-.gate-overlay{
-  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 18px;
-  background: hsl(226 80% 3% / .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-}
+.gate-overlay{ position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: hsl(226 80% 3% / .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .gate-overlay[hidden]{ display: none; }
-.gate-modal{ width: min(620px, 100%); max-height: 92svh; overflow-y: auto; padding: 36px 38px; position: relative; border-radius: 24px; }
+.gate-modal{ width: min(620px, 100%); max-height: 92vh; max-height: 92svh; overflow-y: auto; padding: 36px 38px; position: relative; border-radius: 24px; background: hsl(224 55% 12% / .98); border: 1px solid var(--rule-20); }
 .gate-x{ position: absolute; top: 12px; right: 14px; z-index: 2; background: none; border: 0; color: var(--ink-60); font-family: var(--font-mono); font-size: 20px; cursor: pointer; padding: 8px 12px; }
 .gate-x:hover{ color: var(--ink-100); }
 .gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
@@ -436,587 +215,302 @@ h1,h2,h3{
 .gate-sub{ font-size: 13px; color: var(--ink-60); margin-bottom: 24px; max-width: 54ch; }
 .gate fieldset{ border: 0; margin: 0 0 20px; padding: 0; }
 .gate legend{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 10px; padding: 0; }
-.chips{ display: flex; flex-wrap: wrap; gap: 8px; }
-.chips label{ cursor: pointer; position: relative; }
-.chips input{ position: absolute; opacity: 0; pointer-events: none; }
-.chips span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
-.chips label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
-.chips input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
-.chips input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
+.chips-q{ display: flex; flex-wrap: wrap; gap: 8px; }
+.chips-q label{ cursor: pointer; position: relative; }
+.chips-q input{ position: absolute; opacity: 0; pointer-events: none; }
+.chips-q span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
+.chips-q label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
+.chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+.chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
+.gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; }
 .gate-note{ margin-top: 12px; font-size: 11px; letter-spacing: .08em; color: var(--ink-60); }
-.gate-inline{ width: min(700px, 100%); border-radius: 24px; padding: 36px 38px; text-align: left; }
-.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
-.gate-lbl{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin: 26px 0 12px; }
-.gate .qt-tiles{ grid-template-columns: 1fr; }
-.gate .c3{ grid-column: span 6; }
-.gate .c6{ grid-column: span 12; }
-.gate-capture{ position: relative; display: grid; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
+.gate-lbl{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
+.gate-offer{ margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
+.gate-offer .gate-sub{ margin-bottom: 14px; }
+.gate-capture{ position: relative; display: grid; gap: 10px; margin-top: 16px; }
 .gate-capture label{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); }
+.gate-capture input{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px; font-family: var(--font-mono); font-size: 16px; }
+.gate-capture input:focus{ border-color: var(--amber); outline: none; }
 .gate-capture .btn{ justify-self: start; }
 .gate-capture .hp{ position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-.gate-offer{ margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
-.gate-offer .gate-lbl{ margin-top: 0; }
-.gate-offer .gate-sub{ margin-bottom: 0; }
-.gate-offer .gate-capture{ margin-top: 16px; padding-top: 0; border-top: 0; }
 
-.footer-bar{ position: relative; z-index: 3; margin-top: 150px; border-top: 1px solid hsl(220 40% 98% / .12); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); background: hsl(226 65% 6% / .55); }
-.footer-row{ width: min(1180px, calc(100% - 48px)); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 26px 0; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); flex-wrap: wrap; }
-.footer-row nav{ display: flex; gap: 22px; flex-wrap: wrap; }
-.footer-row a:hover{ color: var(--ink-100); }
-.footer-logo{ font-family: var(--font-head); font-size: 15px; color: var(--ink-70); letter-spacing: .06em; }
-
-/* mobile sticky CTA: one action, no clock */
-.sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 10px; border-radius: 999px; transform: translateY(120%); transition: transform .4s var(--ease-out); }
-.sticky-cta.show{ transform: translateY(0); }
-.sticky-cta .btn{ flex: 1 1 0; justify-content: center; }
+/* mobile sticky CTA */
+.sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
+.sticky-cta.show{ transform: translateY(0); visibility: visible; transition: transform .4s var(--ease-out), visibility 0s; }
+.sticky-cta .btn{ flex: 1 1 0; }
 @media (max-width: 760px){ .sticky-cta{ display: flex; } }
 
-/* motion */
-.reveal-words .w{ display: inline-block; opacity: 0; filter: blur(10px); transform: translateY(50px); transition: opacity .7s ease, filter .7s ease, transform .8s var(--ease-out); will-change: opacity, filter, transform; }
-.in .reveal-words .w{ opacity: 1; filter: blur(0); transform: none; }
-.reveal-unit{ opacity: 0; filter: blur(10px); transform: translateY(26px); transition: opacity .6s ease, filter .6s ease, transform .6s var(--ease-out); will-change: opacity, filter, transform; }
-.reveal-sub{ transition-delay: .8s; }
-.reveal-cta{ transition-delay: 1.1s; }
-.reveal-early{ transition-delay: .05s; }
-.in .reveal-unit{ opacity: 1; filter: blur(0); transform: none; }
-@media (prefers-reduced-motion: reduce){
-  .reveal-words .w, .reveal-unit{ opacity: 1 !important; filter: none !important; transform: none !important; transition: none !important; }
-  .nav{ animation: none; opacity: 1; translate: 0 0; }
-  .grain, .badge i{ animation: none; }
-  .sticky-cta{ transition: none; }
-  html{ scroll-behavior: auto; }
-}
+/* case study, filled only from public_case_study() */
+.case-before{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(26px, 3.2vw, 42px); line-height: 1.08; color: var(--ink-100); max-width: 28ch; margin: 0 auto 24px; }
+.case-before::before{ content: "\201C"; color: var(--amber); } .case-before::after{ content: "\201D"; color: var(--amber); }
+.case-numbers{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
+.case-number{ padding: 22px 24px; background: var(--raise); border-radius: 16px; }
+.case-number .k{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
+.case-number b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: clamp(34px, 4vw, 50px); line-height: 1; margin: 8px 0; }
+.case-number p{ font-size: 12px; color: var(--ink-60); }
+.record{ background: var(--raise); border-radius: 16px; padding: 22px 24px; }
+.record table{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.record th{ text-align: left; font-weight: 400; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); padding: 6px 8px; border-bottom: 1px solid var(--rule-20); }
+.record td{ padding: 12px 8px; border-bottom: 1px solid var(--rule-08); color: var(--ink-70); vertical-align: top; }
+.record th.num, .record td.num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.record .pos{ color: var(--ok); } .record .miss{ color: var(--serious); } .record .pend{ color: var(--ink-60); }
+.case-quote{ margin: 32px auto 0; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.5; color: var(--ink-100); max-width: 52ch; border-left: 2px solid var(--amber); padding-left: 18px; }
 
-/* responsive */
+/* motion + responsive */
+.js [data-reveal]{ opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .8s var(--ease-out); }
+.js [data-reveal].revealed{ opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce), print{
+  [data-reveal]{ opacity: 1 !important; transform: none !important; transition: none !important; }
+  .grain{ animation: none; } .sticky-cta{ transition: none; } html{ scroll-behavior: auto; }
+}
 @media (max-width: 920px){
-  .deliv-grid{ grid-template-columns: 1fr; }
-  .steps, .principles{ grid-template-columns: 1fr 1fr; }
-  .founder{ grid-template-columns: 220px 1fr; gap: 24px; }
-  .fit-grid, .pov{ grid-template-columns: 1fr; }
+  .stats .in{ grid-template-columns: 1fr 1fr; }
+  .guarantee{ grid-template-columns: 1fr; padding: 36px 32px; }
+  .cards{ grid-template-columns: 1fr 1fr; }
+  .founder{ grid-template-columns: 1fr; }
+  .founder video{ max-width: 100%; }
+  .footer .in{ grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 760px){
-  .hero{ padding: 128px 0 64px; }
-  .hero-inner{ gap: 22px; }
-  .offer{ grid-template-columns: 1fr 1fr; }
-  .offer div:nth-child(3){ border-left: 0; }
-  .offer div:nth-child(n+3){ border-top: 1px solid var(--rule-08); }
-  .offer div{ padding: 12px 16px; }
-  .offer b{ font-size: 17px; }
-  .sect{ padding: 104px 0; }
-  .sect-tool{ padding-top: 24px; }
-  .qt, .price-block{ padding: 24px 18px; }
-  .qt-tog{ font-size: 10.5px; letter-spacing: .06em; padding: 9px 12px; white-space: nowrap; }
-  .c3{ grid-column: span 6; } .c6{ grid-column: span 12; }
-  .qt-tiles{ grid-template-columns: 1fr; }
-  .says-grid, .clocks{ grid-template-columns: 1fr; }
-  .clocks p + p{ border-left: 0; border-top: 1px solid var(--rule-08); }
-  .steps, .principles{ grid-template-columns: 1fr; }
-  .founder{ grid-template-columns: 1fr; padding: 22px 20px; }
-  .founder-photo{ max-width: 240px; }
-  .footer-row{ justify-content: center; text-align: center; }
-  .scarcity{ margin-bottom: 56px; }
-}
-@media (max-width: 560px){
-  .record-demo{ padding: 18px 14px; }
-  .record-demo .how, .record-demo th:last-child{ display: none; }
-  .vs li{ flex-direction: column; gap: 2px; }
-  .vs .rate{ padding-left: 22px; text-align: left; max-width: none; }
-  .gate-modal, .gate-inline{ padding: 28px 20px; }
+  .sect{ padding: 72px 0; }
+  .hero{ padding: 72px 0 64px; }
+  .hero h1{ font-size: clamp(44px, 12vw, 64px); }
+  .stats{ padding: 40px 0; }
+  .stats .in{ grid-template-columns: 1fr 1fr; gap: 18px 14px; }
+  .stat b{ font-size: 34px; white-space: nowrap; }
+  .guarantee{ padding: 28px 20px; }
+  .cards{ grid-template-columns: 1fr; }
+  .price{ padding: 30px 20px; } .price .num small{ display: block; margin: 8px 0 0; }
   .btn{ white-space: normal; text-align: center; line-height: 1.35; }
-  .cta-row .btn{ width: 100%; justify-content: center; }
+  .hero .btn-lg, .cta .btn, .price .btn{ width: 100%; padding-left: 14px; padding-right: 14px; letter-spacing: .05em; }
+  .gate-modal, .gate-inline{ padding: 28px 18px; }
+  .footer .in{ grid-template-columns: 1fr; }
+  #case .record th:last-child, #case .record td:last-child{ display: none; }
 }
 </style>
+</head>
+<body>
 
 <div class="grain" aria-hidden="true"></div>
 
-<nav class="nav glass" aria-label="Primary">
-  <a class="nav-logo" href="#top">Hubric<em>o</em>n</a>
-  <div class="nav-links">
-    <a href="#teardown">Teardown</a>
-    <a href="#record">The Record</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
+<div class="bar" id="teardown"><a href="/teardown"><span class="new">Free</span>The 60-second Teardown: price one listing off Amazon's published rate card →</a></div>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-in">
+    <a class="nav-logo" href="#top">Hubric<em>o</em>n</a>
+    <div class="nav-links">
+      <a href="#offer">Offer</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#founder">Founder</a>
+    </div>
+    <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">Start your free Proving Month</a>
   </div>
-  <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">
-    Get your Profit Teardown
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-  </a>
 </nav>
 
-<!-- ══════════════ 01 · HERO — the bet, the terms, the gate ══════════════ -->
-<header class="hero" id="top" data-reveal>
-  <canvas class="hero-canvas" data-mesh="hero" aria-hidden="true"></canvas>
-  <div class="edge edge-top" aria-hidden="true"></div>
-  <div class="edge edge-bottom" aria-hidden="true"></div>
-
-  <div class="hero-inner">
-    <span class="badge glass reveal-unit reveal-early"><i aria-hidden="true"></i>Managed Profit for Amazon &amp; Shopify brands · $3M–$20M/yr</span>
-    <h1 class="reveal-words">More than $6,000 a month of profit, found in your account and proven on your own reports. Or you don't pay.</h1>
-    <p class="hero-sub reveal-unit reveal-sub">We make the money decisions <b>for you</b> — prices, ad bleed, reorders, Amazon claims — and prove each on your own exports before we bill.</p>
-    <div class="offer glass reveal-unit reveal-sub">
-      <div><b>$6,000/mo flat</b></div>
-      <div><b>Month one free</b></div>
-      <div><b>Proven or void</b></div>
-      <div><b>No card</b></div>
-    </div>
-    <div class="cta-row reveal-unit reveal-cta">
-      <a class="btn btn-amber" data-calendly="audit" data-section="hero" href="#apply">
-        Get your Profit Teardown
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-      </a>
-    </div>
-    <p class="hero-qual reveal-unit reveal-cta">We work with private-label brands doing $3M–$20M. Below that, the money we'd find doesn't clear our own bar — and we'd rather say so here than bill you for a month we can't prove.</p>
+<!-- ═══ HERO ═══ -->
+<header class="hero" id="top">
+  <img class="hero-photo" src="/hagen.jpg" alt="" width="960" height="1697" decoding="async" fetchpriority="high" onerror="this.remove()">
+  <div class="hero-in">
+    <span class="badge"><i aria-hidden="true"></i>Managed Profit · Amazon &amp; Shopify brands · $3M–$20M/yr</span>
+    <h1>More profit than our bill, every month. Or you don't pay.</h1>
+    <p class="hero-sub">We make the five money decisions in your account and grade each one on your own reports.</p>
+    <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="hero" href="#apply">Start your free Proving Month</a>
   </div>
 </header>
 
-<!-- ══════════════ 02 · THE 60-SECOND TEARDOWN — proof in the visitor's browser ══════════════ -->
-<section class="sect sect-tool" id="teardown" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">The 60-second Teardown</div>
-    <h2 class="reveal-words">Don't take the math on faith. Price one of your listings right now.</h2>
-    <p class="reveal-unit reveal-early">Priced off Amazon's and Shopify's published rate cards, in your browser.</p>
-  </div>
-  <div class="qt glass-strong reveal-unit reveal-early" data-quick-teardown data-section="teardown">
-    <noscript><p>The calculator needs JavaScript. <a href="/teardown" style="color:var(--amber)">Open the 60-second Teardown</a>.</p></noscript>
+<!-- ═══ FOUR NUMBERS ═══ -->
+<section class="stats band sect" data-reveal>
+  <div class="in">
+    <div class="stat"><b>$6,000</b><span>a month, flat</span></div>
+    <div class="stat"><b>24 hrs</b><span>to your Profit Teardown</span></div>
+    <div class="stat"><b>~90 min</b><span>of your time in month one</span></div>
+    <div class="stat"><b>$0</b><span>until the Record covers the bill</span></div>
   </div>
 </section>
 
-<!-- ══════════════ 03 · THE PROFIT RECORD ══════════════ -->
-<section class="sect" id="record" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">The Profit Record</div>
-    <h2 class="reveal-words">You can see sales. You can see the payout. Your reports cannot tell you which decision made the profit.</h2>
-  </div>
-
-  <div class="says-grid reveal-unit reveal-sub">
-    <div class="says them glass">
-      <h3>Seller Central says</h3>
-      <p>Revenue by SKU in one report. Fees in a second. Ads in a third. Refunds and lost inventory in a fourth and a fifth. Nothing allocated, nothing decided, nothing graded.</p>
+<!-- ═══ PROVEN OR VOID ═══ -->
+<section class="sect" id="guarantee" data-reveal>
+  <div class="guarantee">
+    <div>
+      <div class="eyebrow">Proven or Void</div>
+      <h2>If the Record hasn't covered our bill, there is no bill.</h2>
     </div>
-    <div class="says us glass">
-      <h3>The Profit Record says</h3>
-      <p>Before a move goes live, it's written down with the dollars we expect. After, it's measured from your own Seller Central or Shopify exports — on the exact line, capped at what we promised, misses included.</p>
-    </div>
-  </div>
-
-  <div class="record-demo glass reveal-unit reveal-sub" aria-label="Sample Profit Record, demo data">
-    <span class="sample-tag">Sample · demo data</span>
-    <table>
-      <tr><th>Move</th><th class="num">Expected</th><th class="num">Measured</th><th>How we know</th></tr>
-      <tr><td>Negative-matched 11 search terms spending with zero sales</td><td class="num">$6,200</td><td class="num pos">$6,200</td><td class="how">Measured $6,840 on the exact lines, next export — booked at the $6,200 we promised</td></tr>
-      <tr><td>Price step +4% on B0-7841, Buy Box watched while live</td><td class="num">$2,100</td><td class="num pos">$2,100</td><td class="how">Measured $2,760 against the stated baseline — booked at the $2,100 we promised</td></tr>
-      <tr><td>Trimmed campaign spend past break-even</td><td class="num">$3,400</td><td class="num miss">$2,150</td><td class="how">The honest miss — recorded, not hidden</td></tr>
-      <tr><td>Filed 3 lost-inventory claims before the 60-day window</td><td class="num">$3,900</td><td class="num pos">$3,420</td><td class="how">Confirmed by Amazon's own reimbursement record</td></tr>
-      <tr><td>Filed 2 refund-never-returned claims, awaiting Amazon</td><td class="num">$4,800</td><td class="num pend">— found, not yet banked</td><td class="how">Not yet — it becomes proven only when Amazon pays</td></tr>
-    </table>
-    <div class="r-foot"><span>Proven since day one <b>$13,870</b></span><span>Found, not yet banked <b>$4,800</b></span><span>Billed to date <b>$6,000</b></span></div>
-  </div>
-
-  <p class="record-void reveal-unit reveal-sub">If the Record hasn't covered the bill, the bill is void.</p>
-
-  <div class="cohort reveal-unit reveal-sub">
-    <p><b>Founding clients.</b> <span data-proof-pending>The first published result posts when the first Proving Month closes.</span></p>
-    <p class="links-row">
-      <a href="/results">Every published result, and how each one was measured →</a>
-      <a href="/method">Every formula we run, in the open →</a>
-    </p>
+    <ol class="terms">
+      <li>Month one, the Proving Month, is free.</li>
+      <li>After that, an invoice stands only if dollars proven, plus claims found and filed, cover everything billed since day one.</li>
+      <li>Below the bar, no invoice. The work doesn't stop.</li>
+      <li>Cancel by one email. Your Record exports free, any day.</li>
+    </ol>
   </div>
 </section>
 
-<!-- ══════════════ 03b · THE PROOF — one case study, told in full, or nothing ══════════════
-     Filled only from public_case_study(): a real client whose Proving Month has
-     closed, in their own words, with their own Record. `hubricon casestudy` is the
-     only writer. No row, no section, and nothing stands in its place. -->
-<section class="sect" id="case" data-reveal hidden>
-  <div class="sect-head">
+<!-- ═══ THE OFFER ═══ -->
+<section class="sect band center" id="offer" data-reveal>
+  <div class="in">
+    <h2 class="h2">What $6,000 a month buys</h2>
+    <p class="lede">Prices, ad bleed, reorders, fee cliffs, Amazon claims.</p>
+    <div class="cards" id="demo">
+      <div class="card">
+        <div class="art" role="group" aria-label="Sample Teardown excerpt: per-SKU margin">
+          <span class="tag">Sample · demo data</span>
+          <div class="mini-row"><span class="lbl">SKU-BLUE</span><span class="track"><i class="s-fee" style="width:32%"></i><i class="s-cogs" style="width:24%"></i><i class="s-ads" style="width:4%"></i><i class="s-net" style="width:40%"></i></span><span class="val">+40%</span></div>
+          <div class="mini-row"><span class="lbl">SKU-RED</span><span class="track"><i class="s-fee" style="width:35%"></i><i class="s-cogs" style="width:27%"></i><i class="s-ads" style="width:12%"></i><i class="s-net" style="width:26%"></i></span><span class="val">+26%</span></div>
+          <div class="mini-row"><span class="lbl">GADGET</span><span class="track"><i class="s-fee" style="width:26%"></i><i class="s-cogs" style="width:37%"></i><i class="s-ads" style="width:30%"></i><i class="s-loss" style="width:7%"></i></span><span class="val" style="color:var(--serious)">−7%</span></div>
+        </div>
+        <h3>The Profit Teardown</h3>
+        <p>Every SKU's true margin, stockout odds, ad break-even, dated claims. Inside 24 hours of your files.</p>
+      </div>
+      <div class="card">
+        <div class="art" role="group" aria-label="Sample move">
+          <span class="tag">Sample · demo data</span>
+          <p class="line">Cut 140 zero-sale search terms.</p>
+          <div><span class="chip on">Executed Aug 24</span></div>
+          <div class="kv"><div><span>Expected</span><b class="big">$6,200</b></div><div><span>Measured</span><b class="big ok">$6,840</b></div></div>
+        </div>
+        <h3>Moves, made for you</h3>
+        <p>First moves live inside two weeks. One email before each. Reply no and it stops.</p>
+      </div>
+      <div class="card">
+        <div class="art" role="group" aria-label="Sample Profit Record totals">
+          <span class="tag">Sample · demo data</span>
+          <div class="kv">
+            <div><span>Proven</span><b class="big ok">$11,770</b></div>
+            <div><span>Billed</span><b class="big">$6,000</b></div>
+          </div>
+          <p class="line">Invoice stands.</p>
+        </div>
+        <h3>The Profit Record</h3>
+        <p>Dollars expected before. Dollars measured after, on your own exports. Misses included.</p>
+      </div>
+      <div class="card">
+        <div class="art" role="group" aria-label="What the seat can touch">
+          <span class="tag">One scoped seat</span>
+          <div class="chips"><span class="chip ok">Reports</span><span class="chip ok">Pricing</span><span class="chip ok">Campaigns</span><span class="chip no">Banking</span><span class="chip no">Settings</span></div>
+          <p class="line">Revoked in one click.</p>
+        </div>
+        <h3>Your account, your veto</h3>
+        <p>Nothing moves before you're told. Banking, payouts and settings stay out of reach.</p>
+      </div>
+    </div>
+    <div class="cta"><a class="btn btn-amber btn-lg" data-calendly="audit" data-section="offer" href="#apply">Start your free Proving Month</a></div>
+  </div>
+</section>
+
+<!-- ═══ PRICE ═══ -->
+<section class="sect center" id="pricing" data-reveal>
+  <div class="in">
+    <h2 class="h2">One plan. One price.</h2>
+    <div class="price">
+      <div class="num">$6,000<small>/MO FLAT</small></div>
+      <ul>
+        <li>Month one free</li>
+        <li>Never a percentage of ad spend</li>
+        <li>No setup fee, no card on file</li>
+        <li>Month-to-month, cancel any day</li>
+      </ul>
+      <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="pricing" href="#apply">Start your free Proving Month</a>
+    </div>
+    <p class="anchor">Bought separately, four vendors bill $5,700–$15,000+ a month. None executes across all of it. None grades it. Published price lists, 2025–26. <a class="link" href="/method#sources">Sources →</a></p>
+  </div>
+</section>
+
+<!-- ═══ FOUR QUESTIONS ═══ -->
+<section class="sect band center" id="faq" data-reveal>
+  <div class="in">
+    <h2 class="h2">Built for your own brand at $3M–$20M.</h2>
+    <div class="faq">
+      <details data-q="fit"><summary>Who is it for?</summary>
+        <p>Your own brand on Amazon, Shopify or both, $3M–$20M a year, 10+ SKUs. Under $3M or reselling, the calendar won't book you.</p></details>
+      <details data-q="veto"><summary>What can move without my yes?</summary>
+        <p>Only moves inside the bounds you set at kickoff, after an email with the expected dollars and three days to say no.</p></details>
+      <details data-q="seat"><summary>What about my tools and my agency?</summary>
+        <p>Keep them. Our seat reads reports and edits pricing and campaigns; banking stays locked.</p></details>
+      <details data-q="nothing"><summary>What if you find nothing worth fixing?</summary>
+        <p>We say so. You keep the Teardown. You owe nothing.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE FOUNDER ═══ -->
+<section class="sect" id="founder" data-reveal>
+  <div class="in founder">
+    <video controls preload="none" playsinline poster="/hagen.jpg" src="/welcome.mp4" aria-label="A short welcome from Hagen Simmons, founder of Hubricon"></video>
+    <div>
+      <div class="eyebrow">About the founder</div>
+      <h2>One person, every account.</h2>
+      <p>Hagen Simmons, Dallas, Texas. Applied mathematics, University of North Texas, minor in actuarial science. He builds the models, makes the moves and takes every call. Every formula he runs is published.</p>
+      <a class="link" href="/method">The method →</a>
+    </div>
+  </div>
+</section>
+
+<!-- One case study, told in full, or nothing. Filled only from public_case_study(). No row, no section. -->
+<section class="sect band center" id="case" data-reveal hidden>
+  <div class="in">
     <div class="eyebrow" data-case="eyebrow"></div>
     <blockquote class="case-before" data-case="before"></blockquote>
-  </div>
-  <div class="case-numbers" data-case="numbers"></div>
-  <div class="record-demo glass" aria-label="Their Profit Record, identifiers masked">
-    <span class="sample-tag">Their Profit Record · SKUs masked</span>
-    <table data-case="record"></table>
-  </div>
-  <blockquote class="case-quote" data-case="quote"></blockquote>
-</section>
-
-<!-- ══════════════ 04 · WHAT YOU GET ══════════════ -->
-<section class="sect" id="deliverables" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">What you get</div>
-    <h2 class="reveal-words">Prices and ads, made in your account. Reorders and claims, sized and dated for one yes. Every move on the Record.</h2>
-  </div>
-  <div class="deliv-grid reveal-unit reveal-sub">
-
-    <div class="deliv glass">
-      <span class="sample-tag">Sample · demo data</span>
-      <h3>The Profit Teardown</h3>
-      <div class="artifact" aria-label="Sample Teardown excerpt: per-SKU margin decomposition">
-        <div class="a-head"><span>MARGIN.DECOMP</span><span>latest period</span></div>
-        <div class="mini-row"><span class="lbl">WIDGET-BLUE</span>
-          <span class="mini-track"><i class="seg-fees" style="width:32%"></i><i class="seg-cogs" style="width:24%"></i><i class="seg-ads" style="width:4%"></i><i class="seg-net" style="width:40%"></i></span>
-          <span class="val">+40%</span></div>
-        <div class="mini-row"><span class="lbl">WIDGET-RED</span>
-          <span class="mini-track"><i class="seg-fees" style="width:35%"></i><i class="seg-cogs" style="width:27%"></i><i class="seg-ads" style="width:12%"></i><i class="seg-net" style="width:26%"></i></span>
-          <span class="val">+26%</span></div>
-        <div class="mini-row"><span class="lbl">GADGET-PRO</span>
-          <span class="mini-track"><i class="seg-fees" style="width:26%"></i><i class="seg-cogs" style="width:37%"></i><i class="seg-ads" style="width:44%"></i><i class="seg-loss" style="width:7%"></i></span>
-          <span class="val" style="color:hsl(8 72% 62%)">−7%</span></div>
-        <div class="mini-legend">
-          <span><i class="seg-fees"></i>Platform fees</span><span><i class="seg-cogs"></i>COGS</span>
-          <span><i class="seg-ads"></i>Ads</span><span><i class="seg-net"></i>Net</span>
-        </div>
-      </div>
-      <p>Every SKU's true net margin, with every fee, landed cost and ad spend honestly allocated. Plus stockout odds, how far each price can move, your ad break-even, and the Amazon claims with their deadlines. Written report and a recorded walkthrough, inside 24 hours of your files.</p>
+    <div class="case-numbers" data-case="numbers"></div>
+    <div class="record" role="group" aria-label="Their Profit Record, identifiers masked">
+      <span class="tag">Their Profit Record · SKUs masked</span>
+      <table data-case="record"></table>
     </div>
-
-    <div class="deliv glass">
-      <span class="sample-tag">Sample · demo data</span>
-      <h3>Moves, made in your account</h3>
-      <div class="artifact mock-directive" aria-label="Sample move from the Profit Brief">
-        <div class="a-head"><span>MOVE</span><span>executed</span></div>
-        <span class="tagline">Advertising</span>
-        <p class="d-text">Negative-matched 11 search terms that spent with zero attributed sales — $6,200 of pure bleed, stopped.</p>
-        <div class="mock-btns">
-          <span class="mock-btn">Executed Aug 24</span>
-          <span class="mock-exp">expected $6,200 · measured $6,840, booked at $6,200</span>
-        </div>
-      </div>
-      <p>Up to five moves at a time, each with its expected dollars, emailed before it goes live, then made for you inside the bounds you set. You hold the veto. If that email doesn't go out, nothing moves.</p>
-    </div>
-
-    <div class="deliv glass">
-      <span class="sample-tag">Sample · demo data</span>
-      <h3>The Profit Record</h3>
-      <div class="artifact" aria-label="Sample Profit Record excerpt">
-        <div class="a-head"><span>PROFIT.RECORD</span><span>since day one</span></div>
-        <div class="mock-strip">
-          <div class="mock-total"><span>Proven since day one</span><b>$13,870</b></div>
-          <div class="mock-total"><span>Found, not yet banked</span><b>$4,800</b></div>
-          <div class="mock-total"><span>Billed to date</span><b>$6,000</b></div>
-          <div class="mock-total"><span>Proven ÷ billed</span><b>2.3×</b></div>
-        </div>
-      </div>
-      <p>Every move's expected and measured dollars, on one record, including the calls that came in under. It is what voids our invoice, and you can export it the day you leave.</p>
-    </div>
-
+    <blockquote class="case-quote" data-case="quote"></blockquote>
   </div>
 </section>
 
-<!-- ══════════════ 05 · HOW IT WORKS — the time cost first ══════════════ -->
-<section class="sect" id="process" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">How it works</div>
-    <h2 class="reveal-words">Your whole time cost: about ninety minutes in month one, then five to ten every two weeks.</h2>
-  </div>
-  <div class="steps reveal-unit reveal-sub">
-    <div class="step glass">
-      <span class="when">Day 0 · 2 min + 20 min</span>
-      <h3>Apply &amp; call</h3>
-      <p>Four answers: where you sell, revenue, model, catalog size. Then you book the 20-minute call on the spot. Your answers ride along, so the call starts from your numbers.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">2 min · or 15 min of exports</span>
-      <h3>One seat</h3>
-      <p>Add one user to Seller Central, or approve one collaborator request in Shopify. Banking, settings and payouts stay untouchable; you revoke the seat in one click. Prefer files? Fifteen minutes of exports, once.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">Within 24 hours</span>
-      <h3>Teardown in 24 hours</h3>
-      <p>Every fee decomposed, demand simulated per SKU, your claims dated. Written report plus a recorded walkthrough. Your baseline is recorded before anything is touched, so a good month can never be mistaken for our work.</p>
-    </div>
-    <div class="step glass">
-      <span class="when">Day 30 · and every month after</span>
-      <h3>The Record decides at day 30</h3>
-      <p>Say yes and the Proving Month starts: moves made, Record running, no charge. At day 30, if what it found and proved didn't clear $6,000, no invoice exists. Every month after runs on the same rule.</p>
-    </div>
-  </div>
-  <div class="sect-cta reveal-unit reveal-cta">
-    <a class="btn btn-amber" data-calendly="audit" data-section="process" href="#apply">
-      Get your Profit Teardown
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-    </a>
-  </div>
-</section>
-
-<!-- ══════════════ 06 · PRICE & PROVEN OR VOID ══════════════ -->
-<section class="sect" id="pricing" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">Price &amp; terms</div>
-    <h2 class="reveal-words">One plan. $6,000 a month. Proven or void.</h2>
-  </div>
-  <div class="price-block glass reveal-unit reveal-sub">
-    <span class="price-tag">Managed Profit</span>
-    <div class="price-num">$6,000<small>/MO FLAT</small></div>
-
-    <ol class="pov">
-      <li><h3>The Proving Month costs nothing.</h3><p>Thirty days of the full service: the plan, the moves made, the Record running.</p></li>
-      <li><h3>Proven or void.</h3><p>If what your Profit Record has proven, plus what it has found and filed, does not cover everything we've billed you since day one, that invoice included, that invoice is void.</p></li>
-      <li><h3>The work doesn't stop.</h3><p>A void invoice pauses nothing: we keep running your account until the Record catches up with the bills.</p></li>
-      <li><h3>The exit is always open.</h3><p>If you email "stop" at 9:00, nothing moves in your account at 9:01, no notice period starts, and nothing after that month is ever invoiced.</p></li>
-    </ol>
-
-    <p class="not-promise"><b>What we do not promise:</b> a result. Forecasts are probabilities, and Amazon changes its fees without asking either of us. What we promise is that your invoice can never outrun the proof.</p>
-
-    <details class="why6k" id="why-6000">
-      <summary>Where the $6,000 comes from</summary>
-      <div class="why6k-body">
-        <p>On a $5M brand the low end of two numbers we did not invent is $9,000 a month leaking or owed, before we touch a price.</p>
-        <ul class="vs">
-          <li><span class="what"><b>Ad bleed, stopped</b> — every term that spent with zero sales, listed in dollars and negative-matched on the first cycle. The agencies that publish audits put non-converting spend at 20–40%; they sell audits, so that is their number. Yours comes off your own search-term report.</span><span class="rate">20% of a $25k ad account<br>= $5,000/mo · their share, your account</span></li>
-          <li><span class="what"><b>Claims Amazon did not pay itself</b> — since November 2024 Amazon auto-reimburses most warehouse loss, at its cost figure rather than your landed cost. We reconcile four of your own exports against what it actually paid, and file the rest with your yes, inside the 60 and 120-day windows. You keep 100% of it. The 1–3%-a-year figure everyone quotes belongs to a recovery service and predates that change, so we bank the bottom of it.</span><span class="rate">1% of $5M of FBA<br>= $4,000/mo · their low end</span></li>
-          <li><span class="what"><b>Fee cliffs, crossed back</b> — an ounce or an inch over a band, paid on every unit</span><span class="rate">$0.03–$0.44 a unit × 5,000 units/mo<br>= $150–$2,200/mo · arithmetic</span></li>
-          <li><span class="what"><b>Price steps, measured</b> — elastic SKUs walked toward the optimum in steps sized to how much your own history pins down, never more than ±5% a cycle, Buy Box watched while the step is live</span><span class="rate">1% of price held on $5M = $50,000/yr<br>if demand holds — which is what we measure</span></li>
-          <li><span class="what"><b>Stockouts, priced before they happen</b> — risk-priced reorders instead of velocity averages</span><span class="rate">Two weeks dark on a $20k/mo SKU ≈ $10,000 of sales<br>plus the ads to buy the rank back · arithmetic</span></li>
-        </ul>
-        <div class="vs-total"><span>Assembled from four vendors, none of whom execute across all of it or measure any of it</span><b class="strike">$5,700–$15,000+/mo</b></div>
-        <div class="vs-total" style="border-top:0; padding-top:4px"><span>One person, one Profit Record, one invoice — proven or void</span><b>$6,000/mo flat</b></div>
-        <p class="src-line">Every dollar figure above is arithmetic on a $5M brand, not a result of ours. Where each input comes from: non-converting ad spend, 20–40%, from agencies and ad-tech vendors that publish audit data (Sellers Umbrella 2026, Profasee 2026) and sell against the number, so we bank on the low end. Recoverable FBA revenue, 1–3%, from GETIDA, a recovery service paid a share of what it finds, and that estimate predates Amazon's November 2024 auto-reimbursement. Fractional CFO fees from what those firms publish as their own pricing; independent salary data for the role runs higher. Price elasticity from the SmartScout seller survey 2025. Peak fulfilment fees from Amazon's own 2026 holiday announcement. We have found no independent study behind the ad-spend or recoverable-revenue shares, and we would rather say that than dress a vendor estimate up as research.</p>
-      </div>
-    </details>
-
-    <div class="sect-cta" style="margin-top:34px">
-      <a class="btn btn-amber" data-calendly="audit" data-section="pricing" href="#apply">
-        Get your Profit Teardown
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-      </a>
-      <p class="links-row">
-        <a href="/method">Every formula we run, in the open →</a>
-        <a href="/terms">The terms, in plain English →</a>
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════ 07 · THE PERSON IN YOUR ACCOUNT ══════════════ -->
-<section class="sect" id="operator" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">The person in your account</div>
-    <h2 class="reveal-words">One person builds your models, makes the moves, and signs the terms.</h2>
-    <p class="reveal-unit reveal-sub">No account managers, no outsourcing, no handoffs.</p>
-  </div>
-
-  <p class="scarcity reveal-unit reveal-sub">One operator, one kickoff at a time, booked in the order the calls come in.</p>
-
-  <div class="founder glass reveal-unit reveal-sub">
-    <figure class="founder-photo">
-      <img src="/hagen.jpg" alt="Hagen Simmons, founder of Hubricon" width="960" height="1280" loading="lazy" decoding="async" onerror="this.closest('.founder').classList.add('no-photo')">
-    </figure>
-    <div class="founder-body">
-      <span class="price-tag">Hagen Simmons · Founder</span>
-      <p class="founder-cred">Applied Mathematics, University of North Texas · minor in Actuarial Science</p>
-      <p>Actuarial science prices uncertainty for a living. Every model I run is that training pointed at a catalog: a stockout is a probability with a cost, a price step is an elasticity with a confidence interval.</p>
-      <p>I'm not asking you to trust a résumé. I'm asking you to let the Teardown run on your own numbers, check the arithmetic against your own listings, and then let the Profit Record grade me every month with your invoice riding on the result. When I'm wrong, it's recorded, and the invoice is void.</p>
-      <p>If I'm the one who goes quiet, the same code holds: no email from me, no move goes live, and your complete export is in your inbox inside one working day, terms §11.</p>
-      <p class="founder-sign">— Hagen Simmons, Dallas, Texas</p>
-      <video class="founder-video" controls preload="none" playsinline poster="/hagen.jpg" src="/welcome.mp4" aria-label="Ninety seconds from Hagen"></video>
-    </div>
-  </div>
-
-  <div class="principles reveal-unit reveal-sub">
-    <div class="principle glass"><span class="k">01</span><h3>The math is public.</h3><p>Every formula we run is published.</p></div>
-    <div class="principle glass"><span class="k">02</span><h3>Every move gets a receipt.</h3><p>Expected vs. measured, recorded even when we're wrong.</p></div>
-    <div class="principle glass"><span class="k">03</span><h3>The incentives are flat.</h3><p>No % of spend. Our advice never inflates our invoice.</p></div>
-    <div class="principle glass"><span class="k">04</span><h3>The exit is open.</h3><p>Month-to-month. We re-earn the fee every 30 days.</p></div>
-  </div>
-
-  <div class="fit reveal-unit reveal-sub" id="fit">
-    <div class="fit-grid">
-      <div class="fit-card glass for">
-        <h3>Built for</h3>
-        <ul>
-          <li>Your own brand, on Amazon, Shopify, or both</li>
-          <li>$3M–$20M a year</li>
-          <li>10+ SKUs with real pricing power</li>
-        </ul>
-      </div>
-      <div class="fit-card glass notfor">
-        <h3>Not built for</h3>
-        <ul>
-          <li>Brands under $3M</li>
-          <li>Wholesale, resale or arbitrage</li>
-          <li>A day-to-day PPC agency, or another dashboard</li>
-        </ul>
-      </div>
-    </div>
-    <p class="fit-gate">Inside those lines, the calendar is the only gate.</p>
-  </div>
-</section>
-
-<!-- ══════════════ 08 · FAQ ══════════════ -->
-<section class="sect" id="faq" data-reveal>
-  <div class="sect-head">
-    <div class="eyebrow reveal-unit reveal-early">FAQ</div>
-    <h2 class="reveal-words">Questions.</h2>
-  </div>
-  <div class="faq reveal-unit reveal-sub">
-    <details class="glass" data-q="login"><summary>Do you need access to my Seller Central or Shopify admin?</summary>
-      <p>One permissions-scoped seat on whichever platform you run — that's the whole setup. On Amazon: Reports (view) lets the models read your numbers; Pricing and Campaign Manager (view &amp; edit) let us make the moves. On Shopify: a collaborator account with Orders, Analytics, Reports and Marketing to view, and Products and Discounts to edit — nothing under Settings, Finances or Payouts. Banking and account settings stay untouchable on both, and you revoke the seat in one click, any day. Prefer not to grant it? Send a handful of CSV exports through a secure upload page instead.</p></details>
-    <details class="glass" data-q="data"><summary>What data do I need to send?</summary>
-      <p>About fifteen minutes of exports, once. On Amazon: the Business Report, SKU Economics, your advertising reports and an FBA inventory snapshot. On Shopify: orders, products with cost per item, payouts, and your Meta or Google ads exports. Your private upload page lists each one with the exact clicks to get it. The one thing no platform knows is your costs: a one-row-per-SKU sheet (unit cost, freight, fulfilment, lead times), five minutes, estimates welcome. After that the seat does the rest.</p></details>
-    <details class="glass" data-q="record"><summary>What exactly does the Profit Record count?</summary>
-      <p>Every move we make — a price step, a search term cut, a reorder, a claim filed — written down with the dollars we expect before it goes live, then measured from your own later exports: on the exact line, capped at what we promised, misses included, Amazon claims only when Amazon pays. Attribution tells you which ad made the sale; the Profit Record tells you which decision made the profit. It is also what voids our invoice, and you can export it any day. An Amazon claim sits under "found" from the day we file it and moves to "proven" only when Amazon pays — never before. Reorders are recorded, never claimed as dollars — a stockout you didn't have can't be measured. A fourth outcome exists: "unmeasurable" — we could not isolate what a move earned, so nothing is banked and the row says so. Month one, your elasticity says "not enough data." Month six, every price, reorder and ad budget in your account has a receipt behind it and a confidence interval under it.</p></details>
-    <details class="glass" data-q="veto"><summary>Can anything move in my account without my yes?</summary>
-      <p>On the 45-minute kickoff call you get your 90-day plan: quarterly targets for profit, revenue, and margin, plus the three or four moves that get there. On the same call you set the bounds we act inside without asking — and exactly where your veto sits. After that: one email, three days before anything moves, with every planned move and its expected dollars. Say no to any of them by reply. Silence after three days is a yes only for moves inside the bounds you set on the kickoff call — a bigger price step, a new campaign or a reorder waits for your written yes — and if three weeks pass without one it lapses rather than going live. If the email announcing a planned move doesn't go out, nothing moves — the veto window only opens on a sent notice, and that is code, not policy.</p></details>
-    <details class="glass" data-q="catch"><summary>What's the catch in month one?</summary>
-      <p>The Teardown costs nothing, and month one of Managed Profit — the Proving Month — is free. The catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. You also get a link of your own: a founder you send gets the same month free, and when their first invoice stands after their day 30, your next month is on us. No obligation, and nothing renews against your will.</p></details>
-    <details class="glass" data-q="time"><summary>How much of my time does this take?</summary>
-      <p>One 20-minute application call, two minutes granting the seat or fifteen minutes of exports, five minutes on the cost sheet, a 45-minute kickoff for your 90-day plan — then about five to ten minutes every two weeks: one email three days before anything goes live, and a short video after. The modeling, the measurement, and the moves all happen on our side.</p></details>
-    <details class="glass" data-q="speed"><summary>How long until I see value?</summary>
-      <p>Your Teardown is back within 24 hours of your files landing or your seat going live. The first moves are made inside the first two weeks, and price steps read out in days because Buy Box share, or conversion rate on Shopify, is watched while the step is live. Your Profit Record is re-measured every Monday from your latest exports, so the first proven dollars land on the first Monday after a move has had at least two weeks to read out.</p></details>
-    <details class="glass" data-q="terms"><summary>What are the contract terms?</summary>
-      <p>$6,000 a month, flat, month-to-month, cancel anytime. Month one is free. Every invoice after that is proven or void: it stands only if everything your Profit Record has proven, plus found and filed, since day one covers everything we've billed, that invoice included — otherwise it's void, or credited if already paid. Invoiced by email via ACH, net-7 — no card on file, so nothing can renew against your will. Never a percentage of your ad spend. Your data and your Profit Record export free, anytime. Every term is in writing in <a href="/terms">the terms</a>.</p></details>
-    <details class="glass" data-q="floor"><summary>Why $3M?</summary>
-      <p>The floor comes from the guarantee. An invoice stands only if your Profit Record covers everything billed since day one. On the inputs published in the pricing breakdown — 20% of ad spend leaking, 1% of FBA revenue recoverable, ad spend scaled from the $25k-a-month account on $5M — a $2M brand has roughly $3,600 a month to find, and a $3M brand roughly $5,400. Both sit at or under the $6,000 bar. Below $3M every invoice would void and the service would run unpaid indefinitely, so the application books calls from $3M up.</p></details>
-    <details class="glass" data-q="nothing"><summary>What if you find nothing worth fixing?</summary>
-      <p>We tell you exactly that, and you keep the full report. A Teardown that honestly clears you is a good outcome for you and cheap marketing for us.</p></details>
-    <details class="glass" data-q="tools"><summary>Why not Sellerboard, Helium 10, a PPC agency or a fractional CFO?</summary>
-      <p>Keep your tools — they're good mirrors. But they report what happened. None of the ones we compared runs stockout odds, none derives what your target ACoS or ROAS should be, none makes a move, and none can tell you what a move earned. The average brand past a million a year already runs 5.4 of them. We're the layer that turns their numbers into decisions, makes them in your account, and proves what each one earned — and the target ACoS, the reorder point and the price your other tools and people run on come from here. Agencies bill a percentage of your ad spend — an incentive problem — and get fired the same way you fired yours: nobody could prove what they earned. Fractional CFOs run $3,000–$12,000 a month at P&amp;L altitude without SKU-level modeling. We sit in the gap: SKU-level math, moves made in your account, every one proven on the Record, flat fee. <a href="/method#compare">The full comparison →</a></p></details>
-    <details class="glass" data-q="who"><summary>Who are you?</summary>
-      <p>Hagen Simmons, the only person at Hubricon: applied mathematics at the University of North Texas, with a minor in actuarial science. The person who builds your models is the one on your calls and in your account — no outsourcing, no account managers. The method is published in full; the Teardown is how you evaluate it on your own numbers; the Profit Record is how you keep evaluating it every month. One person is also a risk, so here is the hedge in writing: your complete export — raw files, every model's output for your SKUs, your Profit Record with its "how we know" column — is yours on request, any day, free, inside one working day. Whoever runs your numbers next starts from the same page I did.</p></details>
-  </div>
-</section>
-
-<!-- ══════════════ CLOSE — the application ══════════════ -->
-<footer class="close" id="apply" data-reveal>
-  <canvas class="close-canvas" data-mesh="close" aria-hidden="true"></canvas>
-  <div class="edge edge-top" aria-hidden="true"></div>
-
-  <div class="close-inner">
-    <h2 class="reveal-words">Managed Profit is $6,000 a month, and the Record has to earn it every month.</h2>
-    <div class="clocks reveal-unit reveal-sub">
-      <p><b>Claim windows</b>Amazon's lost-inventory claims close in as little as 60 days, and nothing reopens a window that shut.</p>
-      <p data-until="2027-01-15"><b>October 15</b>Amazon's holiday peak fee card reprices every SKU from October 15 to January 14.</p>
-    </div>
-    <div class="gate gate-inline glass-strong reveal-unit reveal-sub" id="gate-inline" aria-label="Get your free Profit Teardown">
+<!-- ═══ THE APPLICATION ═══ -->
+<section class="close" id="apply" data-reveal>
+  <div class="close-in">
+    <h2>Your Proving Month starts with one 20&#8209;minute call.</h2>
+    <div class="gate gate-inline" id="gate-inline" role="region" aria-label="Start your free Proving Month">
       <noscript><p style="color:var(--ink-70)">The application needs JavaScript enabled to run.</p></noscript>
     </div>
   </div>
-
-  <div class="footer-bar">
-    <div class="footer-row">
-      <span class="footer-logo">HUBRICON</span>
-      <nav aria-label="Footer">
-        <a href="#teardown">60-second Teardown</a>
-        <a href="#record">The Profit Record</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#faq">FAQ</a>
-        <a href="/method">The method</a>
-        <a href="/results">Published results</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-      </nav>
-      <span>© 2026 Hubricon · www.hubricon.com</span>
+  <footer class="footer">
+    <div class="in">
+      <div><a class="nav-logo" href="#top">Hubric<em>o</em>n</a></div>
+      <div><h4>Product</h4><ul><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+      <p class="legal"><span data-proof-pending>No published results yet; the first posts when a client agrees to publish theirs. </span>Dollar figures on this page are our price, published vendor price lists, or arithmetic from named, interested sources, not results of ours. Sample tables are demo data. © 2026 Hubricon</p>
     </div>
-  </div>
-</footer>
+  </footer>
+</section>
 
 <!-- mobile sticky CTA -->
-<div class="sticky-cta glass-strong" id="sticky-cta" aria-hidden="true">
-  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">Get your Profit Teardown</a>
+<div class="sticky-cta" id="sticky-cta" aria-hidden="true">
+  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">Start your free Proving Month</a>
 </div>
 
 <!-- the gate, modal form -->
 <div class="gate-overlay" id="gate-overlay" hidden>
-  <div class="gate gate-modal glass-strong" role="dialog" aria-modal="true" aria-label="Get your Profit Teardown">
+  <div class="gate gate-modal" role="dialog" aria-modal="true" aria-label="Start your free Proving Month">
     <button class="gate-x" id="gate-x" aria-label="Close">✕</button>
     <div id="gate-modal-mount"></div>
   </div>
 </div>
-
-<!-- The 60-second Teardown, as a template: mounted under the hero, and again on
-     the below-the-bar screen of the application. -->
-<template id="qt-template">
-  <form class="qt-form" autocomplete="off" novalidate>
-    <div class="qt-toggle" role="group" aria-label="Platform">
-      <button type="button" class="qt-tog on" data-platform="amazon" aria-pressed="true">Amazon listing</button>
-      <button type="button" class="qt-tog" data-platform="shopify" aria-pressed="false">Shopify product</button>
-    </div>
-    <p class="qt-err" data-qt="stale" hidden></p>
-
-    <div class="qt-grid" data-qt="amazon">
-      <div class="qt-f c12">
-        <label data-for="qt-asin">ASIN <i>· optional</i></label>
-        <div class="qt-lookup"><input data-id="qt-asin" data-qt="asin" placeholder="B0…" maxlength="10" spellcheck="false" autocapitalize="characters"><button type="button" class="btn btn-glass" data-qt="asin-go">Look it up</button></div>
-        <small data-qt="asin-hint" hidden></small>
-      </div>
-      <div class="qt-f c3"><label data-for="qt-price">Price</label><input data-id="qt-price" data-qt="price" type="number" step="0.01" min="0.5" inputmode="decimal" placeholder="24.99"></div>
-      <div class="qt-f c3"><label data-for="qt-weight">Item weight</label>
-        <div class="qt-row"><input data-id="qt-weight" data-qt="weight" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="12.6"><select data-qt="wunit" aria-label="Weight unit"><option>oz</option><option>lb</option><option>g</option></select></div></div>
-      <div class="qt-f c6"><label data-for="qt-d1">Box, inches</label>
-        <div class="qt-row"><input data-id="qt-d1" data-qt="d1" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="12" aria-label="Length"><input data-qt="d2" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="8" aria-label="Width"><input data-qt="d3" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="2" aria-label="Height"></div></div>
-      <div class="qt-f c6"><label data-for="qt-cat">Category</label><select data-id="qt-cat" data-qt="category"></select></div>
-      <div class="qt-f c3"><label data-for="qt-bsr">Sales rank <i>· optional</i></label><input data-id="qt-bsr" data-qt="bsr" type="number" step="1" min="1" inputmode="numeric" placeholder="4500"></div>
-      <div class="qt-f c3"><label data-for="qt-cogs">Landed cost <i>· optional</i></label><input data-id="qt-cogs" data-qt="cogs" type="number" step="0.01" min="0" inputmode="decimal" placeholder="6.50"></div>
-    </div>
-
-    <div class="qt-grid" data-qt="shopify" hidden>
-      <div class="qt-f c12">
-        <label data-for="qt-url">Product URL <i>· optional</i></label>
-        <div class="qt-lookup"><input data-id="qt-url" data-qt="url" placeholder="https://yourstore.com/products/…" maxlength="300" spellcheck="false" inputmode="url"><button type="button" class="btn btn-glass" data-qt="url-go">Look it up</button></div>
-        <small data-qt="url-hint" hidden></small>
-      </div>
-      <div class="qt-f c3"><label data-for="qt-sprice">Price</label><input data-id="qt-sprice" data-qt="s-price" type="number" step="0.01" min="0.5" inputmode="decimal" placeholder="32.00"></div>
-      <div class="qt-f c3"><label data-for="qt-sweight">Shipping weight</label>
-        <div class="qt-row"><input data-id="qt-sweight" data-qt="s-weight" type="number" step="0.01" min="0.05" inputmode="decimal" placeholder="17.2"><select data-qt="s-wunit" aria-label="Weight unit"><option>oz</option><option>lb</option><option>g</option></select></div></div>
-      <div class="qt-f c3"><label data-for="qt-ship">You charge to ship</label><input data-id="qt-ship" data-qt="s-ship" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0"></div>
-      <div class="qt-f c3"><label data-for="qt-orders">Orders a month</label><input data-id="qt-orders" data-qt="s-orders" type="number" step="1" min="1" inputmode="numeric" placeholder="400"></div>
-      <div class="qt-f c6"><label data-for="qt-plan">Shopify plan</label><select data-id="qt-plan" data-qt="s-plan"></select></div>
-      <div class="qt-f c6"><label data-for="qt-scogs">Landed cost <i>· optional</i></label><input data-id="qt-scogs" data-qt="s-cogs" type="number" step="0.01" min="0" inputmode="decimal" placeholder="9.00"></div>
-    </div>
-
-    <div class="qt-foot">
-      <button type="submit" class="btn btn-amber" data-qt="run">
-        Run the Teardown
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-      </button>
-      <span>Runs in your browser. Nothing is stored.</span>
-    </div>
-    <p class="qt-err" data-qt="err" role="alert" hidden></p>
-
-    <div class="qt-result" data-qt="result" hidden>
-      <div class="qt-tiles" data-qt="tiles" aria-live="polite"></div>
-      <p class="qt-line">That was one <span data-qt="noun">listing</span> off public pages.<span data-qt="line-more"> The full Teardown runs every SKU you have, in 24 hours.</span></p>
-      <div class="qt-after">
-        <a class="btn btn-amber" data-qt="cta" data-calendly="audit" data-section="teardown-result" href="#apply">
-          Get your Profit Teardown
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </a>
-        <a class="qt-more" data-qt="more" href="/teardown">The full breakdown of this <span data-qt="noun2">listing</span> →</a>
-      </div>
-    </div>
-  </form>
-</template>
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "Do you need access to my Seller Central or Shopify admin?", "acceptedAnswer": {"@type": "Answer", "text": "One permissions-scoped seat on whichever platform you run — that's the whole setup. On Amazon: Reports (view) lets the models read your numbers; Pricing and Campaign Manager (view & edit) let us make the moves. On Shopify: a collaborator account with Orders, Analytics, Reports and Marketing to view, and Products and Discounts to edit — nothing under Settings, Finances or Payouts. Banking and account settings stay untouchable on both, and you revoke the seat in one click, any day. Prefer not to grant it? Send a handful of CSV exports through a secure upload page instead."}},
-    {"@type": "Question", "name": "What data do I need to send?", "acceptedAnswer": {"@type": "Answer", "text": "About fifteen minutes of exports, once. On Amazon: the Business Report, SKU Economics, your advertising reports and an FBA inventory snapshot. On Shopify: orders, products with cost per item, payouts, and your Meta or Google ads exports. Your private upload page lists each one with the exact clicks to get it. The one thing no platform knows is your costs: a one-row-per-SKU sheet (unit cost, freight, fulfilment, lead times), five minutes, estimates welcome. After that the seat does the rest."}},
-    {"@type": "Question", "name": "What exactly does the Profit Record count?", "acceptedAnswer": {"@type": "Answer", "text": "Every move we make — a price step, a search term cut, a reorder, a claim filed — written down with the dollars we expect before it goes live, then measured from your own later exports: on the exact line, capped at what we promised, misses included, Amazon claims only when Amazon pays. Attribution tells you which ad made the sale; the Profit Record tells you which decision made the profit. It is also what voids our invoice, and you can export it any day. An Amazon claim sits under \"found\" from the day we file it and moves to \"proven\" only when Amazon pays — never before. Reorders are recorded, never claimed as dollars — a stockout you didn't have can't be measured. A fourth outcome exists: \"unmeasurable\" — we could not isolate what a move earned, so nothing is banked and the row says so. Month one, your elasticity says \"not enough data.\" Month six, every price, reorder and ad budget in your account has a receipt behind it and a confidence interval under it."}},
-    {"@type": "Question", "name": "Can anything move in my account without my yes?", "acceptedAnswer": {"@type": "Answer", "text": "On the 45-minute kickoff call you get your 90-day plan: quarterly targets for profit, revenue, and margin, plus the three or four moves that get there. On the same call you set the bounds we act inside without asking — and exactly where your veto sits. After that: one email, three days before anything moves, with every planned move and its expected dollars. Say no to any of them by reply. Silence after three days is a yes only for moves inside the bounds you set on the kickoff call — a bigger price step, a new campaign or a reorder waits for your written yes — and if three weeks pass without one it lapses rather than going live. If the email announcing a planned move doesn't go out, nothing moves — the veto window only opens on a sent notice, and that is code, not policy."}},
-    {"@type": "Question", "name": "What's the catch in month one?", "acceptedAnswer": {"@type": "Answer", "text": "The Teardown costs nothing, and month one of Managed Profit — the Proving Month — is free. The catch is honest: if we deliver, we ask for a short testimonial and permission to publish your results with the numbers anonymized. You also get a link of your own: a founder you send gets the same month free, and when their first invoice stands after their day 30, your next month is on us. No obligation, and nothing renews against your will."}},
-    {"@type": "Question", "name": "How much of my time does this take?", "acceptedAnswer": {"@type": "Answer", "text": "One 20-minute application call, two minutes granting the seat or fifteen minutes of exports, five minutes on the cost sheet, a 45-minute kickoff for your 90-day plan — then about five to ten minutes every two weeks: one email three days before anything goes live, and a short video after. The modeling, the measurement, and the moves all happen on our side."}},
-    {"@type": "Question", "name": "How long until I see value?", "acceptedAnswer": {"@type": "Answer", "text": "Your Teardown is back within 24 hours of your files landing or your seat going live. The first moves are made inside the first two weeks, and price steps read out in days because Buy Box share, or conversion rate on Shopify, is watched while the step is live. Your Profit Record is re-measured every Monday from your latest exports, so the first proven dollars land on the first Monday after a move has had at least two weeks to read out."}},
-    {"@type": "Question", "name": "What are the contract terms?", "acceptedAnswer": {"@type": "Answer", "text": "$6,000 a month, flat, month-to-month, cancel anytime. Month one is free. Every invoice after that is proven or void: it stands only if everything your Profit Record has proven, plus found and filed, since day one covers everything we've billed, that invoice included — otherwise it's void, or credited if already paid. Invoiced by email via ACH, net-7 — no card on file, so nothing can renew against your will. Never a percentage of your ad spend. Your data and your Profit Record export free, anytime. Every term is in writing in the terms."}},
-    {"@type": "Question", "name": "Why $3M?", "acceptedAnswer": {"@type": "Answer", "text": "The floor comes from the guarantee. An invoice stands only if your Profit Record covers everything billed since day one. On the inputs published in the pricing breakdown — 20% of ad spend leaking, 1% of FBA revenue recoverable, ad spend scaled from the $25k-a-month account on $5M — a $2M brand has roughly $3,600 a month to find, and a $3M brand roughly $5,400. Both sit at or under the $6,000 bar. Below $3M every invoice would void and the service would run unpaid indefinitely, so the application books calls from $3M up."}},
-    {"@type": "Question", "name": "What if you find nothing worth fixing?", "acceptedAnswer": {"@type": "Answer", "text": "We tell you exactly that, and you keep the full report. A Teardown that honestly clears you is a good outcome for you and cheap marketing for us."}},
-    {"@type": "Question", "name": "Why not Sellerboard, Helium 10, a PPC agency or a fractional CFO?", "acceptedAnswer": {"@type": "Answer", "text": "Keep your tools — they're good mirrors. But they report what happened. None of the ones we compared runs stockout odds, none derives what your target ACoS or ROAS should be, none makes a move, and none can tell you what a move earned. The average brand past a million a year already runs 5.4 of them. We're the layer that turns their numbers into decisions, makes them in your account, and proves what each one earned — and the target ACoS, the reorder point and the price your other tools and people run on come from here. Agencies bill a percentage of your ad spend — an incentive problem — and get fired the same way you fired yours: nobody could prove what they earned. Fractional CFOs run $3,000–$12,000 a month at P&L altitude without SKU-level modeling. We sit in the gap: SKU-level math, moves made in your account, every one proven on the Record, flat fee."}},
-    {"@type": "Question", "name": "Who are you?", "acceptedAnswer": {"@type": "Answer", "text": "Hagen Simmons, the only person at Hubricon: applied mathematics at the University of North Texas, with a minor in actuarial science. The person who builds your models is the one on your calls and in your account — no outsourcing, no account managers. The method is published in full; the Teardown is how you evaluate it on your own numbers; the Profit Record is how you keep evaluating it every month. One person is also a risk, so here is the hedge in writing: your complete export — raw files, every model's output for your SKUs, your Profit Record with its \"how we know\" column — is yours on request, any day, free, inside one working day. Whoever runs your numbers next starts from the same page I did."}}
+    {"@type": "Question", "name": "Who is it for?", "acceptedAnswer": {"@type": "Answer", "text": "Your own brand on Amazon, Shopify or both, $3M–$20M a year, 10+ SKUs. Under $3M or reselling, the calendar won't book you."}},
+    {"@type": "Question", "name": "What can move without my yes?", "acceptedAnswer": {"@type": "Answer", "text": "Only moves inside the bounds you set at kickoff, after an email with the expected dollars and three days to say no."}},
+    {"@type": "Question", "name": "What about my tools and my agency?", "acceptedAnswer": {"@type": "Answer", "text": "Keep them. Our seat reads reports and edits pricing and campaigns; banking stays locked."}},
+    {"@type": "Question", "name": "What if you find nothing worth fixing?", "acceptedAnswer": {"@type": "Answer", "text": "We say so. You keep the Teardown. You owe nothing."}}
   ]
 }
 </script>
 
 <script>
 "use strict";
+document.documentElement.classList.add("js");
 
-/* ── Vercel Web Analytics (enable in the Vercel dashboard) ── */
+/* ── Vercel Web Analytics ── */
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
 
-const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>`;
 
 /* ── The gate: the application every CTA opens.
@@ -1050,27 +544,26 @@ const GATE_QUESTIONS = [
 ];
 
 /* The floor is derived from the guarantee, not chosen. An invoice stands only
-   if the Profit Record covers everything billed since day one; on the page's own
+   if the Profit Record covers everything billed since day one; on the site's own
    published inputs a brand under $3M has less than $6,000 a month to find, so its
    invoice would void every month. A brand selling someone else's label cannot
    take the price steps a Record is built on. Either one gets the below-the-bar
-   screen instead of the calendar. "Mixed / other" still books: it can include an
-   own brand, and the call is where that gets settled. There is no exceptions
-   path here on purpose; an exception happens by email. */
+   screen instead of the calendar. "Mixed / other" still books. There is no
+   exceptions path here on purpose; an exception happens by email. */
 function belowBar(a) {
   if (a.rev === "Under $3M") return "revenue";
   if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "model";
   return null;
 }
 
-/* Capital Position, the $6,000-a-year tier, lives at /position once it is built.
-   Set this to "/position" then; until it is, the below-the-bar screen carries the
-   60-second Teardown and an address for the weekly position page instead. */
+/* Capital Position lives at /position once it is built. Until then the
+   below-the-bar screen carries the 60-second Teardown and an address for the
+   weekly position page instead. */
 const CAPITAL_POSITION_URL = null;
 
 /* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
-   rides the booking beside the platform, so the operator can credit the sender
-   when this brand clears its own day 30. */
+   rides the booking, so the operator can credit the sender when this brand
+   clears its own day 30. */
 const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
 try {
   const incoming = new URLSearchParams(location.search).get("ref");
@@ -1089,18 +582,18 @@ function auditUrl(a) {
 
 function renderGate(mount, section, onBook, title) {
   mount.innerHTML = `
-    <p class="gate-eyebrow">Application · two minutes, then pick a time</p>
-    <h3 class="gate-title">${title}</h3>
-    <p class="gate-sub">Four answers, so the call starts from your numbers. Then you book the 20-minute Teardown call on the spot.</p>
+    <p class="gate-eyebrow">Two minutes, then pick a time</p>
+    ${title ? `<h3 class="gate-title">${title}</h3>` : ""}
+    <p class="gate-sub">Four answers, so the call starts from your numbers.</p>
     <form>
       ${GATE_QUESTIONS.map(q => `
         <fieldset>
           <legend>${q.legend}</legend>
-          <div class="chips">
+          <div class="chips-q">
             ${q.options.map(o => `<label><input type="radio" name="${q.key}" value="${o}"><span>${o}</span></label>`).join("")}
           </div>
         </fieldset>`).join("")}
-      <div class="cta-row" style="justify-content:flex-start">
+      <div class="cta-row">
         <button class="btn btn-amber" type="submit" disabled>Continue to the calendar ${ARROW}</button>
       </div>
     </form>`;
@@ -1125,11 +618,11 @@ function renderGate(mount, section, onBook, title) {
 const BELOW = {
   revenue: {
     title: "Under $3M, the bar can't be cleared.",
-    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. On the inputs this site publishes, a brand under $3M a year has less than $5,400 a month of leaking ad spend and unpaid claims to find. That is under the $6,000 bar, so every invoice would void. A call would not change the arithmetic.",
+    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. Under $3M a year, our published inputs put ad bleed and unpaid claims below $5,400 a month. That is under the $6,000 bar, and a call would not move it.",
   },
   model: {
     title: "On someone else's brand, the bar can't be cleared.",
-    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. Price steps need a brand you own and can price. On wholesale or arbitrage inventory the listing and the price belong to someone else, so the Record can't reliably cover $6,000 a month, and every invoice would void. A call would not change the arithmetic.",
+    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. Price steps need a brand you own and can price. On wholesale or arbitrage inventory, the listing belongs to someone else and the Buy Box sets the price. Without price steps the Record can't be counted on to cover $6,000 a month, so the calendar doesn't book resellers. A call would not change that.",
   },
 };
 
@@ -1161,30 +654,19 @@ function renderBelowBar(mount, section, reason, a) {
     <h3 class="gate-title">${b.title}</h3>
     <p class="gate-sub">${b.why}</p>
     ${amazon ? `<div class="gate-offer">
-      <p class="gate-lbl">Recovery Only · no retainer</p>
+      <p class="gate-lbl">Recovery Only · no monthly fee</p>
       <p class="gate-sub">We file the reimbursements Amazon owes you and did not pay on its own. You pay 25% of what Amazon actually pays, and nothing in a month where nothing lands.</p>
       ${captureForm("recovery", section, "Your email, for the upload page", "Start Recovery Only")}
     </div>` : ""}
     ${CAPITAL_POSITION_URL
-      ? `<div class="cta-row" style="justify-content:flex-start;margin-top:24px"><a class="btn btn-amber" href="${CAPITAL_POSITION_URL}">See Capital Position ${ARROW}</a></div>`
+      ? `<div class="cta-row" style="margin-top:24px"><a class="btn btn-amber" href="${CAPITAL_POSITION_URL}">See Capital Position ${ARROW}</a></div>`
       : `<div class="gate-offer">
       <p class="gate-lbl">Price one of your listings</p>
-      <div class="qt qt-bare" data-qt-mount></div>
-      ${captureForm("position", section, "The weekly position page, by email", "Send it to me")}
+      <p class="gate-sub">The 60-second Teardown prices one listing off the published rate card, in your browser. Nothing stored.</p>
+      <a class="btn btn-glass" href="/teardown">Open the 60-second Teardown ${ARROW}</a>
+      ${captureForm("position", section, "The weekly position page, when it opens", "Tell me when")}
     </div>`}`;
   mount.closest(".gate-modal")?.scrollTo(0, 0);
-
-  const toolMount = mount.querySelector("[data-qt-mount]");
-  if (toolMount) {
-    const mountTool = () => window.mountQuickTeardown(toolMount, { section: "below-bar", cta: false });
-    if (window.mountQuickTeardown) mountTool();
-    else {
-      addEventListener("quick-teardown-ready", mountTool, { once: true });
-      setTimeout(() => {
-        if (!toolMount.childElementCount) toolMount.innerHTML = `<p class="gate-sub"><a href="/teardown" style="color:var(--amber)">Open the 60-second Teardown →</a></p>`;
-      }, 5000);
-    }
-  }
 
   mount.querySelectorAll(".gate-capture").forEach(capture => {
     const intent = capture.dataset.intent;
@@ -1218,6 +700,7 @@ function renderBelowBar(mount, section, reason, a) {
 /* every CTA opens the modal gate; href="#apply" scrolls to the inline gate as fallback */
 const overlay = document.getElementById("gate-overlay");
 const modalMount = document.getElementById("gate-modal-mount");
+let gateTrigger = null;
 function openGate(section) {
   track("gate_open", { section });
   renderGate(modalMount, section, async url => {
@@ -1228,25 +711,28 @@ function openGate(section) {
     } else {
       location.href = url; /* widget blocked — go straight to Calendly */
     }
-  }, "Four answers, then the call.");
+  }, "Start your free Proving Month.");
   overlay.hidden = false;
+  for (const el of document.body.children) if (el !== overlay) el.inert = true;
   document.body.style.overflow = "hidden";
   modalMount.querySelector("input")?.focus();
 }
 function closeGate() {
   overlay.hidden = true;
+  for (const el of document.body.children) el.inert = false;
   document.body.style.overflow = "";
+  if (gateTrigger) { gateTrigger.focus(); gateTrigger = null; }
 }
 document.getElementById("gate-x").addEventListener("click", closeGate);
 overlay.addEventListener("click", ev => { if (ev.target === overlay) closeGate(); });
 addEventListener("keydown", ev => { if (ev.key === "Escape" && !overlay.hidden) closeGate(); });
 
-/* Delegated, because the Teardown's result CTA is cloned in after load. */
 document.addEventListener("click", ev => {
   const a = ev.target.closest?.("[data-calendly]");
   if (!a) return;
   ev.preventDefault();
   track("cta_click", { section: a.dataset.section || "" });
+  gateTrigger = a;
   openGate(a.dataset.section || "");
 });
 
@@ -1257,7 +743,7 @@ window.addEventListener("message", e => {
   }
 });
 
-/* inline gate in the close section, rendered when it scrolls near */
+/* inline gate in the close, rendered when it scrolls near */
 const inlineGate = document.getElementById("gate-inline");
 if (inlineGate) {
   new IntersectionObserver(([e], obs) => {
@@ -1275,31 +761,29 @@ if (inlineGate) {
       } else {
         location.href = url;
       }
-    }, "Get your free Profit Teardown.");
+    }, "");
   }, { rootMargin: "600px" }).observe(inlineGate);
 }
 
-/* FAQ and pricing-breakdown engagement */
+/* FAQ opens */
 document.querySelectorAll(".faq details").forEach(d => {
   d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q }); });
 });
-document.getElementById("why-6000")?.addEventListener("toggle", ev => { if (ev.target.open) track("why_6000_open", {}); });
 
-/* mobile sticky CTA — appears once the hero scrolls out */
+/* mobile sticky CTA — appears once the hero scrolls out, hides over the application */
 const hero = document.getElementById("top");
 const sticky = document.getElementById("sticky-cta");
 if (hero && sticky) {
-  new IntersectionObserver(([e]) => {
-    sticky.classList.toggle("show", !e.isIntersecting);
-    sticky.setAttribute("aria-hidden", e.isIntersecting ? "true" : "false");
-  }, { threshold: 0.05 }).observe(hero);
+  const close = document.getElementById("apply");
+  let heroIn = true, closeIn = false;
+  const sync = () => {
+    const show = !heroIn && !closeIn;
+    sticky.classList.toggle("show", show);
+    sticky.setAttribute("aria-hidden", show ? "false" : "true");
+  };
+  new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(hero);
+  if (close) new IntersectionObserver(([e]) => { closeIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(close);
 }
-
-/* The peak card is a fact with a date on it, not a countdown: the line says
-   when the card runs, and removes itself once the window has closed. */
-document.querySelectorAll("[data-until]").forEach(el => {
-  if (Date.now() >= Date.parse(el.dataset.until)) el.hidden = true;
-});
 
 /* The two anon-callable functions in the schema. Both re-check consent on every read. */
 const PUBLISHABLE = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
@@ -1313,8 +797,8 @@ async function rpc(name) {
   } catch (e) { return null; }
 }
 
-/* ── The founding-cohort line reads forward. Once a client has consented and a
-      result is published, the "first result posts when…" clause is spent. ── */
+/* Once a client has consented and a result is published, the "no published
+   results yet" clause is spent. */
 (async () => {
   const pending = document.querySelector("[data-proof-pending]");
   if (!pending) return;
@@ -1322,10 +806,9 @@ async function rpc(name) {
   if (Array.isArray(rows) && rows.length) pending.hidden = true;
 })();
 
-/* ── 03b · One case study, told in full, or nothing. public_case_study() returns
-      a row only for a real client whose Proving Month closed, who wrote the
-      before-state and the quote, and who said yes to publishing. No row, no
-      section: nothing stands in its place. ── */
+/* One case study, told in full, or nothing. public_case_study() returns a row
+   only for a real client whose Proving Month closed, who wrote the before-state
+   and the quote, and who said yes to publishing. No row, no section. */
 (async () => {
   const sect = document.getElementById("case");
   const cs = sect ? await rpc("public_case_study") : null;
@@ -1337,7 +820,7 @@ async function rpc(name) {
   $("eyebrow").textContent = `${cs.brand || `A ${cs.industry || "private-label"} brand`}${closed ? ` · Proving Month closed ${closed}` : ""}`;
   $("before").textContent = cs.before;
   $("numbers").replaceChildren(...cs.numbers.map(n => {
-    const card = el("div", "case-number glass");
+    const card = el("div", "case-number");
     card.append(el("span", "k", n.label), el("b", null, usd(n.amount_usd)), el("p", null, n.method));
     return card;
   }));
@@ -1348,7 +831,7 @@ async function rpc(name) {
     const tr = el("tr");
     const measured = r.measured == null ? "— not yet" : usd(r.measured);
     tr.append(el("td", null, r.move), el("td", "num", usd(r.expected)),
-              el("td", `num ${r.measured == null ? "pend" : r.miss ? "miss" : "pos"}`, measured), el("td", "how", r.how));
+              el("td", `num ${r.measured == null ? "pend" : r.miss ? "miss" : "pos"}`, measured), el("td", null, r.how));
     return tr;
   }));
   $("quote").textContent = cs.quote;
@@ -1356,235 +839,11 @@ async function rpc(name) {
   track("case_study_shown", { named: Boolean(cs.brand) });
 })();
 
-/* ============================================================
-   MOTION: word splitting + IntersectionObserver
-   ============================================================ */
-document.querySelectorAll(".reveal-words").forEach(el => {
-  const words = el.textContent.trim().split(/\s+/);
-  el.textContent = "";
-  el.setAttribute("aria-label", words.join(" "));
-  words.forEach((w, i) => {
-    const s = document.createElement("span");
-    s.className = "w";
-    s.textContent = w;
-    s.style.transitionDelay = (i * 80) + "ms";
-    s.setAttribute("aria-hidden", "true");
-    el.appendChild(s);
-    if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
-  });
-});
-
-/* A section taller than the viewport can never show 18% of itself at once, so
-   for those the threshold is scaled to "18% of the viewport is covered". */
-const REVEAL_RATIO = 0.18;
-document.querySelectorAll("[data-reveal]").forEach(s => {
-  const threshold = Math.min(REVEAL_RATIO, REVEAL_RATIO * innerHeight / Math.max(1, s.offsetHeight));
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add("in"); io.disconnect(); }
-    });
-  }, { threshold });
-  io.observe(s);
-});
-
-/* ============================================================
-   DATA-MESH BACKGROUNDS (canvas — self-contained)
-   ============================================================ */
-function dataMesh(canvas, cfg) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const DPR = Math.min(devicePixelRatio || 1, 2);
-  let W = 0, H = 0, pts = [], raf = 0, running = false;
-
-  function resize() {
-    const r = canvas.getBoundingClientRect();
-    W = r.width; H = r.height;
-    canvas.width = W * DPR; canvas.height = H * DPR;
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    const n = Math.round((W * H) / cfg.sparsity);
-    pts = Array.from({ length: n }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - .5) * cfg.speed, vy: (Math.random() - .5) * cfg.speed,
-      a: Math.random() < cfg.amberRatio
-    }));
-  }
-
-  function frame() {
-    ctx.clearRect(0, 0, W, H);
-    const R = cfg.link, R2 = R * R;
-    for (const p of pts) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
-      if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
-    }
-    ctx.lineWidth = 1;
-    for (let i = 0; i < pts.length; i++) {
-      const a = pts[i];
-      for (let j = i + 1; j < pts.length; j++) {
-        const b = pts[j];
-        const dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
-        if (d2 < R2) {
-          const t = 1 - Math.sqrt(d2) / R;
-          ctx.strokeStyle = (a.a && b.a) ? `hsl(45 100% 55% / ${t * .14})` : `hsl(220 50% 80% / ${t * cfg.lineAlpha})`;
-          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-        }
-      }
-    }
-    for (const p of pts) {
-      ctx.fillStyle = p.a ? "hsl(45 100% 55% / .55)" : "hsl(220 50% 85% / .3)";
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.a ? 1.6 : 1.1, 0, 7); ctx.fill();
-    }
-    if (running && !REDUCED) raf = requestAnimationFrame(frame);
-  }
-
-  resize();
-  addEventListener("resize", () => { resize(); if (!running || REDUCED) frame(); });
-  frame(); /* always paint at least one frame */
-
-  new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !REDUCED) { if (!running) { running = true; raf = requestAnimationFrame(frame); } }
-    else { running = false; cancelAnimationFrame(raf); }
-  }).observe(canvas);
-}
-
-dataMesh(document.querySelector('[data-mesh="hero"]'),  { sparsity: 11000, link: 130, speed: .32, lineAlpha: .075, amberRatio: .16 });
-dataMesh(document.querySelector('[data-mesh="close"]'), { sparsity: 13000, link: 125, speed: .3,  lineAlpha: .07,  amberRatio: .2  });
-</script>
-
-<script type="module">
-import * as fees from "/lib/fees.js";
-import { amazonTiles, shopifyTiles, esc } from "/lib/teardown_tiles.js";
-
-/* ── The 60-second Teardown, embedded ───────────────────────────────────────
-   The same arithmetic as /teardown (lib/fees.js on /ratecard.json, in the
-   browser) and the same three headline tiles (lib/teardown_tiles.js), cut to
-   what a founder can read off one listing on a phone. The six sections, the
-   charts and "send me this" stay on /teardown, one link away, with the inputs
-   carried in the hash. Mounted under the hero, and again on the below-the-bar
-   screen of the application, which has no calendar to offer. */
-const TODAY = new Date();
-const CARD = fetch("/ratecard.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-const TEMPLATE = document.getElementById("qt-template");
-const positive = v => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : null; };
-const ounces = (v, unit) => {
-  const w = positive(v);
-  if (!w) return null;
-  return Math.round((unit === "lb" ? w * 16 : unit === "g" ? w / 28.3495 : w) * 100) / 100;
-};
-let mounts = 0;
-
-async function mountQuickTeardown(root, { section = "teardown", cta = true } = {}) {
-  const n = ++mounts;
-  root.replaceChildren(TEMPLATE.content.cloneNode(true));
-  root.querySelectorAll("[data-id]").forEach(el => { el.id = `${el.dataset.id}-${n}`; });
-  root.querySelectorAll("[data-for]").forEach(el => { el.htmlFor = `${el.dataset.for}-${n}`; });
-  const $ = name => root.querySelector(`[data-qt="${name}"]`);
-  if (!cta) { $("cta").remove(); $("line-more").remove(); }
-
-  const rc = await CARD;
-  const staleMsg = !rc ? "The rate card didn't load. Reload the page to price a listing." : fees.stale(rc, TODAY) ? `This won't price anything today: ${fees.stale(rc, TODAY)}.` : null;
-  if (staleMsg) { $("stale").hidden = false; $("stale").textContent = staleMsg; $("run").disabled = true; return; }
-
-  const cats = Object.keys(rc.fba?.referral_by_category || {}).sort();
-  $("category").innerHTML = ['<option value="">Choose a category…</option>',
-    ...cats.map(c => `<option value="${esc(c)}">${esc(c.replace(/\b\w/g, m => m.toUpperCase()))}</option>`),
-    '<option value="other">Other (15% referral)</option>'].join("");
-  $("s-plan").innerHTML = Object.entries(rc.shopify?.payments || {}).map(([k, v]) =>
-    `<option value="${esc(k)}"${k === rc.shopify.default_plan ? " selected" : ""}>${esc(k[0].toUpperCase() + k.slice(1))} · ${(v.rate * 100).toFixed(v.rate * 100 % 1 ? 2 : 1)}% + ${Math.round(v.fixed * 100)}¢</option>`).join("");
-
-  let platform = "amazon";
-  const shop = { compareAt: null, share: null };
-  const hint = (el, cls, text) => { el.hidden = false; el.className = cls; el.textContent = text; };
-
-  root.querySelectorAll(".qt-tog").forEach(b => b.addEventListener("click", () => {
-    platform = b.dataset.platform;
-    root.querySelectorAll(".qt-tog").forEach(t => { const on = t === b; t.classList.toggle("on", on); t.setAttribute("aria-pressed", String(on)); });
-    $("amazon").hidden = platform !== "amazon";
-    $("shopify").hidden = platform !== "shopify";
-    $("result").hidden = true;
-    $("err").hidden = true;
-  }));
-
-  $("asin-go").addEventListener("click", async () => {
-    const asin = $("asin").value.trim().toUpperCase();
-    const h = $("asin-hint");
-    if (!/^[A-Z0-9]{10}$/.test(asin)) return hint(h, "bad", "An ASIN is ten letters and digits, like B0C1234XYZ.");
-    hint(h, "", "Looking…");
-    try {
-      const r = await fetch(`/api/quick?asin=${asin}`);
-      if (!r.ok) return hint(h, "", "We haven't read that listing yet. The numbers are on its page under Product information.");
-      const d = await r.json();
-      if (d.price) $("price").value = d.price;
-      if (d.weight_oz) { $("weight").value = d.weight_oz; $("wunit").value = "oz"; }
-      const dims = fees.parseDims(d.dims);
-      if (dims) { $("d1").value = dims[0]; $("d2").value = dims[1]; $("d3").value = dims[2]; }
-      const cat = String(d.category || "").toLowerCase();
-      if (cats.includes(cat)) $("category").value = cat;
-      if (d.bsr) $("bsr").value = d.bsr;
-      hint(h, "ok", `Found it${d.title ? `: ${d.title.split(" ").slice(0, 8).join(" ")}` : ""}. Check the numbers, then run it.`);
-    } catch { hint(h, "bad", "Could not reach the lookup. Type the numbers instead."); }
-  });
-
-  $("url-go").addEventListener("click", async () => {
-    const url = $("url").value.trim();
-    const h = $("url-hint");
-    if (!/^https?:\/\/[^\s/]+\/products\/[^\s/?#]+/i.test(url)) return hint(h, "bad", "Paste the product's own URL. It ends in /products/<handle>.");
-    hint(h, "", "Reading the store's public product JSON…");
-    try {
-      const r = await fetch(`/api/quick?product=${encodeURIComponent(url)}`);
-      const d = await r.json();
-      if (!r.ok || !d.found) return hint(h, "", d.reason || "The store did not answer. Type the numbers from the variant in your admin.");
-      if (d.price) $("s-price").value = d.price;
-      if (d.weight_oz) { $("s-weight").value = d.weight_oz; $("s-wunit").value = "oz"; }
-      shop.compareAt = Number(d.compare_at_price) || null;
-      shop.share = d.catalogue_discount_share ?? null;
-      hint(h, "ok", `Found it${d.title ? `: ${d.title.split(" ").slice(0, 8).join(" ")}` : ""}. Add your orders, then run it.`);
-    } catch { hint(h, "bad", "Could not reach the lookup. Type the numbers instead."); }
-  });
-
-  root.querySelector("form").addEventListener("submit", ev => {
-    ev.preventDefault();
-    const err = $("err");
-    let tiles, link, noun;
-    if (platform === "shopify") {
-      const inputs = {
-        handle: $("url").value.trim().slice(0, 300) || null, price: positive($("s-price").value), compareAtPrice: shop.compareAt,
-        weightOz: ounces($("s-weight").value, $("s-wunit").value), units: 1, shipCharge: Math.max(0, Number($("s-ship").value) || 0),
-        plan: $("s-plan").value || "basic", thirdParty: false, orders: positive($("s-orders").value), cogs: positive($("s-cogs").value),
-        catalogueShare: shop.share,
-      };
-      if (!inputs.price || !inputs.weightOz) { err.hidden = false; err.textContent = "A price and a shipping weight are the minimum."; return; }
-      tiles = shopifyTiles(fees.analyseShopify(rc, inputs));
-      link = "/teardown" + fees.resultHashShopify(inputs);
-      noun = "product";
-    } else {
-      const asin = $("asin").value.trim().toUpperCase();
-      const d = [$("d1").value, $("d2").value, $("d3").value].map(Number);
-      const inputs = {
-        asin: /^[A-Z0-9]{10}$/.test(asin) ? asin : null, price: positive($("price").value),
-        itemWeightOz: ounces($("weight").value, $("wunit").value), dims: d.every(x => x > 0) ? d : null,
-        category: $("category").value === "other" ? "" : $("category").value, bsr: positive($("bsr").value), cogs: positive($("cogs").value),
-      };
-      if (!inputs.price || !inputs.itemWeightOz) { err.hidden = false; err.textContent = "A sale price and an item weight are the minimum."; return; }
-      tiles = amazonTiles(rc, fees.analyse(rc, inputs, TODAY), TODAY);
-      link = "/teardown" + fees.resultHash(inputs);
-      noun = "listing";
-    }
-    err.hidden = true;
-    $("tiles").innerHTML = tiles;
-    $("noun").textContent = noun;
-    $("noun2").textContent = noun;
-    $("more").href = link;
-    const result = $("result");
-    result.hidden = false;
-    result.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
-    window.track?.("quick_teardown_run", { section, platform });
-  });
-}
-
-window.mountQuickTeardown = mountQuickTeardown;
-document.querySelectorAll("[data-quick-teardown]").forEach(el => mountQuickTeardown(el, { section: el.dataset.section }));
-dispatchEvent(new Event("quick-teardown-ready"));
+/* motion: one fade per section */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); } });
+}, { threshold: 0.06 });
+document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
