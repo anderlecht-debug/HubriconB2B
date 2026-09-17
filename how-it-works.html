@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the work is done, and how we check it | Hubricon</title>
+<meta name="description" content="From application to day 30: what happens to your files, how a move is made, how a dollar is graded, how the engine checks itself, what we got wrong and withdrew, and what it cannot tell you. Hubricon has no client results yet; simulated and hypothetical figures are labelled where they appear.">
+<link rel="canonical" href="https://www.hubricon.com/how-it-works">
+<meta name="theme-color" content="#050A1F">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/how-it-works">
+<meta property="og:title" content="How the work is done, and how we check it — Hubricon">
+<meta property="og:description" content="The whole process in the open: files, moves, grading, the engine's own checks, what we withdrew, and what it cannot tell you. No client results; every simulated figure is labelled.">
+<style>
+/* Same tokens and type as results.html: Iowan Old Style headings, system sans body,
+   amber on navy. No web fonts, no scripts, no external requests. */
+:root{color-scheme:dark;--bg:#050A1F;--panel:hsl(228 40% 10%);--hair:hsl(222 40% 60% / .16);--ink:hsl(222 30% 96%);
+--soft:hsl(222 22% 78%);--faint:hsl(222 16% 58%);--amber:#ffc000;--ok:hsl(150 58% 58%)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--soft);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:0 20px 80px;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
+.wrap{max-width:860px;margin:0 auto}
+a{color:var(--amber);text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
+b,strong{color:var(--ink);font-weight:600}
+.skip{position:absolute;left:-9999px;top:8px;background:var(--amber);color:#1a1205;padding:8px 14px;border-radius:8px;font-weight:600;text-decoration:none}
+.skip:focus{left:16px;z-index:10}
+
+/* nav: the teardown page's markup, in this page's type */
+.nav{max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 0 0}
+.nav-logo{font:500 22px/1 "Iowan Old Style",Georgia,serif;color:var(--ink);text-decoration:none;letter-spacing:.01em}
+.nav-logo em{color:var(--amber);font-style:normal}
+.nav-links{display:flex;gap:20px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.nav-links a{color:var(--faint);text-decoration:none}
+.nav-links a:hover{color:var(--ink)}
+
+.head{padding:44px 0 0}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--faint)}
+h1{font:500 clamp(30px,5.4vw,46px)/1.1 "Iowan Old Style",Georgia,serif;color:var(--ink);margin:10px 0 16px;letter-spacing:-.01em;max-width:20ch}
+h2{font:500 clamp(24px,3.6vw,31px)/1.2 "Iowan Old Style",Georgia,serif;color:var(--ink);margin:0 0 14px;letter-spacing:-.005em}
+h3{font-size:17px;line-height:1.35;font-weight:600;color:var(--ink);margin:34px 0 8px}
+.lede{font-size:17.5px;max-width:62ch;margin-bottom:14px}
+p{max-width:68ch;margin:0 0 14px}
+.prose ul,.prose ol{max-width:68ch;margin:0 0 14px;padding-left:1.25em}
+.prose li{margin:6px 0}
+.meta{font-size:14px;color:var(--faint)}
+.meta a{color:var(--soft)}
+
+.part{margin-top:64px;padding-top:40px;border-top:1px solid var(--hair)}
+.kicker{font-size:14.5px;color:var(--faint);max-width:68ch}
+
+.notice{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:22px 24px;margin:24px 0}
+.notice p:last-child,.notice ul:last-child,.notice dl:last-child{margin-bottom:0}
+.notice ul{padding-left:1.2em;margin:10px 0 14px;max-width:66ch}
+.notice li{margin:6px 0}
+.notice dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 16px;margin-top:10px;max-width:70ch}
+.notice dd{margin:0}
+.hypo{border:1px dashed hsl(45 100% 50% / .5)}
+.hypo-flag{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:10px}
+
+/* verification labels */
+.lab{display:inline-block;font-size:10.5px;line-height:1;letter-spacing:.07em;text-transform:uppercase;font-weight:650;padding:4px 7px 3px;border-radius:999px;border:1px solid var(--hair);white-space:nowrap;vertical-align:2px;margin:0 2px}
+.lab-check{color:var(--ok);border-color:hsl(150 58% 58% / .4)}
+.lab-call{color:var(--soft);border-color:hsl(222 22% 78% / .35)}
+.lab-word{color:var(--faint);border-style:dashed;border-color:hsl(222 16% 58% / .6)}
+.lab-sim,.lab-hyp{color:var(--amber);border-color:hsl(45 100% 50% / .45)}
+
+/* on this page */
+.toc{margin:30px 0 0;padding:18px 22px;border:1px solid var(--hair);border-radius:14px}
+.toc ol{margin:8px 0 0;padding-left:1.4em;columns:2;column-gap:36px}
+.toc li{margin:4px 0;break-inside:avoid}
+.toc a{color:var(--soft);text-decoration:none}
+.toc a:hover{color:var(--amber)}
+
+/* the timeline */
+.clocks{display:grid;grid-template-columns:1fr 1fr;gap:8px 40px;margin:22px 0 6px}
+.clock h3{margin:0 0 12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.rail{list-style:none;margin:0;padding:0}
+.rail li{position:relative;padding:0 0 16px 24px;margin-left:6px;border-left:2px solid var(--hair)}
+.rail li:last-child{border-left-color:transparent;padding-bottom:0}
+.rail li::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--amber)}
+.rail .when{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:650;line-height:1.4}
+.rail .what{display:block;font-size:15px}
+
+/* tables */
+.tbl{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--hair);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.5}
+.tbl.wide table{min-width:640px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--hair);vertical-align:top}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+thead th{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);font-weight:600;vertical-align:bottom}
+tbody th{color:var(--ink);font-weight:600}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+td.r{white-space:nowrap}
+caption{caption-side:top;text-align:left;padding:10px 12px 4px;font-size:13px;color:var(--faint)}
+tr.total th,tr.total td{color:var(--ink);border-top:1px solid hsl(222 40% 60% / .35)}
+.labels{font-size:14px;color:var(--faint);max-width:70ch}
+
+/* figures */
+.fig{margin:22px 0;background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:18px 18px 14px}
+.fig .scroll{overflow-x:auto}
+.fig .scroll svg{display:block;width:100%;min-width:560px;max-width:720px;height:auto;font-family:inherit}
+.fig figcaption{font-size:14px;color:var(--faint);margin-top:12px;max-width:70ch}
+.fig figcaption b{color:var(--soft)}
+.fig details{margin-top:10px;font-size:14px}
+.fig summary{cursor:pointer;color:var(--soft)}
+.fig details .tbl{margin:10px 0 0}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13.5px;color:var(--soft);margin:0 0 10px;padding:0}
+.legend li{display:flex;align-items:center;gap:8px}
+.legend svg{display:block;width:16px;height:16px}
+.fig .scroll,.tbl{scrollbar-color:hsl(222 40% 60% / .4) transparent;scrollbar-width:thin}
+@media (max-width:600px){.fig .scroll + figcaption::before{content:"Swipe the chart sideways to see all of it.";display:block;font-size:12.5px;color:var(--faint);margin-bottom:6px}}
+svg .t-ax{fill:var(--faint);font-size:11.5px}
+svg .t-lbl{fill:var(--soft);font-size:12.5px}
+svg .t-val{fill:var(--ink);font-size:12px;font-variant-numeric:tabular-nums}
+/* a halo in the panel colour, so a gridline never runs through a label */
+svg .t-ax,svg .t-lbl,svg .t-val{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+svg .t-in{fill:#1a1205;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+svg .grid{stroke:var(--hair);stroke-width:1}
+svg .axis{stroke:hsl(222 40% 60% / .35);stroke-width:1}
+svg .zero{stroke:var(--faint);stroke-width:1}
+svg .limit{stroke:var(--soft);stroke-width:1}
+svg .band{fill:hsl(222 40% 60% / .12)}
+svg .rng{stroke:var(--soft);stroke-width:2;stroke-linecap:round}
+svg .cap{stroke:var(--soft);stroke-width:2;stroke-linecap:round}
+svg .bar{fill:var(--amber)}
+svg .hit{fill:transparent}
+svg .dot-amber{fill:var(--amber);stroke:var(--panel);stroke-width:2}
+svg .dot-soft{fill:var(--soft);stroke:var(--panel);stroke-width:2}
+svg .tick-soft{stroke:var(--soft);stroke-width:2;stroke-linecap:round}
+svg .dia{fill:var(--panel);stroke:var(--soft);stroke-width:2}
+
+/* section 6 */
+.wrong{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:20px 22px 8px;margin:14px 0}
+.wrong h3{margin:0 0 4px;font-size:17px}
+.wrong .stamp{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:650;margin-bottom:10px}
+.wrong .ref{font:12.5px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--faint)}
+.wrong ul{padding-left:1.2em;margin:0 0 14px;max-width:66ch}
+.wrong li{margin:7px 0}
+
+/* close */
+.end{margin-top:64px;padding:30px 28px;background:var(--panel);border:1px solid var(--hair);border-radius:16px}
+.btn{display:inline-flex;align-items:center;gap:9px;background:var(--amber);color:#1a1205;font-weight:650;padding:13px 24px;border-radius:999px;text-decoration:none;font-size:14px;margin-top:6px}
+.btn:hover{background:hsl(45 100% 60%)}
+
+footer{max-width:860px;margin:56px auto 0;padding-top:20px;border-top:1px solid var(--hair);font-size:12.5px;color:var(--faint);display:flex;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+footer nav{display:flex;gap:16px;flex-wrap:wrap}
+footer a{color:var(--faint);text-decoration:none}
+footer a:hover{color:var(--ink)}
+
+@media (max-width:720px){.clocks{grid-template-columns:1fr}.toc ol{columns:1}}
+@media (max-width:600px){.nav-links{display:none}.notice dl{grid-template-columns:1fr;gap:2px}.notice dd{margin-bottom:8px}}
+@media (max-width:560px){body{padding:0 16px 64px}.notice,.wrong,.fig,.end,.toc{padding-left:16px;padding-right:16px}h3{margin-top:28px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<nav class="nav" aria-label="Primary">
+  <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+  <div class="nav-links">
+    <a href="/teardown">60-second Teardown</a>
+    <a href="/#pricing">Managed Profit</a>
+    <a href="/#faq">FAQ</a>
+  </div>
+</nav>
+
+<main id="main" class="wrap">
+<header class="head">
+  <div class="eyebrow">How the work is done</div>
+  <h1>How the work is done, and how we check it.</h1>
+  <p class="lede">You have seen the emails that put a dollar figure on your account from the outside. This page is about what happens once a number is inside: where it comes from, what checks it before it reaches you, how it is graded afterwards, and what we got wrong on the way here.</p>
+
+  <div class="notice">
+    <p><b>Hubricon has no paying clients and no published results yet.</b> Nothing on this page is a client result, and nothing on it should be read as one. Every figure below is one of three things, and each is labelled where it appears:</p>
+    <ul>
+      <li><b>Arithmetic.</b> You can redo it with a calculator.</li>
+      <li><b>Simulated sellers</b> <span class="lab lab-sim">Simulated</span> Synthetic data we generated to test the engine. A simulated number tells you how the method behaves. It is not what happened in anyone's account.</li>
+      <li><b>One hypothetical SKU</b> <span class="lab lab-hyp">Hypothetical</span> Made-up inputs, run through our own pricing and grading code, so you can follow a single move from promise to grade.</li>
+    </ul>
+    <p>Each claim also says how you can know it is true:</p>
+    <dl>
+      <dt><span class="lab lab-check">Check it yourself</span></dt><dd>Arithmetic on this page, or our published <a href="/terms">terms</a>.</dd>
+      <dt><span class="lab lab-call">Shown on a call</span></dt><dd>It rests on our code, its tests or a simulation run. The code is in our private repository, so you cannot open it from here. Ask, and we will open it with you on a call and run the test. The larger simulation studies take longer than a call, so for those we send the saved output instead.</dd>
+      <dt><span class="lab lab-word">Our word</span></dt><dd>A commitment nobody can check until a client has lived through it.</dd>
+    </dl>
+  </div>
+
+  <p class="meta">Written 13 September 2026, against the engine as it stood on 12 September 2026. Found a mistake? Email <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a> and the correction goes into <a href="#withdrawn">section 6</a> with its date.</p>
+
+  <nav class="toc" aria-label="On this page">
+    <span class="eyebrow">On this page</span>
+    <ol>
+      <li><a href="#timeline">From application to day 30</a></li>
+      <li><a href="#files">What happens to a file when it lands</a></li>
+      <li><a href="#moves">How a move is made</a></li>
+      <li><a href="#grading">How a dollar is graded</a></li>
+      <li><a href="#checks">How the engine checks itself</a></li>
+      <li><a href="#withdrawn">What we got wrong, and withdrew</a></li>
+      <li><a href="#limits">What the engine cannot tell you</a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- ─────────────────────────────── 1 ─────────────────────────────── -->
+<section class="part prose" id="timeline" aria-labelledby="h-timeline">
+  <h2 id="h-timeline"><span class="ord">1.</span> From application to the day the Record decides</h2>
+  <p>There are two clocks. The first runs from your application to the kickoff call and costs nothing. The second is the Proving Month: thirty days that start on the day you say yes after the Teardown. If you grant a seat, your own time comes to about ninety minutes in month one, then five to ten minutes every two weeks. If you send exports instead, add the time it takes to upload fresh ones, about 15 minutes each time.</p>
+
+  <figure class="fig" aria-labelledby="cap-clocks">
+    <div class="clocks">
+      <div class="clock">
+        <h3>Clock one: before you say yes</h3>
+        <ol class="rail">
+          <li><span class="when">Day 0</span><span class="what">Four answers, then the 20-minute call.</span></li>
+          <li><span class="when">Day 0</span><span class="what">One seat, or about 15 minutes of exports, plus a cost sheet.</span></li>
+          <li><span class="when">Files land</span><span class="what">The 24-hour clock starts, once.</span></li>
+          <li><span class="when">Within 24 hours</span><span class="what">Your Profit Teardown, which is Profit Brief No. 001.</span></li>
+          <li><span class="when">Kickoff, 45 minutes</span><span class="what">The 90-day plan, and your standing yes.</span></li>
+        </ol>
+      </div>
+      <div class="clock">
+        <h3>Clock two: the Proving Month</h3>
+        <ol class="rail">
+          <li><span class="when">Day 1</span><span class="what">The day you say yes.</span></li>
+          <li><span class="when">Every Monday</span><span class="what">New exports read, models re-run, the Record re-graded, moves drafted.</span></li>
+          <li><span class="when">After the Monday pass</span><span class="what">One email of up to five moves, then at least 72 hours to say no.</span></li>
+          <li><span class="when">The next Monday pass</span><span class="what">Moves inside your standing yes that nobody stopped are approved.</span></li>
+          <li><span class="when">Days 1 to 14</span><span class="what">First moves live, as the terms promise.</span></li>
+          <li><span class="when">Every 2 weeks</span><span class="what">A Profit Brief: a letter and a short video.</span></li>
+          <li><span class="when">After a move</span><span class="what">Graded once an export covering the time after it has arrived.</span></li>
+          <li><span class="when">Day 30</span><span class="what">The Record decides whether an invoice can exist.</span></li>
+        </ol>
+      </div>
+    </div>
+    <figcaption id="cap-clocks"><b>The order of events.</b> Clock one costs nothing. Clock two is the free Proving Month. The detail, and who does each part, is in the two tables below.</figcaption>
+  </figure>
+
+  <h3>Before you say yes</h3>
+  <div class="tbl wide" role="region" aria-label="Before you say yes, as a table" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">When</th><th scope="col">What you do</th><th scope="col">What Hagen does</th><th scope="col">What runs on its own</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Day 0</th><td>Four answers: where you sell, revenue, model, catalog size. From $3M a year up, you book the 20-minute call on the spot. About 2 minutes, plus the call.</td><td>Reads your answers before the call, and takes the call himself.</td><td>Your answers ride along on the booking, so the call starts from your numbers.</td></tr>
+      <tr><th scope="row">Day 0</th><td>Grant one seat, or upload about 15 minutes of exports. Plus a one-row-per-SKU cost sheet, about 5 minutes.</td><td>Nothing in your account yet.</td><td>The upload page checks each file's columns in your browser before it sends (section 2).</td></tr>
+      <tr><th scope="row">Files land</th><td>Nothing.</td><td>If you granted a seat, downloads your exports through it and uploads them. Sees in the hourly digest any file that failed to read, with the reason.</td><td>The first hourly pass that finds usable data in uploaded files starts the 24-hour clock. It is set once and never reset. With a seat, it starts when Hagen's download lands, not when the seat goes live.</td></tr>
+      <tr><th scope="row">Within 24 hours</th><td>Read your Profit Teardown, which is Profit Brief No. 001.</td><td>Nothing is needed from him for it to go out. If the video cannot be generated, he records a walkthrough himself.</td><td>Every model runs, including 20,000 simulated demand paths per SKU. Your Profit Teardown is published and emailed: a written report, a letter drafted by a language model (section 1, who does what), and a narrated video walkthrough in a synthetic voice. First moves and a 90-day plan are drafted. Your baseline is recorded before anything is touched.</td></tr>
+      <tr><th scope="row">Kickoff, 45 minutes</th><td>Agree the plan and your standing yes.</td><td>Presents the plan and commits it.</td><td>Until your standing yes is recorded, the bounds are the defaults the terms print. One default ad move sits at the edge of that wording (section 3.3).</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="labels">The application and the $3M line: <span class="lab lab-check">Check it yourself</span> on the <a href="/#faq">home page</a> (Why $3M?). The seat: <span class="lab lab-check">Check it yourself</span> in the <a href="/terms">terms</a>, section 6. The seat is one Seller Central user with exactly four permissions, or one Shopify collaborator account limited to Orders, Products, Analytics, Reports, Marketing and Discounts, with no banking, settings or payout access, and you can revoke it at any time. The 24-hour clock, the digest, the drafting, the letter's number check and the generated video: <span class="lab lab-call">Shown on a call</span>. Hagen taking the call himself, downloading your exports promptly once a seat goes live, and recording a walkthrough if the video cannot be generated: <span class="lab lab-word">Our word</span>.</p>
+  <p>The 24-hour promise has a check behind it. A promise check fails any client who has waited longer than 24 hours for the Teardown, counted from the first usable data on file, and that failure is repeated in the founder's daily digest until it is fixed. Time to the first dollar is reported, and never promised. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3>The Proving Month (day 1 is the day you say yes)</h3>
+  <div class="tbl wide" role="region" aria-label="The Proving Month, as a table" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">When</th><th scope="col">What you do</th><th scope="col">What Hagen does</th><th scope="col">What runs on its own</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Every Monday</th><td>Nothing, if you granted a seat. If you send exports instead, upload the latest ones as each report period closes, about 15 minutes.</td><td>Downloads your latest exports through the seat and uploads them, then reads the digest.</td><td>Any new files are parsed, every model re-runs, the Profit Record is re-graded and new moves are drafted. Nothing fetches exports on its own: with no new files, the pass re-runs on what is already there.</td></tr>
+      <tr><th scope="row">After the Monday pass</th><td>Read one email: up to five planned moves, each with its expected dollars. To stop any of them, press Decline beside it in Hubricon, or reply no. 5 to 10 minutes.</td><td>Records any emailed no against its move before the next Monday pass, and answers your questions.</td><td>The 72-hour reply window opens only if our email provider accepts that email (section 3). A Decline in Hubricon is recorded the moment you press it. No code reads replies.</td></tr>
+      <tr><th scope="row">First Monday pass after the window closes</th><td>Nothing, unless you said no.</td><td>Nothing.</td><td>Moves inside your standing yes that nobody stopped are approved then, about a week after the email. Moves outside it wait for your written yes, and lapse after 21 days of silence.</td></tr>
+      <tr><th scope="row">After approval</th><td>Nothing.</td><td>Makes each approved move in your account by hand, and records it.</td><td>A move approved and not recorded as made within 7 days is escalated in his digest.</td></tr>
+      <tr><th scope="row">While a price step is live</th><td>Nothing.</td><td>Watches Buy Box share (Amazon) or conversion rate (Shopify), and steps the price back by hand if the step is costing you the sale.</td><td>Nothing steps a price back automatically. Section 3 says exactly what the code does here.</td></tr>
+      <tr><th scope="row">Days 1 to 14</th><td>Nothing.</td><td>Aims to have your first moves live, as the terms promise. Approval by silence waits for a Monday pass, so a written yes from you is the fastest route.</td><td></td></tr>
+      <tr><th scope="row">Every 2 weeks</th><td>Read the Profit Brief: a short letter and video. What was found, what moved, what it earned, and the running Profit Record.</td><td>Answers your replies.</td><td>The Brief is published and emailed on your own fortnight. The letter is drafted by a language model under the same number check as the Teardown, and the narrated video is generated from the same points. The video never delays the letter.</td></tr>
+      <tr><th scope="row">Day 30</th><td>Nothing.</td><td>Nothing.</td><td>Proven plus found since day 1 is compared with $6,000. Strictly more, and an invoice can be raised. Otherwise no invoice is created. A tie goes to you.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="labels">The reply window, the Decline button, the lapse, the escalation, the Brief's drafting and the day-30 check: <span class="lab lab-call">Shown on a call</span>. The rules themselves are in the <a href="/terms">terms</a>, sections 3 and 6: <span class="lab lab-check">Check it yourself</span>. Making each move by hand, watching a live price step, downloading your exports through the seat, recording an emailed no, and first moves inside 14 days: <span class="lab lab-word">Our word</span>.</p>
+
+  <h3>What day 30 will probably look like, plainly</h3>
+  <p>A move is graded once an export covering the time after it has arrived (section 4.1 has the detail). If your SKU Economics export is monthly, a price step made in week two is usually graded on the following month's export, after day 30. So at day 30, much of the bar is likely to be <b>found</b> (moves actually made, counted at their expected dollars) rather than <b>proven</b>.</p>
+  <p>Found is not a free pass, with one gap still open. When a found move is graded, what it actually earned replaces what was expected, even if that number is lower or negative. The bar for every later invoice counts everything since day 1, so a move that disappoints in month two shows up in the bar for month two. But a move that cannot be graded stays found at its expected dollars, and the code sets no time limit on that today. Two examples: a price step on a SKU that sold nothing afterwards, and any move after which no new export arrives. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3>Who does what</h3>
+  <p>One person, Hagen Simmons, makes every move in your account and records it. Watching a live price step is his job too. <span class="lab lab-word">Our word</span> The code's job is to stop a move being silently skipped: an approved move not recorded as made within seven days is escalated in his digest. <span class="lab lab-call">Shown on a call</span></p>
+  <p>Hagen does not write the letters. The letter in your Teardown and in each Profit Brief is drafted by a language model, Anthropic's Claude, from a table of figures the engine has already computed. The model may not write a number itself: the engine inserts every figure, and a draft containing any number of its own is sent back once, then replaced by our template letter if it fails again. The video is narrated in a synthetic voice. Both are published and emailed without a person reviewing them first. The <a href="/privacy">privacy policy</a> names the providers. <span class="lab lab-call">Shown on a call</span></p>
+</section>
+
+<!-- ─────────────────────────────── 2 ─────────────────────────────── -->
+<section class="part prose" id="files" aria-labelledby="h-files">
+  <h2 id="h-files"><span class="ord">2.</span> What happens to a file when it lands</h2>
+  <p>A file passes five steps before any model sees it. At every step, "no" is one of the possible answers, and a no always comes with its reason. The code for all five is in our private repository; we will open any of it on the call.</p>
+
+  <h3><span class="ord">Step 1.</span> In your browser, before anything uploads</h3>
+  <p>Your browser reads the first lines of each file and checks them against the same required columns the parser will demand. A file that is clearly a different report is stopped, with a message naming the card it belongs on, because a file on the wrong card uploads cleanly, parses into nothing, and costs a day to discover. A file that is only missing a column gets a warning and uploads if you say so: the check can be wrong, and you know your file. Each file can be up to 50 MB, and a Shopify orders export bigger than that can be sent a month at a time. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">Step 2.</span> Reading the file</h3>
+  <p>The file is decoded whichever way it was saved: UTF-8 with or without a byte-order mark, or the older Windows encodings some accounts still export. The delimiter is detected (comma, tab or semicolon), and prose lines above the real header are skipped. If no header appears in the first 20 lines, or there is a header with no rows under it, the file is refused with that reason. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">Step 3.</span> Parsing</h3>
+  <p>There is one parser per report type: 18 of them across Amazon, Shopify, Meta and Google Ads, the cost sheet included. Each finds the columns it needs by name. If a required column is missing, the file is refused, and the refusal lists the headers the file actually had. A date format the parser does not recognize is refused, not guessed. Trailer rows that are totals ("Total: Account") are dropped, and only those: a campaign named "Total Store" stays. A file that parses to zero usable rows is marked failed with the reason. Before your Teardown, Hagen sees it in the hourly digest; after it, in the Monday digest. <span class="lab lab-call">Shown on a call</span></p>
+  <p>A Shopify orders export carries your customers' names, emails and addresses, because that is how Shopify stores an order. The parser reads ten columns (order name, financial status, created and cancelled dates, refunded amount, and each line item's SKU, name, quantity, price and discount) and writes a per-SKU monthly total to our database. No customer name, email, address, phone number or payment detail is written to that database. The file itself, whether you upload it or Hagen downloads it through the seat, is kept as sent in an encrypted, access-controlled storage bucket, and deleted with the rest of your data when you ask (see the <a href="/privacy">privacy policy</a>). You may delete the customer columns before uploading; the models never read them. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">Step 4.</span> Blanks stay blank</h3>
+  <p>A blank cost is recorded as blank, never as zero. A SKU with no cost on file gets no profit figure, no best price and no dollar promise, and the move says what is missing: "Upload unit costs". <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">Step 5.</span> Enough data, or a named refusal</h3>
+  <p>Every model checks it has enough to go on before it produces a number. When it does not, the output is a status that says why. "Not enough data" is a result we deliver, not a gap we paper over.</p>
+  <div class="tbl wide" role="region" aria-label="What you get instead of a number" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">What is missing</th><th scope="col">What you get instead of a number</th></tr></thead>
+    <tbody>
+      <tr><td>A cost for the SKU</td><td>Cost shown as blank. No best price, no dollar figure, and a note asking for the cost.</td></tr>
+      <tr><td>Fewer than 5 periods of history, or a price that moved less than 2%</td><td>"Not enough data" for how demand responds to price.</td></tr>
+      <tr><td>A demand estimate too close to the point where a price change exactly pays for itself</td><td>No best price and no dollar figure. A small step, and a sentence saying why (section 3).</td></tr>
+      <tr><td>Ad spend that barely moved (under 2% variation), or fewer than 5 data points</td><td>No break-even. "Insufficient spend variation", with the variation that failed.</td></tr>
+      <tr><td>Too short a series for change detection</td><td>"Could not look". That is a different answer from "looked and found nothing".</td></tr>
+      <tr><td>A supplier lead time</td><td>45 days assumed, and the row flagged as assumed.</td></tr>
+      <tr><td>Cash on hand and fixed costs</td><td>No cash runway at all.</td></tr>
+      <tr><td>Fewer than 4 periods for a forecast</td><td>No forecast model is chosen.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>One of our tests feeds the engine the thinnest realistic first upload: one SKU, five months, one price change, no cost sheet. It checks that every dollar figure comes back absent and every absence is named. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3>How much history it takes to name a best price <span class="lab lab-sim">Simulated</span></h3>
+  <p>On a first upload, most SKUs will not get a best price. On simulated sellers with seven months of history, 10% price variation and 22% demand noise, the engine can name one for about one SKU in six. More history and more price movement both help. At seven months, moving from 10% to 18% price variation roughly doubles the share (16.5% to 32.0%). At 10% variation, going from seven to twelve months more than doubles it (16.5% to 37.5%). With both, twelve months and 18%, it reaches 60.5%.</p>
+  <div class="tbl" role="region" aria-label="History needed to name a best price, simulated" tabindex="0">
+  <table>
+    <caption>Simulated sellers, 22% demand noise, 200 simulated SKUs per row. Not client data.</caption>
+    <thead><tr><th scope="col" class="r">Months of history</th><th scope="col" class="r">Price variation</th><th scope="col" class="r">SKUs where a best price can be named (simulated)</th></tr></thead>
+    <tbody>
+      <tr><td class="r">7</td><td class="r">10%</td><td class="r">16.5%</td></tr>
+      <tr><td class="r">7</td><td class="r">18%</td><td class="r">32.0%</td></tr>
+      <tr><td class="r">12</td><td class="r">10%</td><td class="r">37.5%</td></tr>
+      <tr><td class="r">12</td><td class="r">18%</td><td class="r">60.5%</td></tr>
+      <tr><td class="r">24</td><td class="r">18%</td><td class="r">71.0%</td></tr>
+      <tr><td class="r">24</td><td class="r">25%</td><td class="r">79.0%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>This table describes what more price variation would buy. It does not say our own price steps supply that variation today. Section 6, item 6, explains why that claim was withdrawn. <span class="lab lab-call">Shown on a call</span></p>
+</section>
+
+<!-- ─────────────────────────────── 3 ─────────────────────────────── -->
+<section class="part prose" id="moves" aria-labelledby="h-moves">
+  <h2 id="h-moves"><span class="ord">3.</span> How a move is made</h2>
+  <p class="kicker">The tests named in this section are in our private repository. We will run any of them with you on the call.</p>
+
+  <h3 id="carries"><span class="ord">3.1</span> What a move carries, before it goes live</h3>
+  <p>Before a move goes live, it is written down with:</p>
+  <ul>
+    <li>the dollars it is expected to earn per period;</li>
+    <li>a 90% range around that figure;</li>
+    <li>the chance it goes the other way. This is never printed as 0%. The floor is "under 1%", because zero bad outcomes among 6,000 simulated ones is not proof there are none;</li>
+    <li>every input that made the promise: the fitted demand curve and its uncertainty, the baseline units, revenue, fees and cost, and the simulation's fixed seed. That is what lets the move be graded later against the same numbers that made the promise, not against a later and different fit.</li>
+  </ul>
+  <p>The expected dollars are the median of 6,000 simulated outcomes drawn across every uncertain input. They are not the single best-guess figure, though that figure is kept beside it. <span class="lab lab-call">Shown on a call</span></p>
+  <p>Some moves carry no dollar figure, on purpose: a reorder (a stockout that did not happen cannot be measured), a price step where the data cannot locate the best price, and a price test on a SKU with no cost on file. We do not print a figure now that we could not grade later. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.2</span> Which moves reach you, and how many</h3>
+  <p>At most five moves per email, highest expected dollars first. The rest are not queued. They are checked again at the next Monday pass and reach you then if the data still supports them, so you are never handed a wall of twelve decisions. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.3</span> Your standing yes, and what needs your written yes</h3>
+  <p>On the kickoff call you set your standing yes: the moves we make without asking again. Until it is recorded, it is the default the terms print. That covers price steps of up to 5% per SKU per two-week cycle, and ad corrections: negative-matching terms that spend without converting, bid and budget changes, and pausing what loses money. Inventory orders, listing changes, bigger price moves, new campaigns and filing a claim in your account all wait for your written yes. <span class="lab lab-check">Check it yourself</span> in the <a href="/terms">terms</a>, section 6.</p>
+  <p>One default ad move sits at the edge of that wording: pausing exact-match branded search targeting as a tracked test, because part of what those ads sell would likely have sold anyway. The code treats it as inside the default standing yes, although it is not shown to lose money before it is paused. If you want it to need your written yes, say so at kickoff. The code can only move all ad moves to a written yes together, so for this one alone Hagen holds it back by hand. <span class="lab lab-call">Shown on a call</span> for the default; <span class="lab lab-word">Our word</span> for holding it back.</p>
+  <p>If you take a whole kind of move out of your standing yes (all price steps, say), every move of that kind is sent to you for a written yes instead of being approved by silence. <span class="lab lab-call">Shown on a call</span> If you keep a kind but narrow its size (price steps of 3% instead of 5%), the narrower limit is recorded, but the code does not yet check steps against it. Hagen checks each step against it by hand and sends anything larger for your written yes. <span class="lab lab-word">Our word</span></p>
+  <p>One more check sits on top. If a move's simulated bad case (its 5th-percentile outcome) would lose more than 15% of that SKU's own monthly profit, it goes to you for a written yes whatever its size. In practice the step sizing below already refuses such moves, so this check is a backstop. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.4</span> The email at least three days ahead, and a reply window that cannot open on an unsent email</h3>
+  <p>The Monday pass drafts the moves and sends one email listing them. The order inside the code is the point. The email goes first. Only if our email provider accepts the send does the 72-hour reply window open, and only for the moves listed in that email. If the send fails, the moves stay visible in Hubricon, your sign-in, but the window never opens, so no amount of silence can become a yes. The code cannot see a bounce or a spam folder once the provider has accepted the email. <span class="lab lab-call">Shown on a call</span></p>
+  <p>To stop a move, press Decline beside it in Hubricon. That is recorded the moment you press it. <span class="lab lab-call">Shown on a call</span> You can also reply no to the email, as the terms allow. No code reads replies, so an emailed no stops a move once Hagen records it, which he does by hand before the next Monday pass. <span class="lab lab-word">Our word</span></p>
+  <p>A test sends a batch with email switched off. It checks that no window opens and that nothing is ever approved, however long the moves sit. <span class="lab lab-call">Shown on a call</span></p>
+  <p>At the first Monday pass after the window closes, moves inside your standing yes that nobody stopped are approved. That is about a week after the email, not the moment the 72 hours end. A move outside it is never approved by silence. After 21 days without an answer it lapses, and its note says silence is not consent. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.5</span> How far a price step goes: solved for, not capped</h3>
+  <p>A price step is the size the data supports, not a fixed 5%. For each SKU the engine tries candidate prices at 0.25% intervals and picks the one with the best expected gain after a penalty for how uncertain that gain is. Three limits apply:</p>
+  <ul>
+    <li>the average of the worst 5% of simulated outcomes may not lose more than 15% of that SKU's own monthly profit;</li>
+    <li>the step never exceeds the 5% your terms allow;</li>
+    <li>the step never walks past the best price.</li>
+  </ul>
+  <p>Standing still is always one of the candidates, and it scores zero. A SKU where no step beats standing still gets no step. <span class="lab lab-call">Shown on a call</span></p>
+
+  <figure class="fig" aria-labelledby="cap-steps">
+    <div class="scroll" role="region" aria-label="Chart: step size as uncertainty rises, scrolls sideways on narrow screens" tabindex="0"><svg viewBox="0 0 640 252" role="img" aria-labelledby="fig-steps-t fig-steps-d" xmlns="http://www.w3.org/2000/svg"><title id="fig-steps-t">Size of the price cut on one simulated SKU as the uncertainty of its demand estimate rises</title><desc id="fig-steps-d">Ten settings, uncertainty rising 28-fold, each a price cut: cuts of 2.25%, 2.25%, 2.00%, 1.75%, 1.75%, 1.50%, 1.25%, 0.75%, then no step in the last two settings. The first two stop just short of the best price, 2.35% below today’s price; settings 7 and 8 name no best price. The 5% limit is never reached. Simulated.</desc><line class="grid" x1="56" x2="616" y1="192.0" y2="192.0"/><text x="48.0" y="196" class="t-ax" text-anchor="end">0%</text><line class="grid" x1="56" x2="616" y1="162.5" y2="162.5"/><text x="48.0" y="167" class="t-ax" text-anchor="end">1%</text><line class="grid" x1="56" x2="616" y1="133.1" y2="133.1"/><text x="48.0" y="137" class="t-ax" text-anchor="end">2%</text><line class="grid" x1="56" x2="616" y1="103.6" y2="103.6"/><text x="48.0" y="108" class="t-ax" text-anchor="end">3%</text><line class="grid" x1="56" x2="616" y1="74.2" y2="74.2"/><text x="48.0" y="78" class="t-ax" text-anchor="end">4%</text><line class="limit" x1="56" x2="616" y1="44.7" y2="44.7"/><text x="48.0" y="49" class="t-ax" text-anchor="end">5%</text><text x="616.0" y="38" class="t-lbl" text-anchor="end">5% limit your terms allow per cycle</text><path class="bar" d="M72.0,192.0 V129.7 Q72.0,125.7 76.0,125.7 H92.0 Q96.0,125.7 96.0,129.7 V192.0 Z"><title>Setting 1: a 2.25% price cut. Stops just short of the best price ($19.53)</title></path><text x="84.0" y="119" class="t-val" text-anchor="middle">2.25%</text><path class="bar" d="M128.0,192.0 V129.7 Q128.0,125.7 132.0,125.7 H148.0 Q152.0,125.7 152.0,129.7 V192.0 Z"><title>Setting 2: a 2.25% price cut. Stops just short of the best price ($19.53)</title></path><path class="bar" d="M184.0,192.0 V137.1 Q184.0,133.1 188.0,133.1 H204.0 Q208.0,133.1 208.0,137.1 V192.0 Z"><title>Setting 3: a 2.00% price cut. The uncertainty</title></path><path class="bar" d="M240.0,192.0 V144.5 Q240.0,140.5 244.0,140.5 H260.0 Q264.0,140.5 264.0,144.5 V192.0 Z"><title>Setting 4: a 1.75% price cut. The uncertainty</title></path><path class="bar" d="M296.0,192.0 V144.5 Q296.0,140.5 300.0,140.5 H316.0 Q320.0,140.5 320.0,144.5 V192.0 Z"><title>Setting 5: a 1.75% price cut. The uncertainty</title></path><path class="bar" d="M352.0,192.0 V151.8 Q352.0,147.8 356.0,147.8 H372.0 Q376.0,147.8 376.0,151.8 V192.0 Z"><title>Setting 6: a 1.50% price cut. The uncertainty</title></path><path class="bar" d="M408.0,192.0 V159.2 Q408.0,155.2 412.0,155.2 H428.0 Q432.0,155.2 432.0,159.2 V192.0 Z"><title>Setting 7: a 1.25% price cut. Too uncertain to name a best price</title></path><path class="bar" d="M464.0,192.0 V173.9 Q464.0,169.9 468.0,169.9 H484.0 Q488.0,169.9 488.0,173.9 V192.0 Z"><title>Setting 8: a 0.75% price cut. Too uncertain to name a best price</title></path><text x="476.0" y="163" class="t-val" text-anchor="middle">0.75%</text><rect class="hit" x="520.0" y="176.0" width="24" height="16"><title>Setting 9: no step</title></rect><text x="532.0" y="185" class="t-val" text-anchor="middle">no step</text><rect class="hit" x="576.0" y="176.0" width="24" height="16"><title>Setting 10: no step</title></rect><text x="588.0" y="185" class="t-val" text-anchor="middle">no step</text><line class="axis" x1="56" x2="616" y1="192.0" y2="192.0"/><text x="84.0" y="210" class="t-ax" text-anchor="middle">lowest</text><text x="588.0" y="210" class="t-ax" text-anchor="middle">highest</text><text x="336.0" y="240" class="t-ax" text-anchor="middle">uncertainty in the demand estimate, rising 28-fold left to right · one simulated SKU</text></svg></div>
+    <figcaption id="cap-steps"><span class="lab lab-sim">Simulated</span> <b>One simulated SKU, ten settings, each a price cut.</b> Settings 1 and 2 stop at the last candidate price before the best price, which is 2.35% below today's price. From setting 3 on, the uncertainty sets the size. Settings 7 and 8 are too uncertain to name a best price, so they get a small step with no destination and, in the move, no dollar figure. Settings 9 and 10 get no step. The 5% limit is never reached.</figcaption>
+    <details><summary>The numbers behind this chart</summary><div class="tbl" role="region" aria-label="Step sizes, simulated" tabindex="0"><table><caption>The numbers behind this chart (one simulated SKU, today’s price $20.00, best price $19.53)</caption><thead><tr><th scope="col">Setting</th><th scope="col" class="r">Price cut</th><th scope="col">What set the size</th></tr></thead><tbody><tr><th scope="row">1 (lowest uncertainty)</th><td class="r">2.25%</td><td>Stops just short of the best price ($19.53)</td></tr><tr><th scope="row">2</th><td class="r">2.25%</td><td>Stops just short of the best price ($19.53)</td></tr><tr><th scope="row">3</th><td class="r">2.00%</td><td>The uncertainty</td></tr><tr><th scope="row">4</th><td class="r">1.75%</td><td>The uncertainty</td></tr><tr><th scope="row">5</th><td class="r">1.75%</td><td>The uncertainty</td></tr><tr><th scope="row">6</th><td class="r">1.50%</td><td>The uncertainty</td></tr><tr><th scope="row">7</th><td class="r">1.25%</td><td>Too uncertain to name a best price</td></tr><tr><th scope="row">8</th><td class="r">0.75%</td><td>Too uncertain to name a best price</td></tr><tr><th scope="row">9</th><td class="r">no step</td><td>No step</td></tr><tr><th scope="row">10 (highest)</th><td class="r">no step</td><td>No step</td></tr></tbody></table></div></details>
+  </figure>
+
+  <p>The limit of that claim, plainly: across twelve simulated runs and 703 moves, 71.8% of steps still land on the 5% limit. The statistics set the size of about 28% of steps. The limit does most of the work. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></p>
+  <p>One thing is deliberately not modeled. Nothing in any export prices the risk that a bigger step loses the Buy Box, because no competitor price series reaches the engine. A curve for that risk would make the math look finished and would be invented. The 5% limit, and a person watching the live step, carry that risk instead. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.6</span> When we will not name a price</h3>
+  <p>Every demand curve has a point where a price change exactly pays for itself: an elasticity of −1. Near that point, the formula for the best price runs off toward infinity. The multiplier ε/(1+ε) is 21 at −1.05 and 51 at −1.02, so two estimates three hundredths apart name prices more than twice apart. <span class="lab lab-check">Check it yourself</span></p>
+  <p>So when a SKU's 95% range touches −1, or its estimate sits within two standard errors of it, the engine quotes no best price and no dollar figure. You get a small step, and the move says so in these words: "We cannot separate this SKU's demand from the break-even point where a price move pays for itself … so there is no destination to quote and no dollar figure we would stand behind." <span class="lab lab-call">Shown on a call</span></p>
+  <p>How often: on one simulated catalog of 120 SKUs with seven months of history and 22% demand noise, 101 of 117 price steps came back this way. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3 id="watch"><span class="ord">3.7</span> Watched while it is live</h3>
+  <p>Your terms say a price step is watched while it is live, through Buy Box share on Amazon or conversion rate on Shopify, and reversed if it costs you the sale. <span class="lab lab-check">Check it yourself</span> in the <a href="/terms">terms</a>, section 6.</p>
+  <p>How that works, plainly: the watching and the stepping back are done by Hagen, by hand. No code steps a price back on its own, and there is no automatic alarm on a fall in Shopify conversion. <span class="lab lab-word">Our word</span></p>
+  <p>What the code adds comes later, at grading. If your Business Report shows Buy Box share 10 points or more lower after the step than before it, that is written into the move's row, and the step is recorded at its measured value, loss included, when the movement is $25 or more. A smaller movement closes under the $25 floor with nothing banked, and the Buy Box note stays in the row. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">3.8</span> Every price step can be undone next cycle</h3>
+  <p>Every price step the engine drafts is at most 5% before rounding to the cent, so reversing it is inside the same authority and needs no new signature. The price before the step is on the record, so the undo is exact. A test checks both. <span class="lab lab-call">Shown on a call</span> The code does not yet stop a second step on the same SKU inside two weeks once the first has been graded; Hagen holds that line by hand. <span class="lab lab-word">Our word</span></p>
+
+  <h3 id="example-promise"><span class="ord">3.9</span> An example promise <span class="lab lab-hyp">Hypothetical</span></h3>
+  <div class="notice hypo">
+    <span class="hypo-flag">Hypothetical SKU · illustrative arithmetic · not a client and not a result</span>
+    <p>Last month: 2,000 units at $24.00. Landed cost $7.00 a unit. Referral fee 15% of price. FBA fee $4.50 a unit. Profit before ads: 2,000 × ($24.00 × 0.85 − $11.50) = 2,000 × $8.90 = <b>$17,800</b>. <span class="lab lab-check">Check it yourself</span></p>
+    <p>Fitted elasticity −2.0, standard error 0.25, 95% range −2.56 to −1.44 (with 10 degrees of freedom, as on twelve months of history, the multiplier is 2.228). The range is clear of −1, so a best price can be named:</p>
+    <p>P* = [(c + F) ÷ (1 − f)] × ε ÷ (1 + ε) = [($7.00 + $4.50) ÷ 0.85] × (−2.0 ÷ −1.0) = <b>$27.06</b>. <span class="lab lab-check">Check it yourself</span></p>
+    <p>That is 12.7% above today's price, so the step stops at the 5% limit: $24.00 → $25.20. At an elasticity of −2.0, units would be about 2,000 × 1.05<sup>−2</sup> = 1,814, and profit 1,814 × ($25.20 × 0.85 − $11.50) = $17,995. That is $195 more than last month. <span class="lab lab-check">Check it yourself</span></p>
+    <p>The move the engine wrote on these hypothetical inputs:</p>
+    <p><i>"Move HYPOTHETICAL-SKU $24.00 → $25.20 (+$1.20; optimum $27.06). Expected +$195/period (90% range −$209 to +$608; a 19% chance it goes the other way). Run as a tracked test — Buy Box watched while the step is live."</i></p>
+    <p>The engine marked it inside the standing yes. The step is within 5%, and its bad case ($209 at the 5th percentile) is well inside 15% of this SKU's trailing monthly profit. The engine restates last month (31 days) to 30: $17,800 × 30 ÷ 31 = $17,226, and 15% of that is $2,584. <span class="lab lab-check">Check it yourself</span> The $195 in the move is the median of the simulation ($195.36), which sits beside the single best-guess figure ($195.46). The range and the 19% chance come from the simulation. The last sentence of the move is the engine's standard wording; <a href="#watch">3.7</a> says who does the watching. <span class="lab lab-call">Shown on a call</span></p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── 4 ─────────────────────────────── -->
+<section class="part prose" id="grading" aria-labelledby="h-grading">
+  <h2 id="h-grading"><span class="ord">4.</span> How a dollar is graded</h2>
+  <p>Afterwards, every move is graded from your own later exports. The grade says how we know, and a set of rules decides what may be counted. Most rules in this section can only lower a number or leave it alone. Two can also take a loss off the Record: the $25 floor closes a miss smaller than $25 with nothing banked, and one dollar, one move sets aside a second reading of a movement already credited to another move, whether that reading was a gain or a loss. Each says so below. The grading code and its tests are in our private repository; we will open them on the call.</p>
+
+  <h3><span class="ord">4.1</span> Before grading: was it done, and is there an export after it</h3>
+  <p>Grading starts only when two things are true.</p>
+  <p><b>The move was actually made.</b> If the price in your next export is still the old one (within 2%), the step is marked "not made" and nothing is measured. If it is still not made 90 days on, it closes as never carried out.</p>
+  <p><b>An export covers the time after the move.</b> Negative-matched search terms, ad spend corrections and branded-search pauses are not graded on less than 14 days of exports after the move. Price steps and margin moves are graded on the export periods that start after the move, whatever their length. Fee corrections are graded on the latest reading after the move. If no export has arrived yet, the row says "not yet", because a zero would record a miss we have no evidence for. Two kinds of move can record a zero early: a campaign trim is read against the latest ad report, and if spend has not fallen yet it is recorded at $0 and not graded again; a fee correction whose fee is still at the flagged level is recorded the same way. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">4.2</span> The four grades</h3>
+  <div class="tbl wide" role="region" aria-label="The four grades" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">Grade</th><th scope="col">What it means</th><th scope="col">Example from the grading rules</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Direct</th><td>Amazon's own record, in your export, shows the money moved.</td><td>A reimbursement Amazon paid on a claim we filed. If Amazon paid a claim on its own, one we did not file, it is your money and it is not counted as ours.</td></tr>
+      <tr><th scope="row">Isolated</th><td>Measured on the exact line the move named, against that line's own earlier level.</td><td>Negative-matched search terms whose spend fell. If the whole campaign stopped spending, the saving is not credited to the negative match.</td></tr>
+      <tr><th scope="row">Attributable</th><td>Demand moved too, so the result is measured against a stated counterfactual built from the same demand curve that made the promise.</td><td>A price step, worked through in <a href="#worked">4.5</a>.</td></tr>
+      <tr><th scope="row">Unmeasurable</th><td>We could not separate our effect. Nothing is banked, and the row says why.</td><td>A fee that fell on half your catalog in the same month: that is Amazon changing a rate card, not our fix. Or the same movement already credited to another move.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Some work is recorded with no dollars at all: reorders, the Buy Box and conversion watch, and liquidation. The row says the work happened and claims nothing. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">4.3</span> The rules that decide what counts</h3>
+  <p><b><span class="ord">1.</span> Capped at the promise.</b> If an isolated or attributable result comes in above what we expected, it is banked at what we expected. The excess is written in the row and never added to the total. A miss of $25 or more is banked in full (rule 2 covers smaller ones). Claims are the one exception, because a claim pays what Amazon pays. The cap is applied in the single step every grade passes through, so a new kind of move cannot skip it.</p>
+  <p><b><span class="ord">2.</span> A $25 floor.</b> A movement under $25 either way closes with nothing banked, because at that size it is noise. That includes a loss under $25: it is written in the row, and not counted against the Record. The floor is applied to every grade at the end of each pass.</p>
+  <p><b><span class="ord">3.</span> Graded once, on exports after the move.</b> Negative-matched terms, spend corrections and branded pauses need at least 14 days of exports after the move. Price steps and margin moves are graded over the export periods that start after the move, whatever their length. A fee correction is graded on the latest reading in your export, so a fee that crept back up before grading is graded as nothing recovered. Each move is graded once, and nothing checks that a gain lasted beyond the window it was graded on.</p>
+  <p><b><span class="ord">4.</span> One dollar, one move.</b> When two moves touch the same SKU in the same period, the movement is credited once, to the older move. The other move's reading is set aside as unmeasurable, whether it was a gain or a loss, and its row says where the dollars went. <span class="lab lab-call">Shown on a call</span> for rules 1 to 4</p>
+  <p>Price steps get three more.</p>
+  <p><b><span class="ord">5.</span> The cautious reading.</b> The result is not graded at our single best guess. It is graded across the whole fitted range, with 8,000 draws and a fixed seed so that re-grading gives the same number, and the Record banks the 25th percentile. That is a deliberately cautious point for grading. The step itself was not sized at this percentile; section 3.5 describes how it was sized.</p>
+  <p><b><span class="ord">6.</span> Never more than your profit actually rose.</b> The credit cannot exceed the change in that SKU's own profit against its baseline. That before-and-after change includes the season and everything else, which is why it is never what gets banked. As a ceiling, though, it can only lower a claim.</p>
+  <p><b><span class="ord">7.</span> A lost Buy Box stays on the record.</b> If Buy Box share fell 10 points or more across the step, that is written into the row, and the step is recorded at its measured value, loss included, when the movement is $25 or more. Under $25 the floor in rule 2 still closes it with nothing banked, and the note stays in the row. <span class="lab lab-call">Shown on a call</span> for rules 5 to 7</p>
+  <p>The result of all of this: a correct forecast still banks less than it promised. On simulated sellers whose demand behaved exactly as fitted, the Record banked about 0.6 of the promise. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">4.4</span> Found, and proven</h3>
+  <p>A dollar on the Profit Record is in one of two states.</p>
+  <p><b>Proven.</b> Graded on your own later exports, or paid by Amazon.</p>
+  <p><b>Found, not yet banked.</b> A move actually made in your account, not yet graded, counted at its expected dollars, with no time limit today (section 1). Or a claim actually filed with Amazon and not yet paid. That is all. A move that was only proposed does not count. A claim that was only spotted in a report does not count. A claim whose window expired, or that Amazon denied, is neither found nor proven.</p>
+  <p>An invoice can stand only if proven plus found, counted since the day you said yes, is more than everything billed since then, that invoice included. More than, not equal to: a tie goes to you. <span class="lab lab-check">Check it yourself</span> for the rule, in the <a href="/terms">terms</a>, section 3. <span class="lab lab-call">Shown on a call</span> for the code.</p>
+  <p>When results are one day published, the dollar figures on them will be proven dollars only, never found. <span class="lab lab-call">Shown on a call</span> One kind of result, marking that the Record cleared the day-30 bar, records an event that found dollars helped decide, and it will say so where it appears. <span class="lab lab-word">Our word</span></p>
+
+  <h3 id="worked"><span class="ord">4.5</span> A worked example: one price step, graded four ways <span class="lab lab-hyp">Hypothetical</span></h3>
+  <div class="notice hypo">
+    <span class="hypo-flag">Hypothetical SKU · illustrative arithmetic · not a client and not a result</span>
+    <p>This continues the promise from <a href="#example-promise">3.9</a>: $24.00 → $25.20, expected +$195.36 a period, made on 31 August and graded on a hypothetical September export. The figures come from running our grading code on made-up inputs. Every step you can redo is marked.</p>
+    <p><b>Month A: demand did exactly what the fitted curve said.</b></p>
+    <div class="tbl wide" role="region" aria-label="Month A, graded step by step, hypothetical" tabindex="0">
+    <table>
+      <caption>Hypothetical SKU, hypothetical September. Not client data.</caption>
+      <thead><tr><th scope="col">Step</th><th scope="col" class="r">Hypothetical figure</th><th scope="col">How you can know</th></tr></thead>
+      <tbody>
+        <tr><td>Was it made? The price on file is $25.20.</td><td class="r">Yes</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>Actual profit in September: 1,814 units at $25.20. Revenue $45,714, referral $6,857, FBA $8,163, landed cost $12,698.</td><td class="r">$17,995.46</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>What the same September demand would have earned at the old $24.00: 1,814 × ($24.00 ÷ $25.20)<sup>−2</sup> = 2,000 units, × $8.90.</td><td class="r">$17,800.00</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>Difference at the best-guess elasticity.</td><td class="r">+$195.46</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>The cautious reading: 8,000 draws across the fitted range. 5th percentile −$205.84, median +$198.24, 25th percentile +$47.01.</td><td class="r">+$47.01</td><td><span class="lab lab-call">Shown on a call</span></td></tr>
+        <tr><td>Ceiling: the SKU's own profit rose $195.46 against August, and $47.01 is below it.</td><td class="r">+$47.01</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>Cap: $47.01 is below the $195.36 promised.</td><td class="r">+$47.01</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>Floor: $47.01 is more than $25.</td><td class="r">+$47.01</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr><td>Another move on this SKU in September? None.</td><td class="r">+$47.01</td><td><span class="lab lab-check">Check it yourself</span></td></tr>
+        <tr class="total"><th scope="row">On the Record</th><td class="r">Proven +$47.01</td><td>Attributable</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <figure class="fig" aria-labelledby="cap-grade">
+      <div class="scroll" role="region" aria-label="Chart: the promise and the grade, scrolls sideways on narrow screens" tabindex="0"><svg viewBox="0 0 640 224" role="img" aria-labelledby="fig-grade-t fig-grade-d" xmlns="http://www.w3.org/2000/svg"><title id="fig-grade-t">One hypothetical price step: the promise, and the grade</title><desc id="fig-grade-d">Before the move the promise was a median of +$195.36 with a 90% range of −$209.40 to +$608.08. Graded on a month where demand did exactly what the fitted curve said, the range ran −$205.84 to +$577.41 with a median of +$198.24, and the Record banks the 25th percentile, +$47.01.</desc><line class="grid" x1="83.2" x2="83.2" y1="26" y2="160"/><line class="grid" x1="201.6" x2="201.6" y1="26" y2="160"/><line class="grid" x1="320.0" x2="320.0" y1="26" y2="160"/><line class="grid" x1="438.4" x2="438.4" y1="26" y2="160"/><line class="grid" x1="556.8" x2="556.8" y1="26" y2="160"/><rect class="band" x="186.8" y="26" width="29.6" height="134"><title>Under $25 either way nothing is banked</title></rect><line class="zero" x1="201.6" x2="201.6" y1="26" y2="160"/><text x="24.0" y="16" class="t-lbl" text-anchor="start">Before the move: what was promised</text><line class="rng" x1="77.6" x2="561.6" y1="50" y2="50"><title>90% range of the promise: −$209.40 to +$608.08</title></line><line class="cap" x1="77.6" x2="77.6" y1="45" y2="55"/><line class="cap" x1="561.6" x2="561.6" y1="45" y2="55"/><circle class="dot-soft" cx="317.3" cy="50" r="5"><title>The promise, the median: +$195.36</title></circle><text x="77.6" y="38" class="t-ax" text-anchor="middle">5th</text><text x="317.3" y="38" class="t-ax" text-anchor="middle">median: the promise</text><text x="561.6" y="38" class="t-ax" text-anchor="middle">95th</text><text x="77.6" y="68" class="t-val" text-anchor="middle">−$209.40</text><text x="317.3" y="68" class="t-val" text-anchor="middle">+$195.36</text><text x="561.6" y="68" class="t-val" text-anchor="middle">+$608.08</text><text x="24.0" y="98" class="t-lbl" text-anchor="start">After the move: graded on month A&#x27;s export (8,000 draws)</text><line class="rng" x1="79.7" x2="543.4" y1="132" y2="132"><title>Graded range: −$205.84 to +$577.41</title></line><line class="cap" x1="79.7" x2="79.7" y1="127" y2="137"/><line class="cap" x1="543.4" x2="543.4" y1="127" y2="137"/><line class="tick-soft" x1="319.0" x2="319.0" y1="125" y2="139"><title>Median of the graded range: +$198.24</title></line><circle class="dot-amber" cx="229.4" cy="132" r="6"><title>25th percentile, what the Record banks: +$47.01</title></circle><text x="79.7" y="120" class="t-ax" text-anchor="middle">5th</text><text x="229.4" y="120" class="t-ax" text-anchor="middle">25th: banked</text><text x="319.0" y="120" class="t-ax" text-anchor="middle">median</text><text x="543.4" y="120" class="t-ax" text-anchor="middle">95th</text><text x="79.7" y="150" class="t-val" text-anchor="middle">−$205.84</text><text x="229.4" y="150" class="t-val" text-anchor="middle">+$47.01</text><text x="319.0" y="150" class="t-val" text-anchor="middle">+$198.24</text><text x="543.4" y="150" class="t-val" text-anchor="middle">+$577.41</text><text x="201.6" y="172" class="t-ax" text-anchor="middle">±$25: nothing banked</text><line class="axis" x1="24" x2="616" y1="182" y2="182"/><line class="axis" x1="83.2" x2="83.2" y1="182" y2="186"/><text x="83.2" y="200" class="t-ax" text-anchor="middle">−$200</text><line class="axis" x1="201.6" x2="201.6" y1="182" y2="186"/><text x="201.6" y="200" class="t-ax" text-anchor="middle">$0</text><line class="axis" x1="320.0" x2="320.0" y1="182" y2="186"/><text x="320.0" y="200" class="t-ax" text-anchor="middle">+$200</text><line class="axis" x1="438.4" x2="438.4" y1="182" y2="186"/><text x="438.4" y="200" class="t-ax" text-anchor="middle">+$400</text><line class="axis" x1="556.8" x2="556.8" y1="182" y2="186"/><text x="556.8" y="200" class="t-ax" text-anchor="middle">+$600</text><text x="616.0" y="218" class="t-ax" text-anchor="end">dollars per period · hypothetical SKU</text></svg></div>
+      <figcaption id="cap-grade"><span class="lab lab-hyp">Hypothetical</span> <b>The promise and the grade, month A.</b> Top: the range the move was promised on, from 6,000 simulated outcomes. Bottom: the same move graded on 8,000 draws after the fact. The forecast was right, and the Record banks the 25th percentile. The shaded band is the floor, inside which nothing is banked.</figcaption>
+      <details><summary>The numbers behind this chart</summary><div class="tbl" role="region" aria-label="Promise and grade, hypothetical" tabindex="0"><table><caption>The numbers behind this chart (hypothetical SKU)</caption><thead><tr><th scope="col"></th><th scope="col" class="r">5th</th><th scope="col" class="r">25th</th><th scope="col" class="r">Median</th><th scope="col" class="r">95th</th></tr></thead><tbody><tr><th scope="row">Promise, before the move</th><td class="r">−$209.40</td><td class="r">not published</td><td class="r">+$195.36</td><td class="r">+$608.08</td></tr><tr><th scope="row">Graded, month A</th><td class="r">−$205.84</td><td class="r"><b>+$47.01</b> banked</td><td class="r">+$198.24</td><td class="r">+$577.41</td></tr></tbody></table></div></details>
+    </figure>
+
+    <p>The forecast was exactly right, and the Record shows about a quarter of the promise (24%). That is the cautious reading at work. This example's range is deliberately wide, with a 19% chance of a loss, so it banks less than the roughly 0.6 measured on simulated sellers. Across a whole Record, a share that low would trip our own over-promising check (<a href="#replay">5.4</a>), and it should: a Record made of moves this uncertain is promising more than it can prove.</p>
+
+    <p><b>Months B to D: the same move in three other hypothetical months.</b></p>
+    <figure class="fig" aria-labelledby="cap-months">
+      <ul class="legend" aria-label="Legend"><li><svg viewBox="0 0 16 12" aria-hidden="true"><rect class="bar" x="0" y="2" width="16" height="8" rx="2"/></svg>On the Profit Record</li><li><svg viewBox="0 0 16 16" aria-hidden="true"><line class="tick-soft" x1="8" x2="8" y1="2" y2="14"/></svg>Difference at the best-guess curve</li><li><svg viewBox="0 0 16 16" aria-hidden="true"><path class="dia" d="M8,2 L14,8 L8,14 L2,8 Z"/></svg>Change in the SKU’s profit against August</li></ul>
+      <div class="scroll" role="region" aria-label="Chart: the same move in four hypothetical months, scrolls sideways on narrow screens" tabindex="0"><svg viewBox="0 0 640 304" role="img" aria-labelledby="fig-months-t fig-months-d" xmlns="http://www.w3.org/2000/svg"><title id="fig-months-t">The same hypothetical price step, graded in four hypothetical months</title><desc id="fig-months-d">A. Demand did exactly what the fitted curve said: difference at the best-guess curve +$195.46, change in the SKU&#x27;s profit +$195.46, on the Profit Record +$47.01; B. The season lifted demand 10%: difference at the best-guess curve +$215.01, change in the SKU&#x27;s profit +$1,995.01, on the Profit Record +$51.71; C. The season cut demand 10%: difference at the best-guess curve +$175.92, change in the SKU&#x27;s profit −$1,604.08, on the Profit Record −$1,604.08; D. Demand more price-sensitive than fitted: true elasticity −3.0: difference at the best-guess curve +$186.16, change in the SKU&#x27;s profit −$661.46, on the Profit Record −$661.46</desc><line class="grid" x1="94.5" x2="94.5" y1="8" y2="256"/><line class="grid" x1="165.0" x2="165.0" y1="8" y2="256"/><line class="grid" x1="235.4" x2="235.4" y1="8" y2="256"/><line class="zero" x1="305.9" x2="305.9" y1="8" y2="256"/><line class="grid" x1="376.4" x2="376.4" y1="8" y2="256"/><line class="grid" x1="446.9" x2="446.9" y1="8" y2="256"/><line class="grid" x1="517.3" x2="517.3" y1="8" y2="256"/><line class="grid" x1="587.8" x2="587.8" y1="8" y2="256"/><text x="24.0" y="22" class="t-lbl" text-anchor="start">A. Demand did exactly what the fitted curve said</text><path class="bar" d="M305.9,31.0 H309.2 Q312.5,31.0 312.5,34.3 V39.7 Q312.5,43.0 309.2,43.0 H305.9 Z"><title>A. Demand did exactly what the fitted curve said. On the Profit Record: +$47.01</title></path><text x="318.5" y="41" class="t-val" text-anchor="start">+$47.01</text><line class="tick-soft" x1="333.5" x2="333.5" y1="50" y2="64"><title>Difference at the best-guess curve: +$195.46</title></line><path class="dia" d="M333.5,51 L339.5,57 L333.5,63 L327.5,57 Z"><title>Change in the SKU's profit against August: +$195.46</title></path><text x="345.5" y="61" class="t-ax" text-anchor="start">+$195.46 (both marks)</text><text x="24.0" y="84" class="t-lbl" text-anchor="start">B. The season lifted demand 10%</text><path class="bar" d="M305.9,93.0 H309.5 Q313.2,93.0 313.2,96.6 V101.4 Q313.2,105.0 309.5,105.0 H305.9 Z"><title>B. The season lifted demand 10%. On the Profit Record: +$51.71</title></path><text x="319.2" y="103" class="t-val" text-anchor="start">+$51.71</text><line class="tick-soft" x1="336.2" x2="336.2" y1="112" y2="126"><title>Difference at the best-guess curve: +$215.01</title></line><path class="dia" d="M587.1,113 L593.1,119 L587.1,125 L581.1,119 Z"><title>Change in the SKU's profit against August: +$1,995.01</title></path><text x="575.1" y="123" class="t-ax" text-anchor="end">+$1,995.01</text><text x="24.0" y="146" class="t-lbl" text-anchor="start">C. The season cut demand 10%</text><path class="bar" d="M305.9,155.0 H83.8 Q79.8,155.0 79.8,159.0 V163.0 Q79.8,167.0 83.8,167.0 H305.9 Z"><title>C. The season cut demand 10%. On the Profit Record: −$1,604.08</title></path><text x="87.8" y="165" class="t-in" text-anchor="start">−$1,604.08</text><line class="tick-soft" x1="330.7" x2="330.7" y1="174" y2="188"><title>Difference at the best-guess curve: +$175.92</title></line><path class="dia" d="M79.8,175 L85.8,181 L79.8,187 L73.8,181 Z"><title>Change in the SKU's profit against August: −$1,604.08</title></path><text x="91.8" y="185" class="t-ax" text-anchor="start">−$1,604.08</text><text x="24.0" y="208" class="t-lbl" text-anchor="start">D. Demand more price-sensitive than fitted: true elasticity −3.0</text><path class="bar" d="M305.9,217.0 H216.7 Q212.7,217.0 212.7,221.0 V225.0 Q212.7,229.0 216.7,229.0 H305.9 Z"><title>D. Demand more price-sensitive than fitted: true elasticity −3.0. On the Profit Record: −$661.46</title></path><text x="220.7" y="227" class="t-in" text-anchor="start">−$661.46</text><line class="tick-soft" x1="332.1" x2="332.1" y1="236" y2="250"><title>Difference at the best-guess curve: +$186.16</title></line><path class="dia" d="M212.7,237 L218.7,243 L212.7,249 L206.7,243 Z"><title>Change in the SKU's profit against August: −$661.46</title></path><text x="224.7" y="247" class="t-ax" text-anchor="start">−$661.46</text><line class="axis" x1="24" x2="616" y1="262" y2="262"/><line class="axis" x1="94.5" x2="94.5" y1="262" y2="266"/><text x="94.5" y="280" class="t-ax" text-anchor="middle">−$1,500</text><line class="axis" x1="165.0" x2="165.0" y1="262" y2="266"/><text x="165.0" y="280" class="t-ax" text-anchor="middle">−$1,000</text><line class="axis" x1="235.4" x2="235.4" y1="262" y2="266"/><text x="235.4" y="280" class="t-ax" text-anchor="middle">−$500</text><line class="axis" x1="305.9" x2="305.9" y1="262" y2="266"/><text x="305.9" y="280" class="t-ax" text-anchor="middle">$0</text><line class="axis" x1="376.4" x2="376.4" y1="262" y2="266"/><text x="376.4" y="280" class="t-ax" text-anchor="middle">+$500</text><line class="axis" x1="446.9" x2="446.9" y1="262" y2="266"/><text x="446.9" y="280" class="t-ax" text-anchor="middle">+$1,000</text><line class="axis" x1="517.3" x2="517.3" y1="262" y2="266"/><text x="517.3" y="280" class="t-ax" text-anchor="middle">+$1,500</text><line class="axis" x1="587.8" x2="587.8" y1="262" y2="266"/><text x="587.8" y="280" class="t-ax" text-anchor="middle">+$2,000</text><text x="616.0" y="298" class="t-ax" text-anchor="end">dollars per period · hypothetical SKU, one move, four hypothetical months</text></svg></div>
+      <figcaption id="cap-months"><span class="lab lab-hyp">Hypothetical</span> <b>One hypothetical move, four hypothetical months, 8,000 draws each.</b> The difference at the best-guess curve stays positive in every month. What reaches the Record is never more than the 25th percentile of the graded range, the promise, or the change in the SKU's own profit, whichever is lowest.</figcaption>
+      <details><summary>The numbers behind this chart</summary><div class="tbl wide" role="region" aria-label="Four months, hypothetical" tabindex="0"><table><caption>The numbers behind this chart (hypothetical SKU, promise +$195.36 a period)</caption><thead><tr><th scope="col">Hypothetical month</th><th scope="col" class="r">Difference at the best-guess curve</th><th scope="col" class="r">25th percentile of the graded range</th><th scope="col" class="r">Change in the SKU’s profit against August</th><th scope="col" class="r">On the Profit Record</th></tr></thead><tbody><tr><th scope="row">A. Demand did exactly what the fitted curve said</th><td class="r">+$195.46</td><td class="r">+$47.01</td><td class="r">+$195.46</td><td class="r"><b>+$47.01</b></td></tr><tr><th scope="row">B. The season lifted demand 10%</th><td class="r">+$215.01</td><td class="r">+$51.71</td><td class="r">+$1,995.01</td><td class="r"><b>+$51.71</b></td></tr><tr><th scope="row">C. The season cut demand 10%</th><td class="r">+$175.92</td><td class="r">+$42.31</td><td class="r">−$1,604.08</td><td class="r"><b>−$1,604.08</b></td></tr><tr><th scope="row">D. Demand more price-sensitive than fitted: true elasticity −3.0</th><td class="r">+$186.16</td><td class="r">+$44.77</td><td class="r">−$661.46</td><td class="r"><b>−$661.46</b></td></tr></tbody></table></div></details>
+    </figure>
+    <p><b>Month B</b>, the season lifts demand 10%: the SKU's profit rises $1,995.01, and the Record banks +$51.71. The season is not credited to the move.</p>
+    <p><b>Month C</b>, the season cuts demand 10%: at the best-guess curve the step still worked (+$175.92), but the SKU's profit fell $1,604.08, and the ceiling books −$1,604.08 against the move.</p>
+    <p><b>Month D</b>, demand is more price-sensitive than fitted (a true elasticity of −3.0): the move lost money, and it is booked as the loss it was, −$661.46.</p>
+    <p>Month C is the one to read twice. The step itself worked, but a bad month took the SKU's profit down, and the ceiling books that whole drop against the move. We built it that way on purpose. The ceiling can only lower a claim, so when it is wrong, it is wrong against us, never against your invoice.</p>
+  </div>
+
+  <h3><span class="ord">4.6</span> What the day-30 check does with it <span class="lab lab-hyp">Hypothetical</span></h3>
+  <div class="notice hypo">
+    <span class="hypo-flag">Hypothetical figures · not a client</span>
+    <p>Suppose that by day 30 the only graded move is month A, proven at +$47.01. Add an ad correction made but not yet graded, expected at $1,200, and a claim filed with Amazon and not yet paid, expected at $900. Found: $2,100. Proven plus found: $2,147.01. That is not more than $6,000, so no invoice is created. <span class="lab lab-check">Check it yourself</span></p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── 5 ─────────────────────────────── -->
+<section class="part prose" id="checks" aria-labelledby="h-checks">
+  <h2 id="h-checks"><span class="ord">5.</span> How the engine checks itself</h2>
+  <div class="notice">
+    <p><span class="lab lab-sim">Simulated</span> <b>Every measured figure in this section comes from simulated sellers</b>: synthetic data we generated, not any client account. It tells you how the method behaves. It is not a result. The tests and simulation runs are in our private repository. We will run the tests on a call; the larger simulation studies take longer than a call, so for those we send the saved output.</p>
+  </div>
+
+  <h3><span class="ord">5.1</span> The tests</h3>
+  <p>At the commit this page describes (12 September 2026), the engine carried 979 automated tests, and all 979 passed when we ran them on 13 September 2026. 209 of them were added in the math work described below: 199 in fifteen new test files, and 10 more in three existing ones. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">5.2</span> Do the published ranges contain the truth? <span class="lab lab-sim">Simulated</span></h3>
+  <ul>
+    <li><b>The range on how demand responds to price.</b> Across 1,000 simulated SKUs per setting, the published 95% range contained the true value 94.4% to 96.6% of the time, at five and twelve months of history, with noise both even and uneven. The classical standard error, with the same multiplier, applied to the same simulated data under uneven noise, falls to 90.9%. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>Why the range is wider than a spreadsheet's.</b> With five months of history, the correct multiplier for a 95% range is 3.182, not 1.96. Using 1.96 would print a range 38% too narrow on exactly the thinnest SKUs: 1.96 ÷ 3.182 = 0.62. <span class="lab lab-check">Check it yourself</span></li>
+    <li><b>The range on a move's expected dollars.</b> On 1,000 simulated SKUs, the published 90% range contained the realized result 91.6% to 94.0% of the time at seven months of history, and 96.0% to 96.7% at five. At five months the range errs wide, which makes steps smaller than they need to be. That costs upside rather than adding risk. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>Borrowing from your catalog.</b> A SKU with little history borrows strength from the rest of your catalog, in proportion to how noisy its own estimate is. Across 30 simulated sellers of 20 SKUs each, that beat each SKU's own estimate overall, and for at least 20 of the 30 sellers individually. You see both numbers and the weight. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>The best-price formula.</b> A symbolic algebra check confirms the formula's single root, and a 200,001-point search confirms it at four elasticities and four fee structures. <span class="lab lab-call">Shown on a call</span>; the formula itself, in <a href="#example-promise">3.9</a>: <span class="lab lab-check">Check it yourself</span></li>
+  </ul>
+
+  <h3><span class="ord">5.3</span> Thousands of checks, and noise <span class="lab lab-sim">Simulated</span></h3>
+  <p>Each week the engine runs change detection over every fee line, traffic metric, campaign and settlement series. On a real catalog that is thousands of checks. Run a threshold thousands of times and noise will cross it.</p>
+  <ul>
+    <li>On 500 simulated SKUs of pure noise, with nothing real planted, the detectors on their own flagged 548 of 4,000 checks. After controlling for how many checks were run, none survived.</li>
+    <li>A real $1.20-a-unit fee change planted among those 500 noise SKUs still survived, with its $120-a-period figure intact. The control removes noise, not findings.</li>
+    <li>On a simulated 120-SKU catalog: 960 checks, 24 raw flags, 0 findings reaching the seller. Nothing real was planted there, so 0 is the right answer.</li>
+  </ul>
+  <p>The engine records how many checks stood behind each weekly pass, and your report says its fee-change alerts are controlled for running thousands of checks. The alert itself does not print that count yet. <span class="lab lab-sim">Simulated</span> for the figures above; <span class="lab lab-call">Shown on a call</span> for the rest.</p>
+
+  <h3 id="replay"><span class="ord">5.4</span> Scoring our own promises against what happened</h3>
+  <p>A separate check re-grades a client's whole history of moves against their exports and asks three questions. Are we banking a sensible share of what we promised? The target is 0.30 to 1.30, and anything below 0.30 is labelled over-promising. Did the results land inside the ranges we published at least 80% of the time? And can every promise be rebuilt from what was written down? It also reports drift: a banked grade that no longer reproduces. Until at least 8 moves have been graded it says "pending", not a ratio. <span class="lab lab-call">Shown on a call</span></p>
+  <p>The first time it ran, on simulated histories, it caught two errors in our own grading (section 6, item 10). It has never run on a client's history, because there is none yet. Until it does, every calibration number on this page describes a simulation. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">5.5</span> Does the careful step earn its keep? A split result <span class="lab lab-sim">Simulated</span></h3>
+  <p>We raced five pricing rules on 40 simulated sellers of 25 SKUs each, in three settings, including one where each SKU's true demand drifts over time. Scoring was per move, over a thousand moves.</p>
+  <ul>
+    <li>Every rule that uses the fitted demand curve beat a flat 3% step by more than 50% on total profit.</li>
+    <li>The careful step we use did <b>not</b> beat the simpler "go straight for the best guess" rule on total profit. It was 1–2% behind in every setting, because it declines moves the simpler rule takes. Per move, the two were a dead heat.</li>
+    <li>It did win on bad outcomes, in every setting: the worst tenth of moves were 10–18% less bad, and dollars lost on losing moves were 13–18% lower.</li>
+  </ul>
+  <p>Because this is a split result and a simulation cannot settle it, our own scorecard gives it 9 out of 10, not 10. Only real client history can settle it. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">5.6</span> Same inputs, same answer</h3>
+  <p>The whole weekly cycle is run twice on the same catalog, and every output is checked for an exact match. Re-grading a move reproduces what it banked, to the cent. The randomness in every simulation is seeded, so no re-run can move a figure you were already given. <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">5.7</span> What these checks changed in what a seller is told <span class="lab lab-sim">Simulated</span></h3>
+  <p>On one simulated catalog (120 SKUs, seven months, 22% demand noise), the same data went through the engine before and after this work.</p>
+  <div class="tbl" role="region" aria-label="Before and after, one simulated catalog" tabindex="0">
+  <table>
+    <caption>One simulated catalog. Not client data.</caption>
+    <thead><tr><th scope="col"></th><th scope="col" class="r">Before</th><th scope="col" class="r">After</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Price steps proposed</th><td class="r">115</td><td class="r">117</td></tr>
+      <tr><th scope="row">…quoting a best price to the cent</th><td class="r">95</td><td class="r">16</td></tr>
+      <tr><th scope="row">…carrying a dollar promise</th><td class="r">115</td><td class="r">16</td></tr>
+      <tr><th scope="row">Change-detection flags</th><td class="r">24</td><td class="r">24</td></tr>
+      <tr><th scope="row">…reaching the seller as a finding</th><td class="r">24</td><td class="r">0</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The same number of instructions, and far fewer numbers the data could not support. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></p>
+
+  <h3><span class="ord">5.8</span> Two more measured effects <span class="lab lab-sim">Simulated</span></h3>
+  <ul>
+    <li><b>Your SKUs have bad months together.</b> On a simulated 24-SKU catalog where SKUs share demand (a pairwise correlation of 0.43), the expected number running out in the same month was unchanged at 6. But the bad case, the 95th percentile, went from 10 SKUs under the old assumption that SKUs move independently to 15. Both numbers are reported. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>The ad break-even carries a range.</b> On a simulated campaign, the break-even spend band was $88–$95 at low noise and $64–$98 at high noise. A trim is sized from the cautious end, and no trim is proposed when the band reaches current spend. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+  </ul>
+</section>
+
+<!-- ─────────────────────────────── 6 ─────────────────────────────── -->
+<section class="part prose" id="withdrawn" aria-labelledby="h-withdrawn">
+  <h2 id="h-withdrawn"><span class="ord">6.</span> What we got wrong, and withdrew</h2>
+  <p>A method that only publishes its successes is asking you to trust it. This section lists what our own checks caught, in plain terms: what we said, what was actually true, and what changed. Each correction is dated, and was written into the documents where the original claim was made. Nothing here reached a client, because there are none yet, which is also why we fixed these now. The only account on file is our own internal test account, and none of its moves was emailed to anyone or carried out. The commits named are in our private repository; we will open any of them on the call.</p>
+
+  <article class="wrong" aria-labelledby="w1">
+    <h3 id="w1"><span class="ord">1.</span> A guard that could be switched off by the answer it was guarding against</h3>
+    <span class="stamp">Fixed <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>The check that refuses to quote a best price near −1 (<a href="#moves">section 3.6</a>) treated a missing uncertainty figure as a claim of certainty. So a fit whose uncertainty came back infinite sailed through. Measured: a SKU with an estimate of −1.05 got a best price of <b>$123.53 on a $20 item</b>, a full 5% step, a dollar promise, and "under a 1% chance it goes the other way". That is maximum confidence at the exact point where there is no information.</p>
+    <p>Now a fitted estimate with no usable uncertainty is refused. The test that had approved the old behavior now asserts the opposite, with the measurement written into it. Four test fixtures that had left out the uncertainty were made realistic; the rule was not weakened to make them pass. <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w2">
+    <h3 id="w2"><span class="ord">2.</span> One screen showed a dollar figure the move itself refused</h3>
+    <span class="stamp">Fixed <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>On price moves whose own text said there was "no dollar figure we would stand behind", the charts inside Hubricon still printed an expected dollar figure. The engine must not refuse a number in one place and publish it in another. The charts now follow the move. <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w3">
+    <h3 id="w3"><span class="ord">3.</span> Unequal period lengths bent the demand estimate</h3>
+    <span class="stamp">Fixed <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>Units were compared across periods without adjusting for how many days each period had. For a 5% step held 15 days against a 16-day baseline, that shifts the estimate by −1.32. At 14 days against 16, by −2.74. That is 1.3 to 2.7 points of elasticity, pointing toward "cut the price". A calendar fortnight inside a 31-day month forces 15 against 16, so asking clients for fortnightly exports, the obvious way to sharpen the estimate, would have shipped a bias. Units are now converted to a daily rate first. On equal periods nothing changes, which is exactly why this looked like a nicety.</p>
+    <p><span class="lab lab-check">Check it yourself</span> ln(15/16) ÷ ln(1.05) = −1.32, and ln(14/16) ÷ ln(1.05) = −2.74. The fix: <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w4">
+    <h3 id="w4"><span class="ord">4.</span> A reassuring number that was an accident of eight runs</h3>
+    <span class="stamp">Withdrawn <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>We had reported that part of the pricing bias (<a href="#limits">section 7</a>, item 1) was a harmless +0.15 small-sample effect, separate from the dangerous part. There was only one thing. Twelve independent 8-run batches of that simulated setting ranged from −0.117 to +0.145, and pooled over 96 runs the figure is +0.022. The test that pinned +0.15 passed 5 of those 12 batches. So the whole +0.51 bias in the simulated reactive-pricing setting is the dangerous kind: the problem is bigger than we had said, not smaller. A new test asserts that 8 runs cannot measure this setting, so the mistake cannot recur. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w5">
+    <h3 id="w5"><span class="ord">5.</span> A safety claim withdrawn the same morning it was committed</h3>
+    <span class="stamp">Withdrawn <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>We added a line to the client report saying that a quoted price is always at or above the true best price, so it is safe to treat as a ceiling. The math behind it holds in very long histories. But on the estimate the engine actually uses, for the SKUs it actually quotes, it held for 79.7% of SKUs in one simulated setting and 37.3% in another, both inside the claim's own stated conditions. A bound that is wrong for a fifth to nearly two-thirds of the SKUs it is printed on is not a bound. The report now makes a catalog-level statement that names its own limits, and a test asserts the per-SKU claim stays gone. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w6">
+    <h3 id="w6"><span class="ord">6.</span> "Our own price steps fix the bias." They do not.</h3>
+    <span class="stamp">Withdrawn <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>The client report said every step we make is a clean price experiment, so the data would get better on its own. That was false for two reasons, both measured. First, we choose each step from the same fitted curve, which is shaped by the same demand swings that bias it, so the step is not independent of demand. Second, a 14-day price test inside a monthly export averages away to almost nothing: it leaves price variation of 1.1%, under the 2% the engine needs, so it teaches the estimate nothing at all. A step held for a whole month does show (2.4%), and a later pass narrowed the withdrawal to say so. The first reason still stands. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit ec101f7</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w7">
+    <h3 id="w7"><span class="ord">7.</span> An arithmetic error that halved the danger</h3>
+    <span class="stamp">Corrected <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>Our methods document said an estimate of −1.6, when the truth is −2.0, puts the best price 17% too high. It is 33.3%. The test meant to pin the figure only checked "more than 15%", which is how the error survived. It now pins 4/3 exactly. <span class="lab lab-check">Check it yourself</span> (1.6 ÷ 0.6) ÷ (2.0 ÷ 1.0) = 4/3. <span class="ref">commit ec101f7</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w8">
+    <h3 id="w8"><span class="ord">8.</span> Step-size figures from a single run</h3>
+    <span class="stamp">Corrected <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>We reported that the statistics, not the 5% limit, set 43% of step sizes. Over twelve simulated runs and 703 moves the figure is about 28%, with 71.8% of steps on the limit. A quarter of steps are 4.5% or smaller, not 3.0% or smaller as we had said. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w9">
+    <h3 id="w9"><span class="ord">9.</span> A correction we designed, tested, and did not ship</h3>
+    <span class="stamp">Not shipped <time datetime="2026-09-12">12 September 2026</time></span>
+    <p>We designed a way to subtract the pricing bias using only the data already on file, then set a second pass the job of overturning it. It was overturned. The correction only worked because of an error in one of its inputs, so improving that input broke it. On a mixed simulated catalog its headline number looked like total success, with the typical bias going from +0.431 to −0.011. Meanwhile overall error rose 197%, 42% of SKUs were made worse, and the new errors pointed toward "cut the price". It stays unbuilt. One small piece survived: a measure of how strongly a seller reprices in response to last month's demand. That piece is under measurement and not yet claimed. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit b3b2bd6</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w10">
+    <h3 id="w10"><span class="ord">10.</span> Two grading errors, caught by the check in 5.4</h3>
+    <span class="stamp">Fixed <time datetime="2026-09-11">11 September 2026</time></span>
+    <p>We had changed how the demand estimate's range is computed, making it honestly wider. The grading rule still took the worst end of that range, and the replay check caught the effect: on 24 simulated price cuts that <b>all made money</b>, the grading booked 18 as losses. Taking the extreme end of a wide range is not caution; it is a wrong answer. The rule became the 25th percentile. The same check caught a second error: a price cut followed by no change in volume was still booked as a gain. The claim is now capped at what the SKU's profit actually did. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span> <span class="ref">commit 45c216c</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w11">
+    <h3 id="w11"><span class="ord">11.</span> Smaller ones, held to the same standard</h3>
+    <span class="stamp">All <time datetime="2026-09-11">11 September 2026</time></span>
+    <ul>
+      <li>The first version of the pricing race (<a href="#checks">5.5</a>) reported a win on bad outcomes that did not reproduce. It had scored the worst of twenty simulated sellers, a number that swung by hundreds of dollars between runs. Scoring moved to per move. <span class="lab lab-sim">Simulated</span></li>
+      <li>The error bar on every 5th-percentile figure was inflated by 60%, because the estimator looked at the middle of the distribution, not the tail. Caught by comparing it against 400 independent re-runs.</li>
+      <li>Simulating shared demand on a 400-SKU catalog needed 2.9 GB of memory and would have failed on the first large client. It now streams one SKU at a time with identical numbers, peaking at 85 MB for the whole weekly run. <span class="ref">commits 02e4d88, 04287d6</span></li>
+      <li>The formulas on our own home page had fallen behind the code: an old best-price formula and a 1.96 multiplier. They were brought back in line. <span class="ref">commit 9ca1615</span></li>
+      <li>"Capped at what we promised" was applied to every kind of move except ad-bleed cuts, the most common move we make. The page was stricter than the code. The cap now sits in the one step every grade passes through.</li>
+      <li>The day-30 check and the monthly check disagreed on an exact tie. Both now require the Record to be strictly ahead, so a tie goes to you.</li>
+      <li>We deleted a statistic, "about 40% of reimbursements go unfiled", from every page, because we could not trace it to the source it was attributed to.</li>
+    </ul>
+    <p><span class="lab lab-call">Shown on a call</span></p>
+  </article>
+
+  <article class="wrong" aria-labelledby="w12">
+    <h3 id="w12"><span class="ord">12.</span> Before all of this</h3>
+    <span class="stamp">Found and fixed <time datetime="2026-09-11">11 September 2026</time></span>
+    <p>When the math work began, our own scorecard found nine defects in the pricing and alert math. They included a best-price formula that treated per-unit fees as a percentage, a range labelled 95% that was not one, and no control for running thousands of checks, which on a 500-SKU catalog of pure noise would have sent roughly five hundred dollar-figured "findings" per weekly pass. Each was fixed in its own commit with its own tests. <span class="lab lab-call">Shown on a call</span>; the five hundred is <span class="lab lab-sim">Simulated</span> <span class="ref">commits 642e58d to 5ce9401</span></p>
+  </article>
+</section>
+
+<!-- ─────────────────────────────── 7 ─────────────────────────────── -->
+<section class="part prose" id="limits" aria-labelledby="h-limits">
+  <h2 id="h-limits"><span class="ord">7.</span> What the engine cannot tell you</h2>
+  <p>If you read one section, read this one.</p>
+  <ol>
+    <li><b>Whether a price change caused what followed.</b> Demand is estimated from prices you chose, often in response to how sales were running. That makes demand look less price-sensitive than it is. In our simulations of sellers who reprice off last month's numbers, the error was about +0.4 to +0.5 of an elasticity, in the direction that argues for raising prices. It is not corrected, and with the data in an Amazon or Shopify export it cannot be. Our own price steps do not fix it either (section 6, item 6). <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>A best price for most SKUs on a first upload.</b> With seven months of history, 10% price variation and 22% demand noise, about five SKUs in six get no best price. They still get a direction and a step. <span class="lab lab-sim">Simulated</span> <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>Cannibalization between your own SKUs.</b> A cut on one SKU that takes sales from another shows up as a win on the first and an unexplained loss on the second. <span class="lab lab-word">Our word</span></li>
+    <li><b>What your competitors are doing.</b> No competitor price, assortment or stock data reaches the engine. Your Buy Box share is the only shadow of it. <span class="lab lab-word">Our word</span></li>
+    <li><b>The value of a stockout you did not have.</b> Sales you would have lost cannot be observed, so a reorder carries no dollar promise, and the Record proves only that the order landed. <span class="lab lab-call">Shown on a call</span></li>
+    <li><b>Whether an ad drove the SKU it is charged to.</b> Ad spend is split across SKUs by their share of revenue. That is accounting, not attribution. Ad results also inherit the attribution window of the Amazon ad report they come from. <span class="lab lab-word">Our word</span></li>
+    <li><b>Why a detected shift happened.</b> "Fees rose in May" is a measurement. "Because the listing was re-measured" is a guess, and a move states it as one. <span class="lab lab-word">Our word</span></li>
+    <li><b>Anything about your cash you did not tell us.</b> Cash on hand and fixed costs are inputs you give us. The runway is a simulated balance crossing zero: a bridge-capital line, never a bankruptcy prediction. <span class="lab lab-word">Our word</span></li>
+    <li><b>Whether the shapes of the curves are right.</b> Every range on this page assumes a particular curve shape: constant elasticity for demand, a saturating curve for ads, lognormal demand, one shared demand factor. No amount of resampling tests the shape itself. <span class="lab lab-word">Our word</span></li>
+  </ol>
+
+  <div class="notice">
+    <p><b>The assumption that would cost you most if it is wrong</b> is the first one. The size is not the danger; the direction is. An engine that nudges prices up, on evidence that understates how much volume a rise will cost, could take months of exports to catch, and would look like ordinary seasonality while it happened. Four things stand between that and your account:</p>
+    <ul>
+      <li>no best price is quoted where the estimate cannot be separated from −1, and the most-biased SKUs land there disproportionately;</li>
+      <li>the step is small when the fit is uncertain;</li>
+      <li>on Amazon, Hagen reads Buy Box share by hand while a step is live and takes back a step that costs it; on Shopify, where there is no Buy Box, he reads conversion rate instead. No code raises a same-day alarm on either on its own;</li>
+      <li>the Record banks the cautious 25th percentile, capped at what the SKU's profit actually did, so a move that did not work cannot be banked as one that did.</li>
+    </ul>
+    <p><span class="lab lab-call">Shown on a call</span> for the first, second and fourth; <span class="lab lab-word">Our word</span> for the third.</p>
+    <p><b>What would retire it</b>, and why it is not built. Two things would have to change: a deliberately random part of each price step, independent of your data, and a price history fine enough to see a 14-day move. Neither exists today. <span class="lab lab-word">Our word</span></p>
+  </div>
+  <p><b>Smaller limits, stated for completeness.</b> Supplier lead-time spread is an assumption, because no export records actual lead times. Cost uncertainty is treated as zero, because your cost sheet is a number you state, not one we measure. Change detection assumes no slow trend or seasonality in a series, so a slow fee drift can read as a step. One shared demand factor describes a catalog with a seasonal line and an evergreen line only on average. <span class="lab lab-call">Shown on a call</span></p>
+</section>
+
+<!-- ─────────────────────────────── close ─────────────────────────────── -->
+<section class="part prose" id="corrections" aria-labelledby="h-corrections">
+  <h2 id="h-corrections">Corrections, and the parts you cannot open</h2>
+  <p><b>Found a mistake on this page?</b> Email <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a>. If we are wrong, the correction goes into section 6 with its date.</p>
+  <p><b>Want to see the parts you cannot open?</b> Ask on the call, or book a second one for it, and Hagen will share his screen and run the tests named here: the refusal on the thinnest upload, the reply window that will not open without a sent email, the $123.53 fix, the noise-only catalog. The larger simulation studies take longer than a call, so he will send their saved output instead. What is marked Our word is exactly that, and nothing on this page is a client result. <span class="lab lab-word">Our word</span></p>
+  <p><b>Want to see a Teardown before you send anything?</b> <a href="/sample-teardown">A sample Profit Teardown</a> runs the same engine on a synthetic catalog and shows the answer key beside what it found. <span class="lab lab-sim">Simulated</span> It is not a client and not a result.</p>
+
+  <div class="end">
+    <h2>The Teardown is free.</h2>
+    <p>For brands doing $3M or more a year. Apply with four answers, book the 20-minute call, then send your files. Your whole catalog comes back as a written Profit Teardown within 24 hours of the files landing, with a narrated video walkthrough of your numbers. You keep both whether or not you go any further.</p>
+    <p>Under $3M, the <a href="/teardown">60-second Teardown</a> is free and needs no call.</p>
+    <a class="btn" href="/#apply">Get your free Profit Teardown</a>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <span>© 2026 Hubricon · www.hubricon.com · How the work is done</span>
+  <nav aria-label="Footer"><a href="/">Home</a><a href="/#pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+</footer>
+</body>
+</html>

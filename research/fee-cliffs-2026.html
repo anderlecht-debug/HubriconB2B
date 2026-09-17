@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fee Cliff Census 2026 | Hubricon</title>
+<meta name="description" content="Original research from public listing pages. Of 220 FBA listings priced $9.00 to $10.99, 197 were under $10, where the fulfilment fee for a standard-size unit steps up $0.85 to $1.05.">
+<link rel="canonical" href="https://www.hubricon.com/research/fee-cliffs-2026">
+<meta name="theme-color" content="#050A1F">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/research/fee-cliffs-2026">
+<meta property="og:title" content="The Fee Cliff Census 2026">
+<meta property="og:description" content="197 of 220 FBA listings priced $9.00 to $10.99 sit under Amazon&#x27;s $10 fee step. Public pages, published rate cards, every interval and limit shown.">
+<meta name="twitter:card" content="summary">
+<style>
+:root{color-scheme:dark;--bg:#050A1F;--panel:hsl(228 40% 10%);--hair:hsl(222 40% 60% / .16);--ink:hsl(222 30% 96%);
+--soft:hsl(222 22% 78%);--faint:hsl(222 16% 58%);--amber:#ffc000;--ok:hsl(150 58% 58%);
+--s-amber:#c98500;--s-blue:#3987e5;--s-aqua:#199e70;--s-gray:#5a647d;--s-gray-line:#8a93a8;
+--serif:"Iowan Old Style",Georgia,serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--soft);font:16px/1.65 var(--sans);padding-block:24px 90px;padding-inline:20px;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
+.wrap{max-width:860px;margin:0 auto}
+a{color:var(--amber)}
+a:focus-visible,summary:focus-visible,.chart-scroll:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+.skip{position:absolute;left:-9999px;top:8px;background:var(--amber);color:#1a1205;padding:8px 14px;border-radius:8px;font-weight:600}
+.skip:focus{left:16px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--faint)}
+
+/* nav, same markup as the public Teardown pages */
+.nav{max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 9px 9px 20px;border:1px solid var(--hair);border-radius:999px;background:hsl(228 40% 10% / .7)}
+.nav-logo{font:500 21px/1 var(--serif);color:var(--ink);text-decoration:none;letter-spacing:.01em}
+.nav-logo em{color:var(--amber);font-style:normal}
+.nav-links{display:flex;gap:22px;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.nav-links a{color:var(--faint);text-decoration:none}
+.nav-links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:9px;font-weight:650;padding:11px 20px;border-radius:999px;text-decoration:none;font-size:13px;white-space:nowrap}
+.btn svg{width:14px;height:14px;flex:none}
+.btn-white{color:var(--ink);border:1px solid hsl(222 30% 96% / .35)}
+.btn-white:hover{border-color:var(--amber)}
+.btn-amber{background:var(--amber);color:#1a1205;padding:13px 24px}
+
+/* header and disclosure */
+.head{padding:44px 0 8px}
+h1{font:500 clamp(28px,5vw,42px)/1.12 var(--serif);color:var(--ink);margin:10px 0 18px;letter-spacing:-.01em;text-wrap:balance}
+.disclose{background:var(--panel);border:1px solid hsl(45 100% 50% / .38);border-radius:14px;padding:20px 24px;font-size:16px}
+.disclose p+p{margin-top:10px}
+.disclose b{color:var(--ink)}
+.lede{max-width:64ch;margin-top:22px}
+
+/* sections */
+section{margin-top:56px;padding-top:28px;border-top:1px solid var(--hair)}
+h2{font:500 clamp(24px,4vw,31px)/1.2 var(--serif);color:var(--ink);margin-bottom:12px;letter-spacing:-.005em;text-wrap:balance}
+h3{font:500 21px/1.3 var(--serif);color:var(--ink);margin:30px 0 8px}
+section>p,section>ul,section>ol{max-width:68ch}
+section>p+p{margin-top:12px}
+.keys{list-style:none;display:grid;gap:12px;margin-top:16px;max-width:none}
+.keys li{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:14px 18px}
+.keys .k{display:block;font:500 22px/1.25 var(--serif);color:var(--ink);margin-bottom:2px}
+.plain{padding-left:20px;margin-top:10px}
+.plain li+li{margin-top:8px}
+.plain li::marker{color:var(--faint)}
+.plain b,.finding b,section>p b{color:var(--ink);font-weight:600}
+
+/* the headline number */
+.stat{margin:16px 0 6px}
+.big{display:block;font:500 clamp(46px,10vw,68px)/1 var(--serif);color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat p{font:500 clamp(19px,3vw,22px)/1.35 var(--serif);color:var(--ink);max-width:40ch;margin-top:10px}
+.howbox{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:16px 20px;margin-top:22px;max-width:72ch}
+.howbox p+p{margin-top:8px}
+.howbox b{color:var(--ink)}
+.caveat{border-left:3px solid var(--amber);padding:2px 0 2px 16px;margin-top:14px;max-width:68ch}
+
+/* tables */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0;border:1px solid var(--hair);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.5}
+table.xwide{min-width:820px}
+table.wide{min-width:720px}
+table.wide thead th,table.xwide thead th{white-space:normal}
+table.mid{min-width:560px}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--hair)}
+thead th{border-top:0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600;white-space:nowrap}
+tbody th{font-weight:500;color:var(--ink)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+td.r{white-space:nowrap}
+.tnote{font-size:14px;color:var(--faint);max-width:70ch}
+
+/* findings */
+.finding{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:22px 24px;margin:22px 0;min-width:0}
+.fno{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--faint)}
+.finding h3{font-size:22px;margin:6px 0 12px}
+.finding p,.finding ul{max-width:68ch}
+.finding p+p,.finding p+ul,.finding ul+p,.finding figure+p,.finding ul+figure{margin-top:12px}
+.limits{list-style:decimal;padding-left:22px;max-width:70ch}
+.limits li{padding:6px 0 6px 4px}
+.limits li::marker{color:var(--faint);font-variant-numeric:tabular-nums}
+.limits b{color:var(--ink);font-weight:600}
+.steps{margin-top:10px}
+.steps>div{display:grid;grid-template-columns:148px minmax(0,1fr);gap:16px;padding:13px 0;border-top:1px solid var(--hair)}
+.steps dt,.steps dd{min-width:0}
+.steps dt{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--amber);padding-top:4px}
+.steps dd b{color:var(--ink);font-weight:600}
+.calc{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* charts */
+.chart{margin:22px 0;background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:18px 20px;min-width:0}
+.chart figcaption{font-size:14px;color:var(--faint);max-width:72ch}
+.chart figcaption b{display:block;font:500 18px/1.3 var(--serif);color:var(--ink);margin-bottom:4px}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 2px;font-size:13px;color:var(--soft)}
+.legend li{display:flex;align-items:center;gap:7px}
+.sw{width:14px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.sw.m-amber{background:var(--s-amber)}.sw.m-blue{background:var(--s-blue)}.sw.m-gray{background:var(--s-gray)}
+.sw.m-ink{background:var(--ink)}
+.sw.m-alt{border:1.5px solid var(--s-gray-line)}
+.sw.m-dot{width:10px;height:10px;border-radius:50%}
+.sw.m-tick{width:9px;height:9px;border:1.5px solid var(--ink);border-radius:1px;transform:rotate(45deg);margin:0 2px}
+.sw.m-rule{width:2px;height:14px;border-radius:0;background:var(--ink);margin:0 6px}
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px}
+.viz{display:block;width:100%;height:auto;max-width:680px}
+.viz text{font-family:var(--sans)}
+.viz .grid{stroke:var(--hair);stroke-width:1}
+.viz .axis{stroke:hsl(222 30% 70% / .38);stroke-width:1}
+.viz .ref{stroke:var(--ink);stroke-width:1;stroke-opacity:.7}
+.viz .brk,.viz .leader{fill:none;stroke:var(--faint);stroke-width:1}
+.viz .t-tick{fill:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
+.viz .t-lbl{fill:var(--soft);font-size:12.5px}
+.viz .t-val{fill:var(--ink);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.viz .t-note{fill:var(--faint);font-size:12px}
+.viz .m-amber{fill:var(--s-amber)}.viz .m-blue{fill:var(--s-blue)}.viz .m-gray{fill:var(--s-gray)}.viz .m-ink{fill:var(--ink)}
+.viz .m-alt{fill:none;stroke:var(--s-gray-line);stroke-width:1.5}
+.viz .dot{stroke:var(--panel);stroke-width:2}
+.viz .ci{stroke-width:2.5;stroke-linecap:round}
+.viz .ci-blue{stroke:var(--s-blue)}.viz .ci-amber{stroke:var(--s-amber)}
+.viz .expect{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
+.viz .hit{fill:transparent}
+.swipe{display:none;font-size:12.5px;color:var(--faint);margin-top:6px}
+details.tv{margin-top:10px;font-size:14px}
+details.tv summary{cursor:pointer;color:var(--amber);font-size:13px;width:max-content}
+
+/* close */
+.close{margin-top:60px;padding:30px 28px;background:var(--panel);border:1px solid var(--hair);border-radius:16px}
+.close h2{margin-bottom:10px}
+.close p{max-width:62ch}
+.close .btn{margin-top:20px}
+.log{font-size:14px;color:var(--faint);margin-top:26px;max-width:72ch}
+.log+.log{margin-top:10px}
+footer{max-width:860px;margin:40px auto 0;padding-top:22px;border-top:1px solid var(--hair);font-size:12px;color:var(--faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer nav{display:flex;gap:16px;flex-wrap:wrap}
+footer a{color:var(--faint);text-decoration:none}
+footer a:hover{color:var(--ink)}
+
+@media (max-width:760px){.nav-links{display:none}}
+@media (max-width:620px){.steps>div{grid-template-columns:minmax(0,1fr);gap:4px}.finding,.chart{padding:18px 16px}.disclose{padding:18px}.close{padding:24px 18px}.swipe{display:block}.finding .chart{padding:14px 0 0;border:0;border-top:1px solid var(--hair);border-radius:0;background:none}}
+@media (max-width:560px){body{padding-inline:16px}.nav{padding-left:16px}.btn-white{padding:10px 14px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.chart-scroll{scrollbar-color:var(--s-gray) transparent;scrollbar-width:thin}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the census</a>
+
+<nav class="nav" aria-label="Primary">
+  <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+  <div class="nav-links">
+    <a href="#headline">Headline</a>
+    <a href="#findings">Findings</a>
+    <a href="#peak">15 October</a>
+    <a href="#limits">Limits</a>
+  </div>
+  <a class="btn btn-white" href="#reproduce">Reproduce it
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
+</nav>
+
+<main class="wrap" id="main">
+<!-- Generated by reports/proof-tooling/census/build_page.py from census_2026-09-16.json (sha256 252baac0963dbcc0). Do not edit by hand. -->
+<header class="head">
+  <p class="eyebrow">Hubricon · Original research · Listings read 3 to 16 September 2026 · Prepared 16 September 2026</p>
+  <h1>The Fee Cliff Census: where best-selling listings sit against Amazon's fee steps, and what 15 October adds</h1>
+  <p class="lede">This page counts where 1,851 Amazon listings sit against the price, weight and size lines in Amazon's 2026 US FBA fee schedule, what the holiday peak card adds from 15 October, and where products in 17 Shopify stores sit against the USPS pound line. It describes where things sit, not why.</p>
+</header>
+
+<section id="headline" aria-labelledby="headline-h">
+  <h2 id="headline-h">The headline number</h2>
+  <div class="stat"><span class="big">197 of 220</span>
+    <p>FBA listings priced $9.00 to $10.99 were priced under $10, the line where Amazon's fulfilment fee for a standard-size unit steps up $0.85 to $1.05 a unit.</p></div>
+  <p>That is 89.5% (95% interval 84.8% to 92.9%). Counting each seller once, 155 of the 161 sellers with a listing in that band priced under $10 (92.1% to 98.3%). 114 of the 197 were priced at exactly $9.99, and only 8 sat between $10.00 and $10.49.</p>
+  <div class="howbox"><p><b>How, in two lines.</b> Public product pages reached from Amazon's Best Sellers lists: 1,851 listings fulfilled by Amazon, from 934 sellers across 27 category labels, one price per listing as its page showed it when read.</p>
+  <p>The step is Amazon's published 2026 US FBA schedule for standard-size units, 3.5% fuel surcharge included, priced from the same fee tables our 60-second Teardown uses. <a href="#reproduce">The full method is further down.</a></p></div>
+  <figure class="chart" id="fig-price"><figcaption id="fig1-t"><b>Figure 1. Where prices sit around the $10 fee step.</b> The 475 listings priced $8.00 to $12.99, in 25-cent bins. The amber bar is $9.75 to $9.99 (173 listings).</figcaption>
+  <div class="chart-scroll"><svg viewBox="0 0 720 250" role="img" aria-labelledby="fig1-t" style="width:100%;min-width:520px;height:auto"><line x1="44" y1="216" x2="710" y2="216" stroke="var(--hair)"/><rect x="46.0" y="209.0" width="29.3" height="7.0" fill="var(--s-gray-line)"><title>$8.00–$8.24: 6</title></rect><text x="60.6" y="205.0" text-anchor="middle" font-size="10" fill="var(--faint)">6</text><rect x="79.3" y="193.8" width="29.3" height="22.2" fill="var(--s-gray-line)"><title>$8.25–$8.49: 19</title></rect><text x="93.9" y="189.8" text-anchor="middle" font-size="10" fill="var(--faint)">19</text><rect x="112.6" y="206.7" width="29.3" height="9.3" fill="var(--s-gray-line)"><title>$8.50–$8.74: 8</title></rect><text x="127.2" y="202.7" text-anchor="middle" font-size="10" fill="var(--faint)">8</text><rect x="145.9" y="122.6" width="29.3" height="93.4" fill="var(--s-gray-line)"><title>$8.75–$8.99: 80</title></rect><text x="160.5" y="118.6" text-anchor="middle" font-size="10" fill="var(--faint)">80</text><rect x="179.2" y="213.7" width="29.3" height="2.3" fill="var(--s-gray-line)"><title>$9.00–$9.24: 2</title></rect><text x="193.8" y="209.7" text-anchor="middle" font-size="10" fill="var(--faint)">2</text><rect x="212.5" y="197.3" width="29.3" height="18.7" fill="var(--s-gray-line)"><title>$9.25–$9.49: 16</title></rect><text x="227.2" y="193.3" text-anchor="middle" font-size="10" fill="var(--faint)">16</text><rect x="245.8" y="209.0" width="29.3" height="7.0" fill="var(--s-gray-line)"><title>$9.50–$9.74: 6</title></rect><text x="260.4" y="205.0" text-anchor="middle" font-size="10" fill="var(--faint)">6</text><rect x="279.1" y="14.0" width="29.3" height="202.0" fill="var(--amber)"><title>$9.75–$9.99: 173</title></rect><text x="293.7" y="10.0" text-anchor="middle" font-size="10" fill="var(--faint)">173</text><rect x="312.4" y="211.3" width="29.3" height="4.7" fill="var(--s-gray-line)"><title>$10.00–$10.24: 4</title></rect><text x="327.0" y="207.3" text-anchor="middle" font-size="10" fill="var(--faint)">4</text><rect x="345.7" y="211.3" width="29.3" height="4.7" fill="var(--s-gray-line)"><title>$10.25–$10.49: 4</title></rect><text x="360.3" y="207.3" text-anchor="middle" font-size="10" fill="var(--faint)">4</text><rect x="379.0" y="213.7" width="29.3" height="2.3" fill="var(--s-gray-line)"><title>$10.50–$10.74: 2</title></rect><text x="393.6" y="209.7" text-anchor="middle" font-size="10" fill="var(--faint)">2</text><rect x="412.3" y="200.8" width="29.3" height="15.2" fill="var(--s-gray-line)"><title>$10.75–$10.99: 13</title></rect><text x="426.9" y="196.8" text-anchor="middle" font-size="10" fill="var(--faint)">13</text><rect x="445.6" y="214.8" width="29.3" height="1.2" fill="var(--s-gray-line)"><title>$11.00–$11.24: 1</title></rect><text x="460.2" y="210.8" text-anchor="middle" font-size="10" fill="var(--faint)">1</text><rect x="478.9" y="207.8" width="29.3" height="8.2" fill="var(--s-gray-line)"><title>$11.25–$11.49: 7</title></rect><text x="493.5" y="203.8" text-anchor="middle" font-size="10" fill="var(--faint)">7</text><rect x="512.2" y="207.8" width="29.3" height="8.2" fill="var(--s-gray-line)"><title>$11.50–$11.74: 7</title></rect><text x="526.8" y="203.8" text-anchor="middle" font-size="10" fill="var(--faint)">7</text><rect x="545.5" y="157.6" width="29.3" height="58.4" fill="var(--s-gray-line)"><title>$11.75–$11.99: 50</title></rect><text x="560.1" y="153.6" text-anchor="middle" font-size="10" fill="var(--faint)">50</text><rect x="578.8" y="211.3" width="29.3" height="4.7" fill="var(--s-gray-line)"><title>$12.00–$12.24: 4</title></rect><text x="593.4" y="207.3" text-anchor="middle" font-size="10" fill="var(--faint)">4</text><rect x="612.1" y="206.7" width="29.3" height="9.3" fill="var(--s-gray-line)"><title>$12.25–$12.49: 8</title></rect><text x="626.7" y="202.7" text-anchor="middle" font-size="10" fill="var(--faint)">8</text><rect x="645.4" y="202.0" width="29.3" height="14.0" fill="var(--s-gray-line)"><title>$12.50–$12.74: 12</title></rect><text x="660.0" y="198.0" text-anchor="middle" font-size="10" fill="var(--faint)">12</text><rect x="678.7" y="154.1" width="29.3" height="61.9" fill="var(--s-gray-line)"><title>$12.75–$12.99: 53</title></rect><text x="693.3" y="150.1" text-anchor="middle" font-size="10" fill="var(--faint)">53</text><text x="44.0" y="232" font-size="11" fill="var(--faint)">$8</text><text x="177.2" y="232" font-size="11" fill="var(--faint)">$9</text><text x="310.4" y="232" font-size="11" fill="var(--faint)">$10</text><text x="443.6" y="232" font-size="11" fill="var(--faint)">$11</text><text x="576.8" y="232" font-size="11" fill="var(--faint)">$12</text><line x1="310.4" y1="14" x2="310.4" y2="216" stroke="var(--amber)" stroke-dasharray="4 4"/><text x="316.4" y="26" font-size="11" fill="var(--amber)">$10.00: the fee column steps up</text></svg></div></figure>
+</section>
+
+<aside class="disclose" aria-label="Disclosure">
+  <p><b>No clients, no results.</b> Hubricon has no paying clients and has published no client results. Nothing on this page is one. It is a count of public listing pages, sorted by the fee rules our software prices listings with, with one deliberate departure set out under Shopify below.</p>
+  <p><b>Public pages only.</b> Amazon listings were read from public product pages linked from Amazon's Best Sellers lists, and Shopify products from each store's public product list. No seller, brand or product is named, and no row naming an individual listing is published. Hubricon is not affiliated with Amazon, Shopify or USPS, and none of them has reviewed or endorsed this page.</p>
+  <p><b>Real rows, no synthetic data.</b> Every count comes from real rows on file; nothing is simulated. Fee figures come from published rate cards as loaded in our software. Anything estimated says so and carries its range.</p>
+  <p><b>Corrections.</b> If anything here is wrong, write to <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a>. We correct it on this page and note the correction at its foot.</p>
+</aside>
+
+<section id="findings" aria-labelledby="findings-h">
+  <h2 id="findings-h">What else the count shows</h2>
+
+  <h3>1. Almost nothing sits just above a price step</h3>
+  <p>25 of 1,851 listings (1.4%; 0.9% to 2.0%) were priced within $1 above $10 or $50, the two lines where the fulfilment fee column steps up. Far more listings sit just under these lines than just over them.</p>
+
+  <h3>2. Weights sit about where chance puts them</h3>
+  <p>If published weights were spread evenly inside each fee band, a listing would land within <i>x</i> ounces above its band's lower edge with probability <i>x</i> divided by the band's width. The counts below compare that expectation with what the listings show, only for listings whose size tier their published dimensions decide. The 1,188 listings without dimensions are left out rather than assigned a tier.</p>
+  <div class="tw"><table><thead><tr><th scope="col">Tier</th><th scope="col">Window</th><th scope="col">Listings</th><th scope="col">Expected if even</th><th scope="col">p (two-sided)</th></tr></thead>
+  <tbody><tr><td>Small standard (n = 36)</td><td class='num'>0.5 oz of a 2 oz band</td><td class='num'>12</td><td class='num'>9.0</td><td class='num'>0.25</td></tr><tr><td>Small standard (n = 36)</td><td class='num'>1 oz of a 2 oz band</td><td class='num'>22</td><td class='num'>18.0</td><td class='num'>0.24</td></tr><tr><td>Large standard (n = 299)</td><td class='num'>0.5 oz of a 4 oz band</td><td class='num'>29</td><td class='num'>37.4</td><td class='num'>0.16</td></tr><tr><td>Large standard (n = 299)</td><td class='num'>1 oz of a 4 oz band</td><td class='num'>78</td><td class='num'>74.8</td><td class='num'>0.69</td></tr><tr><td>Large standard (n = 299)</td><td class='num'>2 oz of a 4 oz band</td><td class='num'>141</td><td class='num'>149.5</td><td class='num'>0.35</td></tr></tbody></table></div>
+  <p>None of these departs from an even spread. On public weights, there is no sign of listings bunching just over a weight line. Amazon bills the packed weight, which no public page shows, so this says nothing about where packed weights sit.</p>
+
+  <h3>3. Most light listings are billed as large standard anyway</h3>
+  <p>Of the 474 listings that weigh a pound or less and publish dimensions, 384 (81.0%) fall outside the small-standard envelope of 15 × 12 × 0.75 inches, and 57 of those are within 35% of it on every side. This is a floor: listings publish product dimensions, and Amazon measures the packed box, which is at least as large.</p>
+</section>
+
+<section id="categories" aria-labelledby="categories-h">
+  <h2 id="categories-h">The headline, by category</h2>
+  <p>Categories with at least 10 listings in the $9.00 to $10.99 band. The other 7 categories have too few to say anything alone and are counted in the headline only.</p>
+  <div class="tw"><table><thead><tr><th scope="col">Category</th><th scope="col">FBA listings</th><th scope="col">$9.00–$10.99</th><th scope="col">Under $10</th><th scope="col">Share</th><th scope="col">95% interval</th></tr></thead>
+  <tbody><tr><td>Beauty &amp; Personal Care</td><td class='num'>360</td><td class='num'>48</td><td class='num'>43</td><td class='num'>89.6%</td><td class='num'>77.8% to 95.5%</td></tr><tr><td>Automotive</td><td class='num'>212</td><td class='num'>27</td><td class='num'>22</td><td class='num'>81.5%</td><td class='num'>63.3% to 91.8%</td></tr><tr><td>Kitchen &amp; Dining</td><td class='num'>173</td><td class='num'>23</td><td class='num'>21</td><td class='num'>91.3%</td><td class='num'>73.2% to 97.6%</td></tr><tr><td>Home &amp; Kitchen</td><td class='num'>162</td><td class='num'>21</td><td class='num'>20</td><td class='num'>95.2%</td><td class='num'>77.3% to 99.2%</td></tr><tr><td>Arts, Crafts &amp; Sewing</td><td class='num'>152</td><td class='num'>22</td><td class='num'>21</td><td class='num'>95.5%</td><td class='num'>78.2% to 99.2%</td></tr><tr><td>Baby</td><td class='num'>141</td><td class='num'>19</td><td class='num'>16</td><td class='num'>84.2%</td><td class='num'>62.4% to 94.5%</td></tr><tr><td>Health &amp; Household</td><td class='num'>132</td><td class='num'>11</td><td class='num'>8</td><td class='num'>72.7%</td><td class='num'>43.4% to 90.3%</td></tr><tr><td>unlabelled</td><td class='num'>86</td><td class='num'>10</td><td class='num'>10</td><td class='num'>100.0%</td><td class='num'>72.2% to 100.0%</td></tr><tr><td>Sports &amp; Outdoors</td><td class='num'>69</td><td class='num'>10</td><td class='num'>10</td><td class='num'>100.0%</td><td class='num'>72.2% to 100.0%</td></tr></tbody></table></div>
+</section>
+
+<section id="peak" aria-labelledby="peak-h">
+  <h2 id="peak-h">What 15 October adds</h2>
+  <p>Amazon's 2026 holiday peak card runs from 15 October 2026 to 14 January 2027. Across the 593 standard-size listings whose tier and weight their pages decide, it adds a median of $0.27 a unit to the fulfilment fee (mean $0.30; 10th percentile $0.21, 90th percentile $0.56).</p>
+  <p>That is a floor per unit, for the same reason as above: the fee is set by packed weight and packed dimensions. No monthly dollar figure is given, because a public page shows no sales volume.</p>
+</section>
+
+<section id="shopify" aria-labelledby="shopify-h">
+  <h2 id="shopify-h">Shopify: the pound line</h2>
+  <p>USPS Ground Advantage prices every parcel under a pound the same within a zone, and rounds anything over a pound up to the next whole pound. Of 2,045 weighed products in 17 Shopify stores, 479 list a shipping weight within 3 ounces above a whole pound.</p>
+  <p><b>360 of those 479 are not over a pound at all.</b> Shopify stores weight as whole grams, so a product entered as 1 lb is stored as 454 grams and reads as 16.014 ounces. This census counts anything within 0.05 ounces above a pound as that rounding, which leaves 119 genuine cases across 10 stores. Our own 60-second Teardown still counts that rounding as over a pound.</p>
+  <p>17 stores are those stores, not the market, so no Shopify share is offered as a finding.</p>
+</section>
+
+<section id="limits" aria-labelledby="limits-h">
+  <h2 id="limits-h">What this census cannot say</h2>
+  <ul>
+    <li><b>Why.</b> It shows where prices and weights sit, not whether any seller chose them because of the fee schedule.</li>
+    <li><b>The whole of Amazon.</b> Listings reached from Best Sellers lists are the ones already selling well, across the categories our crawl read.</li>
+    <li><b>Change over time.</b> Each listing is one reading, taken when its page was read. Nothing here tracks a price or weight across days.</li>
+    <li><b>Packed weight or packed size.</b> Pages publish item weight and product dimensions; Amazon bills the packed unit.</li>
+    <li><b>Money.</b> No listing's sales, margin or fees paid are known, so no dollar total is given for any seller.</li>
+  </ul>
+</section>
+
+<section id="reproduce" aria-labelledby="reproduce-h">
+  <h2 id="reproduce-h">How it was counted</h2>
+  <p><b>The frame.</b> Every Amazon listing on file that its page showed as fulfilled by Amazon and carried a price: 1,851 listings from 934 sellers, read 3 to 16 September 2026.</p>
+  <p><b>The rules.</b> Size tier and billable weight are decided by the same rules our 60-second Teardown uses: the greater of item weight and dimensional weight (length × width × height ÷ 139, past one cubic foot), against Amazon's small-standard envelope of 15 × 12 × 0.75 inches and 16 ounces. Fees come from Amazon's 2026 US FBA non-peak and holiday peak schedules with the 3.5% fuel surcharge. Intervals are Wilson 95% intervals; the weight-band tests are exact two-sided binomial tests.</p>
+  <p><b>Kept on file.</b> The script that produced every figure above, and its output, are kept on file, so any figure can be traced to the count behind it.</p>
+</section>
+
+<div class="close" id="next">
+  <h2>Price one listing against both cards.</h2>
+  <p>The 60-second Teardown takes five numbers off one product page and shows the fee stack, the band edge the unit may be just over, and what 15 October does to that exact unit, off the same published cards this census used.</p>
+  <a class="btn btn-amber" href="/teardown">Open the 60-second Teardown</a>
+</div>
+
+<p class="log"><b>Corrections to this page:</b> none so far. Prepared 16 September 2026. Write to <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a>.</p>
+<p class="log">Amazon, Shopify and USPS are names of their owners, used here only to identify them. Category names are Amazon's. No product images, logos or screenshots are reproduced.</p>
+</main>
+
+
+
+<footer class="wrap">
+  <span>© 2026 Hubricon · www.hubricon.com · Original research</span>
+  <nav aria-label="Footer"><a href="/">Home</a><a href="/#pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+</footer>
+</body>
+</html>

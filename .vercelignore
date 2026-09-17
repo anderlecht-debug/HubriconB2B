@@ -4,3 +4,9 @@ supabase
 .env.example
 engine
 reports
+# internal docs: strategy, harvesting and outreach notes are not for the public site
+*.md
+# Proof pages that are not cleared to publish (reports/PROOF.md sections 1 and 2).
+# Remove a line here when that page's blocker clears; nothing links to them meanwhile.
+teardowns
+research

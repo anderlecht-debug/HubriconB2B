@@ -116,9 +116,11 @@ def directive_email_body(client: dict, directives: list[dict], closes_at, portal
         blocks.append({"p": "Outside your mandate — these wait for your explicit yes; after three weeks "
                             "without an answer they lapse and nothing happens:"})
         blocks.append({"ol": [line(d) for d in explicit]})
-    blocks.append({"p": "Approve or decline any of them in Hubricon, or just reply to this email "
-                        "and say which ones you don't want. If this email had not reached you, "
-                        "nothing would move."})
+    # A decline in the portal writes `declined` the moment it is clicked; a reply is
+    # read by a person and recorded by hand, so the email must not imply otherwise.
+    blocks.append({"p": "Decline any of them in Hubricon and it is recorded the moment you click, "
+                        "and that move does not go ahead. A reply to this email reaches Hagen, who "
+                        "records it by hand. If this email had not reached you, nothing would move."})
     blocks.append({"button": "Open Hubricon", "url": portal_url})
     blocks.append({"p": "Every one of these lands on your Profit Record afterwards with what it "
                         "actually earned — including the ones that come in under."})
