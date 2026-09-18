@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-18T23:18:49+00:00",
+ "updated_at": "2026-09-18T23:33:07+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -74,44 +74,73 @@
    "phase": 1,
    "kind": "learn",
    "title": "Reimbursement Playbook spreadsheet template",
-   "status": "todo",
+   "status": "done",
    "checklist": [
     {
      "item": "Run `hubricon-content template` to build learn/reimbursement-playbook-template.xlsx from recovery.py's constants and the demo rows; open it with openpyxl and confirm every sheet listed in docs/content/hubricon-learn-build-prompt.md §1 exists.",
-     "done": false
+     "done": true
     },
     {
      "item": "Run `pytest content/tests/test_template_parity.py` and make it pass (constants, reason map, and the Claims sheet's logic equal recovery.run on the demo rows).",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [
+    {
+     "at": "2026-09-18T23:29:09+00:00",
+     "step": "checklist:0",
+     "note": "done built interactively 2026-09-18; sheets: Read me, Windows, Reason codes, COGS, Ledger, Returns, Reimbursements, Refunds, Claims, Filing log"
+    },
+    {
+     "at": "2026-09-18T23:29:09+00:00",
+     "step": "checklist:1",
+     "note": "done tests/test_template_parity.py passes"
+    }
+   ],
+   "order": 0
   },
   {
    "id": "P1-lessons",
    "phase": 1,
    "kind": "learn",
    "title": "Reimbursement Playbook written lessons",
-   "status": "todo",
+   "status": "done",
    "checklist": [
     {
      "item": "Run `hubricon-content facts playbook` to produce content/videos/playbook/facts.json from recovery.run on the demo catalogue.",
-     "done": false
+     "done": true
     },
     {
      "item": "Write the six lessons to content/learn/lessons/L1.md … L6.md per the plan (L1 open: what Amazon owes you and the four reports it hides in; L2 warehouse lost/damaged; L3 carrier/transit; L4 refund without return; L5 damaged returns; L6 reversals, filing wording, EV triage and the calendar). Every dollar figure is a {{key}} from facts.json; render with `hubricon-content render-lessons`.",
-     "done": false
+     "done": true
     },
     {
      "item": "Run the critique skill in copy mode on each rendered lesson; fix until it passes.",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [
+    {
+     "at": "2026-09-18T23:29:45+00:00",
+     "step": "checklist:0",
+     "note": "done facts for the playbook lessons produced 2026-09-18"
+    },
+    {
+     "at": "2026-09-18T23:33:07+00:00",
+     "step": "checklist:1",
+     "note": "done six lessons written 2026-09-18, rendered via render-lessons"
+    },
+    {
+     "at": "2026-09-18T23:33:07+00:00",
+     "step": "checklist:2",
+     "note": "done copy check: number guard clean, no banned phrases, 'free' appears zero times, no coming-soon, teaches completely"
+    }
+   ],
+   "order": 1
   },
   {
    "id": "P1-course-page",
@@ -131,7 +160,8 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [],
+   "order": 3
   },
   {
    "id": "P1-api-learn",
@@ -151,7 +181,8 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [],
+   "order": 2
   },
   {
    "id": "P1-learn-hub",
@@ -171,7 +202,8 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [],
+   "order": 4
   },
   {
    "id": "P1-followup",
@@ -187,7 +219,8 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [],
+   "order": 5
   },
   {
    "id": "P1-index-links",
@@ -203,7 +236,8 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": []
+   "log": [],
+   "order": 6
   },
   {
    "id": "V01",

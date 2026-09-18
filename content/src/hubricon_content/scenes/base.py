@@ -48,6 +48,14 @@ STYLE = {
 }
 
 
+def fit(m, max_width: float):
+    """Shrink a mobject to a maximum width. Manim 0.21's set_max_width is a
+    deprecated no-op, so the clamp lives here."""
+    if m.width > max_width:
+        m.scale_to_fit_width(max_width)
+    return m
+
+
 def money(v: float, digits: int = 0) -> str:
     v = float(v)
     if abs(v) >= 1e6:
@@ -75,7 +83,6 @@ class HubriconScene(Scene):
         self.run = json.loads((self.d / "run.json").read_text(encoding="utf-8"))
         self.facts = json.loads((self.d / "facts.json").read_text(encoding="utf-8"))
         self.length = float(self.seg["end"]) - float(self.seg["start"])
-        self.clock = 0.0
         self.events = []
         self.camera.background_color = NAVY
         self.W = config.frame_width
@@ -83,15 +90,25 @@ class HubriconScene(Scene):
         self.callout_stack = VGroup()
 
     # ── clock ──
+    def _trace(self, what: str):
+        if os.environ.get("HC_DEBUG"):
+            import sys
+            print(f"[hc] {what:28s} clock={self.clock:7.2f} rendered={self.renderer.time:7.2f}", file=sys.stderr)
+
+    @property
+    def clock(self) -> float:
+        """Seconds rendered so far. The renderer's own count, because Manim's
+        wait() is itself a play() and a hand-kept tally double-counts it."""
+        return float(self.renderer.time)
+
     def play(self, *anims, **kw):
         rt = kw.get("run_time") or max((getattr(a, "run_time", 1.0) for a in anims), default=1.0)
         super().play(*anims, **kw)
-        self.clock += float(rt)
+        self._trace(f"play {rt:.2f}")
 
     def wait(self, duration=1.0, **kw):
         if duration > 0.01:
             super().wait(duration, **kw)
-            self.clock += float(duration)
 
     def wait_until(self, t: float):
         self.wait(max(0.0, t - self.clock))
@@ -117,7 +134,7 @@ class HubriconScene(Scene):
     def big_number(self, value: str, label: str, size: int = 96):
         num = Text(value, font=HEAD, font_size=size, color=AMBER, weight="BOLD")
         lab = Text(label, font=MONO, font_size=24, color=INK_60)
-        lab.set_max_width(self.W * 0.8)
+        fit(lab, self.W * 0.8)
         return VGroup(num, lab).arrange(DOWN, buff=0.35)
 
     def axes(self, x_range, y_range, x_len=None, y_len=None):
@@ -150,7 +167,7 @@ class HubriconScene(Scene):
         unhandled spoken figure gets on screen the moment it is said."""
         block = VGroup(Text(value, font=HEAD, font_size=44, color=color, weight="BOLD"),
                        Text(label, font=MONO, font_size=18, color=INK_60)).arrange(DOWN, aligned_edge=RIGHT, buff=0.08)
-        block[1].set_max_width(self.W * 0.34)
+        fit(block[1], self.W * 0.34)
         if len(self.callout_stack) >= 3:
             old = self.callout_stack[0]
             self.callout_stack.remove(old)
@@ -189,3 +206,4 @@ class HubriconScene(Scene):
         existing = json.loads(ev.read_text(encoding="utf-8")) if ev.exists() else []
         existing = [e for e in existing if e.get("segment") != self.seg.get("index")] + self.events
         ev.write_text(json.dumps(sorted(existing, key=lambda e: e["t"])) + "\n", encoding="utf-8")
+        self._trace("finish")

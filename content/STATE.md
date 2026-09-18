@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-18T23:18:49+00:00 · style locked: False
+Updated 2026-09-18T23:33:07+00:00 · style locked: False
 
 ## Capabilities
 
@@ -22,6 +22,8 @@ Updated 2026-09-18T23:18:49+00:00 · style locked: False
 ## Done
 
 - P0-tooling · Tooling, docs, skills, state, runner, timer
+- P1-template · Reimbursement Playbook spreadsheet template
+- P1-lessons · Reimbursement Playbook written lessons
 
 ## Blocked on founder input
 

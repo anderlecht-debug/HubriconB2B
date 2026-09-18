@@ -8,7 +8,7 @@ import numpy as np
 from manim import (DOWN, LEFT, RIGHT, UP, UL, UR, DL, Create, DashedLine, Dot, FadeIn, FadeOut, GrowFromEdge, Line,
                    Rectangle, Text, VGroup, Write, linear, Circle, ImageMobject)
 
-from .base import (AMBER, GREEN, HEAD, INK, INK_35, INK_60, MONO, NAVY_2, RED, STYLE, HubriconScene, money, nice_step)
+from .base import (AMBER, GREEN, HEAD, INK, INK_35, INK_60, MONO, NAVY_2, RED, STYLE, HubriconScene, fit, money, nice_step)
 
 
 class ChapterCard(HubriconScene):
@@ -18,7 +18,7 @@ class ChapterCard(HubriconScene):
         halo = Circle(radius=self.H * 0.35, fill_color=AMBER, fill_opacity=0.05, stroke_width=0).shift(LEFT * self.W * 0.25 + UP * self.H * 0.15)
         self.add(glow, halo)
         t = Text(title, font=HEAD, font_size=72 if not self.vertical else 60, color=INK, weight="BOLD")
-        t.set_max_width(self.W * 0.82)
+        fit(t, self.W * 0.82)
         rule = Line(LEFT * 1.2, RIGHT * 1.2, color=AMBER, stroke_width=4).next_to(t, DOWN, buff=0.4)
         self.play(FadeIn(t, shift=UP * 0.15), run_time=0.35)
         self.play(GrowFromEdge(rule, LEFT), run_time=0.25)
@@ -34,13 +34,13 @@ class Kinetic(HubriconScene):
         reveals = sorted(self.seg.get("reveals", {}).items(), key=lambda kv: kv[1]["t"])
         if not reveals:
             t = Text(first, font=HEAD, font_size=54 if not self.vertical else 48, color=INK, weight="BOLD", line_spacing=1.1)
-            t.set_max_width(self.W * 0.8)
+            fit(t, self.W * 0.8)
             self.play(Write(t), run_time=min(2.2, max(0.8, self.length * 0.4)))
             self.landed("annotation")
             self.finish(t)
             return
         cap = Text(re.sub(r"\{\{.*?\}\}", "…", first), font=MONO, font_size=22, color=INK_60, line_spacing=1.1)
-        cap.set_max_width(self.W * 0.8).to_edge(UP, buff=0.6)
+        fit(cap, self.W * 0.8).to_edge(UP, buff=0.6)
         self.play(FadeIn(cap), run_time=0.4)
         shown = None
         for key, r in reveals:
@@ -48,7 +48,7 @@ class Kinetic(HubriconScene):
             fact = self.facts.get(key, {})
             block = self.big_number(fact.get("value", r.get("value", "")), fact.get("label", key),
                                     size=110 if not self.vertical else 84)
-            block.set_max_width(self.W * 0.86)
+            fit(block, self.W * 0.86)
             if shown is not None:
                 self.play(FadeOut(shown, shift=UP * 0.3), run_time=0.25)
             self.play(FadeIn(block, scale=0.92), run_time=0.45)
@@ -234,7 +234,7 @@ class Elasticity(HubriconScene):
         def ci(value, label):
             self.play(bnd.animate.set_fill(opacity=0.45), run_time=0.3)
             t = Text(f"{value} · {label}", font=MONO, font_size=18, color=INK_60).next_to(ax.c2p(xs[0], band[0]["hi"]), UP, buff=0.15, aligned_edge=LEFT)
-            t.set_max_width(self.W * 0.5)
+            fit(t, self.W * 0.5)
             self.play(FadeIn(t), run_time=0.3); self.landed("annotation"); group.add(t)
 
         self.reveal_loop({"el_point": eps, "el_ci_low": ci, "el_ci_high": ci, "el_ci_width": ci})

@@ -108,8 +108,8 @@ def _video_unit(day: dict) -> dict:
     }
 
 
-def _checklist_unit(uid: str, phase: int, kind: str, title: str, items: list[str]) -> dict:
-    return {"id": uid, "phase": phase, "kind": kind, "title": title, "status": "todo",
+def _checklist_unit(uid: str, phase: int, kind: str, title: str, items: list[str], order: int = 0) -> dict:
+    return {"id": uid, "phase": phase, "kind": kind, "title": title, "status": "todo", "order": order,
             "checklist": [{"item": i, "done": False} for i in items],
             "attempts": {}, "blocked_on": None, "log": []}
 
@@ -124,13 +124,13 @@ PHASE1 = [
         "Write the six lessons to content/learn/lessons/L1.md … L6.md per the plan (L1 open: what Amazon owes you and the four reports it hides in; L2 warehouse lost/damaged; L3 carrier/transit; L4 refund without return; L5 damaged returns; L6 reversals, filing wording, EV triage and the calendar). Every dollar figure is a {{key}} from facts.json; render with `hubricon-content render-lessons`.",
         "Run the critique skill in copy mode on each rendered lesson; fix until it passes.",
     ]),
-    ("P1-course-page", "learn/reimbursement-playbook.html", [
-        "Build learn/reimbursement-playbook.html: three columns (sticky lesson nav / lesson body with the template button directly under the video slot / sticky six-field form), mobile collapse, lessons 2–6 in <section hidden data-gated>, unlock on submit via localStorage, routing panel core/below/none, one CTA. Reuse the tokens, nav and footer markup from index.html and GATE_QUESTIONS from apply.html verbatim. Embed the rendered lessons from content/learn/lessons/rendered/.",
-        "Run the critique skill in copy mode on the page; fix until it passes.",
-    ]),
     ("P1-api-learn", "api/learn.js capture and routing", [
         "Write api/learn.js by copying api/gate.js's skeleton: kind learn_capture, server-side route like apply.html fitTag (below for Under $3M or Wholesale/Arbitrage; none for Mixed/other under $3M), no prospect row, template email via lib/tool_email.js sendResend when RESEND_API_KEY is set.",
         "Write api/learn.test.mjs (node --test) covering validation, honeypot and the three routes; run `node --test api/learn.test.mjs` and pass.",
+    ]),
+    ("P1-course-page", "learn/reimbursement-playbook.html", [
+        "Build learn/reimbursement-playbook.html: three columns (sticky lesson nav / lesson body with the template button directly under the video slot / sticky six-field form), mobile collapse, lessons 2–6 in <section hidden data-gated>, unlock on submit via localStorage, routing panel core/below/none, one CTA. Reuse the tokens, nav and footer markup from index.html and GATE_QUESTIONS from apply.html verbatim. Embed the rendered lessons from content/learn/lessons/rendered/.",
+        "Run the critique skill in copy mode on the page; fix until it passes.",
     ]),
     ("P1-learn-hub", "learn/index.html", [
         "Build learn/index.html: one course card (badges New · Free), headline stating the position, under 200 words, same tokens/nav/footer as index.html, no other cards.",
@@ -156,7 +156,7 @@ def seed() -> dict:
             "demo catalogue committed and parsing through the engine; pytest content/tests passes",
         ]),
     ]
-    units += [_checklist_unit(uid, 1, "learn", title, items) for uid, title, items in PHASE1]
+    units += [_checklist_unit(uid, 1, "learn", title, items, order=n) for n, (uid, title, items) in enumerate(PHASE1, start=1)]
     units += [_video_unit(d) for d in cal["days"]]
     q = {"version": 1, "updated_at": now(), "style_locked": False,
          "capabilities": capabilities(), "units": units}
@@ -196,7 +196,8 @@ def next_item(q: dict) -> dict:
         # resumes before anything new is drafted; then the calendar order
         mid = x["kind"] == "video" and "in_progress" in x["steps"].values()
         resumed = x["kind"] == "video" and _next_step(x) in ("tts", "upload") and x["steps"].get("review") == "approved"
-        return (0 if mid else 1 if resumed else 2 if x["status"] == "in_progress" else 3, x["phase"], x.get("day") or 0, x["id"])
+        return (0 if mid else 1 if resumed else 2 if x["status"] == "in_progress" else 3, x["phase"],
+                x.get("order") or 0, x.get("day") or 0, x["id"])
 
     for u in sorted(candidates, key=priority):
         # the phase gate applies to starting a unit; one already under way finishes on its own merits

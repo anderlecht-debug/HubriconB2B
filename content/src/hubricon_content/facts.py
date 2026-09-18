@@ -467,6 +467,27 @@ def build_facts(run: dict, data: dict) -> Facts:
             f.put(f"p_approve_{t}", _pct(pv), f"assumed approval probability for {t.replace('_', ' ')}", "RECOVERY.EV policy constants")
         f.put("no_cost_fraction", _pct(recovery.NO_COST_VALUE_FRACTION_OF_PRICE), "value fallback when no landed cost is on file, as a share of price", "RECOVERY.EV policy constants")
         f.put("recovery_service_cut", "25%", "the share a typical recovery service keeps", "hubricon-capital-position-build-prompt.md §2 (stated assumption)")
+        codes = lambda cls: " and ".join(", ".join(sorted(k for k, v in recovery.REASON_CODES.items() if v == cls)).rsplit(", ", 1))
+        f.put("reason_codes_lost", codes("warehouse_lost"), "Inventory Ledger reason codes that mean lost in the warehouse", "RECOVERY.EV reason-code map")
+        f.put("reason_codes_damaged", codes("warehouse_damaged"), "reason codes that mean damaged in the warehouse", "RECOVERY.EV reason-code map")
+        f.put("reason_codes_carrier", codes("carrier_damaged"), "reason codes that mean damaged by the carrier", "RECOVERY.EV reason-code map")
+        f.put("reason_codes_transit", codes("transit_lost"), "reason codes that mean lost in transit", "RECOVERY.EV reason-code map")
+        f.put("reason_codes_found", codes("found"), "reason codes that mean found again (they offset a loss)", "RECOVERY.EV reason-code map")
+        f.put("reason_codes_customer", codes("customer_damaged"), "reason codes that mean customer damage (not Amazon's liability)", "RECOVERY.EV reason-code map")
+        f.put("auto_reimburse_since", "1 November 2024", "when Amazon began auto-reimbursing most warehouse losses and customer-return claims", "RECOVERY.EV module note")
+        f.put("dispositions_claimable", " or ".join(sorted(recovery.DAMAGED_BY_AMAZON)), "return dispositions that are Amazon's liability", "RECOVERY.EV constants")
+        f.put("dispositions_not_claimable", ", ".join(sorted(recovery.DAMAGED_NOT_CLAIMABLE)), "return dispositions that are not claimable", "RECOVERY.EV constants")
+        excl = s.get("returns_excluded") or {}
+        f.put("rec_returns_sellable", str(excl.get("sellable", 0)), "returns graded sellable (no claim)", src)
+        f.put("rec_returns_customer_or_defective", str(excl.get("customer_or_defective", 0)), "returns graded customer damage or defective (no claim)", src)
+        f.put("rec_returns_already_reimbursed", str(excl.get("already_reimbursed", 0)), "damaged returns Amazon already reimbursed", src)
+        f.put("rec_n_settled", str(len(rec.get("settlements") or {})), "warehouse losses Amazon already settled, matched to their reimbursement", src)
+        expiring = [c for c in rec["claims"] if c["status"] == "expiring"]
+        if expiring:
+            soon = min(expiring, key=lambda c: c["days_left"])
+            f.put("rec_soonest_days", _days(soon["days_left"]), "days until the soonest deadline", src)
+            f.put("rec_soonest_type", soon["claim_type"].replace("_", " "), "the claim type closing soonest", src)
+        f.put("rec_live_annual_rate", _money(float(s["live_ev"] or 0) * 4), "expected value of open claims, annualised at this quarter's rate", src)
 
     # anomalies and null calibration
     a = run.get("anomaly_summary") or {}

@@ -45,7 +45,7 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         pick = frame_files[min(len(frame_files) - 1, max(1, len(frame_files) // 3))]
         fr = Image.open(pick).convert("RGB")
         fr = fr.resize((1280, int(1280 * fr.height / fr.width)))
-        crop = fr.crop((fr.width // 3, 0, fr.width, fr.height))
+        crop = fr.crop((fr.width // 3, 0, fr.width, int(fr.height * 0.80)))   # above the burned subtitles
         crop = crop.resize((int(crop.width * 0.72), int(crop.height * 0.72)))
         img.paste(crop, (1280 - crop.width - 24, (720 - crop.height) // 2))
         shade = Image.new("RGBA", img.size, (5, 10, 31, 0))
