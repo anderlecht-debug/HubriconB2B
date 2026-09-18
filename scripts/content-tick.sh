@@ -25,6 +25,10 @@ if [ -f "$MAIN/.env" ]; then
     [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && export "$line"
   done < "$MAIN/.env"
 fi
+# The engine's API key is for narrate.py, not for this session: with it set, Claude
+# Code would bill an API key that needs a workspace header instead of using the
+# subscription login the dry run proved. Ticks never need it.
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_WORKSPACE_ID ANTHROPIC_BASE_URL
 export HOME=/home/lp9
 export PATH="$WT/content/.venv/bin:/home/lp9/.local/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$WT" || exit 1

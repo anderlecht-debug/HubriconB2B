@@ -100,11 +100,46 @@ def align(wav: Path) -> list[dict]:
                 for s in segments for w in (s.words or [])]
 
 
+def snap_words(text: str, heard: list[dict]) -> list[dict]:
+    """The script's own words carrying the transcriber's timing.
+
+    A transcriber spells numbers its own way ("$969 ,579", "10th"), so subtitles
+    and reveal lookups must never show its text. Align the script's tokens to the
+    heard tokens with a sequence matcher; tokens it did not match take
+    interpolated times from their neighbours."""
+    import difflib
+    said = text.split()
+    if not said:
+        return heard
+    if not heard:
+        return [{"word": w, "start": 0.0, "end": 0.0} for w in said]
+    norm = lambda w: re.sub(r"[^a-z0-9]", "", w.lower())
+    a = [norm(w) for w in said]
+    b = [norm(w["word"]) for w in heard]
+    times = [None] * len(said)
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            for k in range(i2 - i1):
+                times[i1 + k] = (heard[j1 + k]["start"], heard[j1 + k]["end"])
+        elif tag == "replace" and j2 > j1:
+            span = (heard[j1]["start"], heard[j2 - 1]["end"])
+            n = i2 - i1
+            for k in range(n):
+                times[i1 + k] = (span[0] + (span[1] - span[0]) * k / n, span[0] + (span[1] - span[0]) * (k + 1) / n)
+    last_end = 0.0
+    for i, t in enumerate(times):
+        if t is None:
+            nxt = next((times[j][0] for j in range(i + 1, len(times)) if times[j]), heard[-1]["end"])
+            times[i] = (last_end, min(nxt, last_end + max(0.05, nxt - last_end) * 0.5))
+        last_end = times[i][1]
+    return [{"word": w, "start": round(t[0], 3), "end": round(t[1], 3)} for w, t in zip(said, times)]
+
+
 def _placeholder(text: str, out_wav: Path) -> list[dict]:
     import soundfile as sf
     samples, rate = _kokoro_model().create(text, voice=KOKORO_VOICE, speed=1.0, lang="en-us")
     sf.write(str(out_wav), samples, rate)
-    return align(out_wav)
+    return snap_words(text, align(out_wav))
 
 
 def speakable(text: str) -> str:
