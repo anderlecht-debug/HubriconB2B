@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { SlidingWindow, clientIp } from "../lib/ratelimit.js";
 import { renderHtml, renderText, sendResend } from "../lib/tool_email.js";
 
@@ -116,8 +115,14 @@ export function composeLearnEmail({ firstName, course = DEFAULT_COURSE, route, s
   return { subject: `${c.title}: your template`, text: renderText(msg), html: renderHtml(msg) };
 }
 
-/** funnel_events behind three calls, so api/learn.test.mjs can stand in for Supabase. */
-function supabaseStore() {
+/**
+ * funnel_events behind three calls, so api/learn.test.mjs can stand in for Supabase.
+ * The client is imported here rather than at the top so the module, and the tests
+ * that inject a store, load in a checkout with no node_modules; Vercel traces the
+ * static specifier all the same.
+ */
+async function supabaseStore() {
+  const { createClient } = await import("@supabase/supabase-js");
   const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
@@ -175,7 +180,7 @@ export async function handle(request, deps = {}) {
   if (!store) {
     const bad = missingEnv();
     if (bad) return bad;
-    store = supabaseStore();
+    store = await supabaseStore();
   }
   const hash = ipHash(ip);
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();

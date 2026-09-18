@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-18T23:46:08+00:00",
+ "updated_at": "2026-09-18T23:49:58+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -168,11 +168,11 @@
    "phase": 1,
    "kind": "learn",
    "title": "api/learn.js capture and routing",
-   "status": "todo",
+   "status": "in_progress",
    "checklist": [
     {
      "item": "Write api/learn.js by copying api/gate.js's skeleton: kind learn_capture, server-side route like apply.html fitTag (below for Under $3M or Wholesale/Arbitrage; none for Mixed/other under $3M), no prospect row, template email via lib/tool_email.js sendResend when RESEND_API_KEY is set.",
-     "done": false
+     "done": true
     },
     {
      "item": "Write api/learn.test.mjs (node --test) covering validation, honeypot and the three routes; run `node --test api/learn.test.mjs` and pass.",
@@ -181,7 +181,13 @@
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": [],
+   "log": [
+    {
+     "at": "2026-09-18T23:49:55+00:00",
+     "step": "checklist:0",
+     "note": "done"
+    }
+   ],
    "order": 2
   },
   {

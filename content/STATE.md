@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-18T23:33:07+00:00 · style locked: False
+Updated 2026-09-18T23:49:58+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-18T23:33:07+00:00 · style locked: False
 
 ## Now
 
-- idle
+- P1-api-learn · api/learn.js capture and routing · step checklist
 
 ## Awaiting your review
 
@@ -56,8 +56,8 @@ Updated 2026-09-18T23:33:07+00:00 · style locked: False
 
 ## Next five
 
-- P1-api-learn · api/learn.js capture and routing
 - P1-course-page · learn/reimbursement-playbook.html
 - P1-followup · Recovered-amount follow-up
 - P1-index-links · Nav and footer links on index.html
 - P1-learn-hub · learn/index.html
+- V04 · Your A/B test told you nothing. Here's the sample size you needed
