@@ -43,7 +43,6 @@
   --band: hsl(224 62% 10%);         /* alternating section band */
   --raise: hsl(224 58% 13%);
   --amber: hsl(45 100% 50%);        /* #FFC000 */
-  --amber-soft: hsl(45 100% 50% / .12);
   --serious: hsl(8 72% 58%);
   --ok: hsl(152 55% 52%);
   --ink-100: hsl(220 40% 98%);
@@ -77,11 +76,9 @@ b{ color: var(--ink-100); font-weight: 700; }
   padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
 .btn svg{ width: 13px; height: 13px; }
 .btn:active{ transform: scale(.98); }
-.btn[disabled]{ opacity: .45; cursor: not-allowed; }
 .btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
 .btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
 .btn-white{ background: var(--ink-100); color: var(--bg); }
-.btn-glass{ color: var(--ink-100); background: hsl(224 55% 16% / .5); border: 1px solid var(--rule-20); }
 .btn-lg{ font-size: 15px; padding: 20px 40px; }
 
 /* announcement bar + nav */
@@ -113,7 +110,7 @@ b{ color: var(--ink-100); font-weight: 700; }
 /* hero */
 .hero{ position: relative; overflow: hidden; padding: 64px 0 72px; }
 .hero::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 60% at 50% 30%, hsl(45 100% 50% / .10), transparent 70%); }
-.hero-photo{ position: absolute; right: 0; bottom: 0; height: 100%; width: auto; max-width: 28%; object-fit: cover; object-position: top;
+.hero-photo{ position: absolute; right: 0; bottom: 0; height: 100%; width: auto; max-width: 24%; object-fit: cover; object-position: top;
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%); mask-image: linear-gradient(to right, transparent 0%, #000 55%); opacity: .9; }
 @supports (mask-composite: intersect) or (-webkit-mask-composite: source-in){
   .hero-photo{ -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%), linear-gradient(to top, transparent 0%, #000 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0%, #000 55%), linear-gradient(to top, transparent 0%, #000 22%); mask-composite: intersect; } }
@@ -192,47 +189,15 @@ b{ color: var(--ink-100); font-weight: 700; }
 .close::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 45% at 50% 30%, hsl(45 100% 50% / .09), transparent 70%); }
 .close-in{ position: relative; width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 34px; }
 .close h2{ font-size: clamp(40px, 6vw, 84px); max-width: 16ch; }
-.gate-inline{ width: min(700px, 100%); border-radius: 24px; padding: 36px 38px; text-align: left; background: var(--raise); border: 1px solid var(--rule-20); }
-.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
 
 /* footer */
-.footer{ margin-top: 110px; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer{ margin-top: 110px; text-align: left; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
 .footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
 .footer .nav-logo{ font-size: 26px; }
 .footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
 .footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
 .footer ul a:hover{ color: var(--ink-100); }
 .footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
-
-/* the gate */
-.gate-overlay{ position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: hsl(226 80% 3% / .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.gate-overlay[hidden]{ display: none; }
-.gate-modal{ width: min(620px, 100%); max-height: 92vh; max-height: 92svh; overflow-y: auto; padding: 36px 38px; position: relative; border-radius: 24px; background: hsl(224 55% 12% / .98); border: 1px solid var(--rule-20); }
-.gate-x{ position: absolute; top: 12px; right: 14px; z-index: 2; background: none; border: 0; color: var(--ink-60); font-family: var(--font-mono); font-size: 20px; cursor: pointer; padding: 8px 12px; }
-.gate-x:hover{ color: var(--ink-100); }
-.gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
-.gate-title{ font-size: clamp(24px, 3vw, 32px); margin-bottom: 10px; padding-right: 24px; }
-.gate-sub{ font-size: 13px; color: var(--ink-60); margin-bottom: 24px; max-width: 54ch; }
-.gate fieldset{ border: 0; margin: 0 0 20px; padding: 0; }
-.gate legend{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 10px; padding: 0; }
-.chips-q{ display: flex; flex-wrap: wrap; gap: 8px; }
-.chips-q label{ cursor: pointer; position: relative; }
-.chips-q input{ position: absolute; opacity: 0; pointer-events: none; }
-.chips-q span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
-.chips-q label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
-.chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
-.chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
-.gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; }
-.gate-note{ margin-top: 12px; font-size: 11px; letter-spacing: .08em; color: var(--ink-60); }
-.gate-lbl{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
-.gate-offer{ margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
-.gate-offer .gate-sub{ margin-bottom: 14px; }
-.gate-capture{ position: relative; display: grid; gap: 10px; margin-top: 16px; }
-.gate-capture label{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); }
-.gate-capture input{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px; font-family: var(--font-mono); font-size: 16px; }
-.gate-capture input:focus{ border-color: var(--amber); outline: none; }
-.gate-capture .btn{ justify-self: start; }
-.gate-capture .hp{ position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 /* mobile sticky CTA */
 .sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
@@ -283,7 +248,6 @@ b{ color: var(--ink-100); font-weight: 700; }
   .price{ padding: 30px 20px; } .price .num small{ display: block; margin: 8px 0 0; }
   .btn{ white-space: normal; text-align: center; line-height: 1.35; }
   .hero .btn-lg, .cta .btn, .price .btn{ width: 100%; padding-left: 14px; padding-right: 14px; letter-spacing: .05em; }
-  .gate-modal, .gate-inline{ padding: 28px 18px; }
   .footer .in{ grid-template-columns: 1fr; }
   #case .record th:last-child, #case .record td:last-child{ display: none; }
 }
@@ -304,7 +268,7 @@ b{ color: var(--ink-100); font-weight: 700; }
       <a href="#faq">FAQ</a>
       <a href="#founder">Founder</a>
     </div>
-    <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">Start your free Proving Month</a>
+    <a class="btn btn-white" href="/apply" data-cta="nav">Start your free Proving Month</a>
   </div>
 </nav>
 
@@ -312,10 +276,10 @@ b{ color: var(--ink-100); font-weight: 700; }
 <header class="hero" id="top">
   <img class="hero-photo" src="/hagen.jpg" alt="" width="960" height="1697" decoding="async" fetchpriority="high" onerror="this.remove()">
   <div class="hero-in">
-    <span class="badge"><i aria-hidden="true"></i>Managed Profit · Amazon &amp; Shopify brands · $3M–$20M/yr</span>
+    <span class="badge"><i aria-hidden="true"></i>Managed Profit · Amazon &amp; Shopify brands · <span style="white-space:nowrap">$3M–$20M/yr</span></span>
     <h1>More profit than our bill, every month. Or you don't pay.</h1>
     <p class="hero-sub">We make the five money decisions in your account and grade each one on your own reports.</p>
-    <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="hero" href="#apply">Start your free Proving Month</a>
+    <a class="btn btn-amber btn-lg" href="/apply" data-cta="hero">Start your free Proving Month</a>
   </div>
 </header>
 
@@ -323,7 +287,7 @@ b{ color: var(--ink-100); font-weight: 700; }
 <section class="stats band sect" data-reveal>
   <div class="in">
     <div class="stat"><b>$6,000</b><span>a month, flat</span></div>
-    <div class="stat"><b>24 hrs</b><span>to your Profit Teardown</span></div>
+    <div class="stat"><b>24 hrs</b><span>from your files to your Profit Teardown</span></div>
     <div class="stat"><b>~90 min</b><span>of your time in month one</span></div>
     <div class="stat"><b>$0</b><span>until the Record covers the bill</span></div>
   </div>
@@ -338,7 +302,7 @@ b{ color: var(--ink-100); font-weight: 700; }
     </div>
     <ol class="terms">
       <li>Month one, the Proving Month, is free.</li>
-      <li>After that, an invoice stands only if dollars proven, plus claims found and filed, cover everything billed since day one.</li>
+      <li>After that, an invoice stands only if dollars proven, plus dollars found and filed, cover everything billed since day one.</li>
       <li>Below the bar, no invoice. The work doesn't stop.</li>
       <li>Cancel by one email. Your Record exports free, any day.</li>
     </ol>
@@ -393,7 +357,7 @@ b{ color: var(--ink-100); font-weight: 700; }
         <p>Nothing moves before you're told. Banking, payouts and settings stay out of reach.</p>
       </div>
     </div>
-    <div class="cta"><a class="btn btn-amber btn-lg" data-calendly="audit" data-section="offer" href="#apply">Start your free Proving Month</a></div>
+    <div class="cta"><a class="btn btn-amber btn-lg" href="/apply" data-cta="offer">Start your free Proving Month</a></div>
   </div>
 </section>
 
@@ -409,7 +373,7 @@ b{ color: var(--ink-100); font-weight: 700; }
         <li>No setup fee, no card on file</li>
         <li>Month-to-month, cancel any day</li>
       </ul>
-      <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="pricing" href="#apply">Start your free Proving Month</a>
+      <a class="btn btn-amber btn-lg" href="/apply" data-cta="pricing">Start your free Proving Month</a>
     </div>
     <p class="anchor">Bought separately, four vendors bill $5,700–$15,000+ a month. None executes across all of it. None grades it. Published price lists, 2025–26. <a class="link" href="/method#sources">Sources →</a></p>
   </div>
@@ -435,11 +399,11 @@ b{ color: var(--ink-100); font-weight: 700; }
 <!-- ═══ THE FOUNDER ═══ -->
 <section class="sect" id="founder" data-reveal>
   <div class="in founder">
-    <video controls preload="none" playsinline poster="/hagen.jpg" src="/welcome.mp4" aria-label="A short welcome from Hagen Simmons, founder of Hubricon"></video>
+    <img src="/hagen.jpg" alt="Hagen Simmons, founder" width="960" height="1697" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:1460/828;object-fit:cover;object-position:50% 22%;border-radius:20px;border:4px solid var(--raise)">
     <div>
       <div class="eyebrow">About the founder</div>
       <h2>One person, every account.</h2>
-      <p>Hagen Simmons, Dallas, Texas. Applied mathematics, University of North Texas, minor in actuarial science. He builds the models, makes the moves and takes every call. Every formula he runs is published.</p>
+      <p>Hagen Simmons, Dallas, Texas. Applied mathematics, University of North Texas, minor in actuarial science. He builds the models, makes the moves and takes every call. The formulas he runs are published.</p>
       <a class="link" href="/method">The method →</a>
     </div>
   </div>
@@ -463,9 +427,7 @@ b{ color: var(--ink-100); font-weight: 700; }
 <section class="close" id="apply" data-reveal>
   <div class="close-in">
     <h2>Your Proving Month starts with one 20&#8209;minute call.</h2>
-    <div class="gate gate-inline" id="gate-inline" role="region" aria-label="Start your free Proving Month">
-      <noscript><p style="color:var(--ink-70)">The application needs JavaScript enabled to run.</p></noscript>
-    </div>
+    <a class="btn btn-amber btn-lg" href="/apply" data-cta="close">Start your free Proving Month</a>
   </div>
   <footer class="footer">
     <div class="in">
@@ -479,15 +441,7 @@ b{ color: var(--ink-100); font-weight: 700; }
 
 <!-- mobile sticky CTA -->
 <div class="sticky-cta" id="sticky-cta" aria-hidden="true">
-  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">Start your free Proving Month</a>
-</div>
-
-<!-- the gate, modal form -->
-<div class="gate-overlay" id="gate-overlay" hidden>
-  <div class="gate gate-modal" role="dialog" aria-modal="true" aria-label="Start your free Proving Month">
-    <button class="gate-x" id="gate-x" aria-label="Close">✕</button>
-    <div id="gate-modal-mount"></div>
-  </div>
+  <a class="btn btn-amber" href="/apply" data-cta="sticky">Start your free Proving Month</a>
 </div>
 
 <script type="application/ld+json">
@@ -511,56 +465,6 @@ document.documentElement.classList.add("js");
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
 
-const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>`;
-
-/* ── The gate: the application every CTA opens.
-      Four answers ride along on the Calendly booking as utm_content, so the
-      call starts from the seller's numbers. A qualified brand is on the
-      calendar in under two minutes; nothing is reviewed by hand. ── */
-const CALENDLY_AUDIT = "https://calendly.com/hubricon/margin-audit";
-const EMBED_THEME = "hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000";
-let calendlyReady = null;
-function loadCalendly() {
-  if (calendlyReady) return calendlyReady;
-  calendlyReady = new Promise(resolve => {
-    const css = document.createElement("link");
-    css.rel = "stylesheet";
-    css.href = "https://assets.calendly.com/assets/external/widget.css";
-    document.head.appendChild(css);
-    const s = document.createElement("script");
-    s.src = "https://assets.calendly.com/assets/external/widget.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
-  });
-  return calendlyReady;
-}
-
-const GATE_QUESTIONS = [
-  { key: "channel", legend: "Where you sell", options: ["Amazon", "Shopify", "Both"] },
-  { key: "rev",   legend: "Trailing-12-month revenue, all channels", options: ["Under $3M", "$3M–$5M", "$5M–$20M", "$20M+"] },
-  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
-  { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
-];
-
-/* The floor is derived from the guarantee, not chosen. An invoice stands only
-   if the Profit Record covers everything billed since day one; on the site's own
-   published inputs a brand under $3M has less than $6,000 a month to find, so its
-   invoice would void every month. A brand selling someone else's label cannot
-   take the price steps a Record is built on. Either one gets the below-the-bar
-   screen instead of the calendar. "Mixed / other" still books. There is no
-   exceptions path here on purpose; an exception happens by email. */
-function belowBar(a) {
-  if (a.rev === "Under $3M") return "revenue";
-  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "model";
-  return null;
-}
-
-/* Capital Position lives at /position once it is built. Until then the
-   below-the-bar screen carries the 60-second Teardown and an address for the
-   weekly position page instead. */
-const CAPITAL_POSITION_URL = null;
-
 /* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
    rides the booking, so the operator can credit the sender when this brand
    clears its own day 30. */
@@ -569,201 +473,12 @@ try {
   const incoming = new URLSearchParams(location.search).get("ref");
   if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
 } catch (e) {}
-function refCode() {
-  try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
-}
 
-/* Only a qualified brand reaches this, so every booking is tagged core. */
-function auditUrl(a) {
-  const ref = refCode();
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:core|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
-  return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
-}
-
-function renderGate(mount, section, onBook, title) {
-  mount.innerHTML = `
-    <p class="gate-eyebrow">Two minutes, then pick a time</p>
-    ${title ? `<h3 class="gate-title">${title}</h3>` : ""}
-    <p class="gate-sub">Four answers, so the call starts from your numbers.</p>
-    <form>
-      ${GATE_QUESTIONS.map(q => `
-        <fieldset>
-          <legend>${q.legend}</legend>
-          <div class="chips-q">
-            ${q.options.map(o => `<label><input type="radio" name="${q.key}" value="${o}"><span>${o}</span></label>`).join("")}
-          </div>
-        </fieldset>`).join("")}
-      <div class="cta-row">
-        <button class="btn btn-amber" type="submit" disabled>Continue to the calendar ${ARROW}</button>
-      </div>
-    </form>`;
-  const form = mount.querySelector("form");
-  const submit = form.querySelector("button[type=submit]");
-  const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
-  form.addEventListener("change", () => {
-    submit.disabled = !GATE_QUESTIONS.every(q => form.elements[q.key].value);
-    if (!belowBar(answers())) loadCalendly();
-  });
-  form.addEventListener("submit", ev => {
-    ev.preventDefault();
-    const a = answers();
-    const below = belowBar(a);
-    track("gate_submit", { section, fit: below ? "below" : "core", ...a });
-    if (below) return renderBelowBar(mount, section, below, a);
-    onBook(auditUrl(a));
-  });
-}
-
-/* ── Below the bar: one paragraph of arithmetic, no apology, no calendar. ── */
-const BELOW = {
-  revenue: {
-    title: "Under $3M, the bar can't be cleared.",
-    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. Under $3M a year, our published inputs put ad bleed and unpaid claims below $5,400 a month. That is under the $6,000 bar, and a call would not move it.",
-  },
-  model: {
-    title: "On someone else's brand, the bar can't be cleared.",
-    why: "Every invoice after month one stands only if your Profit Record covers everything billed since day one. Price steps need a brand you own and can price. On wholesale or arbitrage inventory, the listing belongs to someone else and the Buy Box sets the price. Without price steps the Record can't be counted on to cover $6,000 a month, so the calendar doesn't book resellers. A call would not change that.",
-  },
-};
-
-/* One capture form, two doors: Recovery Only (a real plan, Amazon only) and the
-   weekly position page. api/gate.js keys on the intent. */
-const CAPTURE_SAVED = {
-  recovery: "Saved. Your upload page and the plan come from Hagen within about an hour.",
-  position: "Saved.",
-};
-function captureForm(intent, section, label, button) {
-  const id = `${intent}-email-${section}`;
-  return `<form class="gate-capture" data-intent="${intent}" novalidate>
-      <label for="${id}">${label}</label>
-      <input id="${id}" type="email" required maxlength="200" placeholder="you@yourbrand.com" autocomplete="email">
-      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn btn-glass" type="submit">${button}</button>
-      <p class="gate-note" role="status" hidden></p>
-    </form>`;
-}
-
-function renderBelowBar(mount, section, reason, a) {
-  track("gate_below_bar", { section, reason, ...a });
-  const b = BELOW[reason];
-  /* Amazon reimburses lost FBA inventory; a Shopify store has no warehouse losing
-     units on its behalf, so Recovery Only is an Amazon door (terms §4). */
-  const amazon = a.channel === "Amazon" || a.channel === "Both";
-  mount.innerHTML = `
-    <p class="gate-eyebrow">Your answers, against the bar</p>
-    <h3 class="gate-title">${b.title}</h3>
-    <p class="gate-sub">${b.why}</p>
-    ${amazon ? `<div class="gate-offer">
-      <p class="gate-lbl">Recovery Only · no monthly fee</p>
-      <p class="gate-sub">We file the reimbursements Amazon owes you and did not pay on its own. You pay 25% of what Amazon actually pays, and nothing in a month where nothing lands.</p>
-      ${captureForm("recovery", section, "Your email, for the upload page", "Start Recovery Only")}
-    </div>` : ""}
-    ${CAPITAL_POSITION_URL
-      ? `<div class="cta-row" style="margin-top:24px"><a class="btn btn-amber" href="${CAPITAL_POSITION_URL}">See Capital Position ${ARROW}</a></div>`
-      : `<div class="gate-offer">
-      <p class="gate-lbl">Price one of your listings</p>
-      <p class="gate-sub">The 60-second Teardown prices one listing off the published rate card, in your browser. Nothing stored.</p>
-      <a class="btn btn-glass" href="/teardown">Open the 60-second Teardown ${ARROW}</a>
-      ${captureForm("position", section, "The weekly position page, when it opens", "Tell me when")}
-    </div>`}`;
-  mount.closest(".gate-modal")?.scrollTo(0, 0);
-
-  mount.querySelectorAll(".gate-capture").forEach(capture => {
-    const intent = capture.dataset.intent;
-    const note = capture.querySelector(".gate-note");
-    const button = capture.querySelector("button");
-    capture.addEventListener("submit", async ev => {
-      ev.preventDefault();
-      const email = capture.querySelector("input[type=email]").value.trim();
-      note.hidden = false;
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { note.textContent = "That address doesn't look right."; return; }
-      button.disabled = true;
-      note.textContent = "Saving…";
-      try {
-        const r = await fetch("/api/gate", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ intent, email, website: capture.querySelector(".hp").value, ...a }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(d.error || "could not save that");
-        note.textContent = CAPTURE_SAVED[intent];
-        button.textContent = "Saved";
-        track(intent === "recovery" ? "recovery_requested" : "position_list_signup", { section, reason });
-      } catch (err) {
-        button.disabled = false;
-        note.textContent = `Could not save that: ${err.message}.`;
-      }
-    });
-  });
-}
-
-/* every CTA opens the modal gate; href="#apply" scrolls to the inline gate as fallback */
-const overlay = document.getElementById("gate-overlay");
-const modalMount = document.getElementById("gate-modal-mount");
-let gateTrigger = null;
-function openGate(section) {
-  track("gate_open", { section });
-  renderGate(modalMount, section, async url => {
-    closeGate();
-    if (await loadCalendly() && window.Calendly) {
-      window.Calendly.initPopupWidget({ url });
-      track("calendly_opened", { section });
-    } else {
-      location.href = url; /* widget blocked — go straight to Calendly */
-    }
-  }, "Start your free Proving Month.");
-  overlay.hidden = false;
-  for (const el of document.body.children) if (el !== overlay) el.inert = true;
-  document.body.style.overflow = "hidden";
-  modalMount.querySelector("input")?.focus();
-}
-function closeGate() {
-  overlay.hidden = true;
-  for (const el of document.body.children) el.inert = false;
-  document.body.style.overflow = "";
-  if (gateTrigger) { gateTrigger.focus(); gateTrigger = null; }
-}
-document.getElementById("gate-x").addEventListener("click", closeGate);
-overlay.addEventListener("click", ev => { if (ev.target === overlay) closeGate(); });
-addEventListener("keydown", ev => { if (ev.key === "Escape" && !overlay.hidden) closeGate(); });
-
+/* Every button leads to the VSL step at /apply; count the click, then let it navigate. */
 document.addEventListener("click", ev => {
-  const a = ev.target.closest?.("[data-calendly]");
-  if (!a) return;
-  ev.preventDefault();
-  track("cta_click", { section: a.dataset.section || "" });
-  gateTrigger = a;
-  openGate(a.dataset.section || "");
+  const a = ev.target.closest?.("[data-cta]");
+  if (a) track("cta_click", { section: a.dataset.cta || "" });
 });
-
-/* conversion signal from the Calendly widget */
-window.addEventListener("message", e => {
-  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
-    track("calendly_scheduled", {});
-  }
-});
-
-/* inline gate in the close, rendered when it scrolls near */
-const inlineGate = document.getElementById("gate-inline");
-if (inlineGate) {
-  new IntersectionObserver(([e], obs) => {
-    if (!e.isIntersecting) return;
-    obs.disconnect();
-    renderGate(inlineGate, "close-inline", async url => {
-      inlineGate.innerHTML = `<p class="gate-eyebrow">Pick your call time</p><div class="calendly-mount"></div>`;
-      if (await loadCalendly() && window.Calendly) {
-        window.Calendly.initInlineWidget({
-          url: url + "&" + EMBED_THEME,
-          parentElement: inlineGate.querySelector(".calendly-mount"),
-          resize: true,
-        });
-        track("calendly_opened", { section: "close-inline" });
-      } else {
-        location.href = url;
-      }
-    }, "");
-  }, { rootMargin: "600px" }).observe(inlineGate);
-}
 
 /* FAQ opens */
 document.querySelectorAll(".faq details").forEach(d => {

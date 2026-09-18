@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start your free Proving Month — Hubricon</title>
+<meta name="description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M. Four answers, one 20-minute call, your Profit Teardown inside 24 hours, then thirty days free. Proven or Void.">
+<link rel="canonical" href="https://www.hubricon.com/apply">
+<meta name="theme-color" content="#050A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/apply">
+<meta property="og:title" content="Start your free Proving Month — Hubricon">
+<meta property="og:description" content="Four answers, one 20-minute call, your Profit Teardown inside 24 hours, then thirty days free. Proven or Void.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<style>
+/* ============================================================
+   /apply — the VSL step of the funnel, in the shape of the
+   reference workshop page: question, video, one line, one
+   button; what people are saying (real words only); what you
+   get; the application. Same skin as the home page.
+   ============================================================ */
+:root{
+  --bg: hsl(225 72% 7%); --band: hsl(224 62% 10%); --raise: hsl(224 58% 13%);
+  --amber: hsl(45 100% 50%); --amber-soft: hsl(45 100% 50% / .12);
+  --serious: hsl(8 72% 58%); --ok: hsl(152 55% 52%);
+  --ink-100: hsl(220 40% 98%); --ink-70: hsl(220 40% 98% / .72); --ink-60: hsl(220 40% 98% / .58);
+  --rule-20: hsl(220 40% 98% / .18); --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --w: min(1120px, calc(100% - 32px));
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; scroll-padding-top: 120px; }
+body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+img, video{ display: block; max-width: 100%; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b{ color: var(--ink-100); font-weight: 700; }
+.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.link:hover{ color: var(--ink-100); }
+.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
+
+/* buttons */
+.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
+.btn svg{ width: 13px; height: 13px; }
+.btn:active{ transform: scale(.98); }
+.btn[disabled]{ opacity: .45; cursor: not-allowed; }
+.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
+.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
+.btn-white{ background: var(--ink-100); color: var(--bg); }
+.btn-glass{ color: var(--ink-100); background: hsl(224 55% 16% / .5); border: 1px solid var(--rule-20); }
+.btn-lg{ font-size: 15px; padding: 20px 40px; }
+
+/* announcement bar + nav */
+.bar{ background: var(--amber); color: var(--bg); text-align: center; font-size: 13px; font-weight: 700; padding: 11px 16px; }
+.bar a{ display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.bar .new{ background: var(--bg); color: var(--amber); border-radius: 999px; padding: 2px 9px; font-size: 10px; letter-spacing: .12em; }
+.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
+.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+.nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
+.nav-logo em{ font-style: normal; color: var(--amber); }
+.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+.nav-links a{ color: var(--ink-70); transition: color .2s; }
+.nav-links a:hover{ color: var(--ink-100); }
+.nav .btn{ padding: 12px 20px; font-size: 12px; }
+@media (max-width: 920px){ .nav-links{ display: none; } }
+@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
+
+/* sections */
+.sect{ position: relative; padding: 96px 0; }
+.sect.band{ background: var(--band); border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
+.in{ width: var(--w); margin: 0 auto; }
+.center{ text-align: center; }
+.h2{ font-size: clamp(34px, 4.6vw, 58px); max-width: 22ch; margin: 0 auto 14px; }
+.lede{ font-size: clamp(15px, 1.3vw, 18px); max-width: 60ch; margin: 0 auto; }
+.tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
+
+/* the VSL */
+.vsl{ position: relative; overflow: hidden; padding: 72px 0 40px; text-align: center; }
+.vsl::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 55% at 50% 20%, hsl(45 100% 50% / .10), transparent 70%); }
+.vsl-in{ position: relative; width: min(900px, calc(100% - 32px)); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.vsl .badge{ display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: .18em; color: var(--ink-70); border: 1px solid var(--rule-20); background: hsl(224 55% 14% / .6); margin-bottom: -8px; }
+.vsl .badge i{ width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.vsl h1{ font-size: clamp(40px, 5.2vw, 72px); max-width: 22ch; }
+.vsl .sub{ font-size: clamp(16px, 1.5vw, 20px); color: var(--ink-70); max-width: 52ch; }
+.player{ position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: #000; border: 1px solid var(--rule-20); box-shadow: 0 30px 80px hsl(226 80% 3% / .7); }
+.player video{ width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
+.poster{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink-100);
+  background: linear-gradient(180deg, hsl(225 72% 7% / .35), hsl(225 72% 7% / .75)); font-family: var(--font-mono); }
+.poster .title{ font-family: var(--font-head); font-size: clamp(30px, 4.5vw, 58px); text-transform: uppercase; line-height: .95; color: var(--amber); max-width: 18ch; text-shadow: 0 6px 30px hsl(226 80% 3% / .8); }
+.poster .play{ width: 84px; height: 84px; border-radius: 50%; background: var(--amber); color: var(--bg); display: grid; place-items: center; margin-top: 8px; box-shadow: 0 10px 40px hsl(45 100% 40% / .5); transition: transform .25s var(--ease-out); }
+.poster:hover .play{ transform: scale(1.06); }
+.poster .play svg{ width: 34px; height: 34px; margin-left: 4px; }
+.poster .caption{ position: absolute; bottom: 16px; left: 0; right: 0; font-size: 12px; color: var(--ink-70); }
+.poster[hidden]{ display: none; }
+.poster:focus-visible{ outline-offset: -4px; border-radius: inherit; }
+.vsl .line{ font-size: 15px; color: var(--ink-70); max-width: 60ch; }
+
+/* what people are saying: real, consented client words only */
+.reviews{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 340px)); justify-content: center; gap: 18px; margin-top: 44px; align-items: start; }
+.review{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 18px; padding: 24px; text-align: left; }
+.review:nth-child(2){ margin-top: 40px; }
+.review .who{ display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.review .avatar{ width: 40px; height: 40px; border-radius: 50%; background: var(--amber); color: var(--bg); font-family: var(--font-head); font-size: 22px; display: grid; place-items: center; flex: none; }
+.review .name{ color: var(--ink-100); font-weight: 700; font-size: 15px; }
+.review .meta{ font-size: 12px; color: var(--ink-60); }
+.review .quote{ font-size: 15px; color: var(--ink-100); }
+.review .quote::before{ content: "\201C"; color: var(--amber); } .review .quote::after{ content: "\201D"; color: var(--amber); }
+.review .how{ margin-top: 12px; font-size: 12px; color: var(--ink-60); }
+
+/* what you get */
+.get{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px; }
+.get > div{ text-align: center; }
+.get h3{ font-size: 22px; margin-bottom: 18px; }
+.get p{ font-size: 14px; color: var(--ink-70); margin-top: 14px; }
+.art{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 16px; padding: 18px; font-size: 12px; min-height: 190px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.art .tag{ align-self: flex-start; }
+.mini-row{ display: grid; grid-template-columns: 72px 1fr 44px; gap: 8px; align-items: center; }
+.mini-row .lbl{ color: var(--ink-60); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row .val{ text-align: right; color: var(--ink-100); font-variant-numeric: tabular-nums; }
+.track{ display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.track i{ display: block; height: 100%; }
+.s-fee{ background: hsl(224 40% 40%); } .s-cogs{ background: hsl(220 20% 60% / .55); } .s-ads{ background: hsl(45 100% 50% / .8); } .s-net{ background: hsl(150 55% 55% / .9); } .s-loss{ background: hsl(8 72% 58% / .9); }
+.chip{ display: inline-block; border-radius: 8px; padding: 6px 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+.chip.on{ background: var(--amber); color: var(--bg); }
+.art .line{ color: var(--ink-70); font-size: 12.5px; line-height: 1.5; }
+.art .big{ font-family: var(--font-head); font-size: 30px; color: var(--ink-100); line-height: 1; }
+.art .big.ok{ color: var(--ok); }
+.art .kv{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.art .kv span{ font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); display: block; margin-bottom: 4px; }
+
+/* the application */
+.stepper{ list-style: none; display: flex; justify-content: center; gap: 28px; margin: 0 auto 26px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); }
+.stepper li{ display: flex; align-items: center; gap: 10px; }
+.stepper li::before{ content:""; width: 10px; height: 10px; border-radius: 50%; background: var(--rule-20); }
+.stepper li.on{ color: var(--ink-100); } .stepper li.on::before{ background: var(--amber); box-shadow: 0 0 12px 2px hsl(45 100% 50% / .5); }
+.gate-inline{ width: min(700px, 100%); margin: 0 auto; border-radius: 24px; padding: 36px 38px; text-align: left; background: var(--raise); border: 1px solid var(--rule-20); }
+.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
+
+/* footer */
+.footer{ background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+.footer .nav-logo{ font-size: 26px; }
+.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
+.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
+.footer ul a:hover{ color: var(--ink-100); }
+.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
+
+/* the gate */
+.gate-overlay{ position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: hsl(226 80% 3% / .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.gate-overlay[hidden]{ display: none; }
+.gate-modal{ width: min(620px, 100%); max-height: 92vh; max-height: 92svh; overflow-y: auto; padding: 36px 38px; position: relative; border-radius: 24px; background: hsl(224 55% 12% / .98); border: 1px solid var(--rule-20); }
+.gate-x{ position: absolute; top: 12px; right: 14px; z-index: 2; background: none; border: 0; color: var(--ink-60); font-family: var(--font-mono); font-size: 20px; cursor: pointer; padding: 8px 12px; }
+.gate-x:hover{ color: var(--ink-100); }
+.gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+.gate-title{ font-size: clamp(24px, 3vw, 32px); margin-bottom: 10px; padding-right: 24px; }
+.gate-sub{ font-size: 13px; color: var(--ink-60); margin-bottom: 24px; max-width: 54ch; }
+.gate fieldset{ border: 0; margin: 0 0 20px; padding: 0; }
+.gate legend{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 10px; padding: 0; }
+.chips-q{ display: flex; flex-wrap: wrap; gap: 8px; }
+.chips-q label{ cursor: pointer; position: relative; }
+.chips-q input{ position: absolute; opacity: 0; pointer-events: none; }
+.chips-q span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
+.chips-q label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
+.chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+.chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
+.gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; }
+.gate-note{ margin-top: 12px; font-size: 11px; letter-spacing: .08em; color: var(--ink-60); }
+.gate-lbl{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
+.gate-offer{ margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
+.gate-offer .gate-sub{ margin-bottom: 14px; }
+.gate-capture{ position: relative; display: grid; gap: 10px; margin-top: 16px; }
+.gate-capture label{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); }
+.gate-capture input{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px; font-family: var(--font-mono); font-size: 16px; }
+.gate-capture input:focus{ border-color: var(--amber); outline: none; }
+.gate-capture .btn{ justify-self: start; }
+.gate-capture .hp{ position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* mobile sticky CTA */
+.sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
+.sticky-cta.show{ transform: translateY(0); visibility: visible; transition: transform .4s var(--ease-out), visibility 0s; }
+.sticky-cta .btn{ flex: 1 1 0; }
+@media (max-width: 760px){ .sticky-cta{ display: flex; } }
+
+/* motion + responsive */
+.js [data-reveal]{ opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .8s var(--ease-out); }
+.js [data-reveal].revealed{ opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce), print{
+  .js [data-reveal]{ opacity: 1 !important; transform: none !important; transition: none !important; }
+  .grain{ animation: none; } .sticky-cta{ transition: none; } html{ scroll-behavior: auto; }
+}
+@media (max-width: 920px){
+  .reviews, .get{ grid-template-columns: 1fr; }
+  .review:nth-child(2){ margin-top: 0; }
+  .footer .in{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px){
+  .sect{ padding: 64px 0; }
+  .vsl{ padding: 48px 0 56px; }
+  .vsl h1{ font-size: clamp(38px, 11vw, 56px); }
+  .player{ border-radius: 14px; }
+  .poster{ gap: 6px; } .poster .title{ font-size: clamp(22px, 6.5vw, 30px); } .poster .play{ width: 44px; height: 44px; margin-top: 0; } .poster .play svg{ width: 20px; height: 20px; } .poster .caption{ bottom: 6px; font-size: 11px; }
+  .stepper{ gap: 16px; font-size: 11px; }
+  .btn{ white-space: normal; text-align: center; line-height: 1.35; }
+  .vsl .btn-lg{ width: 100%; padding-left: 14px; padding-right: 14px; letter-spacing: .05em; }
+  .gate-modal, .gate-inline{ padding: 28px 18px; }
+  .footer .in{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-in">
+    <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+    <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">Start your free Proving Month</a>
+  </div>
+</nav>
+
+<!-- ═══ THE VSL ═══ -->
+<header class="vsl" id="top">
+  <div class="vsl-in">
+    <span class="badge"><i aria-hidden="true"></i>Amazon &amp; Shopify brands · <span style="white-space:nowrap">$3M–$20M/yr</span></span>
+    <h1>Are you the only one who runs the numbers?</h1>
+    <p class="sub">The free Proving Month: five money decisions, made in your account and graded on your own reports.</p>
+    <div class="player" id="player">
+      <!-- Placeholder VSL: the founder's welcome, until the sales video exists. Swap VSL_VIDEO below. -->
+      <video id="vsl" playsinline preload="none" poster="/hagen.jpg" aria-label="Hagen Simmons, founder of Hubricon: a welcome"></video>
+      <button class="poster" id="vsl-play" type="button" aria-label="Play the video: Hagen Simmons, founder, 1 minute 16 seconds">
+        <span class="title">Which decision made the profit?</span>
+        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="caption">A welcome from Hagen Simmons, founder · 1:16</span>
+      </button>
+    </div>
+    <p class="line">A 20-minute call. Your Profit Teardown inside 24 hours of your files. Then thirty days free.</p>
+    <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="vsl" href="#apply">Start your free Proving Month</a>
+  </div>
+</header>
+
+<!-- ═══ WHAT PEOPLE ARE SAYING ═══
+     Real, consented client words only. Renders from public_case_study() and from
+     TESTIMONIALS below. No row and an empty list means the section does not exist. -->
+<section class="sect band center" id="saying" data-reveal hidden>
+  <div class="in">
+    <h2 class="h2">What people are saying</h2>
+    <div class="reviews" id="reviews"></div>
+  </div>
+</section>
+
+<!-- ═══ WHAT YOU GET ═══ -->
+<section class="sect center" id="get" data-reveal>
+  <div class="in">
+    <h2 class="h2">What you get in the Proving Month:</h2>
+    <div class="get">
+      <div>
+        <h3>#1: The Profit Teardown</h3>
+        <div class="art" role="group" aria-label="Sample Teardown excerpt: per-SKU margin">
+          <span class="tag">Sample · demo data</span>
+          <div class="mini-row"><span class="lbl">SKU-BLUE</span><span class="track"><i class="s-fee" style="width:32%"></i><i class="s-cogs" style="width:24%"></i><i class="s-ads" style="width:4%"></i><i class="s-net" style="width:40%"></i></span><span class="val">+40%</span></div>
+          <div class="mini-row"><span class="lbl">SKU-RED</span><span class="track"><i class="s-fee" style="width:35%"></i><i class="s-cogs" style="width:27%"></i><i class="s-ads" style="width:12%"></i><i class="s-net" style="width:26%"></i></span><span class="val">+26%</span></div>
+          <div class="mini-row"><span class="lbl">GADGET</span><span class="track"><i class="s-fee" style="width:26%"></i><i class="s-cogs" style="width:37%"></i><i class="s-ads" style="width:30%"></i><i class="s-loss" style="width:7%"></i></span><span class="val" style="color:var(--serious)">−7%</span></div>
+        </div>
+        <p>Every SKU's true margin, stockout odds, ad break-even, dated claims. Inside 24 hours of your files.</p>
+      </div>
+      <div>
+        <h3>#2: Moves, made for you</h3>
+        <div class="art" role="group" aria-label="Sample move">
+          <span class="tag">Sample · demo data</span>
+          <p class="line">Cut 140 zero-sale search terms.</p>
+          <div><span class="chip on">Executed Aug 24</span></div>
+          <div class="kv"><div><span>Expected</span><b class="big">$6,200</b></div><div><span>Measured</span><b class="big ok">$6,840</b></div></div>
+        </div>
+        <p>Prices, ad bleed, reorders, fee cliffs, Amazon claims. One email before each. Reply no and it stops.</p>
+      </div>
+      <div>
+        <h3>#3: The Profit Record</h3>
+        <div class="art" role="group" aria-label="Sample Profit Record totals">
+          <span class="tag">Sample · demo data</span>
+          <div class="kv"><div><span>Proven</span><b class="big ok">$11,770</b></div><div><span>Billed</span><b class="big">$6,000</b></div></div>
+          <p class="line">Invoice stands. Misses stay on the record.</p>
+        </div>
+        <p>Dollars expected before, dollars measured after, on your own exports. If it hasn't covered the $6,000 a month, there is no bill.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE APPLICATION ═══ -->
+<section class="sect band center" id="apply" data-reveal>
+  <div class="in">
+    <ol class="stepper" role="list"><li class="on" aria-current="step">Four answers</li><li>Pick your call time</li></ol>
+    <div class="gate gate-inline" id="gate-inline" role="region" aria-label="Start your free Proving Month">
+      <noscript><p style="color:var(--ink-70)">The application needs JavaScript enabled to run.</p></noscript>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="in">
+    <div><a class="nav-logo" href="/">Hubric<em>o</em>n</a></div>
+    <div><h4>Product</h4><ul><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+    <p class="legal"><span data-proof-pending>No published results yet; the first posts when a client agrees to publish theirs. </span>Dollar figures on this page are our price or arithmetic from named, interested sources, not results of ours. Sample tables are demo data. © 2026 Hubricon</p>
+  </div>
+</footer>
+
+<!-- mobile sticky CTA -->
+<div class="sticky-cta" id="sticky-cta" aria-hidden="true">
+  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">Start your free Proving Month</a>
+</div>
+
+<!-- the gate, modal form -->
+<div class="gate-overlay" id="gate-overlay" hidden>
+  <div class="gate gate-modal" role="dialog" aria-modal="true" aria-label="Start your free Proving Month">
+    <button class="gate-x" id="gate-x" aria-label="Close">✕</button>
+    <div id="gate-modal-mount"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+document.documentElement.classList.add("js");
+
+/* ── Vercel Web Analytics ── */
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+
+const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>`;
+
+/* ── The VSL. Placeholder until the sales video exists: the founder's welcome.
+      Drop the real file in and change this one constant. ── */
+const VSL_VIDEO = "/welcome.mp4";
+const vsl = document.getElementById("vsl");
+const posterBtn = document.getElementById("vsl-play");
+if (vsl && posterBtn) {
+  vsl.src = VSL_VIDEO;
+  posterBtn.addEventListener("click", () => {
+    posterBtn.hidden = true;
+    vsl.controls = true;
+    vsl.focus({ preventScroll: true });
+    vsl.play().catch(() => {});
+    track("vsl_play", {});
+  });
+  vsl.addEventListener("ended", () => track("vsl_finished", {}), { once: true });
+}
+
+/* ── What people are saying. Only real client words belong here: a testimonial a
+      client wrote and consented to publish, in their own words. Fill the list from
+      the consent page's record (hubricon casestudy prints it), never from memory.
+      Unlike the RPC, this list is not re-checked on read: remove an entry the day
+      its consent is revoked, and redeploy.
+      { name: "First name or brand, as consented", meta: "Private-label, Amazon · Proving Month closed Month YYYY", quote: "≤ 30 words, verbatim" } ── */
+const TESTIMONIALS = [];
+
+/* ── The gate: the application every CTA opens.
+      Four answers ride along on the Calendly booking as utm_content, so the
+      call starts from the seller's numbers. A qualified brand is on the
+      calendar in under two minutes; nothing is reviewed by hand. ── */
+const CALENDLY_AUDIT = "https://calendly.com/hubricon/margin-audit";
+const EMBED_THEME = "hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000";
+let calendlyReady = null;
+function loadCalendly() {
+  if (calendlyReady) return calendlyReady;
+  calendlyReady = new Promise(resolve => {
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "https://assets.calendly.com/assets/external/widget.css";
+    document.head.appendChild(css);
+    const s = document.createElement("script");
+    s.src = "https://assets.calendly.com/assets/external/widget.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+  return calendlyReady;
+}
+
+const GATE_QUESTIONS = [
+  { key: "channel", legend: "Where you sell", options: ["Amazon", "Shopify", "Both"] },
+  { key: "rev",   legend: "Trailing-12-month revenue, all channels", options: ["Under $3M", "$3M–$5M", "$5M–$20M", "$20M+"] },
+  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
+  { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
+];
+
+/* The floor is derived from the guarantee, not chosen. An invoice stands only
+   if the Profit Record covers everything billed since day one; on the site's own
+   published inputs a brand under $3M has less than $6,000 a month to find, so its
+   invoice would void every month. A brand selling someone else's label cannot
+   take the price steps a Record is built on. Either one gets the below-the-bar
+   screen instead of the calendar. "Mixed / other" still books. There is no
+   exceptions path here on purpose; an exception happens by email. */
+function belowBar(a) {
+  if (a.rev === "Under $3M") return "revenue";
+  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "model";
+  return null;
+}
+
+/* Capital Position lives at /position once it is built. Until then the
+   below-the-bar screen carries the 60-second Teardown instead. */
+const CAPITAL_POSITION_URL = null;
+
+/* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
+   rides the booking, so the operator can credit the sender when this brand
+   clears its own day 30. */
+const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
+try {
+  const incoming = new URLSearchParams(location.search).get("ref");
+  if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
+} catch (e) {}
+function refCode() {
+  try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
+}
+
+/* Only a qualified brand reaches this, so every booking is tagged core. */
+function auditUrl(a) {
+  const ref = refCode();
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:core|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
+  return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
+}
+
+function renderGate(mount, section, onBook, title) {
+  mount.innerHTML = `
+    <p class="gate-eyebrow">Step 1 of 2</p>
+    ${title ? `<h3 class="gate-title">${title}</h3>` : ""}
+    <p class="gate-sub">Four answers, so the 20-minute call starts from your numbers.</p>
+    <form>
+      ${GATE_QUESTIONS.map(q => `
+        <fieldset>
+          <legend>${q.legend}</legend>
+          <div class="chips-q">
+            ${q.options.map(o => `<label><input type="radio" name="${q.key}" value="${o}"><span>${o}</span></label>`).join("")}
+          </div>
+        </fieldset>`).join("")}
+      <div class="cta-row">
+        <button class="btn btn-amber" type="submit" disabled>Continue to the calendar ${ARROW}</button>
+      </div>
+    </form>`;
+  const form = mount.querySelector("form");
+  const submit = form.querySelector("button[type=submit]");
+  const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
+  form.addEventListener("change", () => {
+    submit.disabled = !GATE_QUESTIONS.every(q => form.elements[q.key].value);
+    if (!belowBar(answers())) loadCalendly();
+  });
+  form.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const a = answers();
+    const below = belowBar(a);
+    track("gate_submit", { section, fit: below ? "below" : "core", ...a });
+    if (below) return renderBelowBar(mount, section, below, a);
+    onBook(auditUrl(a));
+  });
+}
+
+/* ── Below the bar: one paragraph of arithmetic, no apology, no calendar. ── */
+const BELOW = {
+  revenue: {
+    title: "Under $3M, the bar can't be cleared.",
+    why: "Under $3M a year there is under $5,400 a month of ad bleed and unpaid claims to find. The bar is $6,000. Every invoice would void, so the calendar won't book you.",
+  },
+  model: {
+    title: "On someone else's brand, the bar can't be cleared.",
+    why: "Price steps need a brand you own and can price. On wholesale or arbitrage inventory, the listing and the price belong to someone else. The Record can't cover $6,000 a month there, so the calendar won't book you.",
+  },
+};
+
+/* One capture form, one door: Recovery Only, a real plan, Amazon only.
+   api/gate.js keys on the intent. */
+const CAPTURE_SAVED = {
+  recovery: "Saved. Your upload page and the plan come from Hagen within about an hour.",
+};
+function captureForm(intent, section, label, button) {
+  const id = `${intent}-email-${section}`;
+  return `<form class="gate-capture" data-intent="${intent}" novalidate>
+      <label for="${id}">${label}</label>
+      <input id="${id}" type="email" required maxlength="200" placeholder="you@yourbrand.com" autocomplete="email">
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn btn-glass" type="submit">${button}</button>
+      <p class="gate-note" role="status" hidden></p>
+    </form>`;
+}
+
+function renderBelowBar(mount, section, reason, a) {
+  track("gate_below_bar", { section, reason, ...a });
+  const b = BELOW[reason];
+  /* Amazon reimburses lost FBA inventory; a Shopify store has no warehouse losing
+     units on its behalf, so Recovery Only is an Amazon door (terms §4). */
+  const amazon = a.channel === "Amazon" || a.channel === "Both";
+  mount.innerHTML = `
+    <p class="gate-eyebrow">Your answers, against the bar</p>
+    <h3 class="gate-title">${b.title}</h3>
+    <p class="gate-sub">${b.why}</p>
+    ${amazon ? `<div class="gate-offer">
+      <p class="gate-lbl">Recovery Only · no monthly fee</p>
+      <p class="gate-sub">We file the reimbursements Amazon owes you and did not pay on its own. You pay 25% of what Amazon actually pays, and nothing in a month where nothing lands.</p>
+      ${captureForm("recovery", section, "Your email, for the upload page", "Start Recovery Only")}
+    </div>` : ""}
+    ${CAPITAL_POSITION_URL
+      ? `<div class="cta-row" style="margin-top:24px"><a class="btn btn-amber" href="${CAPITAL_POSITION_URL}">See Capital Position ${ARROW}</a></div>`
+      : `<div class="gate-offer">
+      <p class="gate-lbl">Price one of your listings</p>
+      <p class="gate-sub">The 60-second Teardown prices one listing off the published rate card, in your browser. Nothing stored.</p>
+      <a class="btn btn-glass" href="/teardown">Open the 60-second Teardown ${ARROW}</a>
+    </div>`}`;
+  mount.closest(".gate-modal")?.scrollTo(0, 0);
+
+  mount.querySelectorAll(".gate-capture").forEach(capture => {
+    const intent = capture.dataset.intent;
+    const note = capture.querySelector(".gate-note");
+    const button = capture.querySelector("button");
+    capture.addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const email = capture.querySelector("input[type=email]").value.trim();
+      note.hidden = false;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { note.textContent = "That address doesn't look right."; return; }
+      button.disabled = true;
+      note.textContent = "Saving…";
+      try {
+        const r = await fetch("/api/gate", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ intent, email, website: capture.querySelector(".hp").value, ...a }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || "could not save that");
+        note.textContent = CAPTURE_SAVED[intent];
+        button.textContent = "Saved";
+        track(intent === "recovery" ? "recovery_requested" : "position_list_signup", { section, reason });
+      } catch (err) {
+        button.disabled = false;
+        note.textContent = `Could not save that: ${err.message}.`;
+      }
+    });
+  });
+}
+
+/* every CTA opens the modal gate; href="#apply" scrolls to the inline gate as fallback */
+const overlay = document.getElementById("gate-overlay");
+const modalMount = document.getElementById("gate-modal-mount");
+let gateTrigger = null;
+function openGate(section) {
+  track("gate_open", { section });
+  renderGate(modalMount, section, async url => {
+    closeGate();
+    if (await loadCalendly() && window.Calendly) {
+      window.Calendly.initPopupWidget({ url });
+      track("calendly_opened", { section });
+    } else {
+      location.href = url; /* widget blocked — go straight to Calendly */
+    }
+  }, "Start your free Proving Month.");
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  for (const el of document.body.children) if (el !== overlay) el.inert = true;
+  modalMount.querySelector("input")?.focus();
+}
+function closeGate() {
+  overlay.hidden = true;
+  document.body.style.overflow = "";
+  for (const el of document.body.children) el.inert = false;
+  if (gateTrigger) { gateTrigger.focus(); gateTrigger = null; }
+}
+document.getElementById("gate-x").addEventListener("click", closeGate);
+overlay.addEventListener("mousedown", ev => { if (ev.target === overlay) closeGate(); });
+addEventListener("keydown", ev => { if (ev.key === "Escape" && !overlay.hidden) closeGate(); });
+
+document.addEventListener("click", ev => {
+  const a = ev.target.closest?.("[data-calendly]");
+  if (!a) return;
+  ev.preventDefault();
+  track("cta_click", { section: a.dataset.section || "" });
+  gateTrigger = a;
+  openGate(a.dataset.section || "");
+});
+
+/* conversion signal from the Calendly widget */
+window.addEventListener("message", e => {
+  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
+    track("calendly_scheduled", {});
+  }
+});
+
+/* inline gate in the application band, rendered when it scrolls near */
+const inlineGate = document.getElementById("gate-inline");
+if (inlineGate) {
+  new IntersectionObserver(([e], obs) => {
+    if (!e.isIntersecting) return;
+    obs.disconnect();
+    renderGate(inlineGate, "apply-inline", async url => {
+      document.querySelectorAll(".stepper li").forEach((li, i) => { li.classList.toggle("on", i === 1); if (i === 1) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
+      inlineGate.innerHTML = `<p class="gate-eyebrow">Pick your call time</p><div class="calendly-mount"></div>`;
+      if (await loadCalendly() && window.Calendly) {
+        window.Calendly.initInlineWidget({
+          url: url + "&" + EMBED_THEME,
+          parentElement: inlineGate.querySelector(".calendly-mount"),
+          resize: true,
+        });
+        track("calendly_opened", { section: "apply-inline" });
+      } else {
+        location.href = url;
+      }
+    }, "Start your free Proving Month.");
+  }, { rootMargin: "600px" }).observe(inlineGate);
+}
+
+/* mobile sticky CTA — appears once the VSL scrolls out, hides over the application */
+const vslTop = document.getElementById("top");
+const sticky = document.getElementById("sticky-cta");
+if (vslTop && sticky) {
+  const apply = document.getElementById("apply");
+  let topIn = true, applyIn = false;
+  const sync = () => {
+    const show = !topIn && !applyIn;
+    sticky.classList.toggle("show", show);
+    sticky.setAttribute("aria-hidden", show ? "false" : "true");
+  };
+  new IntersectionObserver(([e]) => { topIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(vslTop);
+  if (apply) new IntersectionObserver(([e]) => { applyIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(apply);
+}
+
+/* The two anon-callable functions in the schema. Both re-check consent on every read. */
+const PUBLISHABLE = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
+async function rpc(name) {
+  try {
+    const res = await fetch(`https://cgqvdnhgbfxikzdqqaws.supabase.co/rest/v1/rpc/${name}`, {
+      method: "POST", body: "{}",
+      headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${PUBLISHABLE}`, "content-type": "application/json" },
+    });
+    return res.ok ? await res.json() : null;
+  } catch (e) { return null; }
+}
+
+/* Once a client has consented and a result is published, the "no published
+   results yet" clause is spent. */
+(async () => {
+  const pending = document.querySelector("[data-proof-pending]");
+  if (!pending) return;
+  const rows = await rpc("public_results");
+  if (Array.isArray(rows) && rows.length) pending.hidden = true;
+})();
+
+/* What people are saying: the consented case-study quote, plus TESTIMONIALS.
+   Nothing rendered means the section stays hidden. */
+(async () => {
+  const sect = document.getElementById("saying");
+  const mount = document.getElementById("reviews");
+  if (!sect || !mount) return;
+  const cards = TESTIMONIALS.slice();
+  const cs = await rpc("public_case_study");
+  if (cs && cs.quote) {
+    const closed = cs.closed_on ? new Date(cs.closed_on + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "";
+    cards.unshift({ name: cs.brand || `A ${cs.industry || "private-label"} brand`, meta: closed ? `Proving Month closed ${closed}` : "Proving Month closed", quote: cs.quote, how: "Written on their consent page, in their own words." });
+  }
+  if (!cards.length) return;
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  mount.replaceChildren(...cards.slice(0, 3).map(c => {
+    const card = el("div", "review");
+    const who = el("div", "who");
+    who.append(el("span", "avatar", ((c.name || "").trim()[0] || "?").toUpperCase()));
+    const id = el("div");
+    id.append(el("div", "name", c.name), el("div", "meta", c.meta || ""));
+    who.append(id);
+    card.append(who, el("p", "quote", c.quote));
+    if (c.how) card.append(el("p", "how", c.how));
+    return card;
+  }));
+  sect.hidden = false;
+  track("testimonials_shown", { count: Math.min(cards.length, 3) });
+})();
+
+/* motion: one fade per section */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); } });
+}, { threshold: 0.06 });
+document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
