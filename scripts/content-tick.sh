@@ -59,6 +59,9 @@ SECS=$(( $(date +%s) - START ))
 { printf '%s tick rc=%s secs=%s dry=%s\n' "$(date -Is)" "$RC" "$SECS" "${CONTENT_DRY_RUN:-0}"
   printf '%s\n' "$OUT" | tail -c 20000; printf '\n---\n'; } >> "$RUN/log"
 
+if printf '%s' "$OUT" | grep -q '"permission_denials":\[{'; then
+  printf '%s WARNING: the tick was denied a tool call; check the allow list in scripts/content-runner.settings.json\n' "$(date -Is)" >> "$RUN/log"
+fi
 if printf '%s' "$OUT" | grep -qiE "usage limit|rate limit|limit will reset|resets? at|overloaded|status 529|429"; then
   date -d '+60 min' +%s > "$RUN/backoff-until"
   printf '%s backoff until %s\n' "$(date -Is)" "$(date -d '+60 min' -Is)" >> "$RUN/log"
