@@ -29,6 +29,16 @@ fi
 # Code would bill an API key that needs a workspace header instead of using the
 # subscription login the dry run proved. Ticks never need it.
 unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_WORKSPACE_ID ANTHROPIC_BASE_URL
+# The allow list in .claude/settings.json only applies once this workspace is trusted.
+# Until then every hubricon-content, git add and git commit call inside a tick waits
+# for an approval nobody is there to give (the log line "Ignoring 38 permissions.allow
+# entries" is the symptom). A tick cannot fix this itself: Claude Code refuses to let a
+# session edit its own permission settings. The founder does one of these once:
+#   * run `claude` interactively in /home/lp9/Hubricon/HubriconB2B and accept the trust
+#     dialog, or set projects["/home/lp9/Hubricon/HubriconB2B"].hasTrustDialogAccepted
+#     to true in /home/lp9/.claude.json;
+#   * or copy the "allow" list from .claude/settings.json into
+#     scripts/content-runner.settings.json, which is passed with --settings and trusted.
 export HOME=/home/lp9
 export PATH="$WT/content/.venv/bin:/home/lp9/.local/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$WT" || exit 1

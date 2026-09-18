@@ -2,6 +2,15 @@
 
 Updated 2026-09-18T23:33:07+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
+## Runner blocked · needs you once (written by hand by the 2026-09-18 18:35 CDT tick)
+
+The unattended tick cannot run `hubricon-content`, `git add` or `git commit`. This worktree has never accepted Claude Code's trust dialog, so the allow rules in `.claude/settings.json` are ignored under `-p` (the runner log says "Ignoring 38 permissions.allow entries") and every pipeline command waits for an approval nobody is there to give. A tick cannot change its own permission settings; Claude Code refuses that edit. Do one of these once and the loop resumes by itself:
+
+1. Run `claude` interactively in `/home/lp9/Hubricon/HubriconB2B` and accept the trust dialog, or set `projects["/home/lp9/Hubricon/HubriconB2B"].hasTrustDialogAccepted` to `true` in `~/.claude.json`.
+2. Or copy the `allow` list from `.claude/settings.json` into `scripts/content-runner.settings.json`, which the runner passes with `--settings` and which is trusted.
+
+Meanwhile this tick wrote `api/learn.js` and `api/learn.test.mjs` for P1-api-learn by hand. The tests have not been run (no node access either) and the checklist is not marked; the next working tick runs `node --test api/learn.test.mjs`, fixes what fails, and marks both items. This section disappears the next time `hubricon-content status --md` regenerates the file.
+
 ## V01 · day 1 · tier A · pillar 4 — script gate
 
 **Title:** Why most business advice is useless: survivorship bias, with numbers  
