@@ -17,7 +17,7 @@ import { createClient } from "@supabase/supabase-js";
  * permission — so an unapproved token answers 404, exactly like a wrong one.
  */
 
-const APPLY_URL = process.env.TEARDOWN_CTA_URL || "https://hubricon.com/#apply";
+const APPLY_URL = process.env.TEARDOWN_CTA_URL || "https://hubricon.com/apply";
 const VISIBLE = new Set(["approved", "sent"]);
 const EVENTS = new Set(["page_view", "cta_click", "video_watch"]);
 

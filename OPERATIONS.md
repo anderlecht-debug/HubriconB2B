@@ -926,8 +926,8 @@ recorded.
 
 ### The month
 
-The link is `hubricon.com/?ref=<code>`. index.html keeps the code in
-`sessionStorage` and appends `|ref:<code>` to the Calendly `utm_content`, so it
+The link is `hubricon.com/?ref=<code>`. index.html and apply.html keep the code in
+`sessionStorage`, and apply.html appends `|ref:<code>` to the Calendly `utm_content`, so it
 arrives in `bookings.answers` like the platform does. `operator.bookings` calls
 `referral.attribute`: `bookings.ref_code`, `clients.referred_by_client_id` (or
 `referred_by_partner_id`), a `prospects` row with `source = referral|partner`,
@@ -1036,8 +1036,7 @@ cold email / teardown page ─► TEARDOWN reply or booking ─► welcome + upl
         │                                │
         │                     day 14, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
         │
-   site gate: under $3M or not own brand ─► no calendar ─┬─ Amazon: Recovery Only request ─► recovery_welcome ─► reply ─► `hubricon downsell`
-                                                          └─ 60-second Teardown + position list (funnel_events 'position_list')
+   site gate: under $3M or not own brand ─► books anyway, tagged fit:below ─► call ─► Amazon: Hagen offers Recovery Only by hand (or the day-14 DOWNSELL) ─► reply ─► `hubricon downsell`
                                          │
    exports land ─► Issue 001 ─► day-30 gate ─┬─ clears ─► retainer ─► rolling gate on every invoice
                                              └─ short  ─► the letter names the smaller door ─► reply RECOVERY
@@ -1055,14 +1054,15 @@ uv run hubricon downsell <client> --share 0.2    # a different share, agreed in 
 uv run hubricon downsell <client> --retainer     # back onto the flat fee
 ```
 
-The site shows the downsell in one place: the application's below-the-bar
-screen, to an Amazon seller under $3M or on someone else's brand, who is not
-offered a call there. The request becomes a prospect at `wants_teardown` with a
-`recovery-only (site gate)` note (`api/gate.js`); the operator sends
-`recovery_welcome` (the upload page and the plan) instead of `files`, and none of
-the Teardown nudges or the day-14 downsell follow it. The plan is still switched
-by `hubricon downsell` when they reply. Everywhere else it is offered by the
-day-14 email and the day-30 letter, the places a founder has said "not at that
+The site does not show the downsell anywhere. Since 2026-09-18 the application
+books every brand that answers its four questions; an Amazon seller under $3M or
+on someone else's brand arrives on the calendar tagged `fit:below` in the
+booking's `utm_content`, and Hagen offers Recovery Only by hand after the call.
+No code path does that; the hourly operator's only automated offer to a booked
+client is the day-14 downsell. (`api/gate.js` still accepts a `recovery` request and files it as a
+prospect at `wants_teardown` with a `recovery-only (site gate)` note, for which
+the operator sends `recovery_welcome` instead of `files`; nothing on the site
+posts to it now.) Otherwise it is offered by the day-14 email and the day-30 letter, the places a founder has said "not at that
 price" without saying it. Shopify has no reimbursements and so no smaller door
 yet; a Shopify founder who stalls gets the day-7 files email and nothing further.
 

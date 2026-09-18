@@ -312,8 +312,8 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             ],
         }
     if kind == "recovery_welcome":
-        # The door a founder under the $3M bar chose on the site's application
-        # (api/gate.js). The same plan as the day-14 downsell, named as the thing
+        # A Recovery Only request that reached api/gate.js (no page on the site posts
+        # there since 2026-09-18). The same plan as the day-14 downsell, named as the thing
         # they asked for rather than as a consolation.
         from .billing import RECOVERY_SHARE
         pct = f"{RECOVERY_SHARE * 100:.0f}%"
@@ -321,7 +321,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "subject": "Recovery Only: the reimbursements Amazon owes you",
             "greeting": greeting,
             "blocks": [
-                {"p": "You asked for Recovery Only on hubricon.com. Here is the whole of it."},
+                {"p": "You asked for Recovery Only. Here is the whole of it."},
                 {"p": f"Grant the seat or send three exports (the reimbursement, returns and inventory ledger "
                       f"reports), and we file every reimbursement Amazon owes you and did not pay on its own. "
                       f"You pay {pct} of what actually lands in your account — nothing else, nothing up front, "

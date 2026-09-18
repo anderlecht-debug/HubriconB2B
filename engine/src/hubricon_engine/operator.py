@@ -31,8 +31,8 @@ PORTAL_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/p
 NUDGE_AFTER_DAYS = 3
 FILES_AFTER_DAYS = 7
 DOWNSELL_AFTER_DAYS = 14     # the smaller door, once, to an Amazon seller whose exports never came
-# api/gate.js writes this at the head of fit_notes when an Amazon seller under the
-# $3M bar asks for Recovery Only on the site's below-the-bar screen.
+# api/gate.js writes this at the head of fit_notes on a Recovery Only request. The
+# site's below-the-bar screen that posted it is gone (2026-09-18); the endpoint stays.
 RECOVERY_NOTE = "recovery-only (site gate)"
 
 
@@ -254,7 +254,7 @@ class Pass:
             outbound.log_event(self.db, "recovery_provisioned" if recovery else "teardown_requested",
                                prospect_id=p["id"], client_id=client["id"],
                                payload={"created": created, "files_sent": sent})
-            self.say(f"Provisioned {email} from {'a Recovery Only request on the site' if recovery else 'a TEARDOWN reply'}; "
+            self.say(f"Provisioned {email} from {'a Recovery Only request (api/gate)' if recovery else 'a TEARDOWN reply'}; "
                      f"upload page {'sent' if sent else 'NOT sent'}.")
 
     # -- 4. nudges -----------------------------------------------------------

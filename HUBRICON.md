@@ -45,16 +45,17 @@ Nobody in that stack can answer "which decision made the profit". That gap is th
 entire business.
 
 **Who it is not for:** someone who wants day-to-day creative campaign management,
-or another dashboard subscription. Under $3M, or not their own brand, the site's
-application does not book a call. The floor is derived from the guarantee, not
+or another dashboard subscription. The floor is derived from the guarantee, not
 chosen: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
 recoverable) a $2M brand has roughly $3,600 a month to find and a $3M brand roughly
-$5,400, so below $3M every invoice voids and the service runs unpaid. Those founders
-get the 60-second Teardown; an Amazon seller also gets Recovery Only (a share of what
-Amazon pays on claims we file, no retainer), which lands as a prospect the operator
-sends `recovery_welcome`; and, once it exists, Capital Position, with an address for
-its weekly page kept until then (`funnel_events` kind `position_list`). Exceptions
-happen by email, never in the UI.
+$5,400, so below $3M every invoice voids and the service runs unpaid. Since
+2026-09-18 the site's application books every brand that answers its four
+questions; one under $3M or on someone else's label arrives tagged `fit:below` in
+the booking's `utm_content`, and Hagen settles it on the call; nothing in the engine
+reads that tag, and the hourly operator provisions every non-test booking. The
+below-the-bar screen (Teardown, Recovery Only request, position list) is gone from
+the site. Recovery Only is offered by Hagen, by email, after the call; `api/gate.js` still
+accepts that request, but nothing on the site posts to it.
 
 ---
 

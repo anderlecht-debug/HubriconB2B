@@ -45,8 +45,6 @@ img, video{ display: block; max-width: 100%; }
 :focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
 h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
 b{ color: var(--ink-100); font-weight: 700; }
-.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
-.link:hover{ color: var(--ink-100); }
 .grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
 @keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
@@ -60,22 +58,14 @@ b{ color: var(--ink-100); font-weight: 700; }
 .btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
 .btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
 .btn-white{ background: var(--ink-100); color: var(--bg); }
-.btn-glass{ color: var(--ink-100); background: hsl(224 55% 16% / .5); border: 1px solid var(--rule-20); }
 .btn-lg{ font-size: 15px; padding: 20px 40px; }
 
-/* announcement bar + nav */
-.bar{ background: var(--amber); color: var(--bg); text-align: center; font-size: 13px; font-weight: 700; padding: 11px 16px; }
-.bar a{ display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.bar .new{ background: var(--bg); color: var(--amber); border-radius: 999px; padding: 2px 9px; font-size: 10px; letter-spacing: .12em; }
+/* nav */
 .nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
 .nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
 .nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
 .nav-logo em{ font-style: normal; color: var(--amber); }
-.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
-.nav-links a{ color: var(--ink-70); transition: color .2s; }
-.nav-links a:hover{ color: var(--ink-100); }
 .nav .btn{ padding: 12px 20px; font-size: 12px; }
-@media (max-width: 920px){ .nav-links{ display: none; } }
 @media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
 
 /* sections */
@@ -84,7 +74,6 @@ b{ color: var(--ink-100); font-weight: 700; }
 .in{ width: var(--w); margin: 0 auto; }
 .center{ text-align: center; }
 .h2{ font-size: clamp(34px, 4.6vw, 58px); max-width: 22ch; margin: 0 auto 14px; }
-.lede{ font-size: clamp(15px, 1.3vw, 18px); max-width: 60ch; margin: 0 auto; }
 .tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
 
 /* the VSL */
@@ -177,16 +166,6 @@ b{ color: var(--ink-100); font-weight: 700; }
 .chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
 .chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
 .gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; }
-.gate-note{ margin-top: 12px; font-size: 11px; letter-spacing: .08em; color: var(--ink-60); }
-.gate-lbl{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
-.gate-offer{ margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule-08); }
-.gate-offer .gate-sub{ margin-bottom: 14px; }
-.gate-capture{ position: relative; display: grid; gap: 10px; margin-top: 16px; }
-.gate-capture label{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); }
-.gate-capture input{ width: 100%; background: hsl(224 55% 10% / .7); color: var(--ink-100); border: 1px solid var(--rule-20); border-radius: 10px; padding: 11px 12px; font-family: var(--font-mono); font-size: 16px; }
-.gate-capture input:focus{ border-color: var(--amber); outline: none; }
-.gate-capture .btn{ justify-self: start; }
-.gate-capture .hp{ position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 /* mobile sticky CTA */
 .sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
@@ -368,7 +347,7 @@ const TESTIMONIALS = [];
 
 /* ── The gate: the application every CTA opens.
       Four answers ride along on the Calendly booking as utm_content, so the
-      call starts from the seller's numbers. A qualified brand is on the
+      call starts from the seller's numbers. Every brand that answers is on the
       calendar in under two minutes; nothing is reviewed by hand. ── */
 const CALENDLY_AUDIT = "https://calendly.com/hubricon/margin-audit";
 const EMBED_THEME = "hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000";
@@ -396,22 +375,16 @@ const GATE_QUESTIONS = [
   { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
 ];
 
-/* The floor is derived from the guarantee, not chosen. An invoice stands only
-   if the Profit Record covers everything billed since day one; on the site's own
-   published inputs a brand under $3M has less than $6,000 a month to find, so its
-   invoice would void every month. A brand selling someone else's label cannot
-   take the price steps a Record is built on. Either one gets the below-the-bar
-   screen instead of the calendar. "Mixed / other" still books. There is no
-   exceptions path here on purpose; an exception happens by email. */
-function belowBar(a) {
-  if (a.rev === "Under $3M") return "revenue";
-  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "model";
-  return null;
+/* Every brand that answers books. The $3M floor and the own-brand rule are still
+   derived from the guarantee (an invoice stands only if the Profit Record covers
+   everything billed since day one, and under $3M there is less than $6,000 a month
+   to find), but the site refuses nobody: the answers ride the booking tagged
+   fit:core or fit:below, and the call settles it. */
+function fitTag(a) {
+  if (a.rev === "Under $3M") return "below";
+  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "below";
+  return "core";
 }
-
-/* Capital Position lives at /position once it is built. Until then the
-   below-the-bar screen carries the 60-second Teardown instead. */
-const CAPITAL_POSITION_URL = null;
 
 /* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
    rides the booking, so the operator can credit the sender when this brand
@@ -425,10 +398,10 @@ function refCode() {
   try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
 }
 
-/* Only a qualified brand reaches this, so every booking is tagged core. */
+/* The four answers and the fit tag ride the booking as utm_content. */
 function auditUrl(a) {
   const ref = refCode();
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:core|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
   return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
 }
 
@@ -454,96 +427,13 @@ function renderGate(mount, section, onBook, title) {
   const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
   form.addEventListener("change", () => {
     submit.disabled = !GATE_QUESTIONS.every(q => form.elements[q.key].value);
-    if (!belowBar(answers())) loadCalendly();
+    loadCalendly(); /* every completed form books, so fetch the widget on the first answer */
   });
   form.addEventListener("submit", ev => {
     ev.preventDefault();
     const a = answers();
-    const below = belowBar(a);
-    track("gate_submit", { section, fit: below ? "below" : "core", ...a });
-    if (below) return renderBelowBar(mount, section, below, a);
+    track("gate_submit", { section, fit: fitTag(a), ...a });
     onBook(auditUrl(a));
-  });
-}
-
-/* ── Below the bar: one paragraph of arithmetic, no apology, no calendar. ── */
-const BELOW = {
-  revenue: {
-    title: "Under $3M, the bar can't be cleared.",
-    why: "Under $3M a year there is under $5,400 a month of ad bleed and unpaid claims to find. The bar is $6,000. Every invoice would void, so the calendar won't book you.",
-  },
-  model: {
-    title: "On someone else's brand, the bar can't be cleared.",
-    why: "Price steps need a brand you own and can price. On wholesale or arbitrage inventory, the listing and the price belong to someone else. The Record can't cover $6,000 a month there, so the calendar won't book you.",
-  },
-};
-
-/* One capture form, one door: Recovery Only, a real plan, Amazon only.
-   api/gate.js keys on the intent. */
-const CAPTURE_SAVED = {
-  recovery: "Saved. Your upload page and the plan come from Hagen within about an hour.",
-};
-function captureForm(intent, section, label, button) {
-  const id = `${intent}-email-${section}`;
-  return `<form class="gate-capture" data-intent="${intent}" novalidate>
-      <label for="${id}">${label}</label>
-      <input id="${id}" type="email" required maxlength="200" placeholder="you@yourbrand.com" autocomplete="email">
-      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn btn-glass" type="submit">${button}</button>
-      <p class="gate-note" role="status" hidden></p>
-    </form>`;
-}
-
-function renderBelowBar(mount, section, reason, a) {
-  track("gate_below_bar", { section, reason, ...a });
-  const b = BELOW[reason];
-  /* Amazon reimburses lost FBA inventory; a Shopify store has no warehouse losing
-     units on its behalf, so Recovery Only is an Amazon door (terms §4). */
-  const amazon = a.channel === "Amazon" || a.channel === "Both";
-  mount.innerHTML = `
-    <p class="gate-eyebrow">Your answers, against the bar</p>
-    <h3 class="gate-title">${b.title}</h3>
-    <p class="gate-sub">${b.why}</p>
-    ${amazon ? `<div class="gate-offer">
-      <p class="gate-lbl">Recovery Only · no monthly fee</p>
-      <p class="gate-sub">We file the reimbursements Amazon owes you and did not pay on its own. You pay 25% of what Amazon actually pays, and nothing in a month where nothing lands.</p>
-      ${captureForm("recovery", section, "Your email, for the upload page", "Start Recovery Only")}
-    </div>` : ""}
-    ${CAPITAL_POSITION_URL
-      ? `<div class="cta-row" style="margin-top:24px"><a class="btn btn-amber" href="${CAPITAL_POSITION_URL}">See Capital Position ${ARROW}</a></div>`
-      : `<div class="gate-offer">
-      <p class="gate-lbl">Price one of your listings</p>
-      <p class="gate-sub">The 60-second Teardown prices one listing off the published rate card, in your browser. Nothing stored.</p>
-      <a class="btn btn-glass" href="/teardown">Open the 60-second Teardown ${ARROW}</a>
-    </div>`}`;
-  mount.closest(".gate-modal")?.scrollTo(0, 0);
-
-  mount.querySelectorAll(".gate-capture").forEach(capture => {
-    const intent = capture.dataset.intent;
-    const note = capture.querySelector(".gate-note");
-    const button = capture.querySelector("button");
-    capture.addEventListener("submit", async ev => {
-      ev.preventDefault();
-      const email = capture.querySelector("input[type=email]").value.trim();
-      note.hidden = false;
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { note.textContent = "That address doesn't look right."; return; }
-      button.disabled = true;
-      note.textContent = "Saving…";
-      try {
-        const r = await fetch("/api/gate", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ intent, email, website: capture.querySelector(".hp").value, ...a }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(d.error || "could not save that");
-        note.textContent = CAPTURE_SAVED[intent];
-        button.textContent = "Saved";
-        track(intent === "recovery" ? "recovery_requested" : "position_list_signup", { section, reason });
-      } catch (err) {
-        button.disabled = false;
-        note.textContent = `Could not save that: ${err.message}.`;
-      }
-    });
   });
 }
 
@@ -601,7 +491,8 @@ if (inlineGate) {
     obs.disconnect();
     renderGate(inlineGate, "apply-inline", async url => {
       document.querySelectorAll(".stepper li").forEach((li, i) => { li.classList.toggle("on", i === 1); if (i === 1) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
-      inlineGate.innerHTML = `<p class="gate-eyebrow">Pick your call time</p><div class="calendly-mount"></div>`;
+      inlineGate.innerHTML = `<p class="gate-eyebrow" tabindex="-1">Pick your call time</p><div class="calendly-mount"></div>`;
+      inlineGate.querySelector(".gate-eyebrow").focus({ preventScroll: true });
       if (await loadCalendly() && window.Calendly) {
         window.Calendly.initInlineWidget({
           url: url + "&" + EMBED_THEME,

@@ -3,12 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { SlidingWindow, clientIp } from "../lib/ratelimit.js";
 
 /**
- * The two doors on the application's below-the-bar screen.
+ * Two doors that used to sit on the application's below-the-bar screen.
  *
- * The gate on index.html renders the calendar only for a brand doing $3M or
- * more on its own label: below that the Profit Record cannot cover $6,000 a
- * month, so every invoice would void. Those founders get the 60-second
- * Teardown and these:
+ * Since 2026-09-18 the application on /apply books every brand that answers
+ * its four questions (a brand under $3M or on someone else's label arrives
+ * tagged fit:below in the booking's utm_content), so nothing on the site posts
+ * here any more, and no email template links to it. The endpoint stays for a
+ * future surface. The two intents:
  *
  *   POST /api/gate  {intent: "recovery", email, channel, rev, model, skus, website}
  *     Recovery Only, for Amazon sellers (terms §4): no retainer, a share of what
