@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-18T23:49:58+00:00 · style locked: False
+Updated 2026-09-18T23:50:31+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-18T23:49:58+00:00 · style locked: False
 
 ## Now
 
-- P1-api-learn · api/learn.js capture and routing · step checklist
+- idle
 
 ## Awaiting your review
 
@@ -24,6 +24,7 @@ Updated 2026-09-18T23:49:58+00:00 · style locked: False
 - P0-tooling · Tooling, docs, skills, state, runner, timer
 - P1-template · Reimbursement Playbook spreadsheet template
 - P1-lessons · Reimbursement Playbook written lessons
+- P1-api-learn · api/learn.js capture and routing
 
 ## Blocked on founder input
 
