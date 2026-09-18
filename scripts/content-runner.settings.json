@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push:*)", "Bash(git checkout:*)", "Bash(git switch:*)", "Bash(git reset:*)",
+      "Bash(git branch:*)", "Bash(git rebase:*)", "Bash(git merge:*)", "Bash(git worktree add:*)",
+      "Bash(rm -rf:*)", "Bash(curl:*)", "Bash(wget:*)", "Bash(sudo:*)", "Bash(pacman:*)",
+      "Bash(vercel:*)", "Bash(npx:*)", "Bash(systemctl:*)", "Bash(loginctl:*)",
+      "Read(.env)", "Read(./.env)", "Read(content/.secrets/**)",
+      "WebFetch", "WebSearch"
+    ]
+  }
+}

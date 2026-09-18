@@ -1,0 +1,10 @@
+[Unit]
+Description=Hubricon content pipeline tick (Claude Code, unattended)
+
+[Service]
+Type=oneshot
+ExecStart=/home/lp9/Hubricon/HubriconB2B-content/scripts/content-tick.sh
+Environment=HOME=/home/lp9
+Nice=10
+MemoryMax=6G
+TimeoutStartSec=58min
