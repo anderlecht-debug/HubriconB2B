@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Reimbursement Playbook — Hubricon Learn</title>
+<meta name="description" content="What Amazon owes you on lost, damaged and refunded units: which report each one hides in, how to value it at landed cost, how to file, and the day each window shuts. Written lessons and a spreadsheet template.">
+<link rel="canonical" href="https://www.hubricon.com/learn/reimbursement-playbook">
+<meta name="theme-color" content="#050A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/learn/reimbursement-playbook">
+<meta property="og:title" content="The Reimbursement Playbook — Hubricon Learn">
+<meta property="og:description" content="What Amazon owes you on lost, damaged and refunded units, where each one hides in your own reports, how to file, and the day each window shuts.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Reimbursement Playbook — Hubricon Learn">
+<meta name="twitter:description" content="What Amazon owes you on lost, damaged and refunded units, where each one hides in your own reports, how to file, and the day each window shuts.">
+<meta name="twitter:image" content="https://www.hubricon.com/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<style>
+/* ============================================================
+   /learn/reimbursement-playbook — course 1, in the home page's
+   skin. Three columns: the lesson list, the lesson, the form.
+   The first lesson is open; the template and the rest open on
+   the form (docs/content/hubricon-learn-build-prompt.md §2–3).
+   Lesson text is embedded from content/learn/lessons/rendered/
+   by `hubricon-content embed-lessons`; edit the Markdown, not
+   the copy between the lesson markers below.
+   ============================================================ */
+:root{
+  --bg: hsl(225 72% 7%);            /* #050A1F */
+  --band: hsl(224 62% 10%);         /* alternating section band */
+  --raise: hsl(224 58% 13%);
+  --amber: hsl(45 100% 50%);        /* #FFC000 */
+  --amber-soft: hsl(45 100% 50% / .12);
+  --serious: hsl(8 72% 58%);
+  --ok: hsl(152 55% 52%);
+  --ink-100: hsl(220 40% 98%);
+  --ink-70: hsl(220 40% 98% / .72);
+  --ink-60: hsl(220 40% 98% / .58);
+  --rule-20: hsl(220 40% 98% / .18);
+  --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --w: min(1120px, calc(100% - 32px));
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; scroll-padding-top: 84px; }
+body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+img, video{ display: block; max-width: 100%; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b{ color: var(--ink-100); font-weight: 700; }
+.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.link:hover{ color: var(--ink-100); }
+.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
+
+/* buttons */
+.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
+.btn svg{ width: 13px; height: 13px; }
+.btn:active{ transform: scale(.98); }
+.btn[disabled]{ opacity: .45; cursor: not-allowed; }
+.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
+.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
+.btn-white{ background: var(--ink-100); color: var(--bg); }
+
+/* nav */
+.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
+.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+.nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
+.nav-logo em{ font-style: normal; color: var(--amber); }
+.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+.nav-links a{ color: var(--ink-70); transition: color .2s; }
+.nav-links a:hover{ color: var(--ink-100); }
+.nav-course{ font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); flex: none; }
+@media (max-width: 920px){ .nav-links{ display: none; } }
+@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav-course{ display: none; } }
+
+/* shared */
+.in{ width: var(--w); margin: 0 auto; }
+.eyebrow{ font-size: 11px; text-transform: uppercase; letter-spacing: .22em; color: var(--amber); margin-bottom: 18px; }
+.tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
+.tag.new{ color: var(--amber); border-color: hsl(45 100% 50% / .5); }
+
+/* the course head */
+.course-head{ position: relative; padding: 56px 0 12px; }
+.course-head::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 60% at 20% 20%, hsl(45 100% 50% / .08), transparent 70%); }
+.course-head .in{ position: relative; }
+.badges{ display: flex; gap: 8px; margin: 0 0 18px; }
+.course-head h1{ font-size: clamp(40px, 5.2vw, 72px); max-width: 16ch; margin-bottom: 18px; }
+.course-head .lede{ font-size: clamp(15px, 1.3vw, 18px); max-width: 60ch; margin: 0 0 10px; }
+.course-head .lede-sub{ font-size: 14px; color: var(--ink-60); max-width: 60ch; }
+
+/* three columns */
+.course{ padding: 36px 0 80px; }
+.course-in{ width: var(--w); margin: 0 auto; display: grid; grid-template-columns: 232px minmax(0, 1fr) 340px; gap: 44px; align-items: start; }
+
+/* left: the lesson list */
+.lesson-nav{ position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
+.nav-h{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-60); margin: 8px 0 12px 12px; }
+.lesson-nav ol{ list-style: none; counter-reset: l; display: grid; gap: 4px; }
+.lesson-nav li{ counter-increment: l; }
+.lesson-nav a{ display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-radius: 12px; border-left: 2px solid transparent; font-size: 13.5px; line-height: 1.4; color: var(--ink-70); transition: color .15s, background-color .15s; }
+.lesson-nav a::before{ content: counter(l, decimal-leading-zero); font-family: var(--font-head); font-size: 17px; color: var(--amber); flex: none; }
+.lesson-nav a:hover{ color: var(--ink-100); }
+.lesson-nav a.on{ color: var(--ink-100); background: var(--raise); border-left-color: var(--amber); border-radius: 0 12px 12px 0; }
+.lesson-nav li.locked a{ color: var(--ink-60); }
+.lesson-nav li.locked a::before{ color: var(--ink-60); }
+.lesson-nav li.locked a::after{ content: "locked"; margin-left: auto; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 1px 7px; align-self: center; }
+
+/* centre: the lesson */
+.slot{ margin-bottom: 18px; }
+.slot video{ width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; background: #000; border: 1px solid var(--rule-20); }
+.slot-cap{ font-size: 12px; color: var(--ink-60); margin-top: 8px; }
+.tpl{ display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 0 0 32px; padding: 0 0 24px; border-bottom: 1px solid var(--rule-08); }
+.tpl .btn[data-locked="true"]{ background: var(--raise); color: var(--ink-100); box-shadow: none; border: 1px solid var(--rule-20); }
+.tpl-note{ font-size: 12.5px; color: var(--ink-60); }
+.locked-note{ font-size: 13px; color: var(--amber); margin: -18px 0 22px; }
+.prose h2{ font-size: clamp(30px, 3.6vw, 44px); margin: 0 0 18px; }
+.prose h3{ font-size: 22px; letter-spacing: .03em; margin: 34px 0 10px; }
+.prose p{ font-size: 16px; color: var(--ink-70); max-width: 66ch; margin: 0 0 16px; }
+.prose table{ width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0 22px; }
+.prose th{ text-align: left; font-weight: 400; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule-20); }
+.prose td{ padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule-08); color: var(--ink-70); vertical-align: top; }
+.prose blockquote{ border-left: 2px solid var(--amber); padding: 4px 0 4px 18px; margin: 0 0 16px; }
+.prose blockquote p{ color: var(--ink-100); margin: 0; }
+.prose .next{ margin-top: 36px; padding-top: 20px; border-top: 1px dashed var(--rule-20); }
+
+/* right: the form (apply.html's gate, same chips) */
+.form-col{ position: sticky; top: 84px; }
+.gate{ border-radius: 24px; padding: 28px 28px 24px; background: var(--raise); border: 1px solid var(--rule-20); }
+.gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+.gate-title{ font-size: clamp(24px, 3vw, 30px); margin-bottom: 10px; }
+.gate-sub{ font-size: 13px; color: var(--ink-60); margin-bottom: 22px; max-width: 54ch; }
+.gate fieldset{ border: 0; margin: 0 0 18px; padding: 0; }
+.gate legend{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 10px; padding: 0; }
+.chips-q{ display: flex; flex-wrap: wrap; gap: 8px; }
+.chips-q label{ cursor: pointer; position: relative; }
+.chips-q input{ position: absolute; opacity: 0; pointer-events: none; }
+.chips-q span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
+.chips-q label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
+.chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+.chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
+.field{ margin: 0 0 16px; }
+.field label{ display: block; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 8px; }
+.field input{ width: 100%; font-family: var(--font-mono); font-size: 15px; color: var(--ink-100); background: hsl(226 65% 6% / .7); border: 1px solid var(--rule-20); border-radius: 12px; padding: 12px 14px; }
+.field input:focus{ border-color: var(--amber); outline: none; }
+.hp{ position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.gate .cta-row .btn{ width: 100%; }
+.gate-err{ font-size: 13px; color: var(--serious); margin-top: 12px; }
+.gate-fine{ font-size: 12px; color: var(--ink-60); margin-top: 16px; }
+.route .link{ font-size: 15px; }
+.route p + p{ margin-top: 12px; }
+
+/* footer */
+.footer{ margin-top: 40px; text-align: left; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+.footer .nav-logo{ font-size: 26px; }
+.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
+.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
+.footer ul a:hover{ color: var(--ink-100); }
+.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
+
+/* motion + responsive */
+@media (prefers-reduced-motion: reduce), print{
+  .grain{ animation: none; } html{ scroll-behavior: auto; }
+}
+@media (max-width: 1020px){
+  .course-in{ grid-template-columns: 1fr; gap: 28px; }
+  .lesson-nav{ position: static; max-height: none; overflow: visible; }
+  .nav-h{ margin-left: 0; }
+  .lesson-nav ol{ display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+  .lesson-nav li{ flex: none; }
+  .lesson-nav a, .lesson-nav a.on{ white-space: nowrap; border: 1px solid var(--rule-20); border-radius: 999px; padding: 8px 14px; font-size: 12.5px; }
+  .lesson-nav a.on{ border-color: var(--amber); background: var(--amber-soft); }
+  .lesson-nav li.locked a::after{ margin-left: 8px; }
+  .form-col{ position: static; }
+  .gate{ padding: 24px 20px 20px; }
+}
+@media (max-width: 920px){
+  .footer .in{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px){
+  .course-head{ padding: 40px 0 8px; }
+  .course-head h1{ font-size: clamp(38px, 11vw, 56px); }
+  .course{ padding: 24px 0 56px; }
+  .btn{ white-space: normal; text-align: center; line-height: 1.35; }
+  .tpl .btn{ width: 100%; }
+  .prose th, .prose td{ font-size: 12.5px; padding-right: 8px; }
+  .footer .in{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-in">
+    <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+    <div class="nav-links">
+      <a href="/learn">All courses</a>
+      <a href="/">Managed Profit</a>
+      <a href="/method">The method</a>
+    </div>
+    <a class="nav-course" href="/learn">Hubricon Learn</a>
+  </div>
+</nav>
+
+<!-- ═══ THE COURSE ═══ -->
+<header class="course-head" id="top">
+  <div class="in">
+    <div class="eyebrow">Hubricon Learn</div>
+    <div class="badges"><span class="tag new">New</span><span class="tag">Free</span></div>
+    <h1>The Reimbursement Playbook</h1>
+    <p class="lede">What Amazon owes you on lost, damaged and refunded units. Where each one hides in your own reports, how to value it at landed cost, how to file, and the day each window shuts.</p>
+    <p class="lede-sub">The first lesson is open. The template and the rest of the lessons open when you leave a name and an address.</p>
+  </div>
+</header>
+
+<div class="course">
+  <div class="course-in">
+
+    <!-- left: the lesson list. Titles are copied from each lesson's own heading by embed-lessons. -->
+    <nav class="lesson-nav" aria-label="Lessons">
+      <p class="nav-h">Lessons</p>
+      <ol id="lesson-list">
+        <!-- lesson-nav -->
+        <li><a href="#L1" data-lesson="L1">What Amazon owes you, and the reports it hides in</a></li>
+        <li class="locked"><a href="#L2" data-lesson="L2">Lost or damaged in the warehouse</a></li>
+        <li class="locked"><a href="#L3" data-lesson="L3">Damaged by the carrier, lost in transit</a></li>
+        <li class="locked"><a href="#L4" data-lesson="L4">Refunded, never returned</a></li>
+        <li class="locked"><a href="#L5" data-lesson="L5">Returns Amazon damaged</a></li>
+        <li class="locked"><a href="#L6" data-lesson="L6">Reversals, filing, and the calendar</a></li>
+<!-- /lesson-nav -->
+      </ol>
+    </nav>
+
+    <!-- centre: the lesson. The video slot stays hidden until a raw screen recording exists;
+         the template button sits directly under it either way. -->
+    <main class="lesson" id="lesson">
+      <div class="slot" id="slot" hidden>
+        <video id="slot-video" controls playsinline preload="none"></video>
+        <p class="slot-cap">A raw screen recording of the founder's own Seller Central, unedited.</p>
+      </div>
+      <div class="tpl">
+        <a class="btn btn-amber" id="tpl" href="/learn/reimbursement-playbook-template.xlsx" download data-locked="true">Download the template</a>
+        <span class="tpl-note" id="tpl-note">The spreadsheet opens with the form.</span>
+      </div>
+      <p class="locked-note" id="locked-note" hidden></p>
+
+      <section class="prose" id="L1" data-lesson="L1">
+        <!-- lesson:L1 -->
+<h2>What Amazon owes you, and the reports it hides in</h2>
+<p>Amazon loses units, damages units, refunds customers who never send the item back, and grades some returns as its own fault. For each of those it owes you money. Since 1 November 2024 it pays most of that automatically, without a case. This playbook is about what the automatic pass misses or underpays, because that is where the money still sits.</p>
+<p>On the demo catalogue this course runs on, Tarnhollow (demo data, 24 products, about $3.5M a year), the method finds 123 claims. 72 of them are open today, worth $4,593 at landed cost, or $3,573 once you apply honest approval odds. 37 of them close within 14 days. $825 has already been lost to windows that shut. Every one of those numbers came out of the same reports you can export tonight.</p>
+<h3>The reports</h3>
+<p>Everything lives in the seller's own exports. Nothing here needs a tool or an account you don't already have.</p>
+<table>
+<thead>
+<tr>
+<th>Report</th>
+<th>Where</th>
+<th>What it reveals</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Inventory Ledger</td>
+<td>Reports → Fulfillment → Inventory Ledger</td>
+<td>units Amazon adjusted away, with a reason code and, sometimes, its own admission of the shortfall</td>
+</tr>
+<tr>
+<td>FBA Customer Returns</td>
+<td>Reports → Fulfillment → Returns</td>
+<td>each return with the grade Amazon gave it</td>
+</tr>
+<tr>
+<td>Reimbursements</td>
+<td>Reports → Fulfillment → Reimbursements</td>
+<td>what Amazon already paid, in cash or in replacement stock, and what it clawed back</td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Payments → Transaction View → download</td>
+<td>every refund, with the order it belongs to</td>
+</tr>
+</tbody>
+</table>
+<h3>The template</h3>
+<p>Download the spreadsheet under the video. It has a sheet for each report, helper columns that classify every row, a Claims sheet that dates and values each claim, and a filing log. Every window and approval assumption in it is the same constant Hubricon's own engine runs, so the template and the engine can never disagree. The rows already in it are demo data from the demo catalogue; delete them before you paste your own.</p>
+<h3>How a claim gets its number</h3>
+<p>Value is units multiplied by landed cost: unit cost plus inbound freight plus packaging. Amazon reimburses at manufacturing cost, so that is the honest figure. Without a cost sheet the template falls back to 50% of the selling price and says so. Expected value is that value multiplied by an approval probability that is stated, not hidden: 85% for warehouse losses, 70% for refunds without a return, 60% for returns Amazon damaged. Sort by expected value and days left, and you have the order to file in.</p>
+<h3>What this playbook does not cover</h3>
+<p>Inbound shipment shortages. They need the shipment reconciliation export, which is a different report with a different window. Lost units after a removal order. Fee overcharges. Each is real; none is in this course.</p>
+<p>The next lessons take the claim families one at a time: where the row is, how to read it, how to value it, when it opens, when it shuts, and how to file.</p>
+<!-- /lesson:L1 -->
+      </section>
+      <section class="prose" id="L2" data-lesson="L2" hidden data-gated>
+        <!-- lesson:L2 -->
+<h2>Lost or damaged in the warehouse</h2>
+<p>This is the largest family on most accounts. On the demo catalogue it is 36 lost claims worth $3,232 and 20 damaged claims worth $1,324.</p>
+<h3>Where the row is</h3>
+<p>Open the Inventory Ledger. Filter Event Type to Adjustments. Every adjustment carries a Reason. The codes that mean Amazon lost your unit inside its own building are M and N. The codes that mean it damaged your unit are D and Q. A code of E is customer damage, which is not Amazon's liability, and the codes 5 and F mean a unit was found again. Amazon changes its code table between report generations, so the template also reads the reason text: anything that says misplaced, lost or unrecoverable is a loss; anything that says damaged is damage.</p>
+<h3>Read Amazon's own admission first</h3>
+<p>Some ledger rows carry an Unreconciled Quantity. That is Amazon stating, in its own report, that the units are missing and unexplained. When it is present, use it as the claim quantity. It is the strongest evidence you will ever have, because the counterparty wrote it.</p>
+<p>Without it, the claim quantity is the adjustment quantity, made positive.</p>
+<h3>Net out what was already fixed</h3>
+<p>Net out what was already fixed before you file. Filing without netting is how a claim gets denied and your credibility spent.</p>
+<p>A found adjustment inside 45 days of the loss cancels it, oldest loss first. And a reimbursement Amazon already paid for that SKU inside 90 days of the loss consumes it, again oldest first. The template's Ledger sheet classifies each row; the Claims sheet is where you enter what survives the netting. On the demo catalogue 5 losses were already settled this way and never become claims.</p>
+<h3>The window</h3>
+<p>A warehouse loss becomes eligible 30 days after the adjustment date, because Amazon gives itself that long to find the unit or pay automatically. The window shuts 60 days after the adjustment. That leaves a filing window of a month. Missing it is the single most common way this money is lost.</p>
+<h3>Value and odds</h3>
+<p>Units multiplied by landed cost. Approval odds: 85% for a loss, 85% for damage. Amazon's own unreconciled counts approve more often than that; the assumption is deliberately conservative.</p>
+<h3>How to file</h3>
+<p>Seller Support, then Fulfillment by Amazon, then FBA issue, then Inventory reimbursement. One case per SKU and event. Paste the ledger row: the date, the reference id, the FNSKU, the quantity, the reason code. State the landed cost and attach the invoice line that proves it. Ask for reimbursement of the units Amazon's own ledger shows as lost or damaged and not yet reimbursed. Log the case id in the Filing log sheet the moment you have it.</p>
+<!-- /lesson:L2 -->
+      </section>
+      <section class="prose" id="L3" data-lesson="L3" hidden data-gated>
+        <!-- lesson:L3 -->
+<h2>Damaged by the carrier, lost in transit</h2>
+<p>Units that leave your supplier or your warehouse intact and arrive at Amazon damaged, or never arrive, are Amazon's responsibility when they moved on Amazon's partnered carrier. On the demo catalogue this is 11 carrier claims worth $856 and 5 transit claims worth $457.</p>
+<h3>Where the row is</h3>
+<p>The same Inventory Ledger, the same Adjustments filter. The codes for carrier damage are H and K; the code for lost in transit is 6. Reason text with the word carrier is carrier damage; reason text with transit and lost is transit loss.</p>
+<h3>The same netting, the same window</h3>
+<p>Found units inside 45 days and reimbursements inside 90 days offset the loss, oldest first, exactly as in the warehouse family. The claim opens 30 days after the adjustment and shuts 60 days after it.</p>
+<h3>Value and odds</h3>
+<p>Landed cost per unit. Approval odds are lower than for a warehouse loss, 70% for carrier damage and 70% for transit loss, because Amazon more often disputes whether the units were ever in its custody. That is also why the evidence matters more here.</p>
+<h3>Evidence that wins</h3>
+<p>The ledger row, as before. Add the shipment id and the carrier tracking that shows the shipment delivered. If you have the box-level contents from your shipping plan, attach the line for the affected units. A claim that shows Amazon's carrier signed for the box and Amazon's own ledger later wrote the units off is hard to deny.</p>
+<h3>The one this playbook does not cover</h3>
+<p>An inbound shipment that arrives short, with no adjustment row at all, is a shipment reconciliation claim, not a ledger claim. It lives in a different report with a different window, and it is out of scope here. If your account has a lot of it, that is the next thing to learn.</p>
+<!-- /lesson:L3 -->
+      </section>
+      <section class="prose" id="L4" data-lesson="L4" hidden data-gated>
+        <!-- lesson:L4 -->
+<h2>Refunded, never returned</h2>
+<p>A customer asks for a refund. Amazon pays it out of your balance. The customer keeps the item. Amazon's policy is that if the return never arrives, you are reimbursed, but the automatic pass misses a share of these, and they are easy to spot yourself. On the demo catalogue it is 24 claims worth $650.</p>
+<h3>Where the row is</h3>
+<p>A pair of reports, joined on the order id. In Transactions, filter Type to Refund; each row has the order id, the SKU, the quantity and the amount. In FBA Customer Returns, each return has the same order id. A refund with no return against its order, or with fewer units returned than refunded, is a candidate. The template's Refunds sheet does the join for you: it counts returned units per order and shows the shortfall.</p>
+<h3>The clock has a floor and a ceiling</h3>
+<p>A refund younger than 45 days is not a claim yet; the customer still has time to send it back, and filing early gets you a form reply. The claim becomes eligible 60 days after the refund date and shuts 120 days after it. That is a long window, which is exactly why these get forgotten.</p>
+<h3>Value and odds</h3>
+<p>Here the value is not landed cost. It is the refunded amount per unit, because that is what left your balance and it is the most Amazon will return. Treat it as a ceiling. Approval odds: 70%.</p>
+<h3>What disqualifies a candidate</h3>
+<p>An order Amazon already reimbursed under a return-related reason in the Reimbursements report. A return that arrived and was graded, whatever the grade. A refund on an order that was never shipped by FBA.</p>
+<h3>How to file</h3>
+<p>Seller Support, Fulfillment by Amazon, then the customer return option, then refund without return. Give the order id, the SKU, the refund date and the amount. Say that the returns report shows no unit received for the order and that the return window has passed. Log the case.</p>
+<!-- /lesson:L4 -->
+      </section>
+      <section class="prose" id="L5" data-lesson="L5" hidden data-gated>
+        <!-- lesson:L5 -->
+<h2>Returns Amazon damaged</h2>
+<p>When a return arrives, Amazon grades it. Some grades are your problem and some are Amazon's. On the demo catalogue 26 returns worth $237 were Amazon's.</p>
+<h3>Where the row is</h3>
+<p>FBA Customer Returns, the column called detailed disposition. A disposition of CARRIER_DAMAGED or DAMAGED means Amazon or its carrier damaged the unit after the customer sent it back, and that is a claim. A disposition of CUSTOMER_DAMAGED, DEFECTIVE, EXPIRED is customer damage, a defect, or expiry, and none of those is Amazon's liability. Sellable means the unit went back into your inventory and there is nothing to claim.</p>
+<p>On the demo catalogue, 48 returns were sellable, 44 were customer damage or defective, and 6 damaged returns had already been paid. The claims are what is left.</p>
+<h3>Already paid?</h3>
+<p>Check the status column on the return. If it contains the word reimbursed, Amazon paid. Check the Reimbursements report for the order id with a return or damage reason. Either one removes the candidate.</p>
+<h3>The window</h3>
+<p>Eligible at once; there is no waiting period on a graded return. The window shuts 60 days after the return date. These close fast, and the demo catalogue's soonest deadline at the time of the run was a carrier damaged claim with 2 days left.</p>
+<h3>Value and odds</h3>
+<p>Landed cost per unit. Approval odds: 60%, the lowest in this playbook, because Amazon will sometimes regrade the return on review. File anyway; the expected value is still positive on almost every row.</p>
+<h3>How to file</h3>
+<p>Seller Support, Fulfillment by Amazon, then the customer return option, then a damaged return. Give the order id, the license plate number from the returns report, the SKU, the disposition Amazon itself recorded, and the return date. Ask for reimbursement at cost for a unit Amazon graded as damaged in its custody. Log the case.</p>
+<!-- /lesson:L5 -->
+      </section>
+      <section class="prose" id="L6" data-lesson="L6" hidden data-gated>
+        <!-- lesson:L6 -->
+<h2>Reversals, filing, and the calendar</h2>
+<h3>Reversals</h3>
+<p>Sometimes Amazon pays a reimbursement and later takes it back. In the Reimbursements report the row has a negative amount, or an original reimbursement type that says reversal. Each one is a case to review by hand: read the original reimbursement, decide whether the reversal was justified, and if it was not, file with both reimbursement ids. Odds are 50% and the window is 60 days from the reversal date. On the demo catalogue there was 1 reversal worth $32.</p>
+<h3>Cash or stock</h3>
+<p>Amazon reimburses in replacement inventory as often as in money. Replacement units are a real remedy, but they are not dollars, and your Filing log should record which you received. The Reimbursements sheet's cash share column shows the split for every payment Amazon has made.</p>
+<h3>The filing wording</h3>
+<p>Every case is the same shape: what the report says, what the policy says, what you are asking for.</p>
+<blockquote>
+<p>Amazon's own [report name] dated [date] records [quantity] unit(s) of [SKU / FNSKU] as [Amazon's own words: lost, damaged, unreconciled, refunded without return]. No reimbursement appears against this event in the Reimbursements report. Under the FBA lost and damaged inventory reimbursement policy this event is eligible for reimbursement at cost. Landed cost is [amount] per unit; the invoice line is attached. Please reimburse [quantity] unit(s).</p>
+</blockquote>
+<p>Quote Amazon's report back to Amazon. Never argue; cite.</p>
+<h3>Triage by expected value</h3>
+<p>The Claims sheet gives every row a value, an approval probability and an expected value. Sort by expected value, descending. Then look at days left. File everything expiring within 14 days first, whatever its size, because a missed window is worth nothing. Then work down the expected value column. On the demo catalogue the open claims are worth $3,573 in expectation, which at this pace comes to $14,291 over a year, on a catalogue of 24 products. Your number will be different; the template will tell you what it is.</p>
+<h3>The calendar</h3>
+<p>Once a week, in this order: export the reports, paste them over the old ones, read the helper columns, add new claims to the Claims sheet, file the expiring ones, update the Filing log. It takes an hour the first time and less after that. Warehouse claims open 30 days after the loss and shut 60 days after it; refunds open at 60 days and shut at 120 days; damaged returns shut at 60 days. Put the weekly export on your calendar and the windows take care of themselves.</p>
+<h3>What we would like from you</h3>
+<p>If the playbook gets money back, tell us how much. With your permission we publish the number and the brand, and that is the only proof this course will ever carry.</p>
+<!-- /lesson:L6 -->
+      </section>
+    </main>
+
+    <!-- right: the form. apply.html's four questions, verbatim, plus a first name and an address. -->
+    <aside class="form-col">
+      <form class="gate capture" id="capture" novalidate aria-label="Get the template and the rest of the lessons">
+        <p class="gate-eyebrow">The template and the rest of the lessons</p>
+        <h3 class="gate-title">Leave a name and an address</h3>
+        <p class="gate-sub">The spreadsheet arrives by email and the lessons open here. The answers decide what we point you to after.</p>
+        <div class="field"><label for="first_name">First name</label><input id="first_name" name="first_name" type="text" autocomplete="given-name" maxlength="80" required></div>
+        <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" maxlength="200" required></div>
+        <fieldset>
+          <legend>Where you sell</legend>
+          <div class="chips-q">
+            <label><input type="radio" name="channel" value="Amazon"><span>Amazon</span></label><label><input type="radio" name="channel" value="Shopify"><span>Shopify</span></label><label><input type="radio" name="channel" value="Both"><span>Both</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Trailing-12-month revenue, all channels</legend>
+          <div class="chips-q">
+            <label><input type="radio" name="rev" value="Under $3M"><span>Under $3M</span></label><label><input type="radio" name="rev" value="$3M–$5M"><span>$3M–$5M</span></label><label><input type="radio" name="rev" value="$5M–$20M"><span>$5M–$20M</span></label><label><input type="radio" name="rev" value="$20M+"><span>$20M+</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Business model</legend>
+          <div class="chips-q">
+            <label><input type="radio" name="model" value="Private label"><span>Private label</span></label><label><input type="radio" name="model" value="Wholesale / reseller"><span>Wholesale / reseller</span></label><label><input type="radio" name="model" value="Arbitrage"><span>Arbitrage</span></label><label><input type="radio" name="model" value="Mixed / other"><span>Mixed / other</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Catalog size</legend>
+          <div class="chips-q">
+            <label><input type="radio" name="skus" value="Under 10 SKUs"><span>Under 10 SKUs</span></label><label><input type="radio" name="skus" value="10–50 SKUs"><span>10–50 SKUs</span></label><label><input type="radio" name="skus" value="50+ SKUs"><span>50+ SKUs</span></label>
+          </div>
+        </fieldset>
+        <div class="hp" aria-hidden="true"><label>Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
+        <div class="cta-row"><button class="btn btn-amber" type="submit" disabled>Send me the template</button></div>
+        <p class="gate-err" id="gate-err" role="alert" hidden></p>
+        <p class="gate-fine">One email with the template, and one in about a week asking what came back. Nothing else unless you reply.</p>
+        <noscript><p class="gate-fine">The form needs JavaScript enabled to send.</p></noscript>
+      </form>
+      <div class="gate route" id="route" hidden>
+        <p class="gate-eyebrow">Open</p>
+        <h3 class="gate-title" id="route-title">Your template is on its way</h3>
+        <p class="gate-sub" id="route-body"></p>
+        <p id="route-link" hidden><a class="link" id="route-a" href="/apply">Get the Profit Teardown →</a></p>
+        <p class="gate-fine">The lessons are open in the lesson list, in the order the reports are worth reading.</p>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="in">
+    <div><a class="nav-logo" href="/">Hubric<em>o</em>n</a></div>
+    <div><h4>Product</h4><ul><li><a href="/learn">Learn</a></li><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+    <p class="legal">No published results yet; the first posts when a reader agrees to publish what the playbook got back. Dollar figures in the lessons are the recovery model run on a demo catalogue and are labelled demo data, not results of ours. © 2026 Hubricon</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+document.documentElement.classList.add("js");
+
+/* ── Vercel Web Analytics ── */
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+
+/* apply.html's four questions, verbatim. The same keys and chip labels ride the
+   capture, so api/learn.js routes on the answers the application would. */
+const GATE_QUESTIONS = [
+  { key: "channel", legend: "Where you sell", options: ["Amazon", "Shopify", "Both"] },
+  { key: "rev",   legend: "Trailing-12-month revenue, all channels", options: ["Under $3M", "$3M–$5M", "$5M–$20M", "$20M+"] },
+  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
+  { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
+];
+
+const COURSE = "reimbursement-playbook";
+const STATE_KEY = "hubricon_learn_" + COURSE;
+
+/* Raw screen recordings, one per lesson, once the founder has recorded them (learn
+   build prompt §1). An empty string means the written lesson stands on its own and
+   the video slot stays hidden. Nothing in this course is animated. */
+const VIDEOS = { L1: "", L2: "", L3: "", L4: "", L5: "", L6: "" };
+
+/* Capital Position has no page yet. The below route offers nothing until it does; set
+   this to its URL when it ships, and POSITION_URL on the API the same day. */
+const POSITION_URL = "";
+
+const $ = (s, el = document) => el.querySelector(s);
+const sections = [...document.querySelectorAll("section[data-lesson]")];
+const navItems = [...document.querySelectorAll("#lesson-list a[data-lesson]")];
+const slot = $("#slot"), slotVideo = $("#slot-video");
+const tpl = $("#tpl"), tplNote = $("#tpl-note"), lockedNote = $("#locked-note");
+const form = $("#capture"), routeBox = $("#route");
+const submitBtn = form.querySelector("button[type=submit]");
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/* The unlock lives in localStorage: a route, whether the email went, and when. A
+   cleared browser sends the reader through the form again, which the API treats as
+   a repeat and neither stores nor emails twice. */
+function readState() { try { const s = JSON.parse(localStorage.getItem(STATE_KEY) || "null"); return s && s.route ? s : null; } catch (e) { return null; } }
+function saveState(s) { try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch (e) {} }
+let state = readState();
+const sectionOf = (id) => sections.find(s => s.dataset.lesson === id);
+const isLocked = (id) => !state && Boolean(sectionOf(id)?.hasAttribute("data-gated"));
+const titleOf = (id) => { const h = $(`section[data-lesson="${id}"] h2`); return h ? h.textContent : id; };
+
+/* A next-lesson link at the foot of each lesson, from the sections themselves. */
+sections.forEach((s, i) => {
+  const next = sections[i + 1];
+  if (!next) return;
+  const p = document.createElement("p"); p.className = "next";
+  const a = document.createElement("a"); a.className = "link"; a.href = "#" + next.id; a.dataset.lesson = next.id; a.textContent = `Next: ${titleOf(next.id)} →`;
+  p.appendChild(a); s.appendChild(p);
+});
+
+function nudge(note) {
+  lockedNote.textContent = note; lockedNote.hidden = false;
+  form.scrollIntoView({ block: "center" });
+  $("#first_name").focus({ preventScroll: true });
+}
+
+function show(id, { scroll = true, count = true } = {}) {
+  if (!sectionOf(id)) id = "L1";
+  if (isLocked(id)) { nudge("That lesson opens with the form."); track("learn_locked_click", { lesson: id }); return; }
+  lockedNote.hidden = true;
+  sections.forEach(s => { s.hidden = s.dataset.lesson !== id; });
+  navItems.forEach(a => {
+    const on = a.dataset.lesson === id;
+    a.classList.toggle("on", on);
+    if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+  });
+  const src = VIDEOS[id] || "";
+  if (src) { if (slotVideo.getAttribute("src") !== src) slotVideo.src = src; slot.hidden = false; }
+  else { slotVideo.removeAttribute("src"); slot.hidden = true; }
+  try { history.replaceState(null, "", "#" + id); } catch (e) {}
+  if (scroll) $("#lesson").scrollIntoView({ block: "start" });
+  if (count) track("learn_lesson_view", { lesson: id });
+}
+
+/* After the form: every lesson open, the template live, and the routing panel in the
+   form's place. The copy per route mirrors api/learn.js's email, and the below route
+   links nowhere until Capital Position has a page. */
+function unlock(s) {
+  state = s;
+  document.body.classList.add("unlocked");
+  navItems.forEach(a => a.parentElement.classList.remove("locked"));
+  tpl.dataset.locked = "false";
+  tplNote.textContent = s.emailed ? "Also on its way to your inbox." : "Yours to open.";
+  lockedNote.hidden = true;
+  form.hidden = true;
+  routeBox.hidden = false;
+  $("#route-title").textContent = s.repeat ? "Welcome back" : (s.emailed ? "Your template is on its way" : "Your template is ready");
+  $("#route-body").textContent = {
+    core: "Your answers put your brand in the range Managed Profit is built for. The Playbook covers what Amazon owes you on lost and damaged units; a brand your size usually has more sitting in its fee lines, its ad spend and its reorders. The Profit Teardown reads your own exports and shows where, within a day.",
+    below: POSITION_URL
+      ? "Managed Profit is built for own brands above a revenue bar, so the page for you is Capital Position: what your cash can carry this week, and what it has to hold back."
+      : "Managed Profit is built for own brands above a revenue bar, so the lessons and the template are the useful part here. Read them in order, file the expiring claims first, and tell us what came back.",
+    none: "Read the lessons in order, file the expiring claims first, and tell us what came back.",
+  }[s.route] || "";
+  const linkP = $("#route-link"), a = $("#route-a");
+  if (s.route === "core") { a.href = "/apply"; a.textContent = "Get the Profit Teardown →"; linkP.hidden = false; }
+  else if (s.route === "below" && POSITION_URL) { a.href = POSITION_URL; a.textContent = "Read Capital Position →"; linkP.hidden = false; }
+  else linkP.hidden = true;
+}
+
+/* The lesson list and the next links. */
+document.addEventListener("click", ev => {
+  const a = ev.target.closest?.("a[data-lesson]");
+  if (!a) return;
+  ev.preventDefault();
+  show(a.dataset.lesson);
+});
+
+/* The template button: the form's doorway while locked, the file once open. */
+tpl.addEventListener("click", ev => {
+  if (tpl.dataset.locked === "true") {
+    ev.preventDefault();
+    nudge("The template opens with the form.");
+    track("learn_template_locked", {});
+    return;
+  }
+  track("learn_template_download", { route: state?.route || "" });
+});
+
+/* The form. */
+const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
+function valid() {
+  const a = answers();
+  return form.elements.first_name.value.trim().length > 0
+    && EMAIL.test(form.elements.email.value.trim())
+    && GATE_QUESTIONS.every(q => q.options.includes(a[q.key]));
+}
+const sync = () => { submitBtn.disabled = !valid(); };
+form.addEventListener("input", sync);
+form.addEventListener("change", sync);
+form.addEventListener("submit", async ev => {
+  ev.preventDefault();
+  if (!valid()) return;
+  const err = $("#gate-err"); err.hidden = true;
+  const label = submitBtn.textContent;
+  submitBtn.disabled = true; submitBtn.textContent = "Sending";
+  const a = answers();
+  track("learn_submit", { course: COURSE, ...a });
+  try {
+    const res = await fetch("/api/learn", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ course: COURSE, first_name: form.elements.first_name.value.trim(), email: form.elements.email.value.trim(), website: form.elements.website.value, ...a }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.ok) throw new Error(body.error || (res.status === 429 ? "Too many tries from this connection. Try again later." : "That didn't send. Try again in a moment."));
+    const s = { route: body.route, emailed: Boolean(body.emailed), repeat: Boolean(body.repeat), at: new Date().toISOString() };
+    saveState(s);
+    unlock(s);
+    track("learn_capture", { course: COURSE, route: s.route, emailed: s.emailed });
+  } catch (e) {
+    err.textContent = e.message || "That didn't send. Try again in a moment."; err.hidden = false;
+    submitBtn.textContent = label; sync();
+  }
+});
+
+/* First paint: a returning reader is already open; a hash picks the lesson. */
+if (state) unlock(state);
+show((location.hash || "#L1").slice(1), { scroll: false, count: false });
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

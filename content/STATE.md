@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-18T23:50:31+00:00 · style locked: False
+Updated 2026-09-18T23:59:36+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-18T23:50:31+00:00 · style locked: False
 
 ## Now
 
-- idle
+- P1-course-page · learn/reimbursement-playbook.html · step checklist
 
 ## Awaiting your review
 
@@ -57,8 +57,8 @@ Updated 2026-09-18T23:50:31+00:00 · style locked: False
 
 ## Next five
 
-- P1-course-page · learn/reimbursement-playbook.html
 - P1-followup · Recovered-amount follow-up
 - P1-index-links · Nav and footer links on index.html
 - P1-learn-hub · learn/index.html
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
+- V05 · Cash conversion cycle: the number that decides whether you survive

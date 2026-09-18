@@ -216,6 +216,11 @@ def cmd_render_lessons(a):
     print(lessons.render_all())
 
 
+def cmd_embed_lessons(a):
+    from . import lessons
+    print(lessons.embed())
+
+
 def cmd_style_lock(a):
     from . import stylelock
     q = _q()
@@ -250,6 +255,7 @@ def main(argv=None) -> None:
         p = sub.add_parser(name); p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=_step(module))
     sub.add_parser("template").set_defaults(fn=cmd_template)
     sub.add_parser("render-lessons").set_defaults(fn=cmd_render_lessons)
+    sub.add_parser("embed-lessons").set_defaults(fn=cmd_embed_lessons)
     p = sub.add_parser("style-lock"); p.add_argument("slug"); p.set_defaults(fn=cmd_style_lock)
     sub.add_parser("youtube-auth").set_defaults(fn=cmd_youtube_auth)
     sub.add_parser("next").set_defaults(fn=cmd_next)
