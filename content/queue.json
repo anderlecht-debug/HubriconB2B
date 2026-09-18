@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-18T23:13:49+00:00",
+ "updated_at": "2026-09-18T23:18:49+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -16,7 +16,7 @@
    "phase": 0,
    "kind": "setup",
    "title": "Tooling, docs, skills, state, runner, timer",
-   "status": "in_progress",
+   "status": "done",
    "checklist": [
     {
      "item": "content venv on Python 3.13 with manim, elevenlabs, google client and the engine importable",
@@ -36,7 +36,7 @@
     },
     {
      "item": "demo catalogue committed and parsing through the engine; pytest content/tests passes",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
@@ -61,6 +61,11 @@
      "at": "2026-09-18T23:13:49+00:00",
      "step": "checklist:3",
      "note": "done queue seeded 2026-09-18; STATE.md and REVIEW.md render"
+    },
+    {
+     "at": "2026-09-18T23:18:49+00:00",
+     "step": "checklist:4",
+     "note": "done demo committed, parses through the engine; 17 tests pass"
     }
    ]
   },
@@ -214,16 +219,16 @@
     "mc",
     "risk"
    ],
-   "status": "todo",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
-    "facts": "todo",
-    "script": "todo",
-    "critique": "todo",
-    "review": "todo",
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -237,7 +242,33 @@
    },
    "review_notes": [],
    "attempts": {},
-   "log": []
+   "log": [
+    {
+     "at": "2026-09-18T23:18:48+00:00",
+     "step": "facts",
+     "note": "done interactive session 2026-09-18"
+    },
+    {
+     "at": "2026-09-18T23:18:49+00:00",
+     "step": "script",
+     "note": "done interactive session 2026-09-18"
+    },
+    {
+     "at": "2026-09-18T23:18:49+00:00",
+     "step": "critique",
+     "note": "done interactive session 2026-09-18"
+    },
+    {
+     "at": "2026-09-18T23:18:49+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-09-18T23:18:49+00:00",
+     "step": "review",
+     "note": "parked for the founder"
+    }
+   ]
   },
   {
    "id": "V02",

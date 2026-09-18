@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-18T23:13:49+00:00 · style locked: False
+Updated 2026-09-18T23:18:49+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,15 +13,15 @@ Updated 2026-09-18T23:13:49+00:00 · style locked: False
 
 ## Now
 
-- P0-tooling · Tooling, docs, skills, state, runner, timer · step checklist
+- idle
 
 ## Awaiting your review
 
-- nothing waiting
+- V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
-- nothing yet
+- P0-tooling · Tooling, docs, skills, state, runner, timer
 
 ## Blocked on founder input
 
