@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:17:07+00:00 · style locked: False
+Updated 2026-09-19T00:17:27+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:17:07+00:00 · style locked: False
 
 ## Now
 
-- idle
+- V07 · Contribution margin vs gross margin — the one that actually matters · step script
 
 ## Awaiting your review
 
@@ -63,8 +63,8 @@ Updated 2026-09-19T00:17:07+00:00 · style locked: False
 
 ## Next five
 
-- V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
 - V11 · Discounting: the math of what you just gave away
 - V15 · You don't have a revenue problem. You have a cash trough
+- V16 · The $60,000 wire you're guessing on
