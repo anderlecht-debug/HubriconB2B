@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-19T00:06:15+00:00",
+ "updated_at": "2026-09-19T00:07:20+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -266,16 +266,22 @@
    "phase": 1,
    "kind": "learn",
    "title": "Nav and footer links on index.html",
-   "status": "todo",
+   "status": "done",
    "checklist": [
     {
      "item": "Add `Learn` to .nav-links and `Free training` (href /learn) to the footer Product list on index.html; nothing in body copy. Record the visible word count before and after in the commit message.",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": [],
+   "log": [
+    {
+     "at": "2026-09-19T00:07:20+00:00",
+     "step": "checklist:0",
+     "note": "done"
+    }
+   ],
    "order": 6
   },
   {
