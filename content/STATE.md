@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:01:39+00:00 · style locked: False
+Updated 2026-09-19T00:03:18+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:01:39+00:00 · style locked: False
 
 ## Now
 
-- idle
+- P1-learn-hub · learn/index.html · step checklist
 
 ## Awaiting your review
 
@@ -60,6 +60,6 @@ Updated 2026-09-19T00:01:39+00:00 · style locked: False
 
 - P1-followup · Recovered-amount follow-up
 - P1-index-links · Nav and footer links on index.html
-- P1-learn-hub · learn/index.html
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V05 · Cash conversion cycle: the number that decides whether you survive
+- V07 · Contribution margin vs gross margin — the one that actually matters
