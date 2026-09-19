@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:16:03+00:00 · style locked: False
+Updated 2026-09-19T00:16:53+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:16:03+00:00 · style locked: False
 
 ## Now
 
-- V05 · Cash conversion cycle: the number that decides whether you survive · step critique
+- V05 · Cash conversion cycle: the number that decides whether you survive · step review
 
 ## Awaiting your review
 
