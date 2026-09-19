@@ -45,6 +45,16 @@ cd "$WT" || exit 1
 git checkout -q content 2>/dev/null
 git fetch -q origin content 2>/dev/null && git merge -q --ff-only origin/content 2>/dev/null
 
+# An idle queue (everything parked for the founder or blocked on an input) needs no
+# Claude session at all; the state files are refreshed and the tick ends.
+if [ "${CONTENT_DRY_RUN:-0}" != "1" ] && "$WT/content/.venv/bin/hubricon-content" next --dry 2>/dev/null | grep -q '"idle": true'; then
+  "$WT/content/.venv/bin/hubricon-content" status --md >/dev/null 2>&1
+  git add -A content 2>/dev/null; git diff --cached --quiet || git commit -q -m "Content pipeline: the state rollup after an idle tick"
+  git push -q origin content 2>/dev/null || true
+  printf '%s tick idle (no session started)\n' "$(date -Is)" >> "$RUN/log"
+  exit 0
+fi
+
 START=$(date +%s)
 if [ "${CONTENT_DRY_RUN:-0}" = "1" ]; then
   OUT=$(timeout 5m "$CLAUDE" -p "Reply with the single word OK and nothing else." \

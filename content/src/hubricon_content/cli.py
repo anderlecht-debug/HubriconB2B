@@ -155,7 +155,8 @@ def cmd_reject_final(a):
 def cmd_next(a):
     q = _q()
     item = state.next_item(q)
-    state.save(q)
+    if not a.dry:
+        state.save(q)
     _out(item)
 
 
@@ -258,7 +259,7 @@ def main(argv=None) -> None:
     sub.add_parser("embed-lessons").set_defaults(fn=cmd_embed_lessons)
     p = sub.add_parser("style-lock"); p.add_argument("slug"); p.set_defaults(fn=cmd_style_lock)
     sub.add_parser("youtube-auth").set_defaults(fn=cmd_youtube_auth)
-    sub.add_parser("next").set_defaults(fn=cmd_next)
+    p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)
     p = sub.add_parser("unblock"); p.add_argument("unit"); p.add_argument("--note", default=""); p.set_defaults(fn=cmd_unblock)
