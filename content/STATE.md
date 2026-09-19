@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:19:36+00:00 · style locked: False
+Updated 2026-09-19T00:20:18+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:19:36+00:00 · style locked: False
 
 ## Now
 
-- V07 · Contribution margin vs gross margin — the one that actually matters · step critique
+- V07 · Contribution margin vs gross margin — the one that actually matters · step review
 
 ## Awaiting your review
 
