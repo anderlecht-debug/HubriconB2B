@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:07:20+00:00 · style locked: False
+Updated 2026-09-19T00:08:07+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:07:20+00:00 · style locked: False
 
 ## Now
 
-- idle
+- V04 · Your A/B test told you nothing. Here's the sample size you needed · step script
 
 ## Awaiting your review
 
@@ -61,8 +61,8 @@ Updated 2026-09-19T00:07:20+00:00 · style locked: False
 
 ## Next five
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V05 · Cash conversion cycle: the number that decides whether you survive
 - V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
+- V11 · Discounting: the math of what you just gave away
