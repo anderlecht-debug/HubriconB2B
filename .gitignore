@@ -9,3 +9,20 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .claude/settings.local.json
+# content pipeline: environments, runner state, secrets and rendered media stay local
+content/.venv/
+content/.runner/
+content/.secrets/
+content/videos/*/media/
+content/videos/*/audio/
+content/videos/*/scenes/
+content/videos/*/frames/
+content/videos/*/shorts/
+content/videos/**/*.mp4
+content/videos/**/*.mov
+content/videos/**/*.wav
+content/videos/**/*.mp3
+content/videos/**/*.m4a
+content/.manim/
+content/.cache/
+content/videos/00-smoke/

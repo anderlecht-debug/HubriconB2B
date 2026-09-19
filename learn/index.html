@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon Learn — the method, published</title>
+<meta name="description" content="The models Managed Profit runs, written out in full with the spreadsheets, so you can run them yourself. One course so far: the Reimbursement Playbook.">
+<link rel="canonical" href="https://www.hubricon.com/learn">
+<meta name="theme-color" content="#050A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/learn">
+<meta property="og:title" content="Hubricon Learn — the method, published">
+<meta property="og:description" content="The models Managed Profit runs, written out in full with the spreadsheets, so you can run them yourself.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hubricon Learn — the method, published">
+<meta name="twitter:description" content="The models Managed Profit runs, written out in full with the spreadsheets, so you can run them yourself.">
+<meta name="twitter:image" content="https://www.hubricon.com/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<style>
+/* ============================================================
+   /learn — the hub, in the home page's skin. One card per
+   course that exists in full; no card for anything else
+   (docs/content/hubricon-learn-build-prompt.md §2, §7).
+   ============================================================ */
+:root{
+  --bg: hsl(225 72% 7%);            /* #050A1F */
+  --band: hsl(224 62% 10%);         /* alternating section band */
+  --raise: hsl(224 58% 13%);
+  --amber: hsl(45 100% 50%);        /* #FFC000 */
+  --serious: hsl(8 72% 58%);
+  --ok: hsl(152 55% 52%);
+  --ink-100: hsl(220 40% 98%);
+  --ink-70: hsl(220 40% 98% / .72);
+  --ink-60: hsl(220 40% 98% / .58);
+  --rule-20: hsl(220 40% 98% / .18);
+  --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --w: min(1120px, calc(100% - 32px));
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; scroll-padding-top: 84px; }
+body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+img, video{ display: block; max-width: 100%; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b{ color: var(--ink-100); font-weight: 700; }
+.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.link:hover{ color: var(--ink-100); }
+.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
+
+/* nav */
+.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
+.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+.nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
+.nav-logo em{ font-style: normal; color: var(--amber); }
+.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+.nav-links a{ color: var(--ink-70); transition: color .2s; }
+.nav-links a:hover{ color: var(--ink-100); }
+.nav-course{ font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); flex: none; }
+@media (max-width: 920px){ .nav-links{ display: none; } }
+@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav-course{ display: none; } }
+
+/* shared */
+.in{ width: var(--w); margin: 0 auto; }
+.eyebrow{ font-size: 11px; text-transform: uppercase; letter-spacing: .22em; color: var(--amber); margin-bottom: 18px; }
+.tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
+.tag.new{ color: var(--amber); border-color: hsl(45 100% 50% / .5); }
+
+/* the position */
+.hero{ position: relative; overflow: hidden; padding: 72px 0 40px; }
+.hero::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 60% at 20% 20%, hsl(45 100% 50% / .09), transparent 70%); }
+.hero .in{ position: relative; }
+.hero h1{ font-size: clamp(44px, 6.4vw, 92px); max-width: 15ch; margin-bottom: 22px; }
+.hero .lede{ font-size: clamp(16px, 1.5vw, 20px); max-width: 52ch; }
+
+/* the courses: one card per course that exists in full */
+.courses{ padding: 24px 0 96px; }
+.cards{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 440px)); gap: 18px; margin-top: 8px; }
+.card{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 14px; text-align: left; transition: border-color .2s, transform .25s var(--ease-out); }
+.card:hover{ border-color: var(--rule-20); transform: translateY(-2px); }
+.card .badges{ display: flex; gap: 8px; }
+.card h3{ font-size: 28px; letter-spacing: .03em; }
+.card p{ font-size: 15px; color: var(--ink-70); }
+.card .link{ margin-top: auto; font-size: 14px; }
+
+/* footer */
+.footer{ text-align: left; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+.footer .nav-logo{ font-size: 26px; }
+.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
+.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
+.footer ul a:hover{ color: var(--ink-100); }
+.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
+
+/* motion + responsive */
+@media (prefers-reduced-motion: reduce), print{
+  .grain{ animation: none; } html{ scroll-behavior: auto; } .card{ transition: none; }
+}
+@media (max-width: 920px){
+  .footer .in{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px){
+  .hero{ padding: 48px 0 24px; }
+  .hero h1{ font-size: clamp(40px, 12vw, 64px); }
+  .courses{ padding: 16px 0 64px; }
+  .cards{ grid-template-columns: 1fr; }
+  .footer .in{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-in">
+    <a class="nav-logo" href="/">Hubric<em>o</em>n</a>
+    <div class="nav-links">
+      <a href="#courses">Courses</a>
+      <a href="/">Managed Profit</a>
+      <a href="/method">The method</a>
+    </div>
+    <a class="nav-course" href="/learn">Hubricon Learn</a>
+  </div>
+</nav>
+
+<!-- ═══ THE POSITION ═══ -->
+<header class="hero" id="top">
+  <div class="in">
+    <div class="eyebrow">Hubricon Learn</div>
+    <h1>The method is public. The execution is the product.</h1>
+    <p class="lede">Every model Managed Profit runs is written out here in full, with the spreadsheet, so you can run it yourself on your own reports. The service is for the brand that would rather have it done, and graded.</p>
+  </div>
+</header>
+
+<!-- ═══ THE COURSES: one card per course that exists in full. No card for anything else. ═══ -->
+<section class="courses" id="courses">
+  <div class="in">
+    <div class="cards">
+      <a class="card" href="/learn/reimbursement-playbook">
+        <div class="badges"><span class="tag new">New</span><span class="tag">Free</span></div>
+        <h3>The Reimbursement Playbook</h3>
+        <p>What Amazon owes you on lost, damaged and refunded units. Where each one hides in your own reports, how to value it at landed cost, how to file, and the day each window shuts. Written lessons and a spreadsheet template.</p>
+        <span class="link">Open the course →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="in">
+    <div><a class="nav-logo" href="/">Hubric<em>o</em>n</a></div>
+    <div><h4>Product</h4><ul><li><a href="/learn">Learn</a></li><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+    <p class="legal">No published results yet; the first posts when a reader agrees to publish what a course got back. Figures in the lessons are demo data, not results of ours. © 2026 Hubricon</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+document.addEventListener("click", ev => {
+  const a = ev.target.closest?.("a.card");
+  if (a) { try { window.va("event", { name: "learn_card_click", data: { course: a.getAttribute("href") } }); } catch (e) {} }
+});
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
