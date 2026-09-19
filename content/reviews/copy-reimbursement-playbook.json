@@ -1,0 +1,21 @@
+{
+ "path": "learn/reimbursement-playbook.html",
+ "mode": "copy",
+ "pass": true,
+ "items": [
+  {"n": 1, "question": "Any banned phrase present?", "pass": true, "note": "None in the page copy or the six embedded lessons (lib/learn_page.test.mjs greps the visible text for the CLAUDE.md list plus coming soon, limited, countdown)."},
+  {"n": 2, "question": "Is 'free' used at most twice?", "pass": true, "note": "Once: the Free badge under the course eyebrow. The form, the routing panel and the lessons do not use the word."},
+  {"n": 3, "question": "No countdown, no 'limited', no fake counts, no 'coming soon'?", "pass": true, "note": "None. The video slot is hidden rather than promised; the below route offers nothing rather than pointing at a Capital Position page that does not exist yet."},
+  {"n": 4, "question": "Does the form have six fields and no phone number?", "pass": true, "note": "First name, email, and apply.html's four questions verbatim (channel, rev, model, skus). No phone or tel field. The honeypot is off-screen and aria-hidden."},
+  {"n": 5, "question": "Is lesson one readable without the form?", "pass": true, "note": "L1 is static HTML with no hidden or data-gated attribute; L2 to L6 are <section hidden data-gated>. The template button is the only locked element above the lesson."},
+  {"n": 6, "question": "Does any sentence claim results, clients or testimonials that do not exist?", "pass": true, "note": "The footer states there are no published results. The routing panel describes the Profit Teardown as a service, not an outcome. L6 asks the reader for a result and says that is the only proof the course will carry."},
+  {"n": 7, "question": "Does every dollar figure in the lessons trace to facts.json and carry a demo label?", "pass": true, "note": "content/tests/test_lessons_figures.py: every $ and % figure across L1 to L6 is a value in content/videos/playbook/facts.json, and every lesson with a dollar figure names the demo catalogue or demo data."},
+  {"n": 8, "question": "Luxury pass: no urgency, no scarcity, no exclamation marks, one CTA?", "pass": true, "note": "No exclamation mark in visible copy. The form's submit is the only amber button while locked; the template button is styled secondary until the form unlocks it and the form then hides."}
+ ],
+ "checks": {
+  "node --test lib/learn_page.test.mjs": "5 passed",
+  "content/.venv/bin/pytest content/tests/test_lessons_figures.py": "12 passed"
+ },
+ "notes": "Two gaps that are not copy faults: the nav's All courses link points at /learn, which P1-learn-hub builds next; and the below route shows no Capital Position link until POSITION_URL is set on both the page and api/learn.js.",
+ "judged_by": "critique skill (copy), unattended tick 2026-09-18"
+}

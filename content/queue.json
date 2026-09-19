@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-18T23:59:36+00:00",
+ "updated_at": "2026-09-19T00:01:39+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -147,7 +147,7 @@
    "phase": 1,
    "kind": "learn",
    "title": "learn/reimbursement-playbook.html",
-   "status": "in_progress",
+   "status": "done",
    "checklist": [
     {
      "item": "Build learn/reimbursement-playbook.html: three columns (sticky lesson nav / lesson body with the template button directly under the video slot / sticky six-field form), mobile collapse, lessons 2–6 in <section hidden data-gated>, unlock on submit via localStorage, routing panel core/below/none, one CTA. Reuse the tokens, nav and footer markup from index.html and GATE_QUESTIONS from apply.html verbatim. Embed the rendered lessons from content/learn/lessons/rendered/.",
@@ -155,7 +155,7 @@
     },
     {
      "item": "Run the critique skill in copy mode on the page; fix until it passes.",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
@@ -164,6 +164,11 @@
     {
      "at": "2026-09-18T23:59:36+00:00",
      "step": "checklist:0",
+     "note": "done"
+    },
+    {
+     "at": "2026-09-19T00:01:39+00:00",
+     "step": "checklist:1",
      "note": "done"
     }
    ],
