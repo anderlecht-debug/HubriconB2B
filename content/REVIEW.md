@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-09-19T00:16:53+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-09-19T00:17:07+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V01 · day 1 · tier A · pillar 4 — script gate
 
@@ -119,3 +119,66 @@ hubricon-content approve 04-ab-test-sample-size
 hubricon-content reject  04-ab-test-sample-size --note "what to change"
 ```
 Edit `content/videos/04-ab-test-sample-size/script.md` first if you prefer; it is re-validated on approve.
+
+## V05 · day 5 · tier B · pillar 2 — script gate
+
+**Title:** Cash conversion cycle: the number that decides whether you survive  
+**Thumbnail:** $95,201 ⟨min_p5⟩ in amber over the cash cone fragment, the trough marked on day 13 days ⟨min_p5_day⟩ with the supplier wires as red ticks  
+**Spiky claim:** A profitable catalog can run out of cash on a date you can read off a calendar, and most operators watch the P&L instead of the calendar.  
+**Misconception:** We're profitable, so cash takes care of itself. If the margin is there, the bank balance follows.  
+**CTA:** The free Profit Teardown at /apply  
+**Estimated runtime:** about 7 min 28 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. $95,201 ⟨min_p5⟩. That's where this catalog's cash bottoms out on day 13 days ⟨min_p5_day⟩, on a business making 32.3% ⟨net_pct_latest⟩ net. You'd say a margin like that can't run out of money. It can, on a date you can read off a calendar.
+2. $345,501 ⟨wires_total⟩ leaves this account in supplier wires inside 90 days ⟨horizon_days⟩, against $262,000 ⟨cash_on_hand⟩ in the bank. The margin says fine. The margin doesn't know when the money moves, and the dates are the whole story.
+3. 40 days ⟨lead_time_typical⟩ from the wire to the goods landing. 14 days ⟨payout_cycle⟩ from the sale to the payout. Add the time on the shelf and you have the number that decides whether you survive, and almost nobody has written it down.
+
+### Script
+
+**[0:00] HOOK**  
+$95,201 ⟨min_p5⟩. That's where this catalog's cash bottoms out on day 13 days ⟨min_p5_day⟩, on a business making 32.3% ⟨net_pct_latest⟩ net. You'd say a margin like that can't run out of money. It can, on a date you can read off a calendar.  
+
+**[0:15] LET THEM BE WRONG**  
+Here's the model. You watch the P&L. Revenue up, margin healthy, net positive, so the business is fine and the bank balance is a lagging copy of the P&L. When cash gets tight it's a surprise, and the explanation is always something else. A big PO. A slow payout. A bad month. It's a fair model, because over a long enough window the P&L and the bank do agree. The trouble is the window. Inside it, the money leaves on one set of dates and comes back on another, and the P&L doesn't carry dates.  
+
+**[0:45] THE CRACK**  
+Here's the demo catalog on screen. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Last month: $318,632 ⟨rev_latest⟩ of sales, $102,864 ⟨net_latest⟩ of true net profit, 32.3% ⟨net_pct_latest⟩ net margin. On the P&L this business is fine. Now the bank. $262,000 ⟨cash_on_hand⟩ on hand today. Inside the next 90 days ⟨horizon_days⟩, the supplier wires already scheduled add up to $345,501 ⟨wires_total⟩. That's more than the cash in the bank, on a business that is profitable every month. The money comes back. The question is when, and whether the balance runs dry on the way.  
+
+**[1:15] CHAPTER 1 — FIND IT**  
+On screen is the cash cone. 10,000 ⟨n_paths⟩ possible versions of the next 90 days ⟨horizon_days⟩, drawn from what this catalog's demand actually does, with every supplier wire as a red tick. Read it left to right, and find the clocks. First, the wire schedule. 35 ⟨wire_count⟩ wires inside the window. The largest, $23,482 ⟨largest_wire⟩, for TH-ENADUT-03 ⟨largest_wire_sku⟩, leaves on day 0 days ⟨largest_wire_day⟩. That's today. Next, how long the goods take to arrive. The typical supplier lead time here is 40 days ⟨lead_time_typical⟩. For that long the money is gone and there's nothing new to sell. Then the shelf. Once units land they sit until they sell. The tightest product in this catalog, TH-STAMIX-12 ⟨stockout_worst_sku⟩, has 22 days ⟨stockout_worst_cover⟩ of cover, and slower products sit longer than that. Last, the payout. The platform holds the sale for a 14 days ⟨payout_cycle⟩ cycle before it pays you. Now put the clocks in a row. Wire, then lead time, then shelf, then payout. The cash conversion cycle is the length of that row: the days between a dollar leaving for the supplier and the same dollar landing back in the bank. It isn't on the P&L because the P&L has no calendar. It's on this chart, because this chart is nothing but a calendar.  
+
+**[3:30] CHAPTER 2 — VERIFY IT**  
+Now verify it against the cone. The median path's low point is $95,201 ⟨min_median⟩. The bad paths' low point, the worst day of the unlucky tail, is $95,201 ⟨trough_p5⟩, and it arrives on day 13 days ⟨min_p5_day⟩. Look where that day sits. It's after the wires have left and before the goods have landed, let alone sold and paid out. That's the cycle showing up as a date. In this run the share of paths that ever runs dry is 0.0% ⟨p_ruin⟩. That's with $262,000 ⟨cash_on_hand⟩ in the bank on day 0 days ⟨largest_wire_day⟩. Bring the starting balance down toward $95,201 ⟨trough_p5⟩ and the same schedule, same margin, same products, starts touching the floor. The margin never changed. Only the balance did, and the dates did the rest. And here's what the cone knows that a spreadsheet doesn't. Products don't sell independently. Across this catalog, demand moves together with a correlation of 0.48 ⟨demand_corr⟩, so a slow week is slow for most of the products at once, and the trough is deeper than it would be if each product rolled its own dice. Seen from the other end, after 90 days ⟨horizon_days⟩ the top of the cone is $352,682 ⟨terminal_p90⟩ and the bottom is $322,319 ⟨terminal_p10⟩. Same plan, same margin. Over a full year that gap opens to $65,320 ⟨year_luck_spread⟩ on dice alone.  
+
+**[5:30] WHAT IT'S WORTH**  
+So what's the number worth? Every day you shorten the cycle is a day less of cash sitting in the gap, and here's what's sitting in the gap on this catalog right now. On the shelf clock, stock ordered past its economic quantity costs $3,874 ⟨nv_bleed_month⟩ a month in fees to hold, and there are 13 ⟨nv_econ_orders⟩ orders the newsvendor would trim. That's cash parked on a shelf. On the wire clock, the largest wire is $23,482 ⟨largest_wire⟩ and it goes out on day 0 days ⟨largest_wire_day⟩, so it sets the depth of the trough more than any other line on the calendar. On the payout clock, 14 days ⟨payout_cycle⟩ is fixed by the platform. You can't shorten it. You can stop treating it as instant. And the price of getting this wrong isn't a fee. It's the reorder you can't place because the cash is in transit, and the rank you buy back with ads afterwards. The risk model puts the expected shortfall below plan in a bad period at $38,007 ⟨risk_cvar_95⟩, and the worst run of periods at $61,358 ⟨risk_worst_5⟩ of net against an expected $99,365 ⟨risk_expected_net⟩. The cycle is where that shortfall lands.  
+
+**[7:30] WHAT TO DO**  
+This week. First, write the cycle down. Wire date, landing date, first sale, first payout, for your top products, from your own POs and settlement reports. It's a spreadsheet with dates in it, and most operators have never made one. Next, draw the wires. Every scheduled supplier payment inside the next 90 days ⟨horizon_days⟩, on a calendar, against the cash you hold and the payouts you expect. Where the line dips lowest is your own day 13 days ⟨min_p5_day⟩. Then move the clocks. Split the largest wire into a deposit and a balance where the supplier allows it. That flattens the trough without touching the margin. Trim the orders the newsvendor flags as overstocked, because that cash comes back onto the calendar. Ask for terms before you ask for growth. Last, hold cash for the trough, not for the month. Fixed costs here are $31,500 ⟨monthly_fixed_costs⟩ a month, and the trough arrives on day 13 days ⟨min_p5_day⟩. The right reserve is the trough plus a buffer for the cone's bad tail, not a round number of months.  
+
+**[9:00] THE HONEST LIMIT**  
+What you can do yourself is the calendar for your top products, and it's worth doing this week. What you can't do by hand is the cone. 10,000 ⟨n_paths⟩ versions of the next 90 days ⟨horizon_days⟩ across 24 ⟨skus_in_cone⟩ products with demand that moves together, redrawn every time a wire moves or a payout slips. That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe. The free Profit Teardown runs this cone on your own exports and hands you the date and the trough. What you can do today is stop reading the margin as a cash forecast. Find your day 13 days ⟨min_p5_day⟩.  
+*CTA:* The free Profit Teardown at /apply. Your own cash cone, from your own exports, inside a day.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the trough figure lands on the first word, then the day |  |
+| 0:15 | kinetic: the P&L read in the viewer's own words (a real P&L screenshot replaces this beat when the founder supplies one) |  |
+| 0:45 | waterfall: revenue down to true net for the latest month; then cash_cone: the cone opens from today's balance with the wires as red ticks | MARGIN.DECOMP on Tarnhollow demo data; cash horizon on Tarnhollow demo data |
+| 1:15 | cash_cone: the wires as ticks; then the lead-time span, the shelf span and the payout lag drawn as brackets under the axis, joined into one bar | cash horizon on Tarnhollow demo data; MONTE_CARLO.RUN on Tarnhollow demo data for lead time and cover |
+| 3:30 | cash_cone: the trough marked at day {{min_p5_day}}, the floor line, the fan widening to the right with the ends labelled | cash horizon on Tarnhollow demo data; cash horizon paths, one-year horizon, Tarnhollow demo data |
+| 5:30 | newsvendor: the overstocked orders as bars above the economic quantity; then kinetic for the clocks and the shortfall | NEWSVENDOR on Tarnhollow demo data; risk on Tarnhollow demo data |
+| 7:30 | kinetic: the steps landing one at a time; cash_cone with the largest wire split and the trough lifting | cash horizon on Tarnhollow demo data |
+| 9:00 | kinetic: the closing line |  |
+
+### Decide
+
+```
+hubricon-content approve 05-cash-conversion-cycle
+hubricon-content reject  05-cash-conversion-cycle --note "what to change"
+```
+Edit `content/videos/05-cash-conversion-cycle/script.md` first if you prefer; it is re-validated on approve.
