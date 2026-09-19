@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:23:42+00:00 · style locked: False
+Updated 2026-09-19T00:23:56+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:23:42+00:00 · style locked: False
 
 ## Now
 
-- V08 · Elasticity in plain English, and why your price is probably wrong · step review
+- idle
 
 ## Awaiting your review
 
@@ -21,6 +21,7 @@ Updated 2026-09-19T00:23:42+00:00 · style locked: False
 - V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
 - V05 · Cash conversion cycle: the number that decides whether you survive · gate `review` → see `content/REVIEW.md`
 - V07 · Contribution margin vs gross margin — the one that actually matters · gate `review` → see `content/REVIEW.md`
+- V08 · Elasticity in plain English, and why your price is probably wrong · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
