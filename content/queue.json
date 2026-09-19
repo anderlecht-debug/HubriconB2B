@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-19T00:20:47+00:00",
+ "updated_at": "2026-09-19T00:22:58+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -689,7 +689,7 @@
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "todo",
+    "script": "done",
     "critique": "todo",
     "review": "todo",
     "tts": "todo",
@@ -709,6 +709,11 @@
     {
      "at": "2026-09-19T00:20:47+00:00",
      "step": "facts",
+     "note": "done"
+    },
+    {
+     "at": "2026-09-19T00:22:58+00:00",
+     "step": "script",
      "note": "done"
     }
    ]
