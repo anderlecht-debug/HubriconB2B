@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-19T00:03:41+00:00",
+ "updated_at": "2026-09-19T00:06:15+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -243,16 +243,22 @@
    "phase": 1,
    "kind": "learn",
    "title": "Recovered-amount follow-up",
-   "status": "todo",
+   "status": "done",
    "checklist": [
     {
      "item": "Add learn_followups() to engine/src/hubricon_engine/operator.py: seven days after a learn_capture with no learn_result_ask row for that email, send one email asking how much came back and for permission to publish the number and the brand; log funnel_events kind learn_result_ask; reply-to the founder. Wire it into operator.run behind the same send/dry flags as the other steps. Add a unit test with the operator's existing fixtures.",
-     "done": false
+     "done": true
     }
    ],
    "attempts": {},
    "blocked_on": null,
-   "log": [],
+   "log": [
+    {
+     "at": "2026-09-19T00:06:15+00:00",
+     "step": "checklist:0",
+     "note": "done"
+    }
+   ],
    "order": 5
   },
   {
