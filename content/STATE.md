@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:12:29+00:00 · style locked: False
+Updated 2026-09-19T00:12:45+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,11 +13,12 @@ Updated 2026-09-19T00:12:29+00:00 · style locked: False
 
 ## Now
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed · step review
+- idle
 
 ## Awaiting your review
 
 - V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
+- V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
