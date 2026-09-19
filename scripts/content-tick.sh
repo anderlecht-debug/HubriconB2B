@@ -62,7 +62,21 @@ SECS=$(( $(date +%s) - START ))
 if printf '%s' "$OUT" | grep -q '"permission_denials":\[{'; then
   printf '%s WARNING: the tick was denied a tool call; check the allow list in scripts/content-runner.settings.json\n' "$(date -Is)" >> "$RUN/log"
 fi
-if printf '%s' "$OUT" | grep -qiE "usage limit|rate limit|limit will reset|resets? at|overloaded|status 529|429"; then
+# Back off only on a real limit: the result object's own error fields, never a
+# substring somewhere in a transcript that happens to mention a status code.
+LIMIT=$(printf '%s' "$OUT" | python3 -c '
+import json, re, sys
+raw = sys.stdin.read()
+try:
+    obj = json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
+except Exception:
+    print("unparsed"); sys.exit()
+status = obj.get("api_error_status")
+text = str(obj.get("result", ""))[:2000] if obj.get("is_error") else ""
+if status in (429, 529) or re.search(r"usage limit|rate limit|limit will reset|resets? at|overloaded", text, re.I):
+    print("limit")
+' 2>/dev/null)
+if [ "$LIMIT" = "limit" ]; then
   date -d '+60 min' +%s > "$RUN/backoff-until"
   printf '%s backoff until %s\n' "$(date -Is)" "$(date -d '+60 min' -Is)" >> "$RUN/log"
 else

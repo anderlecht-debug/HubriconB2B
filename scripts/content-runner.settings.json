@@ -62,7 +62,10 @@
       "Bash(date:*)",
       "Bash(jq:*)",
       "Bash(sed -n:*)",
-      "Bash(fc-list:*)"
+      "Bash(fc-list:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(node:*)"
     ]
   }
 }
