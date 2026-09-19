@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-09-19T00:20:18+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-09-19T00:20:29+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V01 · day 1 · tier A · pillar 4 — script gate
 
@@ -182,3 +182,66 @@ hubricon-content approve 05-cash-conversion-cycle
 hubricon-content reject  05-cash-conversion-cycle --note "what to change"
 ```
 Edit `content/videos/05-cash-conversion-cycle/script.md` first if you prefer; it is re-validated on approve.
+
+## V07 · day 7 · tier B · pillar 5 — script gate
+
+**Title:** Contribution margin vs gross margin — the one that actually matters  
+**Thumbnail:** 38.4% ⟨gross_vs_contribution_gap⟩ in amber over the waterfall fragment, the fee step and the ad step lit  
+**Spiky claim:** Gross margin is a number for your supplier's benefit, not yours. The only margin a product has is what's left after the platform and the ads take theirs.  
+**Misconception:** Gross margin is my margin. Revenue minus cost of goods is what each product earns, and fees and ads are overhead.  
+**CTA:** The course page at /learn, where the method is written out in full; no service mention  
+**Estimated runtime:** about 7 min 58 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. 70.7% ⟨gross_pct_latest⟩ gross margin. 32.3% ⟨contribution_pct_latest⟩ after the platform and the ads. You'd say the first number is your margin and the rest is overhead. The gap between them is 38.4% ⟨gross_vs_contribution_gap⟩ of revenue, and it's decided product by product, not in overhead.
+2. 38.4% ⟨gross_vs_contribution_gap⟩ of revenue. That's how far this catalog's gross margin sits above the margin it keeps, once the platform and the ads are paid. You'd call that overhead. It isn't, and treating it that way is why the bestseller looks better than it is.
+3. $102,395 ⟨fees_latest⟩ in platform fees last month, on $318,632 ⟨rev_latest⟩ of sales. Gross margin never saw it. Contribution margin does, and it's the only margin that tells you which product to reorder.
+
+### Script
+
+**[0:00] HOOK**  
+70.7% ⟨gross_pct_latest⟩ gross margin. 32.3% ⟨contribution_pct_latest⟩ after the platform and the ads. You'd say the first number is your margin and the rest is overhead. The gap between them is 38.4% ⟨gross_vs_contribution_gap⟩ of revenue, and it's decided product by product, not in overhead.  
+
+**[0:15] LET THEM BE WRONG**  
+Here's the model. Revenue minus what the goods cost you is the margin. That's the number on the product tab of your own spreadsheet, it's the number the supplier negotiation is about, and it's the number you'd quote if someone asked how good a product is. Fees and ads are real, but they're the cost of doing business, so they live in overhead, below the line, spread across everything. It's a fair model. It's how the accounts are laid out, and for a business with one product it's even correct. The trouble starts the moment there's more than one product, because from then on the fees and the ads are not spread. They're charged.  
+
+**[0:45] THE CRACK**  
+Here's the demo catalog on screen. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Last month, $318,632 ⟨rev_latest⟩ of sales. Landed cost of goods, $93,443 ⟨cogs_latest⟩. So the gross margin is 70.7% ⟨gross_pct_latest⟩. Healthy. Now watch the waterfall. Platform fees: $102,395 ⟨fees_latest⟩, which is 32.1% ⟨fee_share_latest⟩ of revenue. Ads, allocated to the products that spent them: $19,930 ⟨ads_latest⟩. What's left is $102,864 ⟨net_latest⟩, and that's 32.3% ⟨contribution_pct_latest⟩ of revenue. The gap between the margin you quote and the margin you keep is 38.4% ⟨gross_vs_contribution_gap⟩ points of revenue. And none of it is overhead. Every dollar of it was charged to a specific product on a specific order, and the platform's own report says which.  
+
+**[1:15] CHAPTER 1 — FIND IT**  
+Find it in your own reports. Start with the settlement report, the one the platform sends when it pays you. Every fee is on it, by order, by product: the referral fee, fulfilment, storage, refund administration, and the advertising invoice if it's netted from the payout. That is your fee line, and it's per product, not per business. Next, the advertising report, by campaign and by product. Sponsored spend belongs to the product that was advertised. Where a campaign covers several products, allocate its spend by the sales the campaign produced for each of them, not by each product's share of catalog revenue, because revenue share hands the bestseller's ad bill to the products that never needed ads. On this catalog, $4,101 ⟨ad_bleed_month⟩ a month goes to search terms with no attributed sales at all. That's a cost with no sale to carry it, and it lands on whichever product the campaign belongs to. Then the landed cost sheet. Unit cost, inbound freight, packaging, duty. Not the invoice price; the price of the unit sitting in the warehouse. Put those side by side, per product, and the number falls out: price, less landed cost, less the fees on that product, less the ads on that product. Now it has a name. That's contribution margin. It's what the product contributes toward everything that isn't a product: salaries, rent, software, you. Gross margin stops before the platform. Contribution margin stops where your money actually starts.  
+
+**[3:30] CHAPTER 2 — VERIFY IT**  
+Now verify it on the product you're proudest of. The bestseller here is TH-CHEKNI-08 ⟨bestseller_sku⟩. $33,634 ⟨bestseller_revenue⟩ of revenue last month, 11% ⟨top_sku_share⟩ of the catalog. On gross margin it looks like the whole business. On contribution it earns $14,339 ⟨bestseller_net⟩, a margin of 42.6% ⟨bestseller_net_pct⟩, and by contribution it ranks 1 ⟨bestseller_rank_by_net⟩ in the catalog. So on this catalog the bestseller survives the test. That's not the usual outcome, and the point is you cannot know until you've run it. The product at the bottom by contribution is TH-TRICOR-23 ⟨worst_net_sku⟩, at 23.4% ⟨worst_net_pct⟩. The count of products losing money after ads this month, on this catalog, is 0 ⟨n_skus_negative_net⟩. Had it been anything else, gross margin would have hidden it, because a product can carry a fine gross margin and a negative contribution at the same time. All it takes is a fee tier or an ad campaign that eats the difference, and neither of those shows up in revenue minus cost of goods. The spread across the catalog runs from 23.4% ⟨worst_net_pct⟩ to 42.6% ⟨best_net_pct⟩. Same catalog, same supplier, same gross margin logic, and the products sit that far apart once the platform and the ads are charged to the product that incurred them. That ranking, by contribution, is the only ranking that should decide a reorder, a price move or an ad budget.  
+
+**[5:30] WHAT IT'S WORTH**  
+What's the difference worth? Every decision that used the wrong margin. Reorders first. A product with a high gross margin and a thin contribution gets restocked deep, and the cash sits on a shelf. The newsvendor on this catalog finds $3,874 ⟨nv_bleed_month⟩ a month of fees on stock ordered past its economic quantity. Ads next. The break-even return on ad spend is set by contribution, never by gross. On this catalog it's 2.61 ⟨ad_breakeven_roas⟩. The worst campaign, Catalog - Auto ⟨ad_worst_campaign⟩, returns 0.97 ⟨ad_worst_marginal_roas⟩ on its last dollar, which is below break-even at contribution and looks perfectly healthy if you judge it at gross. Pricing. A price rise on a product with a fee tier in the way can lift gross margin and cut contribution in the same move, and only the contribution waterfall shows it. And concentration. There are 24 ⟨n_skus⟩ products on the shelf, but by where the money comes from the catalog behaves like 19.3 ⟨effective_skus⟩, so the risk of the business sits in fewer products than the shelf suggests. In short: the margin you quote and the margin you keep are 38.4% ⟨gross_vs_contribution_gap⟩ of revenue apart on this catalog, and every reorder, bid and price set on the wrong one was set on a number that's wrong by that much.  
+
+**[7:30] WHAT TO DO**  
+This week. First, build the waterfall for your top products. Price, landed cost from the cost sheet, fees from the settlement report, ads from the campaign report allocated by attributed sales. One row per product, and the last column is contribution. Next, rank by that column. Not by revenue, not by gross. Read the bottom of the list before the top, because the bottom is where the decisions are. Then set your break-even return on ad spend from contribution and hold every campaign to it, starting with the one that returns least on its last dollar. Last, take gross margin off the dashboard. Keep it for the supplier conversation, where it belongs, and put contribution where you look every morning. When a product looks better on gross than on contribution, that gap is the platform and the ads, and it's per product, so it's yours to fix per product.  
+
+**[9:00] THE HONEST LIMIT**  
+What you can do yourself is the waterfall for your top products, this week, from reports you already export. It's an afternoon, and it changes what you reorder. What you can't do by hand is the allocation at scale. 24 ⟨n_skus⟩ products, every fee line on every order, ads allocated by attributed sales across campaigns that overlap, every month, with the fee tiers rechecked whenever a weight or a price moves. Done by hand it drifts back to revenue share inside a few months, and revenue share is gross margin wearing a different name. That part is a model. What you can do today is stop quoting gross margin as if it were yours. Rank by contribution, and read the bottom of the list.  
+*CTA:* The course page at /learn, where the method is written out in full.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the gross figure lands, then the contribution figure under it, then the gap between them |  |
+| 0:15 | kinetic: the gross margin line in the viewer's own words (a real spreadsheet screenshot replaces this beat when the founder supplies one) |  |
+| 0:45 | waterfall: revenue, then landed cost, then fees, then ads, then what's left, each step landing as it's spoken | MARGIN.DECOMP on Tarnhollow demo data |
+| 1:15 | kinetic: the report names landing one at a time; then waterfall for a single product, each report feeding its own step | MARGIN.DECOMP on Tarnhollow demo data; SPEND.RESPONSE on Tarnhollow demo data for the unattributed spend |
+| 3:30 | waterfall: the bestseller alone, revenue to contribution; then kinetic: the catalog ranked by contribution with the top and bottom named | MARGIN.DECOMP on Tarnhollow demo data |
+| 5:30 | kinetic: reorders, ads, pricing, concentration as chapter cards; waterfall fragment for the ad break-even | NEWSVENDOR on Tarnhollow demo data; SPEND.RESPONSE on Tarnhollow demo data; risk on Tarnhollow demo data |
+| 7:30 | kinetic: the steps landing one at a time; the ranked table with the bottom rows lit |  |
+| 9:00 | kinetic: the closing line |  |
+
+### Decide
+
+```
+hubricon-content approve 07-contribution-vs-gross-margin
+hubricon-content reject  07-contribution-vs-gross-margin --note "what to change"
+```
+Edit `content/videos/07-contribution-vs-gross-margin/script.md` first if you prefer; it is re-validated on approve.

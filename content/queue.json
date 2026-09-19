@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-09-19T00:20:18+00:00",
+ "updated_at": "2026-09-19T00:20:29+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": false,
@@ -613,7 +613,7 @@
    "models": [
     "margin"
    ],
-   "status": "in_progress",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -622,7 +622,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "todo",
+    "review": "awaiting",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -651,6 +651,21 @@
      "at": "2026-09-19T00:20:18+00:00",
      "step": "critique",
      "note": "done"
+    },
+    {
+     "at": "2026-09-19T00:20:23+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-09-19T00:20:23+00:00",
+     "step": "review",
+     "note": "parked for the founder"
+    },
+    {
+     "at": "2026-09-19T00:20:29+00:00",
+     "step": "review",
+     "note": "awaiting"
     }
    ]
   },
