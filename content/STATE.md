@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-19T00:03:18+00:00 · style locked: False
+Updated 2026-09-19T00:03:41+00:00 · style locked: False
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ Updated 2026-09-19T00:03:18+00:00 · style locked: False
 
 ## Now
 
-- P1-learn-hub · learn/index.html · step checklist
+- idle
 
 ## Awaiting your review
 
@@ -26,6 +26,7 @@ Updated 2026-09-19T00:03:18+00:00 · style locked: False
 - P1-lessons · Reimbursement Playbook written lessons
 - P1-course-page · learn/reimbursement-playbook.html
 - P1-api-learn · api/learn.js capture and routing
+- P1-learn-hub · learn/index.html
 
 ## Blocked on founder input
 
