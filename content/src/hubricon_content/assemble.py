@@ -9,7 +9,7 @@ from pathlib import Path
 from . import audio, subtitles
 from . import script as scriptmod
 
-GRAIN = "noise=alls=7:allf=t+u"
+GRAIN = "noise=alls=5:allf=t+u"
 
 
 def run(u: dict, q: dict, force: bool = False) -> dict:

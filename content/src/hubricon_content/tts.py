@@ -20,7 +20,22 @@ from . import script as scriptmod
 from .state import CONTENT_DIR
 
 ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
-ELEVEN_SETTINGS = {"stability": 0.40, "similarity_boost": 0.80, "style": 0.15, "use_speaker_boost": True}
+ELEVEN_FORMAT = "mp3_44100_128"
+
+
+def eleven_settings() -> dict:
+    """Narration settings: steady, not flat. Stability under 0.40 wanders; over
+    0.55 flattens into a read. Style stays low so the clone never performs."""
+    f = lambda k, d: float(os.environ.get(k, d))
+    return {"stability": f("ELEVENLABS_STABILITY", 0.45), "similarity_boost": f("ELEVENLABS_SIMILARITY", 0.85),
+            "style": f("ELEVENLABS_STYLE", 0.08), "use_speaker_boost": True}
+
+
+ELEVEN_SETTINGS = eleven_settings()
+# The placeholder voice exists to prove the chain, not to be heard. It renders only
+# when asked for explicitly, so a founder never reviews a video in a voice that
+# is not his.
+ALLOW_PLACEHOLDER = os.environ.get("CONTENT_ALLOW_PLACEHOLDER") == "1"
 KOKORO_DIR = CONTENT_DIR / ".cache" / "kokoro"
 KOKORO_VOICE = "am_michael"
 WHISPER_MODEL = os.environ.get("CONTENT_WHISPER_MODEL", "small")
@@ -32,18 +47,30 @@ def provider() -> tuple[str, str]:
     """(name, reason)."""
     if os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_VOICE_ID"):
         return "founder", "ElevenLabs clone of the founder's voice"
-    if (KOKORO_DIR / "kokoro-v1.0.onnx").exists() and (KOKORO_DIR / "voices-v1.0.bin").exists():
+    if ALLOW_PLACEHOLDER and (KOKORO_DIR / "kokoro-v1.0.onnx").exists() and (KOKORO_DIR / "voices-v1.0.bin").exists():
         return "placeholder", "Kokoro offline placeholder; never ships"
-    return "none", ("Narration needs ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID in .env for the founder's clone, "
-                    "or the Kokoro model files in content/.cache/kokoro for the placeholder.")
+    if os.environ.get("ELEVENLABS_API_KEY"):
+        return "none", ("The founder's voice clone is not configured. Record per docs/content/VOICE-RECORDING.md, run "
+                        "`hubricon-content voice-clone --name \"Hagen Simmons\" <wav files>`, and set ELEVENLABS_VOICE_ID in "
+                        "/home/lp9/Hubricon/HubriconB2B/.env. Nothing renders in another voice unless CONTENT_ALLOW_PLACEHOLDER=1.")
+    return "none", "Narration needs ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID in /home/lp9/Hubricon/HubriconB2B/.env (the founder's clone)."
 
 
-def _eleven(text: str, out_mp3: Path) -> list[dict]:
-    key, voice = os.environ["ELEVENLABS_API_KEY"], os.environ["ELEVENLABS_VOICE_ID"]
+def _eleven(text: str, out_mp3: Path, previous_text: str | None = None, next_text: str | None = None,
+            voice: str | None = None) -> list[dict]:
+    """One paragraph, with character timing. previous_text/next_text carry the
+    surrounding narration so prosody stays continuous across paragraphs even
+    though each is generated on its own (and can be re-rolled alone)."""
+    key = os.environ["ELEVENLABS_API_KEY"]
+    voice = voice or os.environ["ELEVENLABS_VOICE_ID"]
+    body = {"text": text, "model_id": ELEVEN_MODEL, "voice_settings": eleven_settings()}
+    if previous_text:
+        body["previous_text"] = previous_text[-600:]
+    if next_text:
+        body["next_text"] = next_text[:600]
     req = urllib.request.Request(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps",
-        data=json.dumps({"text": text, "model_id": ELEVEN_MODEL, "voice_settings": ELEVEN_SETTINGS}).encode(),
-        headers={"xi-api-key": key, "content-type": "application/json"})
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format={ELEVEN_FORMAT}",
+        data=json.dumps(body).encode(), headers={"xi-api-key": key, "content-type": "application/json"})
     with urllib.request.urlopen(req, timeout=180) as res:
         payload = json.loads(res.read())
     out_mp3.write_bytes(base64.b64decode(payload["audio_base64"]))
@@ -160,8 +187,9 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     (d / "audio").mkdir(exist_ok=True)
     (d / "alignment").mkdir(exist_ok=True)
     done = []
+    texts = [speakable(b["VO"]) for b in sc["beats"]]
     for i, b in enumerate(sc["beats"], start=1):
-        text = speakable(b["VO"])
+        text = texts[i - 1]
         if not text:
             continue
         ext = "mp3" if name == "founder" else "wav"
@@ -169,7 +197,9 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         meta = d / "alignment" / f"vo-{i:02d}.json"
         if audio.exists() and meta.exists() and not force:
             done.append(i); continue
-        words = _eleven(text, audio) if name == "founder" else _placeholder(text, audio)
+        prev_text = next((t for t in reversed(texts[: i - 1]) if t), None)
+        next_text = next((t for t in texts[i:] if t), None)
+        words = _eleven(text, audio, prev_text, next_text) if name == "founder" else _placeholder(text, audio)
         meta.write_text(json.dumps({"beat": i, "name": b["name"], "text": text, "provider": name, "words": words},
                                    indent=None, ensure_ascii=False) + "\n", encoding="utf-8")
         if name == "founder":   # keep every take; a consistent library is part of the series feel
@@ -181,3 +211,50 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     if name != "founder":
         u["publishable"] = False
     return {"status": "ok", "voice": name, "beats": len(done), "why": why}
+
+
+# ── the founder's voice: clone and preview ─────────────────────────────────
+
+def voice_clone(name: str, files: list[Path], description: str = "") -> str:
+    """Instant Voice Clone from the founder's own recordings. Returns the voice id.
+    Run only by the founder, on his own audio (docs/content/VOICE-RECORDING.md)."""
+    import mimetypes, uuid
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key:
+        raise SystemExit("ELEVENLABS_API_KEY is not set")
+    boundary = f"----hubricon{uuid.uuid4().hex}"
+    parts = []
+    def field(k, v):
+        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode())
+    field("name", name)
+    field("description", description or "Hubricon founder narration clone, used with permission")
+    field("labels", json.dumps({"use_case": "narration", "owner": "founder"}))
+    field("remove_background_noise", "false")
+    for f in files:
+        f = Path(f)
+        ctype = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
+        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{f.name}\"\r\nContent-Type: {ctype}\r\n\r\n".encode() + f.read_bytes() + b"\r\n")
+    parts.append(f"--{boundary}--\r\n".encode())
+    req = urllib.request.Request("https://api.elevenlabs.io/v1/voices/add", data=b"".join(parts),
+                                 headers={"xi-api-key": key, "content-type": f"multipart/form-data; boundary={boundary}"})
+    with urllib.request.urlopen(req, timeout=600) as res:
+        return json.loads(res.read())["voice_id"]
+
+
+def voice_preview(slug: str, text: str | None = None, voice: str | None = None) -> Path:
+    """The hook and the first chapter of a parked script in the configured voice,
+    so the founder hears the clone with the pipeline's exact settings before
+    anything renders."""
+    from . import script as scriptmod
+    out_dir = CONTENT_DIR / "voice-previews"
+    out_dir.mkdir(exist_ok=True)
+    if text is None:
+        d = scriptmod.video_dir(slug)
+        facts = scriptmod.load_facts(slug)
+        sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
+        chapter = next((b for b in sc["beats"] if b["name"].upper().startswith("CHAPTER")), sc["beats"][min(2, len(sc["beats"]) - 1)])
+        text = speakable(sc["hooks"].get(1, "")) + " " + speakable(chapter["VO"])
+    label = "founder" if (voice or os.environ.get("ELEVENLABS_VOICE_ID")) else "unset"
+    out = out_dir / f"{slug}-{label}.mp3"
+    _eleven(text[:4000], out, voice=voice)
+    return out

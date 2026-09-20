@@ -28,7 +28,11 @@ Usage: `critique script <slug>` · `critique render <slug>` · `critique copy <p
    frame; textures are never the subject; charts build progressively and carry an annotation;
    subtitles are legible; every on-screen number is readable; the "demo data" label is present
    on chart frames; palette and type match `content/assets/style-lock.json` once it exists.
-3. Write `content/videos/<slug>/qa.review.json`: `{"pass": bool, "items": [...], "notes": "..."}`.
+3. Run the premium checklist in `docs/content/PREMIUM-STANDARD.md` (one amber element per
+   frame, no glow or gradient furniture, at most three text blocks, direct labels, light
+   subtitles, ElevenLabs or licensed sound in `media/mix.json`, `voice == founder`). A render in
+   any voice but the founder's fails.
+4. Write `content/videos/<slug>/qa.review.json`: `{"pass": bool, "items": [...], "notes": "..."}`.
 
 ## copy
 

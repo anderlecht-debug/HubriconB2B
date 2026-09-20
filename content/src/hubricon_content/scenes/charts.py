@@ -6,7 +6,7 @@ import re
 
 import numpy as np
 from manim import (DOWN, LEFT, RIGHT, UP, UL, UR, DL, Create, DashedLine, Dot, FadeIn, FadeOut, GrowFromEdge, Line,
-                   Rectangle, Text, VGroup, Write, linear, Circle, ImageMobject)
+                   Rectangle, Text, VGroup, Write, linear, smooth, Circle, ImageMobject)
 
 from .base import (AMBER, GREEN, HEAD, INK, INK_35, INK_60, MONO, NAVY_2, RED, STYLE, HubriconScene, fit, money, nice_step)
 
@@ -14,16 +14,17 @@ from .base import (AMBER, GREEN, HEAD, INK, INK_35, INK_60, MONO, NAVY_2, RED, S
 class ChapterCard(HubriconScene):
     def construct(self):
         title = self.seg.get("title") or self.seg.get("name", "")
-        glow = Circle(radius=self.H * 0.9, fill_color=NAVY_2, fill_opacity=1.0, stroke_width=0).shift(RIGHT * self.W * 0.28 + DOWN * self.H * 0.2)
-        halo = Circle(radius=self.H * 0.35, fill_color=AMBER, fill_opacity=0.05, stroke_width=0).shift(LEFT * self.W * 0.25 + UP * self.H * 0.15)
-        self.add(glow, halo)
-        t = Text(title, font=HEAD, font_size=72 if not self.vertical else 60, color=INK, weight="BOLD")
-        fit(t, self.W * 0.82)
-        rule = Line(LEFT * 1.2, RIGHT * 1.2, color=AMBER, stroke_width=4).next_to(t, DOWN, buff=0.4)
-        self.play(FadeIn(t, shift=UP * 0.15), run_time=0.35)
-        self.play(GrowFromEdge(rule, LEFT), run_time=0.25)
+        kicker = Text("HUBRICON", font=MONO, font_size=16, color=INK_35).to_corner(UL, buff=0.5)
+        hair = Line(LEFT * self.W * 0.42, RIGHT * self.W * 0.42, color=INK_35, stroke_width=1).shift(UP * self.H * 0.14)
+        t = Text(title, font=HEAD, font_size=66 if not self.vertical else 56, color=INK, weight="BOLD")
+        fit(t, self.W * 0.78)
+        t.next_to(hair, DOWN, buff=0.55)
+        rule = Line(LEFT * 0.7, RIGHT * 0.7, color=AMBER, stroke_width=3).next_to(t, DOWN, buff=0.45)
+        self.add(kicker, hair)
+        self.play(FadeIn(t, shift=UP * 0.1), run_time=0.4, rate_func=smooth)
+        self.play(GrowFromEdge(rule, LEFT), run_time=0.3, rate_func=smooth)
         self.landed("chapter")
-        self.finish(VGroup(t, rule, halo))
+        self.finish(VGroup(t, rule))
 
 
 class Kinetic(HubriconScene):
@@ -39,8 +40,8 @@ class Kinetic(HubriconScene):
             self.landed("annotation")
             self.finish(t)
             return
-        cap = Text(re.sub(r"\{\{.*?\}\}", "…", first), font=MONO, font_size=22, color=INK_60, line_spacing=1.1)
-        fit(cap, self.W * 0.8).to_edge(UP, buff=0.6)
+        cap = Text(re.sub(r"\{\{.*?\}\}", "…", first), font=MONO, font_size=19, color=INK_35, line_spacing=1.15)
+        fit(cap, self.W * 0.72).to_edge(UP, buff=0.7)
         self.play(FadeIn(cap), run_time=0.4)
         shown = None
         for key, r in reveals:
@@ -51,7 +52,7 @@ class Kinetic(HubriconScene):
             fit(block, self.W * 0.86)
             if shown is not None:
                 self.play(FadeOut(shown, shift=UP * 0.3), run_time=0.25)
-            self.play(FadeIn(block, scale=0.92), run_time=0.45)
+            self.play(FadeIn(block, scale=0.96), run_time=0.5, rate_func=smooth)
             self.landed()
             shown = block
         self.finish(shown)
@@ -84,8 +85,8 @@ class Waterfall(HubriconScene):
         w = self.run["waterfall"]
         self.demo_label()
         self.caption("Latest month · revenue to net")
-        steps = [("Revenue", w["revenue"], AMBER), ("Amazon fees", -w["fees"], RED), ("Landed cost", -w["cogs"], RED),
-                 ("Ads", -w["ads"], RED), ("Net", w["net"], GREEN)]
+        steps = [("Revenue", w["revenue"], AMBER), ("Amazon fees", -w["fees"], INK_60), ("Landed cost", -w["cogs"], INK_60),
+                 ("Ads", -w["ads"], INK_60), ("Net", w["net"], GREEN)]
         top = w["revenue"]
         ax = self.axes([0, 5, 1], [0, top * 1.08, nice_step(0, top)], y_len=self.H * 0.55)
         ax.shift(DOWN * 0.3)
@@ -100,7 +101,7 @@ class Waterfall(HubriconScene):
                 level = level + delta
             x0, x1 = ax.c2p(i + 0.15, lo), ax.c2p(i + 0.85, hi)
             bar = Rectangle(width=abs(x1[0] - x0[0]), height=max(0.02, abs(x1[1] - x0[1])), fill_color=color,
-                            fill_opacity=0.85, stroke_width=0).move_to([(x0[0] + x1[0]) / 2, (x0[1] + x1[1]) / 2, 0])
+                            fill_opacity=0.72 if color != AMBER else 0.9, stroke_width=0).move_to([(x0[0] + x1[0]) / 2, (x0[1] + x1[1]) / 2, 0])
             lab = Text(name, font=MONO, font_size=18, color=INK_60).next_to(ax.c2p(i + 0.5, 0), DOWN, buff=0.2)
             val = Text(money(abs(delta)), font=MONO, font_size=20, color=INK).next_to(bar, UP, buff=0.12)
             self.play(GrowFromEdge(bar, DOWN), FadeIn(lab), run_time=0.45)
@@ -129,9 +130,9 @@ class CashCone(HubriconScene):
         band = self.band(ax, days, p5, p95)
         mid = self.polyline(ax, days, p50, AMBER, 3)
         self.play(FadeIn(band), run_time=0.6)
-        self.play(Create(mid), run_time=STYLE["chart"]["build_data_s"], rate_func=linear)
+        self.play(Create(mid), run_time=STYLE["chart"]["build_data_s"], rate_func=smooth)
         self.landed()
-        ticks = VGroup(*[Line(ax.c2p(w["day"], lo), ax.c2p(w["day"], lo + (hi - lo) * 0.04), color=RED, stroke_width=2)
+        ticks = VGroup(*[Line(ax.c2p(w["day"], lo), ax.c2p(w["day"], lo + (hi - lo) * 0.035), color=INK_60, stroke_width=1.5)
                          for w in det["wires"] if 0 <= w["day"] < len(p5)])
         self.play(FadeIn(ticks), run_time=0.3)
         self.landed()
@@ -169,7 +170,7 @@ class Paths(HubriconScene):
         ax.shift(DOWN * 0.2)
         nums = self.axis_numbers(ax, list(range(0, H + 1, max(30, H // 4))), [0, hi * 0.5 // 1000 * 1000, hi * 0.95 // 1000 * 1000], xfmt=lambda x: f"d{int(x)}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
-        lines = VGroup(*[self.polyline(ax, xs, row[xs], INK, 1.1, 0.16) for row in sample])
+        lines = VGroup(*[self.polyline(ax, xs, row[xs], INK, 1.0, 0.13) for row in sample])
         chunks = np.array_split(np.arange(len(lines)), 5)
         for ch in chunks:
             self.play(*[Create(lines[i]) for i in ch], run_time=0.5, rate_func=linear)
@@ -179,7 +180,7 @@ class Paths(HubriconScene):
         group = VGroup(ax, nums, lines)
 
         def survivors(value, label):
-            self.play(*[lines[i].animate.set_stroke(AMBER, opacity=0.95, width=2.4) for i in top_idx], run_time=0.7)
+            self.play(*[lines[i].animate.set_stroke(AMBER, opacity=0.9, width=2.0) for i in top_idx], run_time=0.8, rate_func=smooth)
             t = Text(f"top tenth · {value}", font=MONO, font_size=20, color=AMBER).next_to(ax.c2p(H, sample[top_idx, -1].mean()), LEFT, buff=0.2).shift(UP * 0.3)
             self.play(FadeIn(t), run_time=0.3); self.landed("annotation"); group.add(t)
 
@@ -223,7 +224,7 @@ class Elasticity(HubriconScene):
         bnd = self.band(ax, [b["p"] for b in band], [b["lo"] for b in band], [b["hi"] for b in band])
         line = self.polyline(ax, xs, ys, AMBER, 3)
         self.play(FadeIn(bnd), run_time=0.5)
-        self.play(Create(line), run_time=STYLE["chart"]["build_data_s"], rate_func=linear); self.landed()
+        self.play(Create(line), run_time=STYLE["chart"]["build_data_s"], rate_func=smooth); self.landed()
         group = VGroup(ax, nums, dots, bnd, line)
 
         def eps(value, label):
@@ -297,7 +298,7 @@ class SampleSize(HubriconScene):
         nums = self.axis_numbers(ax, [12, 60, 120], [round(hi, 1)], xfmt=lambda x: f"{int(x)} periods", yfmt=lambda y: f"±{y:.2f}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         line = self.polyline(ax, ns, se, AMBER, 3)
-        self.play(Create(line), run_time=STYLE["chart"]["build_data_s"], rate_func=linear); self.landed()
+        self.play(Create(line), run_time=STYLE["chart"]["build_data_s"], rate_func=smooth); self.landed()
         dot = Dot(ax.c2p(n0, se0), color=INK, radius=0.08)
         t0 = Text(f"today: {n0} periods, ±{se0:.2f}", font=MONO, font_size=18, color=INK).next_to(dot, UR, buff=0.12)
         self.play(FadeIn(dot), FadeIn(t0), run_time=0.4); self.landed()

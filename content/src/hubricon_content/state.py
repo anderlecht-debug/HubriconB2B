@@ -64,7 +64,9 @@ def capabilities() -> dict:
         "youtube_token": (secrets / "youtube-token.json").exists(),
         "youtube_client": (secrets / "client_secret.json").exists(),
         "textures_cached": (CONTENT_DIR / "assets" / "textures" / "manifest.json").exists(),
-        "music_bed": "licensed" if any((CONTENT_DIR / "assets" / "music").glob("*.wav")) else "procedural",
+        "music_bed": ("licensed" if any((CONTENT_DIR / "assets" / "music").glob("*.wav"))
+                      else "elevenlabs" if (CONTENT_DIR / "assets" / "music" / "bed-elevenlabs.mp3").exists() else "procedural"),
+        "sfx": "elevenlabs" if (CONTENT_DIR / "assets" / "sfx" / "tick.mp3").exists() else "procedural",
     }
 
 
@@ -319,8 +321,8 @@ def reject(q: dict, ref: str, gate: str, note: str) -> dict:
 # ── STATE.md ───────────────────────────────────────────────────────────────
 
 FOUNDER_INPUTS = [
-    "`ELEVENLABS_API_KEY` in `/home/lp9/Hubricon/HubriconB2B/.env` (Creator tier or above covers roughly thirty videos a month of characters plus sound effects).",
-    "Three or more minutes of clean founder audio (one microphone, quiet room, no processing) → instant voice clone → `ELEVENLABS_VOICE_ID` in `.env`. Until both exist the placeholder voice is used and nothing publishes.",
+    "Your voice: 3 to 5 minutes of clean audio now (see `docs/content/VOICE-RECORDING.md`), then `hubricon-content voice-clone --name \"Hagen Simmons\" <wav files>` and `ELEVENLABS_VOICE_ID` in `/home/lp9/Hubricon/HubriconB2B/.env`. Nothing renders in any other voice.",
+    "ElevenLabs tier: Starter's 40,000 characters a month covers about six videos. Creator (100,000) unlocks the professional clone the series should ship on; Pro (500,000) covers a video a day.",
     "YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.",
     "One interactive Higgsfield texture batch saved to `content/assets/textures/` with `manifest.json` (or accept the procedural fallback).",
     "A licensed music bed in `content/assets/music/` (or ElevenLabs music once the key exists).",

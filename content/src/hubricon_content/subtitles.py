@@ -7,7 +7,7 @@ from pathlib import Path
 
 from . import script as scriptmod
 
-MAX_CHARS = 42
+MAX_CHARS = 38
 MAX_LINES = 2
 FONT = "JetBrains Mono"
 
@@ -48,8 +48,8 @@ def write(slug: str, vertical: bool = False) -> Path:
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
     words = [w for s in timing["segments"] if s["kind"] == "beat" for w in s["words"]]
     w, h = (1080, 1920) if vertical else (1920, 1080)
-    size = 64 if vertical else 40
-    margin_v = 420 if vertical else 96
+    size = 56 if vertical else 34
+    margin_v = 420 if vertical else 104
     head = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {w}
@@ -59,7 +59,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Sub,{FONT},{size},&H00F4F6FC,&H0000C0FF,&H00050A1F,&H80050A1F,0,0,0,0,100,100,0,0,1,2,0,2,120,120,{margin_v},1
+Style: Sub,{FONT},{size},&H00E6E9F2,&H0000C0FF,&H00050A1F,&H60050A1F,0,0,0,0,100,100,0.4,0,1,1.2,0.6,2,140,140,{margin_v},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

@@ -1,0 +1,19 @@
+{
+ "tick": {
+  "text": "a single very short, soft, dry wooden click, like a fingertip tapping a desk once; close-miked, no reverb, no tail",
+  "duration_seconds": 0.5,
+  "prompt_influence": 0.7,
+  "source": "elevenlabs sound-generation"
+ },
+ "whoosh": {
+  "text": "a low, brief, airy cinematic whoosh for a chapter cut; restrained, felt more than heard, no cartoon sweep",
+  "duration_seconds": 0.9,
+  "prompt_influence": 0.6,
+  "source": "elevenlabs sound-generation"
+ },
+ "bed": {
+  "prompt": "Sparse, restrained ambient underscore for a serious financial documentary: a soft felt piano playing slow single notes, a low sustained cello drone, wide reverb, no drums, no melody hook, no build, 62 bpm, minor key, calm and expensive. Seamlessly loopable.",
+  "music_length_ms": 120000,
+  "source": "elevenlabs music"
+ }
+}

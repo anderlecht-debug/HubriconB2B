@@ -41,10 +41,12 @@ MONO = "JetBrains Mono"
 STYLE = {
     "palette": {"navy": NAVY, "navy_2": NAVY_2, "amber": AMBER, "ink": INK, "ink_60": INK_60, "ink_35": INK_35,
                 "ground": GROUND, "green": GREEN, "red": RED},
-    "type": {"headline": HEAD, "data": MONO, "headline_size": 64, "number_size": 96, "label_size": 26, "caption_size": 22},
-    "chart": {"axis_stroke": 2, "axis_color": INK_35, "data_stroke": 3, "band_opacity": 0.22, "grid_opacity": 0.0,
-              "build_axes_s": 0.8, "build_data_s": 1.6, "annotation_s": 0.5, "drift_scale": 1.025},
-    "cards": {"hold_s": 1.1, "texture": "procedural glow until content/assets/textures exists"},
+    "type": {"headline": HEAD, "data": MONO, "headline_size": 64, "number_size": 104, "label_size": 22, "caption_size": 19},
+    "chart": {"axis_stroke": 1.5, "axis_color": INK_35, "data_stroke": 2.5, "band_opacity": 0.16, "grid_opacity": 0.0,
+              "build_axes_s": 0.9, "build_data_s": 2.2, "annotation_s": 0.55, "drift_scale": 1.02},
+    "cards": {"hold_s": 1.1, "texture": "plain navy with a hairline rule; a cached texture set may replace the ground"},
+    "restraint": {"amber_elements_per_frame": 1, "callouts_visible": 2, "text_blocks_per_frame": 3,
+                  "reveal_rate_func": "smooth", "no_gradients_or_glows": True},
 }
 
 
@@ -126,14 +128,14 @@ class HubriconScene(Scene):
         self.add(lab)
         return lab
 
-    def caption(self, text: str, size: int = 22):
-        cap = Text(text, font=MONO, font_size=size, color=INK_60).to_corner(UL, buff=0.35)
+    def caption(self, text: str, size: int = 19):
+        cap = Text(text, font=MONO, font_size=size, color=INK_35).to_corner(UL, buff=0.4)
         self.add(cap)
         return cap
 
-    def big_number(self, value: str, label: str, size: int = 96):
+    def big_number(self, value: str, label: str, size: int = 104):
         num = Text(value, font=HEAD, font_size=size, color=AMBER, weight="BOLD")
-        lab = Text(label, font=MONO, font_size=24, color=INK_60)
+        lab = Text(label, font=MONO, font_size=22, color=INK_60)
         fit(lab, self.W * 0.8)
         return VGroup(num, lab).arrange(DOWN, buff=0.35)
 
@@ -142,7 +144,7 @@ class HubriconScene(Scene):
         y_len = y_len or (self.H * 0.6 if not self.vertical else self.H * 0.42)
         return Axes(x_range=x_range, y_range=y_range, x_length=x_len, y_length=y_len, tips=False,
                     axis_config={"stroke_color": INK_35, "stroke_width": STYLE["chart"]["axis_stroke"],
-                                 "include_ticks": True, "tick_size": 0.06, "include_numbers": False})
+                                 "include_ticks": True, "tick_size": 0.05, "include_numbers": False})
 
     def axis_numbers(self, ax, xs, ys, xfmt=str, yfmt=money):
         g = VGroup()
@@ -165,16 +167,19 @@ class HubriconScene(Scene):
     def callout(self, value: str, label: str, at=None, color=AMBER):
         """A number and what it is, stacked top-right; the default way an
         unhandled spoken figure gets on screen the moment it is said."""
-        block = VGroup(Text(value, font=HEAD, font_size=44, color=color, weight="BOLD"),
-                       Text(label, font=MONO, font_size=18, color=INK_60)).arrange(DOWN, aligned_edge=RIGHT, buff=0.08)
-        fit(block[1], self.W * 0.34)
-        if len(self.callout_stack) >= 3:
+        block = VGroup(Text(value, font=HEAD, font_size=40, color=color, weight="BOLD"),
+                       Text(label, font=MONO, font_size=17, color=INK_60)).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
+        fit(block[1], self.W * 0.30)
+        # one amber element per frame: the figure being spoken. Earlier ones step back to ink.
+        for prev in self.callout_stack:
+            prev[0].set_color(INK)
+        if len(self.callout_stack) >= STYLE["restraint"]["callouts_visible"]:
             old = self.callout_stack[0]
             self.callout_stack.remove(old)
             self.play(FadeOut(old), run_time=0.25)
         self.callout_stack.add(block)
-        self.callout_stack.arrange(DOWN, aligned_edge=RIGHT, buff=0.3).to_corner(UR, buff=0.4)
-        self.play(FadeIn(block, shift=LEFT * 0.2), run_time=STYLE["chart"]["annotation_s"])
+        self.callout_stack.arrange(DOWN, aligned_edge=RIGHT, buff=0.42).to_corner(UR, buff=0.5)
+        self.play(FadeIn(block, shift=LEFT * 0.15), run_time=STYLE["chart"]["annotation_s"], rate_func=smooth)
         self.landed("annotation")
         return block
 

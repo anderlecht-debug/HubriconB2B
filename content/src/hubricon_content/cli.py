@@ -230,6 +230,29 @@ def cmd_style_lock(a):
     print(p)
 
 
+def cmd_voice_clone(a):
+    from . import tts
+    from pathlib import Path as P
+    files = [P(f) for f in a.files]
+    missing = [str(f) for f in files if not f.exists()]
+    if missing:
+        raise SystemExit("missing: " + ", ".join(missing))
+    vid = tts.voice_clone(a.name, files, a.description or "")
+    print(f"voice id: {vid}")
+    print(f"add to /home/lp9/Hubricon/HubriconB2B/.env:  ELEVENLABS_VOICE_ID={vid}")
+    print("then listen:  hubricon-content voice-preview 01-survivorship-bias")
+
+
+def cmd_voice_preview(a):
+    from . import tts
+    if not os.environ.get("ELEVENLABS_API_KEY"):
+        raise SystemExit("ELEVENLABS_API_KEY is not set")
+    if not (a.voice or os.environ.get("ELEVENLABS_VOICE_ID")):
+        raise SystemExit("no voice: set ELEVENLABS_VOICE_ID (run voice-clone first) or pass --voice <id>")
+    out = tts.voice_preview(a.slug, text=a.text, voice=a.voice)
+    print(out)
+
+
 def cmd_youtube_auth(a):
     from . import upload
     print(upload.authorize())
@@ -259,6 +282,8 @@ def main(argv=None) -> None:
     sub.add_parser("embed-lessons").set_defaults(fn=cmd_embed_lessons)
     p = sub.add_parser("style-lock"); p.add_argument("slug"); p.set_defaults(fn=cmd_style_lock)
     sub.add_parser("youtube-auth").set_defaults(fn=cmd_youtube_auth)
+    p = sub.add_parser("voice-clone", help="instant clone from the founder's own recordings"); p.add_argument("--name", required=True); p.add_argument("--description", default=""); p.add_argument("files", nargs="+"); p.set_defaults(fn=cmd_voice_clone)
+    p = sub.add_parser("voice-preview", help="hear a parked script's hook and first chapter in the configured voice"); p.add_argument("slug"); p.add_argument("--text", default=None); p.add_argument("--voice", default=None); p.set_defaults(fn=cmd_voice_preview)
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)

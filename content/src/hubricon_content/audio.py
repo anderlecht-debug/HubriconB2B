@@ -20,10 +20,10 @@ from .state import CONTENT_DIR
 
 SR = 48000
 ROOM_TONE_DB = -48.0
-BED_DB = -30.0          # bed level in the gaps
+BED_DB = -32.0          # bed level in the gaps
 BED_DUCK_DB = -20.0     # additional reduction under narration
-TICK_DB = -22.0
-WHOOSH_DB = -18.0
+TICK_DB = -26.0
+WHOOSH_DB = -22.0
 ASSETS = CONTENT_DIR / "assets"
 
 
@@ -122,7 +122,7 @@ def mix(slug: str) -> Path:
     speaking = np.convolve((env > 0.01).astype(float), np.ones(int(SR * 0.35)) / int(SR * 0.35), mode="same")
     speaking = np.clip(speaking * 1.5, 0, 1)
 
-    bed_file = next(iter(sorted(ASSETS.glob("music/*.wav"))), None)
+    bed_file = next(iter(sorted(list(ASSETS.glob("music/*.wav")) + list(ASSETS.glob("music/*.mp3")))), None)
     if bed_file:
         bed = _decode(bed_file).astype(np.float64)
         bed = np.tile(bed, int(np.ceil(n / max(1, len(bed)))))[:n]
@@ -135,7 +135,14 @@ def mix(slug: str) -> Path:
     room = _room(total, rng)[:n] * _db(ROOM_TONE_DB)
 
     fx = np.zeros(n)
-    tick = _tick(rng); whoosh = _whoosh(rng)
+    tick_file, whoosh_file = ASSETS / "sfx" / "tick.mp3", ASSETS / "sfx" / "whoosh.mp3"
+    tick = _decode(tick_file).astype(np.float64) if tick_file.exists() else _tick(rng)
+    whoosh = _decode(whoosh_file).astype(np.float64) if whoosh_file.exists() else _whoosh(rng)
+    for clip in (tick, whoosh):
+        peak = np.abs(clip).max()
+        if peak > 0:
+            clip /= peak
+    sfx_source = "elevenlabs sound-generation" if tick_file.exists() and whoosh_file.exists() else "procedural (provisional)"
     for e in events:
         if e.get("kind") == "data":
             _place(fx, tick, float(e["t"]), _db(TICK_DB))
@@ -153,6 +160,7 @@ def mix(slug: str) -> Path:
                     "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", str(SR), str(final)], check=True, timeout=600)
     (d / "media" / "mix.json").write_text(json.dumps({
         "sample_rate": SR, "room_tone_db": ROOM_TONE_DB, "bed_db": BED_DB, "bed_duck_db": BED_DUCK_DB,
-        "tick_db": TICK_DB, "whoosh_db": WHOOSH_DB, "bed_source": bed_source, "ticks": sum(1 for e in events if e.get("kind") == "data"),
+        "tick_db": TICK_DB, "whoosh_db": WHOOSH_DB, "bed_source": bed_source, "sfx_source": sfx_source,
+        "ticks": sum(1 for e in events if e.get("kind") == "data"),
         "whooshes": len(timing["chapters"]), "target_lufs": -16}, indent=1) + "\n", encoding="utf-8")
     return final
