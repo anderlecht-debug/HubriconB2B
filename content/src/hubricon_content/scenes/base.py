@@ -140,8 +140,9 @@ class HubriconScene(Scene):
         return VGroup(num, lab).arrange(DOWN, buff=0.35)
 
     def axes(self, x_range, y_range, x_len=None, y_len=None):
+        # the bottom of the frame belongs to the subtitles; charts keep clear of it
         x_len = x_len or (self.W * 0.72 if not self.vertical else self.W * 0.82)
-        y_len = y_len or (self.H * 0.6 if not self.vertical else self.H * 0.42)
+        y_len = y_len or (self.H * 0.52 if not self.vertical else self.H * 0.40)
         return Axes(x_range=x_range, y_range=y_range, x_length=x_len, y_length=y_len, tips=False,
                     axis_config={"stroke_color": INK_35, "stroke_width": STYLE["chart"]["axis_stroke"],
                                  "include_ticks": True, "tick_size": 0.05, "include_numbers": False})
@@ -196,6 +197,8 @@ class HubriconScene(Scene):
             self.wait_until(t)
             fact = self.facts.get(key, {})
             if key in handlers:
+                for prev in self.callout_stack:   # the annotation takes the amber; earlier figures step back
+                    prev[0].set_color(INK)
                 handlers[key](fact.get("value", r.get("value", "")), fact.get("label", ""))
             else:
                 self.callout(fact.get("value", r.get("value", "")), fact.get("label", key))

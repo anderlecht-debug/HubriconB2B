@@ -1,15 +1,16 @@
 # Content pipeline — state
 
-Updated 2026-09-20T03:42:24+00:00 · style locked: False
+Updated 2026-09-20T04:06:53+00:00 · style locked: False
 
 ## Capabilities
 
-- elevenlabs_key: False
+- elevenlabs_key: True
 - founder_voice_id: None
 - youtube_token: False
 - youtube_client: False
 - textures_cached: False
-- music_bed: procedural
+- music_bed: elevenlabs
+- sfx: elevenlabs
 
 ## Now
 
@@ -50,8 +51,8 @@ Updated 2026-09-20T03:42:24+00:00 · style locked: False
 
 ### Inputs the pipeline needs from you
 
-1. `ELEVENLABS_API_KEY` in `/home/lp9/Hubricon/HubriconB2B/.env` (Creator tier or above covers roughly thirty videos a month of characters plus sound effects).
-2. Three or more minutes of clean founder audio (one microphone, quiet room, no processing) → instant voice clone → `ELEVENLABS_VOICE_ID` in `.env`. Until both exist the placeholder voice is used and nothing publishes.
+1. Your voice: 3 to 5 minutes of clean audio now (see `docs/content/VOICE-RECORDING.md`), then `hubricon-content voice-clone --name "Hagen Simmons" <wav files>` and `ELEVENLABS_VOICE_ID` in `/home/lp9/Hubricon/HubriconB2B/.env`. Nothing renders in any other voice.
+2. ElevenLabs tier: Starter's 40,000 characters a month covers about six videos. Creator (100,000) unlocks the professional clone the series should ship on; Pro (500,000) covers a video a day.
 3. YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.
 4. One interactive Higgsfield texture batch saved to `content/assets/textures/` with `manifest.json` (or accept the procedural fallback).
 5. A licensed music bed in `content/assets/music/` (or ElevenLabs music once the key exists).

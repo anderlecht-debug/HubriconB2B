@@ -88,8 +88,8 @@ class Waterfall(HubriconScene):
         steps = [("Revenue", w["revenue"], AMBER), ("Amazon fees", -w["fees"], INK_60), ("Landed cost", -w["cogs"], INK_60),
                  ("Ads", -w["ads"], INK_60), ("Net", w["net"], GREEN)]
         top = w["revenue"]
-        ax = self.axes([0, 5, 1], [0, top * 1.08, nice_step(0, top)], y_len=self.H * 0.55)
-        ax.shift(DOWN * 0.3)
+        ax = self.axes([0, 5, 1], [0, top * 1.08, nice_step(0, top)], y_len=self.H * 0.5)
+        ax.shift(UP * 0.25)
         self.play(Create(ax), run_time=STYLE["chart"]["build_axes_s"])
         level = 0.0
         bars, labels = VGroup(), VGroup()
@@ -122,7 +122,7 @@ class CashCone(HubriconScene):
         self.caption(f"Cash, next {len(p5)} days · {c['n_paths']:,} paths")
         lo = min(min(p5), 0) * 1.05; hi = max(p95) * 1.08
         ax = self.axes([0, len(p5), 15], [lo, hi, nice_step(lo, hi)])
-        ax.shift(DOWN * 0.2)
+        ax.shift(UP * 0.35)
         nums = self.axis_numbers(ax, list(range(0, len(p5) + 1, 30)), [0, hi * 0.5 // 1000 * 1000, hi * 0.95 // 1000 * 1000], xfmt=lambda x: f"d{int(x)}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         zero = DashedLine(ax.c2p(0, 0), ax.c2p(len(p5), 0), color=INK_35, dash_length=0.12)
@@ -167,7 +167,7 @@ class Paths(HubriconScene):
         self.caption(f"{sample.shape[0]} of {p['n']:,} paths · one strategy · {H} days")
         lo = min(sample.min(), 0) * 1.05; hi = sample.max() * 1.06
         ax = self.axes([0, H, max(1, H // 6)], [lo, hi, nice_step(lo, hi)])
-        ax.shift(DOWN * 0.2)
+        ax.shift(UP * 0.35)
         nums = self.axis_numbers(ax, list(range(0, H + 1, max(30, H // 4))), [0, hi * 0.5 // 1000 * 1000, hi * 0.95 // 1000 * 1000], xfmt=lambda x: f"d{int(x)}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         lines = VGroup(*[self.polyline(ax, xs, row[xs], INK, 1.0, 0.13) for row in sample])
@@ -216,7 +216,7 @@ class Elasticity(HubriconScene):
         lo_u = min(min(b["lo"] for b in band), min(q["u"] for q in pts)) * 0.85
         hi_u = max(max(b["hi"] for b in band), max(q["u"] for q in pts)) * 1.12
         ax = self.axes([min(xs) * 0.98, max(xs) * 1.02, nice_step(min(xs), max(xs))], [lo_u, hi_u, nice_step(lo_u, hi_u)])
-        ax.shift(DOWN * 0.2)
+        ax.shift(UP * 0.35)
         nums = self.axis_numbers(ax, [round(min(xs)), round(max(xs))], [round(lo_u), round(hi_u)], xfmt=lambda x: f"${x:.0f}", yfmt=lambda y: f"{y:,.0f}u")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         dots = VGroup(*[Dot(ax.c2p(q["p"], q["u"]), color=INK, radius=0.07) for q in pts])
@@ -258,7 +258,7 @@ class Newsvendor(HubriconScene):
         over = co * qs             # expected cost of the unit sitting unsold, rising with service
         hi = max(under.max(), over.max()) * 1.15
         ax = self.axes([0.5, 1.0, 0.1], [0, hi, nice_step(0, hi)])
-        ax.shift(DOWN * 0.2)
+        ax.shift(UP * 0.35)
         nums = self.axis_numbers(ax, [0.5, 0.75, 0.95], [hi * 0.9], xfmt=lambda x: f"{x * 100:.0f}%", yfmt=lambda y: f"${y:.2f}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         l1 = self.polyline(ax, qs, under, AMBER, 3); l2 = self.polyline(ax, qs, over, INK, 3)
@@ -294,7 +294,7 @@ class SampleSize(HubriconScene):
         se = se0 * np.sqrt(n0 / ns)
         hi = se.max() * 1.1
         ax = self.axes([0, 120, 20], [0, hi, nice_step(0, hi)])
-        ax.shift(DOWN * 0.2)
+        ax.shift(UP * 0.35)
         nums = self.axis_numbers(ax, [12, 60, 120], [round(hi, 1)], xfmt=lambda x: f"{int(x)} periods", yfmt=lambda y: f"±{y:.2f}")
         self.play(Create(ax), FadeIn(nums), run_time=STYLE["chart"]["build_axes_s"])
         line = self.polyline(ax, ns, se, AMBER, 3)
