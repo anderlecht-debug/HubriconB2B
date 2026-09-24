@@ -639,6 +639,25 @@ band; 80 customers refuse, 20 weeks refuse; the parser splits nothing on email c
 whitespace and salts keys per client; a calibrated 2× multiplier raises the break-even
 spend and an uncalibrated one moves nothing. `tests/test_clv.py`, 6 tests.
 
+### Iteration 24 — part 10: which SKUs to cut
+
+**Objection.** The negative-margin directive names a SKU on one period of net margin.
+A SKU costs more than that to carry and is worth less than its last month if it is
+dying, and the engine's own credibility and survival estimators sat unused for it.
+
+**Change.** `models/assortment.py`: a fully loaded contribution per period, blended with
+the catalogue by Bühlmann–Straub credibility, valued over twelve months through the
+catalogue's Kaplan–Meier survival conditioned on the SKU's age; four gates before a cut;
+merge candidates inside variant families; an explicit `sku_exit` directive that
+supersedes the negative-margin draft and is banked one absent period at a time.
+
+**Measured.** A SKU losing every month for eight periods is cut with Z ≥ 0.5 and
+P(< 0) ≥ 0.75; one bad month in eight is kept; a two-period-old SKU on a catalogue that
+dies at two or three is discounted and an eight-period-old one is not; carry, returns
+and a stated operational cost subtract as computed by hand; the exit banks the loaded
+loss for the periods the SKU sold nothing and stalls while it still sells.
+`tests/test_assortment.py`, 5 tests.
+
 ---
 
 ## Outcome Alignment

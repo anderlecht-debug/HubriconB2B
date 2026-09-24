@@ -55,6 +55,33 @@ not know.
 **What it cannot tell you.** Whether the ad spend allocated to a SKU actually
 drove that SKU's sales. It is an accounting split, not an attribution.
 
+### 1b. The fully loaded SKU, and which to cut
+
+**What it computes** (`models/assortment.py`). Net margin is one period of one
+measure. The loaded contribution per period is net margin (already net of fees, landed
+cost and allocated ads) less the forward carry the fee lines do not yet show (the aged
+surcharge and low-inventory fee the inventory-economics pass prices), less the returns
+cost (returned units × the loss fraction of their disposition × landed cost), less an
+operational cost per active SKU that is zero until a client states one, and says so.
+Each SKU's mean is blended with the catalogue's by Bühlmann–Straub credibility
+(`risk.buhlmann`), with the weight Z on the row; the interval is a normal on the pooled
+within-SKU variance over n, and P(contribution < 0) comes from it. The twelve-month
+value discounts the blended contribution by the catalogue's Kaplan–Meier survival
+conditioned on the SKU's age, S(age + k)/S(age) — a SKU as old as the catalogue gets
+no discount, because the curve has no information beyond the longest life it saw.
+
+**What is flagged.** Cut: blended contribution below zero, Z ≥ 0.5, at least two
+negative periods, P(< 0) ≥ 0.75 — four gates so one bad month never names a SKU.
+Merge: a variant with under 5% of its family's revenue and a loaded contribution at
+or below zero. The exit directive promises the avoided twelve-month loss and
+supersedes the negative-margin instruction for its SKU; the Profit Record banks it
+only as the periods without the SKU pass, and a SKU still selling ninety days on is
+closed as never carried out.
+
+**What it cannot tell you.** Where a cut SKU's buyers go (§3b's family
+cross-elasticity is the only evidence); a SKU's worth to a rank or a bundle; the
+operational cost, until stated.
+
 ---
 
 ## 2. Price elasticity

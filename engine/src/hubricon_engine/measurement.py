@@ -816,6 +816,39 @@ def measure_markdown(d: dict, margins: list[dict], inv_econ: dict | None, since:
                     window=window)
 
 
+def measure_sku_exit(d: dict, margins: list[dict], since: date, today: date) -> dict:
+    """An exit is banked only as the periods without the SKU pass: each margin
+    period after the decision in which the SKU sold nothing banks the loaded
+    monthly loss it no longer makes, capped at the promise. Still selling is
+    not yet; still selling ninety days on is never carried out."""
+    ev = d.get("evidence") or {}
+    sku = ev.get("sku")
+    monthly = ev.get("blended_monthly")
+    if not sku or monthly is None:
+        return _closed(d, "No loaded-contribution baseline recorded on this directive.")
+    after_rows = sorted([m for m in margins if m.get("sku") == sku and m.get("period_start")
+                         and date.fromisoformat(str(m["period_start"])[:10]) > since], key=lambda m: str(m["period_start"]))
+    if not after_rows:
+        return _not_yet(d, f"No margin period since the decision on {sku}.")
+    window = (str(after_rows[0]["period_start"]), str(after_rows[-1].get("period_end") or after_rows[-1]["period_start"]))
+    still_selling = [m for m in after_rows if float(m.get("units") or 0) > 0]
+    gone = [m for m in after_rows if float(m.get("units") or 0) <= 0]
+    if still_selling and not gone:
+        return _stalled(d, f"{sku} sold {sum(float(m.get('units') or 0) for m in still_selling):,.0f} units since the "
+                           f"decision — the exit has not happened, so there is nothing to bank.", since, today, window)
+    months = sum(_period_days(m) / 30.0 for m in gone)
+    avoided = max(0.0, -float(monthly)) * months
+    if avoided < MEASURE_MIN_USD:
+        return _closed(d, f"The exit of {sku} has avoided less than ${MEASURE_MIN_USD:,.0f} so far; not material.",
+                       evidence_after={"months_gone": round(months, 2)})
+    note = (f"{sku} sold nothing in {len(gone)} period(s) since the decision ({window[0]} → {window[1]}); at its loaded "
+            f"loss of ${abs(float(monthly)):,.2f} a month that is ${avoided:,.2f} not lost"
+            + (f", with {len(still_selling)} earlier period(s) still selling not counted." if still_selling else "."))
+    return _verdict(d, "measured", note, usd=round(avoided, 2), attribution="attributable",
+                    evidence_after={"months_gone": round(months, 2), "periods_gone": len(gone),
+                                    "periods_still_selling": len(still_selling)}, window=window)
+
+
 def measure_negative_margin(d: dict, margins: list[dict], inventory: list[dict],
                             since: date, today: date) -> dict:
     """Reprice, cut the ads, or exit — the instruction is a menu, so read from
@@ -1227,6 +1260,8 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
             verdicts.append(measure_markdown(d, margins, inv_econ, since, today))
         elif kind == "negative_margin_sku":
             verdicts.append(measure_negative_margin(d, margins, inventory, since, today))
+        elif kind == "sku_exit":
+            verdicts.append(measure_sku_exit(d, margins, since, today))
         elif kind == "campaign_trim":
             verdicts.append(measure_campaign_trim(d, ads_rows, since, today))
         elif kind == "budget_reallocation":

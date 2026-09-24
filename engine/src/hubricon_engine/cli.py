@@ -63,7 +63,8 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, cash_orders, cashflow, clv, cross_price, elasticity, forecast, health_score,
+    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, elasticity, forecast,
+    health_score,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
     seasonality,
 )
@@ -92,8 +93,8 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "clv", "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "cashorders",
-              "health")
+              "clv", "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "assortment",
+              "cash", "cashorders", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -513,6 +514,16 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                   + (f"expected net ${float(v['expected_net']):,.0f}, worst-5% ${float(v['worst_5pct_net']):,.0f}"
                      if v.get("status") == "ok" else "VaR skipped (no unit economics)")
                   + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
+        if "assortment" in wanted:
+            cross_out = _load_outputs(db, run_id).get("cross_price")
+            asrt = assortment.run(base_margins, inv_econ, data, risk_out, cross_out, today)
+            _save_output(db, run_id, client["id"], "assortment", asrt)
+            if asrt["status"] == "ok":
+                a_ = asrt["summary"]
+                print(f"  assortment: {a_['n_skus']} SKUs loaded — {len(a_['cut'])} to cut, {len(a_['merge'])} to merge, "
+                      f"${float(a_['avoided_loss_12m_p50'] or 0):,.0f} of twelve-month loss avoidable")
+            else:
+                print(f"  assortment: {asrt['status']}")
         if "cash" in wanted:
             cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel,
                                 seasonal=seasonal, today=today)
@@ -669,7 +680,8 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               incrementality=outputs.get("incrementality"), client_id=client["id"],
                               experiments=_load_price_tests(db, client["id"]),
                               cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
-                              replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"))
+                              replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
+                              assortment=outputs.get("assortment"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}

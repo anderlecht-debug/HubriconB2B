@@ -239,6 +239,51 @@ def _budget_order_set_directive(cash_orders: dict | None) -> dict | None:
     )
 
 
+def _sku_exit_directive(row: dict, margin_row: dict | None) -> dict | None:
+    """Cut or merge a SKU on its fully loaded, survival-discounted contribution.
+    Explicit — an exit is the client's — and the promise is the twelve-month
+    loss avoided, banked only as the periods without the SKU actually pass."""
+    if row.get("decision") not in ("cut", "merge") or not row.get("avoided_loss_12m"):
+        return None
+    sku = row["sku"]
+    av = row["avoided_loss_12m"]
+    comp = row.get("components_latest") or {}
+    z = float(row.get("credibility_z") or 0)
+    if row["decision"] == "merge":
+        text = (f"Merge {sku} into its family: it carries {float(row.get('family_revenue_share') or 0):.1%} of the "
+                f"family's revenue and a loaded contribution of {'−' if comp.get('loaded', 0) < 0 else ''}"
+                f"{_money(float(comp.get('loaded') or 0))} last period. Delist the variant and let its buyers land on "
+                f"the siblings; expected {_money(float(av['p50']))} of loss avoided over twelve months "
+                f"(90% range {_money(float(av['p5']))} to {_money(float(av['p95']))}).")
+    else:
+        text = (f"Plan the exit of {sku}: fully loaded — net margin less the surcharge and low-inventory fee it bills, "
+                f"its returns and the cost of carrying it — it loses about {_money(abs(float(row['blended_monthly'])))} a "
+                f"month, negative in {int(row['negative_periods'])} of {int(row['n_periods'])} periods, with a "
+                f"{float(row['p_negative']):.0%} chance the true figure is below zero"
+                + (f" (this is {z:.0%} the SKU's own history and the rest the catalogue's)" if z < 0.8 else "")
+                + f". Discounted by how long SKUs like it keep selling, that is {_money(float(av['p50']))} of loss avoided "
+                f"over twelve months (90% range {_money(float(av['p5']))} to {_money(float(av['p95']))}). Sell down the "
+                f"stock on hand first — the markdown and liquidation calls cover that.")
+    return _draft(
+        "margin", "sku_exit", (sku, row["decision"]),
+        score=30 + float(av["p50"]) / 100,
+        expected=av["p50"],
+        action_text=text,
+        evidence={
+            "sku": sku, "decision": row["decision"], "blended_monthly": row.get("blended_monthly"),
+            "credibility_z": z, "n_periods": row.get("n_periods"), "n_negative_periods": row.get("negative_periods"),
+            "p_negative": row.get("p_negative"), "ci95": row.get("ci95"), "survival_12m": row.get("survival_12m"),
+            "delta_p5": av["p5"], "delta_p50": av["p50"], "delta_p95": av["p95"], "p_loss": av.get("p_loss"),
+            "mc_inputs": {"draws": 4000, "seed": row.get("seed") or 20260911},
+            "components_latest": comp, "family": row.get("family"),
+            "baseline_period": str((margin_row or {}).get("period_start")),
+            "baseline_units": float((margin_row or {}).get("units") or 0),
+            "baseline_revenue": float((margin_row or {}).get("revenue") or 0),
+            "baseline_net": float((margin_row or {}).get("net_margin") or 0) if margin_row else None,
+        },
+    )
+
+
 def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None,
                          channel: str | None = "amazon", rep_row: dict | None = None,
                          supplier_events: dict | None = None) -> dict:
@@ -1085,7 +1130,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      cross_price: dict | None = None,
                      markdown: dict | None = None,
                      replenishment: dict | None = None,
-                     cash_orders: dict | None = None) -> list[dict]:
+                     cash_orders: dict | None = None,
+                     assortment: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1319,9 +1365,20 @@ def draft_directives(inventory, ads, elasticity, margins,
         if d:
             drafts.append(d)
 
+    # SKUs to cut or merge on the loaded, survival-discounted contribution; an
+    # exit supersedes the one-period negative-margin instruction for its SKU
+    exits: set[str] = set()
+    for row in (assortment or {}).get("rows", []):
+        d = _sku_exit_directive(row, latest_by_sku.get(row["sku"]))
+        if d:
+            drafts.append(d)
+            exits.add(row["sku"])
+
     if margins:
         latest = max(m["period_start"] for m in margins)
         for m in margins:
+            if m["sku"] in exits:
+                continue
             if m["period_start"] == latest and m["net_margin"] is not None and float(m["net_margin"]) < 0:
                 loss = abs(float(m["net_margin"]))
                 # The instruction is a menu of three, so measurement has to read

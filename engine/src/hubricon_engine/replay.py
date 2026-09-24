@@ -80,12 +80,15 @@ BANKABLE_REQUIRED = {
                             "delta_p5", "delta_p50", "delta_p95", "mc_inputs"),
     "markdown": ("sku", "p0", "p_new", "depth", "elasticity", "ci95", "baseline_units", "baseline_revenue",
                  "baseline_period", "carry_saving_p50"),
+    "sku_exit": ("sku", "decision", "blended_monthly", "credibility_z", "n_negative_periods", "p_negative",
+                 "baseline_period", "delta_p5", "delta_p50", "delta_p95"),
 }
 # Every kind that promised a DISTRIBUTION, and the fields that distribution is.
 DISTRIBUTION_FIELDS = {
     "price_step": PRICE_STEP_DISTRIBUTION,
     "budget_reallocation": ("delta_p5", "delta_p50", "delta_p95", "p_loss", "mc_inputs"),
     "markdown": PRICE_STEP_DISTRIBUTION,
+    "sku_exit": ("delta_p5", "delta_p50", "delta_p95", "p_loss", "mc_inputs"),
 }
 
 
