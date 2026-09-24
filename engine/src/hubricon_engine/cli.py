@@ -63,8 +63,8 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, cashflow, elasticity, forecast, health_score,
-    incrementality, inventory_econ, inventory_sim, margin, recovery, risk,
+    ad_allocation, ad_efficiency, anomaly, cashflow, cross_price, elasticity, forecast, health_score,
+    incrementality, inventory_econ, inventory_sim, margin, price_experiment, recovery, risk,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -89,8 +89,8 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "forecast", "inventory", "elasticity", "incrementality", "ads", "adalloc",
-              "recovery", "anomaly", "invecon", "risk", "cash", "health")
+ALL_MODELS = ("margin", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
+              "ads", "adalloc", "recovery", "anomaly", "invecon", "risk", "cash", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -209,6 +209,15 @@ def _save_output(db, run_id: str, client_id: str, model: str, payload) -> None:
         [{"run_id": run_id, "client_id": client_id, "model": model, "payload": payload}],
         on_conflict="run_id,model",
     )
+
+
+def _load_price_tests(db, client_id: str, designed: bool = True) -> list[dict]:
+    rows = db.table("price_tests").select("*").eq("client_id", client_id).execute().data
+    return [r for r in rows if r.get("design")] if designed else rows
+
+
+def _load_experiments(db, run_id: str | None) -> list[dict]:
+    return ((_load_outputs(db, run_id).get("price_experiments") or {}).get("rows") or []) if run_id else []
 
 
 def _load_switchbacks(db, client_id: str) -> list[dict]:
@@ -370,9 +379,29 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  inventory panel: {c['expected_stockouts']:.1f} SKUs expected out of "
                       f"stock, {c['p95_stockouts']:.0f} at the 95th percentile "
                       f"(independent draws would say {i['p95_stockouts']:.0f})")
+        experiments = None
+        if "experiments" in wanted:
+            tests = _load_price_tests(db, client["id"])
+            if tests:
+                # the observational fit first, so the experiment can say how far
+                # the history's curve was off; then the fit the optimizer uses
+                experiments = price_experiment.run(data, tests, elasticity.run(data))
+                _save_output(db, run_id, client["id"], "price_experiments", {"rows": experiments})
+                for e in experiments:
+                    if e.get("test_id"):
+                        db.table("price_tests").update({"analysis": e}).eq("id", e["test_id"]).execute()
+                ok = [e for e in experiments if e["status"] == "ok"]
+                print(f"  price experiments: {len(ok)} of {len(experiments)} analysed"
+                      + (f"; bias vs history {', '.join(f'{e['item_id']} {e['details'].get('bias_estimate'):+.2f}' for e in ok if e['details'].get('bias_estimate') is not None)}"
+                         if any(e["details"].get("bias_estimate") is not None for e in ok) else ""))
         if "elasticity" in wanted:
-            elast_rows = elasticity.run(data)
+            elast_rows = elasticity.run(data, experiments=experiments)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
+        if "crossprice" in wanted:
+            cross = cross_price.run(data, elast_rows)
+            _save_output(db, run_id, client["id"], "cross_price", cross)
+            print(f"  cross-price: {cross['status']}"
+                  + (f" — {cross['n_fitted']} of {cross['n_families']} variant families fitted" if cross["status"] != "no_variant_mapping" else ""))
         incr = None
         if "incrementality" in wanted:
             incr = incrementality.run(data, _load_switchbacks(db, client["id"]))
@@ -584,7 +613,9 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               recovery=outputs.get("recovery"), inv_econ=outputs.get("invecon"),
                               anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
                               channel=channel, ad_allocation=outputs.get("ad_allocation"),
-                              incrementality=outputs.get("incrementality"), client_id=client["id"])
+                              incrementality=outputs.get("incrementality"), client_id=client["id"],
+                              experiments=_load_price_tests(db, client["id"]),
+                              cross_price=outputs.get("cross_price"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -669,7 +700,8 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
 
     verdicts = measurement.measure(directives, data, margins, ads_rows, claims,
                                    inv_econ=_load_outputs(db, run_id).get("invecon"),
-                                   switchbacks=_load_switchbacks(db, client["id"]))
+                                   switchbacks=_load_switchbacks(db, client["id"]),
+                                   experiments=_load_experiments(db, run_id))
     if not apply:
         return verdicts
     by_id = {d["id"]: d for d in directives}
@@ -715,7 +747,8 @@ def cmd_replay(args):
         claims = _fetch_claims(db, client["id"])
         card = replaymod.replay(directives, data, margins, ads_rows, claims,
                                inv_econ=_load_outputs(db, run["id"]).get("invecon"),
-                               switchbacks=_load_switchbacks(db, client["id"]))
+                               switchbacks=_load_switchbacks(db, client["id"]),
+                               experiments=_load_experiments(db, run["id"]))
     print(replaymod.render(card))
 
 
@@ -972,6 +1005,68 @@ def cmd_pricetest(args):
 
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
+
+    if args.action == "plan" and getattr(args, "design", "fixed") == "randomized":
+        from .directives import _fee_history
+        from .models.price_experiment import design as design_experiment
+
+        if not args.sku or not args.start:
+            sys.exit("a randomized plan needs --sku and --start YYYY-MM-DD")
+        run = _latest_run(db, client["id"], None)
+        margins = [m for m in db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+                   if m.get("sku") == args.sku]
+        if not margins:
+            sys.exit(f"No margin row for {args.sku} on the latest run — a randomised test needs the unit economics.")
+        latest = max(margins, key=lambda m: str(m["period_start"]))
+        fit = latest_elasticity(
+            db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data, args.sku)
+        d = design_experiment(client["id"], args.sku, args.start, latest, fit, _fee_history(args.sku, margins))
+        if d.get("status") != "ok":
+            sys.exit(f"Cannot design the test: {d.get('status')} — {d.get('basis', '')}")
+        test = db.table("price_tests").insert({
+            "client_id": client["id"], "sku": args.sku, "asin": latest.get("asin"),
+            "baseline_price": d["p0"], "test_price": d["p0"], "start_date": d["start_date"],
+            "end_date": d["end_date"], "design": d,
+        }).execute().data[0]
+        print(f"Planned {test['id'][:8]}: randomised test on {args.sku} around ${d['p0']:.2f}, "
+              f"{d['n_blocks']} blocks of {d['block_days']} days ({d['allocation']}; seed {d['seed']}):")
+        for b in d["blocks"]:
+            print(f"  {b['start']}..{b['end']}  ${b['price']:.2f}  ({d['arms'][b['arm']]:+.1%})")
+        cost = d.get("expected_test_cost")
+        if cost:
+            print(f"Expected {cost['p50']:+,.0f} against holding (90% range {cost['p5']:+,.0f} to {cost['p95']:+,.0f}).")
+        print("Set each block's price on its first day; `start` when it begins, `analyze` when it ends.")
+        return
+
+    if args.action == "analyze":
+        from .models import daily
+        from .models.price_experiment import analyze
+
+        if not args.test:
+            sys.exit("analyze needs --test <id prefix>")
+        test = _find_test(db, client["id"], args.test)
+        if not test.get("design"):
+            sys.exit(f"Test {test['id'][:8]} is a fixed-price test; only a randomised design can be analysed.")
+        run = _latest_run(db, client["id"], None)
+        data = _load_data(db, client["id"], _run_channel(client, run))
+        series = daily.daily_sku_series(data["settlement_transactions"], test["sku"],
+                                        test["design"]["start_date"], test["design"]["end_date"])
+        fit = latest_elasticity(
+            db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data, test["sku"])
+        if fit and (fit.get("details") or {}).get("source") == "experiment":
+            fit = None
+        result = analyze({**test["design"], "sku": test["sku"]}, series, fit)
+        note = (result["details"].get("bias_sentence") if result["status"] == "ok"
+                else f"{result['status']}: {result['details'].get('basis', '')}")
+        db.table("price_tests").update({"analysis": result, "outcome_notes": note}).eq("id", test["id"]).execute()
+        if result["status"] == "ok":
+            print(f"ε = {result['elasticity']:.2f} (95% {result['details']['ci95'][0]:.2f} to "
+                  f"{result['details']['ci95'][1]:.2f}; permutation p {result['details']['p_permutation']}).")
+            print(note or "")
+            print("The next `hubricon run` fits on it, unshrunk.")
+        else:
+            print(note)
+        return
 
     if args.action == "plan":
         if not args.sku or args.to is None:
@@ -1268,7 +1363,7 @@ def cmd_execute(args):
     log, and the sweep escalates anything approved and still not executed."""
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
-    rows = [r for r in db.table("directives").select("id, status, action_text, executed_at")
+    rows = [r for r in db.table("directives").select("id, status, action_text, executed_at, kind, evidence")
             .eq("client_id", client["id"]).execute().data
             if r["id"].startswith(args.directive.lower())]
     if len(rows) != 1:
@@ -1284,6 +1379,18 @@ def cmd_execute(args):
     }).eq("id", row["id"]).execute()
     print(f"Executed {row['id'][:8]} ({row['action_text'][:60]}…)"
           + (f" — ref {args.ref}" if args.ref else ""))
+    if row.get("kind") == "price_experiment":
+        # the schedule becomes a running price test, so the daily Buy Box watch
+        # and the analysis pass both see it
+        ev = row.get("evidence") or {}
+        design = ev.get("design") or {}
+        db.table("price_tests").insert({
+            "client_id": client["id"], "sku": ev.get("sku"), "baseline_price": ev.get("p0"),
+            "test_price": ev.get("p0"), "start_date": design.get("start_date"), "end_date": design.get("end_date"),
+            "status": "running", "design": design, "directive_id": row["id"],
+        }).execute()
+        print(f"Randomised test on {ev.get('sku')} is running {design.get('start_date')}..{design.get('end_date')}; "
+              f"set each block's price on its first day.")
 
 
 def cmd_watch(args):
@@ -3393,9 +3500,11 @@ def main():
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")
-    p.add_argument("action", choices=["plan", "start", "track", "complete", "abort", "list"])
+    p.add_argument("action", choices=["plan", "start", "track", "complete", "abort", "list", "analyze"])
     p.add_argument("--sku")
-    p.add_argument("--to", type=float, help="test price")
+    p.add_argument("--to", type=float, help="test price (fixed design)")
+    p.add_argument("--design", choices=["fixed", "randomized"], default="fixed",
+                   help="randomized: six 7-day blocks around the current price, drawn by the engine")
     p.add_argument("--baseline", type=float, help="override the observed baseline price")
     p.add_argument("--start", help="start date YYYY-MM-DD (default: when you run `start`)")
     p.add_argument("--days", type=int, default=DEFAULT_TEST_DAYS)

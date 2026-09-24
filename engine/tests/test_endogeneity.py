@@ -20,43 +20,38 @@ last month carries no information about this month and the bias is small. With a
 persistent shock, the reaction loads positive demand onto high prices and the
 fitted demand curve looks FLATTER than it is.
 
-WHAT IT FOUND (median ε̂ − ε_true, ~480 synthetic SKUs per cell, 9 periods):
+WHAT IT FOUND (median ε̂ − ε_true over 96 seeds × 60 SKUs per cell, 9 periods):
 
-    ρ = 0.0   φ = 0.0   +0.14     no reaction
-              φ = 0.4   −0.20     reaction, but nothing to react to
-              φ = 0.6   −0.16
-              φ = 1.2   −0.09
-    ρ = 0.6   φ = 0.0   +0.15     persistence alone: same as no reaction
-              φ = 0.4   +0.59     both — and the bias is 0.44 ABOVE baseline
-              φ = 0.6   +0.45                      0.31 above
-              φ = 1.2   +0.26                      0.11 above
+    ρ = 0.6   φ = 0.0   +0.02     persistence alone: nothing
+    ρ = 0.6   φ = 0.4   +0.51     reaction on persistent demand — the whole bias
+    ρ = 0.0   φ = 0.6   −0.16     reaction with nothing to react to: the OTHER way
 
-Two separate things are visible and they must not be confused. The +0.14 at
-φ = 0 is not endogeneity: it is small-sample attenuation. With only 5% of log
-price variation across nine periods, the slope estimate is pulled toward zero,
-which for a negative slope reads as a positive bias. It is present with or
-without reaction and it is the price of thin data, not of endogeneity.
+This docstring used to describe a "+0.14 small-sample attenuation baseline" with
+the endogeneity as an increment on top. That baseline was an artifact of eight
+seeds (see test_there_is_no_attenuation_baseline_worth_naming, and MATH_METHODS.md
+§2, corrected 2026-09-12): there is no baseline, and the whole +0.5 is endogeneity.
+It runs toward zero — toward "raise the price, demand barely cares" — which is
+the dangerous direction, because it is the direction that makes the engine
+recommend increases. A SKU whose true elasticity is −2.0 can read −1.6, and at
+−1.6 the model puts the optimum 33% higher than at −2.0 — exactly 4/3,
+independent of cost and fees.
 
-The endogeneity is the INCREMENT on top: +0.44 at the reaction strength that
-hurts most. Both run the same way — toward zero, toward "raise the price, demand
-barely cares" — which is the dangerous direction, because it is the direction
-that makes the engine recommend increases. A SKU whose true elasticity is −2.0
-can read −1.6, and at −1.6 the model puts the optimum 33% higher than at −2.0 —
-exactly 4/3, independent of cost and fees.
-
-The engine does not correct this, and cannot with the data it has: correcting it
-needs an instrument, something that moves price without moving demand. What it
-does instead is three things, each of which is tested elsewhere in this suite:
+An observational fit does not correct this and cannot: correcting it needs an
+instrument, something that moves price without moving demand. What stands
+between the bias and a client on such a fit, each tested elsewhere in this suite:
 
   1. The pole guard refuses a destination whenever ε̂ cannot be separated from
-     −1, and a +0.4 bias pushes estimates toward exactly that band — so the
+     −1, and a +0.5 bias pushes estimates toward exactly that band — so the
      most-biased SKUs are the ones the engine most often declines to price.
   2. The step is sized by the certainty equivalent, so an uncertain fit produces
      a small move that a later export can correct.
-  3. Every price step the engine issues IS a price change not chosen in response
-     to demand. The Decision Ledger's own history is the instrument, and
-     price_tests.py already records it. That is the data that retires this
-     assumption, and the engine generates it one cycle at a time.
+  3. The engine's ordinary price steps are NOT the instrument (this docstring
+     claimed they were until 2026-09-23; the claim was withdrawn on 2026-09-12
+     because a step chosen by the fit is not exogenous and a fortnight-long step
+     blends away below the monthly estimator's floor). The instrument is the
+     randomised six-block test in models/price_experiment.py, measured on this
+     same generator in tests/test_price_experiment.py, and it corrects the bias
+     one SKU at a time once that SKU's test has run.
 """
 
 import numpy as np

@@ -482,6 +482,57 @@ simulation showed the opposite for the real-effect mechanism (ι toward zero) an
 claimed direction only for attribution carryover; the payload now states both and
 corrects neither. `tests/test_incrementality.py`, 10 tests.
 
+### Iteration 17 — part 3: the instrument
+
+**Objection.** The most dangerous assumption in this engine (the closing section
+below) needed a price change made for a reason unrelated to demand, plus a price
+series fine enough to see it. Iteration 13 measured that the engine's own steps were
+neither. Nothing had been built since.
+
+**Change.** `models/price_experiment.py`: five arms inside the standing cap, six
+seven-day blocks, two anchors so the estimator's price-variation floor is always
+cleared, the rest by Thompson sampling with a 10% floor, the order from a generator
+seeded by identity and calendar only. Analysed from the daily settlement series
+(`models/daily.py`) after a one-day washout, on the assigned price, with HC3 and the
+larger of HC3 and a permutation standard error. The experimental row replaces the
+observational one in `elasticity.run` and is not shrunk toward the (biased) pool.
+Drafted as a standing `price_experiment` directive for SKUs with no price variation
+or a fit the pole guard refuses; `hubricon pricetest … plan --design randomized` and
+`analyze` run it by hand; `hubricon execute` turns the directive into a running
+price test the Buy Box watch can see.
+
+**Measured.** On the reactive generator of iteration 4 (phi = 0.4, rho = 0.6): the
+observational raw fit reads more than +0.3 too flat, the randomised test on the same
+SKUs lands within ±0.1 of the truth; the assignment is uncorrelated with the shock
+over 160 draws; the washout removes the attenuation a one-day posting lag causes;
+a test whose price sat at the assigned arm on under 80% of days returns
+`not_executed`. `tests/test_price_experiment.py`, 11 tests. The closing section's
+"neither is built" is therefore withdrawn for SKUs that have run the test, and only
+for them.
+
+### Iteration 18 — part 4: the family absorbs the move
+
+**Objection.** §10 item 3: a cut that cannibalises a neighbouring SKU is booked as a
+win on one and an unexplained loss on the other. The per-SKU optimum overstates a
+rise (lost units partly land on a sibling) and understates a cut.
+
+**Change.** `models/cross_price.py`: one own and one cross elasticity per variant
+family (parent ASIN, or Shopify handle), within-transformed OLS with HC3 and a
+Student-t interval, families shrunk toward the catalogue once three fit,
+`no_variant_mapping` when nothing links two SKUs. `pricing_engine.delta_draws` takes
+the family and draws its ε last, so a SKU without one is byte-identical to before;
+every candidate is valued on own plus sibling profit and the step is sized on the
+total; a move the SKU alone would make and the family would not is refused with
+status `cannibalisation` and drafted as a finding. Measurement anchors each sibling
+on its own after window and caps at the family's change.
+
+**Measured.** A planted ε_cross of +0.8 (four children, ten periods) is recovered
+within ±0.2 over twenty seeds with ε_own within ±0.2; families planted far apart keep
+their own estimates and families within their own noise pool fully (τ² = 0 is the
+answer, and the weight says so); a cut on a ε = −3 SKU with a large sibling is
+refused as cannibalisation, a rise the family welcomes carries the sibling gain in
+its range. `tests/test_cross_price.py`, 8 tests.
+
 ---
 
 ## Outcome Alignment
@@ -793,7 +844,10 @@ What would retire the assumption is still a price change made for a reason
 unrelated to demand, plus a price series fine enough to see it — a deliberately
 randomised component of the step, and either a fortnightly export or the daily
 realised price that already sits unread in `settlement_transactions`. Both are
-cheap. Neither is built.
+cheap. ~~Neither is built.~~ **Both are built as of 2026-09-23** (iteration 17): the
+randomised six-block test and the daily settlement series. The assumption is
+retired one SKU at a time, only after its test has run, and the report names which
+SKUs carry an experimental estimate.
 
 The table below still stands, because it is about price VARIATION and says nothing
 about where the variation comes from. It is the measured fraction of SKUs for

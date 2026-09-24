@@ -37,7 +37,7 @@ from .models.pricing_engine import (
 # rather than invented here. Everything else needs an explicit yes, and a
 # price step past the cap is demoted to explicit at the point it is drafted.
 STANDING = {"ad_bleed_terms", "campaign_trim", "branded_pause", "spend_step", "price_step",
-            "budget_reallocation"}
+            "budget_reallocation", "price_experiment"}
 
 # How much of a SKU's own trailing monthly net a single directive's
 # 5th-percentile outcome may put at risk before the move stops travelling under
@@ -257,9 +257,38 @@ def _fee_history(sku: str, margins: list[dict]) -> list[tuple[float, float]]:
     return out
 
 
-def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None = None) -> dict | None:
-    move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []))
+def _cannibalisation_directive(move: dict, fit: dict, margin_row: dict, sku: str) -> dict:
+    """The family absorbed the move: the SKU alone would have stepped, the
+    family together would not. No step is issued; the finding is."""
+    step = float(move["own_step_fraction"])
+    verb = "rise" if step > 0 else "cut"
+    own, total = float(move.get("own_delta_p50") or 0), float(move.get("total_delta_p50") or 0)
+    return _draft(
+        "pricing", "cannibalisation_watch", (sku, move.get("family")),
+        score=8,
+        expected=None,
+        action_text=(
+            f"No step on {sku}. A {abs(step):.1%} {verb} would earn about {'+' if own >= 0 else '−'}{_money(own)}/period "
+            f"on its own, but its variant family absorbs it: with a cross-elasticity of {float(move['eps_cross']):+.2f} "
+            f"the volume moves {'to' if step > 0 else 'from'} {move.get('sibling') or 'its siblings'}, and across the "
+            f"family the move nets {'+' if total >= 0 else '−'}{_money(total)}. We price the family together rather "
+            f"than one variant against another."
+        ),
+        evidence={"sku": sku, "family": move.get("family"), "sibling": move.get("sibling"),
+                  "own_step_fraction": step, "own_delta_p50": own, "total_delta_p50": total,
+                  "sibling_delta_p50": move.get("sibling_delta_p50"), "eps_cross": move.get("eps_cross"),
+                  "cross_std_err": move.get("cross_std_err"), "n_siblings": move.get("n_siblings"),
+                  "elasticity": float(fit["elasticity"]), "ci95": (fit.get("details") or {}).get("ci95"),
+                  "baseline_period": str(margin_row.get("period_start"))},
+    )
+
+
+def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None = None,
+                       cross: dict | None = None) -> dict | None:
+    move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []), cross=cross)
     sku = fit["item_id"]
+    if move and move.get("status") == "cannibalisation":
+        return _cannibalisation_directive(move, fit, margin_row, sku)
     if move and move.get("status") == "near_unit_elastic":
         return _near_unit_elastic_directive(move, fit, margin_row, sku)
     if move:
@@ -726,6 +755,56 @@ def _budget_reallocation_directive(alloc: dict | None) -> dict | None:
 
 
 SWITCHBACK_MIN_SPEND = 20.0     # a campaign under this a day is not worth a four-week test
+EXPERIMENTS_PER_RUN = 3         # randomised price tests drafted per cycle, largest SKUs first
+
+
+def _price_experiment_directive(fit: dict | None, margin_row: dict, sku: str, reason: str,
+                                client_id: str | None, today: date, fee_history=None) -> dict | None:
+    """The instrument: a randomised six-block price test inside the 5% cap.
+    Standing under the pricing mandate — every arm is a step the client already
+    authorised — and worth no dollars in itself; the next fit uses its answer."""
+    from .models.price_experiment import design
+
+    start = (today + timedelta(days=1)).isoformat()
+    d = design(client_id or "", sku, start, margin_row,
+               fit if fit and fit.get("status") == "ok" else None, fee_history)
+    if d.get("status") != "ok":
+        return None
+    seq = " → ".join(f"${b['price']:.2f}" for b in d["blocks"])
+    why = {
+        "no_variation": ("The price has barely moved in the history, so no elasticity can be fitted at all; "
+                         "the test creates the variation."),
+        "near_unit_elastic": ("The history cannot separate this SKU's demand from the point where a price move "
+                              "pays for itself, and a history set in response to demand reads about half an "
+                              "elasticity too flat; a randomised test is the one measurement that does not."),
+    }.get(reason, "A randomised test is the one price measurement not set in response to demand.")
+    cost = d.get("expected_test_cost")
+    if cost:
+        p50 = float(cost["p50"])
+        cost_text = (f" Expected {'+' if p50 >= 0 else '−'}{_money(p50)} against holding ${d['p0']:.2f} over the "
+                     f"six weeks (90% range {'+' if cost['p5'] >= 0 else '−'}{_money(cost['p5'])} to "
+                     f"{'+' if cost['p95'] >= 0 else '−'}{_money(cost['p95'])}).")
+    else:
+        cost_text = " No fit yet, so the arms are weighted equally and the cost of the test is not priced."
+    text = (f"Run a randomised price test on {sku}: six 7-day blocks from {start}, {seq} — every price inside "
+            f"the 5% cap. {why}{cost_text} Buy Box watched throughout; nothing is banked on the test itself.")
+    return _draft(
+        "pricing", "price_experiment", (sku, start),
+        score=16,
+        expected=None,
+        action_text=text,
+        evidence={
+            "sku": sku, "p0": d["p0"], "reason": reason, "design": d,
+            "start_date": d["start_date"], "end_date": d["end_date"], "seed": d["seed"],
+            "expected_test_cost": cost,
+            "elasticity": fit.get("elasticity") if fit else None,
+            "std_err": fit.get("std_err") if fit else None,
+            "ci95": (fit.get("details") or {}).get("ci95") if fit else None,
+            "baseline_units": float(margin_row.get("units") or 0),
+            "baseline_revenue": float(margin_row.get("revenue") or 0),
+            "baseline_period": str(margin_row.get("period_start")),
+        },
+    )
 
 
 def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
@@ -793,7 +872,9 @@ def draft_directives(inventory, ads, elasticity, margins,
                      downside_share: float = DOWNSIDE_GUARD_SHARE,
                      ad_allocation: dict | None = None,
                      incrementality: dict | None = None,
-                     client_id: str | None = None) -> list[dict]:
+                     client_id: str | None = None,
+                     experiments: list[dict] | None = None,
+                     cross_price: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -930,15 +1011,69 @@ def draft_directives(inventory, ads, elasticity, margins,
             },
         ))
 
+    cross_by_sku = (cross_price or {}).get("by_sku") or {}
+
+    def _cross_for(sku: str) -> dict | None:
+        """The family's side of a move on `sku`: each sibling's baseline
+        volume, contribution and the weight this SKU's price carries in the
+        sibling's index. Siblings without landed cost are left out and said."""
+        info = cross_by_sku.get(sku)
+        if not info:
+            return None
+        sibs = []
+        for sib in info.get("siblings") or []:
+            m = latest_by_sku.get(sib["sku"])
+            if not m or m.get("cogs") is None:
+                continue
+            units, revenue = float(m.get("units") or 0), float(m.get("revenue") or 0)
+            if units <= 0 or revenue <= 0:
+                continue
+            f, big_f, _ = fee_terms(m)
+            fees = float(m.get("amazon_fees") or 0)
+            sibs.append({"sku": sib["sku"], "q0": units, "weight": float(sib["weight"]),
+                         "contribution": revenue / units * (1 - f) - float(m["cogs"]) / units - big_f,
+                         "baseline_units": units, "baseline_profit": revenue - fees - float(m["cogs"])})
+        if not sibs:
+            return None
+        return {"eps": info["eps_cross"], "std_err": info["se_cross"], "dof": info.get("dof"),
+                "family": info["family"], "siblings": sibs}
+
+    near_unit: set[str] = set()
     for fit in elasticity:
         if fit.get("status") != "ok" or fit.get("level") != "sku":
             continue
         margin_row = latest_by_sku.get(fit["item_id"])
         if not margin_row:
             continue
-        d = _pricing_directive(fit, margin_row, margins)
+        d = _pricing_directive(fit, margin_row, margins, cross=_cross_for(fit["item_id"]))
         if d:
+            if (d.get("evidence") or {}).get("status") == "near_unit_elastic":
+                near_unit.add(fit["item_id"])
             drafts.append(downside_guard(d, margin_row, downside_share))
+
+    # The instrument. SKUs the history cannot price — no price variation at all,
+    # or a fit that cannot be separated from the pole — get a randomised test,
+    # largest first, a few per cycle, never one that already has a live test.
+    live_tests = {t.get("sku") for t in experiments or []
+                  if t.get("design") and t.get("status") in ("planned", "running")}
+    candidates = []
+    for fit in elasticity:
+        if fit.get("level") != "sku" or fit["item_id"] in live_tests:
+            continue
+        if (fit.get("details") or {}).get("source") == "experiment":
+            continue
+        margin_row = latest_by_sku.get(fit["item_id"])
+        if not margin_row:
+            continue
+        if fit.get("status") == "insufficient_price_variation":
+            candidates.append((float(margin_row.get("revenue") or 0), fit, margin_row, "no_variation"))
+        elif fit["item_id"] in near_unit:
+            candidates.append((float(margin_row.get("revenue") or 0), fit, margin_row, "near_unit_elastic"))
+    for _, fit, margin_row, reason in sorted(candidates, key=lambda c: -c[0])[:EXPERIMENTS_PER_RUN]:
+        d = _price_experiment_directive(fit, margin_row, fit["item_id"], reason, client_id, today,
+                                        _fee_history(fit["item_id"], margins or []))
+        if d:
+            drafts.append(d)
 
     if margins:
         latest = max(m["period_start"] for m in margins)

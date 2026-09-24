@@ -279,6 +279,13 @@ def _shrink(rows: list[dict], group_of) -> None:
         for r, est, weight, shrunk, post_se in zip(members, estimates, eb["weights"],
                                                    eb["shrunk"], eb["post_se"]):
             weight, shrunk, post_se = float(weight), float(shrunk), float(post_se)
+            if r["details"].get("source") == "experiment":
+                # An experimental estimate is unbiased; the pool mean is the
+                # observational one and carries the reactive-pricing bias, so
+                # shrinking toward it would pull the bias back in. It still
+                # informs μ and τ² for the observational rows around it.
+                weight, shrunk, post_se = 1.0, est, float(r["std_err"] or 0.0)
+                r["details"]["shrinkage"] = "none_experimental"
             t_crit = float(r["details"].get("t_critical") or 0.0)
             r["details"].update({
                 **detail,
@@ -289,7 +296,8 @@ def _shrink(rows: list[dict], group_of) -> None:
                 "tau2": num(tau2, 6),
                 "std_err_raw": r["std_err"],
                 "ci95_raw": r["details"]["ci95"],
-                "shrinkage": "empirical_bayes",
+                "shrinkage": r["details"].get("shrinkage") if r["details"].get("shrinkage") == "none_experimental"
+                else "empirical_bayes",
             })
             # the optimizer consumes the shrunk value; the raw one stays on
             # the record beside it
@@ -299,10 +307,16 @@ def _shrink(rows: list[dict], group_of) -> None:
                                     num(shrunk + t_crit * post_se, 4)]
 
 
-def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = None) -> list[dict]:
+def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = None,
+        experiments: list[dict] | None = None) -> list[dict]:
     """`groups` maps item_id -> pool name (a category, when a later export
     carries one). Absent, every item of a level pools with the rest of the
-    catalog."""
+    catalog.
+
+    `experiments` are models/price_experiment.py analyses. One with status ok
+    REPLACES the SKU's observational row before shrinkage — the randomised
+    estimate is the one the optimizer should see — and the observational fit
+    rides in details.observational beside the bias the experiment measured."""
     results = []
 
     by_asin: dict[str, list[dict]] = {}
@@ -338,6 +352,25 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
             for i, row in enumerate(ordered)
         ]
         results.append({"level": "sku", "item_id": sku, **_fit(points)})
+
+    for exp in experiments or []:
+        if exp.get("status") != "ok" or exp.get("level") != "sku":
+            continue
+        replaced = None
+        for i, r in enumerate(results):
+            if r["level"] == "sku" and r["item_id"] == exp["item_id"]:
+                replaced = i
+                break
+        row = {"level": "sku", "item_id": exp["item_id"], "status": "ok",
+               "elasticity": exp["elasticity"], "std_err": exp["std_err"], "r_squared": exp.get("r_squared"),
+               "n_periods": exp.get("n_periods"), "price_cv": exp.get("price_cv"),
+               "details": {**(exp.get("details") or {}), "source": "experiment"}}
+        if replaced is None:
+            results.append(row)
+        else:
+            row["details"].setdefault("observational", {
+                k: results[replaced].get(k) for k in ("status", "elasticity", "std_err")})
+            results[replaced] = row
 
     groups = groups or {}
 

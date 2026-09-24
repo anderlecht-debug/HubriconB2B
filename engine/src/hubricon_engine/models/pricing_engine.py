@@ -341,12 +341,18 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
                 demand_sd_log: float | None = None,
                 fee_history: list[tuple[float, float]] | None = None,
                 cost_cv: float = 0.0, draws: int = MC_DRAWS,
-                rng: np.random.Generator | None = None) -> dict:
+                rng: np.random.Generator | None = None,
+                cross: dict | None = None) -> dict:
     """One draw set of the uncertain inputs, reusable across candidate prices.
 
     Returned as arrays so a whole grid of candidate prices can be evaluated on
     the SAME draws — common random numbers, which is what makes two candidate
-    steps comparable rather than differing by simulation noise."""
+    steps comparable rather than differing by simulation noise.
+
+    `cross` is the variant family's cross-price effect (models/cross_price.py):
+    {eps, std_err, dof, siblings: [{sku, q0, contribution, weight}]}. Its ε is
+    drawn last, so a SKU with no family reproduces every draw it made before the
+    term existed."""
     rng = rng or np.random.default_rng(MC_SEED)
     n = int(draws)
 
@@ -376,9 +382,23 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
     c_draws = (np.clip(unit_cost * (1.0 + cost_cv * rng.standard_normal(n)), 0.0, None)
                if cost_cv > 0 else np.full(n, unit_cost))
 
+    cross_set = None
+    if cross and cross.get("siblings"):
+        se_c = float(cross.get("std_err") or 0.0)
+        dof_c = cross.get("dof")
+        if se_c > 0:
+            shock_c = rng.standard_t(dof_c, size=n) if dof_c and dof_c >= 1 else rng.standard_normal(n)
+            eps_c = float(cross["eps"]) + se_c * shock_c
+        else:
+            eps_c = np.full(n, float(cross["eps"]))
+        cross_set = {"eps": eps_c,
+                     "siblings": [(float(j["q0"]), float(j["contribution"]), float(j["weight"]))
+                                  for j in cross["siblings"]]}
+
     return {
         "eps": eps_draws, "q0": q0_draws, "unit_cost": c_draws,
         "fee_rate": f_draws, "fixed_fee": big_f_draws, "p0": p0, "n": n,
+        "cross": cross_set,
         "inputs": {
             "eps_se": round(float(std_err), 6),
             "eps_dof": float(dof) if dof else None,
@@ -388,15 +408,35 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
             "cost_cv": round(float(cost_cv), 6),
             "draws": n,
             "seed": MC_SEED,
+            "cross_eps_se": round(float(cross.get("std_err") or 0.0), 6) if cross_set else None,
+            "n_siblings": len(cross_set["siblings"]) if cross_set else 0,
         },
     }
 
 
-def delta_at(draw_set: dict, p_new: float) -> np.ndarray:
-    """The profit-delta draw vector at one candidate price."""
-    return profit_delta(draw_set["eps"], draw_set["p0"], draw_set["q0"],
-                        draw_set["unit_cost"], draw_set["fee_rate"], p_new,
-                        draw_set["fixed_fee"])
+def cross_delta(cross_set: dict | None, log_ratio, stride: int = 1):
+    """Sibling profit change for a move of log(p_new/p0) = `log_ratio`:
+    Σ_j q0_j·c_j·[(p_new/p0)^(ε_cross·w_ij) − 1]. `log_ratio` may be a scalar
+    (one candidate) or a column (a grid of candidates); the result broadcasts
+    against the draw axis. Zero when there is no family."""
+    if not cross_set:
+        return 0.0
+    eps = cross_set["eps"][::stride]
+    total = 0.0
+    for q0_j, c_j, w in cross_set["siblings"]:
+        total = total + q0_j * c_j * (np.exp(log_ratio * eps * w) - 1.0)
+    return total
+
+
+def delta_at(draw_set: dict, p_new: float, own_only: bool = False) -> np.ndarray:
+    """The profit-delta draw vector at one candidate price: own profit plus,
+    when the SKU sits in a variant family, the siblings' change."""
+    own = profit_delta(draw_set["eps"], draw_set["p0"], draw_set["q0"],
+                       draw_set["unit_cost"], draw_set["fee_rate"], p_new,
+                       draw_set["fixed_fee"])
+    if own_only or not draw_set.get("cross"):
+        return own
+    return own + cross_delta(draw_set["cross"], float(np.log(p_new / draw_set["p0"])))
 
 
 def summarize_delta(delta: np.ndarray) -> dict:
@@ -488,6 +528,9 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
     q = q0 * np.exp(np.log(prices / p0) * eps)
     base_contribution = p0 * (1 - f) - c - big_f
     delta = q * (prices * (1 - f) - c - big_f) - q0 * base_contribution
+    if draw_set.get("cross"):
+        # the family's side of every candidate, on the same draws
+        delta = delta + cross_delta(draw_set["cross"], np.log(prices / p0), stride)
     if not np.isfinite(delta).all():
         delta = np.where(np.isfinite(delta), delta, -np.inf)
 
@@ -542,7 +585,7 @@ def price_move(margin_row: dict, elasticity_row: dict,
                cost_cv: float = 0.0, draws: int = MC_DRAWS,
                rng: np.random.Generator | None = None,
                hard_cap: float = STEP_CAP, quantile: float = ROBUST_QUANTILE,
-               objective: str = OBJECTIVE) -> dict | None:
+               objective: str = OBJECTIVE, cross: dict | None = None) -> dict | None:
     """One SKU's recommended move: exact new price, destination optimum
     (elastic only, and only when the fit is far enough from the pole at
     eps = −1 to have one), the expected profit delta per period and the
@@ -554,7 +597,13 @@ def price_move(margin_row: dict, elasticity_row: dict,
 
     `fee_history` is [(proportional rate, fixed per unit)] across the SKU's
     own periods; its dispersion is carried into the range. `cost_cv` carries
-    landed-cost dispersion where the client's own sheet shows some."""
+    landed-cost dispersion where the client's own sheet shows some.
+
+    `cross` is the SKU's variant-family effect (see delta_draws). Every candidate
+    is then valued on own PLUS sibling profit, and the step is sized on the
+    total. When the own-only objective would have moved and the total will
+    not, the answer is a dict with status "cannibalisation" naming the sibling
+    — a finding — rather than the silence None means."""
     units = float(margin_row.get("units") or 0)
     revenue = float(margin_row.get("revenue") or 0)
     if units <= 0 or revenue <= 0:
@@ -602,20 +651,39 @@ def price_move(margin_row: dict, elasticity_row: dict,
         eps=eps, std_err=std_err, dof=dof, p0=p0, q0=units,
         unit_cost=unit_cost, fee_rate=fee_rate, fixed_fee=fixed_fee,
         demand_sd_log=details.get("residual_sd_log"),
-        fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng,
+        fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng, cross=cross,
     )
     monthly_net = trailing_monthly_net(margin_row)
     budget = RISK_BUDGET_SHARE * max(monthly_net, 0.0)
-    if direction == 0:
-        options = [robust_step(draw_set, direction=d, hard_cap=hard_cap, risk_budget=budget,
-                              quantile=quantile, objective=objective) for d in (-1, +1)]
-        policy = max(options, key=lambda o: o["objective_value"] or 0.0)
-    else:
-        policy = robust_step(draw_set, direction=direction, hard_cap=hard_cap,
-                             risk_budget=budget, quantile=quantile, objective=objective)
 
+    def _solve(ds):
+        if direction == 0:
+            options = [robust_step(ds, direction=d, hard_cap=hard_cap, risk_budget=budget,
+                                   quantile=quantile, objective=objective) for d in (-1, +1)]
+            return max(options, key=lambda o: o["objective_value"] or 0.0)
+        return robust_step(ds, direction=direction, hard_cap=hard_cap,
+                           risk_budget=budget, quantile=quantile, objective=objective)
+
+    policy = _solve(draw_set)
     fraction = policy["step_fraction"]
     if abs(fraction) < MIN_MOVE:
+        if draw_set.get("cross"):
+            # would the SKU on its own have moved? Then the family is what
+            # stopped it, and that is a finding with a name.
+            own_policy = _solve({**draw_set, "cross": None})
+            if abs(own_policy["step_fraction"]) >= MIN_MOVE:
+                p_own = p0 * (1.0 + own_policy["step_fraction"])
+                own_d = summarize_delta(delta_at(draw_set, p_own, own_only=True))
+                total_d = summarize_delta(delta_at(draw_set, p_own))
+                sibs = sorted(cross["siblings"], key=lambda j: -float(j["weight"]) * float(j["q0"]) * abs(float(j["contribution"])))
+                return {"status": "cannibalisation", "p0": round(p0, 2), "p_own": round(p_own, 2),
+                        "own_step_fraction": round(own_policy["step_fraction"], 6),
+                        "own_delta_p50": own_d["p50"], "total_delta_p50": total_d["p50"],
+                        "sibling_delta_p50": num((total_d["p50"] or 0) - (own_d["p50"] or 0)),
+                        "sibling": sibs[0]["sku"] if sibs else None,
+                        "family": cross.get("family"), "eps_cross": cross.get("eps"),
+                        "cross_std_err": cross.get("std_err"), "n_siblings": len(cross["siblings"]),
+                        "trailing_monthly_net": num(monthly_net)}
         # the robust objective cannot beat doing nothing, or the move it wants
         # is smaller than half a percent. Either way there is no instruction
         # here, and the refusal is the objective's own answer.
@@ -630,9 +698,19 @@ def price_move(margin_row: dict, elasticity_row: dict,
             return None
 
     dist = summarize_delta(delta_at(draw_set, p_new))
+    cross_effect = None
+    if draw_set.get("cross"):
+        own_d = summarize_delta(delta_at(draw_set, p_new, own_only=True))
+        sib = summarize_delta(cross_delta(draw_set["cross"], float(np.log(p_new / p0))) + np.zeros(draw_set["n"]))
+        cross_effect = {"family": cross.get("family"), "eps_cross": cross.get("eps"),
+                        "std_err": cross.get("std_err"), "dof": cross.get("dof"),
+                        "siblings": cross["siblings"],
+                        "delta_own_p50": own_d["p50"],
+                        "delta_sibling_p5": sib["p5"], "delta_sibling_p50": sib["p50"], "delta_sibling_p95": sib["p95"]}
 
     return {
         "status": status,
+        "cross_effect": cross_effect,
         "p0": round(p0, 2),
         "p_new": round(p_new, 2),
         "step_fraction": round(fraction, 6),

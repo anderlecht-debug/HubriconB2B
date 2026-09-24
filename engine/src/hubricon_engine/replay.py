@@ -219,7 +219,8 @@ def score(directives: list[dict]) -> dict:
 
 def replay(directives: list[dict], data: dict, margins: list[dict], ads_rows: list[dict],
            claims: list[dict], today: date | None = None,
-           inv_econ: dict | None = None, switchbacks: list[dict] | None = None) -> dict:
+           inv_econ: dict | None = None, switchbacks: list[dict] | None = None,
+           experiments: list[dict] | None = None) -> dict:
     """Re-measure a set of historical directives against current exports, then
     score the promises. Returns the scorecard plus the verdicts that produced it,
     so a disagreement with the live ledger is visible rather than silent.
@@ -231,6 +232,7 @@ def replay(directives: list[dict], data: dict, margins: list[dict], ads_rows: li
     verdicts = measurement.measure(
         [{**d, "measured_at": None} for d in directives],
         data, margins, ads_rows, claims, today=today, inv_econ=inv_econ, switchbacks=switchbacks,
+        experiments=experiments,
     )
     by_id = {d.get("id") or d.get("dedupe_key"): d for d in directives}
     replayed = []

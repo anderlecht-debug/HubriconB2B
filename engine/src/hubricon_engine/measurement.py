@@ -76,6 +76,7 @@ UNBANKABLE_KINDS = {
     "traffic_watch",
     "buybox_watch",
     "settlement_step",        # "we are tracing the lines" is not an action with a proof
+    "cannibalisation_watch",  # a step NOT taken: nothing to measure, the finding is the record
 }
 
 
@@ -523,7 +524,7 @@ def _counterfactual_profit(eps: float, p0: float, p1: float, units_after: float,
 
 def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: float,
                                  unit_cost: float, fee_rate: float, fixed_fee: float,
-                                 factual: float) -> dict | None:
+                                 factual: float, cross_terms: list[dict] | None = None) -> dict | None:
     """The measured delta as a distribution, and the conservative quantile of it
     that gets banked.
 
@@ -564,10 +565,28 @@ def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: fl
     q_cf = units_after * (p0 / p1) ** draws if p1 > 0 else np.full(MEASURE_DRAWS, units_after)
     counterfactual = q_cf * (p0 * (1 - fee_rate) - unit_cost - fixed_fee)
     delta = factual - counterfactual
+    sibling_delta = None
+    cross = ev.get("cross_effect") or {}
+    if cross_terms and cross.get("eps_cross") is not None and p1 > 0:
+        # the siblings, anchored on THEIR after-period units exactly as the SKU
+        # is on its own: what they would have sold at the SKU's old price
+        se_c = float(cross.get("std_err") or 0)
+        dof_c = cross.get("dof")
+        if se_c > 0:
+            shock_c = rng.standard_t(dof_c, size=MEASURE_DRAWS) if dof_c and dof_c >= 1 else rng.standard_normal(MEASURE_DRAWS)
+            eps_c = float(cross["eps_cross"]) + se_c * shock_c
+        else:
+            eps_c = np.full(MEASURE_DRAWS, float(cross["eps_cross"]))
+        sibling_delta = np.zeros(MEASURE_DRAWS)
+        for t in cross_terms:
+            q_cf_j = t["units_after"] * (p0 / p1) ** (eps_c * float(t["weight"]))
+            sibling_delta += (t["units_after"] - q_cf_j) * float(t["contribution"])
+        delta = delta + sibling_delta
     delta = delta[np.isfinite(delta)]
     if delta.size == 0:
         return None
     return {
+        "sibling_p50": round(float(np.quantile(sibling_delta, 0.5)), 2) if sibling_delta is not None else None,
         "banked": float(np.quantile(delta, MEASURE_QUANTILE)),
         "p5": round(float(np.quantile(delta, 0.05)), 2),
         "p50": round(float(np.quantile(delta, 0.50)), 2),
@@ -630,8 +649,22 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     ci = ev.get("ci95") or []
 
     factual = after["revenue"] - after["fees"] - after["cogs"]
+    # the family: each sibling's own after window, at its own realised
+    # contribution, so a cut that stole from Red is charged for Red
+    cross_terms, family_change = [], 0.0
+    for sib in ((ev.get("cross_effect") or {}).get("siblings") or []):
+        rows_j = [m for m in margins if m.get("sku") == sib.get("sku") and m.get("period_start")
+                  and date.fromisoformat(str(m["period_start"])[:10]) > since]
+        after_j = _observed(rows_j)
+        if not after_j or after_j["units"] <= 0 or after_j["cogs"] is None:
+            continue
+        factual_j = after_j["revenue"] - after_j["fees"] - after_j["cogs"]
+        cross_terms.append({"sku": sib["sku"], "units_after": after_j["units"],
+                            "contribution": factual_j / after_j["units"], "weight": sib.get("weight") or 0.0})
+        if sib.get("baseline_profit") is not None:
+            family_change += factual_j / max(1, len(after_j["periods"])) - float(sib["baseline_profit"])
     distribution = _counterfactual_distribution(ev, p0, p1, after["units"], unit_cost,
-                                                fee_rate, fixed_fee, factual)
+                                                fee_rate, fixed_fee, factual, cross_terms or None)
     if distribution is not None:
         delta = distribution["banked"]
         candidates = distribution["epsilon_range"]
@@ -661,9 +694,12 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     # it can be wrong in is the direction that costs us credit. So: the model
     # reading, capped at what actually happened.
     observed_change = _observed_profit_change(ev, after, factual)
+    if observed_change is not None and cross_terms:
+        observed_change += family_change   # the cap is the FAMILY's own change, not the SKU's
     if observed_change is not None and delta > observed_change:
         delta = observed_change
-        reading += f", and capped at the ${observed_change:,.2f} this SKU's own profit actually rose"
+        reading += (f", and capped at the ${observed_change:,.2f} this "
+                    f"{'family' if cross_terms else 'SKU'}'s own profit actually rose")
 
     promised = d.get("expected_impact_usd")
     capped = delta
@@ -698,6 +734,9 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     after_blob = {"p1": round(p1, 2), "units_after": after["units"],
                   "factual_profit": round(factual, 2), "uncapped": round(delta, 2),
                   "elasticities": candidates}
+    if cross_terms:
+        after_blob["siblings"] = [{"sku": t["sku"], "units_after": t["units_after"]} for t in cross_terms]
+        after_blob["sibling_delta_p50"] = distribution.get("sibling_p50") if distribution else None
     if distribution is not None:
         after_blob["measured_distribution"] = {
             "p5": distribution["p5"], "p25": distribution["banked"],
@@ -1042,9 +1081,39 @@ def measure_ad_switchback(d: dict, switchbacks: list[dict] | None, since: date, 
     return _closed(d, f"The test on “{name}” came back {result.get('status')}; nothing is banked.")
 
 
+def measure_price_experiment(d: dict, experiments: list[dict] | None, since: date, today: date) -> dict:
+    """An information purchase: the experimental elasticity on the record, no
+    dollars. The price steps built on it carry their own promises."""
+    ev = d.get("evidence") or {}
+    sku, start, end = ev.get("sku"), ev.get("start_date"), ev.get("end_date")
+    result = next((e for e in (experiments or [])
+                   if e.get("item_id") == sku and str(e.get("start_date")) == str(start)), None)
+    if result is None:
+        if end and today <= date.fromisoformat(str(end)[:10]):
+            return _not_yet(d, f"The randomised test on {sku} runs until {end}.")
+        return _stalled(d, f"No analysis on file for the randomised test on {sku}; run `hubricon pricetest … analyze`.",
+                        since, today)
+    details = result.get("details") or {}
+    if result.get("status") == "ok":
+        sentence = details.get("bias_sentence") or (
+            f"The randomised test puts {sku}'s elasticity at {float(result['elasticity']):.2f} "
+            f"({details.get('ci95', ['?', '?'])[0]} to {details.get('ci95', ['?', '?'])[1]}).")
+        return _closed(d, f"Measured. {sentence} The next fit uses it, unshrunk; nothing is banked on the test.",
+                       evidence_after={"elasticity_exp": result["elasticity"], "std_err": result["std_err"],
+                                       "ci95": details.get("ci95"), "bias_estimate": details.get("bias_estimate"),
+                                       "bias_se": details.get("bias_se"), "compliance": result.get("compliance"),
+                                       "p_permutation": details.get("p_permutation")})
+    if result.get("status") == "not_executed":
+        return _closed(d, f"The price on {sku} sat at the assigned arm on only "
+                          f"{float(result.get('compliance') or 0):.0%} of days, so the test identified nothing.",
+                       evidence_after={"compliance": result.get("compliance")})
+    return _closed(d, f"The randomised test on {sku} came back {result.get('status')}; nothing is banked.",
+                   evidence_after={"status": result.get("status")})
+
+
 def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: list[dict],
             claims: list[dict], today: date | None = None, inv_econ: dict | None = None,
-            switchbacks: list[dict] | None = None) -> list[dict]:
+            switchbacks: list[dict] | None = None, experiments: list[dict] | None = None) -> list[dict]:
     """One verdict per directive that is due a measurement.
 
     `data` is the canonical export dict every model reads (cli._load_data), so
@@ -1094,6 +1163,8 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
             verdicts.append(measure_budget_reallocation(d, ppc_spend, since, today))
         elif kind == "ad_switchback":
             verdicts.append(measure_ad_switchback(d, switchbacks, since, today))
+        elif kind == "price_experiment":
+            verdicts.append(measure_price_experiment(d, experiments, since, today))
         elif kind == "branded_pause":
             verdicts.append(measure_branded_pause(d, search_terms, margins, since, today))
         elif kind in ("low_inventory_fee", "aged_surcharge", "peak_storage_premium"):

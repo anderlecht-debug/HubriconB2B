@@ -214,8 +214,42 @@ instead:
 
    What would make the claim true is a deliberately randomised component of the
    step whose draw is independent of the data, plus a price series fine enough
-   to see it. Neither exists today. Until they do, the bias is not corrected and
-   not correctable, and the mitigations below are all there is.
+   to see it. ~~Neither exists today.~~
+
+   **Corrected 2026-09-23: both now exist**, in `models/price_experiment.py`, and
+   the bias is corrected for any SKU that has run the test. The design: five arms
+   at −5%, −2.5%, 0, +2.5% and +5% of the current price — every one inside the
+   standing cap — in six seven-day blocks. Two blocks are anchors at the ends,
+   because a Thompson allocation alone can put every block on adjacent arms and
+   hand the estimator a series under its own price-variation floor; the other
+   four are allocated by Thompson sampling on the fitted posterior (uniform when
+   there is no fit — the test is what creates the data), each arm floored at 10%.
+   The block ORDER is a permutation drawn from a generator seeded by the client,
+   the SKU and the start date and nothing else, so the arm a day gets is
+   independent of that day's demand shock by construction. Seven-day blocks hold
+   each weekday once. The series is the daily realised price and units from the
+   settlement file (§4d, `models/daily.py`), read after a one-day washout at the
+   start of each block because Transaction View rows post at shipment.
+
+   The analysis regresses log units per counted day on the ASSIGNED log price
+   (HC3, Student-t on the block dof), so slippage in the realised price cannot
+   re-introduce endogeneity; the first stage and the Wald ratio are published
+   beside it. Because HC3 treats blocks as independent and a persistent shock
+   makes them not so, every distinct relabeling of the blocks is refitted and the
+   standard error used is the larger of HC3 and the permutation sd, with the
+   Fisher p-value for ε = 0 on the record. The result replaces the SKU's
+   observational row in the fit and is NOT shrunk toward the catalogue pool —
+   the pool mean is the observational one and carries the bias — while the
+   observational estimate and the measured bias ε_obs − ε_exp ride in `details`
+   with the sentence a seller reads.
+
+   Measured on the reactive generator above (phi = 0.4, rho = 0.6, twelve seeds
+   × 40 SKUs): the observational raw fit reads more than +0.3 too flat; the
+   randomised test on the same SKUs lands within ±0.1 of the truth
+   (`tests/test_price_experiment.py`). What the test cannot separate: Buy Box
+   suppression at the high arm, which is part of the response the seller faces;
+   and a SKU selling a unit a week has too few units per block for any six-block
+   design, which the fit's own floor and interval report rather than hide.
 
 
 **The other limits.** Constant elasticity is a local approximation; it is used
@@ -352,6 +386,44 @@ Cost uncertainty is the gap: `cost_cv` exists and defaults to 0 because a COGS
 sheet is a number the client states rather than a quantity the engine measures.
 Where a client's sheet changes between cycles the dispersion is observable and the
 parameter carries it.
+
+### 3b. Cross-price effects inside a variant family
+
+**What it computes.** A colour or size variant shares the family's demand. Where a
+family exists — Amazon's `parent_asin` over child ASINs, or a Shopify product handle
+over its variants — one own and one cross elasticity per family:
+
+```
+log q_it = α_i + ε_own·log p_it + ε_cross·log p̃_{−i,t} + e_it
+```
+
+with p̃ the revenue-weighted mean of the siblings' log prices (weights fixed over
+the window). Child intercepts absorbed by a within transformation; OLS on the two
+demeaned regressors; HC3; Student-t on N − n_children − 2. One cross term per family
+because thirty-two observations cannot support a matrix of them. Families are shrunk
+toward the catalogue's cross-elasticity by the empirical-Bayes rule of §2 once three
+or more fit; the sign is the data's (substitutes positive). Refusals: fewer than two
+children or five shared periods (`insufficient_data`), a sibling index that barely
+moved (`insufficient_price_variation`), and no mapping at all (`no_variant_mapping`,
+the whole model).
+
+**What it does to a step.** Every candidate price in §3 is valued on own PLUS
+sibling profit: sibling j's units move by (p_new/p_0)^(ε_cross·w_ij) − 1, w_ij being
+this SKU's share of j's sibling index, ε_cross drawn from its own posterior on the
+same common random numbers. The step is sized on the total. When the SKU alone
+would have moved and the family together will not, no step is issued and the
+finding is drafted as `cannibalisation_watch`, naming the sibling. A SKU with no
+family reproduces every number it produced before the term existed.
+
+**Measurement.** Each sibling is anchored on its own after window exactly as the
+SKU is: what it would have sold at the SKU's old price, at its own realised
+contribution, over the same draws. The observed-change cap becomes the FAMILY's
+change, not the SKU's, so a cut that stole from Red is charged for Red.
+
+**What it cannot tell you.** One cross term for the whole family averages Red
+stealing from Blue with Red ignoring Green. Substitution from outside the family is
+in no export. Both slopes carry the observational caveat of §2 until a randomised
+test has run.
 
 ---
 
@@ -738,20 +810,25 @@ than 1.00, and labels anything below it OVER-PROMISING.
 
 If you read one section, read this one.
 
-1. **Whether a price change caused what followed.** The elasticity is fitted from
-   prices the seller chose, in response to demand. The bias is measured (§2), it
-   runs toward "raise the price", and it is not corrected. The engine's own steps
+1. **Whether a price change caused what followed — until a randomised test has
+   run on the SKU.** The elasticity is fitted from prices the seller chose, in
+   response to demand. The bias is measured (§2), it runs toward "raise the
+   price", and on an observational fit it is not corrected. The engine's own steps
    are NOT an instrument for it — see §2, corrected 2026-09-12 — because the step
    is chosen by the fit and because a fortnight-long step is invisible to a
-   monthly estimator. Making them one is a design question, not a property the
-   engine already has.
+   monthly estimator. Since 2026-09-23 the randomised six-block test
+   (`models/price_experiment.py`) IS one, for the SKUs that have run it; every
+   other SKU's fit still carries the bias, and the report says which is which.
 2. **A price optimum, for most SKUs, on a first upload.** With seven periods and
    20% demand noise, the elasticity cannot be separated from −1 for roughly five
    SKUs in six, and the engine declines to name a destination for them. It still
    gives a direction and a step. See the closing section of `MATH_SCORECARD.md`
    for the table of how much data it takes.
-3. **Cross-price effects.** A cut that cannibalises a neighbouring SKU is booked
-   as a win on one and an unexplained loss on the other.
+3. **Cross-price effects outside a variant family.** Inside one — a parent ASIN or
+   a product handle — the family's cross-elasticity is estimated (§3b) and every
+   step is valued on the family; a cut the family absorbs is refused and named.
+   Between families, and against competitors, a cut that cannibalises is still
+   booked as a win on one listing and an unexplained loss on another.
 4. **Competitor behaviour.** No competitor price, assortment or stock signal
    reaches the engine. The Buy Box share series is the only shadow of it.
 5. **The value of an avoided stockout.** Unobservable counterfactual; no dollars
@@ -788,9 +865,11 @@ the engine does not currently make one: its steps are chosen by the fit, and a
 fortnight-long step blends away below the estimator's own price-variation floor.
 Two things would have to change — a deliberately randomised component of the step
 whose draw is independent of the data, and a price series fine enough to see a
-14-day move. Both are cheap; neither is built; and the claim that the engine
-already compounds its own identification was wrong and has been withdrawn from
-this document, from MATH_SCORECARD.md and from the client report.
+14-day move. Both are cheap; as of 2026-09-23 both are built (§2, corrected); and
+the claim that the engine already compounded its own identification through its
+ordinary steps was wrong and has been withdrawn from this document, from
+MATH_SCORECARD.md and from the client report. The correction is per SKU and only
+after a test has run: nothing here retires the bias on a fit that has not.
 
 There is a second route that needs no experiment on anyone's prices, because the
 seller's own repricing habit is itself measurable from their export: if the
