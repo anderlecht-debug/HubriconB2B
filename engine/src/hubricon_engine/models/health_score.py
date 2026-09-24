@@ -62,7 +62,7 @@ def compute(margin_rows: list[dict], cash: dict | None = None, risk: dict | None
             inventory_rows: list[dict] | None = None, inv_econ: dict | None = None,
             ads_rows: list[dict] | None = None, forecast_rows: list[dict] | None = None,
             recovery: dict | None = None, data_present: dict | None = None,
-            channel: str = "amazon") -> dict:
+            channel: str = "amazon", data_quality: dict | None = None) -> dict:
     subs: list[dict] = []
     excluded: list[str] = []
     latest, rows = _latest(margin_rows)
@@ -150,12 +150,22 @@ def compute(margin_rows: list[dict], cash: dict | None = None, risk: dict | None
     score = 60 * core + 40 * bleed_cov if claims_possible else 100 * core
     if mase is not None and mase > 1:
         score -= 20
+    # exports that disagree with each other, or months that are missing, cost
+    # signal the same way an unforecastable catalogue does (2026-09-23)
+    dq_note = ""
+    if data_quality and data_quality.get("status") == "flags":
+        failed = int(data_quality.get("n_failed") or 0)
+        missing = sum(len(v) for v in (data_quality.get("gaps") or {}).values())
+        penalty = min(30.0, 10.0 * failed + 5.0 * missing)
+        score -= penalty
+        dq_note = f"; {failed} source pair(s) disagree and {missing} month(s) are missing (−{penalty:.0f})"
     open_ev = float(((recovery or {}).get("summary") or {}).get("live_ev") or 0) if claims_possible else 0.0
     coverage = (f"{core:.0%} of core exports and {bleed_cov:.0%} of recovery exports on file"
                 if claims_possible else f"{core:.0%} of core exports on file")
     subs.append({"key": "signal", "score": max(0.0, score), "dollars_at_stake": open_ev,
                  "note": (coverage
                           + (f"; forecast MASE {mase:.2f} vs naive 1.00" if mase is not None else "")
+                          + dq_note
                           + (f"; ${open_ev:,.0f} of expected reimbursements unclaimed" if open_ev else ""))})
 
     total_w = sum(WEIGHTS[s["key"]] for s in subs)

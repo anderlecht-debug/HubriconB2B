@@ -381,7 +381,7 @@ class Pass:
                     health=outputs.get("health"), value=outputs.get("value"), recovery=outputs.get("recovery"),
                     forecast_rows=(outputs.get("forecast") or {}).get("rows"), risk=outputs.get("risk"),
                     anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-                    inv_econ=outputs.get("invecon"),
+                    inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
                 )
                 result = narrate.narrate(facts)
                 if result.get("text"):

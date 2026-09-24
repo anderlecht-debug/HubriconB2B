@@ -772,6 +772,23 @@ spend; silencing the largest SKU raises ruin and deepens the trough; the late su
 hits the SKU whose cover runs out inside the horizon; a held payout deepens the trough;
 the table is ranked. `tests/test_stress.py`, 2 tests.
 
+### Iteration 32 — garbage in
+
+**Objection.** Every model read the exports as truth. Two exports that disagree, a month
+nobody uploaded, a report nobody refreshed — none is a modelling error, and every one
+lands in a directive if nothing catches it.
+
+**Change.** `models/data_quality.py`, first in every run: four reconciliation pairs at a
+5% tolerance, coverage and staleness per report; flags on the payloads that read a
+flagged source; a penalty in the health score's signal sub-score; the largest gap in
+the memo. Nothing is corrected.
+
+**Measured.** A 20% July disagreement between SKU Economics and the settlement file is
+flagged and named while June passes; a missing May is listed as missing; a stale ad
+file is flagged; a Shopify run compares nothing it cannot; two failed pairs and one
+missing month cost the signal sub-score twenty-five points. `tests/test_data_quality.py`,
+4 tests.
+
 ---
 
 ## Outcome Alignment

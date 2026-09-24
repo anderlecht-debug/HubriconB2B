@@ -63,8 +63,8 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, drift, elasticity,
-    forecast, health_score, stress,
+    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, data_quality, drift,
+    elasticity, forecast, health_score, stress,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
     seasonality,
 )
@@ -92,7 +92,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
+ALL_MODELS = ("dataq", "margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
               "incrementality", "clv", "ads", "adalloc", "recovery", "risk", "invecon", "markdown", "replenish",
               "assortment", "cash", "cashorders", "stress", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
@@ -355,6 +355,12 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         avg_margin = None
         margin_rows = inventory_rows = elast_rows = ads_rows = forecast_rows = anomaly_rows = None
         rec = inv_econ = risk_out = cash = health = claims = None
+        dq = None
+        if "dataq" in wanted:
+            # before any model: do the exports agree with each other, and are they all there
+            dq = data_quality.run(data, today)
+            _save_output(db, run_id, client["id"], "data_quality", dq)
+            print(f"  data quality: {dq['status']} — {dq['basis']}")
 
         if "margin" in wanted:
             margin_rows = margin.run(data)
@@ -436,6 +442,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         incr = None
         if "incrementality" in wanted:
             incr = incrementality.run(data, _load_switchbacks(db, client["id"]))
+            incr["data_quality_flags"] = data_quality.flags_for(dq, "ppc_spend", "asin_traffic", "sku_economics",
+                                                                 "settlement_transactions")
             _save_output(db, run_id, client["id"], "incrementality", incr)
             obs = incr["observational"]
             print("  incrementality: "
@@ -526,6 +534,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                           + (f" ({s_['n_no_elasticity']} without an elasticity, two-way only)" if s_["n_no_elasticity"] else ""))
                 else:
                     print(f"  markdown: {md['status']}")
+            inv_econ["data_quality_flags"] = data_quality.flags_for(dq, "sku_economics", "inventory_levels", "inventory_health")
             _save_output(db, run_id, client["id"], "invecon", inv_econ)
             if "replenish" in wanted:
                 rep = replenishment.run(inv_econ, data, rng, today, channel)
@@ -562,6 +571,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                     on_conflict="run_id",
                 )
                 # the cone with its ruin ladder, for the drafting pass and the stress scenarios
+                cash["details"]["data_quality_flags"] = data_quality.flags_for(dq, "sku_economics", "inventory_levels")
                 _save_output(db, run_id, client["id"], "cash", cash)
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
@@ -586,7 +596,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "health" in wanted:
             data_present = {t: bool(data[t]) for t in DATA_TABLES}
             health = health_score.compute(base_margins, cash, risk_out, base_inventory, inv_econ,
-                                          ads_rows, forecast_rows, rec, data_present, channel=channel)
+                                          ads_rows, forecast_rows, rec, data_present, channel=channel,
+                                          data_quality=dq)
             _save_output(db, run_id, client["id"], "health", health)
             if health["status"] == "ok":
                 top = health["top_drivers"][0] if health["top_drivers"] else None

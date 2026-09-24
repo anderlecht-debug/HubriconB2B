@@ -55,7 +55,8 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
                 alerts: list[dict], ledger_measured: float, ledger_count: int, issue_number: int,
                 health: dict | None = None, value: dict | None = None, recovery: dict | None = None,
                 forecast_rows: list[dict] | None = None, risk: dict | None = None,
-                anomaly_summary: dict | None = None, inv_econ: dict | None = None) -> dict:
+                anomaly_summary: dict | None = None, inv_econ: dict | None = None,
+                data_quality: dict | None = None) -> dict:
     """key -> {"value": formatted string, "label": what it is}. Only formatted
     strings leave this function; the model never sees a raw float."""
     facts = {
@@ -151,6 +152,20 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
         facts["inventory_bleed_month"] = {"value": _money(b["total_month"]), "label": "monthly inventory fee bleed (aged, low-inventory, peak storage)"}
         if inv_econ["summary"].get("liquidation_value"):
             facts["liquidation_value"] = {"value": _money(inv_econ["summary"]["liquidation_value"]), "label": "cash available now from liquidating excess"}
+    if data_quality and data_quality.get("status") == "flags":
+        worst = data_quality.get("worst_gap")
+        if worst:
+            facts["worst_data_gap"] = {
+                "value": (f"{worst['a'].replace('_', ' ')} and {worst['b'].replace('_', ' ')} disagree on "
+                          f"{worst['quantity'].replace('_', ' ')} for {worst['period']} by "
+                          f"{float(worst['relative_gap']):.0%}"),
+                "label": "the largest disagreement between two of the client's own exports, to fix at the upload"}
+        gaps = data_quality.get("gaps") or {}
+        if gaps:
+            first = next(iter(gaps))
+            facts["missing_data_months"] = {
+                "value": f"{first.replace('_', ' ')} is missing {', '.join(gaps[first][:3])}",
+                "label": "months absent from a report inside its own span (missing, not zero)"}
     return facts
 
 

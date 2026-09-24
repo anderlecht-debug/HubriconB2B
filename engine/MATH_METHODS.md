@@ -1048,6 +1048,20 @@ refits on the new regime; with fewer than five points since, the campaign is
 `regime_break` — no break-even, no trim, held out of the reallocation — until enough
 days have run. The anomaly scan therefore runs before the ad fit.
 
+### 8b. Garbage in: does the data agree with itself
+
+Before any model (`models/data_quality.py`): per period, pairs of exports that
+measure the same thing two ways — SKU Economics sales against the settlement file's
+orders and against the Business Report, units sold against inventory-ledger
+shipments, daily campaign spend against search-term spend — with the relative gap
+flagged above 5%; per report, the calendar months missing inside its own span and the
+days since its latest period, stale past 45. Nothing is corrected: the flags ride on
+the payloads that read a flagged source, the health score's signal sub-score subtracts
+for disagreement and gaps as it does for an unforecastable catalogue, and the memo
+names the largest disagreement so the client can fix the upload. A missing month is
+reported as missing, never as zero. It cannot say which of two disagreeing exports is
+right.
+
 ### What the change detection cannot tell you
 
 - **The null assumes independent Gaussian noise with no trend and no
