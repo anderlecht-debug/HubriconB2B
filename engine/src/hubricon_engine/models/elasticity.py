@@ -229,8 +229,8 @@ def eb_shrink(estimates, ses, pool_ses=None, covariates=None) -> dict:
     uniform prior on a grid from 0 to three times the spread of the
     estimates, and its posterior is the restricted marginal likelihood of the
     estimates with β integrated under a flat prior (Gelman et al., BDA §5.4,
-    with covariates as in Fay and Herriot). Every published figure is the
-    mixture over that posterior.
+    with covariates as in Fay and Herriot); τ² itself has a flat prior. Every
+    published figure is the mixture over that posterior.
 
     Corrected 2026-09-24. The rule before this plugged in the
     DerSimonian–Laird point estimate of τ², which comes out at zero on an
@@ -285,7 +285,14 @@ def eb_shrink(estimates, ses, pool_ses=None, covariates=None) -> dict:
         prior_mean[g] = X @ beta
         prior_var[g] = np.einsum("ij,jk,ik->i", X, v_beta, X)
         betas[g] = beta
-    post = np.exp(loglik - loglik.max())
+    # a flat prior on τ², so p(τ) ∝ τ on this grid. Where the pool carries
+    # little information about its own spread (five noisy periods, 600 SKUs
+    # whose sampling variance is ten times the spread) the posterior of τ is
+    # the prior's, and flat-on-τ leaned small: extreme SKUs were shrunk past
+    # the truth and their profit bands held it for 82%. Flat on τ² errs wide,
+    # the safe side: 91% there, and the worst of twelve catalogues' elasticity
+    # coverage 0.95 instead of 0.85 (2026-09-24).
+    post = np.exp(loglik - loglik.max()) * np.maximum(taus, 1e-12)
     post /= post.sum()
     t2 = taus[:, None] ** 2
     B = v[None, :] / (v[None, :] + t2)
@@ -359,6 +366,97 @@ def markup_implied_elasticity(data: dict) -> dict[str, float]:
     return out
 
 
+def prices_optimal_probability(estimates, pool_var, implied) -> dict | None:
+    """Posterior probability that the catalogue's prices are ALREADY at their
+    optimum: model M0, ε_i equal to the markup-implied elasticity (no free
+    parameter), against M1, the pooled regression ε_i ~ N(a + b·implied_i, τ²)
+    (three), each SKU's fitted ε carrying its own sampling variance. Equal
+    prior odds; the Bayes factor by BIC. None below MARKUP_MIN_ITEMS.
+
+    Added 2026-09-24. On a catalogue priced exactly at its optimum every
+    SKU's elasticity error is the one shared error of the pool, a first-order
+    edge appears on paper wherever that error points, and the true loss is
+    second-order — the model-risk bench's already-optimal world drafted 78
+    small steps that all lost against 34% quoted. What tells that world apart
+    is not any one SKU but the whole catalogue lying on the line its own
+    markups imply; this is the test for it."""
+    y = np.asarray(estimates, dtype=float)
+    v = np.asarray(pool_var, dtype=float)
+    x = np.asarray(implied, dtype=float)
+    n = len(y)
+    if n < MARKUP_MIN_ITEMS:
+        return None
+    ll0 = float(-0.5 * np.sum(np.log(2 * np.pi * v) + (y - x) ** 2 / v))
+    X = np.column_stack([np.ones(n), x])
+    spread = float(np.std(y))
+    best = -np.inf
+    for tau in np.linspace(0.0, max(3.0 * spread, 1e-9), 160):
+        w = 1.0 / (v + tau**2)
+        try:
+            beta = np.linalg.solve(X.T @ (X * w[:, None]), X.T @ (w * y))
+        except np.linalg.LinAlgError:
+            continue
+        r = y - X @ beta
+        best = max(best, float(-0.5 * np.sum(np.log(2 * np.pi / w) + w * r**2)))
+    delta_bic = (-2.0 * ll0) - (-2.0 * best + 3.0 * np.log(n))
+    w0 = float(1.0 / (1.0 + np.exp(np.clip(delta_bic / 2.0, -50, 50))))
+    return {"p_prices_optimal": w0, "delta_bic": float(delta_bic), "n": n}
+
+
+MODERATE_MIN_ITEMS = 10
+
+
+def _trigamma_inverse(y: float) -> float:
+    """x with ψ'(x) = y, by Newton on the reciprocal (Smyth 2004, appendix)."""
+    from scipy.special import polygamma
+    if y > 1e7:
+        return 1.0 / np.sqrt(y)
+    if y < 1e-6:
+        return 1.0 / y
+    x = 0.5 + 1.0 / y
+    for _ in range(50):
+        tri = float(polygamma(1, x))
+        dif = tri * (1.0 - tri / y) / float(polygamma(2, x))
+        x += dif
+        if -dif / x < 1e-8:
+            break
+    return x
+
+
+def moderate_variances(s2, dof) -> dict | None:
+    """Empirical-Bayes moderation of per-item residual variances (Smyth 2004,
+    the "moderated t" of limma): each s_i² on d_i degrees of freedom is
+    pulled toward a pooled s0² carried by d0 prior degrees of freedom,
+    s̃_i² = (d0·s0² + d_i·s_i²)/(d0 + d_i), with (d0, s0²) fitted to the
+    spread of log s_i² beyond what sampling alone gives it. Returns the
+    moderated variances and d0, or None with too few items.
+
+    Added 2026-09-24. On seven monthly points a SKU's own residual variance
+    is a noisy number, and a SKU whose variance came out small by luck was
+    treated as precisely fitted: the model-risk bench's thin world published
+    elasticities of −10.9 and −5.8 with standard errors near one against
+    truths of −3.1 and −2.7, and drafted full steps on them."""
+    from scipy.special import digamma, polygamma
+    s2 = np.asarray(s2, dtype=float)
+    d = np.asarray(dof, dtype=float)
+    ok = np.isfinite(s2) & (s2 > 0) & (d > 0)
+    if ok.sum() < MODERATE_MIN_ITEMS:
+        return None
+    z = np.log(s2[ok])
+    e = z - digamma(d[ok] / 2.0) + np.log(d[ok] / 2.0)
+    e_bar = float(e.mean())
+    n = int(ok.sum())
+    excess = float(((e - e_bar) ** 2).sum() / (n - 1) - np.mean(polygamma(1, d[ok] / 2.0)))
+    if excess > 0:
+        d0 = 2.0 * _trigamma_inverse(excess)
+        s0 = float(np.exp(e_bar + digamma(d0 / 2.0) - np.log(d0 / 2.0)))
+    else:
+        d0 = np.inf
+        s0 = float(np.exp(e_bar))
+    moderated = np.where(ok, s0 if not np.isfinite(d0) else (d0 * s0 + d * s2) / (d0 + d), s2)
+    return {"moderated": moderated, "d0": d0, "s0": s0}
+
+
 def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) -> None:
     """Empirical-Bayes shrinkage of each fitted ε toward its pool, in place.
 
@@ -376,6 +474,44 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
             pools.setdefault(group_of(r), []).append(r)
 
     for key, members in pools.items():
+        # the residual variances moderated across the pool first: every
+        # standard error and critical value below rides on the moderated one
+        mod = moderate_variances([float((r["details"].get("residual_sd_log") or 0.0)) ** 2 for r in members],
+                                 [float(r["details"].get("dof") or 0) for r in members])
+        if mod is not None:
+            for r, s2m in zip(members, mod["moderated"]):
+                det = r["details"]
+                s2 = float(det.get("residual_sd_log") or 0.0) ** 2
+                # a reaction-corrected fit's error is not its static residual's:
+                # the biased slope absorbed part of every shock, so moderating
+                # that residual re-weights the pool on the wrong number
+                if s2 <= 0 or det.get("source") == "experiment" or "epsilon_uncorrected" in det:
+                    continue
+                ratio = float(np.sqrt(s2m / s2))
+                dof_m = float(det.get("dof") or 0) + (mod["d0"] if np.isfinite(mod["d0"]) else 1e6)
+                # the critical value stays on the item's OWN degrees of freedom:
+                # the moderated variance fixes a lucky-small residual, but the
+                # interval must also carry what no variance model sees (a
+                # reacting seller's SKU-by-SKU bias), and the moderated dof
+                # took reacting catalogues' coverage from 0.93 to 0.84
+                t_crit = float(det.get("t_critical") or stats.t.ppf(0.5 + CI_LEVEL / 2, max(dof_m, 1)))
+                det["std_err_unmoderated"] = r["std_err"]
+                # the demand noise a promise draws is this residual too: a
+                # lucky-small one made a thin SKU's profit band too narrow
+                det["residual_sd_log_raw"] = det.get("residual_sd_log")
+                det["residual_sd_log"] = num(float(np.sqrt(s2m)), 6)
+                det["variance_moderation"] = {"ratio": num(ratio, 4), "prior_dof": num(mod["d0"], 3)
+                                              if np.isfinite(mod["d0"]) else "inf", "pooled_sd_log": num(np.sqrt(mod["s0"]), 6)}
+                r["std_err"] = num(float(r["std_err"] or 0.0) * ratio, 4)
+                if det.get("std_err_classical") is not None:
+                    det["std_err_classical_raw"] = det["std_err_classical"]
+                    det["std_err_classical"] = num(float(det["std_err_classical"]) * ratio, 4)
+                if det.get("std_err_uncorrected") is not None:
+                    det["std_err_uncorrected"] = num(float(det["std_err_uncorrected"]) * ratio, 4)
+                det["t_critical"] = num(t_crit, 4)
+                det["dof_moderated"] = num(dof_m, 3)
+                e = float(r["elasticity"])
+                det["ci95"] = [num(e - t_crit * float(r["std_err"]), 4), num(e + t_crit * float(r["std_err"]), 4)]
         estimates = np.array([float(r["elasticity"]) for r in members], dtype=float)
         ses = np.array([float(r["std_err"] or 0.0) for r in members], dtype=float)
         detail = {"pool": key[-1], "pool_n": len(members)}
@@ -402,6 +538,10 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
         eb = eb_shrink(estimates, ses, pool_ses=classical, covariates=covariates)
         tau2, mu = eb["tau2"], eb["mu"]
         markup_slope = float(eb["beta"][-1]) if covariates is not None else None
+        optimal = None
+        if covariates is not None:
+            optimal = prices_optimal_probability(estimates[has], np.maximum(classical[has], 1e-6) ** 2,
+                                                 [markup[r["item_id"]] for r, h in zip(members, has) if h])
 
         for r, est, weight, shrunk, post_se, pm, pvar in zip(members, estimates, eb["weights"], eb["shrunk"],
                                                             eb["post_se"], eb["prior_mean"], eb["prior_var"]):
@@ -428,6 +568,8 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
                 "prior_epsilon": num(float(pm), 4),
                 "prior_epsilon_se": num(float(np.sqrt(max(pvar, 0.0))), 4),
                 "markup_slope": num(markup_slope, 4) if markup_slope is not None else None,
+                "p_prices_optimal": (num(optimal["p_prices_optimal"], 4)
+                                     if optimal and markup and r["item_id"] in markup else None),
                 "markup_implied_epsilon": num(markup.get(r["item_id"]), 4) if markup and r["item_id"] in markup else None,
                 "tau2": num(tau2, 6),
                 "tau_ci90": [num(x, 4) for x in eb["tau_ci90"]],
@@ -443,6 +585,9 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
             # other item in the pool: the pool mean's, in the share it borrowed
             rb = float(r["details"].get("reaction_bias_se") or 0.0)
             r["details"]["common_se"] = num(float(np.sqrt(((1.0 - weight) * np.sqrt(max(pvar, 0.0))) ** 2 + rb**2)), 4)
+            hetero = float(r["details"].get("reaction_bias_heterogeneity") or 0.0)
+            if hetero > 0:
+                post_se = float(np.sqrt(post_se**2 + hetero**2))
             r["elasticity"] = num(shrunk, 4)
             r["std_err"] = num(post_se, 4)
             r["details"]["ci95"] = [num(shrunk - t_crit * post_se, 4),
@@ -646,12 +791,15 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
     applied, reason = False, None
     fitted = [r for r in rows if r.get("level") == "sku" and r.get("status") == "ok"
               and (r.get("details") or {}).get("source") != "experiment" and r.get("elasticity") is not None]
-    series = []
+    series, price_var = [], {}
     for r in fitted:
         pts = (points_by_sku or {}).get(r["item_id"]) or (r.get("details") or {}).get("points") or []
         lp, lq = _series_of(pts)
+        if len(lp) >= 3:
+            price_var[r["item_id"]] = float(np.var(lp - lp.mean()))
         if len(lp) >= DYNAMIC_MIN_PERIODS:
             series.append(_sku_moments(lp, lq))
+    price_var_mean = float(np.mean(list(price_var.values()))) if price_var else 0.0
     if diag.get("status") != "ok":
         reason = "too few (price, prior residual) pairs to estimate the habit"
     elif not diag["reactive"]:
@@ -694,10 +842,22 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
         det["std_err_uncorrected"] = r["std_err"]
         det["ci95_uncorrected"] = det.get("ci95")
         det["reaction_bias_se"] = num(sd_b, 4)
+        # the catalogue's one correction is right for a SKU of average price
+        # variation; a SKU's own static bias scales roughly with the inverse
+        # of its own price variance, so the part of its bias the constant
+        # misses is carried as uncertainty (not as a correction: the SKU's
+        # own variance is too noisy on twelve points to correct by)
+        v_i = price_var.get(r["item_id"])
+        hetero = bias * (price_var_mean / v_i - 1.0) if v_i and price_var_mean else 0.0
+        det["reaction_bias_heterogeneity"] = num(abs(hetero), 4)
+        # the shared error enters before the pool; the SKU's own heterogeneity
+        # is added to its published interval after it (_shrink), so it widens
+        # what the SKU is told without re-weighting what the pool learns
+        extra = sd_b**2
         r["elasticity"] = num(float(r["elasticity"]) - bias, 4)
-        r["std_err"] = num(float(np.sqrt(float(r["std_err"] or 0.0) ** 2 + sd_b**2)), 4)
+        r["std_err"] = num(float(np.sqrt(float(r["std_err"] or 0.0) ** 2 + extra)), 4)
         if det.get("std_err_classical") is not None:
-            det["std_err_classical"] = num(float(np.sqrt(float(det["std_err_classical"]) ** 2 + sd_b**2)), 4)
+            det["std_err_classical"] = num(float(np.sqrt(float(det["std_err_classical"]) ** 2 + extra)), 4)
         det["ci95"] = [num(float(r["elasticity"]) - t_crit * float(r["std_err"]), 4),
                        num(float(r["elasticity"]) + t_crit * float(r["std_err"]), 4)]
     return diag

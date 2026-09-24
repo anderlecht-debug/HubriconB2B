@@ -723,6 +723,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
     results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
     search_terms = dbmod.fetch_all(db, "ppc_search_terms", client["id"], filters={"channel": channel})
+    ppc_spend = dbmod.fetch_all(db, "ppc_spend", client["id"], filters={"channel": channel})
     outputs = _load_outputs(db, run_id)
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"],
@@ -735,7 +736,8 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
                               replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
                               assortment=outputs.get("assortment"),
-                              risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"))
+                              risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"),
+                              ppc_spend_rows=ppc_spend)
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}

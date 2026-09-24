@@ -112,7 +112,7 @@ def _series(data: dict) -> dict[str, dict[str, tuple[float, float, float]]]:
     return out
 
 
-def fit_family(family_id: str, members: dict[str, dict]) -> dict:
+def fit_family(family_id: str, members: dict[str, dict], weighting: str = "revenue") -> dict:
     children = sorted(members)
     shared = sorted(set.intersection(*(set(v) for v in members.values()))) if members else []
     base = {"family": family_id, "children": children, "n_children": len(children),
@@ -131,7 +131,10 @@ def fit_family(family_id: str, members: dict[str, dict]) -> dict:
     for i in children:
         others = [j for j in children if j != i]
         wsum = sum(revenue[j] for j in others)
-        w = {j: (revenue[j] / wsum if wsum > 0 else 1.0 / len(others)) for j in others}
+        if weighting == "equal":
+            w = {j: 1.0 / len(others) for j in others}
+        else:
+            w = {j: (revenue[j] / wsum if wsum > 0 else 1.0 / len(others)) for j in others}
         weights[i] = w
         sib = sum(w[j] * logp[j] for j in others)
         rows_y.append(logq[i] - logq[i].mean())
@@ -169,6 +172,7 @@ def fit_family(family_id: str, members: dict[str, dict]) -> dict:
             "se_cross_classical": num(se_cross_classical, 4),
             "ci95_cross": [num(beta[1] - t_crit * se_cross, 4), num(beta[1] + t_crit * se_cross, 4)],
             "n_obs": int(n), "dof": int(dof), "t_critical": num(t_crit, 4),
+            "ssr": float(resid @ resid), "index_weighting": weighting,
             "weights": {i: {j: num(w, 4) for j, w in wi.items()} for i, wi in weights.items()},
             "details": {**base["details"], "se_estimator": se_est,
                         "basis": (f"{len(children)} children × {len(shared)} shared periods, within-transformed; "
@@ -185,7 +189,21 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
         return {"status": "no_variant_mapping", "families": [], "by_sku": {},
                 "basis": "no parent ASIN or product handle links any two SKUs; per-SKU pricing runs unchanged"}
     series = _series(data)
-    fits = [fit_family(f, {c: series.get(c, {}) for c in members}) for f, members in sorted(fams.items())]
+    # Which siblings' prices a SKU's demand answers to is not known in
+    # advance: revenue-weighted (a big sibling draws more) or equal. Both are
+    # fitted and the catalogue's total residual sum of squares chooses — the
+    # same data, the same number of coefficients. Added 2026-09-24: on the
+    # model-risk bench's catalogue, whose demand answers an equal-weighted
+    # index, the revenue-weighted proxy recovered 0.69–0.87 of the true family
+    # effect (errors in the regressor attenuate its coefficient) and every
+    # step's sibling term was a third too small.
+    candidates = {}
+    for weighting in ("revenue", "equal"):
+        fits_w = [fit_family(f, {c: series.get(c, {}) for c in members}, weighting) for f, members in sorted(fams.items())]
+        ok_w = [f for f in fits_w if f["status"] == "ok"]
+        candidates[weighting] = (sum(f["ssr"] for f in ok_w), len(ok_w), fits_w)
+    chosen = min(candidates, key=lambda k: (-candidates[k][1], candidates[k][0], k != "revenue"))
+    fits = candidates[chosen][2]
     ok = [f for f in fits if f["status"] == "ok"]
     prior = None
     if len(ok) >= MIN_POOL_FAMILIES:
@@ -232,7 +250,8 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
                 for j in others:
                     peers = [x for x in members if x != j]
                     tot = sum(revenue.get(x, 0.0) for x in peers)
-                    sibs.append({"sku": j, "weight": num(revenue.get(i, 0.0) / tot if tot > 0 else 1.0 / len(peers), 4)})
+                    wgt = (1.0 / len(peers) if chosen == "equal" or tot <= 0 else revenue.get(i, 0.0) / tot)
+                    sibs.append({"sku": j, "weight": num(wgt, 4)})
                 by_sku[i] = {"family": fam, "eps_cross": prior["eps_cross"], "se_cross": prior["se_cross"],
                              "ci95_cross": [num(prior["eps_cross"] - 1.96 * prior["se_cross"], 4),
                                             num(prior["eps_cross"] + 1.96 * prior["se_cross"], 4)],
@@ -240,6 +259,8 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
                              "siblings": sibs}
                 n_prior += 1
     return {"status": "ok" if ok else "insufficient_data", "families": fits, "by_sku": by_sku,
+            "index_weighting": chosen,
+            "index_ssr": {k: num(v[0], 6) for k, v in candidates.items()},
             "n_families": len(fams), "n_fitted": len(ok), "n_identified": sum(1 for f in ok if f["identified"]),
             "n_on_prior": n_prior, "prior": prior, "min_t": MIN_CROSS_T,
             "seasonal_adjustment": season_note,

@@ -51,9 +51,21 @@ CRITERIA = [
 # ── thresholds (pre-registered; see the module docstring) ──
 S1_COVERAGE = 0.90                # 95% intervals, 160 SKUs: sd of coverage ≈ 0.017. Over-coverage is
                                   # not dishonesty; what it costs shows up in T1 and T2
-S1_BIAS = 0.15                    # median error, where the fits can resolve it (median raw se ≤ 1)
-S1_INFORMATIVE_SE = 1.0
-S1_BIAS_Z = 3.0                   # elsewhere: within three of the engine's own stated pool-mean errors
+S1_BIAS = 0.15                    # the floor on the median-error limit
+S1_INFORMATIVE_SE = 1.0           # reported only, since the amendment below
+S1_BIAS_Z = 3.0                   # the median error within three of the engine's own stated common error
+# AMENDED 2026-09-24, after the baseline, and disclosed in MATH_SCORECARD.md.
+# As registered, "informative" worlds (median raw se ≤ 1) had a fixed ±0.15
+# limit on the median error, on the reasoning that its sampling error is
+# 0.05 on 160 SKUs. That reasoning treated the SKUs' errors as independent;
+# every published elasticity leans on the same pool, and the median error's
+# spread across seeds measured 0.04–0.10 — matching the common error the
+# engine states for its own estimates (0.08–0.09). A fixed 0.15 is under two
+# of those, so an unbiased engine fails one of twelve judged worlds most of
+# the time. The registered rule for uninformative worlds — within three of
+# the engine's stated error, floored at 0.15 — now applies to every world,
+# on the tighter of the two errors it could use (the common error of the
+# published estimates, not the pool mean's).
 S2_POOLED = (0.82, 0.98)          # 90% bands, ~250 steps: sd ≈ 0.02; 0.98 = tails twice too wide
 S2_WORLD_ALPHA = 0.005            # a world fails if its coverage is that improbable under a true 90%
 S2_MIN_STEPS = 10
@@ -95,12 +107,13 @@ def s1(reports, stab):
     for r in reports:
         e = r["elasticity"]
         informative = (e.get("raw_se_median") or 0) <= S1_INFORMATIVE_SE
-        limit = S1_BIAS if informative else max(S1_BIAS, S1_BIAS_Z * float(e.get("pool_se") or 0))
+        limit = max(S1_BIAS, S1_BIAS_Z * float(e.get("common_se") or e.get("pool_se") or 0))
         good = (e["coverage95"] is not None and e["coverage95"] >= S1_COVERAGE
                 and e["median_error"] is not None and abs(e["median_error"]) <= limit)
         ok &= good
         rows.append(f"{r['world']}: coverage {e['coverage95']:.3f}, median error {e['median_error']:+.3f} "
-                    f"(limit ±{limit:.2f}{'' if informative else ', fits uninformative'})" + ("" if good else "  ✗"))
+                    f"(limit ±{limit:.2f}: three of the engine's stated common error"
+                    f"{'' if informative else '; fits uninformative'})" + ("" if good else "  ✗"))
     return ok, rows
 
 

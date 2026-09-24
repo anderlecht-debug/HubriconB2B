@@ -47,7 +47,7 @@ def run_engine(data: dict, seed: int = 42, sims: int = 8000, paths: int = 4000) 
         brand_terms=["acme"], recovery=None, inv_econ=out["ie"], anomaly_rows=out["anom"], channel="amazon",
         ad_allocation=out["alloc"], incrementality=out["incr"], client_id=CLIENT["id"], cross_price=out["cross"],
         markdown=out["md"], replenishment=out["rep"], cash_orders=out["co"], assortment=out["asrt"], cash=cash,
-        **_book_kwarg(book))
+        ppc_spend_rows=data["ppc_spend"], **_book_kwarg(book))
     out["book"] = book or None
     out["avg_margin"] = avg_m
     return out

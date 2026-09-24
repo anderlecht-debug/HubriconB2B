@@ -189,11 +189,15 @@ OBJECTIVE = "certainty_equivalent"
 # stays off — the pure-quantile rule earns more per move by declining 40% of
 # the catalogue, and puts less money in the payout.
 MAX_P_LOSS: float | None = None
-# A step is issued only when this share of the posterior's draws agrees that a
-# small move in its direction raises profit (own plus family). None switches
-# the gate off. See the note at the gate in price_move.
-MIN_DIRECTION_CONFIDENCE: float | None = None
+# A step is issued only when more of the posterior's draws than not agree that
+# a small move in its direction raises profit (own plus family) — the Bayes
+# rule for a sign. Set 2026-09-24 after the model-risk bench priced it: at one
+# half it removed every step drafted on a catalogue already at its optimum
+# (110 over two seeds, all losing) and cost nothing elsewhere ($19,712 of true
+# profit against $19,759 without it, four worlds, two seeds). None switches it off.
+MIN_DIRECTION_CONFIDENCE: float | None = 0.5
 DIRECTION_NUDGE = 0.005
+OPTIMAL_MIX_SEED = 20260926
 # How close to the pole at eps = −1 is too close to name a destination. Two
 # standard errors is the same line the 95% interval draws, so the guard and
 # the published interval cannot disagree: if a two-sigma band around epŝ
@@ -364,8 +368,14 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
                 fee_history: list[tuple[float, float]] | None = None,
                 cost_cv: float = 0.0, draws: int = MC_DRAWS,
                 rng: np.random.Generator | None = None,
-                cross: dict | None = None) -> dict:
+                cross: dict | None = None, optimal_mix: tuple[float, float] | None = None) -> dict:
     """One draw set of the uncertain inputs, reusable across candidate prices.
+
+    `optimal_mix` is (w, ε0): with posterior probability w the catalogue already
+    prices at its optimum and this SKU's elasticity is ε0, the one its markup
+    implies (models/elasticity.prices_optimal_probability). That share of the
+    draws is set to ε0, on a stream of its own so every other draw is
+    unchanged.
 
     Returned as arrays so a whole grid of candidate prices can be evaluated on
     the SAME draws — common random numbers, which is what makes two candidate
@@ -383,6 +393,13 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
         eps_draws = eps + std_err * shock
     else:
         eps_draws = np.full(n, eps)
+    at_optimum = None
+    if optimal_mix is not None and optimal_mix[0] is not None and float(optimal_mix[0]) > 0:
+        # the already-optimal model's share of the posterior, on its own stream:
+        # its own elasticity is the one its markup implies, and — the catalogue
+        # being at its optimum — no sibling term survives either (below)
+        at_optimum = np.random.default_rng(OPTIMAL_MIX_SEED).random(n) < float(optimal_mix[0])
+        eps_draws = np.where(at_optimum, float(optimal_mix[1]), eps_draws)
 
     sd_log = float(demand_sd_log) if demand_sd_log else 0.0
     if POISSON_FLOOR and q0 > 0:
@@ -413,6 +430,8 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
             eps_c = float(cross["eps"]) + se_c * shock_c
         else:
             eps_c = np.full(n, float(cross["eps"]))
+        if at_optimum is not None:
+            eps_c = np.where(at_optimum, 0.0, eps_c)
         cross_set = {"eps": eps_c,
                      "siblings": [(float(j["q0"]), float(j["contribution"]), float(j["weight"]))
                                   for j in cross["siblings"]]}
@@ -676,11 +695,15 @@ def price_move(margin_row: dict, elasticity_row: dict,
     else:
         return None
 
+    mix = None
+    if details.get("p_prices_optimal") is not None and details.get("markup_implied_epsilon") is not None:
+        mix = (float(details["p_prices_optimal"]), float(details["markup_implied_epsilon"]))
     draw_set = delta_draws(
         eps=eps, std_err=std_err, dof=dof, p0=p0, q0=units,
         unit_cost=unit_cost, fee_rate=fee_rate, fixed_fee=fixed_fee,
         demand_sd_log=details.get("residual_sd_log"),
         fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng, cross=cross,
+        optimal_mix=mix,
     )
     monthly_net = trailing_monthly_net(margin_row)
     # the client's stated tolerance, or the house default
@@ -774,6 +797,7 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "delta_mean": dist["mean"],
         "p_loss": dist["p_loss"],
         "direction_confidence": round(direction_confidence, 4),
+        "p_prices_optimal": mix[0] if mix else None,
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
         "policy": {**policy, "risk_budget_share": share,

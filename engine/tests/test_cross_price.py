@@ -93,7 +93,10 @@ def test_families_are_shrunk_toward_the_catalogue_when_three_or_more_fit():
     # published the pool mean's error as each family's own
     close = _book(0.0)
     assert close["n_fitted"] == 3
-    assert all(f["shrinkage"] == "empirical_bayes" and f["shrinkage_weight"] < 0.5 for f in close["families"])
+    # (about half their own weight with a flat prior on τ², which errs wide
+    # where three families cannot pin the spread; far apart they keep over 0.9)
+    assert all(f["shrinkage"] == "empirical_bayes" and f["shrinkage_weight"] < 0.65 for f in close["families"])
+    assert max(f["shrinkage_weight"] for f in close["families"]) < min(f["shrinkage_weight"] for f in wide["families"])
     assert max(f["tau2"] for f in close["families"]) < min(f["tau2"] for f in wide["families"])
     out = wide
     # every fitted family is published with its flag, and every one reaches

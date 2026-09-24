@@ -1228,7 +1228,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      assortment: dict | None = None,
                      risk_share: float | None = None,
                      cash: dict | None = None,
-                     book_out: dict | None = None) -> list[dict]:
+                     book_out: dict | None = None,
+                     ppc_spend_rows: list[dict] | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1338,11 +1339,26 @@ def draft_directives(inventory, ads, elasticity, margins,
              for r in ads for t in (r["bleed_terms"] or [])),
             key=lambda t: (t["campaign_name"] or "", t["search_term"] or ""),
         )
+        # Corrected 2026-09-24: the promise was the export window's spend (28
+        # days here) with no band, beside thirty-day promises with bands. Now
+        # the window's daily rate over the horizon, with the spread of the
+        # campaigns' own daily spend over the days on file as its band.
+        window_days_b = float(_term_window_days(search_terms) or 30)
+        bleed_30 = bleed_total * MEASUREMENT_HORIZON_DAYS / window_days_b
+        camps_b = {t["campaign_name"] for t in terms}
+        daily_b = {}
+        for row in (ppc_spend_rows or []):
+            if row.get("campaign_name") in camps_b and row.get("report_date"):
+                daily_b.setdefault(str(row["report_date"])[:10], 0.0)
+                daily_b[str(row["report_date"])[:10]] += float(row.get("spend") or 0)
+        vals_b = np.array(list(daily_b.values()), dtype=float)
+        cv_b = float(vals_b.std(ddof=1) / vals_b.mean()) if vals_b.size >= 14 and vals_b.mean() > 0 else 0.25
+        half_b = 1.645 * cv_b / np.sqrt(window_days_b)
         drafts.append(_draft(
             "advertising", "ad_bleed_terms",
             [(t["campaign_name"], t["search_term"]) for t in terms],
             score=bleed_total,
-            expected=round(bleed_total, 2),
+            expected=round(bleed_30, 2),
             action_text=(
                 f"Negative-match {n} search terms that spent with zero attributed sales — "
                 f"{_money(bleed_total)} of pure bleed in the export window. "
@@ -1351,6 +1367,12 @@ def draft_directives(inventory, ads, elasticity, margins,
             evidence={
                 "terms": terms,
                 "baseline_spend": round(bleed_total, 2),
+                "horizon_days": MEASUREMENT_HORIZON_DAYS,
+                "delta_p5": round(bleed_30 * (1 - half_b), 2),
+                "delta_p50": round(bleed_30, 2),
+                "delta_p95": round(bleed_30 * (1 + half_b), 2),
+                "band_basis": (f"the campaigns' daily spend varies {cv_b:.0%} day to day; the window's "
+                               f"{window_days_b:.0f}-day rate carries that spread over the horizon"),
                 # The campaign's WHOLE baseline spend, not just the bleed terms':
                 # measurement caps the saving at how far the campaign's own
                 # spend actually fell, and that comparison is only honest

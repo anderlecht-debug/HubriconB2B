@@ -121,7 +121,10 @@ def world_report(name: str, data: dict, truth: dict, out: dict, seed: int) -> di
                        "raw_se_median": float(np.median([float(r["details"].get("std_err_raw") or r["std_err"])
                                                          for r in ok])) if ok else None,
                        "pool_se": next((float(r["details"]["pooled_epsilon_se"]) for r in ok
-                                        if r["details"].get("pooled_epsilon_se") is not None), None)},
+                                        if r["details"].get("pooled_epsilon_se") is not None), None),
+                       "common_se": (float(np.median([float(r["details"]["common_se"]) for r in ok
+                                                      if r["details"].get("common_se") is not None]))
+                                     if any(r["details"].get("common_se") is not None for r in ok) else None)},
         "steps": steps,
         "realloc": None if realloc is None else {"p50": realloc.get("expected_impact_usd"),
                                                  "p5": realloc["evidence"].get("delta_p5"),
