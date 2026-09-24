@@ -37,8 +37,10 @@ assertion.
 
 WHAT IT CANNOT TELL YOU. A month that was never observed (the index is 1 with
 no interval, and the payload lists it). A SKU whose season runs against the
-catalog's, from one season of data — it is pulled toward the catalog until a
-second season says otherwise. Holidays that move between months.
+catalog's, from one season of data — it carries the catalog's index until a
+second season lets its own be told from its noise (the forecast ladder's
+non-seasonal candidates remain for a SKU the catalogue's season does not
+fit). Holidays that move between months.
 """
 
 from datetime import date, timedelta
@@ -57,15 +59,26 @@ CI_LEVEL = 0.95
 
 def _monthly_rates(data: dict) -> dict[str, dict[str, list[float]]]:
     """{sku: {'YYYY-MM': [rate, ...]}} from sku_economics (Amazon and Shopify
-    alike), falling back to asin_traffic for an ASIN-only catalog."""
+    alike), falling back to asin_traffic for an ASIN-only catalog.
+
+    A month flagged as a stockout or a promotion (data_quality) is left out:
+    its units are the stock's or the deal's, not the season's. Corrected
+    2026-09-24 — the forecast and the price fits already censored those
+    months while the index read a deal month as that SKU's peak; on the
+    Simons–Thorp–Griffin bench one October deal made a SKU's October index
+    1.6 and its order twice the optimum."""
+    from .data_quality import contaminated_periods
     out: dict[str, dict[str, list[float]]] = {}
     rows = data.get("sku_economics") or []
     key, units_key = "sku", "units_sold"
+    bad = contaminated_periods(data) if rows else {}
     if not rows:
         rows, key, units_key = data.get("asin_traffic") or [], "child_asin", "units_ordered"
     for r in rows:
         units = r.get(units_key)
         if units is None or not r.get("period_start") or not r.get("period_end"):
+            continue
+        if str(r["period_start"])[:10] in (bad.get(r.get(key)) or {}):
             continue
         days = period_days(str(r["period_start"]), str(r["period_end"]))
         month = str(r["period_start"])[:7]
@@ -150,9 +163,21 @@ def indices(data: dict) -> dict:
                    "ci95": [num(shrunk[m - 1] - t_crit * post[m - 1], 4), num(shrunk[m - 1] + t_crit * post[m - 1], 4)],
                    "n": counts[m - 1], "shrinkage_weight": num(weights[m - 1], 4), "observed": bool(observed[m - 1])}
                for m in range(1, 13)}
-    # per SKU: own ratios shrunk toward the catalog index
+    # per SKU: own ratios shrunk toward the catalog index — with two seasons.
+    # With one, each SKU-month is a single observation and a SKU's own
+    # seasonal deviation cannot be told from its noise (both are one number
+    # per month), so the SKU carries the catalogue's index, as the price fits
+    # already do (deseasonalise_economics). Corrected 2026-09-24: the
+    # shrinkage assumed a noise of 0.35 and let each SKU estimate its own
+    # spread from twelve points, so one noisy September set a SKU's
+    # September index 10% under the catalogue's, its deseasonalised rate 18%
+    # high, and its order a third above the optimum.
     per_sku = {}
     for sku, by_cm in sku_ratios.items():
+        if n_seasons < 2:
+            per_sku[sku] = {"basis": "catalog index (one season cannot separate a SKU's own season from its noise)",
+                            "index": {m: catalog[m]["index"] for m in catalog}}
+            continue
         if len(by_cm) < MIN_SKU_MONTHS:
             per_sku[sku] = {"basis": "catalog index (too few months of its own)", "index": {m: catalog[m]["index"] for m in catalog}}
             continue

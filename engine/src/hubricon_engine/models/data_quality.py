@@ -53,9 +53,13 @@ half-months). `contaminated_periods` returns the SKU-months to leave out of
 every price-response fit; `clean_for_fitting` returns the exports with them
 removed and duplicates collapsed. Both are pure functions of the data, so a
 fit reads the same cleaned history whoever calls it. Measured on the
-model-risk bench's dirty world (MATH_SCORECARD.md, iteration 38): 24 stockout
-months and 16 deal months across 160 SKUs moved the catalogue's median
-elasticity error from −0.26 to within ±0.1.
+Simons–Thorp–Griffin bench's dirty world (MATH_SCORECARD.md, iteration 38):
+24 stockout months and 16 deal months across 160 SKUs. On the three test
+seeds the catalogue's median elasticity error went from −0.26 / −0.17 / −0.06
+at the baseline to −0.16 / −0.02 / +0.10 with every correction of that
+iteration in place (−0.04 to +0.06 on three further seeds): inside three of
+the engine's own stated common error each time, not inside ±0.1 as this
+paragraph said when it was first written.
 
 WHAT IT CANNOT TELL YOU. Which of two disagreeing exports is right; whether a
 missing month was a month with no sales or a month nobody uploaded (the

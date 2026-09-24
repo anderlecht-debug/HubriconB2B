@@ -1,0 +1,463 @@
+Round three: the engine at the commit that adds this file, every correction of
+MATH_SCORECARD.md iteration 38 in place. Scored 2026-09-24 by bench/rubric.py,
+unchanged since round two. Seeds 101, 202 and 303 are the three pre-registered
+tests; 404, 505 and 606 are validation seeds the engine was never tuned on.
+
+
+══ TEST seed 101: 10/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.975, median error -0.017 (limit ±0.24: three of the engine's stated common error; fits uninformative)
+          reactive: coverage 0.944, median error +0.075 (limit ±0.33: three of the engine's stated common error)
+          drifting: coverage 0.969, median error +0.043 (limit ±0.33: three of the engine's stated common error)
+          thin: coverage 1.000, median error +0.298 (limit ±0.87: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.994, median error -0.164 (limit ±0.21: three of the engine's stated common error)
+          optimal: coverage 1.000, median error -0.078 (limit ±0.26: three of the engine's stated common error; fits uninformative)
+  PASS  S2 Simons  Promise calibration
+          pooled 0.914 over 140 steps (target 0.82–0.98)
+          clean: 51/54 inside (0.94)
+          reactive: 29/35 inside (0.83)
+          thin: 0/0 inside
+          dirty: 48/51 inside (0.94)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 140, lost in truth 26 against 23.4 quoted (z +0.6)
+          steps rated P(loss) ≤ 20%: 90, lost in truth 4 against 5.7 quoted (z -0.8)
+          no-edge world: 0 steps, true total $0 vs floor $-446; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 2/207 directions flipped (0.010), 0.000 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  PASS  T1 Thorp   The edge is real
+          price steps pooled true/promised 0.888 (target 0.8–1.25)
+          clean: steps true/promised 4,178/4,159 = 1.00
+          reactive: steps true/promised 4,243/4,533 = 0.94
+          drifting: steps' true total $2,384 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 3,534/4,767 = 0.74
+          reallocations: 4/5 truths inside their band, pooled true/promised 0.96
+          trims: 23, pooled true/promised 0.95
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $4,178, at half size $2,158
+          reactive: steps at full size $4,243, at half size $2,201
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $3,534, at half size $1,849
+          clean: 77 orders — over-ordering costs +4.4% of the true optimum's cost (under-ordering +5.4%, total +9.8%)
+          reactive: 82 orders — over-ordering costs +6.0% of the true optimum's cost (under-ordering +5.2%, total +11.2%)
+          drifting: 77 orders — over-ordering costs +2.4% of the true optimum's cost (under-ordering +7.7%, total +10.1%)
+          thin: 106 orders — over-ordering costs +6.1% of the true optimum's cost (under-ordering +35.4%, total +41.5%)
+          dirty: 68 orders — over-ordering costs +4.4% of the true optimum's cost (under-ordering +7.5%, total +11.9%)
+          optimal: 88 orders — over-ordering costs +4.3% of the true optimum's cost (under-ordering +3.9%, total +8.1%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 39 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 50 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 41 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 40 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 39 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 57 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 168
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 7/8 (need 7)
+          clean price_steps: truth $4,178 in [2,304, 6,888]
+          clean advertising: truth $12,462 in [12,421, 13,017]
+          reactive price_steps: truth $4,243 in [3,082, 6,435]
+          reactive advertising: truth $11,989 in [11,588, 12,278]
+          thin advertising: truth $13,359 in [13,147, 13,715]
+          dirty price_steps: truth $3,534 in [3,605, 6,282]  (outside)
+          dirty advertising: truth $10,985 in [10,834, 11,499]
+          optimal advertising: truth $12,772 in [12,712, 13,393]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $50,924 vs truth $54,561
+          budget_reallocation: 5 measured, banked/promised 0.87, banked $4,755 vs truth $5,220
+          campaign_trim: 19 measured, banked/promised 0.89, banked $12,130 vs truth $12,889
+          price_step: 130 measured, banked/promised 0.72, banked $10,820 vs truth $13,568
+
+══ TEST seed 202: 10/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.950, median error +0.074 (limit ±0.21: three of the engine's stated common error)
+          reactive: coverage 0.988, median error -0.057 (limit ±0.34: three of the engine's stated common error)
+          drifting: coverage 0.969, median error +0.041 (limit ±0.38: three of the engine's stated common error)
+          thin: coverage 1.000, median error +0.139 (limit ±0.94: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.988, median error -0.024 (limit ±0.21: three of the engine's stated common error)
+          optimal: coverage 0.988, median error +0.084 (limit ±0.26: three of the engine's stated common error)
+  PASS  S2 Simons  Promise calibration
+          pooled 0.919 over 123 steps (target 0.82–0.98)
+          clean: 27/29 inside (0.93)
+          reactive: 46/51 inside (0.90)
+          thin: 0/0 inside
+          dirty: 40/43 inside (0.93)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 123, lost in truth 18 against 17.3 quoted (z +0.2)
+          steps rated P(loss) ≤ 20%: 85, lost in truth 3 against 5.3 quoted (z -1.1)
+          no-edge world: 0 steps, true total $0 vs floor $-533; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 1/243 directions flipped (0.004), 0.000 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  PASS  T1 Thorp   The edge is real
+          price steps pooled true/promised 0.847 (target 0.8–1.25)
+          clean: steps true/promised 4,281/4,954 = 0.86
+          reactive: steps true/promised 4,283/4,876 = 0.88
+          drifting: steps' true total $3,633 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 3,200/4,066 = 0.79
+          reallocations: 4/6 truths inside their band, pooled true/promised 0.94
+          trims: 23, pooled true/promised 0.92
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $4,281, at half size $2,218
+          reactive: steps at full size $4,283, at half size $2,227
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $3,200, at half size $1,688
+          clean: 80 orders — over-ordering costs +5.8% of the true optimum's cost (under-ordering +8.3%, total +14.2%)
+          reactive: 81 orders — over-ordering costs +10.3% of the true optimum's cost (under-ordering +9.0%, total +19.4%)
+          drifting: 82 orders — over-ordering costs +7.4% of the true optimum's cost (under-ordering +5.0%, total +12.4%)
+          thin: 113 orders — over-ordering costs +2.5% of the true optimum's cost (under-ordering +41.5%, total +44.0%)
+          dirty: 73 orders — over-ordering costs +7.9% of the true optimum's cost (under-ordering +6.7%, total +14.6%)
+          optimal: 84 orders — over-ordering costs +8.4% of the true optimum's cost (under-ordering +3.1%, total +11.6%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 46 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 44 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 50 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 33 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 31 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 48 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 150
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 7/8 (need 7)
+          clean price_steps: truth $4,281 in [3,701, 6,742]
+          clean advertising: truth $10,084 in [9,950, 10,519]
+          reactive price_steps: truth $4,283 in [3,017, 7,349]
+          reactive advertising: truth $7,039 in [6,427, 7,175]
+          thin advertising: truth $8,595 in [8,286, 9,358]
+          dirty price_steps: truth $3,200 in [2,695, 6,009]
+          dirty advertising: truth $15,112 in [15,171, 16,081]  (outside)
+          optimal advertising: truth $11,439 in [11,329, 12,019]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $41,938 vs truth $44,934
+          budget_reallocation: 6 measured, banked/promised 0.89, banked $6,090 vs truth $6,423
+          campaign_trim: 20 measured, banked/promised 0.88, banked $10,684 vs truth $11,198
+          price_step: 120 measured, banked/promised 0.74, banked $11,869 vs truth $14,343
+
+══ TEST seed 303: 10/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.981, median error -0.061 (limit ±0.35: three of the engine's stated common error; fits uninformative)
+          reactive: coverage 0.975, median error +0.078 (limit ±0.31: three of the engine's stated common error)
+          drifting: coverage 0.988, median error -0.038 (limit ±0.35: three of the engine's stated common error)
+          thin: coverage 1.000, median error -0.439 (limit ±0.94: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.981, median error +0.102 (limit ±0.24: three of the engine's stated common error; fits uninformative)
+          optimal: coverage 1.000, median error -0.067 (limit ±0.29: three of the engine's stated common error; fits uninformative)
+  PASS  S2 Simons  Promise calibration
+          pooled 0.875 over 80 steps (target 0.82–0.98)
+          clean: 18/20 inside (0.90)
+          reactive: 29/34 inside (0.85)
+          thin: 0/0 inside
+          dirty: 23/26 inside (0.88)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 80, lost in truth 12 against 12.6 quoted (z -0.2)
+          steps rated P(loss) ≤ 20%: 55, lost in truth 4 against 3.9 quoted (z +0.1)
+          no-edge world: 0 steps, true total $0 vs floor $-492; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 6/270 directions flipped (0.022), 0.008 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  PASS  T1 Thorp   The edge is real
+          price steps pooled true/promised 0.904 (target 0.8–1.25)
+          clean: steps true/promised 1,113/1,697 = 0.66
+          reactive: steps true/promised 3,683/3,223 = 1.14
+          drifting: steps' true total $3,311 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 2,378/3,013 = 0.79
+          reallocations: 4/5 truths inside their band, pooled true/promised 0.95
+          trims: 18, pooled true/promised 0.94
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $1,113, at half size $590
+          reactive: steps at full size $3,683, at half size $1,894
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $2,378, at half size $1,224
+          clean: 85 orders — over-ordering costs +8.4% of the true optimum's cost (under-ordering +6.9%, total +15.3%)
+          reactive: 91 orders — over-ordering costs +6.8% of the true optimum's cost (under-ordering +18.7%, total +25.4%)
+          drifting: 86 orders — over-ordering costs +5.5% of the true optimum's cost (under-ordering +6.3%, total +11.8%)
+          thin: 96 orders — over-ordering costs +5.2% of the true optimum's cost (under-ordering +65.6%, total +70.8%)
+          dirty: 80 orders — over-ordering costs +8.8% of the true optimum's cost (under-ordering +5.5%, total +14.3%)
+          optimal: 77 orders — over-ordering costs +6.8% of the true optimum's cost (under-ordering +2.2%, total +9.0%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 44 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 59 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 48 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 34 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 56 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 47 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 113
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 7/8 (need 7)
+          clean price_steps: truth $1,113 in [657, 3,256]
+          clean advertising: truth $13,104 in [12,606, 13,518]
+          reactive price_steps: truth $3,683 in [2,096, 4,707]
+          reactive advertising: truth $11,482 in [11,418, 12,047]
+          thin advertising: truth $13,608 in [13,411, 14,074]
+          dirty price_steps: truth $2,378 in [1,975, 4,513]
+          dirty advertising: truth $9,835 in [9,880, 10,712]  (outside)
+          optimal advertising: truth $9,177 in [9,091, 9,966]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $48,588 vs truth $52,059
+          budget_reallocation: 5 measured, banked/promised 0.91, banked $10,944 vs truth $11,454
+          campaign_trim: 15 measured, banked/promised 0.88, banked $8,288 vs truth $8,859
+          price_step: 91 measured, banked/promised 0.70, banked $7,746 vs truth $10,404
+
+══ TEST seed 404: 8/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.975, median error -0.164 (limit ±0.23: three of the engine's stated common error; fits uninformative)
+          reactive: coverage 0.944, median error +0.071 (limit ±0.33: three of the engine's stated common error)
+          drifting: coverage 0.988, median error -0.002 (limit ±0.36: three of the engine's stated common error)
+          thin: coverage 1.000, median error +0.192 (limit ±0.91: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.975, median error +0.004 (limit ±0.24: three of the engine's stated common error)
+          optimal: coverage 1.000, median error -0.030 (limit ±0.37: three of the engine's stated common error; fits uninformative)
+  FAIL  S2 Simons  Promise calibration
+          pooled 0.815 over 184 steps (target 0.82–0.98)  ✗
+          clean: 45/54 inside (0.83)
+          reactive: 53/66 inside (0.80)
+          thin: 0/0 inside
+          dirty: 52/64 inside (0.81)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 184, lost in truth 21 against 29.2 quoted (z -1.8)
+          steps rated P(loss) ≤ 20%: 127, lost in truth 2 against 8.0 quoted (z -2.3)
+          no-edge world: 0 steps, true total $0 vs floor $-537; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 2/171 directions flipped (0.012), 0.000 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  FAIL  T1 Thorp   The edge is real
+          price steps pooled true/promised 1.359 (target 0.8–1.25)  ✗
+          clean: steps true/promised 6,557/4,960 = 1.32
+          reactive: steps true/promised 9,962/7,333 = 1.36
+          drifting: steps' true total $3,536 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 5,851/4,165 = 1.40
+          reallocations: 1/5 truths inside their band, pooled true/promised 0.88  ✗
+          trims: 21, pooled true/promised 0.92
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $6,557, at half size $3,380
+          reactive: steps at full size $9,962, at half size $5,099
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $5,851, at half size $3,043
+          clean: 90 orders — over-ordering costs +6.7% of the true optimum's cost (under-ordering +7.6%, total +14.3%)
+          reactive: 93 orders — over-ordering costs +6.0% of the true optimum's cost (under-ordering +5.5%, total +11.5%)
+          drifting: 72 orders — over-ordering costs +7.8% of the true optimum's cost (under-ordering +6.3%, total +14.1%)
+          thin: 103 orders — over-ordering costs +2.7% of the true optimum's cost (under-ordering +38.4%, total +41.1%)
+          dirty: 69 orders — over-ordering costs +2.2% of the true optimum's cost (under-ordering +12.1%, total +14.3%)
+          optimal: 80 orders — over-ordering costs +7.8% of the true optimum's cost (under-ordering +4.1%, total +11.9%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 47 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 44 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 37 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 45 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 40 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 44 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 233
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 7/8 (need 7)
+          clean price_steps: truth $6,557 in [3,317, 7,086]
+          clean advertising: truth $7,957 in [8,034, 8,442]  (outside)
+          reactive price_steps: truth $9,962 in [4,617, 10,583]
+          reactive advertising: truth $9,525 in [9,353, 9,918]
+          thin advertising: truth $7,719 in [7,443, 7,935]
+          dirty price_steps: truth $5,851 in [2,491, 6,286]
+          dirty advertising: truth $16,549 in [16,499, 17,233]
+          optimal advertising: truth $15,708 in [15,588, 16,343]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $55,805 vs truth $59,791
+          budget_reallocation: 5 measured, banked/promised 0.90, banked $4,519 vs truth $4,427
+          campaign_trim: 16 measured, banked/promised 0.88, banked $6,267 vs truth $6,557
+          price_step: 172 measured, banked/promised 0.73, banked $14,492 vs truth $24,380
+
+══ TEST seed 505: 9/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.969, median error -0.081 (limit ±0.22: three of the engine's stated common error)
+          reactive: coverage 0.906, median error +0.166 (limit ±0.26: three of the engine's stated common error)
+          drifting: coverage 0.981, median error +0.001 (limit ±0.34: three of the engine's stated common error)
+          thin: coverage 1.000, median error -0.131 (limit ±0.88: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.981, median error +0.057 (limit ±0.22: three of the engine's stated common error)
+          optimal: coverage 1.000, median error -0.028 (limit ±0.27: three of the engine's stated common error)
+  FAIL  S2 Simons  Promise calibration
+          pooled 0.839 over 112 steps (target 0.82–0.98)
+          clean: 27/31 inside (0.87)
+          reactive: 49/63 inside (0.78)  ✗
+          thin: 0/0 inside
+          dirty: 18/18 inside (1.00)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 112, lost in truth 14 against 14.1 quoted (z -0.0)
+          steps rated P(loss) ≤ 20%: 81, lost in truth 5 against 4.0 quoted (z +0.6)
+          no-edge world: 0 steps, true total $0 vs floor $-453; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 3/254 directions flipped (0.012), 0.000 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  PASS  T1 Thorp   The edge is real
+          price steps pooled true/promised 1.078 (target 0.8–1.25)
+          clean: steps true/promised 3,149/2,798 = 1.13
+          reactive: steps true/promised 6,829/6,438 = 1.06
+          drifting: steps' true total $2,462 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 2,078/1,953 = 1.06
+          reallocations: 5/5 truths inside their band, pooled true/promised 0.93
+          trims: 29, pooled true/promised 0.95
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $3,149, at half size $1,626
+          reactive: steps at full size $6,829, at half size $3,563
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $2,078, at half size $1,072
+          clean: 88 orders — over-ordering costs +8.5% of the true optimum's cost (under-ordering +6.5%, total +14.9%)
+          reactive: 81 orders — over-ordering costs +2.1% of the true optimum's cost (under-ordering +14.5%, total +16.6%)
+          drifting: 91 orders — over-ordering costs +6.0% of the true optimum's cost (under-ordering +8.5%, total +14.4%)
+          thin: 103 orders — over-ordering costs +2.9% of the true optimum's cost (under-ordering +48.4%, total +51.4%)
+          dirty: 89 orders — over-ordering costs +4.2% of the true optimum's cost (under-ordering +9.9%, total +14.1%)
+          optimal: 88 orders — over-ordering costs +5.9% of the true optimum's cost (under-ordering +7.0%, total +12.9%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 60 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 44 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 50 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 45 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 46 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 51 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 153
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 8/8 (need 7)
+          clean price_steps: truth $3,149 in [1,756, 4,280]
+          clean advertising: truth $14,894 in [14,770, 15,519]
+          reactive price_steps: truth $6,829 in [4,711, 8,565]
+          reactive advertising: truth $12,317 in [12,243, 12,941]
+          thin advertising: truth $14,480 in [14,316, 15,023]
+          dirty price_steps: truth $2,078 in [1,206, 2,904]
+          dirty advertising: truth $11,130 in [11,055, 11,521]
+          optimal advertising: truth $17,102 in [16,978, 17,817]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $55,814 vs truth $59,801
+          budget_reallocation: 5 measured, banked/promised 0.83, banked $2,771 vs truth $3,101
+          campaign_trim: 26 measured, banked/promised 0.89, banked $16,822 vs truth $17,890
+          price_step: 119 measured, banked/promised 0.62, banked $8,869 vs truth $14,560
+
+══ TEST seed 606: 10/10 ══
+  PASS  S1 Simons  Estimator honesty
+          clean: coverage 0.975, median error +0.087 (limit ±0.22: three of the engine's stated common error; fits uninformative)
+          reactive: coverage 0.956, median error +0.002 (limit ±0.33: three of the engine's stated common error)
+          drifting: coverage 0.963, median error -0.053 (limit ±0.35: three of the engine's stated common error)
+          thin: coverage 1.000, median error -0.052 (limit ±1.07: three of the engine's stated common error; fits uninformative)
+          dirty: coverage 0.988, median error -0.043 (limit ±0.38: three of the engine's stated common error; fits uninformative)
+          optimal: coverage 1.000, median error -0.110 (limit ±0.26: three of the engine's stated common error; fits uninformative)
+  PASS  S2 Simons  Promise calibration
+          pooled 0.933 over 104 steps (target 0.82–0.98)
+          clean: 21/23 inside (0.91)
+          reactive: 54/56 inside (0.96)
+          thin: 0/0 inside
+          dirty: 22/25 inside (0.88)
+          optimal: 0/0 inside
+  PASS  S3 Simons  No edge where there is none
+          all steps: 104, lost in truth 12 against 16.3 quoted (z -1.3)
+          steps rated P(loss) ≤ 20%: 71, lost in truth 1 against 4.2 quoted (z -1.7)
+          no-edge world: 0 steps, true total $0 vs floor $-506; promised $0
+  PASS  S4 Simons  Stability and reproducibility
+          same inputs twice byte-identical: True; another simulation seed, same promises: True
+          one month dropped: 1/260 directions flipped (0.004), 0.005 of the dollars
+          one clean month more: drift alarms on 0.000 of pairs
+  PASS  T1 Thorp   The edge is real
+          price steps pooled true/promised 1.152 (target 0.8–1.25)
+          clean: steps true/promised 3,156/2,589 = 1.22
+          reactive: steps true/promised 6,168/4,713 = 1.31
+          drifting: steps' true total $1,290 (must be > 0)
+          thin: steps true/promised 0/0
+          dirty: steps true/promised 1,569/2,157 = 0.73
+          reallocations: 6/6 truths inside their band, pooled true/promised 0.98
+          trims: 18, pooled true/promised 0.94
+          negated terms: pooled true/promised 1.00
+  PASS  T2 Thorp   Never over-bet
+          clean: steps at full size $3,156, at half size $1,628
+          reactive: steps at full size $6,168, at half size $3,163
+          thin: steps at full size $0, at half size $0
+          dirty: steps at full size $1,569, at half size $826
+          clean: 73 orders — over-ordering costs +4.0% of the true optimum's cost (under-ordering +7.9%, total +11.9%)
+          reactive: 86 orders — over-ordering costs +4.2% of the true optimum's cost (under-ordering +10.7%, total +14.8%)
+          drifting: 89 orders — over-ordering costs +10.0% of the true optimum's cost (under-ordering +12.9%, total +23.0%)
+          thin: 111 orders — over-ordering costs +6.1% of the true optimum's cost (under-ordering +50.8%, total +56.9%)
+          dirty: 77 orders — over-ordering costs +5.3% of the true optimum's cost (under-ordering +5.2%, total +10.5%)
+          optimal: 81 orders — over-ordering costs +3.2% of the true optimum's cost (under-ordering +5.5%, total +8.7%)
+  PASS  T3 Thorp   Survive
+          clean: sweep at once moves P(ruin) 0.000 → 0.000 over 42 cash moves (0 deferred by the engine)
+          reactive: sweep at once moves P(ruin) 0.000 → 0.000 over 46 cash moves (0 deferred by the engine)
+          drifting: sweep at once moves P(ruin) 0.000 → 0.000 over 52 cash moves (0 deferred by the engine)
+          thin: sweep at once moves P(ruin) 0.000 → 0.000 over 48 cash moves (0 deferred by the engine)
+          dirty: sweep at once moves P(ruin) 0.000 → 0.000 over 48 cash moves (0 deferred by the engine)
+          optimal: sweep at once moves P(ruin) 0.000 → 0.000 over 29 cash moves (0 deferred by the engine)
+          steps whose true loss exceeded their own risk budget: 0.000 of 143
+  PASS  G1 Griffin Manage the book
+          book bands holding the truth: 8/8 (need 7)
+          clean price_steps: truth $3,156 in [1,952, 3,321]
+          clean advertising: truth $10,260 in [10,138, 10,882]
+          reactive price_steps: truth $6,168 in [2,686, 7,537]
+          reactive advertising: truth $10,805 in [10,597, 11,178]
+          thin advertising: truth $12,567 in [12,448, 13,035]
+          dirty price_steps: truth $1,569 in [895, 3,947]
+          dirty advertising: truth $11,322 in [11,136, 11,731]
+          optimal advertising: truth $10,130 in [9,802, 10,477]
+  PASS  G2 Griffin Garbage in, flagged and neutralised
+          dirty: stockout flagged
+          dirty: deal flagged
+          dirty: duplicate flagged
+          dirty: no_cogs flagged
+          dirty: short_period flagged
+          dirty: price steps on SKUs with no landed cost: 0
+          clean: data quality ok
+  PASS  G3 Griffin The Profit Record is honest
+          ad_bleed_terms: 6 measured, banked/promised 0.93, banked $41,331 vs truth $44,283
+          budget_reallocation: 6 measured, banked/promised 0.89, banked $9,573 vs truth $10,532
+          campaign_trim: 13 measured, banked/promised 0.90, banked $6,699 vs truth $7,013
+          price_step: 110 measured, banked/promised 0.67, banked $7,889 vs truth $12,026
+
+total 266s; scores: seed 101: 10/10, seed 202: 10/10, seed 303: 10/10, seed 404: 8/10, seed 505: 9/10, seed 606: 10/10

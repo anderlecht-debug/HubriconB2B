@@ -18,19 +18,24 @@ def run_engine(data: dict, seed: int = 42, sims: int = 8000, paths: int = 4000) 
     out["margins"] = margin.run(data)
     avg_m = margin.average_margin(out["margins"])
     out["sea"] = seasonality.indices(data)
-    out["fc"] = forecast.run(data, seasonal=out["sea"])
+    out["el"] = elasticity.run(data, experiments=None, seasonal=out["sea"])
+    import inspect as _inspect
+    fc_kw = {"elasticity_rows": out["el"]} if "elasticity_rows" in _inspect.signature(forecast.run).parameters else {}
+    out["fc"] = forecast.run(data, seasonal=out["sea"], **fc_kw)
     overrides = {f["item_id"]: forecast.rate_moments(f) for f in out["fc"] if f["status"] == "ok" and f["level"] == "sku"}
     out["inv"] = inventory_sim.run(data, r, sims, rate_overrides=overrides, seasonal=out["sea"], today=TODAY)
-    out["el"] = elasticity.run(data, experiments=None, seasonal=out["sea"])
     out["cross"] = cross_price.run(data, out["el"], seasonal=out["sea"])
     out["anom"] = anomaly.run(data)
     out["incr"] = incrementality.run(data, [])
     out["breaks"] = ad_efficiency.regime_breaks(out["anom"])
     out["ads"] = ad_efficiency.run(data, avg_margin=avg_m, breaks=out["breaks"])
-    out["alloc"] = ad_allocation.run(out["ads"], avg_m, exclude=set(directives.trim_candidates(out["ads"], avg_m)))
+    out["alloc"] = ad_allocation.run(out["ads"], avg_m, exclude=set(directives.trim_candidates(out["ads"], avg_m)),
+                                     daily=ad_efficiency.campaign_points(data["ppc_spend"], out["breaks"]))
     out["risk"] = risk.run(data, out["margins"], out["fc"], out["inv"], out["ads"], r, 4000)
+    out["plan"] = plan = (directives.plan_prices(out["el"], out["margins"], out["cross"])
+                          if hasattr(directives, "plan_prices") else None)
     out["ie"] = inventory_econ.run(data, out["inv"], out["margins"], out["fc"], r, sims, TODAY,
-                                   seasonal=out["sea"], risk_out=out["risk"])
+                                   seasonal=out["sea"], risk_out=out["risk"], **({"price_plan": plan} if plan else {}))
     out["md"] = markdown.run(data, out["ie"], out["el"], out["margins"], out["inv"], TODAY, "amazon", draws=2000)
     out["rep"] = replenishment.run(out["ie"], data, r, TODAY)
     out["asrt"] = assortment.run(out["margins"], out["ie"], data, out["risk"], out["cross"], TODAY)
@@ -47,7 +52,7 @@ def run_engine(data: dict, seed: int = 42, sims: int = 8000, paths: int = 4000) 
         brand_terms=["acme"], recovery=None, inv_econ=out["ie"], anomaly_rows=out["anom"], channel="amazon",
         ad_allocation=out["alloc"], incrementality=out["incr"], client_id=CLIENT["id"], cross_price=out["cross"],
         markdown=out["md"], replenishment=out["rep"], cash_orders=out["co"], assortment=out["asrt"], cash=cash,
-        ppc_spend_rows=data["ppc_spend"], **_book_kwarg(book))
+        ppc_spend_rows=data["ppc_spend"], **_book_kwarg(book), **({"price_plan": plan} if plan else {}))
     out["book"] = book or None
     out["avg_margin"] = avg_m
     return out

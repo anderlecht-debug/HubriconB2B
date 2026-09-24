@@ -655,7 +655,17 @@ def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: fl
 # uncertainty, and folding a pooled ±0.2 into every draw on top of it halved
 # the dollars a correct engine banked on the harness. Below
 # MIN_STEPS_FOR_REALISATION steps κ is not estimated at all.
-REALISATION_T = 2.0
+#
+# Raised from two to three standard errors on 2026-09-24. On ±5% steps the
+# predicted volume change is about ten per cent and κ's own error about 0.2,
+# so at two standard errors a correct engine's batch trips it about one time
+# in twenty on the month's shocks alone — and then every counterfactual in it
+# is scaled by half (the Simons–Thorp–Griffin bench: κ = 0.54 ± 0.19 on a
+# world whose steps delivered what their fits said, $721 banked of $3,472
+# true). A batch that did not respond at all sits five standard errors out
+# and is still caught; a partial shortfall a single step can show is held by
+# that step's own observed-change ceiling.
+REALISATION_T = 3.0
 # Added 2026-09-24 after the model-risk harness showed the per-SKU observed
 # change booking the month's weather against the step (see _cap_at_observed).
 MIN_STEPS_FOR_REALISATION = 6
@@ -691,6 +701,26 @@ def volume_realisation(directives: list[dict], margins: list[dict], since_of) ->
         if not base_days or not after_days:
             continue
         x = float(eps) * float(np.log(after["price"] / float(p0)))
+        # The fits' prediction includes the family's: a sibling that moved in
+        # the same sweep moves this SKU's volume by ε_cross times the change
+        # in its sibling index. Corrected 2026-09-24 — κ read only the SKU's
+        # own term, so a family whose SKUs all rose together (each one's loss
+        # partly refilled by its siblings' rises) read as "the volume did not
+        # respond": on the Simons–Thorp–Griffin bench's dirty world κ came out
+        # 0.54 ± 0.19, was applied to every counterfactual, and the Record
+        # banked $721 of $3,472 of true gains.
+        ce = ev.get("cross_effect") or {}
+        if ce.get("eps_cross") is not None and ce.get("siblings"):
+            moves = []
+            for sib in ce["siblings"]:
+                j = sib.get("sku")
+                b = by_sku_period.get((j, str(ev.get("baseline_period"))))
+                a = _observed([m for m in margins if m.get("sku") == j and m.get("period_start")
+                               and date.fromisoformat(str(m["period_start"])[:10]) > since])
+                if a and b and a["price"] > 0 and float(b.get("units") or 0) > 0 and float(b.get("revenue") or 0) > 0:
+                    moves.append(float(np.log(a["price"] / (float(b["revenue"]) / float(b["units"])))))
+            if moves:
+                x += float(ce["eps_cross"]) * float(np.mean(moves))
         if abs(x) < 1e-6:
             continue
         r = float(np.log((after["units"] / after_days) / (float(base_units) / base_days)))
@@ -1239,13 +1269,19 @@ def measure_campaign_trim(d: dict, ads_rows: list[dict], since: date, today: dat
         return _stalled(d, f"“{name}” is spending ${s_after:,.2f} a day against ${before_spend:,.2f} before and "
                            f"${target:,.2f} recommended — the trim has not been made.", since, today, window)
     cov = ev.get("curve_cov")
-    theta = None
-    if ev.get("curve_model") in ("hill", "log") and cov is not None:
+    theta, vals = None, None
+    spends = [max(before_spend, 0.01), max(s_after + waste, 0.01)]
+    if len(ev.get("form_fits") or []) > 1:
+        # the same forms the promise pooled over
+        from .models.ad_efficiency import form_mixture_values
+        vals = form_mixture_values(ev["form_fits"], spends, 400 * len(ev["form_fits"]), MEASURE_SEED)
+    elif ev.get("curve_model") in ("hill", "log") and cov is not None:
         theta = draw_params(ev["curve_model"], params_vector({"curve_model": ev["curve_model"],
                                                               "curve_params": ev.get("curve_params")}),
                             np.asarray(cov, dtype=float), 400, np.random.default_rng(MEASURE_SEED))
-    if theta is not None and len(theta) >= 50:
-        vals = curve_values(ev["curve_model"], theta, [max(before_spend, 0.01), max(s_after + waste, 0.01)])
+        if theta is not None and len(theta) >= 50:
+            vals = curve_values(ev["curve_model"], theta, spends)
+    if vals is not None and len(vals) >= 50:
         counterfactual = sales_after * vals[:, 0] / np.maximum(vals[:, 1], 1e-9)
         gains = n_days * ((before_eff - s_after) - avg_margin * (counterfactual - sales_after))
         gains = gains[np.isfinite(gains)]

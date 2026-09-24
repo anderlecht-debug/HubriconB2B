@@ -109,9 +109,18 @@ def test_the_trim_directive_is_sized_to_the_cautious_end_of_the_interval():
     drafts = draft_directives([], [row], [], margins)
     trim = next(d for d in drafts if d["kind"] == "campaign_trim")
     ev = trim["evidence"]
-    assert ev["breakeven_used"] == pytest.approx(ev["breakeven_p95"])
-    assert ev["breakeven_used"] >= ev["breakeven_spend"]
-    assert "we trim to the cautious end" in trim["action_text"]
+    # since 2026-09-24 the cautious end is taken across every curve form the
+    # backtest could not separate from the chosen one (and never below the
+    # spend the campaign has run): here the other form breaks even higher
+    fits = row["details"]["form_fits"]
+    cautious = max([ev["breakeven_p95"]] + [f["breakeven_p95"] or f["breakeven"] for f in fits[1:]])
+    assert ev["breakeven_used"] == pytest.approx(max(cautious, row["details"]["spend_p10"]))
+    assert ev["breakeven_used"] >= ev["breakeven_p95"] >= ev["breakeven_spend"] - 1e-9
+    if ev["target_bound_by"] == "breakeven":
+        assert "we trim to the cautious end" in trim["action_text"]
+    elif ev["target_bound_by"] == "form_disagreement":
+        assert "Two curve shapes fit these days equally well" in trim["action_text"]
+        assert len(ev["form_fits"]) == 2 and "pooled over the forms" in ev["net_basis"]
 
 
 def test_no_trim_is_drafted_when_the_interval_reaches_current_spend():

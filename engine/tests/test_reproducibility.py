@@ -167,7 +167,8 @@ def test_every_simulated_component_names_its_seed_or_its_generator():
     assert price_steps
     assert all(d["evidence"]["mc_inputs"]["seed"] is not None for d in price_steps)
     assert out["cash"]["n_paths"] > 0
-    assert out["inventory"][0]["simulations"] > 0
+    # per-SKU inventory figures are exact since 2026-09-24 and name their method
+    assert out["inventory"][0]["details"]["method"].startswith("exact")
     assert out["panel"]["simulations"] > 0
     assert out["risk"]["var"]["n_paths"] > 0
     assert all(r["details"]["uncertainty"].get("seed") is not None

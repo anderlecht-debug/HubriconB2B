@@ -476,18 +476,46 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
     for key, members in pools.items():
         # the residual variances moderated across the pool first: every
         # standard error and critical value below rides on the moderated one
-        mod = moderate_variances([float((r["details"].get("residual_sd_log") or 0.0)) ** 2 for r in members],
+        # A reaction-corrected fit's static residual is not its demand noise:
+        # the biased slope b absorbed part of every shock, and the residual's
+        # variance is the noise's less b²·var(log p). That part is added back
+        # before the pool moderates, so a corrected row is moderated on its
+        # noise, not skipped. Corrected 2026-09-24: skipped, a corrected row
+        # kept its raw twelve-point variance, lucky-small ones included, and
+        # the pool's between-SKU variance came out 0.96 where the truth was 0.33.
+        def _noise_var(r):
+            det = r["details"]
+            s2 = float(det.get("residual_sd_log") or 0.0) ** 2
+            endo = det.get("endogeneity") or {}
+            if "epsilon_uncorrected" in det and endo.get("applied") and det.get("price_log_var") is not None:
+                b_i = det.get("reaction_bias_sku", endo.get("bias_hat")) or 0.0
+                s2 += float(b_i) ** 2 * float(det["price_log_var"])
+            return s2
+        mod = moderate_variances([_noise_var(r) for r in members],
                                  [float(r["details"].get("dof") or 0) for r in members])
         if mod is not None:
             for r, s2m in zip(members, mod["moderated"]):
                 det = r["details"]
                 s2 = float(det.get("residual_sd_log") or 0.0) ** 2
-                # a reaction-corrected fit's error is not its static residual's:
-                # the biased slope absorbed part of every shock, so moderating
-                # that residual re-weights the pool on the wrong number
-                if s2 <= 0 or det.get("source") == "experiment" or "epsilon_uncorrected" in det:
+                if s2 <= 0 or det.get("source") == "experiment":
                     continue
                 ratio = float(np.sqrt(s2m / s2))
+                if "epsilon_uncorrected" in det:
+                    # the sampling error rescaled to the moderated noise
+                    det["std_err_unmoderated"] = r["std_err"]
+                    det["residual_sd_log_raw"] = det.get("residual_sd_log")
+                    det["residual_sd_log"] = num(float(np.sqrt(s2m)), 6)
+                    det["variance_moderation"] = {"ratio": num(ratio, 4), "prior_dof": num(mod["d0"], 3)
+                                                  if np.isfinite(mod["d0"]) else "inf",
+                                                  "pooled_sd_log": num(np.sqrt(mod["s0"]), 6),
+                                                  "absorbed_by_reaction": True}
+                    base_se = float(det.get("std_err_uncorrected") or 0.0) * ratio
+                    det["std_err_uncorrected"] = num(base_se, 4)
+                    r["std_err"] = num(base_se, 4)
+                    if det.get("std_err_classical_uncorrected") is not None:
+                        det["std_err_classical_raw"] = det["std_err_classical_uncorrected"]
+                        det["std_err_classical"] = num(float(det["std_err_classical_uncorrected"]) * ratio, 4)
+                    continue
                 dof_m = float(det.get("dof") or 0) + (mod["d0"] if np.isfinite(mod["d0"]) else 1e6)
                 # the critical value stays on the item's OWN degrees of freedom:
                 # the moderated variance fixes a lucky-small residual, but the
@@ -585,9 +613,11 @@ def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) 
             # other item in the pool: the pool mean's, in the share it borrowed
             rb = float(r["details"].get("reaction_bias_se") or 0.0)
             r["details"]["common_se"] = num(float(np.sqrt(((1.0 - weight) * np.sqrt(max(pvar, 0.0))) ** 2 + rb**2)), 4)
-            hetero = float(r["details"].get("reaction_bias_heterogeneity") or 0.0)
-            if hetero > 0:
-                post_se = float(np.sqrt(post_se**2 + hetero**2))
+            if rb > 0 and r["details"].get("source") != "experiment":
+                # the correction's own error, shared by every corrected row:
+                # the shrunk value carries it whole (it moved the prior mean
+                # by as much as the estimate), so it is added after the pool
+                post_se = float(np.sqrt(post_se**2 + rb**2))
             r["elasticity"] = num(shrunk, 4)
             r["std_err"] = num(post_se, 4)
             r["details"]["ci95"] = [num(shrunk - t_crit * post_se, 4),
@@ -770,6 +800,38 @@ def reaction_bias(moments: list[dict]) -> float | None:
     return static - (2.0 * full - 0.5 * (first + second))
 
 
+def _stacked(moments: list[dict], key: str) -> tuple[np.ndarray, np.ndarray]:
+    """Every SKU's (X'X, X'y) for one regression, stacked; zeros where a SKU
+    has none, so a weighted sum over SKUs is a matrix product."""
+    k = next((m[key][0].shape[0] for m in moments if m[key] is not None), 1)
+    A = np.zeros((len(moments), k, k))
+    b = np.zeros((len(moments), k))
+    for i, m in enumerate(moments):
+        if m[key] is not None:
+            A[i], b[i] = m[key]
+    return A, b
+
+
+def reaction_bias_weighted(moments: list[dict], counts: np.ndarray) -> np.ndarray:
+    """reaction_bias for many resamples at once: `counts` is (resamples × SKUs),
+    how often each SKU was drawn. NaN where a resample's pooled fit is
+    singular. Identical, resample by resample, to reaction_bias on the drawn
+    list (a bootstrap over SKUs is a weighted sum of their moments)."""
+    counts = np.asarray(counts, dtype=float)
+
+    def slope(key):
+        A, b = _stacked(moments, key)
+        XtX = np.einsum("rn,nij->rij", counts, A)
+        Xty = np.einsum("rn,ni->ri", counts, b)
+        out = np.full(len(counts), np.nan)
+        ok = np.abs(np.linalg.det(XtX)) > 1e-12 * np.maximum(1.0, np.abs(XtX).max(axis=(1, 2)) ** XtX.shape[1])
+        if ok.any():
+            out[ok] = np.linalg.solve(XtX[ok], Xty[ok][..., None])[:, 0, 0]
+        return out
+    static, full, first, second = (slope(k) for k in ("static", "full", "first", "second"))
+    return static - (2.0 * full - 0.5 * (first + second))
+
+
 def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, list[dict]] | None = None) -> dict:
     """Estimate the reaction bias once for the catalogue and subtract it from
     every fitted, non-experimental SKU row's RAW estimate, in place, before
@@ -791,7 +853,7 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
     applied, reason = False, None
     fitted = [r for r in rows if r.get("level") == "sku" and r.get("status") == "ok"
               and (r.get("details") or {}).get("source") != "experiment" and r.get("elasticity") is not None]
-    series, price_var = [], {}
+    series, series_v, price_var = [], [], {}
     for r in fitted:
         pts = (points_by_sku or {}).get(r["item_id"]) or (r.get("details") or {}).get("points") or []
         lp, lq = _series_of(pts)
@@ -799,7 +861,7 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
             price_var[r["item_id"]] = float(np.var(lp - lp.mean()))
         if len(lp) >= DYNAMIC_MIN_PERIODS:
             series.append(_sku_moments(lp, lq))
-    price_var_mean = float(np.mean(list(price_var.values()))) if price_var else 0.0
+            series_v.append(float(np.var(lp - lp.mean())))
     if diag.get("status") != "ok":
         reason = "too few (price, prior residual) pairs to estimate the habit"
     elif not diag["reactive"]:
@@ -808,13 +870,52 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
         reason = f"only {len(series)} SKUs have the {DYNAMIC_MIN_PERIODS} periods the controlled fit needs (need {BIAS_MIN_SKUS})"
     else:
         bias = reaction_bias(series)
+        # How the bias varies with a SKU's own price variance, from the
+        # catalogue itself: the same pooled correction on the lower and the
+        # upper half of SKUs by price variance, and the line through them.
+        # Theory allows either sign (a SKU whose price moves mostly by noise
+        # carries less bias per unit of variance; one whose price moves mostly
+        # in reaction carries more), so the data chooses. Added 2026-09-24,
+        # replacing b·(v̄/v − 1), which assumed the first and on the
+        # Simons–Thorp–Griffin bench's reacting catalogues had the sign wrong:
+        # the upper half's bias was 0.50–0.85 against the lower half's
+        # 0.26–0.51, and every SKU outside its interval was an upper-half one.
+        v_arr = np.asarray(series_v, dtype=float)
+        v_med = float(np.median(v_arr)) if len(v_arr) else 0.0
+        lo_idx = [j for j, v in enumerate(v_arr) if v <= v_med]
+        hi_idx = [j for j, v in enumerate(v_arr) if v > v_med]
+        halves_ok = min(len(lo_idx), len(hi_idx)) >= BIAS_MIN_SKUS
+
+        def _slope(lo_set, hi_set):
+            b_lo = reaction_bias([series[j] for j in lo_set])
+            b_hi = reaction_bias([series[j] for j in hi_set])
+            v_lo, v_hi = float(np.mean(v_arr[lo_set])), float(np.mean(v_arr[hi_set]))
+            if b_lo is None or b_hi is None or not np.isfinite(b_lo) or not np.isfinite(b_hi) or v_hi <= v_lo:
+                return None
+            return b_lo, b_hi, (b_hi - b_lo) / (v_hi - v_lo), v_lo
+        het = _slope(lo_idx, hi_idx) if halves_ok else None
+        # the bootstrap over SKUs as resample counts: every resample's pooled
+        # fits are weighted sums of the SKUs' stored moments, so all of them
+        # are one matrix product (2026-09-24; 600 refits a catalogue before)
         rng = np.random.default_rng(BIAS_SEED)
-        boots = []
-        for _ in range(BIAS_BOOTSTRAP):
-            pick = rng.integers(0, len(series), len(series))
-            b = reaction_bias([series[j] for j in pick])
-            if b is not None and np.isfinite(b):
-                boots.append(b)
+        n_s = len(series)
+        counts = np.stack([np.bincount(rng.integers(0, n_s, n_s), minlength=n_s) for _ in range(BIAS_BOOTSTRAP)])
+        bb = reaction_bias_weighted(series, counts)
+        boots = [float(x) for x in bb if np.isfinite(x)]
+        slopes = []
+        if het is not None:
+            lo_a, hi_a = np.array(lo_idx), np.array(hi_idx)
+            c_lo = np.zeros((BIAS_BOOTSTRAP, n_s))
+            c_hi = np.zeros((BIAS_BOOTSTRAP, n_s))
+            for r_ in range(BIAS_BOOTSTRAP):
+                np.add.at(c_lo[r_], lo_a[rng.integers(0, len(lo_a), len(lo_a))], 1.0)
+                np.add.at(c_hi[r_], hi_a[rng.integers(0, len(hi_a), len(hi_a))], 1.0)
+            b_lo_b, b_hi_b = reaction_bias_weighted(series, c_lo), reaction_bias_weighted(series, c_hi)
+            v_lo_b = (c_lo @ v_arr) / c_lo.sum(axis=1)
+            v_hi_b = (c_hi @ v_arr) / c_hi.sum(axis=1)
+            for bl, bh, vl, vh in zip(b_lo_b, b_hi_b, v_lo_b, v_hi_b):
+                if np.isfinite(bl) and np.isfinite(bh) and vh > vl:
+                    slopes.append((bl, bh, (bh - bl) / (vh - vl), vl))
         if bias is None or len(boots) < BIAS_BOOTSTRAP // 2:
             reason = "the pooled fits could not be computed on this catalogue"
         else:
@@ -822,6 +923,21 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
             diag.update({"bias_hat": num(bias, 4), "bias_se": num(se_bias, 4), "n_skus_both_fits": len(series),
                          "t_bias": num(bias / se_bias, 3) if se_bias > 0 else None,
                          "method": "pooled static less half-panel-jackknifed pooled controlled, bootstrap over SKUs"})
+            if het is not None and len(slopes) >= BIAS_BOOTSTRAP // 2:
+                slope_se = float(np.std([x[2] for x in slopes], ddof=1))
+                t_slope = het[2] / slope_se if slope_se > 0 else 0.0
+                # Not shrunk: one slope is one parameter, and shrinking a
+                # single estimate toward zero does not beat the estimate
+                # itself (Stein's result needs three or more); the size gate
+                # above and the slope's own error in every reading are what
+                # protect a catalogue with no real line. The line runs
+                # through the catalogue constant where the two meet.
+                v_c = (het[3] + (bias - het[0]) / het[2]) if het[2] else float(np.mean(v_arr))
+                diag["bias_by_price_variance"] = {
+                    "lower_half": num(het[0], 4), "upper_half": num(het[1], 4),
+                    "slope": num(het[2], 4), "slope_se": num(slope_se, 4), "t_slope": num(t_slope, 3),
+                    "slope_used": num(het[2], 4), "v_centre": num(v_c, 8),
+                    "basis": "the pooled correction on each half of the SKUs by price variance, and the line through them"}
             # Applied whenever the habit itself is established: the estimate is
             # then the best guess at a bias theory says exists, and its error
             # rides in every interval. A significance gate on the estimate
@@ -830,34 +946,44 @@ def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, l
             # because an eighty-SKU estimate of it carried a 0.15 error.
             applied = se_bias > 0
     diag["applied"], diag["reason"] = applied, reason
+    line = diag.get("bias_by_price_variance")
     for r in rows:
         det = r.setdefault("details", {})
         det["endogeneity"] = {k: diag.get(k) for k in ("status", "phi", "t_phi", "rho", "bias_hat", "bias_se",
-                                                      "applied", "reason", "method")}
+                                                      "applied", "reason", "method", "bias_by_price_variance")}
         if not applied or r not in fitted:
             continue
         bias, sd_b = float(diag["bias_hat"]), float(diag["bias_se"])
         t_crit = float(det.get("t_critical") or 1.96)
         det["epsilon_uncorrected"] = r["elasticity"]
         det["std_err_uncorrected"] = r["std_err"]
+        det["std_err_classical_uncorrected"] = det.get("std_err_classical")
         det["ci95_uncorrected"] = det.get("ci95")
-        det["reaction_bias_se"] = num(sd_b, 4)
-        # the catalogue's one correction is right for a SKU of average price
-        # variation; a SKU's own static bias scales roughly with the inverse
-        # of its own price variance, so the part of its bias the constant
-        # misses is carried as uncertainty (not as a correction: the SKU's
-        # own variance is too noisy on twelve points to correct by)
+        det["price_log_var"] = num(price_var.get(r["item_id"]), 8)
+        # The SKU's own correction, read off the catalogue's line at its own
+        # price variance when the catalogue could draw the line, else the one
+        # constant. The error of that reading comes from the same bootstrap
+        # and is shared across SKUs — a wrong line moves every SKU with it,
+        # it cannot spread them — so it is not put before the pool: _shrink
+        # adds it to each posterior (`reaction_bias_se`). Corrected
+        # 2026-09-24, twice. First the SKU-by-SKU part of the bias was
+        # modelled as b·(v̄/v − 1) and added to the interval after pooling;
+        # the pool then read that spread as signal (between-SKU variance
+        # 0.52–0.96 against a true 0.29–0.33 on the Simons–Thorp–Griffin
+        # bench's reacting catalogues), under-shrank the extremes, and the
+        # price cuts chosen there delivered 15–22% of their promise. Then it
+        # was carried as zero-mean noise before the pool — which narrowed the
+        # very SKUs whose bias had a known direction. A bias whose direction
+        # the catalogue shows is corrected, not averaged.
         v_i = price_var.get(r["item_id"])
-        hetero = bias * (price_var_mean / v_i - 1.0) if v_i and price_var_mean else 0.0
-        det["reaction_bias_heterogeneity"] = num(abs(hetero), 4)
-        # the shared error enters before the pool; the SKU's own heterogeneity
-        # is added to its published interval after it (_shrink), so it widens
-        # what the SKU is told without re-weighting what the pool learns
-        extra = sd_b**2
-        r["elasticity"] = num(float(r["elasticity"]) - bias, 4)
-        r["std_err"] = num(float(np.sqrt(float(r["std_err"] or 0.0) ** 2 + extra)), 4)
-        if det.get("std_err_classical") is not None:
-            det["std_err_classical"] = num(float(np.sqrt(float(det["std_err_classical"]) ** 2 + extra)), 4)
+        bias_i = bias
+        if line is not None and v_i is not None and float(line["slope_used"]) != 0.0:
+            dv = v_i - float(line["v_centre"])
+            bias_i = bias + float(line["slope_used"]) * dv
+            sd_b = float(np.hypot(sd_b, float(line["slope_se"]) * dv))
+        det["reaction_bias_sku"] = num(bias_i, 4)
+        det["reaction_bias_se"] = num(sd_b, 4)
+        r["elasticity"] = num(float(r["elasticity"]) - bias_i, 4)
         det["ci95"] = [num(float(r["elasticity"]) - t_crit * float(r["std_err"]), 4),
                        num(float(r["elasticity"]) + t_crit * float(r["std_err"]), 4)]
     return diag

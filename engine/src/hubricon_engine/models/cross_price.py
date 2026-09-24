@@ -74,6 +74,7 @@ CI_LEVEL = 0.95
 # omitted sibling effect was as large as the step's own. An estimate you do
 # not trust enters with the uncertainty that says so, not as a zero.
 MIN_CROSS_T = 2.0
+VUONG_Z = 1.645               # revenue weights must beat the equal-weighted index by this z
 
 
 def families(data: dict) -> dict[str, list[str]]:
@@ -172,7 +173,7 @@ def fit_family(family_id: str, members: dict[str, dict], weighting: str = "reven
             "se_cross_classical": num(se_cross_classical, 4),
             "ci95_cross": [num(beta[1] - t_crit * se_cross, 4), num(beta[1] + t_crit * se_cross, 4)],
             "n_obs": int(n), "dof": int(dof), "t_critical": num(t_crit, 4),
-            "ssr": float(resid @ resid), "index_weighting": weighting,
+            "ssr": float(resid @ resid), "index_weighting": weighting, "_resid": resid,
             "weights": {i: {j: num(w, 4) for j, w in wi.items()} for i, wi in weights.items()},
             "details": {**base["details"], "se_estimator": se_est,
                         "basis": (f"{len(children)} children × {len(shared)} shared periods, within-transformed; "
@@ -197,12 +198,35 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
     # index, the revenue-weighted proxy recovered 0.69–0.87 of the true family
     # effect (errors in the regressor attenuate its coefficient) and every
     # step's sibling term was a third too small.
+    #
+    # Corrected 2026-09-24: the smaller sum of squares chose, and the two
+    # indices fit the same data almost equally, so the choice was close to a
+    # coin; when it fell on the index the demand did not answer to, the
+    # family effect came out 0.12–0.23 low (five of six such catalogues on the
+    # Simons–Thorp–Griffin bench) and every step's sibling term with it. The
+    # equal-weighted index estimates nothing from the data and is the
+    # default; revenue weights must fit significantly better, by Vuong's test
+    # for non-nested models on the observation-by-observation difference in
+    # squared residuals across the catalogue (one-sided, z > VUONG_Z).
     candidates = {}
     for weighting in ("revenue", "equal"):
         fits_w = [fit_family(f, {c: series.get(c, {}) for c in members}, weighting) for f, members in sorted(fams.items())]
         ok_w = [f for f in fits_w if f["status"] == "ok"]
         candidates[weighting] = (sum(f["ssr"] for f in ok_w), len(ok_w), fits_w)
-    chosen = min(candidates, key=lambda k: (-candidates[k][1], candidates[k][0], k != "revenue"))
+    diff = []
+    for f_r, f_e in zip(candidates["revenue"][2], candidates["equal"][2]):
+        if f_r["status"] == "ok" and f_e["status"] == "ok" and len(f_r["_resid"]) == len(f_e["_resid"]):
+            diff.extend(np.square(f_e["_resid"]) - np.square(f_r["_resid"]))
+    diff = np.asarray(diff, dtype=float)
+    vuong_z = (float(diff.mean() / (diff.std(ddof=1) / np.sqrt(diff.size)))
+               if diff.size > 1 and diff.std(ddof=1) > 0 else 0.0)
+    if candidates["revenue"][1] != candidates["equal"][1]:
+        chosen = "revenue" if candidates["revenue"][1] > candidates["equal"][1] else "equal"
+    else:
+        chosen = "revenue" if vuong_z > VUONG_Z else "equal"
+    for k in candidates:
+        for f in candidates[k][2]:
+            f.pop("_resid", None)
     fits = candidates[chosen][2]
     ok = [f for f in fits if f["status"] == "ok"]
     prior = None
@@ -260,6 +284,8 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
                 n_prior += 1
     return {"status": "ok" if ok else "insufficient_data", "families": fits, "by_sku": by_sku,
             "index_weighting": chosen,
+            "index_choice": {"vuong_z": num(vuong_z, 3), "threshold": VUONG_Z,
+                             "rule": "equal weights unless revenue weights fit significantly better (Vuong, one-sided)"},
             "index_ssr": {k: num(v[0], 6) for k, v in candidates.items()},
             "n_families": len(fams), "n_fitted": len(ok), "n_identified": sum(1 for f in ok if f["identified"]),
             "n_on_prior": n_prior, "prior": prior, "min_t": MIN_CROSS_T,

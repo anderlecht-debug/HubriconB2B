@@ -1,4 +1,4 @@
-"""Monte Carlo inventory simulation, per SKU and across the catalog.
+"""Lead-time demand against the inventory position, per SKU and across the catalog.
 
 Demand during a replenishment lead time is simulated as
     lead_time  ~ lognormal(median = supplier lead time, sigma = 0.2)
@@ -14,6 +14,23 @@ zero raises its mean above the one it was calibrated to and removes the skew
 demand actually has, and it bit hardest on the thin volatile SKUs where the
 stockout question is live. The lognormal is moment-matched, so the marginal mean
 and variance are the ones the data showed, and it cannot go negative.
+
+Computed exactly, not simulated, since 2026-09-24. The rate and the lead time
+are independent lognormals, so their product Λ is lognormal too: log Λ ~
+N(log(rate·lead) − σ_r²/2, σ_r² + 0.2²). Lead-time demand is Poisson(Λ), and
+    P(D > x) = E_Z[ P(Gamma(x + 1) ≤ exp(μ + sZ)) ],  Z ~ N(0, 1),
+a one-dimensional integral taken by the trapezoid rule on a grid fine enough
+to resolve the Poisson step (spacing an eighth of its width, 1/(s·√(x+1))),
+which converges geometrically for an integrand this smooth. The reorder point
+and the demand percentiles are exact quantiles of the same mixture, found by
+bisection on the integers. Against four million simulated draws the exact
+figures sat within the simulation's own error in every case checked. Why it
+matters: with 8,000 draws the stockout probability carried a Monte Carlo error
+of about half a point, and a SKU whose true probability sat at the 25% alert
+line was drafted a reorder under one simulation seed and not under another
+(the Simons–Thorp–Griffin bench, seed 303). The same data now gives the same
+advice, and a SKU's figures no longer depend on how many SKUs were simulated
+before it.
 
 `aggregate` is the panel view and it is the reason the shared factor exists. A
 per-SKU stockout probability is a marginal statement and correlation does not
@@ -34,6 +51,47 @@ SERVICE_LEVEL = 0.95
 TARGET_COVER_EXTRA_DAYS = 30
 Z_95 = 1.645
 LEAD_TIME_CV = 0.2  # same lognormal lead-time assumption the simulation uses
+# the exact computation: grid spacing as a share of the Poisson step's width
+# in z (smaller is more accurate and slower; an eighth is below 1e-9), and
+# the half-width of the grid in standard deviations of the lognormal
+QUAD_STEP_SHARE = 1.0 / 8.0
+QUAD_MAX_STEP = 0.05
+QUAD_HALF_WIDTH = 9.0
+PERCENTILES = (5, 25, 50, 75, 95)
+
+
+def lead_time_mixture(mean_rate: float, std_rate: float, lead: float) -> tuple[float, float]:
+    """(μ, s) of log Λ, Λ = rate × lead time, both lognormal and independent."""
+    sr = dependence.log_sigma(mean_rate, std_rate)
+    mu = float(np.log(mean_rate * lead) - 0.5 * sr * sr)
+    return mu, float(np.sqrt(sr * sr + LEAD_TIME_CV * LEAD_TIME_CV))
+
+
+def demand_sf(x: int, mu: float, s: float) -> float:
+    """P(D > x) for D ~ Poisson(Λ), log Λ ~ N(μ, s²), by the trapezoid rule in z."""
+    from scipy.special import gammainc
+    if x < 0:
+        return 1.0
+    width = 1.0 / (s * np.sqrt(x + 1.0))
+    h = min(QUAD_MAX_STEP, QUAD_STEP_SHARE * width)
+    zc = (np.log(x + 1.0) - mu) / s
+    z = np.arange(min(-QUAD_HALF_WIDTH, zc - 12 * width), max(QUAD_HALF_WIDTH, zc + 12 * width) + h, h)
+    w = np.exp(-0.5 * z * z) * (h / np.sqrt(2.0 * np.pi))
+    return float(min(1.0, max(0.0, np.dot(w, gammainc(x + 1.0, np.exp(mu + s * z))))))
+
+
+def demand_quantile(q: float, mu: float, s: float) -> int:
+    """The smallest integer x with P(D ≤ x) ≥ q."""
+    lo, hi = -1, max(1, int(np.ceil(1.5 * np.exp(mu + 4.0 * s) + 20)))
+    while 1.0 - demand_sf(hi, mu, s) < q:
+        hi *= 2
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        if 1.0 - demand_sf(mid, mu, s) >= q:
+            hi = mid
+        else:
+            lo = mid
+    return hi
 
 
 def closed_form_rop(mean_rate: float, std_rate: float, lead: float) -> float:
@@ -80,7 +138,11 @@ def _log_rate_panel(econ_by_sku: dict[str, list[dict]]) -> dict[str, list[float]
 def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
         rate_overrides: dict[str, tuple[float, float]] | None = None,
         seasonal: dict | None = None, today=None) -> list[dict]:
-    """`rate_overrides` — {sku: (mean_rate, std_rate)} from the forecast
+    """`rng` and `simulations` are accepted for interface parity and unused
+    here: each SKU's figures are exact (see the module docstring), so they do
+    not depend on a seed or on the SKUs simulated before it.
+
+    `rate_overrides` — {sku: (mean_rate, std_rate)} from the forecast
     ladder; when present for a SKU it replaces the mean/std of observed
     periods so the stockout probability and the demand forecast are the
     same distribution. Surfaced as details.rate_source.
@@ -144,16 +206,14 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
         inbound = int(inv.get("inbound_quantity") or 0)
         position = fulfillable + inbound
 
-        lead_times = rng.lognormal(mean=np.log(lead), sigma=0.2, size=simulations)
-        # marginal draws: rho = 0 here on purpose. A single SKU's stockout
-        # probability is a marginal statement and a shared factor cannot change
-        # it; the joint question is answered by `aggregate` below.
-        sim_rates = dependence.correlated_rates(
-            rng, [mean_rate], [std_rate], (simulations,), 0.0)[0]
-        demand = rng.poisson(sim_rates * lead_times)
-
-        reorder_point = int(np.ceil(np.quantile(demand, SERVICE_LEVEL)))
-        p_out = float(np.mean(demand > position))
+        # exact, not simulated: a single SKU's stockout probability is a
+        # marginal statement (a shared factor cannot change it; the joint
+        # question is answered by `aggregate` below), and its marginal is a
+        # lognormal–Poisson mixture with a one-dimensional integral
+        mu, s_log = lead_time_mixture(mean_rate, std_rate, lead)
+        reorder_point = demand_quantile(SERVICE_LEVEL, mu, s_log)
+        p_out = demand_sf(position, mu, s_log)
+        expected_demand = mean_rate * lead * float(np.exp(0.5 * LEAD_TIME_CV ** 2))
         results.append(
             {
                 "sku": sku,
@@ -166,11 +226,12 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                 "days_of_cover": num(position / mean_rate, 1),
                 "reorder_point": reorder_point,
                 "reorder_qty": int(np.ceil(mean_rate * (lead + TARGET_COVER_EXTRA_DAYS))),
-                "safety_stock": max(0, reorder_point - int(round(float(np.mean(demand))))),
-                "simulations": simulations,
+                "safety_stock": max(0, reorder_point - int(round(expected_demand))),
+                "simulations": 0,
                 "details": {
+                    "method": "exact: lognormal–Poisson mixture, trapezoid rule in z",
                     "demand_percentiles": {
-                        f"p{p}": num(float(np.quantile(demand, p / 100)), 1) for p in (5, 25, 50, 75, 95)
+                        f"p{p}": float(demand_quantile(p / 100, mu, s_log)) for p in PERCENTILES
                     },
                     "closed_form_rop": num(closed_form_rop(mean_rate, std_rate, lead), 1),
                     "observed_periods": len(rates),
@@ -185,10 +246,11 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                     "rate_std_assumed": len(rates) < 2,
                     "rate_distribution": "lognormal, moments matched to observed",
                     **season_note,
-                    "stockout_probability_mc_se": num(
-                        float(np.sqrt(max(0.0, p_out * (1 - p_out)) / simulations)), 5),
-                    "reorder_point_mc_se": num(
-                        quantile_se(demand.astype(float), SERVICE_LEVEL), 3),
+                    # no simulation error: the figures are exact for the model
+                    "stockout_probability_mc_se": 0.0,
+                    "reorder_point_mc_se": 0.0,
+                    "lead_demand_log_mu": num(mu, 6),
+                    "lead_demand_log_sd": num(s_log, 6),
                 },
             }
         )

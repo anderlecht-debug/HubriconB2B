@@ -482,9 +482,27 @@ def _basis(name: str, n_used: int, backtest: dict, quantile_basis: str, horizon_
             f"figures scale that daily band by {horizon_days} days rather than convolving day-to-day noise.")
 
 
+def _period_prices(rows: list[dict], units_key: str) -> dict[str, float]:
+    """Average selling price per period: sales over units, else the row's own."""
+    tot: dict[str, list[float]] = {}
+    for r in rows:
+        u = float(r.get(units_key) or 0.0)
+        if u <= 0:
+            continue
+        sales = r.get("sales")
+        if sales is None and r.get("avg_sales_price") is not None:
+            sales = float(r["avg_sales_price"]) * u
+        if sales is None or float(sales) <= 0:
+            continue
+        t = tot.setdefault(r["period_start"], [0.0, 0.0])
+        t[0] += float(sales)
+        t[1] += u
+    return {k: v[0] / v[1] for k, v in tot.items() if v[1] > 0}
+
+
 def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
                    snapshots: list[dict], horizon_days: int, seasonal: dict | None = None,
-                   contaminated: set[str] | None = None) -> dict:
+                   contaminated: set[str] | None = None, price_eps: float | None = None) -> dict:
     from .seasonality import index_for
 
     # a re-uploaded period counts once
@@ -498,6 +516,26 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
         {"period_start": start, "rate": rate, "censored": start in censored}
         for start, rate in to_rates(rows, units_key)
     ]
+    # Each period's demand restated at today's price, on the SKU's own
+    # elasticity: a month sold 5% cheaper sold ~10% more at ε = −2, and a
+    # smoother reading that as level mistakes the price for the demand.
+    # Added 2026-09-24 — on the Simons–Thorp–Griffin bench the level error
+    # of the forecasts behind the reorders ran ±17% (10th to 90th
+    # percentile), about half of it the months' own prices.
+    price_note = None
+    if price_eps is not None and np.isfinite(price_eps) and series:
+        prices = _period_prices(rows, units_key)
+        p_ref = prices.get(series[-1]["period_start"])
+        if p_ref and p_ref > 0:
+            n_adj = 0
+            for x in series:
+                p_t = prices.get(x["period_start"])
+                if p_t and p_t > 0:
+                    x["rate"] = x["rate"] * (p_ref / p_t) ** float(price_eps)
+                    n_adj += 1
+            price_note = {"elasticity": num(float(price_eps), 4), "reference_price": num(p_ref, 4),
+                          "periods_adjusted": n_adj,
+                          "basis": "each period's rate restated at the latest period's price on the SKU's own elasticity"}
     clean = [s for s in series if not s["censored"]]
     use_all = not censored or len(clean) < MIN_PERIODS
     used = series if use_all else clean
@@ -535,6 +573,8 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
         "censored_periods": len(censored),
         "censoring_ignored": bool(censored) and use_all,
     }
+    if price_note:
+        details["price_normalised"] = price_note
     if n_used < MIN_PERIODS:
         details["basis"] = (f"Only {n_used} usable period(s) of demand history; at least {MIN_PERIODS} "
                             "are needed before any forecast is attempted.")
@@ -549,6 +589,11 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
         errors, quantile_basis = _in_sample_residuals(y, fit["fitted"]), "in_sample_residuals"
     q = quantiles_from_errors(point, errors)
     error_sd = float(np.std(errors, ddof=1)) if len(errors) >= 2 else None
+    # the spread a full-history forecast carries is closer to that of the
+    # later origins, which trained on most of the history, than to the early
+    # ones fitted on four or five points; the inventory models read this one
+    later = np.asarray(errors[len(errors) // 2:], dtype=float) if quantile_basis == "backtest_errors" else np.asarray(errors)
+    error_sd_later = float(np.sqrt(np.mean(later**2))) if later.size >= 2 else error_sd
 
     mase, naive_mase = backtest["mase"], backtest["candidates"]["naive"]
     if mase is not None and naive_mase is not None:
@@ -576,6 +621,8 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
         "backtest_origins": backtest["origins"],
         "candidates": {n: num(v, 4) for n, v in backtest["candidates"].items()},
         "error_sd": num(error_sd, 4),
+        "error_sd_later": num(error_sd_later, 4),
+        "error_sd_later_n": int(len(errors) - len(errors) // 2) if quantile_basis == "backtest_errors" else int(len(errors)),
         "quantile_basis": quantile_basis,
         "basis": _basis(name, n_used, backtest, quantile_basis, horizon_days),
     })
@@ -583,13 +630,16 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
 
 
 def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORIZON_DAYS,
-        seasonal: dict | None = None) -> list[dict]:
+        seasonal: dict | None = None, elasticity_rows: list[dict] | None = None) -> list[dict]:
     """One row per SKU in sku_economics (units_sold). ASINs in asin_traffic
     that no SKU row covers (via the SKU->ASIN bridge) get their own row at
     level 'asin' from units_ordered — the whole catalog when it is ASIN-only.
     `rng`/`simulations` are accepted for interface parity and unused: the
     forecast is deterministic. `seasonal` is models/seasonality.indices(data);
-    with it on file the ladder gains the pooled seasonal-index candidate."""
+    with it on file the ladder gains the pooled seasonal-index candidate.
+    `elasticity_rows` is models/elasticity.run's output: a SKU with a fitted
+    elasticity is forecast on its history restated at its latest price, so
+    the forecast is demand at today's price (details.price_normalised)."""
     econ = data.get("sku_economics") or []
     traffic = data.get("asin_traffic") or []
     inventory = data.get("inventory_levels") or []
@@ -611,10 +661,13 @@ def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORI
 
     from .data_quality import contaminated_periods
     bad = contaminated_periods(data)
+    eps_by_sku = {r["item_id"]: float(r["elasticity"]) for r in (elasticity_rows or [])
+                  if r.get("level") == "sku" and r.get("status") == "ok" and r.get("elasticity") is not None
+                  and (r.get("details") or {}).get("source") != "experiment_pending"}
     results = []
     for sku, rows in sorted(econ_by_sku.items()):
         results.append(_forecast_item("sku", sku, rows, "units_sold", snaps_by_sku.get(sku, []), horizon_days, seasonal,
-                                      contaminated=set((bad.get(sku) or {}).keys())))
+                                      contaminated=set((bad.get(sku) or {}).keys()), price_eps=eps_by_sku.get(sku)))
     covered = {bridge[sku] for sku in econ_by_sku if sku in bridge}
     for asin, rows in sorted(traffic_by_asin.items()):
         if asin in covered:
@@ -622,4 +675,37 @@ def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORI
         results.append(
             _forecast_item("asin", asin, rows, "units_ordered", snaps_by_asin.get(asin, []), horizon_days, seasonal)
         )
+    moderate_error_spread(results)
     return results
+
+
+def moderate_error_spread(rows: list[dict]) -> None:
+    """Each SKU's forecast error spread, relative to its own point, moderated
+    across the catalogue (the same empirical-Bayes moderation the elasticity
+    fits use, models/elasticity.moderate_variances), in place.
+
+    Added 2026-09-24. A SKU's spread comes from about eight rolling-origin
+    errors, and a noisy eight-point spread of 0.5 where the demand's own is
+    0.2 sent reorders at a 98% fractile to 2.6 times the median: on the
+    model-risk bench's catalogues the orders placed above the true optimum
+    cost 15–22% more than it, most of it on such SKUs. The unmoderated
+    spread is kept as details.error_sd_raw."""
+    from .elasticity import moderate_variances
+    usable = [r for r in rows if r.get("status") == "ok" and r.get("level") == "sku"
+              and (r.get("details") or {}).get("error_sd_later") and float(r.get("daily_rate_point") or 0) > 0]
+    if not usable:
+        return
+    # the later origins' errors, relative to the point, as a mean square on
+    # their own count (a root mean square about zero: the forecast's error,
+    # not its spread about its own bias)
+    rel = [(float(r["details"]["error_sd_later"]) / float(r["daily_rate_point"])) ** 2 for r in usable]
+    dof = [max(1, int((r.get("details") or {}).get("error_sd_later_n") or 2)) for r in usable]
+    mod = moderate_variances(rel, dof)
+    if mod is None:
+        return
+    for r, v in zip(usable, mod["moderated"]):
+        det = r["details"]
+        det["error_sd_raw"] = det["error_sd"]
+        det["error_sd"] = num(float(np.sqrt(v)) * float(r["daily_rate_point"]), 4)
+        det["error_sd_moderation"] = {"prior_dof": num(mod["d0"], 3) if np.isfinite(mod["d0"]) else "inf",
+                                      "pooled_relative_sd": num(float(np.sqrt(mod["s0"])), 4)}

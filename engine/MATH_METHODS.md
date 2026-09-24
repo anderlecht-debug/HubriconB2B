@@ -158,6 +158,39 @@ wider than their own sampling noise explains, and in that case every SKU is
 described better by the pooled estimate. It is visible in the payload (every
 weight goes to zero) rather than silent.
 
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38): the pool, as it now
+runs.** Five changes to the rule above, each forced by a bench failure.
+
+1. **τ is integrated over, not plugged in.** DerSimonian–Laird hit zero on
+   the bench's catalogues and published intervals that held the truth for
+   19–25% of SKUs. The spread now carries a flat prior on τ², and every
+   weight and posterior variance is averaged over τ's posterior on a grid
+   (a flat prior on τ itself leaned small where the data cannot pin the
+   spread: five-period step bands 0.82 → 0.91).
+2. **The prior mean is a regression, not a constant (Fay–Herriot).** A
+   SKU's markup implies the elasticity at which its current price would be
+   optimal, x = −k/(k − 1) with k = p(1 − f)/(c + F). The pool regresses on
+   it with a slope the data sets — near zero on a catalogue priced at
+   random, as the bench's randomly priced worlds are.
+3. **"Are these prices already optimal?"** A catalogue-level comparison by
+   BIC between every SKU sitting at its markup-implied elasticity and the
+   pooled model; its posterior weight enters every price step's draws as a
+   mixture (§3). It reads 0.75 on the bench's already-optimal world and
+   0.00 on every randomly priced one.
+4. **Residual variances moderated first** (Smyth 2004's moderated t), each
+   SKU's own critical value kept: a lucky-small twelve-point variance had
+   produced steps on ε̂ = −10.9 with a standard error near one.
+5. **Which error goes where.** An error that is the SKU's own enters its
+   standard error before the pool; an error every SKU shares (the reaction
+   correction's) is added to each posterior after it, because a shared error
+   moves every estimate together and cannot spread them. The first placement
+   had the two the other way round: the pool read the corrected fits'
+   SKU-by-SKU bias as signal, put the between-SKU variance at 0.52–0.96
+   against a true 0.29–0.33, and under-shrank the extremes — where price
+   cuts are chosen. On the bench the cuts delivered 15–22% of their promise.
+   After, the posterior calibrates by bin on the reacting catalogues (SKUs
+   published at −2.66 average −2.75 in truth).
+
 ### What the elasticity cannot tell you
 
 **It is a correlation, and the price was not randomised.** The prices in the
@@ -257,6 +290,51 @@ first and dropped: ρ̂ read off the residuals of the very regression the
 reaction biases came out at 0.19 against a true 0.6, and the correction it
 produced was a fifth of the bias.
 
+**Corrected again 2026-09-24 (the Simons–Thorp–Griffin bench,
+MATH_SCORECARD.md iteration 38): the correction as it now runs.** Two
+things in the paragraph above no longer describe the code. The bias is not
+a trimmed mean of per-SKU differences — the controlled fit's own
+short-panel bias rode into each difference — but the pooled static slope
+less the half-panel-jackknifed pooled controlled slope (Dhaene and
+Jochmans 2015), 2·β(full) − ½·(β(first half) + β(second half)), both
+pooled over every SKU with a fixed effect each and built from each SKU's
+stored regression moments, so the 200-draw bootstrap over SKUs is one
+weighted matrix product and not 600 refits. And it is applied to every raw
+fit *before* the pool learns, because the pool mean carries the same bias,
+whenever the seller's habit is established; a significance gate on the
+bias estimate itself left a known −0.2 in place where demand had no memory.
+
+The bias is not the same for every SKU. A SKU whose price moves mostly in
+reaction to demand carries more of it per unit of price variance than one
+whose price moves mostly by noise, and a catalogue can lean either way. So
+the same pooled correction is estimated on the lower and on the upper half
+of the SKUs by price variance, and each SKU is corrected by its reading of
+the line through the two (`reaction_bias_sku`), when each half holds at
+least twenty SKUs; a smaller catalogue gets the one constant. The slope is
+not shrunk — it is one parameter, and shrinking a single estimate toward
+zero does not beat the estimate (Stein's improvement needs three or more)
+— and the reading's bootstrap error, which every SKU shares, is added to
+each posterior after the pool (`reaction_bias_se`). On the bench's six
+reacting catalogues the upper half's bias read 0.50–0.85 against the lower
+half's 0.26–0.51, and every SKU outside its interval had been an
+upper-half one. Replaced: a term b·(v̄/v − 1) that assumed the heterogeneity
+ran the other way. Measured over the six: 95% interval coverage 0.91–0.99
+(it was 0.86–0.98), median error −0.06 to +0.17 (it was −0.02 to +0.21).
+
+A corrected fit's static residual is not its demand noise: the biased
+slope absorbed b²·var(ln p) of it. That part is added back before the
+residual variances are moderated across the pool (below), so a corrected
+row is moderated on its noise rather than skipped.
+
+What remains, measured and not fixed: the correction's own error is larger
+than its bootstrap says. The bootstrap resamples SKUs; the half-panel
+jackknife leaves a bias of order 1/T² that no resampling of SKUs can see.
+Across the six catalogues the correction missed the catalogue's median bias
+by −0.13 to +0.24 against a stated 0.05–0.08. A second-order correction
+needs subpanels too short for the controlled fit on twelve periods
+(thirds would leave three points for three coefficients); a GMM estimator
+on the differenced equation is on the scorecard's list.
+
 What it cannot do: a seller who reacts to something *other* than last
 period's demand of the same SKU (a competitor's move, a stock position) is
 not controlled for, and a reaction that changes over the window is averaged.
@@ -349,6 +427,15 @@ the "identified" families were the ones whose noise happened to be largest,
 median error +1.0 — to 0.34 and a median error of −0.09. Without an index
 nothing changes and every row says so (`details.seasonal_adjustment`).
 
+Two additions of 2026-09-24 (iteration 38). Under twelve calendar months a
+*relative* catalogue index from six or more observed months is used for the
+price fits only: with twelve months the fits were deseasonalised and with
+eleven they were not, and dropping one month from the middle of a year
+flipped 22–26% of the bench's step directions (1–2% with the relative
+index). And a month the data-quality pass flags — a stockout the Buy Box
+share shows, a deal the settlement rebates show (§8b) — is left out of
+every price fit, the forecast, and the seasonal index itself.
+
 **The other limits.** Constant elasticity is a local approximation; it is used
 only inside a ±5% band around the observed price and extrapolation beyond the
 observed price range is not attempted. Cross-price effects between the client's
@@ -398,6 +485,17 @@ same guard also fires on a clearly elastic estimate whose interval is merely wid
 — forcing that SKU upward would assert the one thing the wide interval says is
 unknown. Both directions are searched and the objective, which integrates the
 whole posterior, decides.
+
+**Added 2026-09-24 (MATH_SCORECARD.md iteration 38): three more guards on
+a step.** The pole guard also refuses a destination whose optimum moves by
+more than half under a one-standard-error change in ε — far enough from −1
+for the t-test, still too close for the optimum to mean anything. A step
+needs **direction confidence**: on at least half the posterior's draws a
+half-percent move in its direction must raise the profit of the SKU and its
+family (the Bayes rule for a sign); it removed every step on the bench's
+already-optimal world and cost nothing elsewhere. And the **already-optimal
+mixture** of §2 is in every draw set, with no sibling term under it — a
+catalogue at its optimum has a zero family derivative.
 
 ### The risk budget is the client's
 
@@ -530,6 +628,24 @@ passed the gate went from a median error of +1.0 — the gate had been
 selecting the noisiest — to −0.09. A family planted at zero is "unidentified"
 by construction, and that is the right answer: there is no effect to carry.
 
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38): the gate is
+lifted, and the index is tested.** Setting an unidentified family's cross
+term to exactly zero is a confident claim of no effect, made with no
+uncertainty; on the bench, whose every family has a true cross-elasticity
+between 0.3 and 1.2, it dropped the sibling term from most steps. Every
+fitted family now enters its steps at its shrunk estimate with its own
+posterior (`identified` stays on the record), and a family too thin to fit
+carries the catalogue's prior at the prior's width. The sibling index is
+equal-weighted unless revenue weights fit significantly better — Vuong's
+test for non-nested models on the observation-by-observation difference in
+squared residuals across the catalogue, one-sided at z > 1.645. The two
+indices fit the same data almost equally, and the smaller sum of squares
+had chosen revenue weights on six of twenty-four bench catalogues whose
+demand answered the equal index; there the family effect came out 0.12–0.23
+low, because errors in a regressor attenuate its coefficient. Under the
+test no catalogue qualified, and across the twenty-four the cross estimate's
+mean error is +0.01 with 97% of family intervals holding the truth.
+
 **What it does to a step.** Every candidate price in §3 is valued on own PLUS
 sibling profit: sibling j's units move by (p_new/p_0)^(ε_cross·w_ij) − 1, w_ij being
 this SKU's share of j's sibling index, ε_cross drawn from its own posterior on the
@@ -590,6 +706,23 @@ campaign as linear at its ROAS, so it still gives or takes budget. The selection
 candidates' errors and the improvement over the line ride on the row. Fewer than two
 backtest origins: Hill by default, and the row says so.
 
+**Added 2026-09-24 (MATH_SCORECARD.md iteration 38): the trim across the
+forms the data cannot tell apart, and never below the spend on file.** The
+backtest often cannot separate log from Hill (an improvement under one
+standard error of itself). Each such form is now fitted on the same days
+with its own break-even interval (`details.form_fits`); a trim goes to the
+cautious end across them — the highest of their break-even 95th
+percentiles — and never below the campaign's own 10th-percentile daily
+spend, because a deeper cut is extrapolation and belongs to the next
+cycle, on a curve refitted on the new days (`target_bound_by` says which
+rule set it). The promise and its band are drawn from all tied forms
+equally and the measurement's counterfactual uses the same pooled draws. A
+campaign the line wins carries the curve forms not significantly worse than
+it, for the reallocation. Why: a log curve chosen by a hair set one bench
+trim to $102 a day where the truth's break-even was $133, below any day the
+campaign had run, and it delivered 43% of its promise; trims as a whole
+went from 0.66 to 0.92–0.95 of their promise.
+
 **Refusals.** Fewer than 5 points, or a spend coefficient of variation below 2%:
 `curve_fit` converges on a flat-spend campaign onto an arbitrary point of a flat
 likelihood ridge and returns a **zero** covariance that reads as perfect
@@ -645,6 +778,24 @@ gain, P(loss), and the Monte Carlo error of each percentile. The free-budget opt
 (every campaign at marginal ROAS = 1/m) is solved beside it and published as
 information, so the report can say whether the account as a whole is over- or
 under-spent while the directive itself moves no total.
+
+**Added 2026-09-24 (MATH_SCORECARD.md iteration 38): the curve it is
+solved on, and the promise's optimism.** Each campaign's posterior-mean
+curve is averaged, equally, with every form the backtest could not separate
+from the chosen one, fitted on the same days — model averaging for the
+decision, not only for the band. A straight-line campaign in particular
+assumes the marginal dollar returns what the average dollar returns, which
+on a bending curve overstates every dollar it receives. The optimizer's
+curse is priced by resampling each campaign's days (80 resamples, the form
+drawn among the tied ones, the allocation re-solved on each): the mean gap
+between the gain a resample claims on its own curves and the same
+allocation's gain on the full-data curves comes off the promise, and the
+band is the wider of the parameter draws' and the resamples'. On the bench
+the bands went from 10 to 13 of 16 holding the truth. What it still cannot
+price is a form the backtest rejected: on one of six seeds the backtest
+preferred log to Hill at 2.5 standard errors on a campaign whose truth was
+a steep S-curve, the allocation poured budget into it, and four of that
+seed's five reallocations fell outside their bands.
 
 **Refusals.** Fewer than two campaigns with a usable covariance
 (`insufficient_campaigns`); a campaign whose covariance the fit could not produce
@@ -771,6 +922,28 @@ question is live. The lognormal is moment-matched and cannot go negative. The
 −sigma²/2 is not decoration: without it the mean is inflated by 6% at a 35%
 coefficient of variation.
 
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38): exact, not
+simulated.** The rate and the lead time are independent lognormals, so their
+product Λ is lognormal, ln Λ ~ N(ln(μ·L) − σ_r²/2, σ_r² + 0.2²); lead-time
+demand is Poisson(Λ), and
+
+```
+P(D > x) = E_Z[ P(Gamma(x + 1) ≤ exp(m + sZ)) ],   Z ~ N(0, 1)
+```
+
+a one-dimensional integral taken by the trapezoid rule on a grid an eighth
+of the Poisson step's width (geometric convergence for an integrand this
+smooth). The reorder point and the percentiles are exact quantiles found by
+bisection on the integers. Against four million simulated draws the exact
+figures sat inside the simulation's own error in all eight cases checked.
+Why: with 8,000 draws the stockout probability carried half a point of
+Monte Carlo error, and a bench SKU whose true probability was 0.2510 against
+the 25% alert was drafted a reorder under one seed and not under another.
+The order sizing below still simulates (its cycle adds a fixed review period
+to a lognormal lead time), but each SKU draws from its own stream keyed on
+the SKU, so its order depends neither on the caller's seed nor on the SKUs
+drawn before it.
+
 **Across the catalog** (`inventory_sim.aggregate`). A per-SKU stockout probability
 is a marginal statement and correlation cannot change it. "How many SKUs run out
 in the same month" is a joint statement and independence answers it far too
@@ -816,6 +989,32 @@ no information beyond the longest life it saw. The charge's standard error gives
 on q*, published beside it. Without a curve (under eight SKUs or six periods) the flat
 rate stands and the row says so. The risk pass therefore runs before the order sizing.
 
+**Added 2026-09-24 (MATH_SCORECARD.md iteration 38): the order at the
+sweep's own prices, on demand restated at today's.** Two things the order
+had not known.
+
+- *The price the same sweep sets.* Before the order is sized, the sweep's
+  price steps are planned once (`directives.plan_prices`: the same guarded
+  drafts the drafter then issues), and each SKU's demand is multiplied by
+  E[(p_new/p_0)^ε] over its own posterior — mixed with the already-optimal
+  model at its weight — times exp(ε_cross·Δ sibling index) for its family's
+  steps; the multiplier's variance joins the rate's. The bench's steps
+  raised the price of 80–90% of the SKUs they reordered and cut their demand
+  6–8%, and the orders had been sized on demand at the old prices. What is
+  valued at today's price (fee exposure, cover, hold-or-liquidate) keeps
+  today's rate.
+- *The months' own prices.* The forecast smoothed units sold at different
+  prices and read the price as level. Each period's rate is now restated at
+  the latest period's price on the SKU's own elasticity before the ladder
+  runs (the elasticity fit runs before the forecast for this), so the
+  forecast is demand at today's price. On the bench the orders' level error
+  went from ±17% (10th to 90th percentile) to ±12% and its median bias from
+  +1.5–6% to 0–2%.
+
+With the seasonal changes of §5a, the cost of ordering above the true
+optimum fell from 14–19.5% of the optimum's cost to 2–10% across the bench's
+catalogues, and the cost of ordering below it did not rise to pay for it.
+
 ### 5a. The seasonal term
 
 **What it computes** (`models/seasonality.py`). Every simulation above drew a rate
@@ -838,6 +1037,28 @@ seasonal rate. The forecast ladder gains `seasonal_index_ses` — deseasonalise,
 smooth, reseasonalise for the target month — scored by the same rolling-origin
 backtest as every candidate and never chosen by assertion; it runs on a SKU with far
 fewer than thirteen periods of its own because the index is the catalog's.
+
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38).** *Applied once:*
+a forecast's point already carried its target month's index, and the
+inventory simulation, the order sizing and the cash cone each multiplied it
+in again (orders on a September rate 24% low, newsvendor cost 48–79% above
+the optimum); `forecast.rate_moments` now returns the rate at an index of
+one and every consumer applies its own window's index exactly once. *Flagged
+months out:* a stockout or deal month (§8b) is left out of the index, as it
+was already out of the forecast — one October deal had put a SKU's October
+index at 1.6 and its order at twice the optimum. *One season, the
+catalogue's index:* with one season each SKU-month is a single observation
+and a SKU's own seasonal deviation cannot be told from its noise; the
+shrinkage had assumed a noise of 0.35 and let each SKU estimate its own
+spread from twelve points, and one noisy September put a SKU's September
+index 10% under the catalogue's and its deseasonalised rate 18% high. With
+one season every SKU now carries the catalogue's index, as the price fits
+already did; a second season lets its own in. The forecast ladder also keeps
+the simplest candidate within 2% of the best (a seasonal method won a flat
+catalogue on noise), scores the seasonal candidate on the catalogue index (a
+look-ahead leak), censors flagged months, and moderates each SKU's error
+spread across the catalogue (an eight-point spread of 0.5 where demand's own
+is 0.2 had sent 98% fractiles to 2.6× the median).
 
 **What it cannot tell you.** A month never observed (index 1, no interval, listed);
 a SKU whose season runs against the catalog's, from one season of evidence; holidays
@@ -1034,6 +1255,27 @@ the reason. Without a cone nothing is attached and nothing is invented.
 **Measured.** On a simulated account the ladder's P(ruin | $2,000 on day 20) matches a
 second simulation with the wire added within its Monte Carlo error; a zero wire leaves
 it unchanged; a wire past every path's minimum makes it one.
+
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38): charged only for
+what the plan does not already wire.** The cone's own plan wires every
+reorder it expects; the guard charged each drafted reorder in full on top of
+that, so a sweep of reorders read as ruin on a cone whose plan was solvent.
+A directive is now charged only its difference from the wire the plan
+already carries for that SKU and day (`wire_in_plan_usd` on the evidence).
+
+**Added 2026-09-24: the sweep as one book** (`models/portfolio.py`). Every
+directive is guarded on its own and a seller executes the sweep at once.
+Each promise is drawn as a split-normal on its own 5th/50th/95th
+percentiles, with the price steps' shared elasticity error on one common
+factor; a band is published per group (price steps, advertising, fee
+avoidance, recovery, markdowns, stock protection); the standing book's 5%
+expected shortfall is held inside the client's risk budget by demoting the
+largest tail contributors to an explicit yes; and the sweep's cash moves are
+deferred, least profit per cash dollar first, when together they would take
+the cone past the ruin warning. What the book does not carry: the common
+factor is the elasticity's shared error only — the family cross pool's error
+and next month's catalogue-wide volume are independent in the book — and on
+one of six bench seeds its price-step band missed high in two worlds.
 
 ### 6d. What would break you
 
@@ -1273,6 +1515,33 @@ account is `stalled`, not measured), materiality (under $25 the directive closes
 rather than banking noise), and the promise cap (never bank more than was
 promised).
 
+**Corrected 2026-09-24 (MATH_SCORECARD.md iteration 38): what the Record
+banks, as a book and per lever.** Price steps are banked as one book: the
+batch's 25th percentile, the haircut from the batch's medians spread over
+the steps by each one's own downside — not the sum of per-step 25th
+percentiles, which banked a fraction of a fraction. A trim is measured over
+its whole window against its thirty-day promise prorated to it (it had
+banked one day's net against thirty), on the pooled forms its promise was
+drawn from (§4); the negated terms' saving is compared window with window
+(the cap had compared a day with a month and banked nothing); a negation on
+a trimmed campaign is read at blended spend.
+
+The batch's volume response κ (above) regresses each step's realised volume
+change on the change *its fits predicted*, and a step's fits include its
+family: a sibling that moved in the same sweep moves the SKU's volume by
+ε_cross times its sibling index's change. κ read only the SKU's own term, so
+a family whose SKUs rose together — each one's loss partly refilled by its
+siblings' rises — read as volume that did not respond. And κ overrides every
+fit in the batch only at three of its standard errors, not two: on ±5% steps
+the predicted change is about ten per cent and κ's error about 0.2, so at two
+a correct batch trips it one time in twenty on the month's shocks alone and
+then every counterfactual is halved (on the bench, $721 banked of $3,472
+true). A batch that did not respond at all sits five errors out and is still
+caught; a partial shortfall one step can show is held by that step's own
+ceiling. On the bench the Record now banks 0.62–0.74 of the price-step
+promise, 0.83–0.91 of reallocations, 0.88–0.90 of trims and 0.93 of negated
+terms, and never more than the truth.
+
 **Therefore a correct engine books LESS than it promised.** Between the 25th
 percentile and the actual-profit cap, a forecast that is exactly right realises
 around 0.6 of its promise on a noise-free after period, and less under
@@ -1341,7 +1610,11 @@ If you read one section, read this one.
    fortnight-long step is invisible to a monthly estimator. Since 2026-09-23
    the randomised six-block test (`models/price_experiment.py`) IS one, for
    the SKUs that have run it; every other SKU's fit carries whatever bias the
-   correction did not reach, and the report says which is which.
+   correction did not reach, and the report says which is which. That
+   remainder is measured (§2, corrected again 2026-09-24): on six bench
+   catalogues the correction missed the catalogue's median bias by −0.13 to
+   +0.24 against a stated error of 0.05–0.08, so its stated error is too
+   small by about half.
 2. **A price optimum, for most SKUs, on a first upload.** With seven periods and
    20% demand noise, the elasticity cannot be separated from −1 for roughly five
    SKUs in six, and the engine declines to name a destination for them. It still
@@ -1365,7 +1638,17 @@ If you read one section, read this one.
 9. **Whether the curve forms are right.** Constant-elasticity demand, Hill ad
    response, lognormal demand rates, one demand factor, a multiplicative seasonal
    index by calendar month. Every interval in this engine is conditional on its
-   form, and no resampling tests a form.
+   form, and no resampling tests a form. Since 2026-09-24 the ad curve's forms
+   the data cannot separate are averaged (§4, §4b); a form the backtest
+   rejected is in no band, and one bench seed shows what that costs.
+10. **How far a whole catalogue's shared errors land in a given month.** The
+   engine states them — the elasticity pool's common error, the family cross
+   pool's, the reaction correction's — and across the bench's thirty-six
+   catalogues they are honest on average. In one catalogue two of them can
+   land two standard errors out on the same side, and then a fifth of that
+   month's step bands miss together and the month's steps realise a third
+   more (or less) than promised. The book of §6 carries only the first of
+   them on its common factor.
 
 ### The single most dangerous assumption
 
@@ -1399,4 +1682,7 @@ There is a second route that needs no experiment on anyone's prices, because the
 seller's own repricing habit is itself measurable from their export: if the
 strength with which they react to last month's demand can be estimated, the bias
 it induces becomes a nuisance parameter to subtract rather than an assumption to
-disclose. Whether that works is under measurement, not yet claimed.
+disclose. ~~Whether that works is under measurement, not yet claimed.~~
+**Built 2026-09-24** (§2): the reaction is estimated once per catalogue and its
+bias subtracted before the pool learns, each SKU on the catalogue's own line in
+price variance, with a remainder that is measured and disclosed above (#1).

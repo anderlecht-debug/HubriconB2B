@@ -66,7 +66,7 @@ could not produce is held at its current spend and named, never guessed at.
 
 import numpy as np
 
-from .ad_efficiency import CURVE_SEED, _marginal, curve_values, draw_params
+from .ad_efficiency import CURVE_SEED, _fit_form, _marginal, curve_values, draw_params
 from .common import num
 from .mc import quantiles_with_se
 from .pricing_engine import RISK_BUDGET_SHARE, certainty_equivalent, es5
@@ -206,9 +206,67 @@ def shrink_move(models, thetas, s0: np.ndarray, s_star: np.ndarray, tol: float, 
     return best
 
 
+# The optimizer's curse, priced by resampling the campaigns' own days. The
+# allocation is chosen to maximise gain on fitted curves, so the gain it
+# reports on those same curves is biased up; and the curves' asymptotic
+# covariance misses what a bootstrap of the days sees. Each resample refits
+# every campaign in its own form, re-solves the allocation, and measures the
+# gain it would claim on its own curves against the gain on the full-data
+# curves: the mean gap is the optimism, taken off the promise. The band is the
+# wider of the parameter draws' and the resamples'. Added 2026-09-24: on the
+# model-risk bench the reallocation's truth ran 0.91 of its promise on
+# average and fell outside the promised band in five of sixteen worlds.
+BOOT_B = 80
+BOOT_SEED = 20260927
+BOOT_MIN = 20
+BOOT_MIN_POINTS = 8
+
+
+def _bootstrap(active, models, daily, grid, bounds, mean_curves, s0, s_rec, alpha, delta):
+    rng = np.random.default_rng(BOOT_SEED)
+    samples = []
+    for r in active:
+        sp, sa = daily.get(r["campaign_name"], (None, None))
+        if sp is None or len(sp) < BOOT_MIN_POINTS:
+            return None
+        samples.append((sp, sa))
+
+    def value(curves, s):
+        return float(sum(np.interp(x, grid, c) for c, x in zip(curves, s)))
+
+    forms = []
+    for r, mdl in zip(active, models):
+        alt = ((r.get("details") or {}).get("form_alternatives") or {})
+        fs, ws = alt.get("forms") or [mdl], alt.get("weights") or [1.0]
+        forms.append((fs, np.asarray(ws, dtype=float) / float(np.sum(ws))))
+    gaps, gains = [], []
+    for _ in range(BOOT_B):
+        curves_b = []
+        for (fs, ws), (sp, sa) in zip(forms, samples):
+            idx = rng.integers(0, len(sp), len(sp))
+            # the form itself drawn among those the backtest could not separate
+            form = fs[int(rng.choice(len(fs), p=ws))] if len(fs) > 1 else fs[0]
+            fit = _fit_form(form, sp[idx], sa[idx])
+            if fit is None:
+                curves_b = None
+                break
+            curves_b.append(curve_values(form, fit[0], grid)[0])
+        if curves_b is None:
+            continue
+        cb = np.vstack(curves_b)
+        picks_b, _ = allocate_dp(cb, bounds, GRID)
+        s_rec_b = s0 + alpha * (picks_b * delta - s0)
+        gaps.append((value(cb, s_rec_b) - value(cb, s0)) - (value(mean_curves, s_rec_b) - value(mean_curves, s0)))
+        gains.append(value(cb, s_rec) - value(cb, s0))
+    if len(gains) < BOOT_MIN:
+        return None
+    return {"optimism": float(np.mean(gaps)), "gains": np.array(gains), "n": len(gains)}
+
+
 def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS,
         rng: np.random.Generator | None = None, exclude: set[str] | None = None,
-        risk_share: float | None = None) -> dict:
+        risk_share: float | None = None,
+        daily: dict[str, tuple[np.ndarray, np.ndarray]] | None = None) -> dict:
     """The reallocation over the campaigns that can enter it.
 
     `exclude` names campaigns another directive already moves this cycle (a
@@ -254,6 +312,24 @@ def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS
     delta = budget / GRID
     grid = np.arange(0, GRID + 2) * delta
     mean_curves = np.vstack([curve_values(mdl, th, grid).mean(axis=0) for mdl, th in zip(models, thetas)])
+    # the allocation is solved on the form-averaged curve: every form the
+    # backtest could not separate from the chosen one, fitted on the same
+    # days, equally weighted (Bayesian model averaging for the decision, not
+    # only for the band it reports)
+    if daily:
+        for i, r in enumerate(active):
+            alt = ((r.get("details") or {}).get("form_alternatives") or {})
+            fs = alt.get("forms") or []
+            sp, sa = daily.get(r["campaign_name"], (None, None))
+            if len(fs) > 1 and sp is not None and len(sp) >= BOOT_MIN_POINTS:
+                rows_f = [mean_curves[i]]
+                for f in fs:
+                    if f == models[i]:
+                        continue
+                    fit = _fit_form(f, sp, sa)
+                    if fit is not None:
+                        rows_f.append(curve_values(f, fit[0], grid)[0])
+                mean_curves[i] = np.mean(rows_f, axis=0)
     caps = [min(GRID + 1, int(np.floor(EXTRAPOLATION_CAP * float(r["details"]["max_spend"]) / delta)))
             for r in active]
     bounds = []
@@ -274,8 +350,18 @@ def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS
     alpha = policy["alpha"]
     s_rec = s0 + alpha * (s_star - s0)
     sales_gain = gain_draws(models, thetas, s0, s_rec)
-    profit_gain = HORIZON_DAYS * avg_margin * sales_gain
+    boot = (_bootstrap(active, models, daily, grid, bounds, mean_curves, s0, s_rec, alpha, delta)
+            if daily and alpha > 0 else None)
+    optimism = boot["optimism"] if boot else 0.0
+    # with resamples on file, the promise's centre is theirs (it carries the
+    # form's uncertainty); the parameter draws keep the shape of the spread
+    shift = (float(np.median(boot["gains"])) - float(np.median(sales_gain))) if boot else 0.0
+    profit_gain = HORIZON_DAYS * avg_margin * (sales_gain + shift - optimism)
     q = quantiles_with_se(profit_gain, (0.05, 0.50, 0.95))
+    if boot:
+        bq = np.quantile(HORIZON_DAYS * avg_margin * (boot["gains"] - optimism), [0.05, 0.95])
+        q[0.05]["value"] = min(float(q[0.05]["value"]), float(bq[0]))
+        q[0.95]["value"] = max(float(q[0.95]["value"]), float(bq[1]))
     p_loss = float(np.mean(profit_gain < 0)) if alpha > 0 else None
 
     campaigns = []
@@ -311,6 +397,10 @@ def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS
         "mc_se": {"p5": num(q[0.05]["se"], 3), "p50": num(q[0.50]["se"], 3), "p95": num(q[0.95]["se"], 3)},
         "mc_inputs": {"draws": int(m), "seed": ALLOC_SEED, "grid": GRID, "grid_step": num(delta, 4)},
         "sales_gain_daily_p50": num(float(np.quantile(sales_gain, 0.5))),
+        "optimism": ({"daily_sales": num(optimism, 4), "profit_30d": num(HORIZON_DAYS * avg_margin * optimism),
+                      "resamples": boot["n"], "seed": BOOT_SEED,
+                      "basis": "days resampled per campaign, curves refitted in their own form, allocation re-solved"}
+                     if boot else None),
         "free_budget": {"total": num(sum(free) * delta),
                         "per_campaign": {r["campaign_name"]: num(f * delta) for r, f in zip(active, free)}},
         "duality_gap": 0.0,

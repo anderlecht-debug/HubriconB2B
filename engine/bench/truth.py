@@ -216,6 +216,8 @@ def inventory_truth(out: dict, truth: dict, after_price: dict, shock: dict, rng)
         s_opt = max(float(np.quantile(demand, q)), position)
         rows.append({"sku": s, "cost_engine": cost(s_eng), "cost_optimal": cost(s_opt),
                      "s_engine": s_eng, "s_optimal": s_opt, "position": position,
+                     "demand_mean": float(demand.mean()), "demand_sd": float(demand.std()),
+                     "horizon_mean": float(horizon.mean()),
                      "orders": float(r["order_up_to"]) > position})
     ordering = [x for x in rows if x["orders"] or x["s_optimal"] > x["position"]]
     ce = sum(x["cost_engine"] for x in ordering)

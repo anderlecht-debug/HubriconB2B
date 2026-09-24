@@ -13,6 +13,7 @@ branded search terms — using the documented 25–60% incrementality range,
 framed as a tracked test the Ledger then measures.
 """
 
+import copy
 import hashlib
 import json
 
@@ -991,17 +992,24 @@ def _trim_net_draws(r: dict, new_spend: float, avg_margin: float):
     between today's spend and the trimmed one, on the curve's own parameter
     draws. None without a curve and a covariance to draw from."""
     from .models.ad_allocation import params_vector
-    from .models.ad_efficiency import CURVE_SEED, curve_values, draw_params
+    from .models.ad_efficiency import CURVE_SEED, curve_values, draw_params, form_mixture_values
     model = r.get("curve_model")
     cov = (r.get("details") or {}).get("curve_cov")
     if model not in ("hill", "log") or cov is None or not r.get("current_spend"):
         return None
-    theta = draw_params(model, params_vector(r), np.asarray(cov, dtype=float), TRIM_DRAWS,
-                        np.random.default_rng(CURVE_SEED))
-    if theta is None or len(theta) < 50:
-        return None
     cur = float(r["current_spend"])
-    vals = curve_values(model, theta, [cur, max(float(new_spend), 0.01)])
+    fits = (r.get("details") or {}).get("form_fits") or []
+    if len(fits) > 1:
+        # draws pooled over the forms the backtest could not tell apart
+        vals = form_mixture_values(fits, [cur, max(float(new_spend), 0.01)], TRIM_DRAWS * len(fits), CURVE_SEED)
+        if vals is None or len(vals) < 50:
+            return None
+    else:
+        theta = draw_params(model, params_vector(r), np.asarray(cov, dtype=float), TRIM_DRAWS,
+                            np.random.default_rng(CURVE_SEED))
+        if theta is None or len(theta) < 50:
+            return None
+        vals = curve_values(model, theta, [cur, max(float(new_spend), 0.01)])
     net = MEASUREMENT_HORIZON_DAYS * ((cur - float(new_spend)) - avg_margin * (vals[:, 0] - vals[:, 1]))
     net = net[np.isfinite(net)]
     return net if net.size >= 50 else None
@@ -1021,14 +1029,27 @@ def trim_candidates(ads: list[dict], avg_margin: float) -> dict[str, dict]:
         if not (r.get("status") == "ok" and r.get("current_spend") and r.get("breakeven_spend")
                 and float(r["current_spend"]) > float(r["breakeven_spend"])):
             continue
-        uncertainty = (r.get("details") or {}).get("uncertainty") or {}
+        det = r.get("details") or {}
+        uncertainty = det.get("uncertainty") or {}
         breakeven = float(r["breakeven_spend"])
         if uncertainty.get("breakeven_p95") is not None:
             breakeven = max(breakeven, float(uncertainty["breakeven_p95"]))
-        if float(r["current_spend"]) <= breakeven:
+        # the cautious end across the forms the data cannot separate, and
+        # never below the spend the campaign has run often enough to read:
+        # a deeper cut is the next cycle's, on a curve refitted on the new days
+        by_form = breakeven
+        for ff in (det.get("form_fits") or [])[1:]:
+            v = ff.get("breakeven_p95") if ff.get("breakeven_p95") is not None else ff.get("breakeven")
+            if v is not None:
+                by_form = max(by_form, float(v))
+        floor = float(det["spend_p10"]) if det.get("spend_p10") is not None else 0.0
+        target = max(by_form, floor)
+        if float(r["current_spend"]) <= target:
             continue
-        out[r["campaign_name"]] = {"breakeven": breakeven, "excess": float(r["current_spend"]) - breakeven,
-                                   "uncertainty": uncertainty}
+        out[r["campaign_name"]] = {"breakeven": target, "excess": float(r["current_spend"]) - target,
+                                   "uncertainty": uncertainty,
+                                   "bound_by": ("observed_floor" if floor > by_form else
+                                                "form_disagreement" if by_form > breakeven else "breakeven")}
     return out
 
 
@@ -1093,6 +1114,7 @@ def _budget_reallocation_directive(alloc: dict | None, share: float = DOWNSIDE_G
             "p_loss": alloc.get("p_loss"), "mc_se": alloc.get("mc_se"), "mc_inputs": alloc.get("mc_inputs"),
             "alpha": alloc.get("alpha"), "policy": alloc.get("policy"),
             "free_budget": alloc.get("free_budget"),
+            "optimism": alloc.get("optimism"),
             "campaign_monthly_net": round(monthly_net, 2),
         },
     )
@@ -1212,6 +1234,132 @@ def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
     )
 
 
+def cross_for(sku: str, cross_by_sku: dict, latest_by_sku: dict) -> dict | None:
+    """The family's side of a move on `sku`: each sibling's baseline
+    volume, contribution and the weight this SKU's price carries in the
+    sibling's index. Siblings without landed cost are left out and said."""
+    info = cross_by_sku.get(sku)
+    if not info:
+        return None
+    sibs = []
+    for sib in info.get("siblings") or []:
+        m = latest_by_sku.get(sib["sku"])
+        if not m or m.get("cogs") is None:
+            continue
+        units, revenue = float(m.get("units") or 0), float(m.get("revenue") or 0)
+        if units <= 0 or revenue <= 0:
+            continue
+        f, big_f, _ = fee_terms(m)
+        fees = float(m.get("amazon_fees") or 0)
+        sibs.append({"sku": sib["sku"], "q0": units, "weight": float(sib["weight"]),
+                     "contribution": revenue / units * (1 - f) - float(m["cogs"]) / units - big_f,
+                     "baseline_units": units, "baseline_profit": revenue - fees - float(m["cogs"])})
+    if not sibs:
+        return None
+    return {"eps": info["eps_cross"], "std_err": info["se_cross"], "dof": info.get("dof"),
+            "family": info["family"], "siblings": sibs}
+
+
+def _lognormal_moments(mu: float, var: float) -> tuple[float, float]:
+    """Mean and variance of exp(X), X ~ N(mu, var)."""
+    m = float(np.exp(mu + 0.5 * var))
+    return m, m * m * float(np.expm1(var))
+
+
+def own_demand_multiplier(ev: dict, fit: dict | None = None) -> tuple[float, float]:
+    """Mean and variance of (p_new/p0)^ε under the step's own posterior: the
+    fitted ε with its standard error, mixed with the markup-implied ε at the
+    weight the pricing engine gave "prices already optimal"."""
+    lr = float(np.log(float(ev["p_new"]) / float(ev["p0"])))
+    eps = float(ev.get("elasticity") or 0.0)
+    se = float(ev.get("std_err") or 0.0)
+    m1, v1 = _lognormal_moments(eps * lr, (se * lr) ** 2)
+    det = (fit or {}).get("details") or {}
+    pi, eps0 = ev.get("p_prices_optimal"), det.get("markup_implied_epsilon")
+    if pi is None or eps0 is None:
+        return m1, v1
+    pi, m2 = float(pi), float(np.exp(float(eps0) * lr))
+    mean = (1 - pi) * m1 + pi * m2
+    second = (1 - pi) * (v1 + m1 * m1) + pi * m2 * m2
+    return mean, max(0.0, second - mean * mean)
+
+
+def plan_prices(elasticity: list[dict], margins: list[dict], cross_price: dict | None = None,
+                risk_share: float | None = None, downside_share: float | None = None) -> dict:
+    """The sweep's price instructions, computed once, and what they do to each
+    SKU's demand.
+
+    `drafts` holds the guarded pricing draft for every SKU the drafter would
+    price (a markdown or a stretch later takes the SKU's place, decided on
+    stock the inventory model has not sized yet; such a SKU holds excess and
+    does not reorder). `multipliers` holds, for every SKU whose own price or
+    a sibling's moves, the mean and sd of its demand at the planned prices
+    relative to today's: (p_new/p0)^ε for its own step, and exp(ε_cross ×
+    Δ sibling index) for its family's, each over its own posterior.
+
+    Added 2026-09-24. Reorders were sized on demand at today's price while
+    the same sweep raised the price of most of the SKUs it reordered: on the
+    Simons–Thorp–Griffin bench the steps cut those SKUs' demand 6–8%, and
+    the orders placed above the true optimum cost 14–19% more than it."""
+    share = DOWNSIDE_GUARD_SHARE if downside_share is None else float(downside_share)
+    if risk_share is not None:
+        share = float(risk_share)
+    latest_by_sku = _latest_margins_by_sku(margins)
+    cross_by_sku = (cross_price or {}).get("by_sku") or {}
+    drafts, fits = {}, {}
+    for fit in elasticity:
+        if fit.get("status") != "ok" or fit.get("level") != "sku":
+            continue
+        margin_row = latest_by_sku.get(fit["item_id"])
+        if not margin_row:
+            continue
+        d = _pricing_directive(fit, margin_row, margins, cross=cross_for(fit["item_id"], cross_by_sku, latest_by_sku),
+                               risk_share=risk_share)
+        if d:
+            drafts[fit["item_id"]] = downside_guard(d, margin_row, share)
+            fits[fit["item_id"]] = fit
+    own, log_r = {}, {}
+    for sku, d in drafts.items():
+        ev = d.get("evidence") or {}
+        if d.get("kind") != "price_step" or not ev.get("p0") or ev.get("p_new") is None or ev.get("reason") == "stretch":
+            continue
+        r = float(ev["p_new"]) / float(ev["p0"])
+        if r <= 0 or abs(r - 1.0) < 1e-9:
+            continue
+        log_r[sku] = float(np.log(r))
+        own[sku] = own_demand_multiplier(ev, fits.get(sku))
+    multipliers = {}
+    for sku in sorted(set(own) | set(cross_by_sku)):
+        m_own, v_own = own.get(sku, (1.0, 0.0))
+        m_x, v_x, shift = 1.0, 0.0, 0.0
+        info = cross_by_sku.get(sku)
+        if info and info.get("eps_cross") is not None:
+            # this SKU's sibling index moves by the weighted log steps of its
+            # siblings; the weight of j in this SKU's index is the one j's
+            # own entry records for this SKU
+            for sib in info.get("siblings") or []:
+                j = sib["sku"]
+                if j not in log_r:
+                    continue
+                back = next((x for x in (cross_by_sku.get(j) or {}).get("siblings") or [] if x["sku"] == sku), None)
+                w = float(back["weight"]) if back else float(sib.get("weight") or 0.0)
+                shift += w * log_r[j]
+            if shift:
+                m_x, v_x = _lognormal_moments(float(info["eps_cross"]) * shift,
+                                              (float(info.get("se_cross") or 0.0) * shift) ** 2)
+        if sku not in own and not shift:
+            continue
+        mean = m_own * m_x
+        var = (v_own + m_own ** 2) * (v_x + m_x ** 2) - mean ** 2
+        ev = (drafts.get(sku) or {}).get("evidence") or {}
+        multipliers[sku] = {"multiplier": round(mean, 6), "sd": round(float(np.sqrt(max(0.0, var))), 6),
+                            "own": round(m_own, 6), "cross": round(m_x, 6),
+                            "p0": ev.get("p0") if sku in own else None,
+                            "p_new": ev.get("p_new") if sku in own else None}
+    return {"drafts": drafts, "multipliers": multipliers,
+            "basis": "the sweep's own price steps and its siblings', over each elasticity's posterior"}
+
+
 def draft_directives(inventory, ads, elasticity, margins,
                      search_terms=None, brand_terms=None,
                      recovery=None, inv_econ=None, anomaly_rows=None,
@@ -1229,7 +1377,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      risk_share: float | None = None,
                      cash: dict | None = None,
                      book_out: dict | None = None,
-                     ppc_spend_rows: list[dict] | None = None) -> list[dict]:
+                     ppc_spend_rows: list[dict] | None = None,
+                     price_plan: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1239,7 +1388,11 @@ def draft_directives(inventory, ads, elasticity, margins,
 
     `ad_allocation` is models.ad_allocation's output for this run; campaigns it
     moves were excluded from the trims at the point it was computed
-    (trim_candidates), so the two never promise on the same campaign."""
+    (trim_candidates), so the two never promise on the same campaign.
+
+    `price_plan` is plan_prices()'s output when the caller computed it before
+    the inventory model (so orders were sized on demand at the new prices);
+    without it the drafter computes the same plan itself."""
     today = date.today()
     # the client's stated risk tolerance governs both how far a move walks and
     # whether it may walk under the standing mandate
@@ -1436,7 +1589,11 @@ def draft_directives(inventory, ads, elasticity, margins,
                         "p_loss": round(float(np.mean(net_draws < 0)), 4),
                         "curve_model": r.get("curve_model"), "curve_params": r.get("curve_params"),
                         "curve_cov": (r.get("details") or {}).get("curve_cov"),
-                        "current_sales": r.get("current_sales"), "net_basis": "fitted curve, parameter draws"}
+                        "current_sales": r.get("current_sales"),
+                        "form_fits": (r.get("details") or {}).get("form_fits"),
+                        "net_basis": ("fitted curves, parameter draws pooled over the forms the backtest could not separate"
+                                      if len((r.get("details") or {}).get("form_fits") or []) > 1
+                                      else "fitted curve, parameter draws")}
             drafts.append(_draft(
                 "advertising", "campaign_trim", r["campaign_name"],
                 score=excess,
@@ -1451,13 +1608,19 @@ def draft_directives(inventory, ads, elasticity, margins,
                        if waste_daily.get(r["campaign_name"], 0.0) > 0.5 else "")
                     + (f" The fitted break-even sits between ${float(uncertainty['breakeven_p5']):,.0f} "
                        f"and ${float(uncertainty['breakeven_p95']):,.0f}; we trim to the cautious end."
-                       if uncertainty.get("breakeven_p5") is not None else "")
+                       if uncertainty.get("breakeven_p5") is not None and trims[r["campaign_name"]].get("bound_by") == "breakeven" else "")
+                    + (" Two curve shapes fit these days equally well; we trim to where the more cautious one "
+                       "breaks even." if trims[r["campaign_name"]].get("bound_by") == "form_disagreement" else "")
+                    + (f" The break-even may sit lower, but this campaign has rarely run below "
+                       f"${breakeven:,.0f} a day; we stop there this cycle and read the curve again on the new days."
+                       if trims[r["campaign_name"]].get("bound_by") == "observed_floor" else "")
                 ),
                 evidence={
                     "campaign_name": r["campaign_name"],
                     "current_spend": float(r["current_spend"]),
                     "breakeven_spend": float(r["breakeven_spend"]),
                     "breakeven_used": round(breakeven, 2),
+                    "target_bound_by": trims[r["campaign_name"]].get("bound_by"),
                     "negated_daily": round(waste_daily.get(r["campaign_name"], 0.0), 2),
                     "budget_after_negation": round(breakeven - waste_daily.get(r["campaign_name"], 0.0), 2),
                     "breakeven_p5": uncertainty.get("breakeven_p5"),
@@ -1505,45 +1668,21 @@ def draft_directives(inventory, ads, elasticity, margins,
             },
         ))
 
-    cross_by_sku = (cross_price or {}).get("by_sku") or {}
-
-    def _cross_for(sku: str) -> dict | None:
-        """The family's side of a move on `sku`: each sibling's baseline
-        volume, contribution and the weight this SKU's price carries in the
-        sibling's index. Siblings without landed cost are left out and said."""
-        info = cross_by_sku.get(sku)
-        if not info:
-            return None
-        sibs = []
-        for sib in info.get("siblings") or []:
-            m = latest_by_sku.get(sib["sku"])
-            if not m or m.get("cogs") is None:
-                continue
-            units, revenue = float(m.get("units") or 0), float(m.get("revenue") or 0)
-            if units <= 0 or revenue <= 0:
-                continue
-            f, big_f, _ = fee_terms(m)
-            fees = float(m.get("amazon_fees") or 0)
-            sibs.append({"sku": sib["sku"], "q0": units, "weight": float(sib["weight"]),
-                         "contribution": revenue / units * (1 - f) - float(m["cogs"]) / units - big_f,
-                         "baseline_units": units, "baseline_profit": revenue - fees - float(m["cogs"])})
-        if not sibs:
-            return None
-        return {"eps": info["eps_cross"], "std_err": info["se_cross"], "dof": info.get("dof"),
-                "family": info["family"], "siblings": sibs}
-
     near_unit: set[str] = set()
+    # the sweep's price instructions, computed once: the same plan sized the
+    # inventory orders on demand at the new prices (inventory_econ.run)
+    if price_plan is None:
+        price_plan = plan_prices(elasticity, margins, cross_price, risk_share, downside_share)
+    planned = price_plan.get("drafts") or {}
     for fit in elasticity:
         if fit.get("status") != "ok" or fit.get("level") != "sku" or fit["item_id"] in md_skus:
             continue
-        margin_row = latest_by_sku.get(fit["item_id"])
-        if not margin_row:
-            continue
-        d = _pricing_directive(fit, margin_row, margins, cross=_cross_for(fit["item_id"]), risk_share=risk_share)
+        d = planned.get(fit["item_id"])
         if d:
+            d = copy.deepcopy(d)
             if (d.get("evidence") or {}).get("status") == "near_unit_elastic":
                 near_unit.add(fit["item_id"])
-            drafts.append(downside_guard(d, margin_row, downside_share))
+            drafts.append(d)
 
     # The instrument. SKUs the history cannot price — no price variation at all,
     # or a fit that cannot be separated from the pole — get a randomised test,

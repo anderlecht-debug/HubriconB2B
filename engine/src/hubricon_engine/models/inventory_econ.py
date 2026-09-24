@@ -66,6 +66,11 @@ REVIEW_PERIOD_DAYS = 7          # the weekly sweep
 ANNUAL_CAPITAL_RATE = 0.12
 OBSOLESCENCE_RATE = 0.02        # of unit cost, per cycle
 LEAD_TIME_CV = 0.2              # mirrors inventory_sim
+# Each SKU's cycle demand is drawn from its own stream, keyed on the SKU: its
+# order does not depend on the caller's seed or on the SKUs drawn before it
+# (2026-09-24; the shared stream made one SKU's order move when another was
+# added to the catalogue). Changing it moves every draw.
+DEMAND_STREAM_SEED = 20260924
 FRACTILE_FLOOR, FRACTILE_CEIL = 0.50, 0.995
 HOLD_HORIZON_DAYS = 90          # cover beyond this counts as excess
 MAX_HOLD_MONTHS = 24
@@ -149,6 +154,12 @@ def obsolescence_charge(risk_out: dict | None, sku_age_periods: float, cycle_day
             "basis": f"Kaplan–Meier on the catalogue's SKU lifetimes, conditioned on {age:.0f} period(s) of age"}
 
 
+def sku_stream(sku: str) -> np.random.Generator:
+    """The SKU's own generator: the same draws whatever else is in the run."""
+    import zlib
+    return np.random.default_rng([DEMAND_STREAM_SEED, zlib.crc32(str(sku).encode("utf-8"))])
+
+
 def demand_over_cycle(mean_rate: float, std_rate: float, lead_days: float,
                       rng: np.random.Generator, simulations: int) -> np.ndarray:
     lead = rng.lognormal(mean=np.log(max(1.0, lead_days)), sigma=LEAD_TIME_CV, size=simulations)
@@ -200,8 +211,18 @@ def hold_vs_liquidate(excess_units: int, mean_rate: float, contribution: float, 
 def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None = None,
         forecast_rows: list[dict] | None = None, rng: np.random.Generator | None = None,
         simulations: int = 20000, today: date | None = None,
-        channel: str = "amazon", seasonal: dict | None = None, risk_out: dict | None = None) -> dict:
+        channel: str = "amazon", seasonal: dict | None = None, risk_out: dict | None = None,
+        price_plan: dict | None = None) -> dict:
+    """`price_plan` is directives.plan_prices()'s output: a SKU whose own
+    price or a sibling's moves this sweep has its order sized on demand at
+    the planned prices (the multiplier's own uncertainty added to the rate's
+    sd), and says so under `price_plan`. Everything valued at today's price
+    (fee exposure, cover, the hold-or-liquidate call) keeps today's rate.
+
+    `rng` is accepted for interface parity; each SKU's draws come from its
+    own stream (sku_stream)."""
     from .seasonality import horizon_factor, seasonal_rate
+    plan_mult = (price_plan or {}).get("multipliers") or {}
 
     today = today or date.today()
     rng = rng or np.random.default_rng(42)
@@ -347,7 +368,18 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
                                    today.month, size_tier, fee_cliffs=cliffs,
                                    obsolescence_per_unit=max(0.0, obs["per_unit"] - 1.645 * obs["per_unit_se"]))
             cf["q_band"] = [num(hi["q"], 4), num(lo["q"], 4)]
-        demand = demand_over_cycle(mean_rate, std_rate, lead, rng, simulations)
+        order_rate, order_sd = mean_rate, std_rate
+        pm = plan_mult.get(sku)
+        if pm and pm.get("multiplier"):
+            m, m_sd = float(pm["multiplier"]), float(pm.get("sd") or 0.0)
+            order_rate = mean_rate * m
+            order_sd = float(np.sqrt((std_rate * m) ** 2 + (mean_rate * m_sd) ** 2))
+            row["price_plan"] = {"demand_multiplier": num(m, 4), "demand_multiplier_sd": num(m_sd, 4),
+                                 "own": pm.get("own"), "cross": pm.get("cross"),
+                                 "p0": pm.get("p0"), "p_new": pm.get("p_new"),
+                                 "order_rate_mean": num(order_rate, 4), "order_rate_sd": num(order_sd, 4),
+                                 "basis": "order sized on demand at this sweep's planned prices"}
+        demand = demand_over_cycle(order_rate, order_sd, lead, sku_stream(sku), simulations)
         order_up_to = int(np.ceil(np.quantile(demand, cf["q"])))
         order_qty = max(0, order_up_to - position)
         implied_current = float(np.mean(demand <= position + int(inv.get("reorder_qty") or 0)))

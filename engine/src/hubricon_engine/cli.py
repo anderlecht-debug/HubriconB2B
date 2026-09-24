@@ -46,7 +46,7 @@ from . import calibration, proof, referral, speed
 from . import loop as loopmod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
-from .directives import draft_directives, resolve_brand_terms, trim_candidates
+from .directives import draft_directives, plan_prices, resolve_brand_terms, trim_candidates
 from .growth_plan import latest_period_totals, pace, propose_plan
 from .ingest import PARSERS, parse_all
 from .notify import alert_email_body, email_configured, send_email
@@ -92,7 +92,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("dataq", "margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
+ALL_MODELS = ("dataq", "margin", "season", "experiments", "elasticity", "forecast", "inventory", "crossprice", "anomaly",
               "incrementality", "clv", "ads", "adalloc", "recovery", "risk", "invecon", "markdown", "replenish",
               "assortment", "cash", "cashorders", "stress", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
@@ -354,6 +354,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
     try:
         avg_margin = None
         margin_rows = inventory_rows = elast_rows = ads_rows = forecast_rows = anomaly_rows = None
+        ad_breaks = cross = None
         rec = inv_econ = risk_out = cash = health = claims = None
         dq = None
         if "dataq" in wanted:
@@ -374,30 +375,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                   + (f"peak-to-trough {float(seasonal['amplitude']):.2f}× over {seasonal['months_observed']} months "
                      f"({seasonal['basis_label']})" if seasonal["status"] == "ok"
                      else f"{seasonal['status']} — {seasonal.get('basis', '')}"))
-        if "forecast" in wanted:
-            forecast_rows = forecast.run(data, seasonal=seasonal)
-            _save_output(db, run_id, client["id"], "forecast", {"rows": forecast_rows})
-            ok = [f for f in forecast_rows if f["status"] == "ok"]
-            gains = [float(f["fva_pct"]) for f in ok if f.get("fva_pct") is not None]
-            print(f"  forecast: {len(ok)} of {len(forecast_rows)} items backtested"
-                  + (f", mean gain vs naive {sum(gains) / len(gains):+.0f}%" if gains else ""))
-        if "inventory" in wanted:
-            overrides = {f["item_id"]: forecast.rate_moments(f) for f in (forecast_rows or [])
-                         if f["status"] == "ok" and f["level"] == "sku"}
-            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides,
-                                               seasonal=seasonal, today=today)
-            _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
-            # the joint view: how many SKUs run out in the same lead time once
-            # demand shares a common factor, beside the independent figure the
-            # per-SKU rows imply
-            inventory_panel = inventory_sim.aggregate(inventory_rows, data, rng,
-                                                      simulations=simulations)
-            _save_output(db, run_id, client["id"], "inventory_panel", inventory_panel)
-            if inventory_panel.get("status") == "ok":
-                c, i = inventory_panel["correlated"], inventory_panel["independent"]
-                print(f"  inventory panel: {c['expected_stockouts']:.1f} SKUs expected out of "
-                      f"stock, {c['p95_stockouts']:.0f} at the 95th percentile "
-                      f"(independent draws would say {i['p95_stockouts']:.0f})")
+        # the fits before the forecast: it restates each month's demand at
+        # today's price on the SKU's own elasticity
         experiments = None
         if "experiments" in wanted:
             tests = _load_price_tests(db, client["id"])
@@ -426,6 +405,30 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             drift_el = drift.compare_runs(elast_rows, prev_el, [], [])
             drift.apply_to_elasticity(elast_rows, drift_el)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
+        if "forecast" in wanted:
+            forecast_rows = forecast.run(data, seasonal=seasonal, elasticity_rows=elast_rows)
+            _save_output(db, run_id, client["id"], "forecast", {"rows": forecast_rows})
+            ok = [f for f in forecast_rows if f["status"] == "ok"]
+            gains = [float(f["fva_pct"]) for f in ok if f.get("fva_pct") is not None]
+            print(f"  forecast: {len(ok)} of {len(forecast_rows)} items backtested"
+                  + (f", mean gain vs naive {sum(gains) / len(gains):+.0f}%" if gains else ""))
+        if "inventory" in wanted:
+            overrides = {f["item_id"]: forecast.rate_moments(f) for f in (forecast_rows or [])
+                         if f["status"] == "ok" and f["level"] == "sku"}
+            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides,
+                                               seasonal=seasonal, today=today)
+            _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
+            # the joint view: how many SKUs run out in the same lead time once
+            # demand shares a common factor, beside the independent figure the
+            # per-SKU rows imply
+            inventory_panel = inventory_sim.aggregate(inventory_rows, data, rng,
+                                                      simulations=simulations)
+            _save_output(db, run_id, client["id"], "inventory_panel", inventory_panel)
+            if inventory_panel.get("status") == "ok":
+                c, i = inventory_panel["correlated"], inventory_panel["independent"]
+                print(f"  inventory panel: {c['expected_stockouts']:.1f} SKUs expected out of "
+                      f"stock, {c['p95_stockouts']:.0f} at the 95th percentile "
+                      f"(independent draws would say {i['p95_stockouts']:.0f})")
         if "crossprice" in wanted:
             cross = cross_price.run(data, elast_rows, seasonal=seasonal)
             _save_output(db, run_id, client["id"], "cross_price", cross)
@@ -468,7 +471,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             pb = (clv_out or {}).get("payback") or {}
             clv_extra = ({"ltv_cac": pb.get("ltv_cac"), "payback_weeks": pb.get("payback_weeks"),
                           "cac": ((clv_out or {}).get("cac") or {}).get("cac")} if pb.get("status") == "ok" else None)
-            breaks = ad_efficiency.regime_breaks(anomaly_rows)
+            breaks = ad_breaks = ad_efficiency.regime_breaks(anomaly_rows)
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
                                          incrementality_basis="switchback" if iota is not None else None,
                                          clv_multiplier=mult, clv_basis="calibrated" if mult else None,
@@ -503,7 +506,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             # reallocation: one promise per campaign per run
             alloc = ad_allocation.run(base_ads, alloc_margin,
                                       exclude=set(trim_candidates(base_ads, alloc_margin or 0.0)),
-                                      risk_share=client.get("risk_budget_share"))
+                                      risk_share=client.get("risk_budget_share"),
+                                      daily=ad_efficiency.campaign_points(data["ppc_spend"], ad_breaks))
             _save_output(db, run_id, client["id"], "ad_allocation", alloc)
             if alloc["status"] == "ok":
                 print(f"  ad allocation: ${float(alloc['total_moved_daily']) if alloc.get('total_moved_daily') else 0:,.0f}/day "
@@ -522,8 +526,14 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                      if v.get("status") == "ok" else "VaR skipped (no unit economics)")
                   + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "invecon" in wanted:
+            # orders are sized on demand at the prices this sweep will set:
+            # the drafter recomputes the same plan from the same inputs
+            cross_now = cross if cross is not None else _load_outputs(db, run_id).get("cross_price")
+            plan = (plan_prices(elast_rows, base_margins, cross_now, risk_share=client.get("risk_budget_share"))
+                    if elast_rows else None)
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
-                                          simulations, today, channel=channel, seasonal=seasonal, risk_out=risk_out)
+                                          simulations, today, channel=channel, seasonal=seasonal, risk_out=risk_out,
+                                          price_plan=plan)
             if "markdown" in wanted:
                 md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel,
                                   risk_share=client.get("risk_budget_share"))

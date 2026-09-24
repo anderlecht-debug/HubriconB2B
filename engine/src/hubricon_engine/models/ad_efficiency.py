@@ -63,6 +63,18 @@ MIN_BACKTEST_ORIGINS = 2
 MAX_BACKTEST_ORIGINS = 12
 
 
+# The other curve form is carried as an equally weighted alternative
+# (models/ad_allocation.py resamples over it) unless its out-of-sample
+# errors are worse than the chosen form's by more than this many standard
+# errors of the difference — the evidence the curve itself had to show
+# against the straight line. Added 2026-09-24: on the bench, whose curves are
+# all Hill, the backtest preferred log by 3–6% of error on campaigns where
+# the difference was noise, and budget moved toward log-fitted campaigns whose
+# slower saturation overstated the slope over the move (4.45 against a true 3.99).
+FORM_WORSE_T = 1.0
+FORM_TIE = FORM_WORSE_T   # the published name for the same rule
+
+
 def _fit_form(form: str, spend: np.ndarray, sales: np.ndarray):
     """(params, cov) for one form, or None when it will not fit."""
     if form == "linear":
@@ -87,6 +99,28 @@ def _fit_form(form: str, spend: np.ndarray, sales: np.ndarray):
         return params, cov
     except (RuntimeError, ValueError):
         return None
+
+
+def campaign_points(ppc_spend: list[dict], breaks: dict[str, dict] | None = None) -> dict[str, tuple[np.ndarray, np.ndarray]]:
+    """{campaign: (spend, sales)} — the daily points each campaign's curve is
+    fitted on, in date order, after its regime break when it has one: the
+    same sample run() fits, for a caller that resamples it."""
+    pts: dict[str, list[tuple[float, float, str]]] = {}
+    breaks = breaks or {}
+    for row in ppc_spend or []:
+        if row.get("spend") is None:
+            continue
+        name = row.get("campaign_name") or row.get("campaign_id")
+        brk = breaks.get(name)
+        if brk and str(row.get("report_date") or "")[:10] < brk["since"]:
+            continue
+        if float(row["spend"]) > 0:
+            pts.setdefault(name, []).append((float(row["spend"]), float(row.get("sales") or 0), str(row.get("report_date") or "")))
+    out = {}
+    for name, rows in pts.items():
+        rows.sort(key=lambda r: r[2])
+        out[name] = (np.array([r[0] for r in rows]), np.array([r[1] for r in rows]))
+    return out
 
 
 def _predict(form: str, params, s: np.ndarray) -> np.ndarray:
@@ -148,8 +182,20 @@ def backtest_forms(spend: np.ndarray, sales: np.ndarray) -> dict:
             best, best_err, best_t = f, errors[f], t_stat
     naive = errors["linear"]
     fva = ((naive - best_err) / naive * 100) if naive > 0 and best != "linear" else 0.0
+    # how much worse, in its own standard errors, the other curve form is
+    # than the chosen one, origin by origin: the same evidence standard the
+    # curve had to meet against the line
+    worse_by = {}
+    for other in (("log", "hill") if best == "linear" else ("hill" if best == "log" else "log",)):
+        if errors.get(other) is None:
+            continue
+        both = np.isfinite(per_origin[best]) & np.isfinite(per_origin[other])
+        diff = per_origin[other][both] - per_origin[best][both]
+        if diff.size > 1:
+            se = float(diff.std(ddof=1) / np.sqrt(diff.size))
+            worse_by[other] = num(float(diff.mean() / se) if se > 0 else 0.0, 3)
     return {"status": "ok", "chosen": best, "origins": len(origins), "candidates": {f: num(e, 4) for f, e in errors.items()},
-            "fva_pct": num(fva, 1), "t_vs_linear": num(best_t, 3),
+            "fva_pct": num(fva, 1), "t_vs_linear": num(best_t, 3), "other_form_worse_t": worse_by,
             "basis": (f"{len(origins)} rolling-origin backtests, one-step error scaled by the training window's "
                       f"constant-ROAS MAE; " + (f"{best} beats the straight line by {best_t:.1f} standard errors"
                                                 if best != "linear" else "no saturation beats a straight line here"))}
@@ -223,6 +269,28 @@ def curve_values(model: str, theta, spend) -> np.ndarray:
     return a * np.log1p(b * s)
 
 
+def form_mixture_values(form_fits: list[dict], spend, draws: int, seed: int) -> np.ndarray | None:
+    """Sales at every spend level on draws pooled equally across the curve
+    forms the backtest could not tell apart (details.form_fits): each form
+    contributes the same number of draws from its own posterior. Shape
+    (draws, spends); None when no form supports a draw."""
+    rng = np.random.default_rng(seed)
+    usable = [f for f in form_fits or [] if f.get("model") in ("hill", "log") and f.get("cov") is not None]
+    if not usable:
+        return None
+    per = max(1, int(draws) // len(usable))
+    blocks = []
+    for f in usable:
+        theta = draw_params(f["model"], np.asarray(f["params"], dtype=float), np.asarray(f["cov"], dtype=float),
+                            per, rng)
+        if theta is not None and len(theta):
+            blocks.append(curve_values(f["model"], theta, spend))
+    if not blocks:
+        return None
+    n = min(len(b) for b in blocks)
+    return np.vstack([b[:n] for b in blocks])
+
+
 def curve_marginals(model: str, theta, spend) -> np.ndarray:
     """Marginal ROAS (dSales/dSpend) at every spend level for every draw, by the
     same central difference `_marginal` uses. Shape (draws, spends)."""
@@ -248,15 +316,19 @@ def curve_uncertainty(model: str, params, cov, current_spend: float, max_spend: 
     if sample is None:
         return out
 
-    marginals, breakevens = [], []
-    for draw in sample:
-        marginal = _marginal(model, tuple(draw), current_spend)
-        if not np.isfinite(marginal):
-            continue
-        marginals.append(marginal)
-        be = _breakeven(model, tuple(draw), max_spend, threshold)
-        if be is not None and np.isfinite(be):
-            breakevens.append(be)
+    # every draw at once: the marginal at today's spend, and the break-even
+    # as the largest grid spend whose marginal still returns the threshold —
+    # _breakeven's own grid and rule, vectorised (2026-09-24: the per-draw
+    # loop was 1.3 million Python calls a catalogue)
+    with np.errstate(all="ignore"):
+        m_now = curve_marginals(model, sample, [current_spend])[:, 0]
+        finite = np.isfinite(m_now)
+        grid = np.linspace(max_spend * 3, max_spend * 0.01, 400)
+        m_grid = curve_marginals(model, sample[finite], grid)
+    marginals = list(m_now[finite])
+    hit = m_grid >= threshold
+    found = hit.any(axis=1)
+    breakevens = [float(grid[j]) for j in np.argmax(hit, axis=1)[found]]
     if not marginals:
         return out
 
@@ -432,6 +504,12 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             # every dollar: its break-even spend is zero and the trim fires;
             # otherwise there is no break-even to name
             underwater = roas + 1.645 * se < threshold
+            # "could not show saturation" is not "shown not to saturate": the
+            # curve forms not significantly worse than the line ride along
+            alts = ["linear"] + [f for f, t in (selection.get("other_form_worse_t") or {}).items()
+                                 if t is not None and float(t) <= FORM_WORSE_T]
+            base["details"]["form_alternatives"] = {"forms": alts, "weights": [1.0 / len(alts)] * len(alts),
+                                                    "tie": FORM_WORSE_T}
             results.append({
                 **base, "status": "no_diminishing_returns", "curve_model": "linear",
                 "curve_params": {"roas": num(roas, 6)},
@@ -449,6 +527,14 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             model, params, cov = _fit_curve(spend, sales, with_cov=True)
         else:
             model, (params, cov) = selection["chosen"], fitted
+        # the curve forms the out-of-sample backtest cannot tell apart from the
+        # chosen one ride along, equally weighted: a model that reallocates
+        # along one curve should know the other fitted it as well
+        worse = selection.get("other_form_worse_t") or {}
+        alternatives = [model]
+        for f, t in worse.items():
+            if f != model and t is not None and float(t) <= FORM_WORSE_T:
+                alternatives.append(f)
         if model is None:
             results.append({**base, "status": "insufficient_data"})
             continue
@@ -465,9 +551,34 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
         # instead of trusting the point estimate. None when it is not finite.
         cov_list = ([[num(v, 8) for v in row] for row in np.asarray(cov, dtype=float)]
                     if cov is not None and np.all(np.isfinite(cov)) else None)
+        # every form the backtest could not separate from the chosen one,
+        # fitted on the same days with its own break-even interval: a trim
+        # is sized at the cautious end across them and promised on draws
+        # pooled over them (added 2026-09-24 — a log curve chosen by a hair
+        # set a trim to $102 a day where the truth's break-even was $133,
+        # below any day the campaign had run, and the trim delivered 43% of
+        # its promise)
+        form_fits = [{"model": model, "params": [num(v, 8) for v in params], "cov": cov_list,
+                      "breakeven": num(breakeven), "breakeven_p95": uncertainty.get("breakeven_p95")}]
+        for f in alternatives[1:]:
+            if f not in ("hill", "log"):
+                continue
+            fit_f = _fit_form(f, spend, sales)
+            if fit_f is None or not np.all(np.isfinite(fit_f[1])):
+                continue
+            unc_f = curve_uncertainty(f, fit_f[0], fit_f[1], current_spend, float(spend.max()),
+                                      adjusted if use_adjusted else threshold)
+            be_f = _breakeven(f, fit_f[0], float(spend.max()), adjusted if use_adjusted else threshold)
+            form_fits.append({"model": f, "params": [num(v, 8) for v in fit_f[0]],
+                              "cov": [[num(v, 8) for v in row] for row in np.asarray(fit_f[1], dtype=float)],
+                              "breakeven": num(be_f), "breakeven_p95": unc_f.get("breakeven_p95")})
         base["details"] = {**base["details"], "uncertainty": uncertainty,
                            "curve_cov": cov_list, "max_spend": num(float(spend.max())),
-                           "mean_sales": num(float(sales.mean()))}
+                           "spend_p10": num(float(np.quantile(spend, 0.10))),
+                           "form_fits": form_fits,
+                           "mean_sales": num(float(sales.mean())),
+                           "form_alternatives": {"forms": alternatives, "weights": [1.0 / len(alternatives)] * len(alternatives),
+                                                 "tie": FORM_TIE}}
         results.append(
             {
                 **base,
