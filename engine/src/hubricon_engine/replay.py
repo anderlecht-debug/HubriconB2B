@@ -78,11 +78,14 @@ BANKABLE_REQUIRED = {
     "aged_surcharge": ("skus", "monthly_surcharge", "per_sku"),
     "budget_reallocation": ("campaigns", "total_spend", "lambda", "avg_margin", "horizon_days",
                             "delta_p5", "delta_p50", "delta_p95", "mc_inputs"),
+    "markdown": ("sku", "p0", "p_new", "depth", "elasticity", "ci95", "baseline_units", "baseline_revenue",
+                 "baseline_period", "carry_saving_p50"),
 }
 # Every kind that promised a DISTRIBUTION, and the fields that distribution is.
 DISTRIBUTION_FIELDS = {
     "price_step": PRICE_STEP_DISTRIBUTION,
     "budget_reallocation": ("delta_p5", "delta_p50", "delta_p95", "p_loss", "mc_inputs"),
+    "markdown": PRICE_STEP_DISTRIBUTION,
 }
 
 

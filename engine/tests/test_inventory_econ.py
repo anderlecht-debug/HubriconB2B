@@ -30,19 +30,34 @@ def test_critical_fractile_rises_with_margin_and_is_bounded():
     assert peak["c_o"] > fat["c_o"]  # Oct–Dec storage is dearer, so hold less
 
 
-def test_demand_over_cycle_matches_rate_times_horizon():
+def test_demand_over_cycle_matches_rate_times_horizon_and_is_lognormal():
     rng = np.random.default_rng(1)
     d = econ.demand_over_cycle(mean_rate=4.0, std_rate=0.4, lead_days=30, rng=rng, simulations=40000)
     assert d.mean() == pytest.approx(4.0 * (30 + econ.REVIEW_PERIOD_DAYS), rel=0.05)
+    # a volatile rate: the clipped normal it used to draw had no skew and a
+    # mean above the one it was given; the lognormal keeps the mean and skews
+    wide = econ.demand_over_cycle(mean_rate=2.0, std_rate=2.0, lead_days=30, rng=rng, simulations=40000)
+    assert wide.mean() == pytest.approx(2.0 * 37, rel=0.05)
+    assert float(((wide - wide.mean()) ** 3).mean()) > 0
 
 
-def test_hold_vs_liquidate_flips_with_margin():
-    slow = econ.hold_vs_liquidate(excess_units=500, mean_rate=0.5, unit_margin=0.2, unit_cost=6.0, price=20.0,
+def test_hold_vs_liquidate_flips_with_carry_and_velocity_on_cash_contribution():
+    """Landed cost is sunk for units on hand, so the rule compares cash
+    contribution against liquidation recovery (corrected 2026-09-23)."""
+    slow = econ.hold_vs_liquidate(excess_units=500, mean_rate=0.5, contribution=15.5, price=20.0,
                                   item_volume=0.4, start_age_days=200, today=TODAY)
-    assert slow["decision"] == "liquidate" and slow["liquidate_value"] == pytest.approx(500 * 20 * 0.10)
-    fast = econ.hold_vs_liquidate(excess_units=500, mean_rate=10.0, unit_margin=9.0, unit_cost=6.0, price=20.0,
+    assert slow["decision"] == "liquidate"
+    assert slow["liquidate_value"] == pytest.approx(500 * 20 * 0.10, rel=0.02)
+    fast = econ.hold_vs_liquidate(excess_units=500, mean_rate=10.0, contribution=15.5, price=20.0,
                                   item_volume=0.05, start_age_days=60, today=TODAY)
     assert fast["decision"] == "hold" and fast["hold_npv"] > fast["liquidate_value"]
+    # the regression: a thin-margin SKU the old rule sent to liquidation. At
+    # $20 with $16 landed, the old hold value was $1/unit against $2 recovered;
+    # the cash the seller actually keeps by selling is $15.50 a unit.
+    thin = econ.hold_vs_liquidate(excess_units=300, mean_rate=5.0, contribution=15.5, price=20.0,
+                                  item_volume=0.05, start_age_days=60, today=TODAY)
+    assert thin["decision"] == "hold" and thin["hold_npv"] > 4 * thin["liquidate_value"]
+    assert "landed cost sunk" in thin["basis"]
 
 
 def _inventory(sku, on_hand, inbound=0, rate=3.0, sd=0.5, lead=30, reorder_qty=180):
@@ -136,7 +151,7 @@ def test_critical_fractile_without_fee_cliffs_is_margin_vs_capital_and_obsolesce
 def test_hold_value_without_fee_cliffs_carries_nothing():
     """Charging Amazon's storage and aged surcharge to a self-fulfilled brand
     would push it to dump stock it should keep."""
-    kw = dict(excess_units=500, mean_rate=1.0, unit_margin=3.0, unit_cost=6.0, price=20.0,
+    kw = dict(excess_units=500, mean_rate=1.0, contribution=9.0, price=20.0,
               item_volume=0.4, start_age_days=200, today=TODAY)
     amazon = econ.hold_vs_liquidate(**kw)
     shopify = econ.hold_vs_liquidate(**kw, fee_cliffs=False)

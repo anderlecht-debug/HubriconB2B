@@ -533,6 +533,39 @@ answer, and the weight says so); a cut on a ε = −3 SKU with a large sibling i
 refused as cannibalisation, a rise the family welcomes carries the sibling gain in
 its range. `tests/test_cross_price.py`, 8 tests.
 
+### Iteration 19 — part 5: the third way out of excess stock, and two corrections
+
+**Objection.** Hold-or-liquidate assumed the excess sells at today's price. A markdown
+that clears it before the aged-surcharge dates often beats a liquidation program's
+recovery by a wide margin, and the engine never priced one.
+
+**Two defects found on the way, one of them in numbers already issued.** The hold
+value subtracted landed cost per unit while liquidation was gross recovery — sunk cost
+charged on one side — which biased thin-margin SKUs toward liquidation; the excess was
+sold from month one although it sits behind the cover; and `demand_over_cycle` still
+drew the clipped normal the rest of the engine retired in iteration 6, under a
+docstring that said otherwise. Fixed, dated in §5b, and pinned by
+`test_hold_vs_liquidate_flips_with_carry_and_velocity_on_cash_contribution` and
+`test_demand_over_cycle_matches_rate_times_horizon_and_is_lognormal`.
+
+**Change.** `models/markdown.py`: hold, liquidate and a grid of markdown depths valued
+on the same draws as cash proceeds net of fees and carry, landed cost sunk, chosen by
+the certainty equivalent inside the price step's risk budget; the range flag for a
+markdown below the observed price range; the stretch, a rise inside the cap valued on
+thinned common random numbers and drafted as an ordinary price step; measurement
+before landed cost plus the carry saving. A markdown or a stretch is its SKU's price
+instruction for the cycle: the ordinary step and the aged-surcharge draft stand aside.
+
+**Measured.** A hand-computed two-month NPV matches to 1e-9 with landed cost nowhere
+in it; zero depth equals hold and no excess makes liquidate equal hold on every draw;
+a steep-carry elastic SKU marks down, a dead SKU liquidates, a healthy one holds; the
+band widens with se(ε) and more at 30% than at 10%; the stretch pays on an inelastic
+SKU and refuses on an elastic one. That last result overturned the first draft, which
+targeted the smallest rise bringing P(stockout) under 25% and, on an ε = −8 SKU, chose
+a rise with a median window loss of $128: the stockout target alone recommends losing
+money, so the stretch is now sized by the certainty equivalent like every other step.
+`tests/test_markdown.py`, 13 tests.
+
 ---
 
 ## Outcome Alignment

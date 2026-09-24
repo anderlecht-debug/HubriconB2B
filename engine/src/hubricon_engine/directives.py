@@ -37,7 +37,7 @@ from .models.pricing_engine import (
 # rather than invented here. Everything else needs an explicit yes, and a
 # price step past the cap is demoted to explicit at the point it is drafted.
 STANDING = {"ad_bleed_terms", "campaign_trim", "branded_pause", "spend_step", "price_step",
-            "budget_reallocation", "price_experiment"}
+            "budget_reallocation", "price_experiment", "markdown"}
 
 # How much of a SKU's own trailing monthly net a single directive's
 # 5th-percentile outcome may put at risk before the move stops travelling under
@@ -458,13 +458,123 @@ def _recovery_directive(recovery: dict | None) -> dict | None:
     )
 
 
-def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon") -> list[dict]:
+def _baseline(margin_row: dict | None) -> dict:
+    if not margin_row:
+        return {}
+    return {"baseline_units": float(margin_row.get("units") or 0),
+            "baseline_revenue": float(margin_row.get("revenue") or 0),
+            "baseline_cogs": float(margin_row["cogs"]) if margin_row.get("cogs") is not None else None,
+            "baseline_fees": float(margin_row.get("amazon_fees") or 0),
+            "baseline_period": str(margin_row.get("period_start"))}
+
+
+def _markdown_directive(row: dict, margin_row: dict | None, fit: dict | None) -> dict | None:
+    """Clear the excess at a lower price rather than dumping it or carrying it.
+    Standing while the depth sits inside the 5% cap; deeper is the client's
+    call. Measured before landed cost — the dollars are cash proceeds."""
+    if row.get("decision") != "markdown" or row.get("delta_p50") is None:
+        return None
+    sku, depth = row["sku"], float(row["depth"])
+    gain, vs_liq = row["delta_vs_hold"], row.get("delta_vs_liquidate") or {}
+    months = (row.get("months_to_clear") or {}).get("markdown")
+    lo, hi = gain["p5"], gain["p95"]
+    p_loss = row.get("p_loss")
+    rng = (f" (90% range {'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}"
+           + ("; under a 1% chance it goes the other way" if p_loss is not None and p_loss < 0.01
+              else f"; a {p_loss:.0%} chance it goes the other way" if p_loss is not None else "") + ")")
+    range_note = (" The markdown price sits below anything this SKU has sold at, so the demand response there is "
+                  "an extrapolation of the fitted curve; the range carries that." if row.get("beyond_observed_range") else "")
+    text = (f"Mark {sku} down {depth:.0%} to ${float(row['p_new']):.2f} until the {int(row['excess_units'])} excess units "
+            f"clear (about {months:.0f} month{'s' if months != 1 else ''}), then back to ${float(row['p0']):.2f}. "
+            f"It nets +{_money(gain['p50'])} against holding at today's price{rng}"
+            + (f" and {'+' if (vs_liq.get('p50') or 0) >= 0 else '−'}{_money(vs_liq['p50'])} against liquidating"
+               if vs_liq.get("p50") is not None else "")
+            + f", with storage and the aged surcharge priced in.{range_note} Buy Box watched while the markdown is live.")
+    draft = _draft(
+        "pricing", "markdown", sku,
+        score=25 + float(gain["p50"]) / 100,
+        expected=gain["p50"],
+        action_text=text,
+        evidence={
+            "sku": sku, "p0": row["p0"], "p_new": row["p_new"], "depth": depth, "destination": row["p_new"],
+            "excess_units": int(row["excess_units"]), "months_to_clear": months,
+            "hold_npv": (row.get("npv") or {}).get("hold", {}).get("p50"),
+            "liquidate_value": (row.get("npv") or {}).get("liquidate", {}).get("p50"),
+            "markdown_npv": (row.get("npv") or {}).get(f"markdown_{int(depth * 100)}", {}).get("p50"),
+            "delta_p5": row["delta_p5"], "delta_p50": row["delta_p50"], "delta_p95": row["delta_p95"],
+            "delta_vs_liquidate_p50": vs_liq.get("p50"), "p_loss": p_loss, "mc_se": row.get("mc_se"),
+            "mc_inputs": row.get("mc_inputs"), "carry_saving_p50": row.get("carry_saving_p50"),
+            "carry_month_now": row.get("carry_month_now"), "beyond_observed_range": row.get("beyond_observed_range"),
+            "elasticity": row.get("elasticity"), "std_err": row.get("std_err"), "ci95": row.get("ci95"),
+            "fee_rate": row.get("fee_rate"), "fixed_fee_per_unit": row.get("fixed_fee_per_unit"),
+            **_baseline(margin_row),
+        },
+        mandate="standing" if depth <= STEP_CAP + 1e-9 else "explicit",
+    )
+    return downside_guard(draft, margin_row)
+
+
+def _stretch_directive(row: dict, margin_row: dict | None, fit: dict | None) -> dict | None:
+    """A rise inside the cap so thin stock lasts until the replenishment lands.
+    An ordinary price step to the Profit Record, with the reason on it."""
+    st = row.get("stretch") or {}
+    if st.get("status") != "ok":
+        return None
+    sku, gain = row["sku"], st["gain"]
+    lo, hi = gain["p5"], gain["p95"]
+    text = (f"Raise {sku} ${float(st['p0']):.2f} → ${float(st['p_new']):.2f} (+{float(st['step_fraction']):.1%}) to stretch "
+            f"the units on hand across the {int(st['mc_inputs']['lead_days'])}-day lead time: stockout risk falls from "
+            f"{float(st['p_stockout_before']):.0%} to {float(st['p_stockout_after']):.0%}, and the units sell at the higher "
+            f"price rather than running out — about +{_money(gain['p50'])} over the window (90% range "
+            f"{'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}). Back to "
+            f"${float(st['p0']):.2f} when the replenishment lands. Buy Box watched while the step is live.")
+    draft = _draft(
+        "pricing", "price_step", (sku, "stretch"),
+        score=22 + float(gain["p50"]) / 100,
+        expected=gain["p50"],
+        action_text=text,
+        evidence={
+            "sku": sku, "status": "stretch", "reason": "stretch", "p0": st["p0"], "p_new": st["p_new"],
+            "step_fraction": st["step_fraction"], "destination": None,
+            "expected_delta": gain["p50"], "delta_range": (gain["p5"], gain["p95"]),
+            "delta_p5": gain["p5"], "delta_p50": gain["p50"], "delta_p95": gain["p95"],
+            "p_loss": st.get("p_loss"), "mc_se": gain.get("mc_se"), "mc_inputs": st.get("mc_inputs"),
+            "p_stockout_before": st["p_stockout_before"], "p_stockout_after": st["p_stockout_after"],
+            "lead_time_days": st["mc_inputs"].get("lead_days"),
+            "elasticity": row.get("elasticity"), "std_err": row.get("std_err"), "ci95": row.get("ci95"),
+            "fee_rate": row.get("fee_rate"), "fixed_fee_per_unit": row.get("fixed_fee_per_unit"),
+            **_baseline(margin_row),
+        },
+    )
+    return downside_guard(draft, margin_row)
+
+
+def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon",
+                            markdown: dict | None = None) -> list[dict]:
+    """Liquidate only when it beats holding AND every markdown depth (the
+    three-way rows), or when no three-way row exists for the SKU."""
     out = []
     program = "Amazon's liquidation program" if channels.has_fee_cliffs(channel) else "a clearance sale"
+    md_rows = {r["sku"]: r for r in (markdown or {}).get("rows", []) if r.get("decision")}
     for r in (inv_econ or {}).get("rows", []):
-        if r.get("decision") != "liquidate":
+        md = md_rows.get(r["sku"])
+        if md is not None:
+            if md["decision"] != "liquidate" or md.get("delta_p50") is None:
+                continue
+            gain = float(md["delta_p50"])
+            liquidate_value = float(md["npv"]["liquidate"]["p50"] or 0)
+            hold_npv = float(md["npv"]["hold"]["p50"] or 0)
+            extra = {"delta_p5": md["delta_p5"], "delta_p50": md["delta_p50"], "delta_p95": md["delta_p95"],
+                     "p_loss": md.get("p_loss"), "mc_inputs": md.get("mc_inputs"),
+                     "markdown_considered": md["status"] == "ok"}
+            considered = (" No markdown depth nets more." if md["status"] == "ok"
+                          else " No elasticity is fitted, so a markdown could not be priced against it.")
+        elif r.get("decision") == "liquidate":
+            gain = float(r.get("liquidate_value") or 0) - float(r.get("hold_npv") or 0)
+            liquidate_value, hold_npv = float(r["liquidate_value"]), float(r["hold_npv"])
+            extra, considered = {}, ""
+        else:
             continue
-        gain = float(r.get("liquidate_value") or 0) - float(r.get("hold_npv") or 0)
         if gain < LIQUIDATION_MIN_GAIN:
             continue
         aged = float(r.get("aged_surcharge_month") or 0)
@@ -474,16 +584,17 @@ def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon
             expected=round(gain, 2),
             action_text=(
                 f"Liquidate {int(r['excess_units'])} excess units of {r['sku']}: {program} returns about "
-                f"{_money(float(r['liquidate_value']))} now, against {_money(float(r['hold_npv']))} from holding and "
-                f"selling them down with storage, the aged surcharge and capital priced in"
-                + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".")
+                f"{_money(liquidate_value)} now, against {_money(hold_npv)} from holding and "
+                f"selling them down with storage and the aged surcharge priced in"
+                + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".") + considered
             ),
             evidence={
                 "sku": r["sku"],
                 "excess_units": int(r["excess_units"]),
-                "liquidate_value": float(r["liquidate_value"]),
-                "hold_npv": float(r["hold_npv"]),
+                "liquidate_value": liquidate_value,
+                "hold_npv": hold_npv,
                 "aged_surcharge_month": aged,
+                **extra,
             },
         ))
     return out
@@ -492,7 +603,8 @@ def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon
 BLEED_MIN_MONTH = 75.0     # below this a fee line is not worth a decision
 
 
-def _fee_bleed_directives(inv_econ: dict | None, today: date, channel: str | None = "amazon") -> list[dict]:
+def _fee_bleed_directives(inv_econ: dict | None, today: date, channel: str | None = "amazon",
+                          exclude: set[str] | None = None) -> list[dict]:
     """Amazon's own published charges, on the client's own units.
 
     inventory_econ has always computed these three and only fed them to the
@@ -527,8 +639,10 @@ def _fee_bleed_directives(inv_econ: dict | None, today: date, channel: str | Non
         ))
 
     # — aged surcharge: the units are already old, removal or discount is the fix —
+    exclude = exclude or set()
     aged_rows = [r for r in rows if (r.get("aged_surcharge_month") or 0) > 0
-                 and r.get("decision") != "liquidate"]   # liquidation owns those SKUs
+                 and r.get("decision") != "liquidate"     # liquidation owns those SKUs
+                 and r["sku"] not in exclude]              # and a markdown owns its own
     aged = sum(float(r.get("aged_surcharge_month") or 0) for r in aged_rows)
     if aged >= BLEED_MIN_MONTH:
         skus = sorted(r["sku"] for r in aged_rows)
@@ -874,7 +988,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      incrementality: dict | None = None,
                      client_id: str | None = None,
                      experiments: list[dict] | None = None,
-                     cross_price: dict | None = None) -> list[dict]:
+                     cross_price: dict | None = None,
+                     markdown: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -897,8 +1012,24 @@ def draft_directives(inventory, ads, elasticity, margins,
     rec = _recovery_directive(recovery)
     if rec:
         drafts.append(rec)
-    drafts += _liquidation_directives(inv_econ, channel)
-    drafts += _fee_bleed_directives(inv_econ, today, channel)
+    # Excess stock, three ways. A markdown or a stretch on a SKU is its price
+    # instruction for the cycle: the ordinary price step stands aside, and the
+    # aged-surcharge draft too, since the markdown is what clears it.
+    md_rows = {r["sku"]: r for r in (markdown or {}).get("rows", [])}
+    fits_by_sku = {f["item_id"]: f for f in elasticity if f.get("level") == "sku"}
+    md_skus: set[str] = set()
+    for sku, row in md_rows.items():
+        d = _markdown_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
+        if d:
+            drafts.append(d)
+            md_skus.add(sku)
+        st = _stretch_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
+        if st:
+            drafts.append(st)
+            md_skus.add(sku)
+    drafts += _liquidation_directives(inv_econ, channel, markdown)
+    drafts += _fee_bleed_directives(inv_econ, today, channel,
+                                    exclude={s for s, r in md_rows.items() if r.get("decision") == "markdown"})
     drafts += _anomaly_directives(anomaly_rows, channel)
 
     for r in inventory:
@@ -1040,7 +1171,7 @@ def draft_directives(inventory, ads, elasticity, margins,
 
     near_unit: set[str] = set()
     for fit in elasticity:
-        if fit.get("status") != "ok" or fit.get("level") != "sku":
+        if fit.get("status") != "ok" or fit.get("level") != "sku" or fit["item_id"] in md_skus:
             continue
         margin_row = latest_by_sku.get(fit["item_id"])
         if not margin_row:

@@ -29,9 +29,20 @@ the last two; when it is on file those numbers win and the schedule is
 only a fallback, labeled as such.
 
 Liquidate vs hold.  For excess units, hold value is the discounted sum of
-margin earned as they sell at the median rate, less storage and surcharge
-along the way; liquidation is what Amazon's program returns today. The
-larger number is the recommendation, both are shown.
+CASH CONTRIBUTION earned as they sell — price net of fees, landed cost
+excluded — less storage and surcharge along the way; liquidation is what
+Amazon's program returns today. The larger number is the recommendation, both
+are shown. The three-way decision that adds a markdown lives in
+models/markdown.py and shares this module's valuation.
+
+Corrected 2026-09-23. Until then hold value subtracted landed cost per unit
+while liquidation value was gross recovery; for units already on the shelf the
+landed cost is sunk on both sides, and charging it on one biased thin-margin
+SKUs toward liquidating stock that would have netted several times more sold.
+The excess was also sold from month one, though it sits behind the target
+cover; it now sells last. And `demand_over_cycle` drew a normal clipped at zero
+until this date, the generator every other simulation retired on 2026-09-11 —
+it is the moment-matched lognormal now, as the docstring always claimed.
 
 Channels.  Every cliff above is Amazon's. A Shopify store ships from its own
 shelf or a 3PL: there is no marketplace storage rate, no low-inventory fee
@@ -46,8 +57,10 @@ from datetime import date
 import numpy as np
 
 from .. import channels
+from . import dependence
 from . import fee_schedule as fees
 from .common import num
+from .pricing_engine import fee_terms
 
 REVIEW_PERIOD_DAYS = 7          # the weekly sweep
 ANNUAL_CAPITAL_RATE = 0.12
@@ -95,42 +108,48 @@ def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
 def demand_over_cycle(mean_rate: float, std_rate: float, lead_days: float,
                       rng: np.random.Generator, simulations: int) -> np.ndarray:
     lead = rng.lognormal(mean=np.log(max(1.0, lead_days)), sigma=LEAD_TIME_CV, size=simulations)
-    rates = np.clip(rng.normal(mean_rate, std_rate, size=simulations), 0, None)
+    # moment-matched lognormal, the same marginal the stockout model and the
+    # cash cone draw — a clipped normal has a mean above the one it was given
+    # and no skew (corrected 2026-09-23)
+    rates = dependence.correlated_rates(rng, [max(mean_rate, 1e-9)], [max(std_rate, 0.0)], (simulations,), 0.0)[0]
     return rng.poisson(rates * (lead + REVIEW_PERIOD_DAYS))
 
 
-def hold_vs_liquidate(excess_units: int, mean_rate: float, unit_margin: float, unit_cost: float,
-                      price: float, item_volume: float, start_age_days: float, today: date,
+def hold_vs_liquidate(excess_units: int, mean_rate: float, contribution: float, price: float,
+                      item_volume: float, start_age_days: float, today: date,
                       size_tier: str = "standard", fee_cliffs: bool = True) -> dict:
-    """NPV of selling the excess down at the median rate vs liquidating now.
+    """Median-rate value of selling the position down vs liquidating the excess
+    now, on cash proceeds net of fees and carry with landed cost sunk.
 
-    Without fee cliffs the carry is zero: no marketplace storage rate and no
-    aged surcharge apply, and a 3PL's own rate is not on file. Charging
-    Amazon's schedule to a self-fulfilled brand would understate hold value
-    and push it to dump stock it should keep."""
-    remaining = float(excess_units)
-    monthly_units = max(1e-9, mean_rate * 30)
-    npv, months = 0.0, 0
-    discount = 1 + ANNUAL_CAPITAL_RATE / 12
-    month = today.month
-    age = start_age_days
-    while remaining > 0 and months < MAX_HOLD_MONTHS:
-        months += 1
-        month = month % 12 + 1
-        age += 30
-        sold = min(remaining, monthly_units)
-        carry = 0.0
-        if fee_cliffs:
-            carry = remaining * item_volume * (fees.storage_rate(month, size_tier) + fees.aged_surcharge_rate(int(age)))
-            if age > 365:
-                carry = max(carry, remaining * fees.AGED_SURCHARGE_MIN_PER_UNIT_365_PLUS)
-        npv += (sold * unit_margin - carry) / discount ** months
-        remaining -= sold
-    liquidate = excess_units * price * LIQUIDATION_RECOVERY_OF_PRICE
+    `contribution` is price(1 − f) − F per unit. The whole position sells
+    first-in-first-out so the excess sells last; the position is the excess
+    plus the target cover. Without fee cliffs the carry is zero: no
+    marketplace storage rate and no aged surcharge apply, and a 3PL's own
+    rate is not on file. The interval version, with the markdown option, is
+    models/markdown.py."""
+    from .markdown import position_value
+
+    rate = np.array([max(float(mean_rate), 1e-9)])
+    # the position is the excess plus the target cover, so the model's excess
+    # is exactly the caller's (Amazon's estimate or the cover rule)
+    pos = float(excess_units) + float(rate[0]) * HOLD_HORIZON_DAYS
+    # contribution = price(1 − f) − F: expressed as one proportional rate so
+    # liquidation still recovers a share of the PRICE
+    f = np.array([1.0 - float(contribution) / float(price)]) if price and price > 0 else np.array([0.0])
+    big_f = np.array([0.0])
+    hold_all, hold_m = position_value(pos, rate, None, f, big_f, float(price), None, False, item_volume,
+                                      start_age_days, today, size_tier, fee_cliffs)
+    liq_all, _ = position_value(pos, rate, None, f, big_f, float(price), None, True, item_volume,
+                                start_age_days, today, size_tier, fee_cliffs)
+    liquidate = float(excess_units) * float(price) * LIQUIDATION_RECOVERY_OF_PRICE
+    # the excess's own hold value: what holding the whole position earns over
+    # liquidating the excess and holding only the cover, plus the recovery
+    hold_npv = float(hold_all[0]) - (float(liq_all[0]) - liquidate)
     return {
-        "hold_npv": npv, "liquidate_value": liquidate, "months_to_clear": months,
-        "decision": "liquidate" if liquidate > npv else "hold",
-        "per_unit_hold": npv / excess_units if excess_units else None,
+        "hold_npv": hold_npv, "liquidate_value": liquidate, "months_to_clear": int(hold_m[0]),
+        "decision": "liquidate" if liquidate > hold_npv else "hold",
+        "per_unit_hold": hold_npv / excess_units if excess_units else None,
+        "basis": "cash proceeds net of fees and carry; landed cost sunk; excess sells after the target cover",
     }
 
 
@@ -179,10 +198,17 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         if m and m.get("cogs") is not None and float(m.get("units") or 0) > 0 and float(m.get("revenue") or 0) > 0:
             units = float(m["units"])
             price = float(m["revenue"]) / units
-            fee_rate = min(0.9, max(0.0, float(m.get("amazon_fees") or 0) / float(m["revenue"])))
+            # the proportional / fixed split from the margin row, so the
+            # contribution per unit is the one the price step is priced on
+            fee_rate, fixed_fee, fee_basis = fee_terms(m)
             unit_cost = float(m["cogs"]) / units
-            unit_margin = price * (1 - fee_rate) - unit_cost
-            econ = {"price": price, "fee_rate": fee_rate, "unit_cost": unit_cost, "unit_margin": unit_margin}
+            contribution = price * (1 - fee_rate) - fixed_fee
+            unit_margin = contribution - unit_cost
+            econ = {"price": price, "fee_rate": fee_rate, "fixed_fee": fixed_fee, "fee_basis": fee_basis,
+                    "unit_cost": unit_cost, "unit_margin": unit_margin, "contribution": contribution}
+        observed_prices = [float(e["avg_sales_price"] or ((e.get("sales") or 0) / e["units_sold"]))
+                           for e in data.get("sku_economics", []) or []
+                           if e.get("sku") == sku and e.get("units_sold") and (e.get("avg_sales_price") or e.get("sales"))]
 
         row = {
             "sku": sku, "status": "ok",
@@ -255,6 +281,9 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         implied_current = float(np.mean(demand <= position + int(inv.get("reorder_qty") or 0)))
         row.update({
             "unit_margin": num(econ["unit_margin"]), "unit_cost": num(econ["unit_cost"]), "price": num(econ["price"]),
+            "fee_rate": num(econ["fee_rate"], 6), "fixed_fee": num(econ["fixed_fee"], 6), "fee_basis": econ["fee_basis"],
+            "contribution": num(econ["contribution"]),
+            "min_observed_price": num(min(observed_prices)) if observed_prices else None,
             "c_u": num(cf["c_u"]), "c_o": num(cf["c_o"]), "critical_fractile": num(cf["q"], 4),
             "c_u_parts": {k: num(v) for k, v in cf["c_u_parts"].items()},
             "c_o_parts": {k: num(v) for k, v in cf["c_o_parts"].items()},
@@ -265,6 +294,11 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             "demand_cycle_p50": num(float(np.quantile(demand, 0.5)), 1),
             "demand_cycle_p95": num(float(np.quantile(demand, 0.95)), 1),
         })
+        # the demand distribution over the cycle at a ladder of service levels,
+        # so a budget-constrained or joint order can be sized later without
+        # re-simulating: F⁻¹(q) for q on the grid
+        ladder_q = [0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.925, 0.95, 0.975, 0.99, 0.995]
+        row["details"] = {"demand_ladder": [[q, num(float(np.quantile(demand, q)), 1)] for q in ladder_q]}
 
         # — excess and the liquidate-vs-hold call —
         if h.get("estimated_excess_quantity") is not None:
@@ -279,13 +313,14 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             weighted_age = 90.0
             if aged_units:
                 weighted_age = sum(int(h.get(k) or 0) * age for k, age in BUCKET_MID_AGE.items()) / aged_units
-            hv = hold_vs_liquidate(excess, mean_rate, econ["unit_margin"], econ["unit_cost"], econ["price"],
+            hv = hold_vs_liquidate(excess, mean_rate, econ["contribution"], econ["price"],
                                    vol, weighted_age, today, size_tier, fee_cliffs=cliffs)
             row.update({
                 "hold_npv": num(hv["hold_npv"]), "liquidate_value": num(hv["liquidate_value"]),
                 "months_to_clear": hv["months_to_clear"], "decision": hv["decision"],
             })
-        row["details"] = {"basis": (
+            row["weighted_age"] = num(weighted_age, 1)
+        row["details"] = {**row.get("details", {}), "basis": (
             f"{platform}: q* = C_u/(C_u+C_o) = {cf['c_u']:.2f}/({cf['c_u']:.2f}+{cf['c_o']:.2f}) = {cf['q']:.1%}; "
             f"order-up-to is that quantile of {simulations:,} simulated cycles of demand over "
             f"{int(lead)}+{REVIEW_PERIOD_DAYS} days ({rate_source}). "
@@ -331,7 +366,8 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
                if cliffs else
                f"no low-inventory fee, aged surcharge or peak storage to price — {NO_CLIFF_BASIS}"),
             f"Capital at {ANNUAL_CAPITAL_RATE:.0%}/yr, obsolescence {OBSOLESCENCE_RATE:.0%} of cost per cycle",
-            f"Liquidation recovers {LIQUIDATION_RECOVERY_OF_PRICE:.0%} of selling price",
+            f"Liquidation recovers {LIQUIDATION_RECOVERY_OF_PRICE:.0%} of selling price; units on hand are valued "
+            f"on cash contribution with landed cost sunk (corrected 2026-09-23)",
             f"Default unit volume {fees.DEFAULT_ITEM_VOLUME_CUFT['standard']} cu ft when no export states it",
         ],
     }

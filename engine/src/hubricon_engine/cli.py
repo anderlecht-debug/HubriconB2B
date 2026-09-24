@@ -64,7 +64,7 @@ from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
     ad_allocation, ad_efficiency, anomaly, cashflow, cross_price, elasticity, forecast, health_score,
-    incrementality, inventory_econ, inventory_sim, margin, price_experiment, recovery, risk,
+    incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, risk,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -90,7 +90,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "ads", "adalloc", "recovery", "anomaly", "invecon", "risk", "cash", "health")
+              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "risk", "cash", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -454,6 +454,19 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "invecon" in wanted:
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
                                           simulations, today, channel=channel)
+            if "markdown" in wanted:
+                md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel)
+                _save_output(db, run_id, client["id"], "markdown", md)
+                if md["status"] == "ok":
+                    # one liquidation list on the desk: the three-way decision's
+                    inv_econ["summary"]["liquidation_candidates"] = md["summary"]["liquidation_candidates"]
+                    inv_econ["summary"]["liquidation_value"] = md["summary"]["liquidation_value"]
+                    s_ = md["summary"]
+                    print(f"  markdown: {s_['n_valued']} SKUs valued three ways — {len(s_['markdown_candidates'])} to mark "
+                          f"down, {len(s_['liquidation_candidates'])} to liquidate, {len(s_['stretch_candidates'])} to stretch"
+                          + (f" ({s_['n_no_elasticity']} without an elasticity, two-way only)" if s_["n_no_elasticity"] else ""))
+                else:
+                    print(f"  markdown: {md['status']}")
             _save_output(db, run_id, client["id"], "invecon", inv_econ)
             if inv_econ["status"] == "ok":
                 b = inv_econ["summary"]["bleed"]
@@ -615,7 +628,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               channel=channel, ad_allocation=outputs.get("ad_allocation"),
                               incrementality=outputs.get("incrementality"), client_id=client["id"],
                               experiments=_load_price_tests(db, client["id"]),
-                              cross_price=outputs.get("cross_price"))
+                              cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}

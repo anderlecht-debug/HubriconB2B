@@ -748,6 +748,72 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
                     evidence_after=after_blob, window=window)
 
 
+def measure_markdown(d: dict, margins: list[dict], inv_econ: dict | None, since: date, today: date) -> dict:
+    """A markdown is measured BEFORE landed cost. The promise is a difference in
+    cash proceeds — landed cost is sunk and cancels — and selling more units at
+    a lower price raises COGS in the accounting window, so the price-step
+    reading (net of COGS) would book a markdown that won as a loss. Same
+    counterfactual, anchored on the after-period's own units, with unit cost
+    zero and the factual before COGS; plus the carry the cleared stock no
+    longer bills, read off the next inventory-economics pass and capped at the
+    promised carry."""
+    ev = d.get("evidence") or {}
+    sku, p0, p_new = ev.get("sku"), ev.get("p0"), ev.get("p_new")
+    if not sku or not p0 or not p_new:
+        return _closed(d, "No markdown baseline recorded on this directive.")
+    after_rows = [m for m in margins if m.get("sku") == sku and m.get("period_start")
+                  and date.fromisoformat(str(m["period_start"])[:10]) > since]
+    after = _observed(after_rows)
+    if not after:
+        return _not_yet(d, f"No margin period for {sku} since the markdown.")
+    window = (after["periods"][0], after["periods"][-1])
+    p1 = after["price"]
+    if abs(p1 - p_new) / p_new > PRICE_TOLERANCE and abs(p1 - p0) / p0 <= PRICE_TOLERANCE:
+        return _stalled(d, f"The price on file for {sku} is still ${p1:,.2f} — the markdown to "
+                           f"${p_new:,.2f} has not been made, so there is nothing to measure.",
+                        since, today, window)
+    if after["revenue"] <= 0 or after["units"] <= 0:
+        return _not_yet(d, f"{sku} recorded no sales in the measured window.")
+    fee_rate = min(0.9, max(0.0, after["proportional_fees"] / after["revenue"]))
+    fixed_fee = after["fixed_fees"] / after["units"]
+    factual = after["revenue"] - after["fees"]          # before landed cost
+    distribution = _counterfactual_distribution(ev, p0, p1, after["units"], 0.0, fee_rate, fixed_fee, factual)
+    if distribution is None:
+        return _closed(d, f"The markdown on {sku} carries no posterior to integrate; nothing is banked.")
+    delta = distribution["banked"]
+    reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+               f"(median ${distribution['p50']:,.2f}, 5th ${distribution['p5']:,.2f}), before landed cost")
+    periods = max(1, len(after["periods"]))
+    if ev.get("baseline_revenue") is not None and ev.get("baseline_fees") is not None and ev.get("baseline_units"):
+        observed = factual / periods - (float(ev["baseline_revenue"]) - float(ev["baseline_fees"]))
+        if delta > observed:
+            delta = observed
+            reading += f", and capped at the ${observed:,.2f} this SKU's own cash proceeds actually rose"
+    carry = 0.0
+    row_now = next((r for r in (inv_econ or {}).get("rows", []) if r.get("sku") == sku), None)
+    if row_now is not None and ev.get("carry_month_now") is not None:
+        now = float(row_now.get("aged_surcharge_month") or 0) + float(row_now.get("storage_next_month") or 0)
+        saving = max(0.0, float(ev["carry_month_now"]) - now) * periods
+        carry = min(saving, float(ev.get("carry_saving_p50") or 0))
+    total = delta + carry
+    if abs(total) < MEASURE_MIN_USD:
+        return _closed(d, f"The markdown moved less than ${MEASURE_MIN_USD:,.0f} on {sku}; not material.",
+                       evidence_after={"delta": round(delta, 2), "carry_saving": round(carry, 2)})
+    note = (f"{sku} sold {after['units']:,.0f} units at ${p1:,.2f} in {window[0]} → {window[1]}, "
+            f"${factual:,.2f} of cash proceeds before landed cost. At ${p0:,.2f} the fitted curve puts the same demand "
+            f"at ${factual - delta:,.2f} — a difference of ${delta:,.2f}, {reading}"
+            + (f"; plus ${carry:,.2f} of storage and surcharge the cleared stock no longer bills." if carry else "."))
+    return _verdict(d, "measured", note, usd=round(total, 2), attribution="attributable",
+                    evidence_after={"p1": round(p1, 2), "units_after": after["units"],
+                                    "factual_before_cogs": round(factual, 2), "uncapped": round(distribution["banked"], 2),
+                                    "carry_saving": round(carry, 2),
+                                    "measured_distribution": {"p5": distribution["p5"], "p25": distribution["banked"],
+                                                              "p50": distribution["p50"], "p95": distribution["p95"],
+                                                              "quantile_banked": MEASURE_QUANTILE,
+                                                              "draws": distribution["draws"], "seed": distribution["seed"]}},
+                    window=window)
+
+
 def measure_negative_margin(d: dict, margins: list[dict], inventory: list[dict],
                             since: date, today: date) -> dict:
     """Reprice, cut the ads, or exit — the instruction is a menu, so read from
@@ -1155,6 +1221,8 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
             verdicts.append(measure_spend_step(d, ppc_spend, since, today))
         elif kind == "price_step":
             verdicts.append(measure_price_step(d, margins, traffic, since, today))
+        elif kind == "markdown":
+            verdicts.append(measure_markdown(d, margins, inv_econ, since, today))
         elif kind == "negative_margin_sku":
             verdicts.append(measure_negative_margin(d, margins, inventory, since, today))
         elif kind == "campaign_trim":

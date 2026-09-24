@@ -617,6 +617,74 @@ assumption, not a measurement — no export carries realised lead times.
 directive promises no dollars and the measurement pass proves the PO landed
 instead.
 
+### 5b. Excess stock: hold, liquidate, or mark it down
+
+**Corrected 2026-09-23, twice.** The hold-or-liquidate rule in `inventory_econ`
+valued hold as the discounted margin on the excess — price net of fees LESS landed
+cost — against liquidation at 10% of price, gross. For units already on the shelf the
+landed cost is sunk: it is the same cash gone whichever way the units leave. Charging
+it on one side biased thin-margin SKUs toward liquidating stock that would have
+netted several times more sold down; at $20 with $16 landed the old rule read $1 a
+unit against $2 recovered, where the seller keeps $15.50 by selling. It also sold the
+excess from month one, although excess is by definition the stock behind the target
+cover. And `demand_over_cycle` still drew a normal clipped at zero — the generator
+every other simulation retired on 2026-09-11 — while its docstring claimed the
+lognormal. All three are fixed; the first is a change in numbers already issued.
+
+**What it computes now** (`models/markdown.py`). The units on hand, valued three ways
+as cash proceeds net of fees and carry, landed cost excluded, discounted monthly at
+12%/yr with no separate capital charge (discounting is the time value; a capital
+charge on sunk cost would count it twice):
+
+- hold: the whole position first-in-first-out at p_0, storage and aged surcharge on
+  whatever remains each month;
+- liquidate: the excess at 10% of price now, the cover held;
+- markdown at depth d: p_0(1 − d) for the listing until the position is back to
+  the target cover, then p_0; demand r·(1 − d)^ε.
+
+ε from its shrunk Student-t posterior, the rate lognormal from the SKU's own
+dispersion, the fees from their history — common random numbers across every option.
+Depths from 5% to 40%, floored where the markdown nets less per unit than
+liquidation. The choice is the certainty equivalent of the gain versus hold inside the
+same risk budget as the price step (15% of trailing monthly net), hold always a
+candidate at zero. Published per option: P5/P50/P95 of the NPV and of the gain, P(loss),
+the months to clear, the Monte Carlo error. A markdown deeper than the 5% standing cap
+is the client's explicit decision. No elasticity: the corrected two-way decision
+still runs, and says so.
+
+**Extrapolation.** The elasticity is a local fit used inside a ±5% band (§2); a 25%
+markdown is outside it. The interval is the mechanism — uncertainty in ε scales with
+|log(1 − d)|, so deep depths on thin fits publish wide bands and lose the race — and a
+markdown price under 90% of the lowest price ever observed on the SKU is flagged in
+words.
+
+**The stretch.** The mirror case: stockout likely, replenishment on its way. Demand
+over the lead time is Poisson at the base rate; at p_0(1 + d) it is the same draw
+thinned by (1 + d)^ε (a binomial of the base draw, one uniform per draw so every
+step sits on the same numbers), so the two are compared whether the stock binds or
+not. The rise is chosen as every price step is — the certainty equivalent of the
+window's profit, min(D, on hand) × contribution at each price, inside the risk budget —
+and drafted as an ordinary price step, with the change in P(stockout) reported beside
+it. The first draft targeted the smallest rise that brought P(stockout) under 25%; the
+simulation refused it, because on an elastic SKU the rise that stops the stockout
+throws away more sales than the higher price recovers, and a stockout target alone
+recommends losing money. The avoided stockout's own value is not priced (§10 #5), so
+the decision stands on the measurable gain; when no rise inside the cap beats standing
+still the answer is `no_stretch_pays`.
+
+**Measurement.** A markdown is measured BEFORE landed cost: the counterfactual of §9
+with unit cost zero and the factual as revenue less fees, because the promise is a
+difference in cash proceeds and selling more units at a lower price raises COGS in the
+window, so the net-of-COGS reading would book a markdown that won as a loss. Plus the
+storage and surcharge the cleared stock no longer bills, read off the next
+inventory-economics pass and capped at the promised carry. A stretch is measured as a
+price step, which under-credits it when the stock binds after the rise — the
+counterfactual volume at the old price exceeds what the stock allowed — in the
+direction that costs us credit, not the client.
+
+**What it cannot tell you.** Whether the markdown price holds the Buy Box; whether
+Amazon's excess estimate is right; the curve far from the observed range.
+
 ---
 
 ## 6. Cash horizon
