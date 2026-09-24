@@ -658,6 +658,9 @@ def price_move(margin_row: dict, elasticity_row: dict,
     # the client's stated tolerance, or the house default
     share = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
     budget = share * max(monthly_net, 0.0)
+    # a fit that just moved (models/drift.py) walks half as far this cycle
+    drift_scale = float((details.get("drift") or {}).get("tolerance_scale") or 1.0)
+    budget *= drift_scale
 
     def _solve(ds):
         if direction == 0:
@@ -735,7 +738,8 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
         "policy": {**policy, "risk_budget_share": share,
-                   "risk_budget_share_basis": "client" if risk_share is not None else "default"},
+                   "risk_budget_share_basis": "client" if risk_share is not None else "default",
+                   "drift_tolerance_scale": drift_scale},
         "trailing_monthly_net": num(monthly_net),
         "fee_rate": round(fee_rate, 6),
         "fixed_fee_per_unit": round(fixed_fee, 6),

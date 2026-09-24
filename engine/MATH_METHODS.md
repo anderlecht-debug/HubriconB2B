@@ -1104,6 +1104,23 @@ than 1.00, and labels anything below it OVER-PROMISING.
 
 ---
 
+### 9b. Model decay: the promises by cohort, and the parameters run to run
+
+A model tuned last quarter quietly decays, and two things say so. The promises: the
+replay harness pooled every measured directive into one realisation ratio until
+2026-09-23, and a ratio calibrated on last year's directives would still read fine
+while this quarter's failed. `replay.score` now also scores by 90-day cohort of the
+measurement date — ratio and band coverage per cohort, a seeded bootstrap band on each
+ratio, a Mann–Kendall trend across cohorts with at least four scored — and flags
+`decaying` when the latest cohort sits below the floor the pooled figure clears. The
+parameters: `models/drift.py` compares every elasticity and every ad curve's marginal
+return with the previous run's on the same item, z = (θ_new − θ_old) / √(se_new² +
+se_old²), Benjamini–Hochberg across the sweep so four hundred SKUs do not produce
+twenty drifted fits by chance each fortnight; a drifted fit carries `details.drift`
+and the price step halves its risk tolerance for the cycle. The two fits share most
+of their data, so z overstates their independence — the conservative direction for a
+flag that only shortens a step; stated, not corrected.
+
 ## 10. What this engine cannot tell you — the short list
 
 If you read one section, read this one.

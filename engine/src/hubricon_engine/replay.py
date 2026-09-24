@@ -27,7 +27,9 @@ a result, and calling it anything else would be the failure this engine exists t
 avoid.
 """
 
-from datetime import date
+from datetime import date, timedelta
+
+import numpy as np
 
 from .models.common import num
 
@@ -131,13 +133,94 @@ def _promise_band(directive: dict) -> tuple[float, float] | None:
     return float(lo), float(hi)
 
 
-def score(directives: list[dict]) -> dict:
+COHORT_DAYS = 90
+COHORT_BOOTSTRAP = 1000
+COHORT_SEED = 20260911
+MIN_COHORT_SCORED = 4
+
+
+def _mann_kendall(values: list[float]) -> dict:
+    """The trend test that needs no distribution: the sign of every pairwise
+    difference, summed. n cohorts is small, so the normal approximation is
+    reported with that caveat."""
+    n = len(values)
+    if n < 3:
+        return {"s": None, "p_value": None, "direction": "too few cohorts", "n": n}
+    s_stat = sum(np.sign(values[j] - values[i]) for i in range(n) for j in range(i + 1, n))
+    var = n * (n - 1) * (2 * n + 5) / 18.0
+    z = (s_stat - np.sign(s_stat)) / np.sqrt(var) if var > 0 and s_stat != 0 else 0.0
+    from scipy import stats as _stats
+    p = float(2 * _stats.norm.sf(abs(z)))
+    return {"s": int(s_stat), "z": num(float(z), 3), "p_value": num(p, 4),
+            "direction": "falling" if s_stat < 0 else "rising" if s_stat > 0 else "flat", "n": n}
+
+
+def cohorts(scored: list[dict], bandable: list[dict], cohort_days: int = COHORT_DAYS) -> dict:
+    """Realisation ratio and band coverage by cohort of the measurement date,
+    latest cohort first, each ratio with a seeded bootstrap band; a trend test
+    across cohorts; and `decaying` when the latest cohort sits below the floor
+    while the pooled ratio does not — the pooled figure is where a decay hides."""
+    dated = [s_ for s_ in scored if s_.get("measured_at") and s_.get("promised") is not None]
+    if not dated:
+        return {"status": "no_dates", "cohorts": [], "decaying": False}
+    latest = max(date.fromisoformat(str(s_["measured_at"])[:10]) for s_ in dated)
+    by: dict[int, list[dict]] = {}
+    for s_ in dated:
+        k = (latest - date.fromisoformat(str(s_["measured_at"])[:10])).days // cohort_days
+        by.setdefault(k, []).append(s_)
+    band_by: dict[int, list[dict]] = {}
+    for b in bandable:
+        if b.get("measured_at"):
+            k = (latest - date.fromisoformat(str(b["measured_at"])[:10])).days // cohort_days
+            band_by.setdefault(k, []).append(b)
+    rng = np.random.default_rng(COHORT_SEED)
+    out = []
+    for k in sorted(by):
+        members = by[k]
+        promised = sum(m["promised"] for m in members)
+        measured = sum(m["measured"] for m in members)
+        ratio = measured / promised if promised else None
+        lo = hi = None
+        if ratio is not None and len(members) >= 2:
+            idx = rng.integers(0, len(members), (COHORT_BOOTSTRAP, len(members)))
+            pr = np.array([m["promised"] for m in members])[idx].sum(axis=1)
+            me = np.array([m["measured"] for m in members])[idx].sum(axis=1)
+            ok = pr != 0
+            if ok.any():
+                r = me[ok] / pr[ok]
+                lo, hi = float(np.quantile(r, 0.05)), float(np.quantile(r, 0.95))
+        bands = band_by.get(k, [])
+        end = latest - timedelta(days=k * cohort_days)
+        out.append({"cohort": k, "to": end.isoformat(), "from": (end - timedelta(days=cohort_days - 1)).isoformat(),
+                    "n": len(members), "promised": num(promised), "measured": num(measured),
+                    "realisation_ratio": num(ratio, 4), "ratio_p5": num(lo, 4), "ratio_p95": num(hi, 4),
+                    "band_coverage": num(sum(b["inside"] for b in bands) / len(bands), 4) if bands else None,
+                    "enough": len(members) >= MIN_COHORT_SCORED})
+    usable = [c for c in reversed(out) if c["realisation_ratio"] is not None and c["enough"]]   # oldest → latest
+    trend = _mann_kendall([c["realisation_ratio"] for c in usable])
+    pooled_ratio = (sum(m["measured"] for m in dated) / sum(m["promised"] for m in dated)
+                    if sum(m["promised"] for m in dated) else None)
+    latest_c = out[0] if out else None
+    decaying = bool(latest_c and latest_c["enough"] and latest_c["realisation_ratio"] is not None
+                    and latest_c["realisation_ratio"] < MIN_REALISATION
+                    and pooled_ratio is not None and pooled_ratio >= MIN_REALISATION)
+    return {"status": "ok", "cohort_days": cohort_days, "cohorts": out, "trend": trend, "decaying": decaying,
+            "seed": COHORT_SEED,
+            "basis": (f"{len(out)} cohort(s) of {cohort_days} days by measurement date; ratio band by seeded bootstrap "
+                      f"over the cohort's directives; Mann–Kendall on the cohorts with at least {MIN_COHORT_SCORED} "
+                      f"scored; decaying = the latest cohort under {MIN_REALISATION:.2f} while the pooled ratio is not")}
+
+
+def score(directives: list[dict], cohort_days: int = COHORT_DAYS) -> dict:
     """Promise against outcome, over every directive already measured.
 
     Three numbers matter. The realisation ratio — measured dollars over promised
     dollars — says whether the engine over-promises. The band coverage says
     whether the published range meant anything. The count of directives whose
-    evidence could not be audited at all says whether the rest can be trusted."""
+    evidence could not be audited at all says whether the rest can be trusted.
+    And since 2026-09-23 a fourth: the same two by cohort of the measurement
+    date, because a pooled ratio calibrated on last year's directives hides a
+    decay in this quarter's."""
     scored, bandable = [], []
     audit = {"complete": 0, "incomplete": 0, "unchecked": 0, "missing_fields": {}}
     for d in directives:
@@ -156,16 +239,18 @@ def score(directives: list[dict]) -> dict:
         promised = d.get("expected_impact_usd")
         if measured is None:
             continue
+        measured_at = d.get("measured_at")
         scored.append({
             "kind": d.get("kind"), "dedupe_key": d.get("dedupe_key"),
             "promised": None if promised is None else float(promised),
-            "measured": float(measured),
+            "measured": float(measured), "measured_at": str(measured_at)[:10] if measured_at else None,
         })
         band = _promise_band(d)
         if band is not None:
             lo, hi = band
             bandable.append({"kind": d.get("kind"), "measured": float(measured),
-                             "p5": lo, "p95": hi, "inside": lo <= float(measured) <= hi})
+                             "p5": lo, "p95": hi, "inside": lo <= float(measured) <= hi,
+                             "measured_at": str(measured_at)[:10] if measured_at else None})
 
     with_promise = [s for s in scored if s["promised"] is not None]
     promised_total = sum(s["promised"] for s in with_promise)
@@ -183,6 +268,7 @@ def score(directives: list[dict]) -> dict:
         "evidence_audit": audit,
         "scored": scored,
         "banded": bandable,
+        "by_cohort": cohorts(scored, bandable, cohort_days),
     }
     if len(scored) < MIN_SCORED_FOR_CALIBRATION:
         out["status"] = "pending"
@@ -210,6 +296,9 @@ def score(directives: list[dict]) -> dict:
                    else "OVER-PROMISING" if out["over_promising"]
                    else "under-promising" if out["under_promising"]
                    else "the published range is not holding")
+        if out["by_cohort"].get("decaying"):
+            verdict += (" on the pooled figure, but DECAYING: the latest cohort's ratio is "
+                        f"{out['by_cohort']['cohorts'][0]['realisation_ratio']:.2f}")
         out["note"] = (
             f"{len(scored)} measured directives: {out['measured_total']} banked against "
             f"{out['promised_total']} promised"

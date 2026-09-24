@@ -63,8 +63,8 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, elasticity, forecast,
-    health_score,
+    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, drift, elasticity,
+    forecast, health_score,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
     seasonality,
 )
@@ -407,8 +407,18 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  price experiments: {len(ok)} of {len(experiments)} analysed"
                       + (f"; bias vs history {', '.join(f'{e['item_id']} {e['details'].get('bias_estimate'):+.2f}' for e in ok if e['details'].get('bias_estimate') is not None)}"
                          if any(e["details"].get("bias_estimate") is not None for e in ok) else ""))
+        # the previous succeeded run on this channel: what the fits looked like last time
+        prev_run = _latest_run(db, client["id"], None, channel, required=False)
+        prev_el = (db.table("elasticity_results").select("*").eq("run_id", prev_run["id"]).execute().data
+                   if prev_run else [])
+        prev_ads = (db.table("ad_efficiency_results").select("*").eq("run_id", prev_run["id"]).execute().data
+                    if prev_run else [])
         if "elasticity" in wanted:
             elast_rows = elasticity.run(data, experiments=experiments)
+            # a fit that moved since last run walks half as far this cycle; the
+            # mark has to be on the row before the drafting pass reads it back
+            drift_el = drift.compare_runs(elast_rows, prev_el, [], [])
+            drift.apply_to_elasticity(elast_rows, drift_el)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
         if "crossprice" in wanted:
             cross = cross_price.run(data, elast_rows)
@@ -453,6 +463,12 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                                          breaks=breaks)
             if breaks:
                 print(f"  ad efficiency: {len(breaks)} campaign(s) refitted after a cost-per-click or conversion break")
+        if "elasticity" in wanted or "ads" in wanted:
+            drift_out = drift.compare_runs(elast_rows or [], prev_el, ads_rows or [], prev_ads)
+            _save_output(db, run_id, client["id"], "drift", drift_out)
+            print("  drift: "
+                  + (f"{drift_out['n_drifted']} of {drift_out['n_pairs']} fits moved since the last run"
+                     if drift_out["status"] == "ok" else drift_out["status"]))
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
         if "recovery" in wanted and not channels.has_recovery(channel):
             print("  recovery: not applicable to Shopify (no reimbursement window)")

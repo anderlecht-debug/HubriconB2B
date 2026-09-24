@@ -44,7 +44,8 @@ def test_a_young_sku_on_a_catalogue_that_dies_young_earns_a_lower_service_level(
     assert risk_out["survival"]["status"] == "ok" and risk_out["survival"]["events"] >= 8
     charge = econ.obsolescence_charge(risk_out, sku_age_periods=2, cycle_days=52, unit_cost=5.0, price=20.0)
     assert charge and 0 < charge["p_death_before_sellthrough"] < 1 and charge["per_unit"] > 0
-    assert charge["per_unit"] == pytest.approx(charge["p_death_before_sellthrough"] * (5.0 - 2.0), rel=1e-6)
+    # the published probability is rounded to four places; the charge uses the exact one
+    assert charge["per_unit"] == pytest.approx(charge["p_death_before_sellthrough"] * (5.0 - 2.0), rel=1e-3)
     old = econ.obsolescence_charge(risk_out, sku_age_periods=8, cycle_days=52, unit_cost=5.0, price=20.0)
     # the curve has no information beyond the longest life it saw: an old SKU carries no charge
     assert old["p_death_before_sellthrough"] == 0.0

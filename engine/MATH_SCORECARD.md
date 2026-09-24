@@ -738,6 +738,23 @@ three periods earns a lower fractile than the flat rate gives, with the band aro
 a SKU as old as the catalogue carries no charge; no curve falls back flat and says so.
 `tests/test_obsolescence.py`, 2 tests.
 
+### Iteration 30 — model decay
+
+**Objection.** Non-stationarity of the promises themselves: a pooled realisation ratio
+hides a quarter that stopped coming true, and nothing compared a fit with the fit
+before it.
+
+**Change.** Cohort scoring in `replay.score` with bootstrap bands, a Mann–Kendall trend
+and a `decaying` flag; `models/drift.py` comparing every elasticity and ad curve with
+the previous run's under Benjamini–Hochberg, halving the price step's tolerance on a
+drifted fit; both on every run.
+
+**Measured.** Three cohorts realising 0.7 followed by one realising 0.15 read as
+calibrated on the pooled figure and DECAYING by cohort with a falling trend; a planted
+shift of more than an elasticity on two SKUs is flagged with at most two false alarms
+among sixty; a drifted fit's risk budget is exactly halved and its step no longer.
+`tests/test_drift.py`, 3 tests.
+
 ---
 
 ## Outcome Alignment
