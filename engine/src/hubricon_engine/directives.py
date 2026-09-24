@@ -53,6 +53,7 @@ BRANDED_SPEND_MIN = 25.0
 INCREMENTALITY_MID = 0.4       # midpoint of the 25–60% industry range
 GENERIC_NAME_WORDS = {"inc", "llc", "ltd", "the", "and", "co", "company"}
 RECOVERY_MIN_VALUE = 50.0      # below this, filing costs more attention than it returns
+RUIN_WARNING = 0.05            # mirrors cashflow.RUIN_WARNING: a cash decision that pushes ruin past it asks first
 ANOMALY_MIN_IMPACT = 100.0     # per period
 LIQUIDATION_MIN_GAIN = 100.0
 ANOMALY_LABELS = {
@@ -598,6 +599,27 @@ def _recovery_directive(recovery: dict | None) -> dict | None:
     )
 
 
+def ruin_guard(draft: dict, cash: dict | None, day: int, amount: float) -> dict:
+    """The sequence-of-returns risk of one decision, in place: what this wire
+    (or inflow) does to the cone's ruin probability. A decision that pushes
+    ruin past the warning line where it sat under it is no longer inside the
+    standing mandate whatever its own economics, and says why. Nothing is
+    attached without a cone, and nothing is invented."""
+    from .models.cashflow import ruin_delta
+
+    rd = ruin_delta(cash, day, amount)
+    if rd is None:
+        return draft
+    draft["evidence"]["ruin_delta"] = rd
+    if rd["p_ruin_after"] > RUIN_WARNING >= rd["p_ruin_before"]:
+        draft["mandate"] = "explicit"
+        draft["mandate_reason"] = (
+            f"this {'wire' if amount > 0 else 'inflow'} of {_money(abs(amount))} on day {rd['day']} moves the 90-day "
+            f"chance of dipping below {_money(rd['ruin_floor'])} from {rd['p_ruin_before']:.1%} to "
+            f"{rd['p_ruin_after']:.1%}, past the {RUIN_WARNING:.0%} line")
+    return draft
+
+
 def _baseline(margin_row: dict | None) -> dict:
     if not margin_row:
         return {}
@@ -1133,7 +1155,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      replenishment: dict | None = None,
                      cash_orders: dict | None = None,
                      assortment: dict | None = None,
-                     risk_share: float | None = None) -> list[dict]:
+                     risk_share: float | None = None,
+                     cash: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1175,7 +1198,10 @@ def draft_directives(inventory, ads, elasticity, margins,
         if st:
             drafts.append(downside_guard(st, latest_by_sku.get(sku), downside_share))
             md_skus.add(sku)
-    drafts += _liquidation_directives(inv_econ, channel, markdown)
+    for liq in _liquidation_directives(inv_econ, channel, markdown):
+        # an inflow: the program pays out within a week or two
+        ruin_guard(liq, cash, 14, -float(liq["evidence"].get("liquidate_value") or 0))
+        drafts.append(liq)
     drafts += _fee_bleed_directives(inv_econ, today, channel,
                                     exclude={s for s, r in md_rows.items() if r.get("decision") == "markdown"})
     drafts += _anomaly_directives(anomaly_rows, channel)
@@ -1188,14 +1214,24 @@ def draft_directives(inventory, ads, elasticity, margins,
     funded_skus = {o["sku"] for o in (budget_set["evidence"]["orders"] if budget_set else [])}
     if budget_set:
         drafts.append(budget_set)
+    if budget_set:
+        first_day = min((int(w.get("day") or 0) for w in ((cash or {}).get("details") or {}).get("wires") or []), default=0)
+        ruin_guard(budget_set, cash, first_day, float(budget_set["evidence"].get("wire_total") or 0))
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
             if r["sku"] in funded_skus:
                 continue
-            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel,
-                                               rep_row=rep_by_sku.get(r["sku"]), supplier_events=supplier_events))
+            reorder = _inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel,
+                                           rep_row=rep_by_sku.get(r["sku"]), supplier_events=supplier_events)
+            if reorder["evidence"].get("wire_usd"):
+                rate = float(r.get("daily_velocity_mean") or 0)
+                position = int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
+                day = max(0, int((position - int(r.get("reorder_point") or 0)) / rate)) if rate > 0 else 0
+                ruin_guard(reorder, cash, day, float(reorder["evidence"]["wire_usd"]))
+            drafts.append(reorder)
             ex = _expedite_directive(rep_by_sku.get(r["sku"]), econ_by_sku.get(r["sku"]))
             if ex:
+                ruin_guard(ex, cash, 0, float(ex["evidence"].get("freight_premium") or 0))
                 drafts.append(ex)
 
     bleed_total = sum(t["spend"] or 0 for r in ads for t in (r["bleed_terms"] or []))

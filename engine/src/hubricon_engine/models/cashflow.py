@@ -200,6 +200,7 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     trough = cash.min(axis=1)
     trough_tail = expected_shortfall(trough, 0.05, tail="lower")
     ruin_se = float(np.sqrt(max(0.0, ruined * (1 - ruined)) / n_paths))
+    ladder = ruin_ladder(cash, float(ruin_floor))
     return {
         "horizon_days": days,
         "n_paths": n_paths,
@@ -234,6 +235,9 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             "seasonal": "index applied per calendar day" if index_paths is not None else "flat rate",
             "ruin_floor": num(float(ruin_floor)),
             "ruin_floor_basis": "client-stated minimum cash buffer" if ruin_floor else "zero (no buffer stated)",
+            # what a wire on day d would do to the ruin probability, without
+            # re-running the cone: see ruin_ladder / ruin_delta
+            "ruin_ladder": ladder,
             "assumptions": [
                 payout_note or channels.payout_note("amazon"),
                 ("Demand follows the catalog's seasonal index by calendar day" if index_paths is not None
@@ -252,6 +256,62 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             ],
         },
     }
+
+
+LADDER_QUANTILES = 101
+
+
+def ruin_ladder(cash: np.ndarray, floor: float = 0.0) -> dict:
+    """Enough of the simulated paths to price any later cash decision.
+
+    A wire of W on day d lowers every path by W from d on, so a path is ruined
+    afterwards when its minimum before d is under the floor, or its minimum
+    from d on is under floor + W. Per day the ladder keeps P(pre-minimum under
+    the floor) and the quantiles of the post-minimum among the paths still
+    above it — a few thousand numbers, from which ruin_delta reads
+    P(ruin | W on day d) exactly up to the quantile grid, for any W, with no
+    second simulation."""
+    n_paths, days = cash.shape
+    qs = np.linspace(0.0, 1.0, LADDER_QUANTILES)
+    pre_p, post_q, post_p5 = [], [], []
+    running_min = np.minimum.accumulate(cash, axis=1)
+    suffix_min = np.minimum.accumulate(cash[:, ::-1], axis=1)[:, ::-1]
+    for d in range(days):
+        pre_ok = running_min[:, d - 1] >= floor if d > 0 else np.ones(n_paths, dtype=bool)
+        pre_p.append(float(1.0 - pre_ok.mean()))
+        post = suffix_min[pre_ok, d] if pre_ok.any() else np.array([floor])
+        post_q.append([num(float(v)) for v in np.quantile(post, qs)])
+        post_p5.append(num(float(np.quantile(suffix_min[:, d], 0.05))))
+    return {"days": days, "floor": num(floor), "quantiles": LADDER_QUANTILES, "p_pre": [num(v, 5) for v in pre_p],
+            "post_min_q": post_q, "post_min_p5": post_p5, "n_paths": int(n_paths)}
+
+
+def ruin_delta(cash_payload: dict | None, day: int, amount: float) -> dict | None:
+    """P(ruin) before and after a cash movement of `amount` on `day` (positive
+    = out, negative = in), from the ladder the cone stored. None without a cone."""
+    ladder = ((cash_payload or {}).get("details") or {}).get("ruin_ladder")
+    if not ladder or not ladder.get("post_min_q"):
+        return None
+    d = int(max(0, min(day, ladder["days"] - 1)))
+    floor = float(ladder["floor"] or 0.0)
+    p_pre = float(ladder["p_pre"][d])
+    q = np.array(ladder["post_min_q"][d], dtype=float)
+    grid = np.linspace(0.0, 1.0, len(q))
+    threshold = floor + float(amount)
+
+    def cdf(x):
+        # share of the surviving paths whose post-minimum is under x
+        return float(np.interp(x, q, grid, left=0.0, right=1.0))
+    before = p_pre + (1 - p_pre) * cdf(floor)
+    after = p_pre + (1 - p_pre) * cdf(threshold)
+    n = int(ladder.get("n_paths") or 10000)
+    return {"day": d, "amount": round(float(amount), 2),
+            "p_ruin_before": num(before, 4), "p_ruin_after": num(after, 4),
+            "p_ruin_delta": num(after - before, 4),
+            "mc_se": num(float(np.sqrt(max(after * (1 - after), 1e-12) / n)), 5),
+            "trough_p5_after": num(float(ladder["post_min_p5"][d] or 0.0) - float(amount)),
+            "ruin_floor": num(floor),
+            "basis": "read off the cone's stored path minima: the wire lowers every path from its day on"}
 
 
 def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],

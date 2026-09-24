@@ -885,6 +885,27 @@ whole set. The directive `budget_order_set` replaces the individual reorders for
 SKUs it covers, is explicit, and promises nothing: the avoided stockout is §10 #5.
 `no_cash_inputs` and `fully_funded` leave the reorders as they were.
 
+### 6c. The ruin cost of a decision
+
+**What it computes.** Sequence-of-returns risk is the order outcomes arrive in: a wire
+that is fine on average can cross the buffer early, before the good months land. The
+cone already holds the answer in its paths. A wire of W on day d lowers every path by W
+from d on, so a path is ruined afterwards when its minimum before d is under the floor,
+or its minimum from d on is under floor + W. `cashflow.ruin_ladder` keeps, per day,
+P(pre-minimum under the floor) and the quantiles of the post-minimum among the paths
+still above it; `cashflow.ruin_delta` reads P(ruin | W on day d) off that for any W, with
+a Monte Carlo error, no second simulation. An inflow is a negative W.
+
+**Where it lands.** Every directive that moves cash carries `evidence.ruin_delta` —
+the reorder wire, the cash-constrained order set, the air-freight premium, the
+liquidation inflow — and one that pushes the ninety-day ruin probability past the 5%
+line where it sat under it is routed to an explicit yes with the two probabilities in
+the reason. Without a cone nothing is attached and nothing is invented.
+
+**Measured.** On a simulated account the ladder's P(ruin | $2,000 on day 20) matches a
+second simulation with the wire added within its Monte Carlo error; a zero wire leaves
+it unchanged; a wire past every path's minimum makes it one.
+
 ---
 
 ## 7. Demand dependence

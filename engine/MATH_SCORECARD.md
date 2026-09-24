@@ -674,6 +674,21 @@ by the same dollars; a 5% share walks a shorter step than 15% than 30%; a lower 
 routes more drafts to an explicit yes; `risk_share=None` is byte-identical to before.
 `tests/test_client_risk.py`, 3 tests.
 
+### Iteration 26 — the ruin cost of a decision
+
+**Objection.** The cone said "you may need bridge capital" about the whole plan and
+nothing about any one wire. Sequence risk is per decision.
+
+**Change.** `cashflow.ruin_ladder` and `ruin_delta`: the stored path minima price any
+wire on any day without re-running the cone; `directives.ruin_guard` attaches the
+before-and-after ruin probability to every cash-moving directive and routes one that
+crosses the 5% line to an explicit yes.
+
+**Measured.** The ladder agrees with a second simulation of the added wire within its
+Monte Carlo error; a hand-built matrix reproduces its ruin shares to within the
+quantile grid; a reorder priced at ten times the landed cost is demoted with both
+probabilities in the reason. `tests/test_ruin_cost.py`, 3 tests.
+
 ---
 
 ## Outcome Alignment

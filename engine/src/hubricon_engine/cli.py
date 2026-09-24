@@ -537,6 +537,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                     [{**cash, "run_id": run_id, "client_id": client["id"]}],
                     on_conflict="run_id",
                 )
+                # the cone with its ruin ladder, for the drafting pass and the stress scenarios
+                _save_output(db, run_id, client["id"], "cash", cash)
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
         if "cashorders" in wanted:
@@ -684,7 +686,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
                               replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
                               assortment=outputs.get("assortment"),
-                              risk_share=client.get("risk_budget_share"))
+                              risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
