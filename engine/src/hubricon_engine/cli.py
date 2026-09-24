@@ -64,7 +64,7 @@ from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
     ad_allocation, ad_efficiency, anomaly, cashflow, cross_price, elasticity, forecast, health_score,
-    incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, risk,
+    incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -90,7 +90,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "risk", "cash", "health")
+              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -468,6 +468,13 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 else:
                     print(f"  markdown: {md['status']}")
             _save_output(db, run_id, client["id"], "invecon", inv_econ)
+            if "replenish" in wanted:
+                rep = replenishment.run(inv_econ, data, rng, today, channel)
+                _save_output(db, run_id, client["id"], "replenishment", rep)
+                rs = rep["summary"]
+                print(f"  replenishment: {rs['n_with_terms']} of {rs['n_skus']} SKUs carry supplier terms; "
+                      f"{len(rs['price_breaks_taken'])} price break(s) taken, {len(rs['expedite_air'])} to expedite by air, "
+                      f"{rs['wire_events_saved']} wire(s) saved across {rs['n_suppliers']} supplier(s)")
             if inv_econ["status"] == "ok":
                 b = inv_econ["summary"]["bleed"]
                 print(f"  inventory economics: {inv_econ['summary']['n_skus']} SKUs priced, fee bleed "
@@ -628,7 +635,8 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               channel=channel, ad_allocation=outputs.get("ad_allocation"),
                               incrementality=outputs.get("incrementality"), client_id=client["id"],
                               experiments=_load_price_tests(db, client["id"]),
-                              cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"))
+                              cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
+                              replenishment=outputs.get("replenishment"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}

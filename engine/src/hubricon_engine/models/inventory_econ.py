@@ -215,6 +215,8 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             "rate_mean": num(mean_rate, 4), "rate_sd": num(std_rate, 4), "rate_source": rate_source,
             "lead_time_days": int(lead), "review_days": REVIEW_PERIOD_DAYS,
             "on_hand": on_hand, "inbound": inbound, "position": position,
+            "reorder_point": int(inv.get("reorder_point") or 0),
+            "stockout_probability": inv.get("stockout_probability"),
             "days_of_supply_on_hand": num(on_hand / mean_rate, 1),
             "days_of_cover_position": num(position / mean_rate, 1),
             "item_volume_cuft": num(vol, 4), "volume_assumed": vol_assumed, "size_tier": size_tier,

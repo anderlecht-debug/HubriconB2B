@@ -566,6 +566,25 @@ a rise with a median window loss of $128: the stockout target alone recommends l
 money, so the stretch is now sized by the certainty equivalent like every other step.
 `tests/test_markdown.py`, 13 tests.
 
+### Iteration 20 — part 6: the order the supplier will actually accept
+
+**Objection.** The newsvendor sizes each SKU alone. A real purchase order has a
+minimum, a case pack, a price break, a shared wire and a choice of freight, and none
+of that was priced.
+
+**Change.** `models/replenishment.py` on the newsvendor's own demand ladder: MOQ and
+case-pack rounding costed at the overage it forces, the price break taken only when
+its saving beats the extra overage and capital, a can-order joint wire per supplier,
+and air against sea on the stockout units avoided at margin plus the low-inventory fee.
+Seven optional cost-sheet columns and a migration; blank means not priced. The reorder
+directive carries the terms and the joint wire; `expedite_air` is explicit and
+unbankable.
+
+**Measured.** Rounding to a 150 MOQ and 24-unit cases lands on 168 and costs its
+overage; a $1 break at 200 units pays and a 5¢ break at 600 does not; a supplier's
+siblings due within a review period share a wire; a position that sea exposes and air
+covers recommends air, a covered one does not. `tests/test_replenishment.py`, 6 tests.
+
 ---
 
 ## Outcome Alignment

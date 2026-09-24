@@ -175,8 +175,36 @@ def branded_spend(search_terms: list[dict], brand_terms: list[str]) -> tuple[flo
     return total, n
 
 
+def _expedite_directive(rep_row: dict, econ_row: dict | None) -> dict | None:
+    """Air instead of sea on an order at stockout risk. Explicit — it is new
+    money — and unbankable: the avoided stockout is the counterfactual §10
+    calls unobservable, so the expected net rides in evidence and nothing is
+    promised."""
+    ex = (rep_row or {}).get("expedite") or {}
+    if ex.get("status") != "ok" or not ex.get("recommend_air"):
+        return None
+    sku = rep_row["sku"]
+    return _draft(
+        "inventory", "expedite_air", sku,
+        score=28 + float(ex["net_p50"]) / 100,
+        expected=None,
+        action_text=(
+            f"Ship the {int(ex['order_qty'])}-unit order of {sku} by air ({int(ex['air_lead_days'])} days) rather than sea "
+            f"({int(ex['sea_lead_days'])} days): the {_money(float(ex['freight_premium']))} freight premium buys back about "
+            f"{float(ex['stockout_units_sea']) - float(ex['stockout_units_air']):.0f} units that would otherwise sell out, "
+            f"a net of about {'+' if float(ex['net_p50']) >= 0 else '−'}{_money(float(ex['net_p50']))} (90% range "
+            f"{'+' if float(ex['net_p5']) >= 0 else '−'}{_money(float(ex['net_p5']))} to "
+            f"{'+' if float(ex['net_p95']) >= 0 else '−'}{_money(float(ex['net_p95']))}; stockout risk "
+            f"{float(ex['p_stockout_sea']):.0%} by sea, {float(ex['p_stockout_air']):.0%} by air). The avoided stockout is "
+            f"not banked: no later export can show a sale that did not fail to happen."
+        ),
+        evidence={"sku": sku, **{k: v for k, v in ex.items() if k != "basis"}, "order_qty": ex["order_qty"]},
+    )
+
+
 def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None,
-                         channel: str | None = "amazon") -> dict:
+                         channel: str | None = "amazon", rep_row: dict | None = None,
+                         supplier_events: dict | None = None) -> dict:
     p = float(r["stockout_probability"] or 0)
     rate = float(r["daily_velocity_mean"] or 0)
     position = int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
@@ -196,14 +224,40 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
     else:
         order_qty = int(r["reorder_qty"])
 
+    joint = None
+    terms_note = ""
+    if rep_row and rep_row.get("status") == "ok" and rep_row.get("order_qty"):
+        # the supplier's terms reshape the order: MOQ, case pack, a price break
+        order_qty, wire_amount = int(rep_row["order_qty"]), float(rep_row["wire"] or 0)
+        t = rep_row.get("terms") or {}
+        pb = rep_row.get("price_break") or {}
+        if t.get("forced_units"):
+            terms_note += (f" Rounded up from {t['q_star']} to the supplier's minimum and case pack; the extra "
+                           f"{t['forced_units']} units cost about {_money(float(t['moq_cost'] or 0))} in overage this cycle.")
+        if pb.get("take"):
+            terms_note += (f" Raised to the {pb['q_break']}-unit price break at ${float(pb['unit_cost_break']):.2f}: "
+                           f"{_money(float(pb['net']))} net of the extra stock it carries "
+                           f"({float(pb['p_positive']):.0%} of draws agree).")
+        if supplier_events and rep_row.get("supplier"):
+            ev_ = supplier_events.get(rep_row["supplier"])
+            if ev_ and ev_.get("wire_events_saved"):
+                joint = {"supplier": rep_row["supplier"], "skus": next((e["skus"] for e in ev_.get("events", [])
+                                                                        if r["sku"] in e["skus"]), [r["sku"]]),
+                         "wire_events_saved": ev_["wire_events_saved"], "horizon_days": ev_["horizon_days"]}
+                others = [s_ for s_ in joint["skus"] if s_ != r["sku"]]
+                if others:
+                    terms_note += (f" Order it with {', '.join(others[:3])}{'…' if len(others) > 3 else ''} from "
+                                   f"{rep_row['supplier']} on the same wire; ordering the supplier's SKUs together saves "
+                                   f"{ev_['wire_events_saved']} wire(s) over {ev_['horizon_days']} days.")
+
     if econ_row and econ_row.get("order_qty_econ") and econ_row.get("wire_econ") is not None:
         # the newsvendor sized it: the service level is the one the margin justifies
         q = float(econ_row["critical_fractile"])
         text = (
-            f"Wire {_money(float(econ_row['wire_econ']))} to your supplier by {by_text} — "
-            f"{int(econ_row['order_qty_econ'])} units of {r['sku']}. Sized to a {q:.0%} service level, "
+            f"Wire {_money(float(wire_amount))} to your supplier by {by_text} — "
+            f"{int(order_qty)} units of {r['sku']}. Sized to a {q:.0%} service level, "
             f"the level your margin justifies (C_u ÷ (C_u + C_o), storage and the season priced in); "
-            f"lead time {r['lead_time_days']}d, current stockout risk {p:.0%}."
+            f"lead time {r['lead_time_days']}d, current stockout risk {p:.0%}.{terms_note}"
         )
     elif unit_cost:
         wire = float(r["reorder_qty"]) * unit_cost
@@ -235,6 +289,9 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
             "reorder_point": int(r["reorder_point"] or 0),
             "stockout_probability": p,
             "lead_time_days": r.get("lead_time_days"),
+            "supplier_terms": (rep_row or {}).get("terms"),
+            "price_break": (rep_row or {}).get("price_break"),
+            "joint_order": joint,
         },
     )
 
@@ -989,7 +1046,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      client_id: str | None = None,
                      experiments: list[dict] | None = None,
                      cross_price: dict | None = None,
-                     markdown: dict | None = None) -> list[dict]:
+                     markdown: dict | None = None,
+                     replenishment: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1032,9 +1090,15 @@ def draft_directives(inventory, ads, elasticity, margins,
                                     exclude={s for s, r in md_rows.items() if r.get("decision") == "markdown"})
     drafts += _anomaly_directives(anomaly_rows, channel)
 
+    rep_by_sku = {x["sku"]: x for x in (replenishment or {}).get("rows", [])}
+    supplier_events = {x["supplier"]: x for x in (replenishment or {}).get("suppliers", [])}
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
-            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel))
+            drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel,
+                                               rep_row=rep_by_sku.get(r["sku"]), supplier_events=supplier_events))
+            ex = _expedite_directive(rep_by_sku.get(r["sku"]), econ_by_sku.get(r["sku"]))
+            if ex:
+                drafts.append(ex)
 
     bleed_total = sum(t["spend"] or 0 for r in ads for t in (r["bleed_terms"] or []))
     if bleed_total > 0:

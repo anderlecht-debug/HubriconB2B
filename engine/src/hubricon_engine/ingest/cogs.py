@@ -26,6 +26,16 @@ SPEC = {
         "cleaner": clean_money,
     },
     "supplier_lead_time_days": {"synonyms": ["supplierleadtimedays", "leadtimedays"], "cleaner": clean_int},
+    # supplier terms (2026-09-23), all optional: a blank column is priced as
+    # absent by models/replenishment.py, never guessed
+    "supplier": {"synonyms": ["supplier", "vendor", "suppliername"], "cleaner": clean_str},
+    "moq_units": {"synonyms": ["moqunits", "moq", "minimumorderquantity", "minorderunits"], "cleaner": clean_int},
+    "case_pack_units": {"synonyms": ["casepackunits", "casepack", "unitspercase"], "cleaner": clean_int},
+    "price_break_qty": {"synonyms": ["pricebreakqty", "pricebreakunits", "volumebreakqty"], "cleaner": clean_int},
+    "price_break_unit_cost_usd": {"synonyms": ["pricebreakunitcostusd", "pricebreakunitcost", "unitcostatbreak"],
+                                  "cleaner": clean_money},
+    "air_freight_per_unit_usd": {"synonyms": ["airfreightperunitusd", "airfreightperunit"], "cleaner": clean_money},
+    "air_lead_time_days": {"synonyms": ["airleadtimedays", "airleadtime"], "cleaner": clean_int},
     "notes": {"synonyms": ["notes"], "cleaner": clean_str},
 }
 

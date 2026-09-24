@@ -685,6 +685,36 @@ direction that costs us credit, not the client.
 **What it cannot tell you.** Whether the markdown price holds the Buy Box; whether
 Amazon's excess estimate is right; the curve far from the observed range.
 
+### 5c. The purchase order as the supplier writes it
+
+**What it computes** (`models/replenishment.py`), on the same simulated cycle demand
+the newsvendor sized the order on (its quantile ladder rides on the row, so nothing
+is re-simulated):
+
+- **MOQ and case pack.** q rises to the minimum and to whole cases; the forced units
+  cost their own overage, C_o × (E[max(0, q − D)] − E[max(0, q* − D)]), published so
+  the client sees what the supplier's minimum costs per cycle.
+- **The price break.** Taken when the unit saving on the larger order exceeds the
+  extra expected overage plus the capital on the larger wire, with P(net > 0) from the
+  draws; both wires shown.
+- **The joint order.** A can-order policy per supplier: when any SKU hits its reorder
+  point, every sibling due within one review period joins the wire; the wire events
+  saved over the horizon against independent ordering are counted.
+- **Air against sea.** On common random numbers (one uniform per draw scales both lead
+  times), the stockout units avoided — E[max(0, D_sea − position)] − E[max(0, D_air −
+  position)] — at margin plus the low-inventory fee, less the freight premium on the
+  order; air recommended when the median is positive and 60% of draws agree. Drafted
+  as `expedite_air`, explicit, with no dollar promise: the avoided stockout is the
+  counterfactual §10 #5 calls unobservable.
+
+**Where the terms come from.** Optional columns on the client's cost sheet: supplier,
+MOQ, case pack, the break quantity and its unit cost, the air freight per unit and lead
+time; sea is the existing inbound freight and lead time. A blank column is priced as
+absent (`no_supplier_terms`, `no_freight_options`), never guessed.
+
+**What it cannot tell you.** Container capacity, supplier lead-time variance beyond
+the assumed 20%, and whether the break is still on offer.
+
 ---
 
 ## 6. Cash horizon
