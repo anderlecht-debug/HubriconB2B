@@ -15,10 +15,13 @@ framed as a tracked test the Ledger then measures.
 
 import hashlib
 import json
+
+import numpy as np
 from datetime import date, timedelta
 
 from . import channels
 from .models import fee_schedule
+from .models.common import num
 from .models.margin import average_margin
 from .models.pricing_engine import (
     INELASTIC_STEP,
@@ -33,7 +36,8 @@ from .models.pricing_engine import (
 # up to five percent per SKU per two-week cycle" and advertising corrections —
 # rather than invented here. Everything else needs an explicit yes, and a
 # price step past the cap is demoted to explicit at the point it is drafted.
-STANDING = {"ad_bleed_terms", "campaign_trim", "branded_pause", "spend_step", "price_step"}
+STANDING = {"ad_bleed_terms", "campaign_trim", "branded_pause", "spend_step", "price_step",
+            "budget_reallocation"}
 
 # How much of a SKU's own trailing monthly net a single directive's
 # 5th-percentile outcome may put at risk before the move stops travelling under
@@ -629,17 +633,177 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
     return out
 
 
+def trim_candidates(ads: list[dict], avg_margin: float) -> dict[str, dict]:
+    """The campaigns a trim will be drafted for this run, with the break-even
+    the trim is sized against — one rule, used by the trim loop below and by the
+    budget reallocation so no campaign carries two promises in one cycle.
+
+    The trim is sized off the CONSERVATIVE end of the break-even's own interval
+    when the fit produced one: a higher break-even means a smaller trim and a
+    smaller promise, which is the direction to be wrong in on a number the
+    client is billed against. No trim when the interval reaches current spend."""
+    out = {}
+    for r in ads:
+        if not (r.get("status") == "ok" and r.get("current_spend") and r.get("breakeven_spend")
+                and float(r["current_spend"]) > float(r["breakeven_spend"])):
+            continue
+        uncertainty = (r.get("details") or {}).get("uncertainty") or {}
+        breakeven = float(r["breakeven_spend"])
+        if uncertainty.get("breakeven_p95") is not None:
+            breakeven = max(breakeven, float(uncertainty["breakeven_p95"]))
+        if float(r["current_spend"]) <= breakeven:
+            continue
+        out[r["campaign_name"]] = {"breakeven": breakeven, "excess": float(r["current_spend"]) - breakeven,
+                                   "uncertainty": uncertainty}
+    return out
+
+
+def _budget_reallocation_directive(alloc: dict | None) -> dict | None:
+    """Money between campaigns: the same total, moved to where the marginal
+    dollar returns more. Standing under the advertising mandate — no total
+    changes — unless its own bad case exceeds the campaign set's risk budget."""
+    if not alloc or alloc.get("status") != "ok":
+        return None
+    moved = [c for c in alloc.get("campaigns") or []
+             if c.get("status") == "ok" and abs(float(c.get("move") or 0)) >= 1.0]
+    if not moved:
+        return None
+    gives = sorted((c for c in moved if float(c["move"]) < 0), key=lambda c: float(c["move"]))
+    takes = sorted((c for c in moved if float(c["move"]) > 0), key=lambda c: -float(c["move"]))
+    total_moved = sum(-float(c["move"]) for c in gives)
+
+    def _named(cs):
+        return ", ".join(f"“{c['campaign_name']}” ${float(c['current']):,.0f}→${float(c['recommended']):,.0f}"
+                         for c in cs[:4]) + ("…" if len(cs) > 4 else "")
+
+    lam, be = float(alloc.get("lambda") or 0), float(alloc.get("breakeven_marginal_roas") or 0)
+    lo, hi = alloc.get("delta_p5"), alloc.get("delta_p95")
+    rng = ""
+    if lo is not None and hi is not None:
+        rng = (f" (90% range {'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}")
+        if alloc.get("p_loss") is not None:
+            loss = float(alloc["p_loss"])
+            rng += ("; under a 1% chance it goes the other way" if loss < 0.01
+                    else f"; a {loss:.0%} chance it goes the other way")
+        rng += ")"
+    total_note = ""
+    if lam and be:
+        total_note = (f" That common return is {'above' if lam > be else 'below'} the {be:.2f} break-even, so the "
+                      f"total is {'under' if lam > be else 'over'}-spent as a whole; the next cycle re-measures "
+                      f"before the total moves.")
+    horizon = int(alloc.get("horizon_days") or MEASUREMENT_HORIZON_DAYS)
+    text = (f"Move {_money(total_moved)}/day between campaigns at the same {_money(alloc['total_spend'])}/day total — "
+            f"from {_named(gives)} to {_named(takes)}. Every campaign then returns about the same "
+            f"${lam:,.2f} of sales per marginal dollar.{total_note} "
+            f"Expected +{_money(alloc['delta_p50'])} over {horizon} days{rng}.")
+    subject = sorted((c["campaign_name"], c["current"], c["recommended"]) for c in moved)
+    ok_rows = [c for c in alloc["campaigns"] if c.get("status") == "ok"]
+    margin = float(alloc.get("avg_margin") or 0)
+    monthly_net = horizon * max(0.0, sum(margin * float(c.get("current_sales") or 0) - float(c.get("current") or 0)
+                                         for c in ok_rows))
+    draft = _draft(
+        "advertising", "budget_reallocation", subject,
+        score=10 + float(alloc["delta_p50"]) / 100,
+        expected=alloc["delta_p50"],
+        action_text=text,
+        evidence={
+            "campaigns": alloc["campaigns"],
+            "total_spend": alloc["total_spend"],
+            "total_moved": round(total_moved, 2),
+            "lambda": alloc.get("lambda"),
+            "breakeven_marginal_roas": alloc.get("breakeven_marginal_roas"),
+            "avg_margin": alloc.get("avg_margin"),
+            "horizon_days": horizon,
+            "delta_p5": alloc.get("delta_p5"), "delta_p50": alloc.get("delta_p50"),
+            "delta_p95": alloc.get("delta_p95"), "delta_mean": alloc.get("delta_mean"),
+            "p_loss": alloc.get("p_loss"), "mc_se": alloc.get("mc_se"), "mc_inputs": alloc.get("mc_inputs"),
+            "alpha": alloc.get("alpha"), "policy": alloc.get("policy"),
+            "free_budget": alloc.get("free_budget"),
+            "campaign_monthly_net": round(monthly_net, 2),
+        },
+    )
+    return downside_guard(draft, None, monthly_net=monthly_net)
+
+
+SWITCHBACK_MIN_SPEND = 20.0     # a campaign under this a day is not worth a four-week test
+
+
+def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
+                          client_id: str | None, today: date) -> dict | None:
+    """Design the switchback when nothing yet identifies ι: no executed test on
+    file, and the observational estimate either refused or straddles 1. One
+    campaign at a time — the largest ok campaign without a test — because the
+    test costs four weeks of that campaign's OFF days."""
+    from .models.incrementality import design_switchback
+
+    if not incr:
+        return None
+    if incr.get("incrementality_for_breakeven") is not None:
+        return None
+    obs = incr.get("observational") or {}
+    if obs.get("status") == "ok" and obs.get("ci95") and (obs["ci95"][1] < 1 or obs["ci95"][0] > 1):
+        return None   # the history already says which way, no experiment needed
+    tested = {t.get("campaign") for t in incr.get("switchbacks") or []}
+    candidates = sorted((r for r in ads if r.get("status") == "ok" and r.get("campaign_name") not in tested
+                         and float(r.get("current_spend") or 0) >= SWITCHBACK_MIN_SPEND),
+                        key=lambda r: -float(r.get("current_spend") or 0))
+    if not candidates:
+        return None
+    r = candidates[0]
+    start = (today + timedelta(days=1)).isoformat()
+    schedule = design_switchback(client_id or "", r["campaign_name"], start)
+    off_days = sum(1 for b in schedule["blocks"] if b["arm"] == "off") * schedule["block_days"]
+    prior = float(obs["incrementality"]) if obs.get("status") == "ok" else 1.0
+    spend, sales = float(r.get("current_spend") or 0), float(r.get("current_sales") or 0)
+    cost = off_days * max(0.0, avg_margin * sales - spend) * prior
+    lo = hi = None
+    unc = (r.get("details") or {}).get("uncertainty") or {}
+    if unc.get("basis") == "parameter_covariance" and r.get("details", {}).get("curve_cov") is not None:
+        from .models.ad_efficiency import curve_values, draw_params
+        from .models.ad_allocation import params_vector
+        theta = draw_params(r["curve_model"], params_vector(r), r["details"]["curve_cov"])
+        if theta is not None:
+            sales_draws = curve_values(r["curve_model"], theta, [spend])[:, 0]
+            costs = off_days * np.maximum(0.0, avg_margin * sales_draws - spend) * prior
+            lo, hi = float(np.quantile(costs, 0.05)), float(np.quantile(costs, 0.95))
+    band = f" (90% range {_money(lo)} to {_money(hi)})" if lo is not None else ""
+    text = (f"Run a four-week ON/OFF test on “{r['campaign_name']}”: {schedule['n_blocks']} randomised "
+            f"{schedule['block_days']}-day blocks from {start}, {off_days} days paused. It measures how much of "
+            f"the campaign's attributed sales are truly incremental — the one number that says whether its "
+            f"break-even is too generous or too strict, which no monthly export can. Expected cost about "
+            f"{_money(cost)} of attributed profit on the paused days{band}; nothing is banked on the test "
+            f"itself, and the break-even is corrected from the next run.")
+    return _draft(
+        "advertising", "ad_switchback", (r["campaign_name"], start),
+        score=12 + spend / 10,
+        expected=None,
+        action_text=text,
+        evidence={"campaign_name": r["campaign_name"], "schedule": schedule,
+                  "current_spend": spend, "current_sales": sales, "avg_margin": avg_margin,
+                  "incrementality_prior": prior, "expected_cost": round(cost, 2),
+                  "expected_cost_p5": num(lo), "expected_cost_p95": num(hi),
+                  "observational": {k: obs.get(k) for k in ("status", "incrementality", "ci95")}},
+    )
+
+
 def draft_directives(inventory, ads, elasticity, margins,
                      search_terms=None, brand_terms=None,
                      recovery=None, inv_econ=None, anomaly_rows=None,
                      channel: str | None = "amazon",
-                     downside_share: float = DOWNSIDE_GUARD_SHARE) -> list[dict]:
+                     downside_share: float = DOWNSIDE_GUARD_SHARE,
+                     ad_allocation: dict | None = None,
+                     incrementality: dict | None = None,
+                     client_id: str | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
     `downside_share` is the downside guard: a directive whose 5th-percentile
     outcome risks more than this share of its SKU's trailing monthly net is
-    routed to an explicit yes whatever its step size."""
+    routed to an explicit yes whatever its step size.
+
+    `ad_allocation` is models.ad_allocation's output for this run; campaigns it
+    moves were excluded from the trims at the point it was computed
+    (trim_candidates), so the two never promise on the same campaign."""
     today = date.today()
     latest_by_sku = _latest_margins_by_sku(margins)
     econ_by_sku = {r["sku"]: r for r in (inv_econ or {}).get("rows", [])}
@@ -698,20 +862,12 @@ def draft_directives(inventory, ads, elasticity, margins,
             },
         ))
 
+    trims = trim_candidates(ads, avg_margin)
     for r in ads:
-        if r["status"] == "ok" and r["current_spend"] and r["breakeven_spend"] \
-                and float(r["current_spend"]) > float(r["breakeven_spend"]):
-            # Size the trim off the CONSERVATIVE end of the break-even's own
-            # interval when the fit produced one: a higher break-even means a
-            # smaller trim and a smaller promise, which is the direction to be
-            # wrong in on a number the client is billed against.
-            uncertainty = (r.get("details") or {}).get("uncertainty") or {}
-            breakeven = float(r["breakeven_spend"])
-            if uncertainty.get("breakeven_p95") is not None:
-                breakeven = max(breakeven, float(uncertainty["breakeven_p95"]))
-            if float(r["current_spend"]) <= breakeven:
-                continue   # the interval reaches current spend: no honest trim
-            excess = float(r["current_spend"]) - breakeven
+        if r.get("campaign_name") in trims:
+            uncertainty = trims[r["campaign_name"]]["uncertainty"]
+            breakeven = trims[r["campaign_name"]]["breakeven"]
+            excess = trims[r["campaign_name"]]["excess"]
             # Promise the NET saving, not the gross. Those dollars were buying
             # something; a promise measurement can never confirm is a promise
             # we should not make.
@@ -743,6 +899,13 @@ def draft_directives(inventory, ads, elasticity, margins,
                     "horizon_days": MEASUREMENT_HORIZON_DAYS,
                 },
             ))
+
+    realloc = _budget_reallocation_directive(ad_allocation)
+    if realloc:
+        drafts.append(realloc)
+    switchback = _switchback_directive(incrementality, ads, avg_margin, client_id, today)
+    if switchback:
+        drafts.append(switchback)
 
     spend, n_terms = branded_spend(search_terms or [], brand_terms or [])
     if spend >= BRANDED_SPEND_MIN:

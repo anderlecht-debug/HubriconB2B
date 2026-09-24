@@ -76,6 +76,13 @@ BANKABLE_REQUIRED = {
     "recovery_filing": ("claim_keys", "face_value", "expected_value"),
     "low_inventory_fee": ("skus", "monthly_fee", "per_sku"),
     "aged_surcharge": ("skus", "monthly_surcharge", "per_sku"),
+    "budget_reallocation": ("campaigns", "total_spend", "lambda", "avg_margin", "horizon_days",
+                            "delta_p5", "delta_p50", "delta_p95", "mc_inputs"),
+}
+# Every kind that promised a DISTRIBUTION, and the fields that distribution is.
+DISTRIBUTION_FIELDS = {
+    "price_step": PRICE_STEP_DISTRIBUTION,
+    "budget_reallocation": ("delta_p5", "delta_p50", "delta_p95", "p_loss", "mc_inputs"),
 }
 
 
@@ -94,11 +101,11 @@ def completeness(directive: dict) -> dict:
                 "reason": "no rebuild contract for this kind — nothing is banked on it"}
     missing = [f for f in required if evidence.get(f) is None]
     out = {"kind": kind, "checked": True, "complete": not missing, "missing": missing}
-    if kind == "price_step":
-        # A price step promised a DISTRIBUTION, not two endpoints. If the blob
-        # carries only the endpoints, the range it is scored against is not the
-        # range it made.
-        dist_missing = [f for f in PRICE_STEP_DISTRIBUTION if evidence.get(f) is None]
+    if kind in DISTRIBUTION_FIELDS:
+        # A price step (or a reallocation) promised a DISTRIBUTION, not two
+        # endpoints. If the blob carries only the endpoints, the range it is
+        # scored against is not the range it made.
+        dist_missing = [f for f in DISTRIBUTION_FIELDS[kind] if evidence.get(f) is None]
         out["distribution_complete"] = not dist_missing
         out["distribution_missing"] = dist_missing
         # and the promise itself must be the one the distribution describes
@@ -212,7 +219,7 @@ def score(directives: list[dict]) -> dict:
 
 def replay(directives: list[dict], data: dict, margins: list[dict], ads_rows: list[dict],
            claims: list[dict], today: date | None = None,
-           inv_econ: dict | None = None) -> dict:
+           inv_econ: dict | None = None, switchbacks: list[dict] | None = None) -> dict:
     """Re-measure a set of historical directives against current exports, then
     score the promises. Returns the scorecard plus the verdicts that produced it,
     so a disagreement with the live ledger is visible rather than silent.
@@ -223,7 +230,7 @@ def replay(directives: list[dict], data: dict, margins: list[dict], ads_rows: li
 
     verdicts = measurement.measure(
         [{**d, "measured_at": None} for d in directives],
-        data, margins, ads_rows, claims, today=today, inv_econ=inv_econ,
+        data, margins, ads_rows, claims, today=today, inv_econ=inv_econ, switchbacks=switchbacks,
     )
     by_id = {d.get("id") or d.get("dedupe_key"): d for d in directives}
     replayed = []

@@ -198,8 +198,18 @@ def _bleed_terms(rows: list[dict]) -> list[dict]:
     ]
 
 
-def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None) -> list[dict]:
+def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
+        incrementality: float | None = None, incrementality_basis: str | None = None) -> list[dict]:
+    """`incrementality` is ι from models/incrementality.py: the ratio of the
+    total-sales response to the attributed-sales response. When its basis is an
+    executed switchback the break-even is computed on ι-adjusted attribution
+    (marginal attributed ROAS must reach 1/(m·ι)) and the attributed figure is
+    kept beside it; an observational ι is published as information only."""
     threshold = 1.0 / avg_margin if avg_margin and avg_margin > 0 else 1.0
+    adjusted = None
+    if incrementality is not None and float(incrementality) > 0:
+        adjusted = threshold / float(incrementality)
+    use_adjusted = adjusted is not None and incrementality_basis == "switchback"
 
     terms_by_campaign: dict[str, list[dict]] = {}
     for row in data["ppc_search_terms"]:
@@ -237,6 +247,10 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None)
             "bleed_terms": bleed,
             "details": {"n_points": len(points), "breakeven_marginal_roas": num(threshold, 4)},
         }
+        if adjusted is not None:
+            base["details"].update({"incrementality": num(incrementality, 4),
+                                    "incrementality_basis": incrementality_basis,
+                                    "breakeven_marginal_roas_incremental": num(adjusted, 4)})
         if len(points) < MIN_POINTS:
             results.append({**base, "status": "insufficient_data"})
             continue
@@ -251,9 +265,14 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None)
         if model is None:
             results.append({**base, "status": "insufficient_data"})
             continue
-        breakeven = _breakeven(model, params, float(spend.max()), threshold)
+        breakeven_attributed = _breakeven(model, params, float(spend.max()), threshold)
+        breakeven_incremental = (_breakeven(model, params, float(spend.max()), adjusted)
+                                 if adjusted is not None else None)
+        # an executed switchback moves the break-even itself; the attributed
+        # figure stays on the record beside it
+        breakeven = breakeven_incremental if use_adjusted else breakeven_attributed
         uncertainty = curve_uncertainty(model, params, cov, current_spend,
-                                        float(spend.max()), threshold)
+                                        float(spend.max()), adjusted if use_adjusted else threshold)
         # The covariance itself rides along so a later module — the budget
         # allocation, the measurement pass — can redraw the SAME posterior
         # instead of trusting the point estimate. None when it is not finite.
@@ -270,6 +289,8 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None)
                 "curve_params": {k: num(v, 6) for k, v in zip(("a", "k", "h")[: len(params)], params)},
                 "marginal_roas": num(_marginal(model, params, current_spend), 4),
                 "breakeven_spend": num(breakeven),
+                "breakeven_spend_attributed": num(breakeven_attributed),
+                "breakeven_spend_incremental": num(breakeven_incremental),
                 "recommended_spend": num(breakeven),
             }
         )

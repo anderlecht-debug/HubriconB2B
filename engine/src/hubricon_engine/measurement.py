@@ -49,6 +49,7 @@ from datetime import date
 import numpy as np
 from scipy import stats
 
+MEASUREMENT_HORIZON_DAYS = 30      # the window a 30-day promise is made for
 MEASURE_MIN_USD = 25.0          # below this, close it rather than bank noise
 MIN_AFTER_DAYS = 14             # an after-window shorter than this proves nothing
 PRICE_TOLERANCE = 0.02          # observed vs instructed price, before we call it unexecuted
@@ -398,9 +399,12 @@ def measure_spend_step(d: dict, ppc_spend: list[dict], since: date, today: date)
     if baseline is None or flagged is None or flagged <= baseline:
         return _closed(d, "No spend step-up recorded on this directive.")
 
+    # ppc_spend rows carry `report_date` (ingest/ppc_campaign.py). This read
+    # `date` until 2026-09-23 and so never found a row: every spend step came
+    # back "not yet" forever. Pinned by test_spend_step_reads_report_date.
     rows = [r for r in ppc_spend
             if str(r.get("campaign_name") or "") == str(campaign or "")
-            and r.get("date") and date.fromisoformat(str(r["date"])[:10]) > since]
+            and r.get("report_date") and date.fromisoformat(str(r["report_date"])[:10]) > since]
     if len(rows) < MIN_AFTER_DAYS:
         return _not_yet(d, f"Only {len(rows)} day(s) of spend since the correction; {MIN_AFTER_DAYS} needed.")
     daily = sum(float(r.get("spend") or 0) for r in rows) / len(rows)
@@ -814,6 +818,125 @@ def measure_campaign_trim(d: dict, ads_rows: list[dict], since: date, today: dat
                     evidence_after={"spend_after": after_spend, "forgone": round(forgone, 2)})
 
 
+# How much of the prescribed move must have happened, averaged over the
+# campaigns the plan moved, before a reallocation counts as made. Below it the
+# directive is stalled, not measured: a plan half-executed is a different plan.
+REALLOCATION_EXECUTION_SHARE = 0.5
+
+
+def measure_budget_reallocation(d: dict, ppc_spend: list[dict], since: date, today: date) -> dict:
+    """The reallocation, measured on the campaigns' own after-window.
+
+    Anchored PER CAMPAIGN, as the price step is anchored on its after period:
+    each campaign's counterfactual sales at its old spend are what it actually
+    sold at its new spend, scaled by the stored curve's ratio f(s_old)/f(s_new)
+    on draws of that curve's own covariance. Whatever demand shock hit the
+    window hit factual and counterfactual alike, campaign by campaign; a single
+    account-wide factor would assume the shock hit every campaign in
+    proportion, which it need not. Banked at MEASURE_QUANTILE of the joint
+    draws, capped at the observed change in the set's net and at the promise
+    prorated to the window."""
+    from .models.ad_allocation import params_vector
+    from .models.ad_efficiency import curve_values, draw_params
+
+    ev = d.get("evidence") or {}
+    plan = [c for c in (ev.get("campaigns") or []) if c.get("status") == "ok"]
+    margin = float(ev.get("avg_margin") or 0)
+    horizon = float(ev.get("horizon_days") or MEASUREMENT_HORIZON_DAYS)
+    if not plan or margin <= 0:
+        return _closed(d, "No reallocation plan recorded on this directive.")
+    names = {c["campaign_name"] for c in plan}
+
+    after: dict[str, dict] = {n: {"days": set(), "spend": 0.0, "sales": 0.0} for n in names}
+    for r in ppc_spend:
+        name = r.get("campaign_name")
+        if name not in names or not r.get("report_date"):
+            continue
+        day = date.fromisoformat(str(r["report_date"])[:10])
+        if day <= since:
+            continue
+        a = after[name]
+        a["days"].add(day)
+        a["spend"] += float(r.get("spend") or 0)
+        a["sales"] += float(r.get("sales") or 0)
+    days = sorted(set().union(*(a["days"] for a in after.values())))
+    if len(days) < MIN_AFTER_DAYS:
+        return _not_yet(d, f"Only {len(days)} day(s) of spend since the reallocation; {MIN_AFTER_DAYS} needed.")
+    n_days = len(days)
+    window = (days[0].isoformat(), days[-1].isoformat())
+
+    cur = {c["campaign_name"]: float(c.get("current") or 0) for c in plan}
+    rec = {c["campaign_name"]: float(c.get("recommended") or 0) for c in plan}
+    sales_before = {c["campaign_name"]: float(c.get("current_sales") or 0) for c in plan}
+    s_after = {n: after[n]["spend"] / n_days for n in names}
+    sales_after = {n: after[n]["sales"] / n_days for n in names}
+
+    # Execution gate: did the spend actually move toward the plan?
+    ratios = [max(0.0, (s_after[n] - cur[n]) / (rec[n] - cur[n]))
+              for n in names if abs(rec[n] - cur[n]) >= 0.5]
+    executed = float(np.mean(ratios)) if ratios else 0.0
+    if executed < REALLOCATION_EXECUTION_SHARE:
+        return _stalled(d, f"Spend has moved {executed:.0%} of the way to the recommended allocation — "
+                           f"the reallocation has not been made, so there is nothing to measure.",
+                        since, today, window)
+
+    rng = np.random.default_rng(MEASURE_SEED)
+    gains = None
+    for c in plan:
+        n = c["campaign_name"]
+        cov = c.get("curve_cov")
+        theta = (draw_params(c["curve_model"], params_vector(c), np.asarray(cov, dtype=float), 400, rng)
+                 if cov is not None else None)
+        if theta is None:
+            return _closed(d, f"The stored response curve for “{n}” cannot be redrawn, so the counterfactual "
+                              f"cannot be rebuilt honestly.")
+        vals = curve_values(c["curve_model"], theta, [max(cur[n], 0.01), max(s_after[n], 0.01)])
+        counterfactual = sales_after[n] * vals[:, 0] / np.maximum(vals[:, 1], 1e-9)
+        g = margin * (sales_after[n] - counterfactual) - (s_after[n] - cur[n])
+        gains = g if gains is None else gains + g
+    gains = gains * n_days
+    gains = gains[np.isfinite(gains)]
+    if gains.size == 0:
+        return _closed(d, "The counterfactual draws were not finite; nothing is banked.")
+    delta = float(np.quantile(gains, MEASURE_QUANTILE))
+    reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+               f"(median ${float(np.quantile(gains, 0.5)):,.2f})")
+
+    before_net = sum(margin * sales_before[n] - cur[n] for n in names)
+    after_net = sum(margin * sales_after[n] - s_after[n] for n in names)
+    observed = (after_net - before_net) * n_days
+    if delta > observed:
+        delta = observed
+        reading += f", and capped at the ${observed:,.2f} the campaign set's own net actually rose"
+
+    promised = d.get("expected_impact_usd")
+    prorated = float(promised) * n_days / horizon if promised is not None else None
+    capped = delta
+    if prorated is not None and delta > prorated > 0:
+        capped = prorated
+        reading += f", and at the ${prorated:,.2f} promised for {n_days} days"
+    if abs(capped) < MEASURE_MIN_USD:
+        return _closed(d, f"The reallocation moved less than ${MEASURE_MIN_USD:,.0f} over {n_days} days; not material.",
+                       evidence_after={"delta": round(delta, 2), "executed_share": round(executed, 3)})
+    note = (f"Over {window[0]} → {window[1]} the {len(plan)} campaigns spent ${sum(s_after.values()):,.2f}/day "
+            f"against ${sum(cur.values()):,.2f}/day before and sold ${sum(sales_after.values()):,.2f}/day. At the old "
+            f"allocation the fitted curves put the same days at ${sum(sales_after.values()) - float(np.median(gains)) / n_days / max(margin, 1e-9):,.2f}/day "
+            f"— a net difference of ${delta:,.2f}, {reading}.")
+    return _verdict(d, "measured", note, usd=round(capped, 2), attribution="attributable",
+                    evidence_after={"spend_after": {n: round(v, 2) for n, v in s_after.items()},
+                                    "sales_after": {n: round(v, 2) for n, v in sales_after.items()},
+                                    "executed_share": round(executed, 3), "days": n_days,
+                                    "uncapped": round(float(np.quantile(gains, MEASURE_QUANTILE)), 2),
+                                    "measured_distribution": {
+                                        "p5": round(float(np.quantile(gains, 0.05)), 2),
+                                        "p25": round(float(np.quantile(gains, 0.25)), 2),
+                                        "p50": round(float(np.quantile(gains, 0.50)), 2),
+                                        "p95": round(float(np.quantile(gains, 0.95)), 2),
+                                        "quantile_banked": MEASURE_QUANTILE, "draws": int(gains.size),
+                                        "seed": MEASURE_SEED}},
+                    window=window)
+
+
 def measure_branded_pause(d: dict, search_terms: list[dict], margins: list[dict],
                           since: date, today: date) -> dict:
     """The most defensible number in the product, and it is allowed to hurt:
@@ -893,8 +1016,35 @@ def _dedupe_overlapping(verdicts: list[dict], directives_by_id: dict) -> list[di
     return out
 
 
+def measure_ad_switchback(d: dict, switchbacks: list[dict] | None, since: date, today: date) -> dict:
+    """An information purchase: no dollars, the estimate on the record."""
+    ev = d.get("evidence") or {}
+    schedule = ev.get("schedule") or {}
+    name = ev.get("campaign_name")
+    end = schedule.get("end_date")
+    result = next((t.get("result") for t in (switchbacks or [])
+                   if t.get("campaign") == name and t.get("result")), None)
+    if result is None:
+        if end and today <= date.fromisoformat(str(end)[:10]):
+            return _not_yet(d, f"The ON/OFF test on “{name}” runs until {end}.")
+        return _stalled(d, f"No analysis on file for the ON/OFF test on “{name}”; run `hubricon adtest … analyze`.",
+                        since, today)
+    if result.get("status") == "ok":
+        return _closed(d, f"Measured: {result['incrementality']:.2f} of “{name}”'s attributed sales are incremental "
+                          f"(90% range {result['ci90'][0]:.2f} to {result['ci90'][1]:.2f}) — {result['reading']}. "
+                          f"The break-even is corrected from the next run; nothing is banked on the test.",
+                       evidence_after={"incrementality": result["incrementality"], "ci90": result["ci90"],
+                                       "p_permutation": result.get("p_permutation"),
+                                       "compliance": result.get("compliance")})
+    if result.get("status") == "not_executed":
+        return _closed(d, f"The campaign kept spending on its OFF days, so the test on “{name}” identified nothing.",
+                       evidence_after={"compliance": result.get("compliance")})
+    return _closed(d, f"The test on “{name}” came back {result.get('status')}; nothing is banked.")
+
+
 def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: list[dict],
-            claims: list[dict], today: date | None = None, inv_econ: dict | None = None) -> list[dict]:
+            claims: list[dict], today: date | None = None, inv_econ: dict | None = None,
+            switchbacks: list[dict] | None = None) -> list[dict]:
     """One verdict per directive that is due a measurement.
 
     `data` is the canonical export dict every model reads (cli._load_data), so
@@ -940,6 +1090,10 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
             verdicts.append(measure_negative_margin(d, margins, inventory, since, today))
         elif kind == "campaign_trim":
             verdicts.append(measure_campaign_trim(d, ads_rows, since, today))
+        elif kind == "budget_reallocation":
+            verdicts.append(measure_budget_reallocation(d, ppc_spend, since, today))
+        elif kind == "ad_switchback":
+            verdicts.append(measure_ad_switchback(d, switchbacks, since, today))
         elif kind == "branded_pause":
             verdicts.append(measure_branded_pause(d, search_terms, margins, since, today))
         elif kind in ("low_inventory_fee", "aged_surcharge", "peak_storage_premium"):

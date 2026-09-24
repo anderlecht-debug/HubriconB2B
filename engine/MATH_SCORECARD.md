@@ -427,6 +427,61 @@ the rail over twelve seeds, not 57%.
 **Score.** Estimator validity and calibration confirmed at 10 with the corrections
 applied; the cadence work is on the list at the end of this file rather than done.
 
+### Iteration 15 — the interactions between levers, part 1: money between campaigns
+
+**Objection.** Each module optimises its own lever. Ad efficiency trims every
+campaign toward its own break-even and never asks whether a dollar in campaign A
+would earn more in campaign B — which it does whenever their marginal ROAS differ,
+and it does so even in an account where no campaign is past break-even.
+
+**Change.** `models/ad_allocation.py`: the same total, reallocated to equalise
+marginal returns. Solved by an exact dynamic program on a spend grid rather than a
+bisection on the multiplier, because the Hill form with h > 1 is S-shaped and a
+Lagrangian bisection can skip the budget (`test_dp_is_exact_on_s_shaped_curves…`
+demonstrates the gap). Solved on each campaign's posterior-mean curve, which is the
+exact risk-neutral Bayes solution for a separable objective, and moved a fraction α
+of the way by the same certainty-equivalent rule the price step uses, inside a risk
+budget of 15% of the campaign set's monthly net. Interval from paired parameter
+draws; per-campaign anchored measurement; one promise per campaign per run (trims
+first, the reallocation over the rest). The covariance of every ad-curve fit now
+rides on the row (`details.curve_cov`) so later modules redraw the same posterior.
+
+**Two defects found on the way, fixed here.** `measurement.measure_spend_step`
+filtered daily spend rows on a `date` key the rows never carry (`report_date`), so
+every spend-step directive had returned "not yet" since the family shipped;
+pinned by `test_spend_step_reads_report_date`. And `issue.issue_drafts` sorted
+by expected dollars alone, so a directive with no dollar promise sorted last
+forever; the drafting score now rides in evidence and breaks ties.
+
+**Measured.** On a two-campaign account with identical true curves at $40 and $160
+a day, the allocation moves toward equal spend inside the 30% move cap with
+P(loss) under 20%; identical campaigns at equal spend refuse (`no_reallocation`);
+a fit so noisy that under 50 of 400 draws land inside the bounds refuses
+(`insufficient_draws`). `tests/test_ad_allocation.py`, 15 tests.
+
+### Iteration 16 — part 2: what the attributed number is worth
+
+**Objection.** Every ad number the engine publishes rests on the platform's own
+attribution. Attribution overstates by the organic sales it claims and understates by
+the halo it never sees, and the break-even inherits both errors with no sign of which
+dominates.
+
+**Change.** `models/incrementality.py`. An observational ratio of the two slopes on
+first-differenced period totals, HC3 and a Student-t delta-method band, refused under
+eight periods or flat spend, published as information. A randomised ON/OFF switchback
+on one campaign, designed as a directive (`ad_switchback`, explicit, no dollars), run
+by `hubricon adtest`, analysed from the daily settlement file with a block bootstrap
+and a permutation test; only its ι moves the break-even, and the attributed break-even
+stays on the row.
+
+**Measured, and one claim withdrawn before it shipped.** The observational estimator
+recovers ι = 0.4 within ±0.15 on fourteen clean periods and its 95% band covers the
+truth on 80% of seeds; the switchback recovers it within ±0.1 over 24 seeds with a
+permutation p under 0.05. The first draft stated that carryover biases ι toward 1. The
+simulation showed the opposite for the real-effect mechanism (ι toward zero) and the
+claimed direction only for attribution carryover; the payload now states both and
+corrects neither. `tests/test_incrementality.py`, 10 tests.
+
 ---
 
 ## Outcome Alignment

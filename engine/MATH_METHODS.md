@@ -391,6 +391,110 @@ window mis-attributes. And spend was chosen by the seller or their tool, so the
 same endogeneity caveat as §2 applies in principle — unquantified here, because
 the engine has no simulation of how sellers set budgets.
 
+### 4b. Reallocating the budget across campaigns
+
+**What it computes.** The trim above moves each campaign toward its own break-even.
+The money BETWEEN campaigns is a different quantity: at the same total spend B, the
+allocation that equalises marginal returns,
+
+```
+maximise  Σ_i E[f_i(s_i)]    subject to    Σ_i s_i = B,   lo_i ≤ s_i ≤ hi_i
+```
+
+with f_i the fitted Hill or log curve of §4. The margin is common to every
+campaign, so at a fixed budget it cancels: the allocation that maximises attributed
+sales maximises attributed profit. The Lagrangian reading — a multiplier λ at which
+every campaign's marginal ROAS is equal — is what the client is told, but it is not
+the solver. Hill with h > 1 is S-shaped, so the first-order condition is necessary
+and not sufficient and a bisection on λ can skip the budget. The problem is a
+separable allocation on a spend grid and has an exact dynamic program,
+V_k(b) = max_j f̄_k(j) + V_{k−1}(b − j); λ* is read off the solution as the
+marginal value of budget, (V(B+δ) − V(B−δ)) / 2δ.
+
+**Which curve.** The posterior-mean curve of each campaign, f̄_i(s) = E[f_i(s; θ)]
+over draws of θ from the fit's own covariance — not the point estimate. The objective
+is additively separable and expectation is linear, so max E[Σ f_i(s_i)] =
+max Σ E[f_i(s_i)]: the posterior mean IS the risk-neutral Bayes solution, exactly,
+and the optimizer never sees a single noisy parameter vector.
+
+**How far to move.** s_rec = s_0 + α(s* − s_0), α chosen as the price step's size
+is chosen (§3): maximise E[Δ] − Var[Δ]/(2·tol) over α subject to the 5% expected
+shortfall of the 30-day gain staying inside tol = 15% of the campaign set's own
+monthly net (attributed sales × margin − spend, floored at zero — the same
+net-after-ads base as `trailing_monthly_net`). A campaign set earning no net gets no
+tolerance and no move; the trims still fire. Two rails: no campaign past 1.5× the
+spend it was ever observed at, and no campaign moved more than 30% of its current
+spend in one cycle.
+
+**The interval.** Draw d of every campaign paired with draw d of every other
+(campaigns are fitted separately, so the draws are independent and there is no
+cross-campaign covariance to draw). Published: the P5/P50/P95 of the 30-day profit
+gain, P(loss), and the Monte Carlo error of each percentile. The free-budget optimum
+(every campaign at marginal ROAS = 1/m) is solved beside it and published as
+information, so the report can say whether the account as a whole is over- or
+under-spent while the directive itself moves no total.
+
+**Refusals.** Fewer than two campaigns with a usable covariance
+(`insufficient_campaigns`); a campaign whose covariance the fit could not produce
+is `held` and named; fewer than 50 joint draws inside the bounds
+(`insufficient_draws`); a median 30-day gain under $50 or fewer than 60% of draws
+gaining (`no_reallocation`). Campaigns a trim moves this cycle are held out, so no
+campaign carries two promises in one run.
+
+**Measurement.** Anchored per campaign, as the price step is anchored on its after
+period: each campaign's counterfactual sales at its old spend are what it actually
+sold at its new spend scaled by f(s_old)/f(s_new) on draws of the stored curve, so a
+demand shock in the window cancels campaign by campaign. Banked at the 25th
+percentile, capped at the observed change in the set's net and at the promise
+prorated to the window; a plan less than half executed is stalled, not measured.
+
+**What it cannot tell you.** Everything §4 cannot: the interval is conditional on
+the curve form, attribution is the platform's 7-day window, and spend was chosen by
+the seller.
+
+### 4c. Incrementality and the organic halo
+
+**What it computes.** The break-even in §4 is on the platform's ATTRIBUTED sales.
+Some of those would have happened organically (attribution overstates, the break-even
+is too generous); ad-driven sales also lift organic rank (attribution understates, the
+break-even is too strict). The number that settles it is the incrementality ratio
+
+```
+ι = d(total sales)/d(spend)  ÷  d(attributed sales)/d(spend)
+```
+
+Two estimators, of different honesty.
+
+*Observational.* Per export period, total sales across the catalog, attributed
+sales and spend summed from the daily campaign file, all as daily rates; first
+differences remove level and trend; the two slopes by OLS with HC3 standard errors;
+ι their ratio with a delta-method interval on a Student-t critical value at the
+residual degrees of freedom. Refused under eight periods or when spend's coefficient
+of variation across periods is under 10%. Season and everything else that moves total
+sales sits in the residual, so on monthly exports this refuses or publishes a wide
+band more often than not — which is the truthful answer. It is published as
+information and never moves the break-even.
+
+*Switchback.* One campaign ON and OFF in fourteen randomised two-day blocks over four
+weeks, the order from a generator seeded by client, campaign and start date and
+nothing else. Daily total sales from the settlement file (Amazon: per SKU; Shopify:
+per order) against daily attributed sales; ι = total lift ÷ attributed lift, a 90%
+band by seeded block bootstrap, a permutation p-value on the block labels. Executed
+only if OFF days actually stopped spending (`not_executed` otherwise). Randomisation
+makes E[shock | ON] = E[shock | OFF]. An executed switchback's ι moves the break-even:
+the marginal attributed dollar must then return 1/(m·ι), and the attributed break-even
+stays on the row beside it.
+
+**What it cannot tell you.** Carryover, in both directions at once. Real sales
+arriving on OFF days from ON-day clicks shrink the total lift and pull ι toward zero;
+attribution following the click into OFF days (the seven-day window) shrinks the
+attributed lift and pushes ι up. Which wins depends on whether the window carries
+further than the real effect, and nothing in the data says which. The first draft of
+this section claimed one direction; the simulation showed each mechanism moving ι the
+opposite way, so both are stated and neither is corrected. And no export links a
+campaign to the SKUs it advertises, so the total is the account's total: diluted, not
+biased.
+
 ---
 
 ## 5. Inventory

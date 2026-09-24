@@ -46,7 +46,7 @@ from . import calibration, proof, referral, speed
 from . import loop as loopmod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
-from .directives import draft_directives, resolve_brand_terms
+from .directives import draft_directives, resolve_brand_terms, trim_candidates
 from .growth_plan import latest_period_totals, pace, propose_plan
 from .ingest import PARSERS, parse_all
 from .notify import alert_email_body, email_configured, send_email
@@ -63,8 +63,8 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_efficiency, anomaly, cashflow, elasticity, forecast, health_score,
-    inventory_econ, inventory_sim, margin, recovery, risk,
+    ad_allocation, ad_efficiency, anomaly, cashflow, elasticity, forecast, health_score,
+    incrementality, inventory_econ, inventory_sim, margin, recovery, risk,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -89,8 +89,8 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "forecast", "inventory", "elasticity", "ads", "recovery",
-              "anomaly", "invecon", "risk", "cash", "health")
+ALL_MODELS = ("margin", "forecast", "inventory", "elasticity", "incrementality", "ads", "adalloc",
+              "recovery", "anomaly", "invecon", "risk", "cash", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -209,6 +209,15 @@ def _save_output(db, run_id: str, client_id: str, model: str, payload) -> None:
         [{"run_id": run_id, "client_id": client_id, "model": model, "payload": payload}],
         on_conflict="run_id,model",
     )
+
+
+def _load_switchbacks(db, client_id: str) -> list[dict]:
+    """Every ON/OFF ad test the client has planned, with its analysis when one
+    has run. They live in model_outputs under `ad_switchback:<campaign>` on the
+    run current when they were planned, so they outlive any single run."""
+    rows = (db.table("model_outputs").select("model, payload").eq("client_id", client_id)
+            .like("model", "ad_switchback:%").execute().data)
+    return [r["payload"] for r in rows if r.get("payload")]
 
 
 def _load_outputs(db, run_id: str | None) -> dict:
@@ -364,8 +373,20 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "elasticity" in wanted:
             elast_rows = elasticity.run(data)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
+        incr = None
+        if "incrementality" in wanted:
+            incr = incrementality.run(data, _load_switchbacks(db, client["id"]))
+            _save_output(db, run_id, client["id"], "incrementality", incr)
+            obs = incr["observational"]
+            print("  incrementality: "
+                  + (f"observational ι {obs['incrementality']:.2f} ({obs['ci95'][0]:.2f}–{obs['ci95'][1]:.2f}), "
+                     f"{obs['reading']}" if obs["status"] == "ok" else f"observational {obs['status']}")
+                  + (f"; switchback ι {incr['incrementality_for_breakeven']:.2f} adjusts the break-even"
+                     if incr.get("incrementality_for_breakeven") is not None else ""))
         if "ads" in wanted:
-            ads_rows = ad_efficiency.run(data, avg_margin=avg_margin)
+            iota = (incr or {}).get("incrementality_for_breakeven")
+            ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
+                                         incrementality_basis="switchback" if iota is not None else None)
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
         if "recovery" in wanted and not channels.has_recovery(channel):
             print("  recovery: not applicable to Shopify (no reimbursement window)")
@@ -387,6 +408,20 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                   f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
         base_inventory = inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations)
         base_margins = margin_rows if margin_rows is not None else margin.run(data)
+        if "adalloc" in wanted:
+            base_ads = ads_rows if ads_rows is not None else ad_efficiency.run(data, avg_margin=avg_margin)
+            alloc_margin = avg_margin if avg_margin is not None else margin.average_margin(base_margins)
+            # campaigns a trim will move this cycle are held out of the
+            # reallocation: one promise per campaign per run
+            alloc = ad_allocation.run(base_ads, alloc_margin,
+                                      exclude=set(trim_candidates(base_ads, alloc_margin or 0.0)))
+            _save_output(db, run_id, client["id"], "ad_allocation", alloc)
+            if alloc["status"] == "ok":
+                print(f"  ad allocation: ${float(alloc['total_moved_daily']) if alloc.get('total_moved_daily') else 0:,.0f}/day "
+                      f"moved across {sum(1 for c in alloc['campaigns'] if c.get('status') == 'ok')} campaigns, "
+                      f"+${float(alloc['delta_p50'] or 0):,.0f} expected over {alloc['horizon_days']} days")
+            else:
+                print(f"  ad allocation: {alloc['status']}" + (f" — {alloc['reason']}" if alloc.get("reason") else ""))
         if "invecon" in wanted:
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
                                           simulations, today, channel=channel)
@@ -548,7 +583,8 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               search_terms=search_terms, brand_terms=resolve_brand_terms(client),
                               recovery=outputs.get("recovery"), inv_econ=outputs.get("invecon"),
                               anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
-                              channel=channel)
+                              channel=channel, ad_allocation=outputs.get("ad_allocation"),
+                              incrementality=outputs.get("incrementality"), client_id=client["id"])
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -632,7 +668,8 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
     claims = _fetch_claims(db, client["id"])
 
     verdicts = measurement.measure(directives, data, margins, ads_rows, claims,
-                                   inv_econ=_load_outputs(db, run_id).get("invecon"))
+                                   inv_econ=_load_outputs(db, run_id).get("invecon"),
+                                   switchbacks=_load_switchbacks(db, client["id"]))
     if not apply:
         return verdicts
     by_id = {d["id"]: d for d in directives}
@@ -677,7 +714,8 @@ def cmd_replay(args):
                     .eq("run_id", run["id"]).execute().data)
         claims = _fetch_claims(db, client["id"])
         card = replaymod.replay(directives, data, margins, ads_rows, claims,
-                               inv_econ=_load_outputs(db, run["id"]).get("invecon"))
+                               inv_econ=_load_outputs(db, run["id"]).get("invecon"),
+                               switchbacks=_load_switchbacks(db, client["id"]))
     print(replaymod.render(card))
 
 
@@ -1004,6 +1042,64 @@ def cmd_pricetest(args):
               f"price variation into the elasticity fit.")
     else:
         sys.exit(f"Unknown action {args.action!r}")
+
+
+def cmd_adtest(args):
+    """Plan and analyse an ON/OFF switchback on one campaign — the experiment
+    that identifies ad incrementality, which no monthly export can."""
+    from datetime import date
+
+    from .models import daily
+    from .models.incrementality import analyze_switchback, design_switchback
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    tests = _load_switchbacks(db, client["id"])
+
+    if args.action == "list":
+        if not tests:
+            print("No ad tests yet — `hubricon adtest <client> plan --campaign ... --start YYYY-MM-DD`")
+            return
+        for t in tests:
+            r = t.get("result") or {}
+            print(f"  {t['campaign']:<32} {t['start_date']}..{t['end_date']}  "
+                  + (f"ι {r['incrementality']:.2f} ({r['ci90'][0]:.2f}–{r['ci90'][1]:.2f})" if r.get("status") == "ok"
+                     else r.get("status", "planned")))
+        return
+
+    if not args.campaign:
+        sys.exit(f"{args.action} needs --campaign")
+    run = _latest_run(db, client["id"], None)
+    key = f"ad_switchback:{args.campaign}"
+
+    if args.action == "plan":
+        start = args.start or (date.today() + timedelta(days=1)).isoformat()
+        schedule = design_switchback(client["id"], args.campaign, start)
+        _save_output(db, run["id"], client["id"], key, schedule)
+        print(f"Planned {schedule['n_blocks']} blocks of {schedule['block_days']} days on “{args.campaign}” "
+              f"from {start} to {schedule['end_date']} (seed {schedule['seed']}):")
+        for b in schedule["blocks"]:
+            print(f"  {b['start']}..{b['end']}  {b['arm'].upper()}")
+        print("Pause the campaign on every OFF block; the daily settlement file is what the analysis reads.")
+        return
+
+    if args.action == "analyze":
+        test = next((t for t in tests if t.get("campaign") == args.campaign), None)
+        if test is None:
+            sys.exit(f"No planned test on “{args.campaign}” — plan it first.")
+        channel = _run_channel(client, run)
+        data = _load_data(db, client["id"], channel)
+        totals = daily.daily_totals(data["settlement_transactions"], test["start_date"], test["end_date"])
+        result = analyze_switchback(test, totals, data["ppc_spend"])
+        _save_output(db, run["id"], client["id"], key, {**test, "result": result})
+        if result["status"] == "ok":
+            print(f"ι = {result['incrementality']:.2f} (90% range {result['ci90'][0]:.2f}–{result['ci90'][1]:.2f}, "
+                  f"permutation p {result['p_permutation']:.3f}) — {result['reading']}. "
+                  f"The next `hubricon run` corrects the break-even.")
+        else:
+            print(f"{result['status']}: {(result.get('details') or {}).get('basis', '')}")
+        return
+    sys.exit(f"Unknown action {args.action!r}")
 
 
 def cmd_report(args):
@@ -3287,6 +3383,13 @@ def main():
     p.add_argument("--source", choices=["search", "archive"], default="search",
                    help="shopify: where stores come from (default: category searches of Shopify's own marketplace)")
     p.set_defaults(fn=cmd_harvest)
+
+    p = sub.add_parser("adtest", help="plan and analyse an ON/OFF switchback on a campaign (ad incrementality)")
+    p.add_argument("client")
+    p.add_argument("action", choices=["plan", "analyze", "list"])
+    p.add_argument("--campaign")
+    p.add_argument("--start", help="first day YYYY-MM-DD (default: tomorrow)")
+    p.set_defaults(fn=cmd_adtest)
 
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")
