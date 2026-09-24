@@ -62,13 +62,14 @@ QUANTILE_LEVELS = (10, 25, 50, 75, 90)
 DEFAULT_HORIZON_DAYS = 30
 NORMAL_P10_P90_WIDTH = 2.563  # p90 - p10 of a standard normal, for the sd fallback
 SCALE_EPS = 1e-9  # MASE scale below this (relative to the series level) counts as zero
-SIMPLICITY_ORDER = ("naive", "ses", "holt_damped", "croston_tsb", "seasonal_naive")
+SIMPLICITY_ORDER = ("naive", "ses", "holt_damped", "croston_tsb", "seasonal_naive", "seasonal_index_ses")
 METHOD_LABEL = {
     "naive": "last-period carry-forward (naive)",
     "ses": "simple exponential smoothing",
     "holt_damped": "damped-trend exponential smoothing",
     "croston_tsb": "intermittent-demand smoothing (Teunter-Syntetos-Babai)",
     "seasonal_naive": "same-period-last-year carry-forward (seasonal naive)",
+    "seasonal_index_ses": "smoothing on the catalog's seasonal index (deseasonalised SES)",
 }
 
 
@@ -235,18 +236,37 @@ def croston_tsb(y) -> dict:
     }
 
 
+def seasonal_index_ses(y, index) -> dict:
+    """Deseasonalise by a pooled monthly index (models/seasonality.py), smooth
+    the level, reseasonalise for the target period. `index` has one entry per
+    period of y PLUS one for the period being forecast. The index is the
+    catalog's (or the SKU's own, shrunk toward it), so this candidate can run
+    on a SKU with far fewer than thirteen periods of its own — and it is still
+    scored by the same rolling-origin backtest as every other candidate."""
+    y = np.asarray(y, dtype=float)
+    idx = np.asarray(index, dtype=float)
+    train_idx = np.where(idx[: len(y)] > 0, idx[: len(y)], 1.0)
+    inner = ses(y / train_idx)
+    fitted = inner["fitted"] * train_idx
+    target = float(idx[len(y)]) if len(idx) > len(y) else 1.0
+    return {"point": float(inner["point"]) * target, "fitted": fitted,
+            "params": {**inner["params"], "target_index": target}}
+
+
 MODELS = {
     "naive": naive,
     "ses": ses,
     "holt_damped": holt_damped,
     "croston_tsb": croston_tsb,
     "seasonal_naive": seasonal_naive,
+    "seasonal_index_ses": seasonal_index_ses,
 }
 
 
-def candidate_models(y) -> dict:
+def candidate_models(y, month_index=None) -> dict:
     """The ladder that applies to this series. Smoothing models are swapped
-    for TSB on intermittent series; seasonal naive needs >= 13 periods."""
+    for TSB on intermittent series; seasonal naive needs >= 13 periods; the
+    pooled seasonal index candidate needs a seasonal estimate for the catalog."""
     y = np.asarray(y, dtype=float)
     candidates = {"naive": naive}
     if is_intermittent(y):
@@ -254,6 +274,11 @@ def candidate_models(y) -> dict:
     else:
         candidates["ses"] = ses
         candidates["holt_damped"] = holt_damped
+        if month_index is not None and len(month_index) > len(y):
+            idx = np.asarray(month_index, dtype=float)
+            # the closure knows how long the training window is, so the target
+            # period's index is always the one after the window
+            candidates["seasonal_index_ses"] = lambda yy: seasonal_index_ses(yy, idx[: len(yy) + 1])
     if len(y) >= SEASONAL_MIN_PERIODS:
         candidates["seasonal_naive"] = seasonal_naive
     return candidates
@@ -325,7 +350,7 @@ def rolling_origin_backtest(y, model_fn, min_train: int = MIN_TRAIN, m: int | No
     }
 
 
-def select_model(y) -> tuple[str | None, dict]:
+def select_model(y, month_index=None) -> tuple[str | None, dict]:
     """(name, backtest) of the candidate with the lowest rolling-origin MASE;
     exact ties go to the simpler model. The returned backtest dict also
     carries `candidates` = {name: mase} for every model that was tried.
@@ -335,7 +360,7 @@ def select_model(y) -> tuple[str | None, dict]:
         return None, {"status": "insufficient_data", "candidates": {}}
     m = SEASONAL_PERIOD if len(y) >= SEASONAL_MIN_PERIODS else None
     backtests = {
-        name: rolling_origin_backtest(y, fn, MIN_TRAIN, m) for name, fn in candidate_models(y).items()
+        name: rolling_origin_backtest(y, fn, MIN_TRAIN, m) for name, fn in candidate_models(y, month_index).items()
     }
 
     def rank(name):
@@ -405,16 +430,24 @@ def _basis(name: str, n_used: int, backtest: dict, quantile_basis: str, horizon_
 
 
 def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
-                   snapshots: list[dict], horizon_days: int) -> dict:
+                   snapshots: list[dict], horizon_days: int, seasonal: dict | None = None) -> dict:
+    from .seasonality import index_for
+
     censored = censored_periods(rows, snapshots)
     series = [
         {"period_start": start, "rate": rate, "censored": start in censored}
         for start, rate in to_rates(rows, units_key)
     ]
-    clean = [s["rate"] for s in series if not s["censored"]]
+    clean = [s for s in series if not s["censored"]]
     use_all = not censored or len(clean) < MIN_PERIODS
-    y = np.array([s["rate"] for s in series] if use_all else clean, dtype=float)
+    used = series if use_all else clean
+    y = np.array([s["rate"] for s in used], dtype=float)
     n_used = int(len(y))
+    month_index = None
+    if seasonal and seasonal.get("status") == "ok" and used:
+        months = [int(str(s["period_start"])[5:7]) for s in used]
+        last = int(str(used[-1]["period_start"])[5:7])
+        month_index = [index_for(seasonal, item_id, mo)[0] for mo in months] + [index_for(seasonal, item_id, last % 12 + 1)[0]]
 
     row = {
         "level": level,
@@ -439,8 +472,8 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
                             "are needed before any forecast is attempted.")
         return {**row, "status": "insufficient_data", "details": details}
 
-    name, backtest = select_model(y)
-    fit = MODELS[name](y)
+    name, backtest = select_model(y, month_index)
+    fit = (seasonal_index_ses(y, month_index) if name == "seasonal_index_ses" else MODELS[name](y))
     point = max(0.0, float(fit["point"]))
     if len(backtest["errors"]) >= MIN_BACKTEST_ERRORS:
         errors, quantile_basis = np.array(backtest["errors"]), "backtest_errors"
@@ -478,12 +511,14 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
     return {**row, "details": details}
 
 
-def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORIZON_DAYS) -> list[dict]:
+def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORIZON_DAYS,
+        seasonal: dict | None = None) -> list[dict]:
     """One row per SKU in sku_economics (units_sold). ASINs in asin_traffic
     that no SKU row covers (via the SKU->ASIN bridge) get their own row at
     level 'asin' from units_ordered — the whole catalog when it is ASIN-only.
     `rng`/`simulations` are accepted for interface parity and unused: the
-    forecast is deterministic."""
+    forecast is deterministic. `seasonal` is models/seasonality.indices(data);
+    with it on file the ladder gains the pooled seasonal-index candidate."""
     econ = data.get("sku_economics") or []
     traffic = data.get("asin_traffic") or []
     inventory = data.get("inventory_levels") or []
@@ -505,12 +540,12 @@ def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORI
 
     results = []
     for sku, rows in sorted(econ_by_sku.items()):
-        results.append(_forecast_item("sku", sku, rows, "units_sold", snaps_by_sku.get(sku, []), horizon_days))
+        results.append(_forecast_item("sku", sku, rows, "units_sold", snaps_by_sku.get(sku, []), horizon_days, seasonal))
     covered = {bridge[sku] for sku in econ_by_sku if sku in bridge}
     for asin, rows in sorted(traffic_by_asin.items()):
         if asin in covered:
             continue
         results.append(
-            _forecast_item("asin", asin, rows, "units_ordered", snaps_by_asin.get(asin, []), horizon_days)
+            _forecast_item("asin", asin, rows, "units_ordered", snaps_by_asin.get(asin, []), horizon_days, seasonal)
         )
     return results

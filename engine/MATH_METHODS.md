@@ -617,6 +617,33 @@ assumption, not a measurement — no export carries realised lead times.
 directive promises no dollars and the measurement pass proves the PO landed
 instead.
 
+### 5a. The seasonal term
+
+**What it computes** (`models/seasonality.py`). Every simulation above drew a rate
+that was flat over its horizon. The seasonal index is a multiplier per calendar
+month, estimated hierarchically because the data is thin per SKU and wide across
+SKUs: for each SKU and month, the ratio of that month's daily rate to the SKU's own
+mean; the CATALOG index for a month is the mean of every SKU's ratio in it (forty
+SKUs over one year give forty observations of December), shrunk toward 1 by the
+empirical-Bayes rule of §2 against the sampling noise of each month's mean; each
+SKU's own index is its ratios shrunk toward the catalog's. Every index carries a
+standard error and a Student-t interval, and the basis says whether one season or
+two were seen. Refused under twelve distinct calendar months (`insufficient_history`).
+
+**How it is used.** The rate a lead-time window simulates on is the flat rate times
+the mean index over that window's calendar days, and the index's own uncertainty is
+added to the rate's dispersion in quadrature — sd² = sd_rate²·I² + rate²·se_I² — so a
+reorder in a thin month widens rather than pretending the index is known. The cone
+applies the index per calendar day; the peak-storage units are sold down at the
+seasonal rate. The forecast ladder gains `seasonal_index_ses` — deseasonalise,
+smooth, reseasonalise for the target month — scored by the same rolling-origin
+backtest as every candidate and never chosen by assertion; it runs on a SKU with far
+fewer than thirteen periods of its own because the index is the catalog's.
+
+**What it cannot tell you.** A month never observed (index 1, no interval, listed);
+a SKU whose season runs against the catalog's, from one season of evidence; holidays
+that move between months.
+
 ### 5b. Excess stock: hold, liquidate, or mark it down
 
 **Corrected 2026-09-23, twice.** The hold-or-liquidate rule in `inventory_econ`
@@ -971,8 +998,9 @@ If you read one section, read this one.
 8. **Anything about a seller's cash that they did not state.** Cash on hand and
    fixed costs are inputs, not findings.
 9. **Whether the curve forms are right.** Constant-elasticity demand, Hill ad
-   response, lognormal demand rates, one demand factor. Every interval in this
-   engine is conditional on its form, and no resampling tests a form.
+   response, lognormal demand rates, one demand factor, a multiplicative seasonal
+   index by calendar month. Every interval in this engine is conditional on its
+   form, and no resampling tests a form.
 
 ### The single most dangerous assumption
 

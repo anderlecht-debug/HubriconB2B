@@ -78,12 +78,20 @@ def _log_rate_panel(econ_by_sku: dict[str, list[dict]]) -> dict[str, list[float]
 
 
 def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
-        rate_overrides: dict[str, tuple[float, float]] | None = None) -> list[dict]:
+        rate_overrides: dict[str, tuple[float, float]] | None = None,
+        seasonal: dict | None = None, today=None) -> list[dict]:
     """`rate_overrides` — {sku: (mean_rate, std_rate)} from the forecast
     ladder; when present for a SKU it replaces the mean/std of observed
     periods so the stockout probability and the demand forecast are the
-    same distribution. Surfaced as details.rate_source."""
+    same distribution. Surfaced as details.rate_source.
+
+    `seasonal` — models/seasonality.indices(data). With it, the rate over the
+    lead time is the flat rate times the mean index over that window's
+    calendar days, and the index's own uncertainty widens the rate's sd."""
+    from datetime import date as _date
+    from .seasonality import seasonal_rate
     rate_overrides = rate_overrides or {}
+    today = today or _date.today()
     on_hand = latest_snapshot(data["inventory_levels"])
     bridge = sku_asin_bridge(data["sku_economics"], data["cogs_inputs"])
     cogs_by_sku = {r["sku"]: r for r in data["cogs_inputs"]}
@@ -114,6 +122,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
 
         cogs_row = cogs_by_sku.get(sku, {})
         lead = int(cogs_row.get("supplier_lead_time_days") or DEFAULT_LEAD_TIME_DAYS)
+        mean_rate, std_rate, season_note = seasonal_rate(mean_rate, std_rate, seasonal, sku, today, lead)
         inv = on_hand.get(sku, {})
         fulfillable = int(inv.get("fulfillable_quantity") or 0)
         inbound = int(inv.get("inbound_quantity") or 0)
@@ -154,6 +163,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                     or cogs_by_sku[sku].get("supplier_lead_time_days") is None,
                     "rate_std_assumed": len(rates) < 2,
                     "rate_distribution": "lognormal, moments matched to observed",
+                    **season_note,
                     "stockout_probability_mc_se": num(
                         float(np.sqrt(max(0.0, p_out * (1 - p_out)) / simulations)), 5),
                     "reorder_point_mc_se": num(

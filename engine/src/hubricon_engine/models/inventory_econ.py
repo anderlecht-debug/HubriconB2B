@@ -156,7 +156,9 @@ def hold_vs_liquidate(excess_units: int, mean_rate: float, contribution: float, 
 def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None = None,
         forecast_rows: list[dict] | None = None, rng: np.random.Generator | None = None,
         simulations: int = 20000, today: date | None = None,
-        channel: str = "amazon") -> dict:
+        channel: str = "amazon", seasonal: dict | None = None) -> dict:
+    from .seasonality import horizon_factor, seasonal_rate
+
     today = today or date.today()
     rng = rng or np.random.default_rng(42)
     cliffs = channels.has_fee_cliffs(channel)
@@ -181,6 +183,9 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         if mean_rate <= 0:
             continue
         lead = float(inv.get("lead_time_days") or 45)
+        base_rate = mean_rate
+        mean_rate, std_rate, season_note = seasonal_rate(mean_rate, std_rate, seasonal, sku, today,
+                                                         lead + REVIEW_PERIOD_DAYS)
         on_hand = int(inv.get("on_hand_units") or 0)
         inbound = int(inv.get("inbound_units") or 0)
         position = on_hand + inbound
@@ -220,6 +225,7 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             "days_of_supply_on_hand": num(on_hand / mean_rate, 1),
             "days_of_cover_position": num(position / mean_rate, 1),
             "item_volume_cuft": num(vol, 4), "volume_assumed": vol_assumed, "size_tier": size_tier,
+            **season_note,
         }
 
         aged_units = sum(int(h.get(k) or 0) for k in BUCKET_MID_AGE)
@@ -250,7 +256,10 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
                 row["storage_next_month"] = num(on_hand * vol * fees.storage_rate(next_month, size_tier))
                 row["storage_basis"] = f"schedule estimate ({fees.EFFECTIVE})"
             to_peak = fees.months_until_peak(today)
-            units_at_peak = max(0.0, position - mean_rate * 30 * to_peak) if to_peak <= 3 else 0.0
+            # the units left when the peak rate starts: sold down at the
+            # seasonal rate over the months until then
+            factor_to_peak, _ = horizon_factor(seasonal, sku, today, 30 * to_peak) if to_peak else (1.0, 0.0)
+            units_at_peak = max(0.0, position - base_rate * factor_to_peak * 30 * to_peak) if to_peak <= 3 else 0.0
             row["peak_storage_premium_month"] = num(
                 units_at_peak * vol * (fees.storage_rate(10, size_tier) - fees.storage_rate(9, size_tier)))
         else:

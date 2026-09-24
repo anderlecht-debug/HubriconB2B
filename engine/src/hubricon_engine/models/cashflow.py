@@ -142,7 +142,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              n_paths: int = DEFAULT_PATHS,
              payout_cycle_days: int = PAYOUT_CYCLE_DAYS,
              payout_note: str | None = None,
-             correlation: dict | None = None) -> dict:
+             correlation: dict | None = None,
+             index_paths: list[np.ndarray] | None = None) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
     schedule that produced it.
@@ -164,6 +165,9 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     for i, rates in dependence.rate_stream(
             rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
             (n_paths, days), rho):
+        if index_paths is not None:
+            # the seasonal index per calendar day, the same for every path
+            rates = rates * np.asarray(index_paths[i], dtype=float)[None, :days]
         sales_net += rng.poisson(rates) * params[i]["price"] * (1 - params[i]["fee_rate"])
     ad_daily_total = float(sum(p["ad_daily"] for p in params))
 
@@ -224,8 +228,11 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             "payout_days": [d + 1 for d in payout_days],
             "payout_cycle_days": payout_cycle_days,
             "skus_modeled": len(params),
+            "seasonal": "index applied per calendar day" if index_paths is not None else "flat rate",
             "assumptions": [
                 payout_note or channels.payout_note("amazon"),
+                ("Demand follows the catalog's seasonal index by calendar day" if index_paths is not None
+                 else "Demand rate is flat over the horizon (no seasonal estimate on file)"),
                 f"Fixed costs accrue daily (monthly / {OPEX_DAYS_PER_MONTH}); real due dates may be lumpier",
                 "Cash on hand and monthly fixed costs are client-stated, not modeled",
                 "Demand generator identical to the inventory simulation "
@@ -244,7 +251,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
 
 def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
         rng: np.random.Generator, horizon_days: int = DEFAULT_HORIZON_DAYS,
-        n_paths: int = DEFAULT_PATHS, channel: str | None = None) -> dict | None:
+        n_paths: int = DEFAULT_PATHS, channel: str | None = None,
+        seasonal: dict | None = None, today=None) -> dict | None:
     """None when the client hasn't stated cash inputs or there's no revenue
     machinery to simulate — the caller reports the skip, never fakes it.
 
@@ -262,8 +270,14 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
     channel = channel or channels.client_channel(client) or "amazon"
     wires = wire_schedule(inventory_rows, margin_rows, horizon_days)
     correlation = dependence.estimate_pairwise_corr(_rate_panel(margin_rows))
+    index_paths = None
+    if seasonal and seasonal.get("status") == "ok":
+        from datetime import date as _date
+        from .seasonality import daily_path
+        start = today or _date.today()
+        index_paths = [daily_path(seasonal, p["sku"], start, horizon_days) for p in params]
     return simulate(params, wires, float(cash_on_hand), float(opex), rng,
                     horizon_days=horizon_days, n_paths=n_paths,
                     payout_cycle_days=channels.payout_cycle_days(channel),
                     payout_note=channels.payout_note(channel),
-                    correlation=correlation)
+                    correlation=correlation, index_paths=index_paths)

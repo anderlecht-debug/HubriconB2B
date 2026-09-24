@@ -65,6 +65,7 @@ from .ingest.readers import ReadError, read_table
 from .models import (
     ad_allocation, ad_efficiency, anomaly, cash_orders, cashflow, cross_price, elasticity, forecast, health_score,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
+    seasonality,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -89,7 +90,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
+ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
               "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "cashorders",
               "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
@@ -357,8 +358,16 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
             _write_results(db, "margin_results", margin_rows, run_id, client["id"])
+        seasonal = None
+        if "season" in wanted:
+            seasonal = seasonality.indices(data)
+            _save_output(db, run_id, client["id"], "seasonality", seasonal)
+            print("  seasonality: "
+                  + (f"peak-to-trough {float(seasonal['amplitude']):.2f}× over {seasonal['months_observed']} months "
+                     f"({seasonal['basis_label']})" if seasonal["status"] == "ok"
+                     else f"{seasonal['status']} — {seasonal.get('basis', '')}"))
         if "forecast" in wanted:
-            forecast_rows = forecast.run(data)
+            forecast_rows = forecast.run(data, seasonal=seasonal)
             _save_output(db, run_id, client["id"], "forecast", {"rows": forecast_rows})
             ok = [f for f in forecast_rows if f["status"] == "ok"]
             gains = [float(f["fva_pct"]) for f in ok if f.get("fva_pct") is not None]
@@ -367,7 +376,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "inventory" in wanted:
             overrides = {f["item_id"]: forecast.rate_moments(f) for f in (forecast_rows or [])
                          if f["status"] == "ok" and f["level"] == "sku"}
-            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides)
+            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides,
+                                               seasonal=seasonal, today=today)
             _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
             # the joint view: how many SKUs run out in the same lead time once
             # demand shares a common factor, beside the independent figure the
@@ -454,7 +464,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  ad allocation: {alloc['status']}" + (f" — {alloc['reason']}" if alloc.get("reason") else ""))
         if "invecon" in wanted:
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
-                                          simulations, today, channel=channel)
+                                          simulations, today, channel=channel, seasonal=seasonal)
             if "markdown" in wanted:
                 md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel)
                 _save_output(db, run_id, client["id"], "markdown", md)
@@ -491,7 +501,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                      if v.get("status") == "ok" else "VaR skipped (no unit economics)")
                   + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "cash" in wanted:
-            cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel)
+            cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel,
+                                seasonal=seasonal, today=today)
             if cash is None:
                 print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
             else:

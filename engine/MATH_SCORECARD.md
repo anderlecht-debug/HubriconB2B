@@ -601,6 +601,26 @@ interpolation; at 60% of the wires the high-return SKU keeps more of its service
 the total wire is monotone in λ; a cone with a positive trough is `fully_funded` and one
 overdrawn by 40% funds 60% and names the 40% bridge. `tests/test_cash_orders.py`, 4 tests.
 
+### Iteration 22 — part 8: the season
+
+**Objection.** Every demand simulation drew a flat rate. For a catalog with a
+fourth-quarter peak that understates the September reorder, misprices the peak
+storage and makes the cone's November too quiet.
+
+**Change.** `models/seasonality.py`: a multiplicative index per calendar month, pooled
+across the catalog and shrunk toward flat, each SKU shrunk toward the catalog, with a
+standard error on every index; refused under twelve calendar months. Applied to the
+stockout model's and the order sizing's lead-time rate with the index uncertainty
+widening the sd, to the cone per calendar day, to the peak-storage sell-down, and to
+the forecast ladder as a candidate scored by the same backtest as the rest.
+
+**Measured.** A planted 1.8× fourth-quarter peak is recovered within ±0.15 from
+twelve months × thirty SKUs and ±0.08 from twenty-four, with the second season
+tightening the interval; a flat catalog comes back within ±0.08 of 1; a SKU peaking
+against the catalog is pulled toward its own summer but not all the way on one season;
+September's reorder exceeds March's for the peaked SKU; the cone's fourth quarter is
+richer than its first. `tests/test_seasonality.py`, 6 tests.
+
 ---
 
 ## Outcome Alignment
