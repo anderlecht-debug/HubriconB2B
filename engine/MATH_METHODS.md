@@ -940,6 +940,22 @@ the reason. Without a cone nothing is attached and nothing is invented.
 second simulation with the wire added within its Monte Carlo error; a zero wire leaves
 it unchanged; a wire past every path's minimum makes it one.
 
+### 6d. What would break you
+
+**What it computes** (`models/stress.py`). Platform and concentration risk are the
+questions the cone does not ask. Each is a change to one component of the cone's
+arithmetic, and the cone keeps its components during a run, so every scenario is the
+same paths recomputed with no new draws: the platform fee up 3 points of revenue; the
+largest SKU by revenue earning nothing for thirty days; every click 30% dearer; the
+largest SKUs' inbound thirty days late, each earning nothing from the day its cover
+runs out; every payout held thirty days. Each reports p(ruin) with its Monte Carlo
+error, the trough's 5th percentile and expected shortfall, and the ninety-day net
+change against the base, ranked by the change in p(ruin). The base scenario must
+reproduce the published cone exactly, and the payload says whether it did.
+
+**What it cannot tell you.** How likely any scenario is — these are stresses, not
+forecasts — and any second-order response.
+
 ---
 
 ## 7. Demand dependence

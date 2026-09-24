@@ -64,7 +64,7 @@ from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
     ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, drift, elasticity,
-    forecast, health_score,
+    forecast, health_score, stress,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
     seasonality,
 )
@@ -94,7 +94,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
               "incrementality", "clv", "ads", "adalloc", "recovery", "risk", "invecon", "markdown", "replenish",
-              "assortment", "cash", "cashorders", "health")
+              "assortment", "cash", "cashorders", "stress", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -551,7 +551,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  assortment: {asrt['status']}")
         if "cash" in wanted:
             cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel,
-                                seasonal=seasonal, today=today)
+                                seasonal=seasonal, today=today, keep_paths="stress" in wanted)
+            cash_paths = cash.pop("_paths", None) if cash else None
             if cash is None:
                 print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
             else:
@@ -564,6 +565,16 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 _save_output(db, run_id, client["id"], "cash", cash)
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
+        if "stress" in wanted:
+            st = stress.run(cash_paths, cash)
+            _save_output(db, run_id, client["id"], "stress", st)
+            if st["status"] == "ok":
+                w = st["scenarios"][1] if len(st["scenarios"]) > 1 else None
+                print(f"  stress: base p(ruin) {float(st['base']['p_ruin']):.1%}"
+                      + (f"; worst is {w['label']} → {float(w['p_ruin']):.1%}" if w else "")
+                      + ("" if st["reproduces_cone"] else " — BASE DOES NOT REPRODUCE THE CONE"))
+            else:
+                print(f"  stress: {st['status']}")
         if "cashorders" in wanted:
             co = cash_orders.run(inv_econ, cash, today)
             _save_output(db, run_id, client["id"], "cash_orders", co)
@@ -2111,6 +2122,20 @@ def cmd_cash(args):
               f"${w['amount']:,.0f} — {w['sku']}")
 
 
+def cmd_stress(args):
+    """The 'what would break you' table from the latest run."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], None)
+    st = _load_outputs(db, run["id"]).get("stress")
+    if not st or st.get("status") != "ok":
+        sys.exit("No stress table on the latest run — `hubricon run` with cash inputs on file first.")
+    print(f"What would break {client['company_name'] or client['contact_email']} — 90 days, {st['basis']}")
+    for r in st["scenarios"]:
+        print(f"  {r['label']:<48} p(ruin) {float(r['p_ruin']):6.1%}  trough p5 ${float(r['trough_p5'] or 0):>10,.0f}"
+              f"  Δp(ruin) {float(r['p_ruin_delta']):+.1%}")
+
+
 def cmd_console(args):
     """Self-contained dark console (HTML file) to screen-share while
     recording the Loom. Internal artifact — clients receive the brief."""
@@ -3480,6 +3505,10 @@ def main():
     p.add_argument("--risk-share", dest="risk_share", type=float,
                    help="share of a month's net one move may put at risk before it needs an explicit yes (0.05–0.30)")
     p.set_defaults(fn=cmd_cash)
+
+    p = sub.add_parser("stress", help="what would break the account: fee rise, suppression, dearer clicks, late supplier, held payout")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_stress)
 
     p = sub.add_parser("console", help="render the internal briefing console for Loom screen-share")
     p.add_argument("client")

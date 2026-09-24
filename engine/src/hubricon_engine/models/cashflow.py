@@ -145,7 +145,7 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              payout_note: str | None = None,
              correlation: dict | None = None,
              index_paths: list[np.ndarray] | None = None,
-             ruin_floor: float = 0.0) -> dict:
+             ruin_floor: float = 0.0, keep_paths: bool = False, top_k: int = 3) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
     schedule that produced it.
@@ -164,13 +164,24 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     # a time: the whole (n_skus, n_paths, days) array is 2.9 GB on a 400-SKU
     # catalog, and nothing needs it at once.
     sales_net = np.zeros((n_paths, days))
+    revenue = np.zeros((n_paths, days)) if keep_paths else None
+    # the largest SKUs by revenue rate, kept apart so a stress scenario can
+    # suppress or delay one of them without re-simulating anything
+    by_size = sorted(range(len(params)), key=lambda i: -params[i]["mean_rate"] * params[i]["price"])[:top_k]
+    top_paths = {i: None for i in by_size} if keep_paths else {}
     for i, rates in dependence.rate_stream(
             rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
             (n_paths, days), rho):
         if index_paths is not None:
             # the seasonal index per calendar day, the same for every path
             rates = rates * np.asarray(index_paths[i], dtype=float)[None, :days]
-        sales_net += rng.poisson(rates) * params[i]["price"] * (1 - params[i]["fee_rate"])
+        units = rng.poisson(rates)
+        net_i = units * params[i]["price"] * (1 - params[i]["fee_rate"])
+        sales_net += net_i
+        if keep_paths:
+            revenue += units * params[i]["price"]
+            if i in top_paths:
+                top_paths[i] = net_i
     ad_daily_total = float(sum(p["ad_daily"] for p in params))
 
     outflow = np.full(days, monthly_fixed_costs / OPEX_DAYS_PER_MONTH)
@@ -201,7 +212,13 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     trough_tail = expected_shortfall(trough, 0.05, tail="lower")
     ruin_se = float(np.sqrt(max(0.0, ruined * (1 - ruined)) / n_paths))
     ladder = ruin_ladder(cash, float(ruin_floor))
-    return {
+    paths = None
+    if keep_paths:
+        paths = {"sales_net": sales_net, "revenue": revenue, "outflow": outflow, "ad_daily_total": ad_daily_total,
+                 "payout_days": payout_days, "starting_cash": float(starting_cash), "ruin_floor": float(ruin_floor),
+                 "top": {params[i]["sku"]: {"sales_net": v, "days_of_cover": None} for i, v in top_paths.items()},
+                 "n_paths": n_paths, "days": days}
+    out = {
         "horizon_days": days,
         "n_paths": n_paths,
         "starting_cash": num(starting_cash),
@@ -256,6 +273,10 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             ],
         },
     }
+    if keep_paths:
+        # numpy arrays for the stress pass; never persisted — the caller pops it
+        out["_paths"] = paths
+    return out
 
 
 LADDER_QUANTILES = 101
@@ -314,10 +335,26 @@ def ruin_delta(cash_payload: dict | None, day: int, amount: float) -> dict | Non
             "basis": "read off the cone's stored path minima: the wire lowers every path from its day on"}
 
 
+def cash_from_components(paths: dict, sales_net: np.ndarray, ad_daily_total: float, outflow: np.ndarray,
+                         payout_days: list[int], payout_shift: int = 0) -> np.ndarray:
+    """Rebuild the cash matrix from its components — the same arithmetic as
+    simulate, exposed so a stress scenario can change one component and
+    recompute the rest without drawing a single new number."""
+    n_paths, days = sales_net.shape
+    net_daily = sales_net - ad_daily_total
+    cum_net = np.cumsum(net_daily, axis=1)
+    paid = np.zeros((n_paths, days))
+    for k in payout_days:
+        land = k + payout_shift
+        if land < days:
+            paid[:, land:] = cum_net[:, k][:, None]
+    return paths["starting_cash"] - np.cumsum(outflow)[None, :] + paid
+
+
 def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
         rng: np.random.Generator, horizon_days: int = DEFAULT_HORIZON_DAYS,
         n_paths: int = DEFAULT_PATHS, channel: str | None = None,
-        seasonal: dict | None = None, today=None) -> dict | None:
+        seasonal: dict | None = None, today=None, keep_paths: bool = False) -> dict | None:
     """None when the client hasn't stated cash inputs or there's no revenue
     machinery to simulate — the caller reports the skip, never fakes it.
 
@@ -341,9 +378,14 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
         from .seasonality import daily_path
         start = today or _date.today()
         index_paths = [daily_path(seasonal, p["sku"], start, horizon_days) for p in params]
-    return simulate(params, wires, float(cash_on_hand), float(opex), rng,
-                    horizon_days=horizon_days, n_paths=n_paths,
-                    payout_cycle_days=channels.payout_cycle_days(channel),
-                    payout_note=channels.payout_note(channel),
-                    correlation=correlation, index_paths=index_paths,
-                    ruin_floor=float(client.get("min_cash_buffer_usd") or 0.0))
+    out = simulate(params, wires, float(cash_on_hand), float(opex), rng,
+                   horizon_days=horizon_days, n_paths=n_paths,
+                   payout_cycle_days=channels.payout_cycle_days(channel),
+                   payout_note=channels.payout_note(channel),
+                   correlation=correlation, index_paths=index_paths,
+                   ruin_floor=float(client.get("min_cash_buffer_usd") or 0.0), keep_paths=keep_paths)
+    if keep_paths and out.get("_paths"):
+        cover = {r["sku"]: float(r.get("days_of_cover") or 0) for r in inventory_rows}
+        for sku, t in out["_paths"]["top"].items():
+            t["days_of_cover"] = cover.get(sku)
+    return out

@@ -755,6 +755,23 @@ shift of more than an elasticity on two SKUs is flagged with at most two false a
 among sixty; a drifted fit's risk budget is exactly halved and its step no longer.
 `tests/test_drift.py`, 3 tests.
 
+### Iteration 31 — what would break you
+
+**Objection.** The cone priced the plan as it stood and said nothing about a fee rise,
+a suppressed listing, dearer clicks, a late supplier or a held payout — the platform
+and concentration risks a seller actually worries about.
+
+**Change.** `cashflow.simulate(keep_paths=True)` keeps its components; `models/stress.py`
+recomputes the cone under five named shocks with no new draws, ranks them by the change
+in p(ruin), and checks that its base reproduces the cone; `hubricon stress` prints the
+table.
+
+**Measured.** The base equals the cone; a 3-point fee rise costs that share of the
+revenue paid through the last payout day; dearer clicks cost the shock times the ad
+spend; silencing the largest SKU raises ruin and deepens the trough; the late supplier
+hits the SKU whose cover runs out inside the horizon; a held payout deepens the trough;
+the table is ranked. `tests/test_stress.py`, 2 tests.
+
 ---
 
 ## Outcome Alignment
