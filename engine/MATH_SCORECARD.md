@@ -789,6 +789,21 @@ file is flagged; a Shopify run compares nothing it cannot; two failed pairs and 
 missing month cost the signal sub-score twenty-five points. `tests/test_data_quality.py`,
 4 tests.
 
+### Iteration 33 — payback and the cost of a customer
+
+**Objection.** A break-even on ad spend is a rate; what a founder asks is how many weeks
+until a customer has paid for their own acquisition, and whether a customer is worth
+what they cost.
+
+**Change.** `clv.cac_by_month` (blended, stated as such) and `clv.payback`: the week a
+new customer's cumulative expected margin covers the acquisition cost, and the
+52-week LTV over it, each with a bootstrap band; on the trim directive for Shopify.
+
+**Measured.** A $30 blended acquisition against an $80 first order at a 50% margin pays
+back in week one with a ratio above one and bands that contain both; a dear
+acquisition takes longer or reports None; the fitted payback agrees with the
+generator's own within four weeks. `tests/test_clv.py`, 7 tests.
+
 ---
 
 ## Outcome Alignment

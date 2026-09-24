@@ -188,8 +188,60 @@ def conditional_value(gg: dict, x_total, mean_value) -> np.ndarray:
 
 # ── the whole thing ──────────────────────────────────────────────────────────
 
+def cac_by_month(customer_orders: list[dict], ppc_spend: list[dict] | None) -> dict:
+    """Blended acquisition cost per month: the channel's ad spend over the
+    customers whose FIRST order fell in the month. Blended because no export
+    links a campaign to a customer; stated as such."""
+    first: dict[str, date] = {}
+    for o in customer_orders or []:
+        k, d = o.get("customer_key"), o.get("order_date")
+        if not k or not d:
+            continue
+        d = date.fromisoformat(str(d)[:10])
+        if k not in first or d < first[k]:
+            first[k] = d
+    new_by_month: dict[str, int] = {}
+    for d in first.values():
+        new_by_month[d.strftime("%Y-%m")] = new_by_month.get(d.strftime("%Y-%m"), 0) + 1
+    spend_by_month: dict[str, float] = {}
+    for r in ppc_spend or []:
+        m = str(r.get("report_date") or "")[:7]
+        if m:
+            spend_by_month[m] = spend_by_month.get(m, 0.0) + float(r.get("spend") or 0)
+    months = sorted(set(new_by_month) & set(spend_by_month))
+    rows = [{"month": m, "new_customers": new_by_month[m], "spend": num(spend_by_month[m]),
+             "cac": num(spend_by_month[m] / new_by_month[m])} for m in months if new_by_month[m] > 0]
+    if not rows:
+        return {"status": "insufficient_data", "rows": [], "cac": None,
+                "basis": "no month with both ad spend and new customers"}
+    recent = rows[-3:]
+    cac = sum(float(r["spend"]) for r in recent) / sum(int(r["new_customers"]) for r in recent)
+    return {"status": "ok", "rows": rows, "cac": num(cac), "months_used": [r["month"] for r in recent],
+            "basis": "blended: the channel's ad spend over customers whose first order fell in the month, last three months"}
+
+
+def payback(params: dict, repeat_value: float, first_value: float, margin_rate: float, cac: float,
+            horizon_weeks: int = HORIZON_WEEKS) -> dict:
+    """Weeks until a NEW customer's cumulative expected margin covers the
+    acquisition cost: the first order's margin plus the FHL expected repeats
+    by week t (x = 0, t_x = 0, T = 0) at the repeat value's margin."""
+    if cac is None or cac <= 0 or margin_rate <= 0:
+        return {"status": "insufficient_data"}
+    zero = np.array([0.0])
+    cumulative = []
+    for t in range(1, horizon_weeks + 1):
+        rep = float(expected_repeats(params, float(t), zero, zero, zero)[0])
+        cumulative.append(margin_rate * (first_value + rep * repeat_value))
+    weeks = next((t for t, c in enumerate(cumulative, start=1) if c >= cac), None)
+    ltv = cumulative[-1]
+    return {"status": "ok", "payback_weeks": weeks, "ltv_52w_margin": num(ltv), "ltv_cac": num(ltv / cac, 4),
+            "cumulative_margin_by_week": [num(c) for c in cumulative[::4]],
+            "basis": ("first-order margin plus expected repeats at the repeat order's margin, on a new customer; "
+                      "None when a year does not cover the acquisition cost")}
+
+
 def run(customer_orders: list[dict], margins: list[dict] | None = None, today: date | None = None,
-        channel: str = "shopify", draws: int = CLV_DRAWS) -> dict:
+        channel: str = "shopify", draws: int = CLV_DRAWS, ppc_spend: list[dict] | None = None) -> dict:
     if channel != "shopify":
         return {"status": "not_applicable", "basis": "no Amazon export carries a customer identity"}
     x, t_x, T, mv, fv, end = customer_table(customer_orders)
@@ -253,7 +305,33 @@ def run(customer_orders: list[dict], margins: list[dict] | None = None, today: d
                     "mc_se_p50": num(float(m_.std() / np.sqrt(m_.size)), 5), "seed": CLV_SEED}
 
     status = "ok" if calibrated else ("poorly_calibrated" if ratio is not None else "uncalibrated")
+
+    # payback and LTV:CAC, when the ad file gives an acquisition cost
+    cac = cac_by_month(customer_orders, ppc_spend)
+    pb = None
+    if cac.get("status") == "ok" and margins:
+        rev = sum(float(m.get("revenue") or 0) for m in margins)
+        net_before_ads = sum(float(m.get("net_margin") or 0) + float(m.get("ad_spend_allocated") or 0) for m in margins)
+        margin_rate = net_before_ads / rev if rev > 0 else 0.0
+        pb = payback(fit, value, first_value, margin_rate, float(cac["cac"]))
+        if pb.get("status") == "ok" and fit["cov"] is not None:
+            rng2 = np.random.default_rng(CLV_SEED + 1)
+            weeks_d, ltv_d = [], []
+            for th in rng2.multivariate_normal(fit["theta"], fit["cov"], size=min(400, int(draws))):
+                r_, al_, a_, b_ = np.exp(th)
+                if a_ <= 1.0:
+                    continue
+                d_ = payback({"r": r_, "alpha": al_, "a": a_, "b": b_}, value, first_value, margin_rate, float(cac["cac"]))
+                if d_.get("status") == "ok":
+                    weeks_d.append(d_["payback_weeks"] if d_["payback_weeks"] is not None else HORIZON_WEEKS + 1)
+                    ltv_d.append(float(d_["ltv_cac"]))
+            if len(weeks_d) >= 50:
+                pb["payback_weeks_band"] = [num(float(np.quantile(weeks_d, 0.05)), 1), num(float(np.quantile(weeks_d, 0.95)), 1)]
+                pb["ltv_cac_band"] = [num(float(np.quantile(ltv_d, 0.05)), 4), num(float(np.quantile(ltv_d, 0.95)), 4)]
+                pb["draws"] = len(weeks_d)
+        pb["margin_rate"] = num(margin_rate, 4)
     return {
+        "cac": cac, "payback": pb,
         **base, "status": status,
         "bgnbd": {k: num(v, 4) for k, v in fit.items() if k in ("r", "alpha", "a", "b")},
         "bgnbd_loglik": num(fit["loglik"]), "gamma_gamma": {k: (num(v, 4) if isinstance(v, float) else v) for k, v in gg.items()},

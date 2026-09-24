@@ -1329,6 +1329,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                     "incrementality": (r.get("details") or {}).get("incrementality"),
                     "clv_multiplier": (r.get("details") or {}).get("clv_multiplier"),
                     "clv_basis": (r.get("details") or {}).get("clv_basis"),
+                    "ltv_cac": (r.get("details") or {}).get("ltv_cac"),
+                    "payback_weeks": (r.get("details") or {}).get("payback_weeks"),
                 },
             ))
 

@@ -453,7 +453,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                      if incr.get("incrementality_for_breakeven") is not None else ""))
         clv_out = None
         if "clv" in wanted:
-            clv_out = clv.run(data.get("customer_orders") or [], margin_rows, today, channel=channel)
+            clv_out = clv.run(data.get("customer_orders") or [], margin_rows, today, channel=channel,
+                              ppc_spend=data.get("ppc_spend"))
             _save_output(db, run_id, client["id"], "clv", clv_out)
             print("  lifetime value: "
                   + (f"{float(clv_out['expected_repeats_52w']):.2f} repeat orders per customer over a year, "
@@ -464,11 +465,14 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "ads" in wanted:
             iota = (incr or {}).get("incrementality_for_breakeven")
             mult = float(clv_out["clv_multiplier"]) if clv_out and clv_out.get("status") == "ok" else None
+            pb = (clv_out or {}).get("payback") or {}
+            clv_extra = ({"ltv_cac": pb.get("ltv_cac"), "payback_weeks": pb.get("payback_weeks"),
+                          "cac": ((clv_out or {}).get("cac") or {}).get("cac")} if pb.get("status") == "ok" else None)
             breaks = ad_efficiency.regime_breaks(anomaly_rows)
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
                                          incrementality_basis="switchback" if iota is not None else None,
                                          clv_multiplier=mult, clv_basis="calibrated" if mult else None,
-                                         breaks=breaks)
+                                         breaks=breaks, clv_extra=clv_extra)
             if breaks:
                 print(f"  ad efficiency: {len(breaks)} campaign(s) refitted after a cost-per-click or conversion break")
         if "elasticity" in wanted or "ads" in wanted:
@@ -1749,7 +1753,7 @@ def cmd_script(args):
         issue_number=issue_count + 1, health=outputs.get("health"), value=outputs.get("value"),
         recovery=outputs.get("recovery"), forecast_rows=(outputs.get("forecast") or {}).get("rows"),
         risk=outputs.get("risk"), anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-        inv_econ=outputs.get("invecon"),
+        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
     )
     if args.facts:
         print("\nFACTS the narrator may cite (every figure the engine computed):")
@@ -1856,7 +1860,7 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
                 forecast_rows=(outputs.get("forecast") or {}).get("rows"),
                 risk=outputs.get("risk"),
                 anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-                inv_econ=outputs.get("invecon"))
+                inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"))
             result = narrate.narrate(facts)
             if result.get("text"):
                 memo = result["text"]

@@ -645,6 +645,15 @@ asked to predict the last quarter's repeats; actual over predicted is published,
 outside [0.7, 1.3] the multiplier is `poorly_calibrated` and moves nothing. The
 frequency–value correlation is published because Gamma–Gamma assumes it away.
 
+**Payback and LTV:CAC.** The acquisition cost is blended — the channel's ad spend over
+the customers whose first order fell in the month, the last three months — because no
+export links a campaign to a customer, and the payload says so. Payback is the week in
+which a NEW customer's cumulative expected margin (the first order's margin plus the
+expected repeats by that week at the repeat order's margin, from the same closed form
+at zero age) covers that cost; LTV:CAC is the 52-week figure over it; both carry a band
+from the parametric bootstrap, and a payback a year does not reach is None, not
+fifty-three. The trim directive carries them on a Shopify run.
+
 **Refusals.** Under 100 customers or 26 weeks (`insufficient_data`); Amazon
 (`not_applicable` — no Amazon export carries a customer identity, and Subscribe & Save
 is in none of them).

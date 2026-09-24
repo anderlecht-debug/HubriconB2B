@@ -329,7 +329,7 @@ def regime_breaks(anomaly_rows: list[dict] | None) -> dict[str, dict]:
 def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
         incrementality: float | None = None, incrementality_basis: str | None = None,
         clv_multiplier: float | None = None, clv_basis: str | None = None,
-        breaks: dict[str, dict] | None = None) -> list[dict]:
+        breaks: dict[str, dict] | None = None, clv_extra: dict | None = None) -> list[dict]:
     """`incrementality` is ι from models/incrementality.py: the ratio of the
     total-sales response to the attributed-sales response. When its basis is an
     executed switchback the break-even is computed on ι-adjusted attribution
@@ -405,7 +405,8 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             base["details"].update({"incrementality": num(incrementality, 4),
                                     "incrementality_basis": incrementality_basis,
                                     "breakeven_marginal_roas_incremental": num(adjusted, 4),
-                                    "clv_multiplier": num(clv_multiplier, 4), "clv_basis": clv_basis})
+                                    "clv_multiplier": num(clv_multiplier, 4), "clv_basis": clv_basis,
+                                    **(clv_extra or {})})
         if len(points) < MIN_POINTS:
             # too few points since the break: the old curve is not trusted and
             # the new one is not fitted yet — a status, not a stale number

@@ -132,3 +132,37 @@ def test_a_calibrated_multiplier_moves_the_break_even_and_an_uncalibrated_one_do
     assert with_clv["details"]["clv_multiplier"] == 2.0
     unc = ad_efficiency.run(data, avg_margin=0.35, clv_multiplier=2.0, clv_basis=None)[0]
     assert unc["breakeven_spend"] == plain["breakeven_spend"]
+
+
+def test_payback_and_ltv_cac_from_a_blended_acquisition_cost():
+    orders = _customers()
+    # ad spend that acquires the month's new customers at about $30 each
+    from collections import Counter
+    firsts = {}
+    for o in orders:
+        d = o["order_date"]
+        if o["customer_key"] not in firsts or d < firsts[o["customer_key"]]:
+            firsts[o["customer_key"]] = d
+    by_month = Counter(d[:7] for d in firsts.values())
+    ppc = [{"campaign_name": "C", "report_date": f"{m}-15", "spend": 30.0 * n} for m, n in by_month.items()]
+    margins = [{"sku": "W", "period_start": "2026-08-01", "period_end": "2026-08-28", "units": 100, "revenue": 8000.0,
+                "amazon_fees": 800.0, "cogs": 3200.0, "ad_spend_allocated": 600.0, "net_margin": 3400.0}]
+    out = clv.run(orders, margins, today=date(2026, 9, 1), ppc_spend=ppc)
+    assert out["cac"]["status"] == "ok" and out["cac"]["cac"] == pytest.approx(30.0, rel=0.05)
+    pb = out["payback"]
+    assert pb["status"] == "ok" and pb["margin_rate"] == pytest.approx(0.5)
+    # the first order alone (≈$80 at a 50% margin) covers a $30 acquisition: payback in week one
+    assert pb["payback_weeks"] == 1 and pb["ltv_cac"] > 1.0
+    assert pb["payback_weeks_band"][0] <= pb["payback_weeks"] <= pb["payback_weeks_band"][1] + 1e-9
+    assert pb["ltv_cac_band"][0] <= pb["ltv_cac"] <= pb["ltv_cac_band"][1] + 1e-9
+    # a dear acquisition takes longer, and one a year cannot cover reports None
+    dear = clv.payback(out["bgnbd"], out["repeat_order_value"], out["first_order_value"], 0.5, cac=120.0)
+    assert dear["status"] == "ok" and (dear["payback_weeks"] is None or dear["payback_weeks"] > 1)
+    assert clv.payback(out["bgnbd"], 80.0, 80.0, 0.5, cac=1e6)["payback_weeks"] is None
+    assert clv.cac_by_month(orders, [])["status"] == "insufficient_data"
+    # the fitted payback agrees with the truth's within a couple of weeks
+    truth = {"r": 0.6, "alpha": 8.0, "a": 0.8, "b": 3.0}
+    fitted = clv.payback(out["bgnbd"], 80.0, 80.0, 0.5, cac=150.0)
+    true = clv.payback(truth, 80.0, 80.0, 0.5, cac=150.0)
+    if fitted["payback_weeks"] is not None and true["payback_weeks"] is not None:
+        assert abs(fitted["payback_weeks"] - true["payback_weeks"]) <= 4
