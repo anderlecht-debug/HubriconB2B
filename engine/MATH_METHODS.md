@@ -755,6 +755,39 @@ client-stated, not modelled. Fixed costs accrue daily; real due dates are lumpie
 "Ruin" means a simulated balance crossing zero — a bridge-capital line, never a
 bankruptcy prophecy.
 
+### 6b. Inventory under a cash budget
+
+**What it computes** (`models/cash_orders.py`). The cone and the order-sizing model
+did not talk to each other: the newsvendor recommended, the cone warned. With a
+budget K the problem is
+
+```
+maximise  Σ_i E[profit_i(Q_i)]    subject to    Σ_i c_i·Q_i ≤ K
+```
+
+whose Lagrangian gives, per SKU, the critical fractile with the cash a unit ties up
+priced at the shadow price λ:
+
+```
+F_i(Q_i) = (C_u,i − λ·c_i) / (C_u,i + C_o,i)
+```
+
+Q_i(λ) is read off the demand ladder the newsvendor stored (§5), the total wire is
+non-increasing in λ, and a bisection meets the budget exactly. The order this induces
+is by C_u,i / c_i — contribution at risk per inventory dollar, the GMROI ranking
+derived rather than asserted. λ = 0 reproduces the unconstrained newsvendor.
+
+**The budget** comes off the cone already computed, not a re-run: the first cycle's
+wires plus the 5th-percentile trough's overdraft, with the expected-shortfall variant
+beside it. The wires precede the trough — that is the approximation, and it is on the
+payload.
+
+**Published.** λ, the funded order per SKU with its service level and residual
+stockout probability, the deferred dollars and the bridge capital that would fund the
+whole set. The directive `budget_order_set` replaces the individual reorders for the
+SKUs it covers, is explicit, and promises nothing: the avoided stockout is §10 #5.
+`no_cash_inputs` and `fully_funded` leave the reorders as they were.
+
 ---
 
 ## 7. Demand dependence

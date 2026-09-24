@@ -202,6 +202,43 @@ def _expedite_directive(rep_row: dict, econ_row: dict | None) -> dict | None:
     )
 
 
+def _budget_order_set_directive(cash_orders: dict | None) -> dict | None:
+    """When the cash cannot fund every order: the set it supports, in the order
+    capital should go, and the bridge that would fund the rest. Explicit and
+    unbankable, like the reorders it replaces."""
+    if not cash_orders or cash_orders.get("status") != "constrained":
+        return None
+    orders = cash_orders.get("orders") or []
+    funded = [o for o in orders if o["order_qty"] > 0]
+    deferred = [o for o in orders if o["deferred_units"] > 0]
+    k = cash_orders.get("budget") or {}
+
+    def _one(o):
+        return (f"{o['sku']} {int(o['order_qty'])} units ({_money(float(o['wire']))}, "
+                f"{float(o['fractile']):.0%} service)")
+
+    text = (f"Your cash supports {_money(float(cash_orders['wire_total']))} of the "
+            f"{_money(float(cash_orders['unconstrained_total']))} of orders due this cycle "
+            f"(the 90-day cone's worst-twentieth trough is {_money(float(k.get('trough_p5') or 0))}). Fund these first, "
+            f"in the order capital earns most contribution per dollar: "
+            f"{'; '.join(_one(o) for o in funded[:6])}{'…' if len(funded) > 6 else ''}."
+            + (f" Deferred or trimmed: {', '.join(f'{o['sku']} {int(o['deferred_units'])} units' for o in deferred[:6])}"
+               f"{'…' if len(deferred) > 6 else ''}, carrying "
+               f"{', '.join(f'{float(o['p_stockout_cycle']):.0%}' for o in deferred[:3])} stockout risk over the cycle."
+               if deferred else "")
+            + f" Bridge capital of {_money(float(cash_orders['bridge_capital']))} would fund the whole set. "
+            f"No dollars are promised: an avoided stockout cannot be measured after the fact.")
+    return _draft(
+        "inventory", "budget_order_set", sorted((o["sku"], o["order_qty"]) for o in orders),
+        score=45,
+        expected=None,
+        action_text=text,
+        evidence={"orders": orders, "budget": k, "lambda": cash_orders.get("lambda"),
+                  "wire_total": cash_orders.get("wire_total"), "unconstrained_total": cash_orders.get("unconstrained_total"),
+                  "deferred": cash_orders.get("deferred"), "bridge_capital": cash_orders.get("bridge_capital")},
+    )
+
+
 def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row: dict | None = None,
                          channel: str | None = "amazon", rep_row: dict | None = None,
                          supplier_events: dict | None = None) -> dict:
@@ -1047,7 +1084,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      experiments: list[dict] | None = None,
                      cross_price: dict | None = None,
                      markdown: dict | None = None,
-                     replenishment: dict | None = None) -> list[dict]:
+                     replenishment: dict | None = None,
+                     cash_orders: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1092,8 +1130,16 @@ def draft_directives(inventory, ads, elasticity, margins,
 
     rep_by_sku = {x["sku"]: x for x in (replenishment or {}).get("rows", [])}
     supplier_events = {x["supplier"]: x for x in (replenishment or {}).get("suppliers", [])}
+    # When the cash cannot fund every order, one directive carries the set it
+    # supports and the individual reorders for those SKUs stand aside.
+    budget_set = _budget_order_set_directive(cash_orders)
+    funded_skus = {o["sku"] for o in (budget_set["evidence"]["orders"] if budget_set else [])}
+    if budget_set:
+        drafts.append(budget_set)
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
+            if r["sku"] in funded_skus:
+                continue
             drafts.append(_inventory_directive(r, latest_by_sku.get(r["sku"]), today, econ_by_sku.get(r["sku"]), channel,
                                                rep_row=rep_by_sku.get(r["sku"]), supplier_events=supplier_events))
             ex = _expedite_directive(rep_by_sku.get(r["sku"]), econ_by_sku.get(r["sku"]))

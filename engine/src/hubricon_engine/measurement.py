@@ -78,6 +78,7 @@ UNBANKABLE_KINDS = {
     "settlement_step",        # "we are tracing the lines" is not an action with a proof
     "cannibalisation_watch",  # a step NOT taken: nothing to measure, the finding is the record
     "expedite_air",           # the avoided stockout is the same unobservable counterfactual as a reorder
+    "budget_order_set",       # the reorders it replaces, under a cash constraint: the same counterfactual
 }
 
 

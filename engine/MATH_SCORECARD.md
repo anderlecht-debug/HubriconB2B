@@ -585,6 +585,22 @@ overage; a $1 break at 200 units pays and a 5¢ break at 600 does not; a supplie
 siblings due within a review period share a wire; a position that sea exposes and air
 covers recommends air, a covered one does not. `tests/test_replenishment.py`, 6 tests.
 
+### Iteration 21 — part 7: the order set the cash supports
+
+**Objection.** "You may need bridge capital" is a warning, not an action. When the
+cash cannot fund every order the newsvendor wants, which orders?
+
+**Change.** `models/cash_orders.py`: the budget-constrained multi-item newsvendor by
+its Lagrangian — each SKU's fractile with the cash a unit ties up priced at the shadow
+price, bisected to the budget the cone already implies. Capital goes first to
+contribution at risk per inventory dollar. One directive carries the funded set, the
+deferrals and the bridge; the individual reorders for those SKUs stand aside.
+
+**Measured.** λ = 0 reproduces the newsvendor's orders to within the ladder's
+interpolation; at 60% of the wires the high-return SKU keeps more of its service level;
+the total wire is monotone in λ; a cone with a positive trough is `fully_funded` and one
+overdrawn by 40% funds 60% and names the 40% bridge. `tests/test_cash_orders.py`, 4 tests.
+
 ---
 
 ## Outcome Alignment

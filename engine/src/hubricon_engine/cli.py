@@ -63,7 +63,7 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, cashflow, cross_price, elasticity, forecast, health_score,
+    ad_allocation, ad_efficiency, anomaly, cash_orders, cashflow, cross_price, elasticity, forecast, health_score,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
 )
 from .models.anomaly import summarize as summarize_anomalies
@@ -90,7 +90,8 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "health")
+              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "cashorders",
+              "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -501,6 +502,14 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 )
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
+        if "cashorders" in wanted:
+            co = cash_orders.run(inv_econ, cash, today)
+            _save_output(db, run_id, client["id"], "cash_orders", co)
+            if co["status"] == "constrained":
+                print(f"  cash orders: cash funds ${float(co['wire_total']):,.0f} of ${float(co['unconstrained_total']):,.0f}; "
+                      f"shadow price {float(co['lambda']):.3f}/$; bridge ${float(co['bridge_capital']):,.0f} funds the rest")
+            else:
+                print(f"  cash orders: {co['status']}")
         if "health" in wanted:
             data_present = {t: bool(data[t]) for t in DATA_TABLES}
             health = health_score.compute(base_margins, cash, risk_out, base_inventory, inv_econ,
@@ -636,7 +645,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               incrementality=outputs.get("incrementality"), client_id=client["id"],
                               experiments=_load_price_tests(db, client["id"]),
                               cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
-                              replenishment=outputs.get("replenishment"))
+                              replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
