@@ -68,6 +68,14 @@ So the shipped default is a dead heat on money per directive, a reproducible
 win in the tail, and the only rule whose step size is derived from the
 uncertainty rather than asserted as a constant. That is the argument for it,
 stated at its actual strength and no higher.
+
+2026-09-24: every seller in this race reprices at phi = 0.6, so the reaction
+correction of MATH_METHODS.md §2 now fires on all of them. It moved every
+rule's total by under 1% (plugin 131,982 → 131,658 in the no-drift regime, ce
+129,690 → 129,906) and the bands asserted below still hold; the table above is
+left as it was measured. The optional loss gate (`pricing_engine.MAX_P_LOSS`)
+was priced here too: at 0.25 the ce rule keeps 635 of 987 moves and 82% of
+the total, which is why the gate is off by default.
 """
 
 from functools import lru_cache

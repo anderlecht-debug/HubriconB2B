@@ -57,6 +57,15 @@ MIN_PERIODS = 5
 MIN_SIBLING_PRICE_SD = 0.02      # log scale ≈ coefficient of variation
 MIN_POOL_FAMILIES = 3
 CI_LEVEL = 0.95
+# The cross term enters a price step only when the family's estimate, after
+# shrinkage, sits this many of its own standard errors from zero. Added
+# 2026-09-24: at realistic price variation (a 6% coefficient of variation
+# over twelve periods) the model-risk harness fitted cross-elasticities of
+# ±2 against truths under 1 — noise that, fed into a step's sibling term,
+# moved promises by more than the step itself. An unidentified family is
+# still published, with its interval, flagged `identified: false`, and kept
+# out of `by_sku` so no step carries it.
+MIN_CROSS_T = 2.0
 
 
 def families(data: dict) -> dict[str, list[str]]:
@@ -156,7 +165,9 @@ def fit_family(family_id: str, members: dict[str, dict]) -> dict:
                                   f"one own and one cross elasticity per family; t({dof})")}}
 
 
-def run(data: dict, elasticity_rows: list[dict] | None = None) -> dict:
+def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | None = None) -> dict:
+    from .seasonality import deseasonalise_economics
+    data, season_note = deseasonalise_economics(data, seasonal)
     fams = families(data)
     if not fams:
         return {"status": "no_variant_mapping", "families": [], "by_sku": {},
@@ -177,14 +188,20 @@ def run(data: dict, elasticity_rows: list[dict] | None = None) -> dict:
     else:
         for f in ok:
             f["shrinkage"], f["shrinkage_weight"] = "none_pool_too_small", 1.0
-    by_sku = {}
     for f in ok:
+        se = float(f["se_cross"] or 0)
+        f["t_cross"] = num(float(f["eps_cross"]) / se, 3) if se > 0 else None
+        f["identified"] = bool(se > 0 and abs(float(f["eps_cross"])) >= MIN_CROSS_T * se)
+    used = [f for f in ok if f["identified"]]
+    by_sku = {}
+    for f in used:
         for i in f["children"]:
             by_sku[i] = {"family": f["family"], "eps_cross": f["eps_cross"], "se_cross": f["se_cross"],
                          "ci95_cross": f["ci95_cross"], "dof": f["dof"], "eps_own_family": f["eps_own"],
                          # w[j][i]: how much of sibling j's index is THIS SKU's price
                          "siblings": [{"sku": j, "weight": f["weights"][j][i]} for j in f["children"] if j != i]}
     return {"status": "ok" if ok else "insufficient_data", "families": fits, "by_sku": by_sku,
-            "n_families": len(fams), "n_fitted": len(ok),
+            "n_families": len(fams), "n_fitted": len(ok), "n_identified": len(used), "min_t": MIN_CROSS_T,
+            "seasonal_adjustment": season_note,
             "basis": ("one own and one cross elasticity per variant family, HC3 and Student-t, families shrunk "
                       "toward the catalogue cross-elasticity; substitutes read positive")}

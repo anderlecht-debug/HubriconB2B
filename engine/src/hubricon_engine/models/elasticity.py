@@ -307,17 +307,201 @@ def _shrink(rows: list[dict], group_of) -> None:
                                     num(shrunk + t_crit * post_se, 4)]
 
 
+# ── the seller's own repricing habit, and the bias it induces ────────────────
+# MATH_METHODS.md §2 names the reactive-pricing bias and, until 2026-09-24,
+# only disclosed it. The correction built here is the classical one: the
+# seller reacts to LAST period's demand, and last period's demand is in the
+# export, so a fit that controls for it is unbiased — at the price of two
+# more coefficients on a short series. The catalogue then pays for the
+# correction once: the seller's habit is the seller's, not the SKU's, so the
+# difference between the static and the controlled fit, taken as a median
+# over the catalogue, is the bias, estimated with the catalogue's precision
+# and subtracted from every SKU's efficient static fit. tests/test_reaction.py
+# and the model-risk harness measure it on the generator that produces the
+# bias; a simulation-based variant that needed the shock's persistence was
+# tried first and dropped, because that persistence cannot be read off the
+# residuals of the very regression the reaction biases.
+REACTION_T = 2.0            # φ̂ must clear this many standard errors before anything is corrected
+REACTION_MIN_PAIRS = 40     # (price, prior residual) pairs across the catalogue
+DYNAMIC_MIN_PERIODS = 8     # the controlled fit spends three coefficients on n − 1 points
+BIAS_MIN_SKUS = 20          # SKUs with both fits before the catalogue difference is trusted
+BIAS_T = 2.0                # and the difference must clear this many of its own standard errors
+BIAS_BOOTSTRAP = 400
+BIAS_TRIM = 0.2             # trimmed-mean fraction on each tail of the per-SKU differences
+BIAS_SEED = 20260924
+
+
+def reaction_diagnostic(data: dict) -> dict:
+    """How the seller sets price in response to last period's demand.
+
+    Per SKU, the residual e_t of log units on log price is last period's
+    demand surprise; the price the seller then set, log p_{t+1} demeaned
+    within the SKU, is regressed on e_t across the catalogue with HC3
+    standard errors. φ̂ > 0 and significant is a seller who raises price
+    after a good month. ρ̂, the lag-one autocorrelation of the residuals, is
+    published for the record and used for nothing: the same reaction that
+    biases the slope attenuates it."""
+    by_sku: dict[str, list[dict]] = {}
+    for r in data.get("sku_economics") or []:
+        by_sku.setdefault(r["sku"], []).append(r)
+    x_all, y_all, e_pairs = [], [], []
+    n_skus = 0
+    for sku, rows in by_sku.items():
+        rows = sorted(rows, key=lambda r: r["period_start"])
+        pts = [(float(r["avg_sales_price"] or ((r.get("sales") or 0) / r["units_sold"])), float(r["units_sold"]),
+                period_days(str(r["period_start"]), str(r["period_end"])))
+               for r in rows if r.get("units_sold") and float(r["units_sold"]) > 0
+               and (r.get("avg_sales_price") or r.get("sales"))]
+        if len(pts) < MIN_PERIODS:
+            continue
+        logp = np.log([p for p, _, _ in pts])
+        logq = np.log([u / d for _, u, d in pts])
+        if float(np.std(logp)) <= 0:
+            continue
+        X = np.column_stack([np.ones(len(pts)), logp])
+        beta = np.linalg.lstsq(X, logq, rcond=None)[0]
+        e = logq - X @ beta
+        lp = logp - logp.mean()
+        for t in range(len(pts) - 1):
+            x_all.append(e[t])
+            y_all.append(lp[t + 1])
+            e_pairs.append((e[t], e[t + 1]))
+        n_skus += 1
+    n = len(x_all)
+    out = {"n_pairs": n, "n_skus": n_skus}
+    if n < REACTION_MIN_PAIRS:
+        return {**out, "status": "insufficient_data", "phi": None, "rho": None, "reactive": False}
+    x, y = np.array(x_all), np.array(y_all)
+    X = np.column_stack([np.ones(n), x])
+    beta = np.linalg.lstsq(X, y, rcond=None)[0]
+    resid = y - X @ beta
+    xtx_inv = np.linalg.inv(X.T @ X)
+    hat = np.einsum("ij,jk,ik->i", X, xtx_inv, X)
+    omega = (resid / np.maximum(1 - hat, MIN_LEVERAGE_SLACK)) ** 2
+    cov = xtx_inv @ (X.T * omega) @ X @ xtx_inv
+    phi, se_phi = float(beta[1]), float(np.sqrt(max(cov[1, 1], 0)))
+    e0 = np.array([a for a, _ in e_pairs])
+    e1 = np.array([b for _, b in e_pairs])
+    rho = float((e0 * e1).sum() / (e0 * e0).sum()) if (e0 * e0).sum() > 0 else 0.0
+    return {**out, "status": "ok", "phi": num(phi, 4), "se_phi": num(se_phi, 4),
+            "t_phi": num(phi / se_phi, 3) if se_phi > 0 else None, "rho": num(rho, 4),
+            "reactive": bool(se_phi > 0 and phi / se_phi >= REACTION_T)}
+
+
+def _fit_controlled(points: list[dict]) -> dict:
+    """log q_t = a + ε log p_t + b log p_{t−1} + γ log q_{t−1} + η_t.
+
+    Under a persistent demand shock and a seller who prices off last period's
+    demand, p_t is correlated with the shock only through last period's
+    demand, which the two lags carry; η_t is independent of p_t and the
+    coefficient on log p_t is ε. HC3 on n − 1 points and four coefficients."""
+    usable = [p for p in points if p["price"] and p["price"] > 0 and p["units"] and p["units"] > 0]
+    n = len(usable)
+    if n < DYNAMIC_MIN_PERIODS:
+        return {"status": "insufficient_data", "n_periods": n}
+    days = np.array([p.get("days") or 1.0 for p in usable], dtype=float)
+    lp = np.log(np.array([p["price"] for p in usable], dtype=float))
+    lq = np.log(np.array([p["units"] for p in usable], dtype=float) / days)
+    X = np.column_stack([np.ones(n - 1), lp[1:], lp[:-1], lq[:-1]])
+    y = lq[1:]
+    try:
+        beta = np.linalg.lstsq(X, y, rcond=None)[0]
+        xtx_inv = np.linalg.inv(X.T @ X)
+    except np.linalg.LinAlgError:
+        return {"status": "singular", "n_periods": n}
+    resid = y - X @ beta
+    hat = np.einsum("ij,jk,ik->i", X, xtx_inv, X)
+    slack = 1 - hat
+    if not np.all(np.isfinite(slack)) or np.min(slack) <= MIN_LEVERAGE_SLACK:
+        return {"status": "singular", "n_periods": n}
+    omega = (resid / slack) ** 2
+    cov = xtx_inv @ (X.T * omega) @ X @ xtx_inv
+    se = float(np.sqrt(max(cov[1, 1], 0)))
+    if not np.isfinite(se) or se <= 0:
+        return {"status": "singular", "n_periods": n}
+    return {"status": "ok", "elasticity": float(beta[1]), "std_err": se, "dof": n - 1 - 4,
+            "lag_price": float(beta[2]), "lag_demand": float(beta[3]), "n_periods": n}
+
+
+def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, list[dict]] | None = None) -> dict:
+    """Estimate the reaction bias once for the catalogue and subtract it from
+    every fitted, non-experimental SKU row, in place, widening each standard
+    error by the bias estimate's own. Returns the diagnostic, which every row
+    also carries under details.endogeneity."""
+    diag = reaction_diagnostic(data)
+    applied, reason = False, None
+    diffs = []
+    if diag.get("status") != "ok":
+        reason = "too few (price, prior residual) pairs to estimate the habit"
+    elif not diag["reactive"]:
+        reason = f"no significant reaction to last period's demand (t = {diag['t_phi']})"
+    else:
+        for r in rows:
+            det = r.get("details") or {}
+            if r.get("level") != "sku" or r.get("status") != "ok" or det.get("source") == "experiment":
+                continue
+            pts = (points_by_sku or {}).get(r["item_id"]) or det.get("points") or []
+            ctl = _fit_controlled(pts)
+            raw = det.get("epsilon_raw", r.get("elasticity"))
+            if ctl.get("status") == "ok" and raw is not None:
+                diffs.append(float(raw) - ctl["elasticity"])
+                det["epsilon_controlled"], det["std_err_controlled"] = num(ctl["elasticity"], 4), num(ctl["std_err"], 4)
+        n = len(diffs)
+        if n < BIAS_MIN_SKUS:
+            reason = f"only {n} SKUs carry both fits (need {BIAS_MIN_SKUS})"
+        else:
+            # a 20% trimmed mean: on four reactive catalogues it sat within
+            # ±0.16 of the bias the truth showed, where the median under-read
+            # it by up to 0.23 (the differences are right-skewed) and the plain
+            # mean followed the outliers a short series throws
+            d = np.array(diffs)
+            rng = np.random.default_rng(BIAS_SEED)
+            boots = np.array([stats.trim_mean(d[ix], BIAS_TRIM) for ix in rng.integers(0, n, size=(BIAS_BOOTSTRAP, n))])
+            bias, se_bias = float(stats.trim_mean(d, BIAS_TRIM)), float(np.std(boots, ddof=1))
+            diag.update({"bias_hat": num(bias, 4), "bias_se": num(se_bias, 4), "n_skus_both_fits": n,
+                         "t_bias": num(bias / se_bias, 3) if se_bias > 0 else None})
+            if se_bias <= 0 or abs(bias) < BIAS_T * se_bias:
+                reason = "the catalogue's static and controlled fits do not differ by more than their noise"
+            else:
+                applied = True
+    diag["applied"], diag["reason"] = applied, reason
+    for r in rows:
+        det = r.setdefault("details", {})
+        det["endogeneity"] = {k: diag.get(k) for k in ("status", "phi", "t_phi", "rho", "bias_hat", "bias_se", "applied", "reason")}
+        if not applied or r.get("status") != "ok" or det.get("source") == "experiment" or r.get("elasticity") is None:
+            continue
+        bias, sd_b = float(diag["bias_hat"]), float(diag["bias_se"])
+        se_old = float(r.get("std_err") or 0.0)
+        se_new = float(np.sqrt(se_old**2 + sd_b**2))
+        t_crit = float(det.get("t_critical") or 1.96)
+        det["epsilon_uncorrected"] = r["elasticity"]
+        det["std_err_uncorrected"] = r["std_err"]
+        r["elasticity"] = num(float(r["elasticity"]) - bias, 4)
+        r["std_err"] = num(se_new, 4)
+        det["ci95"] = [num(float(r["elasticity"]) - t_crit * se_new, 4), num(float(r["elasticity"]) + t_crit * se_new, 4)]
+    return diag
+
+
 def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = None,
-        experiments: list[dict] | None = None) -> list[dict]:
+        experiments: list[dict] | None = None, correct_reaction: bool = True,
+        seasonal: dict | None = None) -> list[dict]:
     """`groups` maps item_id -> pool name (a category, when a later export
     carries one). Absent, every item of a level pools with the rest of the
     catalog.
+
+    `seasonal` is models/seasonality.py's payload. With a catalogue index on
+    file the SKU fits run on deseasonalised units (the index divided out;
+    see seasonality.deseasonalise_economics): on a catalogue with a 1.6×
+    fourth quarter the standard error fell by a third and the cross-price
+    fit went from unidentified to identified. Absent, nothing changes.
 
     `experiments` are models/price_experiment.py analyses. One with status ok
     REPLACES the SKU's observational row before shrinkage — the randomised
     estimate is the one the optimizer should see — and the observational fit
     rides in details.observational beside the bias the experiment measured."""
     results = []
+    from .seasonality import deseasonalise_economics
+    data, season_note = deseasonalise_economics(data, seasonal)
 
     by_asin: dict[str, list[dict]] = {}
     for row in data["asin_traffic"]:
@@ -339,6 +523,7 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
     by_sku: dict[str, list[dict]] = {}
     for row in data["sku_economics"]:
         by_sku.setdefault(row["sku"], []).append(row)
+    points_by_sku: dict[str, list[dict]] = {}
     for sku, rows in sorted(by_sku.items()):
         ordered = sorted(rows, key=lambda r: r["period_start"])
         exposure = _exposure_days(ordered)
@@ -352,6 +537,7 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
             for i, row in enumerate(ordered)
         ]
         results.append({"level": "sku", "item_id": sku, **_fit(points)})
+        points_by_sku[sku] = points
 
     for exp in experiments or []:
         if exp.get("status") != "ok" or exp.get("level") != "sku":
@@ -378,4 +564,10 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
         return (row["level"], groups.get(row["item_id"], "catalog"))
 
     _shrink(results, pool_key)
+    for r in results:
+        r.setdefault("details", {})["seasonal_adjustment"] = season_note
+    if correct_reaction:
+        # after shrinkage: the bias is common to the catalogue, so the pool
+        # mean carries it too, and subtracting once after the pool is exact
+        correct_endogeneity(results, data, points_by_sku)
     return results

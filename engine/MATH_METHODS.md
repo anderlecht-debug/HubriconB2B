@@ -206,10 +206,62 @@ argues for increases. A SKU whose true elasticity is −2.0 can read −1.6, and
 was supposed to pin it asserted only `> 1.15`, so nothing caught it. The most
 dangerous assumption is twice as dangerous as the first write-up said.)
 
-**It is not corrected, and cannot be with the data on file.** Correcting
+~~**It is not corrected, and cannot be with the data on file.**~~ Correcting
 simultaneity needs an instrument: something that moves price without moving
-demand. Nothing in an Amazon or Shopify export is one. What the engine does
-instead:
+demand. Nothing in an Amazon or Shopify export is one. ~~What the engine does
+instead:~~
+
+**Corrected 2026-09-24: it is corrected, without an instrument, because the
+thing the seller reacts to is in the export.** The bias comes from a price
+set off *last* period's demand, and last period's demand is a column. A fit
+that controls for it,
+
+    ln q_t = a + ε ln p_t + b ln p_{t−1} + γ ln q_{t−1} + η_t,
+
+has η_t independent of p_t — the price can only be correlated with the shock
+through the two lags, which are now held fixed — so the coefficient on ln p_t
+is ε (`elasticity._fit_controlled`, HC3 on n − 1 points and four
+coefficients). The price is two coefficients on a short series: on twelve
+monthly periods the controlled fit's standard error is roughly double the
+static fit's, and on eight it is useless (3.3 against 0.7). So the catalogue
+pays for the control once. The seller's habit is the seller's, not the
+SKU's: the reaction strength φ is estimated across the whole catalogue
+(`reaction_diagnostic`: the price the seller set next, demeaned within the
+SKU, regressed on the residual of the static fit, HC3), and only when φ̂ is
+positive and two standard errors from zero — a one-sided test, because the
+within-SKU demeaning gives φ̂ a small mechanical negative bias and a seller
+who *cuts* after a good month is not the case the engine is defending
+against — is the difference between each SKU's static and controlled fit
+taken, as a 20% trimmed mean over the catalogue with a bootstrap standard
+error, and subtracted from every SKU's efficient static estimate, with that
+error added to the SKU's own. Trimmed rather than the median because the
+differences are right-skewed on a short series and the median under-read
+the bias by up to 0.23 on the reactive catalogues it was tried on; trimmed
+rather than the mean because a twelve-period controlled fit throws
+outliers. Applied after shrinkage, since the pool mean carries the same
+bias. A SKU's row shows `details.epsilon_uncorrected`,
+`epsilon_controlled` and `endogeneity.{phi, t_phi, bias_hat, bias_se,
+applied, reason}`; an experimental row (below) is never touched.
+
+Measured (`tests/test_model_risk.py`, six seeds × 80 SKUs × 12 periods at
+phi = 0.4, rho = 0.6): the static fit reads +0.52 to +0.65 too flat, the
+controlled fit sits within ±0.1 of the truth, the corrected catalogue within
+−0.09 to +0.19 (median +0.04); φ̂ reads 0.37–0.41 against 0.4. On six
+non-reacting catalogues the correction never fires. On the model-risk
+harness (MATH_SCORECARD.md, iteration 37) the reactive world's median error
+went from +0.47 to +0.09 and the drifting world's from +0.55 to +0.29, and
+in the horse race of `tests/test_horse_race.py` — whose sellers all react at
+phi = 0.6 — realised profit rose for every rule that uses the fit. A
+simulation-based variant, which needed the shock's persistence ρ, was built
+first and dropped: ρ̂ read off the residuals of the very regression the
+reaction biases came out at 0.19 against a true 0.6, and the correction it
+produced was a fifth of the bias.
+
+What it cannot do: a seller who reacts to something *other* than last
+period's demand of the same SKU (a competitor's move, a stock position) is
+not controlled for, and a reaction that changes over the window is averaged.
+The randomised test (below) remains the only estimate that needs no model
+of the seller. What the engine also does, unchanged:
 
 1. The pole guard (§3) refuses a destination whenever the estimate cannot be
    separated from −1, and a bias toward zero pushes estimates into exactly that
@@ -279,12 +331,29 @@ instead:
    design, which the fit's own floor and interval report rather than hide.
 
 
+**The season, divided out first (added 2026-09-24).** A catalogue with a
+1.6× fourth quarter puts three consecutive high months into every SKU's
+residual. Under exogenous prices that is variance, not bias — but it is a
+lot of variance on twelve points, and it lands on whichever price noise
+happened to fall in October. With a catalogue seasonal index on file (§5a;
+twelve distinct calendar months, so one full season) the SKU fits run on
+units divided by that month's *catalogue* index
+(`seasonality.deseasonalise_economics`). The catalogue index and never the
+SKU's own: with one season on file a SKU's own monthly ratio *is* its own
+residual, and dividing by it would fit the noise away; the catalogue index
+pools every SKU, so no single SKU's noise moves it. Measured on the harness
+(`tests/test_model_risk.py`): the median standard error fell from 0.74 to
+0.51 on the clean world with the median error unchanged inside noise, and
+the family cross-price fit (§3b) went from a standard error of 0.89 — where
+the "identified" families were the ones whose noise happened to be largest,
+median error +1.0 — to 0.34 and a median error of −0.09. Without an index
+nothing changes and every row says so (`details.seasonal_adjustment`).
+
 **The other limits.** Constant elasticity is a local approximation; it is used
 only inside a ±5% band around the observed price and extrapolation beyond the
 observed price range is not attempted. Cross-price effects between the client's
-own SKUs are not modelled — a cut on one SKU that cannibalises another shows up as
-a win on the first and an unexplained loss on the second. Competitor prices are
-not in the data at all.
+own SKUs are modelled only inside a variant family (§3b) and used only where
+identified. Competitor prices are not in the data at all.
 
 ---
 
@@ -445,13 +514,30 @@ children or five shared periods (`insufficient_data`), a sibling index that bare
 moved (`insufficient_price_variation`), and no mapping at all (`no_variant_mapping`,
 the whole model).
 
+**Identified, or published and not used (added 2026-09-24).** At the price
+variation a real catalogue shows — a 6% coefficient of variation over twelve
+monthly periods — the family fit's standard error is of order one, and the
+model-risk harness (MATH_SCORECARD.md, iteration 37) fitted cross-elasticities
+of ±2 against planted truths under one. Fed into a step's sibling term, that
+noise moved promises by more than the step itself. A family's cross term now
+enters a step only when its shrunk estimate sits `MIN_CROSS_T` = 2 of its own
+standard errors from zero; every fitted family is still published, with
+`identified`, `t_cross` and its interval, and an unidentified one is kept out
+of `by_sku` so no step carries it. The fit runs on units with the catalogue
+seasonal index divided out (§2), which is what made identification real: on
+the harness the standard error fell from 0.89 to 0.34, and the families that
+passed the gate went from a median error of +1.0 — the gate had been
+selecting the noisiest — to −0.09. A family planted at zero is "unidentified"
+by construction, and that is the right answer: there is no effect to carry.
+
 **What it does to a step.** Every candidate price in §3 is valued on own PLUS
 sibling profit: sibling j's units move by (p_new/p_0)^(ε_cross·w_ij) − 1, w_ij being
 this SKU's share of j's sibling index, ε_cross drawn from its own posterior on the
 same common random numbers. The step is sized on the total. When the SKU alone
 would have moved and the family together will not, no step is issued and the
 finding is drafted as `cannibalisation_watch`, naming the sibling. A SKU with no
-family reproduces every number it produced before the term existed.
+family, or in a family whose cross term is not identified, reproduces every
+number it produced before the term existed.
 
 **Measurement.** Each sibling is anchored on its own after window exactly as the
 SKU is: what it would have sold at the SKU's old price, at its own realised
@@ -1131,6 +1217,57 @@ ever reduce a claim. After the cap, as the volume response falls from 1.5× fore
 to zero, the realisation ratio falls 0.69, 0.58, −0.60, −2.23, monotonically, and
 a cut with no response is booked as the loss it was.
 
+**Corrected 2026-09-24: the ceiling was booking the weather.** Written as it
+was, the cap *replaced* a positive reading with the observed change whenever
+the reading exceeded it — including when the observed change was negative.
+The model-risk harness (MATH_SCORECARD.md, iteration 37) put a catalogue
+with a 20% month-to-month demand sd through it: a step whose anchored
+counterfactual read +$350, and whose true effect was +$350, was banked at
+−$293 because the SKU's August shock reverted in September. Over three
+worlds the Record's realisation ratio read −0.4 to −1.1 against a true 0.4
+to 0.7 — a correct engine reported as losing money, and `replay.score`
+would have called it OVER-PROMISING. The rationale two paragraphs up says
+the raw change is not a measurement; a number that is not a measurement
+cannot be banked as a loss. Two changes:
+
+1. *The no-response case is caught where it can be seen: in the batch.* One
+   month of one SKU cannot distinguish "the volume did not respond" from "a
+   bad month" — at a 20% sd a 5% step's expected 12% volume move is inside
+   the noise — but two dozen steps can. Before any step is measured, the
+   realised volume change of every price step and markdown in the batch is
+   regressed through the origin on the change its own fit predicted,
+   `r_i = κ·ε̂_i·ln(p1/p0) + noise`, weighted by each SKU's residual sd
+   (`measurement.volume_realisation`). Every counterfactual then runs on
+   ε̂_i·κ with κ drawn from its estimate and its residual-based standard
+   error — and only when κ sits `REALISATION_T` = 2 of those errors from 1.
+   A cut that produced no response anywhere gives κ = 0 and the reading
+   itself becomes the margin given away — the loss it was; a catalogue
+   whose volume moved as the fits said gives κ = 1 ± 0.2, within noise of
+   1, and every reading stands on its own fit. Applied unconditionally, the
+   pooled ±0.2 folded into every draw on top of the SKU's own posterior
+   halved what a correct engine banked on the harness, which is why the
+   gate. Under `MIN_STEPS_FOR_REALISATION` = 6 steps κ is not estimated.
+2. *The ceiling allows the SKU its own noise, and never manufactures a
+   loss.* A positive reading is capped at the observed rise plus
+   `OBSERVED_CAP_NOISE_Z` = 1 month-to-month standard deviation of the
+   SKU's own profit (√2 × the fit's residual sd × the window's profit), and
+   held at zero when the profit fell by more than that — a Buy Box loss
+   still stops a claim. A negative reading, the model's own, stands.
+   Setting the constant to 0 restores the strict ceiling with a zero floor.
+
+The four-world ladder above still runs 1.5×, 1.0×, 0.5×, 0 in that order and
+still ends below zero (`tests/test_replay.py`); on the harness the
+realisation ratio moved from −0.7/−0.4/−1.1 to the figures in iteration 37.
+
+**A row's fee split, rebuilt when the totals are missing (2026-09-24).** The
+counterfactual charges the proportional fee at the old price and the fixed
+fee per unit, read from the margin row's `fee_split`. A row that carried the
+split's *rate* and *per-unit fee* without its dollar totals was read as
+fee-free, and the counterfactual at the old price charged no referral fee at
+all — a four-figure loss on every step. `measurement._split_fees` now rebuilds
+the totals from the row's own revenue and units, capped at the fees the row
+actually paid.
+
 Three further gates, all pre-existing: execution (a step not actually made in the
 account is `stalled`, not measured), materiality (under $25 the directive closes
 rather than banking noise), and the promise cap (never bank more than was
@@ -1138,8 +1275,10 @@ promised).
 
 **Therefore a correct engine books LESS than it promised.** Between the 25th
 percentile and the actual-profit cap, a forecast that is exactly right realises
-around 0.6 of its promise. `replay.py` states the target band as 0.30–1.30 rather
-than 1.00, and labels anything below it OVER-PROMISING.
+around 0.6 of its promise on a noise-free after period, and less under
+month-to-month noise (iteration 37 gives the figure on a 20% sd). `replay.py`
+states the target band as 0.30–1.30 rather than 1.00, and labels anything
+below it OVER-PROMISING.
 
 ---
 
@@ -1192,12 +1331,17 @@ If you read one section, read this one.
 1. **Whether a price change caused what followed — until a randomised test has
    run on the SKU.** The elasticity is fitted from prices the seller chose, in
    response to demand. The bias is measured (§2), it runs toward "raise the
-   price", and on an observational fit it is not corrected. The engine's own steps
-   are NOT an instrument for it — see §2, corrected 2026-09-12 — because the step
-   is chosen by the fit and because a fortnight-long step is invisible to a
-   monthly estimator. Since 2026-09-23 the randomised six-block test
-   (`models/price_experiment.py`) IS one, for the SKUs that have run it; every
-   other SKU's fit still carries the bias, and the report says which is which.
+   price", and on an observational fit it ~~is not corrected~~ is corrected
+   (since 2026-09-24) only for the one mechanism the export can see: a seller
+   who reprices off last period's demand of the same SKU. That correction is
+   a model of the seller, applied once per catalogue when the seller's
+   reaction is measurable, and a seller who reacts to something else is not
+   corrected. The engine's own steps are NOT an instrument for it — see §2,
+   corrected 2026-09-12 — because the step is chosen by the fit and because a
+   fortnight-long step is invisible to a monthly estimator. Since 2026-09-23
+   the randomised six-block test (`models/price_experiment.py`) IS one, for
+   the SKUs that have run it; every other SKU's fit carries whatever bias the
+   correction did not reach, and the report says which is which.
 2. **A price optimum, for most SKUs, on a first upload.** With seven periods and
    20% demand noise, the elasticity cannot be separated from −1 for roughly five
    SKUs in six, and the engine declines to name a destination for them. It still

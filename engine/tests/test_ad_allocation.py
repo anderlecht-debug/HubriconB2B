@@ -311,3 +311,18 @@ def test_the_kind_is_dispatched_and_replay_can_audit_it():
     assert verdicts[0]["kind"] == "budget_reallocation" and verdicts[0]["verdict"] == "measured"
     audit = replay.completeness(d)
     assert audit["complete"] and audit["distribution_complete"] and audit["promise_matches_distribution"]
+
+
+def test_measurement_pairs_draws_on_the_common_count_when_campaigns_reject_differently():
+    """Rejection inside the fit's bounds leaves each campaign a different
+    number of accepted draws. The model-risk harness of 2026-09-24 hit a
+    shape mismatch here; the draws are now truncated to the common count."""
+    alloc = _alloc()
+    # a wide covariance on one campaign: many of its draws fall outside the bounds
+    alloc["campaigns"][1]["curve_cov"] = [[4e5, 0, 0], [0, 900.0, 0], [0, 0, 0.09]]
+    d = _directive(alloc)
+    v = measurement.measure_budget_reallocation(
+        d, _after({"Fine": 60.0, "Over": 140.0}, {"Fine": 500.0, "Over": 875.0}), date(2026, 8, 1), date(2026, 9, 1))
+    assert v["verdict"] in ("measured", "closed")
+    if v["verdict"] == "measured":
+        assert v["evidence_after"]["measured_distribution"]["draws"] >= 50

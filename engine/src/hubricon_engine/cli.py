@@ -404,7 +404,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             if tests:
                 # the observational fit first, so the experiment can say how far
                 # the history's curve was off; then the fit the optimizer uses
-                experiments = price_experiment.run(data, tests, elasticity.run(data))
+                experiments = price_experiment.run(data, tests, elasticity.run(data, seasonal=seasonal))
                 _save_output(db, run_id, client["id"], "price_experiments", {"rows": experiments})
                 for e in experiments:
                     if e.get("test_id"):
@@ -420,14 +420,14 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         prev_ads = (db.table("ad_efficiency_results").select("*").eq("run_id", prev_run["id"]).execute().data
                     if prev_run else [])
         if "elasticity" in wanted:
-            elast_rows = elasticity.run(data, experiments=experiments)
+            elast_rows = elasticity.run(data, experiments=experiments, seasonal=seasonal)
             # a fit that moved since last run walks half as far this cycle; the
             # mark has to be on the row before the drafting pass reads it back
             drift_el = drift.compare_runs(elast_rows, prev_el, [], [])
             drift.apply_to_elasticity(elast_rows, drift_el)
             _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
         if "crossprice" in wanted:
-            cross = cross_price.run(data, elast_rows)
+            cross = cross_price.run(data, elast_rows, seasonal=seasonal)
             _save_output(db, run_id, client["id"], "cross_price", cross)
             print(f"  cross-price: {cross['status']}"
                   + (f" — {cross['n_fitted']} of {cross['n_families']} variant families fitted" if cross["status"] != "no_variant_mapping" else ""))

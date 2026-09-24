@@ -180,6 +180,45 @@ def index_for(seasonal: dict | None, sku: str | None, month: int) -> tuple[float
     return float(cat["index"] or 1.0), se
 
 
+def deseasonalise_economics(data: dict, seasonal: dict | None) -> tuple[dict, dict]:
+    """SKU Economics with the CATALOGUE index divided out of every period's
+    units and sales, for a fit that should not read the season as a response
+    to price. The per-SKU index is deliberately not used: with one season on
+    file a SKU's own monthly ratio is its own residual, and dividing by it
+    would fit the noise away. The catalogue index pools every SKU, so no
+    single SKU's noise moves it. Returns (data, note); data is the input,
+    untouched, when the index is not on file."""
+    if not seasonal or seasonal.get("status") != "ok":
+        return data, {"deseasonalised": False, "basis": "no catalogue seasonal index on file"}
+    idx = {}
+    for k, v in (seasonal.get("catalog") or {}).items():
+        try:
+            m = int(k)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(v, dict) and v.get("observed", True) and v.get("index"):
+            idx[m] = float(v["index"])
+    if not idx:
+        return data, {"deseasonalised": False, "basis": "catalogue seasonal index carries no observed month"}
+    rows = []
+    for r in data.get("sku_economics") or []:
+        try:
+            f = idx.get(int(str(r["period_start"])[5:7]), 1.0)
+        except (TypeError, ValueError):
+            f = 1.0
+        if f <= 0 or f == 1.0:
+            rows.append(r)
+            continue
+        rr = dict(r)
+        if rr.get("units_sold") is not None:
+            rr["units_sold"] = float(rr["units_sold"]) / f
+        if rr.get("sales") is not None:
+            rr["sales"] = float(rr["sales"]) / f
+        rows.append(rr)
+    return {**data, "sku_economics": rows}, {"deseasonalised": True, "basis": seasonal.get("basis_label"),
+                                            "amplitude": seasonal.get("amplitude")}
+
+
 def horizon_factor(seasonal: dict | None, sku: str | None, start: date, days: float) -> tuple[float, float]:
     """Mean index over the calendar days of a window from `start`, and its se."""
     if not seasonal or seasonal.get("status") != "ok" or days <= 0:

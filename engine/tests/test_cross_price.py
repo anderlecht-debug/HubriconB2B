@@ -91,7 +91,17 @@ def test_families_are_shrunk_toward_the_catalogue_when_three_or_more_fit():
     assert close["n_fitted"] == 3
     assert all(f["shrinkage"] == "empirical_bayes" and f["shrinkage_weight"] == 0.0 for f in close["families"])
     out = wide
-    assert out["by_sku"]["S0"]["family"] == "P1" and len(out["by_sku"]["S0"]["siblings"]) == 3
+    # every fitted family is published with its flag; only the identified ones
+    # reach by_sku, and each of those brings its three siblings
+    assert all("identified" in f and f["t_cross"] is not None for f in out["families"])
+    used = [f for f in out["families"] if f["identified"]]
+    assert out["n_identified"] == len(used) >= 1
+    for f in used:
+        for child in f["children"]:
+            assert out["by_sku"][child]["family"] == f["family"] and len(out["by_sku"][child]["siblings"]) == 3
+    for f in out["families"]:
+        if not f["identified"]:
+            assert all(child not in out["by_sku"] for child in f["children"])
 
 
 def test_thin_families_refuse():

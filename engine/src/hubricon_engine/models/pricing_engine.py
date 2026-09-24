@@ -179,6 +179,16 @@ SEARCH_DRAWS = 2000
 # objectives, kept because they are what a reader expects and because the horse
 # race has to be able to run them.
 OBJECTIVE = "certainty_equivalent"
+# An optional loss gate: when set to a probability, a step is only issued when
+# that quantile of its own profit-delta distribution is non-negative (0.25:
+# at most a one-in-four chance of losing on the step recommended). Off by
+# default. Added 2026-09-24 so the model-risk harness could price the gate:
+# on three synthetic worlds it is measured against the certainty-equivalent
+# default (MATH_SCORECARD.md, "Model risk, measured on three worlds"); the
+# horse race in tests/test_horse_race.py is the standing reason the default
+# stays off — the pure-quantile rule earns more per move by declining 40% of
+# the catalogue, and puts less money in the payout.
+MAX_P_LOSS: float | None = None
 # How close to the pole at eps = −1 is too close to name a destination. Two
 # standard errors is the same line the 95% interval draws, so the guard and
 # the published interval cannot disagree: if a two-sigma band around epŝ
@@ -541,6 +551,8 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
     m = srt.shape[1]
     p5 = srt[:, min(m - 1, int(0.05 * m))]
     es5 = srt[:, :max(1, int(0.05 * m))].mean(axis=1)
+    # the optional gate: that quantile of the step's own distribution must not be a loss
+    p_gate = srt[:, min(m - 1, int(MAX_P_LOSS * m))] if MAX_P_LOSS is not None else np.zeros(len(fractions))
     if objective == "cvar":
         # mean of the worst decile: coherent, and noisier than a quantile
         scores = srt[:, :max(1, int(0.10 * m))].mean(axis=1)
@@ -554,7 +566,8 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
         scores = delta.mean(axis=1) - delta.var(axis=1) / (2.0 * tol)
 
     budget = abs(float(risk_budget))
-    feasible = np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget)
+    feasible = np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget) & (p_gate >= 0.0)
+    gate_bound = bool((np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget)).any() and not feasible.any())
     # standing still is always a candidate, and its delta is exactly zero
     chosen, best_score = 0.0, 0.0
     if feasible.any():
@@ -573,6 +586,9 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
         "quantile": quantile,
         "cap_bound": cap_bound,
         "budget_bound": budget_bound,
+        # the loss gate refused every candidate the budget would have allowed
+        "gain_gate_bound": gate_bound,
+        "max_p_loss": MAX_P_LOSS,
         "risk_budget": round(budget, 2),
         "hard_cap": hard_cap,
         "candidates": int(len(fractions)) + 1,
