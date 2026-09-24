@@ -1219,6 +1219,9 @@ def draft_directives(inventory, ads, elasticity, margins,
                     "marginal_roas": roas or None,
                     "avg_margin": avg_margin,
                     "horizon_days": MEASUREMENT_HORIZON_DAYS,
+                    "incrementality": (r.get("details") or {}).get("incrementality"),
+                    "clv_multiplier": (r.get("details") or {}).get("clv_multiplier"),
+                    "clv_basis": (r.get("details") or {}).get("clv_basis"),
                 },
             ))
 

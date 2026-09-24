@@ -199,7 +199,8 @@ def _bleed_terms(rows: list[dict]) -> list[dict]:
 
 
 def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
-        incrementality: float | None = None, incrementality_basis: str | None = None) -> list[dict]:
+        incrementality: float | None = None, incrementality_basis: str | None = None,
+        clv_multiplier: float | None = None, clv_basis: str | None = None) -> list[dict]:
     """`incrementality` is ι from models/incrementality.py: the ratio of the
     total-sales response to the attributed-sales response. When its basis is an
     executed switchback the break-even is computed on ι-adjusted attribution
@@ -207,9 +208,19 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
     kept beside it; an observational ι is published as information only."""
     threshold = 1.0 / avg_margin if avg_margin and avg_margin > 0 else 1.0
     adjusted = None
+    # ι scales what an attributed dollar is worth; a calibrated lifetime-value
+    # multiplier scales what a first order is worth. Both divide the threshold.
+    factor = 1.0
+    if incrementality is not None and float(incrementality) > 0 and incrementality_basis == "switchback":
+        factor *= float(incrementality)
+    if clv_multiplier is not None and float(clv_multiplier) > 0 and clv_basis == "calibrated":
+        factor *= float(clv_multiplier)
     if incrementality is not None and float(incrementality) > 0:
         adjusted = threshold / float(incrementality)
     use_adjusted = adjusted is not None and incrementality_basis == "switchback"
+    threshold_used = threshold / factor if factor != 1.0 else threshold
+    if factor != 1.0:
+        adjusted, use_adjusted = threshold_used, True
 
     terms_by_campaign: dict[str, list[dict]] = {}
     for row in data["ppc_search_terms"]:
@@ -250,7 +261,8 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
         if adjusted is not None:
             base["details"].update({"incrementality": num(incrementality, 4),
                                     "incrementality_basis": incrementality_basis,
-                                    "breakeven_marginal_roas_incremental": num(adjusted, 4)})
+                                    "breakeven_marginal_roas_incremental": num(adjusted, 4),
+                                    "clv_multiplier": num(clv_multiplier, 4), "clv_basis": clv_basis})
         if len(points) < MIN_POINTS:
             results.append({**base, "status": "insufficient_data"})
             continue

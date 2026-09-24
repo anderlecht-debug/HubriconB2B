@@ -63,7 +63,7 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_allocation, ad_efficiency, anomaly, cash_orders, cashflow, cross_price, elasticity, forecast, health_score,
+    ad_allocation, ad_efficiency, anomaly, cash_orders, cashflow, clv, cross_price, elasticity, forecast, health_score,
     incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
     seasonality,
 )
@@ -79,6 +79,7 @@ CHANNEL_TABLES = (
     "ppc_spend",
     "inventory_levels",
     "settlement_transactions",
+    "customer_orders",
 )
 # Amazon's bleed exports. They describe a warehouse holding a seller's units;
 # a Shopify store has none, so a Shopify run loads nothing from them rather
@@ -91,7 +92,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "cashorders",
+              "clv", "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "cash", "cashorders",
               "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
@@ -423,10 +424,22 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                      f"{obs['reading']}" if obs["status"] == "ok" else f"observational {obs['status']}")
                   + (f"; switchback ι {incr['incrementality_for_breakeven']:.2f} adjusts the break-even"
                      if incr.get("incrementality_for_breakeven") is not None else ""))
+        clv_out = None
+        if "clv" in wanted:
+            clv_out = clv.run(data.get("customer_orders") or [], margin_rows, today, channel=channel)
+            _save_output(db, run_id, client["id"], "clv", clv_out)
+            print("  lifetime value: "
+                  + (f"{float(clv_out['expected_repeats_52w']):.2f} repeat orders per customer over a year, "
+                     f"multiplier {float(clv_out['clv_multiplier']):.2f}× on the allowable acquisition cost "
+                     f"(holdout actual/predicted {clv_out['calibration']['actual_over_predicted']})"
+                     if clv_out["status"] in ("ok", "poorly_calibrated", "uncalibrated") else clv_out["status"])
+                  + (" — moves the ad break-even" if clv_out["status"] == "ok" else ""))
         if "ads" in wanted:
             iota = (incr or {}).get("incrementality_for_breakeven")
+            mult = float(clv_out["clv_multiplier"]) if clv_out and clv_out.get("status") == "ok" else None
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
-                                         incrementality_basis="switchback" if iota is not None else None)
+                                         incrementality_basis="switchback" if iota is not None else None,
+                                         clv_multiplier=mult, clv_basis="calibrated" if mult else None)
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
         if "recovery" in wanted and not channels.has_recovery(channel):
             print("  recovery: not applicable to Shopify (no reimbursement window)")

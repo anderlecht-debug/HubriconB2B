@@ -567,6 +567,38 @@ opposite way, so both are stated and neither is corrected. And no export links a
 campaign to the SKUs it advertises, so the total is the account's total: diluted, not
 biased.
 
+### 4d. Lifetime value, for a store that knows its customers
+
+**What it computes** (`models/clv.py`, Shopify only). The break-even in §4 is a
+first-order break-even. For anything people reorder that is too strict: a customer
+worth three orders justifies three times the acquisition spend. BG/NBD (Fader, Hardie
+and Lee 2005) — a Poisson buying rate per customer, Gamma across customers, a dropout
+coin after each purchase, Beta across customers — fitted by maximum likelihood on each
+customer's repeat count, recency and age in weeks; Gamma–Gamma (Fader and Hardie 2013)
+for the value of an order. Expected repeats over the next 52 weeks per customer by the
+closed form; expected value per order by the conditional mean. The customer is a
+SHA-256 of the lower-cased email salted with the client id (`customer_orders`), and the
+email is never stored.
+
+**The multiplier.** 1 + E[repeats over 52 weeks] × (repeat value ÷ first-order value),
+discounted; `ad_efficiency` divides the break-even threshold by it, so the marginal
+attributed dollar need only return 1/(m × multiplier), and the first-order break-even
+stays on the row beside it. The interval is a parametric bootstrap from the inverse
+Hessian at the maximum, with a Monte Carlo error.
+
+**Calibration is not assumed.** Fitted on the first three quarters of the calendar and
+asked to predict the last quarter's repeats; actual over predicted is published, and
+outside [0.7, 1.3] the multiplier is `poorly_calibrated` and moves nothing. The
+frequency–value correlation is published because Gamma–Gamma assumes it away.
+
+**Refusals.** Under 100 customers or 26 weeks (`insufficient_data`); Amazon
+(`not_applicable` — no Amazon export carries a customer identity, and Subscribe & Save
+is in none of them).
+
+**What it cannot tell you.** Which campaign acquired which customer (the acquisition
+cost is blended); whether last year's cohorts describe next year's; a customer whose
+email changed.
+
 ---
 
 ## 5. Inventory

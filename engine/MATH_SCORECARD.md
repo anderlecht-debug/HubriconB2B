@@ -621,6 +621,24 @@ against the catalog is pulled toward its own summer but not all the way on one s
 September's reorder exceeds March's for the peaked SKU; the cone's fourth quarter is
 richer than its first. `tests/test_seasonality.py`, 6 tests.
 
+### Iteration 23 — part 9: what a customer is worth
+
+**Objection.** The ad break-even values a customer at one order. A store selling
+consumables under-spends against every competitor who knows better.
+
+**Change.** `models/clv.py`: BG/NBD and Gamma–Gamma by maximum likelihood on a hashed
+customer key the Shopify orders parser now writes (the email is never stored), a
+52-week repeat expectation and value with a parametric-bootstrap band, a holdout
+calibration that refuses the multiplier outside [0.7, 1.3], and the multiplier dividing
+the ad break-even threshold when calibrated. Amazon is `not_applicable`.
+
+**Measured.** On two thousand customers simulated from the model's own story the
+fitted repeat expectation matches the truth within 25%, the Gamma–Gamma population
+mean within 15%, the holdout ratio sits inside the band, and the multiplier carries a
+band; 80 customers refuse, 20 weeks refuse; the parser splits nothing on email case or
+whitespace and salts keys per client; a calibrated 2× multiplier raises the break-even
+spend and an uncalibrated one moves nothing. `tests/test_clv.py`, 6 tests.
+
 ---
 
 ## Outcome Alignment

@@ -42,7 +42,7 @@ def _one(report_type: str, fixture: str, upload: dict | None = None):
 
 
 def _orders(upload: dict | None = None) -> dict[tuple[str, str], dict]:
-    _, rows, _ = _one("shopify_orders", "shopify_orders_clean.csv", upload)
+    _, rows, _ = _parse("shopify_orders", "shopify_orders_clean.csv", upload)[0]
     return {(r["sku"], r["period_start"]): r for r in rows}
 
 
@@ -61,7 +61,8 @@ def _orders(upload: dict | None = None) -> dict[tuple[str, str], dict]:
 
 
 def test_orders_land_as_monthly_sku_economics_rows():
-    table, rows, key = _one("shopify_orders", "shopify_orders_clean.csv")
+    # the orders export feeds two tables since 2026-09-23; the first is the one under test here
+    table, rows, key = _parse("shopify_orders", "shopify_orders_clean.csv")[0]
     assert table == "sku_economics"
     assert key == "client_id,channel,sku,period_start,period_end"
     assert {(r["sku"], r["period_start"], r["period_end"]) for r in rows} == {
@@ -489,7 +490,7 @@ def test_is_total_row_matches_googles_trailers_and_not_a_real_search_term():
 def test_parse_all_normalises_one_and_two_table_parsers():
     """One export may feed two tables; the CLI never has to care which."""
     for report_type, fixture, n_tables in [
-        ("shopify_orders", "shopify_orders_clean.csv", 1),
+        ("shopify_orders", "shopify_orders_clean.csv", 2),
         ("shopify_products", "shopify_products_clean.csv", 2),
         ("shopify_inventory", "shopify_inventory_clean.csv", 1),
         ("shopify_payouts", "shopify_payouts_clean.csv", 1),
