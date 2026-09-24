@@ -586,7 +586,9 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
             "module": d["module"],
             "kind": d["kind"],
             "dedupe_key": key,
-            "evidence": d["evidence"],
+            # the drafting score is not a column; it rides in evidence so the
+            # issue pass can break ties on it
+            "evidence": {**(d["evidence"] or {}), "score": round(float(d.get("score") or 0), 4)},
             "mandate": d["mandate"],
             "action_text": d["action_text"],
             "expected_impact_usd": d["expected_impact_usd"],

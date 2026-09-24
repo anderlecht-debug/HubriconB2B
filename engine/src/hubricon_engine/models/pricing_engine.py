@@ -416,6 +416,30 @@ def summarize_delta(delta: np.ndarray) -> dict:
     }
 
 
+def certainty_equivalent(delta, tol: float) -> float:
+    """E[delta] − Var[delta] / (2·tol): the certainty equivalent under quadratic
+    utility, with `tol` the dollar risk tolerance. The objective `robust_step`
+    sizes a price step by, exposed so every other module that chooses among
+    uncertain moves (budget reallocation, markdown depth) uses the same rule
+    rather than a copy of it. −inf on an empty or non-finite sample."""
+    d = np.asarray(delta, dtype=float).ravel()
+    d = d[np.isfinite(d)]
+    if d.size == 0:
+        return float("-inf")
+    tol = max(abs(float(tol)), 1e-9)
+    return float(d.mean() - d.var() / (2.0 * tol))
+
+
+def es5(delta, alpha: float = 0.05) -> float:
+    """Expected shortfall at `alpha`: the mean of the worst `alpha` of outcomes.
+    The feasibility constraint a move must clear against the risk budget."""
+    d = np.sort(np.asarray(delta, dtype=float).ravel())
+    d = d[np.isfinite(d)]
+    if d.size == 0:
+        return float("-inf")
+    return float(d[:max(1, int(alpha * d.size))].mean())
+
+
 def trailing_monthly_net(margin_row: dict) -> float:
     """The SKU's own net for a 30-day month, from the period the promise is
     priced off. The denominator of the risk budget: what a step is allowed to

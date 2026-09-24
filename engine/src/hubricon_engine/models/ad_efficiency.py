@@ -74,6 +74,56 @@ def _fit_curve(spend: np.ndarray, sales: np.ndarray, with_cov: bool = False):
         return (None, None, None) if with_cov else (None, None)
 
 
+def draw_params(model: str, params, cov, draws: int = CURVE_DRAWS,
+                rng: np.random.Generator | None = None) -> np.ndarray | None:
+    """Parameter draws from the fit's asymptotic normal posterior, in draw order,
+    with every draw outside the fit's own bounds rejected — which is how the
+    boundary constraints carry through to anything computed on the draws.
+
+    None when the covariance cannot support a draw: not finite, a zero diagonal
+    (an exactly-fitted response whose covariance is zero because the likelihood
+    is flat, not because the parameters are known), or no draw inside the
+    bounds. Shared by the per-campaign interval, the budget allocation and the
+    measurement pass, so every one of them draws the same posterior."""
+    if cov is None or not np.all(np.isfinite(cov)):
+        return None
+    cov = np.asarray(cov, dtype=float)
+    if np.any(np.diag(cov) <= 0):
+        return None
+    rng = rng or np.random.default_rng(CURVE_SEED)
+    try:
+        sample = rng.multivariate_normal(np.asarray(params, dtype=float), cov, size=int(draws))
+    except (ValueError, np.linalg.LinAlgError):
+        return None
+    keep = (sample[:, 0] > 0) & (sample[:, 1] > 0)   # a is a ceiling, k a scale
+    if model == "hill":
+        keep &= (sample[:, 2] >= 0.5) & (sample[:, 2] <= 3.0)
+    accepted = sample[keep]
+    return accepted if len(accepted) else None
+
+
+def curve_values(model: str, theta, spend) -> np.ndarray:
+    """Sales at every spend level for every parameter draw: shape (draws, spends).
+    `theta` may be one parameter vector or a (draws, p) array."""
+    theta = np.atleast_2d(np.asarray(theta, dtype=float))
+    s = np.asarray(spend, dtype=float).reshape(1, -1)
+    if model == "hill":
+        a, k, h = theta[:, 0:1], theta[:, 1:2], theta[:, 2:3]
+        return a * s**h / (k**h + s**h)
+    a, b = theta[:, 0:1], theta[:, 1:2]
+    return a * np.log1p(b * s)
+
+
+def curve_marginals(model: str, theta, spend) -> np.ndarray:
+    """Marginal ROAS (dSales/dSpend) at every spend level for every draw, by the
+    same central difference `_marginal` uses. Shape (draws, spends)."""
+    s = np.asarray(spend, dtype=float)
+    eps = np.maximum(s, 1.0) * 1e-4
+    lo = np.maximum(s - eps, 0.0)
+    hi = s + eps
+    return (curve_values(model, theta, hi) - curve_values(model, theta, lo)) / (hi - lo).reshape(1, -1)
+
+
 def curve_uncertainty(model: str, params, cov, current_spend: float, max_spend: float,
                       threshold: float, draws: int = CURVE_DRAWS) -> dict:
     """Intervals on marginal ROAS and break-even spend, from the fit's own
@@ -85,24 +135,12 @@ def curve_uncertainty(model: str, params, cov, current_spend: float, max_spend: 
     `basis: "unavailable"` — and no interval — when the covariance is not finite
     or no draw lands inside the bounds."""
     out = {"basis": "unavailable", "draws": 0}
-    if cov is None or not np.all(np.isfinite(cov)):
-        return out
-    if np.any(np.diag(np.asarray(cov, dtype=float)) <= 0):
-        # an exactly-fitted response: the covariance is zero because the
-        # likelihood is flat, not because the parameters are known
-        return out
-    try:
-        sample = np.random.default_rng(CURVE_SEED).multivariate_normal(
-            np.asarray(params, dtype=float), np.asarray(cov, dtype=float), size=int(draws))
-    except (ValueError, np.linalg.LinAlgError):
+    sample = draw_params(model, params, cov, draws)
+    if sample is None:
         return out
 
     marginals, breakevens = [], []
     for draw in sample:
-        if draw[0] <= 0 or draw[1] <= 0:
-            continue   # outside the fit's own bounds: a is a ceiling, k a scale
-        if model == "hill" and not (0.5 <= draw[2] <= 3.0):
-            continue
         marginal = _marginal(model, tuple(draw), current_spend)
         if not np.isfinite(marginal):
             continue
@@ -216,7 +254,14 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None)
         breakeven = _breakeven(model, params, float(spend.max()), threshold)
         uncertainty = curve_uncertainty(model, params, cov, current_spend,
                                         float(spend.max()), threshold)
-        base["details"] = {**base["details"], "uncertainty": uncertainty}
+        # The covariance itself rides along so a later module — the budget
+        # allocation, the measurement pass — can redraw the SAME posterior
+        # instead of trusting the point estimate. None when it is not finite.
+        cov_list = ([[num(v, 8) for v in row] for row in np.asarray(cov, dtype=float)]
+                    if cov is not None and np.all(np.isfinite(cov)) else None)
+        base["details"] = {**base["details"], "uncertainty": uncertainty,
+                           "curve_cov": cov_list, "max_spend": num(float(spend.max())),
+                           "mean_sales": num(float(sales.mean()))}
         results.append(
             {
                 **base,

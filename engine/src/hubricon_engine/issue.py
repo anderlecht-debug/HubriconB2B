@@ -125,9 +125,12 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     for d in drafts:
         if d.get("mandate") == "standing" and not mandate.get(d.get("module"), {}).get("standing"):
             d["mandate"] = "explicit"
-    # draft_directives already ranks by score; expected dollars break ties so a
-    # promise with a number beats one without.
-    drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0)), reverse=True)
+    # Expected dollars first, so a promise with a number beats one without; the
+    # drafting score (carried in evidence since 2026-09-23) breaks ties, which is
+    # what lets an information purchase — a price experiment, a switchback —
+    # reach the client at all rather than sorting last forever behind zero.
+    drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0),
+                               float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
     chosen = drafts[:limit]
     out = {"issued": 0, "notified": False, "held": max(0, len(drafts) - len(chosen))}
     if not chosen:

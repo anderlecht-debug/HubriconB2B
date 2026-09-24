@@ -95,7 +95,8 @@ def _draft(module: str, kind: str, subject, score: float, expected: float | None
 
 
 def downside_guard(draft: dict, margin_row: dict | None,
-                   share: float = DOWNSIDE_GUARD_SHARE) -> dict:
+                   share: float = DOWNSIDE_GUARD_SHARE,
+                   monthly_net: float | None = None) -> dict:
     """Route a draft to an explicit yes when its bad case is too big, in place.
 
     A directive that carries a simulated profit-delta distribution carries its
@@ -106,12 +107,17 @@ def downside_guard(draft: dict, margin_row: dict | None,
 
     Drafts with no delta distribution are left alone: this guard is about a
     quantified downside, and inventing one in order to gate on it would be the
-    thing the engine does not do."""
+    thing the engine does not do.
+
+    `monthly_net` states the budget's base directly, for a draft whose subject is
+    not one SKU — a campaign set, a variant family — and so has no margin row to
+    read a trailing net off."""
     evidence = draft.get("evidence") or {}
     p5 = evidence.get("delta_p5")
-    if p5 is None or margin_row is None:
+    if p5 is None or (margin_row is None and monthly_net is None):
         return draft
-    monthly_net = trailing_monthly_net(margin_row)
+    if monthly_net is None:
+        monthly_net = trailing_monthly_net(margin_row)
     budget = share * max(monthly_net, 0.0)
     downside = max(0.0, -float(p5))
     evidence["downside_guard"] = {

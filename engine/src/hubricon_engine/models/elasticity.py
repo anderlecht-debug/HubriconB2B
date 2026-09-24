@@ -213,6 +213,36 @@ def _tau_squared(estimates: np.ndarray, variances: np.ndarray) -> float:
     return max(0.0, (q - (len(estimates) - 1)) / denom)
 
 
+def eb_shrink(estimates, ses) -> dict:
+    """Empirical-Bayes shrinkage of per-item estimates toward their pool.
+
+    ε_shrunk = w·ε̂ + (1 − w)·μ with w = τ² / (τ² + se²), τ² by DerSimonian–Laird,
+    μ the precision-weighted pool mean. The posterior SE carries both terms,
+    w·se² + (1 − w)²·var(μ). A zero SE floors at the smallest positive SE in
+    the pool so the weighting stays finite; an item with no sampling error is
+    never shrunk. Returns arrays aligned with the inputs plus the pool
+    statistics, so the caller writes the record and nothing else."""
+    est = np.asarray(estimates, dtype=float)
+    ses = np.asarray(ses, dtype=float)
+    positive = ses[ses > 0]
+    floor = float(positive.min()) if positive.size else 1.0
+    variances = np.maximum(ses, floor) ** 2
+    tau2 = _tau_squared(est, variances)
+    precision = 1.0 / (variances + tau2)
+    mu = float((precision * est).sum() / precision.sum())
+    var_mu = float(1.0 / precision.sum())
+    weights = np.empty(len(est))
+    for i, (own_se, var) in enumerate(zip(ses, variances)):
+        if own_se <= 0 or tau2 + var <= 0:
+            weights[i] = 1.0
+        else:
+            weights[i] = tau2 / (tau2 + var)
+    shrunk = weights * est + (1.0 - weights) * mu
+    post_se = np.sqrt(np.maximum(weights * variances + (1.0 - weights) ** 2 * var_mu, 0.0))
+    return {"mu": mu, "var_mu": var_mu, "tau2": tau2, "weights": weights,
+            "shrunk": shrunk, "post_se": post_se}
+
+
 def _shrink(rows: list[dict], group_of) -> None:
     """Empirical-Bayes shrinkage of each fitted ε toward its pool, in place.
 
@@ -232,11 +262,6 @@ def _shrink(rows: list[dict], group_of) -> None:
     for key, members in pools.items():
         estimates = np.array([float(r["elasticity"]) for r in members], dtype=float)
         ses = np.array([float(r["std_err"] or 0.0) for r in members], dtype=float)
-        # a zero SE would be infinite precision; floor it at the smallest
-        # positive SE in the pool so the weighting stays finite
-        positive = ses[ses > 0]
-        floor = float(positive.min()) if positive.size else 1.0
-        variances = np.maximum(ses, floor) ** 2
         detail = {"pool": key[-1], "pool_n": len(members)}
 
         if len(members) < MIN_POOL_ITEMS:
@@ -248,22 +273,12 @@ def _shrink(rows: list[dict], group_of) -> None:
                                      "shrinkage": "none_pool_too_small"})
             continue
 
-        tau2 = _tau_squared(estimates, variances)
-        precision = 1.0 / (variances + tau2)
-        mu = float((precision * estimates).sum() / precision.sum())
-        var_mu = float(1.0 / precision.sum())
+        eb = eb_shrink(estimates, ses)
+        tau2, mu = eb["tau2"], eb["mu"]
 
-        for r, est, var in zip(members, estimates, variances):
-            own_se = float(r["std_err"] or 0.0)
-            if own_se <= 0:
-                weight = 1.0
-            elif tau2 + var <= 0:
-                weight = 1.0
-            else:
-                weight = tau2 / (tau2 + var)
-            shrunk = weight * est + (1.0 - weight) * mu
-            post_var = weight * var + (1.0 - weight) ** 2 * var_mu
-            post_se = float(np.sqrt(max(post_var, 0.0)))
+        for r, est, weight, shrunk, post_se in zip(members, estimates, eb["weights"],
+                                                   eb["shrunk"], eb["post_se"]):
+            weight, shrunk, post_se = float(weight), float(shrunk), float(post_se)
             t_crit = float(r["details"].get("t_critical") or 0.0)
             r["details"].update({
                 **detail,
