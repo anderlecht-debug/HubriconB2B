@@ -1160,6 +1160,31 @@ and the price step halves its risk tolerance for the cycle. The two fits share m
 of their data, so z overstates their independence — the conservative direction for a
 flag that only shortens a step; stated, not corrected.
 
+### 9c. The first thirty days, the headline's band, and the book
+
+**The first sweep** (`issue.FIRST_WIN_WEIGHT`). Before anything has been measured, a
+client has seen nothing come true, and the thirty days where churn is highest are the
+days one measured dollar buys months of patience. The first issue therefore ranks
+drafts by expected dollars times how soon the kind can bank — measured from a
+fortnight of daily spend 1.0, from the next monthly export 0.5, on Amazon's clock 0.4,
+per absent month 0.3, never 0 — and later sweeps rank by dollars as before. Every kind
+the engine drafts has a weight, and a kind without one fails a test. `speed.summary`
+reports the median days from the first issue to the first banked dollar, which is the
+number this ranking exists to shorten.
+
+**The headline's band** (`value.compute`). The proven figure was a point. A measured
+price step, markdown or reallocation carries the distribution it was banked from, so
+the headline now carries the sum of those 5th and 95th percentiles with every other
+dollar at its point, and the record line and the memo print the range when at least
+half the proven dollars have one. The basis says what share did.
+
+**The book** (`models/benchmark.py`). A client's TACoS, net margin, stockout share, fee
+bleed share and realisation ratio as percentiles among the other consenting clients'
+latest runs — the calibration consent of terms §10, and nothing else — each with a band
+from resampling the book and the book's median beside it. Under ten consenting clients
+the whole comparison refuses and says how many short, because a percentile among four
+is a coin flip with a decimal point. No other client's number leaves the module.
+
 ## 10. What this engine cannot tell you — the short list
 
 If you read one section, read this one.

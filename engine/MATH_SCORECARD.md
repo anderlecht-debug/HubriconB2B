@@ -804,6 +804,25 @@ back in week one with a ratio above one and bands that contain both; a dear
 acquisition takes longer or reports None; the fitted payback agrees with the
 generator's own within four weeks. `tests/test_clv.py`, 7 tests.
 
+### Iterations 34–36 — win, remind, embed
+
+**Objection.** The first issue ranked by dollars, so a price step a monthly export away
+could outrank a bleed cut provable in a fortnight; the headline the retainer rests on
+was a point with no band; and nothing placed a client against the book.
+
+**Change.** A first-sweep ranking by expected dollars times time-to-bank
+(`issue.FIRST_WIN_WEIGHT`, every kind weighted, a missing weight fails a test) and the
+first-issue-to-first-dollar median in `speed.summary`; a 5th–95th band on the proven
+figure from the measured moves' own distributions, printed when at least half the
+dollars carry one; `models/benchmark.py` placing a client among the consenting book with
+resampled bands and a refusal under ten clients.
+
+**Measured.** A $900 bleed cut outranks a $1,200 price step on a first sweep and not
+after; two banded steps and a recovery give $350–$1,800 around $900 and a ledger of
+recoveries alone gives a point; a client's ratios come from its own results, a book of
+twelve places it with a band, a book of nine refuses. `tests/test_issue.py`,
+`tests/test_headline_and_benchmark.py`, 4 tests.
+
 ---
 
 ## Outcome Alignment

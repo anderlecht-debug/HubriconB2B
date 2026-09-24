@@ -106,6 +106,35 @@ def close_veto_windows(db, client: dict, channel: str, dry: bool = False) -> dic
     return out
 
 
+# How soon a kind can bank, as a weight on its expected dollars for a client's
+# FIRST sweep: the thirty days where churn is highest and doubt loudest, when
+# one measured dollar buys months of patience. Measured from daily spend
+# inside a fortnight, 1.0; from the next monthly export, 0.5; on Amazon's
+# clock, 0.4; per absent month, 0.3; never banked, 0. Later sweeps rank by
+# dollars as before. A kind missing from this table is a test failure.
+FIRST_WIN_WEIGHT = {
+    "ad_bleed_terms": 1.0, "campaign_trim": 1.0, "spend_step": 1.0, "budget_reallocation": 1.0, "branded_pause": 1.0,
+    "price_step": 0.5, "markdown": 0.5, "negative_margin_sku": 0.5, "fee_anomaly": 0.5, "referral_anomaly": 0.5,
+    "low_inventory_fee": 0.5, "aged_surcharge": 0.5, "peak_storage_premium": 0.5,
+    "recovery_filing": 0.4,
+    "sku_exit": 0.3,
+    "inventory_reorder": 0.0, "expedite_air": 0.0, "budget_order_set": 0.0, "liquidation": 0.0,
+    "price_experiment": 0.0, "ad_switchback": 0.0, "cannibalisation_watch": 0.0,
+    "conversion_watch": 0.0, "traffic_watch": 0.0, "buybox_watch": 0.0, "settlement_step": 0.0,
+    "cpc_drift": 0.0, "conversion_drift": 0.0,
+}
+
+
+def first_win_weight(kind: str | None) -> float:
+    return float(FIRST_WIN_WEIGHT.get(kind or "", 0.0))
+
+
+def is_first_sweep(db, client_id: str) -> bool:
+    """No directive has been measured yet: the client has seen nothing come true."""
+    done = db.table("directives").select("id").eq("client_id", client_id).eq("status", "done").execute().data
+    return not done
+
+
 def issue_drafts(db, client: dict, channel: str, portal_url: str,
                  send: bool = False, dry: bool = False, limit: int = MAX_ISSUED_PER_SWEEP) -> dict:
     """Promote the highest-value drafts, tell the client, then open the window.
@@ -129,10 +158,19 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     # drafting score (carried in evidence since 2026-09-23) breaks ties, which is
     # what lets an information purchase — a price experiment, a switchback —
     # reach the client at all rather than sorting last forever behind zero.
-    drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0),
-                               float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
+    first_sweep = is_first_sweep(db, client["id"])
+    if first_sweep:
+        # the first issue leads with what can be SEEN to work soonest
+        drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0) * first_win_weight(d.get("kind")),
+                                   float(d.get("expected_impact_usd") or 0),
+                                   float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
+    else:
+        drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0),
+                                   float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
     chosen = drafts[:limit]
-    out = {"issued": 0, "notified": False, "held": max(0, len(drafts) - len(chosen))}
+    out = {"issued": 0, "notified": False, "held": max(0, len(drafts) - len(chosen)),
+           "ranking": "first_win" if first_sweep else "expected_dollars",
+           "order": [d.get("id") for d in chosen]}
     if not chosen:
         return out
 

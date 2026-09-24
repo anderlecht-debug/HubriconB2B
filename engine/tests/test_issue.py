@@ -249,3 +249,26 @@ def test_the_issue_flag_only_ever_issues_through_the_veto_email(monkeypatch, cap
     db = FakeDB([_d(1)])
     cli.cmd_directives(_directives_args(db, monkeypatch, issue_flag=False))
     assert len(calls) == 1 and db.rows("directives")[0]["status"] == "draft" and len(sent) == 1
+
+
+def test_the_first_sweep_leads_with_what_can_be_seen_to_work_soonest():
+    """Before anything has been measured, a $900 bleed cut (banked from the
+    next fortnight of daily spend) outranks a $1,200 price step (a monthly
+    export away). Once one directive is done, dollars rank as before."""
+    bleed = _d(1, kind="ad_bleed_terms", expected_impact_usd=900.0)
+    step = _d(2, kind="price_step", module="pricing", expected_impact_usd=1200.0)
+    first = issue.issue_drafts(FakeDB([bleed, step]), CLIENT, "amazon", "https://x", dry=True)
+    assert first["ranking"] == "first_win" and first["order"] == ["d1", "d2"]
+    measured = _d(9, status="done", measured_impact_usd=50.0)
+    later = issue.issue_drafts(FakeDB([bleed, step, measured]), CLIENT, "amazon", "https://x", dry=True)
+    assert later["ranking"] == "expected_dollars" and later["order"] == ["d2", "d1"]
+    # every kind the engine drafts has a weight; a new kind without one fails here
+    from hubricon_engine import directives as dmod, measurement
+    kinds = set(dmod.STANDING) | set(measurement.UNBANKABLE_KINDS) | {
+        "recovery_filing", "liquidation", "low_inventory_fee", "aged_surcharge", "peak_storage_premium",
+        "fee_anomaly", "referral_anomaly", "negative_margin_sku", "markdown", "sku_exit", "budget_reallocation"}
+    assert kinds <= set(issue.FIRST_WIN_WEIGHT), kinds - set(issue.FIRST_WIN_WEIGHT)
+    from hubricon_engine import speed
+    s = speed.summary([{"exports_landed_at": "2026-08-01T00:00:00+00:00", "first_issue_at": "2026-08-01T12:00:00+00:00",
+                        "first_value_at": "2026-08-15T12:00:00+00:00"}])
+    assert s["median_days_first_issue_to_first_value"] == 14.0

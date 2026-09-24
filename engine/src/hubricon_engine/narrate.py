@@ -114,6 +114,10 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             facts[f"health_driver_{i}_dollars"] = {"value": _money(d["dollars_at_stake"]), "label": f"dollars behind health driver {i}"}
     if value:
         facts["value_total"] = {"value": _money(value["value_total"]), "label": "proven to date on the Profit Record (moves + recovered)"}
+        basis = value.get("value_interval_basis") or {}
+        if float(basis.get("banded_share_of_measured") or 0) >= 0.5 and value.get("value_p5") is not None:
+            facts["value_range"] = {"value": f"{_money(value['value_p5'])} to {_money(value['value_p95'])}",
+                                    "label": "the range around the proven figure, from the measured moves' own distributions"}
         facts["fees_paid"] = {"value": _money(value["fees_paid"]), "label": "fees invoiced to date"}
         if value.get("roi_multiple") is not None:
             facts["roi_multiple"] = {"value": f"{float(value['roi_multiple']):.1f}×", "label": "value delivered divided by fees paid"}

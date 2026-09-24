@@ -2137,6 +2137,25 @@ def cmd_cash(args):
               f"${w['amount']:,.0f} — {w['sku']}")
 
 
+def cmd_benchmark(args):
+    """Where the client sits against the consenting book, as percentiles."""
+    from .models import benchmark
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    out = benchmark.run(db, client["id"])
+    if out["status"] != "ok":
+        print(f"{out['status']}: {out['basis']}")
+        return
+    print(f"{client['company_name'] or client['contact_email']} against {out['n_clients']} consenting clients:")
+    for ratio, r in out["ratios"].items():
+        if r.get("status") != "ok":
+            print(f"  {ratio:<18} {r['status']}")
+            continue
+        print(f"  {ratio:<18} {float(r['value']):8.3f}  percentile {float(r['percentile']):5.0%} "
+              f"({float(r['percentile_p5']):.0%}–{float(r['percentile_p95']):.0%}), book median {float(r['book_median']):.3f} — {r['reading']}")
+
+
 def cmd_stress(args):
     """The 'what would break you' table from the latest run."""
     db = dbmod.connect()
@@ -3520,6 +3539,10 @@ def main():
     p.add_argument("--risk-share", dest="risk_share", type=float,
                    help="share of a month's net one move may put at risk before it needs an explicit yes (0.05–0.30)")
     p.set_defaults(fn=cmd_cash)
+
+    p = sub.add_parser("benchmark", help="where the client sits against the consenting book, as percentiles")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_benchmark)
 
     p = sub.add_parser("stress", help="what would break the account: fee rise, suppression, dearer clicks, late supplier, held payout")
     p.add_argument("client")
