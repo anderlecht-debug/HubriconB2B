@@ -121,13 +121,17 @@ def simulate(data: dict, truth: dict, out: dict, seed: int) -> dict:
     for name, c in truth["campaigns"].items():
         before = float(np.mean([p["spend"] for p in data["ppc_spend"] if p["campaign_name"] == name
                                 and p["report_date"] >= (TODAY - timedelta(days=30)).isoformat()]))
+        # the negated terms were a fixed daily amount with no sales: the
+        # campaign keeps its blended-spend curve, and a target set on it is
+        # met by spending the target less the waste (floored at a tenth)
         target = moves.get(name, before)
-        spend = max(0.1 * target, target - bled.get(name, 0.0))
-        camp[name] = {"before": before, "target": target, "spend_after": spend}
+        waste = bled.get(name, 0.0)
+        spend = max(0.1 * target, target - waste)
+        camp[name] = {"before": before, "target": target, "spend_after": spend, "waste": waste}
         for dd in range(28):
             day = (TODAY + timedelta(days=dd + 1)).isoformat()
             after_ppc.append({"campaign_name": name, "campaign_id": name, "report_date": day, "spend": spend,
-                              "sales": max(0.0, true_sales(name, target) + rng.normal(0, 12)),
+                              "sales": max(0.0, true_sales(name, spend + waste) + rng.normal(0, 12)),
                               "clicks": spend / 1.1, "impressions": spend * 40})
     realloc_truth = None
     if realloc is not None:
@@ -136,12 +140,14 @@ def simulate(data: dict, truth: dict, out: dict, seed: int) -> dict:
             if c.get("status") != "ok":
                 continue
             name = c["campaign_name"]
-            cur, rec = float(c["current"]), float(c["recommended"])
-            gain += avg_m * (true_sales(name, rec) - true_sales(name, cur)) - (rec - cur)
+            cur = float(c["current"])
+            eff = camp[name]["spend_after"] + camp[name]["waste"]   # the blended spend actually reached
+            gain += avg_m * (true_sales(name, eff) - true_sales(name, cur)) - (eff - cur)
         realloc_truth = 30.0 * gain
     trim_truth = {}
     for name, d in trims.items():
-        cur, new = float(d["evidence"]["current_spend"]), float(d["evidence"]["breakeven_used"])
+        cur = float(d["evidence"]["current_spend"])
+        new = camp[name]["spend_after"] + camp[name]["waste"]
         trim_truth[name] = 30.0 * ((cur - new) - avg_m * (true_sales(name, cur) - true_sales(name, new)))
     negated = {(x["campaign_name"], x["search_term"]) for d in out["drafts"] if d["kind"] == "ad_bleed_terms"
                for x in d["evidence"]["terms"]}
@@ -182,11 +188,14 @@ def inventory_truth(out: dict, truth: dict, after_price: dict, shock: dict, rng)
                                                               INVENTORY_PATHS))
         horizon = lead + float(r.get("review_days") or 7)
         max_days = int(np.ceil(horizon.max())) + 1
-        # monthly AR(1) shocks from September's, the month each day falls in
+        # monthly AR(1) shocks from the LAST OBSERVED month's, as they stand when
+        # the order is placed on the first of September: the oracle knows the
+        # model and every parameter, never the future (September's shock was
+        # a known number here until 2026-09-24, an optimum no one could reach)
         months = [(TODAY + timedelta(days=d)).month for d in range(max_days)]
         month_keys = sorted(set((TODAY + timedelta(days=d)).strftime("%Y-%m") for d in range(max_days)))
         sh = np.zeros((INVENTORY_PATHS, len(month_keys)))
-        sh[:, 0] = shock[s]
+        sh[:, 0] = rho * t["shock_last"] + rng.normal(0, sd * np.sqrt(1 - rho**2), INVENTORY_PATHS)
         for k in range(1, len(month_keys)):
             sh[:, k] = rho * sh[:, k - 1] + rng.normal(0, sd * np.sqrt(1 - rho**2), INVENTORY_PATHS)
         day_month = [month_keys.index((TODAY + timedelta(days=d)).strftime("%Y-%m")) for d in range(max_days)]
@@ -211,5 +220,11 @@ def inventory_truth(out: dict, truth: dict, after_price: dict, shock: dict, rng)
     ordering = [x for x in rows if x["orders"] or x["s_optimal"] > x["position"]]
     ce = sum(x["cost_engine"] for x in ordering)
     co = sum(x["cost_optimal"] for x in ordering)
+    # the criterion asks whether orders are BIGGER than the evidence pays for:
+    # the excess cost of ordering above the optimum, under-ordering apart
+    over = sum(x["cost_engine"] - x["cost_optimal"] for x in ordering if x["s_engine"] > x["s_optimal"])
+    under = sum(x["cost_engine"] - x["cost_optimal"] for x in ordering if x["s_engine"] < x["s_optimal"])
     return {"n": len(ordering), "cost_engine": ce, "cost_optimal": co,
-            "excess": (ce / co - 1.0) if co > 0 else None, "rows": ordering}
+            "excess": (ce / co - 1.0) if co > 0 else None,
+            "over_excess": (over / co) if co > 0 else None, "under_excess": (under / co) if co > 0 else None,
+            "rows": ordering}

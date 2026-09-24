@@ -482,6 +482,7 @@ def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None =
                 "elasticity_raw": (fit.get("details") or {}).get("epsilon_raw"),
                 "shrinkage_weight": (fit.get("details") or {}).get("shrinkage_weight"),
                 "std_err": fit.get("std_err"),
+                "eps_common_se": (fit.get("details") or {}).get("common_se"),
                 "ci95": (fit.get("details") or {}).get("ci95"),
                 "baseline_units": float(margin_row.get("units") or 0),
                 "baseline_revenue": float(margin_row.get("revenue") or 0),
@@ -559,6 +560,7 @@ def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: s
             "shrinkage_weight": (fit.get("details") or {}).get("shrinkage_weight"),
             "ci95": ci,
             "std_err": fit.get("std_err"),
+            "eps_common_se": (fit.get("details") or {}).get("common_se"),
             "baseline_units": float(margin_row.get("units") or 0),
             "baseline_revenue": float(margin_row.get("revenue") or 0),
             "baseline_cogs": float(margin_row["cogs"]) if margin_row.get("cogs") is not None else None,
@@ -957,6 +959,54 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
     return out
 
 
+def _latest_term_window(search_terms):
+    rows = [r for r in search_terms or [] if r.get("period_start") and r.get("period_end")]
+    if not rows:
+        return None
+    return max((str(r["period_start"]), str(r["period_end"])) for r in rows)
+
+
+def _campaign_window_spend(search_terms, campaigns) -> dict:
+    window = _latest_term_window(search_terms)
+    out = {}
+    for r in search_terms or []:
+        if window and (str(r.get("period_start")), str(r.get("period_end"))) == window and r.get("campaign_name") in campaigns:
+            out[r["campaign_name"]] = round(out.get(r["campaign_name"], 0.0) + float(r.get("spend") or 0), 2)
+    return out
+
+
+def _term_window_days(search_terms):
+    window = _latest_term_window(search_terms)
+    if not window:
+        return None
+    return (date.fromisoformat(window[1][:10]) - date.fromisoformat(window[0][:10])).days + 1
+
+
+TRIM_DRAWS = 400
+TRIM_MIN_PRODUCTIVE_SHARE = 0.25
+
+
+def _trim_net_draws(r: dict, new_spend: float, avg_margin: float):
+    """30 days of spend saved less the margin the fitted curve gives up
+    between today's spend and the trimmed one, on the curve's own parameter
+    draws. None without a curve and a covariance to draw from."""
+    from .models.ad_allocation import params_vector
+    from .models.ad_efficiency import CURVE_SEED, curve_values, draw_params
+    model = r.get("curve_model")
+    cov = (r.get("details") or {}).get("curve_cov")
+    if model not in ("hill", "log") or cov is None or not r.get("current_spend"):
+        return None
+    theta = draw_params(model, params_vector(r), np.asarray(cov, dtype=float), TRIM_DRAWS,
+                        np.random.default_rng(CURVE_SEED))
+    if theta is None or len(theta) < 50:
+        return None
+    cur = float(r["current_spend"])
+    vals = curve_values(model, theta, [cur, max(float(new_spend), 0.01)])
+    net = MEASUREMENT_HORIZON_DAYS * ((cur - float(new_spend)) - avg_margin * (vals[:, 0] - vals[:, 1]))
+    net = net[np.isfinite(net)]
+    return net if net.size >= 50 else None
+
+
 def trim_candidates(ads: list[dict], avg_margin: float) -> dict[str, dict]:
     """The campaigns a trim will be drafted for this run, with the break-even
     the trim is sized against — one rule, used by the trim loop below and by the
@@ -1177,7 +1227,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      cash_orders: dict | None = None,
                      assortment: dict | None = None,
                      risk_share: float | None = None,
-                     cash: dict | None = None) -> list[dict]:
+                     cash: dict | None = None,
+                     book_out: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1235,9 +1286,27 @@ def draft_directives(inventory, ads, elasticity, margins,
     funded_skus = {o["sku"] for o in (budget_set["evidence"]["orders"] if budget_set else [])}
     if budget_set:
         drafts.append(budget_set)
+    planned = ((cash or {}).get("details") or {}).get("wires") or []
+
+    def _in_plan(skus, day=None) -> float:
+        """What the cone's own plan already wires for these SKUs (on `day`, or
+        their first wire): the ruin a directive adds is only its difference.
+        Corrected 2026-09-24 — the guard charged every reorder in full on a
+        cone whose plan already paid for it, so a sweep of reorders read as
+        ruin on the model-risk bench when the plan itself did not."""
+        total, seen = 0.0, set()
+        for w in planned:
+            if w.get("sku") in skus and w["sku"] not in seen and (day is None or int(w.get("day") or 0) == day):
+                total += float(w.get("amount") or 0)
+                seen.add(w["sku"])
+        return total
+
     if budget_set:
-        first_day = min((int(w.get("day") or 0) for w in ((cash or {}).get("details") or {}).get("wires") or []), default=0)
-        ruin_guard(budget_set, cash, first_day, float(budget_set["evidence"].get("wire_total") or 0))
+        first_day = min((int(w.get("day") or 0) for w in planned), default=0)
+        covered = {o.get("sku") for o in budget_set["evidence"].get("orders") or [] if isinstance(o, dict)}
+        in_plan = _in_plan(covered)
+        budget_set["evidence"]["wire_in_plan_usd"] = round(in_plan, 2)
+        ruin_guard(budget_set, cash, first_day, float(budget_set["evidence"].get("wire_total") or 0) - in_plan)
     for r in inventory:
         if float(r["stockout_probability"] or 0) >= STOCKOUT_ALERT:
             if r["sku"] in funded_skus:
@@ -1248,7 +1317,9 @@ def draft_directives(inventory, ads, elasticity, margins,
                 rate = float(r.get("daily_velocity_mean") or 0)
                 position = int(r.get("on_hand_units") or 0) + int(r.get("inbound_units") or 0)
                 day = max(0, int((position - int(r.get("reorder_point") or 0)) / rate)) if rate > 0 else 0
-                ruin_guard(reorder, cash, day, float(reorder["evidence"]["wire_usd"]))
+                in_plan = _in_plan({r["sku"]}, day)
+                reorder["evidence"]["wire_in_plan_usd"] = round(in_plan, 2)
+                ruin_guard(reorder, cash, day, float(reorder["evidence"]["wire_usd"]) - in_plan)
             drafts.append(reorder)
             ex = _expedite_directive(rep_by_sku.get(r["sku"]), econ_by_sku.get(r["sku"]))
             if ex:
@@ -1284,16 +1355,38 @@ def draft_directives(inventory, ads, elasticity, margins,
                 # measurement caps the saving at how far the campaign's own
                 # spend actually fell, and that comparison is only honest
                 # between two totals of the same shape.
-                "campaign_baseline_spend": {
-                    r["campaign_name"]: float(r.get("current_spend") or 0)
-                    for r in ads if r.get("campaign_name") and r.get("bleed_terms")
-                },
+                # Corrected 2026-09-24: this held each campaign's DAILY spend,
+                # and the measurement caps the saving at how far the campaign's
+                # WINDOW total fell — a day against a month, so the cap zeroed
+                # every saving and no negation was ever banked. Now the
+                # campaign's search-term spend over the same export window.
+                "campaign_baseline_spend": _campaign_window_spend(search_terms, {r.get("campaign_name")
+                                                                              for r in ads if r.get("bleed_terms")}),
+                "campaign_baseline_basis": "search-term export window total",
+                "baseline_days": _term_window_days(search_terms),
                 "baseline_period_end": max((r.get("period_end") for r in ads
                                             if r.get("period_end")), default=None),
             },
         ))
 
     trims = trim_candidates(ads, avg_margin)
+    # zero-sale spend the negation above removes, per campaign per day: a trim
+    # on the same campaign is a budget ON TOP of it (break-even less the waste),
+    # and one whose target sits under a quarter of the productive spend left
+    # after the negation waits a cycle — the curve fitted on blended spend
+    # cannot size a cut that deep once the waste is gone (added 2026-09-24)
+    window_days = float(_term_window_days(search_terms) or 30)
+    waste_daily = {}
+    for r in ads:
+        for t in (r.get("bleed_terms") or []):
+            waste_daily[r.get("campaign_name")] = waste_daily.get(r.get("campaign_name"), 0.0) + float(t.get("spend") or 0) / window_days
+    for r in ads:
+        name = r.get("campaign_name")
+        if name in trims:
+            w = waste_daily.get(name, 0.0)
+            cur_ = float(r["current_spend"])
+            if w > 0 and trims[name]["breakeven"] - w < TRIM_MIN_PRODUCTIVE_SHARE * (cur_ - w):
+                trims.pop(name)
     for r in ads:
         if r.get("campaign_name") in trims:
             uncertainty = trims[r["campaign_name"]]["uncertainty"]
@@ -1305,6 +1398,23 @@ def draft_directives(inventory, ads, elasticity, margins,
             roas = float(r.get("marginal_roas") or 0)
             keep = max(0.0, min(1.0, roas * avg_margin)) if roas > 0 else 0.0
             net = excess * MEASUREMENT_HORIZON_DAYS * (1 - keep)
+            # Corrected 2026-09-24: the margin a trim gives up is the curve's
+            # own drop between the two spends, not the cut times the marginal
+            # return at today's spend — that return is the LOWEST on the cut,
+            # so the linear figure overstated every trim's net saving (the
+            # model-risk bench: true saving 0.58 of the promise). On the
+            # fitted curve's own draws when it has a covariance.
+            net_draws = _trim_net_draws(r, breakeven, avg_margin)
+            band = {}
+            if net_draws is not None:
+                net = float(np.quantile(net_draws, 0.5))
+                band = {"delta_p5": round(float(np.quantile(net_draws, 0.05)), 2),
+                        "delta_p50": round(net, 2),
+                        "delta_p95": round(float(np.quantile(net_draws, 0.95)), 2),
+                        "p_loss": round(float(np.mean(net_draws < 0)), 4),
+                        "curve_model": r.get("curve_model"), "curve_params": r.get("curve_params"),
+                        "curve_cov": (r.get("details") or {}).get("curve_cov"),
+                        "current_sales": r.get("current_sales"), "net_basis": "fitted curve, parameter draws"}
             drafts.append(_draft(
                 "advertising", "campaign_trim", r["campaign_name"],
                 score=excess,
@@ -1313,6 +1423,10 @@ def draft_directives(inventory, ads, elasticity, margins,
                     f"Trim “{r['campaign_name']}” toward its marginal break-even: "
                     f"${breakeven:,.0f} vs ${float(r['current_spend']):,.0f} today. "
                     f"The last dollars in are buying less than a dollar back."
+                    + (f" With this sweep's negative matches removing ${waste_daily[r['campaign_name']]:,.0f} a day "
+                       f"of zero-sale spend, set the daily budget to "
+                       f"${breakeven - waste_daily[r['campaign_name']]:,.0f}."
+                       if waste_daily.get(r["campaign_name"], 0.0) > 0.5 else "")
                     + (f" The fitted break-even sits between ${float(uncertainty['breakeven_p5']):,.0f} "
                        f"and ${float(uncertainty['breakeven_p95']):,.0f}; we trim to the cautious end."
                        if uncertainty.get("breakeven_p5") is not None else "")
@@ -1322,12 +1436,15 @@ def draft_directives(inventory, ads, elasticity, margins,
                     "current_spend": float(r["current_spend"]),
                     "breakeven_spend": float(r["breakeven_spend"]),
                     "breakeven_used": round(breakeven, 2),
+                    "negated_daily": round(waste_daily.get(r["campaign_name"], 0.0), 2),
+                    "budget_after_negation": round(breakeven - waste_daily.get(r["campaign_name"], 0.0), 2),
                     "breakeven_p5": uncertainty.get("breakeven_p5"),
                     "breakeven_p95": uncertainty.get("breakeven_p95"),
                     "p_below_breakeven": uncertainty.get("p_below_breakeven"),
                     "marginal_roas": roas or None,
                     "avg_margin": avg_margin,
                     "horizon_days": MEASUREMENT_HORIZON_DAYS,
+                    **band,
                     "incrementality": (r.get("details") or {}).get("incrementality"),
                     "clv_multiplier": (r.get("details") or {}).get("clv_multiplier"),
                     "clv_basis": (r.get("details") or {}).get("clv_basis"),
@@ -1470,4 +1587,12 @@ def draft_directives(inventory, ads, elasticity, margins,
                 ))
 
     drafts.sort(key=lambda d: d["score"], reverse=True)
+    # the sweep as one book: the standing directives' joint shortfall against
+    # the client's budget, and the sweep's cash moves together against the
+    # ruin line; demotions and deferrals land on the drafts themselves
+    from .models import portfolio
+    book = portfolio.run(drafts, margins, cash=cash, risk_share=risk_share)
+    if book_out is not None:
+        book_out.clear()
+        book_out.update(book)
     return drafts

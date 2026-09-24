@@ -173,10 +173,16 @@ def combined_ruin(out: dict) -> dict | None:
     floor = float(paths.get("ruin_floor") or 0.0)
     days = base.shape[1]
     flows = np.zeros(days)
-    n = 0
+    n, deferred = 0, 0
     for d in out["drafts"]:
         rd = (d.get("evidence") or {}).get("ruin_delta")
         if not rd or rd.get("amount") is None:
+            continue
+        # a move the engine itself defers ("asked for, not wired") is not in
+        # the sweep it recommends executing now; counted, so a sweep that
+        # defers everything is visible in the evidence
+        if ((d.get("evidence") or {}).get("book") or {}).get("deferred_for_cash"):
+            deferred += 1
             continue
         day = int(max(0, min(days - 1, int(rd.get("day") or 0))))
         flows[day] += float(rd["amount"])
@@ -184,6 +190,7 @@ def combined_ruin(out: dict) -> dict | None:
     after = base - np.cumsum(flows)[None, :]
     p_before = float(np.mean(base.min(axis=1) < floor))
     p_after = float(np.mean(after.min(axis=1) < floor))
-    return {"n_moves": n, "p_before": p_before, "p_after": p_after, "total_outflow": float(flows.sum()),
+    return {"n_moves": n, "n_deferred": deferred, "p_before": p_before, "p_after": p_after,
+            "total_outflow": float(flows.sum()),
             "starting_cash": float(paths["starting_cash"]), "trough_before": float(base.min(axis=1).mean()),
             "trough_after": float(after.min(axis=1).mean())}

@@ -85,23 +85,25 @@ def test_families_are_shrunk_toward_the_catalogue_when_three_or_more_fit():
     for f in wide["families"]:
         assert f["shrinkage"] == "empirical_bayes" and 0 < f["shrinkage_weight"] <= 1
         assert f["pooled_eps_cross"] is not None and f["tau2"] > 0
-    # families no more dispersed than their own noise pool fully — τ² = 0 is an
-    # answer, not a failure, and the weight says so
+    assert all(f["shrinkage_weight"] > 0.8 for f in wide["families"])
+    # families no more dispersed than their own noise are pulled most of the
+    # way to the pool. Not all the way: with three families the spread τ is
+    # barely identified, and since 2026-09-24 it is integrated over rather
+    # than plugged in at an estimate of zero — the old exact-zero weight
+    # published the pool mean's error as each family's own
     close = _book(0.0)
     assert close["n_fitted"] == 3
-    assert all(f["shrinkage"] == "empirical_bayes" and f["shrinkage_weight"] == 0.0 for f in close["families"])
+    assert all(f["shrinkage"] == "empirical_bayes" and f["shrinkage_weight"] < 0.5 for f in close["families"])
+    assert max(f["tau2"] for f in close["families"]) < min(f["tau2"] for f in wide["families"])
     out = wide
-    # every fitted family is published with its flag; only the identified ones
-    # reach by_sku, and each of those brings its three siblings
+    # every fitted family is published with its flag, and every one reaches
+    # by_sku with its three siblings — identified or not (an unidentified
+    # family carries its own wide interval, not a zero)
     assert all("identified" in f and f["t_cross"] is not None for f in out["families"])
-    used = [f for f in out["families"] if f["identified"]]
-    assert out["n_identified"] == len(used) >= 1
-    for f in used:
+    assert out["n_identified"] == sum(f["identified"] for f in out["families"])
+    for f in out["families"]:
         for child in f["children"]:
             assert out["by_sku"][child]["family"] == f["family"] and len(out["by_sku"][child]["siblings"]) == 3
-    for f in out["families"]:
-        if not f["identified"]:
-            assert all(child not in out["by_sku"] for child in f["children"])
 
 
 def test_thin_families_refuse():

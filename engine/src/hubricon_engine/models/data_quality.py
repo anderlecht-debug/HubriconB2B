@@ -32,6 +32,31 @@ catalogue, and the memo names the worst gap. A client who sees "your SKU
 Economics and your settlement file disagree by 18% for July" can fix the
 upload; a directive built on the wrong one of them could not be un-issued.
 
+CONTAMINATED MONTHS (added 2026-09-24). A month can agree with every other
+export and still lie to a price fit. Two patterns the exports themselves
+reveal:
+
+  stockout   the Business Report's Buy Box share for the SKU's ASIN falls
+             below STOCKOUT_BUYBOX_RATIO of the SKU's own median — the
+             listing was unbuyable part of the month, so the units are
+             censored, and a seller who raised the price as stock ran out
+             hands the fit a high price beside low units: elasticity reads
+             steeper than it is
+  promotion  the settlement file's promotional rebates reach PROMO_SHARE of
+             the SKU's product sales in the month — a deal or coupon whose
+             placement lifted units by more than the price explains:
+             elasticity reads steeper again
+
+Plus two row-level faults: the same SKU-period twice (a re-upload), and a
+period whose length differs from the export's usual one (a month sent as two
+half-months). `contaminated_periods` returns the SKU-months to leave out of
+every price-response fit; `clean_for_fitting` returns the exports with them
+removed and duplicates collapsed. Both are pure functions of the data, so a
+fit reads the same cleaned history whoever calls it. Measured on the
+model-risk bench's dirty world (MATH_SCORECARD.md, iteration 38): 24 stockout
+months and 16 deal months across 160 SKUs moved the catalogue's median
+elasticity error from −0.26 to within ±0.1.
+
 WHAT IT CANNOT TELL YOU. Which of two disagreeing exports is right; whether a
 missing month was a month with no sales or a month nobody uploaded (the
 payload says "missing", never "zero"); anything about a report type the
@@ -40,10 +65,16 @@ client has never uploaded.
 
 from datetime import date
 
+import numpy as np
+
 from .common import num, period_days
 
 RECONCILE_TOLERANCE = 0.05
 STALE_DAYS = 45
+STOCKOUT_BUYBOX_RATIO = 0.75     # a month's Buy Box share under this share of the SKU's own median
+STOCKOUT_MIN_MEDIAN_BUYBOX = 50.0  # a SKU that rarely holds the Buy Box is not judged by it
+PROMO_SHARE = 0.05               # promotional rebates as a share of the month's product sales
+IRREGULAR_PERIOD_DAYS = 5        # period length this far from the export's usual one
 # Amazon settlement rows post at shipment and Business Report periods are the
 # order date, so a month-edge slice of orders sits in the neighbouring month;
 # under this many days of period the pair is not compared
@@ -148,6 +179,100 @@ def coverage(data: dict, today: date) -> dict:
     return out
 
 
+def contaminated_periods(data: dict) -> dict[str, dict[str, str]]:
+    """{sku: {period_start: "stockout" | "promotion"}} for the SKU-months a
+    price-response fit should not read."""
+    econ = data.get("sku_economics") or []
+    asin_of = {}
+    periods_of: dict[str, list[tuple[str, str]]] = {}
+    for r in econ:
+        if r.get("sku") and r.get("period_start") and r.get("period_end"):
+            if r.get("asin"):
+                asin_of.setdefault(r["sku"], r["asin"])
+            periods_of.setdefault(r["sku"], []).append((str(r["period_start"])[:10], str(r["period_end"])[:10]))
+    out: dict[str, dict[str, str]] = {}
+    # stockouts, from the Business Report's Buy Box share
+    by_asin: dict[str, list[dict]] = {}
+    for t in data.get("asin_traffic") or []:
+        if t.get("child_asin") and t.get("buy_box_pct") is not None and t.get("period_start"):
+            by_asin.setdefault(t["child_asin"], []).append(t)
+    for sku, asin in asin_of.items():
+        rows = by_asin.get(asin) or []
+        if len(rows) < 3:
+            continue
+        med = float(np.median([float(t["buy_box_pct"]) for t in rows]))
+        if med < STOCKOUT_MIN_MEDIAN_BUYBOX:
+            continue
+        for t in rows:
+            if float(t["buy_box_pct"]) < STOCKOUT_BUYBOX_RATIO * med:
+                out.setdefault(sku, {})[str(t["period_start"])[:10]] = "stockout"
+    # promotions, from the settlement file's rebates
+    promo: dict[tuple[str, str], list[float]] = {}
+    for t in data.get("settlement_transactions") or []:
+        if (t.get("txn_type") or "").strip().lower() != "order" or not t.get("sku") or not t.get("txn_date"):
+            continue
+        day = str(t["txn_date"])[:10]
+        for start, end in periods_of.get(t["sku"], []):
+            if start <= day <= end:
+                acc = promo.setdefault((t["sku"], start), [0.0, 0.0])
+                acc[0] += -float(t.get("promotional_rebates") or 0.0)
+                acc[1] += float(t.get("product_sales") or 0.0)
+                break
+    for (sku, start), (rebates, sales) in promo.items():
+        if sales > 0 and rebates / sales >= PROMO_SHARE:
+            out.setdefault(sku, {}).setdefault(start, "promotion")
+    return out
+
+
+def duplicate_rows(data: dict) -> list[tuple[str, str]]:
+    seen, dups = set(), []
+    for r in data.get("sku_economics") or []:
+        key = (r.get("sku"), str(r.get("period_start")), str(r.get("period_end")))
+        if key in seen:
+            dups.append((key[0], key[1]))
+        seen.add(key)
+    return dups
+
+
+def clean_for_fitting(data: dict) -> tuple[dict, dict]:
+    """The exports a price-response fit should read: contaminated SKU-months
+    removed, duplicated SKU-periods collapsed to their last row. Returns
+    (data, notes) — the input untouched when nothing is found."""
+    bad = contaminated_periods(data)
+    dups = duplicate_rows(data)
+    if not bad and not dups:
+        return data, {"excluded": {}, "duplicates": 0}
+    kept: dict[tuple, dict] = {}
+    for r in data.get("sku_economics") or []:
+        if str(r.get("period_start"))[:10] in bad.get(r.get("sku"), {}):
+            continue
+        kept[(r.get("sku"), str(r.get("period_start")), str(r.get("period_end")))] = r
+    asin_bad = set()
+    for r in data.get("sku_economics") or []:
+        if r.get("asin") and str(r.get("period_start"))[:10] in bad.get(r.get("sku"), {}):
+            asin_bad.add((r["asin"], str(r["period_start"])[:10]))
+    traffic = [t for t in data.get("asin_traffic") or []
+               if (t.get("child_asin"), str(t.get("period_start"))[:10]) not in asin_bad]
+    return ({**data, "sku_economics": list(kept.values()), "asin_traffic": traffic},
+            {"excluded": bad, "duplicates": len(dups)})
+
+
+def row_faults(data: dict) -> dict:
+    """Row-level faults: duplicates, SKUs selling with no landed cost, and
+    periods whose length is off the export's usual one."""
+    econ = data.get("sku_economics") or []
+    lengths = [period_days(str(r["period_start"]), str(r["period_end"])) for r in econ
+               if r.get("period_start") and r.get("period_end")]
+    usual = float(np.median(lengths)) if lengths else None
+    irregular = sorted({(r["sku"], str(r["period_start"])) for r in econ
+                        if usual and r.get("period_start") and r.get("period_end")
+                        and abs(period_days(str(r["period_start"]), str(r["period_end"])) - usual) > IRREGULAR_PERIOD_DAYS})
+    costed = {c.get("sku") for c in data.get("cogs_inputs") or [] if c.get("unit_cost_usd") is not None}
+    selling = {r["sku"] for r in econ if float(r.get("units_sold") or 0) > 0}
+    no_cost = sorted(selling - costed) if data.get("cogs_inputs") else []
+    return {"duplicates": duplicate_rows(data), "irregular_periods": irregular, "no_landed_cost": no_cost}
+
+
 def run(data: dict, today: date | None = None) -> dict:
     today = today or date.today()
     rec = reconcile(data)
@@ -155,7 +280,21 @@ def run(data: dict, today: date | None = None) -> dict:
     failed = [r for r in rec if r["flagged"]]
     gaps = {t: c["missing_months"] for t, c in cov.items() if c.get("present") and c.get("missing_months")}
     stale = [t for t, c in cov.items() if c.get("stale")]
+    contaminated = contaminated_periods(data)
+    faults = row_faults(data)
     flags = {}
+    n_stockout = sum(1 for v in contaminated.values() for why in v.values() if why == "stockout")
+    n_promo = sum(1 for v in contaminated.values() for why in v.values() if why == "promotion")
+    if n_stockout:
+        flags.setdefault("asin_traffic", set()).add(f"stockout_suspected:{n_stockout} SKU-months")
+    if n_promo:
+        flags.setdefault("settlement_transactions", set()).add(f"promotion:{n_promo} SKU-months")
+    if faults["duplicates"]:
+        flags.setdefault("sku_economics", set()).add(f"duplicate_rows:{len(faults['duplicates'])}")
+    if faults["irregular_periods"]:
+        flags.setdefault("sku_economics", set()).add(f"irregular_period:{len(faults['irregular_periods'])}")
+    if faults["no_landed_cost"]:
+        flags.setdefault("cogs_inputs", set()).add(f"no_landed_cost:{len(faults['no_landed_cost'])} SKUs")
     for r in failed:
         for t in (r["a"], r["b"]):
             flags.setdefault(t, set()).add(f"reconciliation:{r['quantity']}:{r['period_start']}")
@@ -164,13 +303,14 @@ def run(data: dict, today: date | None = None) -> dict:
     for t in stale:
         flags.setdefault(t, set()).add(f"stale:{cov[t]['days_since_latest']}d")
     worst = max(failed, key=lambda r: r["relative_gap"]) if failed else None
-    status = "ok" if not (failed or gaps or stale) else "flags"
+    status = "ok" if not (failed or gaps or stale or contaminated or any(faults.values())) else "flags"
     if not any(c.get("present") for c in cov.values()):
         status = "insufficient_data"
     return {
         "status": status, "as_of": today.isoformat(),
         "reconciliation": rec, "n_reconciled": len(rec), "n_failed": len(failed),
         "coverage": cov, "gaps": gaps, "stale": stale,
+        "contaminated": contaminated, "row_faults": {k: v[:50] for k, v in faults.items()},
         "flags": {t: sorted(v) for t, v in flags.items()},
         "worst_gap": ({"quantity": worst["quantity"], "period": worst["period_start"], "a": worst["a"], "b": worst["b"],
                        "a_value": worst["a_value"], "b_value": worst["b_value"], "relative_gap": worst["relative_gap"]}

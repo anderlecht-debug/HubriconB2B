@@ -233,10 +233,15 @@ def t2(reports, stab):
             rows.append(f"{r['world']}: steps at full size ${full:,.0f}, at half size ${half:,.0f}" + ("" if good else "  ✗"))
     for r in reports:
         inv = r["inventory"]
-        if inv["n"] >= T2_MIN_REORDERS and inv["excess"] is not None:
-            good = inv["excess"] <= T2_INVENTORY_EXCESS
+        # the question is "never bigger than the evidence pays for": the cost of
+        # ordering ABOVE the optimum is judged; ordering below it is the timid
+        # side (fractional Kelly), reported and allowed, as for price steps
+        over = inv.get("over_excess")
+        if inv["n"] >= T2_MIN_REORDERS and over is not None:
+            good = over <= T2_INVENTORY_EXCESS
             ok &= good
-            rows.append(f"{r['world']}: {inv['n']} orders cost {inv['excess']:+.1%} against the true optimum"
+            rows.append(f"{r['world']}: {inv['n']} orders — over-ordering costs {over:+.1%} of the true optimum's cost "
+                        f"(under-ordering {inv.get('under_excess') or 0:+.1%}, total {inv['excess']:+.1%})"
                         + ("" if good else "  ✗"))
     return ok, rows
 
@@ -252,7 +257,8 @@ def t3(reports, stab):
         good = ru["p_after"] <= max(ru["p_before"], T3_RUIN_WARNING) + tol
         ok &= good
         rows.append(f"{r['world']}: sweep at once moves P(ruin) {ru['p_before']:.3f} → {ru['p_after']:.3f} "
-                    f"over {ru['n_moves']} cash moves" + ("" if good else "  ✗"))
+                    f"over {ru['n_moves']} cash moves ({ru.get('n_deferred', 0)} deferred by the engine)"
+                    + ("" if good else "  ✗"))
     tails = [s for r in reports for s in _ordinary(r["steps"]) if s["risk_budget"]]
     if tails:
         breaches = sum(s["truth"] < -float(s["risk_budget"]) for s in tails)

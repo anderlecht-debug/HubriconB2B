@@ -57,14 +57,22 @@ MIN_PERIODS = 5
 MIN_SIBLING_PRICE_SD = 0.02      # log scale ≈ coefficient of variation
 MIN_POOL_FAMILIES = 3
 CI_LEVEL = 0.95
-# The cross term enters a price step only when the family's estimate, after
-# shrinkage, sits this many of its own standard errors from zero. Added
-# 2026-09-24: at realistic price variation (a 6% coefficient of variation
-# over twelve periods) the model-risk harness fitted cross-elasticities of
-# ±2 against truths under 1 — noise that, fed into a step's sibling term,
-# moved promises by more than the step itself. An unidentified family is
-# still published, with its interval, flagged `identified: false`, and kept
-# out of `by_sku` so no step carries it.
+# A family whose shrunk cross-elasticity sits this many of its own standard
+# errors from zero is published as `identified`. Every fitted family's
+# posterior enters the price steps of its children whether identified or
+# not, and a family too thin to fit at all carries the catalogue's prior —
+# the pool mean with the between-family spread and the pool mean's own
+# error as its standard error.
+#
+# Corrected 2026-09-24 (the same day the gate was added). For a few hours
+# only identified families reached a step, on the reasoning that an
+# unidentified estimate is noise. The model-risk bench showed the opposite:
+# leaving a family out sets its cross-elasticity to zero WITH NO
+# UNCERTAINTY, the most overconfident choice there is. On the clean world
+# the truth of a step sat inside its promised 90% band for 49% of the steps
+# whose family was left out and 75% of those whose family was used; the
+# omitted sibling effect was as large as the step's own. An estimate you do
+# not trust enters with the uncertainty that says so, not as a zero.
 MIN_CROSS_T = 2.0
 
 
@@ -154,9 +162,11 @@ def fit_family(family_id: str, members: dict[str, dict]) -> dict:
         cov = xtx_inv @ (X.T * omega) @ X @ xtx_inv
         se_est = "HC3"
     se_own, se_cross = float(np.sqrt(max(cov[0, 0], 0))), float(np.sqrt(max(cov[1, 1], 0)))
+    se_cross_classical = float(np.sqrt(max(float(resid @ resid) / dof * xtx_inv[1, 1], 0)))
     t_crit = float(stats.t.ppf(0.5 + CI_LEVEL / 2, dof))
     return {**base, "status": "ok", "eps_own": num(beta[0], 4), "se_own": num(se_own, 4),
             "eps_cross": num(beta[1], 4), "se_cross": num(se_cross, 4),
+            "se_cross_classical": num(se_cross_classical, 4),
             "ci95_cross": [num(beta[1] - t_crit * se_cross, 4), num(beta[1] + t_crit * se_cross, 4)],
             "n_obs": int(n), "dof": int(dof), "t_critical": num(t_crit, 4),
             "weights": {i: {j: num(w, 4) for j, w in wi.items()} for i, wi in weights.items()},
@@ -166,7 +176,9 @@ def fit_family(family_id: str, members: dict[str, dict]) -> dict:
 
 
 def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | None = None) -> dict:
+    from .data_quality import clean_for_fitting
     from .seasonality import deseasonalise_economics
+    data, _ = clean_for_fitting(data)
     data, season_note = deseasonalise_economics(data, seasonal)
     fams = families(data)
     if not fams:
@@ -175,8 +187,11 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
     series = _series(data)
     fits = [fit_family(f, {c: series.get(c, {}) for c in members}) for f, members in sorted(fams.items())]
     ok = [f for f in fits if f["status"] == "ok"]
+    prior = None
     if len(ok) >= MIN_POOL_FAMILIES:
-        eb = eb_shrink([f["eps_cross"] for f in ok], [f["se_cross"] for f in ok])
+        eb = eb_shrink([f["eps_cross"] for f in ok], [f["se_cross"] for f in ok],
+                       pool_ses=[f.get("se_cross_classical") or f["se_cross"] for f in ok])
+        prior = {"eps_cross": num(eb["mu"], 4), "se_cross": num(float(np.sqrt(eb["tau2"] + eb["var_mu"])), 4)}
         for f, w, sh, se in zip(ok, eb["weights"], eb["shrunk"], eb["post_se"]):
             f["eps_cross_raw"], f["se_cross_raw"] = f["eps_cross"], f["se_cross"]
             f["eps_cross"], f["se_cross"] = num(float(sh), 4), num(float(se), 4)
@@ -192,16 +207,41 @@ def run(data: dict, elasticity_rows: list[dict] | None = None, seasonal: dict | 
         se = float(f["se_cross"] or 0)
         f["t_cross"] = num(float(f["eps_cross"]) / se, 3) if se > 0 else None
         f["identified"] = bool(se > 0 and abs(float(f["eps_cross"])) >= MIN_CROSS_T * se)
-    used = [f for f in ok if f["identified"]]
     by_sku = {}
-    for f in used:
+    for f in ok:
         for i in f["children"]:
             by_sku[i] = {"family": f["family"], "eps_cross": f["eps_cross"], "se_cross": f["se_cross"],
                          "ci95_cross": f["ci95_cross"], "dof": f["dof"], "eps_own_family": f["eps_own"],
+                         "basis": "family fit" if f["identified"] else "family fit, not separable from zero",
                          # w[j][i]: how much of sibling j's index is THIS SKU's price
                          "siblings": [{"sku": j, "weight": f["weights"][j][i]} for j in f["children"] if j != i]}
+    # families too thin to fit carry the catalogue's prior predictive
+    n_prior = 0
+    if prior is not None:
+        revenue = {}
+        for sku, per in series.items():
+            revenue[sku] = sum(v[2] for v in per.values())
+        for fam, members in fams.items():
+            if any(f["family"] == fam and f["status"] == "ok" for f in fits) or len(members) < MIN_CHILDREN:
+                continue
+            for i in members:
+                others = [j for j in members if j != i]
+                if not others:
+                    continue
+                sibs = []
+                for j in others:
+                    peers = [x for x in members if x != j]
+                    tot = sum(revenue.get(x, 0.0) for x in peers)
+                    sibs.append({"sku": j, "weight": num(revenue.get(i, 0.0) / tot if tot > 0 else 1.0 / len(peers), 4)})
+                by_sku[i] = {"family": fam, "eps_cross": prior["eps_cross"], "se_cross": prior["se_cross"],
+                             "ci95_cross": [num(prior["eps_cross"] - 1.96 * prior["se_cross"], 4),
+                                            num(prior["eps_cross"] + 1.96 * prior["se_cross"], 4)],
+                             "dof": None, "eps_own_family": None, "basis": "catalogue prior (family not fitted)",
+                             "siblings": sibs}
+                n_prior += 1
     return {"status": "ok" if ok else "insufficient_data", "families": fits, "by_sku": by_sku,
-            "n_families": len(fams), "n_fitted": len(ok), "n_identified": len(used), "min_t": MIN_CROSS_T,
+            "n_families": len(fams), "n_fitted": len(ok), "n_identified": sum(1 for f in ok if f["identified"]),
+            "n_on_prior": n_prior, "prior": prior, "min_t": MIN_CROSS_T,
             "seasonal_adjustment": season_note,
             "basis": ("one own and one cross elasticity per variant family, HC3 and Student-t, families shrunk "
                       "toward the catalogue cross-elasticity; substitutes read positive")}

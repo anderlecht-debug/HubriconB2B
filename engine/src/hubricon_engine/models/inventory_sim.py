@@ -103,13 +103,28 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
     for row in data["asin_traffic"]:
         traffic_by_asin.setdefault(row["child_asin"], []).append(row)
 
+    from .data_quality import contaminated_periods
+    from .seasonality import index_for
+    bad = contaminated_periods(data)
     results = []
     for sku in sorted(set(on_hand) | set(econ_by_sku)):
-        rates = _daily_rates(econ_by_sku.get(sku, []), "units_sold")
+        # the same history the forecast reads: one row per period, contaminated months out
+        rows = [r for r in {(str(r["period_start"]), str(r["period_end"])): r
+                            for r in econ_by_sku.get(sku, [])}.values()
+                if str(r["period_start"])[:10] not in (bad.get(sku) or {})]
+        rates = _daily_rates(rows, "units_sold")
+        months = [int(str(r["period_start"])[5:7]) for r in rows if r.get("units_sold") is not None]
         if not rates and bridge.get(sku):
-            rates = _daily_rates(traffic_by_asin.get(bridge[sku], []), "units_ordered")
+            rows = traffic_by_asin.get(bridge[sku], [])
+            rates = _daily_rates(rows, "units_ordered")
+            months = [int(str(r["period_start"])[5:7]) for r in rows if r.get("units_ordered") is not None]
         if not rates:
             continue
+        # observed periods at an index of one: each divided by its own month's
+        # index, so a history that happens to end in a peak does not read as
+        # a higher base (corrected 2026-09-24 with forecast.rate_moments)
+        if seasonal and seasonal.get("status") == "ok" and len(months) == len(rates):
+            rates = [x / max(index_for(seasonal, sku, mo)[0], 1e-6) for x, mo in zip(rates, months)]
 
         mean_rate = float(np.mean(rates))
         std_rate = float(np.std(rates, ddof=1)) if len(rates) >= 2 else mean_rate * FALLBACK_RATE_CV
@@ -122,6 +137,7 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
 
         cogs_row = cogs_by_sku.get(sku, {})
         lead = int(cogs_row.get("supplier_lead_time_days") or DEFAULT_LEAD_TIME_DAYS)
+        base_rate, base_sd = mean_rate, std_rate
         mean_rate, std_rate, season_note = seasonal_rate(mean_rate, std_rate, seasonal, sku, today, lead)
         inv = on_hand.get(sku, {})
         fulfillable = int(inv.get("fulfillable_quantity") or 0)
@@ -159,6 +175,11 @@ def run(data: dict, rng: np.random.Generator, simulations: int = 20000,
                     "closed_form_rop": num(closed_form_rop(mean_rate, std_rate, lead), 1),
                     "observed_periods": len(rates),
                     "rate_source": rate_source,
+                    # the rate at a seasonal index of one; daily_velocity_mean
+                    # is the lead window's. A model that applies its own
+                    # window's index (the cash cone) must start from this one.
+                    "daily_velocity_base": num(base_rate, 4),
+                    "daily_velocity_base_std": num(base_sd, 4),
                     "lead_time_assumed": sku not in cogs_by_sku
                     or cogs_by_sku[sku].get("supplier_lead_time_days") is None,
                     "rate_std_assumed": len(rates) < 2,

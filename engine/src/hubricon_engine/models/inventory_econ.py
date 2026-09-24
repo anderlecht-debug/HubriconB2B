@@ -217,13 +217,16 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         sku = inv["sku"]
         f = forecasts.get(sku)
         if f:
-            mean_rate = float(f["daily_rate_point"] or 0)
-            std_rate = float((f.get("details") or {}).get("error_sd") or 0) or mean_rate * 0.35
-            rate_source = f"forecast ({f.get('method')})"
+            from .forecast import rate_moments
+            mean_rate, std_rate = rate_moments(f)
+            mean_rate = float(mean_rate or 0)
+            std_rate = float(std_rate or 0) or mean_rate * 0.35
+            rate_source = f"forecast ({f.get('method')}), at a seasonal index of one"
         else:
-            mean_rate = float(inv.get("daily_velocity_mean") or 0)
-            std_rate = float(inv.get("daily_velocity_std") or 0)
-            rate_source = "observed periods"
+            det_inv = inv.get("details") or {}
+            mean_rate = float(det_inv.get("daily_velocity_base") or inv.get("daily_velocity_mean") or 0)
+            std_rate = float(det_inv.get("daily_velocity_base_std") or inv.get("daily_velocity_std") or 0)
+            rate_source = "observed periods, at a seasonal index of one"
         if mean_rate <= 0:
             continue
         lead = float(inv.get("lead_time_days") or 45)

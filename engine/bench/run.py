@@ -156,8 +156,12 @@ def main(argv=None):
             same = next(r[3] for r in results if r[0] == "rerun" and r[1] == s and r[2] == 42)
             other = next(r[3] for r in results if r[0] == "rerun" and r[1] == s and r[2] == 7)
             pert = next(r[3] for r in results if r[0] == "perturb" and r[1] == s)
+            as_map = lambda pairs: {tuple(k): v for k, v in pairs}
             stab = {"byte_identical": bool(clean and same["digest"] == clean["_digest"]),
-                    "seed_invariant": bool(clean and other["promises"] == clean["_promises"]), **pert}
+                    # the same promises, in any order: drafts are ranked by
+                    # scores that can tie, and a tie's order is not a promise
+                    "seed_invariant": bool(clean and as_map(other["promises"]) == as_map(clean["_promises"])),
+                    **pert}
         card = rubric.score(reports, stab)
         summary[s] = {"card": card, "stability": stab, "reports": reports}
         print(f"\n══ TEST seed {s}: {card['score']}/{card['of']} ══")

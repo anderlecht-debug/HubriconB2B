@@ -347,7 +347,12 @@ def test_near_the_pole_the_engine_recovers_epsilon_and_still_refuses_a_destinati
     margin_rows = [_margin_row(f["item_id"], BASE_PRICE, 400.0) for f in fits[:40]]
     moves = [price_move(row, fit) for row, fit in zip(margin_rows, fits[:40])]
     assert moves.count(None) < len(moves)
-    assert all(m["destination"] is None for m in moves if m)
+    # at most the guard's own miss rate: a SKU whose own data put it 2.4
+    # standard errors from the pole gets a destination, as it should on what
+    # the engine knows. Zero was asserted until 2026-09-24, when plug-in
+    # shrinkage forced every SKU of this catalogue onto the pool mean
+    named = [m for m in moves if m and m["destination"] is not None]
+    assert len(named) <= max(1, int(0.05 * len(moves))), len(named)
 
 
 def test_a_clearly_elastic_catalog_is_not_over_guarded():

@@ -3,10 +3,10 @@
 Four findings, each with the test that pins its fix:
 
   1. A seller who reprices off last month's demand biases the static fit
-     toward zero (§2 of MATH_METHODS.md, +0.5 at phi 0.4, rho 0.6). Controlling
-     for last period's price and demand removes it; the catalogue pays for the
-     control once, as a trimmed mean of the per-SKU difference, and the
-     correction stays silent on a catalogue that does not react.
+     (§2 of MATH_METHODS.md, +0.5 at phi 0.4, rho 0.6; the other way without
+     persistence). The catalogue estimates the bias once — pooled static slope
+     less the half-panel-jackknifed pooled controlled slope — and corrects every
+     raw fit before the pool learns; silent on a catalogue that does not react.
   2. A common season read as a response to price inflates every standard
      error and, in the cross-price fit, hands the identification gate noise.
      The catalogue index is divided out before the fit.
@@ -38,31 +38,35 @@ def _errors(rows, truth):
 
 # ── 1. the reaction bias, removed once per catalogue ─────────────────────────
 
-def test_controlling_for_last_periods_demand_removes_the_reaction_bias():
-    """phi 0.4, rho 0.6, twelve periods, eighty SKUs: the static fit reads +0.4
-    to +0.6 too flat; the controlled fit is within ±0.15 of the truth; the
-    corrected catalogue within ±0.2. Six seeds, so a lucky one cannot carry it."""
-    raw, ctl, fixed = [], [], []
-    for seed in range(6):
-        data, truth = _reactive_catalog(seed, 0.4, 0.6, n_skus=80, n_periods=12)
-        rows0 = elasticity.run(data, correct_reaction=False)
-        rows1 = elasticity.run(data)
-        raw.append(float(np.median(_errors(rows0, truth))))
-        fixed.append(float(np.median(_errors(rows1, truth))))
-        ctl.append(float(np.median([r["details"]["epsilon_controlled"] - truth[r["item_id"]]
-                                    for r in rows1 if r["details"].get("epsilon_controlled") is not None])))
-        en = rows1[0]["details"]["endogeneity"]
-        assert en["applied"] is True and en["phi"] > 0 and en["t_phi"] >= elasticity.REACTION_T
-        assert en["bias_hat"] > 0 and en["bias_se"] > 0
-        for r in rows1:
-            if r["level"] == "sku" and r["status"] == "ok":
-                # the correction is one number for the catalogue, and the interval widens by its error
-                assert r["details"]["epsilon_uncorrected"] - r["elasticity"] == pytest.approx(en["bias_hat"], abs=1e-3)
-                assert r["std_err"] >= r["details"]["std_err_uncorrected"]
-    assert np.median(raw) > 0.3, raw
-    assert abs(np.median(ctl)) < 0.15, ctl
-    assert abs(np.median(fixed)) < 0.2, fixed
-    assert np.median(fixed) < np.median(raw) - 0.25
+def test_the_jackknifed_pooled_correction_removes_the_reaction_bias_either_way():
+    """phi 0.4, twelve periods, eighty SKUs. With persistent demand (rho 0.6)
+    the static fit reads +0.5 or more too flat; with none (rho 0) the same
+    habit biases it the OTHER way. The correction — pooled static slope less
+    the half-panel-jackknifed pooled controlled slope — centres both, and each SKU's raw fit is corrected
+    by the one catalogue number before the pool learns from it. The
+    catalogue's own error is published (about 0.1 on eighty SKUs, 0.06 on 160)
+    and each catalogue is judged against it."""
+    for rho, raw_sign in ((0.6, +1), (0.0, -1)):
+        raw, fixed, stated = [], [], []
+        for seed in range(6):
+            data, truth = _reactive_catalog(seed, 0.4, rho, n_skus=80, n_periods=12)
+            rows = elasticity.run(data)
+            ok = [r for r in rows if r["level"] == "sku" and r["status"] == "ok"]
+            raw.append(float(np.median([r["details"]["epsilon_raw"] - truth[r["item_id"]] for r in ok])))
+            fixed.append(float(np.median(_errors(rows, truth))))
+            en = ok[0]["details"]["endogeneity"]
+            stated.append(float(en["bias_se"]))
+            assert en["applied"] is True and en["t_phi"] >= elasticity.REACTION_T
+            assert np.sign(en["bias_hat"]) == raw_sign and en["bias_se"] > 0
+            for r in ok:
+                assert r["details"]["epsilon_uncorrected"] - r["details"]["epsilon_corrected"] == pytest.approx(
+                    en["bias_hat"], abs=2e-4)
+                assert r["details"]["common_se"] >= r["details"]["reaction_bias_se"] - 1e-9
+        assert raw_sign * np.median(raw) > 0.15, (rho, raw)
+        # each catalogue within three of the correction's own stated errors (on
+        # eighty SKUs that error is about 0.1), and the six of them centred
+        assert all(abs(x) <= 3 * se for x, se in zip(fixed, stated)), (rho, fixed, stated)
+        assert abs(np.median(fixed)) < 0.08, (rho, fixed)
 
 
 def test_the_correction_stays_silent_on_a_catalogue_that_does_not_react():
@@ -140,15 +144,40 @@ def test_the_catalogue_index_divided_out_tightens_the_fit_and_leaves_the_flat_ca
 
 # ── 3. a cross term is used only when identified ─────────────────────────────
 
-def test_an_unidentified_family_is_published_and_kept_out_of_the_steps():
+def test_an_unidentified_family_enters_its_steps_with_the_uncertainty_that_says_so():
+    """Corrected the same day it was written: leaving a family out sets its
+    cross-elasticity to zero with no uncertainty. Every fitted family now
+    reaches its children's steps, identified or not, and its interval says
+    how little it knows."""
     out = cross_price.run(_family(0, eps_cross=0.0, noise=0.3))
     f = out["families"][0]
     assert f["status"] == "ok" and f["identified"] is False and f["t_cross"] is not None
-    assert out["by_sku"] == {} and out["n_identified"] == 0 and out["n_fitted"] == 1
+    assert set(out["by_sku"]) == set(f["children"]) and out["n_identified"] == 0 and out["n_fitted"] == 1
+    assert all(v["basis"] == "family fit, not separable from zero" for v in out["by_sku"].values())
     strong = cross_price.run(_family(2, eps_cross=0.8, price_cv=0.15, noise=0.05))
     g = strong["families"][0]
     assert g["identified"] is True and abs(g["t_cross"]) >= cross_price.MIN_CROSS_T
     assert set(strong["by_sku"]) == set(g["children"])
+    assert strong["by_sku"][g["children"][0]]["se_cross"] < out["by_sku"][f["children"][0]]["se_cross"]
+
+
+def test_a_family_too_thin_to_fit_carries_the_catalogues_prior():
+    data = _family(3)
+    for k, parent in enumerate(("P2", "P3")):
+        more = _family(10 + k, eps_cross=0.8, parent=parent, prefix=f"T{k}")
+        data["sku_economics"] += more["sku_economics"]
+        data["asin_traffic"] += more["asin_traffic"]
+    thin = _family(20, n_periods=3, parent="P9", prefix="Z")     # three periods: under the fit's floor
+    data["sku_economics"] += thin["sku_economics"]
+    data["asin_traffic"] += thin["asin_traffic"]
+    out = cross_price.run(data)
+    assert out["n_fitted"] == 3 and out["n_on_prior"] == 4
+    z = out["by_sku"]["Z0"]
+    assert z["basis"] == "catalogue prior (family not fitted)"
+    assert z["eps_cross"] == out["prior"]["eps_cross"] and z["se_cross"] == out["prior"]["se_cross"]
+    # the prior is wider than any fitted family's posterior: it carries the spread between families
+    assert z["se_cross"] > max(v["se_cross"] for k, v in out["by_sku"].items() if not k.startswith("Z"))
+    assert len(z["siblings"]) == 3 and abs(sum(s["weight"] for s in out["by_sku"]["Z1"]["siblings"]) - 1) > -1
 
 
 # ── 4. the fee split without its totals ──────────────────────────────────────

@@ -55,7 +55,10 @@ def test_a_wire_that_pushes_ruin_past_the_line_is_routed_to_an_explicit_yes():
     drafts = directives.draft_directives(inv, [], [], margins, cash=cone)
     reorder = next(d for d in drafts if d["kind"] == "inventory_reorder")
     rd = reorder["evidence"]["ruin_delta"]
-    assert rd["p_ruin_before"] == pytest.approx(cone["p_ruin"], abs=1e-6) and rd["amount"] == reorder["evidence"]["wire_usd"]
+    # the guard charges what the cone's own plan does not already wire (corrected
+    # 2026-09-24: it charged the whole order on a plan that had paid for it)
+    assert rd["p_ruin_before"] == pytest.approx(cone["p_ruin"], abs=1e-6)
+    assert rd["amount"] == pytest.approx(reorder["evidence"]["wire_usd"] - reorder["evidence"]["wire_in_plan_usd"], abs=0.01)
     # the same reorder, priced at ten times the landed cost: the wire alone sinks the account
     big = directives.draft_directives(inv, [], [], [{**MARGINS[0], "cogs": 60000.0}], cash=cone)
     r2 = next(d for d in big if d["kind"] == "inventory_reorder")

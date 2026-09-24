@@ -213,37 +213,153 @@ def _tau_squared(estimates: np.ndarray, variances: np.ndarray) -> float:
     return max(0.0, (q - (len(estimates) - 1)) / denom)
 
 
-def eb_shrink(estimates, ses) -> dict:
-    """Empirical-Bayes shrinkage of per-item estimates toward their pool.
+TAU_GRID_POINTS = 240
 
-    ε_shrunk = w·ε̂ + (1 − w)·μ with w = τ² / (τ² + se²), τ² by DerSimonian–Laird,
-    μ the precision-weighted pool mean. The posterior SE carries both terms,
-    w·se² + (1 − w)²·var(μ). A zero SE floors at the smallest positive SE in
-    the pool so the weighting stays finite; an item with no sampling error is
+
+def eb_shrink(estimates, ses, pool_ses=None, covariates=None) -> dict:
+    """Hierarchical-normal shrinkage of per-item estimates toward their pool,
+    with the between-item spread τ INTEGRATED OUT rather than plugged in.
+
+    The prior is θ_i ~ N(x_i·β, τ²): with no `covariates`, x_i = 1 and the
+    pool is one mean; with them, a regression the data fits — each item is
+    pulled toward what items like it show, not toward one catalogue number.
+    Conditional on τ: β is its generalised-least-squares estimate with
+    covariance V_β, and θ_i | y ~ N(B_i·x_iβ + (1 − B_i)·y_i,
+    (1 − B_i)·s_i² + B_i²·x_iV_βx_i') with B_i = s_i²/(s_i² + τ²). τ gets a
+    uniform prior on a grid from 0 to three times the spread of the
+    estimates, and its posterior is the restricted marginal likelihood of the
+    estimates with β integrated under a flat prior (Gelman et al., BDA §5.4,
+    with covariates as in Fay and Herriot). Every published figure is the
+    mixture over that posterior.
+
+    Corrected 2026-09-24. The rule before this plugged in the
+    DerSimonian–Laird point estimate of τ², which comes out at zero on an
+    unlucky catalogue: every item was then pulled onto the pool mean with a
+    posterior standard error of the pool mean's alone. On twenty simulated
+    catalogues of 80 SKUs whose true elasticities spread over two units, two
+    catalogues published 95% intervals that held the truth for 19% and 25%
+    of SKUs; integrated over τ, the worst holds it for 86–89% at the same
+    squared error. The DerSimonian–Laird figure is still published beside
+    the posterior as `tau2_dl`.
+
+    `pool_ses`, when given, is the standard error used to learn β and τ:
+    a small-sample robust (HC3) error deliberately overstates each item's
+    noise, and overstated noise makes real between-item spread look like
+    noise — so the pool is learned on the classical errors and each item's
+    own posterior uses its robust one. An item with no sampling error is
     never shrunk. Returns arrays aligned with the inputs plus the pool
     statistics, so the caller writes the record and nothing else."""
     est = np.asarray(estimates, dtype=float)
     ses = np.asarray(ses, dtype=float)
+    k = len(est)
     positive = ses[ses > 0]
     floor = float(positive.min()) if positive.size else 1.0
-    variances = np.maximum(ses, floor) ** 2
-    tau2 = _tau_squared(est, variances)
-    precision = 1.0 / (variances + tau2)
-    mu = float((precision * est).sum() / precision.sum())
-    var_mu = float(1.0 / precision.sum())
-    weights = np.empty(len(est))
-    for i, (own_se, var) in enumerate(zip(ses, variances)):
-        if own_se <= 0 or tau2 + var <= 0:
-            weights[i] = 1.0
-        else:
-            weights[i] = tau2 / (tau2 + var)
-    shrunk = weights * est + (1.0 - weights) * mu
-    post_se = np.sqrt(np.maximum(weights * variances + (1.0 - weights) ** 2 * var_mu, 0.0))
-    return {"mu": mu, "var_mu": var_mu, "tau2": tau2, "weights": weights,
-            "shrunk": shrunk, "post_se": post_se}
+    v = np.maximum(ses, floor) ** 2
+    if pool_ses is not None:
+        ps = np.asarray(pool_ses, dtype=float)
+        ps = np.where(np.isfinite(ps) & (ps > 0), ps, np.maximum(ses, floor))
+        pv = np.maximum(ps, floor * 1e-3) ** 2
+    else:
+        pv = v
+    X = np.ones((k, 1)) if covariates is None else np.asarray(covariates, dtype=float).reshape(k, -1)
+    spread = float(np.std(est)) if k > 1 else 0.0
+    taus = np.linspace(0.0, max(3.0 * spread, 1e-9), TAU_GRID_POINTS)
+    G = len(taus)
+    loglik = np.full(G, -np.inf)
+    prior_mean = np.zeros((G, k))
+    prior_var = np.zeros((G, k))       # x_i V_β x_i', the prior mean's own uncertainty
+    betas = np.zeros((G, X.shape[1]))
+    for g, tau in enumerate(taus):
+        w = 1.0 / (pv + tau**2)
+        xtwx = X.T @ (X * w[:, None])
+        try:
+            v_beta = np.linalg.inv(xtwx)
+        except np.linalg.LinAlgError:
+            continue
+        beta = v_beta @ (X.T @ (w * est))
+        resid = est - X @ beta
+        sign, logdet = np.linalg.slogdet(v_beta)
+        if sign <= 0:
+            continue
+        loglik[g] = 0.5 * logdet + 0.5 * np.log(w).sum() - 0.5 * (w * resid**2).sum()
+        prior_mean[g] = X @ beta
+        prior_var[g] = np.einsum("ij,jk,ik->i", X, v_beta, X)
+        betas[g] = beta
+    post = np.exp(loglik - loglik.max())
+    post /= post.sum()
+    t2 = taus[:, None] ** 2
+    B = v[None, :] / (v[None, :] + t2)
+    theta = B * prior_mean + (1.0 - B) * est[None, :]
+    var_i = (1.0 - B) * v[None, :] + B**2 * prior_var
+    shrunk = (post[:, None] * theta).sum(axis=0)
+    post_var = (post[:, None] * (var_i + (theta - shrunk[None, :]) ** 2)).sum(axis=0)
+    weights = (post[:, None] * (1.0 - B)).sum(axis=0)
+    fixed = ses <= 0
+    shrunk = np.where(fixed, est, shrunk)
+    post_var = np.where(fixed, v, post_var)
+    weights = np.where(fixed, 1.0, weights)
+    mean_prior = (post[:, None] * prior_mean).sum(axis=0)
+    var_prior = (post[:, None] * (prior_var + (prior_mean - mean_prior[None, :]) ** 2)).sum(axis=0)
+    beta_bar = (post[:, None] * betas).sum(axis=0)
+    cdf = np.cumsum(post)
+    tau_ci = [float(taus[min(G - 1, int(np.searchsorted(cdf, 0.05)))]),
+              float(taus[min(G - 1, int(np.searchsorted(cdf, 0.95)))])]
+    return {"mu": float(mean_prior.mean()), "var_mu": float(var_prior.mean()),
+            "prior_mean": mean_prior, "prior_var": var_prior, "beta": beta_bar,
+            "tau2": float((post * taus**2).sum()), "tau_ci90": tau_ci,
+            "tau2_dl": _tau_squared(est, pv), "weights": weights, "shrunk": shrunk,
+            "post_se": np.sqrt(np.maximum(post_var, 0.0))}
 
 
-def _shrink(rows: list[dict], group_of) -> None:
+# The seller's own price as evidence about elasticity. At the price that
+# maximises p^ε·(p(1 − f) − c − F), ε = −k/(k − 1) with k = p(1 − f)/(c + F):
+# a SKU's current markup IMPLIES an elasticity. Whether the seller's prices
+# carry that information is not assumed — the pool regresses each fitted ε
+# on its markup-implied value and the data sets the slope: near zero for a
+# catalogue priced at random, near one for a seller already at the optimum.
+# Added 2026-09-24, after the model-risk bench's already-optimal catalogue:
+# shrinking every SKU toward one catalogue mean pulled a high-markup SKU
+# (true ε −1.3) toward −1.8, the implied optimum moved away from a price that
+# was already right, and all 54 steps drafted there lost money against 15.7
+# the engine quoted.
+MARKUP_MIN_ITEMS = 20
+MARKUP_K_FLOOR = 1.05          # a markup this thin implies an elasticity the fit could never resolve
+MARKUP_EPS_FLOOR = -8.0
+
+
+def markup_implied_elasticity(data: dict) -> dict[str, float]:
+    """{sku: −k/(k − 1)} from each SKU's latest period, where the landed cost
+    is on file and the markup clears MARKUP_K_FLOOR."""
+    cost = {}
+    for c in data.get("cogs_inputs") or []:
+        if c.get("sku") and c.get("unit_cost_usd") is not None:
+            cost[c["sku"]] = float(c["unit_cost_usd"]) + float(c.get("inbound_freight_per_unit_usd") or 0.0)
+    latest = {}
+    for r in data.get("sku_economics") or []:
+        if r.get("sku") and r.get("units_sold") and float(r["units_sold"]) > 0:
+            if r["sku"] not in latest or str(r["period_start"]) > str(latest[r["sku"]]["period_start"]):
+                latest[r["sku"]] = r
+    out = {}
+    for sku, r in latest.items():
+        if sku not in cost:
+            continue
+        units, sales = float(r["units_sold"]), float(r.get("sales") or 0)
+        if sales <= 0:
+            continue
+        price = sales / units
+        prop = -(float(r.get("referral_fees") or 0) + float(r.get("other_fees") or 0)) / sales
+        fixed = -(float(r.get("fba_fulfillment_fees") or 0) + float(r.get("storage_fees") or 0)) / units
+        denom = cost[sku] + max(fixed, 0.0)
+        if denom <= 0:
+            continue
+        k = price * (1.0 - min(max(prop, 0.0), 0.9)) / denom
+        if k <= MARKUP_K_FLOOR:
+            continue
+        out[sku] = max(-k / (k - 1.0), MARKUP_EPS_FLOOR)
+    return out
+
+
+def _shrink(rows: list[dict], group_of, markup: dict[str, float] | None = None) -> None:
     """Empirical-Bayes shrinkage of each fitted ε toward its pool, in place.
 
     ε_shrunk = w·ε̂ + (1 − w)·μ with w = τ² / (τ² + se²) — the ratio of
@@ -273,11 +389,22 @@ def _shrink(rows: list[dict], group_of) -> None:
                                      "shrinkage": "none_pool_too_small"})
             continue
 
-        eb = eb_shrink(estimates, ses)
+        classical = np.array([float(r["details"].get("std_err_classical") or r["std_err"] or 0.0)
+                              for r in members], dtype=float)
+        covariates = None
+        has = np.array([bool(markup) and r.get("level") == "sku" and r["item_id"] in markup for r in members])
+        if markup and has.sum() >= MARKUP_MIN_ITEMS:
+            xm = np.array([markup.get(r["item_id"], 0.0) if h else 0.0 for r, h in zip(members, has)])
+            cols = [np.ones(len(members)), xm]
+            if not has.all():
+                cols.insert(1, has.astype(float))
+            covariates = np.column_stack(cols)
+        eb = eb_shrink(estimates, ses, pool_ses=classical, covariates=covariates)
         tau2, mu = eb["tau2"], eb["mu"]
+        markup_slope = float(eb["beta"][-1]) if covariates is not None else None
 
-        for r, est, weight, shrunk, post_se in zip(members, estimates, eb["weights"],
-                                                   eb["shrunk"], eb["post_se"]):
+        for r, est, weight, shrunk, post_se, pm, pvar in zip(members, estimates, eb["weights"], eb["shrunk"],
+                                                            eb["post_se"], eb["prior_mean"], eb["prior_var"]):
             weight, shrunk, post_se = float(weight), float(shrunk), float(post_se)
             if r["details"].get("source") == "experiment":
                 # An experimental estimate is unbiased; the pool mean is the
@@ -287,20 +414,35 @@ def _shrink(rows: list[dict], group_of) -> None:
                 weight, shrunk, post_se = 1.0, est, float(r["std_err"] or 0.0)
                 r["details"]["shrinkage"] = "none_experimental"
             t_crit = float(r["details"].get("t_critical") or 0.0)
+            corrected = "epsilon_uncorrected" in r["details"]
             r["details"].update({
                 **detail,
-                "epsilon_raw": num(est, 4),
+                # raw is the fit as fitted; a reaction-corrected estimate is
+                # what entered the pool, published beside it
+                "epsilon_raw": r["details"]["epsilon_uncorrected"] if corrected else num(est, 4),
+                "epsilon_corrected": num(est, 4) if corrected else None,
                 "epsilon_shrunk": num(shrunk, 4),
                 "shrinkage_weight": num(weight, 4),
                 "pooled_epsilon": num(mu, 4),
+                "pooled_epsilon_se": num(float(np.sqrt(eb["var_mu"])), 4),
+                "prior_epsilon": num(float(pm), 4),
+                "prior_epsilon_se": num(float(np.sqrt(max(pvar, 0.0))), 4),
+                "markup_slope": num(markup_slope, 4) if markup_slope is not None else None,
+                "markup_implied_epsilon": num(markup.get(r["item_id"]), 4) if markup and r["item_id"] in markup else None,
                 "tau2": num(tau2, 6),
-                "std_err_raw": r["std_err"],
-                "ci95_raw": r["details"]["ci95"],
+                "tau_ci90": [num(x, 4) for x in eb["tau_ci90"]],
+                "tau2_dl": num(eb["tau2_dl"], 6),
+                "std_err_raw": r["details"].get("std_err_uncorrected", r["std_err"]),
+                "ci95_raw": r["details"].get("ci95_uncorrected", r["details"]["ci95"]),
                 "shrinkage": r["details"].get("shrinkage") if r["details"].get("shrinkage") == "none_experimental"
                 else "empirical_bayes",
             })
             # the optimizer consumes the shrunk value; the raw one stays on
             # the record beside it
+            # the part of this item's posterior error it shares with every
+            # other item in the pool: the pool mean's, in the share it borrowed
+            rb = float(r["details"].get("reaction_bias_se") or 0.0)
+            r["details"]["common_se"] = num(float(np.sqrt(((1.0 - weight) * np.sqrt(max(pvar, 0.0))) ** 2 + rb**2)), 4)
             r["elasticity"] = num(shrunk, 4)
             r["std_err"] = num(post_se, 4)
             r["details"]["ci95"] = [num(shrunk - t_crit * post_se, 4),
@@ -325,9 +467,7 @@ REACTION_T = 2.0            # φ̂ must clear this many standard errors before a
 REACTION_MIN_PAIRS = 40     # (price, prior residual) pairs across the catalogue
 DYNAMIC_MIN_PERIODS = 8     # the controlled fit spends three coefficients on n − 1 points
 BIAS_MIN_SKUS = 20          # SKUs with both fits before the catalogue difference is trusted
-BIAS_T = 2.0                # and the difference must clear this many of its own standard errors
-BIAS_BOOTSTRAP = 400
-BIAS_TRIM = 0.2             # trimmed-mean fraction on each tail of the per-SKU differences
+BIAS_BOOTSTRAP = 200
 BIAS_SEED = 20260924
 
 
@@ -423,62 +563,143 @@ def _fit_controlled(points: list[dict]) -> dict:
             "lag_price": float(beta[2]), "lag_demand": float(beta[3]), "n_periods": n}
 
 
+def _series_of(points: list[dict]) -> tuple[np.ndarray, np.ndarray]:
+    usable = [p for p in points if p["price"] and p["price"] > 0 and p["units"] and p["units"] > 0]
+    days = np.array([p.get("days") or 1.0 for p in usable], dtype=float)
+    return (np.log(np.array([p["price"] for p in usable], dtype=float)),
+            np.log(np.array([p["units"] for p in usable], dtype=float) / days))
+
+
+def _moments(X: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray] | None:
+    """(X'X, X'y) of one block after demeaning it — its fixed effect — or None
+    for a block too short to carry one."""
+    if len(y) < 3:
+        return None
+    Xd, yd = X - X.mean(axis=0), y - y.mean()
+    return Xd.T @ Xd, Xd.T @ yd
+
+
+def _sku_moments(lp: np.ndarray, lq: np.ndarray) -> dict:
+    """One SKU's contribution to the four pooled regressions the reaction
+    correction needs: static on the full series, controlled on the full
+    series and on each half."""
+    def ctl(lo, hi):
+        p, q = lp[lo:hi], lq[lo:hi]
+        if len(p) < 4:
+            return None
+        return _moments(np.column_stack([p[1:], p[:-1], q[:-1]]), q[1:])
+    h = len(lp) // 2
+    return {"static": _moments(lp[:, None], lq), "full": ctl(0, None), "first": ctl(0, h), "second": ctl(h, None)}
+
+
+def _slope_from(moments: list, key: str) -> float | None:
+    parts = [m[key] for m in moments if m[key] is not None]
+    if not parts:
+        return None
+    xtx = sum(a for a, _ in parts)
+    xty = sum(b for _, b in parts)
+    if np.linalg.matrix_rank(xtx) < xtx.shape[0]:
+        return None
+    return float(np.linalg.solve(xtx, xty)[0])
+
+
+def reaction_bias(moments: list[dict]) -> float | None:
+    """The catalogue's reaction bias: the pooled static slope less the
+    half-panel-jackknifed pooled controlled slope, from each SKU's stored
+    regression moments (so a bootstrap over SKUs is a sum, not a refit).
+
+    Both are pooled over every SKU with a fixed effect each, so both estimate
+    the same price-variance-weighted average elasticity. The static one
+    carries the reaction bias in full. The controlled one — log units on log
+    price, last period's log price and last period's log units — removes it
+    to first order, but in a panel this short it is itself biased by terms of
+    order 1/T: the coefficient on last period's demand is pulled toward zero
+    (Nickell), and a price set in reaction to demand is correlated with the
+    SKU's own future shocks once its series is demeaned. The half-panel
+    jackknife, 2·β(full) − ½·(β(first half) + β(second half)) (Dhaene and
+    Jochmans 2015), removes the 1/T terms without modelling them."""
+    static = _slope_from(moments, "static")
+    full, first, second = (_slope_from(moments, k) for k in ("full", "first", "second"))
+    if static is None or full is None or first is None or second is None:
+        return None
+    return static - (2.0 * full - 0.5 * (first + second))
+
+
 def correct_endogeneity(rows: list[dict], data: dict, points_by_sku: dict[str, list[dict]] | None = None) -> dict:
     """Estimate the reaction bias once for the catalogue and subtract it from
-    every fitted, non-experimental SKU row, in place, widening each standard
-    error by the bias estimate's own. Returns the diagnostic, which every row
-    also carries under details.endogeneity."""
+    every fitted, non-experimental SKU row's RAW estimate, in place, before
+    the pool learns from them — each row's standard error widened by the bias
+    estimate's own, which is shared by every row and published as such.
+    Returns the diagnostic, which every row also carries under
+    details.endogeneity.
+
+    Corrected 2026-09-24 (twice in a day). The first version subtracted a
+    trimmed mean of per-SKU (static − controlled) differences; the controlled
+    fit's own short-panel bias rode into that difference, and on the
+    model-risk bench's reacting catalogues the corrected median error stayed
+    at +0.10 to +0.24. The jackknifed pooled correction took the same sixteen
+    catalogues (six reactive, six drifting, four of the endogeneity grid) to a
+    mean absolute median error of 0.055, the worst +0.166; it also corrects
+    the case where the bias runs the other way (no persistence, a reacting
+    seller: −0.20 estimated, the corrected error +0.02)."""
     diag = reaction_diagnostic(data)
     applied, reason = False, None
-    diffs = []
+    fitted = [r for r in rows if r.get("level") == "sku" and r.get("status") == "ok"
+              and (r.get("details") or {}).get("source") != "experiment" and r.get("elasticity") is not None]
+    series = []
+    for r in fitted:
+        pts = (points_by_sku or {}).get(r["item_id"]) or (r.get("details") or {}).get("points") or []
+        lp, lq = _series_of(pts)
+        if len(lp) >= DYNAMIC_MIN_PERIODS:
+            series.append(_sku_moments(lp, lq))
     if diag.get("status") != "ok":
         reason = "too few (price, prior residual) pairs to estimate the habit"
     elif not diag["reactive"]:
         reason = f"no significant reaction to last period's demand (t = {diag['t_phi']})"
+    elif len(series) < BIAS_MIN_SKUS:
+        reason = f"only {len(series)} SKUs have the {DYNAMIC_MIN_PERIODS} periods the controlled fit needs (need {BIAS_MIN_SKUS})"
     else:
-        for r in rows:
-            det = r.get("details") or {}
-            if r.get("level") != "sku" or r.get("status") != "ok" or det.get("source") == "experiment":
-                continue
-            pts = (points_by_sku or {}).get(r["item_id"]) or det.get("points") or []
-            ctl = _fit_controlled(pts)
-            raw = det.get("epsilon_raw", r.get("elasticity"))
-            if ctl.get("status") == "ok" and raw is not None:
-                diffs.append(float(raw) - ctl["elasticity"])
-                det["epsilon_controlled"], det["std_err_controlled"] = num(ctl["elasticity"], 4), num(ctl["std_err"], 4)
-        n = len(diffs)
-        if n < BIAS_MIN_SKUS:
-            reason = f"only {n} SKUs carry both fits (need {BIAS_MIN_SKUS})"
+        bias = reaction_bias(series)
+        rng = np.random.default_rng(BIAS_SEED)
+        boots = []
+        for _ in range(BIAS_BOOTSTRAP):
+            pick = rng.integers(0, len(series), len(series))
+            b = reaction_bias([series[j] for j in pick])
+            if b is not None and np.isfinite(b):
+                boots.append(b)
+        if bias is None or len(boots) < BIAS_BOOTSTRAP // 2:
+            reason = "the pooled fits could not be computed on this catalogue"
         else:
-            # a 20% trimmed mean: on four reactive catalogues it sat within
-            # ±0.16 of the bias the truth showed, where the median under-read
-            # it by up to 0.23 (the differences are right-skewed) and the plain
-            # mean followed the outliers a short series throws
-            d = np.array(diffs)
-            rng = np.random.default_rng(BIAS_SEED)
-            boots = np.array([stats.trim_mean(d[ix], BIAS_TRIM) for ix in rng.integers(0, n, size=(BIAS_BOOTSTRAP, n))])
-            bias, se_bias = float(stats.trim_mean(d, BIAS_TRIM)), float(np.std(boots, ddof=1))
-            diag.update({"bias_hat": num(bias, 4), "bias_se": num(se_bias, 4), "n_skus_both_fits": n,
-                         "t_bias": num(bias / se_bias, 3) if se_bias > 0 else None})
-            if se_bias <= 0 or abs(bias) < BIAS_T * se_bias:
-                reason = "the catalogue's static and controlled fits do not differ by more than their noise"
-            else:
-                applied = True
+            se_bias = float(np.std(boots, ddof=1))
+            diag.update({"bias_hat": num(bias, 4), "bias_se": num(se_bias, 4), "n_skus_both_fits": len(series),
+                         "t_bias": num(bias / se_bias, 3) if se_bias > 0 else None,
+                         "method": "pooled static less half-panel-jackknifed pooled controlled, bootstrap over SKUs"})
+            # Applied whenever the habit itself is established: the estimate is
+            # then the best guess at a bias theory says exists, and its error
+            # rides in every interval. A significance gate on the estimate
+            # (there was one, BIAS_T = 2, until 2026-09-24) left a known bias of
+            # −0.2 in place on reacting catalogues whose demand had no memory,
+            # because an eighty-SKU estimate of it carried a 0.15 error.
+            applied = se_bias > 0
     diag["applied"], diag["reason"] = applied, reason
     for r in rows:
         det = r.setdefault("details", {})
-        det["endogeneity"] = {k: diag.get(k) for k in ("status", "phi", "t_phi", "rho", "bias_hat", "bias_se", "applied", "reason")}
-        if not applied or r.get("status") != "ok" or det.get("source") == "experiment" or r.get("elasticity") is None:
+        det["endogeneity"] = {k: diag.get(k) for k in ("status", "phi", "t_phi", "rho", "bias_hat", "bias_se",
+                                                      "applied", "reason", "method")}
+        if not applied or r not in fitted:
             continue
         bias, sd_b = float(diag["bias_hat"]), float(diag["bias_se"])
-        se_old = float(r.get("std_err") or 0.0)
-        se_new = float(np.sqrt(se_old**2 + sd_b**2))
         t_crit = float(det.get("t_critical") or 1.96)
         det["epsilon_uncorrected"] = r["elasticity"]
         det["std_err_uncorrected"] = r["std_err"]
+        det["ci95_uncorrected"] = det.get("ci95")
+        det["reaction_bias_se"] = num(sd_b, 4)
         r["elasticity"] = num(float(r["elasticity"]) - bias, 4)
-        r["std_err"] = num(se_new, 4)
-        det["ci95"] = [num(float(r["elasticity"]) - t_crit * se_new, 4), num(float(r["elasticity"]) + t_crit * se_new, 4)]
+        r["std_err"] = num(float(np.sqrt(float(r["std_err"] or 0.0) ** 2 + sd_b**2)), 4)
+        if det.get("std_err_classical") is not None:
+            det["std_err_classical"] = num(float(np.sqrt(float(det["std_err_classical"]) ** 2 + sd_b**2)), 4)
+        det["ci95"] = [num(float(r["elasticity"]) - t_crit * float(r["std_err"]), 4),
+                       num(float(r["elasticity"]) + t_crit * float(r["std_err"]), 4)]
     return diag
 
 
@@ -500,7 +721,10 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
     estimate is the one the optimizer should see — and the observational fit
     rides in details.observational beside the bias the experiment measured."""
     results = []
+    from .data_quality import clean_for_fitting
     from .seasonality import deseasonalise_economics
+    exported = data           # the markup is read off the export as sent, fees and all
+    data, cleaning = clean_for_fitting(data)
     data, season_note = deseasonalise_economics(data, seasonal)
 
     by_asin: dict[str, list[dict]] = {}
@@ -563,11 +787,13 @@ def run(data: dict, rng=None, simulations=None, groups: dict[str, str] | None = 
     def pool_key(row: dict):
         return (row["level"], groups.get(row["item_id"], "catalog"))
 
-    _shrink(results, pool_key)
+    if correct_reaction:
+        # before shrinkage, so the pool learns on corrected estimates
+        correct_endogeneity(results, data, points_by_sku)
+    _shrink(results, pool_key, markup_implied_elasticity(exported))
     for r in results:
         r.setdefault("details", {})["seasonal_adjustment"] = season_note
-    if correct_reaction:
-        # after shrinkage: the bias is common to the catalogue, so the pool
-        # mean carries it too, and subtracting once after the pool is exact
-        correct_endogeneity(results, data, points_by_sku)
+        excluded = (cleaning.get("excluded") or {}).get(r.get("item_id"))
+        if excluded and r.get("level") == "sku":
+            r["details"]["excluded_periods"] = excluded
     return results

@@ -73,15 +73,35 @@ def _monthly_rates(data: dict) -> dict[str, dict[str, list[float]]]:
     return out
 
 
+RELATIVE_MIN_MONTHS = 6       # observed calendar months before a relative index is offered to price fits
+
+
 def indices(data: dict) -> dict:
     series = _monthly_rates(data)
     months_seen = sorted({m for v in series.values() for m in v})
     calendar_months = sorted({int(m[5:7]) for m in months_seen})
+    if data.get("_relative_only"):
+        # the same estimate on whatever months exist, for the refusal's relative index
+        calendar_months = list(range(1, 13))
     base = {"n_skus": len(series), "months_observed": len(months_seen),
             "calendar_months_covered": len(calendar_months)}
     if len(calendar_months) < MIN_MONTHS:
-        return {**base, "status": "insufficient_history",
-                "basis": f"{len(calendar_months)} distinct calendar months in the history; {MIN_MONTHS} are needed"}
+        refused = {**base, "status": "insufficient_history",
+                   "basis": f"{len(calendar_months)} distinct calendar months in the history; {MIN_MONTHS} are needed"}
+        if len(calendar_months) >= RELATIVE_MIN_MONTHS:
+            # Not a seasonal model — the forecast, the stock and the cash cone
+            # still see the refusal — but a price fit needs less: it compares
+            # the months it observed with each other, and a catalogue ratio over
+            # those months is estimable from any stretch of them. Added
+            # 2026-09-24: with twelve months a catalogue's fits were
+            # deseasonalised and with eleven they were not, and dropping one
+            # month from the middle of a year flipped the direction of 22–26%
+            # of the model-risk bench's price steps.
+            full = indices({**data, "_relative_only": True})
+            refused["relative_catalog"] = full.get("catalog")
+            refused["relative_basis"] = (f"catalogue ratios over {len(calendar_months)} observed calendar months, "
+                                         "for deseasonalising price fits only")
+        return refused
     # per SKU: ratio of each month's rate to the SKU's mean over its window
     ratios: dict[int, list[float]] = {m: [] for m in range(1, 13)}
     sku_ratios: dict[str, dict[int, list[float]]] = {}
@@ -188,10 +208,11 @@ def deseasonalise_economics(data: dict, seasonal: dict | None) -> tuple[dict, di
     would fit the noise away. The catalogue index pools every SKU, so no
     single SKU's noise moves it. Returns (data, note); data is the input,
     untouched, when the index is not on file."""
-    if not seasonal or seasonal.get("status") != "ok":
+    if not seasonal or (seasonal.get("status") != "ok" and not seasonal.get("relative_catalog")):
         return data, {"deseasonalised": False, "basis": "no catalogue seasonal index on file"}
+    catalog = seasonal.get("catalog") if seasonal.get("status") == "ok" else seasonal.get("relative_catalog")
     idx = {}
-    for k, v in (seasonal.get("catalog") or {}).items():
+    for k, v in (catalog or {}).items():
         try:
             m = int(k)
         except (TypeError, ValueError):
@@ -215,7 +236,8 @@ def deseasonalise_economics(data: dict, seasonal: dict | None) -> tuple[dict, di
         if rr.get("sales") is not None:
             rr["sales"] = float(rr["sales"]) / f
         rows.append(rr)
-    return {**data, "sku_economics": rows}, {"deseasonalised": True, "basis": seasonal.get("basis_label"),
+    return {**data, "sku_economics": rows}, {"deseasonalised": True,
+                                            "basis": seasonal.get("basis_label") or seasonal.get("relative_basis"),
                                             "amplitude": seasonal.get("amplitude")}
 
 

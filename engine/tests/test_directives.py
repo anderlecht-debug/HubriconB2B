@@ -336,4 +336,9 @@ def test_every_drafted_price_step_carries_the_guard_and_the_solver_makes_it_slac
         assert guard["share"] == DOWNSIDE_GUARD_SHARE
         # the solver already refused anything whose bad case was a material loss
         assert guard["within_budget"] is True
-        assert guard["downside_usd"] == 0.0
+        # the solver's constraint is the 5% expected shortfall inside the
+        # budget, which puts the 5th percentile inside it too. This asserted
+        # a bad case of exactly zero until 2026-09-24 — a property of the
+        # fixture under plug-in shrinkage, not of the solver; with the spread
+        # between SKUs integrated over, two of eight steps carry a small one
+        assert guard["downside_usd"] <= guard["budget_usd"]

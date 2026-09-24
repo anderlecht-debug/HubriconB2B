@@ -80,10 +80,14 @@ def sku_cash_params(inventory_rows: list[dict], margin_rows: list[dict]) -> list
         if units <= 0 or revenue <= 0:
             continue
         days = period_days(m["period_start"], m["period_end"])
+        det = r.get("details") or {}
         params.append({
             "sku": r["sku"],
-            "mean_rate": float(r["daily_velocity_mean"] or 0),
-            "std_rate": float(r["daily_velocity_std"] or 0),
+            # the rate at index one when the simulation published it: the cone
+            # applies the index per calendar day itself, and the lead-window
+            # rate would apply it twice (corrected 2026-09-24)
+            "mean_rate": float(det.get("daily_velocity_base") or r["daily_velocity_mean"] or 0),
+            "std_rate": float(det.get("daily_velocity_base_std") or r["daily_velocity_std"] or 0),
             "price": revenue / units,
             "fee_rate": min(0.9, max(0.0, float(m.get("amazon_fees") or 0) / revenue)),
             "ad_daily": float(m.get("ad_spend_allocated") or 0) / days,

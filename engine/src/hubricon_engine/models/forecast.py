@@ -350,9 +350,18 @@ def rolling_origin_backtest(y, model_fn, min_train: int = MIN_TRAIN, m: int | No
     }
 
 
+# A more complex candidate must beat the simplest one within this share of
+# the best score, or the simpler one is kept — the one-standard-error rule of
+# model selection. Added 2026-09-24: a seasonal candidate on a flat
+# catalogue "won" the backtest by 0.2% of MASE, fitting a ±0.2% index of
+# pure noise; a margin this size costs a genuine seasonal win nothing (the
+# peaked catalogues of tests/test_seasonality.py win by 30% and more).
+SELECTION_MARGIN = 0.02
+
+
 def select_model(y, month_index=None) -> tuple[str | None, dict]:
-    """(name, backtest) of the candidate with the lowest rolling-origin MASE;
-    exact ties go to the simpler model. The returned backtest dict also
+    """(name, backtest) of the SIMPLEST candidate whose rolling-origin MASE is
+    within SELECTION_MARGIN of the lowest. The returned backtest dict also
     carries `candidates` = {name: mase} for every model that was tried.
     Fewer than MIN_PERIODS points -> (None, {"status": "insufficient_data"})."""
     y = np.asarray(y, dtype=float)
@@ -367,8 +376,15 @@ def select_model(y, month_index=None) -> tuple[str | None, dict]:
         mase = backtests[name]["mase"]
         return (mase if mase is not None else float("inf"), SIMPLICITY_ORDER.index(name))
 
-    chosen = min(backtests, key=rank)
-    return chosen, {**backtests[chosen], "candidates": {n: bt["mase"] for n, bt in backtests.items()}}
+    best = min(backtests, key=rank)
+    best_mase = backtests[best]["mase"]
+    chosen = best
+    if best_mase is not None:
+        within = [n for n, bt in backtests.items()
+                  if bt["mase"] is not None and bt["mase"] <= best_mase * (1.0 + SELECTION_MARGIN)]
+        chosen = min(within, key=lambda n: SIMPLICITY_ORDER.index(n))
+    return chosen, {**backtests[chosen], "candidates": {n: bt["mase"] for n, bt in backtests.items()},
+                    "best_by_score": best, "selection_margin": SELECTION_MARGIN}
 
 
 def quantiles_from_errors(point: float, errors) -> dict[str, float]:
@@ -382,15 +398,52 @@ def quantiles_from_errors(point: float, errors) -> dict[str, float]:
 
 
 def rate_moments(row: dict) -> tuple[float | None, float | None]:
-    """(mean_rate, std_rate) for the inventory simulation: the point forecast
-    and the sd of the forecast errors, falling back to the normal-equivalent
-    width of the P10-P90 band. (None, None) for a row with no forecast."""
+    """(mean_rate, std_rate) for the inventory simulation, AT A SEASONAL INDEX
+    OF ONE: the point forecast and the sd of the forecast errors (falling back
+    to the normal-equivalent width of the P10-P90 band), both divided by the
+    seasonal index the point already carries. Every consumer then applies the
+    index of its own window exactly once. (None, None) for a row with no
+    forecast.
+
+    Corrected 2026-09-24. This returned the point as it stood — a
+    seasonal-index forecast for September already multiplied by September's
+    index — and the inventory simulation, the order sizing and the cash cone
+    each multiplied by the index of their own window again. On the
+    model-risk bench's catalogue (a 1.6x fourth quarter) reorders ran on a
+    September rate 24% low, and their expected newsvendor cost was 48–79%
+    above the true optimum."""
     if row.get("status") != "ok":
         return None, None
     sd = row["details"].get("error_sd")
     if sd is None:
         sd = (row["daily_rate_p90"] - row["daily_rate_p10"]) / NORMAL_P10_P90_WIDTH
-    return float(row["daily_rate_point"]), float(sd)
+    embedded = float((row.get("details") or {}).get("embedded_index") or 1.0)
+    if embedded <= 0:
+        embedded = 1.0
+    return float(row["daily_rate_point"]) / embedded, float(sd) / embedded
+
+
+def embedded_index(name: str, fit: dict, month_index, n_used: int) -> tuple[float, str]:
+    """The seasonal index the method's point already carries: the target
+    month's for a method that forecasts the month itself, the recent months'
+    — weighted as the method weights them — for a method that forecasts a
+    level."""
+    if month_index is None:
+        return 1.0, "no seasonal index on file"
+    idx = np.asarray(month_index, dtype=float)
+    if name in ("seasonal_index_ses", "seasonal_naive"):
+        return float(idx[-1]), "the target month's index"
+    hist = idx[:n_used]
+    if name == "naive" or not len(hist):
+        return float(hist[-1]) if len(hist) else 1.0, "the last period's index"
+    alpha = float((fit.get("params") or {}).get("alpha") or 0.0)
+    if not 0.0 < alpha <= 1.0:
+        tail = hist[-3:]
+        return float(np.mean(tail)), "the mean index of the last three periods"
+    k = np.arange(len(hist))[::-1]             # 0 for the most recent period
+    w = alpha * (1.0 - alpha) ** k
+    w[0] += (1.0 - alpha) ** len(hist)          # the initial level's weight rides on the oldest period
+    return float((w * hist).sum() / w.sum()), f"the recent months' index, smoothing weights (alpha {alpha:.2f})"
 
 
 # ── per-item row ──────────────────────────────────────────────────────────
@@ -430,10 +483,17 @@ def _basis(name: str, n_used: int, backtest: dict, quantile_basis: str, horizon_
 
 
 def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
-                   snapshots: list[dict], horizon_days: int, seasonal: dict | None = None) -> dict:
+                   snapshots: list[dict], horizon_days: int, seasonal: dict | None = None,
+                   contaminated: set[str] | None = None) -> dict:
     from .seasonality import index_for
 
-    censored = censored_periods(rows, snapshots)
+    # a re-uploaded period counts once
+    rows = list({(str(r["period_start"]), str(r["period_end"])): r for r in rows}.values())
+    # an empty shelf censors a period; since 2026-09-24 so does a month the
+    # data-quality pass found contaminated — a stockout the Buy Box share
+    # shows, or a deal whose placement lifted units past what demand is
+    censored = censored_periods(rows, snapshots) | {r["period_start"] for r in rows
+                                                     if str(r["period_start"])[:10] in (contaminated or set())}
     series = [
         {"period_start": start, "rate": rate, "censored": start in censored}
         for start, rate in to_rates(rows, units_key)
@@ -443,11 +503,19 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
     used = series if use_all else clean
     y = np.array([s["rate"] for s in used], dtype=float)
     n_used = int(len(y))
-    month_index = None
+    month_index = select_index = None
     if seasonal and seasonal.get("status") == "ok" and used:
         months = [int(str(s["period_start"])[5:7]) for s in used]
         last = int(str(used[-1]["period_start"])[5:7])
         month_index = [index_for(seasonal, item_id, mo)[0] for mo in months] + [index_for(seasonal, item_id, last % 12 + 1)[0]]
+        # The backtest that decides whether seasonality earns its place is
+        # scored on the CATALOGUE index, to which this SKU's own months
+        # contribute one part in the catalogue's size. Its own index was
+        # estimated from the very months being backtested — a look-ahead the
+        # plug-in shrinkage hid by collapsing a flat catalogue's indices to
+        # exactly one (corrected 2026-09-24, when the shrinkage stopped doing
+        # that and a flat catalogue picked the seasonal method on noise).
+        select_index = [index_for(seasonal, None, mo)[0] for mo in months] + [index_for(seasonal, None, last % 12 + 1)[0]]
 
     row = {
         "level": level,
@@ -472,7 +540,7 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
                             "are needed before any forecast is attempted.")
         return {**row, "status": "insufficient_data", "details": details}
 
-    name, backtest = select_model(y, month_index)
+    name, backtest = select_model(y, select_index)
     fit = (seasonal_index_ses(y, month_index) if name == "seasonal_index_ses" else MODELS[name](y))
     point = max(0.0, float(fit["point"]))
     if len(backtest["errors"]) >= MIN_BACKTEST_ERRORS:
@@ -486,6 +554,9 @@ def _forecast_item(level: str, item_id: str, rows: list[dict], units_key: str,
     if mase is not None and naive_mase is not None:
         assert mase <= naive_mase, "selection must never pick a model that loses to naive"
 
+    embedded, embedded_basis = embedded_index(name, fit, month_index, n_used)
+    details["embedded_index"] = num(embedded, 4)
+    details["embedded_index_basis"] = embedded_basis
     row["method"] = name
     row.update({
         "daily_rate_point": num(point, 4),
@@ -538,9 +609,12 @@ def run(data: dict, rng=None, simulations=None, horizon_days: int = DEFAULT_HORI
         if snap.get("asin"):
             snaps_by_asin.setdefault(snap["asin"], []).append(snap)
 
+    from .data_quality import contaminated_periods
+    bad = contaminated_periods(data)
     results = []
     for sku, rows in sorted(econ_by_sku.items()):
-        results.append(_forecast_item("sku", sku, rows, "units_sold", snaps_by_sku.get(sku, []), horizon_days, seasonal))
+        results.append(_forecast_item("sku", sku, rows, "units_sold", snaps_by_sku.get(sku, []), horizon_days, seasonal,
+                                      contaminated=set((bad.get(sku) or {}).keys())))
     covered = {bridge[sku] for sku in econ_by_sku if sku in bridge}
     for asin, rows in sorted(traffic_by_asin.items()):
         if asin in covered:

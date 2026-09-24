@@ -69,13 +69,28 @@ win in the tail, and the only rule whose step size is derived from the
 uncertainty rather than asserted as a constant. That is the argument for it,
 stated at its actual strength and no higher.
 
-2026-09-24: every seller in this race reprices at phi = 0.6, so the reaction
-correction of MATH_METHODS.md §2 now fires on all of them. It moved every
-rule's total by under 1% (plugin 131,982 → 131,658 in the no-drift regime, ce
-129,690 → 129,906) and the bands asserted below still hold; the table above is
-left as it was measured. The optional loss gate (`pricing_engine.MAX_P_LOSS`)
-was priced here too: at 0.25 the ce rule keeps 635 of 987 moves and 82% of
-the total, which is why the gate is off by default.
+2026-09-24, re-measured after the model-risk bench's corrections (the
+reaction bias removed by a jackknifed pooled estimate, the shrinkage integrated
+over its own spread and informed by each SKU's markup). Every seller here
+reprices at phi = 0.6, so every fitted rule gained:
+
+  regime       rule      moves   total $   $/move   worst-decile $
+  no drift     plugin     1000   137,786    137.8        −91
+               ce          993   137,576    138.5        −84
+               quantile    792   130,010    164.2        −63
+               naive      1000    84,233     84.2        −47
+  ε drift 0.4  plugin     1000   137,957    138.0       −150
+               ce          993   137,439    138.4       −141
+               quantile    792   129,956    164.1       −110
+  ε drift 0.8  plugin     1000   140,984    141.0       −256
+               ce          993   140,065    141.1       −247
+               quantile    792   131,138    165.6       −214
+
+The robust policy is still a dead heat with the plug-in on money (0.998 of
+its total) and still loses less in the tail, by 3–8% now rather than 10–18%:
+truer fits leave less for robustness to buy. The tail-quantile rule declines
+a fifth of the catalogue instead of two fifths and gives up 6% of the total
+instead of 23%. The table above is left as it was measured.
 """
 
 from functools import lru_cache
@@ -289,8 +304,11 @@ def test_the_robust_policy_loses_less_in_the_tail_in_every_regime():
         ce, plugin = result["ce"], result["plugin"]
         assert ce["worst_decile"] > plugin["worst_decile"], f"{name} worst decile"
         assert ce["losses"] > plugin["losses"], f"{name} sum of losses"
-        # and the margin is material, not a rounding artifact
-        assert ce["worst_decile"] > plugin["worst_decile"] * 0.95, name
+        # and the margin is more than rounding. It was 10–18% until 2026-09-24;
+        # with the reaction corrected and the shrinkage integrated over its own
+        # spread the two policies see truer elasticities and converge, and the
+        # robust one's tail advantage is 3–8% (the dated table in the docstring)
+        assert ce["worst_decile"] > plugin["worst_decile"] * 0.98, name
 
 
 def test_the_tail_objective_is_fewer_and_truer_and_we_price_it():
@@ -299,10 +317,12 @@ def test_the_tail_objective_is_fewer_and_truer_and_we_price_it():
     asserted so the scorecard's argument for the default is checkable."""
     result = _race(*REGIMES["no_drift"])
     q, plugin = result["quantile"], result["plugin"]
-    assert q["per_move"] > plugin["per_move"] * 1.2          # truer
+    # the 2026-09-24 table: 792 moves against 1,000, 19% more per move, 6% less
+    # in total (it declined 40% and cost 23% before the fits were corrected)
+    assert q["per_move"] > plugin["per_move"] * 1.1          # truer
     assert q["losses"] > plugin["losses"] * 0.5              # far less lost
-    assert q["moves"] < plugin["moves"] * 0.7               # fewer
-    assert q["total"] < plugin["total"] * 0.85              # and it costs money
+    assert q["moves"] < plugin["moves"] * 0.85              # fewer
+    assert q["total"] < plugin["total"]                     # and it still costs money
 
 
 def test_the_race_is_reported_not_just_asserted():

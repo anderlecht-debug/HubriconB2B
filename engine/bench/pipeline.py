@@ -41,12 +41,14 @@ def run_engine(data: dict, seed: int = 42, sims: int = 8000, paths: int = 4000) 
     out["cash"] = cash
     out["stress"] = stress.run(out["cash_paths"], cash)
     out["co"] = cash_orders.run(out["ie"], cash, TODAY)
+    book = {}
     out["drafts"] = directives.draft_directives(
         out["inv"], out["ads"], out["el"], out["margins"], search_terms=data["ppc_search_terms"],
         brand_terms=["acme"], recovery=None, inv_econ=out["ie"], anomaly_rows=out["anom"], channel="amazon",
         ad_allocation=out["alloc"], incrementality=out["incr"], client_id=CLIENT["id"], cross_price=out["cross"],
-        markdown=out["md"], replenishment=out["rep"], cash_orders=out["co"], assortment=out["asrt"], cash=cash)
-    out["book"] = _book(out)
+        markdown=out["md"], replenishment=out["rep"], cash_orders=out["co"], assortment=out["asrt"], cash=cash,
+        **_book_kwarg(book))
+    out["book"] = book or None
     out["avg_margin"] = avg_m
     return out
 
@@ -70,14 +72,10 @@ def sized_client(out: dict, paths: int) -> dict:
     return {**CLIENT, "cash_on_hand": float(round(CASH_CUSHION * depth, -4) or CLIENT["cash_on_hand"])}
 
 
-def _book(out: dict) -> dict | None:
-    """The sweep as one book, if the engine publishes one."""
-    try:
-        from hubricon_engine.models import portfolio
-    except ImportError:
-        return None
-    return portfolio.run(out["drafts"], out["margins"], cash=out["cash"], cash_paths=out["cash_paths"],
-                         risk_share=out["client"].get("risk_budget_share"))
+def _book_kwarg(book: dict) -> dict:
+    """The engine's own book for the sweep, when its drafting call publishes one."""
+    import inspect
+    return {"book_out": book} if "book_out" in inspect.signature(directives.draft_directives).parameters else {}
 
 
 def pricing_sweep(data: dict) -> list[dict]:

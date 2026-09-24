@@ -189,6 +189,11 @@ OBJECTIVE = "certainty_equivalent"
 # stays off — the pure-quantile rule earns more per move by declining 40% of
 # the catalogue, and puts less money in the payout.
 MAX_P_LOSS: float | None = None
+# A step is issued only when this share of the posterior's draws agrees that a
+# small move in its direction raises profit (own plus family). None switches
+# the gate off. See the note at the gate in price_move.
+MIN_DIRECTION_CONFIDENCE: float | None = None
+DIRECTION_NUDGE = 0.005
 # How close to the pole at eps = −1 is too close to name a destination. Two
 # standard errors is the same line the 95% interval draws, so the guard and
 # the published interval cannot disagree: if a two-sigma band around epŝ
@@ -196,6 +201,7 @@ MAX_P_LOSS: float | None = None
 # is knowable. Raising this refuses more destinations; lowering it publishes
 # cents the data cannot support.
 POLE_GUARD_SIGMAS = 2.0
+POLE_OPTIMUM_LOG_SD = 0.5     # no destination when one standard error moves the optimum by more than half
 # Draws in the profit-delta bootstrap. 6,000 puts the Monte Carlo standard
 # error of the P5 at roughly a fiftieth of the P5-to-P95 width — small enough
 # that re-running cannot move a recommendation, cheap enough to run on every
@@ -294,7 +300,13 @@ def near_unit_elastic(eps: float, std_err: float | None, ci: list | tuple | None
     if std_err is not None and float(std_err) > 0:
         if not math.isfinite(float(std_err)):
             return True
-        return abs(1.0 + eps) < POLE_GUARD_SIGMAS * float(std_err)
+        if abs(1.0 + eps) < POLE_GUARD_SIGMAS * float(std_err):
+            return True
+        # the optimum's own relative uncertainty: d log P*/dε = 1/(ε(1+ε)).
+        # Added 2026-09-24: a catalogue pooled to a precise ε = −1.05 has an
+        # interval that excludes −1, and an optimum of 21× cost that its own
+        # interval moves between 13× and 51× — a price no one should be told
+        return float(std_err) / abs(eps * (1.0 + eps)) > POLE_OPTIMUM_LOG_SD if eps < -1 else False
     # no usable uncertainty on a fitted row: unbounded, not exact
     return bool(fitted)
 
@@ -719,6 +731,16 @@ def price_move(margin_row: dict, elasticity_row: dict,
         if abs(fraction) < MIN_MOVE:
             return None
 
+    # Direction confidence: on what share of the posterior's draws does a
+    # half-percent move this way raise the profit of the SKU and its family?
+    # At a price already near its optimum a small error in ε makes a
+    # first-order edge on paper and a second-order loss in fact; this is the
+    # gate that tells the two apart.
+    nudge = delta_at(draw_set, p0 * (1.0 + DIRECTION_NUDGE * float(np.sign(fraction))))
+    direction_confidence = float(np.mean(nudge[np.isfinite(nudge)] > 0)) if np.isfinite(nudge).any() else 0.0
+    if MIN_DIRECTION_CONFIDENCE is not None and direction_confidence < MIN_DIRECTION_CONFIDENCE:
+        return None
+
     dist = summarize_delta(delta_at(draw_set, p_new))
     cross_effect = None
     if draw_set.get("cross"):
@@ -751,6 +773,7 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "delta_p95": dist["p95"],
         "delta_mean": dist["mean"],
         "p_loss": dist["p_loss"],
+        "direction_confidence": round(direction_confidence, 4),
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
         "policy": {**policy, "risk_budget_share": share,
