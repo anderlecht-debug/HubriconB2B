@@ -983,6 +983,21 @@ of the null the p-value is extrapolated from an exponential fit to the excesses
 tail we have no reason to believe is heavier). `p_basis` says which of the two
 produced each number.
 
+### Ad cost drift, and the regime break
+
+Since 2026-09-23 the campaign scan also covers the cost of a click (spend ÷ clicks)
+and what a click brings back (sales ÷ clicks), day by day, through the same CUSUM and
+changepoint detectors and the same false-discovery control. Spend can sit still while
+the auction moves under it; these two series are where non-stationarity in the ad
+account shows first. A shift is valued at the campaign's own clicks over thirty days
+and drafted as `cpc_drift` or `conversion_drift`, worth no dollars in itself.
+
+A flagged shift is also a REGIME BREAK for §4: a response curve fitted across it is two
+curves averaged. `ad_efficiency.run(breaks=)` drops the points before the break and
+refits on the new regime; with fewer than five points since, the campaign is
+`regime_break` — no break-even, no trim, held out of the reallocation — until enough
+days have run. The anomaly scan therefore runs before the ad fit.
+
 ### What the change detection cannot tell you
 
 - **The null assumes independent Gaussian noise with no trend and no

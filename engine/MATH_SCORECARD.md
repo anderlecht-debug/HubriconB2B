@@ -689,6 +689,22 @@ Monte Carlo error; a hand-built matrix reproduces its ruin shares to within the
 quantile grid; a reorder priced at ten times the landed cost is demoted with both
 probabilities in the reason. `tests/test_ruin_cost.py`, 3 tests.
 
+### Iteration 27 — non-stationarity in the ad account
+
+**Objection.** Ad costs drift. The anomaly scan watched a campaign's spend and nothing
+else, and the response curve averaged across whatever regime change the auction
+brought.
+
+**Change.** Two daily series per campaign — cost per click and sales per click — through
+the existing detectors and false-discovery control, valued at the campaign's clicks;
+two unbankable drift directives; a regime break that makes the ad fit drop the points
+before it and refit, or hold the campaign with a status when too few days have run. The
+anomaly scan now runs before the ad fit.
+
+**Measured.** A planted 50% cost-per-click step is detected and dated; a quiet campaign
+flags nothing; the refit drops the pre-break points; a break with under five points
+after it is held, and the reallocation holds it too. `tests/test_ad_drift.py`, 3 tests.
+
 ---
 
 ## Outcome Alignment

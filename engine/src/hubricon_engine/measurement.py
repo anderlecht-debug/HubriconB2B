@@ -79,6 +79,8 @@ UNBANKABLE_KINDS = {
     "cannibalisation_watch",  # a step NOT taken: nothing to measure, the finding is the record
     "expedite_air",           # the avoided stockout is the same unobservable counterfactual as a reorder
     "budget_order_set",       # the reorders it replaces, under a cash constraint: the same counterfactual
+    "cpc_drift",              # a regime break named: the refit and the correction that follows bank
+    "conversion_drift",
 }
 
 

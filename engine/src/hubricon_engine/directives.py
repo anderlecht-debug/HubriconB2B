@@ -60,6 +60,7 @@ ANOMALY_LABELS = {
     "fee_per_unit": "total Amazon fees per unit", "fba_fee_per_unit": "FBA fulfillment fee per unit",
     "referral_rate": "referral fee rate", "storage_fee": "storage fee",
     "sessions": "traffic", "unit_session_pct": "conversion", "buy_box_pct": "Buy Box share", "spend": "daily spend",
+    "cpc": "cost per click", "sales_per_click": "sales per click",
 }
 
 
@@ -857,7 +858,8 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
     for r in anomaly_rows or []:
         if not r.get("flagged") or (r.get("dollar_impact") or 0) < ANOMALY_MIN_IMPACT:
             continue
-        adverse_up = r["metric"] in ("fee_per_unit", "fba_fee_per_unit", "referral_rate", "storage_fee", "spend", "monthly_total")
+        adverse_up = r["metric"] in ("fee_per_unit", "fba_fee_per_unit", "referral_rate", "storage_fee", "spend",
+                                     "monthly_total", "cpc")
         if (adverse_up and r.get("direction") != "up") or (not adverse_up and r.get("direction") != "down"):
             continue
         key = (r.get("scope"), r.get("item_id"), r.get("metric"))
@@ -925,6 +927,23 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
                 (f"Buy Box share on {r['item_id']} fell from {b:.0f}% to {c:.0f}% since {since}. "
                  f"Amazon is suppressing the Featured Offer — price, competitor, or account health; "
                  f"we step the price back if that is the cause."), ev))
+        elif m == "cpc":
+            # The auction moved under the campaign. Not banked: the response
+            # curve is refitted on the new regime and the trim or reallocation
+            # that follows carries its own promise.
+            out.append(_draft(
+                "advertising", "cpc_drift", subject, 15 + impact / 100, None,
+                (f"The cost of a click on “{r['item_id']}” rose from ${b:.2f} to ${c:.2f} since {since} — about "
+                 f"{_money(impact)} of extra ad cost per 30 days at its own click volume. The response curve fitted "
+                 f"before that date no longer describes it; we refit on the new regime and hold the campaign out of "
+                 f"reallocation until enough days have run. Check bids, match types and new competitors in the auction."), ev))
+        elif m == "sales_per_click":
+            out.append(_draft(
+                "advertising", "conversion_drift", subject, 15 + impact / 100, None,
+                (f"Sales per click on “{r['item_id']}” fell from ${b:.2f} to ${c:.2f} since {since} — about "
+                 f"{_money(impact)} of attributed sales per 30 days at its own click volume. The clicks are landing on "
+                 f"a page that converts worse: price, Buy Box, reviews or the listing itself. The response curve is "
+                 f"refitted on the new regime."), ev))
         elif m == "spend":
             # Banked (was None): the dollars are already computed, the action
             # is inside the standing mandate, and the proof is direct in the

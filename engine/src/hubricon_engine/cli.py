@@ -92,9 +92,9 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "incrementality",
-              "clv", "ads", "adalloc", "recovery", "anomaly", "invecon", "markdown", "replenish", "risk", "assortment",
-              "cash", "cashorders", "health")
+ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
+              "incrementality", "clv", "ads", "adalloc", "recovery", "invecon", "markdown", "replenish", "risk",
+              "assortment", "cash", "cashorders", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -415,6 +415,14 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             _save_output(db, run_id, client["id"], "cross_price", cross)
             print(f"  cross-price: {cross['status']}"
                   + (f" — {cross['n_fitted']} of {cross['n_families']} variant families fitted" if cross["status"] != "no_variant_mapping" else ""))
+        if "anomaly" in wanted:
+            # before the ad fit: a cost-per-click or conversion break under a
+            # campaign is a regime the response curve must not average across
+            anomaly_rows = anomaly.run(data)
+            _save_output(db, run_id, client["id"], "anomaly", {"rows": anomaly_rows})
+            s = summarize_anomalies(anomaly_rows)
+            print(f"  anomaly: {s['scanned']} series scanned, {s['flagged']} flagged, "
+                  f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
         incr = None
         if "incrementality" in wanted:
             incr = incrementality.run(data, _load_switchbacks(db, client["id"]))
@@ -438,9 +446,13 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "ads" in wanted:
             iota = (incr or {}).get("incrementality_for_breakeven")
             mult = float(clv_out["clv_multiplier"]) if clv_out and clv_out.get("status") == "ok" else None
+            breaks = ad_efficiency.regime_breaks(anomaly_rows)
             ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
                                          incrementality_basis="switchback" if iota is not None else None,
-                                         clv_multiplier=mult, clv_basis="calibrated" if mult else None)
+                                         clv_multiplier=mult, clv_basis="calibrated" if mult else None,
+                                         breaks=breaks)
+            if breaks:
+                print(f"  ad efficiency: {len(breaks)} campaign(s) refitted after a cost-per-click or conversion break")
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
         if "recovery" in wanted and not channels.has_recovery(channel):
             print("  recovery: not applicable to Shopify (no reimbursement window)")
@@ -454,12 +466,6 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                       f"${float(s['live_ev'] or 0):,.0f} expected, {s['n_expiring']} expiring")
             else:
                 print("  recovery: no bleed reports on file yet (ledger, returns, reimbursements, transactions)")
-        if "anomaly" in wanted:
-            anomaly_rows = anomaly.run(data)
-            _save_output(db, run_id, client["id"], "anomaly", {"rows": anomaly_rows})
-            s = summarize_anomalies(anomaly_rows)
-            print(f"  anomaly: {s['scanned']} series scanned, {s['flagged']} flagged, "
-                  f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
         base_inventory = inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations)
         base_margins = margin_rows if margin_rows is not None else margin.run(data)
         if "adalloc" in wanted:

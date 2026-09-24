@@ -198,9 +198,27 @@ def _bleed_terms(rows: list[dict]) -> list[dict]:
     ]
 
 
+def regime_breaks(anomaly_rows: list[dict] | None) -> dict[str, dict]:
+    """{campaign: {since, metric}} for every campaign whose cost per click or
+    sales per click shifted (flagged after the sweep's false-discovery control).
+    A response curve fitted across such a break is two curves averaged."""
+    out: dict[str, dict] = {}
+    for r in anomaly_rows or []:
+        if r.get("scope") != "campaign" or r.get("metric") not in ("cpc", "sales_per_click") or not r.get("flagged"):
+            continue
+        since = str(r.get("since") or "")[:10]
+        if not since:
+            continue
+        cur = out.get(r["item_id"])
+        if cur is None or since > cur["since"]:
+            out[r["item_id"]] = {"since": since, "metric": r["metric"], "detector": r.get("detector")}
+    return out
+
+
 def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
         incrementality: float | None = None, incrementality_basis: str | None = None,
-        clv_multiplier: float | None = None, clv_basis: str | None = None) -> list[dict]:
+        clv_multiplier: float | None = None, clv_basis: str | None = None,
+        breaks: dict[str, dict] | None = None) -> list[dict]:
     """`incrementality` is ι from models/incrementality.py: the ratio of the
     total-sales response to the attributed-sales response. When its basis is an
     executed switchback the break-even is computed on ι-adjusted attribution
@@ -229,9 +247,18 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
     # Daily points from ppc_spend when present, else one aggregate point per
     # (campaign, period) from the search-term uploads.
     points_by_campaign: dict[str, list[tuple[float, float]]] = {}
+    breaks = breaks or {}
+    dropped_before_break: dict[str, int] = {}
     for row in data["ppc_spend"]:
         if row["spend"] is not None:
-            points_by_campaign.setdefault(row["campaign_name"] or row["campaign_id"], []).append(
+            name = row["campaign_name"] or row["campaign_id"]
+            brk = breaks.get(name)
+            if brk and str(row.get("report_date") or "")[:10] < brk["since"]:
+                # a point from before the regime break describes a curve
+                # that no longer applies; fit on the new regime only
+                dropped_before_break[name] = dropped_before_break.get(name, 0) + 1
+                continue
+            points_by_campaign.setdefault(name, []).append(
                 (float(row["spend"]), float(row["sales"] or 0))
             )
     if not points_by_campaign:
@@ -258,13 +285,18 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             "bleed_terms": bleed,
             "details": {"n_points": len(points), "breakeven_marginal_roas": num(threshold, 4)},
         }
+        if campaign in breaks:
+            base["details"]["regime_break"] = {**breaks[campaign],
+                                               "points_before_break_dropped": dropped_before_break.get(campaign, 0)}
         if adjusted is not None:
             base["details"].update({"incrementality": num(incrementality, 4),
                                     "incrementality_basis": incrementality_basis,
                                     "breakeven_marginal_roas_incremental": num(adjusted, 4),
                                     "clv_multiplier": num(clv_multiplier, 4), "clv_basis": clv_basis})
         if len(points) < MIN_POINTS:
-            results.append({**base, "status": "insufficient_data"})
+            # too few points since the break: the old curve is not trusted and
+            # the new one is not fitted yet — a status, not a stale number
+            results.append({**base, "status": "regime_break" if campaign in breaks else "insufficient_data"})
             continue
         spend_cv = float(np.std(spend) / np.mean(spend)) if spend.mean() > 0 else 0.0
         base["details"] = {**base["details"], "spend_cv": num(spend_cv, 4)}

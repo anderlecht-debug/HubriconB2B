@@ -682,6 +682,19 @@ def _spend_shift_impact(direction, before, after):
     return dollars, f"over {SPEND_SHIFT_DAYS} days that is {_money(dollars)} more ad spend"
 
 
+def _per_click_impact(clicks_per_day: float | None, what: str):
+    """A shift in a per-click figure, valued at the campaign's own clicks over
+    SPEND_SHIFT_DAYS. Both directions carry dollars; which is adverse is the
+    directive's call (a dearer click up, a sale per click down)."""
+    def impact(direction, before, after):
+        if not clicks_per_day:
+            return None, ""
+        dollars = abs(after - before) * clicks_per_day * SPEND_SHIFT_DAYS
+        return dollars, (f"at {clicks_per_day:,.0f} clicks a day that is {_money(dollars)} of {what} "
+                         f"over {SPEND_SHIFT_DAYS} days")
+    return impact
+
+
 # ── scans ─────────────────────────────────────────────────────────────────
 
 def _abs_or_none(v) -> float | None:
@@ -771,13 +784,34 @@ def _asin_rows(traffic: list[dict]) -> list[dict]:
 
 def _campaign_rows(ppc: list[dict]) -> list[dict]:
     by_campaign: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    clicks_by: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    sales_by: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
     for r in ppc:
         if r.get("spend") is None or not r.get("report_date"):
             continue
         key = r.get("campaign_name") or r.get("campaign_id")
-        by_campaign[key][r["report_date"][:10]] += float(r["spend"])
+        day = r["report_date"][:10]
+        by_campaign[key][day] += float(r["spend"])
+        if r.get("clicks") is not None:
+            clicks_by[key][day] += float(r["clicks"] or 0)
+            sales_by[key][day] += float(r.get("sales") or 0)
     rows = []
     for campaign, daily in sorted(by_campaign.items()):
+        # the cost of a click and what a click brings back: the two series
+        # that move when the auction or the listing changes under a campaign
+        # whose spend did not (non-stationarity the spend series never shows)
+        clicks = clicks_by.get(campaign) or {}
+        cpc_points = sorted((d, daily[d] / clicks[d]) for d in clicks if clicks[d] > 0 and d in daily)
+        spc_points = sorted((d, sales_by[campaign][d] / clicks[d]) for d in clicks if clicks[d] > 0)
+        clicks_per_day = float(np.mean([c for c in clicks.values() if c > 0])) if any(c > 0 for c in clicks.values()) else None
+        for metric, points, label, what, digits in (
+                ("cpc", cpc_points, "cost per click", "extra ad cost", 4),
+                ("sales_per_click", spc_points, "sales per click", "attributed sales", 4)):
+            if len(points) >= MIN_N:
+                spec = _spec("campaign", campaign, metric, points, label=label, fmt=_money,
+                             impact=_per_click_impact(clicks_per_day, what), digits=digits,
+                             extra={"clicks_per_day": clicks_per_day})
+                rows += [_cusum_row(spec), _changepoint_row(spec)]
         try:
             first, last = date.fromisoformat(min(daily)), date.fromisoformat(max(daily))
         except ValueError:
