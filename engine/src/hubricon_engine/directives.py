@@ -423,8 +423,9 @@ def _cannibalisation_directive(move: dict, fit: dict, margin_row: dict, sku: str
 
 
 def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None = None,
-                       cross: dict | None = None) -> dict | None:
-    move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []), cross=cross)
+                       cross: dict | None = None, risk_share: float | None = None) -> dict | None:
+    move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []), cross=cross,
+                      risk_share=risk_share)
     sku = fit["item_id"]
     if move and move.get("status") == "cannibalisation":
         return _cannibalisation_directive(move, fit, margin_row, sku)
@@ -940,7 +941,7 @@ def trim_candidates(ads: list[dict], avg_margin: float) -> dict[str, dict]:
     return out
 
 
-def _budget_reallocation_directive(alloc: dict | None) -> dict | None:
+def _budget_reallocation_directive(alloc: dict | None, share: float = DOWNSIDE_GUARD_SHARE) -> dict | None:
     """Money between campaigns: the same total, moved to where the marginal
     dollar returns more. Standing under the advertising mandate — no total
     changes — unless its own bad case exceeds the campaign set's risk budget."""
@@ -1004,7 +1005,7 @@ def _budget_reallocation_directive(alloc: dict | None) -> dict | None:
             "campaign_monthly_net": round(monthly_net, 2),
         },
     )
-    return downside_guard(draft, None, monthly_net=monthly_net)
+    return downside_guard(draft, None, share=share, monthly_net=monthly_net)
 
 
 SWITCHBACK_MIN_SPEND = 20.0     # a campaign under this a day is not worth a four-week test
@@ -1131,7 +1132,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      markdown: dict | None = None,
                      replenishment: dict | None = None,
                      cash_orders: dict | None = None,
-                     assortment: dict | None = None) -> list[dict]:
+                     assortment: dict | None = None,
+                     risk_share: float | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1143,6 +1145,10 @@ def draft_directives(inventory, ads, elasticity, margins,
     moves were excluded from the trims at the point it was computed
     (trim_candidates), so the two never promise on the same campaign."""
     today = date.today()
+    # the client's stated risk tolerance governs both how far a move walks and
+    # whether it may walk under the standing mandate
+    if risk_share is not None:
+        downside_share = float(risk_share)
     latest_by_sku = _latest_margins_by_sku(margins)
     econ_by_sku = {r["sku"]: r for r in (inv_econ or {}).get("rows", [])}
     # The margin the ad lever is evaluated against — the same figure
@@ -1163,11 +1169,11 @@ def draft_directives(inventory, ads, elasticity, margins,
     for sku, row in md_rows.items():
         d = _markdown_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
         if d:
-            drafts.append(d)
+            drafts.append(downside_guard(d, latest_by_sku.get(sku), downside_share))
             md_skus.add(sku)
         st = _stretch_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
         if st:
-            drafts.append(st)
+            drafts.append(downside_guard(st, latest_by_sku.get(sku), downside_share))
             md_skus.add(sku)
     drafts += _liquidation_directives(inv_econ, channel, markdown)
     drafts += _fee_bleed_directives(inv_econ, today, channel,
@@ -1271,7 +1277,7 @@ def draft_directives(inventory, ads, elasticity, margins,
                 },
             ))
 
-    realloc = _budget_reallocation_directive(ad_allocation)
+    realloc = _budget_reallocation_directive(ad_allocation, downside_share)
     if realloc:
         drafts.append(realloc)
     switchback = _switchback_directive(incrementality, ads, avg_margin, client_id, today)
@@ -1335,7 +1341,7 @@ def draft_directives(inventory, ads, elasticity, margins,
         margin_row = latest_by_sku.get(fit["item_id"])
         if not margin_row:
             continue
-        d = _pricing_directive(fit, margin_row, margins, cross=_cross_for(fit["item_id"]))
+        d = _pricing_directive(fit, margin_row, margins, cross=_cross_for(fit["item_id"]), risk_share=risk_share)
         if d:
             if (d.get("evidence") or {}).get("status") == "near_unit_elastic":
                 near_unit.add(fit["item_id"])

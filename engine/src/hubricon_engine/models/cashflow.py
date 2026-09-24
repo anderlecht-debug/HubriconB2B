@@ -39,8 +39,9 @@ twentieth of troughs is the number a runway decision needs. Every published
 percentile also carries its Monte Carlo standard error, because a P5 read off
 10,000 paths is an estimate and the seller is entitled to know how firm it is.
 
-Ruin here means the simulated account balance crossing zero — an honest
-"you would need bridge capital" line, never a bankruptcy prophecy.
+Ruin here means the simulated account balance crossing zero — or, since
+2026-09-23, the minimum cash buffer the client states — an honest "you would
+need bridge capital" line, never a bankruptcy prophecy.
 """
 
 import numpy as np
@@ -143,7 +144,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              payout_cycle_days: int = PAYOUT_CYCLE_DAYS,
              payout_note: str | None = None,
              correlation: dict | None = None,
-             index_paths: list[np.ndarray] | None = None) -> dict:
+             index_paths: list[np.ndarray] | None = None,
+             ruin_floor: float = 0.0) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
     schedule that produced it.
@@ -188,7 +190,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     cash = starting_cash - np.cumsum(outflow)[None, :] + paid
 
     p5, p50, p95 = (np.quantile(cash, q, axis=0) for q in (0.05, 0.50, 0.95))
-    ruined = (cash.min(axis=1) < 0).mean()
+    # ruin is the balance crossing the client's stated buffer, zero by default
+    ruined = (cash.min(axis=1) < float(ruin_floor)).mean()
     min_p5_day = int(np.argmin(p5))
 
     # The trough of each path, and the tail mean of those troughs. This is the
@@ -229,6 +232,8 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             "payout_cycle_days": payout_cycle_days,
             "skus_modeled": len(params),
             "seasonal": "index applied per calendar day" if index_paths is not None else "flat rate",
+            "ruin_floor": num(float(ruin_floor)),
+            "ruin_floor_basis": "client-stated minimum cash buffer" if ruin_floor else "zero (no buffer stated)",
             "assumptions": [
                 payout_note or channels.payout_note("amazon"),
                 ("Demand follows the catalog's seasonal index by calendar day" if index_paths is not None
@@ -280,4 +285,5 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
                     horizon_days=horizon_days, n_paths=n_paths,
                     payout_cycle_days=channels.payout_cycle_days(channel),
                     payout_note=channels.payout_note(channel),
-                    correlation=correlation, index_paths=index_paths)
+                    correlation=correlation, index_paths=index_paths,
+                    ruin_floor=float(client.get("min_cash_buffer_usd") or 0.0))

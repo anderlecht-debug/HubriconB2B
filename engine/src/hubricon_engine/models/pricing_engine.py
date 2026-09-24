@@ -585,7 +585,8 @@ def price_move(margin_row: dict, elasticity_row: dict,
                cost_cv: float = 0.0, draws: int = MC_DRAWS,
                rng: np.random.Generator | None = None,
                hard_cap: float = STEP_CAP, quantile: float = ROBUST_QUANTILE,
-               objective: str = OBJECTIVE, cross: dict | None = None) -> dict | None:
+               objective: str = OBJECTIVE, cross: dict | None = None,
+               risk_share: float | None = None) -> dict | None:
     """One SKU's recommended move: exact new price, destination optimum
     (elastic only, and only when the fit is far enough from the pole at
     eps = −1 to have one), the expected profit delta per period and the
@@ -654,7 +655,9 @@ def price_move(margin_row: dict, elasticity_row: dict,
         fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng, cross=cross,
     )
     monthly_net = trailing_monthly_net(margin_row)
-    budget = RISK_BUDGET_SHARE * max(monthly_net, 0.0)
+    # the client's stated tolerance, or the house default
+    share = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
+    budget = share * max(monthly_net, 0.0)
 
     def _solve(ds):
         if direction == 0:
@@ -731,7 +734,8 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "p_loss": dist["p_loss"],
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
-        "policy": policy,
+        "policy": {**policy, "risk_budget_share": share,
+                   "risk_budget_share_basis": "client" if risk_share is not None else "default"},
         "trailing_monthly_net": num(monthly_net),
         "fee_rate": round(fee_rate, 6),
         "fixed_fee_per_unit": round(fixed_fee, 6),

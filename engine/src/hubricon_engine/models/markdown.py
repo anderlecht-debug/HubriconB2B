@@ -287,7 +287,7 @@ def _erfinv(x: np.ndarray) -> np.ndarray:
 
 def run(data: dict, inv_econ: dict | None, elasticity_rows: list[dict] | None, margin_rows: list[dict] | None,
         inventory_rows: list[dict] | None, today: date | None = None, channel: str = "amazon",
-        draws: int = MD_DRAWS) -> dict:
+        draws: int = MD_DRAWS, risk_share: float | None = None) -> dict:
     from .. import channels
 
     today = today or date.today()
@@ -336,8 +336,11 @@ def run(data: dict, inv_econ: dict | None, elasticity_rows: list[dict] | None, m
                                  float(r.get("weighted_age") or 90.0), today, elasticity_row=fit,
                                  fee_history=fee_hist.get(sku), min_observed_price=r.get("min_observed_price"),
                                  size_tier=r.get("size_tier") or "standard", cliffs=cliffs, draws=draws, rng=rng)
-            tol = RISK_BUDGET_SHARE * max(trailing_monthly_net(m), 0.0) if m else 0.0
+            share = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
+            tol = share * max(trailing_monthly_net(m), 0.0) if m else 0.0
             pick = choose(opts, tol)
+            pick["risk_budget_share"] = share
+            pick["risk_budget_share_basis"] = "client" if risk_share is not None else "default"
             hold, liq = opts["hold"]["npv"], opts["liquidate"]["npv"]
             row.update({
                 "status": "ok" if fit else "no_elasticity",
@@ -376,7 +379,8 @@ def run(data: dict, inv_econ: dict | None, elasticity_rows: list[dict] | None, m
         # the mirror case
         p_out = float(inv.get("stockout_probability") or r.get("stockout_probability") or 0)
         if p_out >= STOCKOUT_ALERT and inv.get("lead_time_days"):
-            tol_s = RISK_BUDGET_SHARE * max(trailing_monthly_net(m), 0.0) if m else 0.0
+            share_s = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
+            tol_s = share_s * max(trailing_monthly_net(m), 0.0) if m else 0.0
             row["stretch"] = stretch(int(inv.get("on_hand_units") or 0), float(inv["lead_time_days"]), rate_mean, rate_sd,
                                      fit, p0, f, big_f, rng=_rng(sku + "|stretch"), draws=draws, tol=tol_s)
         out_rows.append(row)

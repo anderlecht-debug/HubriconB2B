@@ -207,7 +207,8 @@ def shrink_move(models, thetas, s0: np.ndarray, s_star: np.ndarray, tol: float, 
 
 
 def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS,
-        rng: np.random.Generator | None = None, exclude: set[str] | None = None) -> dict:
+        rng: np.random.Generator | None = None, exclude: set[str] | None = None,
+        risk_share: float | None = None) -> dict:
     """The reallocation over the campaigns that can enter it.
 
     `exclude` names campaigns another directive already moves this cycle (a
@@ -267,7 +268,8 @@ def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS
     free = _free_budget(mean_curves, delta, caps, avg_margin)
 
     # — how far to move, and what the move is worth —
-    tol = RISK_BUDGET_SHARE * campaign_monthly_net(active, avg_margin)
+    share = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
+    tol = share * campaign_monthly_net(active, avg_margin)
     policy = shrink_move(models, thetas, s0, s_star, tol, avg_margin)
     alpha = policy["alpha"]
     s_rec = s0 + alpha * (s_star - s0)
@@ -300,7 +302,8 @@ def run(ads_rows: list[dict], avg_margin: float | None, draws: int = ALLOC_DRAWS
         "lambda": num(lam, 4),
         "breakeven_marginal_roas": num(1.0 / avg_margin, 4),
         "alpha": alpha,
-        "policy": policy,
+        "policy": {**policy, "risk_budget_share": share,
+                   "risk_budget_share_basis": "client" if risk_share is not None else "default"},
         "draws": int(m),
         "delta_p5": num(q[0.05]["value"]), "delta_p50": num(q[0.50]["value"]), "delta_p95": num(q[0.95]["value"]),
         "delta_mean": num(float(profit_gain.mean())),

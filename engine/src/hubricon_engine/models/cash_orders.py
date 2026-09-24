@@ -140,9 +140,11 @@ def cash_budget(cash: dict | None, wires: list[dict] | None) -> dict | None:
     es = cash.get("trough_expected_shortfall")
     if trough is None:
         return None
-    k_p5 = planned + min(0.0, float(trough))
-    k_es = planned + min(0.0, float(es)) if es is not None else None
+    floor = float((cash.get("details") or {}).get("ruin_floor") or 0.0)
+    k_p5 = planned + min(0.0, float(trough) - floor)
+    k_es = planned + min(0.0, float(es) - floor) if es is not None else None
     return {"planned_first_cycle": num(planned), "trough_p5": num(trough), "trough_expected_shortfall": num(es),
+            "ruin_floor": num(floor),
             "budget_p5": num(max(0.0, k_p5)), "budget_expected_shortfall": num(max(0.0, k_es)) if k_es is not None else None,
             "p_ruin": cash.get("p_ruin"),
             "basis": ("first-cycle wires plus the 5th-percentile trough's overdraft, both from the cone already "

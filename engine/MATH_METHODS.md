@@ -330,6 +330,17 @@ same guard also fires on a clearly elastic estimate whose interval is merely wid
 unknown. Both directions are searched and the objective, which integrates the
 whole posterior, decides.
 
+### The risk budget is the client's
+
+Every rule below that sizes a move against "15% of the SKU's trailing monthly net" —
+the step, the reallocation of §4b, the markdown of §5b, and the downside guard that
+routes a move to an explicit yes — reads that share off the client since 2026-09-23
+(`clients.risk_budget_share`, bounded 0.05–0.30, `hubricon cash <client> --risk-share`),
+with 0.15 as the default, and every payload says which it used. The same command sets
+`--buffer`, the minimum cash the cone counts a path as ruined below (§6), in place of
+zero. The default reproduces every number the engine produced before the columns
+existed; a stated share moves them, and the client can see how far.
+
 ### The step size
 
 The step is solved for, not capped. Over a grid of candidate prices at 0.25%

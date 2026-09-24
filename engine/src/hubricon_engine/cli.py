@@ -468,7 +468,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             # campaigns a trim will move this cycle are held out of the
             # reallocation: one promise per campaign per run
             alloc = ad_allocation.run(base_ads, alloc_margin,
-                                      exclude=set(trim_candidates(base_ads, alloc_margin or 0.0)))
+                                      exclude=set(trim_candidates(base_ads, alloc_margin or 0.0)),
+                                      risk_share=client.get("risk_budget_share"))
             _save_output(db, run_id, client["id"], "ad_allocation", alloc)
             if alloc["status"] == "ok":
                 print(f"  ad allocation: ${float(alloc['total_moved_daily']) if alloc.get('total_moved_daily') else 0:,.0f}/day "
@@ -480,7 +481,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
                                           simulations, today, channel=channel, seasonal=seasonal)
             if "markdown" in wanted:
-                md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel)
+                md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel,
+                                  risk_share=client.get("risk_budget_share"))
                 _save_output(db, run_id, client["id"], "markdown", md)
                 if md["status"] == "ok":
                     # one liquidation list on the desk: the three-way decision's
@@ -681,7 +683,8 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               experiments=_load_price_tests(db, client["id"]),
                               cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
                               replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
-                              assortment=outputs.get("assortment"))
+                              assortment=outputs.get("assortment"),
+                              risk_share=client.get("risk_budget_share"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -2045,6 +2048,12 @@ def cmd_cash(args):
         patch["cash_as_of"] = args.as_of or date.today().isoformat()
     if args.opex is not None:
         patch["monthly_fixed_costs"] = args.opex
+    if getattr(args, "buffer", None) is not None:
+        patch["min_cash_buffer_usd"] = args.buffer
+    if getattr(args, "risk_share", None) is not None:
+        if not 0.05 <= args.risk_share <= 0.30:
+            sys.exit("--risk-share must sit between 0.05 and 0.30: the share of a month's net one move may put at risk.")
+        patch["risk_budget_share"] = args.risk_share
     if patch:
         db.table("clients").update(patch).eq("id", client["id"]).execute()
         client = {**client, **patch}
@@ -2066,7 +2075,10 @@ def cmd_cash(args):
     print(f"  inputs: ${float(client['cash_on_hand']):,.0f} on hand "
           f"(as of {client.get('cash_as_of') or today.isoformat()}), "
           f"${float(client['monthly_fixed_costs']):,.0f}/mo fixed costs")
-    print(f"  p(dip below $0 in {cash['horizon_days']}d): {float(cash['p_ruin']):.1%}")
+    floor = float(client.get("min_cash_buffer_usd") or 0)
+    print(f"  p(dip below ${floor:,.0f} in {cash['horizon_days']}d): {float(cash['p_ruin']):.1%}"
+          + (" (buffer client-stated)" if floor else "")
+          + f"; risk budget {float(client.get('risk_budget_share') or 0.15):.0%} of monthly net per move")
     print(f"  5th-percentile low: ${float(cash['min_p5']):,.0f} around "
           f"{(today + timedelta(days=cash['min_p5_day'])).strftime('%b %d')}")
     for w in cash["details"]["wires"][:6]:
@@ -3439,6 +3451,9 @@ def main():
     p.add_argument("--balance", type=float, help="cash on hand (USD)")
     p.add_argument("--opex", type=float, help="monthly fixed operating costs (USD)")
     p.add_argument("--as-of", dest="as_of", help="balance date YYYY-MM-DD (default today)")
+    p.add_argument("--buffer", type=float, help="minimum cash buffer (USD): the cone counts a path as ruined below it")
+    p.add_argument("--risk-share", dest="risk_share", type=float,
+                   help="share of a month's net one move may put at risk before it needs an explicit yes (0.05–0.30)")
     p.set_defaults(fn=cmd_cash)
 
     p = sub.add_parser("console", help="render the internal briefing console for Loom screen-share")

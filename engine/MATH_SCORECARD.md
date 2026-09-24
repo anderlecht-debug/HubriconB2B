@@ -658,6 +658,22 @@ and a stated operational cost subtract as computed by hand; the exit banks the l
 loss for the periods the SKU sold nothing and stalls while it still sells.
 `tests/test_assortment.py`, 5 tests.
 
+### Iteration 25 — the risk tolerance is the client's, not ours
+
+**Objection.** `RISK_BUDGET_SHARE = 0.15` sized every move and gated every mandate for
+every client, and the cone counted ruin at zero for a seller who keeps a buffer.
+
+**Change.** Two client columns, `risk_budget_share` (0.05–0.30) and
+`min_cash_buffer_usd`, set by `hubricon cash`; the price step, the reallocation, the
+markdown and the downside guard read the share, the cone and the cash budget read the
+buffer, and every payload names the basis. Defaults reproduce the previous numbers
+exactly.
+
+**Measured.** A stated buffer raises p(ruin) monotonically and shrinks the order budget
+by the same dollars; a 5% share walks a shorter step than 15% than 30%; a lower share
+routes more drafts to an explicit yes; `risk_share=None` is byte-identical to before.
+`tests/test_client_risk.py`, 3 tests.
+
 ---
 
 ## Outcome Alignment
