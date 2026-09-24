@@ -50,6 +50,111 @@ def _log_curve(s, a, b):
     return a * np.log1p(b * s)
 
 
+# The ladder of response forms, simplest first. Constant ROAS is the naive
+# rung: sales proportional to spend, no saturation at all. A curve is only
+# chosen when it beats it out of sample, so no campaign gets a break-even by
+# assertion.
+FORMS = ("linear", "log", "hill")
+# Fewer points than this leave no room for a rolling-origin backtest; the
+# ladder then defaults to Hill as it did before 2026-09-23, and says so.
+MIN_BACKTEST_ORIGINS = 2
+# Origins are spread evenly over the series past MIN_POINTS and capped, so a
+# long daily history costs a bounded number of refits per form.
+MAX_BACKTEST_ORIGINS = 12
+
+
+def _fit_form(form: str, spend: np.ndarray, sales: np.ndarray):
+    """(params, cov) for one form, or None when it will not fit."""
+    if form == "linear":
+        # least squares through the origin, like the curves: a mean of
+        # sales-to-spend ratios is dominated by the noisiest low-spend days
+        ss = float(np.sum(spend * spend))
+        if ss <= 0:
+            return None
+        roas = float(np.sum(spend * sales) / ss)
+        resid = sales - roas * spend
+        dof = max(1, len(spend) - 1)
+        se = float(np.sqrt(np.sum(resid**2) / dof / ss))
+        return np.array([roas]), np.array([[se**2]])
+    try:
+        if form == "hill":
+            p0 = (float(sales.max()) * 1.5 or 1.0, float(np.median(spend)) or 1.0, 1.0)
+            params, cov = curve_fit(_hill, spend, sales, p0=p0,
+                                    bounds=([0, 1e-6, 0.5], [np.inf, np.inf, 3.0]), maxfev=20000)
+        else:
+            params, cov = curve_fit(_log_curve, spend, sales, p0=(float(sales.max()) or 1.0, 0.1),
+                                    bounds=([0, 1e-9], [np.inf, np.inf]), maxfev=20000)
+        return params, cov
+    except (RuntimeError, ValueError):
+        return None
+
+
+def _predict(form: str, params, s: np.ndarray) -> np.ndarray:
+    if form == "linear":
+        return params[0] * s
+    return (_hill if form == "hill" else _log_curve)(s, *params)
+
+
+def backtest_forms(spend: np.ndarray, sales: np.ndarray) -> dict:
+    """Rolling-origin one-step errors per form, in the points' own order:
+    train on the first t, predict point t, t from MIN_POINTS to n − 1; each
+    error scaled by the training window's naive (constant-ROAS) in-sample
+    MAE, the same discipline as forecast.py. Lowest wins; ties go up the
+    ladder to the simpler form."""
+    n = len(spend)
+    origins = list(range(MIN_POINTS, n))
+    if len(origins) > MAX_BACKTEST_ORIGINS:
+        origins = [int(round(x)) for x in np.linspace(MIN_POINTS, n - 1, MAX_BACKTEST_ORIGINS)]
+    if len(origins) < MIN_BACKTEST_ORIGINS:
+        return {"status": "insufficient_origins", "chosen": "hill", "origins": len(origins),
+                "candidates": {}, "basis": f"{n} points leave {len(origins)} backtest origin(s); Hill by default"}
+    scaled = {f: [] for f in FORMS}
+    level = max(1.0, float(np.mean(np.abs(sales))))
+    for t in origins:
+        tr_s, tr_v = spend[:t], sales[:t]
+        naive_mae = float(np.mean(np.abs(tr_v - float(np.mean(tr_v / np.maximum(tr_s, 1e-9))) * tr_s)))
+        # an exactly proportional history has no naive error to scale by;
+        # the floor keeps every origin and lets the tie go to the line
+        naive_mae = max(naive_mae, 1e-6 * level)
+        for f in FORMS:
+            fit = _fit_form(f, tr_s, tr_v)
+            if fit is None:
+                scaled[f].append(np.nan)
+                continue
+            pred = float(_predict(f, fit[0], np.array([spend[t]]))[0])
+            scaled[f].append(abs(sales[t] - pred) / naive_mae)
+    errors, per_origin = {}, {}
+    for f in FORMS:
+        v = np.array(scaled[f], dtype=float)
+        per_origin[f] = v
+        v = v[np.isfinite(v)]
+        errors[f] = float(v.mean()) if v.size else None
+    if errors.get("linear") is None:
+        return {"status": "insufficient_origins", "chosen": "hill", "origins": len(origins), "candidates": errors}
+    # A curve nests the line (Hill with a huge k, log with a tiny b), so it
+    # can edge the line out by noise. It wins only when its per-origin
+    # improvement over the line is more than one standard error of that
+    # improvement — evidence of saturation, not a coin flip.
+    best, best_err, best_t = "linear", errors["linear"], 0.0
+    lin = per_origin["linear"]
+    for f in ("log", "hill"):
+        if errors[f] is None or errors[f] >= best_err:
+            continue
+        both = np.isfinite(lin) & np.isfinite(per_origin[f])
+        diff = lin[both] - per_origin[f][both]
+        se = float(diff.std(ddof=1) / np.sqrt(diff.size)) if diff.size > 1 else float("inf")
+        t_stat = float(diff.mean() / se) if se > 0 else 0.0
+        if t_stat > 1.0:
+            best, best_err, best_t = f, errors[f], t_stat
+    naive = errors["linear"]
+    fva = ((naive - best_err) / naive * 100) if naive > 0 and best != "linear" else 0.0
+    return {"status": "ok", "chosen": best, "origins": len(origins), "candidates": {f: num(e, 4) for f, e in errors.items()},
+            "fva_pct": num(fva, 1), "t_vs_linear": num(best_t, 3),
+            "basis": (f"{len(origins)} rolling-origin backtests, one-step error scaled by the training window's "
+                      f"constant-ROAS MAE; " + (f"{best} beats the straight line by {best_t:.1f} standard errors"
+                                                if best != "linear" else "no saturation beats a straight line here"))}
+
+
 def _fit_curve(spend: np.ndarray, sales: np.ndarray, with_cov: bool = False):
     """(model, params) or (model, params, covariance) when `with_cov`.
 
@@ -95,7 +200,9 @@ def draw_params(model: str, params, cov, draws: int = CURVE_DRAWS,
         sample = rng.multivariate_normal(np.asarray(params, dtype=float), cov, size=int(draws))
     except (ValueError, np.linalg.LinAlgError):
         return None
-    keep = (sample[:, 0] > 0) & (sample[:, 1] > 0)   # a is a ceiling, k a scale
+    keep = sample[:, 0] > 0                            # a is a ceiling, or a ROAS
+    if model != "linear":
+        keep &= sample[:, 1] > 0                          # k a scale, b a rate
     if model == "hill":
         keep &= (sample[:, 2] >= 0.5) & (sample[:, 2] <= 3.0)
     accepted = sample[keep]
@@ -107,6 +214,8 @@ def curve_values(model: str, theta, spend) -> np.ndarray:
     `theta` may be one parameter vector or a (draws, p) array."""
     theta = np.atleast_2d(np.asarray(theta, dtype=float))
     s = np.asarray(spend, dtype=float).reshape(1, -1)
+    if model == "linear":
+        return theta[:, 0:1] * s
     if model == "hill":
         a, k, h = theta[:, 0:1], theta[:, 1:2], theta[:, 2:3]
         return a * s**h / (k**h + s**h)
@@ -172,6 +281,8 @@ def curve_uncertainty(model: str, params, cov, current_spend: float, max_spend: 
 
 
 def _marginal(model: str, params, s: float) -> float:
+    if model == "linear":
+        return float(params[0])
     eps = max(s, 1.0) * 1e-4
     f = _hill if model == "hill" else _log_curve
     return float((f(s + eps, *params) - f(max(s - eps, 0.0), *params)) / (s + eps - max(s - eps, 0.0)))
@@ -259,7 +370,7 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
                 dropped_before_break[name] = dropped_before_break.get(name, 0) + 1
                 continue
             points_by_campaign.setdefault(name, []).append(
-                (float(row["spend"]), float(row["sales"] or 0))
+                (float(row["spend"]), float(row["sales"] or 0), str(row.get("report_date") or ""))
             )
     if not points_by_campaign:
         per_period: dict[tuple, list[float]] = {}
@@ -268,12 +379,14 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             bucket = per_period.setdefault(key, [0.0, 0.0])
             bucket[0] += row["spend"] or 0
             bucket[1] += row["sales_7d"] or 0
-        for (campaign, _, _), (spend, sales) in per_period.items():
-            points_by_campaign.setdefault(campaign, []).append((spend, sales))
+        for (campaign, start, _), (spend, sales) in per_period.items():
+            points_by_campaign.setdefault(campaign, []).append((spend, sales, str(start or "")))
 
     results = []
     for campaign in sorted(set(points_by_campaign) | set(terms_by_campaign)):
-        points = [(s, v) for s, v in points_by_campaign.get(campaign, []) if s > 0]
+        # in date order: the form is chosen by a rolling-origin backtest, and
+        # an origin is only an origin in time
+        points = sorted(((s, v, d) for s, v, d in points_by_campaign.get(campaign, []) if s > 0), key=lambda p: p[2])
         bleed = _bleed_terms(terms_by_campaign.get(campaign, []))
         spend = np.array([p[0] for p in points])
         sales = np.array([p[1] for p in points])
@@ -305,7 +418,36 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
             # finding of its own
             results.append({**base, "status": "insufficient_spend_variation"})
             continue
-        model, params, cov = _fit_curve(spend, sales, with_cov=True)
+        selection = backtest_forms(spend, sales)
+        base["details"] = {**base["details"], "form_selection": selection}
+        if selection["chosen"] == "linear":
+            # no saturation beats a straight line out of sample: the marginal
+            # dollar returns what the average dollar returns, so there is no
+            # break-even to trim toward and no curve to reallocate along —
+            # the reallocation treats the campaign as linear at its ROAS
+            params, cov = _fit_form("linear", spend, sales)
+            roas, se = float(params[0]), float(np.sqrt(cov[0, 0]))
+            # a line whose whole return interval sits under break-even loses on
+            # every dollar: its break-even spend is zero and the trim fires;
+            # otherwise there is no break-even to name
+            underwater = roas + 1.645 * se < threshold
+            results.append({
+                **base, "status": "no_diminishing_returns", "curve_model": "linear",
+                "curve_params": {"roas": num(roas, 6)},
+                "marginal_roas": num(roas, 4),
+                "breakeven_spend": 0.0 if underwater else None, "recommended_spend": 0.0 if underwater else None,
+                "details": {**base["details"], "curve_cov": [[num(cov[0, 0], 10)]], "max_spend": num(float(spend.max())),
+                            "mean_sales": num(float(sales.mean())),
+                            "uncertainty": {"basis": "roas_standard_error", "marginal_roas_p5": num(roas - 1.645 * se, 4),
+                                            "marginal_roas_p50": num(roas, 4), "marginal_roas_p95": num(roas + 1.645 * se, 4),
+                                            "p_below_breakeven": num(float(roas < threshold), 4)}},
+            })
+            continue
+        fitted = _fit_form(selection["chosen"], spend, sales)
+        if fitted is None:
+            model, params, cov = _fit_curve(spend, sales, with_cov=True)
+        else:
+            model, (params, cov) = selection["chosen"], fitted
         if model is None:
             results.append({**base, "status": "insufficient_data"})
             continue
@@ -330,7 +472,10 @@ def run(data: dict, rng=None, simulations=None, avg_margin: float | None = None,
                 **base,
                 "status": "ok",
                 "curve_model": model,
-                "curve_params": {k: num(v, 6) for k, v in zip(("a", "k", "h")[: len(params)], params)},
+                # named by form: Hill (a, k, h), log (a, b). The log fit carried
+                # Hill's names until 2026-09-23, which nothing downstream read
+                # by name until the reallocation did.
+                "curve_params": {k: num(v, 6) for k, v in zip(("a", "k", "h") if model == "hill" else ("a", "b"), params)},
                 "marginal_roas": num(_marginal(model, params, current_spend), 4),
                 "breakeven_spend": num(breakeven),
                 "breakeven_spend_attributed": num(breakeven_attributed),

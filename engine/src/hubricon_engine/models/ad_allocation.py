@@ -100,7 +100,7 @@ ALPHAS = np.round(np.arange(0.05, 1.0001, 0.05), 2)
 def params_vector(row: dict) -> np.ndarray | None:
     """(a, k, h) for a Hill row, (a, b) for a log row, from `curve_params`."""
     cp = row.get("curve_params") or {}
-    keys = ("a", "k", "h") if row.get("curve_model") == "hill" else ("a", "b")
+    keys = {"hill": ("a", "k", "h"), "log": ("a", "b"), "linear": ("roas",)}.get(row.get("curve_model"), ("a", "b"))
     try:
         return np.array([float(cp[k]) for k in keys], dtype=float)
     except (KeyError, TypeError, ValueError):
@@ -109,9 +109,9 @@ def params_vector(row: dict) -> np.ndarray | None:
 
 def _usable(row: dict) -> str | None:
     """None when the row can enter the optimisation, else the reason it is held."""
-    if row.get("status") != "ok":
+    if row.get("status") not in ("ok", "no_diminishing_returns"):
         return f"status:{row.get('status')}"
-    if row.get("curve_model") not in ("hill", "log") or params_vector(row) is None:
+    if row.get("curve_model") not in ("hill", "log", "linear") or params_vector(row) is None:
         return "no_curve"
     details = row.get("details") or {}
     if details.get("curve_cov") is None:

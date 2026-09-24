@@ -488,6 +488,22 @@ off the cautious (higher) end of the break-even band, and no trim is drafted whe
 the interval reaches current spend. Measured on a simulated campaign: the
 break-even band is $88–$95 at low noise and $64–$98 at high noise.
 
+**Which form, chosen out of sample (2026-09-23).** Hill was taken whenever `curve_fit`
+converged, and §10 #9 said every interval was conditional on the form. The form is now
+chosen the way the forecast ladder chooses a model: a rolling-origin backtest over the
+campaign's points in date order, one-step error scaled by the training window's
+constant-ROAS error, across a ladder of three forms — a straight line (sales
+proportional to spend, no saturation), log, Hill. A curve wins only when its
+per-origin improvement over the line exceeds one standard error of that improvement,
+because a curve nests the line (Hill with a huge k, log with a tiny b) and can edge
+it out by noise. When the line wins the campaign is `no_diminishing_returns`: the
+marginal dollar returns what the average dollar returns, there is no break-even to
+trim toward — unless the whole return interval sits under break-even, in which case
+every dollar loses and the trim fires at zero — and the reallocation treats the
+campaign as linear at its ROAS, so it still gives or takes budget. The selection, the
+candidates' errors and the improvement over the line ride on the row. Fewer than two
+backtest origins: Hill by default, and the row says so.
+
 **Refusals.** Fewer than 5 points, or a spend coefficient of variation below 2%:
 `curve_fit` converges on a flat-spend campaign onto an arbitrary point of a flat
 likelihood ridge and returns a **zero** covariance that reads as perfect

@@ -705,6 +705,24 @@ anomaly scan now runs before the ad fit.
 flags nothing; the refit drops the pre-break points; a break with under five points
 after it is held, and the reallocation holds it too. `tests/test_ad_drift.py`, 3 tests.
 
+### Iteration 28 — the form of the ad curve, chosen out of sample
+
+**Objection.** Hill was assumed whenever it converged. Every ad interval was conditional
+on that form, and nothing tested it.
+
+**Change.** A ladder of three forms — a straight line, log, Hill — scored by a
+rolling-origin backtest in date order with the constant-ROAS error as the scale; a curve
+wins only by more than one standard error of its improvement over the line, because the
+curves nest the line. A campaign the line wins is `no_diminishing_returns` and is
+reallocated as linear at its ROAS. Two defects found on the way: the log fit carried
+Hill's parameter names, and the line was being estimated as a mean of noisy ratios
+rather than by least squares.
+
+**Measured.** A saturating campaign picks a curve that beats the line by several
+standard errors; a proportional one picks the line and gets no break-even; six points
+default to Hill and say so; a linear campaign still gives or takes budget in the
+reallocation with a constant marginal return. `tests/test_ad_form_selection.py`, 4 tests.
+
 ---
 
 ## Outcome Alignment

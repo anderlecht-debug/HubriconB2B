@@ -27,7 +27,8 @@ def _account(specs, n=14, seed=2, noise=8.0):
     rng = np.random.default_rng(seed)
     ppc = []
     for name, mean_spend, a, k, h in specs:
-        spend = mean_spend * np.linspace(0.6, 1.4, n)
+        spend = mean_spend * np.linspace(0.5, 1.5, n)
+        rng.shuffle(spend)          # daily spend fluctuates; a monotone series would make every backtest origin an extrapolation
         sales = _hill(spend, a, k, h) + rng.normal(0, noise, size=n)
         for i, (s, v) in enumerate(zip(spend, sales)):
             ppc.append({"campaign_name": name, "campaign_id": name, "spend": float(s),
@@ -147,9 +148,15 @@ def test_a_noisier_fit_widens_the_band_and_an_unsupported_posterior_is_refused()
     loose = run(_rows([("A", 40.0, 1000, 60, 1.0), ("B", 160.0, 1000, 60, 1.0)], noise=40.0), 0.35)
     assert tight["status"] == loose["status"] == "ok"
     assert (loose["delta_p95"] - loose["delta_p5"]) > (tight["delta_p95"] - tight["delta_p5"])
-    # so noisy that fewer than MIN_DRAWS parameter draws land inside the fit's
-    # own bounds: no allocation is printed on a posterior the bounds cannot hold
-    hopeless = run(_rows([("A", 40.0, 1000, 60, 1.0), ("B", 160.0, 1000, 60, 1.0)], noise=120.0), 0.35)
+    # a curve whose covariance is so wide that fewer than MIN_DRAWS parameter
+    # draws land inside the fit's own bounds: no allocation is printed on a
+    # posterior the bounds cannot hold. (Hopeless noise itself no longer gets
+    # here — the form ladder picks the straight line, whose one-parameter
+    # posterior always supports draws — so the covariance is inflated by hand.)
+    rows = _rows([("A", 40.0, 1000, 60, 1.0), ("B", 160.0, 1000, 60, 1.0)], noise=5.0)
+    for r in rows:
+        r["details"]["curve_cov"] = [[v * 1e6 for v in row] for row in r["details"]["curve_cov"]]
+    hopeless = run(rows, 0.35)
     assert hopeless["status"] == "insufficient_draws" and hopeless["draws"] < ad_allocation.MIN_DRAWS
     assert all(c["reason"] == "posterior_unsupported" for c in hopeless["campaigns"])
 
