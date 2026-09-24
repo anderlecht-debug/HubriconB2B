@@ -236,8 +236,10 @@ def run(inv_econ: dict | None, data: dict, rng: np.random.Generator | None = Non
         # rebuild the cycle's demand draws from the stored ladder: enough for
         # expectations of overage, and no second simulation
         if ladder:
-            u = rng.random(4000)
-            demand = np.array([_ladder_quantile(ladder, float(x)) for x in np.clip(u, ladder[0][0], ladder[-1][0])])
+            u = np.clip(rng.random(4000), ladder[0][0], ladder[-1][0])
+            qs = np.array([q for q, _ in ladder], dtype=float)
+            xs = np.array([x for _, x in ladder], dtype=float)
+            demand = np.interp(u, qs, xs)
         else:
             demand = None
         q_star = int(r.get("order_qty_econ") or 0)

@@ -332,6 +332,35 @@ def test_the_thinnest_plausible_input_returns_statuses_not_numbers():
     assert cashflow.run({"cash_on_hand": None, "monthly_fixed_costs": None},
                         inv, margins, np.random.default_rng(0)) is None
 
+    # and every model added on 2026-09-23 answers this upload with a status,
+    # never a number
+    from datetime import date
+    from hubricon_engine.models import (ad_allocation, assortment, cash_orders, clv, cross_price, data_quality,
+                                        drift, incrementality, inventory_econ, markdown, price_experiment,
+                                        replenishment, seasonality, stress)
+    today = date(2026, 9, 1)
+    assert seasonality.indices(data)["status"] == "insufficient_history"
+    assert cross_price.run(data, fits)["status"] == "no_variant_mapping"
+    assert incrementality.run(data, [])["observational"]["status"] == "insufficient_data"
+    assert clv.run([], margins, today, channel="amazon")["status"] == "not_applicable"
+    assert clv.run([], margins, today, channel="shopify")["status"] == "insufficient_data"
+    assert ad_allocation.run([], 0.3)["status"] == "insufficient_campaigns"
+    assert drift.compare_runs(fits, [], [], [])["status"] == "insufficient_data"
+    ie = inventory_econ.run(data, inv, margins, None, np.random.default_rng(0), 500, today)
+    assert all(r["status"] == "no_unit_economics" for r in ie["rows"])
+    md = markdown.run(data, ie, fits, margins, inv, today, "amazon", draws=200)
+    assert md["status"] == "insufficient_data" and all(r["status"] == "no_unit_economics" for r in md["rows"])
+    assert all(r["status"] == "no_supplier_terms" for r in replenishment.run(ie, data, np.random.default_rng(0), today)["rows"])
+    assert cash_orders.run(ie, None, today)["status"] == "no_cash_inputs"
+    assert stress.run(None, None)["status"] == "no_cash_inputs"
+    assert assortment.run(margins, ie, data, None, None, today)["summary"]["cut"] == []
+    dq = data_quality.run(data, today)
+    assert dq["status"] in ("ok", "flags") and dq["n_failed"] == 0
+    # a randomised test can be designed on this SKU — that is what creates the
+    # data — but with no landed cost its expected cost is not priced
+    d = price_experiment.design("c", "SKU", "2026-09-02", margin_row, fit)
+    assert d["status"] == "ok" and d["expected_test_cost"] is None and d["allocation"].startswith("uniform")
+
 
 # ── the documents are part of the engine ──────────────────────────────────
 

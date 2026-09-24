@@ -9,8 +9,20 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **979 tests, all passing, ~95 seconds** — up from 770
-before this work. The 193 new ones live in fifteen files:
+Suite at time of writing (2026-09-23): **1,106 tests, all passing, ~3 minutes 45 seconds**
+— up from 979 before the interaction iteration (iterations 15–36 below), whose 115
+new tests live in twenty files: `test_ad_allocation`, `test_incrementality`,
+`test_price_experiment`, `test_cross_price`, `test_markdown`, `test_replenishment`,
+`test_cash_orders`, `test_seasonality`, `test_clv`, `test_assortment`,
+`test_client_risk`, `test_ruin_cost`, `test_ad_drift`, `test_ad_form_selection`,
+`test_obsolescence`, `test_drift`, `test_stress`, `test_data_quality`,
+`test_headline_and_benchmark`, `test_daily`; the thinnest-input refusal test in
+`test_degeneracy` now covers every model of the iteration. The suite's runtime grew
+from ninety-five seconds to under four minutes, most of it the form ladder's refits
+in the ad-curve tests and the markdown draws.
+
+Before that iteration: 979 tests, ~95 seconds, up from 770 before the mathematics
+work. The 193 of that work live in fifteen files:
 
 ```
 test_pricing_derivation  21   test_degeneracy            25
@@ -1168,39 +1180,64 @@ of a real table, and the flattering reading was false.
 
 ### What it costs to run
 
-A 400-SKU catalog with nine periods of history and eight campaigns, measured
-end to end:
+A 400-SKU catalog with nine periods of history and eight campaigns, measured end to
+end on 2026-09-23 with every model of this iteration in the run (the synthetic
+catalogue and the script are the end-to-end check in the plan; the measurement pass
+ran over the 495 directives it drafted against a simulated later export):
 
 ```
-margin            0.2s     inventory panel   1.5s
-elasticity        0.4s     anomaly           2.4s   (3,216 tests)
-ad efficiency     1.0s     cash cone        37.2s   (10,000 paths x 90 days)
-inventory sim     2.3s     monthly VaR       0.5s
-                           directives        2.5s   (793 drafted)
-TOTAL            48s       peak memory      85 MB
+data quality      0.0s     ad efficiency      8.7s   (form ladder: 12 backtest origins × 3 forms × 8 campaigns)
+margin            0.1s     drift              0.1s
+seasonality       0.0s     ad allocation      0.0s   (no_reallocation on this catalogue)
+forecast         19.2s     recovery           0.0s
+inventory sim     1.6s     risk               0.3s
+inventory panel   1.3s     inventory econ     2.4s
+elasticity        0.3s     markdown           3.2s   (153 SKUs valued three ways, 4,000 draws each)
+price experiments 0.0s     replenishment      0.5s
+cross-price       0.1s     assortment         0.2s
+anomaly           1.8s     cash cone         33.0s   (10,000 paths × 90 days, components kept)
+incrementality    0.0s     stress             0.1s   (five scenarios on the kept components)
+clv               0.0s     cash orders        0.0s
+                           directives         2.3s   (495 drafted)
+                           measurement        0.9s   (495 directives)
+TOTAL            75.5s
 ```
 
-The cash cone is three quarters of it and always was: 400 SKUs × 10,000 paths × 90
-days is 360 million Poisson draws, and that cost is the model, not the dependence
-work. Measured directly, the common-factor generator is 15% slower than the
-independent one it replaced. The per-SKU loop keeps peak memory at the shape of one
-SKU's draw (see iteration 11).
+The cash cone is still the largest single cost and unchanged in kind. The two
+additions that cost anything are the forecast (already the second-largest before this
+iteration; unchanged) and the ad curve's out-of-sample form ladder, which is
+thirty-six refits per campaign and capped there. Every other model of the iteration
+runs in under four seconds on this catalogue because each reuses draws the engine
+already made: the markdown on the elasticity posterior, the stress table on the cone's
+own paths, the cash budget on the newsvendor's ladder, the ruin ladder on the cone's
+minima.
 
 ### What is still worth doing, in order
 
-1. **Ingest the advertised-product report (SP-API).** Revenue-share ad allocation
-   is the largest remaining approximation in the margin model, and it feeds the
-   negative-margin directive.
-2. **Fit elasticity on the Ledger's own step history** once a client has enough of
-   it, and report the instrumented estimate beside the observational one. The
-   harness to compare them exists; the data does not yet.
-3. **A second demand factor**, which needs a category taxonomy no export carries.
-   One factor currently overstates dependence inside an evergreen line and
-   understates it inside a seasonal one.
-4. **Cost dispersion.** `cost_cv` is plumbed through the bootstrap and defaults to
-   0; a client whose COGS sheet moves between cycles has an observable dispersion
-   that nothing currently reads.
-5. **Run the replay harness on the first real client history** and put its
-   realisation ratio in this file. Every calibration number above is a simulation
-   until then, and that is the one thing on this list that cannot be engineered —
-   only waited for.
+1. **Ingest the advertised-product report (SP-API).** Revenue-share ad allocation is
+   still the largest remaining approximation in the margin model; it feeds the
+   negative-margin directive, the loaded contribution of §1b, and the blended
+   acquisition cost of §4d, and no export links a campaign to a SKU or a customer.
+2. **Run the replay harness on the first real client history** and put its
+   realisation ratio — pooled and by cohort — in this file. Every calibration number
+   above is a simulation until then, and that is the one thing on this list that
+   cannot be engineered, only waited for.
+3. **The randomised price test on a real SKU.** The instrument exists (iteration 17)
+   and has been shown unbiased on the generator that produces the bias; the first
+   real six blocks will say what the generator could not — how often the Buy Box
+   holds at the high arm.
+4. **Container capacity and supplier lead-time variance** on the cost sheet, so the
+   joint order (§5c) can fill a container and the expedite rule can price a late
+   supplier from history rather than an assumed 20%.
+5. **A second demand factor**, which needs a category taxonomy no export carries. One
+   factor currently overstates dependence inside an evergreen line and understates it
+   inside a seasonal one; the seasonal index of §5a is a start, not a factor.
+6. **Cost dispersion.** `cost_cv` is plumbed through the bootstrap and defaults to 0;
+   a client whose cost sheet moves between cycles has an observable dispersion that
+   nothing reads.
+7. **The operational cost per SKU** as a client-stated input (§1b carries it at zero
+   and says so), and the client's own category for the benchmark book (§9c).
+
+Withdrawn from this list on 2026-09-23, because built: fitting elasticity on the
+engine's own step history (the steps were never an instrument; the randomised test
+is), and the two "neither is built" items of the closing section above.

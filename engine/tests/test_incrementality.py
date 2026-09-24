@@ -179,9 +179,10 @@ def test_only_an_executed_switchback_moves_the_break_even():
 
 
 def test_the_directive_designs_the_test_when_nothing_identifies_iota():
+    # the row's sales and its curve agree, as a fitted row's do: 600·120/180 = 400
     ads = [{"campaign_name": "Main", "status": "ok", "current_spend": 120.0, "current_sales": 400.0,
             "breakeven_spend": 200.0, "bleed_terms": [], "curve_model": "hill",
-            "curve_params": {"a": 1000, "k": 60, "h": 1.0},
+            "curve_params": {"a": 600, "k": 60, "h": 1.0},
             "details": {"uncertainty": {"basis": "parameter_covariance"},
                         "curve_cov": [[100.0, 0, 0], [0, 4.0, 0], [0, 0, 0.01]]}}]
     incr = incrementality.run(_history(n_periods=6), [])
@@ -191,9 +192,10 @@ def test_the_directive_designs_the_test_when_nothing_identifies_iota():
     assert d["expected_impact_usd"] is None
     assert "14 randomised 2-day blocks from 2026-09-02" in d["action_text"]
     assert "14 days paused" in d["action_text"]
-    # cost: 14 OFF days × (0.35·400 − 120) × prior 1.0 = $280
-    assert d["evidence"]["expected_cost"] == pytest.approx(280.0)
-    assert d["evidence"]["expected_cost_p5"] is not None
+    # cost: 14 OFF days × (0.35·sales − 120) × prior 1.0 ≈ $280 at the curve's median, inside its own band
+    ev = d["evidence"]
+    assert ev["expected_cost"] == pytest.approx(280.0, rel=0.25)
+    assert ev["expected_cost_p5"] <= ev["expected_cost"] <= ev["expected_cost_p95"]
     assert d["evidence"]["schedule"]["seed"] == switchback_seed("client-1", "Main", "2026-09-02")
     # once a switchback has run, or the history already says which way, no test
     schedule = design_switchback("c", "Main", "2026-09-01")

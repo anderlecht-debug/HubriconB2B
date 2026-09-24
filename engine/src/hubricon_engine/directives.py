@@ -1140,6 +1140,8 @@ def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
             sales_draws = curve_values(r["curve_model"], theta, [spend])[:, 0]
             costs = off_days * np.maximum(0.0, avg_margin * sales_draws - spend) * prior
             lo, hi = float(np.quantile(costs, 0.05)), float(np.quantile(costs, 0.95))
+            # the point and the band on one basis: the curve's own draws
+            cost = float(np.quantile(costs, 0.5))
     band = f" (90% range {_money(lo)} to {_money(hi)})" if lo is not None else ""
     text = (f"Run a four-week ON/OFF test on “{r['campaign_name']}”: {schedule['n_blocks']} randomised "
             f"{schedule['block_days']}-day blocks from {start}, {off_days} days paused. It measures how much of "
