@@ -723,6 +723,21 @@ standard errors; a proportional one picks the line and gets no break-even; six p
 default to Hill and say so; a linear campaign still gives or takes budget in the
 reallocation with a constant marginal return. `tests/test_ad_form_selection.py`, 4 tests.
 
+### Iteration 29 — obsolescence from the survival curve
+
+**Objection.** The order decision charged a flat 2% of landed cost for obsolescence on
+every SKU, while the risk pass already estimated how long SKUs like it live.
+
+**Change.** `inventory_econ.obsolescence_charge`: the expected write-off on a unit
+ordered now, from the catalogue's Kaplan–Meier curve conditioned on the SKU's age, with
+a band on q*; the flat rate stands, labelled, when no curve exists. The risk pass runs
+before the order sizing.
+
+**Measured.** A two-period-old SKU on a catalogue where eight SKUs died at two or
+three periods earns a lower fractile than the flat rate gives, with the band around it;
+a SKU as old as the catalogue carries no charge; no curve falls back flat and says so.
+`tests/test_obsolescence.py`, 2 tests.
+
 ---
 
 ## Outcome Alignment

@@ -703,6 +703,24 @@ assumption, not a measurement — no export carries realised lead times.
 directive promises no dollars and the measurement pass proves the PO landed
 instead.
 
+### 5. Order sizing: the newsvendor, and obsolescence from the survival curve
+
+The order-up-to level is the q*-quantile of demand over lead time plus the weekly
+review period, q* = C_u / (C_u + C_o): C_u the lost contribution margin plus the
+low-inventory fee, C_o the cycle's storage plus capital on the landed cost plus
+obsolescence. (This section was absent from the document until 2026-09-23 although
+the model had shipped; the sunk-cost rule for units already on hand is §5b.)
+
+**Obsolescence** was a flat 2% of landed cost per cycle. It is now, per SKU, the
+expected write-off on a unit ordered now: P(the SKU dies before this order sells
+through) × (landed cost − liquidation recovery), with P read off the catalogue's
+Kaplan–Meier survival curve (§8 of the risk pass) conditioned on the SKU's age,
+1 − S(age + cycle)/S(age). A young SKU on a catalogue that dies young earns a lower
+service level; a SKU as old as the catalogue carries no charge, because the curve has
+no information beyond the longest life it saw. The charge's standard error gives a band
+on q*, published beside it. Without a curve (under eight SKUs or six periods) the flat
+rate stands and the row says so. The risk pass therefore runs before the order sizing.
+
 ### 5a. The seasonal term
 
 **What it computes** (`models/seasonality.py`). Every simulation above drew a rate

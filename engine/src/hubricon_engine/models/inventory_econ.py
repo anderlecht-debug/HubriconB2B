@@ -83,16 +83,26 @@ def _latest_by_sku(rows: list[dict], key: str) -> dict[str, dict]:
 
 def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
                       cycle_days: float, month: int, size_tier: str = "standard",
-                      fee_cliffs: bool = True) -> dict:
+                      fee_cliffs: bool = True, obsolescence_per_unit: float | None = None,
+                      obsolescence_basis: str | None = None) -> dict:
     """q* and its two ingredients, itemised so the Desk can show the arithmetic.
 
     fee_cliffs=False drops the two Amazon-only terms — marketplace storage
     out of C_o, the low-inventory fee out of C_u — leaving lost margin
     against capital and obsolescence, which is the newsvendor a Shopify
-    store actually faces."""
+    store actually faces.
+
+    `obsolescence_per_unit` replaces the flat OBSOLESCENCE_RATE with the
+    expected write-off on a unit that outlives its SKU (see obsolescence_charge,
+    2026-09-23); None keeps the flat rate and says so in `c_o_parts`."""
     storage = fees.storage_rate(month, size_tier) * item_volume * cycle_days / 30 if fee_cliffs else 0.0
     capital = unit_cost * ANNUAL_CAPITAL_RATE * cycle_days / 365
-    obsolescence = unit_cost * OBSOLESCENCE_RATE
+    if obsolescence_per_unit is not None:
+        obsolescence = max(0.0, float(obsolescence_per_unit))
+        basis = obsolescence_basis or "survival curve"
+    else:
+        obsolescence = unit_cost * OBSOLESCENCE_RATE
+        basis = f"flat rate ({OBSOLESCENCE_RATE:.0%} of cost per cycle): survival curve unavailable"
     c_o = storage + capital + obsolescence
     lilf = (fees.LOW_INVENTORY_FEE_PER_UNIT.get(size_tier, fees.LOW_INVENTORY_FEE_PER_UNIT["standard"])["lt14"]
             if fee_cliffs else 0.0)
@@ -102,7 +112,41 @@ def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
         "c_u": c_u, "c_o": c_o, "q": min(FRACTILE_CEIL, max(FRACTILE_FLOOR, q)),
         "c_u_parts": {"margin": max(0.0, unit_margin), "low_inventory_fee": lilf},
         "c_o_parts": {"storage": storage, "capital": capital, "obsolescence": obsolescence},
+        "obsolescence_basis": basis,
     }
+
+
+def obsolescence_charge(risk_out: dict | None, sku_age_periods: float, cycle_days: float,
+                        unit_cost: float, price: float) -> dict | None:
+    """The expected write-off on a unit ordered now, from the catalogue's own
+    survival curve: P(the SKU dies before this order sells through) × (landed
+    cost − liquidation recovery). P is 1 − S(age + cycle | age) on the
+    Kaplan–Meier curve in periods, with a Greenwood-style error read off the
+    curve's event count. None when the risk pass has no curve."""
+    surv = (risk_out or {}).get("survival") or {}
+    if surv.get("status") != "ok" or not surv.get("t"):
+        return None
+    t = np.array(surv["t"], dtype=float)
+    s_ = np.array(surv["s"], dtype=float)
+    per_days = float(surv.get("period_days_typical") or 30)
+
+    def S(x: float) -> float:
+        idx = int(np.searchsorted(t, x, side="right")) - 1
+        return float(s_[max(0, min(idx, len(s_) - 1))])
+    age = float(sku_age_periods)
+    ahead = age + cycle_days / per_days
+    s_age, s_ahead = S(age), S(ahead)
+    p_death = 1.0 - (s_ahead / s_age if s_age > 0 else 0.0)
+    p_death = min(1.0, max(0.0, p_death))
+    events = max(1, int(surv.get("events") or 1))
+    n = max(1, int(surv.get("n") or 1))
+    # a crude standard error on a survival difference: binomial on the
+    # at-risk count, which is what Greenwood's formula reduces to per step
+    se = float(np.sqrt(p_death * (1 - p_death) / n))
+    loss = max(0.0, float(unit_cost) - float(price) * LIQUIDATION_RECOVERY_OF_PRICE)
+    return {"per_unit": p_death * loss, "per_unit_se": se * loss, "p_death_before_sellthrough": num(p_death, 4),
+            "p_death_se": num(se, 4), "s_age": num(s_age, 4), "s_ahead": num(s_ahead, 4), "events": events,
+            "basis": f"Kaplan–Meier on the catalogue's SKU lifetimes, conditioned on {age:.0f} period(s) of age"}
 
 
 def demand_over_cycle(mean_rate: float, std_rate: float, lead_days: float,
@@ -156,7 +200,7 @@ def hold_vs_liquidate(excess_units: int, mean_rate: float, contribution: float, 
 def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None = None,
         forecast_rows: list[dict] | None = None, rng: np.random.Generator | None = None,
         simulations: int = 20000, today: date | None = None,
-        channel: str = "amazon", seasonal: dict | None = None) -> dict:
+        channel: str = "amazon", seasonal: dict | None = None, risk_out: dict | None = None) -> dict:
     from .seasonality import horizon_factor, seasonal_rate
 
     today = today or date.today()
@@ -284,8 +328,22 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             continue
 
         # — the newsvendor —
+        # obsolescence from the catalogue's own survival curve, not a flat 2%
+        age_periods = sum(1 for mm in (margin_rows or []) if mm.get("sku") == sku and float(mm.get("units") or 0) > 0)
+        obs = obsolescence_charge(risk_out, age_periods, lead + REVIEW_PERIOD_DAYS, econ["unit_cost"], econ["price"])
         cf = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
-                               today.month, size_tier, fee_cliffs=cliffs)
+                               today.month, size_tier, fee_cliffs=cliffs,
+                               obsolescence_per_unit=obs["per_unit"] if obs else None,
+                               obsolescence_basis=obs["basis"] if obs else None)
+        if obs:
+            # the interval on q* from the survival curve's own uncertainty
+            hi = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
+                                   today.month, size_tier, fee_cliffs=cliffs,
+                                   obsolescence_per_unit=obs["per_unit"] + 1.645 * obs["per_unit_se"])
+            lo = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
+                                   today.month, size_tier, fee_cliffs=cliffs,
+                                   obsolescence_per_unit=max(0.0, obs["per_unit"] - 1.645 * obs["per_unit_se"]))
+            cf["q_band"] = [num(hi["q"], 4), num(lo["q"], 4)]
         demand = demand_over_cycle(mean_rate, std_rate, lead, rng, simulations)
         order_up_to = int(np.ceil(np.quantile(demand, cf["q"])))
         order_qty = max(0, order_up_to - position)
@@ -298,6 +356,9 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             "c_u": num(cf["c_u"]), "c_o": num(cf["c_o"]), "critical_fractile": num(cf["q"], 4),
             "c_u_parts": {k: num(v) for k, v in cf["c_u_parts"].items()},
             "c_o_parts": {k: num(v) for k, v in cf["c_o_parts"].items()},
+            "obsolescence_basis": cf["obsolescence_basis"],
+            "p_death_before_sellthrough": obs["p_death_before_sellthrough"] if obs else None,
+            "critical_fractile_band": cf.get("q_band"),
             "order_up_to": order_up_to,
             "order_qty_econ": order_qty,
             "wire_econ": num(order_qty * econ["unit_cost"]),
@@ -376,7 +437,8 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
                f"off-peak/peak (standard), schedule effective {fees.EFFECTIVE}; Amazon's own estimates override when the Inventory Age export is on file"
                if cliffs else
                f"no low-inventory fee, aged surcharge or peak storage to price — {NO_CLIFF_BASIS}"),
-            f"Capital at {ANNUAL_CAPITAL_RATE:.0%}/yr, obsolescence {OBSOLESCENCE_RATE:.0%} of cost per cycle",
+            f"Capital at {ANNUAL_CAPITAL_RATE:.0%}/yr; obsolescence from the catalogue's survival curve when the "
+            f"risk pass has one, else a flat {OBSOLESCENCE_RATE:.0%} of cost per cycle (labelled)",
             f"Liquidation recovers {LIQUIDATION_RECOVERY_OF_PRICE:.0%} of selling price; units on hand are valued "
             f"on cash contribution with landed cost sunk (corrected 2026-09-23)",
             f"Default unit volume {fees.DEFAULT_ITEM_VOLUME_CUFT['standard']} cu ft when no export states it",

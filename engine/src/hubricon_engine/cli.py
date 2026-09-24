@@ -93,7 +93,7 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
 ALL_MODELS = ("margin", "season", "forecast", "inventory", "experiments", "elasticity", "crossprice", "anomaly",
-              "incrementality", "clv", "ads", "adalloc", "recovery", "invecon", "markdown", "replenish", "risk",
+              "incrementality", "clv", "ads", "adalloc", "recovery", "risk", "invecon", "markdown", "replenish",
               "assortment", "cash", "cashorders", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
@@ -483,9 +483,19 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                       f"+${float(alloc['delta_p50'] or 0):,.0f} expected over {alloc['horizon_days']} days")
             else:
                 print(f"  ad allocation: {alloc['status']}" + (f" — {alloc['reason']}" if alloc.get("reason") else ""))
+        if "risk" in wanted:
+            # before the order sizing: the survival curve prices obsolescence
+            risk_out = risk.run(data, base_margins, forecast_rows, base_inventory, ads_rows, rng, min(simulations, 10000))
+            _save_output(db, run_id, client["id"], "risk", risk_out)
+            v = risk_out.get("var") or {}
+            c = (risk_out.get("concentration") or {}).get("sku_revenue") or {}
+            print("  risk: "
+                  + (f"expected net ${float(v['expected_net']):,.0f}, worst-5% ${float(v['worst_5pct_net']):,.0f}"
+                     if v.get("status") == "ok" else "VaR skipped (no unit economics)")
+                  + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "invecon" in wanted:
             inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
-                                          simulations, today, channel=channel, seasonal=seasonal)
+                                          simulations, today, channel=channel, seasonal=seasonal, risk_out=risk_out)
             if "markdown" in wanted:
                 md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel,
                                   risk_share=client.get("risk_budget_share"))
@@ -513,15 +523,6 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  inventory economics: {inv_econ['summary']['n_skus']} SKUs priced, fee bleed "
                       f"${float(b['total_month'] or 0):,.0f}/month, {len(inv_econ['summary']['econ_orders'])} "
                       f"economic order(s), {len(inv_econ['summary']['liquidation_candidates'])} liquidation candidate(s)")
-        if "risk" in wanted:
-            risk_out = risk.run(data, base_margins, forecast_rows, base_inventory, ads_rows, rng, min(simulations, 10000))
-            _save_output(db, run_id, client["id"], "risk", risk_out)
-            v = risk_out.get("var") or {}
-            c = (risk_out.get("concentration") or {}).get("sku_revenue") or {}
-            print("  risk: "
-                  + (f"expected net ${float(v['expected_net']):,.0f}, worst-5% ${float(v['worst_5pct_net']):,.0f}"
-                     if v.get("status") == "ok" else "VaR skipped (no unit economics)")
-                  + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
         if "assortment" in wanted:
             cross_out = _load_outputs(db, run_id).get("cross_price")
             asrt = assortment.run(base_margins, inv_econ, data, risk_out, cross_out, today)
