@@ -1,8 +1,9 @@
 # What Hubricon is
 
 *The reference answer. If you are an assistant picking this repo up cold, read this
-first, then `OPERATIONS.md` for how the machine runs and `GROWTH.md` for where
-customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.*
+first, then `MONOPOLY.md` for what the business is building toward and the rules every
+change is held to, `BRAND.md` for how everything looks and sounds, `OPERATIONS.md` for
+how the machine runs and `GROWTH.md` for where customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.*
 
 ---
 
@@ -269,7 +270,7 @@ every two weeks.
 **Data** — Supabase Postgres, 42 migrations, ~55 tables, row-level security. Model
 tables are service-role only; the client portal reads through RPCs.
 
-**Client-facing** — static pages on Vercel: `index.html` (landing), `portal.html`
+**Client-facing** — static pages on Vercel: `index.html` (landing), `manifesto.html` (the argument at length), `portal.html`
 (the client's own sign-in, called simply *Hubricon*), `welcome.html`, `terms.html`,
 `privacy.html`, `results.html`, `teardown.html` (a browser calculator), `intake.html`
 (secure upload). Serverless routes in `api/` for intake, consent, teardown and the
@@ -289,8 +290,9 @@ watch), a Monday sweep (ingest, models, measurement, and the move queue).
    listing off Amazon's or USPS's published rate card. No call, nothing stored
    unless asked. Solves one narrow problem completely and reveals the next.
 2. **The 90-second demo** — built into the site and behind a single constant until
-   the video exists (see `OPERATIONS.md`). The red button is the only solid fill
-   and the only red on the site, deliberately.
+   the video exists (see `OPERATIONS.md`). Its red button is the only red button
+   on the site, deliberately; elsewhere red is only ink (the VOID stamp, a loss).
+   See `BRAND.md`.
 3. **The free Profit Teardown** — the whole catalogue, back in 24 hours, kept
    whether or not they engage.
 4. **The Proving Month** — thirty days of the full service, free.
@@ -318,6 +320,7 @@ rounds against Hormozi's and Becker's standards plus a burned-seller read.
 | **Proven or Void** | The guarantee |
 | **found / proven** | The two states of a dollar |
 | **Recovery Only** | The downsell. Emails and terms only, never the site |
+| **Paid on proof** | The brand line (2026-09-25): the whole business in three words. The hero's stamp, the footer, the manifesto, the seal's ring |
 | **The seal** | A promise's fingerprint on the Profit Record, taken before its email is sent; the email prints the first twelve characters beside the expected dollars |
 
 **Retired, and never to be reintroduced in client copy:** desk, ledger (the terms
@@ -390,6 +393,9 @@ client's yes.
 | The record, graded | `engine/src/hubricon_engine/{value,measurement}.py` |
 | The gate that voids an invoice | `engine/src/hubricon_engine/billing.py` |
 | Turning on the 90-second demo | `OPERATIONS.md`, one constant in two files |
+| What the business is building toward, and the moat test every change passes | `MONOPOLY.md` |
+| The brand: the line, the voice, the tokens, the assets and how to regenerate them | `BRAND.md` |
+| The argument at length, for founders | `manifesto.html` (/manifesto) |
 | Every promise sealed, and how anyone checks one | `engine/src/hubricon_engine/seal.py`, `scripts/verify-record.mjs` |
 
 ---
