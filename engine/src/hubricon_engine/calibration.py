@@ -112,14 +112,19 @@ def _row(key: str, value, n_clients: int, n_obs: int, method: str, note: str | N
             "computed_at": datetime.now(timezone.utc).isoformat()}
 
 
-def consented_clients(db) -> list[dict]:
-    """Only clients who said yes to this specific use, and never internal ones."""
-    granted = {k["client_id"] for k in db.table("consents").select("client_id").eq("kind", "calibration")
+def consented_clients(db, kind: str = "calibration", statuses: tuple[str, ...] | None = None) -> list[dict]:
+    """Only clients who said yes to this specific use, and never internal ones.
+
+    The one gate every consented aggregate reads through: `kind` names the
+    use ('calibration' here; 'network' for fleet.py and `hubricon book`), and
+    `statuses`, when given, keeps only clients whose status is in it."""
+    granted = {k["client_id"] for k in db.table("consents").select("client_id").eq("kind", kind)
                .eq("granted", True).execute().data}
     if not granted:
         return []
     clients = db.table("clients").select("*").in_("id", sorted(granted)).execute().data
-    return [c for c in clients if not onboarding.is_internal(c.get("contact_email"), c.get("contact_name"))]
+    return [c for c in clients if (statuses is None or c.get("status") in statuses)
+            and not onboarding.is_internal(c.get("contact_email"), c.get("contact_name"))]
 
 
 def _since(today: date, days: int = 365) -> str:

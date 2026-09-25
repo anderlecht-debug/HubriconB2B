@@ -2698,6 +2698,32 @@ def cmd_calibrate(args):
     print(f"\n{live} of {len(rows)} calibration row(s) carry a value; the rest say why not.")
 
 
+def cmd_fleet(args):
+    """The network pass (fleet.py): a platform-wide change seen across accounts
+    that granted the `network` consent, announced once to every client it
+    applies to. The weekly sweep runs it after the per-client models."""
+    from . import fleet
+
+    db = dbmod.connect()
+    if args.action == "show":
+        print(fleet.show(db))
+        return
+    out = fleet.run(db, send=args.alert, dry=args.dry_run)
+    print(fleet.render(out))
+    if args.dry_run:
+        print("\nDry run: nothing recorded, nobody alerted.")
+
+
+def cmd_book(args):
+    """What each kind of move delivered, measured over promised, across the
+    accounts that granted the `network` consent (book.py). Report only."""
+    from . import book
+
+    db = dbmod.connect()
+    out = book.run(db)
+    print(json.dumps(out, indent=2, default=str) if args.json else book.render(out))
+
+
 def cmd_partner(args):
     """Referral partners: the people who already hold a list of sellers."""
     db = dbmod.connect()
@@ -3751,6 +3777,19 @@ def main():
     p = sub.add_parser("calibrate", help="learn the cold engine's guesses from consenting clients' real accounts")
     p.add_argument("action", nargs="?", default="run", choices=["run", "show"])
     p.set_defaults(fn=cmd_calibrate)
+
+    p = sub.add_parser("fleet", help="the network pass: a platform-wide change seen across accounts that granted "
+                                     "the network consent, announced once to every client it applies to")
+    p.add_argument("action", nargs="?", default="run", choices=["run", "show"])
+    p.add_argument("--alert", action="store_true",
+                   help="email each client told, and the founder a digest (needs RESEND_API_KEY)")
+    p.add_argument("--dry-run", action="store_true", help="detect and print; record nothing, alert nobody")
+    p.set_defaults(fn=cmd_fleet)
+
+    p = sub.add_parser("book", help="what each kind of move delivered, measured over promised, across accounts "
+                                    "that granted the network consent (report only)")
+    p.add_argument("--json", action="store_true", help="print the table as JSON")
+    p.set_defaults(fn=cmd_book)
 
     p = sub.add_parser("partner", help="referral partners: add, list, draft the intro email")
     p.add_argument("action", nargs="?", default="list", choices=["add", "list", "email"])

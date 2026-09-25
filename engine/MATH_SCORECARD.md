@@ -9,7 +9,10 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing (2026-09-24, iteration 38): **1,129 tests, all passing,
+Suite at time of writing (2026-09-25, iteration 39): **1,180 tests, all passing,
+4½ minutes unthreaded** — the twenty-eight of `test_fleet` and `test_book` (the
+network, iteration 39) added to the 1,152 left by the billing work of the same day.
+Before that (2026-09-24, iteration 38): **1,129 tests, all passing,
 4½ minutes unthreaded** (`OMP_NUM_THREADS=1`; threaded BLAS under pytest's single
 process is slower, not faster) — the twelve of `test_bench_corrections` added to the
 1,117 of the model-risk rounds; plus the Simons–Thorp–Griffin bench (`engine/bench/`,
@@ -1066,6 +1069,54 @@ average and not in every month. Tests: `tests/test_bench_corrections.py`
 (12) pins each change without the bench; `tests/test_model_risk.py`,
 `test_horse_race.py` and `test_ad_curve_uncertainty.py` were re-pinned where
 they recorded the old engine, each with a dated note.
+
+### Iteration 39 — the network: a change on the platform's side
+
+**Objection.** Every model reads one account. An Amazon fee change reaches every
+account at once, and each account's own sweep — rightly strict over a hundred to
+thousands of tests — reports a 5% step in fees that wander by 3% in about three
+accounts in ten, three exports after it; a thin catalogue may never report it. The
+one thing the book knows that no account does went unused, because terms §10
+forbids using one client's data to advise another and nothing asked for the consent
+that would allow it.
+
+**Change.** `fleet.py`: the same count against coincidence, twice. Within an
+account, a series is a hit when its changepoint p ≤ 0.05 and it steps the same way
+by at least 1% inside the lookback; the account flags a fee type at h*(m), the fewest
+hits in one 45-day window that m series of noise reach at most 5% of the time, and
+π_a = P(Bin(m, 0.05) ≥ h*) is its own false-alarm rate (0.0025 for two SKUs, 0.048
+for forty). Across the book, P(X ≥ x) for X Poisson-binomial over each account's
+π_a, Benjamini–Hochberg at 0.01 across the (fee type, direction) cells, three
+agreeing accounts at least; the size from every series at the account's onset
+(not the hits: the winner's curse read an 8% step as 9%), pooled by median with an
+account-resampled band. Two fee types, the FBA fee per unit and the referral rate:
+the all-fees series carries storage, and storage carries the fourth quarter's stock
+build, a common cause the null would read as the platform (a review caught it
+before commit). Named refusals below the floors. A separate `network` consent is the
+only door in, through the calibration consent's own gate; an alert to every client
+who pays the fee, once each (a unique index), saying what, when, how big on the
+typical SKU, how many accounts, and whether their own exports show it, in a letter
+of its own; `hubricon fleet` last in the Monday sweep, guarded. `book.py`: replay's
+realisation ratio by move kind across the same accounts, with an account-resampled
+band, refusing under five accounts; report only.
+
+**Measured.** Forty books of eight noise-only accounts through `anomaly.run`: no
+change declared and none of 1,280 (fee type, direction) account questions flagged,
+while 11 of the 320 accounts' own sweeps reported a finding on one of the two fee
+types. The worst case the arithmetic allows (every account at exactly π_a, one day,
+one direction): 9 declarations in 4,000 books against a design level of 40;
+P(p ≤ 0.01) = 0.0008.
+Power, forty books a cell: a 5% step in 3% noise, three exports after it, is
+declared in 0.80–1.00 of books while one account's own sweep reports it in 0.31;
+an 8% step in 1.00 against 0.84; with two exports, 0.03–0.33, the changepoint's own
+floor. No other cell declared in 1,440 books. The planted book of the test: one
+change, six of ten accounts, median ratio 1.077 (1.074–1.080). Sources that did not
+consent, withdrew, are internal or have left are never read; a second and third
+weekly pass announce nothing new; `hubricon book` refuses at four accounts, equals
+`replay.score` on the pooled moves at six, and writes nothing.
+`tests/test_fleet.py` (23), `tests/test_book.py` (5). What it cannot tell you is in
+`MATH_METHODS.md` §8c, the size's lean on a small change among it (5.8% read for 5%:
+the accounts that show a change are the ones noise pushed the same way).
 
 ---
 

@@ -1710,3 +1710,57 @@ from `api/quick.js` and the portal's sign-in links reach Resend without passing
 the engine, so the Resend line is the engine's share; add any of these as
 `fixed.*` if they should count); and a price. It only ever multiplies by the
 ones you give it.
+
+## The network: a change on the platform's side (2026-09-25)
+
+Every consenting account makes every account safer. When Amazon moves a fee it
+moves it for every seller at once; one account's own sweep is strict by design and
+sees a small step late, or never on a thin catalogue. `fleet.py` asks each
+consenting account whether its FBA fee per unit or its referral rate stepped
+across its SKUs at once, then whether that many accounts could agree
+within the same 45 days by coincidence (the arithmetic, its null and its floors are
+in `engine/MATH_METHODS.md` §8c). A change is declared when at least three accounts
+agree and the agreement clears a false-discovery level of 1%; every current client
+who pays that fee then gets one alert, once, in Hubricon and by email: what changed,
+around when, how big on the typical SKU, how many accounts stand behind it, and
+whether their own exports show it yet.
+
+**Consent.** Only clients who ticked the separate `network` box on their private
+/say page (and have not unticked it), who are current and who are not internal are
+read as sources. What leaves an account is an event — fee type, direction,
+approximate date, size as a ratio — never a figure, a name, a SKU or an ASIN.
+
+**Who is told** is one constant, `fleet.RECIPIENT_POLICY`: `every_client` (the
+default — the consent governs the source, not the recipient) or
+`contributors_only` (give-to-get). The founder's call; nothing else reads it.
+
+```
+uv run hubricon fleet --dry-run     # detect and print; record nothing, alert nobody
+uv run hubricon fleet               # record platform_changes and write the alerts (Hubricon only)
+uv run hubricon fleet --alert       # …and email each client told, and the founder a digest;
+                                    #    an alert written earlier without an email is emailed now, once
+uv run hubricon fleet show          # every change recorded, newest first
+uv run hubricon book                # realisation by move kind across consenting accounts (report only)
+uv run hubricon book --json
+```
+
+**Where it runs.** The Monday sweep (`.github/workflows/sweep.yml`), as its last
+step, after every client's models and the calibration: `hubricon fleet --alert`,
+`if: always()`, and `|| echo` so a failure warns and never fails the sweep. Below
+three consenting accounts with a run from the last three weeks it prints
+`insufficient_accounts` and does nothing else, which is what it will print until
+three clients have said yes.
+
+**Before it can record anything** the founder applies
+`supabase/migrations/20260925000003_network.sql` (the consent kind, the alert
+module, `platform_changes`, and the one-alert-per-client-per-change index). Without
+it the pass says `schema_missing`, names the file, and writes nothing. Apply it
+before the /say page's `network` box deploys: until it is, the page saves every
+other answer and tells a client who ticked the box that their yes is not saved
+yet (the old check constraint on `consents.kind` refuses the new kind).
+
+**`hubricon book`** pools `replay.score`'s realisation ratio — measured over
+promised — by move kind across the same consenting accounts, with the accounts and
+moves behind each and a band from resampling accounts; under five accounts it
+refuses. Report only: no promise, expected dollar or invoice reads it. It is the
+data asset a later, bench-validated change will use to price day-one promises.

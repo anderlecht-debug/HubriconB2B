@@ -90,6 +90,19 @@ at kickoff. Reorders and claims are prepared, dated and valued, and wait for an
 explicit yes. Everything else — a bigger price step, a new campaign, anything
 touching inventory orders — needs written approval.
 
+**The network (2026-09-25).** Every consenting account makes every account safer.
+When Amazon moves a fee it moves it for everyone, and a step that shows in three or
+more accounts at once is told to every client who pays that fee — sooner, and with
+fewer false alarms, than one account's own sweep can manage (`fleet.py`, weekly
+after the models; who is told is one constant, `fleet.RECIPIENT_POLICY`, and the
+founder's call). No client's data informs another unless they granted the separate
+`network` consent; what leaves an account is an event (which fee, which way,
+roughly when, by what ratio), never a figure of theirs, their name, a SKU or an
+ASIN; every alert says how many accounts stand behind it. The same accounts feed
+`hubricon book`, what each kind of move has actually delivered, measured over
+promised — report only, for now. Inert until migration
+`20260925000003_network.sql` is applied and three clients have said yes.
+
 **Access.** One permissions-scoped user on Seller Central with exactly four
 permissions (Business Reports view, Fulfillment reports view, Pricing edit,
 Campaign Manager edit), or one Shopify collaborator account limited to Orders,
@@ -336,6 +349,13 @@ the first broken entry. Until the migration is applied, moves go out unsealed an
 exists for the public head, and whoever owns the database could still rewrite
 the table consistently; the Seal makes such a rewrite disagree with what clients'
 inboxes and earlier exports already hold, which is evidence, not prevention.
+
+**Also true and verifiable in code, since 2026-09-25 (the network):** only clients
+who granted the separate `network` consent, and are current, are read as sources
+(`fleet.consenting_accounts`, which `hubricon book` reads through too); nothing
+leaves an account but an event; fewer than three agreeing accounts declare nothing
+and say `insufficient_accounts`; every network alert says how many accounts stand
+behind it; one change is announced once per client; `hubricon book` writes nothing.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero
 published results**. `results.html` reads zero honestly and says so. No testimonial,

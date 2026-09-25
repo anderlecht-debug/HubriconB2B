@@ -1420,6 +1420,161 @@ right.
   "because the listing was re-measured" is a hypothesis the directive states as
   one.
 
+### 8c. Across accounts: a change on the platform's side (`fleet.py`, 2026-09-25)
+
+When Amazon moves a fee it moves it for every seller at once, and each account's
+own sweep is strict about it by design: Benjamini–Hochberg over a hundred tests on
+a small catalogue, thousands on a large one. Strict means late. A 5% FBA step in
+per-unit fees that wander by 3% is reported by an account's own sweep in about
+three accounts in ten, three exports after it; the same step in several accounts at
+once is not a coincidence, even where no single account can call it. The network
+asks each consenting account a narrower question than its own sweep does, then
+asks whether the agreement across accounts could be chance. It is the same
+arithmetic twice: SKUs within an account, then accounts within the book. A platform
+change moves every SKU that pays the fee; noise, and one SKU re-measured into a
+dearer tier, move one.
+
+**The per-account question.** For a fee type k (the FBA fee per unit and the
+referral rate: rates measured on Amazon's own records) an account holds m
+series, one per SKU, and on each the changepoint scan's row from its latest run:
+the p-value against the simulated null, and the split on the stored series. A row
+the account's own control demoted keeps both; only its finding fields are cleared.
+A series is a *hit* for direction d when p ≤ `SERIES_P` = 0.05, its split steps
+the way d says by at least `MIN_STEP` = 1%, and its onset is inside the 183-day
+lookback. The account *flags* (k, d) when its hits inside one 45-day window reach
+
+```
+h*(m) = min { h : P(Bin(m, 0.05) ≥ h) ≤ α },   α = ALPHA_ACCOUNT = 0.05
+```
+
+Under the null each series is a hit with probability at most 0.05 — the direction
+and the window only make it rarer, and neither is credited — so the account flags
+with probability at most π_a = P(Bin(m, 0.05) ≥ h*(m)). That is the account's own
+false-alarm rate. It is at most α and it depends on the catalogue, because a count
+is discrete: 0.05 for one SKU, 0.0025 for two, 0.0196 for twelve, 0.048 for forty.
+The materiality floor is there for a fee that is deterministic per size tier: a
+flat series that wobbles by a cent has a vanishing p-value and no news in it.
+
+**The fleet test.** For each (platform, fee type, direction) cell, x is the most
+flagging accounts inside one window of `WINDOW_DAYS` = 45 (a fee dated the 15th
+lands in one monthly export or the next; 45 days holds two adjacent month starts
+and not three). Under the null — no platform change, accounts independent — the
+number of accounts flagging (k, d) anywhere in the lookback is stochastically below
+a Poisson-binomial with success probabilities π_a over the n accounts that carry
+the fee type, and the count inside the best window can only be smaller, so
+
+```
+p = P(X ≥ x),   X ~ PoissonBinomial(π_1, …, π_n)
+```
+
+is a valid, conservative p-value, and scanning the windows costs nothing. It is
+computed exactly by the convolution recurrence and summed from the tail. Benjamini–
+Hochberg at `FLEET_Q` = 0.01 runs across every testable cell (at most four: two
+fee types, two directions); a cell whose agreement is below the floor enters the
+family at p = 1, so it can never lower another cell's threshold. The level is
+stricter than the per-client sweep's 0.05 because a declared change is announced
+to every client it applies to, and a false one is wrong in every inbox at once. A
+change is *declared* when at least `MIN_ACCOUNTS` = 3 accounts agree and its q
+clears.
+
+**The size.** Per account, the median over *every* series of the fee type of its
+after/before ratio split at the account's onset — not over the hits, which are
+measured where noise happened to push the same way (on the hits a planted 8% step
+reads 9%). Across accounts, the median of the agreeing accounts' ratios with a 90%
+band from 2,000 seeded resamples of those accounts. It is stated only for a
+declared change.
+
+**The floors, as named refusals.** Fewer than three consenting accounts with a run
+from the last 21 days: the whole pass is `insufficient_accounts`. A fee type fewer
+than three of them carry, or a direction fewer than three agree on: that cell is
+`insufficient_accounts`. A testable cell that fails the level: `not_significant`.
+None of the three carries a size; the refusal carries no p-value either. The table
+that records changes (`platform_changes`) enforces the same in its check
+constraints.
+
+**What leaves an account, and who reads it.** An event: fee type, direction,
+approximate onset (a period start), size as a ratio. No SKU, ASIN, dollar or name
+leaves `account_events`, and a test serialises the event to prove it. The event
+also carries π_a for the arithmetic, and π_a depends on how many SKUs carry the
+fee, so it never leaves the pass: it enters the result only through the aggregate
+p-value, and nothing per account is stored, printed or sent. Sources are only
+clients who granted the separate `network` consent (terms §10) and have not
+withdrawn it, who are current, and who are not internal — read through the same
+gate as the calibration consent (`calibration.consented_clients`). A recipient's
+own rows are read for one purpose — whether the change shows in their own exports
+yet (their own sweep reports it on as many SKUs as the network's bar asks; it
+clears the network's bar and not their own; not yet; or their exports begin after
+it) — and never enter the count. Who is told is one constant, `RECIPIENT_POLICY`:
+every current client on the platform who carries the fee type (the default: the
+consent governs the source, not the recipient), or only the contributors. One
+change is announced once per client: the alert carries the change's id, and a
+unique index makes a second announcement an error. With `--alert`, an alert
+written earlier without an email is emailed then, once.
+
+**Measured** (`tests/test_fleet.py`). Forty books of eight noise-only accounts,
+every account through `anomaly.run`: no change declared, and no account flagged
+any of its 1,280 (fee type, direction) questions, while 11 of the 320 accounts' own
+sweeps reported a finding on one of the two fee types. At the worst case the
+arithmetic allows — every account flagging at exactly π_a, every flag the same day
+and direction — the pass declared in 9 of 4,000 books against a design level of
+40, and P(p ≤ 0.01) was 0.0008. Power, forty books a cell, twelve SKUs an account:
+
+```
+                                    exports after the step:    2          3          4
+5% step, fees wander 3%   network declares            0.03–0.05  0.80–1.00  0.97–1.00
+                          one account's own sweep          0.07  0.31–0.32  0.29–0.32
+8% step, fees wander 3%   network declares            0.17–0.33       1.00       1.00
+                          one account's own sweep     0.12–0.13  0.83–0.84       0.87
+5% step, fees wander 5%   network declares                 0.00  0.03–0.17  0.10–0.25
+                          one account's own sweep     0.04–0.05  0.12–0.13  0.07–0.08
+```
+
+(ranges over books of 5, 8 and 12 accounts with 5 to 8 of them carrying the step;
+the "own sweep" rows are the share of stepped accounts whose own sweep reports
+it; no other cell was declared in any of the 1,440 books). The planted book of the
+test — six of ten accounts with an 8% July step, two independent referral steps
+months apart, one re-measured SKU — declares exactly one change, six accounts,
+median ratio 1.077 (1.074–1.080), p = 1.1e-8 and q = 4.4e-8 across four tests; the
+referral steps and the re-measured SKU stay below the floor.
+
+### What the network cannot tell you
+
+- **Why.** A common cause that is not the platform reads as the platform: the null
+  assumes accounts independent, and consenting accounts that re-package in the same
+  month, share a prep centre, or shift their product mix the same way before the
+  fourth quarter are not. Inside an account the count assumes its SKUs independent
+  under the null; an account-wide cause of its own (a new fulfilment option, a
+  change to how it ships) moves them together, and is an account-specific change.
+  The uncredited window is the margin for both: at the defaults a window is a
+  quarter of the lookback, so account-specific changes timed independently of one
+  another can run to about three times α per account before the stated level stops
+  holding.
+- **The exact size of a small change.** It is measured on the accounts that showed
+  it, and they are the ones noise pushed the same way: a 5% step in 3% noise with
+  five of eight accounts agreeing reads 5.8% (4.8–6.4%). A change that reaches some
+  size tiers and not others reads as its typical SKU, smaller than it is for the
+  tiers it reached.
+- **Anything sooner than three exports after the change.** The changepoint scan
+  cannot place a step with fewer than three points on its far side; the table above
+  shows what two exports buy.
+- **Fee types it does not scan.** Shopify's fee lines are a published-rate estimate
+  until a payouts export lands, and an estimate cannot see a platform change;
+  storage is a dollar total that moves with the stock everyone builds before the
+  fourth quarter, and `anomaly.py`'s all-fees-per-unit series carries storage inside
+  it, so it is not scanned either and a new fee line that lands in "other fees" is
+  not seen; no reimbursement-per-unit or label-cost series exists yet, so a
+  reimbursement-policy or carrier-rate change is not seen.
+- **Lookalikes.** A promotion that carries many accounts' prices across a
+  referral-fee price threshold at once reads as a referral-rate change. A scheduled
+  seasonal fee (the holiday peak fulfilment fee) is a real change on the platform's
+  side and is announced as one, every season; the founder's line says whether it
+  matches the rate card on file (`models/fee_schedule.py`).
+- **Two changes of one fee type and direction inside the lookback.** Each account
+  reports the window more of its SKUs show (the later on a tie), so one pass sees
+  one of them; and two changes less than ninety days apart are one change here.
+- **Which accounts stood behind a change.** Nothing downstream of the detection can
+  say, by construction.
+
 ---
 
 ## 9. Measurement, and what gets banked
@@ -1592,6 +1747,33 @@ latest runs — the calibration consent of terms §10, and nothing else — each
 from resampling the book and the book's median beside it. Under ten consenting clients
 the whole comparison refuses and says how many short, because a percentile among four
 is a coin flip with a decimal point. No other client's number leaves the module.
+
+### 9d. What each kind of move delivers, across the book (`book.py`, 2026-09-25)
+
+`replay.score` says whether one client's promises came true. The question a new
+client's first month turns on is a property of the book: when the engine promises
+a thousand dollars on a price step, what does a price step deliver? `hubricon book`
+scores every account that granted the `network` consent with `replay.score`'s own
+arithmetic — measured dollars over promised, on the moves that carry both — and
+pools by move kind: the realisation ratio Σ measured / Σ promised, the number of
+accounts and of moves behind it, and a 90% band from 2,000 seeded resamples of
+ACCOUNTS. Moves are not the unit: an account's moves share its seller, its
+catalogue and its season, and a band from resampling them would be too narrow.
+The same pooled over every kind. Each ratio is read against replay's own target
+band (0.30–1.30), because a correct engine books less than it promises.
+
+Below five accounts with a scored move the book refuses (`insufficient_accounts`)
+— five is where a resampled band stops being a handful of resamples whose ends are
+single accounts' own ratios — and a kind below five accounts, or below replay's
+eight scored moves, refuses for itself (`insufficient_accounts`,
+`insufficient_moves`), each with no number. It is REPORT ONLY: it reads directives
+and writes nothing, and no promise, expected dollar, measured dollar or invoice
+reads it; a test holds it to that. It is the data asset a later, bench-validated
+change will use to price day-one promises; until that change is made and
+validated on the bench, it changes nothing. What it cannot tell you: whether a
+kind's ratio will hold for an account unlike the ones behind it (no category, size
+or season is on the row); why a kind under-delivers; anything about moves not yet
+measured, which are most of a young book's.
 
 ## 10. What this engine cannot tell you — the short list
 
