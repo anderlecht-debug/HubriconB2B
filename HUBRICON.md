@@ -2,7 +2,7 @@
 
 *The reference answer. If you are an assistant picking this repo up cold, read this
 first, then `OPERATIONS.md` for how the machine runs and `GROWTH.md` for where
-customers come from. Last rewritten 2026-09-11.*
+customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.*
 
 ---
 
@@ -15,8 +15,9 @@ decisions with the dollars it was expected to earn before it happened and the
 dollars it actually earned afterwards, measured from the client's own later
 exports. That record is called the **Profit Record**, and it is the product. The
 fee is $6,000 a month, flat. The first month is free. Every invoice after that is
-void unless the Profit Record has proven more value than Hubricon has billed since
-day one. It is run by one person.
+held until the Profit Record shows more value than Hubricon has billed since day
+one, and voided unsent if it does not; a client who leaves is trued up to the
+Record. It is run by one person.
 
 ---
 
@@ -174,27 +175,39 @@ refused, because the founder takes every call.
 
 ### The guarantee: Proven or Void
 
-Four layers, all in `terms.html` and all enforced in code.
+Rebuilt on 2026-09-25 as a stack of four named guarantees, each answering one
+fear a founder brings to a stranger's $6,000 invoice. All four are in
+`terms.html` and all four are enforced in code; `hubricon promises` names any
+that cannot run for want of a secret.
 
-- **Layer 1 — the Proving Month is free, unconditionally.** Thirty days of the full
-  service. If the client does not get a written Teardown within 24 hours of their
-  files, a 90-day plan on the kickoff call, and the first moves live inside two
-  weeks, the month was free anyway and they keep everything. No card exists to charge.
-- **Layer 2 — proven or void, every invoice after.** If what the Profit Record has
-  proven, plus what it has found and filed, does not exceed everything billed since
-  day one — that invoice included — the invoice is void. Already paid, it is
-  credited. At day 30 the code that would raise the invoice checks the record
-  first, so below the bar **no invoice is created at all**. The bar is cumulative.
-- **Layer 3 — the work does not stop.** A void invoice pauses nothing. Work
-  continues until the record catches up, and no new invoice stands until it has.
-- **Layer 4 — the exit is always open.** Cancel by one email, effective
-  immediately. No notice, no fee, no card on file. Data and full record export
-  free. And if the email announcing a planned move does not go out, nothing moves:
-  the veto window only opens on a sent notice, which is code, not policy.
+- **Month one is free.** Thirty days of the full service, unconditionally.
+  No card exists to charge.
+- **No bill until the Record covers it.** Every retainer invoice is held at
+  draft by the webhook (`lib/stripe_events.js`) until the operator's gate has
+  judged it: if what the Profit Record has proven, plus what it has found and
+  filed, is more than everything billed since day one (that invoice included),
+  it is sent; if not, it is voided before it reaches the client. At day 30 the
+  code that would start billing checks the Record first, so below the bar **no
+  subscription exists at all**. The bar is cumulative. The work does not stop
+  while the Record catches up. If an invoice ever reaches a client before the
+  check and they paid it, it is **refunded to their bank, never credited**.
+- **Leave any day, trued up.** Cancel by one email, effective immediately, no
+  notice, no fee. `hubricon cancel` ends the subscription; the next operator
+  pass checks the Record once more against everything billed and not refunded,
+  voids anything unpaid, and refunds any gap left (terms §5, within seven days).
+  Found dollars that carried an invoice and later measured short come back
+  here. Data and the full Record export free, any day.
+- **Late Teardown, free month.** A Teardown more than 24 hours after the
+  client's first readable upload (or first seat pull) adds a second free month,
+  once, whatever the Record shows. The client is told; they do not ask.
+
+Also: if the email announcing a planned move does not go out, nothing moves.
+The veto window only opens on a sent notice, which is code, not policy.
 
 What is explicitly **not** promised: a result. Forecasts are probabilities and
-Amazon changes its fees without asking. The promise is that the invoice can never
-outrun the proof.
+Amazon changes its fees without asking. The promise is that the invoice can
+never outrun the proof, and that nobody leaves having paid more than the
+Record shows.
 
 **The price of the free month** is a short testimonial and permission to publish an
 anonymised result — asked once, on a private page, each a separate yes. Plus a
@@ -321,9 +334,12 @@ Every judge across three rounds named the same thing as the largest remaining ga
 the empty results wall. No copy closes it. Only the first five brands do.
 
 **Known gaps that are founder actions, not code problems** — see the full table in
-`OPERATIONS.md`: the Stripe secrets need pasting into the Production environment
-before the void can actually run; the Stripe product needs its one-command rename;
-the four-permission seat cannot open a support case, so claims are filed with the
+`OPERATIONS.md`: `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` need adding to GitHub's
+Production environment before the operator can bill, hold, void or refund (as of
+2026-09-25 they are absent; Vercel's webhook has its keys); `npm run stripe:setup`
+must run once to subscribe the webhook to every invoice event and rename the
+product; `hubricon stripe-smoke` with a test key proves the Stripe calls; the
+four-permission seat cannot open a support case, so claims are filed with the
 client's yes.
 
 ---

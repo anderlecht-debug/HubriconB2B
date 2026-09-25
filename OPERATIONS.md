@@ -1005,15 +1005,23 @@ raises for a retainer is judged by the same bar as day 30 — measured plus
 identified value since the retainer began — against everything billed through
 that invoice (`billing.rolling_verdict`). The decision is written on the
 `invoices` row (`gate_decision`, `gate_value`, `gate_fees`), so it is taken
-exactly once. Covered is silent apart from the digest; not covered is
-**voided** if the invoice is still open, or **credited** to the customer
-balance if ACH already settled it (`billing.waive_invoice`), and the client
-gets one letter saying which and why. Void invoices drop out of the ledger's
-fee denominator, so a waived month is a month that was never billed.
+exactly once. Since 2026-09-25 the webhook holds each retainer invoice at
+draft, so the usual case is a draft: covered, it is finalized and sent
+(`billing.release_invoice`); not covered, it is voided unsent and the client
+gets no letter, because there is no invoice to explain. An open invoice (a
+hold that failed) not covered is **voided**, and one ACH already settled is
+**refunded** through a credit note (`billing.waive_invoice`; it used to be a
+customer-balance credit), and the client gets one letter saying which and why.
+Void invoices and refunded dollars drop out of the ledger's fee denominator
+(`invoices.refunded_usd`), so a waived month is a month that was never billed.
 
 Read-only until `STRIPE_SECRET_KEY` is set: without it an uncovered invoice
-is a digest warning, never a silent bill. As of 2026-09-11 no workflow passes `STRIPE_SECRET_KEY` or `STRIPE_PRICE_ID` to the scheduled operator (`grep -rn STRIPE .github/workflows/` is empty), so the day-30 pass and the rolling void both stop at the digest; the index Layer 2 copy was softened to match and the "voided within the hour" sentence may return once the two secrets are added to the Production environment and the env block of the operator.yml "Run the operator" step. terms §3, welcome and the index
-guarantee say the sentence; `hubricon promises` tracks it.
+is a digest warning, never a silent bill. `operator.yml` passes
+`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID`, but as of 2026-09-25 neither secret
+exists in the GitHub Production environment (`gh secret list --env Production`),
+so the day-30 pass and the rolling gate stop at the digest until they are
+added. terms §3, welcome and the index guarantee say the sentence;
+`hubricon promises` tracks it.
 
 ### The smaller door: recovery-only
 
@@ -1058,6 +1066,77 @@ The site does not show the downsell anywhere. Since 2026-09-18 the application
 books every brand that answers its four questions; an Amazon seller under $3M or
 on someone else's brand arrives on the calendar tagged `fit:below` in the
 booking's `utm_content`, and Hagen offers Recovery Only by hand after the call.
+
+## Stripe, end to end (2026-09-25)
+
+Until this date Stripe had never run: the production database held zero
+invoices, zero Stripe events and zero Stripe customers, and the operator had
+no key. The code also had ten faults that would have surfaced on the first
+paying client. All are fixed and tested:
+
+1. The webhook endpoint was created with three events, so an **open** invoice
+   never reached the mirror and the gate could only ever credit after payment,
+   never void. `lib/stripe_events.js` now exports `WEBHOOK_EVENTS`, and
+   `npm run stripe:setup` adds any missing event to the existing endpoint.
+2. Webhooks arrive in any order; a late `invoice.created` could drag a paid
+   invoice back to draft. The mirror now only moves a row forward.
+3. `invoice.paid` for an unknown customer **created a client**. It no longer
+   creates anything: the operator provisions every booking.
+4. A client whose ACH payment failed went `past_due` and fell out of the
+   billing pass, so the invoice that most needed voiding stood. The pass now
+   includes `past_due`.
+5. `invoice.paid` on a client who had left set them `active` again. It no
+   longer revives a churned client.
+6. `start_billing` had no guard: a DB write failing after Stripe succeeded
+   meant a second subscription the next hour. It now finds the live one first
+   and carries an idempotency key.
+7. The Recovery Only invoice created its line item before its invoice; a
+   failure between the two left a pending item that rode along on the next
+   invoice. The invoice now comes first, the item attaches by id, and the
+   claim set is stamped on the invoice so a retry at any distance finishes it
+   rather than billing again.
+8. Two gate decisions in one pass did not see each other; a voided month was
+   still counted against the next. Decisions now update the pass's own copy.
+9. `hubricon downsell` to Recovery Only left the $6,000 subscription running.
+   It now clears the row, then ends the subscription (in that order, so the
+   webhook does not read the switch as a departure).
+10. The setup script told the founder to create subscriptions by hand, which
+    bypasses the day-30 gate entirely. It now says never to, and why.
+
+The guarantee stack built on top (terms §2, §3, §5):
+
+- **The hold.** `invoice.created` on a retainer draft sets `auto_advance=false`;
+  the gate sends or voids it. A failed hold is a 500, so Stripe retries, and
+  Stripe waits on a failing `invoice.created` before it finalizes.
+- **Refund, not credit** on a paid invoice the gate did not cover.
+- **The exit true-up.** `hubricon cancel <client>` ends the subscription (no
+  final invoice, no proration) and marks the client churned; the next operator
+  pass voids any held draft, voids unpaid invoices newest first while a gap
+  remains, refunds the rest newest first, records `exit_trued_up_at`, and
+  sends one letter. A Stripe-side cancellation reaches the same pass through
+  `customer.subscription.deleted`.
+- **The late-Teardown month**, once per client, on the clock the digest reads.
+
+Schema: `supabase/migrations/20260925000001_guarantee_stack.sql` (additive:
+`invoices.refunded_usd`, `clients.exit_trued_up_at`, `clients.exit_refund_usd`,
+`clients.late_teardown_month_at`). Apply it before the operator runs this code;
+without it the exit pass names the migration in the digest.
+
+### Going live, in order
+
+```
+npm run stripe:setup                       # with the live key: product, price, all webhook events, ACH check
+gh secret set STRIPE_SECRET_KEY --env Production
+gh secret set STRIPE_PRICE_ID   --env Production --body price_...
+cd engine
+STRIPE_SECRET_KEY=sk_test_... uv run hubricon stripe-smoke   # every Stripe call, on a TEST key, cleaned up
+uv run hubricon promises                   # every billing promise should read ok
+```
+
+The Vercel key needs Invoices: write (the hold). The engine pins
+`billing.STRIPE_VERSION` to the webhook SDK's version (stripe@18.5 →
+2025-08-27.basil); a test fails if they drift. Never create a subscription or
+an invoice by hand in the dashboard.
 No code path does that; the hourly operator's only automated offer to a booked
 client is the day-14 downsell. (`api/gate.js` still accepts a `recovery` request and files it as a
 prospect at `wants_teardown` with a `recovery-only (site gate)` note, for which
@@ -1222,6 +1301,10 @@ Each of these used to depend on someone remembering. They are now jobs.
 | First fixes live in week one | welcome.html | `hubricon execute` records it; the sweep escalates anything approved and unexecuted past 7 days |
 | Buy Box watched daily through a price step | index.html, terms.html §6 | `hubricon watch --alert` |
 | "If we don't find you more than we cost, you walk away owing nothing" | 8 surfaces, terms.html §3 | The operator's day-30 pass is the **only** code that starts billing. Below the bar no subscription is created — there is no invoice to write off |
+| No invoice reaches the client before the Record covers it | index, welcome, terms.html §3 | `lib/stripe_events.js` holds every retainer draft (`auto_advance=false`); `operator._rolling_gate` sends it if covered and voids it unsent if not |
+| A paid month the Record did not cover is refunded, not credited | terms.html §3, method | `billing.waive_invoice` → a credit note with `refund_amount` |
+| Trued up the day you leave | index, welcome, terms.html §5, method | `hubricon cancel` ends the subscription; `operator._exit_true_up` voids the unpaid and refunds the gap, once (`clients.exit_trued_up_at`) |
+| A Teardown later than 24h makes the first paid month free | index, apply, terms.html §2, method | `operator._late_teardown_month` on `speed.teardown_late`, once (`clients.late_teardown_month_at`); the clock starts at the first parsed upload's `uploaded_at` |
 | Free data + Profit Record export, any time | 11 times across 6 surfaces | `hubricon export <client>`; Hubricon's "Request your export" opens a tracked request |
 | Deletion in 30 days · DSAR in 7 · breach notice in 72h · 14 days' notice of a terms change | privacy.html, terms.html §14 | `hubricon request`; the operator escalates anything within two days of its deadline and shouts when one is overdue |
 | The 90-day plan drafted from the Teardown | welcome.html Step 2 | `draft_plan_for_run` inside the teardown; it stays `draft` until the founder commits it on the kickoff call |
@@ -1233,6 +1316,7 @@ a silent failure:
 |---|---|
 | `ELEVENLABS_API_KEY` | Issues publish with the letter and report, no video (or set `HUBRICON_TTS=local` for a local voice) |
 | `STRIPE_PRICE_ID` | A client who clears the guarantee is flagged in the digest instead of being billed. Nobody is ever wrongly billed |
+| `STRIPE_SECRET_KEY` | Nothing is billed, sent, voided or refunded; each is flagged in the digest instead. Held drafts wait unsent |
 
     hubricon promises                # which promises the machine can keep, right now
     hubricon promises --client <x>   # …and that client's own clocks
