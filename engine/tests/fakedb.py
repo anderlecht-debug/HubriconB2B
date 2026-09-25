@@ -1,5 +1,6 @@
 """An in-memory stand-in for the Supabase client, wide enough for the loop
-modules (proof, referral, speed, loop, calibration) and nothing wider.
+modules (proof, referral, speed, loop, calibration) and the Seal, and nothing
+wider.
 
 Every query runs against plain lists of dicts; inserts mint an id when the
 row has none; upserts honour on_conflict. Nothing here touches the network,
@@ -35,6 +36,7 @@ class _Q:
         self.on_conflict = None
         self._order = None
         self._limit = None
+        self._range = None
         self.not_ = _Not(self)
 
     # -- verbs
@@ -90,6 +92,10 @@ class _Q:
         self._limit = n
         return self
 
+    def range(self, start, end):
+        self._range = (start, end)
+        return self
+
     # -- run
     def _match(self, r):
         return all(f(r) for f in self.filters)
@@ -125,7 +131,14 @@ class _Q:
             return _R(rows)
         if self._order:
             col, desc = self._order
-            rows = sorted(rows, key=lambda r: str(r.get(col) or ""), reverse=desc)
+            vals = [r.get(col) for r in rows]
+            if vals and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals):
+                # a numeric column sorts as numbers, as Postgres sorts it (10 after 9)
+                rows = sorted(rows, key=lambda r: r.get(col), reverse=desc)
+            else:
+                rows = sorted(rows, key=lambda r: str(r.get(col) or ""), reverse=desc)
+        if self._range is not None:
+            rows = rows[self._range[0]: self._range[1] + 1]
         if self._limit is not None:
             rows = rows[: self._limit]
         return _R([dict(r) for r in rows])

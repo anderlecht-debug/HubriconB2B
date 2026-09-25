@@ -11,6 +11,10 @@ The rule this module exists to enforce is in `issue_drafts` step 5: if the
 notification did not actually go out, `veto_closes_at` stays NULL and the
 directive can never auto-approve. Silence from someone who was never told is
 not consent, and a veto window nobody was told about is worse than no window.
+
+Since 2026-09-25 each promise is also sealed (seal.py) between the status flip
+and the email, and the email prints each move's short seal: "written down
+before it goes live" became something the client can check, not take on trust.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -186,6 +190,16 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         db.table("directives").update({"mandate": "explicit"}).in_("id", downgraded).execute()
     out["issued"] = len(ids)
 
+    # The Seal (seal.py): each promise, exactly as just issued, is fingerprinted
+    # and chained onto the client's Record now, BEFORE the email that states it,
+    # so the client's own inbox timestamps what was called. A seal that cannot
+    # be written is a named status here and the email goes out without seals:
+    # the notice is never held for its receipt.
+    sealed = _seal_promises(db, client, chosen, now)
+    out["seal"] = sealed["status"]
+    if sealed.get("reason"):
+        out["seal_reason"] = sealed["reason"]
+
     # The window is the client's own, not a constant.
     window_hours = min((mandate.get(d.get("module"), {}).get("veto_hours") or VETO_HOURS)
                        for d in chosen)
@@ -193,7 +207,8 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     if send and email_configured() and client.get("contact_email"):
         closes = now + timedelta(hours=window_hours)
         text, html = directive_email_body(client, chosen, closes, portal_url,
-                                          record_line=_record_line(db, client))
+                                          record_line=_record_line(db, client),
+                                          seals=sealed.get("short") or {})
         notified = send_email(
             client["contact_email"],
             veto_subject(chosen, closes),
@@ -211,6 +226,19 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         # Issued and visible in the desk, but nothing will ever auto-approve.
         db.table("directives").update({"veto_closes_at": None}).in_("id", ids).execute()
     return out
+
+
+def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
+    """The promises as issued — status, issue time and (possibly narrowed)
+    mandate as just written — sealed before the notice. seal.seal_called names
+    every failure it expects; this catches the ones it does not, because the
+    notice matters more than its receipt."""
+    try:
+        from . import seal
+        issued = [{**d, "status": "issued", "issued_at": _iso(now)} for d in chosen]
+        return seal.seal_called(db, client["id"], issued, sealed_at=now)
+    except Exception as err:
+        return {"status": "failed", "reason": f"{type(err).__name__}: {err}", "short": {}}
 
 
 def _record_line(db, client: dict) -> str | None:

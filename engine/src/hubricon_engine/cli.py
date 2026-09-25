@@ -838,6 +838,7 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
     if not apply:
         return verdicts
     by_id = {d["id"]: d for d in directives}
+    settled = []
     for v in verdicts:
         patch = measurement.to_patch(v, run_id)
         if patch is None:
@@ -847,6 +848,15 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
             evidence["after"] = v["evidence_after"]
         patch["evidence"] = evidence
         db.table("directives").update(patch).eq("id", v["directive_id"]).execute()
+        settled.append({**by_id[v["directive_id"]], **patch})
+    if settled:
+        # The Seal's second entry (seal.py): what was measured, chained after
+        # what was called. Named status in the log; never fails the sweep.
+        from . import seal
+        res = seal.seal_measured(db, client["id"], settled)
+        print(f"  seal: {res['status']}"
+              + (f", {res['sealed']} measured entr{'y' if res['sealed'] == 1 else 'ies'}" if res["sealed"] else "")
+              + (f" — {res['reason']}" if res.get("reason") else ""))
     return verdicts
 
 
@@ -911,6 +921,8 @@ def cmd_directives(args):
                 state = "issued but NOT notified — no veto window opened, so none of them can auto-approve"
             if res["held"]:
                 state += f"; {res['held']} draft(s) held for the next issue"
+            if res.get("seal"):
+                state += f"; seal: {res['seal']}" + (f" ({res['seal_reason']})" if res.get("seal_reason") else "")
 
     print(f"{len(inserted)} directive(s) {state}:")
     for r in inserted:
@@ -1019,6 +1031,12 @@ def cmd_measure(args):
         patch["measurement_notes"] = " ".join(notes)
     db.table("directives").update(patch).eq("id", row["id"]).execute()
     print(f"Recorded ${args.impact:,.0f} on {row['id'][:8]} ({row['action_text'][:60]}…)")
+    # A number typed by hand is sealed as one (`by_hand`), and a correction
+    # supersedes the entry before it rather than replacing it.
+    from . import seal
+    full = db.table("directives").select("*").eq("id", row["id"]).execute().data
+    res = seal.seal_measured(db, client["id"], full, sealed=seal.BY_HAND)
+    print(f"  seal: {res['status']}" + (f" — {res['reason']}" if res.get("reason") else ""))
 
 
 def _find_claim(db, client_id: str, prefix: str) -> dict:
@@ -1643,6 +1661,12 @@ def cmd_export(args):
         manifest.append(f"  ledger.json — ${float(ledger['value_total']):,.0f} measured against "
                         f"${float(ledger['fees_paid']):,.0f} in fees [{ledger['fees_basis']}]")
 
+        # The Seal: every entry's canonical document, leaf and heads, and the
+        # verifier beside them, so anyone can check the Record offline.
+        from . import seal
+        manifest += seal.write_export(z, db, client["id"],
+                                      Path(__file__).resolve().parents[3] / "scripts" / "verify-record.mjs")
+
         if not args.no_files:
             uploads = db.table("uploads").select("*").eq("client_id", client["id"]).execute().data
             for u in uploads:
@@ -1669,6 +1693,14 @@ def cmd_export(args):
         z.writestr("MANIFEST.txt", "\n".join(manifest) + "\n")
     print("\n".join(manifest))
     print(f"\nWrote {out} ({out.stat().st_size / 1_000_000:.1f} MB). It is theirs, free, any time.")
+
+
+def cmd_seal(args):
+    """The Seal (seal.py): `status`, `verify <client>` or `verify --global`
+    (exit 1 at the first broken entry), and `sync` to seal, labelled late,
+    whatever was issued or measured before the table existed."""
+    from . import seal
+    sys.exit(seal.run_cli(dbmod.connect(), args, dbmod.resolve_client))
 
 
 def cmd_request(args):
@@ -2272,6 +2304,8 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
         if res["issued"] and not res["notified"]:
             print(f"  {res['issued']} directive(s) issued but NOT notified — no veto window opened, "
                   f"so none of them can auto-approve.")
+        if res["issued"]:
+            print(f"  seal: {res.get('seal')}" + (f" — {res['seal_reason']}" if res.get("seal_reason") else ""))
 
     # Measure what was approved before, from the exports that just landed, then
     # recompute the ledger so this sweep's own findings are in it.
@@ -2353,6 +2387,16 @@ def _sweep_client(db, client: dict, send_alerts: bool, issue_drafts: bool = Fals
                "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False,
                "issued": 0, "auto_approved": 0, "lapsed": 0, "measured": 0, "measured_usd": 0.0}
     summary["parsed"], summary["failed"] = _ingest_client(db, client)
+
+    # The Seal: anything issued or measured that is not on this client's chain
+    # yet (issued before the table existed, or a write that did not land) is
+    # sealed now and labelled late. Named status in the log; never fails the sweep.
+    from . import seal
+    caught = seal.catch_up(db, client["id"])
+    if caught["status"] not in (seal.ALREADY, seal.NOTHING):
+        print(f"  seal catch-up: {caught['status']}"
+              + (f", {caught['sealed']} entries sealed late" if caught.get("sealed") else "")
+              + (f" — {caught['reason']}" if caught.get("reason") else ""))
 
     running = channels.channels_for(client.get("platform"))
     for channel in running:
@@ -2715,6 +2759,11 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
     add("Corrections stated before they go live", "terms §6", mail,
         "the veto notice needs email; without it nothing auto-approves, by design"
         if not mail else "sweep --issue notifies, then opens the window")
+    from . import seal as sealmod
+    sealed = sealmod.table_status(db)
+    add("Every move sealed before its email", "the pre-move email", sealed["status"] == "ready",
+        "each promise is fingerprinted and chained before the notice; `hubricon seal verify`"
+        if sealed["status"] == "ready" else sealed["reason"])
 
     stripe_ok = billing.stripe_configured() and bool(os.environ.get("STRIPE_PRICE_ID"))
     add("No invoice unless we found more than we cost", "terms §3, 8 surfaces", stripe_ok,
@@ -3556,6 +3605,16 @@ def main():
     p.add_argument("--out", help="output path (default: <slug>-hubricon-export-<date>.zip)")
     p.add_argument("--no-files", action="store_true", help="tables and ledger only, skip raw uploads")
     p.set_defaults(fn=cmd_export)
+
+    p = sub.add_parser("seal", help="the Seal: status, verify a client's Record (or --global), sync late entries")
+    p.add_argument("action", choices=["status", "verify", "sync"])
+    p.add_argument("client", nargs="?", help="verify/sync: this client (verify with none checks the global chain)")
+    p.add_argument("--global", dest="global_chain", action="store_true", help="verify the chain across every client")
+    p.add_argument("--witness", action="append", default=[],
+                   help="a short seal from an email, or a head captured earlier, that must be in the chain")
+    p.add_argument("--no-live", dest="no_live", action="store_true",
+                   help="verify the chain only, without comparing today's directive rows")
+    p.set_defaults(fn=cmd_seal)
 
     p = sub.add_parser("request", help="track a deletion / access / correction request against its clock")
     p.add_argument("action", choices=["open", "close", "list"], nargs="?", default="list")

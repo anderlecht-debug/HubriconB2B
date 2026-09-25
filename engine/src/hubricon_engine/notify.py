@@ -95,21 +95,35 @@ def alert_email_body(company: str, alerts: list[dict], first_name: str | None = 
     return letter(first_name, blocks)
 
 
+# Printed once, after the moves, when at least one carries a seal (seal.py).
+SEAL_NOTE = ("The seal beside each move is its fingerprint on your Profit Record, taken before this "
+             "email was sent. If a promise were changed afterwards it would no longer match its seal, "
+             "and your Record export lets anyone check that.")
+
+
 def directive_email_body(client: dict, directives: list[dict], closes_at, portal_url: str,
-                         record_line: str | None = None) -> tuple[str, str]:
+                         record_line: str | None = None, seals: dict | None = None) -> tuple[str, str]:
     """The notice terms.html §6 promises: every planned correction, with its
     expected dollars, BEFORE it goes live, and how to stop it.
 
     Standing-mandate items say the window and what happens at the end of it.
     Explicit ones say plainly that nothing happens without a yes — because
-    nothing does."""
+    nothing does.
+
+    `seals` maps a move's id to its short seal, printed beside its expected
+    dollars, so the client's own inbox holds a dated copy of what was called.
+    A move without one reads exactly as it did before the Seal existed, and
+    the note explaining seals appears only when one is printed."""
     standing = [d for d in directives if d.get("mandate") == "standing"]
     explicit = [d for d in directives if d.get("mandate") != "standing"]
+    seals = seals or {}
 
     def line(d):
         usd = d.get("expected_impact_usd")
-        money = f" (expected ${float(usd):,.0f})" if usd is not None else ""
-        return f"{d['action_text']}{money}"
+        parts = [f"expected ${float(usd):,.0f}"] if usd is not None else []
+        if seals.get(d.get("id")):
+            parts.append(f"seal {seals[d.get('id')]}")
+        return d["action_text"] + (f" ({' · '.join(parts)})" if parts else "")
 
     blocks = [{"p": "Here is what we plan to do next, and what each one is worth. "
                     "Nothing below has happened yet."}]
@@ -129,6 +143,8 @@ def directive_email_body(client: dict, directives: list[dict], closes_at, portal
     blocks.append({"button": "Open Hubricon", "url": portal_url})
     blocks.append({"p": "Every one of these lands on your Profit Record afterwards with what it "
                         "actually earned — including the ones that come in under."})
+    if any(seals.get(d.get("id")) for d in directives):
+        blocks.append({"p": SEAL_NOTE})
     if record_line:
         blocks.append({"p": record_line})
     return letter(client.get("contact_name"), blocks)
