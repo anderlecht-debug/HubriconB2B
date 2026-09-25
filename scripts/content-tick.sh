@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# One tick of the unattended content pipeline. Fired by the user systemd timer
+# (scripts/systemd/hubricon-content.timer) every 30 minutes; safe to run by hand.
+#
+# It re-enters cold: reads content/queue.json through the content-next skill,
+# advances the queue by as many steps as fit in the budget, commits each one,
+# and pushes only the `content` branch. When Claude Code reports a usage limit
+# the tick backs off for an hour and the next eligible tick retries, so a reset
+# costs one skipped tick and nothing else.
+set -uo pipefail
+MAIN=/home/lp9/Hubricon/HubriconB2B
+WT=/home/lp9/Hubricon/HubriconB2B-content
+RUN="$WT/content/.runner"
+CLAUDE=/home/lp9/.local/bin/claude
+mkdir -p "$RUN"
+exec 9>"$RUN/lock"
+flock -n 9 || exit 0                                   # a previous tick is still running
+[ -e "$RUN/STOP" ] && exit 0                           # founder paused the loop
+if [ -f "$RUN/backoff-until" ] && [ "$(date +%s)" -lt "$(cat "$RUN/backoff-until")" ]; then exit 0; fi
+
+# .env may hold unquoted values with spaces; export line by line rather than sourcing it.
+if [ -f "$MAIN/.env" ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue;; esac
+    [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && export "$line"
+  done < "$MAIN/.env"
+fi
+# The engine's API key is for narrate.py, not for this session: with it set, Claude
+# Code would bill an API key that needs a workspace header instead of using the
+# subscription login the dry run proved. Ticks never need it.
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_WORKSPACE_ID ANTHROPIC_BASE_URL
+# The allow list in .claude/settings.json only applies once this workspace is trusted.
+# Until then every hubricon-content, git add and git commit call inside a tick waits
+# for an approval nobody is there to give (the log line "Ignoring 38 permissions.allow
+# entries" is the symptom). A tick cannot fix this itself: Claude Code refuses to let a
+# session edit its own permission settings. The founder does one of these once:
+#   * run `claude` interactively in /home/lp9/Hubricon/HubriconB2B and accept the trust
+#     dialog, or set projects["/home/lp9/Hubricon/HubriconB2B"].hasTrustDialogAccepted
+#     to true in /home/lp9/.claude.json;
+#   * or copy the "allow" list from .claude/settings.json into
+#     scripts/content-runner.settings.json, which is passed with --settings and trusted.
+export HOME=/home/lp9
+export PATH="$WT/content/.venv/bin:/home/lp9/.local/bin:/usr/local/bin:/usr/bin:/bin"
+cd "$WT" || exit 1
+git checkout -q content 2>/dev/null
+git fetch -q origin content 2>/dev/null && git merge -q --ff-only origin/content 2>/dev/null
+
+# An idle queue (everything parked for the founder or blocked on an input) needs no
+# Claude session at all; the state files are refreshed and the tick ends.
+if [ "${CONTENT_DRY_RUN:-0}" != "1" ] && "$WT/content/.venv/bin/hubricon-content" next --dry 2>/dev/null | grep -q '"idle": true'; then
+  "$WT/content/.venv/bin/hubricon-content" status --md >/dev/null 2>&1
+  git add -A content 2>/dev/null; git diff --cached --quiet || git commit -q -m "Content pipeline: the state rollup after an idle tick"
+  git push -q origin content 2>/dev/null || true
+  printf '%s tick idle (no session started)\n' "$(date -Is)" >> "$RUN/log"
+  exit 0
+fi
+
+START=$(date +%s)
+if [ "${CONTENT_DRY_RUN:-0}" = "1" ]; then
+  OUT=$(timeout 5m "$CLAUDE" -p "Reply with the single word OK and nothing else." \
+        --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
+        --max-turns 2 --output-format json --no-session-persistence --strict-mcp-config 2>&1); RC=$?
+else
+  OUT=$(timeout 55m "$CLAUDE" -p "Read CLAUDE.md, then follow .claude/skills/content-next/SKILL.md exactly. Stop starting new steps after 40 minutes of work." \
+        --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
+        --max-turns 300 --output-format json --no-session-persistence --strict-mcp-config 2>&1); RC=$?
+fi
+SECS=$(( $(date +%s) - START ))
+{ printf '%s tick rc=%s secs=%s dry=%s\n' "$(date -Is)" "$RC" "$SECS" "${CONTENT_DRY_RUN:-0}"
+  printf '%s\n' "$OUT" | tail -c 20000; printf '\n---\n'; } >> "$RUN/log"
+
+if printf '%s' "$OUT" | grep -q '"permission_denials":\[{'; then
+  printf '%s WARNING: the tick was denied a tool call; check the allow list in scripts/content-runner.settings.json\n' "$(date -Is)" >> "$RUN/log"
+fi
+# Back off only on a real limit: the result object's own error fields, never a
+# substring somewhere in a transcript that happens to mention a status code.
+LIMIT=$(printf '%s' "$OUT" | python3 -c '
+import json, re, sys
+raw = sys.stdin.read()
+try:
+    obj = json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
+except Exception:
+    print("unparsed"); sys.exit()
+status = obj.get("api_error_status")
+text = str(obj.get("result", ""))[:2000] if obj.get("is_error") else ""
+if status in (429, 529) or re.search(r"usage limit|rate limit|limit will reset|resets? at|overloaded", text, re.I):
+    print("limit")
+' 2>/dev/null)
+if [ "$LIMIT" = "limit" ]; then
+  date -d '+60 min' +%s > "$RUN/backoff-until"
+  printf '%s backoff until %s\n' "$(date -Is)" "$(date -d '+60 min' -Is)" >> "$RUN/log"
+else
+  rm -f "$RUN/backoff-until"
+fi
+
+# Anything a killed run left uncommitted is still progress.
+git add -A content docs .claude CLAUDE.md learn api index.html scripts 2>/dev/null
+git diff --cached --quiet || git commit -q -m "Content pipeline: recover partial step state from an interrupted tick"
+git push -q origin content 2>/dev/null || true
+exit 0

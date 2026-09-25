@@ -4,6 +4,8 @@
   2. Bookings  — Calendly bookings the cloud routine parsed → client + welcome email.
   3. TEARDOWN  — prospects who replied with the keyword → client + upload page.
   4. Nudges    — clients who haven't uploaded after 3 / 7 days, once each.
+  4b. Learn    — a week after a playbook download, one email asking what came
+                 back and whether the number and the brand may be published.
   5. Teardown  — new uploads parsed; first successful run → Issue 001 in the
                  desk, report file in storage, "it's ready" email.
   6. Billing   — the day-30 gate; the only code that starts a subscription.
@@ -34,6 +36,24 @@ DOWNSELL_AFTER_DAYS = 14     # the smaller door, once, to an Amazon seller whose
 # api/gate.js writes this at the head of fit_notes on a Recovery Only request. The
 # site's below-the-bar screen that posted it is gone (2026-09-18); the endpoint stays.
 RECOVERY_NOTE = "recovery-only (site gate)"
+LEARN_FOLLOWUP_AFTER_DAYS = 7  # a week after a playbook download, ask what came back
+LEARN_COURSES = {"reimbursement-playbook": "The Reimbursement Playbook"}  # mirrors api/learn.js COURSES
+
+
+def learn_followup_email(first_name: str | None, course: str) -> tuple[str, str, str]:
+    """Subject, text and HTML of the one follow-up a playbook download gets. No
+    figure appears in it; the reader supplies the number."""
+    from .notify import letter
+    title = LEARN_COURSES.get(course, course.replace("-", " ").title())
+    blocks = [
+        {"p": f"A week ago you took {title} and its spreadsheet. One question: how much has come back "
+              "so far? A reply with the figure is enough, and nothing yet is a useful answer too."},
+        {"p": "If it did get money back, may we publish the amount and the brand name? That is the only "
+              "proof the course will ever carry, and it is published only with your yes."},
+        {"p": "Reply to this email either way; it comes straight to me."},
+    ]
+    text, html = letter(first_name, blocks)
+    return f"{title}, a week on", text, html
 
 
 def _now() -> datetime:
@@ -313,6 +333,49 @@ class Pass:
                 {"client_id": client["id"], "kind": kind, "sent_at": _iso()}, on_conflict="client_id,kind"
             ).execute()
         return ok
+
+    # -- 4b. learn follow-ups --------------------------------------------------
+    def learn_followups(self) -> None:
+        """A week after api/learn.js records a download, one email: how much came
+        back, and may we publish the number and the brand. That is the proof
+        engine of docs/content/hubricon-learn-build-prompt.md §1, so the ask is
+        explicit and easy to answer with a reply. One ask per address, ever,
+        keyed on a learn_result_ask row; a failed send leaves no row and is
+        tried again next pass."""
+        captures = self.db.table("funnel_events").select("*").eq("kind", "learn_capture").execute().data
+        if not captures:
+            return
+        asked = {(r.get("payload") or {}).get("email") for r in
+                 self.db.table("funnel_events").select("*").eq("kind", "learn_result_ask").execute().data}
+        now = _now()
+        seen: set[str] = set()
+        for row in captures:
+            payload = row.get("payload") or {}
+            email = (payload.get("email") or "").strip().lower()
+            if not email or email in asked or email in seen or onboarding.is_internal(email):
+                continue
+            captured = _parse_ts(row.get("occurred_at"))
+            if not captured or (now - captured).days < LEARN_FOLLOWUP_AFTER_DAYS:
+                continue
+            seen.add(email)
+            course = payload.get("course") or "reimbursement-playbook"
+            if self.dry:
+                self.say(f"[dry] would ask {email} what {LEARN_COURSES.get(course, course)} got back")
+                continue
+            if not self.send or not email_configured():
+                self.warnings.append(f"learn follow-up to {email} not sent: "
+                                     + ("--send not given" if not self.send else "RESEND_API_KEY missing"))
+                continue
+            subject, text, html = learn_followup_email(payload.get("first_name"), course)
+            founder = os.environ.get("FOUNDER_EMAIL") or os.environ.get("EMAIL_REPLY_TO", onboarding.FROM)
+            ok = send_email(email, subject, text, html=html, sender=onboarding.FROM, reply_to=founder)
+            if not ok:
+                self.warnings.append(f"learn follow-up to {email} failed to send; it is tried again next pass.")
+                continue
+            outbound.log_event(self.db, "learn_result_ask", note=course,
+                               payload={"email": email, "course": course, "capture_id": row.get("id"),
+                                        "route": payload.get("route")})
+            self.say(f"Asked {email} what {LEARN_COURSES.get(course, course)} got back, a week after the download.")
 
     # -- 5. teardown delivery ------------------------------------------------
     def teardowns(self) -> None:
@@ -827,8 +890,8 @@ class Pass:
 def run(send: bool = False, dry: bool = False, digest: bool = False) -> str:
     db = dbmod.connect()
     p = Pass(db, send=send, dry=dry)
-    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.teardowns, p.billing, p.proof,
-                 p.data_requests, p.promises):
+    for step in (p.outbound, p.bookings, p.teardown_requests, p.nudges, p.learn_followups, p.teardowns,
+                 p.billing, p.proof, p.data_requests, p.promises):
         try:
             step()
         except Exception as err:  # keep going; the digest carries the failure

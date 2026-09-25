@@ -1,0 +1,92 @@
+{
+ "slug": "08-elasticity-plain-english",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The hook has him read elasticity as a warning not to touch the price, and the 'let them be wrong' beat states the markup-plus-gut method fairly, granting that units are the thing he can see, before the crack draws the line the units sit on."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "'In plain English': the ratio is read off a plotted line, named after it is shown, and the pricing rule is given in words before its symbol. 'Probably wrong': {{pm_count}} of {{n_skus}} products carry an honest move, the price set off gross margin climbs the wrong hill, and the move is wrong by a capped step rather than badly. Note for the founder: the direction of the best move is never spoken, because facts.json carries the new price and the step but not the old price."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "Elasticity is named after the slope has been read as a ratio; the hill is built from the pull in both directions before the top is located; the inverse-elasticity rule is stated in words and only then as a symbol, explicitly as a convenience."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: the price you want is the top of a hill set by the slope and the true margin, and the top is a stretch, not a point. One CTA, the course page."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Almost nobody's price sits on top of the profit hill' and 'a small step you can read is worth more than a big step you can't' are both disputable and specific."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "The method is complete: pull price and units by month, fit log units on log price with its standard error, move the price on purpose when it never moved and wait {{el_min_periods}} months, compute the true unit margin after fees and ads, set the kept fraction to the inverse of the slope, and step under the {{pm_step_cap}} cap while reading each result against its range. Robust errors and sizing the step to the uncertainty are left to the model in the honest limit, as §7 allows."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close says what the viewer can do (the line for the top products), where it breaks ({{n_skus}} products monthly, errors that don't assume tidy noise, steps sized to the range, ranges dropped by hand inside a season), and that the gap is a model. No service is named, as pillar 3 requires, and the CTA is the course page."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "4 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "Elasticity, the hill, the wrong margin and the stretch at the top apply to any product business; 'the platform's cut' reads as any channel's fees. Weakness to note for the scenes step: the profit hill is not one of the listed Manim scenes, so the elasticity scene needs a hill variant driven by the same fit and the margin decomposition."
+  }
+ ],
+ "judged_by": "critique skill, unattended tick 2026-09-18"
+}

@@ -1,0 +1,92 @@
+{
+ "slug": "04-ab-test-sample-size",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The hook has the viewer call the test ('your few-week price test said the new price worked') and the 'let them be wrong' beat states the before-and-after comparison fairly, in his words, as the sane thing every tool suggests, before the crack lands."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "'Told you nothing' is delivered as the few-week test sitting below the fit's own bar of {{el_min_periods}} months and {{el_min_price_cv}} of movement: not a wide answer, no answer. 'The sample size you needed' is delivered as the ladder {{n_for_se_half}}, {{n_for_se_quarter}}, {{n_for_se_tenth}} months. Note for the founder: the sample size is in months of price history for one product's fit, not orders in a split test; the script says so plainly, and it is the number the engine computes."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "No symbols anywhere. Elasticity is named as the fitted line is drawn and glossed at once as units falling faster than price rises; standard error is named after the tilting-line picture; false discovery rate is named after the sweep's flags and the null runs; the log-log slope is given only in the close as the how-to."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: a short price test cannot know whether the price change worked, because the answer is a range and the range is wide. Chapter 2's false-discovery turn is the same idea across a catalog. One CTA, subscribe."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Nearly every price test an operator has ever called a win was noise' and 'products don't live that long' are both disputable and specific."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "The whole method is given: write down the range, move the price on purpose inside {{pm_step_cap}} over enough months, decide on the range not the point, keep a control product as the noise floor, and fit the log-log slope with its standard error in a spreadsheet. The robust errors and the null calibration are described as what the model does rather than as a procedure, which is the honest limit's job under §7, not a withheld step."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close says what the viewer can do (one product's fit, an afternoon on the top products), where it breaks (every product, every month, robust errors, {{null_replicates}} null runs), and that the gap is a model. No service is named and nothing is pitched."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "4 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "Universal for anyone who runs a price or A/B test: the width of the answer, how slowly it narrows, and false winners across many tests. The example catalog is Amazon-shaped but nothing in the argument is. Weakness to note: the 'let them be wrong' beat wants a real price-test dashboard screenshot, which the founder has to supply."
+  }
+ ],
+ "judged_by": "critique skill, unattended tick 2026-09-18"
+}
