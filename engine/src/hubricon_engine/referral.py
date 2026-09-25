@@ -33,7 +33,7 @@ from . import value as valuemod
 
 SITE = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com")
 ASK_KIND = "consent_ask"
-CONSENT_KINDS = ("testimonial", "anonymised_results", "calibration")
+CONSENT_KINDS = ("testimonial", "anonymised_results", "calibration", "network")
 
 _REF = re.compile(r"\bref\s*[:=]\s*([A-Za-z0-9_-]{4,32})")
 
