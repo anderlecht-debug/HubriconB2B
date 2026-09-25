@@ -343,9 +343,12 @@ class Pass:
             )
             if not has_data:
                 continue
-            # The clock the 24-hour promise runs from: the first pass that
-            # found typed data on file, set once and never moved.
-            if not self.dry and speed.set_once(self.db, c, "exports_landed_at"):
+            # The clock the 24-hour promise runs from, set once and never
+            # moved: when the first file we could read was uploaded, not when
+            # this hourly pass noticed it, because a late Teardown now costs
+            # us a month (terms §2). Exports pulled through the seat have no
+            # upload row and start it on the pass that finds them.
+            if not self.dry and speed.set_once(self.db, c, "exports_landed_at", self._first_file_at(c)):
                 outbound.log_event(self.db, "exports_landed", client_id=c["id"])
             if self.dry:
                 self.say(f"[dry] would run the models and publish Issue 001 for {c['contact_email']}")
@@ -355,6 +358,11 @@ class Pass:
             except Exception as err:  # never let one client's data break the pass
                 self.warnings.append(f"Teardown for {c['contact_email']} failed: {err}")
                 print(f"  TEARDOWN FAILED for {c['contact_email']}: {err}", file=sys.stderr)
+
+    def _first_file_at(self, c: dict) -> datetime | None:
+        rows = (self.db.table("uploads").select("uploaded_at").eq("client_id", c["id"]).eq("status", "parsed")
+                .not_.is_("uploaded_at", "null").order("uploaded_at").limit(1).execute().data)
+        return _parse_ts(rows[0]["uploaded_at"]) if rows else None
 
     def _publish_first_issue(self, c: dict, cli) -> None:
         from . import narrate, storage
@@ -440,11 +448,21 @@ class Pass:
         therefore no invoice to write off."""
         from . import billing, cli, value
 
+        if not self._guarantee_schema_ready():
+            return
         price_id = os.environ.get("STRIPE_PRICE_ID")
-        clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
+        # past_due too: a failed ACH payment on an invoice the Record has not
+        # covered is exactly the invoice the gate must void, and dropping the
+        # client from this pass would leave it standing.
+        clients = self.db.table("clients").select("*").in_("status", ["pending", "active", "past_due"]).execute().data
         for c in clients:
             if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
                 continue
+            company = c["company_name"] or c["contact_email"]
+            try:
+                self._late_teardown_month(c, cli)
+            except Exception as err:  # one client's failure never stops the pass for the rest
+                self.warnings.append(f"{company}: the late-Teardown check failed: {err}")
             # The smaller door: no retainer, a share of what Amazon paid back,
             # invoiced at month end. Never enters the day-30 machinery.
             if (c.get("plan") or "retainer") == "recovery":
@@ -452,7 +470,10 @@ class Pass:
                 continue
             # Already on the retainer: every new invoice meets the same bar.
             if c.get("stripe_subscription_id"):
-                self._rolling_gate(c, cli, billing, value)
+                try:
+                    self._rolling_gate(c, cli, billing, value)
+                except Exception as err:
+                    self.warnings.append(f"{company}: the rolling gate failed: {err}")
                 continue
             due, why = billing.due_for_decision(c)
             if not due:
@@ -524,14 +545,74 @@ class Pass:
                     pass
             self.say(f"{company} cleared the guarantee at {v['multiple']:.1f}x — billing started.")
 
+        # terms §5: the day Managed Profit ends, the Record is checked once more.
+        leaving = (self.db.table("clients").select("*").eq("status", "churned")
+                   .is_("exit_trued_up_at", "null").execute().data)
+        for c in leaving:
+            if c.get("stripe_customer_id") and not onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+                try:
+                    self._exit_true_up(c, cli, billing, value)
+                except Exception as err:
+                    self.warnings.append(f"{c['company_name'] or c['contact_email']}: the exit true-up failed: {err}")
+
+    def _guarantee_schema_ready(self) -> bool:
+        """The refund, the exit true-up and the late-Teardown month write the
+        columns of migration 20260925000001. Without them a refund could be
+        made in Stripe and not recorded, then made again once Stripe's
+        idempotency key expired, so the whole pass waits, loudly, rather than
+        half-run. Nobody is billed early; somebody may be billed late."""
+        try:
+            self.db.table("invoices").select("refunded_usd").limit(1).execute()
+            self.db.table("clients").select("exit_trued_up_at, exit_refund_usd, late_teardown_month_at") \
+                .limit(1).execute()
+            return True
+        except Exception as err:
+            self.warnings.append(f"Billing paused: apply supabase/migrations/20260925000001_guarantee_stack.sql "
+                                 f"({str(err)[:100]}). Nothing is billed, sent, voided or refunded until it is.")
+            return False
+
+    def _late_teardown_month(self, c: dict, cli) -> None:
+        """terms §2: a Teardown later than 24 hours from the client's files
+        makes their first paid month free as well. Once per client, on the
+        clock the digest and `hubricon promises` already read, and never for
+        the recovery-only plan, which has no month to give."""
+        if (c.get("late_teardown_month_at") or c.get("stripe_subscription_id")
+                or (c.get("plan") or "retainer") != "retainer"):
+            return
+        late, hours = speed.teardown_late(c)
+        if not late:
+            return
+        company = c["company_name"] or c["contact_email"]
+        if self.dry:
+            self.say(f"[dry] {company}: Teardown {hours:.0f}h after the files — would add a free month")
+            return
+        months = int(c.get("free_months") or 1) + 1
+        self.db.table("clients").update({"free_months": months, "late_teardown_month_at": _iso()}) \
+            .eq("id", c["id"]).execute()
+        c.update({"free_months": months, "late_teardown_month_at": _iso()})
+        cli._send_client_email(self.db, c, "late_teardown", str(c["id"]),
+                               "Your Teardown was late, so your first paid month is free too",
+                               [{"p": f"We promise your Profit Teardown within 24 hours of your files. Yours took "
+                                      f"{'more than ' if not c.get('first_issue_at') else ''}{hours:.0f} hours, "
+                                      f"so we broke that promise, and the terms say what it costs us."},
+                                {"p": "If you say yes to Managed Profit, your first paid month is free as well: "
+                                      "no invoice for it, whatever your Profit Record shows. You don't need to "
+                                      "ask or reply; it is already on your account."},
+                                {"button": "Open Hubricon", "url": PORTAL_URL}], self.send)
+        self.human.append(f"{company}: the Teardown came {hours:.0f}h after the files, past the 24h promise, so "
+                          f"their first paid month is free ({months} free months now). Find out why.")
+        self.say(f"{company}: late Teardown ({hours:.0f}h) — free months now {months}.")
+
     def _rolling_gate(self, c: dict, cli, billing, value) -> None:
         """terms §3: our invoices never run ahead of the ledger.
 
         Every invoice Stripe has raised and nobody has judged is measured by
         the day-30 bar — measured plus identified since the retainer began
-        against everything billed through it. Covered is written on the row;
-        not covered is voided (or credited if ACH already settled) and the
-        client is told in one letter. Decided exactly once per invoice."""
+        against everything billed through it. A held draft the Record covers
+        is sent; one it does not cover is voided before it is ever sent. An
+        open invoice not covered is voided, a paid one refunded, and the
+        client is told in one letter. Decided exactly once per invoice, oldest
+        first, each decision counted by the next one in the same pass."""
         company = c["company_name"] or c["contact_email"]
         invoices = cli._fetch_invoices(self.db, c["id"])
         pending = billing.unjudged_invoices(invoices, c)
@@ -542,38 +623,111 @@ class Pass:
         for inv in pending:
             v = billing.rolling_verdict(ledger, invoices, inv, c)
             label = f"invoice {inv.get('number') or str(inv.get('stripe_invoice_id'))[:12]}"
+            held = inv.get("status") == "draft"
             if self.dry:
                 self.say(f"[dry] {company}: {label} — ledger ${v['total']:,.0f} vs ${v['fees_billed']:,.0f} billed — "
-                         f"{'covered' if v['covered'] else 'would be WAIVED'}")
+                         f"{'covered' + (', would send it' if held else '') if v['covered'] else 'would be WAIVED'}")
                 continue
             if v["covered"]:
-                self.db.table("invoices").update({
-                    "gate_decision": "covered", "gate_decided_at": _iso(),
-                    "gate_value": round(v["total"], 2), "gate_fees": round(v["fees_billed"], 2),
-                }).eq("id", inv["id"]).execute()
-                self.say(f"{company}: {label} covered — ledger ${v['total']:,.0f} against ${v['fees_billed']:,.0f} billed.")
+                patch = {"gate_decision": "covered", "gate_decided_at": _iso(),
+                         "gate_value": round(v["total"], 2), "gate_fees": round(v["fees_billed"], 2)}
+                if held:
+                    if not billing.stripe_configured():
+                        self.warnings.append(f"{company}: {label} is covered and held, and cannot be sent: "
+                                             f"STRIPE_SECRET_KEY missing. Nobody is billed until it is.")
+                        continue
+                    try:
+                        sent = billing.release_invoice(inv)
+                    except Exception as err:
+                        self.warnings.append(f"{company}: {label} is covered but Stripe would not send it: {err}")
+                        continue
+                    inv["status"] = "open"
+                    patch.update({"status": "open", "issued_at": _iso(),
+                                  "hosted_invoice_url": (sent or {}).get("hosted_invoice_url") or inv.get("hosted_invoice_url"),
+                                  "number": (sent or {}).get("number") or inv.get("number")})
+                self.db.table("invoices").update(patch).eq("id", inv["id"]).execute()
+                self.say(f"{company}: {label} covered — ledger ${v['total']:,.0f} against ${v['fees_billed']:,.0f} billed"
+                         + ("; sent." if held else "."))
                 continue
             if not billing.stripe_configured():
                 self.warnings.append(f"{company}: {label} is NOT covered by the ledger (${v['total']:,.0f} vs "
                                      f"${v['fees_billed']:,.0f}) and cannot be waived: STRIPE_SECRET_KEY missing.")
                 continue
             try:
-                how = billing.waive_invoice(inv, c)
+                how, refunded = billing.waive_invoice(inv, c)
             except Exception as err:
                 self.warnings.append(f"{company}: {label} should be waived but Stripe refused: {err}")
                 continue
+            if how == "voided":
+                inv["status"] = "void"
+            else:
+                inv["refunded_usd"] = float(inv.get("refunded_usd") or 0) + refunded
             self.db.table("invoices").update({
                 "gate_decision": "waived", "gate_decided_at": _iso(), "gate_note": how,
                 "gate_value": round(v["total"], 2), "gate_fees": round(v["fees_billed"], 2),
-                **({"status": "void", "voided_at": _iso()} if how == "voided" else {}),
+                **({"status": "void", "voided_at": _iso()} if how == "voided"
+                   else {"refunded_usd": round(inv["refunded_usd"], 2)}),
             }).eq("id", inv["id"]).execute()
+            if held:
+                # Never sent, so there is no invoice to explain: the Brief
+                # already shows the Record, and the next invoice waits for it.
+                self.human.append(f"{company}: {label} held and voided unsent — the ledger (${v['total']:,.0f}) is "
+                                  f"behind the bills (${v['fees_billed']:,.0f}). The work has to catch up; worth a call.")
+                self.say(f"{company}: {label} voided before it was sent — the ledger had not covered it.")
+                continue
             cli._send_client_email(self.db, c, "month_waived", str(inv.get("stripe_invoice_id")),
-                                   f"Invoice {inv.get('number') or 'this month'} void — ${v['total']:,.0f} on the "
+                                   f"Invoice {inv.get('number') or 'this month'} "
+                                   f"{'void' if how == 'voided' else 'refunded'} — ${v['total']:,.0f} on the "
                                    f"Record against ${v['fees_billed']:,.0f} billed",
                                    billing.waived_email_blocks(v, how, PORTAL_URL), self.send)
             self.human.append(f"{company}: {label} {how} — the ledger (${v['total']:,.0f}) had fallen behind "
                               f"the bills (${v['fees_billed']:,.0f}). The work has to catch up; worth a call.")
             self.say(f"{company}: {label} {how} — the ledger had not covered it.")
+
+    def _exit_true_up(self, c: dict, cli, billing, value) -> None:
+        """terms §5: when Managed Profit ends, the Record is checked once more
+        against everything billed and not given back. A held draft is for a
+        month after the goodbye and is voided unsent; whatever is billed beyond
+        the Record is voided if unpaid and refunded if paid. Once per client;
+        a partial failure leaves the marker unset and the next pass finishes
+        from what was recorded."""
+        company = c["company_name"] or c["contact_email"]
+        invoices = cli._fetch_invoices(self.db, c["id"])
+        drafts = [i for i in invoices if i.get("status") == "draft" and not billing._is_recovery(i)]
+        directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+        ledger = value.compute(c, directives, cli._fetch_claims(self.db, c["id"]), invoices)
+        t = billing.exit_true_up(ledger, invoices)
+        if self.dry:
+            self.say(f"[dry] {company}: exit true-up — Record ${t['total']:,.0f} vs ${t['billed']:,.0f} billed; "
+                     f"would void {len(drafts) + len(t['voids'])} and refund ${t['refunded']:,.2f}")
+            return
+        if (drafts or t["voids"] or t["refunds"]) and not billing.stripe_configured():
+            self.warnings.append(f"{company} has left and is owed a true-up (${t['gap']:,.0f} billed beyond the "
+                                 f"Record) that cannot run: STRIPE_SECRET_KEY missing.")
+            return
+        try:
+            for inv in drafts + t["voids"]:
+                billing.waive_invoice(inv, c)
+                self.db.table("invoices").update({
+                    "status": "void", "voided_at": _iso(), "gate_decision": "waived", "gate_decided_at": _iso(),
+                    "gate_note": "voided at exit"}).eq("id", inv["id"]).execute()
+            for inv, amount in t["refunds"]:
+                billing.refund_invoice(inv, amount, "exit")
+                self.db.table("invoices").update({
+                    "refunded_usd": round(float(inv.get("refunded_usd") or 0) + amount, 2)}).eq("id", inv["id"]).execute()
+        except Exception as err:
+            self.warnings.append(f"{company}: the exit true-up stopped part-way ({err}); the next pass finishes it.")
+            return
+        self.db.table("clients").update({"exit_trued_up_at": _iso(), "exit_refund_usd": t["refunded"]}) \
+            .eq("id", c["id"]).execute()
+        if t["billed"] > 0 or t["refunded"] > 0:
+            cli._send_client_email(self.db, c, "exit_true_up", str(c["id"]), billing.exit_subject(t),
+                                   billing.exit_email_blocks(t, PORTAL_URL), self.send)
+        if t["gap"] > 0:
+            self.human.append(f"{company} left ${t['gap']:,.0f} behind: voided ${t['voided']:,.0f}, refunded "
+                              f"${t['refunded']:,.2f}. The found dollars that carried those invoices did not land.")
+        self.say(f"{company}: exit true-up done — Record ${t['total']:,.0f}, billed ${t['billed']:,.0f}, "
+                 f"refunded ${t['refunded']:,.2f}.")
 
     def _recovery_billing(self, c: dict, cli, billing, value) -> None:
         """The recovery-only plan: at month end, one invoice for the share of

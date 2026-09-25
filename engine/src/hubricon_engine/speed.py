@@ -49,6 +49,19 @@ def set_once(db, client: dict, column: str, when: datetime | None = None) -> boo
     return True
 
 
+def teardown_late(client: dict, now: datetime | None = None, sla_h: float = SLA_HOURS) -> tuple[bool, float | None]:
+    """terms §2: a Teardown later than the promise makes the first paid month
+    free as well. Late means Issue 001 went out more than `sla_h` hours after
+    the exports landed, or has still not gone out that long after. Returns
+    (late, hours) on the same clock `breaches` and the scoreboard read."""
+    landed = _parse(client.get("exports_landed_at"))
+    if not landed:
+        return False, None
+    until = _parse(client.get("first_issue_at")) or now or datetime.now(timezone.utc)
+    waited = round((until - landed).total_seconds() / 3600, 1)
+    return waited > sla_h, waited
+
+
 def breaches(clients: list[dict], now: datetime | None = None, sla_h: float = SLA_HOURS) -> list[dict]:
     """Clients whose exports landed, who have no Issue 001, and who have waited
     longer than the promise allows."""

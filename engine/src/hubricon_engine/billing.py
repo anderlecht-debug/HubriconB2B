@@ -20,16 +20,31 @@ Two more gates live here since 2026-09-08, on the founder's decision:
 **The rolling gate.** Day 30 was the only month the promise covered. Now every
 invoice Stripe raises for a retainer is judged by the same bar: measured plus
 identified value since the retainer began must cover everything billed through
-that invoice. One that is not covered is voided — or credited to the next, if
-ACH already settled it. "Our invoices never run ahead of your ledger."
+that invoice. "Our invoices never run ahead of your ledger."
 
 **The recovery-only plan.** The smaller door for a founder who will not commit
 to the fee: no retainer, a share of the reimbursements Amazon actually paid on
 claims we filed, invoiced at month end, nothing else. Nothing landed, no
 invoice. It is a `plan` on the client row, so the intake, the ledger, the proof
 and the ask are all the same machinery.
+
+Tightened on 2026-09-25, when the guarantee was rebuilt as a stack:
+
+**Held, then judged.** api/stripe-webhook.js stops every retainer invoice at
+draft (`auto_advance=false`), so the gate judges it before the client ever sees
+it: covered, it is finalized and sent; not covered, it is voided unsent. An
+open invoice (a hold that failed) is voided as before.
+
+**Refunded, not credited.** A month the Record stops covering after ACH has
+settled goes back to the bank account it came from, through a credit note on
+the invoice. A credit on the next bill is worth nothing to a client who leaves.
+
+**Trued up at the exit.** The day Managed Profit ends, the Record is checked
+once more against everything billed and not given back. Unpaid invoices are
+voided first; whatever gap remains is refunded.
 """
 
+import hashlib
 import json
 import os
 import urllib.error
@@ -38,6 +53,11 @@ import urllib.request
 from datetime import date, timedelta
 
 STRIPE_API = "https://api.stripe.com/v1"
+# Every call is made at the version the webhook's Node SDK pins (stripe@18.5 in
+# package.json), so the engine and api/stripe-webhook.js read the same shapes.
+# Unpinned, each call takes the account's default version, which is whatever
+# it was the day the account was opened.
+STRIPE_VERSION = "2025-08-27.basil"
 FREE_DAYS = 30
 NET_DAYS = 7          # terms.html §4: ACH, net seven days
 TIMEOUT = 30
@@ -47,13 +67,15 @@ def stripe_configured() -> bool:
     return bool(os.environ.get("STRIPE_SECRET_KEY"))
 
 
-def _stripe(path: str, data: dict | None = None, idempotency_key: str | None = None) -> dict:
+def _stripe(path: str, data: dict | None = None, idempotency_key: str | None = None,
+            method: str | None = None) -> dict:
     key = os.environ["STRIPE_SECRET_KEY"]
     url = f"{STRIPE_API}/{path}"
     body = urllib.parse.urlencode(data, doseq=True).encode() if data is not None else None
-    req = urllib.request.Request(url, data=body, method="POST" if body is not None else "GET")
+    req = urllib.request.Request(url, data=body, method=method or ("POST" if body is not None else "GET"))
     req.add_header("Authorization", f"Bearer {key}")
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    req.add_header("Stripe-Version", STRIPE_VERSION)
     if idempotency_key:
         req.add_header("Idempotency-Key", idempotency_key)
     try:
@@ -106,22 +128,43 @@ def ensure_customer(client: dict, stripe=None) -> str:
         customer = call("customers", {
             "email": client["contact_email"],
             "name": client.get("company_name") or client["contact_email"],
-        })["id"]
+            "metadata[hubricon_client_id]": client["id"],
+        }, idempotency_key=f"customer-{client['id']}")["id"]
     return customer
 
 
-def start_billing(client: dict, price_id: str) -> dict:
+def start_billing(client: dict, price_id: str, stripe=None) -> dict:
     """Create the subscription terms.html §4 describes: invoiced by email, ACH,
-    net seven days, no card on file, nothing charged automatically."""
-    customer = ensure_customer(client)
-    return _stripe("subscriptions", {
+    net seven days, no card on file, nothing charged automatically.
+
+    Never twice. The pass runs hourly, and a subscription created on a pass
+    whose database write then failed would otherwise be created again on the
+    next one — two $6,000 invoices a month. A live subscription already carrying
+    this client's id is returned instead, and the create itself carries an
+    idempotency key for the retry that lands inside Stripe's 24 hours."""
+    call = stripe or _stripe
+    customer = ensure_customer(client, call)
+    listed = call(f"subscriptions?{urllib.parse.urlencode({'customer': customer, 'status': 'all', 'limit': 100})}")
+    for s in listed.get("data") or []:
+        if ((s.get("metadata") or {}).get("hubricon_client_id") == client["id"]
+                and s.get("status") not in ("canceled", "incomplete_expired")):
+            return s
+    return call("subscriptions", {
         "customer": customer,
         "items[0][price]": price_id,
         "collection_method": "send_invoice",
         "days_until_due": NET_DAYS,
         "payment_settings[payment_method_types][0]": "us_bank_account",
         "metadata[hubricon_client_id]": client["id"],
-    })
+    }, idempotency_key=f"subscribe-{client['id']}-{str(client.get('retainer_started_at') or '')[:10]}")
+
+
+def cancel_subscription(subscription_id: str, stripe=None) -> dict:
+    """End the retainer in Stripe at once: no final invoice, no proration.
+    terms §5 — the month after the email is simply never invoiced."""
+    call = stripe or _stripe
+    return call(f"subscriptions/{subscription_id}", {"invoice_now": "false", "prorate": "false"},
+                method="DELETE")
 
 
 def cleared_email_blocks(v: dict, portal_url: str) -> list[dict]:
@@ -134,7 +177,9 @@ def cleared_email_blocks(v: dict, portal_url: str) -> list[dict]:
         ]},
         {"p": f"That is {v['multiple']:.1f}× the fee, so the paid months start and your first invoice "
               f"comes by email — ACH, net seven days, no card on file, nothing charged automatically. "
-              f"Cancel with one email whenever you like."},
+              f"Every invoice after it waits for the same check before it is sent. Cancel with one email "
+              f"whenever you like, and we true up on the way out: billed more than the Record shows, and "
+              f"the difference comes back."},
         {"button": "See every line behind that number", "url": portal_url},
         {"p": "Each entry on your Profit Record says how we know it, and which export it came from. "
               "If any of it looks wrong, reply and tell me — I'd rather fix the number than keep it."},
@@ -177,23 +222,37 @@ def _inv_key(inv: dict) -> tuple:
     return (str(inv.get("period_start") or ""), str(inv.get("issued_at") or ""), str(inv.get("stripe_invoice_id") or ""))
 
 
+def _is_recovery(inv: dict) -> bool:
+    return ((inv.get("raw") or {}).get("metadata") or {}).get("hubricon_plan") == "recovery"
+
+
+def still_billed(inv: dict) -> float:
+    """What an invoice still bills: its amount, less anything refunded on it."""
+    return max(0.0, float(inv.get("amount_due") or 0) - float(inv.get("refunded_usd") or 0))
+
+
 def unjudged_invoices(invoices: list[dict], client: dict) -> list[dict]:
-    """Invoices Stripe raised that the gate has not yet decided, oldest first.
-    Only ones inside the retainer: a stray invoice from before the yes is not
-    a month of ours to judge."""
+    """Retainer invoices the gate has not yet decided, oldest first: held
+    drafts, open ones and paid ones. Only ones inside the retainer (a stray
+    invoice from before the yes is not a month of ours to judge), and never a
+    recovery-share invoice, which is priced off money that already landed."""
     started = str(client.get("retainer_started_at") or "")[:10]
     out = [i for i in invoices
-           if i.get("status") in ("open", "paid") and not i.get("gate_decision")
+           if i.get("status") in ("draft", "open", "paid") and not i.get("gate_decision") and not _is_recovery(i)
            and (not started or not i.get("period_start") or str(i["period_start"])[:10] >= started)]
     return sorted(out, key=_inv_key)
 
 
 def fees_billed_through(invoices: list[dict], inv: dict) -> float:
-    """Everything billed up to and including this invoice — void ones excluded,
-    because a voided month was never billed."""
+    """Everything billed up to and including this invoice. Void ones are
+    excluded, because a voided month was never billed; refunded dollars are
+    taken off; and the invoice being judged counts even while it is a held
+    draft, because the question is whether the Record covers it too."""
     key = _inv_key(inv)
-    return sum(float(i.get("amount_due") or 0) for i in invoices
-               if i.get("status") in BILLED_STATUSES and _inv_key(i) <= key)
+    this = inv.get("stripe_invoice_id")
+    return sum(still_billed(i) for i in invoices
+               if (i.get("status") in BILLED_STATUSES or i.get("stripe_invoice_id") == this)
+               and _inv_key(i) <= key)
 
 
 def rolling_verdict(ledger: dict, invoices: list[dict], inv: dict, client: dict) -> dict:
@@ -216,22 +275,54 @@ def rolling_verdict(ledger: dict, invoices: list[dict], inv: dict, client: dict)
             "period_end": inv.get("period_end"), "status": inv.get("status")}
 
 
-def waive_invoice(inv: dict, client: dict, stripe=None) -> str:
-    """Make the month free. An open invoice is voided — nothing to pay, nothing
-    raised. One ACH already settled is credited to the customer balance, which
-    Stripe applies to the next invoice by itself. Returns 'voided' or 'credited'."""
+def release_invoice(inv: dict, stripe=None) -> dict:
+    """A held draft the Record covers: finalize it without Stripe's own
+    auto-send, then send it once. Returns the sent invoice."""
     call = stripe or _stripe
     sid = inv["stripe_invoice_id"]
-    if inv.get("status") == "open":
+    finalized = call(f"invoices/{sid}/finalize", {"auto_advance": "false"})
+    return call(f"invoices/{sid}/send", {}) or finalized
+
+
+def refund_invoice(inv: dict, cash_usd: float, why: str, credit_usd: float = 0.0, stripe=None) -> dict:
+    """Give money back on a paid invoice: a credit note against it, which
+    Stripe turns into a refund of the ACH payment to the account it came from
+    and prints on the invoice. `credit_usd` returns any part that was paid from
+    the customer balance (a referral month) to that balance, where it came from."""
+    call = stripe or _stripe
+    sid = inv["stripe_invoice_id"]
+    cash, credit = int(round(cash_usd * 100)), int(round(credit_usd * 100))
+    data = {"invoice": sid, "amount": cash + credit,
+            "memo": ("This month was not covered by your Profit Record, so it is refunded." if why == "gate" else
+                     "Refunded when Managed Profit ended: you had paid more than your Profit Record shows."),
+            "metadata[hubricon_reason]": why}
+    if cash:
+        data["refund_amount"] = cash
+    if credit:
+        data["credit_amount"] = credit
+    return call("credit_notes", data, idempotency_key=f"refund-{why}-{sid}-{cash + credit}")
+
+
+def waive_invoice(inv: dict, client: dict, stripe=None) -> tuple[str, float]:
+    """Make the month free. Returns how, and the dollars refunded to the bank.
+
+    A held draft is finalized without sending and voided at once, so the
+    client never receives it. An open one is voided: nothing to pay. One ACH
+    already settled is refunded, not credited to the next invoice: a credit is
+    worth nothing to a client who leaves."""
+    call = stripe or _stripe
+    sid = inv["stripe_invoice_id"]
+    status = inv.get("status")
+    if status == "draft":
+        call(f"invoices/{sid}/finalize", {"auto_advance": "false"})
+    if status in ("draft", "open", "uncollectible"):
         call(f"invoices/{sid}/void", {})
-        return "voided"
-    amount = float(inv.get("amount_paid") or inv.get("amount_due") or 0)
-    customer = inv.get("stripe_customer_id") or client.get("stripe_customer_id")
-    call(f"customers/{customer}/balance_transactions",
-         {"amount": int(round(-amount * 100)), "currency": inv.get("currency") or "usd",
-          "description": f"Month not covered by the Profit Record — invoice {inv.get('number') or sid}"},
-         idempotency_key=f"gate-{sid}")
-    return "credited"
+        return "voided", 0.0
+    cash = max(0.0, float(inv.get("amount_paid") or 0) - float(inv.get("refunded_usd") or 0))
+    total = float((inv.get("raw") or {}).get("total") or 0) / 100 or float(inv.get("amount_due") or 0)
+    from_balance = max(0.0, round(total - float(inv.get("amount_paid") or 0), 2))
+    refund_invoice(inv, cash, "gate", credit_usd=from_balance, stripe=call)
+    return "refunded", cash
 
 
 def waived_email_blocks(v: dict, how: str, portal_url: str) -> list[dict]:
@@ -245,12 +336,88 @@ def waived_email_blocks(v: dict, how: str, portal_url: str) -> list[dict]:
         ]},
         {"p": ("So the invoice is void and there is nothing to pay for the month."
                if how == "voided" else
-               "That invoice had already settled, so the same amount is credited to your next one, "
-               "which will show it as paid down to zero.")},
+               "That invoice had already settled, so it is refunded in full to the bank account it came "
+               "from. Stripe attaches a credit note to the invoice, and ACH refunds take a few business "
+               "days to land.")},
         {"button": "See the working", "url": portal_url},
         {"p": "The work carries on. Your Profit Record has to catch up with the bills before another invoice "
               "stands, and that is on us, not you."},
     ]
+
+
+# -- the exit true-up ---------------------------------------------------------------------
+
+def exit_true_up(ledger: dict, invoices: list[dict]) -> dict:
+    """terms §5: the day Managed Profit ends, the Record is checked once more
+    against everything billed and not already given back.
+
+    The gate judged each invoice when it was raised, partly on found dollars
+    (moves made, claims filed) that can later measure short. So at the exit,
+    whatever is billed beyond the Record comes back: unpaid invoices are voided
+    first, newest first, whole — never a smaller refund where a void can do it —
+    and the gap left after that is refunded on paid invoices, newest first. A
+    tie owes nothing either way, the same reading as both gates."""
+    measured = float(ledger.get("value_total") or 0)
+    identified = float(ledger.get("identified_unbanked") or 0)
+    total = measured + identified
+    live = [i for i in invoices if i.get("status") in ("open", "paid", "uncollectible")]
+    billed = round(sum(still_billed(i) for i in live), 2)
+    gap = round(max(0.0, billed - total), 2)
+    voids, refunds, left = [], [], gap
+    for i in sorted([i for i in live if i.get("status") in ("open", "uncollectible")], key=_inv_key, reverse=True):
+        if left <= 0:
+            break
+        voids.append(i)
+        left = round(left - still_billed(i), 2)
+    for i in sorted([i for i in live if i.get("status") == "paid"], key=_inv_key, reverse=True):
+        if left <= 0:
+            break
+        room = max(0.0, float(i.get("amount_paid") or 0) - float(i.get("refunded_usd") or 0))
+        take = round(min(room, left), 2)
+        if take > 0:
+            refunds.append((i, take))
+            left = round(left - take, 2)
+    return {"measured": measured, "identified": identified, "total": total, "billed": billed, "gap": gap,
+            "voids": voids, "refunds": refunds, "refunded": round(sum(a for _, a in refunds), 2),
+            "voided": round(sum(still_billed(i) for i in voids), 2)}
+
+
+def exit_subject(t: dict) -> str:
+    if t["gap"] <= 0:
+        return "Trued up: your Profit Record is ahead of the bills"
+    parts = ([f"${t['voided']:,.0f} voided"] if t["voided"] else []) + \
+            ([f"${t['refunded']:,.2f} refunded to your bank"] if t["refunded"] else [])
+    return "Trued up: " + ", ".join(parts)
+
+
+def exit_email_blocks(t: dict, portal_url: str) -> list[dict]:
+    blocks = [
+        {"p": "Managed Profit has ended, and as promised we checked your Profit Record one last time against "
+              "what we billed you."},
+        {"ol": [
+            f"Proven on your Profit Record since day one: ${t['measured']:,.0f}",
+            f"Found and filed, not yet banked: ${t['identified']:,.0f}",
+            f"Billed to you, after anything already refunded: ${t['billed']:,.0f}",
+        ]},
+    ]
+    if t["gap"] <= 0:
+        blocks.append({"p": "The Record is ahead of the bills, so nothing changes hands. You owe nothing more, "
+                            "and nothing is owed to you."})
+    else:
+        done = []
+        if t["voided"]:
+            done.append(f"the unpaid invoice{'s' if len(t['voids']) > 1 else ''} worth ${t['voided']:,.0f} "
+                        f"{'are' if len(t['voids']) > 1 else 'is'} void, so there is nothing more to pay")
+        if t["refunded"]:
+            done.append(f"${t['refunded']:,.2f} is refunded to the bank account it came from; Stripe attaches "
+                        f"a credit note to the invoice, and ACH refunds take a few business days to land")
+        blocks.append({"p": f"We billed ${t['gap']:,.0f} more than the Record shows, so: " + "; and ".join(done) + "."})
+    blocks += [
+        {"button": "Download your full Profit Record", "url": portal_url},
+        {"p": "Your data and the full Record export stay free to request, any day. Thank you for the chance to "
+              "earn it. If any of these numbers looks wrong, reply and tell me."},
+    ]
+    return blocks
 
 
 # -- the recovery-only plan --------------------------------------------------------------
@@ -298,25 +465,45 @@ def recovery_due(claims: list[dict], today: date, share: float | None = None,
 
 def invoice_recovery_share(client: dict, due: dict, stripe=None) -> dict:
     """One Stripe invoice for the period: an item for the share, sent by email,
-    ACH, net seven days. Nothing recurring is created."""
+    ACH, net seven days. Nothing recurring is created.
+
+    The invoice is created first and the item attached to it by id. The other
+    way round, an item left pending by a failure between the two calls would
+    ride along on the next pass's invoice beside its replacement: the share
+    billed twice. The invoice carries a key made of the claims it bills, and a
+    retry finds it by that key at any distance (Stripe's own idempotency keys
+    last 24 hours) and finishes it rather than starting another."""
     call = stripe or _stripe
     customer = ensure_customer(client, call)
     label = (f"Recovery Only — {due['share'] * 100:.0f}% of ${due['recovered']:,.2f} Amazon paid on "
              f"{due['n_claims']} claim(s) we filed, {due['period_start']} to {due['period_end']}")
-    call("invoiceitems", {"customer": customer, "amount": int(round(due["amount"] * 100)),
-                          "currency": "usd", "description": label})
-    inv = call("invoices", {
-        "customer": customer,
-        "collection_method": "send_invoice",
-        "days_until_due": NET_DAYS,
-        "pending_invoice_items_behavior": "include",
-        "payment_settings[payment_method_types][0]": "us_bank_account",
-        "metadata[hubricon_client_id]": client["id"],
-        "metadata[hubricon_plan]": "recovery",
-        "metadata[period_start]": str(due["period_start"]),
-        "metadata[period_end]": str(due["period_end"]),
-    })
-    inv = call(f"invoices/{inv['id']}/finalize", {}) or inv
+    claims_key = hashlib.sha256(",".join(sorted(str(c.get("id")) for c in due["claims"])).encode()).hexdigest()[:24]
+    recent = call(f"invoices?{urllib.parse.urlencode({'customer': customer, 'limit': 100})}")
+    inv = next((i for i in recent.get("data") or []
+                if (i.get("metadata") or {}).get("hubricon_claims") == claims_key and i.get("status") != "void"), None)
+    if inv is None:
+        inv = call("invoices", {
+            "customer": customer,
+            "collection_method": "send_invoice",
+            "days_until_due": NET_DAYS,
+            "auto_advance": "false",
+            "pending_invoice_items_behavior": "exclude",
+            "payment_settings[payment_method_types][0]": "us_bank_account",
+            "metadata[hubricon_client_id]": client["id"],
+            "metadata[hubricon_plan]": "recovery",
+            "metadata[hubricon_claims]": claims_key,
+            "metadata[period_start]": str(due["period_start"]),
+            "metadata[period_end]": str(due["period_end"]),
+        }, idempotency_key=f"recovery-invoice-{claims_key}")
+    if inv.get("status", "draft") != "draft":
+        # A run that sent it and then failed to record it: it went out once, and once is enough.
+        inv["customer"] = customer
+        return inv
+    if not inv.get("amount_due"):
+        call("invoiceitems", {"customer": customer, "invoice": inv["id"], "amount": int(round(due["amount"] * 100)),
+                              "currency": "usd", "description": label},
+             idempotency_key=f"recovery-item-{claims_key}")
+    inv = call(f"invoices/{inv['id']}/finalize", {"auto_advance": "false"}) or inv
     try:
         sent = call(f"invoices/{inv['id']}/send", {})
         if sent:

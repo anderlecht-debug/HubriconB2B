@@ -1972,7 +1972,10 @@ def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: b
 
 
 # Letters whose body already IS the three Profit Record numbers.
-RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived"})
+# The billing letters carry the Record's numbers as their subject already, and
+# the late-Teardown letter goes to a founder who has no Record yet.
+RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up",
+                                  "late_teardown"})
 
 
 def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
@@ -2485,10 +2488,69 @@ def cmd_downsell(args):
     share = float(args.share) if args.share is not None else billing.RECOVERY_SHARE
     if not 0 < share <= 0.5:
         sys.exit("--share must be a fraction between 0 and 0.5 (0.25 = a quarter of what lands)")
-    db.table("clients").update({"plan": "recovery", "recovery_share": share}).eq("id", client["id"]).execute()
+    sub = client.get("stripe_subscription_id")
+    if sub and not billing.stripe_configured():
+        sys.exit(f"{name} has a live retainer subscription ({sub}) and STRIPE_SECRET_KEY is not set, "
+                 "so it cannot be ended. Set the key and rerun.")
+    # The row first: the webhook marks a client churned when the subscription
+    # ON THEIR ROW ends, and this client is changing plans, not leaving.
+    db.table("clients").update({"plan": "recovery", "recovery_share": share, "stripe_subscription_id": None}) \
+        .eq("id", client["id"]).execute()
+    if sub:
+        # The flat fee ends with the switch. Left running, the subscription
+        # would keep raising $6,000 invoices the recovery pass never looks at.
+        _end_subscription(billing, sub)
+        print(f"{name}: retainer subscription {sub} ended, no final invoice.")
     print(f"{name}: recovery-only at {share * 100:.0f}% of reimbursements Amazon pays on claims we file, "
           f"invoiced at month end (minimum ${billing.RECOVERY_MIN_INVOICE_USD:,.0f}, smaller amounts roll forward). "
           f"No retainer, no day-30 subscription. Claims: `hubricon recover {args.client} list|file|paid`.")
+
+
+def _end_subscription(billing, subscription_id: str) -> None:
+    try:
+        billing.cancel_subscription(subscription_id)
+    except RuntimeError as err:
+        # Already ended (in the dashboard, or by an earlier run): the goal holds.
+        if "canceled" not in str(err) and "No such subscription" not in str(err):
+            sys.exit(f"Stripe would not end {subscription_id}: {err}")
+
+
+def cmd_cancel(args):
+    """terms §5: the client emailed to end Managed Profit, effective at once.
+
+    Nothing did this before: the subscription kept raising invoices until
+    someone remembered the dashboard. Now one command ends it in Stripe with
+    no final invoice and marks the client churned, so the sweep, the briefs
+    and the veto queue stop. The exit true-up (held drafts voided unsent,
+    anything billed beyond the Record voided or refunded, and the letter that
+    says so) is the operator's next hourly pass, which holds the Stripe key and
+    the mail key; this prints what it will do."""
+    import sys as _sys
+    from . import billing, operator
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if client.get("stripe_subscription_id"):
+        if not billing.stripe_configured():
+            sys.exit(f"{name}'s subscription cannot be ended: STRIPE_SECRET_KEY is not set, and left running it "
+                     "keeps raising invoices. Set the key and rerun.")
+        _end_subscription(billing, client["stripe_subscription_id"])
+        print(f"{name}: subscription {client['stripe_subscription_id']} ended in Stripe, no final invoice.")
+    db.table("clients").update({"status": "churned"}).eq("id", client["id"]).execute()
+    print(f"{name}: marked churned — no further changes are made in their account.")
+    if client.get("exit_trued_up_at") or not client.get("stripe_customer_id"):
+        print("  Nothing to true up: " + ("already done." if client.get("exit_trued_up_at") else "never billed."))
+        return
+    preview = operator.Pass(db, send=False, dry=True)
+    preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing, valuemod)
+    for line in preview.notes:
+        print(f"  {line.replace('[dry] ', 'next operator pass: ')}")
+
+
+def cmd_stripe_smoke(args):
+    """Every Stripe call the billing path makes, against a TEST-mode key."""
+    from . import stripe_smoke
+    sys.exit(stripe_smoke.run(os.environ.get("STRIPE_SECRET_KEY", "")))
 
 
 def cmd_casestudy(args):
@@ -2658,9 +2720,29 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
 
     add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
         "hubricon export <client>")
-    add("An invoice the Profit Record hasn't covered is void", "terms §3, index, welcome", stripe_ok,
-        "every new invoice is judged by the day-30 bar; one the ledger has not covered is voided" if stripe_ok
-        else "STRIPE_SECRET_KEY missing — an uncovered invoice is flagged in the digest instead of voided")
+    # The refund, the true-up and the late-Teardown month write the columns of
+    # this migration, and the operator's billing pass waits until they exist.
+    try:
+        db.table("clients").select("exit_trued_up_at, late_teardown_month_at").limit(1).execute()
+        db.table("invoices").select("refunded_usd").limit(1).execute()
+        schema = None
+    except Exception:
+        schema = ("migration 20260925000001_guarantee_stack.sql not applied — the operator's billing pass is "
+                  "paused until it is")
+    if schema:
+        add("The billing pass can run", "terms §2, §3, §5", False, schema)
+    add("No bill reaches you before the Record covers it", "terms §3, index, welcome", stripe_ok,
+        "the webhook holds each retainer invoice at draft; the gate sends it if covered, voids it unsent if not"
+        if stripe_ok else "STRIPE_SECRET_KEY missing — a held invoice waits unsent and an uncovered one is "
+                          "flagged in the digest instead of voided. Nobody is wrongly billed; nobody is billed.")
+    add("A paid month the Record stops covering is refunded, not credited", "terms §3, index", stripe_ok,
+        "a credit note refunds the ACH payment to the account it came from" if stripe_ok
+        else "STRIPE_SECRET_KEY missing — the refund is flagged in the digest instead of made")
+    add("Trued up the day you leave", "terms §5, index", stripe_ok,
+        "`hubricon cancel` ends the subscription; the next pass voids the unpaid and refunds the rest of any gap"
+        if stripe_ok else "STRIPE_SECRET_KEY missing — a departed client's true-up is flagged, not made")
+    add("A late Teardown makes the first paid month free", "terms §2, index", not schema,
+        schema or "the billing pass adds the month on the 24-hour clock and tells the client; no key needed")
     add("Recovery-only clients pay only on money that landed", "terms §4", True,
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
@@ -3443,6 +3525,15 @@ def main():
     p.add_argument("--share", type=float, help="fraction of recovered dollars, default RECOVERY_SHARE (0.25)")
     p.add_argument("--retainer", action="store_true", help="move the client back onto the flat retainer")
     p.set_defaults(fn=cmd_downsell)
+
+    p = sub.add_parser("cancel", help="terms §5: end Managed Profit now — subscription ended, client churned, "
+                                      "exit true-up on the next operator pass")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_cancel)
+
+    p = sub.add_parser("stripe-smoke", help="run every Stripe call the billing path makes against a TEST-mode "
+                                            "key (STRIPE_SECRET_KEY=sk_test_…), then clean up")
+    p.set_defaults(fn=cmd_stripe_smoke)
 
     p = sub.add_parser("casestudy", help="index.html §3b: one real client's case study, previewed, published or taken down")
     p.add_argument("client")

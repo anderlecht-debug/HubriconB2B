@@ -134,29 +134,149 @@ def test_the_rolling_bar_is_ahead_of_the_bills_and_a_tie_goes_to_the_client():
     assert billing.verdict({"value_total": 6001, "identified_unbanked": 0}, CLIENT)["clears"] is True
 
 
-def test_an_open_invoice_is_voided_and_a_paid_one_is_credited_with_an_idempotency_key():
+def test_a_held_draft_is_voided_unsent_an_open_one_voided_and_a_paid_one_refunded_not_credited():
     calls = []
 
     def stripe(path, data=None, idempotency_key=None):
         calls.append((path, data, idempotency_key))
         return {}
 
-    assert billing.waive_invoice(INV2, CLIENT, stripe=stripe) == "voided"
+    # A held draft is finalized WITHOUT Stripe's own send, then voided: the client never receives it.
+    draft = {**INV2, "status": "draft", "stripe_invoice_id": "in_d"}
+    assert billing.waive_invoice(draft, CLIENT, stripe=stripe) == ("voided", 0.0)
+    assert [c[0] for c in calls] == ["invoices/in_d/finalize", "invoices/in_d/void"]
+    assert calls[0][1] == {"auto_advance": "false"}
+    assert billing.waive_invoice(INV2, CLIENT, stripe=stripe) == ("voided", 0.0)
     assert calls[-1][0] == "invoices/in_2/void"
-    assert billing.waive_invoice(INV1, CLIENT, stripe=stripe) == "credited"
+    # Paid: back to the bank through a credit note on the invoice. Never a
+    # customer-balance credit, which is worth nothing to a client who leaves.
+    assert billing.waive_invoice(INV1, CLIENT, stripe=stripe) == ("refunded", 6000.0)
     path, data, key = calls[-1]
-    assert path == "customers/cus_1/balance_transactions" and data["amount"] == -600000 and key == "gate-in_1"
-    assert data["description"] == "Month not covered by the Profit Record — invoice in_1"
+    assert path == "credit_notes" and data["invoice"] == "in_1" and key == "refund-gate-in_1-600000"
+    assert data["amount"] == 600000 and data["refund_amount"] == 600000 and "credit_amount" not in data
+    assert not any("balance_transactions" in c[0] for c in calls)
 
 
-def test_the_waived_letter_says_void_or_credited_and_never_discount():
+def test_a_month_paid_partly_from_a_referral_credit_refunds_the_cash_and_returns_the_credit():
+    calls = []
+    part = {**INV1, "stripe_invoice_id": "in_p", "amount_due": 5000, "amount_paid": 5000, "raw": {"total": 600000}}
+    how, cash = billing.waive_invoice(part, CLIENT, stripe=lambda path, data=None, idempotency_key=None:
+                                      calls.append((path, data)) or {})
+    assert (how, cash) == ("refunded", 5000.0)
+    assert calls[-1][1]["refund_amount"] == 500000 and calls[-1][1]["credit_amount"] == 100000
+    assert calls[-1][1]["amount"] == 600000
+
+
+def test_a_covered_draft_is_finalized_without_the_auto_send_then_sent_once():
+    calls = []
+
+    def stripe(path, data=None, idempotency_key=None):
+        calls.append((path, data))
+        return {"id": "in_d", "status": "open", "hosted_invoice_url": "https://pay/in_d"}
+
+    sent = billing.release_invoice({**INV2, "status": "draft", "stripe_invoice_id": "in_d"}, stripe=stripe)
+    assert calls == [("invoices/in_d/finalize", {"auto_advance": "false"}), ("invoices/in_d/send", {})]
+    assert sent["hosted_invoice_url"] == "https://pay/in_d"
+
+
+def test_a_held_draft_counts_toward_its_own_bar_and_a_refund_comes_off_the_bills():
+    draft = {**INV2, "status": "draft"}
+    assert billing.fees_billed_through([INV1, draft], draft) == 12000         # judged with itself in
+    assert billing.fees_billed_through([INV1, {**draft, "id": "o"}], INV1) == 6000
+    refunded = {**INV1, "refunded_usd": 6000}
+    assert billing.fees_billed_through([refunded, INV2], INV2) == 6000       # a refunded month was not billed
+    assert [i["id"] for i in billing.unjudged_invoices([draft, INV1], CLIENT)] == ["i1", "i2"]
+    recovery = {**INV2, "id": "r", "raw": {"metadata": {"hubricon_plan": "recovery"}}}
+    assert billing.unjudged_invoices([recovery], CLIENT) == []                # priced off money that landed
+
+
+def test_the_waived_letter_says_void_or_refunded_and_never_discount_or_credit():
     v = billing.rolling_verdict({"value_total": 5000, "identified_unbanked": 0}, [INV1, INV2], INV2, CLIENT)
     blocks = billing.waived_email_blocks(v, "voided", "https://x/portal")
     text = " ".join(b.get("p", "") for b in blocks)
     assert "the invoice is void" in text and "hasn't covered is void" in text and "discount" not in text
     assert "Found and filed, not yet banked: $0" in next(b["ol"] for b in blocks if "ol" in b)
-    text = " ".join(b.get("p", "") for b in billing.waived_email_blocks(v, "credited", "https://x/portal"))
-    assert "credited to your next one" in text
+    text = " ".join(b.get("p", "") for b in billing.waived_email_blocks(v, "refunded", "https://x/portal"))
+    assert "refunded in full to the bank account it came from" in text and "credited" not in text
+
+
+# -- the exit true-up ----------------------------------------------------------------------
+
+def test_at_the_exit_an_unpaid_invoice_is_voided_before_any_refund_and_the_rest_is_refunded():
+    paid_a = {**INV1, "id": "a", "stripe_invoice_id": "in_a", "period_start": "2026-09-01"}
+    paid_b = {**INV1, "id": "b", "stripe_invoice_id": "in_b", "period_start": "2026-10-01"}
+    open_c = {**INV2, "id": "c", "stripe_invoice_id": "in_c", "period_start": "2026-11-01"}
+    # Billed $18,000; the Record fell to $9,500 after found dollars measured short.
+    t = billing.exit_true_up({"value_total": 8000, "identified_unbanked": 1500}, [paid_a, paid_b, open_c])
+    assert t["billed"] == 18000 and t["gap"] == 8500
+    assert [i["id"] for i in t["voids"]] == ["c"] and t["voided"] == 6000
+    assert [(i["id"], a) for i, a in t["refunds"]] == [("b", 2500.0)] and t["refunded"] == 2500
+    # Ahead of the bills, or level: nothing changes hands.
+    level = billing.exit_true_up({"value_total": 18000, "identified_unbanked": 0}, [paid_a, paid_b, open_c])
+    assert level["gap"] == 0 and not level["voids"] and not level["refunds"]
+    # Earlier refunds are counted once, never twice.
+    again = billing.exit_true_up({"value_total": 0, "identified_unbanked": 0},
+                                 [{**paid_a, "refunded_usd": 6000}, {**paid_b, "refunded_usd": 1000}])
+    assert again["billed"] == 5000 and [(i["id"], a) for i, a in again["refunds"]] == [("b", 5000.0)]
+
+
+def test_the_exit_letter_names_the_arithmetic_and_what_came_back():
+    t = billing.exit_true_up({"value_total": 8000, "identified_unbanked": 1500},
+                             [{**INV1, "id": "a", "stripe_invoice_id": "in_a"},
+                              {**INV2, "id": "c", "stripe_invoice_id": "in_c"}])
+    text = " ".join(b.get("p", "") for b in billing.exit_email_blocks(t, "https://x"))
+    assert "$2,500 more than the Record shows" in text and "is void" in text and "credited" not in text
+    ahead = billing.exit_true_up({"value_total": 20000, "identified_unbanked": 0}, [INV1])
+    text = " ".join(b.get("p", "") for b in billing.exit_email_blocks(ahead, "https://x"))
+    assert "nothing changes hands" in text
+
+
+def test_a_refund_is_a_credit_note_with_a_key_made_of_what_it_returns():
+    calls = []
+    billing.refund_invoice(INV1, 2500.0, "exit", stripe=lambda path, data=None, idempotency_key=None:
+                           calls.append((path, data, idempotency_key)) or {})
+    path, data, key = calls[0]
+    assert path == "credit_notes" and data["amount"] == 250000 and data["refund_amount"] == 250000
+    assert data["metadata[hubricon_reason]"] == "exit" and key == "refund-exit-in_1-250000"
+
+
+def test_billing_never_starts_a_second_subscription_for_the_same_client():
+    calls = []
+
+    def stripe(path, data=None, idempotency_key=None):
+        calls.append((path, data, idempotency_key))
+        if path.startswith("subscriptions?"):
+            return {"data": [{"id": "sub_old", "status": "canceled", "metadata": {"hubricon_client_id": "c1"}},
+                             {"id": "sub_live", "status": "active", "metadata": {"hubricon_client_id": "c1"}}]}
+        return {"id": "sub_new"}
+
+    client = {**CLIENT, "contact_email": "a@b.com"}
+    assert billing.start_billing(client, "price_1", stripe=stripe)["id"] == "sub_live"
+    assert not any(c[0] == "subscriptions" for c in calls)
+    calls.clear()
+    fresh = lambda path, data=None, idempotency_key=None: calls.append((path, data, idempotency_key)) or (
+        {"data": []} if path.startswith("subscriptions?") else {"id": "sub_new"})
+    assert billing.start_billing(client, "price_1", stripe=fresh)["id"] == "sub_new"
+    path, data, key = calls[-1]
+    assert path == "subscriptions" and key == "subscribe-c1-2026-08-02"
+    assert data["collection_method"] == "send_invoice" and data["payment_settings[payment_method_types][0]"] == "us_bank_account"
+
+
+def test_cancelling_ends_the_subscription_at_once_with_no_final_invoice():
+    calls = []
+    billing.cancel_subscription("sub_1", stripe=lambda path, data=None, idempotency_key=None, method=None:
+                                calls.append((path, data, method)) or {})
+    assert calls == [("subscriptions/sub_1", {"invoice_now": "false", "prorate": "false"}, "DELETE")]
+
+
+def test_every_call_is_made_at_the_webhooks_api_version():
+    """The engine pins the version the webhook's Node SDK pins, so both read one
+    shape. Checked against the installed SDK when node_modules is present."""
+    import pathlib
+    import re
+    sdk = pathlib.Path(__file__).parents[2] / "node_modules/stripe/cjs/apiVersion.js"
+    if sdk.exists():
+        assert billing.STRIPE_VERSION == re.search(r"ApiVersion = '([^']+)'", sdk.read_text()).group(1)
 
 
 def test_the_short_letter_names_the_smaller_door_only_when_asked():
@@ -199,10 +319,11 @@ def test_a_share_under_the_minimum_rolls_forward_instead_of_becoming_a_nine_doll
 
 
 def test_a_recovery_invoice_is_one_item_one_invoice_finalized_and_sent_with_no_subscription():
-    calls = []
+    calls, keys = [], []
 
     def stripe(path, data=None, idempotency_key=None):
         calls.append((path, data))
+        keys.append(idempotency_key)
         if path.startswith("customers?"):
             return {"data": []}
         if path == "customers":
@@ -218,13 +339,43 @@ def test_a_recovery_invoice_is_one_item_one_invoice_finalized_and_sent_with_no_s
     due = billing.recovery_due([_claim(1, "2026-09-03", 2000.0)], date(2026, 10, 8), share=0.25)
     inv = billing.invoice_recovery_share({"id": "c1", "contact_email": "a@b.com", "company_name": "Alpha"}, due, stripe=stripe)
     paths = [p for p, _ in calls]
-    assert paths == ["customers?email=a%40b.com&limit=1", "customers", "invoiceitems", "invoices",
-                     "invoices/in_r1/finalize", "invoices/in_r1/send"]
-    item = dict(calls[2][1]); invoice = dict(calls[3][1])
-    assert item["amount"] == 50000 and "25% of $2,000.00" in item["description"]
+    # The invoice first and the item attached to it by id, so a failure between
+    # the two can never leave a pending item to ride along on the next invoice.
+    assert paths == ["customers?email=a%40b.com&limit=1", "customers", "invoices?customer=cus_new&limit=100",
+                     "invoices", "invoiceitems", "invoices/in_r1/finalize", "invoices/in_r1/send"]
+    invoice = dict(calls[3][1]); item = dict(calls[4][1])
+    assert item["amount"] == 50000 and "25% of $2,000.00" in item["description"] and item["invoice"] == "in_r1"
+    assert invoice["pending_invoice_items_behavior"] == "exclude" and invoice["auto_advance"] == "false"
     assert invoice["collection_method"] == "send_invoice" and invoice["days_until_due"] == 7
     assert invoice["metadata[hubricon_plan]"] == "recovery" and "subscriptions" not in paths
     assert inv["customer"] == "cus_new" and inv["hosted_invoice_url"] == "https://pay/in_r1"
+    # A retry bills the same claims under the same keys, so Stripe returns the first attempt's objects.
+    assert keys[3].startswith("recovery-invoice-") and keys[4].startswith("recovery-item-") and keys[3][17:] == keys[4][14:]
+    assert invoice["metadata[hubricon_claims]"] == keys[3][17:]
     text = " ".join(b.get("p", "") for b in billing.recovery_email_blocks(due, inv["hosted_invoice_url"], "https://x"))
     assert "$2,000.00" in text and "$500.00" in text and "no monthly fee on this plan" in text
     assert "retainer" not in text
+
+
+def test_a_recovery_invoice_a_failed_run_left_behind_is_finished_never_duplicated():
+    """Stripe's idempotency keys last a day; the claims key on the invoice
+    lasts for ever. A run that died after creating the invoice (item attached,
+    not finalized) is finished; one that died after sending it is left alone."""
+    due = billing.recovery_due([_claim(1, "2026-09-03", 2000.0)], date(2026, 10, 8), share=0.25)
+    client = {"id": "c1", "contact_email": "a@b.com", "stripe_customer_id": "cus_1"}
+    import hashlib
+    key = hashlib.sha256(",".join(sorted(str(c.get("id")) for c in due["claims"])).encode()).hexdigest()[:24]
+    for left_behind, expected in (
+        ({"id": "in_old", "status": "draft", "amount_due": 50000, "metadata": {"hubricon_claims": key}},
+         ["invoices?customer=cus_1&limit=100", "invoices/in_old/finalize", "invoices/in_old/send"]),
+        ({"id": "in_old", "status": "open", "amount_due": 50000, "metadata": {"hubricon_claims": key}},
+         ["invoices?customer=cus_1&limit=100"]),
+    ):
+        calls = []
+
+        def stripe(path, data=None, idempotency_key=None):
+            calls.append(path)
+            return {"data": [left_behind]} if path.startswith("invoices?") else {"id": "in_old", "status": "open"}
+
+        assert billing.invoice_recovery_share(client, due, stripe=stripe)["id"] == "in_old"
+        assert calls == expected

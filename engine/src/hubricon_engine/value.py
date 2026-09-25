@@ -84,11 +84,17 @@ def fee_side(client: dict, invoices: list[dict] | None, today: date) -> dict:
 
     real = [i for i in (invoices or []) if (i.get("status") or "") != "void"]
     if real:
-        paid = sum(float(i.get("amount_paid") or 0) for i in real if i.get("status") == "paid")
-        billed = sum(float(i.get("amount_due") or 0) for i in real
+        # A refunded dollar (the gate, or the true-up at the exit) was given
+        # back, so it is not a fee: the invoice counts net of it.
+        def kept(i, field):
+            return max(0.0, float(i.get(field) or 0) - float(i.get("refunded_usd") or 0))
+        paid_rows = [i for i in real if i.get("status") == "paid"]
+        paid = sum(kept(i, "amount_paid") for i in paid_rows)
+        billed = sum(kept(i, "amount_due") for i in real
                      if i.get("status") in ("open", "paid", "uncollectible"))
         return {"fees_paid": paid, "fees_billed": billed, "fees_basis": "invoiced",
-                "billed_months": len([i for i in real if i.get("status") == "paid"]),
+                "billed_months": len([i for i in paid_rows
+                                      if not float(i.get("refunded_usd") or 0) or kept(i, "amount_paid") > 0]),
                 "monthly_fee": fee, "months_elapsed": months,
                 "engagement_start": start, "engagement_start_source": source}
 
