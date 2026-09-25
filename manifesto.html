@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paid on Proof — the Hubricon manifesto</title>
+<meta name="description" content="Help for a product brand is paid on spend, on seats or by the hour. Almost none of it is paid on whether the decisions made money. Hubricon is paid on proof: every move called before it goes live, measured on your own reports, and no bill until the Record covers it.">
+<link rel="canonical" href="https://www.hubricon.com/manifesto">
+<meta name="theme-color" content="#050A1F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23FFC000' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23FFC000'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/manifesto">
+<meta property="og:title" content="Paid on Proof — the Hubricon manifesto">
+<meta property="og:description" content="Everyone else is paid on spend, on seats or by the hour. We're paid on proof.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<style>
+/* ============================================================
+   /manifesto — the long argument the home page is too short to
+   hold. The enemy, the seven beliefs, the four steps, the never
+   list, what we are building (future tense: none of it is live
+   until it is), one action. Brand system: BRAND.md.
+   ============================================================ */
+:root{
+  --bg: hsl(225 72% 7%); --band: hsl(224 62% 10%); --raise: hsl(224 58% 13%);
+  --amber: hsl(45 100% 50%); --paper: #F2EDE3; --void: #CF3B2D; --void-lit: #FF6B5A; --ok: hsl(152 55% 52%);
+  --ink-100: hsl(220 40% 98%); --ink-70: hsl(220 40% 98% / .72); --ink-60: hsl(220 40% 98% / .58); --ink-40: hsl(220 40% 98% / .34);
+  --rule-20: hsl(220 40% 98% / .18); --rule-08: hsl(220 40% 98% / .08);
+  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --w: min(1160px, calc(100% - 32px));
+  --read: min(760px, calc(100% - 32px));
+  --speckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html{ scroll-behavior: smooth; }
+body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.7; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
+a{ color: inherit; text-decoration: none; }
+svg{ display: block; }
+img{ display: block; max-width: 100%; height: auto; }
+:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
+b, strong{ color: var(--ink-100); font-weight: 700; }
+.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .045; animation: grain 1.4s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
+
+.btn{ display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s; }
+.btn:active{ transform: scale(.98); }
+.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
+.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
+.btn-white{ background: var(--ink-100); color: var(--bg); }
+.btn-lg{ font-size: 15px; padding: 20px 40px; }
+.stamp{ display: inline-block; font-family: var(--font-head); text-transform: uppercase; letter-spacing: .09em; line-height: 1; white-space: nowrap; padding: .42em .7em .36em; border: .16em double currentColor; border-radius: .22em; transform: rotate(-5deg);
+  -webkit-mask-image: var(--speckle); mask-image: var(--speckle); -webkit-mask-size: 180px; mask-size: 180px; }
+.stamp.amber{ color: var(--amber); } .stamp.void{ color: var(--void-lit); }
+
+/* nav */
+.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
+.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+.nav-logo{ display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; }
+.nav-logo em{ font-style: normal; color: var(--amber); }
+.nav-logo svg{ width: 26px; height: 26px; color: var(--amber); }
+.nav .btn{ padding: 12px 20px; font-size: 12px; }
+@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
+
+/* the opening */
+.open{ position: relative; min-height: min(92vh, 900px); display: flex; align-items: flex-end; overflow: hidden; isolation: isolate; padding: 120px 0 88px; }
+.open img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; z-index: -2; }
+.open::after{ content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, var(--bg) 0%, hsl(225 72% 7% / .7) 45%, hsl(225 72% 7% / .25) 100%); }
+.open-in{ width: var(--w); margin: 0 auto; }
+.kicker{ font-size: 11.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--amber); margin-bottom: 22px; font-weight: 500; }
+.open h1{ font-size: clamp(72px, 15vw, 220px); line-height: .86; letter-spacing: .005em; }
+.open p{ margin-top: 30px; font-size: clamp(17px, 1.6vw, 21px); color: var(--ink-100); max-width: 46ch; }
+
+/* sections */
+.sect{ padding: 120px 0; position: relative; }
+.sect.band{ background: var(--band); border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
+.in{ width: var(--w); margin: 0 auto; }
+.read{ width: var(--read); margin: 0 auto; }
+.num{ font-family: var(--font-head); font-size: 15px; letter-spacing: .2em; color: var(--amber); margin-bottom: 18px; display: block; }
+.sect h2{ font-size: clamp(42px, 6vw, 88px); margin-bottom: 40px; max-width: 16ch; }
+.read p{ font-size: clamp(16px, 1.3vw, 18px); margin-bottom: 22px; }
+.read p.big{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(26px, 3vw, 40px); line-height: 1.12; color: var(--ink-100); letter-spacing: .01em; }
+.three{ list-style: none; display: grid; gap: 0; margin: 10px 0 36px; border-top: 1px solid var(--rule-08); }
+.three li{ display: grid; grid-template-columns: 170px 1fr; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--rule-08); }
+.three li b{ font-family: var(--font-head); font-weight: 400; font-size: 24px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; }
+.quote{ margin: 56px 0; padding: 28px 0 28px 26px; border-left: 3px solid var(--amber); }
+.quote p{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(30px, 3.6vw, 50px); line-height: 1.06; color: var(--ink-100); margin: 0 0 14px; }
+.quote cite{ font-style: normal; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-60); }
+
+/* seven beliefs */
+.beliefs{ list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 56px; counter-reset: b; border-top: 1px solid var(--rule-08); }
+.beliefs li{ counter-increment: b; padding: 30px 0 30px 72px; position: relative; border-bottom: 1px solid var(--rule-08); }
+.beliefs li::before{ content: counter(b); position: absolute; left: 0; top: 24px; font-family: var(--font-head); font-size: 54px; line-height: 1; color: var(--amber); }
+.beliefs h3{ font-size: clamp(24px, 2.4vw, 32px); margin-bottom: 10px; }
+.beliefs p{ font-size: 15px; }
+.beliefs li:last-child{ grid-column: 1 / -1; }
+.beliefs li:last-child h3{ color: var(--amber); font-size: clamp(34px, 4vw, 56px); }
+
+/* four steps */
+.steps{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.step{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+.step img{ width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.step div{ padding: 22px 22px 26px; }
+.step .n{ font-family: var(--font-head); color: var(--amber); font-size: 14px; letter-spacing: .2em; }
+.step h3{ font-size: 30px; margin: 8px 0 12px; }
+.step p{ font-size: 14px; }
+
+/* never */
+.never{ list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 48px; border-top: 1px solid var(--rule-08); }
+.never li{ display: flex; gap: 18px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule-08); font-family: var(--font-head); text-transform: uppercase; font-size: clamp(22px, 2.4vw, 32px); line-height: 1.1; color: var(--ink-100); }
+.never li::before{ content: "✕"; font-family: var(--font-mono); font-size: 18px; color: var(--void-lit); flex: none; transform: translateY(-3px); }
+
+/* building */
+.build{ display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: start; }
+.build figure{ position: sticky; top: 110px; border-radius: 20px; overflow: hidden; border: 1px solid var(--rule-08); }
+.build figure img{ width: 100%; aspect-ratio: 1; object-fit: cover; }
+.build .tag{ display: inline-block; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; margin-bottom: 26px; }
+.build dl{ border-top: 1px solid var(--rule-08); margin: 8px 0 36px; }
+.build dt{ font-family: var(--font-head); text-transform: uppercase; color: var(--ink-100); font-size: clamp(26px, 2.8vw, 38px); line-height: 1; padding-top: 26px; }
+.build dd{ font-size: 15.5px; padding: 12px 0 26px; border-bottom: 1px solid var(--rule-08); }
+.build .ambition{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(28px, 3.2vw, 46px); line-height: 1.06; color: var(--ink-100); }
+.build .ambition em{ font-style: normal; color: var(--amber); }
+
+/* close */
+.close{ position: relative; text-align: center; padding: 120px 0 0; overflow: hidden; }
+.close::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 45% at 50% 24%, hsl(45 100% 50% / .09), transparent 70%); }
+.close-in{ position: relative; width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 30px; }
+.close h2{ font-size: clamp(40px, 6vw, 84px); max-width: 17ch; }
+.close p{ max-width: 58ch; font-size: 16px; }
+.close .meta{ font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
+.seal{ color: var(--amber); width: 150px; height: 150px; overflow: visible; }
+.seal .ring{ transform-origin: 100px 100px; animation: turn 60s linear infinite; }
+.seal text{ font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; fill: currentColor; }
+@keyframes turn{ to{ transform: rotate(360deg); } }
+.footer{ margin-top: 110px; text-align: left; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
+.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+.footer .motto{ margin-top: 14px; font-family: var(--font-head); font-size: 18px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-60); }
+.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
+.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
+.footer ul a:hover{ color: var(--ink-100); }
+.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
+
+.js [data-reveal]{ opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .8s var(--ease-out); }
+.js [data-reveal].revealed{ opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce), print{
+  [data-reveal]{ opacity: 1 !important; transform: none !important; transition: none !important; }
+  .grain, .seal .ring{ animation: none; } html{ scroll-behavior: auto; }
+}
+@media (max-width: 1000px){
+  .steps{ grid-template-columns: 1fr 1fr; }
+  .build{ grid-template-columns: 1fr; gap: 40px; }
+  .build figure{ position: static; max-width: 460px; }
+}
+@media (max-width: 760px){
+  .sect{ padding: 80px 0; }
+  .open{ min-height: 86vh; padding-bottom: 64px; }
+  .three li{ grid-template-columns: 1fr; gap: 6px; }
+  .beliefs, .never{ grid-template-columns: 1fr; }
+  .beliefs li{ padding-left: 58px; } .beliefs li::before{ font-size: 44px; }
+  .steps{ grid-template-columns: 1fr; }
+  .btn{ white-space: normal; text-align: center; line-height: 1.35; }
+  .close .btn{ width: 100%; }
+  .footer .in{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs><symbol id="mark" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></symbol></defs>
+</svg>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav-in">
+    <a class="nav-logo" href="/" aria-label="Hubricon, home"><svg aria-hidden="true"><use href="#mark"/></svg><span>Hubric<em>o</em>n</span></a>
+    <a class="btn btn-white" href="/apply" data-cta="manifesto-nav">Start your free Proving Month</a>
+  </div>
+</nav>
+
+<header class="open" id="top">
+  <img src="/brand/warehouse.webp" alt="" width="2400" height="1033" fetchpriority="high" decoding="async">
+  <div class="open-in">
+    <p class="kicker">The Hubricon manifesto</p>
+    <h1>Paid on proof.</h1>
+    <p>A product brand lives or dies on its money decisions: what to charge, what to spend, what to reorder, what to claim back. Almost nobody it pays is paid on whether those decisions made money. We are.</p>
+  </div>
+</header>
+
+<!-- I. THE PROBLEM -->
+<section class="sect" data-reveal>
+  <div class="read">
+    <span class="num">I.</span>
+    <h2>Paid for everything except the result.</h2>
+    <p>Help for a product brand is bought three ways, and none of them is the result.</p>
+    <ul class="three">
+      <li><b>By the percent.</b><span>An agency takes a cut of your ad spend. The more you spend, the more it earns. Its incentive and yours part ways at the first dollar.</span></li>
+      <li><b>By the seat.</b><span>A dashboard shows you what happened, in five tools that don't agree. None of them decides anything. None of them is graded.</span></li>
+      <li><b>By the hour.</b><span>A consultant sells time, the one thing you didn't need more of.</span></li>
+    </ul>
+    <p class="big">And every one of them explains the number after it happened. Nobody writes it down first.</p>
+    <p>So a brand raises a price in March, cuts a campaign in April, reorders early in May, and next month's payout is one number that hides whether any of it worked. You can see sales. You can see the payout. Your reports cannot tell you which decision made the profit.</p>
+    <blockquote class="quote">
+      <p>Show me the incentive and I'll show you the outcome.</p>
+      <cite>Charlie Munger</cite>
+    </blockquote>
+    <p>We started from the incentive. Then we built the machine the incentive requires.</p>
+  </div>
+</section>
+
+<!-- II. WHAT WE BELIEVE -->
+<section class="sect band" data-reveal>
+  <div class="in">
+    <span class="num">II.</span>
+    <h2>Seven things we believe.</h2>
+    <ol class="beliefs">
+      <li><h3>The decision is the unit of value.</h3><p>Not the click, the channel or the campaign. The decision: raise this price, cut that search term, order this many units, file that claim.</p></li>
+      <li><h3>Call it before you make it.</h3><p>A forecast written after the fact is a story. Ours reaches you in writing, with its dollars, before anything moves.</p></li>
+      <li><h3>Measure it on the owner's reports.</h3><p>Not on ours, and not on a platform's attribution model. On your own Seller Central and Shopify exports.</p></li>
+      <li><h3>Say how you know.</h3><p>Every result is graded: direct, isolated, attributable. Or unmeasurable, and then nothing is banked and the row says so.</p></li>
+      <li><h3>Keep the misses.</h3><p>A record with no losses on it is marketing. A move that came in short stays on the Record at what it earned.</p></li>
+      <li><h3>Price flat.</h3><p>Advice must never be able to inflate the invoice. $6,000 a month, never a percentage of anything.</p></li>
+      <li><h3>Pay on proof.</h3><p>If the Record hasn't covered the bill, there is no bill. Not a credit, not a discount. No bill.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- III. HOW IT WORKS -->
+<section class="sect" data-reveal>
+  <div class="in">
+    <span class="num">III.</span>
+    <h2>Called. Made. Measured. Proven or void.</h2>
+    <div class="steps">
+      <article class="step"><img src="/brand/hero-printer-960.webp" alt="A receipt printer printing in the dark" width="960" height="542" loading="lazy" decoding="async"><div><span class="n">01</span><h3>Called.</h3><p>At least three days before a move goes live, you get an email listing it and the dollars we expect it to earn. Reply no and it doesn't happen. If the email doesn't go out, nothing moves.</p></div></article>
+      <article class="step"><img src="/brand/stamp-tool.webp" alt="A steel hand stamp and a tin of red ink" width="1200" height="1500" loading="lazy" decoding="async"><div><span class="n">02</span><h3>Made.</h3><p>Inside the bounds you set at kickoff, in your own account, through one seat that can't see your banking, payouts or settings. Revoked in one click.</p></div></article>
+      <article class="step"><img src="/brand/caliper.webp" alt="A steel caliper measuring a shipping box" width="1800" height="1018" loading="lazy" decoding="async"><div><span class="n">03</span><h3>Measured.</h3><p>On your own later exports, under four rules: capped at what we promised, nothing banked below a materiality floor, the effect must persist, and each dollar is credited once.</p></div></article>
+      <article class="step"><img src="/brand/stamp-void.webp" alt="An invoice stamped VOID in red ink" width="1400" height="792" loading="lazy" decoding="async"><div><span class="n">04</span><h3>Proven or void.</h3><p>Each invoice waits until the Record covers everything billed since day one. Short of that, it's void before it reaches you. Leave any day, trued up to the Record.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- IV. NEVER -->
+<section class="sect band" data-reveal>
+  <div class="in">
+    <span class="num">IV.</span>
+    <h2>What we will never do.</h2>
+    <ul class="never">
+      <li>Bill a percentage of your spend.</li>
+      <li>Touch your banking, payouts or settings.</li>
+      <li>Move anything you weren't told about first.</li>
+      <li>Publish your results without your written yes.</li>
+      <li>Show a testimonial nobody gave us.</li>
+      <li>Hide a miss.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- V. WHAT WE ARE BUILDING — future tense until each piece is live -->
+<section class="sect" data-reveal>
+  <div class="in build">
+    <figure><img src="/brand/seal-wax.webp" alt="An amber wax seal pressed with the letter H" width="1400" height="1400" loading="lazy" decoding="async"></figure>
+    <div>
+      <span class="num">V.</span>
+      <h2>The Record, as a standard.</h2>
+      <span class="tag">What we're building · not live yet</span>
+      <p>Today a Profit Record belongs to one brand. We are building it to be worth more than that.</p>
+      <dl>
+        <dt>Sealed.</dt>
+        <dd>Every call fingerprinted the moment it's made, so you, a buyer or a lender can check that the number was written before the move and never rewritten after. Not even by us.</dd>
+        <dt>Pooled, with consent.</dt>
+        <dd>A fee change caught in one account, flagged in every account, built only from brands that agreed to pool and only from aggregates. Never a figure of yours, never your name.</dd>
+        <dt>Portable.</dt>
+        <dd>A Record a buyer can read. When you raise money or sell the brand, every decision and what it earned is already the diligence.</dd>
+      </dl>
+      <p class="ambition">The ambition fits in one line: that <em>"show me the Record"</em> becomes the question every brand asks anyone it pays.</p>
+    </div>
+  </div>
+</section>
+
+<section class="close" id="apply" data-reveal>
+  <div class="close-in">
+    <svg class="seal" viewBox="0 0 200 200" aria-hidden="true"><path id="seal-path-m" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" fill="none"/><circle cx="100" cy="100" r="97" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="64" fill="none" stroke="currentColor" stroke-width="1.5"/><g class="ring"><text><textPath href="#seal-path-m" textLength="500" lengthAdjust="spacing">PAID ON PROOF · PROVEN OR VOID · CALLED BEFORE · MEASURED AFTER · </textPath></text></g><path d="M81 72h11v22h16V72h11v56h-11v-23H92v23H81z" fill="currentColor"/></svg>
+    <h2>No published results yet. The guarantee does the talking.</h2>
+    <p>The first result appears here when a client agrees to publish theirs, misses included. Until then: month one is free, and no invoice exists until your Record covers it.</p>
+    <a class="btn btn-amber btn-lg" href="/apply" data-cta="manifesto-close">Start your free Proving Month</a>
+    <p class="meta">Managed Profit for Amazon &amp; Shopify brands · <span style="white-space:nowrap">$3M–$20M/yr</span></p>
+  </div>
+  <footer class="footer">
+    <div class="in">
+      <div><a class="nav-logo" href="/"><svg aria-hidden="true"><use href="#mark"/></svg><span>Hubric<em>o</em>n</span></a><p class="motto">Paid on proof.</p></div>
+      <div><h4>Product</h4><ul><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="/manifesto">Manifesto</a></li><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+      <p class="legal">Section V describes work in progress, not something anyone can buy today. Photographs are illustrations. © 2026 Hubricon · Dallas, Texas</p>
+    </div>
+  </footer>
+</section>
+
+<script>
+"use strict";
+document.documentElement.classList.add("js");
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+document.addEventListener("click", ev => {
+  const a = ev.target.closest?.("[data-cta]");
+  if (a) track("cta_click", { section: a.dataset.cta || "" });
+});
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); } });
+}, { threshold: 0.06 });
+document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
