@@ -125,7 +125,7 @@ QUOTAS = {("elevenlabs", "characters"): ("rate.elevenlabs.usd_per_1k_characters"
                                          "rate.elevenlabs.included_characters"),
           ("resend", "emails"): ("rate.resend.usd_per_email", 1, "rate.resend.included_emails")}
 
-KICKOFF = re.compile(r"kick\s*-?\s*off", re.I)
+KICKOFF = onboarding.KICKOFF_EVENT
 LENGTH = re.compile(r"(\d{1,3})\s*-?\s*min", re.I)
 
 

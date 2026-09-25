@@ -17,6 +17,10 @@ from . import notify
 
 TOKEN_LIFETIME_DAYS = 90
 INTAKE_BASE_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com")
+# A Calendly event whose name says kickoff is a client's follow-up call, not an
+# application: the operator links it and sends nothing (operator.bookings), and
+# the unit economics count it at the kickoff's length (economics.kickoff_dates).
+KICKOFF_EVENT = re.compile(r"kick\s*-?\s*off", re.I)
 EXEC_EMAIL = os.environ.get("EXECUTION_EMAIL", "hagen.simmons@hubricon.com")
 CALENDLY_URL = os.environ.get("CALENDLY_URL", "https://calendly.com/hubricon/margin-audit")
 FROM = os.environ.get("EMAIL_FROM", "Hagen Simmons <hagen.simmons@hubricon.com>")

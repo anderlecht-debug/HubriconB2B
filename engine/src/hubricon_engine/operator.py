@@ -158,6 +158,27 @@ class Pass:
             if b.get("is_test") or onboarding.is_internal(email, b.get("invitee_name")):
                 self.db.table("bookings").update({"is_test": True, "provisioned_at": _iso()}).eq("id", b["id"]).execute()
                 continue
+            # A kickoff booked by someone who is already a client is their
+            # follow-up call, not an application. They have their welcome, their
+            # upload link and their place in the funnel; re-provisioning would
+            # mint a second link, send the welcome again and set their prospect
+            # row back to "booked". Link it, tell the founder, send nothing.
+            if onboarding.KICKOFF_EVENT.search(b.get("event_type") or ""):
+                existing = self.db.table("clients").select("*").eq("contact_email", email).limit(1).execute().data
+                if existing:
+                    client = existing[0]
+                    if self.dry:
+                        self.say(f"[dry] would link kickoff booking {b['id'][:8]} to existing client {email}")
+                        continue
+                    self.db.table("bookings").update({"client_id": client["id"], "provisioned_at": _iso()}) \
+                        .eq("id", b["id"]).execute()
+                    outbound.log_event(self.db, "kickoff_booked", booking_id=b["id"], client_id=client["id"])
+                    when = _parse_ts(b.get("starts_at"))
+                    when_s = when.astimezone().strftime("%a %b %d, %I:%M %p %Z") if when else "time unknown"
+                    self.human.append(f"Kickoff booked: {b.get('invitee_name') or email} at {when_s}. "
+                                      "Existing client, so no welcome and no new upload link were sent.")
+                    self.say(f"Linked kickoff booking for existing client {email}.")
+                    continue
             # The routine's fit flag is a note for the call, never a reason to
             # turn a booking away: everyone who books gets the welcome + upload
             # link, and the founder sells on the call.
