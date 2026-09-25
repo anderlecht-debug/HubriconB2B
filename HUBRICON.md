@@ -101,8 +101,9 @@ founder's call). No client's data informs another unless they granted the separa
 roughly when, by what ratio), never a figure of theirs, their name, a SKU or an
 ASIN; every alert says how many accounts stand behind it. The same accounts feed
 `hubricon book`, what each kind of move has actually delivered, measured over
-promised — report only, for now. Inert until migration
-`20260925000003_network.sql` is applied and three clients have said yes.
+promised — report only, for now. Migration `20260925000003_network.sql` was
+applied to production on 2026-09-25; the pass stays inert until three clients have
+said yes.
 
 **Access.** One permissions-scoped user on Seller Central with exactly four
 permissions (Business Reports view, Fulfillment reports view, Pricing edit,
@@ -340,14 +341,15 @@ void gate; the veto that cannot open on an unsent email; claims counted only whe
 Amazon actually pays; the 24-hour Teardown clock; the free export; the daily Buy
 Box check; Amazon's 2026 peak fee card, verified against Amazon's own announcement.
 
-**The Seal, in code once migration `20260925000002_record_seal.sql` is applied**
-(`seal.py`, 2026-09-25): every move is fingerprinted and hash-chained onto the
+**The Seal, live since 2026-09-25** (`seal.py`; migration
+`20260925000002_record_seal.sql` applied to production that day): every move of a
+real client (never an internal or test account) is fingerprinted and hash-chained onto the
 client's Record before the email announcing it is sent, and the email prints its
 seal beside the expected dollars; every measurement is chained after the promise
 it answers; the table refuses every edit and deletion, the service role's
 included; `hubricon seal verify` and the dependency-free
 `scripts/verify-record.mjs` recompute all of it from the Record export, and name
-the first broken entry. Until the migration is applied, moves go out unsealed and
+the first broken entry. On a database without the table, moves go out unsealed and
 `hubricon promises` says so. **Not true yet:** no external timestamp anchor
 exists for the public head, and whoever owns the database could still rewrite
 the table consistently; the Seal makes such a rewrite disagree with what clients'

@@ -114,26 +114,24 @@ What the product is at each star, for a founder at $5M a year.
 | 4 | A fractional CFO. A monthly P&L; nothing per SKU, nothing executed. | the market |
 | 5 | Five money decisions made in your account, each called in writing before it goes live, measured on your exports, no invoice until the Record covers it. | **live in code** |
 | 6 | The engine keeps score of itself, and you can see it: promised against measured for every move (live in the portal), plus a published hit rate, the share of calls whose measured outcome landed inside the promised band. | half live; the hit rate is next |
-| 7 | Every call sealed: tamper-evident, time-witnessed pre-registration a buyer or lender can verify without trusting us. | **built 2026-09-25** (`seal.py`, `scripts/verify-record.mjs`), dormant until its migration is applied |
-| 8 | The first move is as good as the hundredth: a platform change caught in one consenting account is flagged in all; day-one promises priced from what every consenting brand's moves actually delivered. | **detector built 2026-09-25**; priors after the bench |
+| 7 | Every call sealed: tamper-evident, time-witnessed pre-registration a buyer or lender can verify without trusting us. | **live 2026-09-25** (`seal.py`, `scripts/verify-record.mjs`; migration applied, first seals with the first real client's first move) |
+| 8 | The first move is as good as the hundredth: a platform change caught in one consenting account is flagged in all; day-one promises priced from what every consenting brand's moves actually delivered. | **detector live 2026-09-25**, inert until three clients consent; priors after the bench |
 | 9 | The Record is an asset. A diligence-grade export that raises what the brand is worth to a buyer or a lender. | later |
 | 10 | The engine runs the P&L to targets you set and you approve by exception; each quarter shows the counterfactual, your brand without the moves. | later |
 | 11 | The Record is the standard. Buyers, lenders and platforms ask for it the way a lender asks for a credit score, and a brand without one is priced at a discount. Hubricon is to decision quality what a rating agency is to credit. | the ambition |
 
 ### The next three builds, in order
 
-1. **Switch on the Seal.** Apply `20260925000002_record_seal.sql`, run
-   `hubricon seal sync`, and check `hubricon seal status` shows the published head
-   equal to the table's. From then on every move is fingerprinted (RFC 8785 canonical
-   JSON, SHA-256, one chain per client and one global chain) before its email goes out,
-   the email prints the first twelve characters of its seal, every measurement is
-   chained after the promise it answers, the table refuses edits and deletions (the
-   service role's included), and `hubricon seal verify` or the dependency-free
-   `scripts/verify-record.mjs` recomputes all of it from a Record export. What it cannot
-   yet prove (HUBRICON.md says so): the head has no external timestamp anchor, so the
-   next step is OpenTimestamps on the daily global head, or a Wayback capture of a GET
-   endpoint serving `public_record_seal()`. Then show the head on /results and the
-   seals in the portal.
+1. **Anchor the Seal outside our own walls.** The Seal is on (2026-09-25): every move
+   of a real client is fingerprinted (RFC 8785 canonical JSON, SHA-256, one chain per
+   client and one global chain) before its email goes out, the email prints the first
+   twelve characters of its seal, every measurement is chained after the promise it
+   answers, the table refuses edits and deletions (the service role's included), and
+   `hubricon seal verify` or the dependency-free `scripts/verify-record.mjs`
+   recomputes all of it from a Record export. What it cannot yet prove (HUBRICON.md
+   says so): the head has no external timestamp anchor. Next: OpenTimestamps on the
+   daily global head, or a Wayback capture of a GET endpoint serving
+   `public_record_seal()`; then the head on /results and the seals in the portal.
 2. **The hit rate, published.** Compute `replay.score` per client on every measurement
    pass, store it with the run, and show it in the portal and, once consented, on
    /results: calls scored, band coverage, realisation ratio. Honest from the first
@@ -292,7 +290,7 @@ Update each quarter with measured numbers. A dash means not measured yet.
 
 | Moat | Metric | 2026-09-25 | By 2027-09 |
 |---|---|---|---|
-| Tech | Stars live on the ladder | 5 (7 and 8 built, not deployed) | 8 |
+| Tech | Stars live on the ladder | 5, with 7 and 8 live and waiting on their first client and first three consents | 8 |
 | Tech | Hit rate: calls landing inside the promised band | no measured moves yet | published per client |
 | Tech | Bench, three tests / three validation seeds | 10, 10, 10 / 8, 9, 10 | 10 on all six |
 | Network | Accounts with the `network` consent | 0 (not yet offered) | 10 |
@@ -306,9 +304,12 @@ Update each quarter with measured numbers. A dash means not measured yet.
 
 ## Sequencing
 
-- **Next 30 days.** Apply the pending migrations and secrets (see `OPERATIONS.md`);
-  deploy the brand and the Seal; approve the `network` consent wording and offer it on
-  the consent page; start logging founder minutes.
+- **Done 2026-09-25.** Ten pending migrations applied to production; the brand, the
+  manifesto, the Seal, the network consent and detector, and the unit economics
+  deployed; the founder approved every change on the branch.
+- **Next 30 days.** The Stripe secrets and `npm run stripe:setup` (`OPERATIONS.md`);
+  migration `20260925000004`; real numbers in `hubricon economics`; `hubricon log`
+  as a habit; the Seal's external anchor.
 - **Next 90 days.** The first five Proving Months. The hit rate in the portal. The first
   consented case study, which is the brand's real launch.
 - **Twelve months.** Stars 6 to 8 live. Ten pooled accounts. Category priors validated
@@ -319,24 +320,27 @@ Update each quarter with measured numbers. A dash means not measured yet.
 
 ---
 
-## Decisions waiting for the founder
+## Decisions taken, and the ones still open
 
-1. The `network` consent and the terms §10 / privacy wording (its own commit; drop it
-   and the code stays dormant). Terms §15 promises clients fourteen days' notice of a
-   change; there are none to notify today.
-2. The fleet alerts: the recipient policy (recommendation above), whether the sweep
-   emails them (`hubricon fleet --alert`) or shows them only in Hubricon, and the floors
-   (three accounts, 1%, 45 days).
-3. The shadow hourly rate, the working week and the real fixed monthly costs
-   `hubricon economics` uses (placeholders today), and the habit of `hubricon log`.
-4. The Seal's open choices: the external timestamp anchor; where the head and the
-   seals are shown; whether the email should carry the full chain head as well as the
-   twelve-character seal (48 bits is a readable receipt, not a proof); and whether
-   keeping a deleted client's seal hashes (so the global chain still verifies) fits the
-   privacy policy's deletion promise.
-5. Whether /apply keeps the founder's welcome video until the sales film exists.
-6. Three migrations to apply, in order, before the code that reads them runs:
-   `20260925000002_record_seal.sql`, `20260925000003_network.sql`,
-   `20260925000004_unit_economics.sql` (after the Stripe work's `20260925000001`).
-7. The deploy: this branch rides on top of three unpushed Stripe and guarantee commits
-   on `main`; pushing ships all of them.
+**Approved by the founder on 2026-09-25** ("approve every change and go live"): the
+`network` consent and the terms §10 and privacy wording; fleet alerts to every client
+(`fleet.RECIPIENT_POLICY = "every_client"`), emailed by the sweep
+(`hubricon fleet --alert`), at three accounts, 1% and 45 days; the Seal as built (a
+twelve-character seal in the email; a deleted client's hashes kept so the global
+chain still verifies, their documents dropped); the /apply welcome video kept until
+the sales film exists; the deploy, with the three Stripe and guarantee commits.
+
+**Still open:**
+
+1. Apply `20260925000004_unit_economics.sql` in the Supabase dashboard's SQL editor.
+   The session that applied the other ten was not permitted to run this one. Do not
+   use `supabase db push`: this project's history records migrations under the time
+   they were applied, not their file names, so the CLI would try to run old ones
+   again. Until it is applied the meter prints one line per run and counts nothing.
+2. The real numbers behind `hubricon economics`: the shadow hourly rate, the working
+   week and the fixed monthly costs (placeholders today).
+3. The Seal's external timestamp anchor, and where the head and the seals are shown.
+4. The benchmark (`models/benchmark.py`) reads the `calibration` consent, which terms
+   §10 limits to the Teardown's estimates. It is founder-only; before its output
+   reaches a client it needs a clause of its own (the recommendation: add it to the
+   `network` consent as the give-to-get).
