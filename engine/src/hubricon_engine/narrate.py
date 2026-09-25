@@ -24,6 +24,8 @@ import os
 import re
 from typing import Callable
 
+from . import meter
+
 DEFAULT_MODEL = "claude-fable-5-1"
 FALLBACK_MODEL = "claude-opus-4-8"
 PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
@@ -231,6 +233,7 @@ def _call_claude(system: str, prompt: str, model: str) -> str:
         system=system,
         messages=[{"role": "user", "content": prompt}],
     )
+    meter.anthropic(response, "narrate", requested_model=model)  # before the refusal check: tokens were spent either way
     if response.stop_reason == "refusal":
         raise RuntimeError("model declined the request")
     return "".join(b.text for b in response.content if b.type == "text").strip()

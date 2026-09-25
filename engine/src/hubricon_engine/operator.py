@@ -24,6 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from . import channels
 from . import db as dbmod
 from . import instantly, onboarding, outbound, proof, referral, speed
+from . import meter
 from .briefing import build_memo, period_deltas
 from .notify import email_configured, send_email
 
@@ -297,6 +298,7 @@ class Pass:
         if self._touch(client, kind, link):
             self.say(f"Sent {kind} email to {client['contact_email']} (no uploads yet).")
 
+    @meter.metered("onboarding", timed=False)
     def _touch(self, client: dict, kind: str, link: str, force: bool = False) -> bool:
         if not self.send or not email_configured():
             self.warnings.append(f"{kind} email to {client['contact_email']} not sent: "
@@ -364,6 +366,7 @@ class Pass:
                 .not_.is_("uploaded_at", "null").order("uploaded_at").limit(1).execute().data)
         return _parse_ts(rows[0]["uploaded_at"]) if rows else None
 
+    @meter.metered("teardown")
     def _publish_first_issue(self, c: dict, cli) -> None:
         from . import narrate, storage
         from .models.anomaly import summarize as summarize_anomalies

@@ -13,6 +13,7 @@ import html
 from datetime import datetime, timezone
 
 from . import icp, triage
+from . import meter
 from .instantly import CAMPAIGN_ACTIVE, Instantly, InstantlyError
 from .onboarding import guess_name_parts, is_internal
 
@@ -645,7 +646,8 @@ def sync_replies(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, 
             prospects[sender] = prospect
         full = db.table("prospects").select("first_name, instantly_lead_id").eq("id", prospect["id"]).execute().data[0]
         body = (em.get("body") or {}).get("text") or (em.get("body") or {}).get("html") or ""
-        verdict = triage.triage(em.get("subject") or "", body, full.get("first_name"), sender=sender)
+        with meter.account(prospect_id=prospect["id"], component="triage", timed=False):
+            verdict = triage.triage(em.get("subject") or "", body, full.get("first_name"), sender=sender)
         db.table("prospect_messages").insert({
             "prospect_id": prospect["id"], "direction": "in", "instantly_email_id": eid,
             "instantly_thread_id": em.get("thread_id"), "eaccount": em.get("eaccount"),

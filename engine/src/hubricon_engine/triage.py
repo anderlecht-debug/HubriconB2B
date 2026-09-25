@@ -16,6 +16,8 @@ import json
 import os
 import re
 
+from . import meter
+
 CALENDLY_URL = os.environ.get("CALENDLY_URL", "https://calendly.com/hubricon/margin-audit")
 EXEC_EMAIL = os.environ.get("EXECUTION_EMAIL", "hagen.simmons@hubricon.com")
 MODEL = os.environ.get("HUBRICON_TRIAGE_MODEL", "claude-opus-5")
@@ -201,6 +203,7 @@ def classify_claude(subject: str, body: str, first_name: str | None) -> dict | N
             output_config={"effort": "low"},  # a classification; thinking is on by default
             messages=[{"role": "user", "content": prompt}],
         )
+        meter.anthropic(msg, "triage", requested_model=MODEL)  # never raises; the reply is the work
         if msg.stop_reason == "refusal":
             return {"category": None, "reply": None, "reason": "claude declined the request"}
         raw = "".join(b.text for b in msg.content if b.type == "text")

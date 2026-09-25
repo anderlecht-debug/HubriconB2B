@@ -11,6 +11,8 @@ import sys
 import urllib.error
 import urllib.request
 
+from . import meter
+
 
 USER_AGENT = "Hubricon-engine/1.0 (+https://www.hubricon.com)"
 
@@ -45,7 +47,10 @@ def send_email(to: str, subject: str, text: str, html: str | None = None,
     )
     try:
         with urllib.request.urlopen(req, timeout=20) as res:
-            return 200 <= res.status < 300
+            ok = 200 <= res.status < 300
+        if ok:
+            meter.email()  # a count for the unit economics; never raises, never holds the mail
+        return ok
     except urllib.error.HTTPError as err:
         # Say why in the log (wrong team's key, unverified sender domain…)
         # instead of failing silently; the sweep itself keeps going.

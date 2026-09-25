@@ -41,6 +41,7 @@ from . import onboarding
 from . import storage
 from . import issue
 from . import measurement
+from . import meter
 from . import value as valuemod
 from . import calibration, proof, referral, speed
 from . import loop as loopmod
@@ -1829,6 +1830,7 @@ def _issue_due(db, client: dict, today: date) -> tuple[bool, str]:
     return True, f"{since}d since issue No. {last[0]['issue_number']:03d}"
 
 
+@meter.metered("issue")
 def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> dict | None:
     """Publish the next issue from the latest run: letter, report, video, email.
 
@@ -1978,6 +1980,7 @@ RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month
                                   "late_teardown"})
 
 
+@meter.metered("email", timed=False)
 def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
                        blocks: list[dict], send: bool) -> bool:
     """Send a recurring client email exactly once.
@@ -2338,6 +2341,7 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
     return out
 
 
+@meter.metered("sweep")
 def _sweep_client(db, client: dict, send_alerts: bool, issue_drafts: bool = False) -> dict:
     """Ingest -> run -> draft -> alert for one client. Returns digest facts.
 
@@ -3802,8 +3806,12 @@ def main():
         simulations=20000, seed=42, run=None, out=None, channel=None,
     )
 
+    from . import economics
+    economics.register(sub)  # `hubricon economics` and `hubricon log`
+
     args = parser.parse_args()
-    args.fn(args)
+    with meter.job(args.command):  # a scheduled command's wall time is a cost of its own (meter.py)
+        args.fn(args)
 
 
 if __name__ == "__main__":

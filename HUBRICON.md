@@ -250,6 +250,7 @@ every two weeks.
 - `value.py` / `measurement.py` / `billing.py` — the record, the grading, the gate
 - `directives.py` / `issue.py` — moves drafted, emailed before they go live, veto windows
 - `operator.py` / `cli.py` — the funnel machine and about forty commands
+- `meter.py` / `economics.py` — what an account-month costs: tokens, characters, emails and runner seconds counted where they are incurred, the founder's minutes logged (`hubricon log`), all priced per account in `hubricon economics`
 - `cold/` — the outbound engine that prices a public listing and writes to its seller
 
 **Data** — Supabase Postgres, 42 migrations, ~55 tables, row-level security. Model

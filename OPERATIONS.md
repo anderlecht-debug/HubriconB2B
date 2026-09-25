@@ -1519,3 +1519,139 @@ refuse a datacenter fall back to typing; that case is expected and the page
 says so. The capture creates the prospect exactly as the Amazon side does;
 `teardown_requests` reads the platform from `tool_runs` when the harvest
 does not know the address, so a Shopify merchant gets Shopify instructions.
+
+## Unit economics: `hubricon economics` (2026-09-25)
+
+One founder serves every account for a flat $6,000, so whether Hubricon
+scales is arithmetic, not opinion: what one more account costs in compute, in
+third-party usage and above all in the founder's minutes, and whether that
+number falls as the engine automates more. Carnegie's rule is to know the
+cost of every unit, every week. Until this date the only unit on file was
+`model_runs`' two timestamps.
+
+### What is counted, and where
+
+| Cost | Counted in | How |
+|---|---|---|
+| Engine compute | `model_runs` (as before); `meter.job` around every scheduled command in `cli.main`; `@meter.metered` on the per-client work (`_sweep_client`, `_publish_issue`, the operator's Teardown) | wall seconds, per account and per GitHub job |
+| Anthropic tokens | `narrate.py`, `triage.py` | the response's own `usage`; a server-side fallback's attempts each at their own model (`usage.iterations`) |
+| ElevenLabs characters | `tts.py` | on a voiced request only |
+| Resend emails | `notify.py` | on an accepted send only; a count, never a recipient |
+| Founder minutes | `hubricon log`, and the calendar | below |
+| Fixed platform costs | `cost_config` | the founder's figures; placeholders until he sets them |
+
+Everything lands in `usage_events`, attributed to the account whose work it
+was (or the prospect, for triage). Anything outside such work, such as the
+digest or a `hubricon script` run by hand, is the machine's own. The meter
+is never fatal. A capture cannot raise into a brief, an email or a sweep, a
+failed write is dropped with one line on stderr, and after three failures in
+a row it goes quiet for the rest of the run. Until migration
+`20260925000004_unit_economics.sql` is applied that line is all it does, and
+the report says what it cannot measure.
+
+### Logging the founder's time
+
+```
+cd engine
+uv run hubricon log acme 30 pricing review with Dana          # a client: uuid, prefix, email or company name
+uv run hubricon log lee@brand.com 15 answered the fee question   # a prospect, by email
+uv run hubricon log all 60 Monday review of every account        # work for every account at once
+uv run hubricon log acme 20 --on 2026-10-02 the call ran long    # a day other than today
+```
+
+Log what serving a client costs you: calls nobody booked, email threads,
+executing moves in Seller Central or Shopify, filing claims, recording a
+walkthrough, reviewing a draft before it goes out. Log selling against the
+prospect. `all` is work done for the whole book at once. Do not log building
+Hubricon itself: that is investment, not the cost of an account, and logging
+it would hide the very fall in minutes the engine exists to produce.
+
+The calendar logs two things for you. `hubricon economics` writes each of
+them into `founder_time` once, the first time it runs after they happen:
+
+- **Every booked call that has happened**, at the length its Calendly event
+  names ("20 Minute Meeting"), else the site's stated 20 minutes.
+- **Each client's kickoff**: the Kickoff booking, else the day the standing
+  mandate was agreed, at 45 minutes (welcome.html).
+
+A booked call counts at its scheduled length whether or not it happened. For
+a no-show, set that row's `minutes` to 0 in Supabase. Do not delete the row,
+because the next report would write it again. An edited row is never
+overwritten.
+
+### Reading it
+
+```
+uv run hubricon economics                    # this month, to date
+uv run hubricon economics --month 2026-10    # a closed month
+uv run hubricon economics --config           # every price, plan fee and rate, and whose each is
+uv run hubricon economics --set founder.hourly_rate_usd 200
+```
+
+Every figure is tagged. **[m] is measured**: read from the engine's own
+records (Stripe's invoices as mirrored, usage the meter wrote, minutes
+logged, a booking's own length). **[a] is assumed**: a measured quantity at a
+price from `cost_config`, which names its basis (`placeholder`, the length
+the site states, or the founder's own figure). The header counts the
+placeholders still standing.
+
+An **account** is a client in service, from the yes (`retainer_started_at`)
+or the kickoff, whichever came first, until they leave. A client an invoice
+bills that month also counts. Time and usage before that are what winning
+them cost. They are reported under *Winning accounts*, with a cost per
+account won, and never in cost to serve.
+
+- **Per account**: revenue that stood (billed and not voided or refunded),
+  voided, compute, third-party (tokens, characters, emails and Stripe's fees
+  on paid invoices), founder minutes and their shadow cost at
+  `founder.hourly_rate_usd`, cost to serve, contribution. Minutes logged to
+  `all` are spread evenly and the page says so.
+- **Fixed base**: every `fixed.*` in `cost_config`, the runner minutes that
+  were no account's, and usage no account carried. It is spread per account.
+  With zero accounts it is carried by nobody, and the page says that
+  instead of dividing.
+- **Runner minutes**: GitHub bills each job rounded up to the minute. One
+  job can run two commands (`issue` then `watch`, `sweep` then `calibrate`),
+  so events are grouped by run, and each gets `setup_seconds_per_job` for the
+  checkout and install the engine cannot see. If fewer runs were recorded than
+  the schedule fired, the minutes are called a floor. With no runs recorded
+  at all, the schedule gives the least the month can have cost.
+- **Scale curve**: accounts, minutes and cost to serve per account, fixed
+  per account and all-in, month over month for up to a year. A month with
+  nothing recorded on its accounts reads "—", never zero.
+
+### The three numbers
+
+1. **Founder minutes per account-month.** This decides whether one person
+   can serve the book. It should fall as the engine takes work over. If it
+   does not, automation is not arriving where the time goes.
+2. **Cost to serve per account**, against $6,000. Founder time dominates it.
+   Compute and tokens are small change unless something is wrong.
+3. **Capacity**: accounts one founder can run in the stated working week
+   (`founder.working_hours_per_week`) at the measured minutes. For a month
+   still running, it is paced to the whole month. It is marked an upper
+   bound when only the calendar's minutes exist, because a founder who logs
+   nothing looks infinitely scalable.
+
+### What only the founder can set
+
+Every price ships as a labelled placeholder, not a fact. Replace them with
+`--set`, or by editing the row in Supabase, which marks it his figure:
+
+| Key | Placeholder | What it should be |
+|---|---|---|
+| `founder.hourly_rate_usd` | 150 | what an hour of yours is worth in cost to serve |
+| `founder.working_hours_per_week` | 50 | the week you actually intend to work |
+| `fixed.*` (supabase, vercel, github, google_workspace, calendly, instantly, elevenlabs, resend) | list prices, unverified | the invoices. Add others with `--set fixed.<name> <usd>` |
+| `rate.github_actions.*` | $0.008 a minute, 2,000 included, 60 s setup | your plan's rates; 0 a minute if the repo is public |
+| `rate.anthropic.<model>.*` | mid-2026 list prices | the price list; a model with no rate is shown unpriced, never guessed |
+| `rate.elevenlabs.*`, `rate.resend.*`, `rate.stripe.*` | plan quotas and overage, Stripe's invoicing and ACH fees | your plans |
+
+What it cannot tell you: minutes nobody logged; whether a booked call
+happened; the day a client left (not recorded, so the exit true-up stands in);
+anything outside the engine, such as the cloud routine on your claude.ai plan,
+the harvest on the Mac, or the site's own mail (the 60-second Teardown's copy
+from `api/quick.js` and the portal's sign-in links reach Resend without passing
+the engine, so the Resend line is the engine's share; add any of these as
+`fixed.*` if they should count); and a price. It only ever multiplies by the
+ones you give it.
