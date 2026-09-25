@@ -103,6 +103,7 @@ NOTHING = "nothing_to_seal"
 TABLE_MISSING = "table_missing"   # the migration is not applied: nothing sealed, nothing broken
 UNAVAILABLE = "unavailable"       # the table exists or not; it could not be read
 FAILED = "failed"                 # the write did not land; nothing was half-written
+INTERNAL = "internal"             # the founder's own test account: never on the chain
 
 # How a called entry came to be sealed, and how a measured one.
 AT_ISSUE, LATE = "at_issue", "late"
@@ -510,6 +511,39 @@ def _seal(db, client_id: str, plan) -> tuple[list[dict], _Index]:
     return [], _Index()        # unreachable: the last attempt returns or raises
 
 
+def _internal(db, client_id: str) -> bool | None:
+    """Is this an internal or test account (onboarding.is_internal)? True,
+    False, or None when the client row could not be read.
+
+    The chain is append-only and its head is public, so a test account's moves
+    on it would be counted as real promises forever. Nothing internal is ever
+    sealed; a row that cannot be read is not sealed now either, and catch_up
+    seals it later, labelled late, once it can be read. No row at all (a fake
+    database, never a real one: a move's client row always exists) is sealed."""
+    from . import onboarding     # lazy: onboarding imports notify
+    try:
+        rows = (db.table("clients").select("contact_email, contact_name")
+                .eq("id", client_id).limit(1).execute().data) or []
+    except Exception:
+        return None
+    if not rows:
+        return False
+    return onboarding.is_internal(rows[0].get("contact_email"), rows[0].get("contact_name"))
+
+
+def _gate(db, client_id: str) -> dict | None:
+    """Why nothing may be written for this client right now, or None."""
+    ready = table_status(db)
+    if ready["status"] != "ready":
+        return {"status": ready["status"], "reason": ready["reason"]}
+    inside = _internal(db, client_id)
+    if inside is None:
+        return {"status": UNAVAILABLE, "reason": "the client row could not be read; sealed later, labelled late"}
+    if inside:
+        return {"status": INTERNAL, "reason": "an internal or test account; its moves are never sealed"}
+    return None
+
+
 def _outcome(new: int, refused: dict, asked: int) -> str:
     if refused:
         return PARTIAL if len(refused) < asked else REFUSED
@@ -523,9 +557,9 @@ def _outcome(new: int, refused: dict, asked: int) -> str:
 def seal_called(db, client_id: str, directives: list[dict], sealed_at=None, sealed: str = AT_ISSUE) -> dict:
     """Seal the promise each directive makes, as issued. Returns a named
     status and each move's short seal for the email; never raises."""
-    ready = table_status(db)
-    if ready["status"] != "ready":
-        return {"status": ready["status"], "reason": ready["reason"], "sealed": 0, "short": {}, "refused": {}}
+    stop = _gate(db, client_id)
+    if stop:
+        return {**stop, "sealed": 0, "short": {}, "refused": {}}
     when = sealed_at or _now()
     refused: dict[str, str] = {}
 
@@ -593,9 +627,9 @@ def seal_measured(db, client_id: str, directives: list[dict], sealed: str = AT_M
     """Seal what the measurement found for each directive (as it now stands:
     status, measured dollars, grade, measured_at). Never raises."""
     rows = [d for d in directives if d.get("measured_at")]
-    ready = table_status(db)
-    if ready["status"] != "ready":
-        return {"status": ready["status"], "reason": ready["reason"], "sealed": 0, "refused": {}}
+    stop = _gate(db, client_id)
+    if stop:
+        return {**stop, "sealed": 0, "refused": {}}
     refused: dict[str, str] = {}
     try:
         new, _ = _seal(db, client_id, _plan_measured(client_id, rows, sealed_at or _now(), sealed, refused))
@@ -610,9 +644,9 @@ def catch_up(db, client_id: str, sealed_at=None) -> dict:
     before the table existed or while a write failed, a measurement whose seal
     did not land. Every entry written here says `late`, so nothing sealed after
     the fact can pass for a promise called before. Never raises."""
-    ready = table_status(db)
-    if ready["status"] != "ready":
-        return {"status": ready["status"], "reason": ready["reason"], "sealed": 0, "refused": {}}
+    stop = _gate(db, client_id)
+    if stop:
+        return {**stop, "sealed": 0, "refused": {}}
     when = sealed_at or _now()
     refused: dict[str, str] = {}
     try:

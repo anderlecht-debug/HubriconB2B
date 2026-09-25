@@ -679,3 +679,40 @@ def test_the_status_reports_the_published_head_when_it_matches():
     out: list[str] = []
     seal.run_cli(db, SimpleNamespace(action="status"), lambda *_: CLIENT, out.append)
     assert any("the same head" in line for line in out)
+
+
+# ── the founder's own test account is never on the chain ─────────────────────
+
+INSIDE = {"id": "c0000009-0000-4000-8000-000000000009", "contact_email": "demo@hubricon.internal",
+          "contact_name": "Demo", "company_name": "Tarnhollow (demo)"}
+
+
+def test_an_internal_account_is_never_sealed_by_any_path():
+    """The chain is append-only and its head is public: a test account's moves
+    on it would count as real promises forever."""
+    db = FakeDB(clients=[INSIDE, CLIENT],
+                directives=[_issued(1, INSIDE, measured_at=T.isoformat(), measured_impact_usd=90.0,
+                                    attribution="isolated", status="approved"),
+                            _issued(2, CLIENT)])
+    called = seal.seal_called(db, INSIDE["id"], [_issued(3, INSIDE)], sealed_at=T)
+    measured = seal.seal_measured(db, INSIDE["id"], db.rows("directives")[:1])
+    caught = seal.catch_up(db, INSIDE["id"])
+    assert {called["status"], measured["status"], caught["status"]} == {seal.INTERNAL}
+    assert called["short"] == {} and not db.rows(seal.TABLE)
+    # a real client beside it is sealed exactly as before
+    assert seal.catch_up(db, CLIENT["id"])["status"] == seal.SEALED
+    assert {r["client_id"] for r in db.rows(seal.TABLE)} == {CLIENT["id"]}
+
+
+def test_a_client_row_that_cannot_be_read_is_not_sealed_now(monkeypatch):
+    db = FakeDB(clients=[CLIENT], directives=[_issued(1)])
+    real = db.table
+
+    def flaky(name):
+        if name == "clients":
+            raise RuntimeError("connection reset")
+        return real(name)
+
+    monkeypatch.setattr(db, "table", flaky)
+    res = seal.catch_up(db, CLIENT["id"])
+    assert res["status"] == seal.UNAVAILABLE and res["sealed"] == 0 and not db.rows(seal.TABLE)
