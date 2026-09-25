@@ -179,9 +179,18 @@ let anyone regenerate or vary them.
 | `warehouse.webp` | The manifesto's opening, the aisle at night | `b8a20e08-d5f6-4db8-813f-acb617c85b0a` (Soul Cinema) |
 | `warehouse-aisle.webp` | The same, symmetric (spare) | `a8ac0b65-fcd7-401d-920b-d68ebcf71b34` |
 | `ribbon.webp` | A receipt ribbon in the dark (spare) | `f546607b-5322-4e2c-8a44-e7014e222a86` |
+| `film-paid-on-proof.mp4` | The brand film, 22 s, silent, 1280×720, 2.7 MB: receipt → stamp → PROVEN → VOID → warehouse → seal → "Paid on proof." On /manifesto, click to play | shots `f9052bbe-f545-4556-a352-c37fd2bc4849` (the strike, from still `beb5f46c-995f-4779-b859-24318aa700dc`), `8547f933-c2b3-44a5-aa2b-29e44f600490`, `72da9f32-51da-4179-ac74-d753bc0ccd7a`, `91c90609-27a6-454b-ac45-5e30654609db`, `0d83402e-4fea-48af-8012-707c55c52e0b` |
+| `film-poster.webp` | The film's poster, the stamp about to strike | from the film |
 | `/og.png` | The share card, rendered from `scripts/og.html` | — |
 
 The printer still the film starts from is job `855b9fe1-772c-4b76-89c2-e74923e8ac5e`.
+
+**Masters live outside the repo**, so git stays light: `~/Hubricon/brand-assets/`
+holds the film at 1920×1080 (`film/paid-on-proof-1080p.mp4`, 9 MB), a 1080×1080 cut for
+square feeds (`film/paid-on-proof-square.mp4`), the hero's source clip, and every still
+at full resolution (`stills/`, 2–3K PNG). The film's supers and end card are HTML
+rendered in the site's own fonts, not generated text, so they can be re-cut with new
+lines in minutes (Anton, white with the key phrase in amber, bottom left).
 
 ## The founder
 
@@ -191,6 +200,15 @@ stays where the law and the terms need it (terms, privacy) and in the structured
 video is still the founder's own welcome when a visitor presses play; its poster is
 now the brand still. When the founder page arrives it lives at its own address and the
 home page links to it, once.
+
+## The film's lines
+
+1. Every move gets **a receipt.** (the printer)
+2. Called **before** it goes live. (the stamp, about to strike)
+3. Measured on **your own** reports. (PROVEN)
+4. Short of the Record? **No bill.** (VOID)
+5. Managed Profit for Amazon & Shopify brands. (the warehouse)
+6. The seal, then the end card: **Paid on proof.** HUBRICON.COM
 
 ## Brand plays not yet run
 
