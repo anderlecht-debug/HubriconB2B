@@ -162,8 +162,8 @@ accounts stand behind it.
    accounts at once is flagged in every account, with how many accounts stand behind
    it and whether it shows yet in the recipient's own data. Each account added raises
    the chance a change is caught in its first week and lowers the false-alarm rate a
-   single account lives with. **Built 2026-09-25** (`fleet.py`, `hubricon fleet`, the
-   last step of the Monday sweep): each account's own change-point tests on Amazon's
+   single account lives with. **Built 2026-09-25** (`fleet.py`, `hubricon fleet`; by
+   hand until the Monday sweep step on the branch `workflow-fleet` can be pushed): each account's own change-point tests on Amazon's
    FBA fee per unit and referral rate, a declaration only when at least three
    consenting accounts agree inside 45 days at a 1% false-discovery level, and a named
    refusal below any floor. In simulation, a 5% fee step three exports old is declared
@@ -324,13 +324,18 @@ Update each quarter with measured numbers. A dash means not measured yet.
 
 **Approved by the founder on 2026-09-25** ("approve every change and go live"): the
 `network` consent and the terms §10 and privacy wording; fleet alerts to every client
-(`fleet.RECIPIENT_POLICY = "every_client"`), emailed by the sweep
-(`hubricon fleet --alert`), at three accounts, 1% and 45 days; the Seal as built (a
+(`fleet.RECIPIENT_POLICY = "every_client"`), emailed (`hubricon fleet --alert`), at
+three accounts, 1% and 45 days; the Seal as built (a
 twelve-character seal in the email; a deleted client's hashes kept so the global
 chain still verifies, their documents dropped); the /apply welcome video kept until
 the sales film exists; the deploy, with the three Stripe and guarantee commits.
 
 **Still open:**
+
+0. Land the Monday sweep step for the fleet detector (the branch `workflow-fleet`): GitHub refused
+   it from a token without the `workflow` scope, so the founder chose to ship
+   everything else first. `~/.local/bin/gh auth refresh -h github.com -s workflow`,
+   then merge the branch and push.
 
 1. Apply `20260925000004_unit_economics.sql` in the Supabase dashboard's SQL editor.
    The session that applied the other ten was not permitted to run this one. Do not

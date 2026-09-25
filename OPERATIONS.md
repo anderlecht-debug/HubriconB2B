@@ -1744,9 +1744,14 @@ uv run hubricon book                # realisation by move kind across consenting
 uv run hubricon book --json
 ```
 
-**Where it runs.** The Monday sweep (`.github/workflows/sweep.yml`), as its last
-step, after every client's models and the calibration: `hubricon fleet --alert`,
-`if: always()`, and `|| echo` so a failure warns and never fails the sweep. Below
+**Where it runs.** By hand for now: `hubricon fleet --alert` after a Monday sweep.
+Its place as the Monday sweep's last step (`.github/workflows/sweep.yml`, after every
+client's models and the calibration, `if: always()`, and `|| echo` so a failure warns
+and never fails the sweep) is held on the local branch `workflow-fleet`, because GitHub
+refuses workflow edits from a token without the `workflow` scope. To land it: run
+`~/.local/bin/gh auth refresh -h github.com -s workflow`, then merge that branch into
+`main` and push; it also adds `fleet` to `meter.SCHEDULED` so its runner time is
+counted. Below
 three consenting accounts with a run from the last three weeks it prints
 `insufficient_accounts` and does nothing else, which is what it will print until
 three clients have said yes.

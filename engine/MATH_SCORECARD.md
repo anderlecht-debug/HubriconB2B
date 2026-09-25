@@ -1096,7 +1096,8 @@ before commit). Named refusals below the floors. A separate `network` consent is
 only door in, through the calibration consent's own gate; an alert to every client
 who pays the fee, once each (a unique index), saying what, when, how big on the
 typical SKU, how many accounts, and whether their own exports show it, in a letter
-of its own; `hubricon fleet` last in the Monday sweep, guarded. `book.py`: replay's
+of its own; `hubricon fleet`, to run last in the Monday sweep, guarded (that step
+waits on the branch `workflow-fleet`; by hand until then). `book.py`: replay's
 realisation ratio by move kind across the same accounts, with an account-resampled
 band, refusing under five accounts; report only.
 

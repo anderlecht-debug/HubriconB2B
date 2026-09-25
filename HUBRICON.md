@@ -94,8 +94,8 @@ touching inventory orders — needs written approval.
 **The network (2026-09-25).** Every consenting account makes every account safer.
 When Amazon moves a fee it moves it for everyone, and a step that shows in three or
 more accounts at once is told to every client who pays that fee — sooner, and with
-fewer false alarms, than one account's own sweep can manage (`fleet.py`, weekly
-after the models; who is told is one constant, `fleet.RECIPIENT_POLICY`, and the
+fewer false alarms, than one account's own sweep can manage (`fleet.py`; by hand
+for now, weekly after the models once the sweep step on the branch `workflow-fleet` lands; who is told is one constant, `fleet.RECIPIENT_POLICY`, and the
 founder's call). No client's data informs another unless they granted the separate
 `network` consent; what leaves an account is an event (which fee, which way,
 roughly when, by what ratio), never a figure of theirs, their name, a SKU or an
