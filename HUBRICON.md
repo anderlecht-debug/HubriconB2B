@@ -305,6 +305,7 @@ rounds against Hormozi's and Becker's standards plus a burned-seller read.
 | **Proven or Void** | The guarantee |
 | **found / proven** | The two states of a dollar |
 | **Recovery Only** | The downsell. Emails and terms only, never the site |
+| **The seal** | A promise's fingerprint on the Profit Record, taken before its email is sent; the email prints the first twelve characters beside the expected dollars |
 
 **Retired, and never to be reintroduced in client copy:** desk, ledger (the terms
 define it once), quantitative, retainer (the terms keep it once as the legal noun),
@@ -322,6 +323,19 @@ built on not overstating.
 void gate; the veto that cannot open on an unsent email; claims counted only when
 Amazon actually pays; the 24-hour Teardown clock; the free export; the daily Buy
 Box check; Amazon's 2026 peak fee card, verified against Amazon's own announcement.
+
+**The Seal, in code once migration `20260925000002_record_seal.sql` is applied**
+(`seal.py`, 2026-09-25): every move is fingerprinted and hash-chained onto the
+client's Record before the email announcing it is sent, and the email prints its
+seal beside the expected dollars; every measurement is chained after the promise
+it answers; the table refuses every edit and deletion, the service role's
+included; `hubricon seal verify` and the dependency-free
+`scripts/verify-record.mjs` recompute all of it from the Record export, and name
+the first broken entry. Until the migration is applied, moves go out unsealed and
+`hubricon promises` says so. **Not true yet:** no external timestamp anchor
+exists for the public head, and whoever owns the database could still rewrite
+the table consistently; the Seal makes such a rewrite disagree with what clients'
+inboxes and earlier exports already hold, which is evidence, not prevention.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero
 published results**. `results.html` reads zero honestly and says so. No testimonial,
@@ -356,6 +370,7 @@ client's yes.
 | The record, graded | `engine/src/hubricon_engine/{value,measurement}.py` |
 | The gate that voids an invoice | `engine/src/hubricon_engine/billing.py` |
 | Turning on the 90-second demo | `OPERATIONS.md`, one constant in two files |
+| Every promise sealed, and how anyone checks one | `engine/src/hubricon_engine/seal.py`, `scripts/verify-record.mjs` |
 
 ---
 

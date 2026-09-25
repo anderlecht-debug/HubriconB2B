@@ -857,6 +857,61 @@ account and recording it (`hubricon execute`), the daily Buy Box reading on a
 live price test (`hubricon watch`), and confirming when an ad spend step-up was
 intended. Everything else measures itself.
 
+## The Seal: every promise written down before it goes live, provably (2026-09-25)
+
+"We write the expected dollars down before a move goes live" was true and
+uncheckable: the promise sat in a `directives` row we can edit. `seal.py`
+makes it arithmetic a client, a buyer's diligence team or a lender can redo.
+
+Each move gets two entries in `record_seals`: **called**, written by
+`issue.issue_drafts` between the status flip and the email (the move, its
+target, the expected dollars, the promised band, the mandate, a SHA-256 of the
+evidence); and **measured**, written when the sweep banks or closes it
+(`cli._measure_for_run`) or a number is recorded by hand (`hubricon measure`,
+sealed `by_hand`, a correction superseding the entry before it). Each entry is
+RFC 8785 canonical JSON; its leaf is `sha256(document)`; `head_n =
+sha256(head_{n-1} || leaf_n)` from 64 zeros, once per client and once across
+all clients. The pre-move email prints each move's short seal (the first twelve
+hex of its leaf) beside its expected dollars, so the client's inbox dates what
+was called. `public_record_seal()` (anon-callable, like `public_results()`)
+returns only the global head, its entry count and the last sealed time.
+
+    uv run hubricon seal status                  # the global head, the published head, each client's entries
+    uv run hubricon seal verify <client>         # every leaf, link and double entry, plus today's rows; exit 1 at the first broken entry
+    uv run hubricon seal verify --global         # the chain across every client, from genesis to the published head
+    uv run hubricon seal verify <client> --witness 3f9a1c0b2e7d   # a short seal from their email must be in it
+    uv run hubricon seal sync [<client>]         # seal, labelled late, what was issued or measured before the table existed
+    node scripts/verify-record.mjs <export.zip>  # what a third party runs; no dependencies
+    node --test scripts/verify-record.test.mjs   # the verifier, pinned to scripts/record-seal.golden.json
+
+**What must be applied.** Migration `20260925000002_record_seal.sql`, by hand.
+Until it is, nothing breaks: moves are issued and emailed exactly as before,
+without seals, and the sweep log, `hubricon promises` and the operator digest
+all name the missing migration. After it: `hubricon seal sync` once (or let
+Monday's sweep do it; it runs the same catch-up for every client), then
+`hubricon seal status` should report the published head equal to the table's.
+Moves issued before that day are sealed `late`, and say so wherever they are
+read; nothing sealed after the fact can pass for a promise called before.
+
+**What the database enforces.** A row must extend both chains (a trigger
+checks its prev heads), its heads must be `sha256(prev || leaf)` (CHECKs), and
+nothing may update, delete or truncate a row, the service role included. The
+one exception is a client's deletion (privacy §5): the foreign key sets their
+rows' client to null, and the trigger drops the document and keeps the leaf, so
+every other client's global chain still verifies. Setting a client to null by
+hand while the client exists is refused.
+
+**What it cannot do.** Whoever owns the database can still rewrite the table
+consistently; the Seal makes that rewrite disagree with the witnesses (the
+short seals in client inboxes, any earlier capture of the global head, any
+earlier export), which is why `--witness` exists. The short seal is 48 bits: a
+receipt a person can read, not a proof; the full leaf is in the export. **The
+next step is an external timestamp anchor**: stamp the global head with
+OpenTimestamps on each sweep, or have the Wayback Machine capture a GET
+endpoint serving `public_record_seal()`, and keep the proofs beside the head's
+sequence number. No network call is made for it today. Neither Hubricon (the
+portal) nor the public site shows seals or the head yet.
+
 ## The loop past paid: proof, the ask, the month, and what it teaches the cold engine
 
 The business is meant to run as a loop — effort, customers, results, word of
