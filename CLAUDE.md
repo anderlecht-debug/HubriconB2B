@@ -30,4 +30,4 @@ model change.
 ## Tests
 
 - Engine: `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 5 minutes).
-- Node: `node --test lib/`.
+- Node: `node --test lib/ scripts/` (the API helpers and the Record verifier).

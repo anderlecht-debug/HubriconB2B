@@ -2761,7 +2761,12 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         if not mail else "sweep --issue notifies, then opens the window")
     from . import seal as sealmod
     sealed = sealmod.table_status(db)
-    add("Every move sealed before its email", "the pre-move email", sealed["status"] == "ready",
+    # Not yet a promise any page or email makes (the email prints a seal only when
+    # one exists; /manifesto lists the Seal as "not live yet"), so the label says
+    # so: the digest line is a reminder to switch it on, not a client let down.
+    add("Every move sealed before its email",
+        "the pre-move email, once switched on; /manifesto calls it not live yet",
+        sealed["status"] == "ready",
         "each promise is fingerprinted and chained before the notice; `hubricon seal verify`"
         if sealed["status"] == "ready" else sealed["reason"])
 
