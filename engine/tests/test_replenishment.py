@@ -2,6 +2,7 @@
 one wire per supplier, and air against sea."""
 
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -92,7 +93,7 @@ def test_blank_terms_refuse_and_the_reader_maps_the_new_columns():
     assert table == "cogs_inputs" and rows[0]["supplier"] == "Acme" and rows[0]["moq_units"] == 500
     assert rows[0]["price_break_unit_cost_usd"] == 3.9 and rows[0]["air_lead_time_days"] == 12
     # the shipped template parses with its example row dropped
-    tdf = pd.read_csv("../cogs-template.csv")
+    tdf = pd.read_csv(Path(__file__).resolve().parents[2] / "cogs-template.csv")   # from any working directory
     assert cogs.parse(tdf, {"client_id": "c", "id": "u"})[1] == []
 
 
