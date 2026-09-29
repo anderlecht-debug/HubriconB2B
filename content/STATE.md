@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-09-29T02:47:09+00:00 · style locked: False
+Updated 2026-09-29T03:18:09+00:00 · style locked: False
 
 ## Capabilities
 
