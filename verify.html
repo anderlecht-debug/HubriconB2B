@@ -129,7 +129,7 @@ td.when { white-space: nowrap; font-variant-numeric: tabular-nums; }
   <section class="block" aria-labelledby="find-title">
     <h2 id="find-title">A head from a printed page, a seal from an email.</h2>
     <div class="prose">
-      <p>A printed page of a Profit Record carries the Record's head: 64 characters, in groups of eight. Every email that announced a move carries that move's seal: the first twelve. Paste either one here, after the export has checked out above, and this page says whether that exact entry is in the chain it just recomputed, and where.</p>
+      <p>A printed page of a Profit Record carries the Record's head: 64 characters, in groups of eight. An email that announced a sealed move prints its seal beside the expected dollars: the first twelve. Paste either one here, after the export has checked out above, and this page says whether that exact entry is in the chain it just recomputed, and where.</p>
       <form class="find" id="find" autocomplete="off">
         <input id="hash" name="hash" aria-label="A head or a seal" inputmode="text" spellcheck="false" placeholder="e70027c2 7e914d6e … or a 12-character seal">
         <button type="submit">Find it</button>
@@ -164,7 +164,7 @@ td.when { white-space: nowrap; font-variant-numeric: tabular-nums; }
         <li><b>There is no outside timestamp.</b> Nothing beyond Hubricon's own systems dates the head today. Having something outside Hubricon record the head as it moves is the next step, and it is not built.</li>
         <li><b>Whoever owns the database could rewrite the table consistently</b>, recomputing every seal so that a rewritten Record checks out on its own. What a rewrite cannot reach is what already left: the seals in clients' inboxes, the heads on pages already printed, and the exports already downloaded. A rewritten Record disagrees with those, and this page says so when you paste one. That is evidence of a rewrite, not prevention of one.</li>
       </ul>
-      <p>Without this page: every export carries the same checker as a file, <b>verify-record.mjs</b>. With Node installed, <b>node verify-record.mjs</b> followed by the export's file name runs every check here, and needs nothing else. The checking code on this page is the same code, line for line.</p>
+      <p>Without this page: the export carries the same checker as a file beside the Record, <b>verify-record.mjs</b>. With Node installed, <b>node verify-record.mjs</b> followed by the export's file name runs every check here, and needs nothing else. The checking code on this page is that file's, line for line.</p>
     </div>
   </section>
 </main>

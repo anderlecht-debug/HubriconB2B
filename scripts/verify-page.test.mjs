@@ -49,7 +49,9 @@ test("it says plainly what the Seal cannot prove yet", () => {
   assert.match(t, /the seals in clients' inboxes, the heads on pages already printed, and the exports already downloaded/);
   assert.match(t, /That is evidence of a rewrite, not prevention of one\./);
   assert.match(t, /is the next step, and it is not built\./, "the anchor is future, and labelled so");
-  assert.match(t, /every export carries the same checker as a file, verify-record\.mjs/);
+  assert.match(t, /the export carries the same checker as a file beside the Record, verify-record\.mjs/);
+  // seal.write_export puts the checker in the zip beside record-seal.json.
+  assert.match(readFileSync(new URL("../engine/src/hubricon_engine/seal.py", import.meta.url), "utf8"), /zf\.writestr\("verify-record\.mjs"/);
 });
 
 test("the sample is a sample wherever it shows, and it checks out until one figure is changed", () => {
