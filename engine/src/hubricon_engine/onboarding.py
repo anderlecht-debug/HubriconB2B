@@ -420,13 +420,13 @@ SHOPIFY_EXPORT_NOTE = (
 # in its own platform, and Finances is never asked for.
 SEAT_HINT = {
     "amazon": f"Add {EXEC_EMAIL} under Seller Central → Settings → User Permissions; the welcome page shows the exact four permissions.",
-    "shopify": (f"Add {EXEC_EMAIL} as a staff account under Settings → Users → Add users, with exactly these "
-                "permissions: Orders, Analytics, Reports and Marketing to view; Products and Discounts to edit; "
-                "Finances and Settings off. It uses one of your plan's staff accounts; if you would rather approve a "
-                "collaborator request instead, reply and say so before you add anyone. Your ad accounts are not part "
-                "of that seat, and each is asked for on its own: partner access to your Meta ad account (Meta "
-                "Business settings → Partners) and user access to your Google Ads account (Admin → Access and "
-                "security)."),
+    # One wording with welcome.html (2026-10-01): a staff user with a custom role,
+    # which Shopify offers on Grow, Advanced and Plus; the ad accounts asked apart.
+    "shopify": (f"Add {EXEC_EMAIL} as a staff account under Settings → Users (Shopify allows staff accounts on "
+                "Grow, Advanced and Plus); the welcome page shows the exact role, with no access to Finance, "
+                "payouts, Customers, Settings or apps. Your ad accounts are not part of that seat and are asked "
+                "for on their own: partner access to your Meta ad account and Standard access to your Google Ads "
+                "account."),
 }
 
 

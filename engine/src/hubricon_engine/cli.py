@@ -2573,6 +2573,7 @@ def cmd_console(args):
         elasticity_rows=fits,
         inventory_rows=inventory,
         generated_on=date.today(),
+        channel=((run.get("params") or {}).get("channel") or client.get("platform") or "amazon"),
     )
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
@@ -2666,7 +2667,7 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
                                   recovery=outputs.get("recovery"),
                                   anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
                                   health=outputs.get("health"), previous_health=prev_health,
-                                  channel=channel,
+                                  channel=channel, platform=client.get("platform"),
                                   # every Inventory Age snapshot on file: the aged-cliff
                                   # early warning compares the two latest (alerts.py)
                                   inventory_health=(dbmod.fetch_all(db, "inventory_health", client["id"])

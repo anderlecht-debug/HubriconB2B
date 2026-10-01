@@ -305,14 +305,14 @@ def test_the_shopify_seat_is_a_staff_account_with_the_ad_accounts_asked_for_apar
     account and never Finances (finding 6, 2026-10-01)."""
     from hubricon_engine.onboarding import EXEC_EMAIL, seat_hint
     shop = seat_hint("shopify")
-    assert shop.startswith(f"Add {EXEC_EMAIL} as a staff account under Settings → Users → Add users")
-    assert "Orders, Analytics, Reports and Marketing to view; Products and Discounts to edit" in shop
-    assert "Finances and Settings off" in shop
-    # the collaborator route is an alternative the client asks for, never a request we say we send
-    assert "if you would rather approve a collaborator request instead, reply and say so" in shop
-    assert "we send a collaborator request" not in shop and "Partner" not in shop.replace("Partners)", "")
+    # one wording with welcome.html's role (reconciled 2026-10-01)
+    assert shop.startswith(f"Add {EXEC_EMAIL} as a staff account under Settings → Users")
+    assert "Grow, Advanced and Plus" in shop and "the welcome page shows the exact role" in shop
+    assert "no access to Finance, payouts, Customers, Settings or apps" in shop
+    # never a request we say we send, and no Partner organisation claimed
+    assert "we send a collaborator request" not in shop and "Partner" not in shop
     # the ad accounts, each on its own
-    assert "partner access to your Meta ad account" in shop and "user access to your Google Ads account" in shop
+    assert "partner access to your Meta ad account" in shop and "Standard access to your Google Ads account" in shop
     both = seat_hint("both")
     assert both.startswith(f"Add {EXEC_EMAIL} under Seller Central") and "On Shopify: add " in both
     assert seat_hint("amazon") == seat_hint(None) and "staff account" not in seat_hint("amazon")

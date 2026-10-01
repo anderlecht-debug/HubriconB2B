@@ -15,6 +15,7 @@ Fonts link with real fallbacks.
 from datetime import date, timedelta
 from html import escape
 
+from . import channels
 from .models.pricing_engine import fee_terms, price_move, profit
 
 NAVY_DEEP = "#050A1F"
@@ -252,7 +253,10 @@ def _select_price_curves(margins: list[dict], elasticity_rows: list[dict], limit
 
 def build_console(company: str, directives: list[dict], cash: dict | None,
                   margins: list[dict], elasticity_rows: list[dict],
-                  inventory_rows: list[dict], generated_on: date) -> str:
+                  inventory_rows: list[dict], generated_on: date,
+                  channel: str | None = "amazon") -> str:
+    """`channel` says what is watched while a price step is live: the Buy Box on
+    Amazon; on Shopify, which has none, the client's own orders."""
     measured_rows = [d for d in directives if d.get("measured_impact_usd") is not None]
     measured = sum(float(d["measured_impact_usd"]) for d in measured_rows)
     on_desk = [d for d in directives if d["status"] == "issued"]
@@ -292,7 +296,7 @@ def build_console(company: str, directives: list[dict], cash: dict | None,
         )
         pricing_section = f'''<section class="panel">
   <header><h2>The profit curve — dΠ/dP = 0</h2></header>
-  <p class="sub mono">gross profit vs price from the fitted demand curve · moves capped at 5% per cycle, Buy Box watched</p>
+  <p class="sub mono">gross profit vs price from the fitted demand curve · moves capped at 5% per cycle · {channels.watch_phrase(channel).rstrip(".")}</p>
   <div class="row">{charts}</div>
 </section>'''
     else:
