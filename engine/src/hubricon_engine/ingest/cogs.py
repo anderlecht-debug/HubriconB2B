@@ -1,17 +1,27 @@
 """Hubricon COGS template -> cogs_inputs. Columns match cogs-template.csv.
 
-fulfillment_per_unit_usd (2026-09-04) is pick, pack and postage per unit
-for a store that ships from its own shelf or a 3PL — a landed cost no
-platform report itemises. Amazon sellers leave it blank: FBA fees arrive
-in the SKU Economics export."""
+One sheet for both platforms (2026-10-01). `sku` leads: the Variant SKU on
+Shopify, the seller SKU on Amazon, the key every other export joins on.
+`listing_id` is optional: the ASIN on Amazon, the product handle on
+Shopify. It lands in the cogs_inputs column still called `asin` (the bridge
+models/common.sku_asin_bridge reads), and a sheet made from the old
+template, whose second column was `asin`, parses exactly as before.
+
+fulfillment_per_unit_usd (2026-09-04) is pick, pack and postage per unit,
+or a 3PL's per-unit fee — a landed cost no platform report itemises. It is
+counted once (models/margin.py): on every Shopify sale, and on an Amazon
+sale only when Amazon charged no FBA fulfilment fee on it, so a seller on
+both platforms fills it in for the 3PL and it never lands on top of FBA."""
 
 import pandas as pd
 
 from .headers import clean_int, clean_money, clean_str, dedupe_last, map_columns
 
 SPEC = {
-    "sku": {"synonyms": ["sku"], "required": True, "cleaner": clean_str},
-    "asin": {"synonyms": ["asin"], "cleaner": clean_str},
+    # every sku name is one lib/call.js COST_FILE also reads (lib/call.test.mjs)
+    "sku": {"synonyms": ["sku", "variantsku", "sellersku", "msku", "merchantsku"], "required": True,
+            "cleaner": clean_str},
+    "asin": {"synonyms": ["listingid", "asin", "producthandle", "handle"], "cleaner": clean_str},
     "product_name": {"synonyms": ["productname"], "cleaner": clean_str},
     "unit_cost_usd": {"synonyms": ["unitcostusd", "unitcost"], "required": True, "cleaner": clean_money},
     "inbound_freight_per_unit_usd": {
