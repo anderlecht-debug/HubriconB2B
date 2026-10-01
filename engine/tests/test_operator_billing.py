@@ -454,12 +454,15 @@ def test_the_exit_true_up_checks_every_billed_month_and_runs_once(monkeypatch):
                           _bill(3, "draft", 3)],
                 record_months=[_month_row(1, 9000.0), _month_row(2, 7000.0, disputed=1500.0)],
                 directives=[], recovery_claims=[], client_emails=[], funnel_events=[])
-    operator.Pass(db, send=False, dry=False).billing()
+    monkeypatch.setattr(operator, "email_configured", lambda: True)
+    operator.Pass(db, send=True, dry=False).billing()
     assert "invoices/in_3/void" in calls and "credit_notes" in calls
     assert db.rows("clients")[0]["exit_trued_up_at"]
     assert [k for k, _ in letters] == ["exit_true_up"]
+    # The held draft was for the month in progress: voided, and marked as never sent.
+    assert {r["id"]: r.get("gate_note") for r in db.rows("invoices")}["i3"] == billing.EXIT_UNSENT_NOTE
     n = len(calls)
-    operator.Pass(db, send=False, dry=False).billing()
+    operator.Pass(db, send=True, dry=False).billing()
     assert len(calls) == n
 
 

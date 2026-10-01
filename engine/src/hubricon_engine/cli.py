@@ -1661,81 +1661,153 @@ def cmd_watch(args):
               else "No live price tests.")
 
 
-# Every table a client's export contains. Ordered so the zip reads like the
-# service does: what you sent us, what we computed, what we decided, what it
-# earned.
+# Every table a client's export contains, each read by its client_id and
+# nothing else. Ordered so the zip reads like the service does: what you sent
+# us, what we computed, what we decided, what it earned, what we billed and
+# wrote to you, and the Seal over all of it. record_months is what every invoice
+# was judged against; results, the verified dollars; record_seals, the chain's
+# rows (record-seal.json beside them is the same chain in the verifier's form).
 EXPORT_TABLES = (
     "uploads", "sku_economics", "asin_traffic", "ppc_search_terms", "ppc_spend",
     "inventory_levels", "settlement_transactions", "cogs_inputs",
-    "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health",
+    "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health", "customer_orders",
     "margin_results", "elasticity_results", "inventory_sim_results", "ad_efficiency_results",
     "cash_horizon_results", "recovery_claims", "model_runs", "model_outputs", "chart_packs",
     "directives", "price_tests", "alerts", "briefings", "plans", "initiatives",
-    "invoices", "mandates", "consents",
+    "record_months", "results",
+    "invoices", "recovery_invoices", "mandates", "consents", "client_emails",
+    "record_seals",
 )
 
+# Beside record-seal.json and verify-record.mjs in every export: how to run the
+# check, in words a client's accountant can follow, and what it does not prove.
+VERIFY_INSTRUCTIONS = """How to check your Profit Record yourself
 
-def cmd_export(args):
-    """Everything we hold on a client, as one zip.
+Every move on your Profit Record is sealed. Before the email that announced a
+move was sent, its promise (what we would do, the dollars we expected, and a
+fingerprint of the evidence behind it) was hashed and chained onto your Record.
+When the move was measured, the result was chained after the promise it
+answers. record-seal.json holds every one of those entries, and
+verify-record.mjs recomputes all of them. It needs Node.js (version 18 or
+later) and nothing else: no account, no network, no Hubricon.
 
-    "Your data and your ledger export free, any time" appears eleven times
-    across six surfaces — including Terms §11, Privacy §6 and the portal footer
-    — and until now there was no export command, endpoint or button anywhere.
-    Raw uploads included: the promise says "raw files, tables, results, this
-    ledger", not a summary."""
+1. Keep this export zipped, or unzip it; either works.
+2. In a terminal, in the folder that holds the files, run
+
+       node verify-record.mjs record-seal.json
+
+   or point it at the zip itself:
+
+       node verify-record.mjs <this export>.zip
+
+3. It prints "OK" when every entry matches its seal, the chain is unbroken and
+   every measurement answers its promise. Otherwise it prints "BROKEN" and
+   names the first entry that does not check out.
+
+Make the check stronger with something only you hold. Every email that
+announced a move printed its seal, the first twelve characters, beside the
+expected dollars. Give it any of them:
+
+       node verify-record.mjs record-seal.json --seal 3f9a1c0b2e7d
+
+Your inbox dated that seal, so a Record rewritten after that email cannot
+contain it.
+
+What this does not prove: whoever holds the database could rewrite the whole
+chain consistently, and the file alone cannot show that. The seals in your
+inbox, and any earlier export you kept, can: a rewritten Record no longer
+contains them.
+
+Exit codes: 0 intact (or nothing sealed yet), 1 broken, 2 the file could not
+be read.
+"""
+
+
+def _rows_to_csv(rows: list[dict]) -> str:
     import csv
+    import io
+
+    if not rows:
+        return ""
+    cols = sorted({k for r in rows for k in r})
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
+    w.writeheader()
+    for r in rows:
+        w.writerow({c: (json.dumps(r[c], default=str) if isinstance(r.get(c), (dict, list)) else r.get(c))
+                    for c in cols})
+    return buf.getvalue()
+
+
+def export_filename(client: dict, today: date | None = None) -> str:
+    name = client.get("company_name") or client.get("contact_email") or "client"
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "client"
+    return f"{slug}-hubricon-export-{(today or date.today()).isoformat()}.zip"
+
+
+def build_export(db, client_id: str, files: bool = True) -> bytes:
+    """Everything we hold on one client, as the bytes of one zip.
+
+    Pure in the sense that matters: it reads (only this client's rows, by
+    client_id), writes nothing, sends nothing. `hubricon export` writes the
+    bytes to disk; the operator stores them privately and emails a link
+    (operator.Pass.data_requests, terms §11: within one working day).
+
+    Raw uploads included: the promise says "raw files, tables, results and your
+    whole Profit Record", not a summary. MANIFEST.txt says what is in the zip,
+    and what could not be read, line by line."""
     import io
     import zipfile
     from pathlib import Path
 
-    db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    name = client["company_name"] or client["contact_email"]
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "client"
-    out = Path(args.out or f"{slug}-hubricon-export-{date.today().isoformat()}.zip")
+    from . import monthly, seal
 
-    def rows_to_csv(rows: list[dict]) -> str:
-        if not rows:
-            return ""
-        cols = sorted({k for r in rows for k in r})
-        buf = io.StringIO()
-        w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
-        w.writeheader()
-        for r in rows:
-            w.writerow({c: (json.dumps(r[c]) if isinstance(r.get(c), (dict, list)) else r.get(c))
-                        for c in cols})
-        return buf.getvalue()
-
+    client = (db.table("clients").select("*").eq("id", client_id).execute().data or [None])[0]
+    if client is None:
+        raise ValueError(f"no client {client_id}")
+    name = client.get("company_name") or client.get("contact_email")
     manifest = [f"Hubricon export — {name}", f"Generated {datetime.now(timezone.utc).isoformat()}", ""]
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for table in EXPORT_TABLES:
             try:
-                rows = dbmod.fetch_all(db, table, client["id"])
+                rows = dbmod.fetch_all(db, table, client_id)
             except Exception as err:
                 manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
                 continue
             if not rows:
                 manifest.append(f"  {table}: empty")
                 continue
-            z.writestr(f"tables/{table}.csv", rows_to_csv(rows))
+            z.writestr(f"tables/{table}.csv", _rows_to_csv(rows))
             manifest.append(f"  tables/{table}.csv — {len(rows)} row(s)")
 
-        # The ledger, as its own file, because it is the thing most often asked for.
-        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-        ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
-                                  _fetch_invoices(db, client["id"]))
-        z.writestr("ledger.json", json.dumps(ledger, indent=2, default=str))
-        manifest.append(f"  ledger.json — ${float(ledger['value_total']):,.0f} measured against "
-                        f"${float(ledger['fees_paid']):,.0f} in fees [{ledger['fees_basis']}]")
+        # The Profit Record, as its own file, because it is the thing most often asked for.
+        directives = db.table("directives").select("*").eq("client_id", client_id).execute().data
+        record = valuemod.compute(client, directives, _fetch_claims(db, client_id), _fetch_invoices(db, client_id))
+        z.writestr("profit-record.json", json.dumps(record, indent=2, default=str))
+        try:
+            months = db.table("record_months").select("*").eq("client_id", client_id).execute().data or []
+        except Exception:
+            months = []
+        if months:
+            figure = (f"${sum(monthly.standing(r) for r in months):,.0f} proven on your Profit Record since "
+                      f"day one")
+        else:
+            figure = f"${float(record['value_total']):,.0f} measured so far"
+        manifest.append(f"  profit-record.json — {figure}, against ${float(record['fees_paid']):,.0f} in fees "
+                        f"[{record['fees_basis']}]")
 
-        # The Seal: every entry's canonical document, leaf and heads, and the
-        # verifier beside them, so anyone can check the Record offline.
-        from . import seal
-        manifest += seal.write_export(z, db, client["id"],
+        # The Seal: every entry's canonical document, leaf and heads, the
+        # verifier beside them, and how to run it, so anyone can check the
+        # Record offline.
+        manifest += seal.write_export(z, db, client_id,
                                       Path(__file__).resolve().parents[3] / "scripts" / "verify-record.mjs")
+        z.writestr("HOW-TO-VERIFY.txt", VERIFY_INSTRUCTIONS)
+        manifest.append("  HOW-TO-VERIFY.txt — how to check your Profit Record yourself, and what that proves")
 
-        if not args.no_files:
-            uploads = db.table("uploads").select("*").eq("client_id", client["id"]).execute().data
+        if files:
+            uploads = db.table("uploads").select("*").eq("client_id", client_id).execute().data
+            written = 0
             for u in uploads:
                 if not u.get("storage_path") or u["storage_path"] == "pending":
                     continue
@@ -1745,21 +1817,41 @@ def cmd_export(args):
                     manifest.append(f"  raw/{u.get('original_filename')}: unavailable ({str(err)[:60]})")
                     continue
                 z.writestr(f"raw/{u['id'][:8]}-{u.get('original_filename') or 'upload.csv'}", blob)
-            manifest.append(f"  raw/ — {len(uploads)} uploaded file(s) exactly as you sent them")
+                written += 1
+            manifest.append(f"  raw/ — {written} uploaded file(s) exactly as you sent them")
 
         for path_field, label in (("report_path", "reports"), ("video_path", "videos")):
-            for b in db.table("briefings").select("*").eq("client_id", client["id"]).execute().data:
+            for b in db.table("briefings").select("*").eq("client_id", client_id).execute().data:
                 target = b.get(path_field)
                 if not target:
                     continue
                 try:
                     z.writestr(f"{label}/{target.rsplit('/', 1)[-1]}", storage.download(db, target))
-                except Exception:
-                    pass
+                except Exception as err:
+                    manifest.append(f"  {label}/{target.rsplit('/', 1)[-1]}: unavailable ({str(err)[:60]})")
 
         z.writestr("MANIFEST.txt", "\n".join(manifest) + "\n")
-    print("\n".join(manifest))
-    print(f"\nWrote {out} ({out.stat().st_size / 1_000_000:.1f} MB). It is theirs, free, any time.")
+    return buf.getvalue()
+
+
+def cmd_export(args):
+    """Everything we hold on a client, as one zip, written here.
+
+    The client's own "Request your export" is fulfilled by the operator
+    (stored privately, a seven-day link emailed); this is the same zip by hand.
+    "Your data and your Profit Record export free, any time": terms §11,
+    privacy §6, the Hubricon footer."""
+    import io
+    import zipfile
+    from pathlib import Path
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    out = Path(args.out or export_filename(client))
+    blob = build_export(db, client["id"], files=not args.no_files)
+    out.write_bytes(blob)
+    print(zipfile.ZipFile(io.BytesIO(blob)).read("MANIFEST.txt").decode().rstrip())
+    print(f"\nWrote {out} ({len(blob) / 1_000_000:.1f} MB). It is theirs, free, any time.")
 
 
 def cmd_seal(args):
@@ -2640,12 +2732,24 @@ def cmd_cancel(args):
     and the veto queue stop. The exit true-up (held drafts voided unsent,
     anything billed beyond the Record voided or refunded, and the letter that
     says so) is the operator's next hourly pass, which holds the Stripe key and
-    the mail key; this prints what it will do."""
+    the mail key; this prints what it will do.
+
+    It also starts the exit clock (terms §5: a refund owed is issued within
+    seven days of the client's email): a data_request of kind 'exit', due seven
+    days from that email, which the digest and `hubricon promises` count and the
+    operator closes once the true-up is done and the exit letter has gone. The
+    letter goes to every client who said yes and then left, billed or not: that
+    they have left and nothing more is invoiced, the true-up, their export, and
+    what to keep watching."""
     import sys as _sys
     from . import billing, operator
     db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    name = client["company_name"] or client["contact_email"]
+    found = dbmod.resolve_client(db, args.client)
+    # resolve_client reads a dozen columns, and the Stripe ids, the yes and the
+    # true-up marker are not among them: read the whole row, or a live
+    # subscription looks like none and keeps raising invoices.
+    client = (db.table("clients").select("*").eq("id", found["id"]).execute().data or [found])[0]
+    name = client.get("company_name") or client["contact_email"]
     if client.get("stripe_subscription_id"):
         if not billing.stripe_configured():
             sys.exit(f"{name}'s subscription cannot be ended: STRIPE_SECRET_KEY is not set, and left running it "
@@ -2654,9 +2758,40 @@ def cmd_cancel(args):
         print(f"{name}: subscription {client['stripe_subscription_id']} ended in Stripe, no final invoice.")
     db.table("clients").update({"status": "churned"}).eq("id", client["id"]).execute()
     print(f"{name}: marked churned — no further changes are made in their account.")
-    if client.get("exit_trued_up_at") or not client.get("stripe_customer_id"):
-        print("  Nothing to true up: " + ("already done." if client.get("exit_trued_up_at") else "never billed."))
+
+    said_yes = bool(client.get("retainer_started_at")) or (client.get("plan") == "recovery") \
+        or client.get("status") in ("active", "past_due")
+    if not said_yes:
+        print("  They never said yes (no start date on file), so no exit letter goes and there is nothing to true "
+              "up. A no on the call is `hubricon declined`.")
         return
+
+    # The day their email arrived, when the founder gives it; otherwise now.
+    emailed = getattr(args, "emailed", None)
+    opened = (datetime.fromisoformat(str(emailed)).replace(tzinfo=timezone.utc) if emailed
+              else datetime.now(timezone.utc))
+    due = opened + timedelta(days=billing.EXIT_REFUND_DAYS)
+    try:
+        running = (db.table("data_requests").select("id, due_at").eq("client_id", client["id"])
+                   .eq("kind", "exit").is_("closed_at", "null").execute().data)
+        if running:
+            print(f"  The exit clock is already running: due {str(running[0]['due_at'])[:10]}.")
+        else:
+            db.table("data_requests").insert({
+                "client_id": client["id"], "requester_email": client.get("contact_email"), "kind": "exit",
+                "note": "Managed Profit ended by email (terms §5): true-up, refund issued within seven days, "
+                        "exit letter",
+                "opened_at": opened.isoformat(), "due_at": due.isoformat(),
+            }).execute()
+            print(f"  Exit clock started: any refund the true-up owes is issued by {due:%a %b %-d} "
+                  f"(terms §5, seven days from their email).")
+    except Exception as err:
+        print(f"  Exit clock NOT started ({str(err)[:80]}): apply "
+              f"supabase/migrations/20261001000005_exit_and_export.sql. Any refund is still due by {due:%a %b %-d}, "
+              f"and nothing counts it until then"
+              + (". The next operator pass still trues up and writes." if client.get("stripe_customer_id") else
+                 "; this client was never billed, so their exit letter waits for the migration."))
+
     preview = operator.Pass(db, send=False, dry=True)
     preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing)
     for line in preview.notes:
@@ -2878,8 +3013,56 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
                                            "measured, so every invoice waits held and nobody is billed")
     add("Every closed month is measured once, on its own exports", "terms §3", months_ok, months_detail)
 
-    add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
-        "hubricon export <client>")
+    # terms §11: an export a client asks for is delivered within one working day.
+    # terms §5: a refund owed at the exit is issued within seven days of their
+    # email. Each is kept while no open request is past its date, whoever ends up
+    # fulfilling it; the detail says whether the machine can.
+    now_utc = datetime.now(timezone.utc)
+    try:
+        open_reqs = (db.table("data_requests").select("id, kind, due_at, opened_at, client_id")
+                     .is_("closed_at", "null").execute().data) or []
+        reqs_err = None
+    except Exception as err:
+        open_reqs, reqs_err = [], str(err)[:60]
+
+    def _late(r) -> bool:
+        return datetime.fromisoformat(str(r["due_at"]).replace("Z", "+00:00")) < now_utc
+
+    auto, auto_why = storage.exports_ready(db)
+    how = ("the operator builds each zip, stores it privately and emails the client a seven-day link" if auto
+           else f"{auto_why} — until then each request waits for `hubricon export <client>` by hand")
+    if reqs_err:
+        add("Your export within one working day", "terms §11, privacy §6, Hubricon", False,
+            f"data_requests unreadable: {reqs_err}")
+    else:
+        asked = [r for r in open_reqs if r.get("kind") == "access"]
+        late = [r for r in asked if _late(r)]
+        add("Your export within one working day", "terms §11, privacy §6, Hubricon", not late,
+            (f"{len(late)} export request(s) PAST the one working day; " if late
+             else f"{len(asked)} open, none late; " if asked else "no export waiting; ") + how)
+
+        exits = [r for r in open_reqs if r.get("kind") == "exit"]
+        lines, late_exits = [], 0
+        for r in exits:
+            c = next(iter(db.table("clients").select("*").eq("id", r.get("client_id")).execute().data or []), {})
+            who = c.get("company_name") or c.get("contact_email") or "a former client"
+            if c.get("exit_trued_up_at"):
+                lines.append(f"{who}: trued up; the exit letter still to go")     # the refund's clock is kept
+                continue
+            try:
+                owed = billing.exit_refund_owed(
+                    db.table("record_months").select("*").eq("client_id", c["id"]).execute().data or [],
+                    _fetch_invoices(db, c["id"]), c)
+            except Exception:
+                owed = None
+            what = (f"${owed:,.2f} to refund" if owed else "refund amount unreadable" if owed is None
+                    else "the true-up")
+            if _late(r):
+                late_exits += 1
+            lines.append(f"{who}: {what} {'was ' if _late(r) else ''}due {str(r['due_at'])[:10]}"
+                         + (" (PAST)" if _late(r) else ""))
+        add("A refund owed at the exit is issued within seven days of the email", "terms §5", not late_exits,
+            "; ".join(lines) if lines else "no client is waiting on an exit true-up")
     # The refund and the true-up write the columns of this migration, and the
     # operator's billing pass waits until they exist.
     try:

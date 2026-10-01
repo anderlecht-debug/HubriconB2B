@@ -693,48 +693,163 @@ class Pass:
                               f"{label} was {how}. Worth a look at what the month needed.")
             self.say(f"{company}: {label} {how} — {when} did not clear.")
 
+    EXIT_LETTER = "exit_true_up"      # its client_emails kind: one per client, ever
+
     def _exit_true_up(self, c: dict, cli, billing) -> None:
         """terms §5: when Managed Profit ends, every billed month is checked once
-        more against its own number after disputes. A held draft is for the month
-        in progress and is voided unsent; an invoice for a month that no longer
-        clears is voided if unpaid and refunded if paid. Once per client; a
-        partial failure leaves the marker unset and the next pass finishes."""
+        more against its own number after disputes, and the client hears once.
+
+        Two halves, each done once. The money: a held draft is for the month in
+        progress and is voided unsent; an invoice for a month that no longer
+        clears is voided if unpaid and refunded if paid; exit_trued_up_at marks
+        it, and a partial failure leaves the marker unset for the next pass to
+        finish. Then the exit letter, to every client who said yes and left,
+        billed or not (`billing.exit_letter`), logged in client_emails so it is
+        never sent twice; a pass that cannot send it leaves it, with the exit
+        clock (`hubricon cancel`) open, for the next. Both done, the clock closes."""
         from . import monthly
-        company = c["company_name"] or c["contact_email"]
+        company = c.get("company_name") or c["contact_email"]
         invoices = cli._fetch_invoices(self.db, c["id"])
-        drafts = [i for i in invoices if i.get("status") == "draft" and not billing._is_recovery(i)]
-        months = monthly.billing_months(c, date.today())
-        t = billing.exit_true_up(self._record_months(c), months, invoices, c)
-        if self.dry:
-            self.say(f"[dry] {company}: exit true-up — {len(t['judged'])} billed month(s); "
-                     f"would void {len(drafts) + len(t['voids'])} and refund ${t['refunded']:,.2f}")
-            return
-        if (drafts or t["voids"] or t["refunds"]) and not billing.stripe_configured():
-            self.warnings.append(f"{company} has left and is owed a true-up (${t['gap']:,.0f} on months that did "
-                                 f"not clear) that cannot run: STRIPE_SECRET_KEY missing.")
-            return
         try:
-            for inv in drafts + t["voids"]:
-                billing.waive_invoice(inv, c)
-                self.db.table("invoices").update({
-                    "status": "void", "voided_at": _iso(), "gate_decision": "waived", "gate_decided_at": _iso(),
-                    "gate_note": "voided at exit"}).eq("id", inv["id"]).execute()
-            for inv, amount in t["refunds"]:
-                billing.refund_invoice(inv, amount, "exit")
-                self.db.table("invoices").update({
-                    "refunded_usd": round(float(inv.get("refunded_usd") or 0) + amount, 2)}).eq("id", inv["id"]).execute()
-        except Exception as err:
-            self.warnings.append(f"{company}: the exit true-up stopped part-way ({err}); the next pass finishes it.")
+            rows = self._record_months(c)
+        except Exception:
+            # Without the measured months no invoice can be judged, and an unjudged
+            # invoice would be refunded. Only a client with nothing to judge goes on.
+            if any(not billing._is_recovery(i) and i.get("status") in ("draft",) + billing.BILLED_STATUSES
+                   for i in invoices):
+                raise
+            rows = []
+        months = monthly.billing_months(c, date.today())
+        if not c.get("exit_trued_up_at"):
+            drafts = [i for i in invoices if i.get("status") == "draft" and not billing._is_recovery(i)]
+            t = billing.exit_true_up(rows, months, invoices, c)
+            if self.dry:
+                self.say(f"[dry] {company}: exit true-up — {len(t['judged'])} billed month(s); "
+                         f"would void {len(drafts) + len(t['voids'])} and refund ${t['refunded']:,.2f}")
+                f = billing.facts_from_true_up(t, c)
+                self.say(f"[dry] {company}: the exit letter would go to {c.get('contact_email')}: "
+                         f"“{billing.exit_subject(f)}”")
+                return
+            if (drafts or t["voids"] or t["refunds"]) and not billing.stripe_configured():
+                self.warnings.append(f"{company} has left and is owed a true-up (${t['gap']:,.0f} on months that "
+                                     f"did not clear) that cannot run: STRIPE_SECRET_KEY missing. The exit letter "
+                                     f"waits for it.")
+                return
+            try:
+                for inv in drafts + t["voids"]:
+                    billing.waive_invoice(inv, c)
+                    self.db.table("invoices").update({
+                        "status": "void", "voided_at": _iso(), "gate_decision": "waived", "gate_decided_at": _iso(),
+                        "gate_note": billing.EXIT_UNSENT_NOTE if inv.get("status") == "draft"
+                        else billing.EXIT_VOID_NOTE}).eq("id", inv["id"]).execute()
+                for inv, amount in t["refunds"]:
+                    billing.refund_invoice(inv, amount, "exit")
+                    self.db.table("invoices").update({
+                        "refunded_usd": round(float(inv.get("refunded_usd") or 0) + amount, 2)}).eq("id", inv["id"]).execute()
+            except Exception as err:
+                self.warnings.append(f"{company}: the exit true-up stopped part-way ({err}); the next pass finishes it.")
+                return
+            stamp = _iso()
+            self.db.table("clients").update({"exit_trued_up_at": stamp, "exit_refund_usd": t["refunded"]}) \
+                .eq("id", c["id"]).execute()
+            c = {**c, "exit_trued_up_at": stamp, "exit_refund_usd": t["refunded"]}
+            if t["gap"] > 0:
+                self.human.append(f"{company} left with ${t['gap']:,.0f} billed on months that do not clear: voided "
+                                  f"${t['voided']:,.0f}, refunded ${t['refunded']:,.2f}.")
+            self.say(f"{company}: exit true-up done — billed ${t['billed']:,.0f}, refunded ${t['refunded']:,.2f}.")
+            invoices = cli._fetch_invoices(self.db, c["id"])
+        elif self.dry:
+            if not self._exit_letter_sent(c):
+                self.say(f"[dry] {company}: trued up {str(c['exit_trued_up_at'])[:10]}; the exit letter would go to "
+                         f"{c.get('contact_email')}.")
             return
-        self.db.table("clients").update({"exit_trued_up_at": _iso(), "exit_refund_usd": t["refunded"]}) \
-            .eq("id", c["id"]).execute()
-        if t["billed"] > 0 or t["refunded"] > 0:
-            cli._send_client_email(self.db, c, "exit_true_up", str(c["id"]), billing.exit_subject(t),
-                                   billing.exit_email_blocks(t, PORTAL_URL), self.send)
-        if t["gap"] > 0:
-            self.human.append(f"{company} left with ${t['gap']:,.0f} billed on months that do not clear: voided "
-                              f"${t['voided']:,.0f}, refunded ${t['refunded']:,.2f}.")
-        self.say(f"{company}: exit true-up done — billed ${t['billed']:,.0f}, refunded ${t['refunded']:,.2f}.")
+        if self._exit_letter(c, cli, billing, rows, months, invoices):
+            self._close_exit_clock(c, f"trued up {str(c['exit_trued_up_at'])[:10]}, refunded "
+                                      f"${float(c.get('exit_refund_usd') or 0):,.2f}; exit letter sent")
+
+    @staticmethod
+    def _day(v) -> date | None:
+        ts = _parse_ts(str(v)) if v else None
+        return ts.date() if ts else None
+
+    def _exit_letter_sent(self, c: dict) -> bool:
+        try:
+            return bool(self.db.table("client_emails").select("id").eq("client_id", c["id"])
+                        .eq("kind", self.EXIT_LETTER).eq("ref_id", str(c["id"])).limit(1).execute().data)
+        except Exception:
+            return False
+
+    def _exit_clock_row(self, c: dict) -> dict | None:
+        try:
+            rows = (self.db.table("data_requests").select("*").eq("client_id", c["id"]).eq("kind", "exit")
+                    .is_("closed_at", "null").order("opened_at").execute().data)
+        except Exception:
+            return None
+        return rows[0] if rows else None
+
+    def _close_exit_clock(self, c: dict, outcome: str) -> None:
+        try:
+            self.db.table("data_requests").update({"closed_at": _iso(), "outcome": outcome}) \
+                .eq("client_id", c["id"]).eq("kind", "exit").is_("closed_at", "null").execute()
+        except Exception:
+            pass        # no clock (migration 20261001000005 not applied): nothing to close
+
+    def _exit_letter(self, c: dict, cli, billing, rows, months, invoices) -> bool:
+        """Send the exit letter once. True when it has gone, on this pass or an earlier one."""
+        company = c.get("company_name") or c["contact_email"]
+        if self._exit_letter_sent(c):
+            return True
+        if not (self.send and email_configured() and c.get("contact_email")):
+            self.say(f"{company}: the exit letter waits for a pass that can send email.")
+            return False
+        clock = self._exit_clock_row(c) or {}
+        left_on = self._day(clock.get("opened_at")) or self._day(c.get("exit_trued_up_at")) or date.today()
+        f = billing.exit_facts(rows, months, invoices, c)
+        directives = self.db.table("directives").select("*").eq("client_id", c["id"]).execute().data
+        subject, blocks = billing.exit_letter(
+            f, left_on, self._exit_export(c, cli), billing.watch_lines(rows, directives),
+            issued_on=self._day(c.get("exit_trued_up_at")) if f["refunded"] else None,
+            refund_due=self._day(clock.get("due_at")), plan=c.get("plan"))
+        sent = cli._send_client_email(self.db, c, self.EXIT_LETTER, str(c["id"]), subject, blocks, True)
+        if sent or self._exit_letter_sent(c):
+            self.say(f"{company}: exit letter sent — “{subject}”.")
+            return True
+        self.warnings.append(f"{company}: the exit letter did not send; the next pass tries again.")
+        return False
+
+    def _exit_export(self, c: dict, cli) -> dict | None:
+        """The exit letter's export: stored privately with a seven-day link, or,
+        when storage is not there, an export request opened so the letter can
+        say it is on its way within one working day (and the digest says who
+        has to send it)."""
+        from . import storage
+        company = c.get("company_name") or c["contact_email"]
+        try:
+            pub = storage.publish_export(self.db, c["id"], f"exit-{date.today().isoformat()}",
+                                         cli.build_export(self.db, c["id"]), cli.export_filename(c))
+            return {"url": pub["url"], "expires_at": pub["expires_at"]}
+        except Exception as err:
+            self.warnings.append(f"{company}: the export for the exit letter could not be stored ({str(err)[:80]}); "
+                                 f"an export request is opened instead.")
+        return {"pending": True} if self._open_export_request(c, "Opened with the exit letter") else None
+
+    def _open_export_request(self, c: dict, note: str) -> bool:
+        """An open 'access' request for this client, opened if there is none,
+        due one working day out (the same rule as public.next_working_day)."""
+        try:
+            if (self.db.table("data_requests").select("id").eq("client_id", c["id"]).eq("kind", "access")
+                    .is_("closed_at", "null").limit(1).execute().data):
+                return True
+            now = _now()
+            due = now + timedelta(days={4: 3, 5: 2, 6: 2}.get(now.weekday(), 1))
+            self.db.table("data_requests").insert({
+                "client_id": c["id"], "requester_email": c.get("contact_email"), "kind": "access", "note": note,
+                "due_at": due.isoformat()}).execute()
+            return True
+        except Exception as err:
+            self.warnings.append(f"{c.get('company_name') or c['contact_email']}: no export request could be "
+                                 f"opened ({str(err)[:80]}).")
+            return False
 
     def _recovery_billing(self, c: dict, cli, billing, value) -> None:
         """The recovery-only plan: at month end, one invoice for the share of
@@ -854,10 +969,20 @@ class Pass:
                 self.say(f"Published {published} consented result(s); the campaign copy follows next pass.")
 
     def data_requests(self) -> None:
-        """Legal clocks, surfaced before they run out.
+        """Legal clocks, surfaced before they run out, and two the machine keeps itself.
 
         privacy.html gives a number of days for each of these. Nothing counted
-        them, so the only alarm was the requester following up."""
+        them, so the only alarm was the requester following up.
+
+        An export request (terms §11: delivered within one working day) is
+        fulfilled here: the zip is built, stored in the private 'exports'
+        bucket, and a seven-day link goes to the client's own contact email,
+        never anyone else's. If any step fails the request stays open and the
+        founder is told to run `hubricon export`. An exit (terms §5: a refund
+        owed is issued within seven days of the client's email) is the clock
+        `hubricon cancel` starts: named here while it runs, closed once the
+        true-up is done and the exit letter has gone."""
+        from . import billing, cli
         try:
             rows = (self.db.table("data_requests").select("*").is_("closed_at", "null")
                     .order("due_at").execute().data)
@@ -865,6 +990,18 @@ class Pass:
             return      # table not migrated yet
         now = _now()
         for r in rows:
+            if r.get("kind") == "exit":
+                try:
+                    self._exit_clock(r, now, cli, billing)
+                except Exception as err:
+                    self.warnings.append(f"exit clock {r['id'][:8]} failed: {err}")
+                continue
+            if r.get("kind") == "access":
+                try:
+                    if self._fulfil_export(r, cli):
+                        continue
+                except Exception as err:
+                    self.warnings.append(f"export request {r['id'][:8]} failed: {err}")
             left = (datetime.fromisoformat(str(r["due_at"])) - now).days
             who = r.get("requester_email") or "—"
             if left < 0:
@@ -872,11 +1009,119 @@ class Pass:
                                      f"({r['id'][:8]}). The privacy policy gives a deadline; this is past it.")
             elif r.get("opened_at") and (now - datetime.fromisoformat(str(r["opened_at"]))).total_seconds() < 86400:
                 # A request is named the day it is opened, not only in the two days
-                # before its clock runs out; the export is the founder's to run.
-                self.human.append(f"New {r['kind']} request from {who} — due in {left}d ({r['id'][:8]}). "
-                                  f"Run: hubricon export <client>")
+                # before its clock runs out. An export the machine could not send
+                # is the founder's to run.
+                self.human.append(f"New {r['kind']} request from {who} — due in {left}d ({r['id'][:8]})."
+                                  + (" Run: hubricon export <client>" if r["kind"] == "access" else ""))
             elif left <= 2:
                 self.human.append(f"{r['kind']} request from {who} is due in {left}d ({r['id'][:8]}).")
+
+    def _client_row(self, client_id) -> dict | None:
+        if not client_id:
+            return None
+        rows = self.db.table("clients").select("*").eq("id", client_id).execute().data
+        return rows[0] if rows else None
+
+    def _export_emailed(self, c: dict, r: dict) -> bool:
+        try:
+            return bool(self.db.table("client_emails").select("id").eq("client_id", c["id"])
+                        .eq("kind", "export_ready").eq("ref_id", str(r["id"])).limit(1).execute().data)
+        except Exception:
+            return False
+
+    def _fulfil_export(self, r: dict, cli) -> bool:
+        """terms §11, kept by the machine: build the client's zip, store it in the
+        private bucket, email a seven-day link to their contact email, close the
+        request. True when the request needs nothing more from the founder this
+        pass; False leaves it to the digest's instruction (no client on it, no
+        email key, storage not there, the email refused)."""
+        from . import storage
+        c = self._client_row(r.get("client_id"))
+        if not c or not c.get("contact_email"):
+            return False
+        company = c.get("company_name") or c["contact_email"]
+        if self.dry:
+            self.say(f"[dry] {company}: would build the export, store it privately and email a "
+                     f"{storage.EXPORT_LINK_DAYS}-day link to {c['contact_email']}.")
+            return True
+        if not self._export_emailed(c, r):
+            if not (self.send and email_configured()):
+                return False
+            try:
+                blob = cli.build_export(self.db, c["id"])
+                pub = storage.publish_export(self.db, c["id"], str(r["id"]), blob, cli.export_filename(c))
+            except Exception as err:
+                self.warnings.append(f"{company}: the export could not be stored ({str(err)[:80]}), so the request "
+                                     f"waits for `hubricon export` by hand.")
+                return False
+            sent = cli._send_client_email(self.db, c, "export_ready", str(r["id"]), "Your Profit Record export",
+                                          self._export_letter(c, pub), True)
+            if not sent and not self._export_emailed(c, r):
+                self.warnings.append(f"{company}: the export is stored but its email did not go; the next pass "
+                                     f"tries again.")
+                return False
+            self.say(f"{company}: export emailed to {c['contact_email']} ({len(blob) / 1_000_000:.1f} MB, link "
+                     f"good to {pub['expires_at']:%b %-d}).")
+        self.db.table("data_requests").update({
+            "closed_at": _iso(),
+            "outcome": f"emailed a {storage.EXPORT_LINK_DAYS}-day download link to {c['contact_email']}"}) \
+            .eq("id", r["id"]).execute()
+        return True
+
+    @staticmethod
+    def _export_letter(c: dict, pub: dict) -> list[dict]:
+        company = c.get("company_name") or "your brand"
+        return [
+            {"p": f"Here is everything we hold on {company}, as you asked: the exports you sent, every table we "
+                  f"computed from them, your whole Profit Record, and the seal file with the verifier that lets "
+                  f"anyone check it."},
+            {"button": "Download your export", "url": pub["url"]},
+            {"p": f"The link works for seven days, until {pub['expires_at']:%B %-d}, and anyone holding it can "
+                  f"download the file, so forward it with care. MANIFEST.txt in the zip lists every file, and "
+                  f"HOW-TO-VERIFY.txt says how to check your Record yourself."},
+            {"p": "When the link runs out, ask again any day, in Hubricon or by replying here, and a fresh one is "
+                  "made. It is always free."},
+        ]
+
+    def _exit_clock(self, r: dict, now: datetime, cli, billing) -> None:
+        """One open exit (terms §5). A client never billed has no Stripe step, so
+        the true-up and the exit letter run from here; a billed client's money
+        is the billing pass's (it ran earlier this pass, and warned if it could
+        not), and a letter that could not go then goes from here. While the
+        clock runs the digest names it, with the refund it owes."""
+        c = self._client_row(r.get("client_id"))
+        if c is None:
+            self.warnings.append(f"An exit clock ({r['id'][:8]}) names no client on file; close it with "
+                                 f"`hubricon request close {r['id'][:8]} --outcome …`.")
+            return
+        if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+            return
+        company = c.get("company_name") or c["contact_email"]
+        if not c.get("exit_trued_up_at") and c.get("stripe_customer_id"):
+            pass        # the billing pass owns a billed client's money
+        elif c.get("exit_trued_up_at") and self._exit_letter_sent(c):
+            self._close_exit_clock(c, f"trued up {str(c['exit_trued_up_at'])[:10]}; exit letter sent")
+            return
+        else:
+            self._exit_true_up(c, cli, billing)
+            c = self._client_row(c["id"]) or c
+            if c.get("exit_trued_up_at") and self._exit_letter_sent(c):
+                return          # closed by _exit_true_up
+        due = datetime.fromisoformat(str(r["due_at"]).replace("Z", "+00:00"))
+        opened = self._day(r.get("opened_at"))
+        who = f"{company} left" + (f" on {opened:%b %-d}" if opened else "")
+        if c.get("exit_trued_up_at"):
+            # The money is done, so the terms' clock is kept; only the letter is still to go.
+            (self.warnings.append if due < now else self.say)(
+                f"{who}: trued up {str(c['exit_trued_up_at'])[:10]}, and the exit letter has not gone yet.")
+            return
+        owed = billing.exit_refund_owed(self._record_months(c), cli._fetch_invoices(self.db, c["id"]), c)
+        what = f"${owed:,.2f} to refund" if owed else "the true-up"
+        if due < now:
+            self.warnings.append(f"OVERDUE by {(now - due).days}d: {who}; {what} was due by {due:%b %-d}. Terms §5: "
+                                 f"a refund is issued within seven days of their email.")
+        else:
+            self.say(f"{who}: {what} due by {due:%b %-d} ({(due - now).days}d left).")
 
     def promises(self) -> None:
         """Every promise the machine cannot currently keep, in the daily digest.
