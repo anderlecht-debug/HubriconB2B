@@ -67,6 +67,8 @@ def test_interested_and_not_now_have_templates_with_the_right_links():
     assert classify_rules("Re:", "Interested. How does this work?") == "interested"
     d = draft_for("interested", "Priya Patel")
     assert d.startswith("Good, Priya.") and CALENDLY_URL in d and triage.LEARN_URL in d
+    # no platform known: the library's front door, not one store's course
+    assert d.endswith(f"{triage.LEARN_URL}\n\nHagen") and "fee-staircase" not in d and "price-curve" not in d
     assert classify_rules("Re:", "Not right now, circle back in Q1") == "not_now"
     d = draft_for("not_now", None)
     assert CALENDLY_URL in d and "Hi there" not in d
@@ -104,12 +106,12 @@ def test_triage_statuses(monkeypatch):
 def test_claude_verdict_is_guarded(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": "question", "reply": "Answer " * 200, "reason": ""})
+                        lambda s, b, n, p=None: {"category": "question", "reply": "Answer " * 200, "reason": ""})
     v = triage.triage("Re:", "Do you work with wholesale sellers?", "Sam")
     # an over-long model reply is discarded, so the message waits for review
     assert v["category"] == "question" and v["reply_status"] == "pending_review"
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": "question", "reply": "Short answer.\n\nHagen", "reason": ""})
+                        lambda s, b, n, p=None: {"category": "question", "reply": "Short answer.\n\nHagen", "reason": ""})
     v = triage.triage("Re:", "Do you work with wholesale sellers?", "Sam")
     assert v["reply_status"] == "approved" and v["by"] == "claude"
 
@@ -164,6 +166,51 @@ def test_claude_tier_names_the_workspace_and_reports_why_it_passed(monkeypatch):
 
     # when the model tier fails, triage() says why instead of failing silently
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": None, "reply": None, "reason": "claude failed: 400"})
+                        lambda s, b, n, p=None: {"category": None, "reply": None, "reason": "claude failed: 400"})
     v = triage.triage("Re:", "How long does it take?", "Lee")
     assert v["reply_status"] == "pending_review" and v["reason"] == "claude failed: 400"
+
+
+def test_a_shopify_prospect_hears_shopify_words_and_is_sent_to_the_price_curve():
+    """Until 2026-10-01 every reply named only Amazon's leaks and sent everyone
+    to The Fee Staircase, an Amazon-only course, including the Shopify stores
+    the harvest found. The reply now follows the prospect's platform."""
+    shop = draft_for("interested", "Sam", "shopify")
+    assert "https://www.hubricon.com/learn/price-curve" in shop and "fee-staircase" not in shop
+    assert "compare-at" in shop and "USPS pound line" in shop and "Products export" in shop
+    for amazon_only in ("Seller Central", "low-inventory", "aged stock", "ACoS"):
+        assert amazon_only not in shop, amazon_only
+    amz = draft_for("interested", "Sam", "amazon")
+    assert "https://www.hubricon.com/learn/fee-staircase" in amz and "compare-at" not in amz
+    assert "aged stock, low-inventory fees, an ad target set wrong" in amz
+    # the retired-Teardown reply follows too, and still promises no clock
+    td = draft_for("wants_teardown", "Sam", "Shopify")
+    assert "Teardown is retired" in td and "price-curve" in td and "compare-at" in td and "24 hours" not in td
+    # unknown or both: the reply names both stores and the library
+    for p in (None, "both", "etsy"):
+        d = draft_for("interested", "Sam", p)
+        assert "compare-at" in d and "low-inventory" in d and d.endswith(f"{triage.LEARN_URL}\n\nHagen")
+    # triage passes it through
+    assert "price-curve" in triage.triage("Re:", "yes let's talk", "Sam", use_claude=False, platform="shopify")["draft"]
+
+
+def test_the_fact_sheet_names_the_shopify_leaks_and_both_courses():
+    f = triage.FACTS
+    assert "compare-at" in f and "USPS pound line" in f
+    assert "/learn/price-curve" in f and "/learn/fee-staircase" in f
+
+
+def test_the_prospects_platform_comes_from_the_harvest_then_the_calculator():
+    from fakedb import FakeDB
+    db = FakeDB(harvest_sellers=[{"email": "a@shop.co", "platform": "shopify"}],
+                tool_runs=[{"email": "b@x.co", "platform": "amazon", "created_at": "2026-09-01"},
+                           {"email": "b@x.co", "platform": "shopify", "created_at": "2026-09-10"}])
+    assert triage.prospect_platform(db, "A@Shop.co ") == "shopify"
+    assert triage.prospect_platform(db, "b@x.co") == "shopify", "the latest calculator run"
+    assert triage.prospect_platform(db, "nobody@x.co") is None
+    assert triage.prospect_platform(None, "a@shop.co") is None and triage.prospect_platform(db, "") is None
+
+    class Broken:
+        def table(self, name):
+            raise RuntimeError("no such table")
+    assert triage.prospect_platform(Broken(), "a@shop.co") is None, "a failed read is unknown, never a guess"

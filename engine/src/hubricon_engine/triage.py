@@ -10,6 +10,11 @@ Three tiers, cheapest first:
   3. The cloud routine. Whatever is still pending_review after 1 and 2.
 
 Replies are plain text, signed "Hagen", under 120 words.
+
+Since 2026-10-01 the templates follow the prospect's platform when it is
+known (prospect_platform): a Shopify founder is told what the call prices on
+a Shopify store and sent to The Price Curve, an Amazon one to The Fee
+Staircase, and anyone else to the library's front door.
 """
 
 import json
@@ -27,7 +32,64 @@ CATEGORIES = ("interested", "wants_teardown", "question", "not_now", "not_intere
 # Categories that get no reply at all: the sequence stops and the prospect is closed.
 SILENT = {"not_interested", "unsubscribe", "ooo", "bounce"}
 
-LEARN_URL = os.environ.get("LEARN_URL", "https://www.hubricon.com/learn/fee-staircase")
+LEARN_BASE = "https://www.hubricon.com/learn"
+# Where a prospect not ready for a call is sent: the course that starts with
+# their own store. The Fee Staircase is Amazon's fee card; The Price Curve is
+# taught on Amazon and Shopify reports alike. Unknown platform: the library.
+LEARN_URLS = {
+    "amazon": f"{LEARN_BASE}/fee-staircase",
+    "shopify": f"{LEARN_BASE}/price-curve",
+}
+LEARN_URL = os.environ.get("LEARN_URL", LEARN_BASE)
+
+# What the call prices, by the prospect's platform, in apply.html's own words
+# (its "prep-copy" block, which scripts/apply-page.test.mjs holds to what /call
+# can read): Seller Central reports on Amazon; the Products export on Shopify,
+# whose two leaks are the compare-at sitting as a permanent discount and the
+# parcel just past a USPS pound line (lib/fees.js anchorGap, carrierBandEdge).
+CALL_PRICES = {
+    "amazon": ("we open your own Seller Central reports together and price, in your browser, what public pages "
+               "can't show: aged stock, low-inventory fees, an ad target set wrong"),
+    "shopify": ("we open your Shopify Products export together and price, in your browser, what it shows: prices "
+                "sitting under their own compare-at, and parcels just past a USPS pound line"),
+    None: ("we open your own reports together and price, in your browser, what public pages can't show: on "
+           "Amazon, aged stock, low-inventory fees and an ad target set wrong; on Shopify, prices sitting under "
+           "their own compare-at and parcels just past a USPS pound line"),
+}
+
+
+def _platform(platform: str | None) -> str | None:
+    """'amazon' or 'shopify', or None when unknown. A brand on both is sent the
+    general reading: the call covers both stores."""
+    p = (platform or "").strip().lower()
+    return p if p in LEARN_URLS else None
+
+
+def learn_url(platform: str | None = None) -> str:
+    p = _platform(platform)
+    return LEARN_URLS[p] if p else LEARN_URL
+
+
+def prospect_platform(db, email: str | None) -> str | None:
+    """Where a prospect sells, from the cheapest row that knows: the harvest
+    found their store (harvest_sellers.platform), else the 60-second calculator
+    they ran (tool_runs.platform, latest). None when neither knows, or when
+    the read fails: an unknown platform is answered generally, never guessed."""
+    e = (email or "").strip().lower()
+    if not e or db is None:
+        return None
+    for table, order in (("harvest_sellers", None), ("tool_runs", "created_at")):
+        try:
+            q = db.table(table).select("platform").eq("email", e)
+            if order:
+                q = q.order(order, desc=True)
+            rows = q.limit(1).execute().data or []
+        except Exception:
+            continue
+        p = _platform(rows[0].get("platform")) if rows else None
+        if p:
+            return p
+    return None
 
 # Rewritten 2026-10-01 to HUBRICON_SPEC.md and the terms as they stand. Until
 # then it still offered the written Profit Teardown and the 60-second Teardown
@@ -35,9 +97,9 @@ LEARN_URL = os.environ.get("LEARN_URL", "https://www.hubricon.com/learn/fee-stai
 # cumulative invoice gate (now month by month).
 FACTS = f"""Hubricon — what we may say to a prospect (nothing beyond this):
 - Hubricon is Managed Profit for product brands doing $1M–$30M a year on Amazon, on Shopify, or both: the money decisions (prices, ads, inventory, and on Amazon the reimbursement claims) made for them inside their own account, run by the founder, Hagen Simmons. Every move is written on their Profit Record: the dollars expected before it goes live, and the dollars measured after, from their own exports.
-- The way in is a 20-minute call: four short questions, then a time, at {CALENDLY_URL}. On the call we open their own reports together and price, in their browser, what public pages can't show: aged stock, low-inventory fees, an ad target set wrong. Nothing is uploaded on the call. Amazon sellers do best with Fee Preview and Inventory Age requested in Seller Central beforehand; Shopify sellers with their Products export to hand.
+- The way in is a 20-minute call: four short questions, then a time, at {CALENDLY_URL}. On the call we open their own reports together and price, in their browser, what public pages can't show. On Amazon: aged stock, low-inventory fees, an ad target set wrong. On Shopify, from the Products export: prices sitting under their own compare-at (when most of a catalogue sits there, the discount has become the price, given away on every order), and parcels just past a USPS pound line, each billed at the next pound. Nothing is uploaded on the call. Amazon sellers do best with Fee Preview and Inventory Age requested in Seller Central beforehand; Shopify sellers with their Products export to hand.
 - The written Profit Teardown and the 60-second Teardown are retired. If someone asks for one, say so plainly: the call replaced it.
-- Not ready for a call: the method is taught free, in full, at https://www.hubricon.com/learn: every lesson and its spreadsheet open, no email needed. Leave an email and we send the link and the spreadsheet to keep, and a note when Amazon changes its fee cards or a new course opens. Nothing is held back for a paid version.
+- Not ready for a call: the method is taught free, in full, at https://www.hubricon.com/learn: every lesson and its spreadsheet open, no email needed. A Shopify brand starts with The Price Curve ({LEARN_URLS['shopify']}); an Amazon brand with The Fee Staircase ({LEARN_URLS['amazon']}). Leave an email and we send the link and the spreadsheet to keep, and a note when Amazon changes its fee cards or a new course opens. Nothing is held back for a paid version.
 - Price: $6,000 a month, flat, never a percentage of ad spend. The first month, the Proving Month, is free and starts the day they say yes after the call. After that each month is measured on its own exports: if that month's Profit Record shows more than $6,000, that month is invoiced (by email, paid by bank transfer, no card on file); if not, that month is free, with nothing credited and nothing carried. Leave any day by one email; any month they paid for that did not clear on its own number is refunded in full, the refund issued within seven days.
 - Fit: their own brand, ten or more SKUs, $1M–$30M a year. We only take on accounts where the arithmetic clears the bill, and if theirs doesn't, Hagen says so on the call. Never say the bill is cleared at any size.
 - After a yes: their exports through a private upload page, and one seat with narrow permissions (no banking, payouts or settings). Moves inside the standing mandate they set at kickoff (bounded price steps capped at 5% per cycle and ad corrections inside limits they set on the kickoff call) are emailed before they go live and go live after 72 hours unless they say no; a bigger price step, a new campaign or a reorder waits for their written yes, and lapses after three weeks without one. A short note each week, and their Profit Record in Hubricon, their private sign-in.
@@ -137,16 +199,21 @@ def classify_rules(subject: str, body: str, sender: str | None = None) -> str | 
     return None
 
 
-def draft_for(category: str, first_name: str | None) -> str | None:
+def draft_for(category: str, first_name: str | None, platform: str | None = None) -> str | None:
     """Fixed replies for the unambiguous categories; None means a human or
-    the model has to write it (or that no reply goes out at all)."""
+    the model has to write it (or that no reply goes out at all).
+
+    `platform` is where the prospect sells, when known (prospect_platform):
+    it decides what the call is said to price and which course they are
+    sent to. Unknown, the reply names both stores and the library."""
     name = (first_name or "").strip().split(" ")[0] or "there"
+    p = _platform(platform)
     if category == "interested":
         return (
-            f"Good, {name}. The way in is a 20-minute call: we open your own reports together and price, "
-            "in your browser, what public pages can't show. Nothing is uploaded and there is no card.\n\n"
+            f"Good, {name}. The way in is a 20-minute call: {CALL_PRICES[p]}. Nothing is uploaded and there "
+            "is no card.\n\n"
             f"{CALENDLY_URL}\n\n"
-            f"If you would rather run the method yourself first, it is taught free, in full: {LEARN_URL}\n\nHagen"
+            f"If you would rather run the method yourself first, it is taught free, in full: {learn_url(p)}\n\nHagen"
         )
     if category == "wants_teardown":
         # The written Teardown is retired (HUBRICON_SPEC.md, "The Teardown is killed").
@@ -154,10 +221,9 @@ def draft_for(category: str, first_name: str | None) -> str | None:
         # their own numbers: the call is that look, and it goes further.
         return (
             f"Thanks, {name}. The written Teardown is retired; the 20-minute call replaced it, and it goes "
-            "further: we open your own reports together and price, in your browser, what public pages "
-            "can't show: aged stock, low-inventory fees, an ad target set wrong. Nothing is uploaded.\n\n"
+            f"further: {CALL_PRICES[p]}. Nothing is uploaded.\n\n"
             f"{CALENDLY_URL}\n\n"
-            f"Or run the method yourself, free: {LEARN_URL}\n\nHagen"
+            f"Or run the method yourself, free: {learn_url(p)}\n\nHagen"
         )
     if category == "not_now":
         # No "I'll check back": nothing schedules one, and a promise nobody keeps
@@ -186,7 +252,7 @@ _SYSTEM = (
 )
 
 
-def classify_claude(subject: str, body: str, first_name: str | None) -> dict | None:
+def classify_claude(subject: str, body: str, first_name: str | None, platform: str | None = None) -> dict | None:
     """Model tier. Returns {'category', 'reply', 'reason'} or None if unavailable/failed."""
     if not claude_available():
         return None
@@ -197,6 +263,7 @@ def classify_claude(subject: str, body: str, first_name: str | None) -> dict | N
     text = strip_quoted(body)
     prompt = (
         f"{FACTS}\n\n---\nProspect first name: {first_name or 'unknown'}\n"
+        f"Prospect sells on: {_platform(platform) or 'unknown'}\n"
         f"Subject: {subject or ''}\nReply body:\n{text[:4000]}\n---\nJSON only."
     )
     try:
@@ -233,25 +300,28 @@ def classify_claude(subject: str, body: str, first_name: str | None) -> dict | N
 
 
 def triage(subject: str, body: str, first_name: str | None, sender: str | None = None,
-           use_claude: bool = True) -> dict:
+           use_claude: bool = True, platform: str | None = None) -> dict:
     """Returns {'category', 'draft', 'by', 'reply_status'}.
+
+    `platform` is the prospect's, when the caller knows it (prospect_platform);
+    the templates and the model's prompt follow it.
 
     reply_status: 'approved' when a draft is ready to send, 'skipped' for the
     silent categories, 'pending_review' when a human/routine must write it.
     """
     cat = classify_rules(subject, body, sender)
     by = "rules"
-    draft = draft_for(cat, first_name) if cat else None
+    draft = draft_for(cat, first_name, platform) if cat else None
     reason = None
 
     if cat in (None, "question", "other") and use_claude:
-        verdict = classify_claude(subject, body, first_name)
+        verdict = classify_claude(subject, body, first_name, platform)
         if verdict and verdict.get("category"):
             cat, by = verdict["category"], "claude"
             reply = verdict.get("reply")
             if reply and len(reply.split()) > 160:
                 reply = None  # too long to trust unread; leave it for review
-            draft = draft_for(cat, first_name) or reply
+            draft = draft_for(cat, first_name, platform) or reply
         elif verdict:
             reason = verdict.get("reason")  # why the model tier passed; lands in funnel_events
 

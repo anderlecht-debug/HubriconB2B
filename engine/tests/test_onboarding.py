@@ -146,6 +146,11 @@ def test_the_call_prep_follows_the_platform():
     assert "Shopify admin" in shopify and "Products export" in shopify and "landed cost" in shopify
     assert "Seller Central" not in shopify and "Fee Preview" not in shopify and "ACoS" not in shopify
     assert "Fee Preview" in both and "Shopify admin" in both
+    # the Shopify leaks are named the way apply.html's Shopify panel names them,
+    # where until 2026-10-01 a Shopify seller read "the costs only your own data shows"
+    for body in (shopify, both):
+        assert "compare-at" in body and "USPS pound line" in body and "Nothing is uploaded" in body
+    assert "aged stock" not in shopify and "low-inventory" not in shopify
     # no time on the booking: the email says where the time is rather than inventing one
     untimed = email_spec("call_prep", "Sam", "l", platform="amazon")
     assert untimed["subject"] == "Your call: the one thing to do first"
@@ -216,7 +221,7 @@ def test_the_export_list_follows_the_platform():
     assert both.count("one-row-per-SKU template") == 1
     # the seat instructions in the agreed letter follow too
     assert "Seller Central" in render_text(email_spec("agreed", "Sam", "l", platform="amazon", **AGREED))
-    assert "collaborator request" in render_text(email_spec("agreed", "Sam", "l", platform="shopify", **AGREED))
+    assert "staff account" in render_text(email_spec("agreed", "Sam", "l", platform="shopify", **AGREED))
     # no platform stated is the column default: Amazon, exactly as before
     assert render_text(email_spec("files", "Sam", "l")) == amazon.replace("https://x/intake?t=1", "l")
 
@@ -292,3 +297,22 @@ def test_every_client_email_is_set_in_the_one_look():
     assert "Hagen Simmons" in html and ">Hubricon</p>" in html
     path = render_html({"greeting": "Hi,", "blocks": [{"path": "Settings → User Permissions"}]})
     assert "Settings → User Permissions" in path and "monospace" not in path
+
+
+def test_the_shopify_seat_is_a_staff_account_with_the_ad_accounts_asked_for_apart():
+    """A collaborator request needs a Shopify Partner organisation on our side;
+    a staff account is the route the owner takes alone. The seat reaches no ad
+    account and never Finances (finding 6, 2026-10-01)."""
+    from hubricon_engine.onboarding import EXEC_EMAIL, seat_hint
+    shop = seat_hint("shopify")
+    assert shop.startswith(f"Add {EXEC_EMAIL} as a staff account under Settings → Users → Add users")
+    assert "Orders, Analytics, Reports and Marketing to view; Products and Discounts to edit" in shop
+    assert "Finances and Settings off" in shop
+    # the collaborator route is an alternative the client asks for, never a request we say we send
+    assert "if you would rather approve a collaborator request instead, reply and say so" in shop
+    assert "we send a collaborator request" not in shop and "Partner" not in shop.replace("Partners)", "")
+    # the ad accounts, each on its own
+    assert "partner access to your Meta ad account" in shop and "user access to your Google Ads account" in shop
+    both = seat_hint("both")
+    assert both.startswith(f"Add {EXEC_EMAIL} under Seller Central") and "On Shopify: add " in both
+    assert seat_hint("amazon") == seat_hint(None) and "staff account" not in seat_hint("amazon")

@@ -410,10 +410,23 @@ SHOPIFY_EXPORT_NOTE = (
     "browser — anything with a date range on it is emailed to you and to the store owner within a minute or "
     "two. The upload page checks each file's columns as you pick it and says so if something looks off."
 )
+# The seat, by store. On Shopify the route an owner can take alone is a staff
+# account they add themselves, as an Amazon seller invites a user (corrected
+# 2026-10-01: this said we send a collaborator request, which needs a Shopify
+# Partner organisation on our side that nothing in the repo shows exists; the
+# collaborator route is now named only as an alternative to ask for). The
+# permissions are the ones welcome.html lists. A Shopify seat reaches no ad
+# account and no Finances, so the ad accounts are asked for separately, each
+# in its own platform, and Finances is never asked for.
 SEAT_HINT = {
     "amazon": f"Add {EXEC_EMAIL} under Seller Central → Settings → User Permissions; the welcome page shows the exact four permissions.",
-    "shopify": "Reply with your store URL and we send a collaborator request to approve under Settings → Users → Collaborators; "
-               "the welcome page shows the exact permissions.",
+    "shopify": (f"Add {EXEC_EMAIL} as a staff account under Settings → Users → Add users, with exactly these "
+                "permissions: Orders, Analytics, Reports and Marketing to view; Products and Discounts to edit; "
+                "Finances and Settings off. It uses one of your plan's staff accounts; if you would rather approve a "
+                "collaborator request instead, reply and say so before you add anyone. Your ad accounts are not part "
+                "of that seat, and each is asked for on its own: partner access to your Meta ad account (Meta "
+                "Business settings → Partners) and user access to your Google Ads account (Admin → Access and "
+                "security)."),
 }
 
 
@@ -441,6 +454,14 @@ def seat_hint(platform: str | None) -> str:
     return SEAT_HINT.get(p, SEAT_HINT["amazon"])
 
 
+# What the call prices on a Shopify store, in apply.html's words (its Shopify
+# panel, held by scripts/apply-page.test.mjs to what /call reads): lib/call.js
+# runs lib/fees.js's anchorGap and carrierBandEdge on the Products export.
+SHOPIFY_CALL_LEAKS = ("prices sitting under their own compare-at (when most of a catalogue sits there, the "
+                      "discount has become the price, given away on every order), and parcels just past a USPS "
+                      "pound line, each billed at the next pound")
+
+
 def _call_prep_blocks(p: str, when, link: str) -> list[dict]:
     """On booking: what the 20-minute call is, the one thing to do before it,
     and, second and optional, the upload page. It assumes no yes."""
@@ -460,16 +481,18 @@ def _call_prep_blocks(p: str, when, link: str) -> list[dict]:
                               "Inventory Age: Reports → Fulfillment → Manage Inventory Health. It downloads as a "
                               ".txt or .csv."]})
         if shopify:
-            blocks.append({"p": "On Shopify, be signed in to your Shopify admin, with your Products export to hand "
-                                "(Products → Export → All products → Plain CSV file; fill in Cost per item first if "
-                                "it is blank)."})
+            blocks.append({"p": f"On Shopify, the same page prices your Products export: {SHOPIFY_CALL_LEAKS}. Be "
+                                "signed in to your Shopify admin, with the export to hand (Products → Export → All "
+                                "products → Plain CSV file; fill in Cost per item first if it is blank)."})
         blocks.append({"p": "Then have three things to hand: your Sponsored Products campaign report by day "
                             "(Advertising → Reports, as a .csv; optional, and it is what prices your ads against "
                             "break-even), your landed cost as a percentage of price (unit cost, freight and "
                             "packaging), and the ACoS you aim for now. Estimates are fine."})
     else:
-        blocks.append({"p": "It is twenty minutes on your own store. We open your numbers together, on your screen, "
-                            "and work out while we talk the costs only your own data shows. Nothing is sent to us."})
+        blocks.append({"p": "It is twenty minutes on your own store. You drop your Products export into a Hubricon "
+                            f"page in your own browser, and while we talk it prices what the file shows: "
+                            f"{SHOPIFY_CALL_LEAKS}. The page reads the file where it is. Nothing is uploaded, and "
+                            "closing the tab forgets it."})
         blocks.append({"p": "The one thing to do beforehand: be signed in to your Shopify admin, with your Products "
                             "export to hand (Products → Export → All products → Plain CSV file; fill in Cost per "
                             "item first if it is blank)."})
