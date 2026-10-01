@@ -15,3 +15,4 @@ deleted. Nothing here is deployed (`.vercelignore`), and `/teardown` redirects h
 
 `/method`, `/how-it-works` and `/sample-teardown` redirect home (`vercel.json`).
 | `results.html` | The results wall in the night system, reading $0 | `/honesty` is the results wall now (the spec: the same page matures from "no results yet" into the wall). `/results` redirects there |
+| `welcome.mp4` | The founder's welcome video, played on /apply and /welcome | The spec keeps the face off camera; no page plays it now |

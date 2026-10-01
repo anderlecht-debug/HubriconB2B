@@ -5,104 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Welcome to Hubricon</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#f2f3f8">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23FFC000' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23FFC000'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* The concierge page. Same paper-and-gold system as the Desk: one page,
-   one action, zero logins. */
-:root{
-  --bg:        hsl(222 28% 96%);
-  --panel:     hsl(0 0% 100%);
-  --panel-2:   hsl(222 26% 94%);
-  --amber:     hsl(40 96% 33%);
-  --amber-fill:hsl(45 100% 50%);
-  --ok:        hsl(150 58% 28%);
-  --serious:   hsl(8 70% 42%);
-  --ink:       hsl(228 44% 11%);
-  --ink-soft:  hsl(228 26% 26%);
-  --ink-faint: hsl(228 16% 42%);
-  --hairline:  hsl(228 30% 20% / .14);
-  --rule:      hsl(228 30% 20% / .30);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-}
-*{ box-sizing: border-box; margin: 0; }
-html{ scroll-behavior: smooth; }
-body{
-  background: var(--bg); color: var(--ink-soft);
-  font-family: var(--sans); font-size: 15.5px; line-height: 1.65;
-  padding: 40px 20px 90px;
-}
-.wrap{ max-width: 760px; margin: 0 auto; }
-h1, h2, h3{ font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
-h1{ font-size: clamp(30px, 6vw, 42px); line-height: 1.12; text-wrap: balance; }
-h2{ font-size: 22px; }
-h3{ font-size: 17px; }
-a{ color: var(--amber); }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-.label{ font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--ink-faint); display: block; }
-.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); }
-.wordmark i{ font-style: normal; color: var(--amber); }
-.masthead{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
-  border-bottom: 1px solid var(--hairline); padding-bottom: 18px; margin-bottom: 34px; }
-.masthead .mono{ font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint);
-  letter-spacing: .08em; text-transform: uppercase; }
-.promise{
-  font-family: var(--serif); font-weight: 300; font-size: 19px; line-height: 1.7;
-  color: var(--ink); max-width: 58ch; margin: 18px 0 8px;
-}
-.promise b{ font-weight: 600; }
-.panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px;
-  padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
-.step-no{ font-family: var(--serif); font-size: 15px; color: var(--amber); letter-spacing: .04em; display: block; margin-bottom: 6px; }
-/* Self-hosted native video: the element sizes itself to the file
-   (1460×828), so there is no frame math and nothing to letterbox. */
-.video-wrap{ border-radius: 10px; overflow: hidden; background: hsl(228 45% 7%);
-  margin-top: 18px; }
-.video-wrap video{ display: block; width: 100%; height: auto; }
-
-.email-line{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 4px; }
-.email-box{ font-family: var(--mono); font-size: 15.5px; color: var(--ink); background: var(--panel-2);
-  border: 1px solid var(--rule); border-radius: 9px; padding: 11px 16px; user-select: all; }
-button.copy{
-  font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer;
-  border-radius: 8px; padding: 11px 18px; border: 1px solid hsl(45 95% 45%);
-  background: var(--amber-fill); color: hsl(228 45% 10%);
-}
-button.copy:hover{ filter: brightness(1.04); }
-.path{ font-family: var(--mono); font-size: 13px; color: var(--ink-soft); background: var(--panel-2);
-  border-radius: 8px; padding: 8px 14px; display: inline-block; margin: 10px 0 4px; }
-.perm{ display: grid; gap: 8px; margin: 14px 0 6px; padding: 0; list-style: none; }
-.perm li{ display: flex; gap: 10px; align-items: baseline; }
-.perm li::before{ content: "☑"; color: var(--ok); font-size: 15px; }
-.perm li.no::before{ content: "☒"; color: var(--serious); }
-.perm b{ color: var(--ink); font-weight: 600; }
-.why{ font-size: 13.5px; color: var(--ink-faint); margin-top: 12px; max-width: 62ch; }
-.fallback{ font-size: 13.5px; color: var(--ink-faint); margin-top: 12px; font-style: italic; }
-
-.calendly-mount{ min-height: 660px; margin-top: 14px; border-radius: 10px; overflow: hidden; }
-.cal-fallback{ font-size: 14px; margin-top: 8px; }
-
-.timeline{ display: grid; gap: 0; margin-top: 16px; }
-.t-step{ display: grid; grid-template-columns: 132px 1fr; gap: 16px; padding: 13px 0;
-  border-top: 1px solid var(--hairline); font-size: 14.5px; }
-.t-step:first-child{ border-top: 0; }
-.t-step .when{ font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--amber); padding-top: 3px; }
-.t-step b{ color: var(--ink); font-weight: 600; }
-
-.faq{ display: grid; gap: 18px; margin-top: 16px; }
-.faq h3{ margin-bottom: 4px; }
-.faq p{ max-width: 66ch; font-size: 14.5px; }
-footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18px;
-  font-size: 13px; color: var(--ink-faint); line-height: 1.8; }
-@media (max-width: 560px){
-  .panel{ padding: 22px 20px; }
-  .t-step{ grid-template-columns: 1fr; gap: 2px; }
+/* The welcome page: one page, the seat, the kickoff, what happens next.
+   Every value is a token from /assets/hubricon.css. */
+.wrap { width: min(760px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+h1 { font-size: var(--t-display-m); }
+h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
+h3 { font-size: var(--t-18); letter-spacing: -0.01em; line-height: 1.3; }
+a { color: var(--ink); text-underline-offset: 3px; }
+p { font-size: var(--t-16); }
+.promise { font-size: var(--t-20); line-height: 1.55; color: var(--ink-2); max-width: 58ch; margin: var(--s-5) 0 var(--s-6); }
+.promise b { color: var(--ink); }
+.panel { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-6); margin-bottom: var(--s-4); }
+.step-no { display: block; margin-bottom: var(--s-2); font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.email-line { display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap; margin: var(--s-4) 0 var(--s-1); }
+.email-box { font-size: var(--t-16); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: 8px; padding: var(--s-3) var(--s-4); user-select: all; }
+button.copy { font: var(--strong) var(--t-14) / 1 var(--font); min-height: 46px; padding: 0 var(--s-5); border: 0; border-radius: 8px; background: var(--ink); color: var(--paper); cursor: pointer; }
+button.copy:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+.path { display: inline-block; margin: var(--s-3) 0 var(--s-1); padding: var(--s-2) var(--s-3); border-radius: 8px; background: var(--paper); font-size: var(--t-14); color: var(--ink-2); }
+.perm { display: grid; gap: var(--s-2); margin: var(--s-4) 0 var(--s-2); padding: 0; list-style: none; }
+.perm li { position: relative; padding-left: var(--s-5); }
+.perm li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--ink); font-weight: var(--strong); }
+.perm li.no::before { content: "✕"; color: var(--ink-3); }
+.perm b { color: var(--ink); }
+.why, .fallback { font-size: var(--t-14); color: var(--ink-2); margin-top: var(--s-3); max-width: 62ch; }
+.why b { color: var(--ink); }
+.calendly-mount { min-height: 660px; margin-top: var(--s-4); border-radius: 8px; overflow: hidden; }
+.cal-fallback { font-size: var(--t-14); margin-top: var(--s-2); }
+.timeline { display: grid; margin-top: var(--s-4); }
+.t-step { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: var(--s-4); padding-block: var(--s-3); border-top: 1px solid var(--rule); font-size: var(--t-16); }
+.t-step:first-child { border-top: 0; }
+.t-step .when { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); padding-top: 4px; }
+.t-step b { color: var(--ink); }
+.faq { display: grid; gap: var(--s-5); margin-top: var(--s-4); }
+.faq h3 { margin-bottom: var(--s-1); }
+.faq p { max-width: 66ch; }
+footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); line-height: 1.8; }
+@media (max-width: 640px) {
+  .panel { padding: var(--s-4); }
+  .t-step { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 </style>
 </head>
@@ -110,7 +61,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
 <div class="wrap">
 
   <div class="masthead">
-    <span class="wordmark">Hubric<i>o</i>n</span>
+    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Client onboarding · private</span>
   </div>
 
@@ -118,14 +69,6 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   <p class="promise">Here's the deal. We run the math on your Amazon account or your Shopify store. We <b>make the profit moves for you</b>: prices and ads, inside your account; reorders and Amazon claims, sized and dated for one yes. You watch a short video every
   two weeks and keep the margin. <b>Your first month is free — the Proving Month.</b> If we don't find you more than we
   cost, you walk away owing nothing — and after that, no invoice reaches you until your Profit Record has covered it.</p>
-
-  <div class="panel">
-    <span class="label">Under 90 seconds · from the founder</span>
-    <div class="video-wrap" id="video-wrap">
-      <video src="/welcome.mp4" controls playsinline preload="metadata"
-        aria-label="Welcome from the founder"></video>
-    </div>
-  </div>
 
   <div class="panel">
     <span class="step-no">Step 1 · The only thing we ever need from you</span>
@@ -149,7 +92,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
       </ul>
     </div>
     <div id="seat-shopify">
-      <p style="margin-top:18px"><b style="color:var(--ink)" id="shopify-lead">On Shopify instead?</b> Reply to your welcome
+      <p style="margin-top:18px"><b id="shopify-lead">On Shopify instead?</b> Reply to your welcome
       email with your store URL (and your collaborator request code, if your store sets one under
       Settings → Users → Security). We send a collaborator request from the same email above; you approve
       it under Settings → Users → Collaborators and grant exactly these:</p>
@@ -164,7 +107,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     <p class="why">Want it gone? One click on that same screen revokes the seat, any day you
     choose. And the narrow scope is the whole point. You hand over the work without handing
     over the keys.</p>
-    <p class="why"><b style="color:var(--ink)">One tiny homework, one time.</b> Neither Amazon nor Shopify
+    <p class="why"><b>One tiny homework, one time.</b> Neither Amazon nor Shopify
     knows what you actually pay for your product (Shopify's cost per item is a start, not the landed cost). So your welcome email includes a simple cost
     template (unit cost, freight, lead time) and a secure upload link. One row per SKU, five
     minutes tops. Estimates are totally fine.</p>
@@ -180,7 +123,9 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
     your files, your first full read is recorded, and your 90-day plan is drafted straight from it. On this
     call, you see the plan: your quarterly targets, plus the three or four moves that get you
     there. Then we set your standing yes: which moves we make without asking, and exactly
-    where your veto sits.</p>
+    where your veto sits. And before anything starts, we go through how your Record counts a
+    dollar (<a href="/terms#how-a-dollar-counts">terms §3</a>), so the rules are agreed while
+    there is no number on it.</p>
     <div class="calendly-mount" id="cal-mount"></div>
     <p class="cal-fallback">Calendar not loading? <a id="cal-link" href="https://calendly.com/hubricon/new-meeting" rel="noopener">Book directly here.</a></p>
   </div>
@@ -198,7 +143,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
   </div>
 
   <div class="panel">
-    <span class="label" style="margin-bottom:12px">Answers you shouldn't have to ask for</span>
+    <span class="label" style="display: block; margin-bottom: var(--s-3)">Answers you shouldn't have to ask for</span>
     <div class="faq">
       <div><h3>When do I actually pay?</h3>
         <p>Never in month one. Stay past day 30, and your first invoice arrives by email. ACH,
@@ -224,7 +169,7 @@ footer{ margin-top: 40px; border-top: 1px solid var(--hairline); padding-top: 18
         cancel.</p></div>
       <div><h3>Who do I talk to?</h3>
         <p>The founder. Always. Reply to any Hubricon email and it lands with the person who
-        builds your models and writes your briefs. There is no support tier.</p></div>
+        builds your models and answers for every brief. There is no support tier.</p></div>
     </div>
   </div>
 
@@ -275,7 +220,7 @@ document.getElementById("cal-link").href = KICKOFF_URL;
   s.onload = () => {
     if (window.Calendly){
       window.Calendly.initInlineWidget({
-        url: KICKOFF_URL + "?hide_gdpr_banner=1&background_color=ffffff&text_color=131a30&primary_color=a97a04",
+        url: KICKOFF_URL + "?hide_gdpr_banner=1&background_color=f5f6f8&text_color=0a0e17&primary_color=0a0e17",
         parentElement: document.getElementById("cal-mount"),
         resize: true,
       });
