@@ -1866,3 +1866,35 @@ figures. `lib/learn.test.mjs` refuses a listed course whose page or template is 
 An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired
 look), is parked: it runs on the seller's own reports, so it is not the public-data first
 course the spec asks for. It is a candidate for a later course, rebuilt on the design system.
+
+## The call: `/call` (since 2026-10-01)
+
+`HUBRICON_SPEC.md` ("The funnel", "Customer experience"): on the call the prospect's exports
+are opened live and the warm-only cliffs priced in front of them, their own named dollars on
+the screen before they have paid a cent. `/call` does that, unlinked and not indexed.
+
+**On the call.** Send the link, or share your screen with it open. Ask for two reports, three if
+they run ads: Reports → Fulfillment → **Manage Inventory Health** (Inventory Age), Reports →
+Fulfillment → **Fee Preview**, and Advertising → Reports → Sponsored Products **Campaign** report
+by day. Type a landed cost (share of price) and their target ACoS. The page shows one number,
+then the aged-inventory surcharge (Amazon's own estimate where the report carries it), the
+cliff at the next snapshot, the low-inventory-level fee at the last 30 days' pace, units past a
+fee edge at their real units, and break-even ACoS per SKU against their target.
+
+**Nothing leaves their browser.** FileReader in, `/lib/call.js` arithmetic, no analytics script,
+the only request the public rate card. `scripts/call-page.test.mjs` holds that; privacy §1
+"Booking a call" says it.
+
+**The engine's arithmetic.** `/lib/call.js` ports the ingest's report reading and
+`inventory_econ.run`'s surcharge and low-inventory fee; `lib/call.test.mjs` holds it to
+`lib/call.golden.json`, which `engine/scripts/call_golden.py` writes by running the engine's
+own parser and model on its fixtures. Regenerate after any change to `ingest/readers.py`,
+`ingest/headers.py`, `ingest/inventory_health.py`, `models/fee_schedule.py` or
+`models/inventory_econ.py`:
+
+    cd engine && uv run python scripts/call_golden.py && cd .. && node --test lib/
+
+Two figures are the call's own and say so: the next-snapshot cliff (Amazon's 241–270 day
+estimate × (5.45 − 1.50) / 1.50, the learn spreadsheet's rule) and break-even ACoS from Amazon's
+own fee estimates in Fee Preview and the typed landed cost. The engine has no per-SKU
+break-even ACoS yet; its ad threshold is catalogue-wide (`ad_efficiency`, 1 / average margin).

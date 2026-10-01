@@ -1,0 +1,421 @@
+{
+ "fixture": "snapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,estimated-ais-181-210-days,estimated-ais-211-240-days,estimated-ais-241-270-days,estimated-ais-271-300-days,estimated-ais-301-330-days,estimated-ais-331-365-days,estimated-ais-365-plus-days,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,0,0,0,0,0,0,0,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,3.60,0,0,0,0,0,0,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,6.40,5.20,4.80,7.10,3.30,2.90,18.60,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,0,0,0,0,0,0,0,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+ "fixture_no_ais": "snapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+ "parsed": [
+  {
+   "sku": "WIDGET-BLUE",
+   "available": 412,
+   "inv_age_181_to_270": 0,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 310,
+   "item_volume": 0.0412,
+   "storage_volume": 16.97,
+   "estimated_aged_surcharge": 0.0,
+   "low_inventory_level_fee_applied": false,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "WIDGET-RED",
+   "available": 96,
+   "inv_age_181_to_270": 36,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 190,
+   "item_volume": 0.0412,
+   "storage_volume": 3.96,
+   "estimated_aged_surcharge": 3.6,
+   "low_inventory_level_fee_applied": true,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "GADGET-PRO",
+   "available": 240,
+   "inv_age_181_to_270": 80,
+   "inv_age_271_to_365": 60,
+   "inv_age_365_plus": 40,
+   "units_shipped_t30": 72,
+   "item_volume": 0.125,
+   "storage_volume": 30.0,
+   "estimated_aged_surcharge": 48.3,
+   "low_inventory_level_fee_applied": false,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "X001ABC4",
+   "available": 8,
+   "inv_age_181_to_270": 0,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 6,
+   "item_volume": 0.01,
+   "storage_volume": 0.08,
+   "estimated_aged_surcharge": 0.0,
+   "low_inventory_level_fee_applied": true,
+   "storage_type": "Standard-Size"
+  }
+ ],
+ "priced_amazon": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 3.6,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 119.7
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 48.3,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0
+  }
+ },
+ "priced_schedule": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "no aged units on file",
+   "low_inventory_fee_month": 0.0
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 1.48,
+   "basis": "schedule estimate (2026-01-15)",
+   "low_inventory_fee_month": 119.7
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 87.25,
+   "basis": "schedule estimate (2026-01-15)",
+   "low_inventory_fee_month": 0.0
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "no aged units on file",
+   "low_inventory_fee_month": 0.0
+  }
+ },
+ "low_inventory_rate": [
+  {
+   "args": [
+    0,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    5,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    13.9,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    14,
+    "standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    20.9,
+    "standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    21,
+    "standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    27.9,
+    "standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    28,
+    "standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "oversize"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    5,
+    "oversize"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    13.9,
+    "oversize"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    14,
+    "oversize"
+   ],
+   "want": 1.14
+  },
+  {
+   "args": [
+    20.9,
+    "oversize"
+   ],
+   "want": 1.14
+  },
+  {
+   "args": [
+    21,
+    "oversize"
+   ],
+   "want": 0.72
+  },
+  {
+   "args": [
+    27.9,
+    "oversize"
+   ],
+   "want": 0.72
+  },
+  {
+   "args": [
+    28,
+    "oversize"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "oversize"
+   ],
+   "want": 0.0
+  }
+ ],
+ "aged_rate": [
+  {
+   "args": [
+    100
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    180
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    181
+   ],
+   "want": 0.5
+  },
+  {
+   "args": [
+    225
+   ],
+   "want": 1.0
+  },
+  {
+   "args": [
+    270
+   ],
+   "want": 1.5
+  },
+  {
+   "args": [
+    271
+   ],
+   "want": 5.45
+  },
+  {
+   "args": [
+    318
+   ],
+   "want": 5.7
+  },
+  {
+   "args": [
+    365
+   ],
+   "want": 5.9
+  },
+  {
+   "args": [
+    366
+   ],
+   "want": 6.9
+  },
+  {
+   "args": [
+    400
+   ],
+   "want": 6.9
+  }
+ ],
+ "clean_money": [
+  {
+   "args": [
+    "US$1,234.56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "$1,234.56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "1.234,56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "(12.34)"
+   ],
+   "want": -12.34
+  },
+  {
+   "args": [
+    "12,5"
+   ],
+   "want": 12.5
+  },
+  {
+   "args": [
+    "1,234"
+   ],
+   "want": 1234.0
+  },
+  {
+   "args": [
+    "n/a"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "--"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    ""
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "abc"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "0.0412"
+   ],
+   "want": 0.0412
+  },
+  {
+   "args": [
+    "-3"
+   ],
+   "want": -3.0
+  }
+ ],
+ "preamble": {
+  "text": "Inventory report\nGenerated for: a, b, c\n\nsnapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,estimated-ais-181-210-days,estimated-ais-211-240-days,estimated-ais-241-270-days,estimated-ais-271-300-days,estimated-ais-301-330-days,estimated-ais-331-365-days,estimated-ais-365-plus-days,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,0,0,0,0,0,0,0,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,3.60,0,0,0,0,0,0,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,6.40,5.20,4.80,7.10,3.30,2.90,18.60,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,0,0,0,0,0,0,0,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+  "headers": [
+   "snapshot-date",
+   "sku",
+   "fnsku",
+   "asin",
+   "product-name",
+   "condition",
+   "available",
+   "pending-removal-quantity",
+   "inv-age-0-to-90-days",
+   "inv-age-91-to-180-days",
+   "inv-age-181-to-270-days",
+   "inv-age-271-to-365-days",
+   "inv-age-365-plus-days",
+   "units-shipped-t7",
+   "units-shipped-t30",
+   "units-shipped-t60",
+   "units-shipped-t90",
+   "sell-through",
+   "days-of-supply",
+   "estimated-excess-quantity",
+   "item-volume",
+   "storage-volume",
+   "estimated-storage-cost-next-month",
+   "estimated-ais-181-210-days",
+   "estimated-ais-211-240-days",
+   "estimated-ais-241-270-days",
+   "estimated-ais-271-300-days",
+   "estimated-ais-301-330-days",
+   "estimated-ais-331-365-days",
+   "estimated-ais-365-plus-days",
+   "recommended-action",
+   "low-inventory-level-fee-applied",
+   "your-price",
+   "sales-price",
+   "currency",
+   "healthy-inventory-level",
+   "storage-type",
+   "weeks-of-cover-t30"
+  ]
+ },
+ "constants": {
+  "bucket_mid_age": {
+   "inv_age_181_to_270": 225,
+   "inv_age_271_to_365": 318,
+   "inv_age_365_plus": 400
+  },
+  "default_volume": {
+   "standard": 0.08,
+   "oversize": 1.2
+  },
+  "effective": "2026-01-15"
+ }
+}
