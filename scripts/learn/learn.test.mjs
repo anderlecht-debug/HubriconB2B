@@ -8,8 +8,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { COURSES } from "../../lib/learn.js";
+import { readFileSync, readdirSync } from "node:fs";
+import { COURSES, composeLearnNote, NOTE_KINDS } from "../../lib/learn.js";
+import { resolveFills } from "./note.mjs";
 
 const root = new URL("../../", import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), "utf8");
@@ -41,13 +42,32 @@ test("no hype furniture anywhere in /learn", () => {
   }
 });
 
-test("one email opens the course, and the form asks for nothing else", () => {
-  const form = course.match(/<form[\s\S]*?<\/form>/)[0];
-  const fields = [...form.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n);
-  assert.deepEqual(fields, ["email", "website"], "the address, and the hidden field bots fill");
-  assert.match(form, /type="email"/);
-  assert.match(form, /one click unsubscribes/);
-  assert.match(form, /href="\/privacy#learn"/);
+test("every lesson is open to anyone; the email is an opt-in that asks for nothing else", () => {
+  // The founder, 2026-10-01: "I want the lessons to be open to everybody as that is the free
+  // content that I am giving. Of course, if they want a little bit of extra, they can opt in the email."
+  const css = read("assets/hubricon.css"), js = read("assets/learn.js");
+  for (const src of [css, js]) assert.doesNotMatch(src, /learn-in/, "no state where a lesson waits for an email");
+  assert.doesNotMatch(js, /api\/learn|\.courses\b/, "the course page asks for nothing before it shows a lesson");
+  assert.match(css, /\.js \.course-page \.lesson\.current \{ display: block; \}/);
+  for (const c of Object.values(COURSES)) {
+    const page = read(`${c.path.slice(1)}.html`);
+    const first = page.match(/<article class="lesson" id="([^"]+)"/)[1];
+    assert.match(page, new RegExp(`<a class="btn" href="#${first}" data-start>Start lesson 1 `), `${c.path}: the cover starts lesson 1`);
+    assert.match(text(page), /Every lesson and the spreadsheet are open\. No email, no account\./);
+    assert.doesNotMatch(page, /learn-in|id="join"/);
+    const forms = [...page.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
+    assert.equal(forms.length, 2, `${c.path}: the opt-in under the cover and at the end of the last lesson`);
+    for (const form of forms) {
+      assert.deepEqual([...form.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n), ["email", "website"], "the address, and the hidden field bots fill");
+      assert.match(form, /type="email"/);
+      assert.doesNotMatch(form, /class="btn/, "the opt-in is never styled as the call");
+      assert.match(form, /No email is needed to read it/);
+      assert.match(form, /One click unsubscribes/);
+      assert.match(form, /href="\/privacy#learn"/);
+    }
+    const lessons = [...page.matchAll(/<article class="lesson"[\s\S]*?<\/article>/g)].map(([a]) => a);
+    assert.ok(lessons.at(-1).includes(forms[1]), `${c.path}: the second sits in the last lesson`);
+  }
   assert.match(read("privacy.html"), /id="learn"/);
 });
 
@@ -95,6 +115,24 @@ test("on a phone nothing scrolls the page sideways, and a panel with nothing to 
   }
   // The [hidden] attribute beats a panel's own display, so an empty reading is never an empty box.
   assert.match(read("assets/hubricon.css"), /\.course-page \[hidden\] \{ display: none !important; \}/);
+});
+
+test("every note drafted for the list composes, types no figure the course computes, and never sells", () => {
+  const dir = new URL("scripts/learn/notes/", root);
+  const drafts = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  assert.ok(drafts.length >= 1);
+  for (const f of drafts) {
+    const raw = JSON.parse(readFileSync(new URL(f, dir), "utf8"));
+    assert.equal(`${raw.id}.json`, f, "a note's file is named for its id");
+    assert.ok(Object.hasOwn(NOTE_KINDS, raw.kind));
+    const typed = JSON.stringify(raw).replace(/\{fill:[^}]+\}/g, "").match(/\$\d[\d.,]*|\d+(\.\d+)?%/g) || [];
+    for (const t of typed) assert.ok(["$10", "$50"].includes(t), `${f}: ${t} is typed; it must be a {fill:…} from the course page`);
+    const note = resolveFills(raw);
+    assert.doesNotMatch(JSON.stringify(note), /\{fill:/);
+    const m = composeLearnNote({ note, unsubscribeUrl: "https://www.hubricon.com/api/learn?unsubscribe=" + "0".repeat(32) });
+    assert.match(m.text, /Unsubscribe/);
+  }
+  assert.throws(() => resolveFills("{fill:fee-staircase:no_such_key}"), /no figure no_such_key/);
 });
 
 test("the invitation is one quiet call to the call; nothing inside a lesson sells", () => {

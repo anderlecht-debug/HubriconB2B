@@ -19,11 +19,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <script>
-/* Before first paint: scripts are running (so the lessons wait behind the email), the
-   visitor may already be in, and motion is allowed unless they asked for less. */
+/* Before first paint: scripts are running (so one lesson shows at a time), a lesson named in
+   the address opens on that lesson rather than the cover, and motion is allowed unless the
+   visitor asked for less. Every lesson is open: no email, no account. */
 (function (d) {
   d.classList.add("js");
-  try { if ((JSON.parse(localStorage.getItem("hubricon.learn") || "{}").courses || {})["fee-staircase"]) d.classList.add("learn-in"); } catch (e) {}
+  if (/^#[a-z0-9-]+$/.test(location.hash)) d.classList.add("reading");
   try {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
     d.classList.add("motion");
@@ -125,16 +126,18 @@
         <li>Price the 271-day storage cliff from your own inventory report.</li>
         <li>Run your whole catalogue at once and work it in order.</li>
       </ul>
-      <form class="join" id="join" novalidate>
-        <label for="email">Your email</label>
-        <div class="row">
-          <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
-          <button class="btn" type="submit">Open the course <span class="arrow" aria-hidden="true">→</span></button>
+      <p class="start"><a class="btn" href="#staircase" data-start>Start lesson 1 <span class="arrow" aria-hidden="true">→</span></a><span class="start-note">Every lesson and the spreadsheet are open. No email, no account.</span></p>
+<!-- build:optin-fee-staircase-cover -->
+      <form class="join-tile" data-join="fee-staircase" novalidate>
+        <label for="join-fee-staircase-cover">Want it in your inbox? <span>Optional</span></label>
+        <div class="join-row">
+          <input id="join-fee-staircase-cover" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
         </div>
-        <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="fine">One email opens every lesson and the spreadsheet. We send you the link so you can come back, and a short note when a new course is out; one click unsubscribes. Nothing inside is held back and nothing inside is for sale. <a href="/privacy#learn">How we handle your email</a>.</p>
-        <p class="err" id="join-err" role="alert" hidden></p>
-      </form>
+        <div class="hp" aria-hidden="true"><label for="join-fee-staircase-cover-website">Leave this empty</label><input id="join-fee-staircase-cover-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form><!-- /build:optin-fee-staircase-cover -->
       <div class="contents">
         <h2>What is inside</h2>
         <ol>
@@ -672,6 +675,21 @@
           <li>Take the top three to a decision this week.</li>
         </ol>
       </div>
+<!-- build:optin-fee-staircase-end -->
+      <section class="keep" aria-labelledby="keep-fee-staircase-h">
+        <h3 id="keep-fee-staircase-h">Keep it current</h3>
+        <p>Amazon rewrites its fee cards about once a year and adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>
+      <form class="join-tile" data-join="fee-staircase" novalidate>
+        <label for="join-fee-staircase-end">Want it in your inbox? <span>Optional</span></label>
+        <div class="join-row">
+          <input id="join-fee-staircase-end" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="join-fee-staircase-end-website">Leave this empty</label><input id="join-fee-staircase-end-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form>
+      </section><!-- /build:optin-fee-staircase-end -->
       <nav class="pager" aria-label="Lesson pages"><a href="#the-cliff">Previous<b>← The 271-day cliff</b></a><a class="next" href="/learn">Back to<b>All courses →</b></a></nav>
     </article>
 

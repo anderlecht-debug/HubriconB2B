@@ -29,8 +29,9 @@ model change.
   the home page adds the trust section, the results wall and the education library; the
   900-word cap is retired. A planned course says Planned and links nowhere; an empty video
   slot says what will play there; a testimonial needs the client's dated consent. The one
-  other control is the course's email field in Education (an outline button, the field's
-  own), and nothing that moves is ever blank before it plays.
+  other control is the course's optional email field in Education (an outline button, the
+  field's own; every lesson is open without it, the founder's call of 2026-10-01), and nothing
+  that moves is ever blank before it plays.
   `scripts/build-pages.test.mjs` and `scripts/site-blocks.test.mjs` check all of it.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
   `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.

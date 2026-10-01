@@ -111,12 +111,10 @@ if (motion) {
   }
 }
 
-/* -- The email that opens a course --------------------------------------------------- */
-// HUBRICON_SPEC.md, "Email to enter, the Acquisition.com model": one address registers you
-// for a course and everything inside is open. This is the featured card's form; it posts
-// what the course page's form posts, remembers the course as opened in this browser the
-// way the course page does, and takes the visitor straight into its first lesson.
-const LEARN_KEY = "hubricon.learn";
+/* -- The opt-in: the course in your inbox ----------------------------------------- */
+// Every lesson is open to anyone (the founder's call, 2026-10-01). This form is the extra:
+// it posts the address, the course and the link's campaign tag to /api/learn, which keeps
+// the address and sends the link and the spreadsheet. The reader stays where they are.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 document.querySelectorAll("form[data-join]").forEach((form) => {
   const err = form.querySelector(".join-err");
@@ -133,6 +131,7 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
     const button = form.querySelector("button");
     button.disabled = true;
     let res = null;
+    let body = {};
     try {
       const params = new URLSearchParams(location.search);
       res = await fetch("/api/learn", {
@@ -140,26 +139,26 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, course: form.dataset.join, website: form.website.value, source: params.get("utm_source") || params.get("ref") || "" }),
       });
+      body = await res.json().catch(() => ({}));
     } catch (e) { res = null; }
-    // A bad address is the visitor's to fix. Anything else is ours: the course opens anyway.
+    button.disabled = false;
     if (res && res.status === 400) {
-      const body = await res.json().catch(() => ({}));
       err.textContent = body.error || "That address was not accepted. Check it and try again.";
       err.hidden = false;
-      button.disabled = false;
       return;
     }
-    try {
-      const s = JSON.parse(localStorage.getItem(LEARN_KEY) || "{}");
-      s.courses = { ...(s.courses || {}), [form.dataset.join]: new Date().toISOString().slice(0, 10) };
-      localStorage.setItem(LEARN_KEY, JSON.stringify(s));
-    } catch (e) {}
-    track("learn_registered", { course: form.dataset.join, from: location.pathname });
+    // Say exactly what happened: nothing here may claim an email that was not sent.
+    let said;
+    if (!res || !res.ok) said = "That didn't go through on our side. Nothing is lost: every lesson and the spreadsheet are open right here. Try again later if you want the email.";
+    else if (body.new === false) said = "You're already on the list for this course. Nothing more to do.";
+    else if (body.emailed) said = `Sent to ${email}: the link and the spreadsheet. Nothing else arrives unless Amazon changes its fee cards or a new course opens.`;
+    else said = "Your address is saved, but the email didn't go out just now; we'll send it once it can. Every lesson and the spreadsheet are open right here.";
+    track("learn_registered", { course: form.dataset.join, from: location.pathname, emailed: Boolean(body.emailed) });
     const done = document.createElement("p");
     done.className = "join-done";
-    done.textContent = "You're in. Opening lesson 1…";
+    done.setAttribute("role", "status");
+    done.textContent = said;
     form.replaceChildren(done);
-    location.href = `${form.dataset.path}#${form.dataset.first}`;
   });
 });
 

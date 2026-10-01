@@ -1983,12 +1983,34 @@ cases hold to the engine. `scripts/learn/learn.test.mjs` refuses a lesson withou
 questions, a wide table that is not in its own scroll box, and a stylesheet where `hidden`
 loses to a panel's own display.
 
-**The gate.** The email opens the course in the browser (`localStorage`, key
-`hubricon.learn`) whatever the server says, except a 400 for a bad address: a fault of ours
-never locks a reader out. Without scripts every lesson shows in order. A new sign-up gets one
-email (the link and the spreadsheet, Resend, with RFC 8058 one-click unsubscribe headers); a
-repeat gets nothing. Notes "a new course is out" go only to addresses with no unsubscribed
-row. Privacy §1 "Courses" and §8 describe exactly this.
+**Open lessons, and the optional email (the founder's call, 2026-10-01).** Every lesson and
+spreadsheet is open: no email, no account. The cover's "Start lesson 1" opens it, one lesson
+shows at a time, and the cover offers to continue where the reader left off (`localStorage`,
+key `hubricon.learn`, this browser only). Without scripts every lesson shows in order. The
+email is the opt-in for a little extra, on the featured card, under each cover and at the end
+of each last lesson (`joinForm` in `scripts/site-blocks.mjs`, posted by `assets/site.js`). A
+new sign-up gets one email (the link and the spreadsheet, Resend, RFC 8058 one-click
+unsubscribe); a repeat gets nothing. The form says only what happened: "Sent" only when the
+server says the email went. Each sign-up records what it was told would follow
+(`funnel_events.payload.promise`, beside `learner`), and after that it gets only notes: when
+Amazon changes its fee cards, and when a new course opens. Privacy §1 "Courses" and §8
+describe exactly this.
+
+**Sending a note** (`scripts/learn/note.mjs`, dry run by default). A note is a JSON file in
+`scripts/learn/notes/`, named for its id, of kind `fee-cards` or `course`; its figures are
+`{fill:<course>:<key>}`, read from the built course page, so a note types no number the course
+computes (`scripts/learn/learn.test.mjs` holds every draft to that and to "never sells"). A
+`fee-cards` note goes only to sign-ups told fee-card notes would come; a `course` note to every
+address still subscribed; one per address; once per id.
+
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json                  # who, and the text
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json --test you@x.com # one copy to you
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json --send           # on the founder's go
+
+When to write one: the week before Amazon's holiday card starts (October 15) and when the
+annual card is published, after `verify_fee_staircase.py --publish` has moved the course to
+it; and the day a new course goes live. `holiday-card-2026` is drafted and waits for the
+founder's go; on 2026-10-01 the list was empty.
 
 **Live since 2026-09-30** (c0d872c), the founder having read the lessons. Migrations
 `20261001000001_record_months`, `20261001000002_learners` and the held-back
@@ -1996,9 +2018,10 @@ row. Privacy §1 "Courses" and §8 describe exactly this.
 **Vercel still needs `RESEND_API_KEY` and `POSTAL_ADDRESS`** (Production): the GitHub
 operator has both, the site has neither, so a sign-up is kept and the course opens but no
 email goes (`funnel_events.payload.email_error = "RESEND_API_KEY not set"`). The key in
-`.env` is a send-only key and was proven against Resend's test inbox the same night. Once
-it is set, send the link to anyone who signed up meanwhile: `learners` rows with
-`email_sent_at` null.
+`.env` is a send-only key and was proven against Resend's test inbox the same night.
+**2026-10-01: the founder set both in Vercel**; they take effect on the next deploy. After it,
+`node scripts/learn/note.mjs --backfill` lists any sign-up the first email never reached
+(`--send` sends it, each told only what it was promised); on 2026-10-01 there were none.
 
 **Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
 pattern with `data-course`, its page in `PAGES` if it carries figures, and in

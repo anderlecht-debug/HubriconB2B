@@ -210,34 +210,36 @@ function lessonVideos(lib) {
 // ---------------------------------------------------------------- the library ----
 const lessonCount = (c) => (Array.isArray(c.lessons) ? c.lessons.length : c.lessons);
 
-/* The email that opens a course, where Acquisition.com asks for it: on the free training's
-   featured card, one field. It sends what the course page's own form sends (the address,
-   the course, the campaign tag of the link if there is one) to /api/learn, and opens the
-   course in place: /assets/site.js. The submit is a plain button, never the call's. */
-function joinForm(c) {
-  const id = `join-${c.slug}`;
+/* The email, as the founder set it on 2026-10-01: every lesson and spreadsheet is open to
+   anyone, and an email is the opt-in for a little extra: the link and the spreadsheet in your
+   inbox, then a short note only when Amazon changes its fee cards or a new course opens. One
+   form, wherever it shows (the featured card, a course's cover and its last lesson); it posts
+   the address, the course and the link's campaign tag to /api/learn (/assets/site.js). Its
+   button is the field's own outline, never the call's. `where` keeps the ids unique. */
+export function joinForm(c, where = "card") {
+  const id = `join-${c.slug}${where === "card" ? "" : `-${where}`}`;
   return `
-      <form class="join-tile" data-join="${c.slug}" data-path="${c.path}" data-first="${c.lessons[0].id}" novalidate>
-        <label for="${id}">Your email opens every lesson now</label>
+      <form class="join-tile" data-join="${c.slug}" novalidate>
+        <label for="${id}">Want it in your inbox? <span>Optional</span></label>
         <div class="join-row">
           <input id="${id}" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
-          <button type="submit">Open the course ${ARROW}</button>
+          <button type="submit">Send it to me ${ARROW}</button>
         </div>
         <div class="hp" aria-hidden="true"><label for="${id}-website">Leave this empty</label><input id="${id}-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">Free. One email, about ten seconds. We send the link and the spreadsheet, then only a note when a new course is out; one click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
         <p class="join-err" role="alert" hidden></p>
       </form>`;
 }
 
 function liveTile(c, i, { feature, wide = false }) {
-  // The featured course carries the email form, and a tile with a trailer carries a
-  // video, so neither can be one link: the cover and the title carry it instead.
+  // The featured course carries the opt-in form, and a tile with a trailer carries a
+  // video, so neither can be one link: the cover, the title and "Start" carry it instead.
   const trailer = Boolean(c.trailer && c.trailer.src);
   const whole = !trailer && !feature;
   const badges = ["Free", `${lessonCount(c)} lessons`, ...(c.extras || [])].map((b) => `<span class="go-badge">${esc(b)}</span>`).join("");
   const title = whole ? esc(c.title) : `<a href="${c.path}">${esc(c.title)}</a>`;
   const go = feature
-    ? `<a class="go-look" href="${c.path}">Or look inside first ${ARROW}</a>`
+    ? `<a class="go-to" href="${c.path}#${c.lessons[0].id}">Start lesson 1, no email needed ${ARROW}</a>`
     : whole ? `<span class="go-to">Take the course ${ARROW}</span>` : `<a class="go-to" href="${c.path}">Take the course ${ARROW}</a>`;
   const art = trailer
     ? video(c.trailer, `${c.title}: trailer`, `trailer:${c.slug}`)
@@ -255,10 +257,25 @@ function liveTile(c, i, { feature, wide = false }) {
     <div class="tile-body">
       <div class="go-badges">${badges}</div>
       <h3>${title}</h3>
-      <p>${esc(c.summary)}</p>${feature ? `\n      <p class="tile-detail">${esc(c.detail)}</p>${joinForm(c)}` : wide ? `\n      <p class="tile-detail">${esc(c.detail)}</p>` : ""}
-      ${go}
+      <p>${esc(c.summary)}</p>${feature || wide ? `\n      <p class="tile-detail">${esc(c.detail)}</p>` : ""}
+      ${go}${feature ? joinForm(c) : ""}
     </div>
   ${close}`;
+}
+
+/* Each live course's opt-in, twice: under its cover's start, and at the end of its last
+   lesson, where a reader who finished it is the one most likely to want it kept current. */
+function optins(lib) {
+  const out = {};
+  for (const c of lib.courses.filter((x) => x.status === "live")) {
+    out[`optin-${c.slug}-cover`] = joinForm(c, "cover");
+    out[`optin-${c.slug}-end`] = `
+      <section class="keep" aria-labelledby="keep-${c.slug}-h">
+        <h3 id="keep-${c.slug}-h">Keep it current</h3>
+        <p>Amazon rewrites its fee cards about once a year and adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>${joinForm(c, "end")}
+      </section>`;
+  }
+  return out;
 }
 
 function plannedTile(c, { hub }) {
@@ -278,8 +295,8 @@ function plannedTile(c, { hub }) {
 function library(lib, { hub }) {
   const live = lib.courses.filter((c) => c.status === "live");
   const planned = lib.courses.filter((c) => c.status === "planned");
-  // One featured course carries the email, the way Acquisition.com features one; every other
-  // live course is a tile that opens its own page, where its own email opens it.
+  // One featured course, the way Acquisition.com features one, with the opt-in under it; every
+  // other live course is a tile that opens its own page. Every lesson is open, no email asked.
   const [first, ...more] = live;
   const others = more.length ? `
   <div class="lib-live">
@@ -290,7 +307,7 @@ function library(lib, { hub }) {
   return `
 <div class="lib">${liveTile(first, 0, { feature: true })}${others}
   <div class="lib-planned">
-    <p class="lib-k">Planned for the library <span>· free when each is complete, one email to enter</span></p>
+    <p class="lib-k">Planned for the library <span>· free and open when each is complete</span></p>
     <div class="${hub ? "lib-grid" : "rail"}">${planned.map((c) => plannedTile(c, { hub })).join("")}
     </div>
   </div>
@@ -385,6 +402,7 @@ export function siteBlocks() {
     "library-hub": library(lib, { hub: true }),
     "film-case": filmCase(lib),
     ...lessonVideos(lib),
+    ...optins(lib),
     wall: wall(json("data/testimonials.json").testimonials),
     board: board(json("data/scoreboard-illustration.json")),
   };

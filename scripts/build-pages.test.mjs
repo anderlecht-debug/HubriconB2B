@@ -63,7 +63,9 @@ test("the call repeats after each proof block, the same words and the same colou
   }
 });
 
-test("the only other control is the email that opens a course, and it looks like the field's, not the call's", () => {
+test("the only other control is the course's optional email, and it looks like the field's, not the call's", () => {
+  // Every lesson is open (the founder's call, 2026-10-01): the card opens lesson 1 with no email,
+  // and the email is the opt-in for the link, the spreadsheet and the fee-change notes.
   const forms = [...html.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
   assert.equal(forms.length, 1, "one form on the page");
   const f = forms[0];
@@ -71,14 +73,18 @@ test("the only other control is the email that opens a course, and it looks like
   assert.deepEqual([...f.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n), ["email", "website"], "the address, and the field bots fill");
   assert.doesNotMatch(f, /class="btn/, "the submit is not styled as the call");
   assert.match(f, /href="\/privacy#learn"/);
-  assert.match(f, /one click unsubscribes/);
+  assert.match(f, /One click unsubscribes/);
+  assert.match(f, /No email is needed to read it/);
+  assert.match(f, /Optional/);
   const learnSection = html.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
   assert.ok(learnSection.includes(f), "it sits in the Education section, on the featured course");
+  assert.match(learnSection, /<a class="go-to" href="\/learn\/fee-staircase#staircase">Start lesson 1, no email needed/, "the card opens lesson 1 itself");
+  assert.doesNotMatch(text(learnSection), /one email (opens|to enter)|email opens|for an email/i);
   const js = read("assets/site.js");
   assert.match(js, /fetch\("\/api\/learn"/);
   assert.match(js, /email, course: form\.dataset\.join, website: form\.website\.value, source:/, "it sends what the course page sends, nothing more");
-  assert.match(read("assets/learn.js"), /const KEY = "hubricon\.learn"/);
-  assert.match(js, /const LEARN_KEY = "hubricon\.learn"/, "and opens the course the way the course page remembers it");
+  assert.doesNotMatch(js, /location\.href\s*=/, "the reader stays where they are");
+  assert.match(js, /body\.emailed\)/, "it says an email was sent only when the server says it was");
 });
 
 test("nothing is blank for want of a scroll: only an armed element or the hero's chart starts hidden", () => {

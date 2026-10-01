@@ -246,10 +246,12 @@ Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
   and what they count for under the rules.
 - **A hash** (`.hash`, on `/verify` and the printed Record): set in Inter with
   `font-feature-settings: "zero"` and tabular numerals, in groups of eight; never a monospace face.
-- **The course's email field** (`.join-tile`): on the featured course card, where
-  Acquisition.com asks for its email. One field, its own outline button ("Open the course →"),
-  one line of what follows and the privacy link. It sends what the course page's form sends and
-  opens the course at lesson 1. The call is still the only solid button.
+- **The course's email field** (`.join-tile`): optional, since every lesson is open (the
+  founder's call, 2026-10-01). On the featured course card under "Start lesson 1, no email
+  needed", under each course's start and at the end of its last lesson. One field marked
+  Optional, its own outline button ("Send it to me →"), one line of what follows and the privacy
+  link. It never moves the reader; it says what happened. The call is still the only solid
+  button on the home page.
 
 ### Labels that never come off
 

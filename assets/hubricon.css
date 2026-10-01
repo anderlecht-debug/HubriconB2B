@@ -431,6 +431,7 @@ a.tile:hover { border-color: var(--ink); }
    call stays the only solid ink button that books anything. */
 .join-tile { container-type: inline-size; display: grid; gap: var(--s-2); margin-top: var(--s-3); padding: var(--s-5); background: var(--paper-2); border-radius: var(--radius); }
 .join-tile label { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
+.join-tile label span { margin-left: var(--s-2); font-weight: var(--regular); color: var(--ink-3); }
 .join-row { display: flex; gap: var(--s-2); }
 .join-row input { flex: 1; min-width: 0; min-height: 50px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink);
   background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
@@ -444,8 +445,6 @@ a.tile:hover { border-color: var(--ink); }
 .join-tile p.join-err { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
 .join-tile p.join-done { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-.go-look { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-2); text-decoration: none; }
-.go-look:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 a.tile-cover { color: inherit; text-decoration: none; }
 article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 /* The field and its button side by side when the card is wide enough, stacked when not. */
@@ -563,14 +562,14 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .course-page .outcomes { margin-top: var(--s-6); list-style: none; display: grid; gap: var(--s-3); max-width: 60ch; }
 .course-page .outcomes li { padding-left: var(--s-5); position: relative; font-size: var(--t-16); }
 .course-page .outcomes li::before { content: ""; position: absolute; left: 0; top: 12px; width: 10px; height: 2px; background: var(--ink); }
-.course-page .join { margin-top: var(--s-7); max-width: 560px; padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); }
-.course-page .join label { display: block; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-2); }
-.course-page .join .row { display: flex; gap: var(--s-3); }
-.course-page .join input[type="email"] { flex: 1; min-width: 0; min-height: 52px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
-.course-page .join input[type="email"]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
-.course-page .join .fine { margin-top: var(--s-4); font-size: var(--t-14); color: var(--ink-3); line-height: 1.55; }
-.course-page .join .fine a { color: var(--ink-2); }
-.course-page .join .err { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink); font-weight: var(--strong); }
+/* The cover's start: the course opens on a click, and the opt-in sits under it, quieter */
+.course-page .start { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); }
+.course-page .start-note { font-size: var(--t-14); color: var(--ink-3); }
+.course-page .cover .join-tile { margin-top: var(--s-6); max-width: 560px; }
+/* The last lesson's "Keep it current" */
+.course-page .keep { margin-top: var(--s-8); max-width: 68ch; padding-top: var(--s-7); border-top: 1px solid var(--rule); }
+.course-page .keep h3 { font-size: var(--t-20); }
+.course-page .keep > p { margin-top: var(--s-3); font-size: var(--t-16); color: var(--ink-2); }
 .course-page .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .course-page .cover .contents { margin-top: var(--s-8); }
 .course-page .cover .contents h2 { font-size: var(--t-24); letter-spacing: -0.018em; }
@@ -633,12 +632,13 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .course-page .invite .btn { margin-top: var(--s-5); width: 100%; min-height: 44px; padding: 0 var(--s-4); font-size: var(--t-14); background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
 .course-page .invite .btn:hover { background: var(--paper-2); }
 
-/* States. Without scripts, every lesson shows in order and the form is not needed.
-   With them, the email opens the course, then one lesson shows at a time. */
-.js .course-page .lesson, .js:not(.learn-in) .course-page .tpl-link { display: none; }
-.js.learn-in .course-page .lesson.current { display: block; }
-.js.learn-in .course-page .cover { display: none; }
-html:not(.js) .course-page .cover { display: none; }
+/* States. Every lesson is open to anyone, no email asked. Without scripts the cover and every
+   lesson show in order, and the opt-in (which needs a script) does not. With them, the cover is
+   the start and one lesson shows at a time. */
+.js .course-page .lesson { display: none; }
+.js .course-page .lesson.current { display: block; }
+.js.reading .course-page .cover { display: none; }
+html:not(.js) .course-page .join-tile, html:not(.js) .course-page .keep { display: none; }
 html:not(.js) .course-page .lesson + .lesson { margin-top: var(--section); padding-top: var(--section); border-top: 1px solid var(--rule); }
 html:not(.js) .course-page .pager { display: none; }
 
@@ -657,13 +657,8 @@ html:not(.js) .course-page .pager { display: none; }
   .course-page .toc[open] summary::after { transform: translateY(2px) rotate(-135deg); }
   .course-page .toc .course-name { display: none; }
   .course-page .toc ol { border-top: 0; }
-  .js:not(.learn-in) .course-page .toc { display: none; }
-  .course-page .join .row { flex-direction: column; }
-  .course-page .join .btn { width: 100%; }
+  .course-page .start .btn { width: 100%; }
   .course-page .prose p, .course-page .prose li { font-size: var(--t-16); }
-}
-@media (max-width: 640px) {
-  .course-page .join { padding: var(--s-5); }
 }
 
 /* Check yourself: two questions a lesson, the answer behind a click. Trying first is what makes it stay. */

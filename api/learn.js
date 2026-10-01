@@ -2,17 +2,18 @@ import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { SlidingWindow, clientIp } from "../lib/ratelimit.js";
 import { sendResend } from "../lib/tool_email.js";
-import { composeLearnEmail, parseSignup, unsubscribePage, unsubscribeUrl, TOKEN } from "../lib/learn.js";
+import { composeLearnEmail, parseSignup, unsubscribePage, unsubscribeUrl, TOKEN, PROMISE } from "../lib/learn.js";
 
 /**
  * /learn's two server-side jobs.
  *
  *   POST /api/learn  {email, course, website, source}
- *        One email registers you for a course (HUBRICON_SPEC.md, "Education hub").
- *        Keeps the address in `learners`, once per course, and sends the one email
- *        lib/learn.js composes: the link back and the spreadsheet. A repeat sign-up
- *        sends nothing. The page opens the course whatever happens here, unless
- *        the address itself is bad (400): a fault of ours never locks a reader out.
+ *        The optional email on a course (every lesson is open without it: the
+ *        founder's amendment, 2026-10-01). Keeps the address in `learners`, once per
+ *        course, sends the one email lib/learn.js composes (the link back and the
+ *        spreadsheet), and records what the reader was told would follow (PROMISE)
+ *        beside the row's id, so scripts/learn/note.mjs writes only to those told.
+ *        A repeat sign-up sends nothing. Nothing on the page waits for this.
  *
  *   GET  /api/learn?unsubscribe=<token>   the link in the email: a page
  *   POST /api/learn?unsubscribe=<token>   the inbox's one-click (RFC 8058)
@@ -99,7 +100,7 @@ export async function POST(request) {
   if (sent.ok) await sb.from("learners").update({ email_sent_at: new Date().toISOString(), email_id: sent.id }).eq("id", fresh.id);
   await sb.from("funnel_events").insert({
     kind: "learn_registered",
-    payload: { course: s.course, source: s.source, emailed: sent.ok, ...(sent.ok ? {} : { email_error: String(sent.error).slice(0, 200) }) },
+    payload: { course: s.course, source: s.source, learner: fresh.id, promise: PROMISE, emailed: sent.ok, ...(sent.ok ? {} : { email_error: String(sent.error).slice(0, 200) }) },
   });
   return json({ ok: true, new: true, emailed: sent.ok });
 }

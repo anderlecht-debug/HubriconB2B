@@ -19,11 +19,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <script>
-/* Before first paint: scripts are running (so the lessons wait behind the email), the
-   visitor may already be in, and motion is allowed unless they asked for less. */
+/* Before first paint: scripts are running (so one lesson shows at a time), a lesson named in
+   the address opens on that lesson rather than the cover, and motion is allowed unless the
+   visitor asked for less. Every lesson is open: no email, no account. */
 (function (d) {
   d.classList.add("js");
-  try { if ((JSON.parse(localStorage.getItem("hubricon.learn") || "{}").courses || {})["price-curve"]) d.classList.add("learn-in"); } catch (e) {}
+  if (/^#[a-z0-9-]+$/.test(location.hash)) d.classList.add("reading");
   try {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
     d.classList.add("motion");
@@ -126,16 +127,18 @@
         <li>Walk toward the best price in steps of at most 5%, and measure each one.</li>
         <li>Rank your whole catalogue by what its next step is worth.</li>
       </ul>
-      <form class="join" id="join" novalidate>
-        <label for="email">Your email</label>
-        <div class="row">
-          <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
-          <button class="btn" type="submit">Open the course <span class="arrow" aria-hidden="true">→</span></button>
+      <p class="start"><a class="btn" href="#elasticity" data-start>Start lesson 1 <span class="arrow" aria-hidden="true">→</span></a><span class="start-note">Every lesson and the spreadsheet are open. No email, no account.</span></p>
+<!-- build:optin-price-curve-cover -->
+      <form class="join-tile" data-join="price-curve" novalidate>
+        <label for="join-price-curve-cover">Want it in your inbox? <span>Optional</span></label>
+        <div class="join-row">
+          <input id="join-price-curve-cover" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
         </div>
-        <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="fine">One email opens every lesson and the spreadsheet. We send you the link so you can come back, and a short note when a new course is out; one click unsubscribes. Nothing inside is held back and nothing inside is for sale. <a href="/privacy#learn">How we handle your email</a>.</p>
-        <p class="err" id="join-err" role="alert" hidden></p>
-      </form>
+        <div class="hp" aria-hidden="true"><label for="join-price-curve-cover-website">Leave this empty</label><input id="join-price-curve-cover-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form><!-- /build:optin-price-curve-cover -->
       <div class="contents">
         <h2>What is inside</h2>
         <ol>
@@ -549,6 +552,21 @@
           <li>Take the top three steps this fortnight. Write the expected change beside each, and check it in two weeks.</li>
         </ol>
       </div>
+<!-- build:optin-price-curve-end -->
+      <section class="keep" aria-labelledby="keep-price-curve-h">
+        <h3 id="keep-price-curve-h">Keep it current</h3>
+        <p>Amazon rewrites its fee cards about once a year and adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>
+      <form class="join-tile" data-join="price-curve" novalidate>
+        <label for="join-price-curve-end">Want it in your inbox? <span>Optional</span></label>
+        <div class="join-row">
+          <input id="join-price-curve-end" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="join-price-curve-end-website">Leave this empty</label><input id="join-price-curve-end-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form>
+      </section><!-- /build:optin-price-curve-end -->
       <nav class="pager" aria-label="Lesson pages"><a href="#move-it">Previous<b>← Move it, and measure it</b></a></nav>
     </article>
 
