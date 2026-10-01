@@ -1937,6 +1937,7 @@ only. What exists:
 | Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
 | Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
 | Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
+| Each course on one page (2026-10-01): every rule and formula in eight cells, one printed Letter page, each cell linked to its lesson; figures are the course page's own fills | `learn/fee-staircase-card.html`, `learn/price-curve-card.html`, "a course on one page" in `/assets/hubricon.css` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
 
 **Every figure is built, none typed.** The lessons' numbers are `data-fill` keys and the two

@@ -554,6 +554,7 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .course-page .toc a.seen::after { content: "✓"; color: var(--ink-4); }
 .course-page .toc .course-name { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-3); }
 .course-page .toc .tpl-link { display: block; margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-2); }
+.course-page .toc .tpl-link + .tpl-link { margin-top: var(--s-2); }
 
 /* centre */
 .course-page .lesson-col { min-width: 0; }
@@ -565,6 +566,7 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 /* The cover's start: the course opens on a click, and the opt-in sits under it, quieter */
 .course-page .start { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); }
 .course-page .start-note { font-size: var(--t-14); color: var(--ink-3); }
+.course-page .start-note a { margin-left: var(--s-2); color: var(--ink-2); }
 .course-page .cover .join-tile { margin-top: var(--s-6); max-width: 560px; }
 /* The last lesson's "Keep it current" */
 .course-page .keep { margin-top: var(--s-8); max-width: 68ch; padding-top: var(--s-7); border-top: 1px solid var(--rule); }
@@ -669,6 +671,50 @@ html:not(.js) .course-page .pager { display: none; }
 .course-page .check details { margin-top: var(--s-2); }
 .course-page .check summary { cursor: pointer; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-2); }
 .course-page .check details p { margin-top: var(--s-2); padding-left: var(--s-4); border-left: 2px solid var(--rule-2); color: var(--ink-2); }
+
+/* ---------------------------------------------------- a course on one page ---- */
+/* /learn/<course>-card: every rule and formula of a course in eight cells, to keep beside
+   Seller Central. On screen a grid; printed, one page (the bar, the footer and the buttons go). */
+.sheet-page .sheet-head { padding-block: var(--s-8) var(--s-6); }
+.sheet-page .sheet-head h1 { margin-top: var(--s-3); font-size: var(--t-display-s); max-width: 22ch; }
+.sheet-page .sheet-src { margin-top: var(--s-4); max-width: 70ch; font-size: var(--t-16); color: var(--ink-2); }
+.sheet-page .sheet-actions { margin-top: var(--s-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-6); font-size: var(--t-14); }
+.sheet-page .sheet-actions a { color: var(--ink-2); }
+.sheet-page .link-btn { font: var(--strong) var(--t-14) / 1.4 var(--font); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.sheet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid var(--ink); }
+.sheet-cell { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5) var(--s-5) var(--s-5) 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.sheet-cell:nth-child(even) { padding-left: var(--s-5); border-left: 1px solid var(--rule); }
+.sheet-cell h2 { font-size: var(--t-20); letter-spacing: -0.015em; display: flex; gap: var(--s-3); align-items: baseline; }
+.sheet-cell h2 .n { font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.sheet-cell p, .sheet-cell li { font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
+.sheet-cell ul, .sheet-cell ol { padding-left: var(--s-5); display: grid; gap: var(--s-2); }
+.sheet-cell .sheet-f { color: var(--ink); font-weight: var(--strong); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sheet-cell .sheet-more { margin-top: auto; padding-top: var(--s-2); font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); text-decoration: none; }
+.sheet-cell .sheet-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.sheet-page .sheet-foot { padding-block: var(--s-6) var(--section); font-size: var(--t-14); color: var(--ink-3); }
+.sheet-page .sheet-foot a { color: var(--ink-2); }
+@media (max-width: 760px) {
+  .sheet { grid-template-columns: minmax(0, 1fr); }
+  .sheet-cell, .sheet-cell:nth-child(even) { padding: var(--s-5) 0; border-left: 0; }
+  .sheet-page .sheet-head { padding-top: var(--s-5); }
+}
+@media print {
+  @page { size: letter; margin: 0.45in; }
+  body.sheet-page > :not(main), .sheet-page .sheet-actions, .sheet-page .sheet-more { display: none !important; }
+  .sheet-page main.wrap { max-width: none; padding: 0; }
+  .sheet-page .sheet-head { padding: 0 0 6pt; }
+  .sheet-page .sheet-head h1 { font-size: 17pt; margin-top: 2pt; max-width: none; }
+  .sheet-page .sheet-src { margin-top: 3pt; font-size: 8pt; max-width: none; color: #333; }
+  .sheet-page .label { font-size: 7pt; }
+  .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); border-top-width: 1.5pt; }
+  .sheet-cell, .sheet-cell:nth-child(even) { padding: 5pt 7pt 6pt 0; gap: 3pt; break-inside: avoid; }
+  .sheet-cell:nth-child(even) { padding-left: 7pt; border-left: 1px solid var(--rule); }
+  .sheet-cell h2 { font-size: 10pt; }
+  .sheet-cell h2 .n { font-size: 8pt; }
+  .sheet-cell p, .sheet-cell li { font-size: 7.6pt; line-height: 1.38; color: #222; }
+  .sheet-cell ul, .sheet-cell ol { gap: 1.5pt; padding-left: 11pt; }
+  .sheet-page .sheet-foot { padding: 5pt 0 0; font-size: 7pt; color: #555; }
+}
 
 /* ------------------------------------------------- a course on your numbers ---- */
 /* The reader's own numbers, typed into a lesson and read back by the lessons after it.

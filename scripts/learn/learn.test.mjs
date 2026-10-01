@@ -135,6 +135,31 @@ test("every note drafted for the list composes, types no figure the course compu
   assert.throws(() => resolveFills("{fill:fee-staircase:no_such_key}"), /no figure no_such_key/);
 });
 
+test("each course on one page: eight cells, each pointing at a lesson that teaches it, no figure typed, one printed page", () => {
+  const css = read("assets/hubricon.css");
+  assert.match(css, /body\.sheet-page > :not\(main\)[^{]*\{ display: none !important; \}/, "printed, the bar and the footer go");
+  assert.match(css, /@media print \{[\s\S]*?\.sheet \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, "two columns on paper, whatever the width");
+  for (const c of Object.values(COURSES)) {
+    const card = read(`${c.card.slice(1)}.html`), page = read(`${c.path.slice(1)}.html`);
+    assert.ok(page.includes(`href="${c.card}"`), `${c.path} links its one page`);
+    const cells = [...card.matchAll(/<section class="sheet-cell"[\s\S]*?<\/section>/g)].map(([s]) => s);
+    assert.equal(cells.length, 8, c.card);
+    for (const cell of cells) {
+      const [, path, id] = cell.match(/class="sheet-more" href="([^"#]+)#([^"]+)"/);
+      assert.equal(path, c.path);
+      assert.match(page, new RegExp(`<article class="lesson" id="${id}"`), `${c.card} points at a lesson that exists: ${id}`);
+    }
+    const prose = text(card.replace(/<!-- build:[\s\S]*?<!-- \/build:[^>]*-->/g, "").replace(/<span[^>]*data-fill[^>]*>[^<]*<\/span>/g, "FILL"));
+    for (const [m] of prose.matchAll(/\$\d+(?:,\d{3})*(?:\.\d+)?/g)) assert.ok(["$10", "$50", "$0.01"].includes(m), `${c.card}: ${m} is typed; it must be a fill`);
+    for (const [, key, shown] of card.matchAll(/data-fill="([a-z0-9_]+)">([^<]*)</g)) {
+      const onCourse = page.match(new RegExp(`data-fill="${key}"[^>]*>([^<]*)<`));
+      assert.ok(onCourse, `${key} is a figure the course itself prints`);
+      assert.equal(shown, onCourse[1], `${c.card} and ${c.path} print the same ${key}`);
+    }
+    assert.match(text(card), /Every lesson is open; no email needed\./);
+  }
+});
+
 test("the invitation is one quiet call to the call; nothing inside a lesson sells", () => {
   const invite = course.match(/<aside class="invite"[\s\S]*?<\/aside>/)[0];
   assert.equal([...invite.matchAll(/<a\b/g)].length, 1);

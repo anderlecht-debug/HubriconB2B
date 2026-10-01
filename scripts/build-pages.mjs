@@ -387,6 +387,8 @@ export const PAGES = [
   { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
   { file: "learn/price-curve.html" },
+  { file: "learn/fee-staircase-card.html" },
+  { file: "learn/price-curve-card.html" },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

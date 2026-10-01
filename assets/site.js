@@ -162,6 +162,9 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
   });
 });
 
+/* -- A page meant for paper: the one-page course cards ------------------------------- */
+document.querySelectorAll("[data-print]").forEach((b) => b.addEventListener("click", () => { track("card_print", { page: location.pathname }); window.print(); }));
+
 /* -- Videos: counted when someone presses play ------------------------------------ */
 document.querySelectorAll("video[data-track]").forEach((v) => {
   v.addEventListener("play", () => track("video_play", { v: v.dataset.track }), { once: true });
