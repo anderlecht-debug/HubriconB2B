@@ -151,7 +151,7 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
     let said;
     if (!res || !res.ok) said = "That didn't go through on our side. Nothing is lost: every lesson and the spreadsheet are open right here. Try again later if you want the email.";
     else if (body.new === false) said = "You're already on the list for this course. Nothing more to do.";
-    else if (body.emailed) said = `Sent to ${email}: the link and the spreadsheet. Nothing else arrives unless Amazon changes its fee cards or a new course opens.`;
+    else if (body.emailed) said = `Sent to ${email}: the link and the spreadsheet. Nothing else arrives unless a fee card the courses use changes or a new course opens.`;
     else said = "Your address is saved, but the email didn't go out just now; we'll send it once it can. Every lesson and the spreadsheet are open right here.";
     track("learn_registered", { course: form.dataset.join, from: location.pathname, emailed: Boolean(body.emailed) });
     const done = document.createElement("p");

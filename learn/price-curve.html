@@ -64,7 +64,7 @@
           <div class="fly-in">
             <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a></div>
             <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
-            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a></div>
           </div>
         </div>
       </div>
@@ -137,7 +137,7 @@
           <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
         </div>
         <div class="hp" aria-hidden="true"><label for="join-price-curve-cover-website">Leave this empty</label><input id="join-price-curve-cover-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
         <p class="join-err" role="alert" hidden></p>
       </form><!-- /build:optin-price-curve-cover -->
       <div class="contents">
@@ -252,8 +252,8 @@
               <label>Today's price <input name="price" inputmode="decimal" autocomplete="off"></label>
               <label>Units a month at today's price <input name="units" inputmode="numeric" autocomplete="off"></label>
               <label>Landed cost per unit <input name="cost" inputmode="decimal" autocomplete="off"></label>
-              <label>Referral rate, % <input name="referral" inputmode="decimal" autocomplete="off" value="15"></label>
-              <label>Fulfilment fee per unit <input name="fba" inputmode="decimal" autocomplete="off"></label>
+              <label>Referral rate, % <span class="hint">Shopify: the payment rate</span> <input name="referral" inputmode="decimal" autocomplete="off" value="15"></label>
+              <label>Fulfilment fee per unit <span class="hint">Shopify: shipping, packing and the per-order fee</span> <input name="fba" inputmode="decimal" autocomplete="off"></label>
               <label>Storage and other per-unit costs <input name="other" inputmode="decimal" autocomplete="off"></label>
               <label>A discount to test, % <input name="discount" inputmode="decimal" autocomplete="off" value="20"></label>
             </div>
@@ -347,6 +347,7 @@
       <div class="prose">
         <h3>Split the fees the way they move</h3>
         <p>Amazon's referral fee is a percentage of the price, so it grows when the price does. The fulfilment fee is fixed per unit by size and weight, and storage is fixed per unit too. Treat the fixed fees like landed cost, and gross the whole thing up by the percentage. Lumping every fee into one percentage moves the best price the wrong way.</p>
+        <p>On Shopify the split is the same. Shopify Payments takes a share of the price, <span data-fill="learn_shop_rate">2.9%</span> on the Basic plan, plus <span data-fill="learn_shop_fixed">$0.30</span> an order, on a standard card (<a href="https://www.shopify.com/pricing">Shopify's pricing</a>); shipping and packing are fixed per unit. The share goes where the referral rate goes, and the fixed costs, the per-order fee included, go with the fulfilment fee.</p>
         <p class="formula">Best price = (landed cost + fixed fees per unit) ÷ (1 − referral rate) × elasticity ÷ (1 + elasticity)</p>
         <p class="source">Valid for elasticity below −1. It is the price where one more cent loses exactly as much in units as it adds in margin.</p>
         <div class="worked">
@@ -366,7 +367,7 @@
         <p>At the best price this listing makes <span data-fill="learn_pc_best_delta">+$25</span> a month more than today, on <span data-fill="learn_pc_profit">$5,593</span>. Near the peak, a few percent either way costs little. Far from it, or on a discount, the curve falls away fast. That is why the next two lessons matter more than the cent.</p>
 
         <h3>When there is no best price</h3>
-        <p>An inelastic SKU, between 0 and −1, has no peak: profit rises with the price until something the model does not see stops it, like a competitor or the Buy Box. And a SKU too close to −1 has a peak nobody can locate. In both cases the sheet says "none" and points up; lesson 7 is how to walk.</p>
+        <p>An inelastic SKU, between 0 and −1, has no peak: profit rises with the price until something the model does not see stops it, like a competitor, the Buy Box on Amazon, or conversion on Shopify. And a SKU too close to −1 has a peak nobody can locate. In both cases the sheet says "none" and points up; lesson 7 is how to walk.</p>
 
         <h3>What the formula assumes</h3>
         <p>That the fees per unit stay the same between today's price and the new one. Amazon's fulfilment fee changes where a price crosses $10 or $50. If a move crosses one, the sheet says so: price both sides with <a href="/learn/fee-staircase">The Fee Staircase</a>.</p>
@@ -381,7 +382,7 @@
       <div class="do">
         <h3>Do this now</h3>
         <ol>
-          <li>Type your landed cost, your fulfilment fee from Seller Central's Fee Preview report, and your referral rate into Your price.</li>
+          <li>Type your landed cost, your fulfilment fee (Seller Central's Fee Preview report on Amazon; your shipping and packing per unit on Shopify), and your referral or payment rate into Your price.</li>
           <li>Read the best price, and the interval's two ends beside it in your head: the distance is only as good as the interval.</li>
         </ol>
       </div>
@@ -492,7 +493,7 @@
 <!-- /build:video-move-it -->
       <div class="prose">
         <h3>At most <span data-fill="learn_pc_cap">5%</span> at a time</h3>
-        <p>The fit describes prices near the ones you have tried, not prices far beyond them. Amazon's Buy Box weighs your price against other sellers'. So a step is never more than 5%, and the next one waits for the measurement. The invented listing's best price is <span data-fill="learn_pc_best">$26.84</span>; its next step stops at <span data-fill="learn_pc_step">$26.24</span>.</p>
+        <p>The fit describes prices near the ones you have tried, not prices far beyond them. On Amazon the Buy Box weighs your price against other sellers'; on Shopify every shopper weighs it against the tabs they have open. So a step is never more than 5%, and the next one waits for the measurement. The invented listing's best price is <span data-fill="learn_pc_best">$26.84</span>; its next step stops at <span data-fill="learn_pc_step">$26.24</span>.</p>
 
         <h3>Called before, measured after</h3>
         <ol>
@@ -515,14 +516,14 @@
         <h3>Check yourself</h3>
         <ol>
           <li><p>The best price for the exercise SKU is 12% above today's <span data-fill="learn_pc_q_p">$20</span>. What is the next price?</p><details><summary>The answer</summary><p>The cap is 5% a step: <span class="money" data-fill="learn_pc_q_step">$21.00</span>. Write down what you expect, then measure for two weeks before the next step.</p></details></li>
-          <li><p>Your Buy Box share drops while a step is live. What do you do?</p><details><summary>The answer</summary><p>Reverse the step. The model cannot see the Buy Box; you can.</p></details></li>
+          <li><p>Your Buy Box share on Amazon, or your conversion rate on Shopify, drops while a step is live. What do you do?</p><details><summary>The answer</summary><p>Reverse the step. The model cannot see either; you can.</p></details></li>
         </ol>
       </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
           <li>Take your best seller's "Next price" and write down the expected change a month beside it, dated.</li>
-          <li>Make the move, watch the Buy Box for two weeks, then add the period to Your history.</li>
+          <li>Make the move, watch the Buy Box or your conversion rate for two weeks, then add the period to Your history.</li>
         </ol>
       </div>
       <nav class="pager" aria-label="Lesson pages"><a href="#discounts">Previous<b>← What a discount gives away</b></a><a class="next" href="#catalogue">Next<b>Every SKU, in order →</b></a></nav>
@@ -572,7 +573,7 @@
 <!-- build:optin-price-curve-end -->
       <section class="keep" aria-labelledby="keep-price-curve-h">
         <h3 id="keep-price-curve-h">Keep it current</h3>
-        <p>Amazon rewrites its fee cards about once a year and adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>
+        <p>The fee cards these courses use change about once a year, and Amazon adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>
       <form class="join-tile" data-join="price-curve" novalidate>
         <label for="join-price-curve-end">Want it in your inbox? <span>Optional</span></label>
         <div class="join-row">
@@ -580,7 +581,7 @@
           <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
         </div>
         <div class="hp" aria-hidden="true"><label for="join-price-curve-end-website">Leave this empty</label><input id="join-price-curve-end-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
         <p class="join-err" role="alert" hidden></p>
       </form>
       </section><!-- /build:optin-price-curve-end -->
@@ -591,7 +592,7 @@
 
   <aside class="invite" aria-label="Hubricon">
     <span class="label">If you would rather it were run</span>
-    <p>Hubricon runs this arithmetic, and the rest of it on fees, ads, inventory and Amazon claims, across a whole catalogue every week.</p>
+    <p>Hubricon runs this arithmetic, and the rest of it on prices, ads, inventory and fees, on Amazon, Shopify or both, across a whole catalogue every week.</p>
     <p>A month is billed only if the profit it measured clears the fee.</p>
     <a class="btn" href="/apply" data-cta="learn">Book your call <span class="arrow" aria-hidden="true">→</span></a>
   </aside>

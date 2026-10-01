@@ -465,3 +465,60 @@ export function lateSVG(late, opts) {
     `On time it is ${Math.round(a.p_out * 100)}%; two weeks late it is ${Math.round(b.p_out * 100)}%.`;
   return frame(w, h, "late", { id: `${id}-t`, text: "The chance of running out, by days late" }, { id: `${id}-d`, text: desc }, body);
 }
+
+// ---------------------------------------------------------------- the parcel staircase
+
+/**
+ * pc: USPS Ground Advantage commercial rates by weight (the rate card's carrier rows), the
+ * farthest zone solid and the nearest dashed, with one invented parcel just past the pound
+ * line. Anything over a pound bills at the next whole pound, so the step at 16 oz is from the
+ * under-a-pound rate to the 2 lb rate.
+ */
+export function parcelSVG(pc, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const xMax = 48;
+  const near = [[16, pc.rows["0"][0]], [32, pc.rows["32"][0]], [48, pc.rows["48"][0]]];
+  const far = [[16, pc.rows["0"][7]], [32, pc.rows["32"][7]], [48, pc.rows["48"][7]]];
+  const all = [...near, ...far].map(([, v]) => v);
+  const yt = niceTicks(Math.min(...all) - 0.5, Math.max(...all) + 0.5, 4);
+  const d0 = Math.min(yt[0], Math.min(...all) - 0.5), d1 = Math.max(yt[yt.length - 1], Math.max(...all) + 0.5);
+  const X = scale(0, xMax, m.l, w - m.r), Y = scale(d0, d1, h - m.b, m.t);
+  const stairs = (rows) => {
+    let d = `M${r1(X(0))},${r1(Y(rows[0][1]))}`;
+    rows.forEach(([edge], i) => { d += ` H${r1(X(edge))}`; if (i + 1 < rows.length) d += ` V${r1(Y(rows[i + 1][1]))}`; });
+    return d;
+  };
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">$${t.toFixed(2)}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const e of [0, 16, 32, 48]) {
+    body += `<line class="tick" x1="${r1(X(e))}" x2="${r1(X(e))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(e))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">${e === xMax ? "48 oz" : e}</text>`;
+  }
+  body += `<path class="step-alt fade" style="--after:0ms" d="${stairs(near)}"/>`;
+  body += `<path class="step draw" pathLength="1" d="${stairs(far)}"/>`;
+  const kx = m.l, ky = font * 0.9, kl = font * 1.7;
+  body += `<g class="fade" style="--after:0ms">` +
+    `<line class="key-solid" x1="${kx}" x2="${kx + kl}" y1="${ky}" y2="${ky}"/>` +
+    `<text class="ink" x="${kx + kl + 8}" y="${ky}" font-size="${font - 1}" dominant-baseline="middle">The farthest zone (8)</text>` +
+    `<line class="step-alt" x1="${kx}" x2="${kx + kl}" y1="${ky + font * 1.6}" y2="${ky + font * 1.6}"/>` +
+    `<text x="${kx + kl + 8}" y="${ky + font * 1.6}" font-size="${font - 1}" dominant-baseline="middle">The nearest zone (1)</text>` +
+    `</g>`;
+  // the invented parcel, just past the pound line, on the farthest zone; one step down, under a pound
+  const r = font < 13 ? 4.5 : 5.5;
+  const ex = X(16), yLo = Y(pc.rows["0"][7]), yHi = Y(pc.rows["32"][7]), px = X(pc.parcel_oz);
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  body += `<line class="leak" x1="${r1(ex)}" x2="${r1(ex)}" y1="${r1(yLo)}" y2="${r1(yHi)}"/>`;
+  body += `<circle class="dot-hollow" cx="${r1(ex - 1.5)}" cy="${r1(yLo)}" r="${r}"/>`;
+  body += `<circle class="dot" cx="${r1(px)}" cy="${r1(yHi)}" r="${r}"/>`;
+  body += `<text class="leak-text" x="${r1(ex - 10)}" y="${r1((yLo + yHi) / 2)}" font-size="${font + 1}" text-anchor="end" dominant-baseline="middle">+${perUnit(pc.step[0])} to ${perUnit(pc.step[1])}</text>`;
+  body += `<text class="leak-text" x="${r1(ex - 10)}" y="${r1((yLo + yHi) / 2 + font + 4)}" font-size="${font - 1}" text-anchor="end" dominant-baseline="middle">a parcel, by zone</text>`;
+  body += `<text class="ink strong" x="${r1(px + r + 6)}" y="${r1(yHi - r - 6)}" font-size="${font}">${pc.parcel_oz} oz · an invented parcel</text>`;
+  body += `</g>`;
+  const desc = `USPS Ground Advantage's 2026 commercial rates climb a step at every pound, because anything over a pound bills at the next whole pound. ` +
+    `A parcel at ${pc.parcel_oz} ounces pays the 2 lb rate: ${perUnit(pc.step[0])} to ${perUnit(pc.step[1])} more a parcel than one under a pound, depending on the zone.`;
+  return frame(w, h, "stairs", { id: `${id}-t`, text: "The parcel staircase: USPS Ground Advantage by weight" }, { id: `${id}-d`, text: desc }, body);
+}

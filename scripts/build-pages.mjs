@@ -20,7 +20,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, usd } from "../assets/charts.mjs";
 import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
@@ -35,6 +35,9 @@ const shortDate = (iso) => { const [, m, d] = iso.split("-").map(Number); return
 const n = (v) => Math.round(v).toLocaleString("en-US");
 const dollars2 = (v) => `$${v.toFixed(2)}`;
 const millions = (v) => `$${(v / 1e6).toFixed(1).replace(/\.0$/, "")}M`;
+
+// An invented parcel for the home page's Shopify staircase: a few tenths of an ounce past a pound.
+const PARCEL_OZ = 16.4;
 
 export function figures(rc, mc, cs) {
   const priced = cs.priced_on;
@@ -63,6 +66,9 @@ export function figures(rc, mc, cs) {
   };
 
   const end = mc.months.length - 1;
+  // The parcel staircase: the rate card's USPS rows and the step at the pound line, by zone
+  const parcel = { rows: rc.carrier.ground_commercial, parcel_oz: PARCEL_OZ, step: fees.carrierSteps(rc)[16] };
+  if (!parcel.step) throw new Error("the rate card has no USPS step at one pound");
   const learn = learnFigures(rc, cs);
   const pc = priceCurveFigures(json("data/learn-price-curve.json"));
   const cc = capitalCashFigures(json("data/learn-capital-cash.json"));
@@ -80,6 +86,9 @@ export function figures(rc, mc, cs) {
     "mc-narrow": monteCarloSVG(mc, { id: "mc-n", w: 360, h: 340, m: { t: 16, r: 82, b: 38, l: 50 }, paths: 20, font: 12 }),
     "stairs-wide": staircaseSVG(stairs, { id: "st-w", w: 760, h: 420, m: { t: 64, r: 24, b: 48, l: 64 }, font: 13, xMax: 20 }),
     "stairs-narrow": staircaseSVG(stairs, { id: "st-n", w: 360, h: 420, m: { t: 60, r: 26, b: 42, l: 50 }, font: 12, xMax: 16 }),
+    // Shopify's staircase: USPS Ground Advantage's published rows, one invented parcel just past a pound
+    "parcel-wide": parcelSVG(parcel, { id: "pa-w", w: 760, h: 380, m: { t: 64, r: 24, b: 48, l: 64 }, font: 13 }),
+    "parcel-narrow": parcelSVG(parcel, { id: "pa-n", w: 360, h: 380, m: { t: 60, r: 16, b: 42, l: 50 }, font: 12 }),
     "aging-wide": agingSVG(aging, { id: "ag-w", w: 760, h: 300, m: { t: 32, r: 24, b: 48, l: 64 }, font: 13 }),
     "aging-narrow": agingSVG(aging, { id: "ag-n", w: 360, h: 260, m: { t: 28, r: 8, b: 40, l: 46 }, font: 12 }),
     "strip-wide": agingStripSVG(aging, { id: "sp-w", w: 1040, h: 200, m: { t: 44, r: 8, b: 66, l: 8 }, font: 15 }),
@@ -103,7 +112,8 @@ export function figures(rc, mc, cs) {
       edge: String(cs.step.edge_oz),
       step_np: dollars2(cs.step.non_peak.step),
       step_peak: dollars2(cs.step.peak.step),
-      units: n(Math.round(cs.listing.est_monthly_units / 100) * 100),
+      // an estimate, so rounded down (HUBRICON_SPEC.md: "ranges, never points; rounded down")
+      units: n(Math.floor(cs.listing.est_monthly_units / 100) * 100),
       mc_p10: usd(mc.percentiles.p10[end], { step: 1000 }),
       mc_p50: usd(mc.percentiles.p50[end], { step: 1000 }),
       mc_p90: usd(mc.percentiles.p90[end], { step: 1000 }),
@@ -126,6 +136,13 @@ export function figures(rc, mc, cs) {
       card_np_full: `${longDate(cs.cards.non_peak.effective).replace(/, \d{4}$/, "")} to ${longDate(cs.cards.non_peak.through).replace(/, \d{4}$/, "")}`,
       card_peak_full: `${longDate(cs.cards.peak.effective).replace(/, \d{4}$/, "")} to ${longDate(cs.cards.peak.through).replace(/, \d{4}$/, "")}`,
       storage_effective: longDate(cs.aging.storage_effective),
+      parcel_oz: String(PARCEL_OZ),
+      parcel_step_lo: `$${parcel.step[0].toFixed(2)}`,
+      parcel_step_hi: `$${parcel.step[1].toFixed(2)}`,
+      usps_effective: longDate(rc.carrier.effective),
+      // Shopify Payments, Basic plan: The Price Curve's "On Shopify the split is the same"
+      learn_shop_rate: `${+(rc.shopify.payments[rc.shopify.default_plan].rate * 100).toFixed(2)}%`,
+      learn_shop_fixed: `$${rc.shopify.payments[rc.shopify.default_plan].fixed.toFixed(2)}`,
       ...learn.fill,
       ...pc.fill,
       ...cc.fill,

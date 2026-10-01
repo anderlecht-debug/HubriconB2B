@@ -217,7 +217,7 @@ const lessonCount = (c) => (Array.isArray(c.lessons) ? c.lessons.length : c.less
 
 /* The email, as the founder set it on 2026-10-01: every lesson and spreadsheet is open to
    anyone, and an email is the opt-in for a little extra: the link and the spreadsheet in your
-   inbox, then a short note only when Amazon changes its fee cards or a new course opens. One
+   inbox, then a short note only when a fee card the courses use changes or a new course opens. One
    form, wherever it shows (the featured card, a course's cover and its last lesson); it posts
    the address, the course and the link's campaign tag to /api/learn (/assets/site.js). Its
    button is the field's own outline, never the call's. `where` keeps the ids unique. */
@@ -231,7 +231,7 @@ export function joinForm(c, where = "card") {
           <button type="submit">Send it to me ${ARROW}</button>
         </div>
         <div class="hp" aria-hidden="true"><label for="${id}-website">Leave this empty</label><input id="${id}-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when Amazon changes its fee cards or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
         <p class="join-err" role="alert" hidden></p>
       </form>`;
 }
@@ -241,7 +241,8 @@ function liveTile(c, i, { feature, wide = false }) {
   // video, so neither can be one link: the cover, the title and "Start" carry it instead.
   const trailer = Boolean(c.trailer && c.trailer.src);
   const whole = !trailer && !feature;
-  const badges = ["Free", `${lessonCount(c)} lessons`, ...(c.extras || [])].map((b) => `<span class="go-badge">${esc(b)}</span>`).join("");
+  // Who it is for, first after "Free": an Amazon-only course says so, so a Shopify seller moves on to one that runs on theirs
+  const badges = ["Free", ...(c.audience ? [c.audience] : []), `${lessonCount(c)} lessons`, ...(c.extras || [])].map((b) => `<span class="go-badge">${esc(b)}</span>`).join("");
   const title = whole ? esc(c.title) : `<a href="${c.path}">${esc(c.title)}</a>`;
   const go = feature
     ? `<a class="go-to" href="${c.path}#${c.lessons[0].id}">Start lesson 1, no email needed ${ARROW}</a>`
@@ -277,7 +278,7 @@ function optins(lib) {
     out[`optin-${c.slug}-end`] = `
       <section class="keep" aria-labelledby="keep-${c.slug}-h">
         <h3 id="keep-${c.slug}-h">Keep it current</h3>
-        <p>Amazon rewrites its fee cards about once a year and adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>${joinForm(c, "end")}
+        <p>The fee cards these courses use change about once a year, and Amazon adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>${joinForm(c, "end")}
       </section>`;
   }
   return out;

@@ -566,6 +566,8 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .course-page .outcomes li { padding-left: var(--s-5); position: relative; font-size: var(--t-16); }
 .course-page .outcomes li::before { content: ""; position: absolute; left: 0; top: 12px; width: 10px; height: 2px; background: var(--ink); }
 /* The cover's start: the course opens on a click, and the opt-in sits under it, quieter */
+.course-page .cover .audience { margin-top: var(--s-4); max-width: 60ch; font-size: var(--t-16); color: var(--ink-2); }
+.course-page .yours label .hint { font-weight: var(--regular); color: var(--ink-3); }
 .course-page .start { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); }
 .course-page .start-note { font-size: var(--t-14); color: var(--ink-3); }
 .course-page .start-note a { margin-left: var(--s-2); color: var(--ink-2); }
