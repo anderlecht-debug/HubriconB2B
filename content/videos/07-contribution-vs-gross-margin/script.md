@@ -3,7 +3,7 @@ THUMBNAIL:        {{gross_vs_contribution_gap}} in amber over the waterfall frag
 PILLAR:           5
 TIER:             B
 AWARENESS STAGE:  problem-aware
-CTA:              The course page at /learn, where the method is written out in full; no service mention
+CTA:              The free course at hubricon.com/learn, where the method is written out in full
 SPIKY CLAIM:      Gross margin is a number for your supplier's benefit, not yours. The only margin a product has is what's left after the platform and the ads take theirs.
 MISCONCEPTION:    Gross margin is my margin. Revenue minus cost of goods is what each product earns, and fees and ads are overhead.
 RUNTIME:          9–10 min
@@ -54,9 +54,9 @@ SCRIPT
   TEMPLATE: none yet for this pillar; the CTA points at the course page
 
 [9:00] THE HONEST LIMIT
-  VO: What you can do yourself is the waterfall for your top products, this week, from reports you already export. It's an afternoon, and it changes what you reorder. What you can't do by hand is the allocation at scale. {{n_skus}} products, every fee line on every order, ads allocated by attributed sales across campaigns that overlap, every month, with the fee tiers rechecked whenever a weight or a price moves. Done by hand it drifts back to revenue share inside a few months, and revenue share is gross margin wearing a different name. That part is a model. What you can do today is stop quoting gross margin as if it were yours. Rank by contribution, and read the bottom of the list.
+  VO: What you can do yourself is the waterfall for your top products, this week, from reports you already export. It's an afternoon, and it changes what you reorder. What you can't do by hand is the allocation at scale. {{n_skus}} products, every fee line on every order, ads allocated by attributed sales across campaigns that overlap, every month, with the fee tiers rechecked whenever a weight or a price moves. Done by hand it drifts back to revenue share inside a few months, and revenue share is gross margin wearing a different name. That part is a model. What you can do today is stop quoting gross margin as if it were yours. Rank by contribution, and read the bottom of the list. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: kinetic: the closing line
-  CTA: The course page at /learn, where the method is written out in full.
+  CTA: The method, written out in full with the spreadsheet, is free at hubricon.com/learn.
 
 RE-HOOK AUDIT: 0:00, 0:15, 0:45, 1:15, 1:50, 2:25, 3:00, 3:30, 4:05, 4:40, 5:15, 5:30, 6:05, 6:40, 7:15, 7:30, 8:05, 8:40, 9:00, 9:35 — no gap over 40 s
 DERIVED ASSETS: LinkedIn post: "gross margin is a number for your supplier" · X thread spine: {{gross_pct_latest}} quoted, {{contribution_pct_latest}} kept, {{gross_vs_contribution_gap}} of revenue between them · newsletter section: allocate ads by attributed sales, never by revenue share · clips at 0:00, 0:45, 1:15, 3:30, 5:30

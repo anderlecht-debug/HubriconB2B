@@ -1,6 +1,136 @@
 # Review inbox
 
-Updated 2026-10-01T03:22:50+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-01T03:54:40+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+
+## T01 · day None · tier A · pillar 3 — script gate
+
+**Title:** October 15 ⟨peak_from⟩: what Amazon's holiday fees cost one listing, to the cent  
+**Thumbnail:** $0.29 ⟨cs_delta⟩ a unit, from October 15 ⟨peak_from⟩, in blue on the dashed holiday card  
+**Spiky claim:** The holiday card is a price rise Amazon charges you per unit, and your P&L won't show it until it has already been paid.  
+**Misconception:** Holiday fees are a seasonal blip: a little higher, volume's up anyway, it washes out.  
+**CTA:** The whole method and the spreadsheet, free at hubricon.com/learn  
+**Estimated runtime:** about 4 min 34 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. October 15 ⟨peak_from⟩. From that morning until January 14 ⟨peak_to⟩, every unit you ship through Amazon costs more to fulfil, and your P&L won't say so until it's been paid. Here's what it costs one real listing, to the cent.
+2. $0.29 ⟨cs_delta⟩ a unit. That's what Amazon's holiday card adds to one real listing from October 15 ⟨peak_from⟩. On its volume, that's $1,500 ⟨cs_window_lo⟩ to $4,600 ⟨cs_window_hi⟩ across the season, and nobody sent it a memo.
+3. $0.20 ⟨peak_min⟩ to $0.42 ⟨peak_max⟩ more a unit. That's Amazon's holiday card on standard-size products, row by row, from October 15 ⟨peak_from⟩. If you can't say what it costs your best seller, that's not a you problem.
+
+### Script
+
+**[0:00] HOOK**  
+October 15 ⟨peak_from⟩. From that morning until January 14 ⟨peak_to⟩, every unit you ship through Amazon costs more to fulfil, and your P&L won't say so until it's been paid. Here's what it costs one real listing, to the cent.  
+
+**[0:20] LET THEM BE WRONG**  
+Here's how most of us treat holiday fees. Amazon raises them a little for the season. Volume's up anyway. It washes out. It's a reasonable view, and it's how the fee usually gets handled, as weather. If you've never priced it, that's not a you problem. Nobody around you is running the math. The trouble is that it isn't the same for every product, and it lands on each unit, not on the average.  
+
+**[0:50] WHAT CHANGES**  
+Here's what changes. First, the fulfilment fee. From October 15 ⟨peak_from⟩ to January 14 ⟨peak_to⟩, Amazon prices every unit off a second card. On the standard-size rows it's $0.20 ⟨peak_min⟩ to $0.42 ⟨peak_max⟩ more a unit, depending on the weight and the price. Second, storage. From October to December, a cubic foot of standard-size stock costs $2.40 ⟨stor_peak⟩ a month, against $0.78 ⟨stor_off⟩ the rest of the year. And under both, the 3.5% ⟨surcharge⟩ fuel and logistics surcharge Amazon added in April stays on every fulfilment fee.  
+
+**[1:30] CHAPTER 1 — ONE LISTING, PRICED**  
+Here's what that means on one real listing, modeled from its public page: a car-care brand ⟨who⟩'s best-selling paint scratch remover. Until October 14 ⟨np_through⟩ it pays $4.35 ⟨cs_fee_np⟩ a unit to fulfil. From October 15 ⟨peak_from⟩, $4.64 ⟨cs_fee_peak⟩. That's $0.29 ⟨cs_delta⟩ a unit. Its public sales rank puts it at roughly 3,600 ⟨units⟩ units a month, and a rank is a rough guide, so we carry a range. Across the season, the holiday card costs this one listing $1,500 ⟨cs_window_lo⟩ to $4,600 ⟨cs_window_hi⟩. Nothing about the product changed. Nobody decided anything. The date did it.  
+
+**[2:10] CHAPTER 2 — THE STEPS GET STEEPER**  
+Here's the part most people miss. Amazon's card is a staircase, and a unit that sits a fraction of an ounce past an edge pays the whole step. This listing sits 0.8 of an ounce ⟨over⟩ past the 8 ounces ⟨edge⟩ edge. On the card in force until October 14 ⟨np_through⟩, that step costs it $0.26 ⟨step_np⟩ a unit. On the holiday card, $0.28 ⟨step_peak⟩. A step you were already paying for gets more expensive in the months you sell the most.  
+
+**[2:45] CHAPTER 3 — THE PRICE TRAP**  
+The reflex is to raise the price to cover it. Be careful where. On Amazon's card a price is a step too. Below $10 ⟨price_edge⟩, a unit pays the cheaper column. Move a price from under $10 ⟨price_edge⟩ to over it, and on the card in force the fulfilment fee alone goes up $0.85 ⟨ten_min⟩ to $1.05 ⟨ten_max⟩ a unit, before the holiday card adds its share. A small raise across that line can leave you with less per unit than you had. Check which column the new price lands in before you move it.  
+
+**[3:20] CHAPTER 4 — THE UNITS THAT SIT**  
+Then storage. From October to December, a cubic foot costs $2.40 ⟨stor_peak⟩ a month, against $0.78 ⟨stor_off⟩. The units that cost the most are the ones that don't move. And once a unit has sat 271 ⟨cliff_day⟩ days, the aged-inventory surcharge steps from $1.50 ⟨aged_before⟩ to $5.45 ⟨aged_after⟩ a cubic foot, on top of storage. Holiday storage on an old unit is the most expensive combination on Amazon's cards.  
+
+**[3:55] WHAT TO DO**  
+Here's the list, and you can do all of it before October 15 ⟨peak_from⟩. Price your best sellers on the holiday card, not the one you're used to. Find any that sit a fraction of an ounce past an edge: that step gets steeper now. If you're raising prices for the season, check which column of the card the new price lands in. And pull your inventory age report. For anything close to 271 ⟨cliff_day⟩ days, price what it costs to hold through December against what it costs to sell through or remove. The spreadsheet that does every one of these is free, with the course.  
+
+**[4:35] THE HONEST LIMIT**  
+What a public page can't tell you is how long your units have sat, what your ads cost you per sale, or how many come back. Those live in your own exports, and that's where most of the holiday money goes. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The whole method and the spreadsheet are free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | number: {{peak_from}} lands alone, then {{peak_to}} beside it |  |
+| 0:20 | kinetic: the misconception in plain words, then "each unit, not the average" |  |
+| 0:50 | staircase: the card in force drawn solid, the holiday card dashed above it, the gap between them shaded | Amazon's published 2026 cards, both of them, with the surcharge |
+| 1:30 | number: {{cs_fee_np}} turns into {{cs_fee_peak}}, the difference in blue, then the season's range | the public-data case study, modeled from public data |
+| 2:10 | staircase: the listing's dot past the edge, the riser in blue on both cards | the public-data case study, modeled from public data |
+| 2:45 | formula: net per unit = the fee jump minus the price you gain, after referral | Amazon's published 2026 cards |
+| 3:20 | aging: storage plus the surcharge by age, the day-271 riser in blue | Amazon's published storage schedule, on the case-study unit's size, modeled from public data |
+| 3:55 | kinetic: the steps landing one at a time, then the template's One listing sheet |  |
+| 4:35 | kinetic: the closing line, then hubricon.com/learn |  |
+
+### Decide
+
+```
+hubricon-content approve october-15
+hubricon-content reject  october-15 --note "what to change"
+```
+Edit `content/videos/october-15/script.md` first if you prefer; it is re-validated on approve.
+
+## F01 · day None · tier F · pillar 0 — script gate
+
+**Title:** One listing, a fraction of an ounce past an edge  
+**Thumbnail:** $0.26 ⟨step_np⟩ a unit, in blue, on the riser between the dots  
+**Spiky claim:** A P&L is an average, and a fee step only shows up as a counterfactual, so the reports you trust cannot show you this one.  
+**Misconception:** Amazon's fees creep up a little as a product gets heavier or pricier. Small change, small difference.  
+**CTA:** Book the call. Not ready yet? The whole method is free at hubricon.com/learn.  
+**Estimated runtime:** about 3 min 04 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. $0.26 ⟨step_np⟩ a unit. That's what one real listing pays, on every sale, for sitting 0.8 of an ounce ⟨over⟩ past an edge on Amazon's fee card. Its P&L will never show it. Here's why, and here's the arithmetic.
+2. $6,400 ⟨leak_p10⟩ to $19,200 ⟨leak_p90⟩ a year. That's what one listing pays on a single step of Amazon's fee staircase, for a fraction of an ounce. Nobody around it is running the math.
+3. 8.8 ounces ⟨weight⟩. That's the published weight of the listing in this film, and it sits a fraction of an ounce past an edge on Amazon's card. Your cost model is a line. Amazon's is a staircase.
+
+### Script
+
+**[0:00] HOOK**  
+$0.26 ⟨step_np⟩ a unit. That's what one real listing pays, on every sale, for sitting 0.8 of an ounce ⟨over⟩ past an edge on Amazon's fee card. Its P&L will never show it. Here's why, and here's the arithmetic.  
+
+**[0:15] THE STAIRCASE**  
+Most of us carry a mental model of cost that's a line. Heavier costs a little more. Pricier costs a little more. A small change makes a small difference. Amazon's fulfilment fee isn't a line. It's a staircase. It's flat for a stretch, then it steps, then it's flat again. Inside a step, another ounce costs nothing. Across an edge, the next ounce costs the whole step, on every unit, every month, until something moves.  
+
+**[0:45] WHERE THIS LISTING SITS**  
+This is a real listing, modeled from its public page and nothing else: a car-care brand ⟨who⟩'s best-selling paint scratch remover, in Automotive ⟨category⟩. Its page lists an item weight of 8.8 ounces ⟨weight⟩. The edge on the card is at 8 ounces ⟨edge⟩. So every unit it ships pays the next step up.  
+
+**[1:05] THE COUNTERFACTUAL**  
+Now the same listing, one step the other way. It would pay $0.26 ⟨step_np⟩ less a unit, and $0.28 ⟨step_peak⟩ less from October 15 ⟨peak_from⟩, when Amazon's holiday card takes over. No report shows you that, because the lighter version never shipped. A P&L is an average. A cliff is only visible as a counterfactual. On roughly 3,600 ⟨units⟩ units a month, that one step is worth $6,400 ⟨leak_p10⟩ to $19,200 ⟨leak_p90⟩ a year.  
+
+**[1:35] TEN THOUSAND YEARS**  
+That's a range, not a number, on purpose. Volume read from a public sales rank can be off by a long way in either direction. So we didn't take one guess. We ran this listing's year 10,000 ⟨years⟩ times, with volume and cost moving the way they really move, and read the spread. Each faint line is one of those years. The band is where most of them land, the bad end included. Months at a loss, before ads, storage and returns: 0 ⟨months_losing⟩ of 120,000 ⟨months_total⟩.  
+
+**[2:00] THE CLIFF, AND THE GAP**  
+There's a bigger step that no public page can show. Once a unit has sat 271 ⟨cliff_day⟩ days in Amazon's warehouse, its storage surcharge goes from $1.50 ⟨aged_before⟩ to $5.45 ⟨aged_after⟩ a cubic foot, overnight. How close this brand's stock sits to that line, its page doesn't say. It doesn't show ads, either, or returns. That's the gap, and only your own exports close it.  
+
+**[2:25] WHAT THIS IS**  
+We picked this listing because it had a finding. Of 1,856 ⟨brands_modeled⟩ Amazon brands we've modeled from public pages, 1,473 ⟨brands_silent⟩ showed nothing worth fixing, and we say so. On a call, we look at your own numbers with you, and if the arithmetic doesn't clear our fee at your size, we tell you that too.  
+
+**[2:45] THE CLOSE**  
+You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* Book the call. Not ready yet? The whole method is free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | number: {{step_np}} lands alone, then the words "a unit, on every sale" |  |
+| 0:15 | staircase: the card draws in as steps, the holiday card dashed above it, no listing yet | Amazon's published 2026 large-standard card, with the fuel and logistics surcharge |
+| 0:45 | staircase: the solid dot lands on the tread past the edge, labelled with its weight | the public-data case study, modeled from public data |
+| 1:05 | staircase: the hollow dot one step down, the riser between the two in blue, the yearly range beneath | the public-data case study, modeled from public data |
+| 1:35 | montecarlo: the paths fan out from today, settle to almost nothing, then the band fills | the public-data case study, modeled from public data |
+| 2:00 | aging: storage plus the surcharge by age, the day-271 riser in blue | Amazon's published storage schedule, on the case-study unit's size, modeled from public data |
+| 2:25 | number: {{brands_silent}} of {{brands_modeled}}, the words "nothing worth fixing" beneath |  |
+| 2:45 | kinetic: the two ways out, the call and the course, the call first |  |
+
+### Decide
+
+```
+hubricon-content approve case-study-film
+hubricon-content reject  case-study-film --note "what to change"
+```
+Edit `content/videos/case-study-film/script.md` first if you prefer; it is re-validated on approve.
 
 ## V01 · day 1 · tier A · pillar 4 — script gate
 
@@ -8,8 +138,8 @@ Updated 2026-10-01T03:22:50+00:00. Everything here is parked until you decide. N
 **Thumbnail:** $65,320 ⟨year_luck_spread⟩ in amber beside the fan of paths, the top tenth lit  
 **Spiky claim:** Most of the gap between the top tenth and the median of similar businesses is dice, and from the outside you cannot tell which.  
 **Misconception:** The founders who finished on top did something different. Find out what, and copy it.  
-**CTA:** Subscribe, and the newsletter. Nothing else.  
-**Estimated runtime:** about 4 min 33 s · **voice:** placeholder until the clone exists
+**CTA:** The free course at hubricon.com/learn, where the method is written out in full  
+**Estimated runtime:** about 4 min 45 s · **voice:** placeholder until the clone exists
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -38,8 +168,8 @@ Here's the part that should bother you more. Look at the worst day of the year f
 A short list, and you can do all of it this week. First, before you copy anyone, ask for the denominator. How many people ran this plan, and how many of them are not on the podcast. If nobody can answer, treat the advice as a story, not a method. Next, look for the shared moves. If the winners and the losers did the same thing, that thing is not the explanation, however confidently it's told. Last, run your own plan more than once. Take your last year, change nothing but the order the demand arrived in, and see how wide the spread gets. If it's wide, most of what you'd credit to skill is variance, and the plan should be judged on its worst tenth, not its best.  
 
 **[4:45] THE HONEST LIMIT**  
-What you can't do by hand is that last step at any real scale. Running a year of a 24 ⟨n_skus⟩-product catalog 2,000 ⟨year_paths⟩ times, with demand that moves together across products the way it really does, is a model, and a bad model is worse than no model. What you can do today is stop asking winners how they won. Ask how many people ran their plan, and where the rest of them are.  
-*CTA:* If this was useful, subscribe. The newsletter carries one of these a week.  
+What you can't do by hand is that last step at any real scale. Running a year of a 24 ⟨n_skus⟩-product catalog 2,000 ⟨year_paths⟩ times, with demand that moves together across products the way it really does, is a model, and a bad model is worse than no model. What you can do today is stop asking winners how they won. Ask how many people ran their plan, and where the rest of them are. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method, written out in full with the spreadsheet, is free at hubricon.com/learn.  
 
 ### Shot list
 
@@ -67,8 +197,8 @@ Edit `content/videos/01-survivorship-bias/script.md` first if you prefer; it is 
 **Thumbnail:** 546 ⟨n_for_se_tenth⟩ months in amber beside the error ladder: the standard error falling as months of price history are added, with the rungs marked  
 **Spiky claim:** Nearly every price test an operator has ever called a win was noise, and the ones that were real could not be told apart from the outside.  
 **Misconception:** I changed the price, sales went up for a few weeks, so the price change worked.  
-**CTA:** Subscribe, and the newsletter. Nothing else.  
-**Estimated runtime:** about 6 min 12 s · **voice:** placeholder until the clone exists
+**CTA:** The free course at hubricon.com/learn, where the method is written out in full  
+**Estimated runtime:** about 6 min 19 s · **voice:** placeholder until the clone exists
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -97,8 +227,8 @@ Here's the part that should bother you more. Suppose you commit to getting more 
 A short list, and it's this week's work. First, stop reading a test as worked or didn't. Write down the range the data allows, and if you can't compute a range, treat the test as a story. Next, make the price move on purpose. Small steps, capped at 5% ⟨pm_step_cap⟩, in both directions, over months, because the fit needs 5 ⟨el_min_periods⟩ of them and at least 2% ⟨el_min_price_cv⟩ of movement before it can say anything. Then price on the range, not the point. The best move on the demo catalog is TH-CASIRO-01 ⟨pm_sku⟩ to $37.84 ⟨pm_new_price⟩, a 5.0% ⟨pm_step⟩ step, worth about $388 ⟨pm_delta⟩ a month. The honest version is $20 ⟨pm_delta_p5⟩ to $909 ⟨pm_delta_p95⟩, with a 4% ⟨pm_p_loss⟩ chance it loses. Decide looking at the whole range. Last, keep a control. Leave one product's price where it is and watch how far it moves on its own over the same weeks. That's your noise floor, and a winner that didn't beat it wasn't a winner.  
 
 **[4:45] THE HONEST LIMIT**  
-What you can do yourself is fit one product's curve in a spreadsheet. Log of units against log of price, the slope is the elasticity, and the spreadsheet gives you the standard error. Do that on your top products and it's worth an afternoon. What you can't do by hand is keep it honest across 24 ⟨n_skus⟩ products every month, with errors that don't trust the noise to be tidy, and check each decision against 4,000 ⟨null_replicates⟩ runs of nothing. That part is a model, and a bad model is worse than the few-week test. What you can do today is stop calling a test a win. Ask how wide the answer is.  
-*CTA:* If this was useful, subscribe. The newsletter carries one of these a week.  
+What you can do yourself is fit one product's curve in a spreadsheet. Log of units against log of price, the slope is the elasticity, and the spreadsheet gives you the standard error. What you can't do by hand is keep it honest across 24 ⟨n_skus⟩ products every month, with errors that don't trust the noise to be tidy, and check each decision against 4,000 ⟨null_replicates⟩ runs of nothing. That part is a model, and a bad model is worse than the few-week test. What you can do today is stop calling a test a win. Ask how wide the answer is. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method, written out in full with the spreadsheet, is free at hubricon.com/learn.  
 
 ### Shot list
 
@@ -126,8 +256,8 @@ Edit `content/videos/04-ab-test-sample-size/script.md` first if you prefer; it i
 **Thumbnail:** $95,201 ⟨min_p5⟩ in amber over the cash cone fragment, the trough marked on day 13 days ⟨min_p5_day⟩ with the supplier wires as red ticks  
 **Spiky claim:** A profitable catalog can run out of cash on a date you can read off a calendar, and most operators watch the P&L instead of the calendar.  
 **Misconception:** We're profitable, so cash takes care of itself. If the margin is there, the bank balance follows.  
-**CTA:** The free Profit Teardown at /apply  
-**Estimated runtime:** about 7 min 28 s · **voice:** placeholder until the clone exists
+**CTA:** The free course at hubricon.com/learn, where the method is written out in full  
+**Estimated runtime:** about 7 min 32 s · **voice:** placeholder until the clone exists
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -159,8 +289,8 @@ So what's the number worth? Every day you shorten the cycle is a day less of cas
 This week. First, write the cycle down. Wire date, landing date, first sale, first payout, for your top products, from your own POs and settlement reports. It's a spreadsheet with dates in it, and most operators have never made one. Next, draw the wires. Every scheduled supplier payment inside the next 90 days ⟨horizon_days⟩, on a calendar, against the cash you hold and the payouts you expect. Where the line dips lowest is your own day 13 days ⟨min_p5_day⟩. Then move the clocks. Split the largest wire into a deposit and a balance where the supplier allows it. That flattens the trough without touching the margin. Trim the orders the newsvendor flags as overstocked, because that cash comes back onto the calendar. Ask for terms before you ask for growth. Last, hold cash for the trough, not for the month. Fixed costs here are $31,500 ⟨monthly_fixed_costs⟩ a month, and the trough arrives on day 13 days ⟨min_p5_day⟩. The right reserve is the trough plus a buffer for the cone's bad tail, not a round number of months.  
 
 **[9:00] THE HONEST LIMIT**  
-What you can do yourself is the calendar for your top products, and it's worth doing this week. What you can't do by hand is the cone. 10,000 ⟨n_paths⟩ versions of the next 90 days ⟨horizon_days⟩ across 24 ⟨skus_in_cone⟩ products with demand that moves together, redrawn every time a wire moves or a payout slips. That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe. The free Profit Teardown runs this cone on your own exports and hands you the date and the trough. What you can do today is stop reading the margin as a cash forecast. Find your day 13 days ⟨min_p5_day⟩.  
-*CTA:* The free Profit Teardown at /apply. Your own cash cone, from your own exports, inside a day.  
+What you can do yourself is the calendar for your top products, and it's worth doing this week. What you can't do by hand is the cone. 10,000 ⟨n_paths⟩ versions of the next 90 days ⟨horizon_days⟩ across 24 ⟨skus_in_cone⟩ products with demand that moves together, redrawn every time a wire moves or a payout slips. That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe. What you can do today is stop reading the margin as a cash forecast. Find your day 13 days ⟨min_p5_day⟩. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method, written out in full with the spreadsheet, is free at hubricon.com/learn.  
 
 ### Shot list
 
@@ -189,8 +319,8 @@ Edit `content/videos/05-cash-conversion-cycle/script.md` first if you prefer; it
 **Thumbnail:** 38.4% ⟨gross_vs_contribution_gap⟩ in amber over the waterfall fragment, the fee step and the ad step lit  
 **Spiky claim:** Gross margin is a number for your supplier's benefit, not yours. The only margin a product has is what's left after the platform and the ads take theirs.  
 **Misconception:** Gross margin is my margin. Revenue minus cost of goods is what each product earns, and fees and ads are overhead.  
-**CTA:** The course page at /learn, where the method is written out in full; no service mention  
-**Estimated runtime:** about 7 min 58 s · **voice:** placeholder until the clone exists
+**CTA:** The free course at hubricon.com/learn, where the method is written out in full  
+**Estimated runtime:** about 8 min 10 s · **voice:** placeholder until the clone exists
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -222,8 +352,8 @@ What's the difference worth? Every decision that used the wrong margin. Reorders
 This week. First, build the waterfall for your top products. Price, landed cost from the cost sheet, fees from the settlement report, ads from the campaign report allocated by attributed sales. One row per product, and the last column is contribution. Next, rank by that column. Not by revenue, not by gross. Read the bottom of the list before the top, because the bottom is where the decisions are. Then set your break-even return on ad spend from contribution and hold every campaign to it, starting with the one that returns least on its last dollar. Last, take gross margin off the dashboard. Keep it for the supplier conversation, where it belongs, and put contribution where you look every morning. When a product looks better on gross than on contribution, that gap is the platform and the ads, and it's per product, so it's yours to fix per product.  
 
 **[9:00] THE HONEST LIMIT**  
-What you can do yourself is the waterfall for your top products, this week, from reports you already export. It's an afternoon, and it changes what you reorder. What you can't do by hand is the allocation at scale. 24 ⟨n_skus⟩ products, every fee line on every order, ads allocated by attributed sales across campaigns that overlap, every month, with the fee tiers rechecked whenever a weight or a price moves. Done by hand it drifts back to revenue share inside a few months, and revenue share is gross margin wearing a different name. That part is a model. What you can do today is stop quoting gross margin as if it were yours. Rank by contribution, and read the bottom of the list.  
-*CTA:* The course page at /learn, where the method is written out in full.  
+What you can do yourself is the waterfall for your top products, this week, from reports you already export. It's an afternoon, and it changes what you reorder. What you can't do by hand is the allocation at scale. 24 ⟨n_skus⟩ products, every fee line on every order, ads allocated by attributed sales across campaigns that overlap, every month, with the fee tiers rechecked whenever a weight or a price moves. Done by hand it drifts back to revenue share inside a few months, and revenue share is gross margin wearing a different name. That part is a model. What you can do today is stop quoting gross margin as if it were yours. Rank by contribution, and read the bottom of the list. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method, written out in full with the spreadsheet, is free at hubricon.com/learn.  
 
 ### Shot list
 
@@ -252,8 +382,8 @@ Edit `content/videos/07-contribution-vs-gross-margin/script.md` first if you pre
 **Thumbnail:** -2.20 ⟨el_point⟩ in amber over the elasticity fragment: the demand line with its band, and the top of the profit hill marked as a stretch, not a point  
 **Spiky claim:** Almost nobody's price sits on top of the profit hill, because almost nobody has measured the slope, and the ones who moved on gut are as likely to have moved away from the top as toward it.  
 **Misconception:** If units are holding, the price is right. Elasticity is a warning not to raise prices.  
-**CTA:** The course page at /learn, where the method is written out in full; no service mention  
-**Estimated runtime:** about 6 min 13 s · **voice:** placeholder until the clone exists
+**CTA:** The free course at hubricon.com/learn, where the method is written out in full  
+**Estimated runtime:** about 6 min 18 s · **voice:** placeholder until the clone exists
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -282,8 +412,8 @@ Here's the part a good operator gets wrong even after the hill. The top isn't a 
 This week. First, pick your top products and pull price and units by month, as far back as you have. Next, plot them and fit the line: log of units against log of price. The slope is the elasticity, and the spreadsheet gives you the standard error beside it. If the price never moved, you have no line, and the first job is to move it, in small steps, both ways, and wait 5 ⟨el_min_periods⟩ months. Then compute your true unit margin, after the platform and the ads, not the gross one, and put the price where the fraction you keep equals the inverse of the slope. Last, take the step as a step, not a leap. Cap it, read the result against the range, and go again.  
 
 **[4:45] THE HONEST LIMIT**  
-What you can do yourself is the line for your top products, and it's worth an afternoon. What you can't do by hand is keep it honest across 24 ⟨n_skus⟩ products every month, with errors that don't assume the noise is tidy, and turn each range into a step that's the right size for what's unknown in it. Done by hand, the ranges get dropped inside a season and you're back to gut. That part is a model. What you can do today is stop treating units holding as proof. Measure the slope.  
-*CTA:* The course page at /learn, where the method is written out in full.  
+What you can do yourself is the line for your top products, and it's worth an afternoon. What you can't do by hand is keep it honest across 24 ⟨n_skus⟩ products every month, with errors that don't assume the noise is tidy, and turn each range into a step that's the right size for what's unknown in it. That part is a model. What you can do today is stop treating units holding as proof. Measure the slope. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method, written out in full with the spreadsheet, is free at hubricon.com/learn.  
 
 ### Shot list
 

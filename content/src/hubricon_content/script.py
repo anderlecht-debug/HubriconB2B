@@ -17,8 +17,11 @@ from .state import CONTENT_DIR
 VIDEOS = CONTENT_DIR / "videos"
 BANNED = ["in today's video", "let's dive in", "game-changer", "game changer", "secret", "hack",
           "crazy", "insane", "simply", "just", "obviously", "of course", "the truth is", "imagine"]
-CHART_SCENES = {"waterfall", "cash_cone", "elasticity", "newsvendor", "paths", "sample_size"}
-ALL_SCENES = CHART_SCENES | {"kinetic", "chapter_card", "screenshot"}
+# The house visuals (HUBRICON_SPEC.md: the staircase, the Monte Carlo band, the aging cliff) are
+# drawn by the site's own /assets/charts.mjs (content/film/render.mjs); the rest are Manim scenes.
+HOUSE_SCENES = {"staircase", "montecarlo", "aging"}
+CHART_SCENES = {"waterfall", "cash_cone", "elasticity", "newsvendor", "paths", "sample_size"} | HOUSE_SCENES
+ALL_SCENES = CHART_SCENES | {"kinetic", "chapter_card", "screenshot", "number", "formula"}
 HEADER_KEYS = ["TITLE", "THUMBNAIL", "PILLAR", "TIER", "AWARENESS STAGE", "CTA", "SPIKY CLAIM",
                "MISCONCEPTION", "RUNTIME"]
 BEAT_RE = re.compile(r"^\[(\d+):(\d\d)\]\s*(.*)$")
@@ -26,7 +29,7 @@ FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA):\s*(.*)$")
 HOOK_RE = re.compile(r"^([123])\.\s+(.*)$")
 STAMP_RE = re.compile(r"(\d+):(\d\d)")
 WPM = 150
-WORDS = {"A": (650, 950), "B": (1100, 2200)}
+WORDS = {"A": (650, 950), "B": (1100, 2200), "F": (280, 520)}   # F: the home page's one film
 
 
 def scene_of(visual: str) -> str | None:
@@ -36,7 +39,8 @@ def scene_of(visual: str) -> str | None:
     head = re.split(r"[:,;(]", vis, maxsplit=1)[0].strip().replace(" ", "_")
     if head in ALL_SCENES:
         return head
-    for name in ("cash_cone", "sample_size", "chapter_card", "waterfall", "elasticity", "newsvendor", "screenshot", "kinetic", "paths"):
+    for name in ("cash_cone", "sample_size", "chapter_card", "waterfall", "elasticity", "newsvendor", "screenshot", "kinetic", "paths",
+                 "staircase", "montecarlo", "aging", "number", "formula"):
         if re.search(r"\b" + name + r"\b", vis):
             return name
     return None
@@ -173,25 +177,27 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
         if scene in CHART_SCENES:
             if not b["DATA SOURCE"]:
                 problems.append(f"beat {b['name']} draws {scene} without DATA SOURCE")
-            elif "demo" not in b["DATA SOURCE"].lower():
-                problems.append(f"beat {b['name']}: DATA SOURCE must say the run is on demo data")
+            elif not any(w in b["DATA SOURCE"].lower() for w in ("demo", "modeled from public data", "published")):
+                problems.append(f"beat {b['name']}: DATA SOURCE must say the run is demo data, the public-data case study, or a published card")
         elif b["VISUAL"] and scene is None and "screenshot" not in vis:
             problems.append(f"beat {b['name']}: VISUAL names no scene ({', '.join(sorted(ALL_SCENES))})")
     ctas = [b for b in script["beats"] if b["CTA"]]
     if len(ctas) != 1:
         problems.append(f"{len(ctas)} beats carry a CTA; exactly one (the honest limit) may")
-    rule = cta_rules.get(str(pillar), {})
+    # HUBRICON_SPEC.md ("Content engine"): every piece points to /learn and closes on one calm
+    # line; the home page's film (pillar 0) points to the call first. The Teardown is gone.
     cta_text = (h.get("CTA", "") + " " + " ".join(b["CTA"] for b in ctas)).lower()
-    if pillar == 4 and not ("subscribe" in cta_text or "newsletter" in cta_text):
-        problems.append("pillar 4 CTA must be subscribe/newsletter only")
+    said = spoken(script).lower()
+    if "/learn" not in cta_text:
+        problems.append("the CTA must point to /learn (HUBRICON_SPEC.md: every piece points to /learn)")
+    if pillar == 0 and "call" not in cta_text:
+        problems.append("the home page's film points to the call first, then /learn")
+    if "teardown" in cta_text or "teardown" in said:
+        problems.append("the Teardown is killed (HUBRICON_SPEC.md); no script mentions it")
     if pillar in (3, 4, 5):
-        for word in ("managed profit", "teardown", "/apply", "capital position"):
-            if word in cta_text or word in spoken(script).lower():
-                problems.append(f"pillar {pillar} must not mention “{word}” (doctrine §8)")
-    if pillar == 2 and "teardown" not in cta_text:
-        problems.append("pillar 2 CTA is the free Profit Teardown")
-    if pillar == 1 and "playbook" not in cta_text:
-        problems.append("pillar 1 CTA is the Reimbursement Playbook")
+        for word in ("managed profit", "/apply", "capital position"):
+            if word in cta_text or word in said:
+                problems.append(f"pillar {pillar} must not mention “{word}”: the soft close names no product")
     # re-hook cadence: beat starts plus the audit's stamps
     stamps = sorted({b["at"] for b in script["beats"]} | {
         int(m.group(1)) * 60 + int(m.group(2)) for m in STAMP_RE.finditer(script["tail"].get("RE-HOOK AUDIT", ""))})

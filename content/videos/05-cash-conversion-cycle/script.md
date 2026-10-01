@@ -3,7 +3,7 @@ THUMBNAIL:        {{min_p5}} in amber over the cash cone fragment, the trough ma
 PILLAR:           2
 TIER:             B
 AWARENESS STAGE:  solution-aware
-CTA:              The free Profit Teardown at /apply
+CTA:              The free course at hubricon.com/learn, where the method is written out in full
 SPIKY CLAIM:      A profitable catalog can run out of cash on a date you can read off a calendar, and most operators watch the P&L instead of the calendar.
 MISCONCEPTION:    We're profitable, so cash takes care of itself. If the margin is there, the bank balance follows.
 RUNTIME:          9–10 min
@@ -55,9 +55,9 @@ SCRIPT
   TEMPLATE: none for this unit
 
 [9:00] THE HONEST LIMIT
-  VO: What you can do yourself is the calendar for your top products, and it's worth doing this week. What you can't do by hand is the cone. {{n_paths}} versions of the next {{horizon_days}} across {{skus_in_cone}} products with demand that moves together, redrawn every time a wire moves or a payout slips. That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe. The free Profit Teardown runs this cone on your own exports and hands you the date and the trough. What you can do today is stop reading the margin as a cash forecast. Find your day {{min_p5_day}}.
+  VO: What you can do yourself is the calendar for your top products, and it's worth doing this week. What you can't do by hand is the cone. {{n_paths}} versions of the next {{horizon_days}} across {{skus_in_cone}} products with demand that moves together, redrawn every time a wire moves or a payout slips. That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe. What you can do today is stop reading the margin as a cash forecast. Find your day {{min_p5_day}}. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: kinetic: the closing line
-  CTA: The free Profit Teardown at /apply. Your own cash cone, from your own exports, inside a day.
+  CTA: The method, written out in full with the spreadsheet, is free at hubricon.com/learn.
 
 RE-HOOK AUDIT: 0:00, 0:15, 0:45, 1:15, 1:50, 2:25, 3:00, 3:30, 4:05, 4:40, 5:15, 5:30, 6:05, 6:40, 7:15, 7:30, 8:05, 8:40, 9:00, 9:35 — no gap over 40 s
 DERIVED ASSETS: LinkedIn post: "the P&L has no calendar" · X thread spine: {{wires_total}} of wires against {{cash_on_hand}} in the bank, and the trough on day {{min_p5_day}} · newsletter section: write the cycle down, four dates per product · clips at 0:00, 0:45, 1:15, 3:30, 5:30

@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-01T03:22:50+00:00 · style locked: False
+Updated 2026-10-01T03:54:40+00:00 · style locked: False
 
 ## Capabilities
 
@@ -18,6 +18,8 @@ Updated 2026-10-01T03:22:50+00:00 · style locked: False
 
 ## Awaiting your review
 
+- T01 · October 15: what Amazon's holiday fees cost one listing, to the cent · gate `review` → see `content/REVIEW.md`
+- F01 · The case-study film: one listing, a fraction of an ounce past an edge · gate `review` → see `content/REVIEW.md`
 - V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
 - V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
 - V05 · Cash conversion cycle: the number that decides whether you survive · gate `review` → see `content/REVIEW.md`

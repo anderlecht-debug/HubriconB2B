@@ -3,7 +3,7 @@ THUMBNAIL:        {{el_point}} in amber over the elasticity fragment: the demand
 PILLAR:           3
 TIER:             A
 AWARENESS STAGE:  problem-aware
-CTA:              The course page at /learn, where the method is written out in full; no service mention
+CTA:              The free course at hubricon.com/learn, where the method is written out in full
 SPIKY CLAIM:      Almost nobody's price sits on top of the profit hill, because almost nobody has measured the slope, and the ones who moved on gut are as likely to have moved away from the top as toward it.
 MISCONCEPTION:    If units are holding, the price is right. Elasticity is a warning not to raise prices.
 RUNTIME:          5–6 min
@@ -48,9 +48,9 @@ SCRIPT
   TEMPLATE: none yet for this pillar; the CTA points at the course page
 
 [4:45] THE HONEST LIMIT
-  VO: What you can do yourself is the line for your top products, and it's worth an afternoon. What you can't do by hand is keep it honest across {{n_skus}} products every month, with errors that don't assume the noise is tidy, and turn each range into a step that's the right size for what's unknown in it. Done by hand, the ranges get dropped inside a season and you're back to gut. That part is a model. What you can do today is stop treating units holding as proof. Measure the slope.
+  VO: What you can do yourself is the line for your top products, and it's worth an afternoon. What you can't do by hand is keep it honest across {{n_skus}} products every month, with errors that don't assume the noise is tidy, and turn each range into a step that's the right size for what's unknown in it. That part is a model. What you can do today is stop treating units holding as proof. Measure the slope. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: kinetic: the closing line
-  CTA: The course page at /learn, where the method is written out in full.
+  CTA: The method, written out in full with the spreadsheet, is free at hubricon.com/learn.
 
 RE-HOOK AUDIT: 0:00, 0:15, 0:45, 1:15, 1:50, 2:20, 2:45, 3:15, 3:45, 4:00, 4:30, 4:45, 5:10 — no gap over 40 s
 DERIVED ASSETS: LinkedIn post: "elasticity isn't a warning, it's a measurement" · X thread spine: the hill, the wrong hill off gross margin, the top as a stretch · newsletter section: move the price on purpose so the fit can speak · clips at 0:00, 0:45, 1:15, 2:45

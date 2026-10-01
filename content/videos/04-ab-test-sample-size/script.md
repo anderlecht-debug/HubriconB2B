@@ -3,7 +3,7 @@ THUMBNAIL:        {{n_for_se_tenth}} months in amber beside the error ladder: th
 PILLAR:           4
 TIER:             A
 AWARENESS STAGE:  unaware
-CTA:              Subscribe, and the newsletter. Nothing else.
+CTA:              The free course at hubricon.com/learn, where the method is written out in full
 SPIKY CLAIM:      Nearly every price test an operator has ever called a win was noise, and the ones that were real could not be told apart from the outside.
 MISCONCEPTION:    I changed the price, sales went up for a few weeks, so the price change worked.
 RUNTIME:          5–6 min
@@ -48,9 +48,9 @@ SCRIPT
   TEMPLATE: none for this pillar
 
 [4:45] THE HONEST LIMIT
-  VO: What you can do yourself is fit one product's curve in a spreadsheet. Log of units against log of price, the slope is the elasticity, and the spreadsheet gives you the standard error. Do that on your top products and it's worth an afternoon. What you can't do by hand is keep it honest across {{n_skus}} products every month, with errors that don't trust the noise to be tidy, and check each decision against {{null_replicates}} runs of nothing. That part is a model, and a bad model is worse than the few-week test. What you can do today is stop calling a test a win. Ask how wide the answer is.
+  VO: What you can do yourself is fit one product's curve in a spreadsheet. Log of units against log of price, the slope is the elasticity, and the spreadsheet gives you the standard error. What you can't do by hand is keep it honest across {{n_skus}} products every month, with errors that don't trust the noise to be tidy, and check each decision against {{null_replicates}} runs of nothing. That part is a model, and a bad model is worse than the few-week test. What you can do today is stop calling a test a win. Ask how wide the answer is. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: kinetic: the closing question
-  CTA: If this was useful, subscribe. The newsletter carries one of these a week.
+  CTA: The method, written out in full with the spreadsheet, is free at hubricon.com/learn.
 
 RE-HOOK AUDIT: 0:00, 0:15, 0:45, 1:15, 1:50, 2:20, 2:45, 3:15, 3:45, 4:00, 4:30, 4:45, 5:10 — no gap over 40 s
 DERIVED ASSETS: LinkedIn post: "the sample size you needed was {{n_for_se_tenth}} months, and your product won't live that long" · X thread spine: a year of data, an answer from {{el_ci_low}} to {{el_ci_high}} · newsletter section: keep a control product · clips at 0:00, 0:45, 2:45, 4:00

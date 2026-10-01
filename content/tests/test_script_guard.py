@@ -1,13 +1,13 @@
 from hubricon_content import script as sm
 
 FACTS = {"big": {"value": "$65,320", "label": "spread", "source": "demo"}, "n": {"value": "2,000", "label": "paths", "source": "demo"}}
-CTA = {"4": {"cta": "Subscribe"}, "2": {"cta": "Teardown"}}
+CTA = {"4": {"cta": "hubricon.com/learn"}, "0": {"cta": "the call, then hubricon.com/learn"}}
 GOOD = """TITLE: Why {{big}} of results is luck
 THUMBNAIL: {{big}} on the fan
 PILLAR: 4
 TIER: A
 AWARENESS STAGE: unaware
-CTA: Subscribe, and the newsletter.
+CTA: The free course at hubricon.com/learn.
 SPIKY CLAIM: Most of it is dice.
 MISCONCEPTION: Winners did something different.
 RUNTIME: 5 min
@@ -32,7 +32,7 @@ SCRIPT
 [1:00] THE HONEST LIMIT
   VO: You can ask how many peers ran the same plan and lost. WORDS
   VISUAL: kinetic
-  CTA: Subscribe, and the newsletter.
+  CTA: The whole method is free at hubricon.com/learn.
   CLIP: yes
 
 RE-HOOK AUDIT: 0:00, 0:30, 1:00
@@ -65,8 +65,18 @@ def test_rehook_gap_and_cta_mismatch():
     sc = sm.parse(bad)
     p = sm.validate(sc, FACTS, "A", 4, CTA)
     assert any("re-hook gap" in x for x in p)
-    sc2 = sm.parse(_pad(GOOD, 340).replace("CTA: Subscribe, and the newsletter.", "CTA: Get your free Profit Teardown."))
-    assert any("pillar 4" in x or "must not mention" in x for x in sm.validate(sc2, FACTS, "A", 4, CTA))
+    sc2 = sm.parse(_pad(GOOD, 340).replace("CTA: The free course at hubricon.com/learn.", "CTA: Get your free Profit Teardown."))
+    p2 = sm.validate(sc2, FACTS, "A", 4, CTA)
+    assert any("Teardown is killed" in x for x in p2)
+    no_learn = _pad(GOOD, 340).replace("hubricon.com/learn", "our site")
+    assert any("/learn" in x for x in sm.validate(sm.parse(no_learn), FACTS, "A", 4, CTA))
+
+
+def test_the_home_page_film_points_to_the_call_first():
+    sc = sm.parse(_pad(GOOD, 340))
+    assert any("call first" in x for x in sm.validate(sc, FACTS, "A", 0, CTA))
+    film = _pad(GOOD, 340).replace("  CTA: The whole method is free at hubricon.com/learn.", "  CTA: Book the call. Or learn the method free at hubricon.com/learn.")
+    assert not any("call first" in x for x in sm.validate(sm.parse(film), FACTS, "A", 0, CTA))
 
 
 def test_chart_needs_demo_data_source():

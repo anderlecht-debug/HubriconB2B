@@ -3,7 +3,7 @@ THUMBNAIL:        {{year_luck_spread}} in amber beside the fan of paths, the top
 PILLAR:           4
 TIER:             A
 AWARENESS STAGE:  unaware
-CTA:              Subscribe, and the newsletter. Nothing else.
+CTA:              The free course at hubricon.com/learn, where the method is written out in full
 SPIKY CLAIM:      Most of the gap between the top tenth and the median of similar businesses is dice, and from the outside you cannot tell which.
 MISCONCEPTION:    The founders who finished on top did something different. Find out what, and copy it.
 RUNTIME:          5–6 min
@@ -48,9 +48,9 @@ SCRIPT
   TEMPLATE: none for this pillar
 
 [4:45] THE HONEST LIMIT
-  VO: What you can't do by hand is that last step at any real scale. Running a year of a {{n_skus}}-product catalog {{year_paths}} times, with demand that moves together across products the way it really does, is a model, and a bad model is worse than no model. What you can do today is stop asking winners how they won. Ask how many people ran their plan, and where the rest of them are.
+  VO: What you can't do by hand is that last step at any real scale. Running a year of a {{n_skus}}-product catalog {{year_paths}} times, with demand that moves together across products the way it really does, is a model, and a bad model is worse than no model. What you can do today is stop asking winners how they won. Ask how many people ran their plan, and where the rest of them are. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: kinetic: the closing question
-  CTA: If this was useful, subscribe. The newsletter carries one of these a week.
+  CTA: The method, written out in full with the spreadsheet, is free at hubricon.com/learn.
 
 RE-HOOK AUDIT: 0:00, 0:15, 0:45, 1:15, 1:50, 2:20, 2:45, 3:20, 3:50, 4:00, 4:30, 4:45, 5:10 — no gap over 40 s
 DERIVED ASSETS: LinkedIn post: "the winners' worst day was everyone's worst day" · X thread spine: same plan, {{year_paths}} runs, {{year_luck_spread}} of dice · newsletter section: how to ask for the denominator · clips at 0:00, 0:45, 1:15, 2:45

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-01T03:22:50+00:00",
+ "updated_at": "2026-10-01T03:54:40+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -12,6 +12,114 @@
   "sfx": "elevenlabs"
  },
  "units": [
+  {
+   "id": "T01",
+   "phase": 2,
+   "kind": "video",
+   "day": null,
+   "title": "October 15: what Amazon's holiday fees cost one listing, to the cent",
+   "pillar": 3,
+   "tier": "A",
+   "slug": "october-15",
+   "models": [
+    "case_study",
+    "ratecard"
+   ],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-01T03:53:46+00:00",
+     "step": "script",
+     "note": "drafted interactively 2026-09-30 from HUBRICON_SPEC.md; facts from content/film/facts.mjs (the site's own figures); critiqued against the spec's hook, teach, soft close"
+    },
+    {
+     "at": "2026-10-01T03:54:02+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:02+00:00",
+     "step": "review",
+     "note": "parked for the founder"
+    }
+   ]
+  },
+  {
+   "id": "F01",
+   "phase": 2,
+   "kind": "video",
+   "day": null,
+   "title": "The case-study film: one listing, a fraction of an ounce past an edge",
+   "pillar": 0,
+   "tier": "F",
+   "slug": "case-study-film",
+   "models": [
+    "case_study",
+    "ratecard"
+   ],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-01T03:53:46+00:00",
+     "step": "script",
+     "note": "drafted interactively 2026-09-30 from HUBRICON_SPEC.md; facts from content/film/facts.mjs (the site's own figures); critiqued against the spec's hook, teach, soft close"
+    },
+    {
+     "at": "2026-10-01T03:54:02+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:02+00:00",
+     "step": "review",
+     "note": "parked for the founder"
+    }
+   ]
+  },
   {
    "id": "P0-tooling",
    "phase": 0,
@@ -347,6 +455,16 @@
      "at": "2026-09-18T23:18:49+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
@@ -491,6 +609,16 @@
      "at": "2026-09-19T00:12:45+00:00",
      "step": "review",
      "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
@@ -561,6 +689,16 @@
      "at": "2026-09-19T00:17:07+00:00",
      "step": "review",
      "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:39+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
@@ -667,6 +805,16 @@
      "at": "2026-09-19T00:20:29+00:00",
      "step": "review",
      "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:40+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:40+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
@@ -736,6 +884,16 @@
      "at": "2026-09-19T00:23:56+00:00",
      "step": "review",
      "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:40+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-01T03:54:40+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
