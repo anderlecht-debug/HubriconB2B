@@ -90,15 +90,24 @@ def test_recovery_only_never_enters_the_day_30_machinery(monkeypatch):
     assert db.rows("clients")[0].get("billing_decision") is None
 
 
+def _calls(old, *ids):
+    """Each client's application call, held fifteen days ago: since 2026-10-01
+    the nudges and the downsell count from the call, not the booking."""
+    return [{"id": f"b-{i}", "client_id": i, "event_type": "Margin audit", "starts_at": old, "created_at": old,
+             "welcome_sent_at": None} for i in ids]
+
+
 def test_the_downsell_email_goes_once_at_day_14_to_an_amazon_seller_only(monkeypatch):
     sent = []
-    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind, **k: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_agreed_letters", lambda self: None)
     old = (date.today() - timedelta(days=15)).isoformat() + "T00:00:00Z"
     db = FakeDB(
         clients=[{"id": "a", "contact_email": "a@x.com", "status": "pending", "platform": "amazon", "created_at": old},
                  {"id": "s", "contact_email": "s@y.com", "status": "pending", "platform": "shopify", "created_at": old},
                  {"id": "r", "contact_email": "r@z.com", "status": "pending", "platform": "amazon", "plan": "recovery",
                   "created_at": old}],
+        bookings=_calls(old, "a", "s", "r"),
         uploads=[],
         client_touches=[{"client_id": "a", "kind": "welcome", "sent_at": old},
                         {"client_id": "a", "kind": "nudge", "sent_at": old},
@@ -122,12 +131,14 @@ def test_the_downsell_email_names_the_share_and_asks_for_the_word():
     assert "smaller door" in spec["subject"].lower()
 
 
-def test_a_founder_who_chose_recovery_on_the_site_gets_none_of_the_teardown_nudges(monkeypatch):
+def test_a_founder_who_chose_recovery_on_the_site_gets_none_of_the_export_nudges(monkeypatch):
     sent = []
-    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind, **k: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_agreed_letters", lambda self: None)
     old = (date.today() - timedelta(days=15)).isoformat() + "T00:00:00Z"
     db = FakeDB(
         clients=[{"id": "g", "contact_email": "g@x.com", "status": "pending", "platform": "amazon", "created_at": old}],
+        bookings=_calls(old, "g"),
         uploads=[],
         client_touches=[{"client_id": "g", "kind": "recovery_welcome", "sent_at": old}],
     )

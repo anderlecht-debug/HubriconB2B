@@ -2646,35 +2646,126 @@ def cmd_platform(args):
     print(f"  next run reads: {', '.join(channels.label(c) for c in channels.channels_for(args.platform))}")
 
 
-def cmd_retainer(args):
-    """When the retainer actually started.
+def _full_client(db, ident: str) -> dict:
+    """The whole client row. resolve_client selects a fixed column list that
+    leaves out retainer_started_at, plan and the lifecycle columns."""
+    client = dbmod.resolve_client(db, ident)
+    rows = db.table("clients").select("*").eq("id", client["id"]).execute().data
+    return rows[0] if rows else client
 
-    terms.html §3: "the retainer starts on the day you say yes after the
-    Teardown." Nothing recorded that date, so the free-month clock ran from
-    provisioning — from the booking, before the Teardown existed. This is the
-    best evidence there is, and it outranks the date the Stripe webhook infers
-    from a first invoice."""
+
+def _print_proving_month(client: dict) -> None:
+    """The dates monthly.billing_months gives the gate, printed for the founder."""
+    pm = onboarding.proving_month(client)
+    if not pm:
+        return
+    print(f"  Proving Month: {pm['start'].isoformat()} to {pm['end'].isoformat()} (month 0, free)")
+    if pm["free_end"] != pm["end"]:
+        print(f"  free months ({pm['free_months']}) run to {pm['free_end'].isoformat()}")
+    first_billed = pm["free_end"] + timedelta(days=1)
+    from . import monthly
+    nxt = monthly.billing_months(client, first_billed)[-1]
+    print(f"  first month that can be invoiced: {nxt['start'].isoformat()} to {nxt['end'].isoformat()}, judged "
+          f"once its exports land, about {monthly.CLOSE_LAG_DAYS} days after it ends")
+
+
+def cmd_retainer(args):
+    """The client's yes: the day Managed Profit started, and the letter that says so.
+
+    terms.html §3: "Managed Profit (the retainer) starts on the day you say yes
+    after the call." This records that day (retainer_started_at, source
+    client_yes), which is what lifecycle.py reads as the yes, and it outranks
+    the date the Stripe webhook infers from a first invoice. The dates printed
+    and emailed are the ones the billing gate uses (monthly.billing_months:
+    calendar months from the day of the yes), never "plus thirty days".
+
+    Then the agreed letter (client_touches 'agreed'): the yes confirmed, the
+    Proving Month's first and last day, and what happens next with its real
+    timing. If this machine cannot send it, the operator's next pass does."""
+    from . import lifecycle, outbound
     db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
+    client = _full_client(db, args.client)
     name = client["company_name"] or client["contact_email"]
 
     if args.show:
         v = valuemod.engagement_start(client, date.today())
-        print(f"{name}: retainer clock runs from {v[0].isoformat()} ({v[1]})")
+        print(f"{name}: Managed Profit clock runs from {v[0].isoformat()} ({v[1]}); stage "
+              f"{lifecycle.stage_of(db, client)}")
         if not client.get("retainer_started_at"):
-            print("  no agreed start date on file — the ledger reports its fee basis as unknown "
+            print("  no yes on file — the Record reports its fee basis as unknown "
                   "and treats them as in their free month.")
+        _print_proving_month(client)
         return
 
     started = date.fromisoformat(args.started) if args.started else date.today()
-    db.table("clients").update({
+    patch = {
         "retainer_started_at": datetime.combine(started, datetime.min.time(), tzinfo=timezone.utc).isoformat(),
         "retainer_source": args.source,
-    }).eq("id", client["id"]).execute()
-    free = int(client.get("free_months") if client.get("free_months") is not None else 1)
-    print(f"{name}: retainer starts {started.isoformat()} ({args.source}).")
-    print(f"  free month{'s' if free != 1 else ''} run to "
-          f"{(started + timedelta(days=30 * free)).isoformat()}; the guarantee is checked then.")
+    }
+    if client.get("status") == "declined":
+        # A yes after a no: the yes is the later word.
+        patch.update({"status": "pending", "declined_at": None})
+        print(f"{name} was recorded as declined"
+              + (f" on {str(client['declined_at'])[:10]}" if client.get("declined_at") else "")
+              + "; this yes replaces it.")
+    db.table("clients").update(patch).eq("id", client["id"]).execute()
+    client = {**client, **patch}
+    try:
+        outbound.log_event(db, "client_agreed", client_id=client["id"],
+                           payload={"started": started.isoformat(), "source": args.source})
+    except Exception as err:
+        print(f"  funnel event not logged ({err})")
+    print(f"{name}: Managed Profit starts {started.isoformat()} ({args.source}).")
+    _print_proving_month(client)
+
+    sent, why = onboarding.deliver_agreed(db, client)
+    if sent:
+        print(f"  agreed letter sent to {client['contact_email']}" + ("." if why == "sent" else f": {why}."))
+    elif why.startswith("RESEND_API_KEY"):
+        print(f"  agreed letter not sent from this machine ({why}); the operator's next pass sends it.")
+    else:
+        print(f"  agreed letter not sent: {why}.")
+
+
+def cmd_declined(args):
+    """The prospect said no on the call (lifecycle stage 'declined').
+
+    From here the machine sends them nothing unasked: no nudges, no downsell,
+    no move notices, no briefs, no weekly notes (lifecycle.ALLOWED['declined']
+    is empty, and the sweep and the operator read only pending and active
+    clients). Their open upload links stop working; what they already sent is
+    kept as the privacy page says. Nothing is sent to tell them so: they said
+    no, and the reply to that is the founder's."""
+    from . import lifecycle, outbound
+    db = dbmod.connect()
+    client = _full_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if client.get("status") == "declined":
+        print(f"{name} is already recorded as declined"
+              + (f" (on {str(client['declined_at'])[:10]})." if client.get("declined_at") else "."))
+        return
+    if client.get("retainer_started_at") or client.get("status") in ("active", "past_due", "churned"):
+        sys.exit(f"{name} said yes (stage {lifecycle.stage_of(db, client)}). Leaving after a yes is "
+                 f"`hubricon cancel {args.client}` (terms §5), not a no.")
+    err = onboarding.lifecycle_schema_error(db)
+    if err:
+        sys.exit(f"Cannot record the no: the database has no clients.declined_at ({err}).\n"
+                 f"Apply {onboarding.LIFECYCLE_MIGRATION} (it adds the 'declined' status and declined_at), "
+                 "then run this again. Until then move notices already wait for a yes, and the nudges after "
+                 "the call still go.")
+    try:
+        db.table("clients").update({"status": "declined", "declined_at": _now()}).eq("id", client["id"]).execute()
+    except Exception as e:
+        sys.exit(f"Cannot record the no: {e}\nApply {onboarding.LIFECYCLE_MIGRATION} (its status check allows "
+                 "'declined'), then run this again.")
+    try:
+        db.rpc("revoke_intake_tokens", {"p_client_id": client["id"]}).execute()
+        revoked = "their upload links no longer work"
+    except Exception as e:
+        revoked = f"their upload links could NOT be revoked ({e}); revoke them by hand"
+    outbound.log_event(db, "client_declined", client_id=client["id"], note=args.note,
+                       payload={"stage_before": lifecycle.stage_of(db, client)})
+    print(f"{name}: recorded as declined. Nothing more is sent to them unasked; {revoked}. Nothing was sent.")
 
 
 def cmd_downsell(args):
@@ -3852,13 +3943,18 @@ def main():
                    help="score what the ledger already banked instead of re-measuring")
     p.set_defaults(fn=cmd_replay)
 
-    p = sub.add_parser("retainer", help="record when the retainer started (the client's yes)")
+    p = sub.add_parser("retainer", help="record the client's yes: Managed Profit starts, the agreed letter goes")
     p.add_argument("client")
     p.add_argument("--started", help="YYYY-MM-DD (default: today)")
     p.add_argument("--source", default="client_yes",
                    choices=["client_yes", "first_invoice", "teardown_delivered", "manual"])
     p.add_argument("--show", action="store_true", help="print the clock without changing it")
     p.set_defaults(fn=cmd_retainer)
+
+    p = sub.add_parser("declined", help="record the prospect's no: nothing more is sent unasked, upload links revoked")
+    p.add_argument("client")
+    p.add_argument("--note", help="why, in a line (kept in funnel_events)")
+    p.set_defaults(fn=cmd_declined)
 
     p = sub.add_parser("downsell", help="the smaller door: recovery-only at a share of what Amazon pays back, or --retainer")
     p.add_argument("client")

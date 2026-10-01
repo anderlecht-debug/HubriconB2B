@@ -1,4 +1,5 @@
 import hashlib
+from datetime import date, datetime, timedelta, timezone
 
 from hubricon_engine import onboarding
 from hubricon_engine.onboarding import email_spec, guess_name_parts, is_internal, render_html, render_text
@@ -38,25 +39,148 @@ def test_mint_token_stores_only_the_hash():
     assert token not in str(calls[1][1])
 
 
-def test_welcome_email_leads_with_the_upload_page():
-    link = "https://www.hubricon.com/intake?t=abc"
-    spec = email_spec("welcome", "Priya Patel", link)
+CALL = datetime(2026, 10, 2, 15, 0, tzinfo=timezone.utc)
+AGREED = {"start": date(2026, 10, 1), "end": date(2026, 10, 31), "free_end": date(2026, 10, 31), "fee": 6000.0,
+          "first_read": False, "has_files": False, "drafts": 0, "next_sweep": datetime(2026, 10, 5, 11, tzinfo=timezone.utc),
+          "kickoff_at": None, "veto_hours": 72}
+
+
+def test_the_proving_month_is_dated_the_way_the_billing_gate_dates_it():
+    """`hubricon retainer` used to print start + 30 days; the gate bills calendar
+    months from the day of the yes. One arithmetic now, the gate's own."""
+    from hubricon_engine import monthly
+    for started, free in (("2026-10-01", 1), ("2027-01-31", 1), ("2026-02-15", 2), ("2028-01-30", 1)):
+        c = {"retainer_started_at": f"{started}T00:00:00+00:00", "free_months": free}
+        pm = onboarding.proving_month(c)
+        months = monthly.billing_months(c, date(2030, 1, 1))
+        assert (pm["start"], pm["end"]) == (months[0]["start"], months[0]["end"])
+        assert pm["free_end"] == months[free - 1]["end"] and months[free - 1]["free"] and not months[free]["free"]
+    jan31 = onboarding.proving_month({"retainer_started_at": "2027-01-31T00:00:00+00:00"})
+    assert jan31["end"] == date(2027, 2, 27)          # Feb 28 is month 1's first day, not +30 (Mar 2)
+    assert onboarding.proving_month({"status": "pending"}) is None
+
+
+def test_the_agreed_letter_confirms_the_yes_with_dates_and_what_happens_next():
+    spec = email_spec("agreed", "Priya Patel", "https://x/intake?t=up", "https://x/portal", platform="amazon",
+                      **AGREED)
     text = render_text(spec)
-    html = render_html(spec)
+    assert spec["subject"] == "Confirmed: your Proving Month runs October 1 to October 31, 2026"
+    assert "This confirms your yes. Managed Profit started on Thursday, October 1, 2026." in text
+    assert "from October 1 to October 31, 2026, and it is free whatever it measures" in text
+    assert "cleared the $6,000 fee" in text
+    assert "the first of those Mondays is October 5" in text
+    assert "72 hours after the notice unless you reply no" in text and "nothing in it goes live" in text
+    assert "https://x/intake?t=up" in text and "https://x/portal" in text
+    assert "Book it on your welcome page" in text
+    for retired in ("retainer", "Teardown", "directive", "desk", "ledger", "!", "within the hour"):
+        assert retired not in text, retired
+
+
+def test_the_agreed_letter_says_what_is_true_at_each_point():
+    out = lambda **kw: render_text(email_spec("agreed", "Sam", "", "p", **{**AGREED, **kw}))
+    sent_files = out(has_files=True)
+    assert "written from the files you sent" in sent_files and "upload page" not in sent_files.split("What")[1].split("welcome")[0]
+    read_out = out(first_read=True, has_files=True, drafts=3)
+    assert "already in Hubricon" in read_out and "sent separately after this letter" in read_out
+    nothing = out(first_read=True, has_files=True, drafts=0)
+    assert "It found no move to make yet." in nothing and "sent separately" not in nothing
+    booked = out(kickoff_at=datetime(2026, 10, 8, 16, tzinfo=timezone.utc))
+    assert "Your kickoff is booked for Thursday, October 8 at 16:00 UTC" in booked and "Book it" not in booked
+    referred = out(free_end=date(2026, 11, 30))
+    assert "your free months run to November 30, 2026" in referred
+
+
+def test_the_first_read_waits_for_the_core_files_or_a_day_after_the_last_one():
+    now = datetime(2026, 10, 5, 12, tzinfo=timezone.utc)
+    up = lambda kind, hours_ago, status="parsed": {"report_type": kind, "status": status,
+                                                     "uploaded_at": (now - timedelta(hours=hours_ago)).isoformat()}
+    r = onboarding.first_read_ready([up("business_report", 2)], "amazon", now)
+    assert not r["ready"] and r["missing"] == ["sku_economics"]
+    assert r["publish_by"] == now + timedelta(hours=22)
+    r = onboarding.first_read_ready([up("business_report", 2), up("sku_economics", 1)], "amazon", now)
+    assert r["ready"] and r["missing"] == [] and r["why"] == "core"
+    r = onboarding.first_read_ready([up("business_report", 25)], "amazon", now)
+    assert r["ready"] and r["missing"] == ["sku_economics"] and r["why"] == "waited"
+    # a file that has landed but is not parsed yet holds the clock open
+    r = onboarding.first_read_ready([up("business_report", 30), up("cogs", 1, "uploaded")], "amazon", now)
+    assert not r["ready"]
+    r = onboarding.first_read_ready([up("shopify_orders", 1), up("shopify_products", 1)], "shopify", now)
+    assert r["ready"] and r["why"] == "core"
+    # data that came through the seat has no uploads and nothing to wait for
+    assert onboarding.first_read_ready([], "amazon", now)["ready"]
+
+
+def test_the_next_sweep_is_the_next_monday_at_eleven_utc():
+    assert onboarding.next_sweep(datetime(2026, 10, 1, 9, tzinfo=timezone.utc)) == \
+        datetime(2026, 10, 5, 11, tzinfo=timezone.utc)
+    assert onboarding.next_sweep(datetime(2026, 10, 5, 10, 59, tzinfo=timezone.utc)) == \
+        datetime(2026, 10, 5, 11, tzinfo=timezone.utc)
+    assert onboarding.next_sweep(datetime(2026, 10, 5, 11, 0, tzinfo=timezone.utc)) == \
+        datetime(2026, 10, 12, 11, tzinfo=timezone.utc)
+
+
+def test_the_call_prep_says_what_the_call_is_and_the_one_thing_to_do_first():
+    """On booking, before any yes: no "You're in", no exports homework the call
+    does not read, no offer to book the call they just booked. The upload page
+    is there, second and optional."""
+    link = "https://www.hubricon.com/intake?t=abc"
+    spec = email_spec("call_prep", "Priya Patel", link, platform="amazon", call_at=CALL)
+    text, html = render_text(spec), render_html(spec)
     assert text.startswith("Hi Priya,")
-    assert text.index(link) < text.index("Prefer to grant a seat")  # upload path first, seat second
-    assert "month one is free" in text and "first full read" in text
-    # The Teardown and its 24-hour promise were retired on 2026-09-30 (HUBRICON_SPEC.md).
-    assert "24 hours" not in text and "Teardown" not in text
-    assert link in html and "<ol" in html and "Hubricon" in html
+    assert spec["subject"] == "Your call on Friday, October 2: the one thing to do first"
+    assert "Friday, October 2 at 15:00 UTC" in text
+    assert "twenty minutes" in text and "Nothing is uploaded" in text
+    assert "Fee Preview" in text and "Manage Inventory Health" in text and "Amazon builds them on request" in text
+    assert "landed cost as a percentage of price" in text and "ACoS" in text
+    # the upload link is the last thing, and optional
+    assert text.index("Fee Preview") < text.index(link) and "optional" in text.lower()
+    assert "first full read" in text and "Profit Brief No. 001" in text
+    for retired in ("You're in", "Welcome aboard", "calendly.com", "Book 20 minutes", "Teardown", "!"):
+        assert retired not in text, retired
+    assert link in html and "<ol" in html
+
+
+def test_the_call_prep_follows_the_platform():
+    shopify = render_text(email_spec("call_prep", "Sam", "l", platform="shopify", call_at=CALL))
+    both = render_text(email_spec("call_prep", "Sam", "l", platform="both", call_at=CALL))
+    assert "Shopify admin" in shopify and "Products export" in shopify and "landed cost" in shopify
+    assert "Seller Central" not in shopify and "Fee Preview" not in shopify and "ACoS" not in shopify
+    assert "Fee Preview" in both and "Shopify admin" in both
+    # no time on the booking: the email says where the time is rather than inventing one
+    untimed = email_spec("call_prep", "Sam", "l", platform="amazon")
+    assert untimed["subject"] == "Your call: the one thing to do first"
+    assert "Calendly's invitation has the time" in render_text(untimed)
 
 
 def test_all_kinds_render_and_greet_unknown_names():
-    for kind in ("welcome", "files", "nudge", "teardown_ready", "downsell", "recovery_welcome"):
+    for kind in ("call_prep", "files", "nudge", "teardown_ready", "downsell", "recovery_welcome"):
         spec = email_spec(kind, None, "https://x/intake?t=1", "https://x/portal")
         assert render_text(spec).startswith("Hi there,")
         assert spec["subject"]
+        assert "$3M" not in render_text(spec) and "Teardown" not in render_text(spec)
     assert "https://x/portal" in render_text(email_spec("teardown_ready", "Sam", "l", "https://x/portal"))
+    # "You're in" is gone with the email that said it before anyone had said yes
+    import pytest
+    with pytest.raises(ValueError):
+        email_spec("welcome", "Sam", "l")
+
+
+def test_the_first_read_email_ends_where_the_client_stands():
+    booked = render_text(email_spec("teardown_ready", "Sam", "l", "p", stage="booked", call_at=CALL))
+    agreed = render_text(email_spec("teardown_ready", "Sam", "l", "p", stage="agreed"))
+    called = render_text(email_spec("teardown_ready", "Sam", "l", "p", stage="called"))
+    assert "on your call, Friday, October 2 at 15:00 UTC" in booked
+    # before a yes there is a baseline, not a Profit Record
+    assert "Your Profit Record starts today" not in booked and "if you go ahead" in booked
+    assert "Your Profit Record starts today at $0" in agreed
+    assert "own notice" in agreed and "before anything in your account changes" in agreed
+    assert "own notice" not in called and "calendly" not in called.lower()
+    # what the read could not see, in plain words
+    short = render_text(email_spec("teardown_ready", "Sam", "l", "p", stage="called",
+                                   missing=["sku_economics"]))
+    assert "One file was not in when this read was written." in short
+    assert "SKU Economics (fees by SKU): without it, Amazon's fees are not split by SKU" in short
+    assert "Your upload page stays open for it." in short
 
 
 def test_the_teardown_email_opens_the_record_at_zero_before_anything_is_touched():
@@ -90,9 +214,9 @@ def test_the_export_list_follows_the_platform():
     # cost template is asked for once, not twice
     assert "Amazon — " in both and "Shopify — " in both
     assert both.count("one-row-per-SKU template") == 1
-    # the seat instructions follow too
-    assert "Seller Central" in render_text(email_spec("welcome", "Sam", "l", platform="amazon"))
-    assert "collaborator request" in render_text(email_spec("welcome", "Sam", "l", platform="shopify"))
+    # the seat instructions in the agreed letter follow too
+    assert "Seller Central" in render_text(email_spec("agreed", "Sam", "l", platform="amazon", **AGREED))
+    assert "collaborator request" in render_text(email_spec("agreed", "Sam", "l", platform="shopify", **AGREED))
     # no platform stated is the column default: Amazon, exactly as before
     assert render_text(email_spec("files", "Sam", "l")) == amazon.replace("https://x/intake?t=1", "l")
 
@@ -101,7 +225,7 @@ def test_the_shopify_email_warns_about_the_two_exports_that_catch_people_out():
     """A filtered export ships a slice, and a dated export never downloads —
     Shopify emails it. Both are why an intake stalls; Amazon has neither."""
     shopify = render_text(email_spec("files", "Sam", "l", platform="shopify"))
-    both = render_text(email_spec("welcome", "Sam", "l", platform="both"))
+    both = render_text(email_spec("files", "Sam", "l", platform="both"))
     amazon = render_text(email_spec("files", "Sam", "l", platform="amazon"))
     for body in (shopify, both):
         assert "clear any filter" in body
@@ -112,8 +236,9 @@ def test_the_shopify_email_warns_about_the_two_exports_that_catch_people_out():
 
 
 def test_the_welcome_link_carries_the_platform():
-    """/welcome leads with the seat the client actually has to grant."""
-    link = lambda platform: [b for b in email_spec("welcome", "Sam", "l", platform=platform)["blocks"]
+    """/welcome leads with the seat the client actually has to grant. Since
+    2026-10-01 it is linked from the agreed letter, after the yes."""
+    link = lambda platform: [b for b in email_spec("agreed", "Sam", "l", platform=platform, **AGREED)["blocks"]
                              if b.get("button") == "Open your welcome page"][0]["url"]
     assert link("shopify").endswith("/welcome?p=shopify")
     assert link("both").endswith("/welcome?p=both")

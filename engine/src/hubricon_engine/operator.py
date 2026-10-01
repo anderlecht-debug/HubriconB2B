@@ -182,6 +182,18 @@ class Pass:
 
     # -- 2. bookings ---------------------------------------------------------
     def bookings(self) -> None:
+        """Calendly bookings the cloud routine parsed.
+
+        A new address becomes a pending client with an upload link and is sent
+        one email, the call prep: what the twenty-minute call is, the one thing
+        to do before it, and, second and optional, the upload page for a first
+        read before the call. Nothing in it assumes a yes (lifecycle.py). An
+        address that is already a client (a kickoff, a reschedule, a second
+        booking) is linked and sent nothing, and the founder is told. A call
+        prep that did not go out is tried again on later passes while the call
+        is still ahead (`_call_prep_retries`); `welcome_sent_at` records the
+        one that did."""
+        self._prepped: set[str] = set()
         rows = (self.db.table("bookings").select("*").is_("provisioned_at", "null")
                 .order("created_at").execute().data)
         for b in rows:
@@ -189,57 +201,132 @@ class Pass:
             if b.get("is_test") or onboarding.is_internal(email, b.get("invitee_name")):
                 self.db.table("bookings").update({"is_test": True, "provisioned_at": _iso()}).eq("id", b["id"]).execute()
                 continue
-            # A kickoff booked by someone who is already a client is their
-            # follow-up call, not an application. They have their welcome, their
-            # upload link and their place in the funnel; re-provisioning would
-            # mint a second link, send the welcome again and set their prospect
-            # row back to "booked". Link it, tell the founder, send nothing.
-            if onboarding.KICKOFF_EVENT.search(b.get("event_type") or ""):
-                existing = self.db.table("clients").select("*").eq("contact_email", email).limit(1).execute().data
-                if existing:
-                    client = existing[0]
-                    if self.dry:
-                        self.say(f"[dry] would link kickoff booking {b['id'][:8]} to existing client {email}")
-                        continue
-                    self.db.table("bookings").update({"client_id": client["id"], "provisioned_at": _iso()}) \
-                        .eq("id", b["id"]).execute()
-                    outbound.log_event(self.db, "kickoff_booked", booking_id=b["id"], client_id=client["id"])
-                    when = _parse_ts(b.get("starts_at"))
-                    when_s = when.astimezone().strftime("%a %b %d, %I:%M %p %Z") if when else "time unknown"
-                    self.human.append(f"Kickoff booked: {b.get('invitee_name') or email} at {when_s}. "
-                                      "Existing client, so no welcome and no new upload link were sent.")
-                    self.say(f"Linked kickoff booking for existing client {email}.")
-                    continue
+            existing = self.db.table("clients").select("*").eq("contact_email", email).limit(1).execute().data
+            if existing:
+                self._link_booking(b, existing[0], email)
+                continue
             # The routine's fit flag is a note for the call, never a reason to
-            # turn a booking away: everyone who books gets the welcome + upload
-            # link, and the founder sells on the call.
+            # turn a booking away: everyone who books gets the call prep, and
+            # the founder sells on the call.
             fit_note = ""
             if b.get("qualified") is False:
                 fit_note = (f" Flagged as a stretch fit ({b.get('dq_reason') or 'no reason given'}) "
                             "— this is a call to sell on.")
             if self.dry:
-                self.say(f"[dry] would provision {email} from booking {b['id'][:8]}")
+                self.say(f"[dry] would provision {email} from booking {b['id'][:8]} and send the call prep")
                 continue
             company = (b.get("answers") or {}).get("company") or (b.get("answers") or {}).get("storefront")
             platform = onboarding.platform_from_answers(b.get("answers"))
             client, link, created = onboarding.provision(self.db, email, b.get("invitee_name"), company, platform)
             self._attribute_booking(client, b, email)
-            sent = self._touch(client, "welcome", link, force=True)
-            self.db.table("bookings").update({
-                "client_id": client["id"], "provisioned_at": _iso(),
-                "welcome_sent_at": _iso() if sent else None,
-            }).eq("id", b["id"]).execute()
+            self.db.table("bookings").update({"client_id": client["id"], "provisioned_at": _iso()}) \
+                .eq("id", b["id"]).execute()
+            sent = self._send_call_prep(client, b, link)
             outbound.log_event(self.db, "booking_provisioned", booking_id=b["id"], client_id=client["id"],
-                               payload={"created": created, "welcome_sent": sent})
+                               payload={"created": created, "call_prep_sent": sent})
             # make sure any prospect record lines up with the client
             self.db.table("prospects").update({"status": "booked", "client_id": client["id"], "last_event_at": _iso()}) \
                 .eq("email", email).execute()
-            when = _parse_ts(b.get("starts_at"))
-            when_s = when.astimezone().strftime("%a %b %d, %I:%M %p %Z") if when else "time unknown"
             self.human.append(f"Call booked: {b.get('invitee_name') or email} ({b.get('event_type') or 'event'}) "
-                              f"at {when_s}. Welcome email {'sent' if sent else 'NOT sent'}; upload link live."
-                              f"{fit_note}")
+                              f"at {self._when(b)}. Call prep email "
+                              + ("sent" if sent else "NOT sent (tried again each pass while the call is ahead)")
+                              + "; upload link live, optional before the call." + fit_note)
             self.say(f"Provisioned {email} ({'new' if created else 'existing'} client) from a booking.")
+        self._call_prep_retries()
+
+    @staticmethod
+    def _when(b: dict) -> str:
+        when = _parse_ts(b.get("starts_at"))
+        return when.astimezone().strftime("%a %b %d, %I:%M %p %Z") if when else "time unknown"
+
+    def _link_booking(self, b: dict, client: dict, email: str) -> None:
+        """A booking from an address that is already a client: their kickoff,
+        a reschedule, or a second call. They have their upload link and their
+        place in the journey; provisioning again would revoke the link, mint
+        another and send the first email twice. Link it, tell the founder, send
+        nothing. (A client whose call prep never went out is picked up by
+        `_call_prep_retries`, for the call this booking now dates.)"""
+        from . import lifecycle
+        kickoff = bool(onboarding.KICKOFF_EVENT.search(b.get("event_type") or ""))
+        if self.dry:
+            self.say(f"[dry] would link {'kickoff ' if kickoff else ''}booking {b['id'][:8]} to existing client "
+                     f"{email}; nothing sent")
+            return
+        self.db.table("bookings").update({"client_id": client["id"], "provisioned_at": _iso()}) \
+            .eq("id", b["id"]).execute()
+        stage = lifecycle.stage_of(self.db, client)
+        outbound.log_event(self.db, "kickoff_booked" if kickoff else "booking_linked", booking_id=b["id"],
+                           client_id=client["id"], payload={"event_type": b.get("event_type"), "stage": stage})
+        who = b.get("invitee_name") or email
+        if kickoff:
+            self.human.append(f"Kickoff booked: {who} at {self._when(b)}. Existing client, so nothing was sent "
+                              "and no new upload link was made.")
+        else:
+            self.human.append(f"{who} booked again ({b.get('event_type') or 'event'}) for {self._when(b)}: linked "
+                              f"to the existing client, stage {stage}. Nothing was sent and the upload link was "
+                              "left as it was."
+                              + (" They were recorded as declined; if this is a change of mind, the answer is "
+                                 "yours to send." if stage == "declined" else ""))
+        self.say(f"Linked {'kickoff ' if kickoff else ''}booking for existing client {email}; nothing sent.")
+
+    def _send_call_prep(self, client: dict, b: dict, link: str) -> bool:
+        """The call prep, if the stage allows it (the call is still ahead).
+        Success is written on the booking, which is what keeps a retry from
+        sending it twice even before client_touches can hold the kind."""
+        from . import lifecycle
+        self._prepped.add(client["id"])
+        call = lifecycle.call_at(self.db, client["id"])
+        stage = lifecycle.stage(client, call)
+        sent = self._touch(client, "call_prep", link, stage=stage, call_at=call)
+        if sent:
+            self.db.table("bookings").update({"welcome_sent_at": _iso()}).eq("id", b["id"]).execute()
+        return sent
+
+    def _prep_sent(self, client_id: str) -> bool:
+        """The client was sent their call prep (or, before 2026-10-01, the welcome)."""
+        if (self.db.table("bookings").select("id").eq("client_id", client_id)
+                .not_.is_("welcome_sent_at", "null").limit(1).execute().data):
+            return True
+        return bool(self.db.table("client_touches").select("kind").eq("client_id", client_id)
+                    .in_("kind", ["call_prep", "welcome"]).limit(1).execute().data)
+
+    def _call_prep_retries(self) -> None:
+        """A call prep that did not go out (no mail key, a send that failed) is
+        sent on a later pass, once, while the call is still ahead. After the
+        call it is never sent: it would describe a call that has happened."""
+        from . import lifecycle
+        rows = (self.db.table("bookings").select("*").not_.is_("client_id", "null")
+                .not_.is_("provisioned_at", "null").is_("welcome_sent_at", "null").execute().data)
+        latest: dict[str, dict] = {}
+        for b in sorted(rows, key=lambda r: str(r.get("created_at") or "")):
+            if b.get("is_test") or onboarding.KICKOFF_EVENT.search(b.get("event_type") or ""):
+                continue
+            if b["client_id"] not in getattr(self, "_prepped", set()):
+                latest[b["client_id"]] = b
+        waiting = []
+        for cid, b in latest.items():
+            got = self.db.table("clients").select("*").eq("id", cid).limit(1).execute().data
+            if not got or onboarding.is_internal(got[0]["contact_email"], got[0].get("contact_name")):
+                continue
+            client = got[0]
+            if self._prep_sent(cid) or lifecycle.stage_of(self.db, client) != "booked":
+                continue
+            waiting.append((client, b))
+        if not waiting:
+            return
+        if self.dry:
+            for client, _ in waiting:
+                self.say(f"[dry] would send the call prep to {client['contact_email']} (not sent before)")
+            return
+        if not self.send or not email_configured():
+            self.warnings.append(f"{len(waiting)} call prep email(s) waiting to go out: "
+                                 + ("--send not given" if not self.send else "RESEND_API_KEY missing")
+                                 + ". Each goes on the first pass that can send it, while its call is ahead.")
+            return
+        for client, b in waiting:
+            token = onboarding.mint_token(self.db, client["id"], "call prep link", rotate=False)
+            if self._send_call_prep(client, b, f"{onboarding.INTAKE_BASE_URL}/intake?t={token}"):
+                self.say(f"Sent the call prep to {client['contact_email']} (it had not gone out before).")
 
     def _attribute_booking(self, client: dict, b: dict, email: str) -> None:
         """Who sent this booking and what it came from. Never fatal: a booking
@@ -311,11 +398,28 @@ class Pass:
                      f"upload page {'sent' if sent else 'NOT sent'}.")
 
     # -- 4. nudges -----------------------------------------------------------
+    # An email's name in lifecycle.ALLOWED, where the two differ.
+    TOUCH_KIND = {"teardown_ready": "first_read", "welcome": "call_prep"}
+
     def nudges(self) -> None:
-        clients = self.db.table("clients").select("*").eq("status", "pending").execute().data
+        """The upload link again, after the call, to someone with no files in.
+
+        Keyed off the call (lifecycle.call_at), never the booking: the nudge
+        three days after it, the export list at seven, and Recovery Only at
+        fourteen (Amazon, once). Only where the stage allows each one: a called
+        prospect may get all three; a client who said yes and has sent nothing
+        gets the first two, counted from the later of the call and the yes, and
+        never the downsell. Nothing to anyone who said no or left, and never as
+        anyone's first email: a call prep, welcome or agreed letter must have
+        gone out first. The agreed letter itself is sent here too, if
+        `hubricon retainer` could not send it."""
+        from . import lifecycle
+        self._agreed_letters()
+        clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
+        now = _now()
         for c in clients:
             email = c["contact_email"]
-            if onboarding.is_internal(email):
+            if onboarding.is_internal(email, c.get("contact_name")):
                 continue
             uploads = self.db.table("uploads").select("id").eq("client_id", c["id"]).limit(1).execute().data
             if uploads:
@@ -324,61 +428,137 @@ class Pass:
                        self.db.table("client_touches").select("*").eq("client_id", c["id"]).execute().data}
             if "recovery_welcome" in touches:
                 # They chose the smaller door themselves, below the bar. The
-                # Teardown nudges pitch the $6,000 door they were just told the
+                # export nudges pitch the $6,000 door they were just told the
                 # arithmetic rules out, and the day-14 downsell offers the one
                 # they came in by; the founder follows up by hand.
                 continue
-            start = touches.get("welcome") or touches.get("files") or _parse_ts(c["created_at"])
+            call = lifecycle.call_at(self.db, c["id"])
+            stage = lifecycle.stage(c, call, now)
+            if stage not in ("called", "agreed"):
+                continue
+            if not ({"call_prep", "welcome", "agreed"} & set(touches) or self._prep_sent(c["id"])):
+                continue        # never anyone's first email
+            start = call
+            if stage == "agreed":
+                yes = lifecycle._ts(c.get("retainer_started_at"))
+                start = max(d for d in (call, yes) if d) if (call or yes) else None
             if not start:
                 continue
-            age = (_now() - start).days
+            age = (now - start).days
             amazon = (c.get("platform") or "amazon") in ("amazon", "both")
             if (age >= DOWNSELL_AFTER_DAYS and "downsell" not in touches and amazon
-                    and (c.get("plan") or "retainer") == "retainer"):
-                self._reonboard(c, "downsell")
-            elif age >= FILES_AFTER_DAYS and "files" not in touches:
-                self._reonboard(c, "files")
-            elif age >= NUDGE_AFTER_DAYS and "nudge" not in touches:
-                self._reonboard(c, "nudge")
+                    and (c.get("plan") or "retainer") == "retainer" and lifecycle.may_send(stage, "downsell")):
+                self._reonboard(c, "downsell", stage=stage)
+            elif age >= FILES_AFTER_DAYS and "files" not in touches and lifecycle.may_send(stage, "files"):
+                self._reonboard(c, "files", stage=stage)
+            elif age >= NUDGE_AFTER_DAYS and "nudge" not in touches and lifecycle.may_send(stage, "nudge"):
+                self._reonboard(c, "nudge", stage=stage)
 
-    def _reonboard(self, client: dict, kind: str) -> None:
+    def _agreed_letters(self) -> None:
+        """The letter that confirms a yes, for a client `hubricon retainer`
+        could not send it to (no mail key on the founder's machine). Within
+        onboarding.AGREED_LETTER_DAYS of the yes only: a confirmation weeks late
+        confirms nothing."""
+        from . import lifecycle
+        rows = (self.db.table("clients").select("*").eq("status", "pending")
+                .not_.is_("retainer_started_at", "null").execute().data)
+        now = _now()
+        for c in rows:
+            if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+                continue
+            if (c.get("plan") or "retainer") == "recovery" or c.get("retainer_source") == "first_invoice":
+                continue
+            yes = lifecycle._ts(c.get("retainer_started_at"))
+            if not yes or now - yes > timedelta(days=onboarding.AGREED_LETTER_DAYS):
+                continue
+            if (self.db.table("client_touches").select("kind").eq("client_id", c["id"]).eq("kind", "agreed")
+                    .execute().data):
+                continue
+            if self.dry:
+                self.say(f"[dry] would send the agreed letter to {c['contact_email']}")
+                continue
+            sent, why = onboarding.deliver_agreed(self.db, c, live=self.send)
+            if sent:
+                self.say(f"Sent the agreed letter to {c['contact_email']}" + ("." if why == "sent" else f": {why}."))
+            else:
+                self.warnings.append(f"Agreed letter to {c['contact_email']} not sent: {why}.")
+
+    def _reonboard(self, client: dict, kind: str, stage: str | None = None) -> None:
         if self.dry:
             self.say(f"[dry] would send {kind} to {client['contact_email']}")
             return
+        if not self._can_send(client, kind):
+            return      # no link is minted for an email that cannot go
         token = onboarding.mint_token(self.db, client["id"], f"{kind} link", rotate=False)
         link = f"{onboarding.INTAKE_BASE_URL}/intake?t={token}"
-        if self._touch(client, kind, link):
+        if self._touch(client, kind, link, stage=stage):
             self.say(f"Sent {kind} email to {client['contact_email']} (no uploads yet).")
 
-    @meter.metered("onboarding", timed=False)
-    def _touch(self, client: dict, kind: str, link: str, force: bool = False) -> bool:
+    def _can_send(self, client: dict, kind: str) -> bool:
         if not self.send or not email_configured():
             self.warnings.append(f"{kind} email to {client['contact_email']} not sent: "
                                  + ("--send not given" if not self.send else "RESEND_API_KEY missing"))
+            return False
+        return True
+
+    @meter.metered("onboarding", timed=False)
+    def _touch(self, client: dict, kind: str, link: str, force: bool = False, stage: str | None = None,
+               **ctx) -> bool:
+        """Send one onboarding email, once per kind unless forced.
+
+        With `stage`, the email goes only if lifecycle.may_send allows its kind
+        there (TOUCH_KIND maps an email to the lifecycle's name for it). The
+        mail goes first and is then recorded; a record the database refuses
+        (a kind migration 20261001000003 adds, before it is applied) is a
+        warning, never a reason to say the mail did not go."""
+        from . import lifecycle
+        if stage is not None and not lifecycle.may_send(stage, self.TOUCH_KIND.get(kind, kind)):
+            return False
+        if not self._can_send(client, kind):
             return False
         if not force:
             done = self.db.table("client_touches").select("kind").eq("client_id", client["id"]).eq("kind", kind).execute().data
             if done:
                 return False
         ok = onboarding.send(kind, client["contact_email"], client.get("contact_name"), link, PORTAL_URL,
-                             platform=client.get("platform") or "amazon")
+                             platform=client.get("platform") or "amazon", stage=stage, **ctx)
         if ok:
-            self.db.table("client_touches").upsert(
-                {"client_id": client["id"], "kind": kind, "sent_at": _iso()}, on_conflict="client_id,kind"
-            ).execute()
+            try:
+                self.db.table("client_touches").upsert(
+                    {"client_id": client["id"], "kind": kind, "sent_at": _iso()}, on_conflict="client_id,kind"
+                ).execute()
+            except Exception as err:
+                self.warnings.append(f"{kind} email to {client['contact_email']} went out, but client_touches "
+                                     f"would not record it ({str(err)[:120]}). Apply "
+                                     f"{onboarding.LIFECYCLE_MIGRATION}.")
         return ok
 
-    # -- 5. teardown delivery ------------------------------------------------
+    # -- 5. the first read ------------------------------------------------------
     def teardowns(self) -> None:
+        """The first full read, Profit Brief No. 001, and the first moves with it.
+
+        Uploads are parsed as they land. The read is written when the core
+        files for the channel it reads are in (onboarding.CORE_FILES: Amazon's
+        Business Report and SKU Economics, Shopify's orders and products), or
+        24 hours after the last upload, whichever comes first: a client who
+        sends files in pieces gets one read of all of them, and one who stops
+        short still gets a read that names what it could not see. Speed is the
+        promise, so it is automatic.
+
+        A client who has said yes gets the moves it found in the same pass
+        (issue.issue_drafts: sealed, the notice, then the veto window), and one
+        whose yes comes after the read gets them on the next pass rather than
+        at Monday's sweep. Nobody who has not said yes is sent a move."""
         from . import cli  # lazy: cli imports the world
 
         clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
         for c in clients:
-            if onboarding.is_internal(c["contact_email"]):
+            if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
                 continue
             issued = (self.db.table("briefings").select("id").eq("client_id", c["id"])
                       .eq("issue_number", 1).limit(1).execute().data)
             if issued:
+                self._first_moves_after_yes(c)
                 continue
             pending = self.db.table("uploads").select("id").eq("client_id", c["id"]).eq("status", "uploaded").execute().data
             if pending:
@@ -397,37 +577,73 @@ class Pass:
             )
             if not has_data:
                 continue
-            # The clock the 24-hour promise runs from, set once and never
-            # moved: when the first file we could read was uploaded, not when
-            # this hourly pass noticed it, because a late Teardown now costs
-            # us a month (terms §2). Exports pulled through the seat have no
+            # The clock speed-to-value runs from, set once and never moved:
+            # when the first file we could read was uploaded, not when this
+            # hourly pass noticed it. Exports pulled through the seat have no
             # upload row and start it on the pass that finds them.
             if not self.dry and speed.set_once(self.db, c, "exports_landed_at", self._first_file_at(c)):
                 outbound.log_event(self.db, "exports_landed", client_id=c["id"])
+            uploads = (self.db.table("uploads").select("report_type,status,uploaded_at,created_at")
+                       .eq("client_id", c["id"]).execute().data)
+            ready = onboarding.first_read_ready(uploads, channels.client_channel(c) or "amazon", _now())
+            if not ready["ready"]:
+                waits = ", ".join(onboarding.FILE_GAPS.get(k, (k,))[0] for k in ready["missing"])
+                self.say(f"{c['company_name'] or c['contact_email']}: first read waits for {waits}, or until "
+                         f"{ready['publish_by'].strftime('%a %b %d %H:%M UTC')} (24 hours after the last upload).")
+                continue
             if self.dry:
-                self.say(f"[dry] would run the models and publish Issue 001 for {c['contact_email']}")
+                self.say(f"[dry] would run the models and publish Issue 001 for {c['contact_email']}"
+                         + (f" (without {', '.join(ready['missing'])})" if ready["missing"] else ""))
                 continue
             try:
-                self._publish_first_issue(c, cli)
+                self._publish_first_issue(c, cli, missing=ready["missing"])
             except Exception as err:  # never let one client's data break the pass
-                self.warnings.append(f"Teardown for {c['contact_email']} failed: {err}")
-                print(f"  TEARDOWN FAILED for {c['contact_email']}: {err}", file=sys.stderr)
+                self.warnings.append(f"First read for {c['contact_email']} failed: {err}")
+                print(f"  FIRST READ FAILED for {c['contact_email']}: {err}", file=sys.stderr)
 
     def _first_file_at(self, c: dict) -> datetime | None:
         rows = (self.db.table("uploads").select("uploaded_at").eq("client_id", c["id"]).eq("status", "parsed")
                 .not_.is_("uploaded_at", "null").order("uploaded_at").limit(1).execute().data)
         return _parse_ts(rows[0]["uploaded_at"]) if rows else None
 
+    @staticmethod
+    def _first_read_letter(memo: str, missing: list[str], stage: str) -> str:
+        """Issue 001's letter, told where the client stands and what the read
+        could not see. The stock line "Nothing needs your decision this period
+        — the watch continues either way" is true of a client mid-service and
+        of nobody else here: a prospect has no watch, and a client who said yes
+        is about to be sent their first moves."""
+        if stage == "agreed":
+            nxt = ("Any moves this read found are listed in their own notice, each with its expected dollars, "
+                   "before anything in your account changes. Moves inside your standing yes go live when the "
+                   "notice's window closes unless you say no; anything else waits for your yes. If the notice "
+                   "does not reach you, nothing in it goes live.")
+        else:
+            nxt = ("Nothing in this read changes anything in your account. Moves are made only after you say yes "
+                   "to Managed Profit, and each is listed with its expected dollars before it goes live.")
+        stock = "Nothing needs your decision this period — the watch continues either way."
+        add = [x for x in (onboarding.missing_note(missing), None if stock in memo else nxt) if x]
+        memo = memo.replace(stock, nxt)
+        if not add:
+            return memo
+        sign = "\n\n— Hubricon"
+        at = memo.rfind(sign)
+        block = "\n\n".join(add)
+        return memo[:at] + "\n\n" + block + memo[at:] if at >= 0 else memo.rstrip() + "\n\n" + block
+
     @meter.metered("teardown")
-    def _publish_first_issue(self, c: dict, cli) -> None:
-        from . import narrate, storage
+    def _publish_first_issue(self, c: dict, cli, missing: list[str] | None = None) -> None:
+        from . import lifecycle, narrate, storage
         from .models.anomaly import summarize as summarize_anomalies
         from .report.html_report import generate
 
+        missing = list(missing or [])
+        call = lifecycle.call_at(self.db, c["id"])
+        stage = lifecycle.stage(c, call)
         run_id = cli._run_models(self.db, c, set(cli.ALL_MODELS), 20000, 42)
         cli._draft_for_run(self.db, c, run_id)
-        # welcome.html: the 90-day plan is drafted from the Teardown within 24h
-        # and presented on the kickoff call. It stays a draft until then.
+        # welcome.html: the 90-day plan is drafted from the first read and
+        # presented on the kickoff call. It stays a draft until then.
         cli.draft_plan_for_run(self.db, c, run_id)
         margins = self.db.table("margin_results").select("*").eq("run_id", run_id).execute().data
         elasticity = self.db.table("elasticity_results").select("*").eq("run_id", run_id).execute().data
@@ -451,6 +667,7 @@ class Pass:
                     memo = result["text"]
             except Exception as err:
                 print(f"  narrated letter skipped: {err}")
+        memo = self._first_read_letter(memo, missing, stage)
 
         video_path = None
         with tempfile.TemporaryDirectory() as tmp:
@@ -460,7 +677,7 @@ class Pass:
                 report_path, path.read_bytes(), {"content-type": "text/html", "upsert": "true"})
 
             # index.html, welcome.html, terms.html §2 and the portal all promise
-            # a recorded walkthrough with the Teardown. This line used to be
+            # a recorded walkthrough with the first read. This line used to be
             # `"video_id": None` and a note asking the founder to record a Loom.
             from pathlib import Path as _Path
             from . import video as videomod
@@ -479,12 +696,14 @@ class Pass:
             "headline": "Profit Brief No. 001 — your first full read",
         }).execute()
         speed.set_once(self.db, c, "first_issue_at")
-        sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True)
+        sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True, stage=stage, call_at=call, missing=missing)
         outbound.log_event(self.db, "teardown_delivered", client_id=c["id"],
-                           payload={"run_id": run_id, "emailed": sent, "video": bool(video_path)})
+                           payload={"run_id": run_id, "emailed": sent, "video": bool(video_path),
+                                    "missing": missing, "stage": stage})
         self.db.table("prospects").update({"status": "client", "last_event_at": _iso()}).eq("email", c["contact_email"]).execute()
         self.say(f"Published Issue 001 for {company}"
                  + (" with video" if video_path else " (no video — see the warning)")
+                 + (f", without {', '.join(missing)}" if missing else "")
                  + f"; client {'emailed' if sent else 'NOT emailed'}.")
         if not video_path:
             # The copy promises a recorded walkthrough. If the pipeline could
@@ -492,6 +711,59 @@ class Pass:
             self.warnings.append(
                 f"Issue 001 for {company} shipped WITHOUT the recorded walkthrough the site promises. "
                 f"Record one now: `hubricon brief {c['contact_email']} --video <url>`.")
+        if stage == "agreed":
+            self._issue_first_moves(c)
+
+    def _first_moves_after_yes(self, c: dict) -> None:
+        """Issue 001 went out before the yes. Now there is a yes, and nothing
+        has ever been issued: the drafts go now, not at Monday's sweep."""
+        from . import lifecycle
+        if lifecycle.stage(c, None) != "agreed":
+            return
+        if (self.db.table("directives").select("id").eq("client_id", c["id"])
+                .not_.is_("issued_at", "null").limit(1).execute().data):
+            return
+        if not (self.db.table("directives").select("id").eq("client_id", c["id"]).eq("status", "draft")
+                .limit(1).execute().data):
+            return
+        if self.dry:
+            self.say(f"[dry] would issue the first moves to {c['contact_email']} (yes after Issue 001)")
+            return
+        self._issue_first_moves(c)
+
+    def _issue_first_moves(self, c: dict) -> int:
+        """A yes and a first read: the drafted moves, through the one gate there
+        is (issue.issue_drafts: the stage, the Seal, the notice, then the veto
+        window), on every channel the client sells on. Without a way to send
+        the notice nothing is issued: an issued move nobody was told about is
+        worse than a draft."""
+        from . import issue
+        company = c.get("company_name") or c["contact_email"]
+        if not self.send or not email_configured():
+            self.warnings.append(f"{company} said yes and has a first read, but its first moves stay drafts: "
+                                 + ("--send not given" if not self.send else "RESEND_API_KEY missing")
+                                 + ". The next pass that can send the notice issues them.")
+            return 0
+        total = 0
+        for channel in channels.channels_for(c.get("platform")):
+            try:
+                res = issue.issue_drafts(self.db, c, channel, PORTAL_URL, send=True)
+            except Exception as err:
+                self.warnings.append(f"{company}: first moves on {channels.label(channel)} failed: {err}")
+                continue
+            if not res["issued"]:
+                continue
+            total += res["issued"]
+            self.say(f"{company}: {res['issued']} first move(s) on {channels.label(channel)} issued, "
+                     + ("notice sent, veto window open" if res["notified"]
+                        else "notice NOT sent, so none can auto-approve")
+                     + f"; seal: {res.get('seal')}.")
+            if not res["notified"]:
+                self.warnings.append(f"{company}: {res['issued']} first move(s) issued without a notice reaching "
+                                     "them, so none can go live on silence. Tell them yourself.")
+        if total:
+            outbound.log_event(self.db, "first_moves_issued", client_id=c["id"], payload={"issued": total})
+        return total
 
     # -- 6. the day-30 guarantee ---------------------------------------------
     def billing(self) -> None:
