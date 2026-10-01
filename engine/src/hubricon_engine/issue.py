@@ -19,7 +19,7 @@ before it goes live" became something the client can check, not take on trust.
 
 from datetime import datetime, timedelta, timezone
 
-from . import lifecycle
+from . import channels, lifecycle
 
 VETO_HOURS = 72             # closes before the next weekly sweep, and always
                             # leaves a full working day plus the weekend
@@ -222,7 +222,10 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
                                           seals=sealed.get("short") or {})
         notified = send_email(
             client["contact_email"],
-            veto_subject(chosen, closes),
+            # a client on both stores gets a notice per store each Monday; the
+            # subject says which (channels.store_name), a one-store client's
+            # reads as it always has
+            veto_subject(chosen, closes, store=channels.store_name(client.get("platform"), channel)),
             text, html=html,
         )
     out["notified"] = notified
@@ -279,18 +282,22 @@ def _record_line(db, client: dict) -> str | None:
         return None
 
 
-def veto_subject(chosen: list[dict], closes) -> str:
+def veto_subject(chosen: list[dict], closes, store: str | None = None) -> str:
     """The subject is the picture of the fortnight: how many moves, when they go
     live, and what they are expected to earn. Explicit-mandate moves never go
-    live on their own, so a batch of only those says what it waits for."""
+    live on their own, so a batch of only those says what it waits for.
+
+    `store` ('Amazon' or 'Shopify') names the store for a client who sells on
+    both (channels.store_name); None leaves the subject as it always was."""
     n = len(chosen)
-    noun = f"{n} move{'s' if n != 1 else ''}"
+    moves = f"move{'s' if n != 1 else ''}"
     total = sum(float(d.get("expected_impact_usd") or 0) for d in chosen)
     money = f" — ${total:,.0f} expected" if total > 0 else ""
     if all(d.get("mandate") != "standing" for d in chosen):
-        return f"{noun} waiting for your yes{money}"
+        return f"{n} {store + ' ' if store else ''}{moves} waiting for your yes{money}"
     when = closes.strftime("%A") if hasattr(closes, "strftime") else str(closes)
-    return f"{noun} in your account go live {when} unless you say no{money}"
+    place = f"your {channels.PLACE.get(store.lower(), 'account')}" if store else "your account"
+    return f"{n} {moves} in {place} go live {when} unless you say no{money}"
 
 
 EXECUTION_SLA_DAYS = 7      # welcome.html: "Weeks 1–2 — first moves go live"; terms §3: inside fourteen days. We hold ourselves to seven.

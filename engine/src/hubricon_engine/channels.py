@@ -20,9 +20,18 @@ CHANNELS = ("amazon", "shopify")
 
 LABEL = {"amazon": "Amazon", "shopify": "Shopify"}
 FEE_LABEL = {"amazon": "Amazon fees", "shopify": "Shopify fees"}
+# What the fee figure holds, said as narrowly as the code reads it. Amazon's
+# SKU Economics itemises every fee line. On Shopify the figure is the payment
+# processing fee alone (shopify_orders.py: Shopify Payments' 2.9% + 30¢ until a
+# payouts row says otherwise); no label, app or 3PL export is read, so those
+# are named as missing rather than implied (corrected 2026-10-01: this line
+# said "shipping labels, apps and 3PL charges" and nothing read them). A
+# pick, pack and postage cost typed on the cost sheet lands in landed cost
+# (models/margin.py), not here.
 FEE_PARTS = {
     "amazon": "referral, FBA fulfilment, storage and every other fee line",
-    "shopify": "payment processing, shipping labels, apps and 3PL charges",
+    "shopify": ("Shopify Payments processing fees only; shipping labels, apps and 3PL charges are not in this "
+                "figure, and a pick, pack and postage cost on your cost sheet is counted with landed cost"),
 }
 # When a sale becomes cash in the bank (corrected 2026-10-01; until then the
 # cash cone paid a sale made on day 13 on day 14).
@@ -59,14 +68,38 @@ PAYOUT_NOTE = {
                 f"{PAYOUT_RESERVE_DAYS['shopify']} days later (3 business days; Shopify says 3 to 5). A weekly or "
                 f"monthly payout schedule would hold cash longer and is not modelled"),
 }
-# Where the seat lives, in the client's words.
+# Where the seat lives, in the client's words. On Shopify a staff account the
+# owner adds is the route they can take alone; a collaborator request needs a
+# Shopify Partner organisation on our side, which the onboarding copy names
+# only as an alternative (onboarding.SEAT_HINT).
 SEAT = {
     "amazon": "a permissions-scoped user in Seller Central",
-    "shopify": "a collaborator account in your Shopify admin",
+    "shopify": "a staff account in your Shopify admin",
 }
-# What is watched while a price step runs: Amazon can suppress the Featured
-# Offer; a Shopify store has no Buy Box, so the conversion rate carries it.
-SUPPRESSION_SIGNAL = {"amazon": "Buy Box share", "shopify": "conversion rate"}
+# What says a price step went too far. Amazon can suppress the Featured Offer,
+# and the Buy Box share is read while a step runs (the Business Report in the
+# measurement pass, and the daily reading `hubricon watch` records and
+# .github/workflows/issue.yml asks for). A Shopify store has no Buy Box, and no code
+# reads its conversion rate (only a number typed by hand into `hubricon watch
+# --conversion`), so what carries it is what is ingested: the units the product
+# sells on the client's own orders, before and after the step
+# (measurement.measure_price_step, from the Orders export).
+SUPPRESSION_SIGNAL = {"amazon": "Buy Box share", "shopify": "units sold, read on your orders"}
+HAS_BUY_BOX = {"amazon": True, "shopify": False}
+# Every sentence a client reads about what is watched while a price move is
+# live comes from here, so no draft, plan or report can say more than the code
+# does. `{what}` is "step", "markdown" or "test".
+WATCH_SENTENCE = {
+    "amazon": "Buy Box watched while the {what} is live.",
+    "shopify": ("No Buy Box on Shopify: the {what} is read on your own orders, the units this product sells "
+                "before and after it."),
+}
+WATCH_CLAUSE = {
+    "amazon": "watch your Buy Box while a step is live",
+    "shopify": "read each step on your own orders, the units sold before and after it",
+}
+# Where a move happens, for a client who sells on both (store_place).
+PLACE = {"amazon": "Amazon account", "shopify": "Shopify store"}
 # Reimbursement recovery reconciles Amazon's own bleed exports (ledger,
 # returns, reimbursements, settlements). A Shopify store has no warehouse
 # that loses units on its behalf and no claim window to miss.
@@ -148,6 +181,40 @@ def payout_note(channel: str | None) -> str:
 
 def suppression_signal(channel: str | None) -> str:
     return SUPPRESSION_SIGNAL.get((channel or "amazon").lower(), SUPPRESSION_SIGNAL["amazon"])
+
+
+def has_buy_box(channel: str | None) -> bool:
+    return HAS_BUY_BOX.get((channel or "amazon").lower(), True)
+
+
+def watch_phrase(channel: str | None, what: str = "step") -> str:
+    """The one sentence on what is watched while a price move is live:
+    'Buy Box watched while the step is live.' on Amazon; on Shopify, where the
+    move is read on the client's own orders."""
+    ch = (channel or "amazon").lower()
+    return WATCH_SENTENCE.get(ch, WATCH_SENTENCE["amazon"]).format(what=what)
+
+
+def watch_clause(channel: str | None) -> str:
+    """The same promise as a clause after 'we': 'watch your Buy Box while a
+    step is live', or, on Shopify, 'read each step on your own orders…'."""
+    return WATCH_CLAUSE.get((channel or "amazon").lower(), WATCH_CLAUSE["amazon"])
+
+
+def store_name(platform: str | None, channel: str | None) -> str | None:
+    """'Amazon' or 'Shopify' when the client sells on both, so every notice,
+    Brief and alert says which store it is about; None for a one-store client,
+    whose mail reads exactly as it did before."""
+    if channel is None or len(channels_for(platform)) < 2:
+        return None
+    return label(channel)
+
+
+def store_place(platform: str | None, channel: str | None) -> str | None:
+    """'Amazon account' or 'Shopify store' for a two-store client, else None."""
+    if store_name(platform, channel) is None:
+        return None
+    return PLACE.get(channel.lower(), PLACE["amazon"])
 
 
 def has_recovery(channel: str | None) -> bool:

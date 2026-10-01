@@ -11,7 +11,7 @@ import sys
 import urllib.error
 import urllib.request
 
-from . import meter
+from . import channels, meter
 
 
 USER_AGENT = "Hubricon-engine/1.0 (+https://www.hubricon.com)"
@@ -113,8 +113,14 @@ def directive_email_body(client: dict, directives: list[dict], closes_at, portal
     `seals` maps a move's id to its short seal, printed beside its expected
     dollars, so the client's own inbox holds a dated copy of what was called.
     A move without one reads exactly as it did before the Seal existed, and
-    the note explaining seals appears only when one is printed."""
+    the note explaining seals appears only when one is printed.
+
+    A client who sells on both stores is sent one notice per store; each says
+    which store its moves are in (channels.store_place, from the moves' own
+    channel). A one-store client's notice reads exactly as before."""
     standing = [d for d in directives if d.get("mandate") == "standing"]
+    place = channels.store_place(client.get("platform"),
+                                 next((d.get("channel") for d in directives if d.get("channel")), None))
     explicit = [d for d in directives if d.get("mandate") != "standing"]
     seals = seals or {}
 
@@ -125,8 +131,8 @@ def directive_email_body(client: dict, directives: list[dict], closes_at, portal
             parts.append(f"seal {seals[d.get('id')]}")
         return d["action_text"] + (f" ({' · '.join(parts)})" if parts else "")
 
-    blocks = [{"p": "Here is what we plan to do next, and what each one is worth. "
-                    "Nothing below has happened yet."}]
+    blocks = [{"p": f"Here is what we plan to do next{f' in your {place}' if place else ''}, and what each one "
+                    "is worth. Nothing below has happened yet."}]
     if standing:
         when = closes_at.strftime("%A %-d %B at %-I%p").replace("AM", "am").replace("PM", "pm")             if hasattr(closes_at, "strftime") else str(closes_at)
         blocks.append({"p": f"Inside your standing mandate — we go ahead after {when} unless you say no:"})

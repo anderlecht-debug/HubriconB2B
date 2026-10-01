@@ -330,20 +330,39 @@ def aged_cliff_alerts(health_rows: list[dict] | None, channel: str | None = "ama
 def compute_alerts(current_inventory, previous_inventory, margin_rows, price_tests,
                    cash_row=None, recovery=None, anomaly_rows=None, health=None,
                    previous_health=None, channel: str | None = "amazon",
-                   inventory_health: list[dict] | None = None) -> list[dict]:
+                   inventory_health: list[dict] | None = None,
+                   platform: str | None = None) -> list[dict]:
     """`inventory_health` is the channel's Inventory Age rows (every snapshot on
     file, or at least the two latest); without it the aged-cliff warning is
-    simply not computed."""
+    simply not computed.
+
+    `platform` is the client's. A client who sells on both stores runs one
+    sweep per store, so each alert says which store it is about ("On Shopify:
+    …"); a one-store client's alerts read exactly as before. The Buy Box alert
+    is Amazon's whichever sweep finds it (price tests carry no channel), so it
+    says Amazon, and the second sweep's identical message is deduped."""
+    store = channels.store_name(platform, channel)
+
+    def tag(alerts: list[dict], where: str | None = store) -> list[dict]:
+        return [store_tagged(a, where) for a in alerts] if store else alerts
+
     return (
-        cash_alerts(cash_row)
-        + buybox_alerts(price_tests)
-        + recovery_alerts(recovery)
-        + anomaly_alerts(anomaly_rows, channel)
-        + health_alerts(health, previous_health)
-        + stockout_alerts(current_inventory, previous_inventory)
-        + aged_cliff_alerts(inventory_health, channel)
-        + margin_flip_alerts(margin_rows)
+        tag(cash_alerts(cash_row))
+        + tag(buybox_alerts(price_tests), channels.label("amazon"))
+        + tag(recovery_alerts(recovery))
+        + tag(anomaly_alerts(anomaly_rows, channel))
+        + tag(health_alerts(health, previous_health))
+        + tag(stockout_alerts(current_inventory, previous_inventory))
+        + tag(aged_cliff_alerts(inventory_health, channel))
+        + tag(margin_flip_alerts(margin_rows))
     )
+
+
+def store_tagged(alert: dict, store: str) -> dict:
+    """The alert with its store named first, once."""
+    prefix = f"On {store}: "
+    msg = alert["message"]
+    return alert if msg.startswith(prefix) else {**alert, "message": prefix + msg}
 
 
 def dedupe(new_alerts: list[dict], recent_messages: set[str]) -> list[dict]:

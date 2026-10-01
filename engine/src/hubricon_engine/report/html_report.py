@@ -84,7 +84,18 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         today=date.today().isoformat(),
         actions=_top_actions(inventory, ads, elasticity, margins, channel),
         fee_label=channels.fee_label(channel),
+        fee_parts=channels.fee_parts(channel),
         platform_label=channels.label(channel),
+        # the store this report is about, named only for a client on both
+        store=channels.store_name(client.get("platform"), channel),
+        both_stores=len(channels.channels_for(client.get("platform"))) > 1,
+        store_labels=channels.LABEL,
+        # what is watched while a step is live, as channels.py says it; the
+        # Buy Box column only where a Buy Box exists (price_tests carry no
+        # channel, so a client who sells on Amazon at all keeps it)
+        watch_clause=channels.watch_clause(channel),
+        has_buy_box=channels.has_buy_box(channel),
+        buy_box_column="amazon" in channels.channels_for(client.get("platform")),
         totals=totals,
         latest_period=latest,
         inventory=sorted(inventory, key=lambda r: float(r["stockout_probability"] or 0), reverse=True),

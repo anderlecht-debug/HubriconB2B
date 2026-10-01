@@ -44,14 +44,54 @@ def test_the_mechanics_only_amazon_has():
     assert channels.payout_cycle_days("shopify") == 1
     assert "14 days" in channels.payout_note("amazon")
     assert "daily" in channels.payout_note("shopify")
-    # no Buy Box on a Shopify store, so a price test watches conversion instead
+    # no Buy Box on a Shopify store, and no code reads its conversion rate: a
+    # step is read on the units its own orders show (2026-10-01)
     assert channels.suppression_signal("amazon") == "Buy Box share"
-    assert channels.suppression_signal("shopify") == "conversion rate"
+    assert channels.suppression_signal("shopify") == "units sold, read on your orders"
+    assert channels.has_buy_box("amazon") and not channels.has_buy_box("shopify")
+
+
+def test_what_is_watched_is_said_once_and_only_as_far_as_the_code_goes():
+    """Every 'Buy Box watched' a client reads comes from channels.watch_phrase,
+    so a Shopify step is never promised a Buy Box, and nothing is 'watched
+    daily' that no code watches."""
+    assert channels.watch_phrase("amazon") == "Buy Box watched while the step is live."
+    assert channels.watch_phrase(None, "markdown") == "Buy Box watched while the markdown is live."
+    shop = channels.watch_phrase("shopify")
+    assert "Buy Box" in shop and shop.startswith("No Buy Box on Shopify")
+    assert "read on your own orders" in shop and "before and after" in shop
+    for text in (shop, channels.watch_phrase("shopify", "markdown"), channels.watch_clause("shopify")):
+        assert "daily" not in text and "conversion" not in text
+    assert channels.watch_clause("amazon") == "watch your Buy Box while a step is live"
+    assert "Buy Box" not in channels.watch_clause("shopify")
+
+
+def test_the_shopify_fee_figure_names_only_what_is_read():
+    """No label, app or 3PL export is read, so the fee figure says they are
+    not in it rather than implying they are (finding 2, 2026-10-01)."""
+    parts = channels.fee_parts("shopify")
+    assert parts.startswith("Shopify Payments processing fees only")
+    assert "shipping labels, apps and 3PL charges are not in this figure" in parts
+
+
+def test_a_two_store_client_is_told_which_store_and_a_one_store_client_is_not():
+    assert channels.store_name("both", "shopify") == "Shopify"
+    assert channels.store_name("both", "amazon") == "Amazon"
+    assert channels.store_name("BOTH", "Shopify") == "Shopify"
+    for platform in ("amazon", "shopify", None):
+        assert channels.store_name(platform, "shopify") is None
+        assert channels.store_place(platform, "amazon") is None
+    assert channels.store_name("both", None) is None
+    assert channels.store_place("both", "shopify") == "Shopify store"
+    assert channels.store_place("both", "amazon") == "Amazon account"
+    # the seat a Shopify owner can grant alone
+    assert channels.seat("shopify") == "a staff account in your Shopify admin"
 
 
 def test_an_unknown_channel_is_treated_as_amazon():
     for fn in (channels.label, channels.fee_label, channels.fee_parts,
-               channels.payout_note, channels.suppression_signal, channels.seat):
+               channels.payout_note, channels.suppression_signal, channels.seat,
+               channels.watch_phrase, channels.watch_clause, channels.has_buy_box):
         assert fn("etsy") == fn("amazon")
         assert fn(None) == fn("amazon")
     assert channels.payout_cycle_days(None) == 14

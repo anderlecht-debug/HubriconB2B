@@ -2197,7 +2197,11 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
                 video_path, made.read_bytes(),
                 {"content-type": "video/mp4", "upsert": "true"})
 
-    headline = f"Profit Brief No. {issue_no:03d}"
+    # A client on both stores gets a Brief per store each fortnight: the
+    # headline, subject and email say which (channels.store_name). One store,
+    # no change.
+    store = channels.store_name(client.get("platform"), channel)
+    headline = f"Profit Brief No. {issue_no:03d}" + (f" · {store}" if store else "")
     if deltas and deltas.get("net_delta") is not None:
         headline += f" — net profit {'up' if deltas['net_delta'] >= 0 else 'down'} ${abs(deltas['net_delta']):,.0f}"
     row = {"client_id": client["id"], "run_id": run["id"], "memo": memo, "issue_number": issue_no,
@@ -2205,8 +2209,8 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
            "headline": headline, "tldr": (memo.split("\n\n")[2][:280] if memo.count("\n\n") > 2 else None)}
     found = float(ledger["identified_unbanked"] or 0)
     # The subject, the email and its footer all read the one figure the letter read.
-    subject = _issue_subject(issue_no, headline, proven, found)
-    blocks = _issue_email_blocks(issue_no, proven, found, bool(video_path))
+    subject = _issue_subject(issue_no, headline, proven, found, store=store)
+    blocks = _issue_email_blocks(issue_no, proven, found, bool(video_path), store=store)
     record = valuemod.record_line(ledger, proven)
     parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
 
@@ -2263,22 +2267,26 @@ def _usd(v: float) -> str:
     return ("−" if v < 0 else "") + f"${abs(v):,.0f}"
 
 
-def _issue_subject(issue_no: int, headline: str, proven: dict, found: float) -> str:
+def _issue_subject(issue_no: int, headline: str, proven: dict, found: float, store: str | None = None) -> str:
     """The subject line is the Record, not the period's net profit: the one
     figure (value.proven_since_day_one) and what has been found. The briefings
     row keeps `headline` (net profit up/down) for the portal. Before the Record
     has anything on it, the subject falls back to the headline's tail, or to
-    plain 'is in Hubricon'."""
+    plain 'is in Hubricon'.
+
+    `store` names the Brief's store for a client on both ('Profit Brief No. 004
+    · Shopify'); the Record's figure stays the whole Record's, every store."""
+    name = f"Profit Brief No. {issue_no:03d}" + (f" · {store}" if store else "")
     usd = float(proven.get("usd") or 0)
     if usd or found > 0:
         words = "proven" if proven.get("basis") == "months" else "measured so far"
-        return f"Profit Brief No. {issue_no:03d} — {_usd(usd)} {words}, {_usd(found)} found on your Record"
+        return f"{name} — {_usd(usd)} {words}, {_usd(found)} found on your Record"
     tail = headline.split("—")[-1].strip() if "—" in headline else ""
-    return (f"Profit Brief No. {issue_no:03d} — {tail}" if tail
-            else f"Profit Brief No. {issue_no:03d} is in Hubricon")
+    return f"{name} — {tail}" if tail else f"{name} is in Hubricon"
 
 
-def _issue_email_blocks(issue_no: int, proven: dict, found: float, has_video: bool) -> list[dict]:
+def _issue_email_blocks(issue_no: int, proven: dict, found: float, has_video: bool,
+                        store: str | None = None) -> list[dict]:
     usd = _usd(float(proven.get("usd") or 0))
     if proven.get("basis") == "months":
         figure = f"{usd} proven on your Record since day one"
@@ -2286,7 +2294,7 @@ def _issue_email_blocks(issue_no: int, proven: dict, found: float, has_video: bo
         aside = valuemod.proven_words(proven)[1]
         figure = f"{usd} measured on your Record so far" + (f" ({aside})" if aside else "")
     return [
-        {"p": f"Your Profit Brief is ready — {figure}, {_usd(found)} found and filed."},
+        {"p": f"Your {store + ' ' if store else ''}Profit Brief is ready — {figure}, {_usd(found)} found and filed."},
         {"p": ("It's a short video, with the written letter and the full report "
                "underneath it." if has_video else
                "The written letter and the full report are both in Hubricon.")},

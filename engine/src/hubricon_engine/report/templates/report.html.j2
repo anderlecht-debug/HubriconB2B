@@ -55,7 +55,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 
 <span class="logo">Hubric<b>o</b>n</span>
 <h1>Margin Audit</h1>
-<p class="meta">{{ client.company_name or client.contact_email }} · prepared {{ today }} · run {{ run.id[:8] }}
+<p class="meta">{{ client.company_name or client.contact_email }}{% if store %} · {{ store }}{% endif %} · prepared {{ today }} · run {{ run.id[:8] }}
 {%- if run.git_sha %} · engine {{ run.engine_version }} @ {{ run.git_sha }}{% endif %}</p>
 
 <section>
@@ -91,10 +91,11 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
       <div class="kpi"><b>{{ ledger|selectattr("status", "in", ["approved", "done"])|list|length }}</b><span>approved or completed</span></div>
     </div>
     <table>
-      <tr><th>Module</th><th>Move</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
+      <tr><th>Module</th>{% if both_stores %}<th>Store</th>{% endif %}<th>Move</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th></tr>
       {% for d in ledger[:12] %}
       <tr>
         <td>{{ d.module|upper }}</td>
+        {% if both_stores %}<td>{{ store_labels.get(d.channel or "amazon", "") }}</td>{% endif %}
         <td>{{ d.action_text }}</td>
         <td class="num">{% if d.expected_impact_usd %}${{ "{:,.0f}".format(d.expected_impact_usd|float) }}{% else %}—{% endif %}</td>
         <td>{{ d.status }}</td>
@@ -181,8 +182,8 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
   puts the price we would quote you a third too high. <b>It is not corrected.</b> Correcting it
   needs a price change made for a reason unrelated to demand, and the moves on this report are
   not that &mdash; we choose them from this same fit. What we do instead is refuse to quote a
-  price where the range is too wide to support one, step small where we know least, watch your
-  Buy Box while a step is live, and book your Profit Record at the cautious end of our own
+  price where the range is too wide to support one, step small where we know least,
+  {{ watch_clause }}, and book your Profit Record at the cautious end of our own
   range. Across a whole catalogue whose pricing has responded to demand, our quoted prices
   lean high rather than low &mdash; but that is a statement about the catalogue and not about
   any one SKU, and we will not dress it up as a per-SKU guarantee: measured on simulated
@@ -195,16 +196,16 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 {% if price_tests %}
 <section>
   <h2>Price-testing program</h2>
-  <p>Deliberate, tracked price moves &mdash; Buy Box share watched so suppression is caught in days, and every completed test feeds the next elasticity fit. The size of each step is not a house rule: it is solved for against how much your own history actually pins down, inside the &plusmn;5% a cycle your terms authorise.</p>
+  <p>Deliberate, tracked price moves &mdash; {% if has_buy_box %}Buy Box share watched so suppression is caught in days{% else %}no Buy Box on Shopify, so we {{ watch_clause }}{% endif %}, and every completed test feeds the next elasticity fit. The size of each step is not a house rule: it is solved for against how much your own history actually pins down, inside the &plusmn;5% a cycle your terms authorise.</p>
   <table>
-    <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box before → during</th><th>Status</th><th>Outcome</th></tr>
+    <tr><th>SKU</th><th class="num">Move</th><th>Window</th>{% if buy_box_column %}<th class="num">Buy Box before → during{% if both_stores %} (Amazon){% endif %}</th>{% endif %}<th>Status</th><th>Outcome</th></tr>
     {% for t in price_tests %}
     <tr>
       <td>{{ t.sku }}</td>
       <td class="num">${{ "%.2f"|format(t.baseline_price|float) }} → ${{ "%.2f"|format(t.test_price|float) }}</td>
       <td>{{ t.start_date or "—" }} .. {{ t.end_date or "—" }}</td>
-      <td class="num {{ 'risk' if t.buy_box_share_before and t.buy_box_share_during and t.buy_box_share_before|float - t.buy_box_share_during|float >= 10 else '' }}">
-        {{ t.buy_box_share_before or "—" }}% → {{ t.buy_box_share_during or "—" }}%</td>
+      {% if buy_box_column %}<td class="num {{ 'risk' if t.buy_box_share_before and t.buy_box_share_during and t.buy_box_share_before|float - t.buy_box_share_during|float >= 10 else '' }}">
+        {{ t.buy_box_share_before or "—" }}% → {{ t.buy_box_share_during or "—" }}%</td>{% endif %}
       <td>{{ t.status }}</td>
       <td class="small">{{ t.outcome_notes or "" }}</td>
     </tr>
@@ -239,8 +240,8 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 <section>
   <h2>Module 04 · True net margin</h2>
   <img class="chart" src="data:image/png;base64,{{ chart_margin }}" alt="Margin decomposition">
-  <div class="narrate">Revenue split into {{ fee_label }}, landed COGS, allocated ad spend, and what's actually
-  left. Ad allocation is proportional to revenue share within the period.</div>
+  <div class="narrate">Revenue split into {{ fee_label }} ({{ fee_parts }}), landed COGS, allocated ad spend,
+  and what's actually left. Ad allocation is proportional to revenue share within the period.</div>
 </section>
 {% endif %}
 
