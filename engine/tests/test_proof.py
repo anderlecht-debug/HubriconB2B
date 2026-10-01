@@ -20,6 +20,11 @@ def test_the_gate_answer_reads_the_booking_string_in_both_shapes():
     assert proof.revenue_band_from_answers({"utm": "rev:$3M–$5M|model:Private label|fit:core"}) == "$3M–$5M"
     assert proof.revenue_band_from_answers({"rev": "Under $3M"}) == "under $3M"
     assert proof.revenue_band_from_answers({"utm": "rev:$5M–$20M|fit:core"}) == "$5M–$20M"
+    # the $1M–$30M chips (2026-09-30)
+    assert proof.revenue_band_from_answers({"utm": "rev:$1M–$3M|model:Private label|fit:core"}) == "$1M–$3M"
+    assert proof.revenue_band_from_answers({"rev": "$3M–$10M"}) == "$3M–$10M"
+    assert proof.revenue_band_from_answers({"utm": "rev:$10M–$30M|fit:core|channel:Both"}) == "$10M–$30M"
+    assert proof.revenue_band_from_answers({"rev": "$30M+"}) == "$30M+"
     assert proof.revenue_band_from_answers({"utm": "model:x"}) is None
     assert proof.revenue_band_from_answers(None) is None
 

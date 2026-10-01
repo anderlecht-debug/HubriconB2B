@@ -3,393 +3,191 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Start your free Proving Month — Hubricon</title>
-<meta name="description" content="Managed Profit for Amazon and Shopify brands doing $3M–$20M. Four answers, one 20-minute call, your Profit Teardown inside 24 hours, then thirty days free. Proven or Void.">
+<title>Book your call — Hubricon</title>
+<meta name="description" content="Four answers, then pick a time. Twenty minutes on your own numbers, for Amazon and Shopify brands doing $1M to $30M a year.">
 <link rel="canonical" href="https://www.hubricon.com/apply">
-<meta name="theme-color" content="#050A1F">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23FFC000' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23FFC000'/%3E%3C/svg%3E">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.hubricon.com/apply">
-<meta property="og:title" content="Start your free Proving Month — Hubricon">
-<meta property="og:description" content="Four answers, one 20-minute call, your Profit Teardown inside 24 hours, then thirty days free. Proven or Void.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:title" content="Book your call — Hubricon">
 <meta property="og:image" content="https://www.hubricon.com/og.png">
-<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* ============================================================
-   /apply — the VSL step of the funnel, in the shape of the
-   reference workshop page: question, video, one line, one
-   button; what people are saying (real words only); what you
-   get; the application. Same skin as the home page.
-   ============================================================ */
-:root{
-  --bg: hsl(225 72% 7%); --band: hsl(224 62% 10%); --raise: hsl(224 58% 13%);
-  --amber: hsl(45 100% 50%); --amber-soft: hsl(45 100% 50% / .12);
-  --serious: hsl(8 72% 58%); --ok: hsl(152 55% 52%);
-  --ink-100: hsl(220 40% 98%); --ink-70: hsl(220 40% 98% / .72); --ink-60: hsl(220 40% 98% / .58);
-  --rule-20: hsl(220 40% 98% / .18); --rule-08: hsl(220 40% 98% / .08);
-  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
-  --paper: #F2EDE3; --paper-ink: #16181F; --paper-60: hsl(228 16% 10% / .62); --paper-rule: hsl(228 16% 10% / .22); --void: #CF3B2D; --ok-ink: hsl(152 62% 28%);
-  --speckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --zigzag: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
-  --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --w: min(1120px, calc(100% - 32px));
+/* /apply's layout. Every value is a token from /assets/hubricon.css. */
+.top { display: flex; align-items: center; justify-content: space-between; padding-block: var(--s-5); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+
+.book { padding-block: var(--s-7) var(--section); }
+.book-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-areas: "intro gate" "details gate"; column-gap: var(--s-8); align-items: start; }
+.intro { grid-area: intro; }
+.details { grid-area: details; }
+.gate { grid-area: gate; }
+.book h1 { font-size: var(--t-display-m); max-width: 14ch; margin-top: var(--s-3); }
+.book .lede { margin-top: var(--s-5); }
+.facts { list-style: none; margin-top: var(--s-7); border-top: 1px solid var(--rule); }
+@media (max-width: 900px) { .facts { margin-top: 0; } }
+.facts li { padding: var(--s-4) 0; border-bottom: 1px solid var(--rule); font-size: var(--t-16); }
+.promise { margin-top: var(--s-6); font-size: var(--t-16); color: var(--ink-3); }
+
+.gate { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-7); }
+.gate-step { font-size: var(--t-14); color: var(--ink-3); }
+.gate h2 { font-size: var(--t-24); letter-spacing: -0.018em; margin-top: var(--s-2); }
+.gate form { margin-top: var(--s-6); display: grid; gap: var(--s-6); }
+.gate fieldset { border: 0; }
+.gate legend { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-3); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.chips label { position: relative; }
+.chips input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chips span {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--s-4);
+  border: 1px solid var(--rule-2); border-radius: 8px; background: var(--paper);
+  font-size: var(--t-14); color: var(--ink-2); cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
-*{ box-sizing: border-box; margin: 0; padding: 0; }
-html{ scroll-behavior: smooth; scroll-padding-top: 120px; }
-body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
-a{ color: inherit; text-decoration: none; }
-svg{ display: block; }
-img, video{ display: block; max-width: 100%; }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
-b{ color: var(--ink-100); font-weight: 700; }
-.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .04; will-change: transform; animation: grain 1.4s steps(4) infinite;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
-@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
+.chips label:hover span { border-color: var(--ink-3); }
+.chips input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.chips input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
+.gate .btn { width: 100%; }
+.gate .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.gate-note { font-size: var(--t-14); color: var(--ink-3); margin-top: var(--s-3); }
+.calendly-mount { min-height: 700px; margin-top: var(--s-5); }
 
-/* buttons */
-.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
-.btn svg{ width: 13px; height: 13px; }
-.btn:active{ transform: scale(.98); }
-.btn[disabled]{ opacity: .45; cursor: not-allowed; }
-.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
-.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
-.btn-white{ background: var(--ink-100); color: var(--bg); }
-.btn-lg{ font-size: 15px; padding: 20px 40px; }
+.saying-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); margin-top: var(--s-7); }
+.saying-grid blockquote { border-top: 1px solid var(--ink); padding-top: var(--s-4); font-size: var(--t-18); color: var(--ink); }
+.saying-grid cite { display: block; margin-top: var(--s-4); font-style: normal; font-size: var(--t-14); color: var(--ink-3); }
 
-/* nav */
-.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
-.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
-.nav-logo{ font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
-.nav-logo{ display: inline-flex; align-items: center; gap: 10px; }
-.nav-logo em{ font-style: normal; color: var(--amber); }
-.nav-logo svg{ width: 26px; height: 26px; color: var(--amber); }
-.nav .btn{ padding: 12px 20px; font-size: 12px; }
-@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
+.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
+.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
+.foot nav { display: flex; gap: var(--s-5); justify-self: end; }
+.foot a { color: var(--ink-2); text-decoration: none; }
+.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.foot .legal { grid-column: 1 / -1; max-width: 80ch; }
 
-/* sections */
-.sect{ position: relative; padding: 96px 0; }
-.sect.band{ background: var(--band); border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
-.in{ width: var(--w); margin: 0 auto; }
-.center{ text-align: center; }
-.h2{ font-size: clamp(34px, 4.6vw, 58px); max-width: 22ch; margin: 0 auto 14px; }
-.tag{ display: inline-block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
-
-/* the VSL */
-.vsl{ position: relative; overflow: hidden; padding: 72px 0 40px; text-align: center; }
-.vsl::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 55% at 50% 20%, hsl(45 100% 50% / .10), transparent 70%); }
-.vsl-in{ position: relative; width: min(900px, calc(100% - 32px)); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 26px; }
-.vsl .badge{ display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; padding: 8px 18px; font-size: 11px; text-transform: uppercase; letter-spacing: .18em; color: var(--ink-70); border: 1px solid var(--rule-20); background: hsl(224 55% 14% / .6); margin-bottom: -8px; }
-.vsl .badge i{ width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
-.vsl h1{ font-size: clamp(40px, 5.2vw, 72px); max-width: 22ch; }
-.vsl .sub{ font-size: clamp(16px, 1.5vw, 20px); color: var(--ink-70); max-width: 52ch; }
-.player{ position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: #000; border: 1px solid var(--rule-20); box-shadow: 0 30px 80px hsl(226 80% 3% / .7); }
-.player video{ width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
-.player video:not([controls]){ object-position: 72% 50%; }
-.poster{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink-100);
-  background: linear-gradient(180deg, hsl(225 72% 7% / .35), hsl(225 72% 7% / .75)); font-family: var(--font-mono); }
-.poster .title{ font-family: var(--font-head); font-size: clamp(30px, 4.5vw, 58px); text-transform: uppercase; line-height: .95; color: var(--amber); max-width: 18ch; text-shadow: 0 6px 30px hsl(226 80% 3% / .8); }
-.poster .play{ width: 84px; height: 84px; border-radius: 50%; background: var(--amber); color: var(--bg); display: grid; place-items: center; margin-top: 8px; box-shadow: 0 10px 40px hsl(45 100% 40% / .5); transition: transform .25s var(--ease-out); }
-.poster:hover .play{ transform: scale(1.06); }
-.poster .play svg{ width: 34px; height: 34px; margin-left: 4px; }
-.poster .caption{ position: absolute; bottom: 16px; left: 0; right: 0; font-size: 12px; color: var(--ink-70); }
-.poster[hidden]{ display: none; }
-.poster:focus-visible{ outline-offset: -4px; border-radius: inherit; }
-.vsl .line{ font-size: 15px; color: var(--ink-70); max-width: 60ch; }
-
-/* what people are saying: real, consented client words only */
-.reviews{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 340px)); justify-content: center; gap: 18px; margin-top: 44px; align-items: start; }
-.review{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 18px; padding: 24px; text-align: left; }
-.review:nth-child(2){ margin-top: 40px; }
-.review .who{ display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.review .avatar{ width: 40px; height: 40px; border-radius: 50%; background: var(--amber); color: var(--bg); font-family: var(--font-head); font-size: 22px; display: grid; place-items: center; flex: none; }
-.review .name{ color: var(--ink-100); font-weight: 700; font-size: 15px; }
-.review .meta{ font-size: 12px; color: var(--ink-60); }
-.review .quote{ font-size: 15px; color: var(--ink-100); }
-.review .quote::before{ content: "\201C"; color: var(--amber); } .review .quote::after{ content: "\201D"; color: var(--amber); }
-.review .how{ margin-top: 12px; font-size: 12px; color: var(--ink-60); }
-
-/* what you get */
-.get{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px; }
-.get > div{ text-align: center; }
-.get h3{ font-size: 22px; margin-bottom: 18px; }
-.get p{ font-size: 14px; color: var(--ink-70); margin-top: 14px; }
-.pov{ max-width: 64ch; margin: 0 auto 28px; font-size: 14px; line-height: 1.6; color: var(--ink-70); }
-.pov b{ color: var(--amber); }
-.art{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 16px; padding: 18px; font-size: 12px; min-height: 190px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
-.art .tag{ align-self: flex-start; }
-.receipt{ position: relative; background: var(--paper); color: var(--paper-ink); font-size: 12px; line-height: 1.55; padding: 14px 14px 26px; min-height: 206px; display: flex; flex-direction: column; gap: 3px; text-align: left;
-  -webkit-mask: var(--zigzag); mask: var(--zigzag); box-shadow: inset 0 -40px 60px -50px hsl(30 30% 30% / .25); font-variant-numeric: tabular-nums; }
-.receipt .rh{ display: flex; justify-content: space-between; gap: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px dashed var(--paper-rule); }
-.receipt .rh span:last-child{ font-weight: 500; color: var(--paper-60); }
-.receipt .rl{ display: flex; gap: 6px; align-items: baseline; }
-.receipt .rl span:first-child{ white-space: nowrap; }
-.receipt .rl i{ flex: 1; border-bottom: 1px dotted var(--paper-rule); transform: translateY(-3px); min-width: 8px; }
-.receipt .rl span:last-child{ white-space: nowrap; font-weight: 700; }
-.receipt .rule{ border-top: 1px dashed var(--paper-rule); margin: 4px 0 2px; }
-.get .receipt p{ margin: 0; font-size: 12px; color: var(--paper-ink); }
-.receipt .foot{ margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; min-height: 40px; }
-.get .receipt .note{ font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-60); }
-.receipt .neg{ color: var(--void); } .receipt .pos{ color: var(--ok-ink); }
-.stamp{ display: inline-block; font-family: var(--font-head); text-transform: uppercase; letter-spacing: .09em; line-height: 1; white-space: nowrap; padding: .42em .7em .36em; border: .16em double currentColor; border-radius: .22em; transform: rotate(-5deg); font-size: 19px;
-  -webkit-mask-image: var(--speckle); mask-image: var(--speckle); -webkit-mask-size: 180px; mask-size: 180px; }
-.stamp.amber{ color: var(--amber); } .stamp.ok{ color: var(--ok-ink); }
-.mini-row{ display: grid; grid-template-columns: 72px 1fr 44px; gap: 8px; align-items: center; }
-.mini-row .lbl{ color: var(--ink-60); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-row .val{ text-align: right; color: var(--ink-100); font-variant-numeric: tabular-nums; }
-.track{ display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 1px; }
-.track i{ display: block; height: 100%; }
-.s-fee{ background: hsl(224 40% 40%); } .s-cogs{ background: hsl(220 20% 60% / .55); } .s-ads{ background: hsl(45 100% 50% / .8); } .s-net{ background: hsl(150 55% 55% / .9); } .s-loss{ background: hsl(8 72% 58% / .9); }
-.chip{ display: inline-block; border-radius: 8px; padding: 6px 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
-.chip.on{ background: var(--amber); color: var(--bg); }
-.art .line{ color: var(--ink-70); font-size: 12.5px; line-height: 1.5; }
-.art .big{ font-family: var(--font-head); font-size: 30px; color: var(--ink-100); line-height: 1; }
-.art .big.ok{ color: var(--ok); }
-.art .kv{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.art .kv span{ font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); display: block; margin-bottom: 4px; }
-
-/* the application */
-.stepper{ list-style: none; display: flex; justify-content: center; gap: 28px; margin: 0 auto 26px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); }
-.stepper li{ display: flex; align-items: center; gap: 10px; }
-.stepper li::before{ content:""; width: 10px; height: 10px; border-radius: 50%; background: var(--rule-20); }
-.stepper li.on{ color: var(--ink-100); } .stepper li.on::before{ background: var(--amber); box-shadow: 0 0 12px 2px hsl(45 100% 50% / .5); }
-.gate-inline{ width: min(700px, 100%); margin: 0 auto; border-radius: 24px; padding: 36px 38px; text-align: left; background: var(--raise); border: 1px solid var(--rule-20); }
-.gate-inline .calendly-mount{ min-height: 680px; margin-top: 10px; }
-
-/* footer */
-.footer{ background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
-.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
-.footer .nav-logo{ font-size: 26px; }
-.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
-.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
-.footer ul a:hover{ color: var(--ink-100); }
-.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
-
-/* the gate */
-.gate-overlay{ position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: hsl(226 80% 3% / .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.gate-overlay[hidden]{ display: none; }
-.gate-modal{ width: min(620px, 100%); max-height: 92vh; max-height: 92svh; overflow-y: auto; padding: 36px 38px; position: relative; border-radius: 24px; background: hsl(224 55% 12% / .98); border: 1px solid var(--rule-20); }
-.gate-x{ position: absolute; top: 12px; right: 14px; z-index: 2; background: none; border: 0; color: var(--ink-60); font-family: var(--font-mono); font-size: 20px; cursor: pointer; padding: 8px 12px; }
-.gate-x:hover{ color: var(--ink-100); }
-.gate-eyebrow{ font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
-.gate-title{ font-size: clamp(24px, 3vw, 32px); margin-bottom: 10px; padding-right: 24px; }
-.gate-sub{ font-size: 13px; color: var(--ink-60); margin-bottom: 24px; max-width: 54ch; }
-.gate fieldset{ border: 0; margin: 0 0 20px; padding: 0; }
-.gate legend{ font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-70); margin-bottom: 10px; padding: 0; }
-.chips-q{ display: flex; flex-wrap: wrap; gap: 8px; }
-.chips-q label{ cursor: pointer; position: relative; }
-.chips-q input{ position: absolute; opacity: 0; pointer-events: none; }
-.chips-q span{ display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--rule-20); color: var(--ink-70); transition: border-color .15s, color .15s, background-color .15s; }
-.chips-q label:hover span{ border-color: var(--ink-70); color: var(--ink-100); }
-.chips-q input:checked + span{ background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
-.chips-q input:focus-visible + span{ outline: 2px solid var(--amber); outline-offset: 2px; }
-.gate .cta-row{ display: flex; gap: 12px; flex-wrap: wrap; }
-
-/* mobile sticky CTA */
-.sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
-.sticky-cta.show{ transform: translateY(0); visibility: visible; transition: transform .4s var(--ease-out), visibility 0s; }
-.sticky-cta .btn{ flex: 1 1 0; }
-@media (max-width: 760px){ .sticky-cta{ display: flex; } }
-
-/* motion + responsive */
-.js [data-reveal]{ opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .8s var(--ease-out); }
-.js [data-reveal].revealed{ opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce), print{
-  .js [data-reveal]{ opacity: 1 !important; transform: none !important; transition: none !important; }
-  .grain{ animation: none; } .sticky-cta{ transition: none; } html{ scroll-behavior: auto; }
+@media (max-width: 900px) {
+  .book-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "gate" "details"; row-gap: var(--s-7); }
+  .saying-grid { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 920px){
-  .reviews, .get{ grid-template-columns: 1fr; }
-  .review:nth-child(2){ margin-top: 0; }
-  .footer .in{ grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 760px){
-  .sect{ padding: 64px 0; }
-  .vsl{ padding: 48px 0 56px; }
-  .vsl h1{ font-size: clamp(38px, 11vw, 56px); }
-  .player{ border-radius: 14px; }
-  .poster{ gap: 6px; } .poster .title{ font-size: clamp(22px, 6.5vw, 30px); } .poster .play{ width: 44px; height: 44px; margin-top: 0; } .poster .play svg{ width: 20px; height: 20px; } .poster .caption{ bottom: 6px; font-size: 11px; }
-  .stepper{ gap: 16px; font-size: 11px; }
-  .btn{ white-space: normal; text-align: center; line-height: 1.35; }
-  .vsl .btn-lg{ width: 100%; padding-left: 14px; padding-right: 14px; letter-spacing: .05em; }
-  .gate-modal, .gate-inline{ padding: 28px 18px; }
-  .footer .in{ grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .book { padding-top: var(--s-5); }
+  .gate { padding: var(--s-5); margin-inline: calc(-1 * var(--s-2)); }
+  .foot-in { grid-template-columns: minmax(0, 1fr); }
+  .foot nav { justify-self: start; }
 }
 </style>
 </head>
 <body>
 
-<div class="grain" aria-hidden="true"></div>
-
-<nav class="nav" aria-label="Primary">
-  <div class="nav-in">
-    <a class="nav-logo" href="/" aria-label="Hubricon, home"><svg aria-hidden="true" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubric<em>o</em>n</span></a>
-    <a class="btn btn-white" data-calendly="audit" data-section="nav" href="#apply">Start your free Proving Month</a>
-  </div>
-</nav>
-
-<!-- ═══ THE VSL ═══ -->
-<header class="vsl" id="top">
-  <div class="vsl-in">
-    <span class="badge"><i aria-hidden="true"></i><span>Amazon &amp; Shopify brands · <span style="white-space:nowrap">$3M–$20M/yr</span></span></span>
-    <h1>Are you the only one who runs the numbers?</h1>
-    <p class="sub">The free Proving Month: five money decisions, made in your account and graded on your own reports.</p>
-    <div class="player" id="player">
-      <!-- Placeholder VSL: the founder's welcome, until the sales video exists. Swap VSL_VIDEO below. -->
-      <video id="vsl" playsinline preload="none" poster="/brand/hero-printer.webp" aria-label="A welcome from the founder of Hubricon"></video>
-      <button class="poster" id="vsl-play" type="button" aria-label="Play the video: a welcome from the founder, 1 minute 16 seconds">
-        <span class="title">Which decision made the profit?</span>
-        <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
-        <span class="caption">A welcome from the founder · 1:16</span>
-      </button>
-    </div>
-    <p class="line">A 20-minute call. Your Profit Teardown inside 24 hours of your files. Then thirty days free.</p>
-    <a class="btn btn-amber btn-lg" data-calendly="audit" data-section="vsl" href="#apply">Start your free Proving Month</a>
-  </div>
+<header class="wrap top">
+  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
 </header>
 
-<!-- ═══ WHAT PEOPLE ARE SAYING ═══
-     Real, consented client words only. Renders from public_case_study() and from
-     TESTIMONIALS below. No row and an empty list means the section does not exist. -->
-<section class="sect band center" id="saying" data-reveal hidden>
-  <div class="in">
-    <h2 class="h2">What people are saying</h2>
-    <div class="reviews" id="reviews"></div>
-  </div>
-</section>
+<main>
+<section class="book">
+  <div class="wrap book-grid">
+    <div class="intro">
+      <span class="label">Book your call</span>
+      <h1>Twenty minutes, on your own numbers.</h1>
+      <p class="lede">Four answers so the call starts from your business, then pick a time.</p>
+    </div>
+    <div class="details">
+      <ul class="facts">
+        <li>We open your reports with you and price what public pages can't show: aged stock, low-inventory fees, an ad target set wrong.</li>
+        <li>If the arithmetic won't clear our bill at your size, we tell you on the call.</li>
+        <li>No card, no contract to sign on the call.</li>
+      </ul>
+      <p class="promise">More profit than our bill every month, or you don't pay. Your first month is free.</p>
+    </div>
 
-<!-- ═══ WHAT YOU GET ═══ -->
-<section class="sect center" id="get" data-reveal>
-  <div class="in">
-    <h2 class="h2">What you get in the Proving Month:</h2>
-    <div class="get">
-      <div>
-        <h3>#1: The Profit Teardown</h3>
-        <div class="receipt" role="group" aria-label="Sample Teardown excerpt: net margin per SKU, demo data">
-          <div class="rh"><span>Profit Teardown</span><span>Sample</span></div>
-          <div class="rl"><span>SKU-BLUE net</span><i></i><span class="pos">+40%</span></div>
-          <div class="rl"><span>SKU-RED net</span><i></i><span class="pos">+26%</span></div>
-          <div class="rl"><span>GADGET net</span><i></i><span class="neg">−7%</span></div>
-          <div class="rule"></div>
-          <div class="rl"><span>Stockout odds</span><i></i><span>per SKU</span></div>
-          <div class="rl"><span>Claims, dated</span><i></i><span>per case</span></div>
-          <div class="foot"><p class="note">Demo data</p><span class="stamp amber">24 hrs</span></div>
-        </div>
-        <p>Every SKU's true margin, stockout odds, ad break-even, dated claims. Inside 24 hours of your files.</p>
-      </div>
-      <div>
-        <h3>#2: Moves, made for you</h3>
-        <div class="receipt" role="group" aria-label="Sample move, demo data: expected $6,200, measured $6,840">
-          <div class="rh"><span>Move 014</span><span>Sample</span></div>
-          <p>Cut 140 zero-sale search terms.</p>
-          <div class="rule"></div>
-          <div class="rl"><span>Called · Aug 21</span><i></i><span>$6,200</span></div>
-          <div class="rl"><span>Live · Aug 24</span><i></i><span>—</span></div>
-          <div class="rl"><span>Measured · Sep 18</span><i></i><span class="pos">$6,840</span></div>
-          <div class="foot"><p class="note">Demo data</p><span class="stamp ok">Proven</span></div>
-        </div>
-        <p>Prices, ad bleed, reorders, fee cliffs, Amazon claims. One email before each. Reply no and it stops.</p>
-      </div>
-      <div>
-        <h3>#3: The Profit Record</h3>
-        <div class="receipt" role="group" aria-label="Sample Profit Record totals, demo data: proven $11,770, billed $6,000">
-          <div class="rh"><span>Profit Record</span><span>Sample</span></div>
-          <div class="rl"><span>Proven</span><i></i><span class="pos">$11,770</span></div>
-          <div class="rl"><span>Billed since day one</span><i></i><span>$6,000</span></div>
-          <div class="rule"></div>
-          <div class="rl"><span>Invoice</span><i></i><span>Stands</span></div>
-          <div class="foot"><p class="note">Misses stay on it · Demo data</p></div>
-        </div>
-        <p>Dollars expected before, dollars measured after, on your own exports. If it hasn't covered the $6,000 a month, there is no bill.</p>
-      </div>
+    <div class="gate" id="gate" role="region" aria-labelledby="gate-title">
+      <p class="gate-step" id="gate-step">Step 1 of 2</p>
+      <h2 id="gate-title">Four answers.</h2>
+      <form id="gate-form" novalidate>
+        <noscript><p class="gate-note">Booking needs JavaScript. Or email <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a>.</p></noscript>
+      </form>
     </div>
   </div>
 </section>
 
-<!-- ═══ THE APPLICATION ═══ -->
-<section class="sect band center" id="apply" data-reveal>
-  <div class="in">
-    <p class="pov"><b>Proven or Void.</b> Month one free. No bill until your Profit Record covers it. Leave any day, trued up: billed more than the Record shows, the difference comes back. Teardown later than 24 hours, and your first paid month is free too.</p>
-    <ol class="stepper" role="list"><li class="on" aria-current="step">Four answers</li><li>Pick your call time</li></ol>
-    <div class="gate gate-inline" id="gate-inline" role="region" aria-label="Start your free Proving Month">
-      <noscript><p style="color:var(--ink-70)">The application needs JavaScript enabled to run.</p></noscript>
-    </div>
+<!-- Real, consented client words only: the consent page's own record, or TESTIMONIALS
+     below. Nothing to show means the section does not exist. -->
+<section class="section" id="saying" hidden>
+  <div class="wrap">
+    <h2>In clients' own words.</h2>
+    <div class="saying-grid" id="reviews"></div>
+    <p class="gate-note">Each of these clients had their first month free, and we asked for these words as its price (terms §9).</p>
   </div>
 </section>
+</main>
 
-<footer class="footer">
-  <div class="in">
-    <div><a class="nav-logo" href="/" aria-label="Hubricon, home"><svg aria-hidden="true" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubric<em>o</em>n</span></a></div>
-    <div><h4>Product</h4><ul><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
-    <div><h4>Company</h4><ul><li><a href="/manifesto">Manifesto</a></li><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
-    <p class="legal"><span data-proof-pending>No published results yet; the first posts when a client agrees to publish theirs. </span>Dollar figures on this page are our price or arithmetic from named, interested sources, not results of ours. Sample receipts are demo data. © 2026 Hubricon · Paid on proof.</p>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>Hubricon</span>
+    <nav aria-label="Legal"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+    <p class="legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>© 2026 Hubricon</p>
   </div>
 </footer>
 
-<!-- mobile sticky CTA -->
-<div class="sticky-cta" id="sticky-cta" aria-hidden="true">
-  <a class="btn btn-amber" data-calendly="audit" data-section="sticky" href="#apply">Start your free Proving Month</a>
-</div>
-
-<!-- the gate, modal form -->
-<div class="gate-overlay" id="gate-overlay" hidden>
-  <div class="gate gate-modal" role="dialog" aria-modal="true" aria-label="Start your free Proving Month">
-    <button class="gate-x" id="gate-x" aria-label="Close">✕</button>
-    <div id="gate-modal-mount"></div>
-  </div>
-</div>
-
 <script>
 "use strict";
-document.documentElement.classList.add("js");
 
-/* ── Vercel Web Analytics ── */
+/* -- Vercel Web Analytics ------------------------------------------------------ */
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+let headline = "";
+try { headline = localStorage.getItem("hubricon_h") || ""; } catch (e) {}
 
-const ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>`;
-
-/* ── The VSL. Placeholder until the sales video exists: the founder's welcome.
-      Drop the real file in and change this one constant. ── */
-const VSL_VIDEO = "/welcome.mp4";
-const vsl = document.getElementById("vsl");
-const posterBtn = document.getElementById("vsl-play");
-if (vsl && posterBtn) {
-  vsl.src = VSL_VIDEO;
-  posterBtn.addEventListener("click", () => {
-    posterBtn.hidden = true;
-    vsl.controls = true;
-    vsl.focus({ preventScroll: true });
-    vsl.play().catch(() => {});
-    track("vsl_play", {});
-  });
-  vsl.addEventListener("ended", () => track("vsl_finished", {}), { once: true });
-}
-
-/* ── What people are saying. Only real client words belong here: a testimonial a
-      client wrote and consented to publish, in their own words. Fill the list from
-      the consent page's record (hubricon casestudy prints it), never from memory.
-      Unlike the RPC, this list is not re-checked on read: remove an entry the day
+/* -- What people are saying. Only a testimonial a client wrote and consented to
+      publish, in their own words, from the consent page's record (hubricon casestudy
+      prints it), never from memory. Not re-checked on read: remove an entry the day
       its consent is revoked, and redeploy.
-      { name: "First name or brand, as consented", meta: "Private-label, Amazon · Proving Month closed Month YYYY", quote: "≤ 30 words, verbatim" } ── */
+      { name: "First name or brand, as consented", meta: "Private label, Amazon · Proving Month closed Month YYYY", quote: "≤ 30 words, verbatim" } */
 const TESTIMONIALS = [];
 
-/* ── The gate: the application every CTA opens.
-      Four answers ride along on the Calendly booking as utm_content, so the
-      call starts from the seller's numbers. Every brand that answers is on the
-      calendar in under two minutes; nothing is reviewed by hand. ── */
+/* -- The gate. Four answers ride the Calendly booking as utm_content, so the call
+      starts from the seller's numbers (engine: onboarding.platform_from_answers,
+      proof.revenue_band_from_answers, referral). Every brand that answers books;
+      nothing is reviewed by hand. -------------------------------------------- */
 const CALENDLY_AUDIT = "https://calendly.com/hubricon/margin-audit";
-const EMBED_THEME = "hide_gdpr_banner=1&background_color=0a1130&text_color=f4f6fc&primary_color=ffc000";
+const EMBED_THEME = "hide_gdpr_banner=1&background_color=f5f6f8&text_color=0a0e17&primary_color=0a0e17";
+const QUESTIONS = [
+  { key: "channel", legend: "Where you sell", options: ["Amazon", "Shopify", "Both"] },
+  { key: "rev", legend: "Trailing-12-month revenue, all channels", options: ["Under $1M", "$1M–$3M", "$3M–$10M", "$10M–$30M", "$30M+"] },
+  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
+  { key: "skus", legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
+];
+
+/* The site refuses nobody. A brand under the $1M band, or on someone else's label,
+   is tagged fit:below and the call settles it. */
+function fitTag(a) {
+  if (a.rev === "Under $1M") return "below";
+  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "below";
+  return "core";
+}
+
+/* A client's referral link (hubricon.com/?ref=<code>), kept from the home page or
+   arriving here, rides the booking so the sender can be credited. */
+const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
+try {
+  const incoming = new URLSearchParams(location.search).get("ref");
+  if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
+} catch (e) {}
+function refCode() {
+  try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
+}
+function bookingUrl(a) {
+  const ref = refCode();
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
+  return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
+}
+
 let calendlyReady = null;
 function loadCalendly() {
   if (calendlyReady) return calendlyReady;
-  calendlyReady = new Promise(resolve => {
+  calendlyReady = new Promise((resolve) => {
     const css = document.createElement("link");
     css.rel = "stylesheet";
     css.href = "https://assets.calendly.com/assets/external/widget.css";
@@ -403,161 +201,52 @@ function loadCalendly() {
   return calendlyReady;
 }
 
-const GATE_QUESTIONS = [
-  { key: "channel", legend: "Where you sell", options: ["Amazon", "Shopify", "Both"] },
-  { key: "rev",   legend: "Trailing-12-month revenue, all channels", options: ["Under $3M", "$3M–$5M", "$5M–$20M", "$20M+"] },
-  { key: "model", legend: "Business model", options: ["Private label", "Wholesale / reseller", "Arbitrage", "Mixed / other"] },
-  { key: "skus",  legend: "Catalog size", options: ["Under 10 SKUs", "10–50 SKUs", "50+ SKUs"] },
-];
-
-/* Every brand that answers books. The $3M floor and the own-brand rule are still
-   derived from the guarantee (an invoice stands only if the Profit Record covers
-   everything billed since day one, and under $3M there is less than $6,000 a month
-   to find), but the site refuses nobody: the answers ride the booking tagged
-   fit:core or fit:below, and the call settles it. */
-function fitTag(a) {
-  if (a.rev === "Under $3M") return "below";
-  if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "below";
-  return "core";
-}
-
-/* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
-   rides the booking, so the operator can credit the sender when this brand
-   clears its own day 30. */
-const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
-try {
-  const incoming = new URLSearchParams(location.search).get("ref");
-  if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
-} catch (e) {}
-function refCode() {
-  try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
-}
-
-/* The four answers and the fit tag ride the booking as utm_content. */
-function auditUrl(a) {
-  const ref = refCode();
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
-  return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
-}
-
-function renderGate(mount, section, onBook, title) {
-  mount.innerHTML = `
-    <p class="gate-eyebrow">Step 1 of 2</p>
-    ${title ? `<h3 class="gate-title">${title}</h3>` : ""}
-    <p class="gate-sub">Four answers, so the 20-minute call starts from your numbers.</p>
-    <form>
-      ${GATE_QUESTIONS.map(q => `
-        <fieldset>
-          <legend>${q.legend}</legend>
-          <div class="chips-q">
-            ${q.options.map(o => `<label><input type="radio" name="${q.key}" value="${o}"><span>${o}</span></label>`).join("")}
-          </div>
-        </fieldset>`).join("")}
-      <div class="cta-row">
-        <button class="btn btn-amber" type="submit" disabled>Continue to the calendar ${ARROW}</button>
-      </div>
-    </form>`;
-  const form = mount.querySelector("form");
-  const submit = form.querySelector("button[type=submit]");
-  const answers = () => Object.fromEntries(GATE_QUESTIONS.map(q => [q.key, form.elements[q.key].value]));
-  form.addEventListener("change", () => {
-    submit.disabled = !GATE_QUESTIONS.every(q => form.elements[q.key].value);
-    loadCalendly(); /* every completed form books, so fetch the widget on the first answer */
-  });
-  form.addEventListener("submit", ev => {
-    ev.preventDefault();
-    const a = answers();
-    track("gate_submit", { section, fit: fitTag(a), ...a });
-    onBook(auditUrl(a));
-  });
-}
-
-/* every CTA opens the modal gate; href="#apply" scrolls to the inline gate as fallback */
-const overlay = document.getElementById("gate-overlay");
-const modalMount = document.getElementById("gate-modal-mount");
-let gateTrigger = null;
-function openGate(section) {
-  track("gate_open", { section });
-  renderGate(modalMount, section, async url => {
-    closeGate();
-    if (await loadCalendly() && window.Calendly) {
-      window.Calendly.initPopupWidget({ url });
-      track("calendly_opened", { section });
-    } else {
-      location.href = url; /* widget blocked — go straight to Calendly */
-    }
-  }, "Start your free Proving Month.");
-  overlay.hidden = false;
-  document.body.style.overflow = "hidden";
-  for (const el of document.body.children) if (el !== overlay) el.inert = true;
-  modalMount.querySelector("input")?.focus();
-}
-function closeGate() {
-  overlay.hidden = true;
-  document.body.style.overflow = "";
-  for (const el of document.body.children) el.inert = false;
-  if (gateTrigger) { gateTrigger.focus(); gateTrigger = null; }
-}
-document.getElementById("gate-x").addEventListener("click", closeGate);
-overlay.addEventListener("mousedown", ev => { if (ev.target === overlay) closeGate(); });
-addEventListener("keydown", ev => { if (ev.key === "Escape" && !overlay.hidden) closeGate(); });
-
-document.addEventListener("click", ev => {
-  const a = ev.target.closest?.("[data-calendly]");
-  if (!a) return;
-  ev.preventDefault();
-  track("cta_click", { section: a.dataset.section || "" });
-  gateTrigger = a;
-  openGate(a.dataset.section || "");
+const form = document.getElementById("gate-form");
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+form.innerHTML = QUESTIONS.map((q) => `
+  <fieldset>
+    <legend>${esc(q.legend)}</legend>
+    <div class="chips">${q.options.map((o) => `<label><input type="radio" name="${q.key}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}</div>
+  </fieldset>`).join("") + `
+  <div>
+    <button class="btn" type="submit" disabled>Pick your time <span class="arrow" aria-hidden="true">→</span></button>
+    <p class="gate-note">Every brand that answers can book.</p>
+  </div>`;
+const submit = form.querySelector("button[type=submit]");
+const answers = () => Object.fromEntries(QUESTIONS.map((q) => [q.key, form.elements[q.key].value]));
+let started = false;
+form.addEventListener("change", () => {
+  if (!started) { started = true; track("gate_start", { h: headline }); }
+  submit.disabled = !QUESTIONS.every((q) => form.elements[q.key].value);
+  loadCalendly();   // every completed form books, so fetch the widget on the first answer
 });
-
-/* conversion signal from the Calendly widget */
-window.addEventListener("message", e => {
-  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
-    track("calendly_scheduled", {});
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const a = answers();
+  if (!QUESTIONS.every((q) => a[q.key])) return;
+  track("gate_submit", { fit: fitTag(a), h: headline, ...a });
+  const url = bookingUrl(a);
+  document.getElementById("gate-step").textContent = "Step 2 of 2";
+  const title = document.getElementById("gate-title");
+  title.textContent = "Pick your time.";
+  title.tabIndex = -1;
+  title.focus({ preventScroll: true });
+  const mount = document.createElement("div");
+  mount.className = "calendly-mount";
+  form.replaceWith(mount);
+  if (await loadCalendly() && window.Calendly) {
+    window.Calendly.initInlineWidget({ url: url + "&" + EMBED_THEME, parentElement: mount, resize: true });
+    track("calendly_opened", { section: "apply" });
+  } else {
+    location.href = url;   // the widget was blocked: go straight to Calendly
   }
 });
 
-/* inline gate in the application band, rendered when it scrolls near */
-const inlineGate = document.getElementById("gate-inline");
-if (inlineGate) {
-  new IntersectionObserver(([e], obs) => {
-    if (!e.isIntersecting) return;
-    obs.disconnect();
-    renderGate(inlineGate, "apply-inline", async url => {
-      document.querySelectorAll(".stepper li").forEach((li, i) => { li.classList.toggle("on", i === 1); if (i === 1) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
-      inlineGate.innerHTML = `<p class="gate-eyebrow" tabindex="-1">Pick your call time</p><div class="calendly-mount"></div>`;
-      inlineGate.querySelector(".gate-eyebrow").focus({ preventScroll: true });
-      if (await loadCalendly() && window.Calendly) {
-        window.Calendly.initInlineWidget({
-          url: url + "&" + EMBED_THEME,
-          parentElement: inlineGate.querySelector(".calendly-mount"),
-          resize: true,
-        });
-        track("calendly_opened", { section: "apply-inline" });
-      } else {
-        location.href = url;
-      }
-    }, "Start your free Proving Month.");
-  }, { rootMargin: "600px" }).observe(inlineGate);
-}
+window.addEventListener("message", (e) => {
+  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") track("calendly_scheduled", { h: headline });
+});
 
-/* mobile sticky CTA — appears once the VSL scrolls out, hides over the application */
-const vslTop = document.getElementById("top");
-const sticky = document.getElementById("sticky-cta");
-if (vslTop && sticky) {
-  const apply = document.getElementById("apply");
-  let topIn = true, applyIn = false;
-  const sync = () => {
-    const show = !topIn && !applyIn;
-    sticky.classList.toggle("show", show);
-    sticky.setAttribute("aria-hidden", show ? "false" : "true");
-  };
-  new IntersectionObserver(([e]) => { topIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(vslTop);
-  if (apply) new IntersectionObserver(([e]) => { applyIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(apply);
-}
-
-/* The two anon-callable functions in the schema. Both re-check consent on every read. */
+/* -- Real results and consented words, only once they exist --------------------- */
 const PUBLISHABLE = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
 async function rpc(name) {
   try {
@@ -568,50 +257,32 @@ async function rpc(name) {
     return res.ok ? await res.json() : null;
   } catch (e) { return null; }
 }
-
-/* Once a client has consented and a result is published, the "no published
-   results yet" clause is spent. */
 (async () => {
   const pending = document.querySelector("[data-proof-pending]");
-  if (!pending) return;
   const rows = await rpc("public_results");
-  if (Array.isArray(rows) && rows.length) pending.hidden = true;
+  if (pending && Array.isArray(rows) && rows.length) pending.hidden = true;
 })();
-
-/* What people are saying: the consented case-study quote, plus TESTIMONIALS.
-   Nothing rendered means the section stays hidden. */
 (async () => {
   const sect = document.getElementById("saying");
   const mount = document.getElementById("reviews");
-  if (!sect || !mount) return;
   const cards = TESTIMONIALS.slice();
   const cs = await rpc("public_case_study");
   if (cs && cs.quote) {
     const closed = cs.closed_on ? new Date(cs.closed_on + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "";
-    cards.unshift({ name: cs.brand || `A ${cs.industry || "private-label"} brand`, meta: closed ? `Proving Month closed ${closed}` : "Proving Month closed", quote: cs.quote, how: "Written on their consent page, in their own words." });
+    cards.unshift({ name: cs.brand || `A ${cs.industry || "private-label"} brand`, meta: closed ? `Proving Month closed ${closed}` : "Proving Month closed", quote: cs.quote });
   }
   if (!cards.length) return;
-  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  mount.replaceChildren(...cards.slice(0, 3).map(c => {
-    const card = el("div", "review");
-    const who = el("div", "who");
-    who.append(el("span", "avatar", ((c.name || "").trim()[0] || "?").toUpperCase()));
-    const id = el("div");
-    id.append(el("div", "name", c.name), el("div", "meta", c.meta || ""));
-    who.append(id);
-    card.append(who, el("p", "quote", c.quote));
-    if (c.how) card.append(el("p", "how", c.how));
-    return card;
+  mount.replaceChildren(...cards.slice(0, 3).map((c) => {
+    const q = document.createElement("blockquote");
+    q.textContent = c.quote;
+    const who = document.createElement("cite");
+    who.textContent = [c.name, c.meta].filter(Boolean).join(" · ");
+    q.append(who);
+    return q;
   }));
   sect.hidden = false;
   track("testimonials_shown", { count: Math.min(cards.length, 3) });
 })();
-
-/* motion: one fade per section */
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); } });
-}, { threshold: 0.06 });
-document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
