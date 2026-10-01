@@ -229,3 +229,49 @@ export function agingSVG(ag, opts) {
     `At day ${ag.cliff} it steps from $${Math.round(before)} to $${Math.round(after)} a month.`;
   return frame(w, h, "aging", { id: `${id}-t`, text: "What 1,000 units cost to store, by age" }, { id: `${id}-d`, text: desc }, body);
 }
+
+// ---------------------------------------------------------------- the aging strip
+
+/**
+ * The aging strip (HUBRICON_SPEC.md, "Displaying the case study", layer 2, third
+ * visual): one unit's clock toward the 271-day cliff. A strip from the day a unit
+ * reaches Amazon ("Today"), cut into the storage-cost bands it passes through, each
+ * marked with what 1,000 of these units cost a month there; the bands from the cliff
+ * on are the leak, so they alone take the accent. Each day tick carries data-days, so
+ * the page can print the calendar date that day falls on for the person reading it;
+ * the still frame shows day numbers.
+ */
+export function agingStripSVG(ag, opts) {
+  const { id, w, h, m, font = 13, xMax = 420, ticks = ag.ticks } = opts;
+  const X = scale(0, xMax, m.l, w - m.r);
+  const y0 = m.t, bh = h - m.t - m.b;
+  const end = (b) => Math.min(b.to == null ? xMax : b.to + 1, xMax);
+  let body = "";
+  ag.bands.forEach((b, i) => {
+    const x0 = X(b.from), x1 = X(end(b)), leak = b.from >= ag.cliff;
+    const tone = leak ? "seg-leak" : `seg-${Math.min(i, 3)}`;
+    body += `<rect class="seg ${tone} fade" style="--after:${120 * i}ms" x="${r1(x0)}" y="${y0}" width="${r1(Math.max(0, x1 - x0 - 2))}" height="${bh}"/>`;
+    if (x1 - x0 >= font * 3.4) {
+      body += `<text class="${leak ? "seg-text-leak" : "seg-text"} fade" style="--after:${120 * i + 200}ms" x="${r1(x0 + 8)}" y="${r1(y0 + bh / 2)}" font-size="${font}" dominant-baseline="middle">$${Math.round(b.value)}</text>`;
+    }
+  });
+  // Today, at day 0.
+  body += `<line class="tick" x1="${r1(X(0))}" x2="${r1(X(0))}" y1="${y0 - 10}" y2="${y0 + bh + 6}"/>`;
+  body += `<text class="ink strong" x="${r1(X(0))}" y="${y0 - 16}" font-size="${font}">Today</text>`;
+  // The cliff: a riser in the accent, named.
+  const cx = X(ag.cliff);
+  const before = ag.bands.find((b) => b.to === ag.cliff - 1)?.value, after = ag.bands.find((b) => b.from === ag.cliff)?.value;
+  body += `<line class="leak fade" style="--after:900ms" x1="${r1(cx - 1)}" x2="${r1(cx - 1)}" y1="${y0 - 10}" y2="${y0 + bh + 6}"/>`;
+  if (before != null && after != null) {
+    body += `<text class="leak-text fade" style="--after:900ms" x="${r1(cx - 8)}" y="${y0 - 16}" font-size="${font}" text-anchor="end">$${Math.round(before)} → $${Math.round(after)} a month</text>`;
+  }
+  // Day ticks, with an empty line for the visitor's calendar date.
+  for (const d of ticks) {
+    const x = r1(X(d)), anchor = d === 0 ? "start" : "middle";
+    body += `<line class="tick" x1="${x}" x2="${x}" y1="${y0 + bh}" y2="${y0 + bh + 6}"/>`;
+    body += `<text x="${x}" y="${y0 + bh + font + 12}" font-size="${font}" text-anchor="${anchor}"${d === ag.cliff ? ' class="ink strong"' : ""}>Day ${d}</text>`;
+    body += `<text class="strip-date" data-days="${d}" x="${x}" y="${y0 + bh + 2 * font + 18}" font-size="${font - 1}" text-anchor="${anchor}"></text>`;
+  }
+  const desc = `A unit that reaches Amazon today is in the cheapest storage band until day 181, steps up each month after, and at day ${ag.cliff} goes from $${Math.round(before)} to $${Math.round(after)} a month for every 1,000 units.`;
+  return frame(w, h, "strip", { id: `${id}-t`, text: "One unit's clock toward the 271-day cliff" }, { id: `${id}-d`, text: desc }, body);
+}

@@ -1,7 +1,7 @@
 // /learn, held to HUBRICON_SPEC.md's "Education hub": one card per course that exists
 // in full, one email to enter, three columns, the spreadsheet under every lesson, a
-// standing invitation to the call and nothing for sale inside, linked from footers
-// only. And the spreadsheet itself: built from the card the engine prices with, and
+// standing invitation to the call and nothing for sale inside, in every footer and one
+// quiet card on the home page. And the spreadsheet: built from the card the engine prices with, and
 // re-verified whenever that card or the file moves.
 //   node --test scripts/
 import { test } from "node:test";
@@ -73,10 +73,13 @@ test("every case-study figure in the course wears its label; every invented exam
   for (const w of worked) assert.match(w, /Modeled from public data · Not a client · Not a result|an invented listing/);
 });
 
-test("/learn is linked from footers, never from the home page's body", () => {
+test("/learn is in every footer, and on the home page as one quiet card, never a button", () => {
+  // The founder put the free training on the home page on 2026-10-01; the call stays the only button.
   const home = read("index.html");
   const body = home.slice(home.indexOf("<body"), home.indexOf('<footer class="foot">'));
-  assert.doesNotMatch(body, /href="\/learn/);
+  const links = [...body.matchAll(/<a\b([^>]*)href="(\/learn[^"]*)"/g)];
+  assert.equal(links.length, 1, "one course card in the home page's body");
+  assert.match(links[0][1], /class="go-card course"/);
   for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "terms.html", "privacy.html"]) {
     const h = read(page);
     const foot = h.slice(h.lastIndexOf("<footer"));

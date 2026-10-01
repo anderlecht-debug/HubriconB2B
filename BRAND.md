@@ -183,6 +183,24 @@ band fills over 0.4 s. It never loops and never asks for attention again. Under
 `prefers-reduced-motion`, or when the page's script never arrives, the still frame is all
 there is.
 
+### The pieces a page is built from (since 2026-10-01)
+
+In `/assets/hubricon.css`, so every page draws them the same way:
+
+- **The exhibit** (`.exhibit`, `-head`, `-body`, `-cap`): a chart framed as an instrument, with a
+  header row that numbers and names it ("Fig. 2 · Ten thousand years of this one listing") and
+  carries its label box. A hairline, never a shadow.
+- **The proof strip** (`.numbers`): four numbers that are true today, each saying what it counts.
+  Never a client count or a result until one exists.
+- **The go-card** (`.go-card`, `.go-k`, `.go-to`, `.go-badge`): a card that links somewhere. Only
+  the call is a button (`.btn`, `.btn-lg`); everything else that goes somewhere is a card or a link.
+- **Two-tone headlines** (`.tone`): the claim in ink, the turn after it a step quieter.
+- **The display-xl size** (`--t-display-xl`): the one or two lines a page is remembered by.
+
+The home page's hero carries the Monte Carlo as mood, wide and muted behind the headline, and the
+case study's third visual is the aging strip (`agingStripSVG`): one unit's clock from today,
+the day-271 band in the accent, the visitor's own calendar dates under the day marks.
+
 ### Labels that never come off
 
 Every proof screen carries **Modeled from public data · Not a client · Not a result**.

@@ -54,6 +54,17 @@ if (root.classList.contains("motion")) {
   document.querySelectorAll("[data-play]").forEach((f) => io.observe(f));
 }
 
+/* -- The aging strip: the calendar date each day falls on, for whoever is reading --- */
+// The still frame says "Day 271"; this adds the date a unit reaching Amazon today gets there.
+{
+  const today = new Date();
+  const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  document.querySelectorAll(".strip-date[data-days]").forEach((t) => {
+    const d = new Date(today); d.setDate(d.getDate() + Number(t.dataset.days));
+    t.textContent = Number(t.dataset.days) === 0 ? fmt(today) : fmt(d);
+  });
+}
+
 /* -- The case-study film ------------------------------------------------------ */
 // TODO(video): the five-beat case-study film (HUBRICON_SPEC.md, "Education: landing
 // page vs the hub"). Set src and poster when it exists; until then nothing renders.

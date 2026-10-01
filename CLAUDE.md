@@ -23,8 +23,10 @@ model change.
   `brand`, or `none (why)`.
 - **One client's data never advises another** without the consent the terms name (§10).
 - **The home page meets the Hormozi standard:** one action ("Book your call →", to
-  `/apply`), under about 900 visible words, no proof that does not exist.
-  `scripts/build-pages.test.mjs` checks all three.
+  `/apply`, the only button), no proof that does not exist, and the spec's ten sections in
+  the spec's order. Since 2026-10-01 (the founder's call) it also carries a trust section and
+  a free-training card as quiet links, and the 900-word cap is retired.
+  `scripts/build-pages.test.mjs` checks the action, the links and the order.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
   `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.
 - **One design system.** Every page reads `/assets/hubricon.css`. No page keeps a private

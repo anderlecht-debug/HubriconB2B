@@ -45,6 +45,7 @@
   --t-display-s: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
   --t-display-m: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
   --t-display-l: clamp(2.375rem, 1.2rem + 4.6vw, 4.5rem);
+  --t-display-xl: clamp(2.75rem, 1rem + 6.2vw, 6rem);    /* the one or two lines a page is remembered by */
   --track-display: -0.032em;
   --track-label: 0.08em;
 
@@ -201,6 +202,44 @@ p { text-wrap: pretty; }
 .fold .fold-body { padding-bottom: var(--s-6); color: var(--ink-2); font-size: var(--t-16); }
 .fold + .fold { border-top: 0; }
 
+/* A headline in two tones: the claim in ink, the turn after it a step quieter. */
+.tone { color: var(--ink-3); }
+
+.btn-lg { min-height: 60px; padding: 0 var(--s-6); font-size: var(--t-18); }
+
+/* A figure framed as an instrument: a header row that names it, the chart, a caption. */
+.exhibit { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+.exhibit-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s-2) var(--s-4);
+  padding: var(--s-3) var(--s-5); border-bottom: 1px solid var(--rule);
+  font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.exhibit-head .label-box { font-size: var(--t-12); }
+.exhibit-body { padding: var(--s-6) var(--s-6) var(--s-4); }
+.exhibit-cap { padding: 0 var(--s-6) var(--s-5); font-size: var(--t-14); line-height: 1.55; color: var(--ink-3); max-width: 80ch; }
+.exhibit-body h3 { margin-bottom: var(--s-2); }
+@media (max-width: 640px) {
+  .exhibit-body { padding: var(--s-4) var(--s-3) var(--s-3); }
+  .exhibit-head, .exhibit-cap { padding-inline: var(--s-4); }
+}
+
+/* A strip of numbers that are true today, each saying what it counts. */
+.numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-5); }
+.numbers > div { border-left: 2px solid var(--ink); padding: var(--s-1) 0 var(--s-1) var(--s-4); }
+.numbers dt { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.numbers dd { margin-top: var(--s-2); font-size: var(--t-14); line-height: 1.45; color: var(--ink-2); }
+@media (max-width: 900px) { .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-6); } }
+
+/* A card that goes somewhere. Never a shadow: a hairline, and the hairline darkens. */
+.go-card { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink-2); text-decoration: none; background: var(--paper); transition: border-color 0.2s ease; }
+.go-card:hover { border-color: var(--ink); }
+.go-card h3 { font-size: var(--t-20); }
+.go-card p { font-size: var(--t-16); }
+.go-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.go-to { margin-top: auto; padding-top: var(--s-2); font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
+.go-card:hover .go-to { text-decoration: underline; text-underline-offset: 3px; }
+.go-badge { display: inline-block; font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase;
+  color: var(--ink-2); border: 1px solid var(--rule-2); border-radius: 999px; padding: 2px var(--s-3); }
+
 /* -------------------------------------------------------------- charts ---- */
 .chart text { fill: var(--ink-3); font-family: var(--font); }
 .chart .ink { fill: var(--ink); }
@@ -215,6 +254,16 @@ p { text-wrap: pretty; }
 .chart .dot { fill: var(--ink); }
 .chart .dot-hollow { fill: var(--paper); stroke: var(--ink); stroke-width: var(--line-step); }
 .chart .tick { stroke: var(--ink-3); stroke-width: var(--line-hair); }
+
+/* The aging strip: storage bands in greys that deepen with age; from day 271, the leak. */
+.strip .seg-0 { fill: var(--paper-2); }
+.strip .seg-1 { fill: var(--rule); }
+.strip .seg-2 { fill: var(--rule-2); }
+.strip .seg-3 { fill: var(--ink-4); }
+.strip .seg-leak { fill: var(--blue); }
+.strip .seg-text { fill: var(--ink); font-weight: var(--strong); }
+.strip .seg-text-leak { fill: var(--paper); font-weight: var(--strong); }
+.strip .strip-date { fill: var(--ink-3); }
 
 /* The Monte Carlo: ten thousand futures, drawn once, then still. */
 .mc .mc-path { fill: none; stroke: var(--blue); stroke-width: 1; stroke-opacity: var(--mc-path-rest); }

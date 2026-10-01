@@ -18,7 +18,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, usd } from "../assets/charts.mjs";
 import { STORAGE } from "./case-study.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -64,13 +64,17 @@ export function figures(rc, mc, cs) {
     ...learn.blocks,
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
+    // The hero's: wide, wordless, behind the headline (HUBRICON_SPEC.md: "muted behind or beside it").
+    "mc-mood-hero": monteCarloSVG(mc, { id: "mc-mood-h", w: 1000, h: 560, m: { t: 12, r: 12, b: 12, l: 12 }, variant: "mood" }),
     "mc-mood-narrow": monteCarloSVG(mc, { id: "mc-mood-n", w: 360, h: 200, m: { t: 6, r: 6, b: 6, l: 6 }, paths: 20, variant: "mood" }),
     "mc-wide": monteCarloSVG(mc, { id: "mc-w", w: 760, h: 420, m: { t: 24, r: 120, b: 44, l: 64 }, font: 13 }),
-    "mc-narrow": monteCarloSVG(mc, { id: "mc-n", w: 360, h: 320, m: { t: 16, r: 74, b: 36, l: 46 }, paths: 20, font: 11 }),
+    "mc-narrow": monteCarloSVG(mc, { id: "mc-n", w: 360, h: 340, m: { t: 16, r: 82, b: 38, l: 50 }, paths: 20, font: 12 }),
     "stairs-wide": staircaseSVG(stairs, { id: "st-w", w: 760, h: 420, m: { t: 64, r: 24, b: 48, l: 64 }, font: 13, xMax: 20 }),
-    "stairs-narrow": staircaseSVG(stairs, { id: "st-n", w: 360, h: 340, m: { t: 56, r: 8, b: 40, l: 46 }, font: 11, xMax: 16 }),
+    "stairs-narrow": staircaseSVG(stairs, { id: "st-n", w: 360, h: 420, m: { t: 60, r: 26, b: 42, l: 50 }, font: 12, xMax: 16 }),
     "aging-wide": agingSVG(aging, { id: "ag-w", w: 760, h: 300, m: { t: 32, r: 24, b: 48, l: 64 }, font: 13 }),
-    "aging-narrow": agingSVG(aging, { id: "ag-n", w: 360, h: 260, m: { t: 28, r: 8, b: 40, l: 46 }, font: 11 }),
+    "aging-narrow": agingSVG(aging, { id: "ag-n", w: 360, h: 260, m: { t: 28, r: 8, b: 40, l: 46 }, font: 12 }),
+    "strip-wide": agingStripSVG(aging, { id: "sp-w", w: 1040, h: 200, m: { t: 44, r: 8, b: 66, l: 8 }, font: 15 }),
+    "strip-narrow": agingStripSVG(aging, { id: "sp-n", w: 360, h: 190, m: { t: 40, r: 6, b: 60, l: 6 }, font: 12, ticks: [0, 271] }),
   };
   return {
     blocks,

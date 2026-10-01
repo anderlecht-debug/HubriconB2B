@@ -21,9 +21,14 @@ for (const page of PAGES) {
   });
 }
 
-test("under about 900 words on load", () => {
-  const n = visibleWords(html);
-  assert.ok(n <= 900, `${n} visible words`);
+test("the spec's ten sections, in the spec's order, with the founder's two additions in theirs", () => {
+  // HUBRICON_SPEC.md, "Landing page, section by section". The trust and free-training sections
+  // were added by the founder on 2026-10-01 ("everything needs to be on that landing page"),
+  // and the 900-word cap retired with them.
+  assert.match(html, /<section class="hero"/, "1 · the hero");
+  const order = [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map(([, id]) => id).filter((id) => id !== "result");
+  assert.deepEqual(order, ["problem", "staircase", "case-study", "how", "offer", "scoreboard", "trust", "who", "faq", "learn", "book"]);
+  assert.ok(visibleWords(html) > 0);
 });
 
 test("one action: every button says the same thing and goes to the same place", () => {
@@ -33,9 +38,11 @@ test("one action: every button says the same thing and goes to the same place", 
     assert.match(tag, /href="\/apply"/);
     assert.equal(inner.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(), "Book your call →");
   }
+  for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  assert.deepEqual([...new Set(otherLinks)].sort(), ["/", "/honesty", "/learn", "/privacy", "/terms", "/your-data"],
-    "no navigation competes with the call: the wordmark, a data answer, and the footer");
+  assert.deepEqual([...new Set(otherLinks)].sort(),
+    ["/", "/honesty", "/learn", "/learn/fee-staircase", "/privacy", "/terms", "/terms#how-a-dollar-counts", "/your-data"],
+    "no navigation competes with the call: the wordmark, the trust cards, the course card and the footer");
 });
 
 test("the case study says what it is on its own screen", () => {
