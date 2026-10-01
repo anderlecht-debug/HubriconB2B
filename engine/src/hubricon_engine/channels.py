@@ -24,13 +24,40 @@ FEE_PARTS = {
     "amazon": "referral, FBA fulfilment, storage and every other fee line",
     "shopify": "payment processing, shipping labels, apps and 3PL charges",
 }
-# Amazon disburses every fourteen days; Shopify Payments pays out daily
-# (funds land about two business days after the sale). The cash cone uses
-# the cycle; the lag is inside a day's noise at a 90-day horizon.
+# When a sale becomes cash in the bank (corrected 2026-10-01; until then the
+# cash cone paid a sale made on day 13 on day 14).
+#
+# Amazon, "Payments based on delivery date" (Seller Central help G202124090):
+# "The standard reserve period is 7 days after delivery date ('DD + 7')". Its
+# own example: sold January 1, delivered January 6, available January 14 — the
+# funds release on the eighth calendar day after delivery. The remaining North
+# American accounts moved to DD+7 on 2026-03-12. Settlement then runs every 14
+# days (daily on Disburse on Demand, not assumed here) and the bank transfer
+# takes up to 5 business days.
+#   reserve  = delivery (ASSUMED 2 days, a typical FBA delivery) + 8 = 10 days
+#              from the sale until Amazon can settle it
+#   transit  = 3 business days ≈ 4 calendar days, a stated central value of
+#              Amazon's "up to 5"
+# Shopify Payments: payouts "typically arrive … within 3 to 5 business days
+# after a customer's payment is captured", on a daily, weekly or monthly
+# schedule. Modelled daily, 3 business days ≈ 4 calendar days from the sale to
+# the bank; the transfer is inside that figure, so its own transit is zero.
 PAYOUT_CYCLE_DAYS = {"amazon": 14, "shopify": 1}
+PAYOUT_DELIVERY_DAYS = {"amazon": 2, "shopify": 0}
+AMAZON_RELEASE_AFTER_DELIVERY_DAYS = 8      # DD+7: delivered Jan 6, available Jan 14
+PAYOUT_RESERVE_DAYS = {"amazon": PAYOUT_DELIVERY_DAYS["amazon"] + AMAZON_RELEASE_AFTER_DELIVERY_DAYS,
+                       "shopify": 4}
+PAYOUT_TRANSIT_DAYS = {"amazon": 4, "shopify": 0}
 PAYOUT_NOTE = {
-    "amazon": "Amazon settlement phase unknown — payouts assumed every 14 days",
-    "shopify": "Shopify Payments pays out daily; the ~2 business-day lag is ignored at this horizon",
+    "amazon": (f"A sale becomes payable {PAYOUT_RESERVE_DAYS['amazon']} days after it is made (delivery assumed "
+               f"{PAYOUT_DELIVERY_DAYS['amazon']} days, then Amazon's reserve until 7 days after delivery, DD+7); "
+               f"Amazon settles every {PAYOUT_CYCLE_DAYS['amazon']} days and the transfer is assumed to reach your "
+               f"bank {PAYOUT_TRANSIT_DAYS['amazon']} days later (3 business days; Amazon says up to 5). Your "
+               f"settlement date is not on file, so the last transfer is assumed to have reached your bank today "
+               f"and the next to land in {PAYOUT_CYCLE_DAYS['amazon']} days, the longest wait"),
+    "shopify": (f"Shopify Payments is assumed to pay out daily, each day's sales reaching your bank "
+                f"{PAYOUT_RESERVE_DAYS['shopify']} days later (3 business days; Shopify says 3 to 5). A weekly or "
+                f"monthly payout schedule would hold cash longer and is not modelled"),
 }
 # Where the seat lives, in the client's words.
 SEAT = {
@@ -96,6 +123,23 @@ def fee_parts(channel: str | None) -> str:
 
 def payout_cycle_days(channel: str | None) -> int:
     return PAYOUT_CYCLE_DAYS.get((channel or "amazon").lower(), PAYOUT_CYCLE_DAYS["amazon"])
+
+
+def payout_reserve_days(channel: str | None, delivery_days: int | None = None) -> int:
+    """Calendar days from a sale until the platform can settle it. For Amazon
+    `delivery_days` replaces the assumed delivery time: Amazon's own example,
+    sold Jan 1 and delivered Jan 6 (5 days), is payable Jan 14 (13 days)."""
+    ch = (channel or "amazon").lower()
+    if ch not in PAYOUT_RESERVE_DAYS:
+        ch = "amazon"
+    if delivery_days is not None and ch == "amazon":
+        return int(delivery_days) + AMAZON_RELEASE_AFTER_DELIVERY_DAYS
+    return PAYOUT_RESERVE_DAYS[ch]
+
+
+def payout_transit_days(channel: str | None) -> int:
+    """Calendar days from a settlement to the money in the seller's bank."""
+    return PAYOUT_TRANSIT_DAYS.get((channel or "amazon").lower(), PAYOUT_TRANSIT_DAYS["amazon"])
 
 
 def payout_note(channel: str | None) -> str:

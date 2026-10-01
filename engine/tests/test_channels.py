@@ -55,7 +55,31 @@ def test_an_unknown_channel_is_treated_as_amazon():
         assert fn("etsy") == fn("amazon")
         assert fn(None) == fn("amazon")
     assert channels.payout_cycle_days(None) == 14
+    assert channels.payout_reserve_days("etsy") == channels.payout_reserve_days("amazon")
+    assert channels.payout_transit_days(None) == channels.payout_transit_days("amazon")
     assert channels.has_recovery("etsy") and channels.has_fee_cliffs("etsy")
+
+
+def test_amazons_own_example_sold_jan_1_delivered_jan_6_is_payable_jan_14():
+    """Seller Central help G202124090: the reserve runs to 7 days after the
+    delivery date (DD+7), and Amazon's example releases a January 1 sale
+    delivered January 6 on January 14."""
+    from datetime import date, timedelta
+    sold, delivered = date(2026, 1, 1), date(2026, 1, 6)
+    reserve = channels.payout_reserve_days("amazon", delivery_days=(delivered - sold).days)
+    assert sold + timedelta(days=reserve) == date(2026, 1, 14)
+    # unstated, delivery is assumed to take 2 days: payable 10 days after the sale
+    assert channels.payout_reserve_days("amazon") == 10
+    assert channels.payout_transit_days("amazon") == 4         # 3 business days of Amazon's "up to 5"
+    # Shopify: 3 business days from capture to the bank, the transfer inside it
+    assert (channels.payout_reserve_days("shopify"), channels.payout_transit_days("shopify")) == (4, 0)
+    assert channels.payout_reserve_days("shopify", delivery_days=5) == 4, "delivery does not hold Shopify money"
+    # the sentences say what is assumed, with the numbers the model uses
+    note = channels.payout_note("amazon")
+    for phrase in ("10 days", "delivery assumed 2 days", "DD+7", "every 14 days", "4 days later",
+                   "up to 5", "not on file"):
+        assert phrase in note, phrase
+    assert "4 days later" in channels.payout_note("shopify") and "3 to 5" in channels.payout_note("shopify")
 
 
 def test_case_is_not_load_bearing():

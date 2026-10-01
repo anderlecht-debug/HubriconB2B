@@ -8,14 +8,36 @@ numbers can never disagree about what demand is.
 
 Cash mechanics per simulated path over the horizon:
 
-    in  — the platform disburses every payout_cycle_days: the accumulated
-          (revenue − fees − ad spend) since the previous payout. Amazon
-          settles fortnightly and the client's actual settlement phase is
-          unknown, so payouts land on days 14, 28, …; Shopify Payments pays
-          out daily. Either way the cycle and the assumption behind it come
-          from channels.py and are surfaced in the payload.
+    in  — a sale's (revenue − fees) reaches the bank only after the
+          platform's own delays (channels.py, with their sources): it becomes
+          payable `reserve` days after the sale (Amazon: delivery + DD+7, 10
+          days), is swept into the next settlement, and lands `transit` days
+          after that (Amazon: 4). Transfers land every payout_cycle_days; the
+          client's settlement date is unknown, so the last one is assumed to
+          have landed today and the next lands on day 14 (Amazon) — the
+          longest wait — or tomorrow (Shopify, daily, 4 days from sale to
+          bank). The settlement landing on day L pays every sale made up to
+          day L − transit − reserve not already paid.
+    held — a going concern starts the horizon with sales the platform still
+          holds: the last reserve + transit days (14 on Amazon), not yet in
+          the bank and not in the client's stated cash. The first settlements
+          pay them. The model has not seen those days, so they are drawn from
+          the same generator as the days ahead (an assumption, stated; the
+          client's payments page has the real balance). Without them the cone
+          would tell every operating seller that Amazon owes them nothing
+          today.
     out — fixed operating costs accrue daily (monthly_fixed_costs / 30);
-          supplier POs leave as lump-sum wires on their scheduled dates.
+          ad spend is charged the day it is spent, not netted against a later
+          payout; supplier POs leave as lump-sum wires on their scheduled
+          dates.
+
+Corrected 2026-10-01. Until then each payout carried the sales made up to its
+own landing day (a sale on day 13 was cash on day 14), ignored the balance the
+platform already held, and netted ad spend against the payout. On a flat
+catalogue the first two errors cancel in expectation, so the trough barely
+moves; what moves is timing — a seasonal ramp, a stockout or a suppressed
+listing reaches the bank 14 days later than the old cone showed — and ad spend,
+which now leaves on the day it is spent.
 
 The wire schedule is derived from the same inventory results the reorder
 directives use: the first wire when the position walks down to the reorder
@@ -52,6 +74,8 @@ from .common import num, period_days
 from .mc import expected_shortfall, quantile_se
 
 PAYOUT_CYCLE_DAYS = channels.PAYOUT_CYCLE_DAYS["amazon"]  # the default; 14 days
+PAYOUT_RESERVE_DAYS = channels.PAYOUT_RESERVE_DAYS["amazon"]  # sale to payable; 10 days
+PAYOUT_TRANSIT_DAYS = channels.PAYOUT_TRANSIT_DAYS["amazon"]  # settlement to bank; 4 days
 DEFAULT_HORIZON_DAYS = 90
 DEFAULT_PATHS = 10000
 OPEX_DAYS_PER_MONTH = 30  # daily accrual approximation, surfaced in payload
@@ -141,6 +165,39 @@ def wire_schedule(inventory_rows: list[dict], margin_rows: list[dict],
     return sorted(wires, key=lambda w: w["day"])
 
 
+def landed(sales_net: np.ndarray, held: np.ndarray, landing_days: list[int], reserve_days: int,
+           transit_days: int, shift: int = 0) -> np.ndarray:
+    """Cumulative cash landed in the bank by each day, per path.
+
+    `sales_net` is (paths, days), day d at index d − 1. `held` is (paths, P)
+    or (P,): the sales of the P days before day 1, oldest first, that the
+    platform still holds. `landing_days` are the 0-indexed days a transfer
+    lands. The transfer landing on day L carries every sale made up to day
+    L − transit − reserve that an earlier one did not. `shift` lands every
+    transfer that many days later with the same money in it: the
+    payout-hold stress."""
+    n_paths, days = sales_net.shape
+    cum = np.cumsum(sales_net, axis=1)
+    held = np.asarray(held, dtype=float)
+    if held.ndim == 1:
+        held = np.broadcast_to(held, (n_paths, held.shape[0]))
+    n_held = held.shape[1]
+    held_cum = np.concatenate([np.zeros((n_paths, 1)), np.cumsum(held, axis=1)], axis=1)
+    paid = np.zeros((n_paths, days))
+    for idx in landing_days:
+        land = idx + shift
+        if land >= days:
+            continue
+        through = idx + 1 - transit_days - reserve_days       # the last sale day it carries
+        if through >= 1:
+            amount = held_cum[:, -1] + cum[:, min(through, days) - 1]
+        else:
+            # only days before the horizon: held column k is day k − n_held + 1
+            amount = held_cum[:, max(0, min(n_held, through + n_held))]
+        paid[:, land:] = amount[:, None]
+    return paid
+
+
 def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              monthly_fixed_costs: float, rng: np.random.Generator,
              horizon_days: int = DEFAULT_HORIZON_DAYS,
@@ -149,25 +206,36 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
              payout_note: str | None = None,
              correlation: dict | None = None,
              index_paths: list[np.ndarray] | None = None,
-             ruin_floor: float = 0.0, keep_paths: bool = False, top_k: int = 3) -> dict:
+             ruin_floor: float = 0.0, keep_paths: bool = False, top_k: int = 3,
+             payout_reserve_days: int = PAYOUT_RESERVE_DAYS,
+             payout_transit_days: int = PAYOUT_TRANSIT_DAYS,
+             held_index_paths: list[np.ndarray] | None = None) -> dict:
     """The cone. Returns a JSON-safe payload with daily p5/p50/p95 cash
     paths (day 0 = today = starting cash), ruin probability, and the
     schedule that produced it.
 
-    payout_cycle_days and payout_note are the platform's disbursement
-    mechanics and the sentence that explains them — a number and a label, so
-    the simulation itself stays channel-blind. run() takes them from
-    channels.py; the defaults are Amazon's."""
+    payout_cycle_days, payout_reserve_days, payout_transit_days and
+    payout_note are the platform's disbursement mechanics and the sentence
+    that explains them — numbers and a label, so the simulation itself stays
+    channel-blind. run() takes them from channels.py; the defaults are
+    Amazon's. `held_index_paths` is the seasonal index on the reserve +
+    transit days before today, whose sales the platform still holds; without
+    it those days take the first day's index."""
     days = horizon_days
     payout_cycle_days = max(1, int(payout_cycle_days))
+    reserve, transit = max(0, int(payout_reserve_days)), max(0, int(payout_transit_days))
+    n_held = reserve + transit
     correlation = correlation or dependence.estimate_pairwise_corr({})
     rho = float(correlation.get("rho") or 0.0)
 
     # Every SKU's rate for a given (path, day) shares one common factor, so a bad
     # day is bad across the catalog rather than averaging out. Streamed one SKU at
     # a time: the whole (n_skus, n_paths, days) array is 2.9 GB on a 400-SKU
-    # catalog, and nothing needs it at once.
+    # catalog, and nothing needs it at once. The draw starts n_held days before
+    # today: those sales are made, unseen by the model, and still held by the
+    # platform, so they come from the same generator as the rest.
     sales_net = np.zeros((n_paths, days))
+    held = np.zeros((n_paths, n_held))
     revenue = np.zeros((n_paths, days)) if keep_paths else None
     # the largest SKUs by revenue rate, kept apart so a stress scenario can
     # suppress or delay one of them without re-simulating anything
@@ -175,17 +243,21 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     top_paths = {i: None for i in by_size} if keep_paths else {}
     for i, rates in dependence.rate_stream(
             rng, [p["mean_rate"] for p in params], [p["std_rate"] for p in params],
-            (n_paths, days), rho):
+            (n_paths, n_held + days), rho):
         if index_paths is not None:
             # the seasonal index per calendar day, the same for every path
-            rates = rates * np.asarray(index_paths[i], dtype=float)[None, :days]
+            ahead = np.asarray(index_paths[i], dtype=float)[:days]
+            before = (np.asarray(held_index_paths[i], dtype=float)[-n_held:] if held_index_paths is not None
+                      else np.full(n_held, ahead[0]))
+            rates = rates * np.concatenate([before, ahead])[None, :]
         units = rng.poisson(rates)
         net_i = units * params[i]["price"] * (1 - params[i]["fee_rate"])
-        sales_net += net_i
+        held += net_i[:, :n_held]
+        sales_net += net_i[:, n_held:]
         if keep_paths:
-            revenue += units * params[i]["price"]
+            revenue += units[:, n_held:] * params[i]["price"]
             if i in top_paths:
-                top_paths[i] = net_i
+                top_paths[i] = net_i[:, n_held:]
     ad_daily_total = float(sum(p["ad_daily"] for p in params))
 
     outflow = np.full(days, monthly_fixed_costs / OPEX_DAYS_PER_MONTH)
@@ -193,16 +265,14 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
         if 0 <= w["day"] < days:
             outflow[w["day"]] += w["amount"]
 
-    # payout accumulator: (revenue − fees − ads) held until the next payout
-    # day. Paid-through-t is the cumulative net at the latest payout day ≤ t
-    # — a negative settlement carries forward, exactly like Amazon's.
-    net_daily = sales_net - ad_daily_total
-    cum_net = np.cumsum(net_daily, axis=1)
-    paid = np.zeros((n_paths, days))
+    # Sales net of fees reach the bank on the landing days, each transfer
+    # carrying the sales made up to reserve + transit days before it, the held
+    # balance first; ad spend leaves the day it is spent.
     payout_days = list(range(payout_cycle_days - 1, days, payout_cycle_days))
-    for k in payout_days:
-        paid[:, k:] = cum_net[:, k][:, None]
-    cash = starting_cash - np.cumsum(outflow)[None, :] + paid
+    paid = landed(sales_net, held, payout_days, reserve, transit)
+    cash = starting_cash - np.cumsum(outflow + ad_daily_total)[None, :] + paid
+    held_now = held.sum(axis=1)
+    still_held = held_now + sales_net.sum(axis=1) - paid[:, -1]
 
     p5, p50, p95 = (np.quantile(cash, q, axis=0) for q in (0.05, 0.50, 0.95))
     # ruin is the balance crossing the client's stated buffer, zero by default
@@ -219,9 +289,15 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
     paths = None
     if keep_paths:
         paths = {"sales_net": sales_net, "revenue": revenue, "outflow": outflow, "ad_daily_total": ad_daily_total,
-                 "payout_days": payout_days, "starting_cash": float(starting_cash), "ruin_floor": float(ruin_floor),
+                 "payout_days": payout_days, "held": held, "payout_reserve_days": reserve,
+                 "payout_transit_days": transit,
+                 "starting_cash": float(starting_cash), "ruin_floor": float(ruin_floor),
                  "top": {params[i]["sku"]: {"sales_net": v, "days_of_cover": None} for i, v in top_paths.items()},
                  "n_paths": n_paths, "days": days}
+    held_note = ([f"The platform already holds your last {n_held} days of sales, not part of your stated cash: "
+                  f"about ${float(np.median(held_now)):,.0f} net of fees, drawn from the same demand model as the "
+                  f"days ahead (your payments page shows the real balance); the first transfers pay it"]
+                 if n_held else [])
     out = {
         "horizon_days": days,
         "n_paths": n_paths,
@@ -250,8 +326,16 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             },
             "demand_correlation": correlation,
             "wires": wires,
+            # the days a transfer lands in the bank, and the days it was settled
             "payout_days": [d + 1 for d in payout_days],
+            "settlement_days": [d + 1 - transit for d in payout_days],
             "payout_cycle_days": payout_cycle_days,
+            "payout_reserve_days": reserve,
+            "payout_transit_days": transit,
+            # sales the platform holds today (counted in), and still holds on
+            # the last day of the horizon (not counted: they land after it)
+            "held_at_start_p50": num(float(np.median(held_now))),
+            "held_at_end_p50": num(float(np.median(still_held))),
             "skus_modeled": len(params),
             "seasonal": "index applied per calendar day" if index_paths is not None else "flat rate",
             "ruin_floor": num(float(ruin_floor)),
@@ -261,6 +345,9 @@ def simulate(params: list[dict], wires: list[dict], starting_cash: float,
             "ruin_ladder": ladder,
             "assumptions": [
                 payout_note or channels.payout_note("amazon"),
+                *held_note,
+                "Ad spend leaves your cash the day it is spent; where the platform takes it out of a later "
+                "payout instead, your balance in between runs a little higher than shown",
                 ("Demand follows the catalog's seasonal index by calendar day" if index_paths is not None
                  else "Demand rate is flat over the horizon (no seasonal estimate on file)"),
                 f"Fixed costs accrue daily (monthly / {OPEX_DAYS_PER_MONTH}); real due dates may be lumpier",
@@ -343,16 +430,13 @@ def cash_from_components(paths: dict, sales_net: np.ndarray, ad_daily_total: flo
                          payout_days: list[int], payout_shift: int = 0) -> np.ndarray:
     """Rebuild the cash matrix from its components — the same arithmetic as
     simulate, exposed so a stress scenario can change one component and
-    recompute the rest without drawing a single new number."""
-    n_paths, days = sales_net.shape
-    net_daily = sales_net - ad_daily_total
-    cum_net = np.cumsum(net_daily, axis=1)
-    paid = np.zeros((n_paths, days))
-    for k in payout_days:
-        land = k + payout_shift
-        if land < days:
-            paid[:, land:] = cum_net[:, k][:, None]
-    return paths["starting_cash"] - np.cumsum(outflow)[None, :] + paid
+    recompute the rest without drawing a single new number. The held balance
+    and the platform's delays come from `paths` (a cone kept before
+    2026-10-01 has none, and is read with no delay)."""
+    held = np.asarray(paths.get("held", np.zeros(0)), dtype=float)
+    paid = landed(sales_net, held, payout_days, int(paths.get("payout_reserve_days") or 0),
+                  int(paths.get("payout_transit_days") or 0), payout_shift)
+    return paths["starting_cash"] - np.cumsum(outflow + ad_daily_total)[None, :] + paid
 
 
 def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
@@ -376,17 +460,22 @@ def run(client: dict, inventory_rows: list[dict], margin_rows: list[dict],
     channel = channel or channels.client_channel(client) or "amazon"
     wires = wire_schedule(inventory_rows, margin_rows, horizon_days)
     correlation = dependence.estimate_pairwise_corr(_rate_panel(margin_rows))
-    index_paths = None
+    reserve, transit = channels.payout_reserve_days(channel), channels.payout_transit_days(channel)
+    index_paths = held_index = None
     if seasonal and seasonal.get("status") == "ok":
-        from datetime import date as _date
+        from datetime import date as _date, timedelta as _timedelta
         from .seasonality import daily_path
         start = today or _date.today()
         index_paths = [daily_path(seasonal, p["sku"], start, horizon_days) for p in params]
+        # the days before today whose sales the platform still holds
+        held_index = [daily_path(seasonal, p["sku"], start - _timedelta(days=reserve + transit), reserve + transit)
+                      for p in params]
     out = simulate(params, wires, float(cash_on_hand), float(opex), rng,
                    horizon_days=horizon_days, n_paths=n_paths,
                    payout_cycle_days=channels.payout_cycle_days(channel),
+                   payout_reserve_days=reserve, payout_transit_days=transit,
                    payout_note=channels.payout_note(channel),
-                   correlation=correlation, index_paths=index_paths,
+                   correlation=correlation, index_paths=index_paths, held_index_paths=held_index,
                    ruin_floor=float(client.get("min_cash_buffer_usd") or 0.0), keep_paths=keep_paths)
     if keep_paths and out.get("_paths"):
         cover = {r["sku"]: float(r.get("days_of_cover") or 0) for r in inventory_rows}
