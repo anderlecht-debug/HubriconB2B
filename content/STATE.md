@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-01T03:54:40+00:00 · style locked: False
+Updated 2026-10-01T04:07:32+00:00 · style locked: False
 
 ## Capabilities
 
@@ -53,14 +53,13 @@ Updated 2026-10-01T03:54:40+00:00 · style locked: False
 
 ### Inputs the pipeline needs from you
 
-1. Your voice: 3 to 5 minutes of clean audio now (see `docs/content/VOICE-RECORDING.md`), then `hubricon-content voice-clone --name "Hagen Simmons" <wav files>` and `ELEVENLABS_VOICE_ID` in `/home/lp9/Hubricon/HubriconB2B/.env`. Nothing renders in any other voice.
-2. ElevenLabs tier: Starter's 40,000 characters a month covers about six videos. Creator (100,000) unlocks the professional clone the series should ship on; Pro (500,000) covers a video a day.
-3. YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.
-4. One interactive Higgsfield texture batch saved to `content/assets/textures/` with `manifest.json` (or accept the procedural fallback).
-5. A licensed music bed in `content/assets/music/` (or ElevenLabs music once the key exists).
-6. Course 1 screen recordings (one raw 4–8 minute recording per lesson) and Seller Central screenshots for the pillar-1 Desk videos.
-7. `loginctl enable-linger lp9` (sudo if refused); optional `sudo pacman -S espeak-ng texlive-basic texlive-latexextra`.
-8. Merge the `content → main` pull request when `/learn` is ready; deploy is a push to `main`.
+1. Watch the style reel (`content/videos/style-reel/style-reel.mp4`, 36 s, silent: the site's own charts and type on a film stage). If the look is right, freeze it: `node content/film/lock.mjs`. Every film after reuses it.
+2. Read F01 (the home page's case-study film) and T01 (October 15) in `content/REVIEW.md`; `hubricon-content approve <slug>` or `reject <slug> --note "..."`. T01 is dated: it is only worth publishing before the holiday card ends.
+3. Your voice, your own recording first (HUBRICON_SPEC.md): `node content/film/record.mjs <slug>` opens a teleprompter at http://127.0.0.1:8790; read each beat, keep the take. Then `node content/film/render.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4 --audio content/videos/<slug>/takes` and `node content/film/check.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4`.
+4. The clone, in parallel, from those same recordings: `hubricon-content voice-clone --name "Hagen Simmons" <wav files>` and `ELEVENLABS_VOICE_ID` in `.env`. Switch over only when it is indistinguishable.
+5. YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.
+6. A licensed music bed in `content/assets/music/` if the series is to have one (the films render without).
+7. Seller Central screenshots or screen recordings for the parked pieces that need them (V02, V03, V06, V10, V13, V20, V26).
 
 ## Stuck (three failures; needs a look)
 

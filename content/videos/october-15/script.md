@@ -61,7 +61,7 @@ SCRIPT
 
 [4:35] THE HONEST LIMIT
   VO: What a public page can't tell you is how long your units have sat, what your ads cost you per sale, or how many come back. Those live in your own exports, and that's where most of the holiday money goes. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
-  VISUAL: kinetic: the closing line, then hubricon.com/learn
+  VISUAL: kinetic: the closing line, then the method and the spreadsheet at hubricon.com/learn
   CTA: The whole method and the spreadsheet are free at hubricon.com/learn.
   CLIP: no
 

@@ -21,13 +21,12 @@ SCRIPT
 
 [0:15] THE STAIRCASE
   VO: Most of us carry a mental model of cost that's a line. Heavier costs a little more. Pricier costs a little more. A small change makes a small difference. Amazon's fulfilment fee isn't a line. It's a staircase. It's flat for a stretch, then it steps, then it's flat again. Inside a step, another ounce costs nothing. Across an edge, the next ounce costs the whole step, on every unit, every month, until something moves.
-  VISUAL: staircase: the card draws in as steps, the holiday card dashed above it, no listing yet
-  DATA SOURCE: Amazon's published 2026 large-standard card, with the fuel and logistics surcharge
+  VISUAL: kinetic: "Your mental model is linear." then "Amazon's cost structure is a staircase."
   CLIP: yes
 
 [0:45] WHERE THIS LISTING SITS
   VO: This is a real listing, modeled from its public page and nothing else: {{who}}'s best-selling paint scratch remover, in {{category}}. Its page lists an item weight of {{weight}}. The edge on the card is at {{edge}}. So every unit it ships pays the next step up.
-  VISUAL: staircase: the solid dot lands on the tread past the edge, labelled with its weight
+  VISUAL: number: the published weight in ink, then where the edge is
   DATA SOURCE: the public-data case study, modeled from public data
   CLIP: yes
 

@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-01T03:54:40+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-01T04:07:32+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## T01 · day None · tier A · pillar 3 — script gate
 
@@ -59,7 +59,7 @@ What a public page can't tell you is how long your units have sat, what your ads
 | 2:45 | formula: net per unit = the fee jump minus the price you gain, after referral | Amazon's published 2026 cards |
 | 3:20 | aging: storage plus the surcharge by age, the day-271 riser in blue | Amazon's published storage schedule, on the case-study unit's size, modeled from public data |
 | 3:55 | kinetic: the steps landing one at a time, then the template's One listing sheet |  |
-| 4:35 | kinetic: the closing line, then hubricon.com/learn |  |
+| 4:35 | kinetic: the closing line, then the method and the spreadsheet at hubricon.com/learn |  |
 
 ### Decide
 
@@ -116,8 +116,8 @@ You can build this yourself. If you're doing real volume and want it run with ri
 | at | scene | data source |
 |---|---|---|
 | 0:00 | number: {{step_np}} lands alone, then the words "a unit, on every sale" |  |
-| 0:15 | staircase: the card draws in as steps, the holiday card dashed above it, no listing yet | Amazon's published 2026 large-standard card, with the fuel and logistics surcharge |
-| 0:45 | staircase: the solid dot lands on the tread past the edge, labelled with its weight | the public-data case study, modeled from public data |
+| 0:15 | kinetic: "Your mental model is linear." then "Amazon's cost structure is a staircase." |  |
+| 0:45 | number: the published weight in ink, then where the edge is | the public-data case study, modeled from public data |
 | 1:05 | staircase: the hollow dot one step down, the riser between the two in blue, the yearly range beneath | the public-data case study, modeled from public data |
 | 1:35 | montecarlo: the paths fan out from today, settle to almost nothing, then the band fills | the public-data case study, modeled from public data |
 | 2:00 | aging: storage plus the surcharge by age, the day-271 riser in blue | Amazon's published storage schedule, on the case-study unit's size, modeled from public data |

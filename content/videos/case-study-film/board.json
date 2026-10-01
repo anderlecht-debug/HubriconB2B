@@ -1,0 +1,69 @@
+{
+ "name": "case-study-film",
+ "facts": "content/videos/case-study-film/facts.json",
+ "scenes": [
+  {
+   "id": "b1",
+   "kind": "number",
+   "seconds": 15,
+   "value": "{{step_np}}",
+   "sub": "a unit, on every sale.",
+   "proof": true
+  },
+  {
+   "id": "b2",
+   "kind": "kinetic",
+   "seconds": 30,
+   "lines": [
+    "Your mental model is linear.",
+    "Amazon's cost structure is a staircase."
+   ]
+  },
+  {
+   "id": "b3",
+   "kind": "number",
+   "seconds": 20,
+   "value": "{{weight}}",
+   "ink": true,
+   "sub": "its published weight. The edge is at {{edge}}.",
+   "proof": true
+  },
+  {
+   "id": "b4",
+   "kind": "staircase",
+   "seconds": 30,
+   "heading": "One step down: {{step_np}} a unit less.",
+   "caption": "{{step_peak}} less from {{peak_from}}. On roughly {{units}} units a month, {{leak_p10}} to {{leak_p90}} a year, estimate."
+  },
+  {
+   "id": "b5",
+   "kind": "montecarlo",
+   "seconds": 25,
+   "heading": "{{years}} years of this one listing",
+   "caption": "Months at a loss, before ads, storage and returns: {{months_losing}} of {{months_total}}."
+  },
+  {
+   "id": "b6",
+   "kind": "aging",
+   "seconds": 25,
+   "heading": "The cliff public pages can't see",
+   "caption": "From day {{cliff_day}}: {{aged_before}} to {{aged_after}} a cubic foot."
+  },
+  {
+   "id": "b7",
+   "kind": "number",
+   "seconds": 20,
+   "value": "{{brands_silent}} of {{brands_modeled}}",
+   "ink": true,
+   "sub": "brands we modeled showed nothing worth fixing. We say so."
+  },
+  {
+   "id": "b8",
+   "kind": "end",
+   "seconds": 10,
+   "headline": "You can build this yourself.",
+   "primary": "Book your call",
+   "secondary": "or learn the method, free, at hubricon.com/learn"
+  }
+ ]
+}

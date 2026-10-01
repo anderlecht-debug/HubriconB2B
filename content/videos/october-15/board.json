@@ -1,0 +1,84 @@
+{
+ "name": "october-15",
+ "facts": "content/videos/october-15/facts.json",
+ "scenes": [
+  {
+   "id": "b1",
+   "kind": "number",
+   "seconds": 20,
+   "value": "{{peak_from}}",
+   "ink": true,
+   "sub": "to {{peak_to}}: every unit costs more to fulfil."
+  },
+  {
+   "id": "b2",
+   "kind": "kinetic",
+   "seconds": 30,
+   "lines": [
+    "Not weather.",
+    "It lands on each unit, not on the average."
+   ]
+  },
+  {
+   "id": "b3",
+   "kind": "staircase",
+   "seconds": 40,
+   "heading": "From {{peak_from}}: {{peak_min}} to {{peak_max}} more a unit.",
+   "caption": "Dashed: the holiday card. Storage, October to December: {{stor_peak}} a cubic foot, against {{stor_off}}."
+  },
+  {
+   "id": "b4",
+   "kind": "number",
+   "seconds": 40,
+   "value": "{{cs_fee_np}} → {{cs_fee_peak}}",
+   "sub": "{{cs_delta}} a unit more. {{cs_window_lo}} to {{cs_window_hi}} across the season.",
+   "estimate": true,
+   "proof": true
+  },
+  {
+   "id": "b5",
+   "kind": "staircase",
+   "seconds": 35,
+   "heading": "The step past the edge: {{step_np}}, then {{step_peak}}.",
+   "caption": "The case-study listing sits {{over}} past the {{edge}} edge."
+  },
+  {
+   "id": "b6",
+   "kind": "formula",
+   "seconds": 35,
+   "kicker": "The price trap",
+   "lines": [
+    "Under {{price_edge}}: the cheaper column.",
+    "Over it: {{ten_min}} to {{ten_max}} more a unit to fulfil."
+   ],
+   "caption": "Check which column a new price lands in before you move it."
+  },
+  {
+   "id": "b7",
+   "kind": "aging",
+   "seconds": 35,
+   "heading": "The units that sit",
+   "caption": "From day {{cliff_day}}: {{aged_before}} to {{aged_after}} a cubic foot, on top of {{stor_peak}} storage."
+  },
+  {
+   "id": "b8",
+   "kind": "kinetic",
+   "seconds": 40,
+   "small": true,
+   "lines": [
+    "Price your best sellers on the holiday card.",
+    "Find the units a fraction of an ounce past an edge.",
+    "Check the column a new price lands in.",
+    "Pull your inventory age report."
+   ]
+  },
+  {
+   "id": "b9",
+   "kind": "end",
+   "seconds": 15,
+   "headline": "You can build this yourself.",
+   "primary": "The method and the spreadsheet, free",
+   "secondary": "hubricon.com/learn"
+  }
+ ]
+}

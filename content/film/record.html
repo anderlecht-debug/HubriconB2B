@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record — Hubricon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<style>
+/* The teleprompter. Tokens only. */
+body { min-height: 100vh; }
+.wrap { padding-block: var(--s-6); }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); }
+.prompt { margin-top: var(--s-7); font-size: clamp(28px, 3vw, 44px); line-height: 1.45; color: var(--ink); max-width: 40ch; font-weight: var(--regular); }
+.controls { margin-top: var(--s-7); display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
+.btn.quiet { background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
+.btn.rec { background: var(--blue); }
+.meter { width: 220px; height: 8px; background: var(--paper-2); border-radius: 4px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--ink); }
+.dots { display: flex; gap: var(--s-2); margin-top: var(--s-6); }
+.dots button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--rule-2); background: var(--paper); color: var(--ink-3); font: var(--strong) var(--t-12) / 1 var(--font); cursor: pointer; }
+.dots button.kept { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.dots button[aria-current="true"] { outline: 2px solid var(--blue); outline-offset: 2px; }
+.note { margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); max-width: 60ch; }
+.warn { color: var(--ink); font-weight: var(--strong); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><span class="label" id="where">Loading</span><span class="label" id="slug"></span></div>
+  <p class="prompt" id="prompt"></p>
+  <div class="controls">
+    <button class="btn rec" id="rec">Record <span aria-hidden="true">●</span></button>
+    <button class="btn quiet" id="play" disabled>Play it back</button>
+    <button class="btn quiet" id="keep" disabled>Keep this take</button>
+    <button class="btn quiet" id="next">Next beat →</button>
+    <span class="meter" aria-hidden="true"><i id="level"></i></span>
+  </div>
+  <div class="dots" id="dots"></div>
+  <p class="note">Read each beat once through, as you would say it to one operator across a table. Space starts and stops a take. A take you keep replaces the one before it. Headphones on, so the mic hears only you.</p>
+  <p class="note warn" id="rehearsal" hidden>Rehearsal: this script is not approved yet, so takes are not kept.</p>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const data = await (await fetch("/beats.json")).json();
+let i = 0, rec = null, chunks = [], blob = null, kept = new Set(data.kept);
+$("slug").textContent = data.slug;
+$("rehearsal").hidden = !data.rehearsal;
+
+function paint() {
+  const b = data.beats[i];
+  $("where").textContent = `Beat ${i + 1} of ${data.beats.length} · ${b.name}`;
+  $("prompt").textContent = b.text;
+  $("dots").replaceChildren(...data.beats.map((x, k) => {
+    const d = document.createElement("button");
+    d.textContent = k + 1;
+    d.className = kept.has(x.id) ? "kept" : "";
+    d.setAttribute("aria-current", String(k === i));
+    d.onclick = () => { i = k; blob = null; $("play").disabled = $("keep").disabled = true; paint(); };
+    return d;
+  }));
+}
+
+const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+const ctx = new AudioContext();
+const an = ctx.createAnalyser();
+ctx.createMediaStreamSource(stream).connect(an);
+const buf = new Float32Array(an.fftSize);
+(function meter() {
+  an.getFloatTimeDomainData(buf);
+  const peak = Math.max(...buf.map(Math.abs));
+  $("level").style.width = `${Math.min(100, peak * 140)}%`;
+  requestAnimationFrame(meter);
+})();
+
+function toggle() {
+  if (rec && rec.state === "recording") { rec.stop(); return; }
+  chunks = [];
+  rec = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus", audioBitsPerSecond: 256000 });
+  rec.ondataavailable = (e) => chunks.push(e.data);
+  rec.onstop = () => {
+    blob = new Blob(chunks, { type: "audio/webm" });
+    $("rec").firstChild.textContent = "Record again ";
+    $("play").disabled = false;
+    $("keep").disabled = data.rehearsal;
+  };
+  rec.start();
+  $("rec").firstChild.textContent = "Stop ";
+}
+$("rec").onclick = toggle;
+addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(); toggle(); } });
+$("play").onclick = () => blob && new Audio(URL.createObjectURL(blob)).play();
+$("keep").onclick = async () => {
+  if (!blob) return;
+  const res = await fetch(`/take/${data.beats[i].id}`, { method: "POST", body: blob });
+  const out = await res.json();
+  kept = new Set(out.kept);
+  $("keep").disabled = true;
+  paint();
+};
+$("next").onclick = () => { i = Math.min(data.beats.length - 1, i + 1); blob = null; $("play").disabled = $("keep").disabled = true; $("rec").firstChild.textContent = "Record "; paint(); };
+paint();
+</script>
+</body>
+</html>
