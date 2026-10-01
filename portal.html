@@ -182,6 +182,11 @@ input[type=email]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 .reflink { display: inline-block; margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border-radius: 8px; background: var(--paper-2); color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 
 /* 3 · the folds */
+.pack-switch { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.pack-switch button[aria-pressed="true"] { border-color: var(--ink); }
+.pack-switch .hint { margin-left: var(--s-2); }
+.pack-label { margin-top: var(--s-3); max-width: 72ch; }
+#pack-pick[hidden] { display: none; }
 .fold summary h2 { font-size: var(--t-20); letter-spacing: -0.015em; }
 .fold-body > section + section, .fold-body > div + div { margin-top: var(--s-7); padding-top: var(--s-6); border-top: 1px solid var(--rule); }
 .fold-body h3 { font-size: var(--t-18); letter-spacing: -0.01em; margin-bottom: var(--s-3); }
@@ -275,6 +280,8 @@ input[type=email]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 .claim .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
 .claim .type { font-size: var(--t-12); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); font-weight: var(--strong); }
 .claim .when { text-align: right; font-size: var(--t-12); }
+.claim.econ-order { grid-template-columns: minmax(0, 1fr) 90px 110px 140px; }
+.claim.econ-liq { grid-template-columns: minmax(0, 1fr) 90px minmax(0, 1fr); }
 .fan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: var(--s-5); }
 .meter { position: relative; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--rule) 0 10%, var(--rule-2) 10% 18%, var(--ink-4) 18% 100%); }
 .meter i { position: absolute; top: -5px; width: 3px; height: 20px; background: var(--ink); border-radius: 2px; margin-left: -1px; }
@@ -327,7 +334,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
   .watch-grid, .candor, .chart-duo, .health, .pos-tiles { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
   .driver { grid-template-columns: 1fr 1fr; }
   .driver .bar { grid-column: 1 / -1; }
-  .claim { grid-template-columns: 1fr 1fr; }
+  .claim, .claim.econ-order, .claim.econ-liq { grid-template-columns: 1fr 1fr; }
   .leak { grid-template-columns: minmax(0, 1fr); }
   .leak .usd { text-align: left; }
   .login-row { flex-direction: column; }
@@ -540,6 +547,15 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
           <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per move"></svg>
         </section>
 
+        <!-- A store on both is read once per channel (cli._run_models): one read each, labelled,
+             chosen here for the sections that come from it. Filled by renderReads(); hidden for a
+             single store. -->
+        <section id="pack-pick" hidden>
+          <h3>Your stores, one read each</h3>
+          <nav class="pack-switch" id="pack-switch" aria-label="Which store's read"></nav>
+          <p class="hint pack-label" id="pack-label"></p>
+        </section>
+
         <section id="money-sect" class="hidden">
           <h3>Where the money goes</h3>
           <svg class="chart" id="waterfall-svg" viewBox="0 0 920 260" role="img" aria-label="Latest period: revenue stepping down to net profit"></svg>
@@ -558,7 +574,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
         <section id="pricing-sect" class="hidden">
           <h3>The mathematics of your prices</h3>
           <div id="pricing-rows"></div>
-          <p class="hint" style="margin-top: var(--s-3)">The demand curve is fitted to your observed months (the dots) with its 95% confidence band: that band is us showing our work. The profit curve follows from it and your true unit economics. Steps are capped at 5% per cycle, with the Buy Box watched while a step is live.</p>
+          <p class="hint" id="pricing-hint" style="margin-top: var(--s-3)">The demand curve is fitted to your observed months (the dots) with its 95% confidence band: that band is us showing our work. The profit curve follows from it and your true unit economics. Steps are capped at 5% per cycle, with the Buy Box watched while a step is live.</p>
         </section>
 
         <section id="fc-sect" class="hidden">
@@ -610,9 +626,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
             <p class="hz-note" id="conc-note"></p>
           </div>
           <div id="anom" class="hidden">
-            <div class="hz-head"><span class="label">Fee creep and traffic shifts</span><span class="chip escalated" id="anom-chip"></span></div>
+            <div class="hz-head"><span class="label" id="anom-title">Fee creep and traffic shifts</span><span class="chip escalated" id="anom-chip"></span></div>
             <div id="anom-rows"></div>
-            <p class="hz-note">Change-point and CUSUM tests on your own fee-per-unit, conversion and traffic series. A flag is a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.</p>
+            <p class="hz-note" id="anom-note">Change-point and CUSUM tests on your own fee-per-unit, conversion and traffic series. A flag is a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.</p>
           </div>
           <div id="riskmap" class="hidden">
             <div class="hz-head"><span class="label">Inventory risk, every SKU on one map</span></div>
@@ -639,7 +655,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
         <section>
           <h3>Price tests</h3>
           <div class="scroll"><table id="ptests">
-            <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
+            <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num" id="pt-watch">Buy Box</th><th>Status</th></tr>
           </table></div>
         </section>
       </div>
@@ -1038,7 +1054,77 @@ const P = (() => {
       + `<p class="pp-foot">${PRINT_FOOT(c.head)}</p>`;
   }
 
-  return { esc, clip, asDate, fdate, fmonth, fday, fwhen, money, usd, monthLabel, stageOf, beforeYes, schedule,
+  /* ── the store a number is about (channels.channels_for): Amazon, Shopify, or both ──
+     What is read while a price step is live differs. Amazon has a Buy Box. A Shopify store has
+     none, and nothing ingests its conversion rate, so a step there is read on the orders that
+     follow it (measurement.measure_price_step, on the Orders export's own units and prices). */
+  function channelsOf(platform) {
+    const p = String(platform || "amazon").toLowerCase();
+    return p === "both" ? ["amazon", "shopify"] : p === "shopify" ? ["shopify"] : ["amazon"];
+  }
+  const STORE = { amazon: "Amazon", shopify: "Shopify" };
+  const STEP_READ = {
+    amazon: { chip: "Buy Box watched while live", log: "Buy Box watched while the step is live" },
+    shopify: { chip: "read on your orders", log: "read on your orders" },
+  };
+  /* A price test's store: the move it carries out names it (directives.channel); a single
+     store's is that store; otherwise it is not known, and nothing is said to be watched. */
+  function testChannel(t, directives, platform) {
+    const d = t && t.directive_id ? (directives || []).find((x) => x.id === t.directive_id) : null;
+    if (d && STORE[d.channel]) return d.channel;
+    const cs = channelsOf(platform);
+    return cs.length === 1 ? cs[0] : null;
+  }
+  const priceTestColumn = (channels) => channels.length > 1 ? "Watched" : channels[0] === "shopify" ? "Read on" : "Buy Box";
+  function priceTestCell(t, channel, both) {
+    const bb = `${t.buy_box_share_before ?? "—"}% → ${t.buy_box_share_during ?? "—"}%`;
+    if (channel === "shopify") return "your orders";
+    if (channel === "amazon") return both ? `Buy Box ${bb}` : bb;
+    return "—";
+  }
+  const PRICING_BASE = "The demand curve is fitted to your observed months (the dots) with its 95% confidence band: that band is us showing our work. The profit curve follows from it and your true unit economics. Steps are capped at 5% per cycle";
+  const pricingHint = (channel) => channel === "shopify"
+    ? `${PRICING_BASE}; each step is read on your orders: the units it sells at the new price, in the exports that follow.`
+    : `${PRICING_BASE}, with the Buy Box watched while a step is live.`;
+  /* Shopify has no storage card on file (inventory_econ: fee_schedule_effective is null), so
+     its note never names one. */
+  function invNote(ie, channel) {
+    const sl = (ie.service_levels || []).slice(0, 3).map((x) => `${x.sku} ${(Number(x.critical_fractile) * 100).toFixed(0)}%`).join(", ");
+    const head = "Service levels are set by the money, SKU by SKU: q* = C_u ÷ (C_u + C_o), the cost of a lost sale against the cost of a unit left over — ";
+    if (channel === "shopify" || !ie.fee_schedule_effective)
+      return `${head}capital and the season priced in${sl ? ` (${sl})` : ""}. No storage fee or fee cliff is priced for your store: Amazon's are not yours, and a 3PL's storage rate is not modelled.`;
+    return `${head}storage at the ${ie.fee_schedule_effective} rate card, capital, and the season priced in${sl ? ` (${sl})` : ""}. `
+      + (ie.inventory_age_on_file ? "Aged-inventory and storage figures are Amazon's own estimates from your Inventory Age export."
+        : "Upload the Inventory Age export and Amazon's own surcharge estimates replace the rate-card figures.");
+  }
+  const anomTitle = (channel) => channel === "shopify" ? "Fee creep and spend shifts" : "Fee creep and traffic shifts";
+  const anomNote = (channel) => (channel === "shopify"
+    ? "Change-point and CUSUM tests on your own fee-per-unit and ad-spend series."
+    : "Change-point and CUSUM tests on your own fee-per-unit, conversion and traffic series.")
+    + " A flag is a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.";
+  /* The rules' one example of a direct dollar is an Amazon reimbursement: the only thing
+     measurement.py grades direct. A store with no Amazon side is given no example. */
+  const directLine = (channels) => channels.includes("amazon") ? null
+    : "<b>Direct.</b> The platform's own record shows the money moved. Counted in full.";
+  const foundNote = (channels) => channels.includes("amazon")
+    ? "found, not yet measured: moves made and claims filed. They count in the month your exports or Amazon read them back, and not before."
+    : "found, not yet measured: moves made. They count in the month your exports read them back, and not before.";
+  /* One read per store, the newest of each; a run names its store in params.channel. */
+  function packsByChannel(packs, runs, platform) {
+    const cs = channelsOf(platform);
+    const chanOf = Object.fromEntries((runs || []).map((r) => [r.id, r.params && r.params.channel]));
+    const out = {};
+    for (const pk of packs || []) {
+      const c = STORE[chanOf[pk.run_id]] ? chanOf[pk.run_id] : cs.length === 1 ? cs[0] : null;
+      if (c && cs.includes(c) && !out[c]) out[c] = pk;
+    }
+    return cs.filter((c) => out[c]).map((c) => ({ channel: c, pack: out[c] }));
+  }
+  const packLabel = (channel, createdAt) => `Below: your ${STORE[channel]} store, from its read of ${fdate(createdAt)}. Where the money goes, prices, demand, inventory, ads, risk and health are read for each store on its own.`;
+
+  return { channelsOf, STORE, STEP_READ, testChannel, priceTestColumn, priceTestCell, pricingHint, invNote, anomTitle,
+           anomNote, directLine, foundNote, packsByChannel, packLabel,
+           esc, clip, asDate, fdate, fmonth, fday, fwhen, money, usd, monthLabel, stageOf, beforeYes, schedule,
            firstMonthEnd, monthsOf, cleared, provenOf, provenLabel, tickPlan, invoiceFor, outcomeOf, outcomeText,
            monthSentence, billedTotal, holding, heldLine, monthsLeftInYear, forwardLine, FORWARD_NOTE, nextCheck,
            ago, heartbeat, freshAlert, sealsByMove, grouped, sealHtml, leakName, groupMoves, GRADE, CHANGE_BY_EMAIL,
@@ -1551,7 +1637,7 @@ function renderDumbbells(dirs){
 /* ── 1 · the monitor: proven since day one, the bill, the difference ── */
 
 /* What the page holds between refreshes. */
-const STATE = { clients: [], client: null, shown: null, briefId: null, loading: false, lastLoad: 0 };
+const STATE = { clients: [], client: null, shown: null, briefId: null, loading: false, lastLoad: 0, read: null };
 
 /* Rung 7: the number has a heartbeat. It ticks up once, from the last number of
    the same kind this device saw, to where it is now. A change of basis is not a
@@ -1650,7 +1736,7 @@ function renderScore(c){
   const billed = P.billedTotal(c.invoices);
   if (billed > 0) more.push(`<span>Billed since day one: <b>${usd(billed)}</b>.</span>`);
   const v = c.value;
-  if (!pre && v && Number(v.identified_unbanked) > 0) more.push(`<span><b>${usd(v.identified_unbanked)}</b> found, not yet measured: moves made and claims filed. They count in the month your exports or Amazon read them back, and not before.</span>`);
+  if (!pre && v && Number(v.identified_unbanked) > 0) more.push(`<span><b>${usd(v.identified_unbanked)}</b> ${P.foundNote(P.channelsOf(c.client.platform))}</span>`);
   if (!pre && v && Number(v.recovered_unattributed) > 0) more.push(`<span>Amazon also paid <b>${usd(v.recovered_unattributed)}</b> without a claim from us. It is yours either way, and not counted here.</span>`);
   $("#score-more").innerHTML = more.join("");
 
@@ -1919,12 +2005,13 @@ function renderFans(list){
 }
 
 /* ── inventory economics ── */
-function renderInvEcon(ie){
+function renderInvEcon(ie, channel){
   if (!ie) return;
   const tiles = $("#inv-tiles"); tiles.innerHTML = "";
   const tile = (v, label, cls = "") => tiles.insertAdjacentHTML("beforeend", `<div class="o"><b class="${cls}">${v}</b><span>${label}</span></div>`);
   const b = ie.bleed || {};
-  tile(money(b.total_month), "fee bleed per month", Number(b.total_month) > 0 ? "neg" : "");
+  /* a store with no fee cliffs has no fee bleed to show: a $0 tile there says nothing true */
+  if (ie.fee_schedule_effective) tile(money(b.total_month), "fee bleed per month", Number(b.total_month) > 0 ? "neg" : "");
   if (Number(b.aged_surcharge_month) > 0) tile(money(b.aged_surcharge_month), `aged-inventory surcharge · ${ie.aged_units_181_plus} units past 181 days`);
   if (Number(b.low_inventory_fee_month) > 0) tile(money(b.low_inventory_fee_month), `low-inventory fee · ${ie.n_low_inventory_fee_risk} SKU${ie.n_low_inventory_fee_risk === 1 ? "" : "s"} thin`);
   if (Number(b.peak_storage_premium_month) > 0) tile(money(b.peak_storage_premium_month), "Oct–Dec storage premium, projected");
@@ -1933,7 +2020,7 @@ function renderInvEcon(ie){
   if ((ie.econ_orders || []).length){
     orders.innerHTML = `<span class="label" style="margin-bottom:6px">Purchase orders the money justifies</span>`;
     for (const o of ie.econ_orders){
-      orders.insertAdjacentHTML("beforeend", `<div class="claim" style="grid-template-columns: 1fr 90px 110px 140px">
+      orders.insertAdjacentHTML("beforeend", `<div class="claim econ-order">
         <span class="s-sku">${esc(o.sku)}</span>
         <span class="num">${o.qty} units</span>
         <span class="num">${money(o.wire)}</span>
@@ -1945,13 +2032,12 @@ function renderInvEcon(ie){
     liq.classList.remove("hidden");
     liq.innerHTML = `<span class="label" style="margin-bottom:6px">Liquidate rather than hold</span>`;
     for (const c of ie.liquidation_candidates){
-      liq.insertAdjacentHTML("beforeend", `<div class="claim" style="grid-template-columns: 1fr 90px 1fr">
+      liq.insertAdjacentHTML("beforeend", `<div class="claim econ-liq">
         <span class="s-sku">${esc(c.sku)}</span><span class="num">${c.units} units</span>
         <span class="hint">liquidate now ${money(c.liquidate_value)} vs hold ${money(c.hold_npv)} (discounted, storage and surcharge included)</span></div>`);
     }
   } else liq.classList.add("hidden");
-  const sl = (ie.service_levels || []).slice(0, 3).map((s) => `${esc(s.sku)} ${(Number(s.critical_fractile) * 100).toFixed(0)}%`).join(", ");
-  $("#inv-note").textContent = `Service levels are set by the money, SKU by SKU: q* = C_u ÷ (C_u + C_o), the cost of a lost sale against the cost of a unit left over — storage at the ${ie.fee_schedule_effective} rate card, capital, and the season priced in${sl ? ` (${sl})` : ""}. ${ie.inventory_age_on_file ? "Aged-inventory and storage figures are Amazon's own estimates from your Inventory Age export." : "Amazon accounts: upload the Inventory Age export and Amazon's own surcharge estimates replace the rate-card figures."}`;
+  $("#inv-note").textContent = P.invNote(ie, channel);
   $("#inv-sect").classList.remove("hidden");
 }
 
@@ -1988,8 +2074,10 @@ function renderConcentration(c){
   $("#conc-note").textContent = `Your catalog behaves like ${Number(c.effective_n).toFixed(1)} equally-sized SKUs. ${esc(c.top_item)} carries ${(Number(c.top_share) * 100).toFixed(0)}% of revenue${c.dollar_at_risk_top_item != null ? ` — one suppressed listing costs ${money(c.dollar_at_risk_top_item)} of profit a period` : ""}. The 1,800 line is the regulators' own definition of "highly concentrated".`;
   $("#conc").classList.remove("hidden");
 }
-function renderAnomalies(a){
+function renderAnomalies(a, channel){
   if (!a || !(a.top || []).length) return;
+  $("#anom-title").textContent = P.anomTitle(channel);
+  $("#anom-note").textContent = P.anomNote(channel);
   $("#anom-chip").textContent = `${a.flagged} flagged · ${money(a.dollar_impact_total)} per period`;
   const rows = $("#anom-rows"); rows.innerHTML = "";
   for (const r of a.top){
@@ -2012,15 +2100,16 @@ function renderAnomalies(a){
 }
 
 /* ── the chart pack: engine-computed series, drawn here ── */
-function renderPack(pack){
+function renderPack(pack, channel){
   if (!pack) return;
+  $("#pricing-hint").textContent = P.pricingHint(channel);
   try { renderHealth(pack.health); } catch {}
   try { renderMoneyFound(pack.money_found); } catch {}
   try { if (pack.forecast_fans?.length) renderFans(pack.forecast_fans); } catch {}
-  try { renderInvEcon(pack.inventory_econ); } catch {}
+  try { renderInvEcon(pack.inventory_econ, channel); } catch {}
   try { renderRisk(pack.risk); } catch {}
   try { renderConcentration(pack.risk?.concentration); } catch {}
-  try { renderAnomalies(pack.anomalies); } catch {}
+  try { renderAnomalies(pack.anomalies, channel); } catch {}
   if (pack.waterfall){
     renderWaterfall(pack.waterfall);
     if (pack.sku_stacks?.length) renderStacks(pack.sku_stacks);
@@ -2037,6 +2126,35 @@ function renderPack(pack){
     $("#ads-sect").classList.remove("hidden");
   }
   if (pack.risk_map?.length) { renderRiskMap(pack.risk_map); $("#riskmap").classList.remove("hidden"); }
+}
+
+/* ── one read per store: a store on both chooses which read the sections below show ── */
+const PACK_SECTIONS = ["#health-sect", "#found-sect", "#fc-sect", "#inv-sect", "#inv-liq", "#risk", "#conc", "#anom",
+  "#money-sect", "#pricing-sect", "#ads-sect", "#bleed-wrap", "#brand-wrap", "#riskmap"];
+function riskEmpty(){
+  $("#risk-empty").hidden = ["#horizon", "#risk", "#conc", "#anom", "#riskmap"].some((sel) => !$(sel).classList.contains("hidden"));
+}
+function renderReads(reads, client){
+  const stores = P.channelsOf(client.platform);
+  const both = stores.length > 1;
+  const sw = $("#pack-switch"), label = $("#pack-label"), pick = $("#pack-pick");
+  const show = (i) => {
+    for (const sel of PACK_SECTIONS) $(sel).classList.add("hidden");
+    const r = reads[i] || null;
+    if (r) { try { renderPack(r.pack.payload, r.channel); } catch {} }
+    sw.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+    label.textContent = both && r ? P.packLabel(r.channel, r.pack.created_at) : "";
+    STATE.read = r ? r.channel : null;
+    riskEmpty();
+  };
+  pick.hidden = !both;
+  if (both){
+    const missing = stores.filter((c) => !reads.some((r) => r.channel === c));
+    sw.innerHTML = reads.map((r) => `<button type="button" aria-pressed="false">${esc(P.STORE[r.channel])}</button>`).join("")
+      + (missing.length ? `<span class="hint">${esc(missing.map((c) => P.STORE[c]).join(" and "))}: no read yet</span>` : "");
+    sw.querySelectorAll("button").forEach((b, j) => b.addEventListener("click", () => show(j)));
+  }
+  show(Math.max(0, reads.findIndex((r) => r.channel === STATE.read)));
 }
 
 /* ── the cash horizon — percentile cone from the desk_cash RPC ── */
@@ -2153,6 +2271,13 @@ async function loadNow(){
      cannot be scoped, so a login with several workspaces goes without them. */
   const f = `client_id=eq.${encodeURIComponent(client.id)}`;
   const single = clients.length === 1;
+  const stores = P.channelsOf(client.platform);
+  /* the rules' example of a direct dollar, for the store this is */
+  const directLi = [...document.querySelectorAll("#method-fold li")].find((li) => li.textContent.startsWith("Direct."));
+  if (directLi){
+    if (!directLi.dataset.amazon) directLi.dataset.amazon = directLi.innerHTML;
+    directLi.innerHTML = P.directLine(stores) || directLi.dataset.amazon;
+  }
   const [directives, pace, ptests, alerts, briefs, uploads, plans, initiatives, cashRows, packRows, packs,
          monthRows, invoices, sealRows, recordHead, consents, cogs, caps] = await Promise.all([
     rest(`/rest/v1/directives?select=*&${f}&order=created_at.desc`),
@@ -2164,7 +2289,7 @@ async function loadNow(){
     rest(`/rest/v1/plans?select=*&${f}&status=eq.active&order=created_at.desc&limit=1`),
     rest(`/rest/v1/initiatives?select=*&${f}&order=sort`),
     single ? rpc("desk_cash") : null,
-    maybe(`/rest/v1/chart_packs?select=payload,created_at,run_id&${f}&order=created_at.desc&limit=1`),
+    maybe(`/rest/v1/chart_packs?select=payload,created_at,run_id&${f}&order=created_at.desc&limit=${stores.length > 1 ? 6 : 1}`),
     maybe(`/rest/v1/chart_packs?select=run_id,created_at&${f}&order=created_at.desc&limit=4`),
     maybe(`/rest/v1/record_months?select=*&${f}&order=month_index.asc`),
     maybe(`/rest/v1/invoices?select=status,amount_due,amount_paid,refunded_usd,issued_at,paid_at,voided_at,period_start,period_end,gate_month_index,gate_decision,created_at&${f}`)
@@ -2178,6 +2303,11 @@ async function loadNow(){
 
   const months = P.monthsOf(monthRows || []);
   const pack = packRows?.[0] || null;
+  /* a store on both: which run each read came from says which store it is */
+  const runIds = (packRows || []).map((r) => r.run_id).filter((x) => /^[0-9a-f-]{36}$/i.test(String(x)));
+  const runs = stores.length > 1 && runIds.length
+    ? await maybe(`/rest/v1/model_runs?select=id,params&${f}&id=in.(${runIds.join(",")})`) : null;
+  const reads = P.packsByChannel(packRows || [], runs || [], client.platform);
   const stage = P.stageOf(client, caps?.call_at || null, now);
   const seals = P.sealsByMove(sealRows || []);
   /* The head printed is the latest global head, which every later export of
@@ -2200,7 +2330,7 @@ async function loadNow(){
   $("#kept").innerHTML = P.PRINT_FOOT(head);
 
   try { renderHorizon(cashRows || []); } catch {}
-  try { renderPack(pack?.payload); } catch {}
+  try { renderReads(reads, client); } catch {}
   try { renderDumbbells(directives); } catch {}
   const plan = plans[0] ?? null;
   const planInits = plan ? initiatives.filter((i) => i.plan_id === plan.id) : [];
@@ -2332,7 +2462,7 @@ async function loadNow(){
   }
 
   /* the watch: warnings and urgent items from the last thirty days, each with
-     its age, newest first; the price tests running under the Buy Box watch */
+     its age, newest first; the price tests running, each with what is read while it runs */
   const wl = $("#watchlist");
   wl.innerHTML = "";
   const watchItems = [];
@@ -2345,7 +2475,8 @@ async function loadNow(){
     });
   }
   for (const t of ptests.filter((t) => t.status === "running")){
-    watchItems.push({ order: 1, html: `<span class="what">${esc(ctx.names[t.sku] || t.sku)} — price test</span><span class="chip watching">Buy Box watched while live</span>` });
+    const read = P.STEP_READ[P.testChannel(t, directives, client.platform)];
+    watchItems.push({ order: 1, html: `<span class="what">${esc(ctx.names[t.sku] || t.sku)} — price test</span>${read ? `<span class="chip watching">${esc(read.chip)}</span>` : ""}` });
   }
   watchItems.sort((a, b) => a.order - b.order).slice(0, 8).forEach((w) => {
     const el = document.createElement("div");
@@ -2369,7 +2500,10 @@ async function loadNow(){
     events.push({ t: d.auto_approved_at, what: `Approved inside your standing mandate when the veto window closed: ${clip(d.action_text, 70)}` });
   for (const d of directives.filter((x) => x.executed_at).slice(0, 5))
     events.push({ t: d.executed_at, what: `Made in your account: ${clip(d.action_text, 70)}` });
-  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${ctx.names[t.sku] || t.sku}; Buy Box watched while the step is live` });
+  for (const t of ptests.filter((t) => t.start_date)){
+    const read = P.STEP_READ[P.testChannel(t, directives, client.platform)];
+    events.push({ t: t.start_date, what: `Price test opened on ${ctx.names[t.sku] || t.sku}` + (read ? `; ${read.log}` : "") });
+  }
   events.sort((a, b) => String(b.t).localeCompare(String(a.t)));
   const log = $("#log");
   log.innerHTML = events.length ? "" : `<p class="hint">Work appears here as it happens.</p>`;
@@ -2387,18 +2521,20 @@ async function loadNow(){
   /* evidence: the client's own price tests — the full report carries the rest */
   const pt = $("#ptests");
   pt.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
+  $("#pt-watch").textContent = P.priceTestColumn(stores);
   for (const t of ptests){
-    const drop = t.buy_box_share_before != null && t.buy_box_share_during != null
+    const channel = P.testChannel(t, directives, client.platform);
+    const drop = channel === "amazon" && t.buy_box_share_before != null && t.buy_box_share_during != null
       && Number(t.buy_box_share_before) - Number(t.buy_box_share_during) >= 10;
     pt.insertAdjacentHTML("beforeend", `<tr>
       <td>${esc(ctx.names[t.sku] || t.sku)}</td>
       <td class="num">$${Number(t.baseline_price).toFixed(2)} → $${Number(t.test_price).toFixed(2)}</td>
       <td>${t.start_date ?? "—"} .. ${t.end_date ?? "—"}</td>
-      <td class="num ${drop ? "risk" : ""}">${t.buy_box_share_before ?? "—"}% → ${t.buy_box_share_during ?? "—"}%</td>
+      <td class="num ${drop ? "risk" : ""}">${esc(P.priceTestCell(t, channel, stores.length > 1))}</td>
       <td>${esc(t.status)}</td>
     </tr>`);
   }
-  $("#risk-empty").hidden = ["#horizon", "#risk", "#conc", "#anom", "#riskmap"].some((sel) => !$(sel).classList.contains("hidden"));
+  riskEmpty();
 }
 
 /* ── freshness: read again when the page comes back into view, and at most

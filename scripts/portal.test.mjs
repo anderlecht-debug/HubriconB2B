@@ -353,3 +353,78 @@ test("no retired word and no untrue line in what the client reads", () => {
     assert.ok(!html.includes(untrue), `"${untrue}" is back`);
   }
 });
+
+// ── a Shopify store, met as one (2026-10-01) ─────────────────────────────────
+
+test("what is read while a price step is live: the Buy Box on Amazon, the orders on Shopify, nothing claimed when unknown", () => {
+  same(P.channelsOf("both"), ["amazon", "shopify"]);
+  same(P.channelsOf("shopify"), ["shopify"]);
+  same(P.channelsOf(null), ["amazon"]);
+  const dirs = [{ id: "d1", channel: "shopify" }, { id: "d2", channel: "amazon" }];
+  assert.equal(P.testChannel({ directive_id: "d1" }, dirs, "both"), "shopify", "the move the test carries out names the store");
+  assert.equal(P.testChannel({ directive_id: "d2" }, dirs, "both"), "amazon");
+  assert.equal(P.testChannel({}, dirs, "shopify"), "shopify", "a single store's test is that store's");
+  assert.equal(P.testChannel({}, dirs, "both"), null, "on both, an unlinked test is not guessed");
+  const t = { buy_box_share_before: 92, buy_box_share_during: 80 };
+  assert.equal(P.priceTestCell(t, "amazon", false), "92% → 80%", "an Amazon store's column is unchanged");
+  assert.equal(P.priceTestCell(t, "amazon", true), "Buy Box 92% → 80%");
+  assert.equal(P.priceTestCell({}, "shopify", false), "your orders");
+  assert.equal(P.priceTestCell(t, null, true), "—");
+  assert.equal(P.priceTestColumn(["amazon"]), "Buy Box");
+  assert.equal(P.priceTestColumn(["shopify"]), "Read on");
+  assert.equal(P.priceTestColumn(["amazon", "shopify"]), "Watched");
+  assert.equal(P.STEP_READ.shopify.chip, "read on your orders");
+  assert.match(P.pricingHint("shopify"), /each step is read on your orders/);
+  assert.doesNotMatch(P.pricingHint("shopify"), /Buy Box|conversion/);
+  assert.match(P.pricingHint("amazon"), /with the Buy Box watched while a step is live\.$/);
+  // nothing on the page says a Shopify conversion rate is watched: nothing ingests one
+  assert.doesNotMatch(html, /conversion rate[^.<]*watched|Buy Box watched while live` \}\);|Buy Box watched while the step is live` \}\);/);
+  assert.match(script, /P\.STEP_READ\[P\.testChannel\(t, directives, client\.platform\)\]/);
+});
+
+test("a Shopify store is never told about a rate card it does not have, or shown a $0 fee bleed", () => {
+  const ie = { fee_schedule_effective: null, inventory_age_on_file: false, service_levels: [{ sku: "MUG", critical_fractile: 0.91 }] };
+  const shop = P.invNote(ie, "shopify");
+  assert.doesNotMatch(shop, /null|rate card|Inventory Age|Amazon accounts/);
+  assert.match(shop, /MUG 91%/);
+  assert.match(shop, /No storage fee or fee cliff is priced for your store/);
+  assert.equal(P.invNote(ie, "amazon"), shop, "no schedule on file is the same as no schedule, whichever store");
+  const amazon = P.invNote({ ...ie, fee_schedule_effective: "2026-01-15" }, "amazon");
+  assert.match(amazon, /storage at the 2026-01-15 rate card/);
+  assert.match(amazon, /Upload the Inventory Age export/);
+  assert.match(script, /if \(ie\.fee_schedule_effective\) tile\(money\(b\.total_month\), "fee bleed per month"/);
+  assert.equal(P.anomTitle("shopify"), "Fee creep and spend shifts");
+  assert.doesNotMatch(P.anomNote("shopify"), /conversion|traffic/, "no traffic or conversion series exists for a Shopify store");
+});
+
+test("the rules' example of a direct dollar is the only one measurement.py grades direct, so Shopify gets none", () => {
+  const engine = read("engine/src/hubricon_engine/measurement.py");
+  assert.equal((engine.match(/attribution="direct"/g) || []).length, 1, "measurement.py grades one thing direct");
+  assert.match(engine, /def measure_recovery_filing[\s\S]*?attribution="direct"/, "and it is an Amazon reimbursement");
+  assert.equal(P.directLine(["amazon"]), null, "a store with Amazon keeps the rules word for word");
+  assert.equal(P.directLine(["amazon", "shopify"]), null);
+  assert.equal(strip(P.directLine(["shopify"])), "Direct. The platform's own record shows the money moved. Counted in full.");
+  assert.doesNotMatch(P.directLine(["shopify"]), /Amazon|chargeback/i);
+  assert.match(script, /li\.textContent\.startsWith\("Direct\."\)/);
+  assert.doesNotMatch(P.foundNote(["shopify"]), /Amazon|claims/);
+  assert.match(P.foundNote(["amazon"]), /claims filed/);
+});
+
+test("a store on both gets one read per channel, each labelled, and the switch between them", () => {
+  const packs = [
+    { run_id: "r3", created_at: "2026-09-28T11:20:00Z", payload: { n: 3 } },
+    { run_id: "r2", created_at: "2026-09-28T11:05:00Z", payload: { n: 2 } },
+    { run_id: "r1", created_at: "2026-09-21T11:05:00Z", payload: { n: 1 } },
+  ];
+  const runs = [{ id: "r3", params: { channel: "shopify" } }, { id: "r2", params: { channel: "amazon" } }, { id: "r1", params: { channel: "amazon" } }];
+  const reads = P.packsByChannel(packs, runs, "both");
+  same(reads.map((r) => [r.channel, r.pack.run_id]), [["amazon", "r2"], ["shopify", "r3"]], "the newest of each store");
+  assert.match(P.packLabel("shopify", "2026-09-28"), /^Below: your Shopify store, from its read of Sep 28\./);
+  same(P.packsByChannel(packs, [], "amazon").map((r) => r.pack.run_id), ["r3"], "a single store needs no run lookup");
+  same(P.packsByChannel(packs, [], "both"), [], "on both, a read whose store is unknown is not shown as either");
+  const load = script.slice(script.indexOf("async function loadNow"), script.indexOf("/* ── freshness"));
+  assert.match(load, /\/rest\/v1\/model_runs\?select=id,params&\$\{f\}&id=in\./, "the run lookup is scoped to the workspace");
+  assert.match(load, /limit=\$\{stores\.length > 1 \? 6 : 1\}/);
+  assert.match(load, /renderReads\(reads, client\)/);
+  assert.match(html, /<section id="pack-pick" hidden>[\s\S]*<nav class="pack-switch" id="pack-switch" aria-label="Which store.s read"><\/nav>[\s\S]*<\/section>\s*<section id="money-sect"/, "the switch heads the sections that come from a read");
+});
