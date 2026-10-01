@@ -1807,3 +1807,56 @@ bills (in arrears). Two things to know:
   `disputed_usd` (the trigger allows only that, and only upward). Do it in the Supabase
   editor until a CLI command exists; the gate and the exit true-up read the month after
   disputes.
+
+## /learn: the courses (since 2026-09-30)
+
+`HUBRICON_SPEC.md` ("Education hub"): one complete course before any second, one email to
+enter, everything inside open, three columns, templates before videos, linked from footers
+only. What exists:
+
+| Piece | Where |
+|---|---|
+| The hub, one card per course that exists | `learn/index.html` |
+| Course 1, **The Fee Staircase**: eight lessons, the five beats of the case study taught end to end | `learn/fee-staircase.html`, `assets/learn.js` |
+| Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
+| The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
+
+**Every figure is built, none typed.** The lessons' numbers are `data-fill` keys and the two
+fee cards are build blocks, all computed by `scripts/build-pages.mjs` (`learnFigures`) from
+`ratecard.json` and the case study through `lib/fees.js`; the worked examples are invented
+listings, priced the same way, and say so. `node scripts/build-pages.mjs` rebuilds the page.
+
+**The spreadsheet is the engine's arithmetic in cells.** `scripts/learn/fee_staircase_template.py`
+writes it from `ratecard.json` and the storage schedule; `scripts/learn/verify_fee_staircase.py`
+recalculates a copy in LibreOffice and holds it to the 41 golden cases that pin `lib/fees.js` to
+the Python (tier, dimensional and billable weight, both cards' fees, the band edge, the rank
+curve, all four edges' gap per unit), then `--publish` rebuilds the shipped file with its
+values and writes `scripts/learn/fee-staircase.stamp.json`. `scripts/learn/learn.test.mjs`
+fails when `ratecard.json` or the file has moved since. When Amazon publishes a new card:
+
+    uv run --no-project --with openpyxl python scripts/learn/verify_fee_staircase.py --publish
+    node scripts/build-pages.mjs
+
+One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth
+decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a
+hundredth of a cent; every figure agrees to the cent.
+
+**The gate.** The email opens the course in the browser (`localStorage`, key
+`hubricon.learn`) whatever the server says, except a 400 for a bad address: a fault of ours
+never locks a reader out. Without scripts every lesson shows in order. A new sign-up gets one
+email (the link and the spreadsheet, Resend, with RFC 8058 one-click unsubscribe headers); a
+repeat gets nothing. Notes "a new course is out" go only to addresses with no unsubscribed
+row. Privacy §1 "Courses" and §8 describe exactly this.
+
+**Before it is live:** apply `20261001000002_learners.sql`; `RESEND_API_KEY` and
+`POSTAL_ADDRESS` set in Vercel (without the key the sign-up is kept and no email goes). The
+founder reads the eight lessons first: the insight is his (spec, "You own the script").
+
+**Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
+pattern with `data-course`, a card in `learn/index.html`, its page in `PAGES` if it carries
+figures. `lib/learn.test.mjs` refuses a listed course whose page or template is missing, and
+`scripts/learn/learn.test.mjs` refuses a hub card for a course that is not listed.
+
+An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired
+look), is parked: it runs on the seller's own reports, so it is not the public-data first
+course the spec asks for. It is a candidate for a later course, rebuilt on the design system.

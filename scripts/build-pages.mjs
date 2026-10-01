@@ -19,6 +19,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
 import { monteCarloSVG, staircaseSVG, agingSVG, usd } from "../assets/charts.mjs";
+import { STORAGE } from "./case-study.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), "utf8");
@@ -58,7 +59,9 @@ export function figures(rc, mc, cs) {
   };
 
   const end = mc.months.length - 1;
+  const learn = learnFigures(rc, cs);
   const blocks = {
+    ...learn.blocks,
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
     "mc-mood-narrow": monteCarloSVG(mc, { id: "mc-mood-n", w: 360, h: 200, m: { t: 6, r: 6, b: 6, l: 6 }, paths: 20, variant: "mood" }),
@@ -107,6 +110,116 @@ export function figures(rc, mc, cs) {
       card_np_full: `${longDate(cs.cards.non_peak.effective).replace(/, \d{4}$/, "")} to ${longDate(cs.cards.non_peak.through).replace(/, \d{4}$/, "")}`,
       card_peak_full: `${longDate(cs.cards.peak.effective).replace(/, \d{4}$/, "")} to ${longDate(cs.cards.peak.through).replace(/, \d{4}$/, "")}`,
       storage_effective: longDate(cs.aging.storage_effective),
+      ...learn.fill,
+    },
+  };
+}
+
+/**
+ * The Fee Staircase course's figures (/learn/fee-staircase). The cards as tables,
+ * and the worked examples, each priced here by lib/fees.js on the published card so
+ * the lesson's arithmetic and the engine's are the same arithmetic. The examples
+ * are invented listings and the lessons say so; the case study's figures come from
+ * the fill keys above.
+ */
+function learnFigures(rc, cs) {
+  const day = cs.priced_on;                                    // non-peak, after the fuel surcharge began
+  const nonPeak = fees.cardNamed(rc, "non_peak"), peak = fees.cardNamed(rc, "peak");
+  const BAND_PRICE = [9.99, 25, 99];                            // one price inside each column
+  const fee = (card, tier, oz, price) => fees.fulfilmentFee(rc, tier, oz, price, day, card);
+  const cents = (v) => `$${v.toFixed(2)}`;
+  const shortCard = (c) => `${shortDate(c.effective)} to ${shortDate(c.through)}`;
+
+  const table = (tier, caption, label) => {
+    const rows = (tier === "small_standard" ? nonPeak.small_standard : nonPeak.large_standard).map(([edge]) => edge);
+    const head = `<thead><tr><th scope="col" rowspan="2">Up to</th><th scope="colgroup" colspan="3">${shortCard(nonPeak)}</th><th scope="colgroup" colspan="3">${shortCard(peak)}</th></tr>` +
+      `<tr>${["Under $10", "$10 to $50", "Over $50"].map((b) => `<th scope="col">${b}</th>`).join("").repeat(2)}</tr></thead>`;
+    const oz = (e) => (e % 16 === 0 && e >= 16 ? `${e / 16} lb` : `${e} oz`);
+    const body = rows.map((edge) => `<tr><th scope="row">${oz(edge)}</th>${[nonPeak, peak].flatMap((card) => BAND_PRICE.map((p) => `<td>${cents(fee(card, tier, edge, p))}</td>`)).join("")}</tr>`).join("");
+    let tail = "";
+    if (tier === "large_standard") {
+      const base = [nonPeak, peak].flatMap((card) => BAND_PRICE.map((p) => `<td>${cents(fee(card, tier, 48.01, p) - card.over_3lb_per_4oz * (1 + rc.fba.fuel_surcharge))}</td>`)).join("");
+      tail = `<tr class="over"><th scope="row">Over 3 lb, base</th>${base}</tr>`;
+    }
+    return `\n<div class="card-table" role="region" aria-label="${label}" tabindex="0"><table>\n<caption>${caption}</caption>\n${head}\n<tbody>${body}${tail}</tbody>\n</table></div>\n`;
+  };
+
+  // The price edges, across every standard-size row of the card in force.
+  const jumps = (from, to) => {
+    const out = [];
+    for (const tier of ["small_standard", "large_standard"]) {
+      for (const [edge] of nonPeak[tier]) out.push(fee(nonPeak, tier, edge, BAND_PRICE[to]) - fee(nonPeak, tier, edge, BAND_PRICE[from]));
+    }
+    return [Math.min(...out), Math.max(...out)];
+  };
+  const peakSteps = [];
+  for (const tier of ["small_standard", "large_standard"]) {
+    for (const [edge] of nonPeak[tier]) peakSteps.push(fee(peak, tier, edge, 25) - fee(nonPeak, tier, edge, 25));
+  }
+  const ten = jumps(0, 1);
+
+  // Worked example: the price edge. An invented 13 oz kitchen item at $10.49.
+  const px = fees.describeItem(rc, { price: 10.49, category: "kitchen & dining", itemWeightOz: 13, dims: "9 x 6 x 2" });
+  const pxFind = fees.priceBandEdge(rc, nonPeak, px, day);
+  const pxHi = fee(nonPeak, px.tier, px.billableWeightOz, px.price), pxLo = fee(nonPeak, px.tier, px.billableWeightOz, pxFind.evidence.targetPrice);
+  // The size tier: an invented 6 oz item, 15 × 12 × 0.9 in, at $12.99.
+  const tr = fees.describeItem(rc, { price: 12.99, category: "kitchen & dining", itemWeightOz: 6, dims: "15 x 12 x 0.9" });
+  const trFind = fees.sizeTierEdge(rc, nonPeak, tr, day);
+  // The box: an invented 4 lb item in an 18 × 14 × 7 in box, at $39.99.
+  const bx = fees.describeItem(rc, { price: 39.99, category: "home & kitchen", itemWeightOz: 64, dims: "18 x 14 x 7" });
+  const bxFind = fees.dimWeightOverage(rc, nonPeak, bx, day);
+  if (!pxFind || !trFind || !bxFind) throw new Error("a /learn worked example no longer finds its edge on the card; rewrite the example");
+  const tens = (v) => n(Math.round(v / 10) * 10);
+  const u = (rank, cat) => fees.estimateUnits(rc, rank, cat);
+  const band = (from) => cs.aging.bands.find((b) => b.from === from);
+  const aged = (from) => dollars2(band(from).surcharge_per_cuft);
+
+  return {
+    blocks: {
+      "learn-card-small": table("small_standard", "Small standard: fulfilment fee per unit, with the fuel and logistics surcharge", "Small standard fee card"),
+      "learn-card-large": table("large_standard", "Large standard: fulfilment fee per unit, with the fuel and logistics surcharge", "Large standard fee card"),
+    },
+    fill: {
+      learn_rc_date: longDate(rc.generated),
+      learn_over3: cents(nonPeak.over_3lb_per_4oz),
+      learn_ten_min: cents(ten[0]),
+      learn_ten_max: cents(ten[1]),
+      learn_peak_min: cents(Math.min(...peakSteps)),
+      learn_peak_max: cents(Math.max(...peakSteps)),
+      learn_px_fee_hi: cents(pxHi),
+      learn_px_fee_lo: cents(pxLo),
+      // Three places, so the lesson's subtraction adds up on the page.
+      learn_px_jump: `$${pxFind.evidence.feeJumpLow.toFixed(3)}`,
+      learn_px_given: `$${((px.price - pxFind.evidence.targetPrice) * (1 - pxFind.evidence.referralRate)).toFixed(3)}`,
+      learn_px_net: `$${pxFind.perUnitLow.toFixed(3)}`,
+      learn_px_be: cents(pxFind.evidence.breakEvenPrice),
+      learn_tier_small: cents(trFind.evidence.smallFee),
+      learn_tier_large: cents(trFind.evidence.largeFee),
+      learn_tier_gap: cents(trFind.perUnitLow),
+      learn_box_dim_lb: (bx.dimWeightOz / 16).toFixed(1),
+      learn_box_fee_dim: cents(fee(nonPeak, bx.tier, bx.dimWeightOz, bx.price)),
+      learn_box_fee_item: cents(fee(nonPeak, bx.tier, bx.itemWeightOz, bx.price)),
+      learn_box_gap: cents(bxFind.perUnitLow),
+      learn_uc_a: String(rc.units_curve.a),
+      learn_uc_b: String(rc.units_curve.b),
+      learn_uc_knee: n(rc.units_curve.head_knee),
+      learn_u_5000: tens(u(5000, "kitchen & dining")),
+      learn_u_5000_lo: tens(u(5000, "kitchen & dining") * fees.UNITS_LOW),
+      learn_u_5000_hi: tens(u(5000, "kitchen & dining") * fees.UNITS_HIGH),
+      learn_u_30000: tens(u(30000, "home & kitchen")),
+      learn_u_800: tens(u(800, "beauty & personal care")),
+      learn_stor_off: dollars2(STORAGE.per_cuft_month.offpeak),
+      learn_stor_peak: dollars2(STORAGE.per_cuft_month.peak),
+      learn_aged_181: aged(181),
+      learn_aged_211: aged(211),
+      learn_aged_301: aged(301),
+      learn_aged_331: aged(331),
+      learn_aged_366: aged(366),
+      learn_aged_min: dollars2(STORAGE.aged_min_per_unit_366),
+      learn_cliff_x: (band(271).surcharge_per_cuft / band(241).surcharge_per_cuft).toFixed(1),
+      learn_cs_cuft: cs.aging.cubic_feet_per_unit.toFixed(3),
+      learn_cs_270: dollars2(band(241).per_1000_units_month),
+      learn_cs_271: dollars2(band(271).per_1000_units_month),
     },
   };
 }
@@ -147,7 +260,7 @@ export function build(html, built, { requireAllFills = false, name = "page" } = 
     return `${open}${built.fill[key]}${close}`;
   });
   if (requireAllFills) {
-    const unused = Object.keys(built.fill).filter((k) => !used.has(k) && !OTHER_PAGES_ONLY.has(k));
+    const unused = Object.keys(built.fill).filter((k) => !used.has(k) && !OTHER_PAGES_ONLY.has(k) && !k.startsWith("learn_"));
     if (unused.length) throw new Error(`${name}: figures computed but never shown: ${unused.join(", ")}`);
   }
   out = out.replace(/(<!-- build:faq-jsonld -->)[\s\S]*?(<!-- \/build:faq-jsonld -->)/, (_, a, z) => `${a}\n${faqJsonLd(out)}\n${z}`);
@@ -162,6 +275,7 @@ export const PAGES = [
   { file: "honesty.html" },
   { file: "terms.html" },
   { file: "portal.html" },
+  { file: "learn/fee-staircase.html" },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

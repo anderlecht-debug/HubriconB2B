@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fee Staircase — a free course from Hubricon</title>
+<meta name="description" content="Find what Amazon's fee steps cost any listing, from five numbers on its public page. Eight lessons and a spreadsheet template, free. The 2026 cards, the four edges, volume from rank, ten thousand months, and the 271-day cliff.">
+<link rel="canonical" href="https://www.hubricon.com/learn/fee-staircase">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/learn/fee-staircase">
+<meta property="og:title" content="The Fee Staircase — a free course from Hubricon">
+<meta property="og:description" content="Find what Amazon's fee steps cost any listing, from five numbers on its public page. Eight lessons and the spreadsheet, free.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<script>
+/* Before first paint: scripts are running (so the lessons wait behind the email), the
+   visitor may already be in, and motion is allowed unless they asked for less. */
+(function (d) {
+  d.classList.add("js");
+  try { if ((JSON.parse(localStorage.getItem("hubricon.learn") || "{}").courses || {})["fee-staircase"]) d.classList.add("learn-in"); } catch (e) {}
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+<style>
+/* /learn/<course>: three columns, the lesson list, the lesson, the standing invitation.
+   Every value is a token from /assets/hubricon.css. */
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding-block: var(--s-5); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.crumb { font-size: var(--t-14); color: var(--ink-3); text-decoration: none; }
+.crumb:hover { color: var(--ink); }
+.course-wrap { width: min(1280px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+
+.course { display: grid; grid-template-columns: 232px minmax(0, 1fr) 248px; gap: var(--s-7); align-items: start; padding-block: var(--s-6) var(--section); }
+
+/* left: the lessons */
+.toc { position: sticky; top: var(--s-5); }
+.toc summary { display: none; }
+.toc ol { list-style: none; border-top: 1px solid var(--rule); }
+.toc li { border-bottom: 1px solid var(--rule); }
+.toc a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--s-2); padding: var(--s-3) 0; text-decoration: none; color: var(--ink-2); font-size: var(--t-14); line-height: 1.4; }
+.toc a .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.toc a:hover { color: var(--ink); }
+.toc a[aria-current="true"] { color: var(--ink); font-weight: var(--strong); }
+.toc a[aria-current="true"] .n { color: var(--blue); }
+.toc a.seen::after { content: "✓"; color: var(--ink-4); }
+.toc .course-name { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-3); }
+.toc .tpl-link { display: block; margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-2); }
+
+/* centre */
+.lesson-col { min-width: 0; }
+.cover h1 { margin-top: var(--s-3); font-size: var(--t-display-m); max-width: 14ch; }
+.cover .lede { margin-top: var(--s-5); }
+.outcomes { margin-top: var(--s-6); list-style: none; display: grid; gap: var(--s-3); max-width: 60ch; }
+.outcomes li { padding-left: var(--s-5); position: relative; font-size: var(--t-16); }
+.outcomes li::before { content: ""; position: absolute; left: 0; top: 12px; width: 10px; height: 2px; background: var(--ink); }
+.join { margin-top: var(--s-7); max-width: 560px; padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); }
+.join label { display: block; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-2); }
+.join .row { display: flex; gap: var(--s-3); }
+.join input[type="email"] { flex: 1; min-width: 0; min-height: 52px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
+.join input[type="email"]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.join .fine { margin-top: var(--s-4); font-size: var(--t-14); color: var(--ink-3); line-height: 1.55; }
+.join .fine a { color: var(--ink-2); }
+.join .err { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink); font-weight: var(--strong); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.cover .contents { margin-top: var(--s-8); }
+.cover .contents h2 { font-size: var(--t-24); letter-spacing: -0.018em; }
+.cover .contents ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-2); font-size: var(--t-16); }
+.cover .contents b { font-weight: var(--strong); }
+
+.lesson-head h2 { margin-top: var(--s-3); font-size: var(--t-display-s); }
+.lesson-head .lede { margin-top: var(--s-4); max-width: 60ch; }
+.tpl { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-5); padding: var(--s-4) var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.tpl p { font-size: var(--t-14); color: var(--ink-2); }
+.tpl p b { display: block; font-size: var(--t-16); }
+.tpl a { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); white-space: nowrap; }
+
+.prose { margin-top: var(--s-7); max-width: 68ch; }
+.prose > * + * { margin-top: var(--s-4); }
+.prose h3 { margin-top: var(--s-7); }
+.prose p, .prose li { font-size: var(--t-18); }
+.prose ol, .prose ul { padding-left: var(--s-5); display: grid; gap: var(--s-3); }
+.prose .formula { padding: var(--s-4) var(--s-5); background: var(--paper-2); border-radius: var(--radius); font-size: var(--t-16); color: var(--ink); font-variant-numeric: tabular-nums; }
+.prose .formula + .formula { margin-top: var(--s-2); }
+.prose .source { font-size: var(--t-14); color: var(--ink-3); }
+.prose .figure { margin-top: var(--s-6); margin-bottom: var(--s-6); }
+.prose .figure .label-box { margin-bottom: var(--s-4); }
+.worked { padding: var(--s-5); border-left: 2px solid var(--ink); background: var(--paper-2); border-radius: 0 var(--radius) var(--radius) 0; }
+.worked > * + * { margin-top: var(--s-3); }
+.worked p, .worked li { font-size: var(--t-16); }
+
+.data { width: 100%; border-collapse: collapse; font-size: var(--t-16); }
+.data th[scope="row"] { white-space: nowrap; }
+.data th, .data td { text-align: left; padding: var(--s-3) var(--s-3) var(--s-3) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.data thead th { font-size: var(--t-14); color: var(--ink-3); font-weight: var(--strong); }
+.data td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.card-table { overflow-x: auto; margin-top: var(--s-5); }
+.card-table:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.card-table table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: var(--t-14); font-variant-numeric: tabular-nums; }
+.card-table caption { text-align: left; font-weight: var(--strong); color: var(--ink); font-size: var(--t-16); padding-bottom: var(--s-3); }
+.card-table th, .card-table td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.card-table thead th { color: var(--ink-3); font-weight: var(--strong); }
+.card-table thead tr:first-child th[colspan] { text-align: center; color: var(--ink); border-bottom: 1px solid var(--rule-2); }
+.card-table tbody th { text-align: left; color: var(--ink); font-weight: var(--strong); }
+.card-table td:nth-child(5), .card-table th[scope="col"]:nth-child(4) { border-left: 1px solid var(--rule-2); }
+.card-table tr.over th, .card-table tr.over td { color: var(--ink-3); }
+
+.do { margin-top: var(--s-8); padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); max-width: 68ch; }
+.do h3 { font-size: var(--t-20); }
+.do ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-3); font-size: var(--t-16); }
+.pager { margin-top: var(--s-7); padding-top: var(--s-5); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: var(--s-4); max-width: 68ch; }
+.pager a { text-decoration: none; color: var(--ink-2); font-size: var(--t-16); }
+.pager a b { display: block; color: var(--ink); }
+.pager a:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.pager .next { text-align: right; margin-left: auto; }
+
+/* right: the standing invitation, present and quiet */
+.invite { position: sticky; top: var(--s-5); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.invite p { margin-top: var(--s-3); font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
+.invite .btn { margin-top: var(--s-5); width: 100%; min-height: 44px; padding: 0 var(--s-4); font-size: var(--t-14); background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
+.invite .btn:hover { background: var(--paper-2); }
+
+/* States. Without scripts, every lesson shows in order and the form is not needed.
+   With them, the email opens the course, then one lesson shows at a time. */
+.js .lesson, .js:not(.learn-in) .tpl-link { display: none; }
+.js.learn-in .lesson.current { display: block; }
+.js.learn-in .cover { display: none; }
+html:not(.js) .cover { display: none; }
+html:not(.js) .lesson + .lesson { margin-top: var(--section); padding-top: var(--section); border-top: 1px solid var(--rule); }
+html:not(.js) .pager { display: none; }
+
+.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
+.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
+.foot nav { display: flex; flex-wrap: wrap; gap: var(--s-5); justify-self: end; }
+.foot a { color: var(--ink-2); text-decoration: none; }
+.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 1140px) {
+  .course { grid-template-columns: 220px minmax(0, 1fr); }
+  .invite { position: static; grid-column: 2; max-width: 68ch; }
+}
+@media (max-width: 860px) {
+  .course { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding-top: 0; }
+  .invite { grid-column: 1; }
+  .toc { position: static; }
+  .toc summary { display: flex; justify-content: space-between; align-items: center; list-style: none; cursor: pointer; padding: var(--s-4) 0; font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc summary::after { content: ""; width: 9px; height: 9px; border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3); transform: translateY(-3px) rotate(45deg); }
+  .toc[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+  .toc .course-name { display: none; }
+  .toc ol { border-top: 0; }
+  .js:not(.learn-in) .toc { display: none; }
+  .join .row { flex-direction: column; }
+  .join .btn { width: 100%; }
+  .prose p, .prose li { font-size: var(--t-16); }
+}
+@media (max-width: 640px) {
+  .foot-in { grid-template-columns: minmax(0, 1fr); }
+  .foot nav { justify-self: start; }
+  .join { padding: var(--s-5); }
+}
+</style>
+</head>
+<body data-course="fee-staircase">
+
+<header class="course-wrap top">
+  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+  <a class="crumb" href="/learn">Learn</a>
+</header>
+
+<div class="course-wrap course">
+
+  <details class="toc" id="toc" open>
+    <summary>Lessons</summary>
+    <p class="course-name">The Fee Staircase</p>
+    <ol>
+      <li><a href="#staircase"><span class="n">1</span><span>The staircase</span></a></li>
+      <li><a href="#read-the-listing"><span class="n">2</span><span>Read the listing</span></a></li>
+      <li><a href="#find-the-step"><span class="n">3</span><span>Find the step</span></a></li>
+      <li><a href="#counterfactual"><span class="n">4</span><span>The counterfactual</span></a></li>
+      <li><a href="#volume"><span class="n">5</span><span>Volume from rank</span></a></li>
+      <li><a href="#ten-thousand-months"><span class="n">6</span><span>Ten thousand months</span></a></li>
+      <li><a href="#the-cliff"><span class="n">7</span><span>The 271-day cliff</span></a></li>
+      <li><a href="#every-sku"><span class="n">8</span><span>Every SKU, in order</span></a></li>
+    </ol>
+    <a class="tpl-link" href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>The template (.xlsx) ↓</a>
+  </details>
+
+  <main class="lesson-col" id="main">
+
+    <section class="cover" id="cover" aria-labelledby="cover-h">
+      <span class="label">Free course · 8 lessons · 1 spreadsheet</span>
+      <h1 id="cover-h">The Fee Staircase</h1>
+      <p class="lede">Find what Amazon's fee steps cost any listing, from five numbers on its public page. Then decide which of your SKUs to fix, and which to leave alone.</p>
+      <ul class="outcomes">
+        <li>Read Amazon's 2026 fee cards as the staircase they are: tiers, weight bands, price bands, the holiday card.</li>
+        <li>Put any listing on it, yours or a competitor's, and find the edge it sits just past.</li>
+        <li>Price the step per unit, then per year as a range, with ten thousand simulated months.</li>
+        <li>Price the 271-day storage cliff from your own inventory report.</li>
+        <li>Run your whole catalogue at once and work it in order.</li>
+      </ul>
+      <form class="join" id="join" novalidate>
+        <label for="email">Your email</label>
+        <div class="row">
+          <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button class="btn" type="submit">Open the course <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="fine">One email opens every lesson and the spreadsheet. We send you the link so you can come back, and a short note when a new course is out; one click unsubscribes. Nothing inside is held back and nothing inside is for sale. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="err" id="join-err" role="alert" hidden></p>
+      </form>
+      <div class="contents">
+        <h2>What is inside</h2>
+        <ol>
+          <li><b>The staircase.</b> Amazon's cost structure is steps, not a line.</li>
+          <li><b>Read the listing.</b> The five public numbers, and which are floors.</li>
+          <li><b>Find the step.</b> Tier, column, row, and the four edges a unit can sit past.</li>
+          <li><b>The counterfactual.</b> One ounce, one cent, a quarter-inch, a smaller box.</li>
+          <li><b>Volume from rank.</b> The curve, and why it is always a range.</li>
+          <li><b>Ten thousand months.</b> A simulation in a spreadsheet, and how to read it.</li>
+          <li><b>The 271-day cliff.</b> The biggest step, which only your own export shows.</li>
+          <li><b>Every SKU, in order.</b> The whole catalogue, ranked, and when to stop.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ═══ Lesson 1 ═══ -->
+    <article class="lesson" id="staircase" aria-labelledby="l1-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 1 of 8</span>
+        <h2 id="l1-h">The staircase</h2>
+        <p class="lede">Your cost model is a line. Amazon's is a staircase. A unit one ounce past an edge pays the whole step, on every sale, for as long as nothing changes.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: the Rate card sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <p>Ask an operator what one more ounce costs to ship through Amazon and the answer is usually "a little more". That is a line: heavier costs a bit more, pricier costs a bit more, and a small change makes a small difference.</p>
+        <p>Amazon's fulfilment fee is not a line. It is flat for a stretch, then it steps up, then it is flat again. Inside a step, an extra ounce costs nothing. Across an edge, the next ounce costs the whole step. And the step is paid on every unit, every month, until the unit or the price moves.</p>
+
+        <figure class="figure" data-play>
+          <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+          <div class="chart-wide"><!-- build:stairs-wide --><svg class="chart stairs" viewBox="0 0 760 420" role="img" aria-labelledby="st-w-t st-w-d" preserveAspectRatio="xMidYMid meet"><title id="st-w-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-w-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="64" x2="736" y1="325.5" y2="325.5"/><text x="54" y="325.5" font-size="13" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="64" x2="736" y1="245.1" y2="245.1"/><text x="54" y="245.1" font-size="13" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="64" x2="736" y1="164.8" y2="164.8"/><text x="54" y="164.8" font-size="13" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="grid" x1="64" x2="736" y1="84.4" y2="84.4"/><text x="54" y="84.4" font-size="13" text-anchor="end" dominant-baseline="middle">$5.50</text><line class="axis" x1="64" x2="736" y1="372" y2="372"/><line class="tick" x1="64" x2="64" y1="372" y2="377"/><text x="64" y="395" font-size="13" text-anchor="middle">0</text><line class="tick" x1="198.4" x2="198.4" y1="372" y2="377"/><text x="198.4" y="395" font-size="13" text-anchor="middle">4</text><line class="tick" x1="332.8" x2="332.8" y1="372" y2="377"/><text x="332.8" y="395" font-size="13" text-anchor="middle">8</text><line class="tick" x1="467.2" x2="467.2" y1="372" y2="377"/><text x="467.2" y="395" font-size="13" text-anchor="middle">12</text><line class="tick" x1="601.6" x2="601.6" y1="372" y2="377"/><text x="601.6" y="395" font-size="13" text-anchor="middle">16</text><line class="tick" x1="736" x2="736" y1="372" y2="377"/><text x="736" y="395" font-size="13" text-anchor="middle">20 oz</text><path class="step-alt fade" style="--after:0ms" d="M64,308 H198.4 V268 H332.8 V223.1 H467.2 V154.9 H601.6 V80.1 H736"/><path class="step draw" pathLength="1" d="M64,347.9 H198.4 V311.3 H332.8 V269.7 H467.2 V203.2 H601.6 V130 H736"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="64" x2="86.1" y1="11.700000000000001" y2="11.700000000000001"/><text class="ink" x="94.1" y="11.700000000000001" font-size="12" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="64" x2="86.1" y1="32.5" y2="32.5"/><text x="94.1" y="32.5" font-size="12" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="332.8" x2="332.8" y1="311.3" y2="269.7"/><circle class="dot-hollow" cx="332.8" cy="311.3" r="5.5"/><circle class="dot" cx="360.3" cy="269.7" r="5.5"/><text class="leak-text" x="322.8" y="290.5" font-size="14" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="371.8" y="288.7" font-size="13">8.8 oz · this listing</text><text x="344.3" y="332.3" font-size="13">8.0 oz · one step down</text></g></svg><!-- /build:stairs-wide --></div>
+          <div class="chart-narrow"><!-- build:stairs-narrow --><svg class="chart stairs" viewBox="0 0 360 340" role="img" aria-labelledby="st-n-t st-n-d" preserveAspectRatio="xMidYMid meet"><title id="st-n-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-n-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="46" x2="352" y1="251.3" y2="251.3"/><text x="36" y="251.3" font-size="11" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="46" x2="352" y1="167.2" y2="167.2"/><text x="36" y="167.2" font-size="11" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="46" x2="352" y1="83.1" y2="83.1"/><text x="36" y="83.1" font-size="11" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="axis" x1="46" x2="352" y1="300" y2="300"/><line class="tick" x1="46" x2="46" y1="300" y2="305"/><text x="46" y="321" font-size="11" text-anchor="middle">0</text><line class="tick" x1="122.5" x2="122.5" y1="300" y2="305"/><text x="122.5" y="321" font-size="11" text-anchor="middle">4</text><line class="tick" x1="199" x2="199" y1="300" y2="305"/><text x="199" y="321" font-size="11" text-anchor="middle">8</text><line class="tick" x1="275.5" x2="275.5" y1="300" y2="305"/><text x="275.5" y="321" font-size="11" text-anchor="middle">12</text><line class="tick" x1="352" x2="352" y1="300" y2="305"/><text x="352" y="321" font-size="11" text-anchor="middle">16 oz</text><path class="step-alt fade" style="--after:0ms" d="M46,233 H122.5 V191.2 H199 V144.2 H275.5 V72.8 H352"/><path class="step draw" pathLength="1" d="M46,274.8 H122.5 V236.5 H199 V192.9 H275.5 V123.3 H352"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="46" x2="64.7" y1="9.9" y2="9.9"/><text class="ink" x="72.7" y="9.9" font-size="10" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="46" x2="64.7" y1="27.5" y2="27.5"/><text x="72.7" y="27.5" font-size="10" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="199" x2="199" y1="236.5" y2="192.9"/><circle class="dot-hollow" cx="199" cy="236.5" r="4.5"/><circle class="dot" cx="214.6" cy="192.9" r="4.5"/><text class="leak-text" x="189" y="214.7" font-size="12" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="225.1" y="209.9" font-size="11">8.8 oz · this listing</text><text x="209.5" y="255.5" font-size="11">8.0 oz · one step down</text></g></svg><!-- /build:stairs-narrow --></div>
+          <figcaption>Amazon's 2026 large-standard card, the $10 to $50 column, with the fuel and logistics surcharge; dashed, the holiday card. The dot is one real listing: <span data-fill="who_lower">a car-care brand</span>'s paint scratch remover at <span data-fill="weight">8.8</span> ounces, just past the <span data-fill="edge">8</span>-ounce edge. One step down it would pay <span class="money" data-fill="step_np">$0.26</span> less a unit, <span data-fill="step_peak">$0.28</span> on the holiday card.</figcaption>
+        </figure>
+
+        <h3>What the staircase is made of</h3>
+        <p>Four published things decide which step a unit stands on.</p>
+        <ol>
+          <li><b>The size tier.</b> Amazon sorts a unit's three sides longest to shortest and compares them with two envelopes. Small standard: up to 15 × 12 × 0.75 inches and 16 ounces. Large standard: up to 18 × 14 × 8 inches and 20 pounds. Anything bigger is oversize, which this course leaves out. A tier is not a different step: it is a different staircase.</li>
+          <li><b>The weight band.</b> Small standard climbs in 2-ounce steps to 16 ounces. Large standard climbs in 4-ounce steps to 3 pounds, then adds <span data-fill="learn_over3">$0.08</span> for every 4 ounces after that, before the surcharge. The weight that counts is the billable weight: the greater of what the unit weighs and its dimensional weight (lesson 3).</li>
+          <li><b>The price band.</b> Every row has three prices: under $10, $10 to $50, and over $50. On the card in force until October 14, crossing $10 adds <span data-fill="learn_ten_min">$0.85</span> to <span data-fill="learn_ten_max">$1.05</span> a unit, depending on the row. Price is a step too.</li>
+          <li><b>The season.</b> From October 15 to January 14 a second card applies. In the $10 to $50 column it runs <span data-fill="learn_peak_min">$0.20</span> to <span data-fill="learn_peak_max">$0.42</span> a unit higher, row for row.</li>
+        </ol>
+        <p>On top of all four, since April 17, 2026, a <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge is added to every fulfilment fee, the holiday card's included.</p>
+
+        <h3>The card itself</h3>
+        <p>Here are the two standard-size cards with the surcharge already in. Every fulfilment fee in this course is read from them, and so is every one in the template.</p>
+<!-- build:learn-card-small -->
+<div class="card-table" role="region" aria-label="Small standard fee card" tabindex="0"><table>
+<caption>Small standard: fulfilment fee per unit, with the fuel and logistics surcharge</caption>
+<thead><tr><th scope="col" rowspan="2">Up to</th><th scope="colgroup" colspan="3">Jan 15 to Oct 14</th><th scope="colgroup" colspan="3">Oct 15 to Jan 14</th></tr><tr><th scope="col">Under $10</th><th scope="col">$10 to $50</th><th scope="col">Over $50</th><th scope="col">Under $10</th><th scope="col">$10 to $50</th><th scope="col">Over $50</th></tr></thead>
+<tbody><tr><th scope="row">2 oz</th><td>$2.52</td><td>$3.44</td><td>$3.71</td><td>$2.71</td><td>$3.63</td><td>$3.90</td></tr><tr><th scope="row">4 oz</th><td>$2.58</td><td>$3.54</td><td>$3.81</td><td>$2.77</td><td>$3.74</td><td>$4.01</td></tr><tr><th scope="row">6 oz</th><td>$2.65</td><td>$3.57</td><td>$3.84</td><td>$2.86</td><td>$3.78</td><td>$4.05</td></tr><tr><th scope="row">8 oz</th><td>$2.75</td><td>$3.66</td><td>$3.93</td><td>$2.96</td><td>$3.87</td><td>$4.14</td></tr><tr><th scope="row">10 oz</th><td>$2.87</td><td>$3.81</td><td>$4.08</td><td>$3.08</td><td>$4.03</td><td>$4.30</td></tr><tr><th scope="row">12 oz</th><td>$2.92</td><td>$3.91</td><td>$4.18</td><td>$3.14</td><td>$4.13</td><td>$4.40</td></tr><tr><th scope="row">14 oz</th><td>$3.02</td><td>$4.05</td><td>$4.32</td><td>$3.25</td><td>$4.27</td><td>$4.54</td></tr><tr><th scope="row">1 lb</th><td>$3.05</td><td>$4.10</td><td>$4.37</td><td>$3.28</td><td>$4.33</td><td>$4.60</td></tr></tbody>
+</table></div>
+<!-- /build:learn-card-small -->
+<!-- build:learn-card-large -->
+<div class="card-table" role="region" aria-label="Large standard fee card" tabindex="0"><table>
+<caption>Large standard: fulfilment fee per unit, with the fuel and logistics surcharge</caption>
+<thead><tr><th scope="col" rowspan="2">Up to</th><th scope="colgroup" colspan="3">Jan 15 to Oct 14</th><th scope="colgroup" colspan="3">Oct 15 to Jan 14</th></tr><tr><th scope="col">Under $10</th><th scope="col">$10 to $50</th><th scope="col">Over $50</th><th scope="col">Under $10</th><th scope="col">$10 to $50</th><th scope="col">Over $50</th></tr></thead>
+<tbody><tr><th scope="row">4 oz</th><td>$3.01</td><td>$3.86</td><td>$4.13</td><td>$3.26</td><td>$4.11</td><td>$4.38</td></tr><tr><th scope="row">8 oz</th><td>$3.24</td><td>$4.09</td><td>$4.36</td><td>$3.51</td><td>$4.36</td><td>$4.63</td></tr><tr><th scope="row">12 oz</th><td>$3.50</td><td>$4.35</td><td>$4.62</td><td>$3.79</td><td>$4.64</td><td>$4.91</td></tr><tr><th scope="row">1 lb</th><td>$3.91</td><td>$4.76</td><td>$5.03</td><td>$4.21</td><td>$5.06</td><td>$5.33</td></tr><tr><th scope="row">20 oz</th><td>$4.37</td><td>$5.22</td><td>$5.49</td><td>$4.68</td><td>$5.53</td><td>$5.80</td></tr><tr><th scope="row">24 oz</th><td>$4.76</td><td>$5.61</td><td>$5.88</td><td>$5.08</td><td>$5.93</td><td>$6.20</td></tr><tr><th scope="row">28 oz</th><td>$4.92</td><td>$5.76</td><td>$6.03</td><td>$5.25</td><td>$6.10</td><td>$6.37</td></tr><tr><th scope="row">2 lb</th><td>$5.17</td><td>$6.02</td><td>$6.29</td><td>$5.52</td><td>$6.37</td><td>$6.63</td></tr><tr><th scope="row">36 oz</th><td>$5.28</td><td>$6.13</td><td>$6.40</td><td>$5.66</td><td>$6.51</td><td>$6.78</td></tr><tr><th scope="row">40 oz</th><td>$5.46</td><td>$6.31</td><td>$6.58</td><td>$5.87</td><td>$6.72</td><td>$6.99</td></tr><tr><th scope="row">44 oz</th><td>$5.63</td><td>$6.48</td><td>$6.75</td><td>$6.04</td><td>$6.89</td><td>$7.16</td></tr><tr><th scope="row">3 lb</th><td>$6.05</td><td>$6.90</td><td>$7.17</td><td>$6.48</td><td>$7.33</td><td>$7.60</td></tr><tr class="over"><th scope="row">Over 3 lb, base</th><td>$6.37</td><td>$7.21</td><td>$7.48</td><td>$6.92</td><td>$7.77</td><td>$8.04</td></tr></tbody>
+</table></div>
+<!-- /build:learn-card-large -->
+        <p class="source">Amazon's published 2026 US FBA fulfilment fee schedules, as loaded in Hubricon's engine on <span data-fill="learn_rc_date">September 9, 2026</span>. Above 3 pounds, add <span data-fill="learn_over3">$0.08</span> for each 4 ounces, before the surcharge. Amazon reprices about once a year: check the live schedule in Seller Central before you act on a figure.</p>
+
+        <h3>Why nobody around you sees it</h3>
+        <p>A P&amp;L is an average. It tells you what fulfilment cost across everything you shipped. It cannot tell you that one SKU sits 0.8 ounces past an edge, because the cheaper version of that SKU never shipped, so it is on no report.</p>
+        <p>A cliff is only visible as a counterfactual: the same unit, one step the other way. No report anyone sells contains one. That is why the fee tool, the agency and the bookkeeper can all miss it at once. Each of them reads what happened, and the step is about what did not.</p>
+        <p>This course builds that counterfactual for any listing, from its public page, in arithmetic you can check line by line.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Download the template and open the Rate card sheet. Every number above is on it, with its source.</li>
+          <li>Find the row your best-selling SKU sits on. If you don't know its weight to the ounce and its sides to the quarter-inch, that is lesson 2.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a class="next" href="#read-the-listing">Next<b>Read the listing →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 2 ═══ -->
+    <article class="lesson" id="read-the-listing" aria-labelledby="l2-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 2 of 8</span>
+        <h2 id="l2-h">Read the listing</h2>
+        <p class="lede">Five numbers on any Amazon product page put a listing on the staircase: the price, the weight, the three sides, the category and the sales rank.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: the One listing sheet, the yellow cells.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <p>You can run this course on your own listings, on a competitor's, or on a listing you are thinking of launching against. Everything it needs is public.</p>
+
+        <h3>The five numbers</h3>
+        <table class="data">
+          <thead><tr><th scope="col">Number</th><th scope="col">Where it is</th><th scope="col">What to watch</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Price</th><td>The buy box.</td><td>The price customers pay most days, not a one-day deal.</td></tr>
+            <tr><th scope="row">Weight</th><td>Product information, "Item Weight".</td><td>A floor: Amazon bills the packed unit, which can only weigh more.</td></tr>
+            <tr><th scope="row">Three sides</th><td>Product information, "Package Dimensions" if shown, otherwise "Product Dimensions".</td><td>Package dimensions are closer to the box Amazon measures. Product dimensions are a floor.</td></tr>
+            <tr><th scope="row">Category</th><td>"Best Sellers Rank", the first line: "#2,400 in Home &amp; Kitchen".</td><td>The top-level category, not the sub-category under it.</td></tr>
+            <tr><th scope="row">Sales rank</th><td>The same line: the number.</td><td>Today's rank. It moves daily; lesson 5 deals with that.</td></tr>
+          </tbody>
+        </table>
+        <p>Pounds × 16 is ounces. Centimetres ÷ 2.54 is inches. Grams ÷ 28.35 is ounces.</p>
+
+        <h3>Floors, not facts</h3>
+        <p>Two of the five are floors. The page's item weight is what the product weighs; Amazon bills what the packed unit weighs, which is at least that and often more. Product dimensions stand in the same relation to the box.</p>
+        <p>A floor errs in one direction. If the page puts a unit past an edge, the packed unit is at least that far past it, so a finding built on the page understates the fee rather than inventing one.</p>
+        <p>One rule from Hubricon's engine applies here too: a size tier is never guessed. No dimensions, no tier, no finding.</p>
+
+        <h3>Your own listings: use Amazon's measurements</h3>
+        <p>For your own SKUs you don't need the public page. Seller Central's Fee Preview report (Reports, Fulfillment) lists, for every SKU, the sides and the packaged weight Amazon measured, the size tier it assigned, and the fulfilment fee it expects to charge. That is the ground truth. In lesson 8 you paste it into the Catalogue sheet, and the sheet shows you where Amazon's fee and the card disagree.</p>
+        <p>To check one listing against Amazon's own arithmetic, Amazon's Revenue Calculator prices any ASIN's fees. If it and the template disagree by more than a cent, one of the inputs is off.</p>
+
+        <h3>Type them in</h3>
+        <p>Open One listing and type the five numbers into the yellow cells. The example already there is invented; overwrite it. Leave "your own units", "landed cost" and "referral rate" blank for now: lessons 4 and 5 come back to them.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Put your best seller into One listing from its public page.</li>
+          <li>Then put in the competitor that sits next to you in search. Their page gives you the same five numbers, and their position on the staircase is your pricing room.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#staircase">Previous<b>← The staircase</b></a><a class="next" href="#find-the-step">Next<b>Find the step →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 3 ═══ -->
+    <article class="lesson" id="find-the-step" aria-labelledby="l3-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 3 of 8</span>
+        <h2 id="l3-h">Find the step</h2>
+        <p class="lede">Five lines of arithmetic put a listing on the card: its sides sorted, its billable weight, its tier, its price column and the row it lands on. Then one more: the edge it sits just past.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: One listing, "What Amazon sees" and the four edges.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>The five lines</h3>
+        <ol>
+          <li><b>Sort the sides.</b> Longest, median, shortest. Amazon compares them in that order.</li>
+          <li><b>Billable weight.</b> If the box is over a cubic foot (1,728 cubic inches), work out its dimensional weight: length × width × height ÷ 139, in pounds. The billable weight is the greater of that and the unit's weight. Under a cubic foot, the unit's own weight is billed.</li>
+          <li><b>The tier.</b> Small standard if the sorted sides fit inside 15 × 12 × 0.75 inches and the billable weight is 16 ounces or less. Large standard if they fit inside 18 × 14 × 8 and it is 20 pounds or less.</li>
+          <li><b>The column.</b> Under $10, $10 to $50, or over $50, by the price.</li>
+          <li><b>The row.</b> The first row whose edge the billable weight does not exceed. In large standard, 8.0 ounces pays the 8-ounce row and 8.1 ounces pays the 12-ounce row. The fee is that cell, plus <span data-fill="surcharge">3.5%</span>.</li>
+        </ol>
+        <p>One listing does all five, rows 18 to 31, and shows every step.</p>
+
+        <h3>Worked through: the case study</h3>
+        <div class="worked">
+          <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+          <p><span data-fill="who">A car-care brand</span>, its best-selling paint scratch remover, <span data-fill="category">Automotive</span>. Its public page lists an item weight of <span data-fill="weight">8.8</span> ounces, sides that fit large standard, and a price in the $10 to $50 column. (We publish neither the sides nor the price, so the brand stays anonymous.)</p>
+          <ol>
+            <li>Sides sorted: inside 18 × 14 × 8, outside small standard.</li>
+            <li>Under a cubic foot, so the billable weight is the item weight: <span data-fill="weight">8.8</span> ounces.</li>
+            <li>Large standard.</li>
+            <li>$10 to $50.</li>
+            <li><span data-fill="weight">8.8</span> ounces is past the <span data-fill="edge">8</span>-ounce edge, so it pays the next row.</li>
+          </ol>
+          <p>The step is the difference between that row and the one below: <span class="money" data-fill="step_np">$0.26</span> a unit on the card in force until October 14, <span data-fill="step_peak">$0.28</span> on the holiday card. That is the finding, before any volume is put on it.</p>
+        </div>
+
+        <h3>The four edges</h3>
+        <p>A unit can sit just past four kinds of edge. One listing tests all four, on both cards, and gives each a verdict.</p>
+        <ol>
+          <li><b>The weight band.</b> The heaviest edge below the billable weight, and how far over it the unit is. It counts within 2 ounces; further than that is a redesign, not a shave.</li>
+          <li><b>The price band.</b> A price of $10 or more pays the $10 to $50 column; one cent under, it pays the cheaper one. Whether dropping pays depends on how far above the edge the price is (lesson 4).</li>
+          <li><b>The size tier.</b> A large-standard unit that would be small standard but for one side: a mailer 0.9 inches thick where the limit is 0.75. It counts when exactly one side is over, by no more than 35%, and the unit weighs 16 ounces or less.</li>
+          <li><b>The box.</b> A unit billed on dimensional weight because its box is over a cubic foot and bigger than the product needs. It counts when the dimensional weight is at least 1.3 times the real weight.</li>
+        </ol>
+        <p>Any of the four counts only if it is worth at least 8 cents a unit. These thresholds are ours, not Amazon's: they are the ones Hubricon's engine uses to decide an edge deserves a person's attention. They sit on the Rate card sheet. Change them if your business disagrees.</p>
+        <p>Edges overlap: a lighter unit can also drop a tier. So they are never added together. The largest single edge is the finding.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Read the four verdicts on One listing for your best seller.</li>
+          <li>Where one says "Worth a look", note the gap per unit on both cards. Lesson 4 works on that number.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#read-the-listing">Previous<b>← Read the listing</b></a><a class="next" href="#counterfactual">Next<b>The counterfactual →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 4 ═══ -->
+    <article class="lesson" id="counterfactual" aria-labelledby="l4-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 4 of 8</span>
+        <h2 id="l4-h">The counterfactual</h2>
+        <p class="lede">The finding is the gap between the listing as it is and the same listing one step the other way: an ounce lighter, a cent cheaper, a fraction of an inch thinner, a smaller box. This lesson prices each, and what it costs to get there.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: One listing, the four edges and "Is the change worth making?"</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>An ounce lighter</h3>
+        <p class="formula">gap per unit = the fee now − the fee at the edge below</p>
+        <p>Work it on both cards. For the case study that is <span class="money" data-fill="step_np">$0.26</span> and <span data-fill="step_peak">$0.28</span>.</p>
+        <p>The ounce usually comes out of the packaging: a lighter carton, a thinner insert, less void fill, a lighter bottle or jar. Sometimes it is not there at all, because Amazon measured the unit wrong. Compare the packaged weight in your Fee Preview report with what the packed unit really weighs on a scale. If Amazon's figure is higher, open a case in Seller Central and ask for the unit to be re-measured.</p>
+        <p>A smaller fill is a different product. If the ounce comes out of what the customer gets, the listing has to say so.</p>
+
+        <h3>A cent cheaper</h3>
+        <div class="worked">
+          <p class="label">Worked example · an invented listing</p>
+          <p>A 13-ounce kitchen item in a 9 × 6 × 2 inch box, large standard, 15% referral fee, priced at $10.49.</p>
+          <ul>
+            <li>Fulfilment at $10.49, the $10 to $50 column: <span data-fill="learn_px_fee_hi">$4.76</span>.</li>
+            <li>Fulfilment at $9.99, the under-$10 column: <span data-fill="learn_px_fee_lo">$3.91</span>. The fee jump: <span data-fill="learn_px_jump">$0.849</span>.</li>
+            <li>The price given up: 50 cents, less the 15% referral you stop paying on it: <span data-fill="learn_px_given">$0.425</span>.</li>
+            <li>Net: <span class="money" data-fill="learn_px_net">$0.424</span> a unit more at $9.99 than at $10.49.</li>
+          </ul>
+        </div>
+        <p>The cheaper price keeps more per unit, before counting any extra sales a lower price brings. Its break-even is <span data-fill="learn_px_be">$10.99</span>: above that, staying over $10 pays; below it, the step costs more than the higher price earns.</p>
+        <p>It runs the other way too. A listing at $9.99 that takes "a small price rise" to $10.49 keeps <span data-fill="learn_px_net">$0.424</span> less per unit, on every sale, and no report will say why.</p>
+        <p>For any price P at or above an edge E, at referral rate r:</p>
+        <p class="formula">net per unit at one cent under = fee jump − (P − (E − $0.01)) × (1 − r)</p>
+        <p class="formula">break-even price = (E − $0.01) + fee jump ÷ (1 − r)</p>
+        <p>The same arithmetic applies at $50, where the top column starts.</p>
+
+        <h3>A fraction of an inch thinner</h3>
+        <div class="worked">
+          <p class="label">Worked example · an invented listing</p>
+          <p>A 6-ounce item in a 15 × 12 × 0.9 inch mailer, at $12.99. One side, 0.9 inches, is over small standard's 0.75. Small standard would charge <span data-fill="learn_tier_small">$3.57</span> a unit; large standard charges <span data-fill="learn_tier_large">$4.09</span>. The gap: <span class="money" data-fill="learn_tier_gap">$0.52</span> a unit, for 0.15 inches of packaging.</p>
+        </div>
+        <p>Tier edges are usually the largest in this course, because they move a unit to a different staircase, not down a step.</p>
+
+        <h3>A smaller box</h3>
+        <div class="worked">
+          <p class="label">Worked example · an invented listing</p>
+          <p>A 4-pound item in an 18 × 14 × 7 inch box, at $39.99. The box is over a cubic foot, so Amazon bills its dimensional weight, <span data-fill="learn_box_dim_lb">12.7</span> pounds, not the 4 the item weighs: <span data-fill="learn_box_fee_dim">$10.44</span> a unit instead of <span data-fill="learn_box_fee_item">$7.55</span>. The gap: <span class="money" data-fill="learn_box_gap">$2.90</span> a unit, paid for air.</p>
+        </div>
+
+        <h3>What getting there costs</h3>
+        <p>A gap per unit is not yet an answer. The answer is whether the gap pays back what the change costs:</p>
+        <p class="formula">months to pay back = one-time cost ÷ (gap per unit × units a month)</p>
+        <p>A new carton run, a redesign, relabelling the stock already inbound: get the quote, type it into "Is the change worth making?" on One listing, and plan on the low end of volume. The price move costs nothing to make, which is why it usually goes first.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>For the largest edge on your best seller, write down what the change would take, and get a price for it.</li>
+          <li>Type it into "Is the change worth making?" and read the verdict.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#find-the-step">Previous<b>← Find the step</b></a><a class="next" href="#volume">Next<b>Volume from rank →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 5 ═══ -->
+    <article class="lesson" id="volume" aria-labelledby="l5-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 5 of 8</span>
+        <h2 id="l5-h">Volume from rank</h2>
+        <p class="lede">A sales rank is a position, not a count. Turning it into units takes a curve, and the curve can be wrong by a factor of two either way. So every monthly figure in this course is a range.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: One listing, "Volume, from the rank" and "What each edge is worth".</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>The curve</h3>
+        <p>Hubricon's engine fits a power law from rank to units. For a rank of <span data-fill="learn_uc_knee">1,000</span> or worse in a top-level category:</p>
+        <p class="formula">units a month ≈ scale × 10^(<span data-fill="learn_uc_a">5.925</span> − <span data-fill="learn_uc_b">0.875</span> × log10(rank))</p>
+        <p>Better than rank <span data-fill="learn_uc_knee">1,000</span> it flattens, because the top of a category does not sell without limit. The scale adjusts for the category, with Home &amp; Kitchen as the reference at 1.0; the rest are on the Rate card sheet.</p>
+        <p>Some readings from it:</p>
+        <ul>
+          <li>Rank 5,000 in Kitchen &amp; Dining: about <span data-fill="learn_u_5000">440</span> a month.</li>
+          <li>Rank 30,000 in Home &amp; Kitchen: about <span data-fill="learn_u_30000">100</span>.</li>
+          <li>Rank 800 in Beauty &amp; Personal Care: about <span data-fill="learn_u_800">2,260</span>.</li>
+        </ul>
+
+        <h3>Why it is a range</h3>
+        <p>The curve is honest about its error: a factor of two either way. Ranks move every day. Categories differ in how many units a rank is worth. A listing with several variations shares one rank across all of them. A single number from this curve is a guess dressed as a fact.</p>
+        <p>So the template, like the engine, never uses it as a point. In plain arithmetic it brackets the estimate from half to one and a half times: rank 5,000 in Kitchen &amp; Dining is <span data-fill="learn_u_5000_lo">220</span> to <span data-fill="learn_u_5000_hi">660</span> a month. In the simulation (lesson 6) it draws volume from a spread where one month in twenty is under half the estimate and one in twenty is over double.</p>
+        <p>A year of an edge is then the gap per unit times the units, nine months on the card in force and three on the holiday card, at the low end and the high end. One listing's "What each edge is worth" table does exactly that.</p>
+
+        <h3>When you know the number, use it</h3>
+        <p>For your own listings you don't need the curve. Business Reports, "Detail Page Sales and Traffic by Child Item", gives units ordered by ASIN. Type the monthly average into "Your own units a month" on One listing and the range closes to your number.</p>
+        <p>For a competitor, the curve is all there is. Read it as a range and say it as a range.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Compare the curve's estimate for your best seller with your real units. The gap tells you how far to trust it in your category.</li>
+          <li>Read "What each edge is worth": a year, low and high.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#counterfactual">Previous<b>← The counterfactual</b></a><a class="next" href="#ten-thousand-months">Next<b>Ten thousand months →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 6 ═══ -->
+    <article class="lesson" id="ten-thousand-months" aria-labelledby="l6-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 6 of 8</span>
+        <h2 id="l6-h">Ten thousand months</h2>
+        <p class="lede">A single forecast is a guess written to the cent. Draw the uncertain things ten thousand times, read the spread, and plan on the low end.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: the Ten thousand months sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>What is uncertain, and what is not</h3>
+        <p>The fee is not uncertain: it is on the card. Three things are.</p>
+        <ol>
+          <li><b>Volume.</b> The rank curve's factor of two (lesson 5).</li>
+          <li><b>Cost.</b> Freight and exchange rates move landed cost. The template lets it drift 10% either way each month.</li>
+          <li><b>The calendar.</b> November is on the holiday card and March is not. October and January are split by the day.</li>
+        </ol>
+
+        <h3>How the sheet does it</h3>
+        <p>Each of the 10,000 rows on the Ten thousand months sheet is one month:</p>
+        <ul>
+          <li>a volume draw: units × e<sup>σz</sup>, where z is a standard normal draw and σ = ln 2 ÷ 1.645, which puts the 5th and 95th percentiles at half and double the estimate;</li>
+          <li>a landed cost: cost × (0.9 + 0.2 × a random number between 0 and 1);</li>
+          <li>that calendar month's fee, the two cards blended by days;</li>
+          <li>profit = units × (price − referral − fee − cost), before ads, storage and returns;</li>
+          <li>and what the edge is worth over a year at that row's volume.</li>
+        </ul>
+        <p>The sheet reads off P10, the median and P90 of each, and the share of months at a loss. Recalculate (F9 in Excel, Ctrl+Shift+F9 in LibreOffice) and ten thousand new months are drawn. The percentiles barely move. That stability is the point: the range is a property of what you know, not of one lucky draw.</p>
+
+        <h3>The case study, simulated</h3>
+        <figure class="figure" data-play>
+          <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+          <div class="chart-wide"><!-- build:mc-wide --><svg class="chart mc mc--full" viewBox="0 0 760 420" role="img" aria-labelledby="mc-w-t mc-w-d" preserveAspectRatio="xMidYMid meet"><title id="mc-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="64" x2="640" y1="376" y2="376"/><text x="54" y="376" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="640" y1="295" y2="295"/><text x="54" y="295" font-size="13" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="64" x2="640" y1="214" y2="214"/><text x="54" y="214" font-size="13" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="64" x2="640" y1="133.1" y2="133.1"/><text x="54" y="133.1" font-size="13" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="64" x2="640" y1="52.1" y2="52.1"/><text x="54" y="52.1" font-size="13" text-anchor="end" dominant-baseline="middle">$1M</text><text x="64" y="401" font-size="13" text-anchor="start">Today</text><text x="352" y="401" font-size="13" text-anchor="middle">6 months</text><text x="640" y="401" font-size="13" text-anchor="end">12 months</text><path class="mc-band fade" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2 L640,301.3 L592,307.6 L544,313.8 L496,320.1 L448,326.4 L400,332.7 L352,339 L304,345.2 L256,351.5 L208,357.7 L160,363.8 L112,369.9 L64,376Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M64,376 L112,372.2 L160,368.3 L208,364.6 L256,360.6 L304,356.7 L352,352.6 L400,348.4 L448,344.6 L496,340.8 L544,336.7 L592,332.7 L640,328.6"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M64,376 L112,371.3 L160,366.8 L208,361.8 L256,357.1 L304,352.4 L352,347.5 L400,342.4 L448,337.3 L496,332.2 L544,327.5 L592,322.9 L640,318.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M64,376 L112,370.6 L160,365.3 L208,359.9 L256,354.4 L304,349.3 L352,344 L400,338.4 L448,333 L496,327.9 L544,322.6 L592,317.3 L640,311.9"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M64,376 L112,370.5 L160,365.1 L208,359.3 L256,353.3 L304,347.4 L352,341.7 L400,336.1 L448,330.3 L496,324.8 L544,319 L592,313.1 L640,307.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M64,376 L112,370.2 L160,364.2 L208,358.5 L256,352.3 L304,346 L352,339.9 L400,333.6 L448,327.2 L496,321.1 L544,315.1 L592,309.3 L640,303.2"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M64,376 L112,369.5 L160,363.2 L208,356.6 L256,350.4 L304,344.2 L352,337.8 L400,331.2 L448,324.7 L496,318 L544,311.9 L592,305.7 L640,299.5"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M64,376 L112,369.3 L160,363 L208,356.9 L256,350 L304,343.2 L352,336.9 L400,329.9 L448,323.4 L496,316.7 L544,310 L592,303.2 L640,296.3"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M64,376 L112,369.1 L160,362.8 L208,355.9 L256,349.2 L304,342.1 L352,335.1 L400,328.1 L448,321.2 L496,314.1 L544,307.3 L592,300.3 L640,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M64,376 L112,368.6 L160,361.5 L208,354.4 L256,347.4 L304,340.1 L352,333.1 L400,326 L448,318.8 L496,311.9 L544,304.5 L592,297 L640,289.9"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M64,376 L112,368.8 L160,361.2 L208,353.7 L256,346.2 L304,339 L352,331.4 L400,323.8 L448,316.1 L496,309.1 L544,302 L592,294.5 L640,287.1"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M64,376 L112,368.5 L160,360.8 L208,353.7 L256,346.1 L304,338.3 L352,330.3 L400,322.5 L448,315.1 L496,307.5 L544,300.1 L592,292 L640,284.4"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M64,376 L112,368.6 L160,361 L208,353 L256,345 L304,337 L352,329.5 L400,321.8 L448,313.5 L496,305.5 L544,297.4 L592,289.4 L640,281.9"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M64,376 L112,368.3 L160,360.7 L208,352.3 L256,344.1 L304,336.3 L352,328 L400,319.4 L448,311.5 L496,303.6 L544,295.8 L592,287.5 L640,279.5"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M64,376 L112,368 L160,360.1 L208,352.1 L256,344.1 L304,335.6 L352,327 L400,318.4 L448,310.3 L496,301.9 L544,293 L592,284.6 L640,276.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M64,376 L112,368 L160,359.2 L208,351.3 L256,343 L304,334.4 L352,326 L400,317.5 L448,308.7 L496,299.7 L544,291 L592,282.1 L640,273.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M64,376 L112,367.5 L160,359.2 L208,350.1 L256,341.7 L304,332.6 L352,324 L400,314.7 L448,306.2 L496,297 L544,288.3 L592,279.7 L640,271.1"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M64,376 L112,367.5 L160,358.5 L208,349.6 L256,340.3 L304,330.9 L352,321.6 L400,312.9 L448,304 L496,295.1 L544,286.2 L592,277 L640,268.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M64,376 L112,367.3 L160,358.3 L208,349.1 L256,340.3 L304,330.9 L352,321.3 L400,311.7 L448,302.5 L496,293.8 L544,284.2 L592,274.6 L640,265.7"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M64,376 L112,366.8 L160,357.9 L208,348.7 L256,339.8 L304,330.1 L352,321 L400,311.4 L448,301.7 L496,291.8 L544,282.2 L592,272.4 L640,263.2"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M64,376 L112,366.7 L160,357.3 L208,348 L256,338.5 L304,329.2 L352,319.2 L400,309.1 L448,299.8 L496,290 L544,279.7 L592,270.6 L640,260.7"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M64,376 L112,366.3 L160,356.5 L208,346.9 L256,336.6 L304,326.7 L352,317.1 L400,307.5 L448,297.4 L496,287 L544,277.4 L592,267.4 L640,257.9"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M64,376 L112,365.7 L160,356.3 L208,346.5 L256,336.4 L304,326.7 L352,316 L400,305.8 L448,295.2 L496,284.9 L544,275 L592,265.1 L640,255.4"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M64,376 L112,366.2 L160,356.5 L208,346.3 L256,335.8 L304,325.3 L352,314.9 L400,304.3 L448,294.1 L496,284 L544,273.7 L592,263.2 L640,252.6"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M64,376 L112,365.4 L160,355.4 L208,345.7 L256,335.5 L304,324.8 L352,314.5 L400,303.4 L448,293 L496,282.9 L544,271.7 L592,260.8 L640,249.9"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M64,376 L112,365.4 L160,355.1 L208,344.8 L256,333.8 L304,323.2 L352,312.6 L400,301.8 L448,290.7 L496,280.1 L544,268.9 L592,257.6 L640,246.9"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M64,376 L112,364.9 L160,354.6 L208,343.4 L256,331.9 L304,321.1 L352,310.5 L400,299.7 L448,288.5 L496,277.7 L544,266.1 L592,255 L640,244.3"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M64,376 L112,364.8 L160,354.1 L208,342.9 L256,331.8 L304,320.7 L352,309.7 L400,298.8 L448,287.4 L496,275.4 L544,264 L592,252.6 L640,241.4"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M64,376 L112,364 L160,353.3 L208,342.5 L256,331 L304,319.5 L352,308.2 L400,296.9 L448,285.2 L496,274 L544,262.3 L592,250.3 L640,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M64,376 L112,364.1 L160,352.6 L208,340.4 L256,328.5 L304,317 L352,305.8 L400,294.4 L448,282.3 L496,271.1 L544,259.5 L592,247.6 L640,235.7"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M64,376 L112,364.6 L160,353.3 L208,341.1 L256,328.5 L304,316.7 L352,305.2 L400,293.2 L448,280.7 L496,268.7 L544,257.2 L592,245.6 L640,232.9"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M64,376 L112,364.2 L160,352.6 L208,340.1 L256,327.8 L304,315.3 L352,302.3 L400,289.6 L448,277.5 L496,265.1 L544,253.2 L592,241 L640,229.2"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M64,376 L112,364.1 L160,351.9 L208,340 L256,327.5 L304,315 L352,302.7 L400,290.4 L448,278.3 L496,265.9 L544,252.4 L592,239.4 L640,226.1"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M64,376 L112,362.9 L160,350 L208,337.3 L256,324.7 L304,312.3 L352,299.3 L400,286.1 L448,273.5 L496,261.2 L544,248.6 L592,235.7 L640,222.7"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M64,376 L112,363.4 L160,350.7 L208,337.2 L256,324.1 L304,310.7 L352,297.6 L400,284 L448,271.5 L496,258.6 L544,246.1 L592,233.3 L640,219.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M64,376 L112,363.2 L160,349.6 L208,336.9 L256,323.5 L304,310.1 L352,296.5 L400,283.2 L448,269.4 L496,256.1 L544,243 L592,228.9 L640,215.5"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M64,376 L112,362 L160,349.1 L208,335.6 L256,322.2 L304,308.2 L352,294.7 L400,280.9 L448,266.7 L496,253.6 L544,239.2 L592,225.7 L640,212.1"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M64,376 L112,361.4 L160,346.7 L208,333.1 L256,319.5 L304,305.6 L352,291.7 L400,277.6 L448,262.7 L496,249 L544,235.2 L592,221.1 L640,206.8"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M64,376 L112,361.6 L160,347.4 L208,332.7 L256,318.2 L304,304.1 L352,289.7 L400,274.8 L448,260.8 L496,245.3 L544,231 L592,216.2 L640,201.7"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M64,376 L112,360.4 L160,345.8 L208,330.7 L256,315.5 L304,300.7 L352,286 L400,271.1 L448,256.9 L496,241 L544,225.5 L592,210.9 L640,196.7"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M64,376 L112,361.1 L160,346.4 L208,331.4 L256,316.3 L304,301.2 L352,285.6 L400,269.5 L448,254.8 L496,239 L544,222.9 L592,207.7 L640,191.9"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M64,376 L112,360.3 L160,345.6 L208,329.6 L256,313.2 L304,298.2 L352,281.7 L400,265.3 L448,249 L496,232.3 L544,217.1 L592,201.6 L640,186.2"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M64,376 L112,359.6 L160,343.3 L208,327.9 L256,311.5 L304,294.8 L352,278.1 L400,261.8 L448,246.2 L496,229.6 L544,212.8 L592,195.9 L640,179.8"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M64,376 L112,358.4 L160,342.4 L208,326.6 L256,310.3 L304,292.8 L352,276.4 L400,258.8 L448,241.7 L496,224.9 L544,207 L592,190.9 L640,173.2"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M64,376 L112,358.7 L160,341.2 L208,323.2 L256,305.5 L304,288.5 L352,270.6 L400,252 L448,234.7 L496,217.9 L544,199.6 L592,181.9 L640,164.9"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M64,376 L112,358.7 L160,341.1 L208,322.2 L256,304.2 L304,285 L352,266.5 L400,247.4 L448,229 L496,211.4 L544,193.5 L592,176 L640,156.8"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M64,376 L112,356.4 L160,338.4 L208,320.6 L256,301.6 L304,283.3 L352,263.2 L400,244.5 L448,225.5 L496,205.9 L544,186.8 L592,166.9 L640,148.1"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M64,376 L112,355.9 L160,337.1 L208,317.6 L256,297.8 L304,276.1 L352,254.4 L400,233.5 L448,214 L496,194.5 L544,174 L592,154.5 L640,134"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M64,376 L112,354.2 L160,334.1 L208,312.9 L256,291 L304,268.7 L352,247.9 L400,225.7 L448,203.7 L496,182.3 L544,161.6 L592,140.6 L640,118.2"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M64,376 L112,352.8 L160,329 L208,307 L256,284.5 L304,259.9 L352,236.5 L400,211.7 L448,188.8 L496,163.9 L544,140.9 L592,115.5 L640,90.8"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M64,376 L112,347.2 L160,317.2 L208,289.4 L256,260.8 L304,230.6 L352,199.4 L400,170.5 L448,142.4 L496,111.6 L544,82.5 L592,53.8 L640,24"/><path class="mc-pct draw p10" pathLength="1" d="M64,376 L112,369.9 L160,363.8 L208,357.7 L256,351.5 L304,345.2 L352,339 L400,332.7 L448,326.4 L496,320.1 L544,313.8 L592,307.6 L640,301.3"/><path class="mc-pct draw p90" pathLength="1" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2"/><path class="mc-pct draw p50" pathLength="1" d="M64,376 L112,365.2 L160,354.6 L208,344 L256,333.2 L304,322.3 L352,311.3 L400,300.4 L448,289.5 L496,278.5 L544,267.5 L592,256.6 L640,245.7"/><g class="fade"><text x="654" y="146" font-size="12">P90</text><text class="mc-value p90" x="654" y="162.9" font-size="14">$687,000</text></g><g class="fade"><text x="654" y="238.5" font-size="12">Median</text><text class="mc-value p50" x="654" y="255.4" font-size="14">$402,000</text></g><g class="fade"><text x="654" y="294.1" font-size="12">P10</text><text class="mc-value p10" x="654" y="311" font-size="14">$230,000</text></g></svg><!-- /build:mc-wide --></div>
+          <div class="chart-narrow"><!-- build:mc-narrow --><svg class="chart mc mc--full" viewBox="0 0 360 320" role="img" aria-labelledby="mc-n-t mc-n-d" preserveAspectRatio="xMidYMid meet"><title id="mc-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="46" x2="286" y1="284" y2="284"/><text x="36" y="284" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="286" y1="222.3" y2="222.3"/><text x="36" y="222.3" font-size="11" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="46" x2="286" y1="160.7" y2="160.7"/><text x="36" y="160.7" font-size="11" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="46" x2="286" y1="99" y2="99"/><text x="36" y="99" font-size="11" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="46" x2="286" y1="37.4" y2="37.4"/><text x="36" y="37.4" font-size="11" text-anchor="end" dominant-baseline="middle">$1M</text><text x="46" y="307" font-size="11" text-anchor="start">Today</text><text x="166" y="307" font-size="11" text-anchor="middle">6 months</text><text x="286" y="307" font-size="11" text-anchor="end">12 months</text><path class="mc-band fade" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3 L286,227.1 L266,231.9 L246,236.7 L226,241.5 L206,246.2 L186,251 L166,255.8 L146,260.6 L126,265.4 L106,270.1 L86,274.7 L66,279.3 L46,284Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M46,284 L66,281.1 L86,278.1 L106,275.3 L126,272.3 L146,269.3 L166,266.2 L186,263 L206,260.1 L226,257.2 L246,254.1 L266,251 L286,247.9"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M46,284 L66,279.8 L86,275.7 L106,271.3 L126,266.7 L146,262.2 L166,257.9 L186,253.6 L206,249.2 L226,245 L246,240.6 L266,236.1 L286,231.6"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M46,284 L66,279 L86,274.2 L106,269.2 L126,264.5 L146,259.8 L166,254.9 L186,249.9 L206,244.9 L226,239.9 L246,235.2 L266,230.5 L286,225.8"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M46,284 L66,278.4 L86,273 L106,267.5 L126,262.2 L146,256.7 L166,251.3 L186,246 L206,240.4 L226,235.2 L246,229.5 L266,223.9 L286,218.4"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M46,284 L66,278.3 L86,272.4 L106,267 L126,261.3 L146,255.3 L166,249.2 L186,243.3 L206,237.7 L226,231.8 L246,226.2 L266,220 L286,214.3"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M46,284 L66,277.9 L86,271.9 L106,265.8 L126,259.7 L146,253.3 L166,246.7 L186,240.2 L206,234 L226,227.6 L246,220.8 L266,214.4 L286,208.3"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M46,284 L66,277.5 L86,271.2 L106,264.3 L126,257.9 L146,250.9 L166,244.4 L186,237.3 L206,230.8 L226,223.8 L246,217.2 L266,210.7 L286,204.1"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M46,284 L66,277 L86,270.2 L106,263.2 L126,256.4 L146,249 L166,242.1 L186,234.9 L206,227.4 L226,219.9 L246,212.6 L266,205.1 L286,198.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M46,284 L66,276.1 L86,269 L106,261.6 L126,253.8 L146,246.5 L166,238.3 L186,230.6 L206,222.4 L226,214.6 L246,207.1 L266,199.6 L286,192.2"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M46,284 L66,276 L86,268.3 L106,261 L126,253.2 L146,245 L166,237.2 L186,228.7 L206,220.8 L226,213.1 L246,204.6 L266,196.3 L286,188"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M46,284 L66,275.5 L86,267.3 L106,258.8 L126,250.4 L146,241.9 L166,233.5 L186,225.2 L206,216.5 L226,207.4 L246,198.7 L266,190 L286,181.5"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M46,284 L66,275 L86,266.2 L106,256.9 L126,247.8 L146,239.1 L166,230.5 L186,221.9 L206,212.6 L226,204.1 L246,195.3 L266,186.2 L286,177.2"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M46,284 L66,274.9 L86,265.7 L106,256.6 L126,247.1 L146,237.6 L166,228.2 L186,218.8 L206,209.6 L226,200.2 L246,189.9 L266,180 L286,169.9"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M46,284 L66,274.3 L86,263.9 L106,254.2 L126,244 L146,233.8 L166,223.5 L186,213.4 L206,202.8 L226,192.7 L246,182.7 L266,172 L286,161.8"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M46,284 L66,272.9 L86,261.7 L106,251.4 L126,240.9 L146,230.4 L166,219.8 L186,209.1 L206,197.7 L226,187.3 L246,176.8 L266,166.1 L286,155.2"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M46,284 L66,272.7 L86,261.5 L106,250 L126,238.5 L146,227.1 L166,215.1 L186,202.9 L206,191.7 L226,179.7 L246,167.4 L266,155.9 L286,143.8"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M46,284 L66,271.5 L86,259.1 L106,247.4 L126,234.9 L146,222.2 L166,209.4 L186,197 L206,185.2 L226,172.5 L246,159.8 L266,146.9 L286,134.6"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M46,284 L66,270.8 L86,257.4 L106,243 L126,229.3 L146,214.7 L166,200.7 L186,186.1 L206,172.1 L226,158.6 L246,145.1 L266,131.7 L286,117.1"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M46,284 L66,268.7 L86,254.4 L106,239.5 L126,224.5 L146,208 L166,191.4 L186,175.5 L206,160.7 L226,145.8 L246,130.2 L266,115.3 L286,99.8"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M46,284 L66,262.1 L86,239.2 L106,218.1 L126,196.3 L146,173.3 L166,149.5 L186,127.5 L206,106.1 L226,82.7 L246,60.5 L266,38.7 L286,16"/><path class="mc-pct draw p10" pathLength="1" d="M46,284 L66,279.3 L86,274.7 L106,270.1 L126,265.4 L146,260.6 L166,255.8 L186,251 L206,246.2 L226,241.5 L246,236.7 L266,231.9 L286,227.1"/><path class="mc-pct draw p90" pathLength="1" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3"/><path class="mc-pct draw p50" pathLength="1" d="M46,284 L66,275.8 L86,267.7 L106,259.6 L126,251.5 L146,243.1 L166,234.8 L186,226.5 L206,218.2 L226,209.7 L246,201.4 L266,193.1 L286,184.8"/><g class="fade"><text x="300" y="108.3" font-size="10">P90</text><text class="mc-value p90" x="300" y="122.6" font-size="12">$687k</text></g><g class="fade"><text x="300" y="178.7" font-size="10">Median</text><text class="mc-value p50" x="300" y="193" font-size="12">$402k</text></g><g class="fade"><text x="300" y="221" font-size="10">P10</text><text class="mc-value p10" x="300" y="235.3" font-size="12">$230k</text></g></svg><!-- /build:mc-narrow --></div>
+          <figcaption>Cumulative profit on the case-study listing over twelve months, simulated <span data-fill="years">10,000</span> times, before advertising, storage and returns. Each faint line is one simulated year; the band holds eight years in ten. The step past the <span data-fill="edge">8</span>-ounce edge comes to <span class="money" data-fill="leak_p10">$6,400</span> to <span class="money" data-fill="leak_p90">$19,200</span> a year, P10 to P90.</figcaption>
+        </figure>
+
+        <h3>Reading a range</h3>
+        <ul>
+          <li><b>P10</b> is the year you plan on: one year in ten comes in under it.</li>
+          <li><b>P90</b> is the good year: one in ten beats it.</li>
+          <li><b>The median</b> is the middle of the spread, not a promise.</li>
+          <li><b>The share of months at a loss</b> is the margin's cushion: how often, at these fees and costs, a month on this listing loses money before ads.</li>
+        </ul>
+        <p>Say the range, rounded down. "<span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span> a year" is a claim you can defend. A single figure to the dollar is not.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Open Ten thousand months, choose the edge to size ("Largest" by default) and read the year's P10 to P90.</li>
+          <li>If the share of months at a loss is above zero before ads, that listing's problem is bigger than a fee step. Start there.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#volume">Previous<b>← Volume from rank</b></a><a class="next" href="#the-cliff">Next<b>The 271-day cliff →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 7 ═══ -->
+    <article class="lesson" id="the-cliff" aria-labelledby="l7-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 7 of 8</span>
+        <h2 id="l7-h">The 271-day cliff</h2>
+        <p class="lede">The biggest step on Amazon's cards cannot be seen from outside. It is in your inventory report, and Amazon checks it on the 15th of every month.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: The 271-day cliff sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>Two charges, and one of them is a cliff</h3>
+        <p>Every standard-size unit in an Amazon warehouse pays monthly storage by the cubic foot: <span data-fill="learn_stor_off">$0.78</span> a cubic foot from January to September, <span data-fill="learn_stor_peak">$2.40</span> from October to December.</p>
+        <p>Once a unit has sat 181 days, it also pays an aged-inventory surcharge, by age:</p>
+        <table class="data">
+          <thead><tr><th scope="col">Age</th><th scope="col">Surcharge, per cubic foot a month</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">181 to 210 days</th><td class="num" data-fill="learn_aged_181">$0.50</td></tr>
+            <tr><th scope="row">211 to 240 days</th><td class="num" data-fill="learn_aged_211">$1.00</td></tr>
+            <tr><th scope="row">241 to 270 days</th><td class="num" data-fill="aged_rate_before">$1.50</td></tr>
+            <tr><th scope="row">271 to 300 days</th><td class="num" data-fill="aged_rate_after">$5.45</td></tr>
+            <tr><th scope="row">301 to 330 days</th><td class="num" data-fill="learn_aged_301">$5.70</td></tr>
+            <tr><th scope="row">331 to 365 days</th><td class="num" data-fill="learn_aged_331">$5.90</td></tr>
+            <tr><th scope="row">366 days and over</th><td><span class="tnum" data-fill="learn_aged_366">$6.90</span>, or <span class="tnum" data-fill="learn_aged_min">$0.15</span> a unit, whichever is greater</td></tr>
+          </tbody>
+        </table>
+        <p>At day 271 the surcharge goes from <span data-fill="aged_rate_before">$1.50</span> to <span data-fill="aged_rate_after">$5.45</span> a cubic foot: <span data-fill="learn_cliff_x">3.6</span> times, in one step. Amazon assesses it from a snapshot of your inventory on the 15th of each month.</p>
+
+        <figure class="figure" data-play>
+          <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+          <div class="chart-wide"><!-- build:aging-wide --><svg class="chart aging" viewBox="0 0 760 300" role="img" aria-labelledby="ag-w-t ag-w-d" preserveAspectRatio="xMidYMid meet"><title id="ag-w-t">What 1,000 units cost to store, by age</title><desc id="ag-w-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="64" x2="736" y1="252" y2="252"/><text x="54" y="252" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="736" y1="168.8" y2="168.8"/><text x="54" y="168.8" font-size="13" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="64" x2="736" y1="85.7" y2="85.7"/><text x="54" y="85.7" font-size="13" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="64" x2="64" y1="252" y2="257"/><text x="64" y="275" font-size="13" text-anchor="middle">Day 0</text><line class="tick" x1="368.1" x2="368.1" y1="252" y2="257"/><text x="368.1" y="275" font-size="13" text-anchor="middle">181</text><line class="tick" x1="519.3" x2="519.3" y1="252" y2="257"/><text x="519.3" y="275" font-size="13" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="678.9" x2="678.9" y1="252" y2="257"/><text x="678.9" y="275" font-size="13" text-anchor="middle">366</text><line class="axis" x1="64" x2="736" y1="252" y2="252"/><path class="step draw" pathLength="1" d="M64,231.3 H368.1 V218.1 H418.5 V204.8 H468.9 V191.5 H519.3 V86.8 H569.7 V80.1 H620.1 V74.8 H678.9 V48.3 H736"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="519.3" x2="519.3" y1="191.5" y2="86.8"/><text class="leak-text" x="507.3" y="82.8" font-size="14" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-wide --></div>
+          <div class="chart-narrow"><!-- build:aging-narrow --><svg class="chart aging" viewBox="0 0 360 260" role="img" aria-labelledby="ag-n-t ag-n-d" preserveAspectRatio="xMidYMid meet"><title id="ag-n-t">What 1,000 units cost to store, by age</title><desc id="ag-n-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="46" x2="352" y1="220" y2="220"/><text x="36" y="220" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="352" y1="147.4" y2="147.4"/><text x="36" y="147.4" font-size="11" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="46" x2="352" y1="74.8" y2="74.8"/><text x="36" y="74.8" font-size="11" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="46" x2="46" y1="220" y2="225"/><text x="46" y="241" font-size="11" text-anchor="middle">Day 0</text><line class="tick" x1="184.5" x2="184.5" y1="220" y2="225"/><text x="184.5" y="241" font-size="11" text-anchor="middle">181</text><line class="tick" x1="253.3" x2="253.3" y1="220" y2="225"/><text x="253.3" y="241" font-size="11" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="326" x2="326" y1="220" y2="225"/><text x="326" y="241" font-size="11" text-anchor="middle">366</text><line class="axis" x1="46" x2="352" y1="220" y2="220"/><path class="step draw" pathLength="1" d="M46,201.9 H184.5 V190.4 H207.4 V178.8 H230.4 V167.2 H253.3 V75.8 H276.3 V70 H299.2 V65.4 H326 V42.2 H352"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="253.3" x2="253.3" y1="167.2" y2="75.8"/><text class="leak-text" x="241.3" y="71.8" font-size="12" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-narrow --></div>
+          <figcaption>Storage plus the surcharge on 1,000 units of the case-study listing, by age, at January-to-September rates. At about <span data-fill="learn_cs_cuft">0.032</span> cubic feet a unit, that is <span data-fill="learn_cs_270">$72.70</span> a month at 241 to 270 days and <span class="money" data-fill="learn_cs_271">$198.67</span> from day 271.</figcaption>
+        </figure>
+
+        <h3>Why the public page cannot see it</h3>
+        <p>A product page doesn't say how long the units behind it have sat. Your own report does. In Seller Central, Reports, Fulfillment, Manage Inventory Health (the Inventory Age report) counts your units by age, 0 to 90, 91 to 180, 181 to 270, 271 to 365 and over 365 days, and gives Amazon's own estimate of the surcharge each band will pay. Where those estimate columns are there, use them: they are Amazon's number, not an estimate of it.</p>
+
+        <h3>Pricing it in your numbers</h3>
+        <ol>
+          <li>Cubic feet per unit comes across from One listing, or type Amazon's: longest × median × shortest side from Fee Preview, ÷ 1,728.</li>
+          <li>Type how many units sit in each age band. The report's bands are coarser than the surcharge's, so split 181 to 270 and 271 to 365 by when each shipment arrived, or work from Amazon's estimate columns.</li>
+          <li>Type the units sold in the last 30 days.</li>
+        </ol>
+        <p>The sheet prices every band, the month's total, and the cliff: how much more the units now 241 to 270 days old will cost next month if none of them sell.</p>
+
+        <h3>The rule</h3>
+        <p class="formula">days of cover = units on hand ÷ units sold a day</p>
+        <p>Amazon ages stock first in, first out. Hold more than about 270 days of cover and some units cross the cliff before they sell, at this pace, whatever else happens.</p>
+        <p>Before the 15th the choices are three: sell the oldest units through, with a price or a promotion; remove them; or liquidate them. Set the one-time cost of each against a few months of surcharge at the new rate. The sheet gives you the monthly side of that comparison; Seller Central quotes the other.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Pull the Manage Inventory Health report and list every SKU with units in the 181 to 270 day band.</li>
+          <li>Price each one's cliff on the sheet, and decide before the next 15th.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#ten-thousand-months">Previous<b>← Ten thousand months</b></a><a class="next" href="#every-sku">Next<b>Every SKU, in order →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 8 ═══ -->
+    <article class="lesson" id="every-sku" aria-labelledby="l8-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 8 of 8</span>
+        <h2 id="l8-h">Every SKU, in order</h2>
+        <p class="lede">One listing teaches the method. The money is in running every SKU at once, fixing them in order, and stopping where the arithmetic says stop.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: the Catalogue sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+      <div class="prose">
+        <h3>Load the catalogue</h3>
+        <p>The Catalogue sheet takes 500 SKUs, one a row: price, category, weight in ounces (or pounds, in the next column), three sides, sales rank, and two optional columns: your units a month, and Amazon's own fee per unit.</p>
+        <p>For your own catalogue, the Fee Preview report gives Amazon's measured sides, its packaged weight (in pounds: use the pounds column) and the fulfilment fee it expects to charge, for every SKU. Business Reports gives units ordered. Paste them in. Every column from M onward is arithmetic, and every step of it is shown in the working columns on the right.</p>
+
+        <h3>Check Amazon against the card</h3>
+        <p>The column "Amazon's fee minus this sheet's" compares what Amazon expects to charge with what the card says for the row.</p>
+        <ul>
+          <li>Paste <b>your own</b> measurements, and it shows where Amazon measured differently. Above zero, Amazon is billing the unit as heavier or bigger than you think it is. Weigh and measure a packed unit; if Amazon's figure is wrong, open a case and ask for a re-measure.</li>
+          <li>Paste <b>Amazon's</b> measurements, and it should read zero. If it does not, the card in the template is out of date or something else is changing the fee. Check it in Seller Central.</li>
+        </ul>
+
+        <h3>Work in order</h3>
+        <p>Sort by the Rank column. It ranks every SKU by the low end of what its largest edge is worth a year. Then work down from the top:</p>
+        <ol>
+          <li>Price edges first. They cost nothing to make.</li>
+          <li>Then packaging: weight bands, tiers and boxes, each against its quote (lesson 4).</li>
+          <li>Stop when a year at the low end is less than the change costs. Below that line, leave it.</li>
+        </ol>
+
+        <h3>When the answer is nothing</h3>
+        <p>Most catalogues have a few edges worth moving and a long tail that isn't. Some have none. Of the <span data-fill="brands_modeled">1,856</span> Amazon brands Hubricon has modeled from public pages, <span data-fill="brands_silent">1,473</span> showed nothing worth fixing. If your catalogue is one of them, that is a result too: the staircase is not where your money is going.</p>
+
+        <h3>What this course cannot see</h3>
+        <p>Everything above is the public half. Here is the shape of the rest, so you can size it.</p>
+        <ul>
+          <li><b>The price response.</b> Moving a price moves volume. This course assumes volume holds, which is safe for a cut and unsafe for a rise. A real pricing decision needs that listing's demand curve, and an Amazon price test without a counterfactual is mostly noise.</li>
+          <li><b>Ads.</b> The break-even ad cost of sale on One listing is the ceiling on what an ad-driven sale can cost. Where a campaign runs above it, every sale it buys loses money. That needs your advertising reports.</li>
+          <li><b>The low-inventory-level fee.</b> Amazon adds a fee to each unit shipped when both your 30-day and 90-day historical days of supply fall under 28 days. It needs your inventory history.</li>
+          <li><b>Returns and reimbursements.</b> What comes back, what Amazon loses, and what it owes you for both. That needs your inventory ledger and returns reports.</li>
+        </ul>
+        <p>Each is computable from your own exports, with the same discipline as this course: published cards, stated assumptions, ranges, and a counterfactual.</p>
+        <p>Run the template again every quarter, and the week Amazon publishes a new card.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Paste your catalogue and sort by Rank.</li>
+          <li>Take the top three to a decision this week.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#the-cliff">Previous<b>← The 271-day cliff</b></a><a class="next" href="/learn">Back to<b>All courses →</b></a></nav>
+    </article>
+
+  </main>
+
+  <aside class="invite" aria-label="Hubricon">
+    <span class="label">If you would rather it were run</span>
+    <p>Managed Profit runs this arithmetic, and the rest of it on prices, ads, inventory and Amazon claims, across a whole catalogue every week.</p>
+    <p>A month is billed only if the profit it measured clears the fee.</p>
+    <a class="btn" href="/apply" data-cta="learn">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+  </aside>
+
+</div>
+
+<footer class="foot">
+  <div class="course-wrap foot-in">
+    <span>Hubricon</span>
+    <nav aria-label="Footer"><a href="/">Home</a><a href="/learn">Learn</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+  </div>
+</footer>
+<script type="module" src="/assets/learn.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
