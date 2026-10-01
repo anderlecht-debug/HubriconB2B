@@ -183,6 +183,10 @@ CORE_FILES = {
 # Files may come in pieces; a read waits this long after the last one for the
 # rest, then is written with what is in and says what is not.
 FIRST_READ_GRACE_HOURS = 24
+# When the first read is written, as every client surface says it (welcome.html,
+# the upload page): the operator writes it on its next pass after this, never
+# "the moment" a file lands, because GitHub runs the schedule late.
+FIRST_READ_WHEN = f"your core files are in, or {FIRST_READ_GRACE_HOURS} hours after your last upload"
 # What each core file is, and what a read without it does not have, in plain words.
 FILE_GAPS = {
     "business_report": ("Sales and traffic by product (Business Reports)",
@@ -473,7 +477,8 @@ def _call_prep_blocks(p: str, when, link: str) -> list[dict]:
                             "packaging). An estimate is fine."})
     if link:
         blocks.append({"p": "If you would like your first full read, Profit Brief No. 001, before we speak, you can "
-                            "send your exports through your private upload page; it is written once they are in. "
+                            "send your exports through your private upload page; it is written on our next pass "
+                            f"after {FIRST_READ_WHEN}. "
                             "This is optional. The call works without it."})
         blocks.append({"button": "Open your private upload page", "url": link})
     return blocks
@@ -494,8 +499,8 @@ def _agreed_blocks(c: dict, p: str, link: str, welcome: str, portal: str) -> lis
     if not c.get("first_read") and not c.get("has_files"):
         steps.append("Your files: about fifteen minutes of exports through your private upload page, linked below. "
                      "The list for your store is on the page.")
-        steps.append("Your first full read, Profit Brief No. 001: written once your files are in, and emailed to you "
-                     f"when it is in Hubricon. {moves_with_read}")
+        steps.append(f"Your first full read, Profit Brief No. 001: written on our next pass after {FIRST_READ_WHEN}, "
+                     f"and emailed to you when it is in Hubricon. {moves_with_read}")
     elif not c.get("first_read"):
         steps.append("Your first full read, Profit Brief No. 001: written from the files you sent, and emailed to "
                      f"you when it is in Hubricon. {moves_with_read}")
@@ -586,8 +591,8 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 {"button": "Open your private upload page", "url": link},
                 {"ol": exports},
                 *([{"p": note}] if note else []),
-                {"p": "Your first full read, Profit Brief No. 001, is written once your files are in, and you get an "
-                      "email when it is in Hubricon."},
+                {"p": f"Your first full read, Profit Brief No. 001, is written on our next pass after {FIRST_READ_WHEN}, "
+                      "and you get an email when it is in Hubricon."},
                 {"p": "Managed Profit is $6,000 a month, flat, and month one is free. If we don't find you more than we cost, "
       "walk away owing nothing — and after that, any invoice your Profit Record hasn't covered is void."},
             ],
@@ -673,42 +678,55 @@ def _esc(s: str) -> str:
             .replace('"', "&quot;").replace("'", "&#39;"))
 
 
-_P = 'style="font-size:16px;margin:0 0 20px"'
-_SMALL = 'style="font-size:14px;color:#555;margin:0 0 20px"'
+# Hubricon's one email look (BRAND.md's tokens written out, because an email
+# cannot read /assets/hubricon.css; supabase/templates/magic-link.html,
+# scripts/lib/email.mjs and lib/tool_email.js set the same): one sans, ink
+# #0a0e17 on white, #3b4250 for what is secondary, one hairline rule #e4e7ec
+# before the sign-off, the button in ink with the one radius. Blue (#0b5fff)
+# is for money alone, so a letter of prose carries none.
+EMAIL_FONT = "Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+EMAIL_INK, EMAIL_INK_2, EMAIL_RULE = "#0a0e17", "#3b4250", "#e4e7ec"
+
+_P = f'style="font-size:16px;color:{EMAIL_INK};margin:0 0 20px"'
+_SMALL = f'style="font-size:14px;color:{EMAIL_INK_2};margin:0 0 20px"'
 
 
 def _html_block(b: dict) -> str:
     if "p" in b:
         return f"  <p {_P}>{_esc(b['p'])}</p>"
     if "path" in b:
-        return ('  <p style="font-family:Menlo,Consolas,monospace;font-size:14px;background:#f2f2f2;'
+        return (f'  <p style="font-size:14px;color:{EMAIL_INK};background:#f5f6f8;border-radius:10px;'
                 f'padding:10px 14px;margin:0 0 20px">{_esc(b["path"])}</p>')
     if "button" in b:
         return "\n".join([
             '  <p style="margin:0 0 10px">',
             f'    <a href="{_esc(b["url"])}"',
-            '       style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;'
-            'padding:12px 24px;font-size:15px">',
+            f'       style="display:inline-block;background:{EMAIL_INK};color:#ffffff;text-decoration:none;'
+            'padding:14px 24px;border-radius:10px;font-size:15px;font-weight:600">',
             f"      {_esc(b['button'])}",
             "    </a>",
             "  </p>",
-            f'  <p {_SMALL}><a href="{_esc(b["url"])}" style="color:#555;word-break:break-all">{_esc(b["url"])}</a></p>',
+            f'  <p {_SMALL}><a href="{_esc(b["url"])}" style="color:{EMAIL_INK_2};word-break:break-all">'
+            f'{_esc(b["url"])}</a></p>',
         ])
     if "ol" in b:
         items = "\n".join(f'    <li style="margin:0 0 10px">{_esc(i)}</li>' for i in b["ol"])
-        return f'  <ol style="font-size:15px;padding-left:22px;margin:0 0 20px">\n{items}\n  </ol>'
+        return f'  <ol style="font-size:15px;color:{EMAIL_INK};padding-left:22px;margin:0 0 20px">\n{items}\n  </ol>'
     raise ValueError(f"unknown block {b}")
 
 
 def render_html(spec: dict) -> str:
     parts = [
-        '<div style="max-width:520px;margin:0 auto;padding:32px 24px;font-family:Georgia,\'Times New Roman\','
-        'serif;color:#1a1a1a;line-height:1.6">',
-        '  <p style="font-size:15px;letter-spacing:0.08em;text-transform:uppercase;color:#8a8a8a;margin:0 0 28px">Hubricon</p>',
+        f'<div style="max-width:520px;margin:0 auto;padding:32px 24px;font-family:{EMAIL_FONT};'
+        f'color:{EMAIL_INK};font-size:16px;line-height:1.6">',
+        f'  <p style="font-size:17px;font-weight:600;letter-spacing:-0.01em;color:{EMAIL_INK};margin:0 0 28px">'
+        'Hubricon</p>',
         f"  <p {_P}>{_esc(spec['greeting'])}</p>",
         *[_html_block(b) for b in spec["blocks"]],
+        f'  <hr style="border:0;border-top:1px solid {EMAIL_RULE};margin:8px 0 20px">',
         f"  <p {_P}>Best,</p>",
-        '  <p style="font-size:14px;margin:0">Hagen Simmons<br><span style="color:#8a8a8a">Hubricon</span></p>',
+        f'  <p style="font-size:14px;color:{EMAIL_INK};margin:0">Hagen Simmons<br>'
+        f'<span style="color:{EMAIL_INK_2}">Hubricon</span></p>',
         "</div>",
     ]
     return "\n".join(parts)

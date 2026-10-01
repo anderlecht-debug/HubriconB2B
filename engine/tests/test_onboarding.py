@@ -258,3 +258,37 @@ def test_platform_read_from_the_application_gate():
     assert p({"rev": "$1M–$5M"}) is None
     assert p({"channel": "Walmart"}) is None
     assert p({}) is None and p(None) is None
+
+
+def test_every_email_says_when_the_first_read_is_written_as_the_schedule_writes_it():
+    """The operator writes the first read on its next pass after the core files
+    are in, or 24 hours after the last upload (first_read_ready), and GitHub runs
+    that pass late. No email may promise it "the moment" a file lands."""
+    when = "on our next pass after your core files are in, or 24 hours after your last upload"
+    prep = render_text(email_spec("call_prep", "Sam", "https://x/intake?t=1", platform="amazon", call_at=CALL))
+    files = render_text(email_spec("files", "Sam", "https://x/intake?t=1"))
+    agreed = render_text(email_spec("agreed", "Sam", "https://x/intake?t=1", "p", **AGREED))
+    for text in (prep, files, agreed):
+        assert when in text
+    for kind in ("call_prep", "files", "nudge", "teardown_ready", "downsell", "recovery_welcome"):
+        text = render_text(email_spec(kind, "Sam", "https://x/intake?t=1", "https://x/portal", call_at=CALL))
+        for promise in ("the moment", "as soon as", "within the hour", "within an hour", "written once"):
+            assert promise not in text, (kind, promise)
+
+
+def test_every_client_email_is_set_in_the_one_look():
+    """Inter on white, ink #0a0e17, #3b4250 for what is secondary, one hairline
+    rule, the button in ink: the sign-in email's look (supabase/templates/
+    magic-link.html), never the old Georgia serif. Blue is for money alone, so a
+    letter of prose carries none. The words are unchanged."""
+    spec = email_spec("call_prep", "Sam", "https://x/intake?t=1", platform="amazon", call_at=CALL)
+    html = render_html(spec)
+    assert "font-family:Inter,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" in html
+    for gone in ("Georgia", "Times New Roman", "#1a1a1a", "#555", "#8a8a8a", "Menlo", "#0b5fff"):
+        assert gone not in html, gone
+    assert "color:#0a0e17" in html and "color:#3b4250" in html
+    assert html.count("<hr ") == 1 and "border-top:1px solid #e4e7ec" in html
+    assert "background:#0a0e17;color:#ffffff" in html and "border-radius:10px" in html
+    assert "Hagen Simmons" in html and ">Hubricon</p>" in html
+    path = render_html({"greeting": "Hi,", "blocks": [{"path": "Settings → User Permissions"}]})
+    assert "Settings → User Permissions" in path and "monospace" not in path
