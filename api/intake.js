@@ -1,16 +1,23 @@
 import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { dispatchOperator, intakeView } from "../lib/intake.js";
 
 /**
  * Tokenized client intake.
  *
- *   GET  /api/intake?t=<token>                     -> { ok, company } | 403
+ *   GET  /api/intake?t=<token>                     -> { ok, company, platform, uploads, cards, status } | 403
  *   POST { t, action: "init", files: [...] }       -> { ok, files: [{ upload_id, signed_url }] }
  *   POST { t, action: "complete", upload_ids: [] } -> { ok, completed: [...] }
  *
  * Files never pass through this function: "init" registers them and returns
  * Supabase Storage signed upload URLs the browser PUTs to directly, which
  * sidesteps Vercel's request body limit.
+ *
+ * GET is what makes the page remember (lib/intake.js): every file already
+ * sent, whether it has been read or needs a fix (in a sentence, never the
+ * parser's own words), and the status line from the call to the first move
+ * notices. "complete" wakes the operator through GitHub's workflow_dispatch
+ * when GITHUB_DISPATCH_TOKEN and GITHUB_DISPATCH_REPO are set.
  */
 
 const BUCKET = "intake";
@@ -128,9 +135,12 @@ export async function GET(request) {
   const db = getDb();
   const identity = await resolveToken(db, token);
   if (!identity) return Response.json({ ok: false }, { status: 403 });
-  // Which export cards the page shows: 'amazon', 'shopify' or 'both'.
-  const { data: client } = await db.from("clients").select("platform").eq("id", identity.client_id).single();
-  return Response.json({ ok: true, company: identity.company_name, platform: client?.platform ?? "amazon" });
+  // `platform` decides which export cards the page shows: 'amazon', 'shopify' or 'both'.
+  const view = await intakeView(db, identity.client_id);
+  return Response.json(
+    { ok: true, company: identity.company_name, ...view },
+    { headers: { "cache-control": "no-store" } }
+  );
 }
 
 export async function POST(request) {
@@ -215,6 +225,13 @@ export async function POST(request) {
         .update({ status: "uploaded", uploaded_at: new Date().toISOString() })
         .eq("id", row.id);
       if (!updateError) completed.push(row.id);
+    }
+    // Files are in: ask the operator to read them now rather than on its next
+    // hourly run. Awaited (a serverless function may stop once it responds),
+    // bounded by a timeout, and never allowed to fail the upload.
+    if (completed.length) {
+      const woke = await dispatchOperator(process.env);
+      if (!woke.dispatched && woke.reason !== "not configured") console.warn(`operator dispatch: ${woke.reason}`);
     }
     return Response.json({ ok: true, completed });
   }

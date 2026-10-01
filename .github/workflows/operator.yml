@@ -15,6 +15,8 @@ on:
     paths:
       - ".github/workflows/operator.yml"
       - "engine/**"
+  # By hand, and from /api/intake when a client's files land (GITHUB_DISPATCH_TOKEN
+  # and GITHUB_DISPATCH_REPO on Vercel), so files are read without waiting for the hour.
   workflow_dispatch:
     inputs:
       dry_run:
@@ -95,6 +97,7 @@ jobs:
         run: |
           flags="--send"
           if [ "${{ inputs.dry_run }}" = "true" ]; then flags="--dry-run"; fi
-          # One digest a day, on the 13:17 UTC run (8:17 am Chicago).
-          if [ "$(date -u +%H)" = "13" ]; then flags="$flags --digest"; fi
+          # One digest a day, on the scheduled 13:17 UTC run (8:17 am Chicago). A run
+          # an upload dispatched (or a push) in the same hour must not send a second one.
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%H)" = "13" ]; then flags="$flags --digest"; fi
           uv run hubricon operator $flags

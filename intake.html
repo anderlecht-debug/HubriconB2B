@@ -57,7 +57,57 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
 .banner { display: none; margin: var(--s-5) 0; padding: var(--s-4) var(--s-5); border-radius: var(--radius); background: var(--paper-2); color: var(--ink); font-size: var(--t-14); }
 .banner.err { border-left: 3px solid var(--ink); }
 .hidden { display: none; }
-@media (max-width: 640px) { .card, .primer { padding: var(--s-4); } }
+
+/* The status line: Call → Files → First full read → Proving Month → move notices. A dot per
+   stage: filled once it is behind them, a ring for where they are, a quiet ring for what follows. */
+.line { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: var(--s-4);
+  margin: 0 0 var(--s-3); padding: var(--s-5) 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.line:empty { display: none; }
+.step { position: relative; display: grid; gap: var(--s-1); align-content: start; padding-top: var(--s-5); font-size: var(--t-14); line-height: 1.45; color: var(--ink-2); }
+.step::before { content: ""; position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink-4); background: var(--paper); }
+.step::after { content: ""; position: absolute; top: 6px; left: 20px; right: calc(-1 * var(--s-4) + 8px); height: 1px; background: var(--rule-2); }
+.step:last-child::after { display: none; }
+.step.done::before { background: var(--ink); border-color: var(--ink); }
+.step.now::before { border-color: var(--ink); }
+.step .k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.step .v { color: var(--ink); font-weight: var(--strong); font-variant-numeric: tabular-nums; }
+.step .s { color: var(--ink-3); }
+.line-note { font-size: var(--t-14); color: var(--ink-3); max-width: 64ch; margin-bottom: var(--s-6); }
+.line-note:empty { display: none; }
+
+/* The checklist. No red, no green: a state is a word and a mark, in ink. */
+.files { margin-bottom: var(--s-7); }
+.files-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); margin-bottom: var(--s-3); }
+.files-count { font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.checklist { list-style: none; border-top: 1px solid var(--rule); }
+.item { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: var(--s-1) var(--s-3); align-items: start; padding: var(--s-3) 0; border-bottom: 1px solid var(--rule); }
+.item .mark { width: 16px; height: 16px; margin-top: 4px; border-radius: 50%; border: 1px solid var(--rule-2); display: grid; place-items: center; font-size: 10px; line-height: 1; font-weight: var(--strong); color: var(--paper); }
+.item[data-state=received] .mark { border: 2px solid var(--ink-3); }
+.item[data-state=parsed] .mark { background: var(--ink); border-color: var(--ink); }
+.item[data-state=parsed] .mark::after { content: "✓"; }
+.item[data-state=failed] .mark { border: 2px solid var(--ink); color: var(--ink); }
+.item[data-state=failed] .mark::after { content: "!"; }
+.item .what { display: grid; gap: 2px; font-size: var(--t-14); line-height: 1.45; }
+.item .name { font-size: var(--t-16); color: var(--ink); font-weight: var(--strong); }
+.item .core { margin-left: var(--s-2); font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--rule-2); border-radius: 6px; padding: 0 var(--s-2); vertical-align: 2px; }
+.item .gives { color: var(--ink-2); }
+.item .detail { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.item .fix { color: var(--ink); border-left: 2px solid var(--ink); padding-left: var(--s-3); margin-top: var(--s-1); }
+.item .fix a { white-space: nowrap; }
+.item .state { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); padding-top: 3px; white-space: nowrap; }
+.item[data-state=parsed] .state, .item[data-state=failed] .state { color: var(--ink); }
+.send-head { margin: 0 0 var(--s-2); }
+.card .have { font-size: var(--t-14); color: var(--ink); margin: calc(-1 * var(--s-2)) 0 var(--s-4); }
+.card .have:empty { display: none; }
+
+@media (max-width: 640px) {
+  .card, .primer { padding: var(--s-4); }
+  .line { grid-template-columns: minmax(0, 1fr); gap: var(--s-3); padding: var(--s-4) 0; }
+  .step { padding: 0 0 0 var(--s-5); }
+  .step::before { top: 4px; }
+  .step::after { top: 18px; left: 5px; right: auto; bottom: calc(-1 * var(--s-3) + 2px); width: 1px; height: auto; }
+  .item { gap: var(--s-1) var(--s-2); }
+}
 </style>
 </head>
 <body>
@@ -74,10 +124,26 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
 
   <!-- the intake form -->
   <div id="form" class="hidden">
-    <div class="head"><h1>Send your reports.</h1></div>
+    <div class="head"><h1>Your reports.</h1></div>
     <p class="plat" id="plat"><i aria-hidden="true"></i><span id="plat-text"></span></p>
-    <p class="sub">Private workspace for <b id="company"></b>.
-    Files upload straight into an isolated, encrypted store — nothing is sent by email.
+    <p class="sub">Private workspace for <b id="company"></b>. What you have sent, what we have read, and what
+    happens next, each time you open this link.</p>
+
+    <!-- The status line: only stages this client has reached, only dates the code keeps
+         (lib/intake.js statusLine). Filled from GET /api/intake. -->
+    <ol class="line" id="line" aria-label="What happens next"></ol>
+    <p class="line-note" id="line-note"></p>
+
+    <!-- The checklist: one row per file this client's cards ask for. -->
+    <section class="files" aria-labelledby="files-h">
+      <div class="files-head"><h2 id="files-h">Your files</h2><span class="files-count" id="files-count"></span></div>
+      <ul class="checklist" id="checklist"></ul>
+      <p class="note">We read your files on our next pass. Each one shows <b>Read</b> here once we have, or says
+      what to fix.</p>
+    </section>
+
+    <h2 class="send-head">Send what is missing</h2>
+    <p class="sub">Files upload straight into an isolated, encrypted store — nothing is sent by email.
     Add what you have; you can reopen this link to send the rest (it expires after 90 days).
     Every card's dates are already filled in to match the export it asks for — change them if you exported a
     different span, because anything outside the dates you give us is ignored.</p>
@@ -443,6 +509,146 @@ function applyPlatform(platform){
   $("#plat-text").textContent = "Selling on " + PLATFORM_LABEL[p];
 }
 
+/* --- what the page remembers ---------------------------------------------
+   GET /api/intake returns every file already sent and the status line
+   (lib/intake.js). The checklist has one row per card this client sees, in
+   the cards' order; each says what the file gives the models. A row says Read
+   only once the file is parsed, never on arrival. */
+const GIVES = {
+  business_report: "your trend and demand, SKU by SKU",
+  sku_economics: "your true fee per SKU",
+  ppc: "ad spend that never converted, and your break-even",
+  fba_inventory: "stockout odds and reorder dates",
+  shopify_orders: "sales, refunds and discounts per SKU: your demand curves",
+  shopify_products: "cost per item, and stock on a single-location store",
+  shopify_inventory: "stock across your locations, for reorder points",
+  shopify_payouts: "the processing fee you really paid, not the published rate",
+  meta_ads: "where more Meta spend stops paying",
+  google_ads_campaign: "where more Google spend stops paying",
+  google_ads_search_terms: "Google spend on terms that never convert",
+  cogs: "your true net margin per SKU",
+  fba_reimbursements: "what Amazon has paid back: the baseline for what it still owes",
+  fba_returns: "returned units never restocked or refunded",
+  inventory_ledger: "units lost or damaged in Amazon's warehouses",
+  inventory_health: "aged-stock and low-inventory fees before they are charged",
+  transactions: "every fee line Amazon charged, checked by type",
+};
+const STATE_WORD = { parsed: "Read", received: "Received", failed: "Needs a fix", none: "Not yet" };
+
+const UTC_DAY = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+const UTC_SHORT = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+const LOCAL_DAY = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
+const LOCAL_TIME = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+const day = (d) => UTC_DAY.format(new Date(`${String(d).slice(0, 10)}T00:00:00Z`));
+const shortDay = (d) => UTC_SHORT.format(new Date(`${String(d).slice(0, 10)}T00:00:00Z`));
+const n = (x) => Number(x).toLocaleString("en-US");
+const plural = (k, one, many) => `${n(k)} ${k === 1 ? one : many}`;
+
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function period(c){
+  if (!c.period_start) return "";
+  return c.period_end && c.period_end !== c.period_start ? `${day(c.period_start)} – ${day(c.period_end)}` : day(c.period_start);
+}
+
+function renderLine(status){
+  const line = $("#line"), note = $("#line-note");
+  line.replaceChildren();
+  note.textContent = "";
+  if (!status) return;
+  const step = (k, v, state, sub) => {
+    const li = el("li", "step " + state);
+    li.append(el("span", "k", k), el("span", "v", v));
+    if (sub) li.append(el("span", "s", sub));
+    line.append(li);
+  };
+  const now = new Date();
+  if (status.call){
+    const at = new Date(status.call.at);
+    step("Call", status.call.past ? LOCAL_DAY.format(at) : LOCAL_TIME.format(at), status.call.past ? "done" : "now");
+  }
+  const f = status.files;
+  const allIn = f.count >= f.of;
+  step("Files", allIn ? "Core files in" : `${f.count} of ${f.of} core files in`, allIn ? "done" : "now");
+  if (status.first_read){
+    if (status.first_read.published_at) step("First full read", `Published ${shortDay(status.first_read.published_at)}`, "done", "in Hubricon");
+    else step("First full read", "When your core files are in, or 24 hours after your last upload", allIn ? "now" : "next");
+  }
+  if (status.proving_month){
+    const pm = status.proving_month;
+    const today = now.toISOString().slice(0, 10);
+    step("Proving Month", `${shortDay(pm.start)} – ${shortDay(pm.end)}`, today > pm.end ? "done" : today >= pm.start ? "now" : "next", "free");
+  }
+  if (status.move_notices){
+    const mn = status.move_notices;
+    step(mn.first ? "First move notices" : "Move notices", `From the weekly pass, ${shortDay(mn.next_pass)}`, "next");
+    note.textContent = "Move notices come from the weekly pass on Mondays. Each names the move and its expected dollars at least three days before it goes live, and you can say no to any of them. A week with nothing worth moving sends nothing.";
+  }
+}
+
+function renderFiles(cards, core){
+  const list = $("#checklist");
+  list.replaceChildren();
+  const coreSet = new Set((core || []).map((t) => (t.startsWith("ppc_") ? "ppc" : t)));
+  let read = 0, total = 0;
+  document.querySelectorAll(".card").forEach((card) => {
+    const type = card.dataset.type;
+    const c = cards?.[type];
+    const state = c?.status || "none";
+    total++;
+    if (state === "parsed" || (c && c.read)) read++;
+    card.id = "card-" + type;
+
+    const li = el("li", "item");
+    li.dataset.state = state;
+    const what = el("div", "what");
+    const name = el("span", "name", $("h2", card).textContent.replace(/^\d+ · /, ""));
+    if (coreSet.has(type)) name.append(el("span", "core", "Core"));
+    what.append(name, el("span", "gives", "→ " + GIVES[type]));
+    const bits = [];
+    if (c?.read) bits.push(`${plural(c.read, "file", "files")} read` + (period(c) ? ` · ${period(c)}` : "") + (c.rows ? ` · ${plural(c.rows, "row", "rows")}` : ""));
+    if (c?.received) bits.push(`${plural(c.received, "file", "files")} received, not read yet`);
+    if (bits.length) what.append(el("span", "detail", bits.join(" · ")));
+    for (const p of c?.problems || []){
+      const fix = el("span", "fix", `${p.filename}: ${p.problem} `);
+      const a = el("a", null, "Send it again ↓");
+      a.href = "#card-" + type;
+      fix.append(a);
+      what.append(fix);
+    }
+    li.append(el("span", "mark"), what, el("span", "state", STATE_WORD[state]));
+    li.querySelector(".mark").setAttribute("aria-hidden", "true");
+    list.append(li);
+
+    // The card itself says what is already here, so nobody sends a month twice.
+    let have = $(".have", card);
+    if (!have){ have = el("p", "have"); $(".why", card).after(have); }
+    have.textContent = !c ? "" :
+      [c.read ? `Already read: ${plural(c.read, "file", "files")}${period(c) ? ", " + period(c) : ""}.` : "",
+       c.received ? `${plural(c.received, "file", "files")} received, waiting for our next pass.` : "",
+       c.problems.length ? `${plural(c.problems.length, "file needs", "files need")} a fix: see Your files above.` : ""]
+        .filter(Boolean).join(" ");
+  });
+  $("#files-count").textContent = `${read} of ${total} read`;
+}
+
+async function refresh(){
+  const res = await fetch(`/api/intake?t=${encodeURIComponent(token)}`, { cache: "no-store" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) return null;
+  return data;
+}
+
+function render(data){
+  renderLine(data.status);
+  renderFiles(data.cards, data.status?.files?.core);
+}
+
 /* --- does this file look like the export the card asked for? -------------
    The columns below are the ones each parser requires
    (engine/src/hubricon_engine/ingest/*.py, the "required" entries in each
@@ -737,19 +943,22 @@ $("#submit").addEventListener("click", async () => {
   }
 
   btn.disabled = false;
-  if (failed === 0) showBanner(`All set — ${sent} file${sent === 1 ? "" : "s"} received. You can close this page, or add more months any time.`);
+  if (failed === 0) showBanner(`Received: ${sent} file${sent === 1 ? "" : "s"}. We read your files on our next pass; ` +
+    "this page shows each one as Read once we have, or says what to fix. You can close it, and add more with the same link.");
   else showBanner(`${sent} received, ${failed} failed — hit “Upload files” again to retry the failed ones.`, true);
+  // The checklist and the status line catch up with what just landed.
+  if (sent) refresh().then((data) => { if (data) render(data); }).catch(() => {});
 });
 
 (async () => {
   if (!token) return deadLink("No access token in the URL. Use the exact link from your Hubricon email.");
   try {
-    const res = await fetch(`/api/intake?t=${encodeURIComponent(token)}`);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok)
+    const data = await refresh();
+    if (!data)
       return deadLink("The link may have expired or been replaced. Reply to your Hubricon email for a fresh one.");
     $("#company").textContent = data.company || "your team";
     applyPlatform(data.platform || "amazon");
+    render(data);
     gate.classList.add("hidden");
     form.classList.remove("hidden");
   } catch {

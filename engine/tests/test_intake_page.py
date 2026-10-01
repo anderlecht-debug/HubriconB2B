@@ -115,3 +115,41 @@ def test_every_shopify_report_type_has_a_signature_to_check_against():
     for report_type in PARSERS:
         if report_type.startswith("shopify_"):
             assert report_type in signatures
+
+
+# The page remembers (2026-10-01): a checklist row per card, each saying what the
+# file gives the models, a state that says Read only once the parser has run, and
+# a plain sentence for every file that failed (lib/intake.js).
+INTAKE_LIB = (ROOT / "lib" / "intake.js").read_text()
+
+
+def _js_object_keys(source: str, name: str) -> set[str]:
+    """The keys of `const NAME = { key: "…", … };` (one or several per line)."""
+    body = re.search(rf"const {name} = \{{(.*?)\n\}};", source, re.S).group(1)
+    return set(re.findall(r'(?:^|,)\s*(\w+):\s*"', body, re.M))
+
+
+def test_every_card_says_what_it_gives_the_models():
+    gives = _js_object_keys(INTAKE_HTML, "GIVES")
+    assert set(_card_types()) <= gives, set(_card_types()) - gives
+
+
+def test_every_report_type_has_a_name_the_client_reads():
+    names = _js_object_keys(INTAKE_LIB, "CARD_NAME")
+    for report_type in PARSERS:
+        card = "ppc" if report_type.startswith("ppc_") else report_type
+        assert card in names, f"{report_type} failing to parse would be described without its card's name"
+
+
+def test_read_means_parsed():
+    """The upload landing is 'received'; only the parser's success is 'Read'."""
+    status = re.search(r"const STATUS = \{(.*?)\};", INTAKE_LIB, re.S).group(1)
+    assert 'uploaded: "received"' in status and 'parsed: "parsed"' in status and 'failed: "failed"' in status
+    words = re.search(r"const STATE_WORD = \{(.*?)\};", INTAKE_HTML, re.S).group(1)
+    assert re.findall(r'(\w+): "Read"', words) == ["parsed"]
+
+
+def test_the_core_set_names_report_types_the_parsers_read():
+    core = re.search(r"export const CORE = \{(.*?)\};", INTAKE_LIB, re.S).group(1)
+    for report_type in re.findall(r'"(\w+)"', core):
+        assert report_type in PARSERS
