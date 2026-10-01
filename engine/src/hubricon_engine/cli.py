@@ -368,6 +368,15 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
             _write_results(db, "margin_results", margin_rows, run_id, client["id"])
+            if channel == "shopify":
+                # the store's own files: the compare-at discount and the parcel
+                # band, each found, not proven (models/shopify_findings); the
+                # weekly drafting pass reads it (directives.compare_at_directives)
+                from .models import shopify_findings
+                try:
+                    _save_output(db, run_id, client["id"], "shopify_findings", shopify_findings.run(data))
+                except Exception as err:   # never a reason for the run to stop
+                    print(f"  shopify findings skipped: {err}")
         seasonal = None
         if "season" in wanted:
             seasonal = seasonality.indices(data)
@@ -749,7 +758,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
                               assortment=outputs.get("assortment"),
                               risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"),
-                              ppc_spend_rows=ppc_spend)
+                              ppc_spend_rows=ppc_spend, shopify_findings=outputs.get("shopify_findings"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}

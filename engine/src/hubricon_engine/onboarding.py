@@ -576,6 +576,18 @@ def _read_ready_close(stage: str | None, call_at) -> str:
     return "Read it, then tell me where you disagree; a reply reaches me."
 
 
+def _reads_line(reads: dict | None) -> str:
+    """Which first reads are in Hubricon. A seller on both platforms gets one per
+    store (operator: Amazon is No. 001, Shopify No. 002), and the email names each."""
+    reads = {k: v for k, v in (reads or {}).items() if v}
+    if len(reads) > 1:
+        names = {"amazon": "Amazon", "shopify": "Shopify"}
+        parts = [f"No. {int(n):03d} ({names.get(ch, ch.title())})" for ch, n in sorted(reads.items(), key=lambda kv: kv[1])]
+        return ("The models have run on your files. Your first full reads, one for each store, are in Hubricon: "
+                f"Profit Brief {parts[0]} and {parts[1]}" + (":" if len(parts) == 2 else f" and {', '.join(parts[2:])}:"))
+    return "The models have run on your files. Your first full read, Profit Brief No. 001, is in Hubricon:"
+
+
 def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | None = None,
                platform: str | None = "amazon", **ctx) -> dict:
     """One email's subject and blocks. `ctx` carries what a stage email states:
@@ -637,7 +649,7 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
             "subject": "Your first full read is ready",
             "greeting": greeting,
             "blocks": [
-                {"p": "The models have run on your files. Your first full read, Profit Brief No. 001, is in Hubricon:"},
+                {"p": _reads_line(ctx.get("reads"))},
                 {"button": "Open Hubricon", "url": portal},
                 {"p": "Sign in with this email address; the link arrives in seconds and works once."},
                 # Before a yes there is no Record to start, only the baseline it would start from.

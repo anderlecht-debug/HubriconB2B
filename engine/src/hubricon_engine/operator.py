@@ -904,9 +904,8 @@ class Pass:
                          + (f" of your {where}" if both else "")),
         }).execute()
         speed.set_once(self.db, c, "first_issue_at")
-        # `reads` names every read this pass wrote, {channel: issue number}, for
-        # an email that can say there are two (onboarding's teardown_ready
-        # names No. 001 only today and ignores what it does not use)
+        # `reads` names every read this pass wrote, {channel: issue number}, so a
+        # seller on both platforms is told both (onboarding._reads_line)
         reads = ({channel: issue_no, **{x: n for x, n in (siblings or {}).items() if n}} if both else None)
         sent = (self._touch(c, "teardown_ready", PORTAL_URL, force=True, stage=stage, call_at=call,
                             missing=missing if email_missing is None else email_missing,

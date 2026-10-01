@@ -316,3 +316,11 @@ def test_the_shopify_seat_is_a_staff_account_with_the_ad_accounts_asked_for_apar
     both = seat_hint("both")
     assert both.startswith(f"Add {EXEC_EMAIL} under Seller Central") and "On Shopify: add " in both
     assert seat_hint("amazon") == seat_hint(None) and "staff account" not in seat_hint("amazon")
+
+
+def test_a_seller_on_both_platforms_is_told_both_first_reads():
+    one = render_text(email_spec("teardown_ready", "Sam", "l"))
+    assert "Your first full read, Profit Brief No. 001, is in Hubricon" in one
+    both = render_text(email_spec("teardown_ready", "Sam", "l", reads={"amazon": 1, "shopify": 2}))
+    assert "Profit Brief No. 001 (Amazon) and No. 002 (Shopify)" in both
+    assert render_text(email_spec("teardown_ready", "Sam", "l", reads={"shopify": 1})) == one.replace("l", "l")
