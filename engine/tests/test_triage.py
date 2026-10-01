@@ -81,6 +81,8 @@ def test_the_fact_sheet_offers_only_what_exists_today():
     assert "/teardown" not in f and "reply TEARDOWN" not in f and "TEARDOWN" not in f
     assert "Teardown are retired" in f
     assert "No client results are published yet" in f
+    # Since 2026-10-01 every lesson and its spreadsheet are open; an email is optional.
+    assert "no email needed" in f and "One email opens" not in f
     assert "within 24 hours" not in f
     for v in triage.STATUS_AFTER.values():
         assert v != "wants_teardown", "a TEARDOWN reply no longer opens a door that is closed"
