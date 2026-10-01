@@ -1699,8 +1699,20 @@ EXPORT_TABLES = (
     "directives", "price_tests", "alerts", "briefings", "plans", "initiatives",
     "record_months", "results",
     "invoices", "recovery_invoices", "mandates", "consents", "client_emails",
-    "record_seals",
+    "record_seals", "weekly_notes",
 )
+
+# What a client's export may hold of a table that also keeps the founder's
+# drafts: a Profit Brief only once published (a row with no status predates the
+# approval gate and was published), a weekly note only once sent. Drafts and
+# discarded notes are the founder's working papers, not something we told them.
+EXPORT_ROW_FILTERS = {
+    "briefings": lambda r: (r.get("status") or "published") == "published",
+    "weekly_notes": lambda r: r.get("status") == "sent",
+}
+# Tables a migration may not have created yet (20261001000004): absent, the
+# export leaves them out without a line, rather than print a database error.
+EXPORT_OPTIONAL_TABLES = ("weekly_notes",)
 
 # Beside record-seal.json and verify-record.mjs in every export: how to run the
 # check, in words a client's accountant can follow, and what it does not prove.
@@ -1796,8 +1808,12 @@ def build_export(db, client_id: str, files: bool = True) -> bytes:
             try:
                 rows = dbmod.fetch_all(db, table, client_id)
             except Exception as err:
-                manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
+                if table not in EXPORT_OPTIONAL_TABLES:
+                    manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
                 continue
+            keep = EXPORT_ROW_FILTERS.get(table)
+            if keep:
+                rows = [r for r in rows if keep(r)]
             if not rows:
                 manifest.append(f"  {table}: empty")
                 continue
@@ -1843,8 +1859,10 @@ def build_export(db, client_id: str, files: bool = True) -> bytes:
                 written += 1
             manifest.append(f"  raw/ — {written} uploaded file(s) exactly as you sent them")
 
+        briefings = [b for b in db.table("briefings").select("*").eq("client_id", client_id).execute().data
+                     if EXPORT_ROW_FILTERS["briefings"](b)]
         for path_field, label in (("report_path", "reports"), ("video_path", "videos")):
-            for b in db.table("briefings").select("*").eq("client_id", client_id).execute().data:
+            for b in briefings:
                 target = b.get(path_field)
                 if not target:
                     continue
@@ -3040,6 +3058,14 @@ def cmd_cancel(args):
         print(f"  {line.replace('[dry] ', 'next operator pass: ')}")
 
 
+def _iso_day(s: str) -> str:
+    """argparse type for a calendar day: YYYY-MM-DD, said plainly when it is not."""
+    try:
+        return date.fromisoformat(s).isoformat()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{s!r} is not a day; use YYYY-MM-DD") from None
+
+
 def cmd_stripe_smoke(args):
     """Every Stripe call the billing path makes, against a TEST-mode key."""
     from . import stripe_smoke
@@ -3327,10 +3353,13 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
     # -- the clocks ----------------------------------------------------------
+    # An exit's refund clock is terms §5, counted on its own row above; counted
+    # here too, one late refund would read as a late privacy request.
     try:
         overdue = [r for r in db.table("data_requests").select("kind, due_at")
                    .is_("closed_at", "null").execute().data
-                   if datetime.fromisoformat(str(r["due_at"])) < datetime.now(timezone.utc)]
+                   if r.get("kind") != "exit"
+                   and datetime.fromisoformat(str(r["due_at"])) < datetime.now(timezone.utc)]
         add("Deletion in 30d · DSAR in 7d · breach in 72h", "privacy §5–7", not overdue,
             "no open request is past its deadline" if not overdue
             else f"{len(overdue)} request(s) PAST the deadline the privacy policy states")
@@ -4122,6 +4151,8 @@ def main():
     p = sub.add_parser("cancel", help="terms §5: end Managed Profit now — subscription ended, client churned, "
                                       "exit true-up on the next operator pass")
     p.add_argument("client")
+    p.add_argument("--emailed", type=_iso_day, metavar="YYYY-MM-DD",
+                   help="day the cancel email arrived; the refund clock runs seven days from it (default: today)")
     p.set_defaults(fn=cmd_cancel)
 
     p = sub.add_parser("dispute", help="take a disputed dollar the record cannot defend off a measured month; "

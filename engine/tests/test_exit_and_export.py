@@ -384,3 +384,91 @@ def test_cancel_for_someone_who_never_said_yes_sends_no_exit_letter(monkeypatch,
     db = _db(clients=[_client(status="pending", retainer_started_at=None)])
     _cancel(monkeypatch, db)
     assert db.rows("data_requests") == [] and "never said yes" in capsys.readouterr().out
+
+
+# -- what the export holds of the founder's drafts, and the clocks beside the exit ---------------
+
+def test_the_export_holds_published_briefs_and_sent_notes_never_a_draft():
+    """A Brief held for approval and a weekly note never sent are the founder's
+    working papers: the client was told neither, so neither is in their zip,
+    and a held Brief's report is not either. A Brief from before the approval
+    gate has no status and was published."""
+    db = _db(briefings=[
+                 {"id": "b1", "client_id": "c1", "issue_number": 1, "report_path": "reports/c1/issue-001.html"},
+                 {"id": "b2", "client_id": "c1", "issue_number": 2, "status": "published",
+                  "report_path": "reports/c1/issue-002.html"},
+                 {"id": "b3", "client_id": "c1", "issue_number": 3, "status": "draft", "memo": "HELD DRAFT",
+                  "report_path": "drafts/c1/issue-003.html"}],
+             weekly_notes=[
+                 {"id": "n1", "client_id": "c1", "week_of": "2026-09-28", "status": "sent", "body_text": "SENT NOTE"},
+                 {"id": "n2", "client_id": "c1", "week_of": "2026-10-05", "status": "draft", "body_text": "DRAFT NOTE"},
+                 {"id": "n3", "client_id": "c1", "week_of": "2026-09-21", "status": "discarded",
+                  "body_text": "DISCARDED NOTE"}])
+    db.storage = FakeStorage()
+    for path in ("reports/c1/issue-001.html", "reports/c1/issue-002.html", "drafts/c1/issue-003.html"):
+        db.storage.objects[(storage.BUCKET, path)] = (b"<html></html>", {})
+    z = zipfile.ZipFile(io.BytesIO(cli.build_export(db, "c1")))
+    names = set(z.namelist())
+    assert {"reports/issue-001.html", "reports/issue-002.html"} <= names
+    assert "reports/issue-003.html" not in names
+    briefs = z.read("tables/briefings.csv").decode()
+    assert "b1" in briefs and "b2" in briefs and "HELD DRAFT" not in briefs
+    notes = z.read("tables/weekly_notes.csv").decode()
+    assert "SENT NOTE" in notes and "DRAFT NOTE" not in notes and "DISCARDED NOTE" not in notes
+    manifest = z.read("MANIFEST.txt").decode()
+    assert "tables/briefings.csv — 2 row(s)" in manifest and "tables/weekly_notes.csv — 1 row(s)" in manifest
+
+
+def test_the_export_works_without_the_notes_migration():
+    """Before 20261001000004 there is no weekly_notes table and no briefings
+    status: the export is built as before, with no database error in it."""
+    db = _db(briefings=[{"id": "b1", "client_id": "c1", "issue_number": 1}])
+    real = db.table
+
+    def table(name):
+        if name == "weekly_notes":
+            raise RuntimeError('relation "public.weekly_notes" does not exist (42P01)')
+        return real(name)
+
+    db.table = table
+    z = zipfile.ZipFile(io.BytesIO(cli.build_export(db, "c1", files=False)))
+    manifest = z.read("MANIFEST.txt").decode()
+    assert "weekly_notes" not in manifest and "42P01" not in manifest
+    assert "tables/briefings.csv — 1 row(s)" in manifest
+
+
+def test_cancel_takes_the_day_the_email_arrived(monkeypatch):
+    """`hubricon cancel <client> --emailed YYYY-MM-DD`: the refund clock runs
+    seven days from the client's email, not from when the founder got to it."""
+    import sys
+    seen, real = [], cli.cmd_cancel
+    monkeypatch.setattr(cli, "cmd_cancel", lambda args: seen.append(args))
+    monkeypatch.setattr(sys, "argv", ["hubricon", "cancel", "a@alpha.com", "--emailed", "2026-09-30"])
+    cli.main()
+    assert seen[0].client == "a@alpha.com" and seen[0].emailed == "2026-09-30"
+    monkeypatch.setattr(sys, "argv", ["hubricon", "cancel", "a@alpha.com"])
+    cli.main()
+    assert seen[1].emailed is None
+    monkeypatch.setattr(sys, "argv", ["hubricon", "cancel", "a@alpha.com", "--emailed", "last tuesday"])
+    with pytest.raises(SystemExit):
+        cli.main()
+
+    monkeypatch.setattr(cli, "cmd_cancel", real)
+    db = _db(clients=[_client()])
+    _cancel(monkeypatch, db, emailed=seen[0].emailed)
+    [clock] = db.rows("data_requests")
+    assert clock["opened_at"].startswith("2026-09-30") and clock["due_at"].startswith("2026-10-07")
+
+
+def test_a_late_exit_is_counted_on_its_own_row_not_as_a_late_privacy_request():
+    """The exit's refund clock (terms §5) has its own promise row; counted in the
+    privacy clocks too, one late refund read as a late privacy request."""
+    late = _db(data_requests=[_req("exit-9", "exit", hours_ago=24 * 9, due_in_days=-2)])
+    rows = {r[0]: r for r in cli.promise_rows(late)}
+    assert rows["A refund owed at the exit is issued within seven days of the email"][2] is False
+    clocks = rows["Deletion in 30d · DSAR in 7d · breach in 72h"]
+    assert clocks[2] is True and "no open request is past its deadline" in clocks[3]
+    both = _db(data_requests=[_req("exit-9", "exit", hours_ago=24 * 9, due_in_days=-2),
+                              _req("del-1", "deletion", hours_ago=24 * 40, due_in_days=-10)])
+    clocks = {r[0]: r for r in cli.promise_rows(both)}["Deletion in 30d · DSAR in 7d · breach in 72h"]
+    assert clocks[2] is False and "1 request(s) PAST" in clocks[3]
