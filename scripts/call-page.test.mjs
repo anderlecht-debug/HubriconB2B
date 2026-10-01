@@ -58,10 +58,51 @@ test("Shopify sellers get a Shopify reading, and a SKU with its own cost says so
   assert.match(page, /id="file-shopify"/);
   assert.match(page, /On Shopify: prices sitting under their own compare-at, and parcels just past a pound line\./);
   assert.match(js, /call\.parseShopifyProducts/);
-  assert.match(js, /call\.analyseShopify\(rc, state\.shopify\)/);
+  assert.match(js, /call\.analyseShopify\(rc, state\.shopify, \{/);
   for (const label of ["est.", "estimate"]) assert.ok(js.split("drawShopify")[2].includes(label), `the Shopify figures carry "${label}"`);
   assert.match(page, /id="file-cost"/);
   assert.match(page, /href="\/cogs-template\.csv"/);
   assert.match(js, /costBySku: state\.cost \? state\.cost\.bySku : \{\}/);
   assert.match(js, /m\.cost_basis === "yours" \? "your cost" : "est\. from your %"/);
+});
+
+test("a Shopify booker is met as one: Shopify cards first, the Shopify lede, no ACoS box", () => {
+  // the channel is the one /apply kept for this browser at booking, or ?p= on the link
+  const apply = read("apply.html");
+  assert.match(apply, /const BOOKED_KEY = "hubricon_booked";/);
+  assert.match(apply, /localStorage\.setItem\(BOOKED_KEY, JSON\.stringify\(\{ channel: channelOf\(channel\), at: Date\.now\(\) \}\)\)/);
+  assert.match(js, /localStorage\.getItem\("hubricon_booked"\)/);
+  assert.match(js, /new URLSearchParams\(location\.search\)\.get\("p"\)/);
+  assert.doesNotMatch(js, /localStorage\.(setItem|removeItem)/, "the call reads the booking's answer and never changes it");
+  const order = js.match(/const ORDER = \{([\s\S]*?)\n\};/)[1];
+  assert.match(order, /shopify: \[\["shopify", "orders", "cost"\], "Also selling on Amazon\?[^"]*", \["inventory", "fees", "ads"\]\]/);
+  for (const id of ["shopify", "orders", "cost", "inventory", "fees", "ads"]) assert.match(page, new RegExp(`id="drop-${id}"`), `${id} is a card on the page`);
+  assert.match(js, /\$\("knob-target"\)\.hidden = CHANNEL === "shopify" && !amazon;/, "target ACoS is Amazon's, shown to a Shopify seller only once an Amazon report is in");
+  assert.match(page, /<div class="knob" id="knob-target">\s*<label for="target">Your target ACoS<\/label>/);
+  const lede = js.match(/shopify: "(Drop in your Shopify[^"]*)"/)[1];
+  assert.doesNotMatch(lede, /Amazon|Seller Central|ACoS|FBA/, "the Shopify lede names no Amazon report");
+  assert.match(js, /if \(CHANNEL === "shopify"\) \$\("results"\)\.insertBefore\(\$\("shopify"\), \$\("amazon"\)\);/);
+});
+
+test("the Orders export makes the Shopify figures a month, read here, its customer columns never", () => {
+  assert.match(page, /id="file-orders"/);
+  assert.match(page, /Orders, Export, Orders by date, as CSV/);
+  assert.match(page, /no name, email or address/);
+  assert.match(js, /orders: \{ label: "Shopify Orders", parse: call\.parseShopifyOrders/);
+  assert.match(js, /orders: state\.orders/);
+  assert.doesNotMatch(js, /your own count/, "nothing points at an export the page cannot read");
+  const body = js.split("function drawShopify")[1];
+  assert.match(body, /Twelve months at this pace would be \$\{usd\(total \* 12\)\}, an estimate: a plain multiplication, not a forecast\./);
+});
+
+test("what each Shopify variant keeps, and its break-even ROAS, every figure an estimate, on paper too", () => {
+  const body = js.split("function drawShopify")[1];
+  assert.match(body, /Shopify Payments' standard online card fee of \$\{\(pay\.rate \* 100\)\.toFixed\(1\)\}% \+ \$\{Math\.round\(pay\.fixed \* 100\)\}¢/);
+  assert.match(body, /The fee is an estimate/);
+  assert.match(body, /Break-even ROAS is the return an ad must bring/);
+  const keep = body.slice(body.indexOf("const BASIS"));
+  assert.equal((keep.match(/<span class="basis">estimate<\/span>/g) || []).length, 4, "the fee, kept a unit, the ROAS and kept a month each say estimate");
+  assert.match(keep, /cost_per_item: "Cost per item"/, "a cost says where it came from");
+  assert.match(results, /id="leak-keep"[\s\S]*What each variant keeps, and the ROAS that breaks even/, "inside the results, so the printed reading carries it");
+  assert.match(results, /Shopify Payments' standard 2\.9% \+ 30¢/);
 });

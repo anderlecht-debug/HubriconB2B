@@ -7,7 +7,12 @@ JavaScript to it: reading a Seller Central export the way the ingest does, and p
 the aged-inventory surcharge and the low-inventory-level fee the way inventory_econ.run
 does, so the number shown on a call is the number the Profit Record would count after
 a yes. Regenerate after any change to ingest/readers.py, ingest/headers.py,
-ingest/inventory_health.py, models/fee_schedule.py or models/inventory_econ.py.
+ingest/inventory_health.py, ingest/shopify_orders.py, models/fee_schedule.py or
+models/inventory_econ.py.
+
+The Shopify Orders export is held the same way: each SKU's units, sales after refunds
+and processing fee over the export, as shopify_orders.parse buckets them, so the month
+the call shows a Shopify seller is the month the engine would read from the same file.
 """
 from __future__ import annotations
 
@@ -22,7 +27,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from hubricon_engine.ingest import headers, inventory_health, readers  # noqa: E402
+from hubricon_engine.ingest import headers, inventory_health, readers, shopify_orders  # noqa: E402
 from hubricon_engine.models import fee_schedule as fees  # noqa: E402
 from hubricon_engine.models import inventory_econ as econ  # noqa: E402
 
@@ -35,6 +40,7 @@ FIELDS = ["sku", "available", "inv_age_181_to_270", "inv_age_271_to_365", "inv_a
 
 
 FEE_PREVIEW = ROOT / "engine" / "tests" / "fixtures" / "fee_preview_clean.txt"
+SHOPIFY_ORDERS = ROOT / "engine" / "tests" / "fixtures" / "shopify_orders_clean.csv"
 # The low-inventory fee's own columns, per fixture row (sku, or fnsku where the sku is
 # blank): Amazon's 30- and 90-day historical days of supply and its exemption flag.
 LILF_COLUMNS = {
@@ -75,6 +81,22 @@ def with_fee_preview_tiers(rows: list[dict], fee_text: str) -> list[dict]:
     by_sku = {rec["sku"]: rec for rec in fp.to_dict(orient="records")}
     return [{**r, "raw": {**(r.get("raw") or {}), **{k: by_sku[r["sku"]][k] for k in TIER_COLUMNS}}}
             if r["sku"] in by_sku else r for r in rows]
+
+
+def shopify_orders_by_sku(text: str) -> dict:
+    """shopify_orders.parse over the whole export (the window is the file's own first to last
+    order day, as on the call), summed per SKU across its months."""
+    df = readers.read_table(text.encode("utf-8"))
+    days = sorted(d for d in (headers.to_iso_date(v) for v in df["Created at"]) if d)
+    upload = {"client_id": "c", "id": "u", "period_start": days[0], "period_end": days[-1]}
+    tables = {name: rows for name, rows, _ in shopify_orders.parse(df, upload)}
+    out: dict[str, dict] = {}
+    for r in tables["sku_economics"]:
+        b = out.setdefault(r["sku"], {"units": 0, "sales": 0.0, "fee": 0.0})
+        b["units"] += r["units_sold"]
+        b["sales"] = round(b["sales"] + r["sales"], 2)
+        b["fee"] = round(b["fee"] - r["referral_fees"], 2)
+    return out
 
 
 def main() -> None:
@@ -121,6 +143,11 @@ def main() -> None:
     }
     preamble = ("Inventory report\nGenerated for: a, b, c\n\n" + text)
     cases["preamble"] = {"text": preamble, "headers": list(readers.read_table(preamble.encode()).columns)}
+    orders_text = SHOPIFY_ORDERS.read_text(encoding="utf-8")
+    cases["shopify_orders"] = {"text": orders_text, "by_sku": shopify_orders_by_sku(orders_text),
+                               "payments": {"rate": shopify_orders.DEFAULT_PAYMENTS_RATE,
+                                            "fixed": shopify_orders.DEFAULT_PAYMENTS_FIXED},
+                               "drop_statuses": sorted(shopify_orders.DROP_STATUSES)}
     cases["constants"] = {"bucket_mid_age": econ.BUCKET_MID_AGE, "default_volume": fees.DEFAULT_ITEM_VOLUME_CUFT,
                           "effective": fees.EFFECTIVE,
                           "low_inventory_fee": fees.LOW_INVENTORY_FEE_PER_UNIT,

@@ -38,6 +38,8 @@
 .drop.loaded { border-style: solid; border-color: var(--ink); }
 .drop.bad { border-style: solid; }
 .drop.bad .state { color: var(--ink); font-weight: var(--strong); }
+.also { grid-column: 1 / -1; margin-top: var(--s-2); padding-top: var(--s-4); border-top: 1px solid var(--rule); font-size: var(--t-14); color: var(--ink-3); }
+.also[hidden], .knob[hidden], .big[hidden] { display: none; }
 .knobs { margin-top: var(--s-4); display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-6); align-items: end; }
 .knob { display: grid; gap: var(--s-1); }
 .knob label { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
@@ -127,7 +129,7 @@ td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-we
 <main class="wrap">
   <section class="head">
     <h1>Your reports, priced while we talk.</h1>
-    <p class="lede">Drop in your Seller Central reports, your Shopify Products export, or both. This page reads them and prices the costs only your own data shows. On Amazon: aged stock heading for day 271, the low-inventory fee, units just past a fee edge, and ads spending past break-even. On Shopify: prices sitting under their own compare-at, and parcels just past a pound line.</p>
+    <p class="lede" id="lede">Drop in your Seller Central reports, your Shopify exports, or both. This page reads them and prices the costs only your own data shows. On Amazon: aged stock heading for day 271, the low-inventory fee, units just past a fee edge, and ads spending past break-even. On Shopify: prices sitting under their own compare-at, and parcels just past a pound line. And for every Shopify variant, what it keeps after Shopify Payments and your cost, and the return on ad spend it needs to break even.</p>
     <p class="private">Read in this browser. Nothing is uploaded; closing the tab forgets it.</p>
   </section>
 
@@ -158,8 +160,15 @@ td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-we
         <input type="file" id="file-shopify" accept=".csv,text/csv" aria-describedby="where-shopify">
         <span class="for">Shopify</span>
         <b>Products export</b>
-        <span class="where" id="where-shopify">Shopify admin, Products, Export, All products, as CSV. Price, compare-at and weight for every variant.</span>
+        <span class="where" id="where-shopify">Shopify admin, Products, Export, All products, as CSV. Price, compare-at, weight and Cost per item for every variant.</span>
         <span class="state" id="state-shopify">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-orders">
+        <input type="file" id="file-orders" accept=".csv,text/csv" aria-describedby="where-orders">
+        <span class="for">Shopify</span>
+        <b>Orders export (optional)</b>
+        <span class="where" id="where-orders">Orders, Export, Orders by date, as CSV; Shopify emails it once a range is set, so export it before the call. It turns the per-unit figures into a month. Only order, date, status, refund, SKU, quantity, price and discount are read: no name, email or address.</span>
+        <span class="state" id="state-orders">Drop the file here, or tap to choose it.</span>
       </label>
       <label class="drop" id="drop-cost">
         <input type="file" id="file-cost" accept=".csv,.txt,.tsv,text/csv,text/plain" aria-describedby="where-cost">
@@ -173,9 +182,9 @@ td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-we
       <div class="knob">
         <label for="cost">Landed cost</label>
         <div class="field"><input id="cost" type="number" inputmode="decimal" min="0" max="95" step="1" placeholder="25"><span>% of price</span></div>
-        <span class="hint">Unit cost, freight and packaging. Break-even uses it for every SKU your cost file does not list.</span>
+        <span class="hint">Unit cost, freight and packaging. Break-even uses it for every SKU without its own cost (Cost per item on Shopify, or a row in your cost file).</span>
       </div>
-      <div class="knob">
+      <div class="knob" id="knob-target">
         <label for="target">Your target ACoS</label>
         <div class="field"><input id="target" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="30"><span>%</span></div>
         <span class="hint">The ad cost of sale you aim for.</span>
@@ -232,7 +241,8 @@ td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-we
 
     <div class="part" id="shopify" hidden>
       <div class="headline">
-        <span class="label">In your Shopify export, a unit and a parcel</span>
+        <span class="label" id="shop-label">In your Shopify export, a unit and a parcel</span>
+        <span class="big" id="shop-total" hidden></span>
         <p id="shop-note"></p>
       </div>
       <div class="stats" id="shop-tiles"></div>
@@ -240,18 +250,24 @@ td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-we
       <section class="leak" id="leak-anchor">
         <h2>Below their own compare-at</h2>
         <p class="why" id="why-anchor"></p>
-        <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Compare-at</th><th class="num">The gap, a unit</th><th class="num">Under it by</th></tr></thead><tbody id="rows-anchor"></tbody></table></div>
+        <div class="table-wrap"><table><thead id="head-anchor"><tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Compare-at</th><th class="num">The gap, a unit</th><th class="num">Under it by</th></tr></thead><tbody id="rows-anchor"></tbody></table></div>
       </section>
 
       <section class="leak" id="leak-parcel">
         <h2>Parcels just past a pound line</h2>
         <p class="why" id="why-parcel"></p>
-        <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th class="num">Weight</th><th class="num">Over the line by</th><th>Bills at, not</th><th class="num">A parcel, nearest zone to farthest</th></tr></thead><tbody id="rows-parcel"></tbody></table></div>
+        <div class="table-wrap"><table><thead id="head-parcel"><tr><th>SKU</th><th>Product</th><th class="num">Weight</th><th class="num">Over the line by</th><th>Bills at, not</th><th class="num">A parcel, nearest zone to farthest</th></tr></thead><tbody id="rows-parcel"></tbody></table></div>
+      </section>
+
+      <section class="leak" id="leak-keep">
+        <h2>What each variant keeps, and the ROAS that breaks even</h2>
+        <p class="why" id="why-keep"></p>
+        <div class="table-wrap"><table><thead id="head-keep"></thead><tbody id="rows-keep"></tbody></table></div>
       </section>
     </div>
 
     <div class="fine">
-      <p>Every figure here is arithmetic on your own reports and the published schedules (Amazon's fee card, USPS Ground Advantage's commercial rates), the same arithmetic Hubricon's engine runs. The aged-inventory surcharge is Amazon's own estimate wherever your report carries it. Anything marked estimate rests on the last 30 days holding, on the landed cost you typed, or, on Shopify, on one unit to a parcel and a mix of zones only your orders show.</p>
+      <p>Every figure here is arithmetic on your own reports and the published schedules (Amazon's fee card, USPS Ground Advantage's commercial rates, Shopify Payments' standard card rate), the same arithmetic Hubricon's engine runs. The aged-inventory surcharge is Amazon's own estimate wherever your report carries it. Anything marked estimate rests on the last 30 days holding, on the landed cost you typed, or, on Shopify, on Shopify Payments' standard 2.9% + 30¢ (your plan or processor may charge less or more), on a mix of zones only your orders show, and, where your Orders export is in, on its pace holding.</p>
       <p>This is a reading of what your reports show today, not a result and not a promise.</p>
     </div>
   </section>

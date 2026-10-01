@@ -5,7 +5,7 @@
 import * as call from "/lib/call.js";
 
 const $ = (id) => document.getElementById(id);
-const state = { inventory: null, feePreview: null, ppc: null, shopify: null, cost: null };
+const state = { inventory: null, feePreview: null, ppc: null, shopify: null, orders: null, cost: null };
 const names = {};
 let rc = null;
 
@@ -21,6 +21,8 @@ const READERS = {
   fees: { key: "feePreview", label: "Fee Preview", parse: call.parseFeePreview, done: (rows) => `${n(rows.length)} SKUs read` },
   ads: { key: "ppc", label: "Ad campaigns", parse: call.parsePpcCampaign, done: (p) => `${p.campaigns} campaigns, ${p.days ?? "?"} days read` },
   shopify: { label: "Shopify Products", parse: call.parseShopifyProducts, done: (rows) => `${n(rows.length)} variants read` },
+  orders: { label: "Shopify Orders", parse: call.parseShopifyOrders,
+    done: (o) => `${n(o.orders)} paid orders over ${n(o.days)} day${o.days === 1 ? "" : "s"} read` + (o.days < call.MIN_ORDER_DAYS ? ", under a week: too short to read a month from" : "") },
   cost: { label: "Landed cost by SKU", parse: call.parseCostFile, done: (c) => `${n(c.skus)} SKUs with their own cost` + (c.example ? " (the template's example row left out)" : "") },
 };
 
@@ -51,6 +53,40 @@ function load(which, file) {
   fr.readAsText(file);
 }
 
+/* Where the booker said they sell: ?p=shopify|amazon|both, else the answer /apply kept in this
+   browser when the call was booked (the same origin's "hubricon_booked", kept 14 days), else
+   nobody knows and every card shows in the usual order. A Shopify seller gets the Shopify cards
+   first, the Shopify lede, and no ACoS box; the Amazon cards wait below a line, still there. */
+const CHANNEL = (() => {
+  const p = String(new URLSearchParams(location.search).get("p") || "").toLowerCase();
+  if (["amazon", "shopify", "both"].includes(p)) return p;
+  try {
+    const b = JSON.parse(localStorage.getItem("hubricon_booked") || "null");
+    if (b && Date.now() - b.at < 14 * 864e5 && ["Amazon", "Shopify", "Both"].includes(b.channel)) return b.channel.toLowerCase();
+  } catch {}
+  return null;
+})();
+const LEDE = {
+  shopify: "Drop in your Shopify Products export, and your Orders export if you have it. This page reads them and prices what only your own data shows: prices sitting under their own compare-at, parcels just past a pound line, and what each variant keeps after Shopify Payments and your cost, with the return on ad spend it needs to break even.",
+  amazon: "Drop in your Seller Central reports. This page reads them and prices the costs only your own data shows: aged stock heading for day 271, the low-inventory fee, units just past a fee edge, and ads spending past break-even.",
+};
+const ORDER = {
+  shopify: [["shopify", "orders", "cost"], "Also selling on Amazon? These read your Seller Central reports.", ["inventory", "fees", "ads"]],
+  amazon: [["inventory", "fees", "ads", "cost"], "Also selling on Shopify? These read your Shopify exports.", ["shopify", "orders"]],
+};
+if (ORDER[CHANNEL]) {
+  const [first, line, rest] = ORDER[CHANNEL];
+  const grid = document.querySelector(".inputs");
+  const also = document.createElement("p");
+  also.className = "also";
+  also.textContent = line;
+  for (const w of first) grid.append($(`drop-${w}`));
+  grid.append(also);
+  for (const w of rest) grid.append($(`drop-${w}`));
+  $("lede").textContent = LEDE[CHANNEL];
+}
+if (CHANNEL === "shopify") $("results").insertBefore($("shopify"), $("amazon"));
+
 for (const which of Object.keys(READERS)) {
   const input = $(`file-${which}`), drop = $(`drop-${which}`);
   input.addEventListener("change", () => input.files[0] && load(which, input.files[0]));
@@ -80,6 +116,8 @@ $("keep").addEventListener("click", () => { stampReading(); window.print(); });
 
 function draw() {
   const amazon = Boolean(state.inventory || state.feePreview);
+  // the ACoS box is Amazon's: a Shopify seller sees it only once an Amazon report is in
+  $("knob-target").hidden = CHANNEL === "shopify" && !amazon;
   if (!rc || (!amazon && !state.shopify)) { $("results").hidden = true; return; }
   $("results").hidden = false;
   $("amazon").hidden = !amazon;
@@ -178,31 +216,94 @@ function drawAmazon() {
   }
 }
 
+const roasText = (r) => (r == null ? "none" : r.toFixed(2));
+
 function drawShopify() {
-  const s = call.analyseShopify(rc, state.shopify);
+  const costPct = parseFloat($("cost").value);
+  const s = call.analyseShopify(rc, state.shopify, {
+    costShare: Number.isFinite(costPct) ? costPct / 100 : null, costBySku: state.cost ? state.cost.bySku : {}, orders: state.orders,
+  });
+  const t = s.totals, o = s.orders;
   const share = s.catalogue_share != null ? `${Math.round(s.catalogue_share * 100)}%` : "–";
-  $("shop-note").textContent = `${n(s.priced)} live variants with a price, read from your own export. A Products export carries no sales, so these are per unit and per parcel; your Orders export, or your own count, turns them into a month on the call.` +
-    (s.no_weight ? ` ${n(s.no_weight)} have no weight set, so their parcels could not be checked.` : "");
+
+  // The headline: a month once the Orders export sets the pace, else a unit and a parcel.
+  $("shop-label").textContent = t ? "In your Shopify exports, a month" : "In your Shopify export, a unit and a parcel";
+  const total = t ? t.anchors_month + t.parcels_low_month : 0;
+  $("shop-total").hidden = !t;
+  $("shop-total").innerHTML = t ? `${usd(total)}<span class="est">estimate</span>` : "";
+  let note = `${n(s.priced)} live variants with a price, read from your own Products export.`;
+  if (t) {
+    const parts = [s.policy ? "the compare-at gap on every unit sold" : null, "the pound line on every order of one unit, at the nearest zone's rate"].filter(Boolean);
+    note += ` ${n(o.orders)} paid orders over ${n(o.days)} days, from your Orders export, set the pace. The figure above is ${parts.join(", and ")}, a month.`
+      + (o.matched_units < o.units ? ` ${n(o.matched_units)} of the ${n(o.units)} units sold match a variant in the Products export; the rest are left out.` : "")
+      + (total > 0 ? ` Twelve months at this pace would be ${usd(total * 12)}, an estimate: a plain multiplication, not a forecast.` : "");
+  } else if (s.orders_too_short) {
+    note += " Your Orders export covers under a week, too short to read a month from, so these stay per unit and per parcel.";
+  } else {
+    note += " A Products export carries no sales, so these are per unit and per parcel; drop your Orders export too and each becomes a month.";
+  }
+  if (s.no_weight) note += ` ${n(s.no_weight)} have no weight set, so their parcels could not be checked.`;
+  $("shop-note").textContent = note;
+
+  const roasTile = ["Break-even ROAS, across the catalogue", s.catalogue_roas != null ? `${s.catalogue_roas.toFixed(2)}<span class="est">estimate</span>` : "–",
+    !s.margins.length ? "needs a cost" : s.catalogue_roas_basis === "sales" ? "on your sales, after Shopify Payments and your cost" : "one unit of each variant, after Shopify Payments and your cost", false];
   $("shop-tiles").innerHTML = [
     ["Listed below their own compare-at", `${n(s.below)} of ${n(s.priced)}`, `${share} of the live catalogue`, false],
-    ["The gap, a unit, on average", s.gap_mean != null ? `${cents(s.gap_mean)}<span class="est">estimate</span>` : "–", s.policy ? "over half the catalogue, so it reads as the price" : "under half the catalogue: promotions, not the price", s.gap_mean != null],
-    ["Parcels just past a pound line", n(s.parcels.length), "within 3 oz over, one unit a parcel", false],
-    ["A parcel, nearest zone to farthest", s.parcel_low != null ? `${cents(s.parcel_low)}–${cents(s.parcel_high)}<span class="est">estimate</span>` : "–", "USPS Ground Advantage card", s.parcel_low != null],
+    t && s.policy
+      ? ["The compare-at gap, a month", `${usd(t.anchors_month)}<span class="est">estimate</span>`, "on every unit your orders show", t.anchors_month > 0]
+      : ["The gap, a unit, on average", s.gap_mean != null ? `${cents(s.gap_mean)}<span class="est">estimate</span>` : "–", s.policy ? "over half the catalogue, so it reads as the price" : "under half the catalogue: promotions, not the price", s.gap_mean != null],
+    t
+      ? ["Parcels past a pound line, a month", `${usd(t.parcels_low_month)}–${usd(t.parcels_high_month)}<span class="est">estimate</span>`, "orders of one unit, nearest zone to farthest", t.parcels_low_month > 0]
+      : ["Parcels just past a pound line", n(s.parcels.length), "within 3 oz over, one unit a parcel", false],
+    roasTile,
   ].map(tile).join("");
 
   $("why-anchor").textContent = `Your export's own two numbers for each variant: the price, and the compare-at it is listed under. ${n(s.below)} of ${n(s.priced)} live variants (${share}) sit below their compare-at. ` +
     (s.policy
       ? "When most of the catalogue sits there, the compare-at stops being a sale and becomes a price no customer is shown, and the gap is margin decided in advance. The gap is your two numbers subtracted; what it costs you depends on whether anyone would pay the compare-at, so it is an estimate. One export cannot say how long the prices have sat there; that is the question for the call."
+        + (t ? " A month is the gap on every unit of it your orders show, at their pace." : "")
       : "That is under half the catalogue, which reads as promotions rather than the price, so no gap is counted here.");
+  $("head-anchor").innerHTML = `<tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Compare-at</th><th class="num">The gap, a unit</th><th class="num">Under it by</th>${t ? '<th class="num">Units a month</th><th class="num">A month</th>' : ""}</tr>`;
   $("rows-anchor").innerHTML = s.anchors.slice(0, 20).map((a) => row([
     [esc(a.sku), "sku"], [esc(a.name), "name"], [cents(a.price), "num"], [cents(a.compare_at), "num"], [`${cents(a.per_unit)} est.`, "num"], [`${Math.round(a.share * 100)}%`, "num"],
+    ...(t ? [[a.units_month.toFixed(1), "num"], [`${cents(a.month)} est.`, "num"]] : []),
   ])).join("") || row([[s.policy ? "No variant sits far enough below its compare-at to count." : "Not counted: under half the catalogue is below its compare-at.", ""]]);
 
-  $("why-parcel").textContent = "USPS Ground Advantage bills anything over a pound at the next whole pound, so a parcel a few tenths of an ounce over the line pays the heavier rate on every order. The weight is the one set on your own product, the one Shopify hands the carrier; if your shipping settings add a box's weight, the parcel is heavier than this. A range across zones 1 to 8, because only your orders show your zone mix: an estimate.";
+  $("why-parcel").textContent = "USPS Ground Advantage bills anything over a pound at the next whole pound, so a parcel a few tenths of an ounce over the line pays the heavier rate on every order. The weight is the one set on your own product, the one Shopify hands the carrier; if your shipping settings add a box's weight, the parcel is heavier than this. A range across zones 1 to 8, because only your orders show your zone mix: an estimate."
+    + (t ? " A month counts your orders of one unit of the variant alone, the parcels that weigh what it weighs; an order of several is a different parcel." : "");
+  $("head-parcel").innerHTML = `<tr><th>SKU</th><th>Product</th><th class="num">Weight</th><th class="num">Over the line by</th><th>Bills at, not</th><th class="num">A parcel, nearest zone to farthest</th>${t ? '<th class="num">Parcels a month</th><th class="num">A month</th>' : ""}</tr>`;
   $("rows-parcel").innerHTML = s.parcels.slice(0, 20).map((p) => row([
     [esc(p.sku), "sku"], [esc(p.name), "name"], [`${p.weight_oz.toFixed(2)} oz`, "num"], [`${p.over_by} oz`, "num"], [`${esc(p.band_above)}, not ${esc(p.band_below)}`],
     [p.priced ? `${cents(p.low)}–${cents(p.high)} est.` : "not on the loaded card", "num"],
+    ...(t ? [[p.parcels_month.toFixed(1), "num"], [p.priced ? `${cents(p.month_low)}–${cents(p.month_high)} est.` : "–", "num"]] : []),
   ])).join("") || row([["No parcel sits within 3 oz over a pound line.", ""]]);
+
+  // What each variant keeps a unit, and the ROAS at which an ad sale keeps nothing.
+  const pay = s.payments, b = s.cost_bases;
+  const lines = [];
+  if (!s.margins.length) {
+    lines.push("Type a landed cost above, fill in Cost per item in Shopify before you export, or drop a cost file, to see what each variant keeps and the return on ad spend it needs to break even.");
+  } else {
+    lines.push(`Kept a unit is the price, less Shopify Payments' standard online card fee of ${(pay.rate * 100).toFixed(1)}% + ${Math.round(pay.fixed * 100)}¢ and your cost, before postage and ads. The fee is an estimate: it is the Basic plan's rate; Grow, Advanced and Plus pay less, and another processor charges its own.`
+      + (o ? " The 30¢ is shared across the units of each order, as your orders show." : " The 30¢ is counted on every unit, as if every order were one unit."));
+    lines.push(`Break-even ROAS is the return an ad must bring before the sale keeps nothing: the price over what it keeps. Across these variants, ${s.catalogue_roas_basis === "sales" ? "weighted by your sales" : "one unit of each"}, it is ${roasText(s.catalogue_roas)}; an ad returning less loses money on the sale.`);
+    const bases = [b.cost_per_item ? `${n(b.cost_per_item)} at the Cost per item in your export (the unit cost alone: freight and packaging are not in it)` : null,
+      b.yours ? `${n(b.yours)} at their own cost from your file` : null,
+      b.assumed ? `${n(b.assumed)} at the ${costPct}% of price you typed, an estimate` : null].filter(Boolean);
+    lines.push(`Costs: ${bases.join("; ")}.` + (s.no_cost ? ` ${n(s.no_cost)} variant${s.no_cost === 1 ? " has" : "s have"} no cost yet, so ${s.no_cost === 1 ? "it is" : "they are"} left out.` : ""));
+    if (t) lines.push("A month is your sales after refunds, less the same fee and your cost on every unit sold, at your orders' pace: an estimate.");
+    lines.push("This break-even counts the first order alone. A customer who orders again makes the same ad worth more; the full read checks for that in six months of your orders, and counts it only where it predicts your own last quarter.");
+  }
+  $("why-keep").textContent = lines.join(" ");
+  $("head-keep").innerHTML = s.margins.length ? `<tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Shopify Payments, a unit</th><th class="num">Cost</th><th class="num">Kept a unit</th><th class="num">Break-even ROAS</th>${t ? '<th class="num">Units a month</th><th class="num">Kept a month</th>' : ""}</tr>` : "";
+  const BASIS = { yours: "your cost", cost_per_item: "Cost per item", assumed: "est. from your %" };
+  $("rows-keep").innerHTML = s.margins.slice(0, 25).map((m) => row([
+    [esc(m.sku), "sku"], [esc(m.name), "name"], [cents(m.price), "num"], [`${cents(m.fee)}<span class="basis">estimate</span>`, "num"],
+    [`${cents(m.cost)}<span class="basis">${BASIS[m.cost_basis]}</span>`, "num"],
+    [`${m.contribution < 0 ? "−" : ""}${cents(Math.abs(m.contribution))}<span class="basis">estimate</span>`, "num"],
+    [m.roas != null ? `${m.roas.toFixed(2)}<span class="basis">estimate</span>` : "none: it keeps nothing", "num"],
+    ...(t ? [[m.units_month.toFixed(1), "num"], [`${m.kept_month < 0 ? "−" : ""}${usd(Math.abs(m.kept_month))}<span class="basis">estimate</span>`, "num"]] : []),
+  ])).join("");
 }
 
 fetch("/ratecard.json").then((r) => r.json()).then((j) => { rc = j; draw(); });
