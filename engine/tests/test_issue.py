@@ -58,7 +58,9 @@ class FakeDB:
         return FakeTable(self, name)
 
 
-CLIENT = {"id": "c1", "contact_email": "dana@acme.test", "contact_name": "Dana Reyes"}
+# A client who said yes: since 2026-10-01 nobody else is sent a move (the stage gate below).
+CLIENT = {"id": "c1", "contact_email": "dana@acme.test", "contact_name": "Dana Reyes", "status": "pending",
+          "retainer_started_at": "2026-09-01T00:00:00+00:00"}
 
 
 def _d(i, **kw):
@@ -272,3 +274,37 @@ def test_the_first_sweep_leads_with_what_can_be_seen_to_work_soonest():
     s = speed.summary([{"exports_landed_at": "2026-08-01T00:00:00+00:00", "first_issue_at": "2026-08-01T12:00:00+00:00",
                         "first_value_at": "2026-08-15T12:00:00+00:00"}])
     assert s["median_days_first_issue_to_first_value"] == 14.0
+
+
+def test_nobody_who_has_not_said_yes_is_sent_a_move(monkeypatch):
+    """A prospect who sent files before the call, or said no on it, used to get
+    "before it goes live" notices that the default mandate approves after 72
+    hours. Now their drafts stay drafts: nothing issued, sealed or sent, and
+    nothing that could ever auto-approve."""
+    sent = []
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda *a, **k: sent.append(a) or True)
+    sealed = []
+    monkeypatch.setattr(issue, "_seal_promises", lambda *a, **k: sealed.append(a) or {"status": "sealed"})
+    for who in ({"id": "c1", "contact_email": "p@x.test", "status": "pending"},                   # booked or called
+                {"id": "c1", "contact_email": "p@x.test", "status": "declined"},                  # said no
+                {"id": "c1", "contact_email": "p@x.test", "status": "churned",
+                 "retainer_started_at": "2026-09-01T00:00:00+00:00"}):                            # left
+        db = FakeDB([_d(1), _d(2)])
+        res = issue.issue_drafts(db, who, "amazon", "https://x/portal", send=True)
+        assert res["issued"] == 0 and res["notified"] is False and res["held"] == 2 and res["gated"]
+        assert db.writes == [] and all(d["status"] == "draft" for d in db.rows("directives"))
+    assert sent == [] and sealed == []
+
+
+def test_the_gate_reads_the_row_as_it_is_now_not_the_row_it_was_handed(monkeypatch):
+    """`hubricon directives` hands over resolve_client's partial row, which has
+    no retainer_started_at; a sweep may hold a row from before a `hubricon
+    declined`. The stage comes from the database when it can."""
+    from fakedb import FakeDB as Rows
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: False)
+    yes = Rows(clients=[{"id": "c1", "status": "pending", "retainer_started_at": "2026-09-01T00:00:00+00:00"}],
+               directives=[_d(1)])
+    assert issue.issue_drafts(yes, {"id": "c1", "contact_email": "d@x.test"}, "amazon", "https://x")["issued"] == 1
+    no = Rows(clients=[{"id": "c1", "status": "declined"}], directives=[_d(1)])
+    assert issue.issue_drafts(no, CLIENT, "amazon", "https://x")["gated"] == "declined"

@@ -19,6 +19,8 @@ before it goes live" became something the client can check, not take on trust.
 
 from datetime import datetime, timedelta, timezone
 
+from . import lifecycle
+
 VETO_HOURS = 72             # closes before the next weekly sweep, and always
                             # leaves a full working day plus the weekend
 EXPLICIT_LAPSE_DAYS = 21    # an explicit-mandate directive nobody answered
@@ -144,13 +146,22 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     """Promote the highest-value drafts, tell the client, then open the window.
 
     Order matters: the email goes out BEFORE veto_closes_at is set, and the
-    window is only opened for the directives the email actually reached."""
+    window is only opened for the directives the email actually reached.
+
+    And before any of it, the stage (lifecycle.py): a move notice goes only to
+    a client who has said yes. Anyone else's drafts stay drafts, unsealed and
+    unsent, so a prospect who sent files and then said no on the call is never
+    told a move "goes live unless you say no" under a mandate they never gave."""
     from .notify import directive_email_body, email_configured, send_email
 
-    mandate = load_mandate(db, client["id"])
     drafts = (db.table("directives").select("*")
               .eq("client_id", client["id"]).eq("channel", channel).eq("status", "draft")
               .execute().data)
+    stage = _stage(db, client)
+    if not lifecycle.may_send(stage, "moves"):
+        return {"issued": 0, "notified": False, "held": len(drafts), "ranking": None, "order": [],
+                "gated": stage}
+    mandate = load_mandate(db, client["id"])
     # A directive drafted as "standing" is only standing if THIS client's
     # mandate says that module is. Downgrading here means a client who narrowed
     # their mandate on the kickoff call is never auto-approved into something
@@ -226,6 +237,21 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         # Issued and visible in the desk, but nothing will ever auto-approve.
         db.table("directives").update({"veto_closes_at": None}).in_("id", ids).execute()
     return out
+
+
+def _stage(db, client: dict) -> str:
+    """The client's stage for the move gate, from their row as it is now: a
+    caller may hold a partial or stale row (resolve_client selects no
+    retainer_started_at; a sweep loads its roster before a `hubricon declined`).
+    Booked and called both hold moves, so the call time is never needed."""
+    row = client
+    try:
+        fresh = db.table("clients").select("*").eq("id", client["id"]).execute().data
+        if fresh:
+            row = {**client, **fresh[0]}
+    except Exception:
+        pass        # the row we were handed is the best there is
+    return lifecycle.stage(row, None)
 
 
 def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
