@@ -1254,6 +1254,83 @@ def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
     )
 
 
+# -- the compare-at family (Shopify, 2026-10-01) -------------------------------------
+
+def _compare_at_directive(step: dict, row: dict) -> dict | None:
+    """One price step, re-drafted as a step back toward the SKU's own
+    compare-at. The move, its promise, its range, its mandate and its dedupe
+    key are the price step's own (pricing_engine.price_move sized it on the
+    SKU's fitted demand curve inside the standing step cap, and the downside
+    guard has already read it); what changes is the reason on the record and
+    the words: the list price the store set, the compare-at it set above it,
+    and how long the two have stood apart. Kind stays `price_step`, so
+    measurement values it exactly as it values every price step.
+
+    None when the step would carry the list price past the compare-at: the
+    anchor is the ceiling of this family, never a waypoint."""
+    ev = step.get("evidence") or {}
+    frac = float(ev.get("step_fraction") or 0)
+    p0, p_new = ev.get("p0"), ev.get("p_new")
+    price, anchor = row.get("price"), row.get("compare_at")
+    if not (p0 and p_new and price and anchor) or frac <= 0:
+        return None
+    target = round(float(price) * (1.0 + frac), 2)
+    if target > float(anchor):
+        return None
+    sku = ev.get("sku") or row.get("sku")
+    lo, hi = (ev.get("delta_range") or (None, None))[:2]
+    rng = ""
+    if lo is not None and hi is not None:
+        rng = (f" (90% range {'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}"
+               + ("; under a 1% chance it goes the other way" if ev.get("p_loss") is not None and ev["p_loss"] < 0.01
+                  else f"; a {float(ev['p_loss']):.0%} chance it goes the other way" if ev.get("p_loss") is not None
+                  else "") + ")")
+    expected = step.get("expected_impact_usd")
+    sign = "+" if (expected or 0) >= 0 else "−"
+    name = row.get("product_name") or sku
+    text = (f"Raise {name} ({sku}) {frac:.1%}, from ${float(price):,.2f} to ${target:,.2f}, back toward its own "
+            f"compare-at of ${float(anchor):,.2f}. It has sold at ${float(price):,.2f} for "
+            f"{int(row.get('months_at_price') or 0)} months and is listed today under that compare-at, so the "
+            f"discount reads as the price, not a promotion. "
+            + (f"Expected {sign}{_money(expected)}/period{rng}, from your own demand history. " if expected is not None
+               else "")
+            + "Run as a tracked test and measured on your own orders.")
+    out = copy.deepcopy(step)
+    out["action_text"] = text
+    out["evidence"] = {**out.get("evidence", {}), "reason": "compare_at", "list_price": float(price),
+                       "list_price_new": target, "compare_at": float(anchor),
+                       "compare_at_finding": {k: row.get(k) for k in (
+                           "discount_share", "per_unit", "months_at_price", "days_observed", "units_month",
+                           "usd_month_face_value", "snapshot_date")}}
+    out["score"] = float(step.get("score") or 0) + 1.0
+    return out
+
+
+def compare_at_directives(drafts: list[dict], shopify_findings: dict | None) -> list[dict]:
+    """The compare-at family: every price step that raises a SKU whose
+    discount is permanent (models/shopify_findings.compare_at_finding) is
+    re-drafted as a step back toward that SKU's compare-at. Nothing new is
+    priced and nothing is added: a SKU whose fitted curve says lower, or that
+    no curve can price yet, keeps the finding and gets no step (the finding
+    says so in the first read). Returns the drafts with those steps replaced."""
+    rows = {r["sku"]: r for r in ((shopify_findings or {}).get("compare_at") or {}).get("rows") or []
+            if r.get("settled")}
+    if not rows:
+        return drafts
+    out = []
+    for d in drafts:
+        ev = d.get("evidence") or {}
+        row = rows.get(ev.get("sku"))
+        if (row and d.get("kind") == "price_step" and not ev.get("reason")
+                and ev.get("status") not in ("near_unit_elastic", "cannibalisation")):
+            redrafted = _compare_at_directive(d, row)
+            if redrafted:
+                out.append(redrafted)
+                continue
+        out.append(d)
+    return out
+
+
 def cross_for(sku: str, cross_by_sku: dict, latest_by_sku: dict) -> dict | None:
     """The family's side of a move on `sku`: each sibling's baseline
     volume, contribution and the weight this SKU's price carries in the
@@ -1411,7 +1488,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      cash: dict | None = None,
                      book_out: dict | None = None,
                      ppc_spend_rows: list[dict] | None = None,
-                     price_plan: dict | None = None) -> list[dict]:
+                     price_plan: dict | None = None,
+                     shopify_findings: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1783,6 +1861,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                     },
                 ))
 
+    # a Shopify run's permanent compare-at discounts (models/shopify_findings)
+    drafts = compare_at_directives(drafts, shopify_findings)
     drafts.sort(key=lambda d: d["score"], reverse=True)
     # the sweep as one book: the standing directives' joint shortfall against
     # the client's budget, and the sweep's cash moves together against the
