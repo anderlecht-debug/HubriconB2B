@@ -16,6 +16,10 @@
 --
 -- Safe before or after the code: without this, the code publishes and sends as
 -- it did before and the founder's digest says the approval gate is off.
+--
+-- Written without a drop (2026-10-01, as applied to production): the briefings
+-- read rule is altered in place, so the table is never without one, and every
+-- object below is new.
 
 create table if not exists public.weekly_notes (
   id uuid primary key default gen_random_uuid(),
@@ -32,7 +36,6 @@ create table if not exists public.weekly_notes (
 );
 alter table public.weekly_notes enable row level security;
 
-drop policy if exists "members read own sent notes" on public.weekly_notes;
 create policy "members read own sent notes"
   on public.weekly_notes for select to authenticated
   using (status = 'sent'
@@ -41,7 +44,6 @@ create policy "members read own sent notes"
 create index if not exists weekly_notes_status_idx on public.weekly_notes (status, created_at);
 
 alter table public.briefings add column if not exists status text not null default 'published';
-alter table public.briefings drop constraint if exists briefings_status_check;
 alter table public.briefings add constraint briefings_status_check check (status in ('draft', 'published'));
 alter table public.briefings add column if not exists approved_at timestamptz;
 -- What a draft's email says (subject, blocks, footer) and the Record figure it
@@ -49,10 +51,9 @@ alter table public.briefings add column if not exists approved_at timestamptz;
 -- whose figure has since moved.
 alter table public.briefings add column if not exists facts jsonb;
 
-drop policy if exists "members read own briefings" on public.briefings;
-drop policy if exists "members read own published briefings" on public.briefings;
-create policy "members read own published briefings"
-  on public.briefings for select to authenticated
+-- The existing rule ("members read own briefings", 20260826000002) now reads
+-- published rows only.
+alter policy "members read own briefings" on public.briefings
   using (status = 'published'
          and client_id in (select client_id from public.client_users where user_id = (select auth.uid())));
 

@@ -31,7 +31,6 @@ begin
 end;
 $$;
 
-drop trigger if exists intake_token_purpose on private.intake_tokens;
 create trigger intake_token_purpose before insert on private.intake_tokens
   for each row execute function private.intake_token_purpose();
 
