@@ -1848,9 +1848,15 @@ email (the link and the spreadsheet, Resend, with RFC 8058 one-click unsubscribe
 repeat gets nothing. Notes "a new course is out" go only to addresses with no unsubscribed
 row. Privacy §1 "Courses" and §8 describe exactly this.
 
-**Before it is live:** apply `20261001000002_learners.sql`; `RESEND_API_KEY` and
-`POSTAL_ADDRESS` set in Vercel (without the key the sign-up is kept and no email goes). The
-founder reads the eight lessons first: the insight is his (spec, "You own the script").
+**Live since 2026-09-30** (c0d872c), the founder having read the lessons. Migrations
+`20261001000001_record_months`, `20261001000002_learners` and the held-back
+`20260925000004_unit_economics` were applied that night through the Supabase connector.
+**Vercel still needs `RESEND_API_KEY` and `POSTAL_ADDRESS`** (Production): the GitHub
+operator has both, the site has neither, so a sign-up is kept and the course opens but no
+email goes (`funnel_events.payload.email_error = "RESEND_API_KEY not set"`). The key in
+`.env` is a send-only key and was proven against Resend's test inbox the same night. Once
+it is set, send the link to anyone who signed up meanwhile: `learners` rows with
+`email_sent_at` null.
 
 **Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
 pattern with `data-course`, a card in `learn/index.html`, its page in `PAGES` if it carries
