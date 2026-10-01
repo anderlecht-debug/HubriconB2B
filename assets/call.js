@@ -109,7 +109,7 @@ function drawAmazon() {
 
   const tiles = [
     ["Aged-inventory surcharge, a month", usd(t.aged), state.inventory ? (out.aged.some((a) => a.basis === "amazon") ? "Amazon's own estimate" : "Amazon's schedule, estimate") : "needs Inventory Age", t.aged > 0],
-    ["Low-inventory-level fee, a month", usd(t.low), state.inventory ? "at the last 30 days' pace, estimate" : "needs Inventory Age", t.low > 0],
+    ["Low-inventory-level fee, a month", usd(t.low), state.inventory ? (state.feePreview ? "by your size tiers, estimate" : "size tier assumed, estimate") : "needs Inventory Age", t.low > 0],
     ["Units past a fee edge, a month", usd(t.edges), state.feePreview ? (state.inventory ? "Amazon's measurement, your units, estimate" : "add Inventory Age for units") : "needs Fee Preview", t.edges > 0],
     ["Ads past break-even, a month", usd(t.ads), out.ads ? (out.ads.over_month != null ? "campaign report, blended, estimate" : "needs a landed cost") : "needs the campaign report", t.ads > 0],
   ];
@@ -131,10 +131,20 @@ function drawAmazon() {
   // Low inventory.
   $("leak-low").hidden = !state.inventory;
   if (state.inventory) {
+    // the arithmetic the rows below rest on, said in full (lib/call.js lowInventoryFee)
+    $("leak-low").querySelector(".why").textContent = "Amazon charges this on each unit shipped while both your 30-day and your 90-day days of supply sit under 28; the higher of the two sets the rate. " +
+      (out.low_amazon_dos ? "Days of supply here are Amazon's own 30- and 90-day figures from your report where it has them, else what you have on hand at the last 30 and 90 days' shipping pace. "
+        : "Days of supply here is what you have on hand at the last 30 and 90 days' shipping pace. ") +
+      (state.feePreview ? "The rate is each SKU's size tier, from your Fee Preview. "
+        : "Without Fee Preview the size tier is assumed to be small standard, the lowest rate, so no figure here is overstated; add Fee Preview for your own tiers. ") +
+      (out.low_exempt ? `${n(out.low_exempt)} SKU${out.low_exempt === 1 ? " is" : "s are"} left out as exempt (under 20 units shipped in 7 days, or marked exempt in your report). ` : "") +
+      "Not checked, because no report shows them: the exemptions for a new seller, a New Selection listing and stock auto-replenished through AWD. Each figure a month is an estimate at the last 30 days' pace.";
     $("rows-low").innerHTML = out.low.slice(0, 15).map((l) => row([
-      [esc(l.sku), "sku"], [esc(l.name), "name"], [l.dos.toFixed(1), "num"], [cents(l.rate), "num"], [cents(l.month), "num"],
+      [esc(l.sku), "sku"], [esc(l.name), "name"], [l.dos.toFixed(1), "num"],
+      [`${cents(l.rate)}<span class="basis">${esc(call.SCHEDULE.low_inventory_tier_label[l.tier] || "")}${/assumed/.test(l.tier_basis) ? ", assumed" : ""}</span>`, "num"],
+      [`${cents(l.month)}<span class="basis">estimate</span>`, "num"],
       [l.applied_per_amazon == null ? "–" : l.applied_per_amazon ? "Yes" : "No"],
-    ])).join("") || row([["No SKU under 28 days of supply at this pace.", ""]]);
+    ])).join("") || row([["No SKU under 28 days of supply on both the 30 and 90 days.", ""]]);
   }
 
   // Fee edges.

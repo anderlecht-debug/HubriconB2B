@@ -75,6 +75,19 @@ def test_air_beats_sea_when_the_sea_lead_time_exposes_the_position():
     assert expedite(exposed, {"inbound_freight_per_unit_usd": 0.6}, rng)["status"] == "no_freight_options"
 
 
+def test_a_short_unit_is_priced_at_the_skus_own_low_inventory_tier():
+    """inventory_econ hands each row its size tier's under-14-days rate (since
+    2026-10-01); a 3–20 lb large-standard SKU's avoided stockout is worth
+    $1.11 a unit on top of its margin, not the small-standard $0.89."""
+    exposed = _econ("A", rate=4.0, position=120, lead=60)
+    terms = {"inbound_freight_per_unit_usd": 0.6, "air_freight_per_unit_usd": 1.4, "air_lead_time_days": 12}
+    small = expedite(exposed, terms, np.random.default_rng(3))
+    heavy = expedite({**exposed, "low_inventory_fee_lt14": 1.11}, terms, np.random.default_rng(3))
+    avoided = small["stockout_units_sea"] - small["stockout_units_air"]
+    assert avoided > 0
+    assert heavy["net_p50"] - small["net_p50"] == pytest.approx(avoided * (1.11 - 0.89), rel=0.25)
+
+
 def test_blank_terms_refuse_and_the_reader_maps_the_new_columns():
     inv_econ = {"rows": [_econ("A"), _econ("B")]}
     data = {"cogs_inputs": [{"sku": "A", "supplier": "S", "moq_units": 240, "case_pack_units": 24,

@@ -198,3 +198,116 @@ def test_amazon_run_is_unchanged_by_the_channel_default():
     assert default["summary"]["bleed"] == named["summary"]["bleed"]
     assert default["rows"][0]["low_inventory_fee_month"] > 0   # 40 units at 3/day is thin cover
     assert named["rows"][0]["details"]["basis"].startswith("Amazon:")
+
+
+# ── the low-inventory-level fee by size tier, on Amazon's 30/90-day rule (2026-10-01) ──
+
+def test_the_schedule_has_five_tiers_and_the_two_storage_classes_map_to_rows():
+    assert fees.LOW_INVENTORY_FEE_PER_UNIT["large_standard_3lb"] == {"lt14": 0.97, "14to21": 0.70, "21to28": 0.36}
+    assert fees.LOW_INVENTORY_FEE_PER_UNIT["large_standard_20lb"] == {"lt14": 1.11, "14to21": 0.87, "21to28": 0.47}
+    assert fees.LOW_INVENTORY_FEE_PER_UNIT["small_bulky"] == {"lt14": 1.85, "14to21": 1.02, "21to28": 0.51}
+    assert fees.LOW_INVENTORY_FEE_PER_UNIT["large_bulky"] == {"lt14": 2.09, "14to21": 1.15, "21to28": 0.57}
+    # "standard" with no finer tier is the lowest standard row, so never overstated
+    assert fees.low_inventory_fee(10, "standard") == fees.low_inventory_fee(10, "small_standard") == 0.89
+    assert fees.low_inventory_fee(15, "oversize") == 1.15
+    assert fees.low_inventory_fee(10, None) == 0.0, "a tier with no row is not priced"
+    assert fees.low_inventory_band_days(12.0, 30.0) == 30.0 and fees.low_inventory_band_days(None, 9.0) == 9.0
+    assert fees.low_inventory_band_days(None, None) is None and fees.low_inventory_fee(None) == 0.0
+
+
+@pytest.mark.parametrize("label, weight, tier, says", [
+    ("Small standard", None, "small_standard", "from your export"),
+    ("Large standard", 0.82, "large_standard_3lb", "from your export"),
+    ("Large standard", 3.0, "large_standard_3lb", "from your export"),
+    ("Large standard", 7.5, "large_standard_20lb", "from your export"),
+    ("Large standard", None, "large_standard_3lb", "weight not on file"),
+    ("Small Bulky", None, "small_bulky", "least certain"),
+    ("Large bulky", None, "large_bulky", "least certain"),
+    ("Standard-Size", None, "small_standard", "size tier assumed (small standard)"),
+    (None, None, "small_standard", "size tier assumed (small standard)"),
+    ("Oversize", None, "large_bulky", "assumed"),
+    ("Extra-large 50+ to 70 lb", None, None, "not priced"),
+])
+def test_a_size_tier_as_an_export_names_it_finds_its_row(label, weight, tier, says):
+    got, basis = fees.low_inventory_tier(label, weight)
+    assert got == tier and says in basis
+
+
+def _health(sku="L", available=60, t7=40, t30=150, t90=450, **extra):
+    return {"snapshot_date": "2026-08-30", "sku": sku, "available": available, "item_volume": 0.1,
+            "units_shipped_t7": t7, "units_shipped_t30": t30, "units_shipped_t90": t90, **extra}
+
+
+def _lilf_row(health, on_hand=60, rate=5.0):
+    out = econ.run({"inventory_health": [health]}, [_inventory(health["sku"], on_hand=on_hand, rate=rate)],
+                   margin_rows=[_margin(health["sku"])], rng=np.random.default_rng(0), simulations=2000, today=TODAY)
+    return out["rows"][0]
+
+
+def test_a_large_standard_sku_is_priced_on_its_own_row_and_says_so():
+    """60 on hand, 150 shipped in 30 days and 450 in 90 (5 a day): 12 days of
+    supply on both, under 14. A large-standard item of 0.82 lb pays $0.97 a
+    unit, not the small-standard $0.89: $145.50 a month at 5 a day."""
+    raw = {"product-size-tier": "Large standard", "item-package-weight": "0.82", "unit-of-weight": "pounds"}
+    row = _lilf_row(_health(raw=raw))
+    assert row["fee_size_tier"] == "large_standard_3lb"
+    assert row["low_inventory_fee_rate"] == 0.97
+    assert row["low_inventory_fee_month"] == pytest.approx(0.97 * 5 * 30)
+    assert row["low_inventory_days_of_supply"]["t30"] == 12.0 and row["low_inventory_days_of_supply"]["t90"] == 12.0
+    assert "large standard, up to 3 lb" in row["low_inventory_fee_basis"]
+    # the newsvendor's C_u carries the same tier at its under-14-days rate
+    assert row["c_u_parts"]["low_inventory_fee"] == 0.97
+    # the same SKU with no tier on file: the lowest standard row, labelled as assumed
+    plain = _lilf_row(_health())
+    assert plain["low_inventory_fee_month"] == pytest.approx(0.89 * 5 * 30)
+    assert plain["fee_size_tier_basis"] == "size tier assumed (small standard)"
+    assert "size tier assumed (small standard)" in plain["low_inventory_fee_basis"]
+    # in ounces, 56 oz is 3.5 lb: the 3-20 lb row
+    heavy = _lilf_row(_health(raw={**raw, "item-package-weight": "56", "unit-of-weight": "ounces"}))
+    assert heavy["fee_size_tier"] == "large_standard_20lb" and heavy["low_inventory_fee_rate"] == 1.11
+
+
+def test_the_fee_needs_both_the_30_and_90_day_supply_under_28_and_the_higher_sets_the_band():
+    # a fortnight's dip: 30-day supply 12 days, but the 90-day supply 40 days -> no fee
+    dip = _lilf_row(_health(t30=150, t90=135))
+    assert dip["low_inventory_days_of_supply"]["t30"] == 12.0 and dip["low_inventory_days_of_supply"]["t90"] == 40.0
+    assert dip["low_inventory_fee_risk"] is False and dip["low_inventory_fee_month"] == 0.0
+    # both under 28: 30-day 12 days, 90-day 18 days -> the 14-21 band, not under-14
+    both = _lilf_row(_health(t30=150, t90=300))
+    assert both["low_inventory_days_of_supply"]["band"] == 18.0
+    assert both["low_inventory_fee_rate"] == 0.63
+
+
+def test_amazons_own_historical_days_of_supply_win_when_the_export_has_them():
+    raw = {"short-term-historical-days-of-supply": "20", "long-term-historical-days-of-supply": "25"}
+    row = _lilf_row(_health(raw=raw))           # the shipping pace alone would say 12 days
+    assert row["low_inventory_days_of_supply"] == {"t30": 20.0, "t90": 25.0, "band": 25.0,
+                                                   "source": "Amazon's own 30- and 90-day historical days of supply"}
+    assert row["low_inventory_fee_rate"] == 0.32
+
+
+def test_the_exemptions_an_export_shows_are_applied_and_the_rest_are_named():
+    slow_week = _lilf_row(_health(t7=12))
+    assert slow_week["low_inventory_fee_month"] == 0.0 and slow_week["low_inventory_fee_risk"] is False
+    assert "12 units shipped in the past 7 days, under 20" in slow_week["low_inventory_fee_exempt"]
+    flagged = _lilf_row(_health(raw={"exempted-from-low-inventory-level-fee": "Yes"}))
+    assert flagged["low_inventory_fee_month"] == 0.0 and "marks this SKU exempt" in flagged["low_inventory_fee_exempt"]
+    grocery = _lilf_row(_health(raw={"product-group": "Grocery"}))
+    assert grocery["low_inventory_fee_month"] == 0.0 and grocery["low_inventory_fee_exempt"] == "exempt: Grocery"
+    # no 7-day count on file: the fee stands, and the row says the exemption went unchecked
+    unchecked = _lilf_row(_health(t7=None))
+    assert unchecked["low_inventory_fee_month"] > 0 and unchecked["low_inventory_fee_exempt"] is None
+    assert "exemption is unchecked (no units-shipped-t7 on file)" in unchecked["low_inventory_fee_basis"]
+    # the exemptions no export shows are named on every row
+    for r in (slow_week, unchecked):
+        assert "New Selection" in r["low_inventory_fee_basis"] and "AWD" in r["low_inventory_fee_basis"]
+
+
+def test_without_shipping_history_the_modelled_rate_stands_in_and_says_so():
+    """No Inventory Age row at all: on hand over the modelled rate, as before, labelled."""
+    out = econ.run({}, [_inventory("A", on_hand=40)], margin_rows=[_margin("A")], rng=np.random.default_rng(0),
+                   simulations=2000, today=TODAY)
+    a = out["rows"][0]
+    assert a["low_inventory_days_of_supply"]["band"] == pytest.approx(40 / 3, abs=0.05)
+    assert "modelled rate" in a["low_inventory_days_of_supply"]["source"]
+    assert a["low_inventory_fee_month"] == pytest.approx(0.89 * 3 * 30, rel=1e-3)
