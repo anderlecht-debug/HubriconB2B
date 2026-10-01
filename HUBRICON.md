@@ -425,6 +425,14 @@ listing in the harvest, the engine's detectors found nothing to say about 1,473 
 on 2026-09-30 (`engine/scripts/silence_rate.py`). The "roughly half" in COLD_ENGINE.md
 was an expectation; the site prints the measured figure.
 
+**The cash horizon and the low-inventory fee, since 2026-10-01.** The cash horizon models
+Amazon's DD+7 reserve, its 14-day settlement and the bank transfer, and counts what Amazon
+already holds on day one. The low-inventory-level fee is priced by size tier, on Amazon's
+30/90-day rule, where a report names the tier (Fee Preview on /call); otherwise at the lowest
+row of its kind, labelled assumed. The bulky rows are the least certain figures in the
+schedule (read from Amazon's page, not re-read). The storage utilization surcharge is not
+modelled.
+
 **Not true, and never to be implied:** there are **zero paying customers and zero
 published results**. `/results` redirects to `/honesty`, and the home page's results wall reads zero honestly and says so. No testimonial,
 logo, client count or dollar result may appear until a real one exists. Industry

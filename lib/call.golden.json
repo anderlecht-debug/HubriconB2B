@@ -278,49 +278,49 @@
     0,
     "oversize"
    ],
-   "want": 2.09
+   "want": 1.85
   },
   {
    "args": [
     5,
     "oversize"
    ],
-   "want": 2.09
+   "want": 1.85
   },
   {
    "args": [
     13.9,
     "oversize"
    ],
-   "want": 2.09
+   "want": 1.85
   },
   {
    "args": [
     14,
     "oversize"
    ],
-   "want": 1.15
+   "want": 1.02
   },
   {
    "args": [
     20.9,
     "oversize"
    ],
-   "want": 1.15
+   "want": 1.02
   },
   {
    "args": [
     21,
     "oversize"
    ],
-   "want": 0.57
+   "want": 0.51
   },
   {
    "args": [
     27.9,
     "oversize"
    ],
-   "want": 0.57
+   "want": 0.51
   },
   {
    "args": [
@@ -832,8 +832,8 @@
     null
    ],
    "want": [
-    "large_bulky",
-    "size tier assumed (large bulky; your export says oversize)"
+    "small_bulky",
+    "size tier assumed (small bulky; your export says oversize)"
    ]
   },
   {
@@ -842,8 +842,8 @@
     null
    ],
    "want": [
-    "large_bulky",
-    "size tier assumed (large bulky; your export says oversize)"
+    "small_bulky",
+    "size tier assumed (small bulky; your export says oversize)"
    ]
   },
   {
@@ -1096,7 +1096,7 @@
   },
   "low_inventory_assumed_tier": {
    "standard": "small_standard",
-   "oversize": "large_bulky"
+   "oversize": "small_bulky"
   },
   "low_inventory_min_units_t7": 20,
   "lilf_unmodelled": "not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD",

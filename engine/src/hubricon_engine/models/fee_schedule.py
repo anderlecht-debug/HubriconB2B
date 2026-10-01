@@ -69,9 +69,10 @@ LOW_INVENTORY_TIER_LABEL = {
     "large_standard_20lb": "large standard, 3 to 20 lb", "small_bulky": "small bulky", "large_bulky": "large bulky",
 }
 # When an export says only "standard" or "oversize" (Inventory Age's storage
-# type): standard takes the lowest standard row, so the fee is never
-# overstated; oversize keeps the large-bulky row it was priced at before.
-LOW_INVENTORY_ASSUMED_TIER = {"standard": "small_standard", "oversize": "large_bulky"}
+# type), each takes the lowest row of its kind, so an assumed tier never
+# overstates the fee: small standard, and small bulky (oversize was priced at
+# 2.09/1.14/0.72 until 2026-10-01).
+LOW_INVENTORY_ASSUMED_TIER = {"standard": "small_standard", "oversize": "small_bulky"}
 LOW_INVENTORY_DAYS_THRESHOLD = 28
 LOW_INVENTORY_MIN_UNITS_T7 = 20            # fewer shipped in the past 7 days: exempt
 LARGE_STANDARD_SPLIT_LB = 3.0

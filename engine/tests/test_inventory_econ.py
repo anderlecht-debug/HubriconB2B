@@ -209,7 +209,8 @@ def test_the_schedule_has_five_tiers_and_the_two_storage_classes_map_to_rows():
     assert fees.LOW_INVENTORY_FEE_PER_UNIT["large_bulky"] == {"lt14": 2.09, "14to21": 1.15, "21to28": 0.57}
     # "standard" with no finer tier is the lowest standard row, so never overstated
     assert fees.low_inventory_fee(10, "standard") == fees.low_inventory_fee(10, "small_standard") == 0.89
-    assert fees.low_inventory_fee(15, "oversize") == 1.15
+    # "oversize" with no finer tier is the lowest bulky row, for the same reason
+    assert fees.low_inventory_fee(15, "oversize") == fees.low_inventory_fee(15, "small_bulky") == 1.02
     assert fees.low_inventory_fee(10, None) == 0.0, "a tier with no row is not priced"
     assert fees.low_inventory_band_days(12.0, 30.0) == 30.0 and fees.low_inventory_band_days(None, 9.0) == 9.0
     assert fees.low_inventory_band_days(None, None) is None and fees.low_inventory_fee(None) == 0.0
@@ -225,7 +226,7 @@ def test_the_schedule_has_five_tiers_and_the_two_storage_classes_map_to_rows():
     ("Large bulky", None, "large_bulky", "least certain"),
     ("Standard-Size", None, "small_standard", "size tier assumed (small standard)"),
     (None, None, "small_standard", "size tier assumed (small standard)"),
-    ("Oversize", None, "large_bulky", "assumed"),
+    ("Oversize", None, "small_bulky", "assumed"),   # the lowest bulky row: an assumed tier never overstates
     ("Extra-large 50+ to 70 lb", None, None, "not priced"),
 ])
 def test_a_size_tier_as_an_export_names_it_finds_its_row(label, weight, tier, says):
