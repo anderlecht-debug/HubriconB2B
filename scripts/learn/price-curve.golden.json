@@ -1,0 +1,7020 @@
+{
+ "about": "Written by scripts/learn/price_curve.py from Hubricon's engine. Do not edit.",
+ "engine_sha256": {
+  "engine/src/hubricon_engine/models/elasticity.py": "b059dd73e84e2543736e4b8d68fac62270b781b2b092bdf9279f48c49673336d",
+  "engine/src/hubricon_engine/models/pricing_engine.py": "1ab85b441f00362fab303406a0a151e8d34875f1bb32a99d9f19bdd3cb4ec14b"
+ },
+ "t975": [
+  null,
+  12.706205,
+  4.302653,
+  3.182446,
+  2.776445,
+  2.570582,
+  2.446912,
+  2.364624,
+  2.306004,
+  2.262157,
+  2.228139,
+  2.200985,
+  2.178813,
+  2.160369,
+  2.144787,
+  2.13145,
+  2.119905,
+  2.109816,
+  2.100922,
+  2.093024,
+  2.085963,
+  2.079614,
+  2.073873,
+  2.068658,
+  2.063899,
+  2.059539,
+  2.055529,
+  2.051831,
+  2.048407,
+  2.04523,
+  2.042272,
+  2.039513,
+  2.036933,
+  2.034515,
+  2.032245,
+  2.030108,
+  2.028094,
+  2.026192,
+  2.024394,
+  2.022691,
+  2.021075,
+  2.019541,
+  2.018082,
+  2.016692,
+  2.015368,
+  2.014103,
+  2.012896,
+  2.011741,
+  2.010635,
+  2.009575,
+  2.008559,
+  2.007584,
+  2.006647,
+  2.005746,
+  2.004879,
+  2.004045,
+  2.003241,
+  2.002465,
+  2.001717,
+  2.000995,
+  2.000298
+ ],
+ "fits": [
+  {
+   "points": [
+    {
+     "price": 78.18,
+     "units": 131,
+     "days": 7
+    },
+    {
+     "price": 77.78,
+     "units": 340,
+     "days": 15
+    },
+    {
+     "price": 79.05,
+     "units": 510,
+     "days": 28
+    },
+    {
+     "price": 78.93,
+     "units": 127,
+     "days": 7
+    },
+    {
+     "price": 78.58,
+     "units": 742,
+     "days": 30
+    },
+    {
+     "price": 78.26,
+     "units": 150,
+     "days": 7
+    },
+    {
+     "price": 78.52,
+     "units": 715,
+     "days": 31
+    },
+    {
+     "price": 78.59,
+     "units": 694,
+     "days": 31
+    },
+    {
+     "price": 79.16,
+     "units": 689,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 9
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 50.51,
+     "units": 808,
+     "days": 16
+    },
+    {
+     "price": 53.1,
+     "units": 541,
+     "days": 14
+    },
+    {
+     "price": 47.25,
+     "units": 1453,
+     "days": 31
+    },
+    {
+     "price": 40.65,
+     "units": 242,
+     "days": 7
+    },
+    {
+     "price": 46.25,
+     "units": 559,
+     "days": 14
+    },
+    {
+     "price": 48.88,
+     "units": 1029,
+     "days": 28
+    },
+    {
+     "price": 46.98,
+     "units": 330,
+     "days": 7
+    },
+    {
+     "price": 48.46,
+     "units": 898,
+     "days": 30
+    },
+    {
+     "price": 48.13,
+     "units": 590,
+     "days": 16
+    },
+    {
+     "price": 45.08,
+     "units": 1319,
+     "days": 30
+    },
+    {
+     "price": 48.97,
+     "units": 1226,
+     "days": 30
+    },
+    {
+     "price": 52.96,
+     "units": 249,
+     "days": 7
+    },
+    {
+     "price": 47.78,
+     "units": 294,
+     "days": 7
+    },
+    {
+     "price": 46.47,
+     "units": 244,
+     "days": 7
+    },
+    {
+     "price": 50.15,
+     "units": 667,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 15,
+    "elasticity": 0.1867,
+    "std_err": 0.747,
+    "ci": [
+     -1.427,
+     1.8005
+    ],
+    "dof": 13,
+    "t": 2.1604,
+    "r_squared": 0.0077,
+    "price_cv": 0.0619,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.5884,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 42.69,
+     "units": 869,
+     "days": 16
+    },
+    {
+     "price": 37.56,
+     "units": 1794,
+     "days": 30
+    },
+    {
+     "price": 47.32,
+     "units": 1074,
+     "days": 31
+    },
+    {
+     "price": 40.08,
+     "units": 366,
+     "days": 7
+    },
+    {
+     "price": 32.99,
+     "units": 2047,
+     "days": 28
+    },
+    {
+     "price": 45.96,
+     "units": 287,
+     "days": 7
+    },
+    {
+     "price": 44.82,
+     "units": 1658,
+     "days": 28
+    },
+    {
+     "price": 47.05,
+     "units": 1456,
+     "days": 30
+    },
+    {
+     "price": 46.9,
+     "units": 1399,
+     "days": 30
+    },
+    {
+     "price": 33.55,
+     "units": 2293,
+     "days": 28
+    },
+    {
+     "price": 43.59,
+     "units": 1304,
+     "days": 28
+    },
+    {
+     "price": 40.69,
+     "units": 1644,
+     "days": 31
+    },
+    {
+     "price": 36.67,
+     "units": 2377,
+     "days": 31
+    },
+    {
+     "price": 47.75,
+     "units": 485,
+     "days": 15
+    },
+    {
+     "price": 48.14,
+     "units": 1566,
+     "days": 31
+    },
+    {
+     "price": 42.24,
+     "units": 556,
+     "days": 14
+    },
+    {
+     "price": 39.76,
+     "units": 1507,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 17,
+    "elasticity": -1.7131,
+    "std_err": 0.3296,
+    "ci": [
+     -2.4156,
+     -1.0107
+    ],
+    "dof": 15,
+    "t": 2.1314,
+    "r_squared": 0.6472,
+    "price_cv": 0.1128,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3266,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 85.72,
+     "units": 583,
+     "days": 15
+    },
+    {
+     "price": 73.59,
+     "units": 956,
+     "days": 15
+    },
+    {
+     "price": 85.85,
+     "units": 1254,
+     "days": 28
+    },
+    {
+     "price": 87.29,
+     "units": 1527,
+     "days": 30
+    },
+    {
+     "price": 79.39,
+     "units": 932,
+     "days": 15
+    },
+    {
+     "price": 73.41,
+     "units": 974,
+     "days": 14
+    },
+    {
+     "price": 83.9,
+     "units": 304,
+     "days": 7
+    },
+    {
+     "price": 75.99,
+     "units": 465,
+     "days": 7
+    },
+    {
+     "price": 66.94,
+     "units": 1505,
+     "days": 15
+    },
+    {
+     "price": 73.59,
+     "units": 1832,
+     "days": 30
+    },
+    {
+     "price": 69.2,
+     "units": 2196,
+     "days": 28
+    },
+    {
+     "price": 82.57,
+     "units": 801,
+     "days": 15
+    },
+    {
+     "price": 110.63,
+     "units": 510,
+     "days": 28
+    },
+    {
+     "price": 69.61,
+     "units": 1275,
+     "days": 15
+    },
+    {
+     "price": 116.28,
+     "units": 483,
+     "days": 31
+    },
+    {
+     "price": 105.05,
+     "units": 120,
+     "days": 7
+    },
+    {
+     "price": 67.45,
+     "units": 3392,
+     "days": 31
+    },
+    {
+     "price": 82.19,
+     "units": 1139,
+     "days": 30
+    },
+    {
+     "price": 80.66,
+     "units": 556,
+     "days": 16
+    },
+    {
+     "price": 79.18,
+     "units": 626,
+     "days": 14
+    },
+    {
+     "price": 95.38,
+     "units": 204,
+     "days": 7
+    },
+    {
+     "price": 106.45,
+     "units": 243,
+     "days": 16
+    },
+    {
+     "price": 84.67,
+     "units": 870,
+     "days": 15
+    },
+    {
+     "price": 71.54,
+     "units": 620,
+     "days": 7
+    },
+    {
+     "price": 90.74,
+     "units": 964,
+     "days": 31
+    },
+    {
+     "price": 70.91,
+     "units": 509,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 26,
+    "elasticity": -3.5117,
+    "std_err": 0.1907,
+    "ci": [
+     -3.9052,
+     -3.1182
+    ],
+    "dof": 24,
+    "t": 2.0639,
+    "r_squared": 0.9202,
+    "price_cv": 0.1604,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2111,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 91.82,
+     "units": 1074,
+     "days": 28
+    },
+    {
+     "price": 91.2,
+     "units": 1313,
+     "days": 30
+    },
+    {
+     "price": 84.45,
+     "units": 889,
+     "days": 14
+    },
+    {
+     "price": 79.06,
+     "units": 1489,
+     "days": 31
+    },
+    {
+     "price": 91.42,
+     "units": 633,
+     "days": 15
+    },
+    {
+     "price": 79.68,
+     "units": 786,
+     "days": 14
+    },
+    {
+     "price": 90.32,
+     "units": 698,
+     "days": 15
+    },
+    {
+     "price": 101.13,
+     "units": 742,
+     "days": 16
+    },
+    {
+     "price": 89.55,
+     "units": 287,
+     "days": 7
+    },
+    {
+     "price": 92.32,
+     "units": 1143,
+     "days": 28
+    },
+    {
+     "price": 89.42,
+     "units": 678,
+     "days": 15
+    },
+    {
+     "price": 94.51,
+     "units": 1754,
+     "days": 30
+    },
+    {
+     "price": 82.67,
+     "units": 2011,
+     "days": 31
+    },
+    {
+     "price": 88.19,
+     "units": 394,
+     "days": 7
+    },
+    {
+     "price": 91.36,
+     "units": 617,
+     "days": 14
+    },
+    {
+     "price": 82.97,
+     "units": 1453,
+     "days": 28
+    },
+    {
+     "price": 96.2,
+     "units": 659,
+     "days": 16
+    },
+    {
+     "price": 91.33,
+     "units": 657,
+     "days": 15
+    },
+    {
+     "price": 89.78,
+     "units": 762,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 19,
+    "elasticity": -1.2814,
+    "std_err": 0.6335,
+    "ci": [
+     -2.618,
+     0.0551
+    ],
+    "dof": 17,
+    "t": 2.1098,
+    "r_squared": 0.2668,
+    "price_cv": 0.0605,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.5152,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 70.9,
+     "units": 377,
+     "days": 7
+    },
+    {
+     "price": 100.66,
+     "units": 1176,
+     "days": 28
+    },
+    {
+     "price": 93.62,
+     "units": 1064,
+     "days": 28
+    },
+    {
+     "price": 81.6,
+     "units": 306,
+     "days": 7
+    },
+    {
+     "price": 95.92,
+     "units": 629,
+     "days": 16
+    },
+    {
+     "price": 87.98,
+     "units": 604,
+     "days": 14
+    },
+    {
+     "price": 65.51,
+     "units": 1784,
+     "days": 28
+    },
+    {
+     "price": 87.13,
+     "units": 569,
+     "days": 14
+    },
+    {
+     "price": 68.37,
+     "units": 731,
+     "days": 15
+    },
+    {
+     "price": 81.62,
+     "units": 745,
+     "days": 15
+    },
+    {
+     "price": 95.77,
+     "units": 1166,
+     "days": 28
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 11,
+    "elasticity": -0.9188,
+    "std_err": 0.28,
+    "ci": [
+     -1.5523,
+     -0.2854
+    ],
+    "dof": 9,
+    "t": 2.2622,
+    "r_squared": 0.7663,
+    "price_cv": 0.1356,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.1691,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 58.01,
+     "units": 279,
+     "days": 28
+    },
+    {
+     "price": 62.71,
+     "units": 74,
+     "days": 7
+    },
+    {
+     "price": 55.17,
+     "units": 242,
+     "days": 14
+    },
+    {
+     "price": 63.98,
+     "units": 129,
+     "days": 14
+    },
+    {
+     "price": 61.16,
+     "units": 416,
+     "days": 28
+    },
+    {
+     "price": 62.79,
+     "units": 285,
+     "days": 28
+    },
+    {
+     "price": 60.41,
+     "units": 92,
+     "days": 7
+    },
+    {
+     "price": 66.57,
+     "units": 301,
+     "days": 31
+    },
+    {
+     "price": 60.73,
+     "units": 157,
+     "days": 15
+    },
+    {
+     "price": 57.73,
+     "units": 474,
+     "days": 30
+    },
+    {
+     "price": 50.09,
+     "units": 529,
+     "days": 30
+    },
+    {
+     "price": 63.21,
+     "units": 175,
+     "days": 15
+    },
+    {
+     "price": 53.55,
+     "units": 129,
+     "days": 7
+    },
+    {
+     "price": 55.61,
+     "units": 351,
+     "days": 28
+    },
+    {
+     "price": 55.65,
+     "units": 389,
+     "days": 30
+    },
+    {
+     "price": 53.95,
+     "units": 234,
+     "days": 16
+    },
+    {
+     "price": 69.59,
+     "units": 126,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 17,
+    "elasticity": -2.2443,
+    "std_err": 0.2856,
+    "ci": [
+     -2.853,
+     -1.6356
+    ],
+    "dof": 15,
+    "t": 2.1314,
+    "r_squared": 0.6613,
+    "price_cv": 0.0837,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.4147,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 38.89,
+     "units": 655,
+     "days": 14
+    },
+    {
+     "price": 33.44,
+     "units": 2384,
+     "days": 31
+    },
+    {
+     "price": 32.0,
+     "units": 1420,
+     "days": 15
+    },
+    {
+     "price": 29.52,
+     "units": 2176,
+     "days": 30
+    },
+    {
+     "price": 38.83,
+     "units": 1252,
+     "days": 31
+    },
+    {
+     "price": 33.37,
+     "units": 939,
+     "days": 14
+    },
+    {
+     "price": 43.86,
+     "units": 793,
+     "days": 30
+    },
+    {
+     "price": 31.71,
+     "units": 1599,
+     "days": 15
+    },
+    {
+     "price": 35.99,
+     "units": 1113,
+     "days": 16
+    },
+    {
+     "price": 31.72,
+     "units": 629,
+     "days": 7
+    },
+    {
+     "price": 45.76,
+     "units": 844,
+     "days": 28
+    },
+    {
+     "price": 34.04,
+     "units": 974,
+     "days": 16
+    },
+    {
+     "price": 47.34,
+     "units": 739,
+     "days": 28
+    },
+    {
+     "price": 26.85,
+     "units": 1625,
+     "days": 15
+    },
+    {
+     "price": 42.58,
+     "units": 280,
+     "days": 7
+    },
+    {
+     "price": 45.17,
+     "units": 421,
+     "days": 16
+    },
+    {
+     "price": 35.27,
+     "units": 2440,
+     "days": 31
+    },
+    {
+     "price": 29.44,
+     "units": 1636,
+     "days": 16
+    },
+    {
+     "price": 31.22,
+     "units": 2675,
+     "days": 30
+    },
+    {
+     "price": 40.3,
+     "units": 288,
+     "days": 7
+    },
+    {
+     "price": 38.22,
+     "units": 730,
+     "days": 14
+    },
+    {
+     "price": 35.35,
+     "units": 1052,
+     "days": 15
+    },
+    {
+     "price": 29.14,
+     "units": 1471,
+     "days": 15
+    },
+    {
+     "price": 32.88,
+     "units": 460,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 24,
+    "elasticity": -2.7968,
+    "std_err": 0.22,
+    "ci": [
+     -3.253,
+     -2.3407
+    ],
+    "dof": 22,
+    "t": 2.0739,
+    "r_squared": 0.8967,
+    "price_cv": 0.1578,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2024,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 27.83,
+     "units": 2074,
+     "days": 31
+    },
+    {
+     "price": 29.2,
+     "units": 1280,
+     "days": 28
+    },
+    {
+     "price": 28.16,
+     "units": 689,
+     "days": 14
+    },
+    {
+     "price": 23.24,
+     "units": 1376,
+     "days": 16
+    },
+    {
+     "price": 27.7,
+     "units": 376,
+     "days": 7
+    },
+    {
+     "price": 22.38,
+     "units": 1306,
+     "days": 14
+    },
+    {
+     "price": 39.05,
+     "units": 123,
+     "days": 7
+    },
+    {
+     "price": 29.82,
+     "units": 312,
+     "days": 7
+    },
+    {
+     "price": 25.8,
+     "units": 951,
+     "days": 15
+    },
+    {
+     "price": 23.64,
+     "units": 908,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 10,
+    "elasticity": -2.801,
+    "std_err": 0.5726,
+    "ci": [
+     -4.1214,
+     -1.4806
+    ],
+    "dof": 8,
+    "t": 2.306,
+    "r_squared": 0.9285,
+    "price_cv": 0.1632,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2748,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 23.51,
+     "units": 409,
+     "days": 16
+    },
+    {
+     "price": 30.12,
+     "units": 324,
+     "days": 14
+    },
+    {
+     "price": 26.49,
+     "units": 376,
+     "days": 14
+    },
+    {
+     "price": 27.55,
+     "units": 636,
+     "days": 30
+    },
+    {
+     "price": 25.74,
+     "units": 330,
+     "days": 16
+    },
+    {
+     "price": 26.51,
+     "units": 585,
+     "days": 28
+    },
+    {
+     "price": 27.07,
+     "units": 740,
+     "days": 31
+    },
+    {
+     "price": 27.59,
+     "units": 521,
+     "days": 28
+    },
+    {
+     "price": 25.71,
+     "units": 756,
+     "days": 30
+    },
+    {
+     "price": 27.68,
+     "units": 399,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 10,
+    "elasticity": -0.5047,
+    "std_err": 0.6072,
+    "ci": [
+     -1.9049,
+     0.8956
+    ],
+    "dof": 8,
+    "t": 2.306,
+    "r_squared": 0.0762,
+    "price_cv": 0.0606,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.6215,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 79.17,
+     "units": 268,
+     "days": 7
+    },
+    {
+     "price": 105.08,
+     "units": 239,
+     "days": 15
+    },
+    {
+     "price": 71.2,
+     "units": 1322,
+     "days": 31
+    },
+    {
+     "price": 90.48,
+     "units": 764,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "insufficient_data",
+    "n": 4
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 88.47,
+     "units": 1088,
+     "days": 31
+    },
+    {
+     "price": 89.13,
+     "units": 1009,
+     "days": 28
+    },
+    {
+     "price": 87.73,
+     "units": 420,
+     "days": 16
+    },
+    {
+     "price": 88.67,
+     "units": 881,
+     "days": 31
+    },
+    {
+     "price": 88.71,
+     "units": 373,
+     "days": 14
+    },
+    {
+     "price": 87.63,
+     "units": 912,
+     "days": 31
+    },
+    {
+     "price": 88.3,
+     "units": 1037,
+     "days": 30
+    },
+    {
+     "price": 87.91,
+     "units": 384,
+     "days": 15
+    },
+    {
+     "price": 88.52,
+     "units": 157,
+     "days": 7
+    },
+    {
+     "price": 87.6,
+     "units": 375,
+     "days": 14
+    },
+    {
+     "price": 88.28,
+     "units": 483,
+     "days": 15
+    },
+    {
+     "price": 88.42,
+     "units": 1158,
+     "days": 31
+    },
+    {
+     "price": 88.3,
+     "units": 680,
+     "days": 14
+    },
+    {
+     "price": 88.86,
+     "units": 230,
+     "days": 7
+    },
+    {
+     "price": 89.76,
+     "units": 479,
+     "days": 14
+    },
+    {
+     "price": 88.24,
+     "units": 432,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 16
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 9.88,
+     "units": 120,
+     "days": 7
+    },
+    {
+     "price": 9.61,
+     "units": 198,
+     "days": 14
+    },
+    {
+     "price": 9.34,
+     "units": 520,
+     "days": 31
+    },
+    {
+     "price": 10.19,
+     "units": 141,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "insufficient_data",
+    "n": 4
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 38.34,
+     "units": 501,
+     "days": 28
+    },
+    {
+     "price": 38.22,
+     "units": 166,
+     "days": 7
+    },
+    {
+     "price": 37.43,
+     "units": 335,
+     "days": 14
+    },
+    {
+     "price": 40.13,
+     "units": 131,
+     "days": 7
+    },
+    {
+     "price": 36.68,
+     "units": 640,
+     "days": 30
+    },
+    {
+     "price": 36.01,
+     "units": 823,
+     "days": 31
+    },
+    {
+     "price": 34.2,
+     "units": 172,
+     "days": 7
+    },
+    {
+     "price": 41.45,
+     "units": 661,
+     "days": 30
+    },
+    {
+     "price": 37.77,
+     "units": 323,
+     "days": 14
+    },
+    {
+     "price": 38.41,
+     "units": 379,
+     "days": 15
+    },
+    {
+     "price": 35.27,
+     "units": 372,
+     "days": 16
+    },
+    {
+     "price": 38.55,
+     "units": 300,
+     "days": 16
+    },
+    {
+     "price": 34.57,
+     "units": 351,
+     "days": 14
+    },
+    {
+     "price": 36.63,
+     "units": 581,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 14,
+    "elasticity": -1.0946,
+    "std_err": 0.5943,
+    "ci": [
+     -2.3895,
+     0.2002
+    ],
+    "dof": 12,
+    "t": 2.1788,
+    "r_squared": 0.2062,
+    "price_cv": 0.0524,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.62,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 61.51,
+     "units": 405,
+     "days": 14
+    },
+    {
+     "price": 56.9,
+     "units": 483,
+     "days": 15
+    },
+    {
+     "price": 61.23,
+     "units": 410,
+     "days": 15
+    },
+    {
+     "price": 60.58,
+     "units": 922,
+     "days": 31
+    },
+    {
+     "price": 62.09,
+     "units": 459,
+     "days": 14
+    },
+    {
+     "price": 57.83,
+     "units": 766,
+     "days": 31
+    },
+    {
+     "price": 61.55,
+     "units": 492,
+     "days": 16
+    },
+    {
+     "price": 61.19,
+     "units": 385,
+     "days": 15
+    },
+    {
+     "price": 62.46,
+     "units": 424,
+     "days": 14
+    },
+    {
+     "price": 59.01,
+     "units": 853,
+     "days": 28
+    },
+    {
+     "price": 58.2,
+     "units": 469,
+     "days": 15
+    },
+    {
+     "price": 62.64,
+     "units": 703,
+     "days": 28
+    },
+    {
+     "price": 60.76,
+     "units": 418,
+     "days": 14
+    },
+    {
+     "price": 57.28,
+     "units": 434,
+     "days": 15
+    },
+    {
+     "price": 59.75,
+     "units": 192,
+     "days": 7
+    },
+    {
+     "price": 58.08,
+     "units": 929,
+     "days": 30
+    },
+    {
+     "price": 59.92,
+     "units": 440,
+     "days": 14
+    },
+    {
+     "price": 60.9,
+     "units": 454,
+     "days": 16
+    },
+    {
+     "price": 61.51,
+     "units": 452,
+     "days": 15
+    },
+    {
+     "price": 62.67,
+     "units": 935,
+     "days": 30
+    },
+    {
+     "price": 59.02,
+     "units": 494,
+     "days": 16
+    },
+    {
+     "price": 55.9,
+     "units": 1124,
+     "days": 31
+    },
+    {
+     "price": 58.56,
+     "units": 956,
+     "days": 31
+    },
+    {
+     "price": 58.89,
+     "units": 668,
+     "days": 31
+    },
+    {
+     "price": 60.77,
+     "units": 514,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 25,
+    "elasticity": -0.5617,
+    "std_err": 0.8784,
+    "ci": [
+     -2.3788,
+     1.2554
+    ],
+    "dof": 23,
+    "t": 2.0687,
+    "r_squared": 0.028,
+    "price_cv": 0.0312,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.6905,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 6.87,
+     "units": 179,
+     "days": 15
+    },
+    {
+     "price": 7.56,
+     "units": 115,
+     "days": 16
+    },
+    {
+     "price": 7.62,
+     "units": 91,
+     "days": 16
+    },
+    {
+     "price": 8.49,
+     "units": 151,
+     "days": 31
+    },
+    {
+     "price": 6.37,
+     "units": 287,
+     "days": 30
+    },
+    {
+     "price": 10.32,
+     "units": 37,
+     "days": 15
+    },
+    {
+     "price": 9.02,
+     "units": 35,
+     "days": 7
+    },
+    {
+     "price": 6.68,
+     "units": 338,
+     "days": 30
+    },
+    {
+     "price": 8.81,
+     "units": 57,
+     "days": 14
+    },
+    {
+     "price": 9.09,
+     "units": 57,
+     "days": 14
+    },
+    {
+     "price": 7.96,
+     "units": 103,
+     "days": 14
+    },
+    {
+     "price": 9.11,
+     "units": 86,
+     "days": 15
+    },
+    {
+     "price": 9.55,
+     "units": 60,
+     "days": 15
+    },
+    {
+     "price": 9.46,
+     "units": 24,
+     "days": 7
+    },
+    {
+     "price": 7.61,
+     "units": 284,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 15,
+    "elasticity": -2.9798,
+    "std_err": 0.4434,
+    "ci": [
+     -3.9378,
+     -2.0219
+    ],
+    "dof": 13,
+    "t": 2.1604,
+    "r_squared": 0.8548,
+    "price_cv": 0.1359,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3406,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 15.84,
+     "units": 265,
+     "days": 15
+    },
+    {
+     "price": 15.82,
+     "units": 282,
+     "days": 15
+    },
+    {
+     "price": 16.97,
+     "units": 417,
+     "days": 28
+    },
+    {
+     "price": 16.28,
+     "units": 544,
+     "days": 28
+    },
+    {
+     "price": 17.05,
+     "units": 577,
+     "days": 31
+    },
+    {
+     "price": 16.12,
+     "units": 306,
+     "days": 14
+    },
+    {
+     "price": 16.78,
+     "units": 301,
+     "days": 16
+    },
+    {
+     "price": 16.15,
+     "units": 272,
+     "days": 16
+    },
+    {
+     "price": 15.86,
+     "units": 227,
+     "days": 15
+    },
+    {
+     "price": 16.19,
+     "units": 314,
+     "days": 15
+    },
+    {
+     "price": 15.9,
+     "units": 341,
+     "days": 16
+    },
+    {
+     "price": 15.84,
+     "units": 137,
+     "days": 7
+    },
+    {
+     "price": 15.44,
+     "units": 201,
+     "days": 7
+    },
+    {
+     "price": 15.65,
+     "units": 368,
+     "days": 16
+    },
+    {
+     "price": 15.72,
+     "units": 299,
+     "days": 14
+    },
+    {
+     "price": 14.64,
+     "units": 236,
+     "days": 7
+    },
+    {
+     "price": 15.67,
+     "units": 432,
+     "days": 16
+    },
+    {
+     "price": 17.06,
+     "units": 263,
+     "days": 14
+    },
+    {
+     "price": 17.16,
+     "units": 258,
+     "days": 16
+    },
+    {
+     "price": 13.98,
+     "units": 440,
+     "days": 16
+    },
+    {
+     "price": 16.67,
+     "units": 716,
+     "days": 30
+    },
+    {
+     "price": 15.41,
+     "units": 340,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 22,
+    "elasticity": -2.9665,
+    "std_err": 0.8144,
+    "ci": [
+     -4.6653,
+     -1.2676
+    ],
+    "dof": 20,
+    "t": 2.086,
+    "r_squared": 0.4841,
+    "price_cv": 0.0475,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.6848,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 83.3,
+     "units": 862,
+     "days": 14
+    },
+    {
+     "price": 83.54,
+     "units": 1968,
+     "days": 28
+    },
+    {
+     "price": 79.24,
+     "units": 1274,
+     "days": 16
+    },
+    {
+     "price": 112.49,
+     "units": 459,
+     "days": 16
+    },
+    {
+     "price": 119.9,
+     "units": 354,
+     "days": 16
+    },
+    {
+     "price": 71.18,
+     "units": 3075,
+     "days": 30
+    },
+    {
+     "price": 88.63,
+     "units": 848,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 7,
+    "elasticity": -2.9147,
+    "std_err": 0.1301,
+    "ci": [
+     -3.2492,
+     -2.5802
+    ],
+    "dof": 5,
+    "t": 2.5706,
+    "r_squared": 0.9912,
+    "price_cv": 0.183,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.123,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 80.7,
+     "units": 320,
+     "days": 7
+    },
+    {
+     "price": 80.72,
+     "units": 696,
+     "days": 15
+    },
+    {
+     "price": 80.56,
+     "units": 868,
+     "days": 30
+    },
+    {
+     "price": 80.67,
+     "units": 407,
+     "days": 16
+    },
+    {
+     "price": 80.79,
+     "units": 1064,
+     "days": 28
+    },
+    {
+     "price": 80.77,
+     "units": 446,
+     "days": 14
+    },
+    {
+     "price": 80.88,
+     "units": 251,
+     "days": 7
+    },
+    {
+     "price": 80.87,
+     "units": 562,
+     "days": 14
+    },
+    {
+     "price": 81.17,
+     "units": 848,
+     "days": 30
+    },
+    {
+     "price": 81.07,
+     "units": 573,
+     "days": 14
+    },
+    {
+     "price": 80.54,
+     "units": 980,
+     "days": 30
+    },
+    {
+     "price": 80.73,
+     "units": 1101,
+     "days": 28
+    },
+    {
+     "price": 80.74,
+     "units": 752,
+     "days": 28
+    },
+    {
+     "price": 80.84,
+     "units": 477,
+     "days": 14
+    },
+    {
+     "price": 81.17,
+     "units": 194,
+     "days": 7
+    },
+    {
+     "price": 81.14,
+     "units": 1067,
+     "days": 31
+    },
+    {
+     "price": 80.91,
+     "units": 581,
+     "days": 15
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 17
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 68.93,
+     "units": 45,
+     "days": 16
+    },
+    {
+     "price": 67.88,
+     "units": 0,
+     "days": 14
+    },
+    {
+     "price": 71.03,
+     "units": 30,
+     "days": 16
+    },
+    {
+     "price": 52.78,
+     "units": 53,
+     "days": 16
+    },
+    {
+     "price": 91.94,
+     "units": 30,
+     "days": 28
+    },
+    {
+     "price": 64.63,
+     "units": 43,
+     "days": 15
+    },
+    {
+     "price": 63.66,
+     "units": 38,
+     "days": 14
+    },
+    {
+     "price": 70.09,
+     "units": 66,
+     "days": 30
+    },
+    {
+     "price": 76.45,
+     "units": 54,
+     "days": 30
+    },
+    {
+     "price": 53.8,
+     "units": 57,
+     "days": 15
+    },
+    {
+     "price": 80.53,
+     "units": 20,
+     "days": 14
+    },
+    {
+     "price": 67.26,
+     "units": 59,
+     "days": 30
+    },
+    {
+     "price": 51.64,
+     "units": 30,
+     "days": 7
+    },
+    {
+     "price": 65.27,
+     "units": 78,
+     "days": 31
+    },
+    {
+     "price": 51.64,
+     "units": 121,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 14,
+    "elasticity": -2.1942,
+    "std_err": 0.174,
+    "ci": [
+     -2.5734,
+     -1.815
+    ],
+    "dof": 12,
+    "t": 2.1788,
+    "r_squared": 0.9201,
+    "price_cv": 0.1701,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.1867,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 16.3,
+     "units": 601,
+     "days": 16
+    },
+    {
+     "price": 14.32,
+     "units": 560,
+     "days": 7
+    },
+    {
+     "price": 16.19,
+     "units": 1761,
+     "days": 30
+    },
+    {
+     "price": 18.99,
+     "units": 620,
+     "days": 16
+    },
+    {
+     "price": 18.16,
+     "units": 1155,
+     "days": 30
+    },
+    {
+     "price": 15.21,
+     "units": 2197,
+     "days": 30
+    },
+    {
+     "price": 15.21,
+     "units": 983,
+     "days": 16
+    },
+    {
+     "price": 15.85,
+     "units": 603,
+     "days": 15
+    },
+    {
+     "price": 13.38,
+     "units": 2180,
+     "days": 30
+    },
+    {
+     "price": 16.84,
+     "units": 1335,
+     "days": 31
+    },
+    {
+     "price": 15.5,
+     "units": 1386,
+     "days": 28
+    },
+    {
+     "price": 15.97,
+     "units": 1569,
+     "days": 31
+    },
+    {
+     "price": 13.97,
+     "units": 2030,
+     "days": 31
+    },
+    {
+     "price": 16.98,
+     "units": 0,
+     "days": 28
+    },
+    {
+     "price": 15.78,
+     "units": 1207,
+     "days": 30
+    },
+    {
+     "price": 18.25,
+     "units": 490,
+     "days": 14
+    },
+    {
+     "price": 18.7,
+     "units": 745,
+     "days": 28
+    },
+    {
+     "price": 14.58,
+     "units": 1006,
+     "days": 16
+    },
+    {
+     "price": 18.76,
+     "units": 974,
+     "days": 31
+    },
+    {
+     "price": 15.43,
+     "units": 780,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 19,
+    "elasticity": -2.6232,
+    "std_err": 0.3629,
+    "ci": [
+     -3.3889,
+     -1.8575
+    ],
+    "dof": 17,
+    "t": 2.1098,
+    "r_squared": 0.7563,
+    "price_cv": 0.1018,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3611,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 32.58,
+     "units": 1807,
+     "days": 28
+    },
+    {
+     "price": 32.6,
+     "units": 1501,
+     "days": 28
+    },
+    {
+     "price": 32.61,
+     "units": 371,
+     "days": 7
+    },
+    {
+     "price": 32.55,
+     "units": 1391,
+     "days": 28
+    },
+    {
+     "price": 32.57,
+     "units": 1737,
+     "days": 28
+    },
+    {
+     "price": 32.61,
+     "units": 832,
+     "days": 16
+    },
+    {
+     "price": 32.57,
+     "units": 445,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 7
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 69.39,
+     "units": 1340,
+     "days": 28
+    },
+    {
+     "price": 64.6,
+     "units": 965,
+     "days": 16
+    },
+    {
+     "price": 67.73,
+     "units": 880,
+     "days": 16
+    },
+    {
+     "price": 63.06,
+     "units": 1345,
+     "days": 15
+    },
+    {
+     "price": 65.53,
+     "units": 974,
+     "days": 16
+    },
+    {
+     "price": 60.87,
+     "units": 1240,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 6,
+    "elasticity": -5.0623,
+    "std_err": 0.8199,
+    "ci": [
+     -7.3388,
+     -2.7857
+    ],
+    "dof": 4,
+    "t": 2.7764,
+    "r_squared": 0.8732,
+    "price_cv": 0.0433,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.9645,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 11.84,
+     "units": 165,
+     "days": 15
+    },
+    {
+     "price": 12.0,
+     "units": 61,
+     "days": 7
+    },
+    {
+     "price": 11.91,
+     "units": 343,
+     "days": 30
+    },
+    {
+     "price": 11.86,
+     "units": 59,
+     "days": 7
+    },
+    {
+     "price": 11.99,
+     "units": 129,
+     "days": 14
+    },
+    {
+     "price": 11.88,
+     "units": 143,
+     "days": 15
+    },
+    {
+     "price": 11.86,
+     "units": 155,
+     "days": 15
+    },
+    {
+     "price": 11.94,
+     "units": 82,
+     "days": 7
+    },
+    {
+     "price": 11.87,
+     "units": 148,
+     "days": 14
+    },
+    {
+     "price": 12.01,
+     "units": 157,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 10
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 40.56,
+     "units": 282,
+     "days": 16
+    },
+    {
+     "price": 38.28,
+     "units": 223,
+     "days": 14
+    },
+    {
+     "price": 34.46,
+     "units": 266,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "insufficient_data",
+    "n": 3
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 9.35,
+     "units": 1534,
+     "days": 28
+    },
+    {
+     "price": 10.09,
+     "units": 1265,
+     "days": 28
+    },
+    {
+     "price": 10.82,
+     "units": 572,
+     "days": 14
+    },
+    {
+     "price": 10.57,
+     "units": 523,
+     "days": 15
+    },
+    {
+     "price": 9.96,
+     "units": 677,
+     "days": 14
+    },
+    {
+     "price": 11.14,
+     "units": 537,
+     "days": 16
+    },
+    {
+     "price": 10.7,
+     "units": 1229,
+     "days": 31
+    },
+    {
+     "price": 8.67,
+     "units": 1016,
+     "days": 28
+    },
+    {
+     "price": 9.39,
+     "units": 576,
+     "days": 16
+    },
+    {
+     "price": 10.89,
+     "units": 636,
+     "days": 14
+    },
+    {
+     "price": 10.05,
+     "units": 1470,
+     "days": 31
+    },
+    {
+     "price": 10.11,
+     "units": 281,
+     "days": 7
+    },
+    {
+     "price": 10.49,
+     "units": 556,
+     "days": 15
+    },
+    {
+     "price": 9.79,
+     "units": 658,
+     "days": 14
+    },
+    {
+     "price": 8.62,
+     "units": 1303,
+     "days": 30
+    },
+    {
+     "price": 10.05,
+     "units": 652,
+     "days": 14
+    },
+    {
+     "price": 9.7,
+     "units": 301,
+     "days": 7
+    },
+    {
+     "price": 10.64,
+     "units": 750,
+     "days": 16
+    },
+    {
+     "price": 9.6,
+     "units": 966,
+     "days": 31
+    },
+    {
+     "price": 9.62,
+     "units": 1362,
+     "days": 28
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 20,
+    "elasticity": -0.2252,
+    "std_err": 0.5616,
+    "ci": [
+     -1.4051,
+     0.9547
+    ],
+    "dof": 18,
+    "t": 2.1009,
+    "r_squared": 0.0115,
+    "price_cv": 0.0676,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.4915,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 14.11,
+     "units": 800,
+     "days": 31
+    },
+    {
+     "price": 12.58,
+     "units": 488,
+     "days": 16
+    },
+    {
+     "price": 16.08,
+     "units": 182,
+     "days": 15
+    },
+    {
+     "price": 10.01,
+     "units": 1807,
+     "days": 30
+    },
+    {
+     "price": 14.41,
+     "units": 667,
+     "days": 30
+    },
+    {
+     "price": 11.94,
+     "units": 1195,
+     "days": 28
+    },
+    {
+     "price": 14.97,
+     "units": 452,
+     "days": 28
+    },
+    {
+     "price": 12.33,
+     "units": 1138,
+     "days": 30
+    },
+    {
+     "price": 12.28,
+     "units": 212,
+     "days": 7
+    },
+    {
+     "price": 11.74,
+     "units": 244,
+     "days": 7
+    },
+    {
+     "price": 16.49,
+     "units": 364,
+     "days": 28
+    },
+    {
+     "price": 12.2,
+     "units": 905,
+     "days": 30
+    },
+    {
+     "price": 10.03,
+     "units": 1924,
+     "days": 30
+    },
+    {
+     "price": 12.26,
+     "units": 657,
+     "days": 15
+    },
+    {
+     "price": 12.87,
+     "units": 212,
+     "days": 7
+    },
+    {
+     "price": 9.06,
+     "units": 1254,
+     "days": 14
+    },
+    {
+     "price": 13.56,
+     "units": 174,
+     "days": 7
+    },
+    {
+     "price": 10.8,
+     "units": 841,
+     "days": 15
+    },
+    {
+     "price": 13.03,
+     "units": 514,
+     "days": 16
+    },
+    {
+     "price": 11.63,
+     "units": 1348,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 20,
+    "elasticity": -3.2555,
+    "std_err": 0.1665,
+    "ci": [
+     -3.6053,
+     -2.9057
+    ],
+    "dof": 18,
+    "t": 2.1009,
+    "r_squared": 0.9488,
+    "price_cv": 0.1496,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.1782,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 62.82,
+     "units": 561,
+     "days": 28
+    },
+    {
+     "price": 60.62,
+     "units": 678,
+     "days": 30
+    },
+    {
+     "price": 63.74,
+     "units": 187,
+     "days": 14
+    },
+    {
+     "price": 65.4,
+     "units": 304,
+     "days": 15
+    },
+    {
+     "price": 57.82,
+     "units": 273,
+     "days": 15
+    },
+    {
+     "price": 62.78,
+     "units": 569,
+     "days": 30
+    },
+    {
+     "price": 59.6,
+     "units": 128,
+     "days": 7
+    },
+    {
+     "price": 57.59,
+     "units": 534,
+     "days": 30
+    },
+    {
+     "price": 57.17,
+     "units": 690,
+     "days": 31
+    },
+    {
+     "price": 61.13,
+     "units": 695,
+     "days": 31
+    },
+    {
+     "price": 59.95,
+     "units": 620,
+     "days": 31
+    },
+    {
+     "price": 63.7,
+     "units": 389,
+     "days": 28
+    },
+    {
+     "price": 60.7,
+     "units": 544,
+     "days": 30
+    },
+    {
+     "price": 55.47,
+     "units": 422,
+     "days": 16
+    },
+    {
+     "price": 62.23,
+     "units": 157,
+     "days": 7
+    },
+    {
+     "price": 56.7,
+     "units": 231,
+     "days": 15
+    },
+    {
+     "price": 60.87,
+     "units": 566,
+     "days": 30
+    },
+    {
+     "price": 62.03,
+     "units": 512,
+     "days": 31
+    },
+    {
+     "price": 62.59,
+     "units": 444,
+     "days": 31
+    },
+    {
+     "price": 61.32,
+     "units": 872,
+     "days": 30
+    },
+    {
+     "price": 62.06,
+     "units": 155,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 21,
+    "elasticity": -1.1787,
+    "std_err": 1.2718,
+    "ci": [
+     -3.8406,
+     1.4831
+    ],
+    "dof": 19,
+    "t": 2.093,
+    "r_squared": 0.0643,
+    "price_cv": 0.0417,
+    "se_estimator": "HC3",
+    "std_err_classical": 1.0313,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 64.23,
+     "units": 289,
+     "days": 28
+    },
+    {
+     "price": 64.26,
+     "units": 54,
+     "days": 7
+    },
+    {
+     "price": 69.14,
+     "units": 46,
+     "days": 7
+    },
+    {
+     "price": 61.69,
+     "units": 223,
+     "days": 31
+    },
+    {
+     "price": 63.59,
+     "units": 0,
+     "days": 14
+    },
+    {
+     "price": 59.64,
+     "units": 128,
+     "days": 14
+    },
+    {
+     "price": 67.29,
+     "units": 101,
+     "days": 15
+    },
+    {
+     "price": 60.96,
+     "units": 199,
+     "days": 30
+    },
+    {
+     "price": 63.55,
+     "units": 191,
+     "days": 30
+    },
+    {
+     "price": 67.46,
+     "units": 241,
+     "days": 31
+    },
+    {
+     "price": 75.52,
+     "units": 204,
+     "days": 30
+    },
+    {
+     "price": 64.94,
+     "units": 66,
+     "days": 7
+    },
+    {
+     "price": 67.04,
+     "units": 84,
+     "days": 16
+    },
+    {
+     "price": 70.31,
+     "units": 39,
+     "days": 7
+    },
+    {
+     "price": 72.26,
+     "units": 208,
+     "days": 30
+    },
+    {
+     "price": 66.85,
+     "units": 274,
+     "days": 30
+    },
+    {
+     "price": 64.09,
+     "units": 39,
+     "days": 7
+    },
+    {
+     "price": 72.68,
+     "units": 237,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 17,
+    "elasticity": -0.682,
+    "std_err": 0.6028,
+    "ci": [
+     -1.9669,
+     0.603
+    ],
+    "dof": 15,
+    "t": 2.1314,
+    "r_squared": 0.0518,
+    "price_cv": 0.0635,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.7535,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 41.69,
+     "units": 1215,
+     "days": 16
+    },
+    {
+     "price": 47.69,
+     "units": 1724,
+     "days": 28
+    },
+    {
+     "price": 50.3,
+     "units": 326,
+     "days": 7
+    },
+    {
+     "price": 36.82,
+     "units": 3280,
+     "days": 31
+    },
+    {
+     "price": 41.07,
+     "units": 612,
+     "days": 7
+    },
+    {
+     "price": 45.02,
+     "units": 943,
+     "days": 16
+    },
+    {
+     "price": 40.82,
+     "units": 2213,
+     "days": 30
+    },
+    {
+     "price": 55.26,
+     "units": 819,
+     "days": 14
+    },
+    {
+     "price": 41.44,
+     "units": 930,
+     "days": 15
+    },
+    {
+     "price": 39.4,
+     "units": 2641,
+     "days": 28
+    },
+    {
+     "price": 45.03,
+     "units": 490,
+     "days": 7
+    },
+    {
+     "price": 36.0,
+     "units": 1770,
+     "days": 15
+    },
+    {
+     "price": 50.97,
+     "units": 1227,
+     "days": 30
+    },
+    {
+     "price": 52.01,
+     "units": 1688,
+     "days": 31
+    },
+    {
+     "price": 56.76,
+     "units": 683,
+     "days": 15
+    },
+    {
+     "price": 53.38,
+     "units": 690,
+     "days": 14
+    },
+    {
+     "price": 43.66,
+     "units": 1569,
+     "days": 16
+    },
+    {
+     "price": 44.2,
+     "units": 1172,
+     "days": 15
+    },
+    {
+     "price": 43.66,
+     "units": 2179,
+     "days": 31
+    },
+    {
+     "price": 50.94,
+     "units": 394,
+     "days": 7
+    },
+    {
+     "price": 41.79,
+     "units": 524,
+     "days": 7
+    },
+    {
+     "price": 40.78,
+     "units": 1101,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 22,
+    "elasticity": -1.8818,
+    "std_err": 0.2608,
+    "ci": [
+     -2.4259,
+     -1.3378
+    ],
+    "dof": 20,
+    "t": 2.086,
+    "r_squared": 0.7407,
+    "price_cv": 0.1272,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.249,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 65.93,
+     "units": 1710,
+     "days": 31
+    },
+    {
+     "price": 65.54,
+     "units": 1843,
+     "days": 30
+    },
+    {
+     "price": 67.81,
+     "units": 1686,
+     "days": 28
+    },
+    {
+     "price": 65.2,
+     "units": 1762,
+     "days": 30
+    },
+    {
+     "price": 61.67,
+     "units": 923,
+     "days": 16
+    },
+    {
+     "price": 59.5,
+     "units": 409,
+     "days": 7
+    },
+    {
+     "price": 63.87,
+     "units": 971,
+     "days": 16
+    },
+    {
+     "price": 64.18,
+     "units": 927,
+     "days": 16
+    },
+    {
+     "price": 70.17,
+     "units": 642,
+     "days": 16
+    },
+    {
+     "price": 67.07,
+     "units": 1347,
+     "days": 31
+    },
+    {
+     "price": 62.09,
+     "units": 1825,
+     "days": 31
+    },
+    {
+     "price": 64.92,
+     "units": 731,
+     "days": 15
+    },
+    {
+     "price": 64.4,
+     "units": 822,
+     "days": 15
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 13,
+    "elasticity": -1.824,
+    "std_err": 1.2444,
+    "ci": [
+     -4.5629,
+     0.9149
+    ],
+    "dof": 11,
+    "t": 2.201,
+    "r_squared": 0.3366,
+    "price_cv": 0.041,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.7721,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 88.54,
+     "units": 102,
+     "days": 30
+    },
+    {
+     "price": 80.71,
+     "units": 56,
+     "days": 15
+    },
+    {
+     "price": 90.02,
+     "units": 18,
+     "days": 7
+    },
+    {
+     "price": 83.4,
+     "units": 53,
+     "days": 16
+    },
+    {
+     "price": 83.99,
+     "units": 18,
+     "days": 7
+    },
+    {
+     "price": 80.37,
+     "units": 115,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 6,
+    "elasticity": -2.3864,
+    "std_err": 1.5662,
+    "ci": [
+     -6.7348,
+     1.9619
+    ],
+    "dof": 4,
+    "t": 2.7764,
+    "r_squared": 0.3995,
+    "price_cv": 0.0431,
+    "se_estimator": "HC3",
+    "std_err_classical": 1.4628,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 76.88,
+     "units": 513,
+     "days": 28
+    },
+    {
+     "price": 71.85,
+     "units": 158,
+     "days": 7
+    },
+    {
+     "price": 71.89,
+     "units": 709,
+     "days": 30
+    },
+    {
+     "price": 71.24,
+     "units": 552,
+     "days": 28
+    },
+    {
+     "price": 66.78,
+     "units": 392,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 5,
+    "elasticity": -1.9577,
+    "std_err": 0.7152,
+    "ci": [
+     -4.2337,
+     0.3183
+    ],
+    "dof": 3,
+    "t": 3.1824,
+    "r_squared": 0.6229,
+    "price_cv": 0.0447,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.8794,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 80.71,
+     "units": 786,
+     "days": 16
+    },
+    {
+     "price": 67.34,
+     "units": 792,
+     "days": 14
+    },
+    {
+     "price": 82.43,
+     "units": 962,
+     "days": 30
+    },
+    {
+     "price": 69.73,
+     "units": 1754,
+     "days": 30
+    },
+    {
+     "price": 97.73,
+     "units": 713,
+     "days": 31
+    },
+    {
+     "price": 64.77,
+     "units": 1285,
+     "days": 14
+    },
+    {
+     "price": 61.71,
+     "units": 1255,
+     "days": 14
+    },
+    {
+     "price": 69.47,
+     "units": 2349,
+     "days": 31
+    },
+    {
+     "price": 58.95,
+     "units": 3539,
+     "days": 31
+    },
+    {
+     "price": 64.51,
+     "units": 1179,
+     "days": 15
+    },
+    {
+     "price": 81.8,
+     "units": 1412,
+     "days": 30
+    },
+    {
+     "price": 79.53,
+     "units": 1070,
+     "days": 28
+    },
+    {
+     "price": 69.32,
+     "units": 474,
+     "days": 7
+    },
+    {
+     "price": 74.82,
+     "units": 789,
+     "days": 14
+    },
+    {
+     "price": 94.28,
+     "units": 942,
+     "days": 30
+    },
+    {
+     "price": 63.68,
+     "units": 944,
+     "days": 15
+    },
+    {
+     "price": 76.01,
+     "units": 772,
+     "days": 14
+    },
+    {
+     "price": 73.37,
+     "units": 1870,
+     "days": 28
+    },
+    {
+     "price": 69.21,
+     "units": 1118,
+     "days": 14
+    },
+    {
+     "price": 74.67,
+     "units": 1702,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 20,
+    "elasticity": -2.7765,
+    "std_err": 0.273,
+    "ci": [
+     -3.3501,
+     -2.2029
+    ],
+    "dof": 18,
+    "t": 2.1009,
+    "r_squared": 0.8641,
+    "price_cv": 0.1348,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2595,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 32.51,
+     "units": 488,
+     "days": 15
+    },
+    {
+     "price": 39.76,
+     "units": 1111,
+     "days": 30
+    },
+    {
+     "price": 46.12,
+     "units": 253,
+     "days": 7
+    },
+    {
+     "price": 40.31,
+     "units": 879,
+     "days": 28
+    },
+    {
+     "price": 47.42,
+     "units": 422,
+     "days": 14
+    },
+    {
+     "price": 45.49,
+     "units": 1135,
+     "days": 31
+    },
+    {
+     "price": 45.92,
+     "units": 203,
+     "days": 7
+    },
+    {
+     "price": 41.41,
+     "units": 461,
+     "days": 15
+    },
+    {
+     "price": 42.63,
+     "units": 464,
+     "days": 14
+    },
+    {
+     "price": 50.38,
+     "units": 815,
+     "days": 31
+    },
+    {
+     "price": 39.05,
+     "units": 878,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 11,
+    "elasticity": -0.2072,
+    "std_err": 0.341,
+    "ci": [
+     -0.9786,
+     0.5643
+    ],
+    "dof": 9,
+    "t": 2.2622,
+    "r_squared": 0.0502,
+    "price_cv": 0.11,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3003,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 77.4,
+     "units": 2176,
+     "days": 31
+    },
+    {
+     "price": 73.25,
+     "units": 2382,
+     "days": 30
+    },
+    {
+     "price": 68.45,
+     "units": 416,
+     "days": 7
+    },
+    {
+     "price": 72.98,
+     "units": 1131,
+     "days": 16
+    },
+    {
+     "price": 72.09,
+     "units": 1861,
+     "days": 31
+    },
+    {
+     "price": 88.66,
+     "units": 709,
+     "days": 15
+    },
+    {
+     "price": 69.93,
+     "units": 902,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 7,
+    "elasticity": -1.0507,
+    "std_err": 2.6549,
+    "ci": [
+     -7.8753,
+     5.7738
+    ],
+    "dof": 5,
+    "t": 2.5706,
+    "r_squared": 0.2968,
+    "price_cv": 0.0841,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.7233,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 46.12,
+     "units": 788,
+     "days": 28
+    },
+    {
+     "price": 41.04,
+     "units": 1068,
+     "days": 31
+    },
+    {
+     "price": 41.81,
+     "units": 536,
+     "days": 16
+    },
+    {
+     "price": 43.91,
+     "units": 939,
+     "days": 30
+    },
+    {
+     "price": 45.51,
+     "units": 651,
+     "days": 30
+    },
+    {
+     "price": 43.81,
+     "units": 355,
+     "days": 15
+    },
+    {
+     "price": 43.66,
+     "units": 490,
+     "days": 14
+    },
+    {
+     "price": 44.17,
+     "units": 0,
+     "days": 31
+    },
+    {
+     "price": 44.21,
+     "units": 935,
+     "days": 30
+    },
+    {
+     "price": 42.87,
+     "units": 654,
+     "days": 14
+    },
+    {
+     "price": 47.15,
+     "units": 910,
+     "days": 28
+    },
+    {
+     "price": 43.74,
+     "units": 455,
+     "days": 14
+    },
+    {
+     "price": 45.36,
+     "units": 903,
+     "days": 31
+    },
+    {
+     "price": 42.99,
+     "units": 1032,
+     "days": 28
+    },
+    {
+     "price": 43.41,
+     "units": 365,
+     "days": 16
+    },
+    {
+     "price": 41.0,
+     "units": 536,
+     "days": 15
+    },
+    {
+     "price": 43.01,
+     "units": 949,
+     "days": 31
+    },
+    {
+     "price": 42.79,
+     "units": 826,
+     "days": 31
+    },
+    {
+     "price": 46.42,
+     "units": 481,
+     "days": 16
+    },
+    {
+     "price": 41.98,
+     "units": 502,
+     "days": 15
+    },
+    {
+     "price": 43.35,
+     "units": 1342,
+     "days": 30
+    },
+    {
+     "price": 43.63,
+     "units": 1320,
+     "days": 31
+    },
+    {
+     "price": 46.83,
+     "units": 333,
+     "days": 14
+    },
+    {
+     "price": 45.48,
+     "units": 180,
+     "days": 7
+    },
+    {
+     "price": 44.43,
+     "units": 475,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 24,
+    "elasticity": -2.2754,
+    "std_err": 0.803,
+    "ci": [
+     -3.9408,
+     -0.6101
+    ],
+    "dof": 22,
+    "t": 2.0739,
+    "r_squared": 0.1923,
+    "price_cv": 0.0381,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.9943,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 61.76,
+     "units": 181,
+     "days": 14
+    },
+    {
+     "price": 61.13,
+     "units": 202,
+     "days": 16
+    },
+    {
+     "price": 59.5,
+     "units": 82,
+     "days": 7
+    },
+    {
+     "price": 61.83,
+     "units": 145,
+     "days": 14
+    },
+    {
+     "price": 64.3,
+     "units": 340,
+     "days": 28
+    },
+    {
+     "price": 60.92,
+     "units": 104,
+     "days": 7
+    },
+    {
+     "price": 60.82,
+     "units": 390,
+     "days": 30
+    },
+    {
+     "price": 63.78,
+     "units": 386,
+     "days": 30
+    },
+    {
+     "price": 60.57,
+     "units": 226,
+     "days": 14
+    },
+    {
+     "price": 65.14,
+     "units": 96,
+     "days": 7
+    },
+    {
+     "price": 61.51,
+     "units": 546,
+     "days": 30
+    },
+    {
+     "price": 63.59,
+     "units": 475,
+     "days": 30
+    },
+    {
+     "price": 62.74,
+     "units": 230,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 13,
+    "elasticity": 0.2019,
+    "std_err": 1.5889,
+    "ci": [
+     -3.2953,
+     3.699
+    ],
+    "dof": 11,
+    "t": 2.201,
+    "r_squared": 0.0011,
+    "price_cv": 0.0257,
+    "se_estimator": "HC3",
+    "std_err_classical": 1.7943,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 24.48,
+     "units": 1100,
+     "days": 28
+    },
+    {
+     "price": 23.17,
+     "units": 1234,
+     "days": 31
+    },
+    {
+     "price": 26.95,
+     "units": 0,
+     "days": 28
+    },
+    {
+     "price": 21.76,
+     "units": 511,
+     "days": 15
+    },
+    {
+     "price": 21.46,
+     "units": 1207,
+     "days": 30
+    },
+    {
+     "price": 21.94,
+     "units": 1443,
+     "days": 30
+    },
+    {
+     "price": 28.88,
+     "units": 614,
+     "days": 16
+    },
+    {
+     "price": 20.95,
+     "units": 509,
+     "days": 14
+    },
+    {
+     "price": 30.5,
+     "units": 360,
+     "days": 14
+    },
+    {
+     "price": 17.3,
+     "units": 958,
+     "days": 16
+    },
+    {
+     "price": 15.37,
+     "units": 566,
+     "days": 14
+    },
+    {
+     "price": 29.03,
+     "units": 1280,
+     "days": 30
+    },
+    {
+     "price": 20.8,
+     "units": 553,
+     "days": 15
+    },
+    {
+     "price": 18.02,
+     "units": 1853,
+     "days": 31
+    },
+    {
+     "price": 23.65,
+     "units": 823,
+     "days": 31
+    },
+    {
+     "price": 15.57,
+     "units": 592,
+     "days": 15
+    },
+    {
+     "price": 18.54,
+     "units": 1091,
+     "days": 31
+    },
+    {
+     "price": 31.48,
+     "units": 1028,
+     "days": 31
+    },
+    {
+     "price": 30.44,
+     "units": 922,
+     "days": 28
+    },
+    {
+     "price": 24.58,
+     "units": 989,
+     "days": 31
+    },
+    {
+     "price": 19.01,
+     "units": 285,
+     "days": 7
+    },
+    {
+     "price": 22.15,
+     "units": 1132,
+     "days": 28
+    },
+    {
+     "price": 21.68,
+     "units": 657,
+     "days": 14
+    },
+    {
+     "price": 23.02,
+     "units": 496,
+     "days": 16
+    },
+    {
+     "price": 30.51,
+     "units": 1070,
+     "days": 31
+    },
+    {
+     "price": 22.56,
+     "units": 485,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 25,
+    "elasticity": -0.4936,
+    "std_err": 0.1965,
+    "ci": [
+     -0.9001,
+     -0.087
+    ],
+    "dof": 23,
+    "t": 2.0687,
+    "r_squared": 0.2536,
+    "price_cv": 0.2013,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.1766,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 80.44,
+     "units": 59,
+     "days": 30
+    },
+    {
+     "price": 80.96,
+     "units": 16,
+     "days": 7
+    },
+    {
+     "price": 81.23,
+     "units": 68,
+     "days": 31
+    },
+    {
+     "price": 80.94,
+     "units": 56,
+     "days": 31
+    },
+    {
+     "price": 80.64,
+     "units": 47,
+     "days": 28
+    },
+    {
+     "price": 80.72,
+     "units": 72,
+     "days": 30
+    },
+    {
+     "price": 80.51,
+     "units": 0,
+     "days": 14
+    },
+    {
+     "price": 81.76,
+     "units": 44,
+     "days": 15
+    },
+    {
+     "price": 82.79,
+     "units": 49,
+     "days": 30
+    },
+    {
+     "price": 81.06,
+     "units": 24,
+     "days": 15
+    },
+    {
+     "price": 81.42,
+     "units": 27,
+     "days": 14
+    },
+    {
+     "price": 82.03,
+     "units": 12,
+     "days": 7
+    },
+    {
+     "price": 81.08,
+     "units": 57,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 12
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 82.77,
+     "units": 217,
+     "days": 31
+    },
+    {
+     "price": 81.24,
+     "units": 160,
+     "days": 30
+    },
+    {
+     "price": 87.15,
+     "units": 111,
+     "days": 15
+    },
+    {
+     "price": 79.37,
+     "units": 94,
+     "days": 16
+    },
+    {
+     "price": 83.37,
+     "units": 214,
+     "days": 30
+    },
+    {
+     "price": 83.0,
+     "units": 205,
+     "days": 31
+    },
+    {
+     "price": 83.62,
+     "units": 37,
+     "days": 7
+    },
+    {
+     "price": 83.38,
+     "units": 85,
+     "days": 15
+    },
+    {
+     "price": 81.01,
+     "units": 41,
+     "days": 7
+    },
+    {
+     "price": 89.11,
+     "units": 140,
+     "days": 28
+    },
+    {
+     "price": 83.72,
+     "units": 163,
+     "days": 28
+    },
+    {
+     "price": 83.27,
+     "units": 161,
+     "days": 28
+    },
+    {
+     "price": 84.48,
+     "units": 159,
+     "days": 28
+    },
+    {
+     "price": 91.99,
+     "units": 148,
+     "days": 28
+    },
+    {
+     "price": 83.2,
+     "units": 0,
+     "days": 31
+    },
+    {
+     "price": 87.79,
+     "units": 86,
+     "days": 14
+    },
+    {
+     "price": 77.88,
+     "units": 74,
+     "days": 14
+    },
+    {
+     "price": 79.93,
+     "units": 247,
+     "days": 31
+    },
+    {
+     "price": 78.26,
+     "units": 101,
+     "days": 15
+    },
+    {
+     "price": 81.63,
+     "units": 99,
+     "days": 15
+    },
+    {
+     "price": 82.9,
+     "units": 27,
+     "days": 7
+    },
+    {
+     "price": 79.49,
+     "units": 148,
+     "days": 30
+    },
+    {
+     "price": 82.79,
+     "units": 110,
+     "days": 15
+    },
+    {
+     "price": 81.51,
+     "units": 182,
+     "days": 30
+    },
+    {
+     "price": 86.53,
+     "units": 39,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 24,
+    "elasticity": -0.478,
+    "std_err": 0.771,
+    "ci": [
+     -2.0769,
+     1.1209
+    ],
+    "dof": 22,
+    "t": 2.0739,
+    "r_squared": 0.0146,
+    "price_cv": 0.0402,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.8379,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 79.07,
+     "units": 338,
+     "days": 30
+    },
+    {
+     "price": 57.77,
+     "units": 319,
+     "days": 14
+    },
+    {
+     "price": 67.68,
+     "units": 214,
+     "days": 16
+    },
+    {
+     "price": 62.32,
+     "units": 565,
+     "days": 31
+    },
+    {
+     "price": 76.41,
+     "units": 326,
+     "days": 28
+    },
+    {
+     "price": 48.38,
+     "units": 401,
+     "days": 14
+    },
+    {
+     "price": 60.71,
+     "units": 703,
+     "days": 28
+    },
+    {
+     "price": 76.39,
+     "units": 251,
+     "days": 28
+    },
+    {
+     "price": 70.53,
+     "units": 227,
+     "days": 15
+    },
+    {
+     "price": 73.64,
+     "units": 406,
+     "days": 30
+    },
+    {
+     "price": 78.11,
+     "units": 370,
+     "days": 31
+    },
+    {
+     "price": 76.3,
+     "units": 342,
+     "days": 30
+    },
+    {
+     "price": 63.87,
+     "units": 139,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 13,
+    "elasticity": -2.2739,
+    "std_err": 0.452,
+    "ci": [
+     -3.2688,
+     -1.2791
+    ],
+    "dof": 11,
+    "t": 2.201,
+    "r_squared": 0.8675,
+    "price_cv": 0.1318,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2679,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 42.5,
+     "units": 210,
+     "days": 14
+    },
+    {
+     "price": 43.31,
+     "units": 394,
+     "days": 28
+    },
+    {
+     "price": 47.26,
+     "units": 137,
+     "days": 15
+    },
+    {
+     "price": 40.82,
+     "units": 243,
+     "days": 14
+    },
+    {
+     "price": 46.62,
+     "units": 184,
+     "days": 14
+    },
+    {
+     "price": 45.66,
+     "units": 82,
+     "days": 7
+    },
+    {
+     "price": 41.18,
+     "units": 243,
+     "days": 16
+    },
+    {
+     "price": 43.58,
+     "units": 441,
+     "days": 31
+    },
+    {
+     "price": 39.42,
+     "units": 268,
+     "days": 14
+    },
+    {
+     "price": 42.37,
+     "units": 274,
+     "days": 15
+    },
+    {
+     "price": 45.42,
+     "units": 98,
+     "days": 7
+    },
+    {
+     "price": 38.29,
+     "units": 589,
+     "days": 31
+    },
+    {
+     "price": 48.11,
+     "units": 262,
+     "days": 28
+    },
+    {
+     "price": 42.71,
+     "units": 299,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 14,
+    "elasticity": -3.1535,
+    "std_err": 0.641,
+    "ci": [
+     -4.5501,
+     -1.7569
+    ],
+    "dof": 12,
+    "t": 2.1788,
+    "r_squared": 0.7045,
+    "price_cv": 0.0654,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.5896,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 10.57,
+     "units": 294,
+     "days": 16
+    },
+    {
+     "price": 9.83,
+     "units": 382,
+     "days": 15
+    },
+    {
+     "price": 10.41,
+     "units": 272,
+     "days": 14
+    },
+    {
+     "price": 11.78,
+     "units": 280,
+     "days": 15
+    },
+    {
+     "price": 10.97,
+     "units": 695,
+     "days": 30
+    },
+    {
+     "price": 10.34,
+     "units": 820,
+     "days": 28
+    },
+    {
+     "price": 9.77,
+     "units": 341,
+     "days": 14
+    },
+    {
+     "price": 9.54,
+     "units": 165,
+     "days": 7
+    },
+    {
+     "price": 10.19,
+     "units": 130,
+     "days": 7
+    },
+    {
+     "price": 10.65,
+     "units": 299,
+     "days": 15
+    },
+    {
+     "price": 10.62,
+     "units": 797,
+     "days": 31
+    },
+    {
+     "price": 9.98,
+     "units": 850,
+     "days": 31
+    },
+    {
+     "price": 10.15,
+     "units": 0,
+     "days": 14
+    },
+    {
+     "price": 10.27,
+     "units": 606,
+     "days": 31
+    },
+    {
+     "price": 10.5,
+     "units": 328,
+     "days": 16
+    },
+    {
+     "price": 10.22,
+     "units": 348,
+     "days": 16
+    },
+    {
+     "price": 10.44,
+     "units": 242,
+     "days": 14
+    },
+    {
+     "price": 10.48,
+     "units": 146,
+     "days": 7
+    },
+    {
+     "price": 10.47,
+     "units": 221,
+     "days": 16
+    },
+    {
+     "price": 11.07,
+     "units": 554,
+     "days": 31
+    },
+    {
+     "price": 10.17,
+     "units": 651,
+     "days": 31
+    },
+    {
+     "price": 11.18,
+     "units": 236,
+     "days": 14
+    },
+    {
+     "price": 10.26,
+     "units": 303,
+     "days": 14
+    },
+    {
+     "price": 9.28,
+     "units": 278,
+     "days": 15
+    },
+    {
+     "price": 9.71,
+     "units": 114,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 24,
+    "elasticity": -0.7855,
+    "std_err": 0.6635,
+    "ci": [
+     -2.1615,
+     0.5906
+    ],
+    "dof": 22,
+    "t": 2.0739,
+    "r_squared": 0.0545,
+    "price_cv": 0.0519,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.6974,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 69.71,
+     "units": 1428,
+     "days": 28
+    },
+    {
+     "price": 87.36,
+     "units": 277,
+     "days": 7
+    },
+    {
+     "price": 78.31,
+     "units": 1243,
+     "days": 30
+    },
+    {
+     "price": 79.76,
+     "units": 578,
+     "days": 14
+    },
+    {
+     "price": 64.87,
+     "units": 1388,
+     "days": 28
+    },
+    {
+     "price": 95.85,
+     "units": 416,
+     "days": 16
+    },
+    {
+     "price": 76.61,
+     "units": 580,
+     "days": 15
+    },
+    {
+     "price": 83.87,
+     "units": 618,
+     "days": 14
+    },
+    {
+     "price": 92.31,
+     "units": 206,
+     "days": 7
+    },
+    {
+     "price": 87.17,
+     "units": 559,
+     "days": 14
+    },
+    {
+     "price": 88.3,
+     "units": 1226,
+     "days": 31
+    },
+    {
+     "price": 91.84,
+     "units": 521,
+     "days": 16
+    },
+    {
+     "price": 78.34,
+     "units": 633,
+     "days": 14
+    },
+    {
+     "price": 93.08,
+     "units": 485,
+     "days": 14
+    },
+    {
+     "price": 83.6,
+     "units": 1121,
+     "days": 30
+    },
+    {
+     "price": 121.03,
+     "units": 199,
+     "days": 7
+    },
+    {
+     "price": 74.63,
+     "units": 1517,
+     "days": 31
+    },
+    {
+     "price": 93.0,
+     "units": 1347,
+     "days": 28
+    },
+    {
+     "price": 83.51,
+     "units": 679,
+     "days": 16
+    },
+    {
+     "price": 61.87,
+     "units": 916,
+     "days": 15
+    },
+    {
+     "price": 69.94,
+     "units": 1434,
+     "days": 28
+    },
+    {
+     "price": 88.27,
+     "units": 598,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 22,
+    "elasticity": -1.1727,
+    "std_err": 0.2019,
+    "ci": [
+     -1.5939,
+     -0.7515
+    ],
+    "dof": 20,
+    "t": 2.086,
+    "r_squared": 0.6838,
+    "price_cv": 0.1472,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.1783,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 11.82,
+     "units": 295,
+     "days": 7
+    },
+    {
+     "price": 12.26,
+     "units": 798,
+     "days": 16
+    },
+    {
+     "price": 12.58,
+     "units": 825,
+     "days": 16
+    },
+    {
+     "price": 11.54,
+     "units": 412,
+     "days": 7
+    },
+    {
+     "price": 11.97,
+     "units": 866,
+     "days": 16
+    },
+    {
+     "price": 12.57,
+     "units": 1794,
+     "days": 28
+    },
+    {
+     "price": 11.07,
+     "units": 2013,
+     "days": 31
+    },
+    {
+     "price": 10.69,
+     "units": 671,
+     "days": 15
+    },
+    {
+     "price": 11.32,
+     "units": 850,
+     "days": 15
+    },
+    {
+     "price": 11.09,
+     "units": 1443,
+     "days": 30
+    },
+    {
+     "price": 12.35,
+     "units": 694,
+     "days": 16
+    },
+    {
+     "price": 11.5,
+     "units": 947,
+     "days": 16
+    },
+    {
+     "price": 9.68,
+     "units": 363,
+     "days": 7
+    },
+    {
+     "price": 12.63,
+     "units": 1556,
+     "days": 28
+    },
+    {
+     "price": 9.91,
+     "units": 844,
+     "days": 15
+    },
+    {
+     "price": 13.59,
+     "units": 1571,
+     "days": 31
+    },
+    {
+     "price": 11.04,
+     "units": 1754,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 17,
+    "elasticity": -0.1142,
+    "std_err": 0.2819,
+    "ci": [
+     -0.715,
+     0.4866
+    ],
+    "dof": 15,
+    "t": 2.1314,
+    "r_squared": 0.0063,
+    "price_cv": 0.0845,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3698,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 19.32,
+     "units": 1412,
+     "days": 31
+    },
+    {
+     "price": 20.44,
+     "units": 731,
+     "days": 16
+    },
+    {
+     "price": 17.53,
+     "units": 1036,
+     "days": 14
+    },
+    {
+     "price": 17.66,
+     "units": 1752,
+     "days": 31
+    },
+    {
+     "price": 20.02,
+     "units": 1204,
+     "days": 30
+    },
+    {
+     "price": 17.77,
+     "units": 1852,
+     "days": 31
+    },
+    {
+     "price": 20.68,
+     "units": 341,
+     "days": 7
+    },
+    {
+     "price": 17.18,
+     "units": 1664,
+     "days": 30
+    },
+    {
+     "price": 15.94,
+     "units": 1186,
+     "days": 14
+    },
+    {
+     "price": 18.09,
+     "units": 1852,
+     "days": 31
+    },
+    {
+     "price": 18.44,
+     "units": 1555,
+     "days": 31
+    },
+    {
+     "price": 19.04,
+     "units": 688,
+     "days": 15
+    },
+    {
+     "price": 16.76,
+     "units": 2631,
+     "days": 31
+    },
+    {
+     "price": 20.82,
+     "units": 277,
+     "days": 7
+    },
+    {
+     "price": 22.96,
+     "units": 274,
+     "days": 7
+    },
+    {
+     "price": 18.33,
+     "units": 1880,
+     "days": 28
+    },
+    {
+     "price": 18.18,
+     "units": 942,
+     "days": 15
+    },
+    {
+     "price": 19.62,
+     "units": 470,
+     "days": 7
+    },
+    {
+     "price": 17.45,
+     "units": 1229,
+     "days": 16
+    },
+    {
+     "price": 18.4,
+     "units": 0,
+     "days": 15
+    },
+    {
+     "price": 18.31,
+     "units": 740,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 20,
+    "elasticity": -2.3024,
+    "std_err": 0.4005,
+    "ci": [
+     -3.1437,
+     -1.461
+    ],
+    "dof": 18,
+    "t": 2.1009,
+    "r_squared": 0.6694,
+    "price_cv": 0.0863,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3813,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 29.12,
+     "units": 99,
+     "days": 7
+    },
+    {
+     "price": 29.47,
+     "units": 242,
+     "days": 14
+    },
+    {
+     "price": 29.52,
+     "units": 213,
+     "days": 14
+    },
+    {
+     "price": 29.1,
+     "units": 235,
+     "days": 15
+    },
+    {
+     "price": 29.5,
+     "units": 491,
+     "days": 31
+    },
+    {
+     "price": 29.51,
+     "units": 622,
+     "days": 31
+    },
+    {
+     "price": 29.16,
+     "units": 354,
+     "days": 28
+    },
+    {
+     "price": 29.2,
+     "units": 117,
+     "days": 7
+    },
+    {
+     "price": 29.33,
+     "units": 127,
+     "days": 7
+    },
+    {
+     "price": 29.38,
+     "units": 250,
+     "days": 14
+    },
+    {
+     "price": 29.21,
+     "units": 511,
+     "days": 30
+    },
+    {
+     "price": 29.29,
+     "units": 219,
+     "days": 14
+    },
+    {
+     "price": 29.22,
+     "units": 440,
+     "days": 31
+    },
+    {
+     "price": 29.28,
+     "units": 235,
+     "days": 14
+    },
+    {
+     "price": 29.36,
+     "units": 520,
+     "days": 31
+    },
+    {
+     "price": 29.19,
+     "units": 234,
+     "days": 16
+    },
+    {
+     "price": 29.4,
+     "units": 262,
+     "days": 16
+    },
+    {
+     "price": 29.43,
+     "units": 509,
+     "days": 30
+    },
+    {
+     "price": 29.36,
+     "units": 359,
+     "days": 15
+    },
+    {
+     "price": 29.19,
+     "units": 692,
+     "days": 31
+    },
+    {
+     "price": 29.57,
+     "units": 273,
+     "days": 16
+    },
+    {
+     "price": 29.52,
+     "units": 229,
+     "days": 14
+    },
+    {
+     "price": 29.34,
+     "units": 141,
+     "days": 7
+    },
+    {
+     "price": 29.24,
+     "units": 249,
+     "days": 15
+    },
+    {
+     "price": 29.51,
+     "units": 258,
+     "days": 15
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 25
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 15.34,
+     "units": 630,
+     "days": 31
+    },
+    {
+     "price": 11.58,
+     "units": 751,
+     "days": 30
+    },
+    {
+     "price": 12.98,
+     "units": 749,
+     "days": 28
+    },
+    {
+     "price": 12.35,
+     "units": 379,
+     "days": 16
+    },
+    {
+     "price": 13.63,
+     "units": 726,
+     "days": 28
+    },
+    {
+     "price": 14.1,
+     "units": 387,
+     "days": 16
+    },
+    {
+     "price": 12.01,
+     "units": 375,
+     "days": 14
+    },
+    {
+     "price": 13.07,
+     "units": 192,
+     "days": 7
+    },
+    {
+     "price": 14.05,
+     "units": 263,
+     "days": 14
+    },
+    {
+     "price": 11.2,
+     "units": 515,
+     "days": 16
+    },
+    {
+     "price": 12.33,
+     "units": 320,
+     "days": 14
+    },
+    {
+     "price": 12.87,
+     "units": 455,
+     "days": 15
+    },
+    {
+     "price": 10.94,
+     "units": 441,
+     "days": 16
+    },
+    {
+     "price": 8.71,
+     "units": 877,
+     "days": 31
+    },
+    {
+     "price": 13.89,
+     "units": 290,
+     "days": 15
+    },
+    {
+     "price": 12.84,
+     "units": 808,
+     "days": 31
+    },
+    {
+     "price": 11.77,
+     "units": 422,
+     "days": 15
+    },
+    {
+     "price": 14.32,
+     "units": 667,
+     "days": 28
+    },
+    {
+     "price": 12.6,
+     "units": 362,
+     "days": 14
+    },
+    {
+     "price": 12.82,
+     "units": 319,
+     "days": 16
+    },
+    {
+     "price": 13.55,
+     "units": 437,
+     "days": 16
+    },
+    {
+     "price": 14.08,
+     "units": 272,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 22,
+    "elasticity": -0.7166,
+    "std_err": 0.3864,
+    "ci": [
+     -1.5225,
+     0.0893
+    ],
+    "dof": 20,
+    "t": 2.086,
+    "r_squared": 0.3164,
+    "price_cv": 0.1089,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2355,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 35.36,
+     "units": 183,
+     "days": 7
+    },
+    {
+     "price": 38.17,
+     "units": 411,
+     "days": 14
+    },
+    {
+     "price": 40.13,
+     "units": 319,
+     "days": 14
+    },
+    {
+     "price": 40.94,
+     "units": 197,
+     "days": 7
+    },
+    {
+     "price": 43.17,
+     "units": 702,
+     "days": 31
+    },
+    {
+     "price": 41.83,
+     "units": 556,
+     "days": 28
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 6,
+    "elasticity": -1.1218,
+    "std_err": 1.3413,
+    "ci": [
+     -4.8459,
+     2.6024
+    ],
+    "dof": 4,
+    "t": 2.7764,
+    "r_squared": 0.2894,
+    "price_cv": 0.064,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.8789,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 8.19,
+     "units": 794,
+     "days": 16
+    },
+    {
+     "price": 7.51,
+     "units": 336,
+     "days": 7
+    },
+    {
+     "price": 7.08,
+     "units": 1584,
+     "days": 30
+    },
+    {
+     "price": 8.67,
+     "units": 0,
+     "days": 14
+    },
+    {
+     "price": 9.07,
+     "units": 760,
+     "days": 16
+    },
+    {
+     "price": 7.05,
+     "units": 1682,
+     "days": 30
+    },
+    {
+     "price": 7.89,
+     "units": 1793,
+     "days": 31
+    },
+    {
+     "price": 7.39,
+     "units": 1592,
+     "days": 28
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 7,
+    "elasticity": -0.5135,
+    "std_err": 0.2437,
+    "ci": [
+     -1.1399,
+     0.113
+    ],
+    "dof": 5,
+    "t": 2.5706,
+    "r_squared": 0.3085,
+    "price_cv": 0.0857,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3438,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 64.63,
+     "units": 286,
+     "days": 7
+    },
+    {
+     "price": 55.72,
+     "units": 517,
+     "days": 7
+    },
+    {
+     "price": 56.42,
+     "units": 417,
+     "days": 7
+    },
+    {
+     "price": 75.84,
+     "units": 705,
+     "days": 28
+    },
+    {
+     "price": 60.31,
+     "units": 1562,
+     "days": 28
+    },
+    {
+     "price": 64.72,
+     "units": 600,
+     "days": 16
+    },
+    {
+     "price": 53.35,
+     "units": 466,
+     "days": 7
+    },
+    {
+     "price": 54.2,
+     "units": 1061,
+     "days": 14
+    },
+    {
+     "price": 58.13,
+     "units": 652,
+     "days": 14
+    },
+    {
+     "price": 61.96,
+     "units": 618,
+     "days": 14
+    },
+    {
+     "price": 45.41,
+     "units": 3503,
+     "days": 28
+    },
+    {
+     "price": 64.08,
+     "units": 583,
+     "days": 14
+    },
+    {
+     "price": 59.96,
+     "units": 1903,
+     "days": 31
+    },
+    {
+     "price": 67.91,
+     "units": 323,
+     "days": 7
+    },
+    {
+     "price": 57.9,
+     "units": 1045,
+     "days": 16
+    },
+    {
+     "price": 60.84,
+     "units": 1772,
+     "days": 31
+    },
+    {
+     "price": 61.29,
+     "units": 482,
+     "days": 7
+    },
+    {
+     "price": 56.82,
+     "units": 876,
+     "days": 16
+    },
+    {
+     "price": 59.42,
+     "units": 1566,
+     "days": 31
+    },
+    {
+     "price": 60.91,
+     "units": 849,
+     "days": 16
+    },
+    {
+     "price": 67.62,
+     "units": 286,
+     "days": 7
+    },
+    {
+     "price": 62.62,
+     "units": 1529,
+     "days": 31
+    },
+    {
+     "price": 60.0,
+     "units": 807,
+     "days": 15
+    },
+    {
+     "price": 55.33,
+     "units": 900,
+     "days": 15
+    },
+    {
+     "price": 61.12,
+     "units": 1268,
+     "days": 28
+    },
+    {
+     "price": 65.06,
+     "units": 1117,
+     "days": 30
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 26,
+    "elasticity": -2.8537,
+    "std_err": 0.2425,
+    "ci": [
+     -3.3541,
+     -2.3533
+    ],
+    "dof": 24,
+    "t": 2.0639,
+    "r_squared": 0.8291,
+    "price_cv": 0.0935,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2644,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 30.96,
+     "units": 197,
+     "days": 15
+    },
+    {
+     "price": 45.2,
+     "units": 390,
+     "days": 28
+    },
+    {
+     "price": 50.03,
+     "units": 188,
+     "days": 15
+    },
+    {
+     "price": 36.95,
+     "units": 335,
+     "days": 28
+    },
+    {
+     "price": 44.09,
+     "units": 315,
+     "days": 28
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 5,
+    "elasticity": -0.0407,
+    "std_err": 0.296,
+    "ci": [
+     -0.9828,
+     0.9014
+    ],
+    "dof": 3,
+    "t": 3.1824,
+    "r_squared": 0.0088,
+    "price_cv": 0.1618,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2495,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 89.11,
+     "units": 1370,
+     "days": 31
+    },
+    {
+     "price": 95.47,
+     "units": 590,
+     "days": 14
+    },
+    {
+     "price": 71.86,
+     "units": 1555,
+     "days": 30
+    },
+    {
+     "price": 81.75,
+     "units": 726,
+     "days": 15
+    },
+    {
+     "price": 102.34,
+     "units": 1251,
+     "days": 28
+    },
+    {
+     "price": 81.83,
+     "units": 1643,
+     "days": 28
+    },
+    {
+     "price": 83.93,
+     "units": 284,
+     "days": 7
+    },
+    {
+     "price": 90.45,
+     "units": 731,
+     "days": 14
+    },
+    {
+     "price": 78.55,
+     "units": 1006,
+     "days": 15
+    },
+    {
+     "price": 71.34,
+     "units": 2024,
+     "days": 31
+    },
+    {
+     "price": 74.08,
+     "units": 1838,
+     "days": 31
+    },
+    {
+     "price": 85.9,
+     "units": 622,
+     "days": 14
+    },
+    {
+     "price": 72.16,
+     "units": 842,
+     "days": 14
+    },
+    {
+     "price": 70.24,
+     "units": 465,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 14,
+    "elasticity": -1.1268,
+    "std_err": 0.2726,
+    "ci": [
+     -1.7206,
+     -0.5329
+    ],
+    "dof": 12,
+    "t": 2.1788,
+    "r_squared": 0.5535,
+    "price_cv": 0.1157,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.2921,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 36.95,
+     "units": 795,
+     "days": 16
+    },
+    {
+     "price": 41.84,
+     "units": 573,
+     "days": 15
+    },
+    {
+     "price": 38.76,
+     "units": 737,
+     "days": 16
+    },
+    {
+     "price": 37.43,
+     "units": 1904,
+     "days": 30
+    },
+    {
+     "price": 37.11,
+     "units": 1021,
+     "days": 15
+    },
+    {
+     "price": 32.44,
+     "units": 1050,
+     "days": 15
+    },
+    {
+     "price": 38.49,
+     "units": 1987,
+     "days": 28
+    },
+    {
+     "price": 37.2,
+     "units": 1025,
+     "days": 16
+    },
+    {
+     "price": 35.81,
+     "units": 1821,
+     "days": 30
+    },
+    {
+     "price": 35.69,
+     "units": 769,
+     "days": 14
+    },
+    {
+     "price": 38.77,
+     "units": 1781,
+     "days": 31
+    },
+    {
+     "price": 37.81,
+     "units": 1560,
+     "days": 28
+    },
+    {
+     "price": 37.35,
+     "units": 820,
+     "days": 14
+    },
+    {
+     "price": 42.8,
+     "units": 1914,
+     "days": 30
+    },
+    {
+     "price": 38.03,
+     "units": 918,
+     "days": 14
+    },
+    {
+     "price": 37.96,
+     "units": 1373,
+     "days": 28
+    },
+    {
+     "price": 36.58,
+     "units": 2034,
+     "days": 30
+    },
+    {
+     "price": 37.36,
+     "units": 1530,
+     "days": 28
+    },
+    {
+     "price": 34.84,
+     "units": 973,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 19,
+    "elasticity": -1.0897,
+    "std_err": 1.0096,
+    "ci": [
+     -3.2198,
+     1.0404
+    ],
+    "dof": 17,
+    "t": 2.1098,
+    "r_squared": 0.1672,
+    "price_cv": 0.0586,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.5898,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 40.46,
+     "units": 1448,
+     "days": 31
+    },
+    {
+     "price": 39.26,
+     "units": 322,
+     "days": 7
+    },
+    {
+     "price": 52.11,
+     "units": 431,
+     "days": 28
+    },
+    {
+     "price": 52.76,
+     "units": 240,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "insufficient_data",
+    "n": 4
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 94.73,
+     "units": 490,
+     "days": 15
+    },
+    {
+     "price": 77.64,
+     "units": 1578,
+     "days": 31
+    },
+    {
+     "price": 84.41,
+     "units": 589,
+     "days": 14
+    },
+    {
+     "price": 96.07,
+     "units": 513,
+     "days": 16
+    },
+    {
+     "price": 74.25,
+     "units": 1115,
+     "days": 15
+    },
+    {
+     "price": 85.12,
+     "units": 217,
+     "days": 7
+    },
+    {
+     "price": 73.68,
+     "units": 821,
+     "days": 16
+    },
+    {
+     "price": 85.24,
+     "units": 1221,
+     "days": 31
+    },
+    {
+     "price": 94.57,
+     "units": 604,
+     "days": 14
+    },
+    {
+     "price": 85.64,
+     "units": 730,
+     "days": 14
+    },
+    {
+     "price": 76.51,
+     "units": 1406,
+     "days": 30
+    },
+    {
+     "price": 86.87,
+     "units": 543,
+     "days": 16
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 12,
+    "elasticity": -2.026,
+    "std_err": 0.6876,
+    "ci": [
+     -3.5582,
+     -0.4938
+    ],
+    "dof": 10,
+    "t": 2.2281,
+    "r_squared": 0.5333,
+    "price_cv": 0.0891,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.5994,
+    "guard": true
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 65.65,
+     "units": 443,
+     "days": 28
+    },
+    {
+     "price": 59.62,
+     "units": 902,
+     "days": 31
+    },
+    {
+     "price": 57.99,
+     "units": 347,
+     "days": 15
+    },
+    {
+     "price": 69.88,
+     "units": 270,
+     "days": 15
+    },
+    {
+     "price": 66.81,
+     "units": 255,
+     "days": 14
+    },
+    {
+     "price": 61.85,
+     "units": 668,
+     "days": 31
+    },
+    {
+     "price": 53.18,
+     "units": 842,
+     "days": 30
+    },
+    {
+     "price": 54.69,
+     "units": 766,
+     "days": 28
+    },
+    {
+     "price": 70.34,
+     "units": 195,
+     "days": 15
+    },
+    {
+     "price": 61.82,
+     "units": 258,
+     "days": 14
+    },
+    {
+     "price": 76.1,
+     "units": 488,
+     "days": 30
+    },
+    {
+     "price": 49.73,
+     "units": 942,
+     "days": 30
+    },
+    {
+     "price": 67.29,
+     "units": 222,
+     "days": 15
+    },
+    {
+     "price": 55.51,
+     "units": 421,
+     "days": 16
+    },
+    {
+     "price": 62.78,
+     "units": 674,
+     "days": 30
+    },
+    {
+     "price": 62.95,
+     "units": 392,
+     "days": 30
+    },
+    {
+     "price": 66.18,
+     "units": 114,
+     "days": 7
+    },
+    {
+     "price": 51.93,
+     "units": 443,
+     "days": 16
+    },
+    {
+     "price": 67.99,
+     "units": 348,
+     "days": 28
+    },
+    {
+     "price": 63.92,
+     "units": 451,
+     "days": 28
+    },
+    {
+     "price": 63.7,
+     "units": 577,
+     "days": 30
+    },
+    {
+     "price": 54.82,
+     "units": 334,
+     "days": 14
+    }
+   ],
+   "want": {
+    "status": "ok",
+    "n": 22,
+    "elasticity": -2.1603,
+    "std_err": 0.3339,
+    "ci": [
+     -2.8568,
+     -1.4637
+    ],
+    "dof": 20,
+    "t": 2.086,
+    "r_squared": 0.697,
+    "price_cv": 0.1062,
+    "se_estimator": "HC3",
+    "std_err_classical": 0.3185,
+    "guard": false
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 17.18,
+     "units": 344,
+     "days": 15
+    },
+    {
+     "price": 21.59,
+     "units": 377,
+     "days": 30
+    },
+    {
+     "price": 17.59,
+     "units": 116,
+     "days": 7
+    }
+   ],
+   "want": {
+    "status": "insufficient_data",
+    "n": 3
+   }
+  },
+  {
+   "points": [
+    {
+     "price": 67.54,
+     "units": 1611,
+     "days": 31
+    },
+    {
+     "price": 68.24,
+     "units": 848,
+     "days": 16
+    },
+    {
+     "price": 68.8,
+     "units": 1381,
+     "days": 31
+    },
+    {
+     "price": 68.7,
+     "units": 1817,
+     "days": 31
+    },
+    {
+     "price": 67.97,
+     "units": 1852,
+     "days": 31
+    },
+    {
+     "price": 68.65,
+     "units": 629,
+     "days": 14
+    },
+    {
+     "price": 67.65,
+     "units": 1773,
+     "days": 31
+    },
+    {
+     "price": 68.65,
+     "units": 1576,
+     "days": 28
+    },
+    {
+     "price": 69.08,
+     "units": 1715,
+     "days": 31
+    }
+   ],
+   "want": {
+    "status": "insufficient_price_variation",
+    "n": 9
+   }
+  }
+ ],
+ "rows": [
+  {
+   "row": {
+    "sku": "SKU-1",
+    "price": 7.43,
+    "units": 1673,
+    "cost": 13.75,
+    "referral": 0.17,
+    "fixed": 7.58,
+    "eps": -0.2087,
+    "se": 0.3055,
+    "lo": -1.0568,
+    "hi": 0.6394
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 7.8,
+    "delta": 764.5837863771994,
+    "profit": -25367.8663,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-2",
+    "price": 45.58,
+    "units": 691,
+    "cost": 4.9,
+    "referral": 0.17,
+    "fixed": 8.87,
+    "eps": -1.0477,
+    "se": 0.1677,
+    "lo": -1.5813,
+    "hi": -0.514
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 47.86,
+    "delta": 413.56768511143673,
+    "profit": 16626.4274,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-3",
+    "price": 5.85,
+    "units": 948,
+    "cost": 19.42,
+    "referral": 0.17,
+    "fixed": 3.25,
+    "eps": -2.8482,
+    "se": 0.2548,
+    "lo": -3.3834,
+    "hi": -2.3129
+   },
+   "want": {
+    "guard": false,
+    "best": 42.09155244503608,
+    "way": "up",
+    "next": 6.14,
+    "delta": 2372.839856640894,
+    "profit": -16888.146,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-4",
+    "price": 57.04,
+    "units": 817,
+    "cost": 29.27,
+    "referral": 0.15,
+    "fixed": 7.53,
+    "eps": -0.699,
+    "se": 0.0896,
+    "lo": -0.9841,
+    "hi": -0.4138
+   },
+   "want": {
+    "guard": false,
+    "best": null,
+    "way": "up",
+    "next": 59.89,
+    "delta": 1593.0166536161505,
+    "profit": 9545.827999999996,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-5",
+    "price": 74.34,
+    "units": 2978,
+    "cost": 13.26,
+    "referral": 0.15,
+    "fixed": 4.64,
+    "eps": -1.0478,
+    "se": 0.1448,
+    "lo": -1.5087,
+    "hi": -0.5868
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 78.06,
+    "delta": 2219.997383531474,
+    "profit": 134870.642,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-6",
+    "price": 79.48,
+    "units": 2443,
+    "cost": 23.89,
+    "referral": 0.17,
+    "fixed": 7.56,
+    "eps": -1.7219,
+    "se": 0.2686,
+    "lo": -2.3414,
+    "hi": -1.1025
+   },
+   "want": {
+    "guard": false,
+    "best": 90.38022988198813,
+    "way": "up",
+    "next": 83.45,
+    "delta": 613.1286223776988,
+    "profit": 84328.4512,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-7",
+    "price": 17.29,
+    "units": 1350,
+    "cost": 7.89,
+    "referral": 0.15,
+    "fixed": 8.82,
+    "eps": -0.4816,
+    "se": 0.4375,
+    "lo": -1.552,
+    "hi": 0.5889
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 18.15,
+    "delta": 1026.8565455979078,
+    "profit": -2718.2250000000017,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-8",
+    "price": 40.45,
+    "units": 2173,
+    "cost": 3.3,
+    "referral": 0.08,
+    "fixed": 5.05,
+    "eps": -1.0657,
+    "se": 0.0776,
+    "lo": -1.2332,
+    "hi": -0.8981
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 42.47,
+    "delta": 659.7594824985499,
+    "profit": 62721.472000000016,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-9",
+    "price": 27.1,
+    "units": 2830,
+    "cost": 24.8,
+    "referral": 0.15,
+    "fixed": 4.27,
+    "eps": -2.3216,
+    "se": 0.13,
+    "lo": -2.596,
+    "hi": -2.0472
+   },
+   "want": {
+    "guard": false,
+    "best": 60.07772397094431,
+    "way": "up",
+    "next": 28.46,
+    "delta": 4755.18235793583,
+    "profit": -17079.05,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-10",
+    "price": 75.74,
+    "units": 755,
+    "cost": 1.94,
+    "referral": 0.17,
+    "fixed": 9.33,
+    "eps": -2.0971,
+    "se": 0.6025,
+    "lo": -3.5715,
+    "hi": -0.6227
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 79.53,
+    "delta": -1647.4637672566168,
+    "profit": 38953.62099999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-11",
+    "price": 27.81,
+    "units": 1869,
+    "cost": 2.1,
+    "referral": 0.08,
+    "fixed": 9.47,
+    "eps": -0.829,
+    "se": 0.8504,
+    "lo": -3.1901,
+    "hi": 1.532
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 29.2,
+    "delta": 1257.378366472647,
+    "profit": 26194.408799999997,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-12",
+    "price": 10.27,
+    "units": 2263,
+    "cost": 5.33,
+    "referral": 0.08,
+    "fixed": 5.4,
+    "eps": -0.4586,
+    "se": 0.2927,
+    "lo": -1.1028,
+    "hi": 0.1855
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 10.78,
+    "delta": 1102.2110235227917,
+    "profit": -2900.2608000000023,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-13",
+    "price": 54.99,
+    "units": 1607,
+    "cost": 13.49,
+    "referral": 0.17,
+    "fixed": 8.83,
+    "eps": -0.843,
+    "se": 0.8912,
+    "lo": -2.7848,
+    "hi": 1.0988
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 57.74,
+    "delta": 2009.682605574999,
+    "profit": 37477.9719,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-14",
+    "price": 50.84,
+    "units": 712,
+    "cost": 7.79,
+    "referral": 0.08,
+    "fixed": 3.4,
+    "eps": -1.6339,
+    "se": 0.0443,
+    "lo": -1.7477,
+    "hi": -1.52
+   },
+   "want": {
+    "guard": false,
+    "best": 31.35068108397292,
+    "way": "down",
+    "next": 48.3,
+    "delta": 403.7940600186739,
+    "profit": 25334.953600000004,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-15",
+    "price": 53.0,
+    "units": 1190,
+    "cost": 17.49,
+    "referral": 0.08,
+    "fixed": 5.38,
+    "eps": -1.2076,
+    "se": 0.471,
+    "lo": -2.5154,
+    "hi": 0.1002
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 55.65,
+    "delta": 972.4209818604104,
+    "profit": 30809.10000000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-16",
+    "price": 39.89,
+    "units": 404,
+    "cost": 11.94,
+    "referral": 0.15,
+    "fixed": 8.16,
+    "eps": -1.0127,
+    "se": 0.6752,
+    "lo": -2.6649,
+    "hi": 0.6395
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 41.88,
+    "delta": 382.1686992582945,
+    "profit": 5577.826000000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-17",
+    "price": 27.91,
+    "units": 316,
+    "cost": 9.44,
+    "referral": 0.08,
+    "fixed": 7.91,
+    "eps": -1.5642,
+    "se": 0.8055,
+    "lo": -3.4217,
+    "hi": 0.2933
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 29.31,
+    "delta": 183.0759278160226,
+    "profit": 2631.3952000000004,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-18",
+    "price": 29.75,
+    "units": 718,
+    "cost": 2.91,
+    "referral": 0.08,
+    "fixed": 9.3,
+    "eps": -0.3908,
+    "se": 0.4278,
+    "lo": -1.3585,
+    "hi": 0.5769
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 31.24,
+    "delta": 759.7033823000165,
+    "profit": 10884.88,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-19",
+    "price": 47.77,
+    "units": 2402,
+    "cost": 3.44,
+    "referral": 0.08,
+    "fixed": 6.17,
+    "eps": -3.7573,
+    "se": 0.3871,
+    "lo": -4.5602,
+    "hi": -2.9544
+   },
+   "want": {
+    "guard": false,
+    "best": 14.234014765547267,
+    "way": "down",
+    "next": 45.38,
+    "delta": 11138.703526553407,
+    "profit": 82480.83680000002,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-20",
+    "price": 59.16,
+    "units": 2149,
+    "cost": 14.9,
+    "referral": 0.17,
+    "fixed": 3.68,
+    "eps": -1.2699,
+    "se": 0.7498,
+    "lo": -2.8782,
+    "hi": 0.3383
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 62.12,
+    "delta": 1019.0056651725754,
+    "profit": 65593.4972,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-21",
+    "price": 58.4,
+    "units": 254,
+    "cost": 26.98,
+    "referral": 0.08,
+    "fixed": 5.41,
+    "eps": -1.9041,
+    "se": 0.7134,
+    "lo": -3.4938,
+    "hi": -0.3145
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 61.32,
+    "delta": 140.97933072712476,
+    "profit": 5419.852,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-22",
+    "price": 15.28,
+    "units": 828,
+    "cost": 19.33,
+    "referral": 0.17,
+    "fixed": 5.54,
+    "eps": -1.187,
+    "se": 0.0356,
+    "lo": -1.2608,
+    "hi": -1.1133
+   },
+   "want": {
+    "guard": false,
+    "best": 190.19837639327358,
+    "way": "up",
+    "next": 16.04,
+    "delta": 1058.0672823271743,
+    "profit": -10091.3328,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-23",
+    "price": 54.83,
+    "units": 1894,
+    "cost": 22.25,
+    "referral": 0.08,
+    "fixed": 3.19,
+    "eps": -0.937,
+    "se": 0.0448,
+    "lo": -1.043,
+    "hi": -0.831
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 57.57,
+    "delta": 2446.0165134003255,
+    "profit": 47356.818400000004,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-24",
+    "price": 38.05,
+    "units": 1060,
+    "cost": 18.07,
+    "referral": 0.17,
+    "fixed": 8.11,
+    "eps": -3.4717,
+    "se": 0.254,
+    "lo": -4.0054,
+    "hi": -2.9379
+   },
+   "want": {
+    "guard": false,
+    "best": 44.30349435123673,
+    "way": "up",
+    "next": 39.95,
+    "delta": 520.3730006874503,
+    "profit": 5725.589999999995,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-25",
+    "price": 8.74,
+    "units": 2487,
+    "cost": 23.86,
+    "referral": 0.17,
+    "fixed": 6.73,
+    "eps": -1.2425,
+    "se": 0.664,
+    "lo": -2.8127,
+    "hi": 0.3277
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 9.18,
+    "delta": 4290.394435447393,
+    "profit": -58036.1346,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-26",
+    "price": 27.16,
+    "units": 2293,
+    "cost": 24.75,
+    "referral": 0.08,
+    "fixed": 5.17,
+    "eps": -2.727,
+    "se": 0.385,
+    "lo": -3.5527,
+    "hi": -1.9014
+   },
+   "want": {
+    "guard": false,
+    "best": 51.35308778731653,
+    "way": "up",
+    "next": 28.52,
+    "delta": 3922.1023803438075,
+    "profit": -11310.910399999997,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-27",
+    "price": 70.18,
+    "units": 95,
+    "cost": 28.79,
+    "referral": 0.15,
+    "fixed": 5.98,
+    "eps": -0.9445,
+    "se": 0.4617,
+    "lo": -2.0362,
+    "hi": 0.1472
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 73.69,
+    "delta": 164.1738007630197,
+    "profit": 2363.8850000000007,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-28",
+    "price": 19.24,
+    "units": 795,
+    "cost": 18.12,
+    "referral": 0.08,
+    "fixed": 8.57,
+    "eps": -1.0101,
+    "se": 0.856,
+    "lo": -2.7903,
+    "hi": 0.7701
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 20.2,
+    "delta": 1011.4241482740936,
+    "profit": -7146.414000000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-29",
+    "price": 7.27,
+    "units": 1339,
+    "cost": 10.06,
+    "referral": 0.15,
+    "fixed": 6.06,
+    "eps": -1.2199,
+    "se": 0.2339,
+    "lo": -1.7922,
+    "hi": -0.6477
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 7.63,
+    "delta": 1148.3602214873663,
+    "profit": -13310.3295,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-30",
+    "price": 19.13,
+    "units": 1087,
+    "cost": 6.38,
+    "referral": 0.17,
+    "fixed": 5.7,
+    "eps": -0.9475,
+    "se": 0.5316,
+    "lo": -2.4235,
+    "hi": 0.5285
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 20.09,
+    "delta": 639.7035794890317,
+    "profit": 4128.317299999997,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-31",
+    "price": 70.33,
+    "units": 60,
+    "cost": 11.84,
+    "referral": 0.15,
+    "fixed": 6.6,
+    "eps": -0.7443,
+    "se": 0.0594,
+    "lo": -0.8767,
+    "hi": -0.6118
+   },
+   "want": {
+    "guard": false,
+    "best": null,
+    "way": "up",
+    "next": 73.85,
+    "delta": 84.56756861964323,
+    "profit": 2480.43,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-32",
+    "price": 14.55,
+    "units": 826,
+    "cost": 9.83,
+    "referral": 0.15,
+    "fixed": 7.38,
+    "eps": -1.1854,
+    "se": 0.4673,
+    "lo": -2.195,
+    "hi": -0.1758
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 15.28,
+    "delta": 709.14473668658,
+    "profit": -3999.905,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-33",
+    "price": 51.75,
+    "units": 270,
+    "cost": 22.48,
+    "referral": 0.17,
+    "fixed": 7.06,
+    "eps": -3.3868,
+    "se": 0.4006,
+    "lo": -4.236,
+    "hi": -2.5376
+   },
+   "want": {
+    "guard": false,
+    "best": 50.501691027559204,
+    "way": "down",
+    "next": 50.5,
+    "delta": 8.346632025075905,
+    "profit": 3621.3750000000005,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-34",
+    "price": 50.76,
+    "units": 2930,
+    "cost": 21.47,
+    "referral": 0.17,
+    "fixed": 3.36,
+    "eps": -0.9156,
+    "se": 0.5474,
+    "lo": -2.2551,
+    "hi": 0.424
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 53.3,
+    "delta": 3690.6261367487386,
+    "profit": 50691.34399999998,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-35",
+    "price": 21.66,
+    "units": 2775,
+    "cost": 4.53,
+    "referral": 0.15,
+    "fixed": 9.18,
+    "eps": -0.8992,
+    "se": 0.7667,
+    "lo": -2.5867,
+    "hi": 0.7883
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 22.74,
+    "delta": 1879.9235720670295,
+    "profit": 13045.275000000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-36",
+    "price": 24.47,
+    "units": 2810,
+    "cost": 3.26,
+    "referral": 0.17,
+    "fixed": 5.4,
+    "eps": -2.9212,
+    "se": 0.4343,
+    "lo": -3.8302,
+    "hi": -2.0123
+   },
+   "want": {
+    "guard": false,
+    "best": 15.86457761088075,
+    "way": "down",
+    "next": 23.25,
+    "delta": 1971.1480999013038,
+    "profit": 32736.781,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-37",
+    "price": 50.3,
+    "units": 2095,
+    "cost": 10.95,
+    "referral": 0.15,
+    "fixed": 7.5,
+    "eps": -0.9844,
+    "se": 0.7984,
+    "lo": -2.6616,
+    "hi": 0.6929
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 52.81,
+    "delta": 1877.213180192055,
+    "profit": 50918.97499999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-38",
+    "price": 70.9,
+    "units": 1656,
+    "cost": 6.8,
+    "referral": 0.08,
+    "fixed": 5.93,
+    "eps": -0.7157,
+    "se": 0.2428,
+    "lo": -1.2305,
+    "hi": -0.201
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 74.45,
+    "delta": 2235.2477038391517,
+    "profit": 86936.68800000002,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-39",
+    "price": 64.3,
+    "units": 2916,
+    "cost": 1.36,
+    "referral": 0.17,
+    "fixed": 3.06,
+    "eps": -1.0799,
+    "se": 0.8641,
+    "lo": -3.0725,
+    "hi": 0.9128
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 67.52,
+    "delta": 56.07452575111529,
+    "profit": 142735.28399999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-40",
+    "price": 31.2,
+    "units": 2391,
+    "cost": 17.59,
+    "referral": 0.15,
+    "fixed": 4.13,
+    "eps": -0.4152,
+    "se": 0.7476,
+    "lo": -2.1391,
+    "hi": 1.3088
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 32.76,
+    "delta": 2876.7316612483537,
+    "profit": 11476.8,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-41",
+    "price": 58.8,
+    "units": 1598,
+    "cost": 29.42,
+    "referral": 0.17,
+    "fixed": 8.53,
+    "eps": -2.5351,
+    "se": 0.3911,
+    "lo": -3.7797,
+    "hi": -1.2905
+   },
+   "want": {
+    "guard": false,
+    "best": 75.50785122118337,
+    "way": "up",
+    "next": 61.74,
+    "delta": 1427.8027259307382,
+    "profit": 17344.691999999992,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-42",
+    "price": 64.59,
+    "units": 1936,
+    "cost": 21.03,
+    "referral": 0.17,
+    "fixed": 8.27,
+    "eps": -1.0453,
+    "se": 0.5225,
+    "lo": -2.2502,
+    "hi": 0.1596
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 67.82,
+    "delta": 2591.6934401714534,
+    "profit": 47063.57920000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-43",
+    "price": 33.79,
+    "units": 759,
+    "cost": 28.72,
+    "referral": 0.08,
+    "fixed": 6.74,
+    "eps": -0.8614,
+    "se": 0.7731,
+    "lo": -2.4741,
+    "hi": 0.7512
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 35.48,
+    "delta": 1268.1595689198994,
+    "profit": -3319.258799999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-44",
+    "price": 27.72,
+    "units": 178,
+    "cost": 23.16,
+    "referral": 0.17,
+    "fixed": 2.91,
+    "eps": -0.5493,
+    "se": 0.1365,
+    "lo": -0.8324,
+    "hi": -0.2663
+   },
+   "want": {
+    "guard": false,
+    "best": null,
+    "way": "up",
+    "next": 29.11,
+    "delta": 214.3680458524309,
+    "profit": -545.1072000000007,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-45",
+    "price": 76.6,
+    "units": 1277,
+    "cost": 23.93,
+    "referral": 0.17,
+    "fixed": 6.1,
+    "eps": -3.9242,
+    "se": 0.3181,
+    "lo": -4.5954,
+    "hi": -3.2531
+   },
+   "want": {
+    "guard": false,
+    "best": 48.55358483382954,
+    "way": "down",
+    "next": 72.77,
+    "delta": 4587.753949867656,
+    "profit": 42840.79599999999,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-46",
+    "price": 32.97,
+    "units": 1054,
+    "cost": 13.38,
+    "referral": 0.15,
+    "fixed": 3.26,
+    "eps": -0.7785,
+    "se": 0.3878,
+    "lo": -1.6234,
+    "hi": 0.0664
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 34.62,
+    "delta": 975.479797268812,
+    "profit": 11999.262999999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-47",
+    "price": 57.48,
+    "units": 802,
+    "cost": 22.27,
+    "referral": 0.15,
+    "fixed": 8.19,
+    "eps": -0.3026,
+    "se": 0.3446,
+    "lo": -1.0416,
+    "hi": 0.4364
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 60.35,
+    "delta": 1711.8921105608752,
+    "profit": 14755.195999999996,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-48",
+    "price": 20.26,
+    "units": 27,
+    "cost": 4.13,
+    "referral": 0.17,
+    "fixed": 2.44,
+    "eps": -2.7213,
+    "se": 0.3421,
+    "lo": -3.443,
+    "hi": -1.9996
+   },
+   "want": {
+    "guard": false,
+    "best": 12.514316371977191,
+    "way": "down",
+    "next": 19.25,
+    "delta": 15.290589385416524,
+    "profit": 276.63660000000004,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-49",
+    "price": 53.75,
+    "units": 1168,
+    "cost": 6.23,
+    "referral": 0.15,
+    "fixed": 8.05,
+    "eps": -2.4621,
+    "se": 0.5877,
+    "lo": -3.6844,
+    "hi": -1.2399
+   },
+   "want": {
+    "guard": false,
+    "best": 28.290322139388554,
+    "way": "down",
+    "next": 51.06,
+    "delta": 1912.5637574612192,
+    "profit": 36683.95999999999,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-50",
+    "price": 20.01,
+    "units": 253,
+    "cost": 24.6,
+    "referral": 0.17,
+    "fixed": 5.18,
+    "eps": -1.0352,
+    "se": 0.0812,
+    "lo": -1.244,
+    "hi": -0.8264
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 21.01,
+    "delta": 363.70776118729054,
+    "profit": -3332.4401000000003,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-51",
+    "price": 62.13,
+    "units": 396,
+    "cost": 23.8,
+    "referral": 0.17,
+    "fixed": 7.85,
+    "eps": -0.5441,
+    "se": 0.737,
+    "lo": -2.099,
+    "hi": 1.0107
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 65.24,
+    "delta": 788.530455646337,
+    "profit": 7887.488400000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-52",
+    "price": 77.19,
+    "units": 2721,
+    "cost": 15.23,
+    "referral": 0.08,
+    "fixed": 4.8,
+    "eps": -3.1596,
+    "se": 0.6708,
+    "lo": -4.5689,
+    "hi": -1.7502
+   },
+   "want": {
+    "guard": false,
+    "best": 31.85311490855794,
+    "way": "down",
+    "next": 73.33,
+    "delta": 13048.238960941497,
+    "profit": 138729.6408,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-53",
+    "price": 73.47,
+    "units": 752,
+    "cost": 24.13,
+    "referral": 0.17,
+    "fixed": 7.78,
+    "eps": -3.2183,
+    "se": 0.8921,
+    "lo": -6.0574,
+    "hi": -0.3792
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 77.14,
+    "delta": -1215.857782746596,
+    "profit": 21860.7152,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-54",
+    "price": 47.29,
+    "units": 2108,
+    "cost": 6.73,
+    "referral": 0.15,
+    "fixed": 5.86,
+    "eps": -3.0007,
+    "se": 0.5798,
+    "lo": -4.3124,
+    "hi": -1.689
+   },
+   "want": {
+    "guard": false,
+    "best": 22.21505590690317,
+    "way": "down",
+    "next": 44.93,
+    "delta": 4731.958387719278,
+    "profit": 58194.50199999999,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-55",
+    "price": 48.44,
+    "units": 1358,
+    "cost": 20.21,
+    "referral": 0.17,
+    "fixed": 9.39,
+    "eps": -1.0671,
+    "se": 0.4345,
+    "lo": -1.9681,
+    "hi": -0.1661
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 50.86,
+    "delta": 1859.3474568087604,
+    "profit": 14401.861599999995,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-56",
+    "price": 52.2,
+    "units": 1391,
+    "cost": 14.16,
+    "referral": 0.15,
+    "fixed": 7.36,
+    "eps": -1.0525,
+    "se": 0.0797,
+    "lo": -1.228,
+    "hi": -0.877
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 54.81,
+    "delta": 1340.4863217523452,
+    "profit": 31784.350000000006,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-57",
+    "price": 9.47,
+    "units": 426,
+    "cost": 15.03,
+    "referral": 0.15,
+    "fixed": 2.98,
+    "eps": -3.6553,
+    "se": 0.7542,
+    "lo": -5.3614,
+    "hi": -1.9492
+   },
+   "want": {
+    "guard": false,
+    "best": 29.16783657989238,
+    "way": "up",
+    "next": 9.94,
+    "delta": 831.0981890585731,
+    "profit": -4243.173,
+    "crosses": true
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-58",
+    "price": 12.09,
+    "units": 82,
+    "cost": 22.79,
+    "referral": 0.08,
+    "fixed": 5.61,
+    "eps": -0.5234,
+    "se": 0.479,
+    "lo": -1.5167,
+    "hi": 0.47
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 12.69,
+    "delta": 79.59531304220059,
+    "profit": -1416.7304000000001,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-59",
+    "price": 25.39,
+    "units": 2577,
+    "cost": 23.2,
+    "referral": 0.17,
+    "fixed": 8.82,
+    "eps": -1.2751,
+    "se": 0.5787,
+    "lo": -2.4863,
+    "hi": -0.064
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 26.66,
+    "delta": 4254.593007269716,
+    "profit": -28208.615100000003,
+    "crosses": false
+   }
+  },
+  {
+   "row": {
+    "sku": "SKU-60",
+    "price": 68.1,
+    "units": 2456,
+    "cost": 7.38,
+    "referral": 0.17,
+    "fixed": 5.91,
+    "eps": -1.6305,
+    "se": 0.7138,
+    "lo": -3.1615,
+    "hi": -0.0995
+   },
+   "want": {
+    "guard": true,
+    "best": null,
+    "way": "up",
+    "next": 71.5,
+    "delta": -1706.899663006261,
+    "profit": 106180.24799999998,
+    "crosses": false
+   }
+  }
+ ]
+}

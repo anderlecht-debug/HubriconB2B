@@ -224,11 +224,33 @@
 <!-- /build:pc-history -->
           <p class="source">An invented listing · not a client · not a result.</p>
         </div>
+
+        <section class="yours" id="yours" hidden aria-labelledby="yours-h">
+          <div class="yours-head"><h3 id="yours-h">Your numbers</h3><p class="yours-note">Typed here, kept in this browser. Nothing you type leaves it.</p></div>
+          <label class="yours-sku">SKU <input name="sku" autocomplete="off" placeholder="Your best seller"></label>
+          <div class="yours-grid">
+            <div class="yours-hist">
+              <table class="yours-table"><thead><tr><th scope="col">#</th><th scope="col">Days</th><th scope="col">Units sold</th><th scope="col">Average price</th></tr></thead><tbody></tbody></table>
+              <button type="button" class="link-btn" id="yours-add">Add a period</button>
+            </div>
+            <div class="yours-econ">
+              <label>Today's price <input name="price" inputmode="decimal" autocomplete="off"></label>
+              <label>Units a month at today's price <input name="units" inputmode="numeric" autocomplete="off"></label>
+              <label>Landed cost per unit <input name="cost" inputmode="decimal" autocomplete="off"></label>
+              <label>Referral rate, % <input name="referral" inputmode="decimal" autocomplete="off" value="15"></label>
+              <label>Fulfilment fee per unit <input name="fba" inputmode="decimal" autocomplete="off"></label>
+              <label>Storage and other per-unit costs <input name="other" inputmode="decimal" autocomplete="off"></label>
+              <label>A discount to test, % <input name="discount" inputmode="decimal" autocomplete="off" value="20"></label>
+            </div>
+          </div>
+          <p class="yours-status" id="yours-status" aria-live="polite"></p>
+          <p class="yours-actions"><button type="button" class="link-btn" id="yours-example">Fill in the example</button><button type="button" class="link-btn" id="yours-clear">Clear</button></p>
+        </section>
       </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
-          <li>Pull twelve half-months for your best seller and type them into Your history.</li>
+          <li>Pull twelve half-months for your best seller and type them into Your numbers above, or into Your history in the spreadsheet.</li>
           <li>If the sheet says the price has not moved enough, that is the finding: lesson 7 is how to move it on purpose.</li>
         </ol>
       </div>
@@ -260,6 +282,7 @@
         <div class="worked">
           <p><b>The invented listing's fit:</b> elasticity <span data-fill="learn_pc_eps">−1.86</span>, standard error <span data-fill="learn_pc_se">0.28</span>, 95% interval <span data-fill="learn_pc_lo">−2.48</span> to <span data-fill="learn_pc_hi">−1.24</span>, on <span data-fill="learn_pc_n">12</span> periods. The line explains <span data-fill="learn_pc_r2">0.88</span> of the variation (R²).</p>
         </div>
+        <div class="yours-out" data-yours="fit" hidden></div>
 
         <h3>What one history can and cannot tell you</h3>
         <p>Hubricon's engine ran this exact price test <span data-fill="learn_pc_runs">200</span> times on a listing whose true elasticity is <span data-fill="learn_pc_true">−1.6</span>, each time with fresh noise. The median standard error was <span data-fill="learn_pc_se50">0.28</span>; one run in ten came out under <span data-fill="learn_pc_se10">0.18</span> and one in ten over <span data-fill="learn_pc_se90">0.45</span>. In <span data-fill="learn_pc_guard_share">50%</span> of the runs the interval sat too close to −1 to name a price at all. In <span data-fill="learn_pc_up_share">96%</span> of them, the direction came out right: up.</p>
@@ -304,6 +327,8 @@
           <figcaption>Profit a month against price. Solid: at the fitted elasticity. Dashed: at the two ends of its interval, which put the best price anywhere from <span data-fill="learn_pc_lo_best">$20.79</span> to <span data-fill="learn_pc_hi_best">$64.39</span>. All three pass through today's price.</figcaption>
         </figure>
 
+        <div class="yours-out" data-yours="best" hidden></div>
+
         <h3>The lesson in the flat top</h3>
         <p>At the best price this listing makes <span data-fill="learn_pc_best_delta">+$25</span> a month more than today, on <span data-fill="learn_pc_profit">$5,593</span>. Near the peak, a few percent either way costs little. Far from it, or on a discount, the curve falls away fast. That is why the next two lessons matter more than the cent.</p>
 
@@ -342,6 +367,7 @@
 <!-- /build:pc-breakeven -->
           <p class="source">An invented listing · not a client · not a result. "Break-even units" is how far units can fall (or must rise) before profit moves; "Elasticity says" is what the fit expects them to do.</p>
         </div>
+        <div class="yours-out" data-yours="raise" hidden></div>
 
         <h3>Why a raise is usually safer than it feels</h3>
         <p>The fear prices a raise in revenue: 5% more per unit against some share of the units. The break-even prices it in margin, and every dollar of a raise lands in the margin. The thinner the margin, the more units a raise can lose and still pay, because the same dollar is a bigger share of a small contribution.</p>
@@ -374,6 +400,7 @@
           <p><b>A <span data-fill="learn_pc_disc">20%</span> sale on the invented listing:</b> <span data-fill="learn_pc_disc_price">$19.99</span>, which leaves <span data-fill="learn_pc_disc_margin">$6.45</span> a unit. It has to sell <span data-fill="learn_pc_disc_needed">66%</span> more units to make the same money. Its elasticity says it sells <span data-fill="learn_pc_disc_implied">51%</span> more. Run for a month, the sale costs <span data-fill="learn_pc_disc_delta">−$488</span>.</p>
           <p class="source">An invented listing · not a client · not a result.</p>
         </div>
+        <div class="yours-out" data-yours="discount" hidden></div>
 
         <h3>Add what the deal itself costs</h3>
         <p>A coupon or a deal can carry its own fee per unit sold. The sheet has a cell for it: it comes straight off the contribution, so it raises the units the sale must sell.</p>
@@ -414,6 +441,7 @@
           <li><b>After two weeks,</b> add the period to Your history. The fit moves, the interval tightens, and the next step starts from the new reading.</li>
         </ol>
         <p>Each step is also an experiment. A history whose price never moved becomes one that can be read.</p>
+        <div class="yours-out" data-yours="next" hidden></div>
 
         <h3>What one sheet cannot do</h3>
         <p>Three things lie beyond a single SKU's spreadsheet. Each is in Hubricon's engine, and each is worth knowing about even if you never use it:</p>
@@ -496,8 +524,13 @@
   </div>
 </footer>
 <!-- /build:foot -->
+<section class="memo" data-yours="memo" hidden aria-label="Your pricing memo, for print"></section>
+<!-- build:pc-example-json -->
+<script type="application/json" id="pc-example">{"history":[{"days":14,"units":237,"price":24.99},{"days":14,"units":252,"price":24.99},{"days":15,"units":313,"price":22.99},{"days":16,"units":299,"price":22.99},{"days":15,"units":211,"price":26.99},{"days":15,"units":213,"price":26.99},{"days":15,"units":256,"price":23.99},{"days":16,"units":216,"price":27.49},{"days":15,"units":300,"price":21.99},{"days":15,"units":237,"price":25.49},{"days":15,"units":258,"price":24.99},{"days":16,"units":282,"price":24.99}],"economics":{"price":24.99,"units_month":523,"landed_cost":6.2,"referral":0.15,"fba_fee":4.347,"other_fixed":0,"fixed":4.347,"margin":10.694499999999998,"profit_month":5593.223499999999},"discount":0.2}</script>
+<!-- /build:pc-example-json -->
 <script type="module" src="/assets/site.js"></script>
 <script type="module" src="/assets/learn.js"></script>
+<script type="module" src="/assets/learn-price-curve.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

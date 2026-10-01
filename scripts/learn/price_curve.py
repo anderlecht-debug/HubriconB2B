@@ -592,10 +592,51 @@ def verify(fig: dict, cases: int = 40) -> int:
     return len(problems)
 
 
+GOLDEN = ROOT / "scripts" / "learn" / "price-curve.golden.json"
+
+
+def golden(cases: int = 60) -> dict:
+    """The browser port's golden cases (assets/price-curve.mjs), from the engine itself."""
+    from scipy import stats
+    rng = random.Random(20261002)
+    out = {"about": "Written by scripts/learn/price_curve.py from Hubricon's engine. Do not edit.",
+           "engine_sha256": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in ENGINE_SOURCES},
+           "t975": [None] + [round(float(stats.t.ppf(0.975, d)), 6) for d in range(1, 61)],
+           "fits": [], "rows": []}
+    for _ in range(cases):
+        hist = random_history(rng)
+        pts = [{"price": r["price"], "units": r["units"], "days": r["days"]} for r in hist]
+        f = _fit(pts)
+        want = {"status": f["status"], "n": f["n_periods"]}
+        if f["status"] == "ok":
+            d = f["details"]
+            want.update({"elasticity": f["elasticity"], "std_err": f["std_err"], "ci": d["ci95"], "dof": d["dof"],
+                         "t": d["t_critical"], "r_squared": f["r_squared"], "price_cv": f["price_cv"],
+                         "se_estimator": d["se_estimator"], "std_err_classical": d["std_err_classical"],
+                         "guard": guarded(f["elasticity"], f["std_err"], tuple(d["ci95"]))})
+        out["fits"].append({"points": pts, "want": want})
+    for i in range(cases):
+        row = random_catalogue_row(rng, i)
+        g = guarded(row["eps"], row["se"], (row["lo"], row["hi"]))
+        best = None if g else optimal_price(row["eps"], row["cost"], row["referral"], row["fixed"])
+        way = direction(row["eps"], row["price"], best, g)
+        nxt = step_price(row["price"], best, way)
+        out["rows"].append({"row": row, "want": {
+            "guard": g, "best": best, "way": way, "next": nxt,
+            "delta": float(profit_delta(row["eps"], row["price"], row["units"], row["cost"], row["referral"], nxt, row["fixed"])),
+            "profit": float(profit(row["eps"], row["price"], row["units"], row["cost"], row["referral"], row["price"], row["fixed"])),
+            "crosses": crosses_edge(row["price"], best or nxt)}})
+    return out
+
+
 def main() -> None:
     fig = figures()
     FIGURES.write_text(json.dumps(fig, indent=1) + "\n")
     print(f"wrote {FIGURES.relative_to(ROOT)}: elasticity {fig['fit']['elasticity']} ± {fig['fit']['std_err']}, best price {fig['best']['price']}")
+    GOLDEN.write_text(json.dumps(golden(), indent=1) + "\n")
+    print(f"wrote {GOLDEN.relative_to(ROOT)}")
+    if "--golden-only" in sys.argv:
+        return
     if verify(fig):
         raise SystemExit(1)
     if "--publish" in sys.argv:

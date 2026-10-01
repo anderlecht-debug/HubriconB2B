@@ -291,6 +291,8 @@ function priceCurveFigures(pc) {
   return {
     fill,
     blocks: {
+      // The example, for the course's own "Fill in the example": the same figures the page prints.
+      "pc-example-json": `\n<script type="application/json" id="pc-example">${JSON.stringify({ history: pc.history.map(({ days, units, price }) => ({ days, units, price })), economics: e, discount: d.rate })}</script>\n`,
       "pc-history": `\n<table class="data"><thead><tr><th scope="col">Period</th><th scope="col">Days</th><th scope="col">Units</th><th scope="col">Average price</th><th scope="col">Units a day</th></tr></thead><tbody>${rows}</tbody></table>\n`,
       "pc-breakeven": `\n<table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody>${be}</tbody></table>\n`,
       "pc-fit-wide": fitSVG(fitData, { id: "pcf-w", w: 680, h: 360, m: { t: 40, r: 16, b: 46, l: 56 }, font: 13 }),
