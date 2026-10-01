@@ -60,7 +60,8 @@ def test_build_script_hits_all_beats_with_real_numbers():
     assert "Old test." not in desk
     assert "$1,240" in script                                  # ledger close
     # true for both mandates: a standing move goes live unless declined, an explicit one waits
-    assert "Inside your standing mandate it goes live after 72 hours unless you say no" in script
+    assert "Inside your standing mandate it goes live when the window on its email closes, unless you say no" in script
+    assert "72 hours" not in script, "a stored mandate can set its own window; the move's email names it"
     assert "anything outside it waits for your yes" in script
     assert "nothing moves without you" not in script
 

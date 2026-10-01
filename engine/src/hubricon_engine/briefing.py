@@ -56,8 +56,11 @@ def _signed(v: float) -> str:
 # What happens to a listed move, true for both mandates (issue.py): a standing
 # one goes live when its veto window closes unless declined; an explicit one
 # never moves without a yes.
+# The window is not named here: 72 hours is only the default, and a stored mandate
+# can set its own per module. The move's own email gives its closing time.
 MANDATE_SENTENCE = ("Each move is listed before it goes live. Inside your standing mandate it goes live "
-                    "after 72 hours unless you say no; anything outside it waits for your yes.")
+                    "when the window on its email closes, unless you say no; anything outside it waits "
+                    "for your yes.")
 
 
 def _proven(proven: dict | None, ledger_measured: float, ledger_count: int) -> dict:
