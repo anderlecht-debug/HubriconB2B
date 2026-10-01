@@ -1,0 +1,977 @@
+{
+ "demo_brand": {
+  "value": "Tarnhollow",
+  "label": "the demo brand's name",
+  "source": "demo catalogue"
+ },
+ "demo_label": {
+  "value": "demo data",
+  "label": "the label every demo figure carries",
+  "source": "demo catalogue"
+ },
+ "n_skus": {
+  "value": "24",
+  "label": "SKUs in the demo catalogue",
+  "source": "demo catalogue"
+ },
+ "n_periods": {
+  "value": "12",
+  "label": "monthly periods of history",
+  "source": "demo catalogue"
+ },
+ "annual_revenue": {
+  "value": "$3,531,212",
+  "label": "trailing twelve-month revenue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "annual_revenue_m": {
+  "value": "$3.5M",
+  "label": "trailing twelve-month revenue, in millions",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rev_latest": {
+  "value": "$318,632",
+  "label": "revenue, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "fees_latest": {
+  "value": "$102,395",
+  "label": "Amazon fees, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cogs_latest": {
+  "value": "$93,443",
+  "label": "landed cost of goods sold, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ads_latest": {
+  "value": "$19,930",
+  "label": "ad spend allocated, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "net_latest": {
+  "value": "$102,864",
+  "label": "true net profit, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "net_pct_latest": {
+  "value": "32.3%",
+  "label": "net margin, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "fee_share_latest": {
+  "value": "32.1%",
+  "label": "Amazon fees as a share of revenue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "gross_pct_latest": {
+  "value": "70.7%",
+  "label": "gross margin (revenue less landed cost), latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "contribution_pct_latest": {
+  "value": "32.3%",
+  "label": "contribution margin after fees, cost and ads, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "gross_vs_contribution_gap": {
+  "value": "38.4%",
+  "label": "points of margin between gross and contribution",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bestseller_sku": {
+  "value": "TH-CHEKNI-08",
+  "label": "the SKU with the most revenue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bestseller_revenue": {
+  "value": "$33,634",
+  "label": "the bestseller's monthly revenue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bestseller_net": {
+  "value": "$14,339",
+  "label": "the bestseller's monthly net profit",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bestseller_net_pct": {
+  "value": "42.6%",
+  "label": "the bestseller's net margin",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bestseller_rank_by_net": {
+  "value": "1",
+  "label": "where the bestseller ranks by net profit",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "worst_net_sku": {
+  "value": "TH-TRICOR-23",
+  "label": "the SKU with the lowest net margin",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "worst_net_pct": {
+  "value": "23.4%",
+  "label": "the lowest net margin in the catalogue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "best_net_sku": {
+  "value": "TH-CHEKNI-08",
+  "label": "the SKU with the highest net margin",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "best_net_pct": {
+  "value": "42.6%",
+  "label": "the highest net margin in the catalogue",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "n_skus_negative_net": {
+  "value": "0",
+  "label": "SKUs losing money after ads, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cash_on_hand": {
+  "value": "$262,000",
+  "label": "cash on hand today (client-stated)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "monthly_fixed_costs": {
+  "value": "$31,500",
+  "label": "monthly fixed costs (client-stated)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "horizon_days": {
+  "value": "90 days",
+  "label": "the cash horizon",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "n_paths": {
+  "value": "10,000",
+  "label": "simulated cash paths",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "p_ruin": {
+  "value": "0.0%",
+  "label": "probability the cash balance crosses zero inside the horizon",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "p_ruin_se": {
+  "value": "0.00%",
+  "label": "Monte Carlo standard error on that probability",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "min_p5": {
+  "value": "$95,201",
+  "label": "the fifth-percentile low point of cash",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "min_p5_day": {
+  "value": "13 days",
+  "label": "the day the fifth-percentile low arrives",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "min_median": {
+  "value": "$95,201",
+  "label": "the median path's low point",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_p5": {
+  "value": "$95,201",
+  "label": "fifth percentile of each path's own trough",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_es": {
+  "value": "$95,201",
+  "label": "expected shortfall: the mean trough of the worst five percent of paths",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_median": {
+  "value": "$95,201",
+  "label": "the median path's trough",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "wire_count": {
+  "value": "35",
+  "label": "supplier wires inside the horizon",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "largest_wire": {
+  "value": "$23,482",
+  "label": "the largest supplier wire in the horizon",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "largest_wire_day": {
+  "value": "0 days",
+  "label": "when the largest wire leaves",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "largest_wire_sku": {
+  "value": "TH-ENADUT-03",
+  "label": "the SKU behind the largest wire",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "wires_total": {
+  "value": "$345,501",
+  "label": "all supplier wires inside the horizon",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "payout_cycle": {
+  "value": "14 days",
+  "label": "the platform's payout cycle",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "demand_corr": {
+  "value": "0.48",
+  "label": "pairwise demand correlation across SKUs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "skus_in_cone": {
+  "value": "24",
+  "label": "SKUs feeding the cash cone",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "paths_sampled": {
+  "value": "2,000",
+  "label": "paths drawn for the survivorship comparison",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "terminal_p50": {
+  "value": "$337,154",
+  "label": "median cash at the end of the horizon",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "terminal_p90": {
+  "value": "$352,682",
+  "label": "ninetieth-percentile cash at the end of the horizon",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "terminal_p10": {
+  "value": "$322,319",
+  "label": "tenth-percentile cash at the end of the horizon",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "top_decile_terminal": {
+  "value": "$358,288",
+  "label": "mean ending cash of the top tenth of paths",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "top_decile_trough": {
+  "value": "$95,201",
+  "label": "mean trough of the top tenth of paths",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "all_trough": {
+  "value": "$95,201",
+  "label": "mean trough across every path",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "top_decile_hit_zero": {
+  "value": "0.0%",
+  "label": "share of the top tenth that ever crossed zero",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "all_hit_zero": {
+  "value": "0.0%",
+  "label": "share of all paths that ever crossed zero",
+  "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_paths": {
+  "value": "2,000",
+  "label": "one-year paths of the same strategy",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_terminal_p50": {
+  "value": "$969,579",
+  "label": "median cash after a year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_terminal_p90": {
+  "value": "$1,002,743",
+  "label": "ninetieth-percentile cash after a year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_terminal_p10": {
+  "value": "$937,423",
+  "label": "tenth-percentile cash after a year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_top_decile": {
+  "value": "$1,014,998",
+  "label": "mean ending cash of the top tenth of paths after a year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_bottom_decile": {
+  "value": "$924,168",
+  "label": "mean ending cash of the bottom tenth after a year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_luck_spread": {
+  "value": "$65,320",
+  "label": "gap between the ninetieth and tenth percentiles after a year, same strategy, different demand draws",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_luck_spread_pct": {
+  "value": "7%",
+  "label": "that gap as a share of the median outcome",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_top_vs_median": {
+  "value": "$45,419",
+  "label": "how far the top tenth finished above the median with an identical strategy",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_hit_zero": {
+  "value": "0.0%",
+  "label": "share of one-year paths that ever crossed zero",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_top_decile_hit_zero": {
+  "value": "0.0%",
+  "label": "share of the top tenth that ever crossed zero",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_top_trough": {
+  "value": "$95,201",
+  "label": "mean trough of the top tenth over the year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "year_all_trough": {
+  "value": "$95,201",
+  "label": "mean trough of every path over the year",
+  "source": "cash horizon paths, one-year horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "inv_skus": {
+  "value": "24",
+  "label": "SKUs simulated",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "inv_sims": {
+  "value": "20,000",
+  "label": "simulated lead times per SKU",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "stockout_worst_sku": {
+  "value": "TH-STAMIX-12",
+  "label": "the SKU most likely to run out inside its lead time",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "stockout_worst_p": {
+  "value": "98%",
+  "label": "its stockout probability",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "stockout_worst_cover": {
+  "value": "22 days",
+  "label": "its days of cover",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "stockout_worst_lead": {
+  "value": "50 days",
+  "label": "its supplier lead time",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "stockout_worst_rop": {
+  "value": "884",
+  "label": "its reorder point at the default service level",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "n_skus_stockout_gt_20": {
+  "value": "6",
+  "label": "SKUs with more than a one-in-five stockout chance",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "service_level_default": {
+  "value": "95%",
+  "label": "the flat service level most tools assume",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "lead_time_typical": {
+  "value": "40 days",
+  "label": "median supplier lead time",
+  "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "panel_expected_stockouts": {
+  "value": "5.6",
+  "label": "SKUs expected out of stock in the same lead time, demand correlated",
+  "source": "MONTE_CARLO.RUN panel on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "panel_p95_correlated": {
+  "value": "9",
+  "label": "ninety-fifth percentile of simultaneous stockouts, demand correlated",
+  "source": "MONTE_CARLO.RUN panel on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "panel_p95_independent": {
+  "value": "8",
+  "label": "the same percentile if SKUs were independent",
+  "source": "MONTE_CARLO.RUN panel on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_skus": {
+  "value": "24",
+  "label": "SKUs priced by the newsvendor",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_bleed_month": {
+  "value": "$3,874",
+  "label": "monthly inventory fee bleed",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_econ_orders": {
+  "value": "13",
+  "label": "economic orders recommended",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_liquidations": {
+  "value": "0",
+  "label": "liquidation candidates",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_fractile_min": {
+  "value": "92%",
+  "label": "lowest margin-justified service level in the catalogue",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_fractile_max": {
+  "value": "98%",
+  "label": "highest margin-justified service level in the catalogue",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_fractile_median": {
+  "value": "97%",
+  "label": "median margin-justified service level",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_skus_below_95": {
+  "value": "8",
+  "label": "SKUs whose own margin justifies less than the flat default",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_sku": {
+  "value": "TH-CHEKNI-08",
+  "label": "the worked newsvendor example SKU",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_unit_margin": {
+  "value": "$28.45",
+  "label": "its unit margin",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_unit_cost": {
+  "value": "$16.60",
+  "label": "its landed unit cost",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_cu": {
+  "value": "$29.34",
+  "label": "its cost of being one unit short",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_co": {
+  "value": "$0.74",
+  "label": "its cost of holding one unit too many over a cycle",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_fractile": {
+  "value": "98%",
+  "label": "its margin-justified service level",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_low_sku": {
+  "value": "TH-STAMIX-12",
+  "label": "the SKU with the lowest justified service level",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_low_fractile": {
+  "value": "92%",
+  "label": "that SKU's justified service level",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_low_cu": {
+  "value": "$14.58",
+  "label": "that SKU's cost of a stockout, per unit",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "nv_low_co": {
+  "value": "$1.22",
+  "label": "that SKU's cost of overstock, per unit per cycle",
+  "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_skus_fit": {
+  "value": "22",
+  "label": "SKUs with a usable elasticity fit",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_skus_insufficient": {
+  "value": "2",
+  "label": "SKUs the fit refused (too few periods or no price movement)",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_min_periods": {
+  "value": "5",
+  "label": "periods the fit needs before it will speak",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_min_price_cv": {
+  "value": "2%",
+  "label": "price movement the fit needs before it will speak",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_sku": {
+  "value": "TH-OVEMIT-22",
+  "label": "the worked elasticity example SKU",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_point": {
+  "value": "-2.20",
+  "label": "its elasticity point estimate",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_se": {
+  "value": "0.67",
+  "label": "its HC3 robust standard error",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_ci_low": {
+  "value": "-3.52",
+  "label": "lower bound of its ninety-five percent interval",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_ci_high": {
+  "value": "-0.88",
+  "label": "upper bound of its ninety-five percent interval",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_ci_width": {
+  "value": "2.64",
+  "label": "width of that interval",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_periods": {
+  "value": "12",
+  "label": "periods the example fit used",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_r2": {
+  "value": "0.53",
+  "label": "its R-squared",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_median": {
+  "value": "-1.86",
+  "label": "median elasticity across fitted SKUs",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_inelastic_count": {
+  "value": "0",
+  "label": "SKUs that are price-inelastic (a raise adds profit)",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_elastic_count": {
+  "value": "22",
+  "label": "SKUs that are price-elastic",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "n_for_se_half": {
+  "value": "22",
+  "label": "periods needed to shrink that error to 0.5",
+  "source": "derived from ELASTICITY.FIT standard error, Tarnhollow demo data"
+ },
+ "n_for_se_quarter": {
+  "value": "87",
+  "label": "periods needed to shrink that error to 0.25",
+  "source": "derived from ELASTICITY.FIT standard error, Tarnhollow demo data"
+ },
+ "n_for_se_tenth": {
+  "value": "546",
+  "label": "periods needed to shrink that error to 0.1",
+  "source": "derived from ELASTICITY.FIT standard error, Tarnhollow demo data"
+ },
+ "pm_count": {
+  "value": "22",
+  "label": "SKUs with an honest price move available",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_sku": {
+  "value": "TH-CASIRO-01",
+  "label": "the SKU with the largest expected gain from a price move",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_new_price": {
+  "value": "$37.84",
+  "label": "its recommended new price",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_step": {
+  "value": "5.0%",
+  "label": "the size of the step",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_delta": {
+  "value": "$388",
+  "label": "expected profit change per month",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_delta_p5": {
+  "value": "$20",
+  "label": "fifth percentile of that change",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_delta_p95": {
+  "value": "$909",
+  "label": "ninety-fifth percentile of that change",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_p_loss": {
+  "value": "4%",
+  "label": "probability the move loses money",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_total_delta": {
+  "value": "$1,701",
+  "label": "expected monthly profit across every recommended move",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_step_cap": {
+  "value": "5%",
+  "label": "the hard cap on any single price step",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_campaigns": {
+  "value": "8",
+  "label": "campaigns analysed",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_campaigns_fit": {
+  "value": "8",
+  "label": "campaigns with a fitted response curve",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_bleed_terms": {
+  "value": "48",
+  "label": "search terms spending with zero attributed sales",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_bleed_spend": {
+  "value": "$4,101",
+  "label": "spend on those terms over the periods on file",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_breakeven_roas": {
+  "value": "2.61",
+  "label": "the break-even marginal return on ad spend at this margin",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_worst_campaign": {
+  "value": "Catalog - Auto",
+  "label": "the campaign with the lowest marginal return",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_worst_marginal_roas": {
+  "value": "0.97",
+  "label": "its marginal return on the last dollar",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_worst_spend": {
+  "value": "$125",
+  "label": "its current daily spend",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_worst_breakeven": {
+  "value": "$11",
+  "label": "the daily spend where its last dollar breaks even",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "ad_bleed_month": {
+  "value": "$4,101",
+  "label": "monthly ad spend with zero attributed sales",
+  "source": "SPEND.RESPONSE on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_n_claims": {
+  "value": "123",
+  "label": "reimbursement claims detected",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_n_live": {
+  "value": "72",
+  "label": "claims open right now",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_live_value": {
+  "value": "$4,593",
+  "label": "face value of open claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_live_ev": {
+  "value": "$3,573",
+  "label": "expected value of open claims after approval odds",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_n_expiring": {
+  "value": "37",
+  "label": "claims expiring within two weeks",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_expiring_value": {
+  "value": "$2,782",
+  "label": "value expiring within two weeks",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_expired_value": {
+  "value": "$825",
+  "label": "value already lost to closed windows",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_pending_value": {
+  "value": "$1,370",
+  "label": "value not yet eligible to file",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_reimbursed_90d": {
+  "value": "$204",
+  "label": "what Amazon paid in the last ninety days",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_annualised_live": {
+  "value": "$18,372",
+  "label": "open claim value, annualised at this quarter's rate",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_warehouse_lost_n": {
+  "value": "36",
+  "label": "warehouse lost claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_warehouse_lost_value": {
+  "value": "$3,232",
+  "label": "warehouse lost value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_carrier_damaged_n": {
+  "value": "11",
+  "label": "carrier damaged claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_carrier_damaged_value": {
+  "value": "$856",
+  "label": "carrier damaged value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_transit_lost_n": {
+  "value": "5",
+  "label": "transit lost claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_transit_lost_value": {
+  "value": "$457",
+  "label": "transit lost value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_refund_no_return_n": {
+  "value": "24",
+  "label": "refund no return claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_refund_no_return_value": {
+  "value": "$650",
+  "label": "refund no return value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_damaged_return_n": {
+  "value": "26",
+  "label": "damaged return claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_damaged_return_value": {
+  "value": "$237",
+  "label": "damaged return value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_reimbursement_reversal_n": {
+  "value": "1",
+  "label": "reimbursement reversal claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_reimbursement_reversal_value": {
+  "value": "$32",
+  "label": "reimbursement reversal value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_warehouse_damaged_n": {
+  "value": "20",
+  "label": "warehouse damaged claims",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_warehouse_damaged_value": {
+  "value": "$1,324",
+  "label": "warehouse damaged value",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "win_warehouse_eligible": {
+  "value": "30 days",
+  "label": "days after a warehouse loss before a claim is eligible",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_warehouse_deadline": {
+  "value": "60 days",
+  "label": "days after a warehouse loss until the window shuts",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_refund_eligible": {
+  "value": "60 days",
+  "label": "days after a refund before a no-return claim is eligible",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_refund_deadline": {
+  "value": "120 days",
+  "label": "days after a refund until the window shuts",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_refund_min_age": {
+  "value": "45 days",
+  "label": "days a refund must age before it counts",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_damaged_deadline": {
+  "value": "60 days",
+  "label": "days after a damaged return until the window shuts",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_found_match": {
+  "value": "45 days",
+  "label": "days inside which a found unit offsets a loss",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_reimb_match": {
+  "value": "90 days",
+  "label": "days inside which a paid reimbursement offsets a loss",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "win_expiring_within": {
+  "value": "14 days",
+  "label": "days before a deadline a claim is called expiring",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_warehouse_lost": {
+  "value": "85%",
+  "label": "assumed approval probability for warehouse lost",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_warehouse_damaged": {
+  "value": "85%",
+  "label": "assumed approval probability for warehouse damaged",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_carrier_damaged": {
+  "value": "70%",
+  "label": "assumed approval probability for carrier damaged",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_transit_lost": {
+  "value": "70%",
+  "label": "assumed approval probability for transit lost",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_refund_no_return": {
+  "value": "70%",
+  "label": "assumed approval probability for refund no return",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_damaged_return": {
+  "value": "60%",
+  "label": "assumed approval probability for damaged return",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "p_approve_reimbursement_reversal": {
+  "value": "50%",
+  "label": "assumed approval probability for reimbursement reversal",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "no_cost_fraction": {
+  "value": "50%",
+  "label": "value fallback when no landed cost is on file, as a share of price",
+  "source": "RECOVERY.EV policy constants"
+ },
+ "recovery_service_cut": {
+  "value": "25%",
+  "label": "the share a typical recovery service keeps",
+  "source": "hubricon-capital-position-build-prompt.md §2 (stated assumption)"
+ },
+ "anom_scanned": {
+  "value": "364",
+  "label": "series and detectors scanned",
+  "source": "ANOMALY.SCAN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "anom_detector_flagged": {
+  "value": "91",
+  "label": "flags the detectors alone would have raised",
+  "source": "ANOMALY.SCAN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "anom_flagged": {
+  "value": "18",
+  "label": "flags that survived false-discovery control",
+  "source": "ANOMALY.SCAN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "anom_fdr_q": {
+  "value": "5%",
+  "label": "the false-discovery rate the sweep controls to",
+  "source": "ANOMALY.SCAN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "anom_dollars": {
+  "value": "$2,053",
+  "label": "monthly dollars behind surviving flags",
+  "source": "ANOMALY.SCAN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "null_replicates": {
+  "value": "4,000",
+  "label": "null replicates each detector's threshold is calibrated on",
+  "source": "ANOMALY.SCAN null calibration"
+ },
+ "risk_expected_net": {
+  "value": "$99,365",
+  "label": "expected net profit next period",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "risk_worst_5": {
+  "value": "$61,358",
+  "label": "net profit in the worst five percent of periods",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "risk_cvar_95": {
+  "value": "$38,007",
+  "label": "expected shortfall below plan in a bad period",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "hhi": {
+  "value": "519",
+  "label": "revenue concentration index (HHI)",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "top_sku_share": {
+  "value": "11%",
+  "label": "revenue share of the largest SKU",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "effective_skus": {
+  "value": "19.3",
+  "label": "effective number of SKUs",
+  "source": "risk on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "forecast_skus": {
+  "value": "24",
+  "label": "SKUs with a backtested forecast",
+  "source": "forecast ladder on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "forecast_fva": {
+  "value": "10%",
+  "label": "average accuracy gain over the naive forecast",
+  "source": "forecast ladder on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "health_score": {
+  "value": "90",
+  "label": "Health Score out of one hundred",
+  "source": "health score on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "health_grade": {
+  "value": "A",
+  "label": "Health Score grade",
+  "source": "health score on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ }
+}

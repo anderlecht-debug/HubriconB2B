@@ -1,0 +1,33 @@
+[project]
+name = "hubricon-content"
+version = "0.1.0"
+description = "Hubricon's content pipeline: scripts, Manim scenes, narration, assembly, QA and review gates, driven by real engine runs on labelled demo data."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "manim>=0.19",
+    "numpy>=2.0",
+    "pillow>=10",
+    "openpyxl>=3.1",
+    "elevenlabs>=1.0",
+    "google-api-python-client>=2.0",
+    "google-auth-oauthlib>=1.2",
+    "soundfile>=0.12",
+    "pytest>=8.0",
+    "markdown>=3.5",
+]
+
+[project.optional-dependencies]
+voice = ["kokoro-onnx>=0.4", "faster-whisper>=1.0"]
+
+[project.scripts]
+hubricon-content = "hubricon_content.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hubricon_content"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
