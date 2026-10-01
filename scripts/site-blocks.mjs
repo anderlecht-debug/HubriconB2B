@@ -186,10 +186,13 @@ function video(v, label, track) {
 function filmCase(lib) {
   const f = lib.films.case_study;
   if (f.src) return `\n<div class="film">${video(f, f.title, "case_film")}</div>\n`;
+  // Until it exists, the slot names what will play, beat by beat. It does not redraw
+  // Fig. 1, which the visitor has just read one screen up.
+  const beats = f.beats.map((b, i) => `<li><span>${String(i + 1).padStart(2, "0")}</span>${esc(b)}</li>`).join("");
   return `
-<div class="film film-waiting night" data-play>
-  ${cover("staircase", "film-case")}
+<div class="film film-waiting night">
   <p class="film-note"><span class="label">Film</span><span>${esc(f.waiting)}</span></p>
+  <ol class="film-beats">${beats}</ol>
 </div>
 `;
 }
@@ -306,7 +309,7 @@ function wall(list) {
   const reserved = Array.from({ length: Math.max(0, 3 - list.length) }, (_, i) => `
     <div class="frame frame-reserved">
       <span class="frame-n">${String(list.length + i + 1).padStart(2, "0")}</span>
-      <p><span class="label">Reserved</span>A client's Record and their own words, on video, published with their consent.</p>
+      <span class="label">Reserved</span>
     </div>`);
   return `
 <div class="wall-frames" data-wall>${[...said, ...reserved].join("")}

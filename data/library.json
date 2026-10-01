@@ -5,7 +5,8 @@
       "src": null,
       "poster": null,
       "title": "The case study, as a film",
-      "waiting": "The case study, told as a film in five beats, will play here: the staircase, where this listing sits, the counterfactual, ten thousand months, the cliff."
+      "waiting": "The case study, told as a film in five beats, will play here.",
+      "beats": ["The staircase", "Where this listing sits", "The counterfactual", "Ten thousand months", "The cliff"]
     }
   },
   "courses": [

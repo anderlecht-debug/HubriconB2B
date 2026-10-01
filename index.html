@@ -49,8 +49,8 @@
 .problem-grid { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); }
 .problem-grid p { font-size: var(--t-20); line-height: 1.55; }
 .problem-grid b { color: var(--ink); }
-.creed { margin-top: var(--s-10); padding-top: var(--s-8); border-top: 1px solid var(--rule); display: grid; gap: var(--s-2); }
-.creed p { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.06; color: var(--ink-3); text-wrap: balance; }
+.creed { margin-top: var(--s-9); padding-top: var(--s-7); border-top: 1px solid var(--rule); display: grid; gap: var(--s-2); }
+.creed p { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.06; color: var(--ink-3); text-wrap: balance; }
 .creed p:last-child { color: var(--ink); }
 
 /* 3 · 4 · the figures */
@@ -96,7 +96,7 @@
 /* trust: where every promise is written down */
 .trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
 .trust-tile { padding: var(--s-6) var(--s-5) var(--s-5); background: var(--paper-2); border-color: var(--paper-2); }
-.trust-tile h3 { font-size: var(--t-display-s); letter-spacing: var(--track-display); line-height: 1.08; margin-top: var(--s-2); }
+.trust-tile h3 { font-size: var(--t-24); margin-top: var(--s-2); }
 .trust-tile p { color: var(--ink-2); }
 
 /* 7 · the Profit Record, as the thing itself */
@@ -141,9 +141,7 @@
 
 /* 10 · the close */
 .close { text-align: center; padding-block: calc(var(--section) * 1.3); }
-.close-mark { display: inline-block; color: var(--ink); }
-.close-mark svg { width: 56px; height: 56px; }
-.close h2 { margin: var(--s-6) auto 0; font-size: var(--t-display-xl); max-width: 14ch; }
+.close h2 { margin: 0 auto; font-size: var(--t-display-xl); max-width: 14ch; }
 .close .cta { justify-content: center; }
 .close-note { margin-top: var(--s-4); }
 .close + .site-foot { border-top-color: var(--rule); }
@@ -169,12 +167,13 @@
   .cta .btn { width: 100%; }
   .cta { margin-top: var(--s-6); }
   .layers, .trust-grid { grid-template-columns: minmax(0, 1fr); }
+  .layers { gap: 0; border-bottom: 1px solid var(--rule); }
+  .layer { display: grid; grid-template-columns: var(--s-6) minmax(0, 1fr); gap: var(--s-2) 0; padding: var(--s-5) 0; border: 0; border-top: 1px solid var(--rule); border-radius: 0; }
+  .layer-n { grid-row: span 2; line-height: 1.5; }
   .trust-tile { padding: var(--s-5) var(--s-4) var(--s-4); gap: var(--s-2); }
-  .trust-tile h3 { font-size: var(--t-24); letter-spacing: -0.02em; }
   .trust-tile p { font-size: var(--t-14); }
   .result-numbers { grid-template-columns: minmax(0, 1fr); }
   .selection { font-size: var(--t-20); }
-  .creed p { font-size: var(--t-display-m); }
 }
 </style>
 <script type="application/ld+json">
@@ -409,14 +408,9 @@
     <!-- The case study told as a film (HUBRICON_SPEC.md, "Education"). Its slot is
          data/library.json's films.case_study: set src and rebuild, and it plays here. -->
 <!-- build:film-case -->
-<div class="film film-waiting night" data-play>
-  <svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
-      <path class="cv-grid" d="M20 160 H300"/>
-      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 152 H84 V128 H148 V100 H212 V66 H276 V34 H300"/>
-      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M148 128 V100"/>
-      <circle class="cv-hollow fade" style="--after:1100ms" cx="140" cy="128" r="5"/>
-      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg>
-  <p class="film-note"><span class="label">Film</span><span>The case study, told as a film in five beats, will play here: the staircase, where this listing sits, the counterfactual, ten thousand months, the cliff.</span></p>
+<div class="film film-waiting night">
+  <p class="film-note"><span class="label">Film</span><span>The case study, told as a film in five beats, will play here.</span></p>
+  <ol class="film-beats"><li><span>01</span>The staircase</li><li><span>02</span>Where this listing sits</li><li><span>03</span>The counterfactual</li><li><span>04</span>Ten thousand months</li><li><span>05</span>The cliff</li></ol>
 </div>
 <!-- /build:film-case -->
 
@@ -498,7 +492,6 @@
           <li><b>Every leak found and sealed:</b> prices, ad bleed, reorders, fee cliffs, Amazon claims.</li>
           <li><b>Every dollar graded</b> on your own reports, misses included.</li>
           <li><b>Inventory timed</b> against the fee cliffs.</li>
-          <li><b>The guarantee</b> around all of it.</li>
         </ul>
       </div>
     </div>
@@ -596,15 +589,15 @@
 <div class="wall-frames" data-wall>
     <div class="frame frame-reserved">
       <span class="frame-n">01</span>
-      <p><span class="label">Reserved</span>A client's Record and their own words, on video, published with their consent.</p>
+      <span class="label">Reserved</span>
     </div>
     <div class="frame frame-reserved">
       <span class="frame-n">02</span>
-      <p><span class="label">Reserved</span>A client's Record and their own words, on video, published with their consent.</p>
+      <span class="label">Reserved</span>
     </div>
     <div class="frame frame-reserved">
       <span class="frame-n">03</span>
-      <p><span class="label">Reserved</span>A client's Record and their own words, on video, published with their consent.</p>
+      <span class="label">Reserved</span>
     </div>
 </div>
 <div class="wall-results" id="wall-results" hidden></div>
@@ -753,8 +746,7 @@
 <!-- 10 · The close -->
 <section class="section close night" id="book">
   <div class="wrap">
-    <span class="close-mark" aria-hidden="true" data-reveal><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg></span>
-    <h2 data-reveal style="--d: 100ms">More profit than our bill every month, or you don't pay.</h2>
+    <h2 data-reveal>More profit than our bill every month, or you don't pay.</h2>
     <div class="cta" data-reveal style="--d: 200ms"><a class="btn btn-lg" href="/apply" data-cta="close">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
     <p class="cta-note close-note">20 minutes. No card, ever.</p>
   </div>
