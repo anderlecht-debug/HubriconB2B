@@ -235,8 +235,10 @@ Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
   trough below zero in blue (capital and cash), the profit curve with its peak in blue
   (pricing), the fan (decisions under uncertainty), the margin bars with the gap in blue (the
   operator's math). A live course is a link; a planned one is labelled Planned and links nowhere.
-- **The video slot** (`.film`, `.lesson-video`): the space a video will fill. Empty, it shows
-  the house visual and says what will play there, in the future tense; full, it plays.
+- **The video slot** (`.film`, `.lesson-video`): the space a video will fill. Empty, it says
+  what will play there, in the future tense, and names its chapters (the case-study film's
+  five beats, from `data/library.json`) rather than redrawing a chart the visitor has just
+  read; full, it plays.
 - **The results wall** (`.wall-frames`, `.frame`): a client's own words beside their Record,
   with consent, or a reserved frame for each one missing, dashed, numbered. It reads zero
   until a client fills it, and says so in the largest type on the page.
