@@ -153,3 +153,66 @@ def test_the_core_set_names_report_types_the_parsers_read():
     core = re.search(r"export const CORE = \{(.*?)\};", INTAKE_LIB, re.S).group(1)
     for report_type in re.findall(r'"(\w+)"', core):
         assert report_type in PARSERS
+
+
+# Shopify, told the truth (2026-10-01). The Orders card used to say "ten columns" and that no
+# email is ever kept, then invited the client to delete the Email column, which silently turns
+# repeat-customer value off; the primer said two files unblock everything, which is false for
+# a seller on both.
+def _card(report_type: str) -> str:
+    return re.search(rf'<div class="card" data-type="{report_type}".*?\n    </div>\n', INTAKE_HTML, re.S).group(0)
+
+
+def _words(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+
+
+def test_the_orders_card_names_every_column_the_parser_reads():
+    from hubricon_engine.ingest import shopify_orders
+
+    card = _words(_card("shopify_orders"))
+    numbers = {10: "Ten", 11: "Eleven", 12: "Twelve"}
+    assert f"{numbers[len(shopify_orders.SPEC)]} columns" in card
+    for header in ("Name", "Email", "Financial Status", "Created at", "Cancelled at", "Refunded Amount"):
+        assert header in card, header
+    assert "each line's sku, name, quantity, price and discount" in card
+    # each named header is one the parser maps
+    for header in ("Email", "Financial Status", "Created at", "Cancelled at", "Refunded Amount"):
+        norm = re.sub(r"[^a-z0-9]", "", header.lower())
+        assert any(norm in rule["synonyms"] for rule in shopify_orders.SPEC.values()), header
+
+
+def test_the_orders_card_says_what_the_email_becomes_and_what_deleting_it_turns_off():
+    from hubricon_engine.ingest import shopify_orders
+
+    card = _words(_card("shopify_orders"))
+    assert "one-way code" in card and "SHA-256" in card and "keyed to your account" in card
+    # the code is what the parser writes: the address hashed with the client id, never the address
+    k = shopify_orders.customer_key("Pat@Example.com ", "client-a")
+    assert k == shopify_orders.customer_key("pat@example.com", "client-a") != shopify_orders.customer_key("pat@example.com", "client-b")
+    assert "pat" not in k
+    assert "raises what an ad can afford" in card
+    # no invitation to delete the Email column without what that costs, in the same sentence
+    for sentence in re.split(r"(?<=[.!?])\s+", card):
+        if re.search(r"delete the Email column", sentence, re.I):
+            assert "repeat-customer value is then off" in sentence, sentence
+    assert "the file itself is kept as you sent it" in card.lower()
+    assert "never written to our database" not in card and "ten columns" not in card.lower()
+
+
+def test_the_payouts_card_promises_the_fees_actually_paid_and_where_the_file_comes_from():
+    card = _words(_card("shopify_payouts"))
+    assert "The processing fees you actually paid, in place of the 2.9% + 30¢ estimate." in card
+    assert "always comes from you" in card, "the seat has no Finances access, so later payouts come by upload"
+    assert '"the processing fees you actually paid, in place of the 2.9% + 30¢ estimate"' in INTAKE_HTML
+
+
+def test_what_starts_the_first_read_is_named_from_the_core_set_for_every_platform():
+    assert "unblock everything" not in INTAKE_HTML
+    assert 'id="core-note"' in INTAKE_HTML
+    core = re.search(r"export const CORE = \{(.*?)\};", INTAKE_LIB, re.S).group(1)
+    named = re.search(r"const CORE_NAMES = \{(.*?)\};", INTAKE_HTML, re.S).group(1)
+    for report_type in re.findall(r'"(\w+)"', core):
+        assert f"{report_type}:" in named, f"{report_type} is in the core set but the page cannot name it"
+    assert "renderCore(data.status?.files?.core, PLATFORM)" in INTAKE_HTML
+    assert "CORE_DEFAULT.both = [...CORE_DEFAULT.amazon, ...CORE_DEFAULT.shopify]" in INTAKE_HTML

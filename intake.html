@@ -99,6 +99,9 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
 .send-head { margin: 0 0 var(--s-2); }
 .card .have { font-size: var(--t-14); color: var(--ink); margin: calc(-1 * var(--s-2)) 0 var(--s-4); }
 .card .have:empty { display: none; }
+.core-note { font-size: var(--t-14); color: var(--ink-2); max-width: 64ch; margin: calc(-1 * var(--s-4)) 0 var(--s-6); }
+.core-note b { color: var(--ink); }
+.core-note:empty { display: none; }
 
 @media (max-width: 640px) {
   .card, .primer { padding: var(--s-4); }
@@ -147,6 +150,9 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
     Add what you have; you can reopen this link to send the rest (it expires after 90 days).
     Every card's dates are already filled in to match the export it asks for — change them if you exported a
     different span, because anything outside the dates you give us is ignored.</p>
+    <!-- What the first full read waits for, on this client's platform: filled from the core set
+         GET /api/intake returns (lib/intake.js CORE), so a seller on both is told all four. -->
+    <p class="core-note" id="core-note"></p>
 
     <div class="card" data-type="business_report" data-platform="amazon">
       <h2><span class="num"></span>Sales &amp; traffic by product</h2>
@@ -203,14 +209,22 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
         <li><b>The file arrives by email, not in your browser.</b> Any export you set a date range on — and any list longer than 50 rows — is emailed to you and to the store owner, usually within a couple of minutes. Nothing downloading on the page is normal. Go to your inbox.</li>
         <li><b>Send the .csv itself.</b> Choose <b>Plain CSV file</b> when Shopify offers the choice. If what lands is a .zip, unzip it and upload the .csv inside.</li>
       </ol>
-      <p class="note"><b>Two files unblock everything: Orders and Products.</b> The rest sharpen the numbers — send what you have and reopen this link for the rest. About ten minutes of clicking, and most of the wait is email.</p>
+      <p class="note">About ten minutes of clicking, and most of the wait is email.</p>
     </div>
 
     <div class="card" data-type="shopify_orders" data-scope="range" data-repeat data-window="months:6" data-platform="shopify">
       <h2><span class="num"></span>Orders — last 6 months</h2>
-      <p class="why">Every order and line item. This is the sales, refund and discount history every model runs on, and six months is what lets us fit your trend and your season instead of photographing one week.
-      We read ten columns (order name, dates, status, refund total, SKU, quantity, price, discount) and store a per-SKU monthly aggregate; no customer
-      name, email or address is ever written to our database. Delete those columns first if you'd rather they never leave your store.</p>
+      <p class="why">Every order and line item. This is the sales, refund and discount history every model runs on, and six months is what lets us fit your trend and your season instead of photographing one week.</p>
+      <p class="hint" id="orders-read"><b>What we read, and what we keep.</b> Eleven columns: Name (the order number), Email, Financial Status,
+      Created at, Cancelled at, Refunded Amount, and each line's sku, name, quantity, price and discount. Our database keeps a per-SKU total for
+      each month, and one row per order: its number, date, units and revenue, with the customer's email turned into a one-way code (a SHA-256
+      hash of the address, keyed to your account). The same customer gets the same code on every order, so we can count who comes back without
+      keeping the address. That matters for your ads: a customer worth three orders is worth more than one order's margin to win, so repeat
+      value raises what an ad can afford (we count it once your orders hold a hundred customers and six months, and only where it predicts your
+      own last quarter). Names, addresses and phone numbers are never read.</p>
+      <p class="hint" id="orders-columns">The file itself is kept as you sent it, in your encrypted store, and deleted with the rest of your
+      data when you ask. You may delete the name, address and phone columns before you upload: nothing reads them. You may delete the Email
+      column too, and everything else still works, but repeat-customer value is then off and your ad break-even counts the first order alone.</p>
       <p class="path">Shopify admin → Orders → clear any filters → Export → <b>Orders by date</b> → set the range → Plain CSV file → <b>Export orders</b> (not “Export transaction histories”).</p>
       <p class="hint"><b>One file for all six months is ideal</b>, and the dates below are already set. If your store is busy enough that the file comes back over 50 MB, export one month at a time and add a range here for each — six monthly files land exactly like one six-month file.</p>
       <div class="rows"></div>
@@ -241,10 +255,11 @@ input[type=month], input[type=date], select { font: var(--regular) var(--t-14) /
     </div>
 
     <div class="card" data-type="shopify_payouts" data-scope="range" data-window="days:90" data-platform="shopify">
-      <h2><span class="num"></span>Payouts — the fees you really paid</h2>
-      <p class="why">The processing fee on every charge and refund. Without it we estimate at Shopify Payments' published 2.9% + 30¢, which is the Basic-plan card rate — on Grow or Advanced that estimate overstates your fees and understates your margin on every SKU. Ninety days of the real thing fixes it.</p>
+      <h2><span class="num"></span>Payouts</h2>
+      <p class="why">The processing fees you actually paid, in place of the 2.9% + 30¢ estimate. That estimate is Shopify Payments' standard card rate on the Basic plan; on Grow, Advanced or Plus you pay less, so without this file your fees read high and your margin low on every SKU. Ninety days is enough.</p>
       <p class="path">Shopify admin → Finances → Payouts → View transactions → Export → set the range → Plain CSV. (Same screen via Settings → Payments → View payouts → Transactions.)</p>
-      <p class="hint"><b>Only exists on Shopify Payments.</b> On another processor there is no such export — skip the card and we use the published rate.</p>
+      <p class="hint"><b>Only exists on Shopify Payments.</b> On another processor there is no such export — skip the card and we use the published rate.
+      It sits under Finances, which the seat we ask for cannot open, so this file always comes from you, here, including in later months.</p>
       <div class="row">
         <input type="date" data-role="start" aria-label="Report start date">
         <span>→</span>
@@ -494,6 +509,7 @@ for (const card of document.querySelectorAll(".card[data-scope=range]")){
 const PLATFORM_LABEL = { amazon: "Amazon", shopify: "Shopify", both: "Amazon and Shopify" };
 function applyPlatform(platform){
   const p = PLATFORM_LABEL[platform] ? platform : "amazon";
+  PLATFORM = p;
   document.querySelectorAll("[data-platform]").forEach((el) => {
     const want = el.dataset.platform;
     if (want !== "both" && p !== "both" && want !== p) el.remove();
@@ -519,10 +535,10 @@ const GIVES = {
   sku_economics: "your true fee per SKU",
   ppc: "ad spend that never converted, and your break-even",
   fba_inventory: "stockout odds and reorder dates",
-  shopify_orders: "sales, refunds and discounts per SKU: your demand curves",
+  shopify_orders: "sales, refunds and discounts per SKU, your demand curves, and the customers who come back",
   shopify_products: "cost per item, and stock on a single-location store",
   shopify_inventory: "stock across your locations, for reorder points",
-  shopify_payouts: "the processing fee you really paid, not the published rate",
+  shopify_payouts: "the processing fees you actually paid, in place of the 2.9% + 30¢ estimate",
   meta_ads: "where more Meta spend stops paying",
   google_ads_campaign: "where more Google spend stops paying",
   google_ads_search_terms: "Google spend on terms that never convert",
@@ -644,9 +660,32 @@ async function refresh(){
   return data;
 }
 
+/* What the first full read waits for. Named from the core set the API returns (lib/intake.js
+   CORE, which the operator's first read waits for), else this platform's own; a seller on both
+   is told all four, by where each comes from. */
+const CORE_NAMES = { business_report: "Sales & traffic by product", sku_economics: "SKU economics",
+  shopify_orders: "Orders", shopify_products: "Products & costs" };
+const CORE_DEFAULT = { amazon: ["business_report", "sku_economics"], shopify: ["shopify_orders", "shopify_products"] };
+CORE_DEFAULT.both = [...CORE_DEFAULT.amazon, ...CORE_DEFAULT.shopify];
+const and = (xs) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+function renderCore(core, platform){
+  const list = (core && core.length ? core : CORE_DEFAULT[platform] || CORE_DEFAULT.amazon).filter((t) => CORE_NAMES[t]);
+  const amazon = list.filter((t) => !t.startsWith("shopify_")), shopify = list.filter((t) => t.startsWith("shopify_"));
+  const named = amazon.length && shopify.length
+    ? `${and(amazon.map((t) => CORE_NAMES[t]))} from Seller Central, and ${and(shopify.map((t) => CORE_NAMES[t]))} from Shopify`
+    : and(list.map((t) => CORE_NAMES[t]));
+  const count = ["No file", "One file", "Two files", "Three files", "Four files"][list.length] || `${list.length} files`;
+  $("#core-note").innerHTML = "";
+  const b = el("b", null, `${count} start your first full read: ${named}.`);
+  $("#core-note").append(b, document.createTextNode(" It is written when they are in, or 24 hours after your last upload, " +
+    "whichever comes first, and says what it could not see. The rest sharpen the numbers: send what you have, and reopen this link for the rest."));
+}
+
+let PLATFORM = "amazon";
 function render(data){
   renderLine(data.status);
   renderFiles(data.cards, data.status?.files?.core);
+  renderCore(data.status?.files?.core, PLATFORM);
 }
 
 /* --- does this file look like the export the card asked for? -------------
