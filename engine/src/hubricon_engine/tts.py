@@ -23,6 +23,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from . import meter
+
 ELEVEN_VOICE = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
 ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
 TIMEOUT = 120
@@ -62,6 +64,8 @@ def _elevenlabs(text: str, out: Path) -> None:
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
             out.write_bytes(res.read())
+        # Billed by the character on a voiced request; a refused one costs nothing.
+        meter.characters(meter.ELEVENLABS, len(text), "tts", item=ELEVEN_MODEL)
     except urllib.error.HTTPError as err:
         raise TTSUnavailable(f"ElevenLabs HTTP {err.code}: {err.read().decode(errors='replace')[:200]}")
     except (urllib.error.URLError, TimeoutError) as err:

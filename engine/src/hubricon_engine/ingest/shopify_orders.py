@@ -28,9 +28,17 @@ Rules, decided 2026-09-04:
     the window are skipped.
   * the per-order fixed fee is spread by each line's share of its order's
     revenue (orders_share), so a SKU that shares orders pays its part.
+
+Since 2026-09-23 the same upload also feeds `customer_orders`: one row per
+order with a CUSTOMER KEY, the SHA-256 of the lower-cased email and the client
+id. The email itself is never stored — the key is enough to say "this
+customer came back", which is all the lifetime-value model (models/clv.py)
+needs. Orders without an email column, or with a blank one, are in
+sku_economics as before and simply absent here.
 """
 
 import calendar
+import hashlib
 import os
 from datetime import date
 
@@ -49,8 +57,18 @@ SPEC = {
     "price": {"synonyms": ["lineitemprice"], "required": True, "cleaner": clean_money},
     "sku": {"synonyms": ["lineitemsku"], "cleaner": clean_str},
     "discount": {"synonyms": ["lineitemdiscount"], "cleaner": clean_money},
+    "email": {"synonyms": ["email", "customeremail"], "cleaner": clean_str},
 }
-ORDER_FIELDS = ("financial_status", "created_at", "cancelled_at", "refunded_amount")
+ORDER_FIELDS = ("financial_status", "created_at", "cancelled_at", "refunded_amount", "email")
+
+
+def customer_key(email: str | None, client_id: str) -> str | None:
+    """The customer, without the customer: a one-way hash of the lower-cased
+    email salted with the client id, so the same person is the same key inside
+    one client and nothing else across clients."""
+    if not email or not str(email).strip():
+        return None
+    return hashlib.sha256(f"{str(email).strip().lower()}|{client_id}".encode()).hexdigest()
 DROP_STATUSES = {"voided", "pending"}
 DEFAULT_PAYMENTS_RATE = 0.029
 DEFAULT_PAYMENTS_FIXED = 0.30
@@ -96,6 +114,7 @@ def parse(df: pd.DataFrame, upload: dict):
     window_end = date.fromisoformat(upload["period_end"])
 
     buckets: dict[tuple[str, str, str], dict] = {}
+    customer_rows = []
     for name, order in group_orders(mapped).items():
         status = (order["financial_status"] or "").strip().lower()
         if order["cancelled_at"] or status in DROP_STATUSES:
@@ -122,6 +141,13 @@ def parse(df: pd.DataFrame, upload: dict):
             continue
         order_revenue = sum(revenue for _, _, _, revenue in lines)
         refund = max(0.0, min(order["refunded_amount"] or 0.0, order_revenue))
+        key = customer_key(order.get("email"), upload["client_id"])
+        if key:
+            customer_rows.append({
+                "client_id": upload["client_id"], "upload_id": upload["id"], "channel": CHANNEL,
+                "customer_key": key, "order_name": name, "order_date": created,
+                "revenue": round(order_revenue - refund, 2), "units": sum(qty for _, qty, _, _ in lines),
+            })
         for sku, qty, gross, revenue in lines:
             share = revenue / order_revenue if order_revenue > 0 else 1 / len(lines)
             b = buckets.setdefault(
@@ -167,4 +193,6 @@ def parse(df: pd.DataFrame, upload: dict):
             }
         )
     rows = dedupe_last(rows, ("sku", "period_start"))
-    return "sku_economics", rows, "client_id,channel,sku,period_start,period_end"
+    customer_rows = dedupe_last(customer_rows, ("order_name",))
+    return [("sku_economics", rows, "client_id,channel,sku,period_start,period_end"),
+            ("customer_orders", customer_rows, "client_id,channel,order_name")]

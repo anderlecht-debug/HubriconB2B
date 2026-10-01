@@ -15,10 +15,16 @@ import { createClient } from "@supabase/supabase-js";
  *
  * No consent is inferred. An unticked box is "no", written as false, and a
  * client can come back and change either answer while the link lives.
+ *
+ * `network` (terms.html §10, the third exception) lets aggregates from the
+ * client's account warn other clients of a fee change on the platform's side
+ * and count toward the book of what each kind of move delivers. The engine's
+ * network pass (engine/src/hubricon_engine/fleet.py) reads nobody without it,
+ * and an unticked box withdraws it on the next weekly pass.
  */
 
 const SITE = process.env.INTAKE_BASE_URL || "https://www.hubricon.com";
-const KINDS = ["testimonial", "anonymised_results", "named_results", "calibration"];
+const KINDS = ["testimonial", "anonymised_results", "named_results", "calibration", "network"];
 
 function getDb() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -112,6 +118,15 @@ while this link lives.</p>
     business, and every estimate that uses it says how many accounts stand behind it.</span></label>
 </div>
 <div class="panel">
+  <h2>Warning other brands</h2>
+  <label class="row"><input type="checkbox" name="network" ${on("network")}>
+    <span><b>Let my account help warn other brands when Amazon or Shopify changes a fee.</b>
+    Only the change leaves my account — which fee, which way, roughly when, and by what
+    percentage — never a figure of mine, never my name, a SKU or an ASIN. An alert goes out only
+    when several accounts show the same change, and it says how many stand behind it. My
+    account also counts toward your measure of what each kind of move really delivers.</span></label>
+</div>
+<div class="panel">
   <h2>A short testimonial</h2>
   <label class="row"><input type="checkbox" name="testimonial" ${on("testimonial")}>
     <span><b>Yes, you may quote me.</b> Two honest lines are plenty. Attributed by first name and
@@ -179,11 +194,28 @@ export async function POST(request) {
       ? { testimonial: text || null, testimonial_named_ok: yes("testimonial_named_ok"), before_text: before || null }
       : {}),
   }));
-  const { error } = await db.from("consents").upsert(rows, { onConflict: "client_id,kind" });
+  // `network` is written on its own. Until its migration
+  // (supabase/migrations/20260925000003_network.sql) is applied the consents
+  // check constraint refuses the kind, and one refused row must not take the
+  // testimonial and every other answer down with it. The page says when it
+  // happens; nothing is silently dropped.
+  const core = rows.filter((r) => r.kind !== "network");
+  const { error } = await db.from("consents").upsert(core, { onConflict: "client_id,kind" });
   if (error) return new Response("Could not save your answers", { status: 500 });
+  const { error: networkError } = await db
+    .from("consents")
+    .upsert(rows.filter((r) => r.kind === "network"), { onConflict: "client_id,kind" });
+  const saved = networkError ? core : rows;
+  const networkNote = !networkError
+    ? ""
+    : yes("network")
+      ? `<p class="sub"><b style="color:var(--ink)">One answer is not saved yet:</b> your yes to warning other
+brands. Nothing of yours is used for it until it is. Everything else is saved.</p>`
+      : `<p class="sub"><b style="color:var(--ink)">One answer could not be saved:</b> warning other brands.
+Everything else is saved. Please save again, or reply to any Hubricon email and it will be recorded by hand.</p>`;
 
-  const events = [{ kind: "consent_answered", client_id: identity.client_id, payload: { granted: rows.filter((r) => r.granted).map((r) => r.kind) } }];
-  if (rows.some((r) => r.granted)) events.push({ kind: "consent_granted", client_id: identity.client_id, payload: {} });
+  const events = [{ kind: "consent_answered", client_id: identity.client_id, payload: { granted: saved.filter((r) => r.granted).map((r) => r.kind) } }];
+  if (saved.some((r) => r.granted)) events.push({ kind: "consent_granted", client_id: identity.client_id, payload: {} });
   if (yes("testimonial") && text) events.push({ kind: "testimonial_given", client_id: identity.client_id, payload: { chars: text.length } });
   await db.from("funnel_events").insert(events);
 
@@ -194,9 +226,10 @@ export async function POST(request) {
     "Saved — thank you",
     `<span class="label">Hubricon · ${esc(identity.company_name || "your account")}</span>
 <h1>Saved. Thank you.</h1>
-<p class="sub">Your answers are recorded exactly as ticked. Anything you allowed appears on the public
-results page on the next hourly pass; anything you did not stays private. Change your mind any
-time at the same link.</p>
+<p class="sub">Your answers are recorded exactly as ticked. Anything you allowed us to publish appears on
+the public results page on the next hourly pass; anything you did not stays private. Change your
+mind any time at the same link.</p>
+${networkNote}
 <div class="panel">
   <h2>Your link</h2>
   <p>Send it to a founder who should see their own numbers. Their first month is free exactly as

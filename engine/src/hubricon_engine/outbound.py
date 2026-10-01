@@ -13,6 +13,7 @@ import html
 from datetime import datetime, timezone
 
 from . import icp, triage
+from . import meter
 from .instantly import CAMPAIGN_ACTIVE, Instantly, InstantlyError
 from .onboarding import guess_name_parts, is_internal
 
@@ -224,6 +225,43 @@ def log_event(db, kind: str, note: str | None = None, **refs) -> None:
 
 
 # -- campaign ----------------------------------------------------------------
+
+# HUBRICON_SPEC.md, "Channel decision": cold outreach is paused on purpose until real
+# proof exists, and content is the one channel. Paused is the default, so a deploy can
+# never restart it by accident; HUBRICON_COLD=on in the operator's environment resumes it.
+COLD_ENV = "HUBRICON_COLD"
+# Every campaign this business has run in Instantly carries this prefix.
+HUBRICON_CAMPAIGN_PREFIX = "Hubricon — "
+
+
+def cold_paused() -> bool:
+    return os.environ.get(COLD_ENV, "").strip().lower() != "on"
+
+
+def hold_campaigns(db, api: Instantly, dry: bool) -> list[str]:
+    """While cold is paused: pause every Hubricon campaign Instantly reports as active.
+
+    ensure_campaign re-activates a campaign that is not active, so a pause made by
+    hand in Instantly's dashboard lasted only until the next hourly pass. This is
+    the other half: the operator itself holds them paused, and reads the status
+    back, because Instantly answers 200 whether or not the change took."""
+    notes: list[str] = []
+    for c in api.campaigns():
+        name, cid = c.get("name") or "", c.get("id")
+        if not cid or not name.startswith(HUBRICON_CAMPAIGN_PREFIX) or c.get("status") != CAMPAIGN_ACTIVE:
+            continue
+        if dry:
+            notes.append(f"[dry] would pause {name!r} ({cid})")
+            continue
+        api.pause_campaign(cid)
+        after = (next((x for x in api.campaigns() if x.get("id") == cid), None) or {}).get("status")
+        log_event(db, "campaign_paused", payload={"id": cid, "name": name, "status_after": after,
+                                                   "why": "cold outreach paused (HUBRICON_SPEC.md)"})
+        notes.append(f"Paused {name!r} ({cid}); Instantly now reports {_status_name(after)}."
+                     if after != CAMPAIGN_ACTIVE else
+                     f"PAUSE DID NOT STICK: {name!r} ({cid}) still reports active. Pause it in Instantly's dashboard.")
+    return notes
+
 
 def ensure_campaign(db, api: Instantly, postal_address: str | None, dry: bool,
                     proof_line: str | None = None) -> tuple[str | None, list[str]]:
@@ -645,7 +683,8 @@ def sync_replies(db, api: Instantly, campaign_id: str, dry: bool) -> tuple[int, 
             prospects[sender] = prospect
         full = db.table("prospects").select("first_name, instantly_lead_id").eq("id", prospect["id"]).execute().data[0]
         body = (em.get("body") or {}).get("text") or (em.get("body") or {}).get("html") or ""
-        verdict = triage.triage(em.get("subject") or "", body, full.get("first_name"), sender=sender)
+        with meter.account(prospect_id=prospect["id"], component="triage", timed=False):
+            verdict = triage.triage(em.get("subject") or "", body, full.get("first_name"), sender=sender)
         db.table("prospect_messages").insert({
             "prospect_id": prospect["id"], "direction": "in", "instantly_email_id": eid,
             "instantly_thread_id": em.get("thread_id"), "eaccount": em.get("eaccount"),

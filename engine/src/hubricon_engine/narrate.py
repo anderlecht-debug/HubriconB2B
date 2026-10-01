@@ -24,6 +24,8 @@ import os
 import re
 from typing import Callable
 
+from . import meter
+
 DEFAULT_MODEL = "claude-fable-5-1"
 FALLBACK_MODEL = "claude-opus-4-8"
 PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
@@ -55,7 +57,8 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
                 alerts: list[dict], ledger_measured: float, ledger_count: int, issue_number: int,
                 health: dict | None = None, value: dict | None = None, recovery: dict | None = None,
                 forecast_rows: list[dict] | None = None, risk: dict | None = None,
-                anomaly_summary: dict | None = None, inv_econ: dict | None = None) -> dict:
+                anomaly_summary: dict | None = None, inv_econ: dict | None = None,
+                data_quality: dict | None = None) -> dict:
     """key -> {"value": formatted string, "label": what it is}. Only formatted
     strings leave this function; the model never sees a raw float."""
     facts = {
@@ -113,6 +116,10 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             facts[f"health_driver_{i}_dollars"] = {"value": _money(d["dollars_at_stake"]), "label": f"dollars behind health driver {i}"}
     if value:
         facts["value_total"] = {"value": _money(value["value_total"]), "label": "proven to date on the Profit Record (moves + recovered)"}
+        basis = value.get("value_interval_basis") or {}
+        if float(basis.get("banded_share_of_measured") or 0) >= 0.5 and value.get("value_p5") is not None:
+            facts["value_range"] = {"value": f"{_money(value['value_p5'])} to {_money(value['value_p95'])}",
+                                    "label": "the range around the proven figure, from the measured moves' own distributions"}
         facts["fees_paid"] = {"value": _money(value["fees_paid"]), "label": "fees invoiced to date"}
         if value.get("roi_multiple") is not None:
             facts["roi_multiple"] = {"value": f"{float(value['roi_multiple']):.1f}×", "label": "value delivered divided by fees paid"}
@@ -151,6 +158,20 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
         facts["inventory_bleed_month"] = {"value": _money(b["total_month"]), "label": "monthly inventory fee bleed (aged, low-inventory, peak storage)"}
         if inv_econ["summary"].get("liquidation_value"):
             facts["liquidation_value"] = {"value": _money(inv_econ["summary"]["liquidation_value"]), "label": "cash available now from liquidating excess"}
+    if data_quality and data_quality.get("status") == "flags":
+        worst = data_quality.get("worst_gap")
+        if worst:
+            facts["worst_data_gap"] = {
+                "value": (f"{worst['a'].replace('_', ' ')} and {worst['b'].replace('_', ' ')} disagree on "
+                          f"{worst['quantity'].replace('_', ' ')} for {worst['period']} by "
+                          f"{float(worst['relative_gap']):.0%}"),
+                "label": "the largest disagreement between two of the client's own exports, to fix at the upload"}
+        gaps = data_quality.get("gaps") or {}
+        if gaps:
+            first = next(iter(gaps))
+            facts["missing_data_months"] = {
+                "value": f"{first.replace('_', ' ')} is missing {', '.join(gaps[first][:3])}",
+                "label": "months absent from a report inside its own span (missing, not zero)"}
     return facts
 
 
@@ -212,6 +233,7 @@ def _call_claude(system: str, prompt: str, model: str) -> str:
         system=system,
         messages=[{"role": "user", "content": prompt}],
     )
+    meter.anthropic(response, "narrate", requested_model=model)  # before the refusal check: tokens were spent either way
     if response.stop_reason == "refusal":
         raise RuntimeError("model declined the request")
     return "".join(b.text for b in response.content if b.type == "text").strip()

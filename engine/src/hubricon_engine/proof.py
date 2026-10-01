@@ -33,7 +33,9 @@ from datetime import datetime, timezone
 from . import narrate
 from . import value as valuemod
 
-RESULTS_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/results"
+# /honesty is the results wall since 2026-09-30: it reads zero until a client publishes, then
+# fills, with the method and the misses kept beneath (HUBRICON_SPEC.md). /results redirects there.
+RESULTS_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/honesty"
 
 KINDS = ("first_recovered", "gate_cleared", "roi_3x", "roi_5x", "direct_measured")
 
@@ -62,15 +64,20 @@ MANY_RESULTS = ("{{proof_count}} brands have taken the free month and have {{pro
                 "The records are at {{proof_url}}.")
 
 _BAND = re.compile(r"rev\s*[:=]\s*([^|]+)")
-# The gate's revenue chips. The floor moved from $1M to $3M on 2026-09-13 (it is
-# derived from proven-or-void, not chosen); the two retired chips stay readable
-# so a booking made before that date still reports its band.
+# The gate's revenue chips. The band is $1M–$30M since 2026-09-30 (the founder's
+# decision in HUBRICON_SPEC.md); it was $3M–$20M from 2026-09-13 and $1M–$20M
+# before. Every retired chip stays readable so an older booking still reports its band.
 BANDS = {
+    "under $1m": "under $1M",
+    "$1m–$3m": "$1M–$3M", "$1m-$3m": "$1M–$3M",
+    "$3m–$10m": "$3M–$10M", "$3m-$10m": "$3M–$10M",
+    "$10m–$30m": "$10M–$30M", "$10m-$30m": "$10M–$30M",
+    "$30m+": "$30M+",
+    # retired chips
     "under $3m": "under $3M",
     "$3m–$5m": "$3M–$5M", "$3m-$5m": "$3M–$5M",
     "$5m–$20m": "$5M–$20M", "$5m-$20m": "$5M–$20M",
     "$20m+": "$20M+",
-    "under $1m": "under $1M",
     "$1m–$5m": "$1M–$5M", "$1m-$5m": "$1M–$5M",
 }
 

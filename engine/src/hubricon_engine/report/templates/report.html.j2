@@ -109,7 +109,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
 {% if chart_stockout %}
 <section>
   <h2>Module 01 · Probabilistic inventory</h2>
-  <p>{{ inventory|length }} SKUs simulated against supplier lead times ({{ run.params.simulations }} Monte Carlo paths each).</p>
+  <p>{{ inventory|length }} SKUs checked against supplier lead times: each stockout probability and reorder point is computed exactly from its lead-time demand distribution, with no simulation error.</p>
   <img class="chart" src="data:image/png;base64,{{ chart_stockout }}" alt="Stockout risk by SKU">
   <div class="narrate">Bars past the dashed line are SKUs more likely than 1-in-4 to sell out before a
   reorder placed today could arrive. The reorder quantities in the table are sized for a

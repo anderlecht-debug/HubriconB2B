@@ -179,6 +179,25 @@ SEARCH_DRAWS = 2000
 # objectives, kept because they are what a reader expects and because the horse
 # race has to be able to run them.
 OBJECTIVE = "certainty_equivalent"
+# An optional loss gate: when set to a probability, a step is only issued when
+# that quantile of its own profit-delta distribution is non-negative (0.25:
+# at most a one-in-four chance of losing on the step recommended). Off by
+# default. Added 2026-09-24 so the model-risk harness could price the gate:
+# on three synthetic worlds it is measured against the certainty-equivalent
+# default (MATH_SCORECARD.md, "Model risk, measured on three worlds"); the
+# horse race in tests/test_horse_race.py is the standing reason the default
+# stays off — the pure-quantile rule earns more per move by declining 40% of
+# the catalogue, and puts less money in the payout.
+MAX_P_LOSS: float | None = None
+# A step is issued only when more of the posterior's draws than not agree that
+# a small move in its direction raises profit (own plus family) — the Bayes
+# rule for a sign. Set 2026-09-24 after the model-risk bench priced it: at one
+# half it removed every step drafted on a catalogue already at its optimum
+# (110 over two seeds, all losing) and cost nothing elsewhere ($19,712 of true
+# profit against $19,759 without it, four worlds, two seeds). None switches it off.
+MIN_DIRECTION_CONFIDENCE: float | None = 0.5
+DIRECTION_NUDGE = 0.005
+OPTIMAL_MIX_SEED = 20260926
 # How close to the pole at eps = −1 is too close to name a destination. Two
 # standard errors is the same line the 95% interval draws, so the guard and
 # the published interval cannot disagree: if a two-sigma band around epŝ
@@ -186,6 +205,7 @@ OBJECTIVE = "certainty_equivalent"
 # is knowable. Raising this refuses more destinations; lowering it publishes
 # cents the data cannot support.
 POLE_GUARD_SIGMAS = 2.0
+POLE_OPTIMUM_LOG_SD = 0.5     # no destination when one standard error moves the optimum by more than half
 # Draws in the profit-delta bootstrap. 6,000 puts the Monte Carlo standard
 # error of the P5 at roughly a fiftieth of the P5-to-P95 width — small enough
 # that re-running cannot move a recommendation, cheap enough to run on every
@@ -284,7 +304,13 @@ def near_unit_elastic(eps: float, std_err: float | None, ci: list | tuple | None
     if std_err is not None and float(std_err) > 0:
         if not math.isfinite(float(std_err)):
             return True
-        return abs(1.0 + eps) < POLE_GUARD_SIGMAS * float(std_err)
+        if abs(1.0 + eps) < POLE_GUARD_SIGMAS * float(std_err):
+            return True
+        # the optimum's own relative uncertainty: d log P*/dε = 1/(ε(1+ε)).
+        # Added 2026-09-24: a catalogue pooled to a precise ε = −1.05 has an
+        # interval that excludes −1, and an optimum of 21× cost that its own
+        # interval moves between 13× and 51× — a price no one should be told
+        return float(std_err) / abs(eps * (1.0 + eps)) > POLE_OPTIMUM_LOG_SD if eps < -1 else False
     # no usable uncertainty on a fitted row: unbounded, not exact
     return bool(fitted)
 
@@ -341,12 +367,24 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
                 demand_sd_log: float | None = None,
                 fee_history: list[tuple[float, float]] | None = None,
                 cost_cv: float = 0.0, draws: int = MC_DRAWS,
-                rng: np.random.Generator | None = None) -> dict:
+                rng: np.random.Generator | None = None,
+                cross: dict | None = None, optimal_mix: tuple[float, float] | None = None) -> dict:
     """One draw set of the uncertain inputs, reusable across candidate prices.
+
+    `optimal_mix` is (w, ε0): with posterior probability w the catalogue already
+    prices at its optimum and this SKU's elasticity is ε0, the one its markup
+    implies (models/elasticity.prices_optimal_probability). That share of the
+    draws is set to ε0, on a stream of its own so every other draw is
+    unchanged.
 
     Returned as arrays so a whole grid of candidate prices can be evaluated on
     the SAME draws — common random numbers, which is what makes two candidate
-    steps comparable rather than differing by simulation noise."""
+    steps comparable rather than differing by simulation noise.
+
+    `cross` is the variant family's cross-price effect (models/cross_price.py):
+    {eps, std_err, dof, siblings: [{sku, q0, contribution, weight}]}. Its ε is
+    drawn last, so a SKU with no family reproduces every draw it made before the
+    term existed."""
     rng = rng or np.random.default_rng(MC_SEED)
     n = int(draws)
 
@@ -355,6 +393,13 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
         eps_draws = eps + std_err * shock
     else:
         eps_draws = np.full(n, eps)
+    at_optimum = None
+    if optimal_mix is not None and optimal_mix[0] is not None and float(optimal_mix[0]) > 0:
+        # the already-optimal model's share of the posterior, on its own stream:
+        # its own elasticity is the one its markup implies, and — the catalogue
+        # being at its optimum — no sibling term survives either (below)
+        at_optimum = np.random.default_rng(OPTIMAL_MIX_SEED).random(n) < float(optimal_mix[0])
+        eps_draws = np.where(at_optimum, float(optimal_mix[1]), eps_draws)
 
     sd_log = float(demand_sd_log) if demand_sd_log else 0.0
     if POISSON_FLOOR and q0 > 0:
@@ -376,9 +421,25 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
     c_draws = (np.clip(unit_cost * (1.0 + cost_cv * rng.standard_normal(n)), 0.0, None)
                if cost_cv > 0 else np.full(n, unit_cost))
 
+    cross_set = None
+    if cross and cross.get("siblings"):
+        se_c = float(cross.get("std_err") or 0.0)
+        dof_c = cross.get("dof")
+        if se_c > 0:
+            shock_c = rng.standard_t(dof_c, size=n) if dof_c and dof_c >= 1 else rng.standard_normal(n)
+            eps_c = float(cross["eps"]) + se_c * shock_c
+        else:
+            eps_c = np.full(n, float(cross["eps"]))
+        if at_optimum is not None:
+            eps_c = np.where(at_optimum, 0.0, eps_c)
+        cross_set = {"eps": eps_c,
+                     "siblings": [(float(j["q0"]), float(j["contribution"]), float(j["weight"]))
+                                  for j in cross["siblings"]]}
+
     return {
         "eps": eps_draws, "q0": q0_draws, "unit_cost": c_draws,
         "fee_rate": f_draws, "fixed_fee": big_f_draws, "p0": p0, "n": n,
+        "cross": cross_set,
         "inputs": {
             "eps_se": round(float(std_err), 6),
             "eps_dof": float(dof) if dof else None,
@@ -388,15 +449,35 @@ def delta_draws(*, eps: float, std_err: float, dof: float | None, p0: float, q0:
             "cost_cv": round(float(cost_cv), 6),
             "draws": n,
             "seed": MC_SEED,
+            "cross_eps_se": round(float(cross.get("std_err") or 0.0), 6) if cross_set else None,
+            "n_siblings": len(cross_set["siblings"]) if cross_set else 0,
         },
     }
 
 
-def delta_at(draw_set: dict, p_new: float) -> np.ndarray:
-    """The profit-delta draw vector at one candidate price."""
-    return profit_delta(draw_set["eps"], draw_set["p0"], draw_set["q0"],
-                        draw_set["unit_cost"], draw_set["fee_rate"], p_new,
-                        draw_set["fixed_fee"])
+def cross_delta(cross_set: dict | None, log_ratio, stride: int = 1):
+    """Sibling profit change for a move of log(p_new/p0) = `log_ratio`:
+    Σ_j q0_j·c_j·[(p_new/p0)^(ε_cross·w_ij) − 1]. `log_ratio` may be a scalar
+    (one candidate) or a column (a grid of candidates); the result broadcasts
+    against the draw axis. Zero when there is no family."""
+    if not cross_set:
+        return 0.0
+    eps = cross_set["eps"][::stride]
+    total = 0.0
+    for q0_j, c_j, w in cross_set["siblings"]:
+        total = total + q0_j * c_j * (np.exp(log_ratio * eps * w) - 1.0)
+    return total
+
+
+def delta_at(draw_set: dict, p_new: float, own_only: bool = False) -> np.ndarray:
+    """The profit-delta draw vector at one candidate price: own profit plus,
+    when the SKU sits in a variant family, the siblings' change."""
+    own = profit_delta(draw_set["eps"], draw_set["p0"], draw_set["q0"],
+                       draw_set["unit_cost"], draw_set["fee_rate"], p_new,
+                       draw_set["fixed_fee"])
+    if own_only or not draw_set.get("cross"):
+        return own
+    return own + cross_delta(draw_set["cross"], float(np.log(p_new / draw_set["p0"])))
 
 
 def summarize_delta(delta: np.ndarray) -> dict:
@@ -414,6 +495,30 @@ def summarize_delta(delta: np.ndarray) -> dict:
                   "p95": num(q[0.95]["se"], 3)},
         "draws": int(finite.size),
     }
+
+
+def certainty_equivalent(delta, tol: float) -> float:
+    """E[delta] − Var[delta] / (2·tol): the certainty equivalent under quadratic
+    utility, with `tol` the dollar risk tolerance. The objective `robust_step`
+    sizes a price step by, exposed so every other module that chooses among
+    uncertain moves (budget reallocation, markdown depth) uses the same rule
+    rather than a copy of it. −inf on an empty or non-finite sample."""
+    d = np.asarray(delta, dtype=float).ravel()
+    d = d[np.isfinite(d)]
+    if d.size == 0:
+        return float("-inf")
+    tol = max(abs(float(tol)), 1e-9)
+    return float(d.mean() - d.var() / (2.0 * tol))
+
+
+def es5(delta, alpha: float = 0.05) -> float:
+    """Expected shortfall at `alpha`: the mean of the worst `alpha` of outcomes.
+    The feasibility constraint a move must clear against the risk budget."""
+    d = np.sort(np.asarray(delta, dtype=float).ravel())
+    d = d[np.isfinite(d)]
+    if d.size == 0:
+        return float("-inf")
+    return float(d[:max(1, int(alpha * d.size))].mean())
 
 
 def trailing_monthly_net(margin_row: dict) -> float:
@@ -464,6 +569,9 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
     q = q0 * np.exp(np.log(prices / p0) * eps)
     base_contribution = p0 * (1 - f) - c - big_f
     delta = q * (prices * (1 - f) - c - big_f) - q0 * base_contribution
+    if draw_set.get("cross"):
+        # the family's side of every candidate, on the same draws
+        delta = delta + cross_delta(draw_set["cross"], np.log(prices / p0), stride)
     if not np.isfinite(delta).all():
         delta = np.where(np.isfinite(delta), delta, -np.inf)
 
@@ -474,6 +582,8 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
     m = srt.shape[1]
     p5 = srt[:, min(m - 1, int(0.05 * m))]
     es5 = srt[:, :max(1, int(0.05 * m))].mean(axis=1)
+    # the optional gate: that quantile of the step's own distribution must not be a loss
+    p_gate = srt[:, min(m - 1, int(MAX_P_LOSS * m))] if MAX_P_LOSS is not None else np.zeros(len(fractions))
     if objective == "cvar":
         # mean of the worst decile: coherent, and noisier than a quantile
         scores = srt[:, :max(1, int(0.10 * m))].mean(axis=1)
@@ -487,7 +597,8 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
         scores = delta.mean(axis=1) - delta.var(axis=1) / (2.0 * tol)
 
     budget = abs(float(risk_budget))
-    feasible = np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget)
+    feasible = np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget) & (p_gate >= 0.0)
+    gate_bound = bool((np.isfinite(es5) & np.isfinite(scores) & (es5 >= -budget)).any() and not feasible.any())
     # standing still is always a candidate, and its delta is exactly zero
     chosen, best_score = 0.0, 0.0
     if feasible.any():
@@ -506,6 +617,9 @@ def robust_step(draw_set: dict, *, direction: int, hard_cap: float = STEP_CAP,
         "quantile": quantile,
         "cap_bound": cap_bound,
         "budget_bound": budget_bound,
+        # the loss gate refused every candidate the budget would have allowed
+        "gain_gate_bound": gate_bound,
+        "max_p_loss": MAX_P_LOSS,
         "risk_budget": round(budget, 2),
         "hard_cap": hard_cap,
         "candidates": int(len(fractions)) + 1,
@@ -518,7 +632,8 @@ def price_move(margin_row: dict, elasticity_row: dict,
                cost_cv: float = 0.0, draws: int = MC_DRAWS,
                rng: np.random.Generator | None = None,
                hard_cap: float = STEP_CAP, quantile: float = ROBUST_QUANTILE,
-               objective: str = OBJECTIVE) -> dict | None:
+               objective: str = OBJECTIVE, cross: dict | None = None,
+               risk_share: float | None = None) -> dict | None:
     """One SKU's recommended move: exact new price, destination optimum
     (elastic only, and only when the fit is far enough from the pole at
     eps = −1 to have one), the expected profit delta per period and the
@@ -530,7 +645,13 @@ def price_move(margin_row: dict, elasticity_row: dict,
 
     `fee_history` is [(proportional rate, fixed per unit)] across the SKU's
     own periods; its dispersion is carried into the range. `cost_cv` carries
-    landed-cost dispersion where the client's own sheet shows some."""
+    landed-cost dispersion where the client's own sheet shows some.
+
+    `cross` is the SKU's variant-family effect (see delta_draws). Every candidate
+    is then valued on own PLUS sibling profit, and the step is sized on the
+    total. When the own-only objective would have moved and the total will
+    not, the answer is a dict with status "cannibalisation" naming the sibling
+    — a finding — rather than the silence None means."""
     units = float(margin_row.get("units") or 0)
     revenue = float(margin_row.get("revenue") or 0)
     if units <= 0 or revenue <= 0:
@@ -574,24 +695,52 @@ def price_move(margin_row: dict, elasticity_row: dict,
     else:
         return None
 
+    mix = None
+    if details.get("p_prices_optimal") is not None and details.get("markup_implied_epsilon") is not None:
+        mix = (float(details["p_prices_optimal"]), float(details["markup_implied_epsilon"]))
     draw_set = delta_draws(
         eps=eps, std_err=std_err, dof=dof, p0=p0, q0=units,
         unit_cost=unit_cost, fee_rate=fee_rate, fixed_fee=fixed_fee,
         demand_sd_log=details.get("residual_sd_log"),
-        fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng,
+        fee_history=fee_history, cost_cv=cost_cv, draws=draws, rng=rng, cross=cross,
+        optimal_mix=mix,
     )
     monthly_net = trailing_monthly_net(margin_row)
-    budget = RISK_BUDGET_SHARE * max(monthly_net, 0.0)
-    if direction == 0:
-        options = [robust_step(draw_set, direction=d, hard_cap=hard_cap, risk_budget=budget,
-                              quantile=quantile, objective=objective) for d in (-1, +1)]
-        policy = max(options, key=lambda o: o["objective_value"] or 0.0)
-    else:
-        policy = robust_step(draw_set, direction=direction, hard_cap=hard_cap,
-                             risk_budget=budget, quantile=quantile, objective=objective)
+    # the client's stated tolerance, or the house default
+    share = float(risk_share) if risk_share is not None else RISK_BUDGET_SHARE
+    budget = share * max(monthly_net, 0.0)
+    # a fit that just moved (models/drift.py) walks half as far this cycle
+    drift_scale = float((details.get("drift") or {}).get("tolerance_scale") or 1.0)
+    budget *= drift_scale
 
+    def _solve(ds):
+        if direction == 0:
+            options = [robust_step(ds, direction=d, hard_cap=hard_cap, risk_budget=budget,
+                                   quantile=quantile, objective=objective) for d in (-1, +1)]
+            return max(options, key=lambda o: o["objective_value"] or 0.0)
+        return robust_step(ds, direction=direction, hard_cap=hard_cap,
+                           risk_budget=budget, quantile=quantile, objective=objective)
+
+    policy = _solve(draw_set)
     fraction = policy["step_fraction"]
     if abs(fraction) < MIN_MOVE:
+        if draw_set.get("cross"):
+            # would the SKU on its own have moved? Then the family is what
+            # stopped it, and that is a finding with a name.
+            own_policy = _solve({**draw_set, "cross": None})
+            if abs(own_policy["step_fraction"]) >= MIN_MOVE:
+                p_own = p0 * (1.0 + own_policy["step_fraction"])
+                own_d = summarize_delta(delta_at(draw_set, p_own, own_only=True))
+                total_d = summarize_delta(delta_at(draw_set, p_own))
+                sibs = sorted(cross["siblings"], key=lambda j: -float(j["weight"]) * float(j["q0"]) * abs(float(j["contribution"])))
+                return {"status": "cannibalisation", "p0": round(p0, 2), "p_own": round(p_own, 2),
+                        "own_step_fraction": round(own_policy["step_fraction"], 6),
+                        "own_delta_p50": own_d["p50"], "total_delta_p50": total_d["p50"],
+                        "sibling_delta_p50": num((total_d["p50"] or 0) - (own_d["p50"] or 0)),
+                        "sibling": sibs[0]["sku"] if sibs else None,
+                        "family": cross.get("family"), "eps_cross": cross.get("eps"),
+                        "cross_std_err": cross.get("std_err"), "n_siblings": len(cross["siblings"]),
+                        "trailing_monthly_net": num(monthly_net)}
         # the robust objective cannot beat doing nothing, or the move it wants
         # is smaller than half a percent. Either way there is no instruction
         # here, and the refusal is the objective's own answer.
@@ -605,10 +754,30 @@ def price_move(margin_row: dict, elasticity_row: dict,
         if abs(fraction) < MIN_MOVE:
             return None
 
+    # Direction confidence: on what share of the posterior's draws does a
+    # half-percent move this way raise the profit of the SKU and its family?
+    # At a price already near its optimum a small error in ε makes a
+    # first-order edge on paper and a second-order loss in fact; this is the
+    # gate that tells the two apart.
+    nudge = delta_at(draw_set, p0 * (1.0 + DIRECTION_NUDGE * float(np.sign(fraction))))
+    direction_confidence = float(np.mean(nudge[np.isfinite(nudge)] > 0)) if np.isfinite(nudge).any() else 0.0
+    if MIN_DIRECTION_CONFIDENCE is not None and direction_confidence < MIN_DIRECTION_CONFIDENCE:
+        return None
+
     dist = summarize_delta(delta_at(draw_set, p_new))
+    cross_effect = None
+    if draw_set.get("cross"):
+        own_d = summarize_delta(delta_at(draw_set, p_new, own_only=True))
+        sib = summarize_delta(cross_delta(draw_set["cross"], float(np.log(p_new / p0))) + np.zeros(draw_set["n"]))
+        cross_effect = {"family": cross.get("family"), "eps_cross": cross.get("eps"),
+                        "std_err": cross.get("std_err"), "dof": cross.get("dof"),
+                        "siblings": cross["siblings"],
+                        "delta_own_p50": own_d["p50"],
+                        "delta_sibling_p5": sib["p5"], "delta_sibling_p50": sib["p50"], "delta_sibling_p95": sib["p95"]}
 
     return {
         "status": status,
+        "cross_effect": cross_effect,
         "p0": round(p0, 2),
         "p_new": round(p_new, 2),
         "step_fraction": round(fraction, 6),
@@ -627,9 +796,13 @@ def price_move(margin_row: dict, elasticity_row: dict,
         "delta_p95": dist["p95"],
         "delta_mean": dist["mean"],
         "p_loss": dist["p_loss"],
+        "direction_confidence": round(direction_confidence, 4),
+        "p_prices_optimal": mix[0] if mix else None,
         "mc_se": dist["mc_se"],
         "mc_inputs": draw_set["inputs"],
-        "policy": policy,
+        "policy": {**policy, "risk_budget_share": share,
+                   "risk_budget_share_basis": "client" if risk_share is not None else "default",
+                   "drift_tolerance_scale": drift_scale},
         "trailing_monthly_net": num(monthly_net),
         "fee_rate": round(fee_rate, 6),
         "fixed_fee_per_unit": round(fixed_fee, 6),

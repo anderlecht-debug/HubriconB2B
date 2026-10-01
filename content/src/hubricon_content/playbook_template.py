@@ -20,7 +20,7 @@ from . import facts as F
 from .demo import DEMO_DIR, TODAY
 from .state import CONTENT_DIR
 
-OUT = CONTENT_DIR.parent / "learn" / "reimbursement-playbook-template.xlsx"
+OUT = CONTENT_DIR.parent / "archive" / "learn-reimbursement-playbook" / "reimbursement-playbook-template.xlsx"   # parked
 NAVY = "050A1F"; AMBER = "FFC000"; GREY = "EEF0F5"
 
 WINDOWS = [

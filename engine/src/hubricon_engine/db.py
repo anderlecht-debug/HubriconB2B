@@ -5,13 +5,16 @@ import sys
 from supabase import Client, create_client
 
 from . import config
+from . import meter
 
 UPSERT_CHUNK = 500
 
 
 def connect() -> Client:
     cfg = config.load()
-    return create_client(cfg["supabase_url"], cfg["service_role_key"])
+    db = create_client(cfg["supabase_url"], cfg["service_role_key"])
+    meter.bind(db)  # usage is counted where the work happens, into this database (meter.py)
+    return db
 
 
 def resolve_client(db: Client, ident: str) -> dict:

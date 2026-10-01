@@ -15,7 +15,7 @@ LESSONS = CONTENT_DIR / "learn" / "lessons"
 RENDERED = LESSONS / "rendered"
 FACTS = CONTENT_DIR / "videos" / "playbook" / "facts.json"
 # The course page the fragments land in, between its `<!-- lesson:L1 -->` markers.
-PAGE = CONTENT_DIR.parent / "learn" / "reimbursement-playbook.html"
+PAGE = CONTENT_DIR.parent / "archive" / "learn-reimbursement-playbook" / "reimbursement-playbook.html"   # parked (HUBRICON_SPEC.md: course 1 is the public-data one)
 _H2 = re.compile(r"<h2>(.*?)</h2>", re.S)
 
 

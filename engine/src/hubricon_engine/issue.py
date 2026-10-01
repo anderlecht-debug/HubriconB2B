@@ -11,6 +11,10 @@ The rule this module exists to enforce is in `issue_drafts` step 5: if the
 notification did not actually go out, `veto_closes_at` stays NULL and the
 directive can never auto-approve. Silence from someone who was never told is
 not consent, and a veto window nobody was told about is worse than no window.
+
+Since 2026-09-25 each promise is also sealed (seal.py) between the status flip
+and the email, and the email prints each move's short seal: "written down
+before it goes live" became something the client can check, not take on trust.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -106,6 +110,35 @@ def close_veto_windows(db, client: dict, channel: str, dry: bool = False) -> dic
     return out
 
 
+# How soon a kind can bank, as a weight on its expected dollars for a client's
+# FIRST sweep: the thirty days where churn is highest and doubt loudest, when
+# one measured dollar buys months of patience. Measured from daily spend
+# inside a fortnight, 1.0; from the next monthly export, 0.5; on Amazon's
+# clock, 0.4; per absent month, 0.3; never banked, 0. Later sweeps rank by
+# dollars as before. A kind missing from this table is a test failure.
+FIRST_WIN_WEIGHT = {
+    "ad_bleed_terms": 1.0, "campaign_trim": 1.0, "spend_step": 1.0, "budget_reallocation": 1.0, "branded_pause": 1.0,
+    "price_step": 0.5, "markdown": 0.5, "negative_margin_sku": 0.5, "fee_anomaly": 0.5, "referral_anomaly": 0.5,
+    "low_inventory_fee": 0.5, "aged_surcharge": 0.5, "peak_storage_premium": 0.5,
+    "recovery_filing": 0.4,
+    "sku_exit": 0.3,
+    "inventory_reorder": 0.0, "expedite_air": 0.0, "budget_order_set": 0.0, "liquidation": 0.0,
+    "price_experiment": 0.0, "ad_switchback": 0.0, "cannibalisation_watch": 0.0,
+    "conversion_watch": 0.0, "traffic_watch": 0.0, "buybox_watch": 0.0, "settlement_step": 0.0,
+    "cpc_drift": 0.0, "conversion_drift": 0.0,
+}
+
+
+def first_win_weight(kind: str | None) -> float:
+    return float(FIRST_WIN_WEIGHT.get(kind or "", 0.0))
+
+
+def is_first_sweep(db, client_id: str) -> bool:
+    """No directive has been measured yet: the client has seen nothing come true."""
+    done = db.table("directives").select("id").eq("client_id", client_id).eq("status", "done").execute().data
+    return not done
+
+
 def issue_drafts(db, client: dict, channel: str, portal_url: str,
                  send: bool = False, dry: bool = False, limit: int = MAX_ISSUED_PER_SWEEP) -> dict:
     """Promote the highest-value drafts, tell the client, then open the window.
@@ -125,11 +158,23 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     for d in drafts:
         if d.get("mandate") == "standing" and not mandate.get(d.get("module"), {}).get("standing"):
             d["mandate"] = "explicit"
-    # draft_directives already ranks by score; expected dollars break ties so a
-    # promise with a number beats one without.
-    drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0)), reverse=True)
+    # Expected dollars first, so a promise with a number beats one without; the
+    # drafting score (carried in evidence since 2026-09-23) breaks ties, which is
+    # what lets an information purchase — a price experiment, a switchback —
+    # reach the client at all rather than sorting last forever behind zero.
+    first_sweep = is_first_sweep(db, client["id"])
+    if first_sweep:
+        # the first issue leads with what can be SEEN to work soonest
+        drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0) * first_win_weight(d.get("kind")),
+                                   float(d.get("expected_impact_usd") or 0),
+                                   float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
+    else:
+        drafts.sort(key=lambda d: (float(d.get("expected_impact_usd") or 0),
+                                   float((d.get("evidence") or {}).get("score") or 0)), reverse=True)
     chosen = drafts[:limit]
-    out = {"issued": 0, "notified": False, "held": max(0, len(drafts) - len(chosen))}
+    out = {"issued": 0, "notified": False, "held": max(0, len(drafts) - len(chosen)),
+           "ranking": "first_win" if first_sweep else "expected_dollars",
+           "order": [d.get("id") for d in chosen]}
     if not chosen:
         return out
 
@@ -145,6 +190,16 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         db.table("directives").update({"mandate": "explicit"}).in_("id", downgraded).execute()
     out["issued"] = len(ids)
 
+    # The Seal (seal.py): each promise, exactly as just issued, is fingerprinted
+    # and chained onto the client's Record now, BEFORE the email that states it,
+    # so the client's own inbox timestamps what was called. A seal that cannot
+    # be written is a named status here and the email goes out without seals:
+    # the notice is never held for its receipt.
+    sealed = _seal_promises(db, client, chosen, now)
+    out["seal"] = sealed["status"]
+    if sealed.get("reason"):
+        out["seal_reason"] = sealed["reason"]
+
     # The window is the client's own, not a constant.
     window_hours = min((mandate.get(d.get("module"), {}).get("veto_hours") or VETO_HOURS)
                        for d in chosen)
@@ -152,7 +207,8 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     if send and email_configured() and client.get("contact_email"):
         closes = now + timedelta(hours=window_hours)
         text, html = directive_email_body(client, chosen, closes, portal_url,
-                                          record_line=_record_line(db, client))
+                                          record_line=_record_line(db, client),
+                                          seals=sealed.get("short") or {})
         notified = send_email(
             client["contact_email"],
             veto_subject(chosen, closes),
@@ -170,6 +226,19 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         # Issued and visible in the desk, but nothing will ever auto-approve.
         db.table("directives").update({"veto_closes_at": None}).in_("id", ids).execute()
     return out
+
+
+def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
+    """The promises as issued — status, issue time and (possibly narrowed)
+    mandate as just written — sealed before the notice. seal.seal_called names
+    every failure it expects; this catches the ones it does not, because the
+    notice matters more than its receipt."""
+    try:
+        from . import seal
+        issued = [{**d, "status": "issued", "issued_at": _iso(now)} for d in chosen]
+        return seal.seal_called(db, client["id"], issued, sealed_at=now)
+    except Exception as err:
+        return {"status": "failed", "reason": f"{type(err).__name__}: {err}", "short": {}}
 
 
 def _record_line(db, client: dict) -> str | None:

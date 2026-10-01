@@ -217,8 +217,10 @@ def test_unbankable_kinds_close_with_the_work_recorded_and_no_dollars():
 
 
 def test_immaterial_movements_close_rather_than_banking_noise():
+    # a trim is banked over its window since 2026-09-24 (it was one day's net
+    # before): half a dollar a day is $15 over thirty days, under the floor
     d = _d("campaign_trim", {"campaign_name": "C1", "current_spend": 1000.0, "avg_margin": 0.3})
-    ads = [{"campaign_name": "C1", "current_spend": 990.0, "marginal_roas": 0.0}]
+    ads = [{"campaign_name": "C1", "current_spend": 999.5, "marginal_roas": 0.0}]
     out = m.measure_campaign_trim(d, ads, date(2026, 6, 15), TODAY)
     assert out["verdict"] == "closed"
 

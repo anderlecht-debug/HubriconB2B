@@ -70,11 +70,15 @@ def summary(clients: list[dict]) -> dict:
     to_value = [h for h in (hours(c.get("exports_landed_at"), c.get("first_value_at")) for c in clients)
                 if h is not None]
     waiting = [c for c in clients if c.get("exports_landed_at") and not c.get("first_issue_at")]
+    issue_to_value = [h for h in (hours(c.get("first_issue_at"), c.get("first_value_at")) for c in clients)
+                      if h is not None]
     return {
         "n_measured": len(to_issue),
         "median_hours_to_first_issue": round(median(to_issue), 1) if to_issue else None,
         "n_with_value": len(to_value),
         "median_days_to_first_value": round(median(to_value) / 24, 1) if to_value else None,
+        # the number the first-win ranking (issue.FIRST_WIN_WEIGHT) exists to shorten
+        "median_days_first_issue_to_first_value": round(median(issue_to_value) / 24, 1) if issue_to_value else None,
         "n_waiting": len(waiting),
     }
 

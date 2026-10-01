@@ -9,8 +9,31 @@ Written for whoever reviews or maintains this engine. Derivations and limits liv
 in `MATH_METHODS.md`; this file is the audit trail of how the mathematics got
 here and what it is and is not known to do.
 
-Suite at time of writing: **979 tests, all passing, ~95 seconds** — up from 770
-before this work. The 193 new ones live in fifteen files:
+Suite at time of writing (2026-09-25, iteration 39): **1,180 tests, all passing,
+4½ minutes unthreaded** — the twenty-eight of `test_fleet` and `test_book` (the
+network, iteration 39) added to the 1,152 left by the billing work of the same day.
+Before that (2026-09-24, iteration 38): **1,129 tests, all passing,
+4½ minutes unthreaded** (`OMP_NUM_THREADS=1`; threaded BLAS under pytest's single
+process is slower, not faster) — the twelve of `test_bench_corrections` added to the
+1,117 of the model-risk rounds; plus the Simons–Thorp–Griffin bench (`engine/bench/`,
+iteration 38), three tests in about two minutes on twelve workers.
+Before that: **1,116 tests, ~5 minutes**
+— 1,106 after the interaction iteration (iterations 15–36 below) plus the ten of the
+model-risk pass (iteration 37, `test_model_risk` and one in `test_ad_allocation`);
+up from 979 before the interaction iteration, whose 115 new tests live in twenty files
+(the extra minute of runtime since 2026-09-23 is the controlled fit and its bootstrap
+running inside every elasticity call on a reacting catalogue): `test_ad_allocation`, `test_incrementality`,
+`test_price_experiment`, `test_cross_price`, `test_markdown`, `test_replenishment`,
+`test_cash_orders`, `test_seasonality`, `test_clv`, `test_assortment`,
+`test_client_risk`, `test_ruin_cost`, `test_ad_drift`, `test_ad_form_selection`,
+`test_obsolescence`, `test_drift`, `test_stress`, `test_data_quality`,
+`test_headline_and_benchmark`, `test_daily`; the thinnest-input refusal test in
+`test_degeneracy` now covers every model of the iteration. The suite's runtime grew
+from ninety-five seconds to under four minutes, most of it the form ladder's refits
+in the ad-curve tests and the markdown draws.
+
+Before that iteration: 979 tests, ~95 seconds, up from 770 before the mathematics
+work. The 193 of that work live in fifteen files:
 
 ```
 test_pricing_derivation  21   test_degeneracy            25
@@ -30,9 +53,9 @@ test_reproducibility      5
 | # | Dimension | Score | The artifact that proves it |
 |---|---|---|---|
 | 1 | Derivation correctness | **10** | `tests/test_pricing_derivation.py` — sympy solves dΠ/dP = 0 and checks the single root equals the published P*; a 200,001-point grid search confirms it at 4 elasticities × 4 fee structures; `test_closed_form_rop_matches_formula_and_tracks_mc`; `test_benjamini_hochberg_matches_the_textbook_step_up` worked by hand |
-| 2 | Estimator validity | **10** | `tests/test_elasticity_inference.py` — t(3) = 3.182 not 1.96; HC3 matched against the textbook sandwich computed independently; HC3 vs classical against the empirical sd of 600 fits; shrinkage justified by a 30-seller squared-error race; `tests/test_endogeneity.py` documents the identification limit with a measured bias table |
+| 2 | Estimator validity | **10** | `tests/test_elasticity_inference.py` — t(3) = 3.182 not 1.96; HC3 matched against the textbook sandwich computed independently; HC3 vs classical against the empirical sd of 600 fits; shrinkage justified by a 30-seller squared-error race; `tests/test_endogeneity.py` documents the identification limit with a measured bias table; `tests/test_model_risk.py` removes the bias where the seller's reaction is measurable (iteration 37) |
 | 3 | Uncertainty propagation | **10** | `tests/test_delta_propagation.py` — every uncertain input demonstrably widens the band; `tests/test_mc.py` checks the quantile standard error against 400 independent reruns and against the analytic normal formula; `tests/test_ad_curve_uncertainty.py` closed the last published number that had no interval |
-| 4 | Calibration | **10** | `tests/test_calibration_math.py` — 1,000 synthetic SKUs, the whole pipeline, scored against realized deltas; elasticity interval coverage 94.4–96.6%; profit-delta band 91.6–94.0% at seven periods; an unconditional check that the coverage is not an artifact of selection |
+| 4 | Calibration | **10** | `tests/test_calibration_math.py` — 1,000 synthetic SKUs, the whole pipeline, scored against realized deltas; elasticity interval coverage 94.4–96.6%; profit-delta band 91.6–94.0% at seven periods; an unconditional check that the coverage is not an artifact of selection; `engine/bench/` (iteration 38): the whole engine on six planted-truth catalogues per test, 10/10 on the three pre-registered tests, and on three validation seeds 8, 9 and 10 with every miss explained |
 | 5 | Decision quality under uncertainty | **9** | `tests/test_horse_race.py` — five rules, 40 sellers × 25 SKUs, three regimes. **The robust policy does not beat the plug-in on raw realised profit.** It ties per directive, wins the tail in every regime, and wins on bankable dollars once the true elasticity drifts. Scored 9 because that is a split result and a simulation cannot settle it. Full table below. |
 | 6 | Degeneracy coverage | **10** | `tests/test_degeneracy.py` — 25 tests, one per degenerate path, each with a named status; two NaN/inf sweeps over 144 and 12 parameter combinations |
 | 7 | Multiple-testing discipline | **10** | `tests/test_anomaly_fdr.py` — 500 noise SKUs, 4,000 tests, 548 detector flags, 0 survivors; null p-values uniform for all four statistics; a planted step still clears the control |
@@ -427,6 +450,675 @@ the rail over twelve seeds, not 57%.
 **Score.** Estimator validity and calibration confirmed at 10 with the corrections
 applied; the cadence work is on the list at the end of this file rather than done.
 
+### Iteration 15 — the interactions between levers, part 1: money between campaigns
+
+**Objection.** Each module optimises its own lever. Ad efficiency trims every
+campaign toward its own break-even and never asks whether a dollar in campaign A
+would earn more in campaign B — which it does whenever their marginal ROAS differ,
+and it does so even in an account where no campaign is past break-even.
+
+**Change.** `models/ad_allocation.py`: the same total, reallocated to equalise
+marginal returns. Solved by an exact dynamic program on a spend grid rather than a
+bisection on the multiplier, because the Hill form with h > 1 is S-shaped and a
+Lagrangian bisection can skip the budget (`test_dp_is_exact_on_s_shaped_curves…`
+demonstrates the gap). Solved on each campaign's posterior-mean curve, which is the
+exact risk-neutral Bayes solution for a separable objective, and moved a fraction α
+of the way by the same certainty-equivalent rule the price step uses, inside a risk
+budget of 15% of the campaign set's monthly net. Interval from paired parameter
+draws; per-campaign anchored measurement; one promise per campaign per run (trims
+first, the reallocation over the rest). The covariance of every ad-curve fit now
+rides on the row (`details.curve_cov`) so later modules redraw the same posterior.
+
+**Two defects found on the way, fixed here.** `measurement.measure_spend_step`
+filtered daily spend rows on a `date` key the rows never carry (`report_date`), so
+every spend-step directive had returned "not yet" since the family shipped;
+pinned by `test_spend_step_reads_report_date`. And `issue.issue_drafts` sorted
+by expected dollars alone, so a directive with no dollar promise sorted last
+forever; the drafting score now rides in evidence and breaks ties.
+
+**Measured.** On a two-campaign account with identical true curves at $40 and $160
+a day, the allocation moves toward equal spend inside the 30% move cap with
+P(loss) under 20%; identical campaigns at equal spend refuse (`no_reallocation`);
+a fit so noisy that under 50 of 400 draws land inside the bounds refuses
+(`insufficient_draws`). `tests/test_ad_allocation.py`, 15 tests.
+
+### Iteration 16 — part 2: what the attributed number is worth
+
+**Objection.** Every ad number the engine publishes rests on the platform's own
+attribution. Attribution overstates by the organic sales it claims and understates by
+the halo it never sees, and the break-even inherits both errors with no sign of which
+dominates.
+
+**Change.** `models/incrementality.py`. An observational ratio of the two slopes on
+first-differenced period totals, HC3 and a Student-t delta-method band, refused under
+eight periods or flat spend, published as information. A randomised ON/OFF switchback
+on one campaign, designed as a directive (`ad_switchback`, explicit, no dollars), run
+by `hubricon adtest`, analysed from the daily settlement file with a block bootstrap
+and a permutation test; only its ι moves the break-even, and the attributed break-even
+stays on the row.
+
+**Measured, and one claim withdrawn before it shipped.** The observational estimator
+recovers ι = 0.4 within ±0.15 on fourteen clean periods and its 95% band covers the
+truth on 80% of seeds; the switchback recovers it within ±0.1 over 24 seeds with a
+permutation p under 0.05. The first draft stated that carryover biases ι toward 1. The
+simulation showed the opposite for the real-effect mechanism (ι toward zero) and the
+claimed direction only for attribution carryover; the payload now states both and
+corrects neither. `tests/test_incrementality.py`, 10 tests.
+
+### Iteration 17 — part 3: the instrument
+
+**Objection.** The most dangerous assumption in this engine (the closing section
+below) needed a price change made for a reason unrelated to demand, plus a price
+series fine enough to see it. Iteration 13 measured that the engine's own steps were
+neither. Nothing had been built since.
+
+**Change.** `models/price_experiment.py`: five arms inside the standing cap, six
+seven-day blocks, two anchors so the estimator's price-variation floor is always
+cleared, the rest by Thompson sampling with a 10% floor, the order from a generator
+seeded by identity and calendar only. Analysed from the daily settlement series
+(`models/daily.py`) after a one-day washout, on the assigned price, with HC3 and the
+larger of HC3 and a permutation standard error. The experimental row replaces the
+observational one in `elasticity.run` and is not shrunk toward the (biased) pool.
+Drafted as a standing `price_experiment` directive for SKUs with no price variation
+or a fit the pole guard refuses; `hubricon pricetest … plan --design randomized` and
+`analyze` run it by hand; `hubricon execute` turns the directive into a running
+price test the Buy Box watch can see.
+
+**Measured.** On the reactive generator of iteration 4 (phi = 0.4, rho = 0.6): the
+observational raw fit reads more than +0.3 too flat, the randomised test on the same
+SKUs lands within ±0.1 of the truth; the assignment is uncorrelated with the shock
+over 160 draws; the washout removes the attenuation a one-day posting lag causes;
+a test whose price sat at the assigned arm on under 80% of days returns
+`not_executed`. `tests/test_price_experiment.py`, 11 tests. The closing section's
+"neither is built" is therefore withdrawn for SKUs that have run the test, and only
+for them.
+
+### Iteration 18 — part 4: the family absorbs the move
+
+**Objection.** §10 item 3: a cut that cannibalises a neighbouring SKU is booked as a
+win on one and an unexplained loss on the other. The per-SKU optimum overstates a
+rise (lost units partly land on a sibling) and understates a cut.
+
+**Change.** `models/cross_price.py`: one own and one cross elasticity per variant
+family (parent ASIN, or Shopify handle), within-transformed OLS with HC3 and a
+Student-t interval, families shrunk toward the catalogue once three fit,
+`no_variant_mapping` when nothing links two SKUs. `pricing_engine.delta_draws` takes
+the family and draws its ε last, so a SKU without one is byte-identical to before;
+every candidate is valued on own plus sibling profit and the step is sized on the
+total; a move the SKU alone would make and the family would not is refused with
+status `cannibalisation` and drafted as a finding. Measurement anchors each sibling
+on its own after window and caps at the family's change.
+
+**Measured.** A planted ε_cross of +0.8 (four children, ten periods) is recovered
+within ±0.2 over twenty seeds with ε_own within ±0.2; families planted far apart keep
+their own estimates and families within their own noise pool fully (τ² = 0 is the
+answer, and the weight says so); a cut on a ε = −3 SKU with a large sibling is
+refused as cannibalisation, a rise the family welcomes carries the sibling gain in
+its range. `tests/test_cross_price.py`, 8 tests.
+
+### Iteration 19 — part 5: the third way out of excess stock, and two corrections
+
+**Objection.** Hold-or-liquidate assumed the excess sells at today's price. A markdown
+that clears it before the aged-surcharge dates often beats a liquidation program's
+recovery by a wide margin, and the engine never priced one.
+
+**Two defects found on the way, one of them in numbers already issued.** The hold
+value subtracted landed cost per unit while liquidation was gross recovery — sunk cost
+charged on one side — which biased thin-margin SKUs toward liquidation; the excess was
+sold from month one although it sits behind the cover; and `demand_over_cycle` still
+drew the clipped normal the rest of the engine retired in iteration 6, under a
+docstring that said otherwise. Fixed, dated in §5b, and pinned by
+`test_hold_vs_liquidate_flips_with_carry_and_velocity_on_cash_contribution` and
+`test_demand_over_cycle_matches_rate_times_horizon_and_is_lognormal`.
+
+**Change.** `models/markdown.py`: hold, liquidate and a grid of markdown depths valued
+on the same draws as cash proceeds net of fees and carry, landed cost sunk, chosen by
+the certainty equivalent inside the price step's risk budget; the range flag for a
+markdown below the observed price range; the stretch, a rise inside the cap valued on
+thinned common random numbers and drafted as an ordinary price step; measurement
+before landed cost plus the carry saving. A markdown or a stretch is its SKU's price
+instruction for the cycle: the ordinary step and the aged-surcharge draft stand aside.
+
+**Measured.** A hand-computed two-month NPV matches to 1e-9 with landed cost nowhere
+in it; zero depth equals hold and no excess makes liquidate equal hold on every draw;
+a steep-carry elastic SKU marks down, a dead SKU liquidates, a healthy one holds; the
+band widens with se(ε) and more at 30% than at 10%; the stretch pays on an inelastic
+SKU and refuses on an elastic one. That last result overturned the first draft, which
+targeted the smallest rise bringing P(stockout) under 25% and, on an ε = −8 SKU, chose
+a rise with a median window loss of $128: the stockout target alone recommends losing
+money, so the stretch is now sized by the certainty equivalent like every other step.
+`tests/test_markdown.py`, 13 tests.
+
+### Iteration 20 — part 6: the order the supplier will actually accept
+
+**Objection.** The newsvendor sizes each SKU alone. A real purchase order has a
+minimum, a case pack, a price break, a shared wire and a choice of freight, and none
+of that was priced.
+
+**Change.** `models/replenishment.py` on the newsvendor's own demand ladder: MOQ and
+case-pack rounding costed at the overage it forces, the price break taken only when
+its saving beats the extra overage and capital, a can-order joint wire per supplier,
+and air against sea on the stockout units avoided at margin plus the low-inventory fee.
+Seven optional cost-sheet columns and a migration; blank means not priced. The reorder
+directive carries the terms and the joint wire; `expedite_air` is explicit and
+unbankable.
+
+**Measured.** Rounding to a 150 MOQ and 24-unit cases lands on 168 and costs its
+overage; a $1 break at 200 units pays and a 5¢ break at 600 does not; a supplier's
+siblings due within a review period share a wire; a position that sea exposes and air
+covers recommends air, a covered one does not. `tests/test_replenishment.py`, 6 tests.
+
+### Iteration 21 — part 7: the order set the cash supports
+
+**Objection.** "You may need bridge capital" is a warning, not an action. When the
+cash cannot fund every order the newsvendor wants, which orders?
+
+**Change.** `models/cash_orders.py`: the budget-constrained multi-item newsvendor by
+its Lagrangian — each SKU's fractile with the cash a unit ties up priced at the shadow
+price, bisected to the budget the cone already implies. Capital goes first to
+contribution at risk per inventory dollar. One directive carries the funded set, the
+deferrals and the bridge; the individual reorders for those SKUs stand aside.
+
+**Measured.** λ = 0 reproduces the newsvendor's orders to within the ladder's
+interpolation; at 60% of the wires the high-return SKU keeps more of its service level;
+the total wire is monotone in λ; a cone with a positive trough is `fully_funded` and one
+overdrawn by 40% funds 60% and names the 40% bridge. `tests/test_cash_orders.py`, 4 tests.
+
+### Iteration 22 — part 8: the season
+
+**Objection.** Every demand simulation drew a flat rate. For a catalog with a
+fourth-quarter peak that understates the September reorder, misprices the peak
+storage and makes the cone's November too quiet.
+
+**Change.** `models/seasonality.py`: a multiplicative index per calendar month, pooled
+across the catalog and shrunk toward flat, each SKU shrunk toward the catalog, with a
+standard error on every index; refused under twelve calendar months. Applied to the
+stockout model's and the order sizing's lead-time rate with the index uncertainty
+widening the sd, to the cone per calendar day, to the peak-storage sell-down, and to
+the forecast ladder as a candidate scored by the same backtest as the rest.
+
+**Measured.** A planted 1.8× fourth-quarter peak is recovered within ±0.15 from
+twelve months × thirty SKUs and ±0.08 from twenty-four, with the second season
+tightening the interval; a flat catalog comes back within ±0.08 of 1; a SKU peaking
+against the catalog is pulled toward its own summer but not all the way on one season;
+September's reorder exceeds March's for the peaked SKU; the cone's fourth quarter is
+richer than its first. `tests/test_seasonality.py`, 6 tests.
+
+### Iteration 23 — part 9: what a customer is worth
+
+**Objection.** The ad break-even values a customer at one order. A store selling
+consumables under-spends against every competitor who knows better.
+
+**Change.** `models/clv.py`: BG/NBD and Gamma–Gamma by maximum likelihood on a hashed
+customer key the Shopify orders parser now writes (the email is never stored), a
+52-week repeat expectation and value with a parametric-bootstrap band, a holdout
+calibration that refuses the multiplier outside [0.7, 1.3], and the multiplier dividing
+the ad break-even threshold when calibrated. Amazon is `not_applicable`.
+
+**Measured.** On two thousand customers simulated from the model's own story the
+fitted repeat expectation matches the truth within 25%, the Gamma–Gamma population
+mean within 15%, the holdout ratio sits inside the band, and the multiplier carries a
+band; 80 customers refuse, 20 weeks refuse; the parser splits nothing on email case or
+whitespace and salts keys per client; a calibrated 2× multiplier raises the break-even
+spend and an uncalibrated one moves nothing. `tests/test_clv.py`, 6 tests.
+
+### Iteration 24 — part 10: which SKUs to cut
+
+**Objection.** The negative-margin directive names a SKU on one period of net margin.
+A SKU costs more than that to carry and is worth less than its last month if it is
+dying, and the engine's own credibility and survival estimators sat unused for it.
+
+**Change.** `models/assortment.py`: a fully loaded contribution per period, blended with
+the catalogue by Bühlmann–Straub credibility, valued over twelve months through the
+catalogue's Kaplan–Meier survival conditioned on the SKU's age; four gates before a cut;
+merge candidates inside variant families; an explicit `sku_exit` directive that
+supersedes the negative-margin draft and is banked one absent period at a time.
+
+**Measured.** A SKU losing every month for eight periods is cut with Z ≥ 0.5 and
+P(< 0) ≥ 0.75; one bad month in eight is kept; a two-period-old SKU on a catalogue that
+dies at two or three is discounted and an eight-period-old one is not; carry, returns
+and a stated operational cost subtract as computed by hand; the exit banks the loaded
+loss for the periods the SKU sold nothing and stalls while it still sells.
+`tests/test_assortment.py`, 5 tests.
+
+### Iteration 25 — the risk tolerance is the client's, not ours
+
+**Objection.** `RISK_BUDGET_SHARE = 0.15` sized every move and gated every mandate for
+every client, and the cone counted ruin at zero for a seller who keeps a buffer.
+
+**Change.** Two client columns, `risk_budget_share` (0.05–0.30) and
+`min_cash_buffer_usd`, set by `hubricon cash`; the price step, the reallocation, the
+markdown and the downside guard read the share, the cone and the cash budget read the
+buffer, and every payload names the basis. Defaults reproduce the previous numbers
+exactly.
+
+**Measured.** A stated buffer raises p(ruin) monotonically and shrinks the order budget
+by the same dollars; a 5% share walks a shorter step than 15% than 30%; a lower share
+routes more drafts to an explicit yes; `risk_share=None` is byte-identical to before.
+`tests/test_client_risk.py`, 3 tests.
+
+### Iteration 26 — the ruin cost of a decision
+
+**Objection.** The cone said "you may need bridge capital" about the whole plan and
+nothing about any one wire. Sequence risk is per decision.
+
+**Change.** `cashflow.ruin_ladder` and `ruin_delta`: the stored path minima price any
+wire on any day without re-running the cone; `directives.ruin_guard` attaches the
+before-and-after ruin probability to every cash-moving directive and routes one that
+crosses the 5% line to an explicit yes.
+
+**Measured.** The ladder agrees with a second simulation of the added wire within its
+Monte Carlo error; a hand-built matrix reproduces its ruin shares to within the
+quantile grid; a reorder priced at ten times the landed cost is demoted with both
+probabilities in the reason. `tests/test_ruin_cost.py`, 3 tests.
+
+### Iteration 27 — non-stationarity in the ad account
+
+**Objection.** Ad costs drift. The anomaly scan watched a campaign's spend and nothing
+else, and the response curve averaged across whatever regime change the auction
+brought.
+
+**Change.** Two daily series per campaign — cost per click and sales per click — through
+the existing detectors and false-discovery control, valued at the campaign's clicks;
+two unbankable drift directives; a regime break that makes the ad fit drop the points
+before it and refit, or hold the campaign with a status when too few days have run. The
+anomaly scan now runs before the ad fit.
+
+**Measured.** A planted 50% cost-per-click step is detected and dated; a quiet campaign
+flags nothing; the refit drops the pre-break points; a break with under five points
+after it is held, and the reallocation holds it too. `tests/test_ad_drift.py`, 3 tests.
+
+### Iteration 28 — the form of the ad curve, chosen out of sample
+
+**Objection.** Hill was assumed whenever it converged. Every ad interval was conditional
+on that form, and nothing tested it.
+
+**Change.** A ladder of three forms — a straight line, log, Hill — scored by a
+rolling-origin backtest in date order with the constant-ROAS error as the scale; a curve
+wins only by more than one standard error of its improvement over the line, because the
+curves nest the line. A campaign the line wins is `no_diminishing_returns` and is
+reallocated as linear at its ROAS. Two defects found on the way: the log fit carried
+Hill's parameter names, and the line was being estimated as a mean of noisy ratios
+rather than by least squares.
+
+**Measured.** A saturating campaign picks a curve that beats the line by several
+standard errors; a proportional one picks the line and gets no break-even; six points
+default to Hill and say so; a linear campaign still gives or takes budget in the
+reallocation with a constant marginal return. `tests/test_ad_form_selection.py`, 4 tests.
+
+### Iteration 29 — obsolescence from the survival curve
+
+**Objection.** The order decision charged a flat 2% of landed cost for obsolescence on
+every SKU, while the risk pass already estimated how long SKUs like it live.
+
+**Change.** `inventory_econ.obsolescence_charge`: the expected write-off on a unit
+ordered now, from the catalogue's Kaplan–Meier curve conditioned on the SKU's age, with
+a band on q*; the flat rate stands, labelled, when no curve exists. The risk pass runs
+before the order sizing.
+
+**Measured.** A two-period-old SKU on a catalogue where eight SKUs died at two or
+three periods earns a lower fractile than the flat rate gives, with the band around it;
+a SKU as old as the catalogue carries no charge; no curve falls back flat and says so.
+`tests/test_obsolescence.py`, 2 tests.
+
+### Iteration 30 — model decay
+
+**Objection.** Non-stationarity of the promises themselves: a pooled realisation ratio
+hides a quarter that stopped coming true, and nothing compared a fit with the fit
+before it.
+
+**Change.** Cohort scoring in `replay.score` with bootstrap bands, a Mann–Kendall trend
+and a `decaying` flag; `models/drift.py` comparing every elasticity and ad curve with
+the previous run's under Benjamini–Hochberg, halving the price step's tolerance on a
+drifted fit; both on every run.
+
+**Measured.** Three cohorts realising 0.7 followed by one realising 0.15 read as
+calibrated on the pooled figure and DECAYING by cohort with a falling trend; a planted
+shift of more than an elasticity on two SKUs is flagged with at most two false alarms
+among sixty; a drifted fit's risk budget is exactly halved and its step no longer.
+`tests/test_drift.py`, 3 tests.
+
+### Iteration 31 — what would break you
+
+**Objection.** The cone priced the plan as it stood and said nothing about a fee rise,
+a suppressed listing, dearer clicks, a late supplier or a held payout — the platform
+and concentration risks a seller actually worries about.
+
+**Change.** `cashflow.simulate(keep_paths=True)` keeps its components; `models/stress.py`
+recomputes the cone under five named shocks with no new draws, ranks them by the change
+in p(ruin), and checks that its base reproduces the cone; `hubricon stress` prints the
+table.
+
+**Measured.** The base equals the cone; a 3-point fee rise costs that share of the
+revenue paid through the last payout day; dearer clicks cost the shock times the ad
+spend; silencing the largest SKU raises ruin and deepens the trough; the late supplier
+hits the SKU whose cover runs out inside the horizon; a held payout deepens the trough;
+the table is ranked. `tests/test_stress.py`, 2 tests.
+
+### Iteration 32 — garbage in
+
+**Objection.** Every model read the exports as truth. Two exports that disagree, a month
+nobody uploaded, a report nobody refreshed — none is a modelling error, and every one
+lands in a directive if nothing catches it.
+
+**Change.** `models/data_quality.py`, first in every run: four reconciliation pairs at a
+5% tolerance, coverage and staleness per report; flags on the payloads that read a
+flagged source; a penalty in the health score's signal sub-score; the largest gap in
+the memo. Nothing is corrected.
+
+**Measured.** A 20% July disagreement between SKU Economics and the settlement file is
+flagged and named while June passes; a missing May is listed as missing; a stale ad
+file is flagged; a Shopify run compares nothing it cannot; two failed pairs and one
+missing month cost the signal sub-score twenty-five points. `tests/test_data_quality.py`,
+4 tests.
+
+### Iteration 33 — payback and the cost of a customer
+
+**Objection.** A break-even on ad spend is a rate; what a founder asks is how many weeks
+until a customer has paid for their own acquisition, and whether a customer is worth
+what they cost.
+
+**Change.** `clv.cac_by_month` (blended, stated as such) and `clv.payback`: the week a
+new customer's cumulative expected margin covers the acquisition cost, and the
+52-week LTV over it, each with a bootstrap band; on the trim directive for Shopify.
+
+**Measured.** A $30 blended acquisition against an $80 first order at a 50% margin pays
+back in week one with a ratio above one and bands that contain both; a dear
+acquisition takes longer or reports None; the fitted payback agrees with the
+generator's own within four weeks. `tests/test_clv.py`, 7 tests.
+
+### Iterations 34–36 — win, remind, embed
+
+**Objection.** The first issue ranked by dollars, so a price step a monthly export away
+could outrank a bleed cut provable in a fortnight; the headline the retainer rests on
+was a point with no band; and nothing placed a client against the book.
+
+**Change.** A first-sweep ranking by expected dollars times time-to-bank
+(`issue.FIRST_WIN_WEIGHT`, every kind weighted, a missing weight fails a test) and the
+first-issue-to-first-dollar median in `speed.summary`; a 5th–95th band on the proven
+figure from the measured moves' own distributions, printed when at least half the
+dollars carry one; `models/benchmark.py` placing a client among the consenting book with
+resampled bands and a refusal under ten clients.
+
+**Measured.** A $900 bleed cut outranks a $1,200 price step on a first sweep and not
+after; two banded steps and a recovery give $350–$1,800 around $900 and a ledger of
+recoveries alone gives a point; a client's ratios come from its own results, a book of
+twelve places it with a band, a book of nine refuses. `tests/test_issue.py`,
+`tests/test_headline_and_benchmark.py`, 4 tests.
+
+### Iteration 37 — model risk, measured on three worlds
+
+**Objection.** Every calibration number above was measured one model at a time on
+the generator that model was built against. Nothing had run the whole engine on a
+catalogue with a planted truth, drafted its directives, simulated the month after,
+and scored every promise against what that month actually held. The founder asked
+for three such runs and for whatever they exposed to be fixed.
+
+**The harness.** A synthetic catalogue of 160 SKUs in 40 variant families with a
+1.6× fourth quarter, twelve monthly periods ending August 2026, eight campaigns,
+supplier terms and settlement rows; three worlds — *clean* (prices exogenous),
+*reactive* (the seller reprices at φ = 0.4 off last month's demand, ρ = 0.6) and
+*drifting* (φ = 0.2, the true elasticity drifts by sd 0.6 before the after period,
+a CPC break on one campaign, a 3-point fee rise). Every model runs as the CLI runs
+it, `draft_directives` drafts, the after period is simulated from the truth at the
+prices and spends the directives set, `measurement.measure` and `replay.score` run
+over it, and each promise is scored against its own truth. Plus: the same seed twice
+(byte-identical), another seed for the engine's own draws (same promises), one more
+period (drift false alarms) and one period dropped (direction flips). The script is
+the session's scratchpad `model_risk.py`; the findings are pinned in
+`tests/test_model_risk.py`. What the first run showed, in the order it was
+understood:
+
+| finding on the first run | cause | what changed |
+|---|---|---|
+| promises 15–40× the truth; the Record read every step as a four-figure loss | the harness's history ended in December (peak) and its after-rows carried a fee split without dollar totals, read as fee-free | harness calendar fixed; `measurement._split_fees` rebuilds missing totals from the rate and the per-unit fee (an engine fragility, not only a harness one) |
+| reactive world: fits +0.47 too flat, promises ~15× truth | the §2 bias, disclosed and uncorrected | the controlled fit and the catalogue correction (§2, corrected 2026-09-24) |
+| family cross-elasticities of ±2 against truths under 1; the "identified" families were the noisiest (median error +1.0) | a common season in every residual; no identification gate | catalogue seasonal index divided out before both fits; a family's cross term used only at t ≥ 2 (§3b) |
+| 30% of step directions flipped when one period was dropped | the same season noise on twelve points | fell to 8% (2% of the dollars) once the index was divided out |
+| Record realisation −0.4 to −1.1 on worlds whose true realisation was 0.4 to 0.7 | the observed-change ceiling booked a bad month as the step's loss | the ceiling allows the SKU its own month-to-month noise and never manufactures a loss; the no-response case is caught by the batch's pooled volume response κ (§9, corrected 2026-09-24) |
+| a joint-draw shape mismatch crashed the reallocation measurement | campaigns rejecting different numbers of out-of-bounds draws | draws paired on the common count (`tests/test_ad_allocation.py`) |
+
+**Measured, after the changes** (world: clean / reactive / drifting):
+
+```
+elasticity, median error, raw static fit          −0.01 / +0.47 / +0.49
+  after the season is divided out and the
+  reaction corrected (published value)             +0.04 / +0.04 / +0.22
+  raw 95% interval coverage                         0.96 /  0.87 /  0.88
+  published interval coverage                       0.99 /  0.93 /  0.94
+  median standard error, clean world                0.74 → 0.51
+reaction diagnostic φ̂ (truth 0 / 0.4 / 0.2)         −0.00 / 0.38 / 0.19
+family cross term, identified families,
+  median error                                     +1.02 → −0.09 (clean)
+  standard error                                    0.89 → 0.34
+seasonal index, December, error                    −0.03 / −0.02 / −0.04
+budget reallocation, 30-day promise vs truth       1,886 vs 1,683 (outside band) / 845 vs 813 / 1,842 vs 1,761
+ordinary price steps, true dollars ÷ promised      1.10 / 0.93 / 0.52   (53 / 90 / 33 steps)
+  truth inside the promised 5–95 band             0.57 / 0.47 / 0.52   (nominal 0.90)
+  steps that lost money in truth                   0.26 / 0.32 / 0.36
+  promised P(loss), median                         0.19 / 0.14 / 0.14
+Profit Record realisation ratio (banked ÷ promised) 0.60 / 0.70 / 0.62 on the price steps, 0.64 / 0.64 / 0.53 on the reallocation
+  band coverage                                    0.98 / 0.98 / 0.98
+  pooled volume response κ                         0.90 ± 0.18 / 1.16 ± 0.16 / 0.79 ± 0.20
+same seed twice                                    byte-identical
+another seed for the engine's own draws            the same promises, to the dollar
+drift false alarms on one more period              0 of 326 pairs
+direction flips, one period dropped                19 of 236 steps (2.1% of the promised dollars); was 30%
+```
+
+Read plainly. The corrections are real on the reactive world — the published
+elasticity error fell from +0.47 to +0.04 with interval coverage back at 0.93,
+and the ordinary price steps' true dollars went from a fifteenth of the promise
+on the first run to 0.93 of it — and partial on the drifting one, where the fit
+is honest about a truth that has already moved and the steps realise half.
+On the clean world the promises are unbiased (1.10): decomposed on one
+after-period draw, the model's own delta at the point estimate is 0.86 of the
+published median (the delta is convex in ε), the true elasticity gives 1.07 of
+that, mean reversion of the baseline month takes 5%, and the after-period's
+own shock is the rest. The Record's own ratio lands where §9 says a correct
+engine's must — about 0.6 of the promise, the 25th percentile banked under a
+ceiling that now allows the month its noise, with the small steps closed under
+the $25 materiality floor — on the two worlds whose truth is near 1, and on the
+drifting world it reads 0.62 against a true 0.52: an anchored counterfactual on
+last quarter's fit cannot see this month's drift, which is what the cohort trend
+of §9b is for. The harness's after-simulation sets prices and campaign spends
+and nothing else, so the fee-bleed and ad-bleed kinds bank zero there (their
+promises are reported as unsimulated) and the campaign trims bank one thirtieth
+(one day of after-spend); the Record's ratio above is over the kinds the
+harness can actually move. What remains open is listed below.
+
+**The loss gate, priced and left off.** A gate on the step's own 25th percentile
+(`pricing_engine.MAX_P_LOSS`) was built so the harness could price it. On the
+three worlds at 0.25 it removed a quarter of the steps, cut the share that lose
+money in truth from 0.26/0.29/0.29 to 0.18/0.28/0.22, took the direction-flip
+rate to under 1%, and moved the true dollars by −7% / +3% / +14%. In the horse
+race of iteration 6, whose sellers sit far from their optimum, the same gate keeps
+635 of 987 moves and 82% of the total. The two testbeds disagree because their
+worlds do, and the doctrine of iteration 6 — money landed first, the tail second —
+stands until a real client history says otherwise. The gate is off, and one
+constant away.
+
+**What was tried and dropped.** A simulation-based bias correction that estimated
+the seller's habit (φ̂, ρ̂) and simulated what that habit does to the estimator:
+ρ̂ read off the residuals of the very regression the reaction biases came out at
+0.19 against a true 0.6, and the correction it produced was a fifth of the bias.
+It cost a day and is recorded so it is not tried again.
+
+**Still open from this run.** The reallocation's promise ran 12% above the truth
+on one world with the truth outside its band — the optimizer's curse on a promise
+made on the same fits the allocation was chosen on; cross-fitting is on the list.
+The truth sits inside an ordinary step's promised 5–95 band about six times in
+ten against a nominal nine: the bands are honest about ε and the demand noise
+they carry, and the shortfall is the after-period's own shock at a 20% sd,
+which the promise's horizon term under-reads. The stretch step cannot be scored
+in a harness with no stock constraint; the harness scores it apart and says so.
+`data_quality` flags the harness's own August ad-spend reconciliation, which is
+the harness's search-term rows, not the model. `tests/test_model_risk.py`,
+9 tests, plus one in `tests/test_ad_allocation.py`.
+
+### Iteration 38 — the Simons–Thorp–Griffin test
+
+**Objection.** The founder asked for the model to be run on variations of the
+data it will meet, its weaknesses found and removed and its mathematics
+iterated, until a test scores ten out of ten through the eyes of Jim Simons,
+Edward Thorp and Ken Griffin applied to the clients' problems, three times.
+
+**The test** (`engine/bench/`). Ten pass/fail criteria under three lenses,
+stated as principles in our own words — none is a quotation:
+
+| lens | principle | criteria (client problem each answers) |
+|---|---|---|
+| Simons | is the signal real, and is the stated uncertainty honest? | S1 estimator honesty (does the elasticity say what the data supports?) · S2 promise calibration (does a 90% band hold nine times in ten?) · S3 no edge where there is none (do confident promises come true; is a catalogue at its optimum left alone?) · S4 stability (same data, same advice; one month more or less does not reverse it) |
+| Thorp | know the edge, size the bet to it, never risk ruin | T1 the edge is real (steps, budget moves, trims, negations deliver in truth) · T2 never over-bet (steps and purchase orders no bigger than the evidence pays for) · T3 survive (the whole sweep at once cannot run the business out of cash or lose more than it said) |
+| Griffin | manage the book; bad data is a risk; the accounting must be as rigorous as the model | G1 the book (the sweep's total promise is honest as a portfolio) · G2 garbage in (stockouts, deals, duplicates and missing costs caught before they become advice) · G3 the Profit Record (banks what was delivered — never more, not so little it is useless) |
+
+A test is one seed: six synthetic 160-SKU catalogues with planted truths —
+*clean*, *reactive* (the seller reprices off last month's demand), *drifting*
+(the elasticity moves before the month after; a CPC break; a fee rise),
+*thin* (seven noisy months), *dirty* (stockout and deal months, missing costs,
+duplicate rows, a month split in two) and *already optimal* (prices at the true
+optimum) — the whole engine run as the CLI runs it, the month after simulated
+from the truth with every directive executed, every promise scored against
+it. Three tests: seeds 101, 202, 303. The thresholds were committed before any
+engine change made to meet them (`db24a4c`, which also records the four
+corrected before the baseline was scored); one was amended after the baseline
+and says so in `bench/rubric.py` (S1's bias limit, three of the engine's own
+stated common error, floored at 0.15, because every SKU's error leans on the
+same pool and a fixed 0.15 was under two of that error). The harness was
+corrected where it scored the wrong thing — seed invariance compared as a
+set, engine-deferred cash moves excluded and counted, the inventory oracle
+deciding with decision-time information rather than knowing September's
+shock, T2 charging over-ordering as its question asks — and no threshold
+moved for any of them. Run it with
+
+```
+cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run python -m bench.run --tests 3 --jobs 12
+```
+
+(about two minutes on twelve workers; `--seed N` for any other seed;
+unthreaded BLAS, or twelve workers oversubscribe the cores and it takes twelve).
+
+**Scores.**
+
+```
+                           seed 101   seed 202   seed 303
+baseline (da98479)            0/10       0/10       0/10     bench/results/2026-09-24-baseline.txt
+round one (102aced)           5/10
+round two (2bfde19)           9/10
+round three, first run       10/10       9/10       5/10
+round three (this commit)    10/10      10/10      10/10     bench/results/2026-09-24-round-three.txt
+
+validation seeds, never tuned on:  404  8/10   505  9/10   606  10/10
+```
+
+**What round three changed**, each in `MATH_METHODS.md` under a dated note:
+
+| failure the bench measured | cause | change |
+|---|---|---|
+| a reorder drafted under one simulation seed and not another (S4) | a stockout probability of 0.2510 against the 25% alert, carrying half a point of Monte Carlo error | lead-time demand computed exactly (lognormal–Poisson, trapezoid in z); order sizing on per-SKU streams (§5) |
+| purchase orders 14–19.5% costlier than the true optimum's from over-ordering (T2) | orders sized on demand at the old prices while the same sweep raised them; a cheap month read as level; a deal month read as a seasonal peak; one noisy September setting a SKU's own index | the sweep's price plan sizes its orders; history restated at today's price; flagged months out of the index; one season pools to the catalogue (§5, §5a) → 2–10% |
+| cuts delivering 15–22% of their promise; the Record banking 0.23 of the price-step promise (T1, G3) | the pool read the reaction correction's SKU-by-SKU bias as signal (τ² 0.52–0.96 against 0.29–0.33) and under-shrank the extremes, where cuts are chosen | each error placed by kind: a SKU's own before the pool, the shared one after; corrected rows moderated on their noise (§2) |
+| reactive intervals holding the truth for 86% of SKUs (S1) | the heterogeneity term had its sign backwards | each SKU corrected on the catalogue's own line in price variance, gated at twenty SKUs a half (§2) |
+| family cross effect 0.12–0.23 low on six of twenty-four catalogues | a coin-flip choice between two sibling indices | equal weights unless revenue weights win Vuong's test (§3b) |
+| trims at 0.66 of promise; reallocations 7–9% optimistic, 10 of 16 bands holding | a log curve chosen by a hair; constant-ROAS extrapolation for straight-line campaigns | trims at the cautious end across tied forms and never below the spend on file; allocation on form-averaged curves with a resampled optimism (§4, §4b) → trims 0.92–0.95, bands 13 of 16 |
+| the Record banking $721 of $3,472 of true step gains on one world (G3) | κ read without the family term, and trusted at two standard errors on a statistic whose error is 0.2 | κ reads the family's prediction; it overrides the fits at three standard errors (§9) |
+
+**Measured, the three tests** (seed 101 / 202 / 303):
+
+```
+S1  95% interval coverage, six worlds          0.94–1.00 / 0.95–1.00 / 0.98–1.00
+    median elasticity error, five worlds        −0.16…+0.08 / −0.06…+0.08 / −0.07…+0.10
+    median elasticity error, thin world          +0.30 / +0.14 / −0.44   (limits ±0.87–0.94: its fits are uninformative)
+S2  price-step bands holding the truth, pooled  0.91 / 0.92 / 0.88   (target 0.82–0.98)
+S3  losses in truth vs quoted, all steps        26 vs 23.4 / 18 vs 17.3 / 12 vs 12.6
+    steps on the already-optimal catalogue       0 / 0 / 0
+S4  same seed twice / another simulation seed   byte-identical / the same promises, all three
+    directions flipped by one month dropped      1.0% / 0.4% / 2.2%
+T1  price steps, true ÷ promised                 0.89 / 0.85 / 0.90
+    reallocation bands holding the truth         4 of 5 / 4 of 6 / 4 of 5
+    trims, true ÷ promised                       0.95 / 0.92 / 0.94
+T2  over-ordering cost, worst world              6.1% / 10.3% / 8.8%   (limit 15%)
+T3  P(ruin), whole sweep at once                 0 → 0 in every world
+G1  book bands holding the truth                 7 of 8 / 7 of 8 / 7 of 8   (the minimum; the misses: dirty price steps
+                                                 $71 under the band, dirty advertising $59 and $45 under)
+G2  every planted pathology flagged              yes, and no step on a SKU without landed cost
+G3  Record banked ÷ promised, price steps        0.72 / 0.74 / 0.70   (never above the truth)
+```
+
+**The validation seeds, stated as found.** 606 scores 10/10. 505 scores 9/10:
+its reactive world's price-step bands hold the truth for 78% of steps against
+a floor the binomial test puts near 83%, because two shared errors landed
+together — the reaction correction's remainder (+0.17, about 2.4 of its
+stated error) and the family cross pool's (−0.16, about 1.9) — and every step
+there carries both. 404 scores 8/10: its steps realise 1.36 of their promise
+(the ceiling is 1.25) and its pooled bands hold 0.815 (the floor is 0.82),
+from the same kind of coincidence on three catalogues at once — the
+elasticity pool 0.16 too elastic in one, the cross pool 0.17 too low in
+another, the month's volume 3–8% above August's in all three — and four of
+its five reallocations miss because the ad backtest rejected, at 2.5 standard
+errors, the curve shape that was true. Each is a stated uncertainty being
+too small in a given month rather than a bias on average: across the
+eighteen catalogues of the six seeds, 12% of step truths fall outside their
+90% bands and 48% below their medians.
+
+**What remains, and is on the list below.** The reaction correction's own
+error is about half what its bootstrap states. A form the ad backtest
+rejects is in no band. The book (§6) carries only the elasticity's shared
+error on its common factor. The engine's per-world calibration is honest on
+average and not in every month. Tests: `tests/test_bench_corrections.py`
+(12) pins each change without the bench; `tests/test_model_risk.py`,
+`test_horse_race.py` and `test_ad_curve_uncertainty.py` were re-pinned where
+they recorded the old engine, each with a dated note.
+
+### Iteration 39 — the network: a change on the platform's side
+
+**Objection.** Every model reads one account. An Amazon fee change reaches every
+account at once, and each account's own sweep — rightly strict over a hundred to
+thousands of tests — reports a 5% step in fees that wander by 3% in about three
+accounts in ten, three exports after it; a thin catalogue may never report it. The
+one thing the book knows that no account does went unused, because terms §10
+forbids using one client's data to advise another and nothing asked for the consent
+that would allow it.
+
+**Change.** `fleet.py`: the same count against coincidence, twice. Within an
+account, a series is a hit when its changepoint p ≤ 0.05 and it steps the same way
+by at least 1% inside the lookback; the account flags a fee type at h*(m), the fewest
+hits in one 45-day window that m series of noise reach at most 5% of the time, and
+π_a = P(Bin(m, 0.05) ≥ h*) is its own false-alarm rate (0.0025 for two SKUs, 0.048
+for forty). Across the book, P(X ≥ x) for X Poisson-binomial over each account's
+π_a, Benjamini–Hochberg at 0.01 across the (fee type, direction) cells, three
+agreeing accounts at least; the size from every series at the account's onset
+(not the hits: the winner's curse read an 8% step as 9%), pooled by median with an
+account-resampled band. Two fee types, the FBA fee per unit and the referral rate:
+the all-fees series carries storage, and storage carries the fourth quarter's stock
+build, a common cause the null would read as the platform (a review caught it
+before commit). Named refusals below the floors. A separate `network` consent is the
+only door in, through the calibration consent's own gate; an alert to every client
+who pays the fee, once each (a unique index), saying what, when, how big on the
+typical SKU, how many accounts, and whether their own exports show it, in a letter
+of its own; `hubricon fleet`, to run last in the Monday sweep, guarded (that step
+waits on the branch `workflow-fleet`; by hand until then). `book.py`: replay's
+realisation ratio by move kind across the same accounts, with an account-resampled
+band, refusing under five accounts; report only.
+
+**Measured.** Forty books of eight noise-only accounts through `anomaly.run`: no
+change declared and none of 1,280 (fee type, direction) account questions flagged,
+while 11 of the 320 accounts' own sweeps reported a finding on one of the two fee
+types. The worst case the arithmetic allows (every account at exactly π_a, one day,
+one direction): 9 declarations in 4,000 books against a design level of 40;
+P(p ≤ 0.01) = 0.0008.
+Power, forty books a cell: a 5% step in 3% noise, three exports after it, is
+declared in 0.80–1.00 of books while one account's own sweep reports it in 0.31;
+an 8% step in 1.00 against 0.84; with two exports, 0.03–0.33, the changepoint's own
+floor. No other cell declared in 1,440 books. The planted book of the test: one
+change, six of ten accounts, median ratio 1.077 (1.074–1.080). Sources that did not
+consent, withdrew, are internal or have left are never read; a second and third
+weekly pass announce nothing new; `hubricon book` refuses at four accounts, equals
+`replay.score` on the pooled moves at six, and writes nothing.
+`tests/test_fleet.py` (23), `tests/test_book.py` (5). What it cannot tell you is in
+`MATH_METHODS.md` §8c, the size's lean on a small change among it (5.8% read for 5%:
+the accounts that show a change are the ones noise pushed the same way).
+
 ---
 
 ## Outcome Alignment
@@ -738,7 +1430,10 @@ What would retire the assumption is still a price change made for a reason
 unrelated to demand, plus a price series fine enough to see it — a deliberately
 randomised component of the step, and either a fortnightly export or the daily
 realised price that already sits unread in `settlement_transactions`. Both are
-cheap. Neither is built.
+cheap. ~~Neither is built.~~ **Both are built as of 2026-09-23** (iteration 17): the
+randomised six-block test and the daily settlement series. The assumption is
+retired one SKU at a time, only after its test has run, and the report names which
+SKUs carry an experimental estimate.
 
 The table below still stands, because it is about price VARIATION and says nothing
 about where the variation comes from. It is the measured fraction of SKUs for
@@ -769,39 +1464,94 @@ of a real table, and the flattering reading was false.
 
 ### What it costs to run
 
-A 400-SKU catalog with nine periods of history and eight campaigns, measured
-end to end:
+A 400-SKU catalog with nine periods of history and eight campaigns, measured end to
+end on 2026-09-23 with every model of this iteration in the run (the synthetic
+catalogue and the script are the end-to-end check in the plan; the measurement pass
+ran over the 495 directives it drafted against a simulated later export):
 
 ```
-margin            0.2s     inventory panel   1.5s
-elasticity        0.4s     anomaly           2.4s   (3,216 tests)
-ad efficiency     1.0s     cash cone        37.2s   (10,000 paths x 90 days)
-inventory sim     2.3s     monthly VaR       0.5s
-                           directives        2.5s   (793 drafted)
-TOTAL            48s       peak memory      85 MB
+data quality      0.0s     ad efficiency      8.7s   (form ladder: 12 backtest origins × 3 forms × 8 campaigns)
+margin            0.1s     drift              0.1s
+seasonality       0.0s     ad allocation      0.0s   (no_reallocation on this catalogue)
+forecast         19.2s     recovery           0.0s
+inventory sim     1.6s     risk               0.3s
+inventory panel   1.3s     inventory econ     2.4s
+elasticity        0.3s     markdown           3.2s   (153 SKUs valued three ways, 4,000 draws each)
+price experiments 0.0s     replenishment      0.5s
+cross-price       0.1s     assortment         0.2s
+anomaly           1.8s     cash cone         33.0s   (10,000 paths × 90 days, components kept)
+incrementality    0.0s     stress             0.1s   (five scenarios on the kept components)
+clv               0.0s     cash orders        0.0s
+                           directives         2.3s   (495 drafted)
+                           measurement        0.9s   (495 directives)
+TOTAL            75.5s
 ```
 
-The cash cone is three quarters of it and always was: 400 SKUs × 10,000 paths × 90
-days is 360 million Poisson draws, and that cost is the model, not the dependence
-work. Measured directly, the common-factor generator is 15% slower than the
-independent one it replaced. The per-SKU loop keeps peak memory at the shape of one
-SKU's draw (see iteration 11).
+Re-measured on 2026-09-24 (iteration 38) on the bench's 160-SKU catalogue, eight
+campaigns, twelve months, 8,000 inventory draws and 4,000 cone paths: the whole engine
+runs in about 29 seconds, of which the ad curves take 4.2 (the form ladder's refits,
+plus one fit and a break-even interval per tied form, the interval vectorised over
+draws and grid), the reallocation's resampled optimism 3.1 (80 resamples × the
+campaigns it moves), the elasticity fit 0.3 on a reacting catalogue (its bootstrap is
+one weighted matrix product over the SKUs' stored moments), and the exact lead-time
+demand 1.3 seconds for 160 SKUs — about what 8,000 draws each had cost, for figures
+with no simulation error.
+
+The cash cone is still the largest single cost and unchanged in kind. The two
+additions that cost anything are the forecast (already the second-largest before this
+iteration; unchanged) and the ad curve's out-of-sample form ladder, which is
+thirty-six refits per campaign and capped there. Every other model of the iteration
+runs in under four seconds on this catalogue because each reuses draws the engine
+already made: the markdown on the elasticity posterior, the stress table on the cone's
+own paths, the cash budget on the newsvendor's ladder, the ruin ladder on the cone's
+minima.
 
 ### What is still worth doing, in order
 
-1. **Ingest the advertised-product report (SP-API).** Revenue-share ad allocation
-   is the largest remaining approximation in the margin model, and it feeds the
-   negative-margin directive.
-2. **Fit elasticity on the Ledger's own step history** once a client has enough of
-   it, and report the instrumented estimate beside the observational one. The
-   harness to compare them exists; the data does not yet.
-3. **A second demand factor**, which needs a category taxonomy no export carries.
-   One factor currently overstates dependence inside an evergreen line and
-   understates it inside a seasonal one.
-4. **Cost dispersion.** `cost_cv` is plumbed through the bootstrap and defaults to
-   0; a client whose COGS sheet moves between cycles has an observable dispersion
-   that nothing currently reads.
-5. **Run the replay harness on the first real client history** and put its
-   realisation ratio in this file. Every calibration number above is a simulation
-   until then, and that is the one thing on this list that cannot be engineered —
-   only waited for.
+1. **Ingest the advertised-product report (SP-API).** Revenue-share ad allocation is
+   still the largest remaining approximation in the margin model; it feeds the
+   negative-margin directive, the loaded contribution of §1b, and the blended
+   acquisition cost of §4d, and no export links a campaign to a SKU or a customer.
+2. **Run the replay harness on the first real client history** and put its
+   realisation ratio — pooled and by cohort — in this file. Every calibration number
+   above is a simulation until then, and that is the one thing on this list that
+   cannot be engineered, only waited for.
+3. **The randomised price test on a real SKU.** The instrument exists (iteration 17)
+   and has been shown unbiased on the generator that produces the bias; the first
+   real six blocks will say what the generator could not — how often the Buy Box
+   holds at the high arm.
+4. **Container capacity and supplier lead-time variance** on the cost sheet, so the
+   joint order (§5c) can fill a container and the expedite rule can price a late
+   supplier from history rather than an assumed 20%.
+5. **A second demand factor**, which needs a category taxonomy no export carries. One
+   factor currently overstates dependence inside an evergreen line and understates it
+   inside a seasonal one; the seasonal index of §5a is a start, not a factor.
+6. **Cost dispersion.** `cost_cv` is plumbed through the bootstrap and defaults to 0;
+   a client whose cost sheet moves between cycles has an observable dispersion that
+   nothing reads.
+7. **The operational cost per SKU** as a client-stated input (§1b carries it at zero
+   and says so), and the client's own category for the benchmark book (§9c).
+8. ~~**Cross-fit the reallocation's promise.**~~ Priced since iteration 38 by
+   resampling each campaign's days and re-solving the allocation on each
+   resample, with the forms the backtest cannot separate averaged in. What
+   remains is a form the backtest *rejected* (iteration 38, seed 404): a
+   decision-aware form check — scoring the forms on the marginal return the
+   allocation actually moves along, not on one-step sales levels — is the
+   next step.
+10. **A second-order reaction correction.** The half-panel jackknife leaves a
+   bias of order 1/T² that the bootstrap over SKUs cannot see; on six bench
+   catalogues the correction's error was about twice its stated error. A GMM
+   estimator on the differenced equation (Arellano–Bond) would remove it on
+   twelve periods where a third subpanel cannot.
+11. **The family cross pool and next month's volume on the book's common
+   factor** (§6), so a month in which the shared errors land together shows
+   in the book's band before it shows in the Record.
+9. **A stock constraint in the model-risk harness**, so the stretch step (§5b) can
+   be scored against a truth that includes the stockout it is meant to avoid;
+   today the harness scores it apart and says so.
+
+Withdrawn from this list on 2026-09-23, because built: fitting elasticity on the
+engine's own step history (the steps were never an instrument; the randomised test
+is), and the two "neither is built" items of the closing section above.
+Withdrawn on 2026-09-24, because built: the reactive-pricing correction (iteration
+37), which the 2026-09-12 write-up said could not be built without an instrument.

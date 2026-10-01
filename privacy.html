@@ -6,59 +6,51 @@
 <title>Privacy Policy — Hubricon</title>
 <meta name="description" content="What Hubricon collects, why, where it goes, and how to get it back or erased. Written to be read.">
 <link rel="canonical" href="https://www.hubricon.com/privacy">
-<meta name="theme-color" content="#f2f3f8">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* Legal pages share the welcome page's paper-and-gold system: one column, readable. */
-:root{
-  --bg: hsl(222 28% 96%); --panel: hsl(0 0% 100%); --panel-2: hsl(222 26% 94%);
-  --amber: hsl(40 96% 33%); --ink: hsl(228 44% 11%); --ink-soft: hsl(228 26% 26%);
-  --ink-faint: hsl(228 16% 42%); --hairline: hsl(228 30% 20% / .14);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+/* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
+.wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+h1 { font-size: var(--t-display-m); }
+h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
+h3 { font-size: var(--t-18); letter-spacing: -0.01em; line-height: 1.3; margin: var(--s-5) 0 var(--s-2); }
+p { margin: 0 0 var(--s-4); max-width: 68ch; font-size: var(--t-16); }
+ul, ol { margin: 0 0 var(--s-4); padding-left: var(--s-5); max-width: 68ch; font-size: var(--t-16); }
+li { margin-bottom: var(--s-2); }
+a { color: var(--ink); text-underline-offset: 3px; }
+.meta { font-size: var(--t-14); color: var(--ink-3); margin: var(--s-3) 0 var(--s-6); }
+.lede { font-size: var(--t-20); line-height: 1.55; color: var(--ink); max-width: 58ch; margin-bottom: var(--s-3); }
+.panel { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-5) var(--s-6); margin: var(--s-5) 0 var(--s-3); }
+.panel ul { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
+th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
+th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
+@media (max-width: 640px) {
+  .panel { padding: var(--s-4); }
+  th, td { display: block; padding: var(--s-1) 0; border: 0; }
+  tr { display: block; padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 }
-*{ box-sizing: border-box; margin: 0; }
-body{ background: var(--bg); color: var(--ink-soft); font-family: var(--sans); font-size: 15.5px; line-height: 1.7; padding: 40px 20px 90px; }
-.wrap{ max-width: 720px; margin: 0 auto; }
-h1, h2, h3{ font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
-h1{ font-size: clamp(30px, 6vw, 42px); line-height: 1.12; text-wrap: balance; }
-h2{ font-size: 22px; margin: 40px 0 10px; }
-h3{ font-size: 16.5px; margin: 22px 0 6px; }
-p{ margin: 0 0 14px; max-width: 68ch; }
-ul, ol{ margin: 0 0 16px; padding-left: 22px; max-width: 68ch; }
-li{ margin-bottom: 6px; }
-a{ color: var(--amber); }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); text-decoration: none; }
-.wordmark i{ font-style: normal; color: var(--amber); }
-.masthead{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--hairline); padding-bottom: 18px; margin-bottom: 34px; }
-.masthead .mono{ font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); letter-spacing: .08em; text-transform: uppercase; }
-.meta{ font-family: var(--mono); font-size: 12px; color: var(--ink-faint); letter-spacing: .04em; margin: 12px 0 26px; }
-.lede{ font-family: var(--serif); font-weight: 300; font-size: 19px; line-height: 1.65; color: var(--ink); max-width: 58ch; margin-bottom: 8px; }
-.panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px; padding: 22px 26px; margin: 18px 0 8px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
-.panel ul{ margin-bottom: 0; }
-table{ border-collapse: collapse; width: 100%; font-size: 14px; margin: 6px 0 16px; }
-th, td{ text-align: left; vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--hairline); }
-th{ font-weight: 600; color: var(--ink); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
-mark{ background: hsl(45 100% 85%); color: var(--ink); padding: 0 4px; border-radius: 3px; }
-footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18px; font-size: 13px; color: var(--ink-faint); line-height: 1.8; }
-@media (max-width: 560px){ .panel{ padding: 18px; } th, td{ display: block; padding: 4px 0; border: 0; } tr{ display: block; padding: 8px 0; border-bottom: 1px solid var(--hairline); } th{ padding-top: 8px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/">Hubric<i>o</i>n</a>
+    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Privacy</span>
   </div>
 
   <h1>Privacy Policy</h1>
-  <p class="meta">Effective September 18, 2026 · <a href="/terms">Terms of Service</a></p>
+  <p class="meta">Effective September 30, 2026 · <a href="/terms">Terms of Service</a></p>
 
   <p class="lede">Hubricon is a founder-operated Managed Profit service for brands selling on Amazon and Shopify. This page says
   what we collect, why, who else touches it, and how to get it back or erased. It is written to be
@@ -86,16 +78,12 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   which kinds of seller apply. Our host, Vercel, records anonymous, cookieless analytics: pages
   viewed, country, device type, referrer. We run no advertising pixels and no retargeting.</p>
 
-  <h3>The 60-second Teardown</h3>
-  <p>The calculator at hubricon.com/teardown runs in your browser: the numbers you type are priced
-  against a published rate card on your own device, and nothing is fetched from Amazon or sent to us
-  unless you ask. If you enter an ASIN we look it up in listings our own crawl has already read; if you paste a Shopify product URL we read that store's public product JSON, the same file its own storefront reads; if you
-  ask for your category benchmark we return aggregates and nothing about any listing but yours. If you
-  choose "send me this", we keep the numbers you typed, your name and email address, and a salted hash
-  of your connection address (never the address itself) so the form cannot be abused; we email you the
-  result through Resend, and the same address enters our list as someone who asked for a Profit
-  Teardown, which is what the upload-page email that follows is. One reply stops everything.</p>
-  <p>The same calculator also sits on the home page, where it works the same way and stores nothing.</p>
+  <h3>The 60-second calculator (retired)</h3>
+  <p>Until 30 September 2026 a calculator at hubricon.com/teardown priced one listing against a
+  published rate card in your browser. It is gone. If you used its "send me this" option, we still
+  hold what it kept: the numbers you typed, your name and email address, and a salted hash of your
+  connection address (never the address itself). Nothing more is sent to that address. Ask and we
+  delete it, under section 6.</p>
   <h3>Booking a call</h3>
   <p>The application at hubricon.com/apply asks the four questions described above. They travel with
   your booking to Calendly as one tag, together with the fit note we derive from them and, if you arrived
@@ -103,6 +91,16 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   "Visiting the website". Calendly collects your name, email, a phone number for the
   call, and your answers to the booking questions, under <a href="https://calendly.com/privacy" rel="noopener">Calendly's privacy policy</a>.
   We receive that information by email and keep it in our mailbox.</p>
+
+  <h3 id="learn">Courses at hubricon.com/learn</h3>
+  <p>A course opens with your email address and nothing else. We keep that address, which course you
+  opened and when, the campaign tag in the link you arrived by if it carried one, and a salted hash of
+  your connection address (never the address itself), so that one connection cannot sign up hundreds of
+  addresses. We send one email with the course link and the spreadsheet, and after that only a short note
+  when a new course is out. Every email carries a one-click unsubscribe, and after it we send nothing more
+  about courses; the courses stay open to you. The course page remembers, in your own browser's storage,
+  that you opened it and which lessons you have read. That note never leaves your browser. Ask, and we
+  delete your address under section 6.</p>
 
   <h3>Email</h3>
   <p>If you write to us, we keep the correspondence. If you received an email from us that you did not
@@ -144,14 +142,21 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
 
   <h2>2. What we do with it</h2>
   <ul>
-    <li>Run the models and produce your Profit Teardown, your plan, your Profit Briefs and your Profit Record.</li>
+    <li>Run the models and produce our first full read of your catalogue, your plan, your Profit Briefs and your Profit Record.</li>
     <li>Execute the pricing and advertising corrections you have authorised, inside your account.</li>
     <li>Monitor your account weekly for anomalies, stock risk and reimbursement claims, and alert you.</li>
     <li>Invoice you.</li>
     <li>With your permission under our Terms, publish results in anonymised form.</li>
+    <li>With your separate permission under our Terms, use aggregate statistics from your account (a
+    rate, a ratio, a fitted slope; never a figure of yours, never your name) to calibrate the
+    estimates we make from public pages. Every estimate that uses them says how many accounts stand behind it.</li>
+    <li>With your separate permission under our Terms, use aggregates from your account (which fee
+    changed, which way, roughly when, and by what percentage; never a figure of yours, never your name,
+    a SKU or an ASIN) to warn other clients of a change on the platform's side, and to measure what each
+    kind of move delivers. Every alert that uses them says how many accounts stand behind it.</li>
   </ul>
-  <p>We do not sell or rent data, share one client's data with another, use your data to train AI
-  models, or run advertising on the strength of it.</p>
+  <p>We do not sell or rent data, share one client's data with another (the aggregates above carry no
+  figure of any one client), use your data to train AI models, or run advertising on the strength of it.</p>
 
   <h2>3. AI drafting</h2>
   <p>The wording of your written briefs is drafted by Anthropic's Claude from a short table of results
@@ -169,7 +174,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
     <tr><td>Supabase</td><td>Database and file storage, encrypted in transit and at rest</td></tr>
     <tr><td>Vercel</td><td>Website hosting and cookieless analytics</td></tr>
     <tr><td>Google Workspace</td><td>Email</td></tr>
-    <tr><td>Resend</td><td>Delivery of transactional email such as your welcome and alerts</td></tr>
+    <tr><td>Resend</td><td>Delivery of transactional email such as your welcome and alerts, and of the course emails described under "Courses"</td></tr>
     <tr><td>Calendly</td><td>Scheduling</td></tr>
     <tr><td>Stripe</td><td>Invoicing and ACH payment</td></tr>
     <tr><td>Loom</td><td>Hosting a video brief on the occasions the founder records one personally, in place of the generated one</td></tr>
@@ -194,7 +199,8 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   you leave, an export of your data and your full Profit Record is free, any time, including the day you
   cancel. Ask, and we delete your raw reports, uploads and model outputs within thirty days, keeping
   only what invoicing and the law require and any results you agreed we may publish in anonymised
-  form. Booking and correspondence records are kept for our own bookkeeping. Analytics data is
+  form. Booking and correspondence records are kept for our own bookkeeping. A course sign-up is kept
+  until you ask us to delete it; unsubscribing stops the emails at once. Analytics data is
   anonymous from the start.</p>
 
   <h2>7. Your rights</h2>
@@ -207,7 +213,9 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
 
   <h2>8. Cookies</h2>
   <p>We set none of our own. Vercel's analytics uses no cookies. The embedded Calendly scheduler may
-  set Calendly's own cookies when you use it.</p>
+  set Calendly's own cookies when you use it. A course page at /learn keeps a small note in your
+  browser's storage (not a cookie) that you opened the course and which lessons you have read, so it
+  opens where you left off. It is never sent to us, and clearing your browser's site data removes it.</p>
 
   <h2>9. Children</h2>
   <p>Hubricon is a business service and is not directed at anyone under eighteen.</p>
@@ -221,7 +229,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   Hubricon · Dallas, Texas, United States</p>
 
   <footer>
-    Hubricon · Managed Profit · <a href="/">www.hubricon.com</a> · <a href="/terms">Terms of Service</a>
+    Hubricon · <a href="/">Home</a> · <a href="/learn">Learn</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/terms">Terms of Service</a>
   </footer>
 </div>
 </body>

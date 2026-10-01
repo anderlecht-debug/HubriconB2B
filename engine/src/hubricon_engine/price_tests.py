@@ -23,11 +23,19 @@ not true. Measured 2026-09-12, two things stop it:
     A test held for a whole period, or a daily price series read from
     settlement_transactions, is what would make the variation visible.
 
-Both are fixable and neither is fixed. See engine/MATH_METHODS.md section 2.
+Both were fixable and, since 2026-09-23, both are fixed by the randomised design
+in models/price_experiment.py: `hubricon pricetest <client> plan --sku X
+--design randomized --start DATE`, then `analyze` once the six blocks have run.
+The fixed-price test here remains for the manual, single-price case.
+See engine/MATH_METHODS.md section 2.
 """
 
 BUYBOX_DROP_WARNING = 10.0  # percentage points lost vs. baseline that triggers the alarm
 DEFAULT_TEST_DAYS = 14
+# The randomised design (models/price_experiment.py): six seven-day blocks. Both
+# objections above are answered by it — the arm is drawn independently of the
+# data, and the daily settlement series sees every block.
+RANDOMISED_DAYS = 42
 
 
 def resolve_baseline(econ_rows: list[dict], sku: str) -> float | None:

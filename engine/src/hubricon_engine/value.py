@@ -84,11 +84,17 @@ def fee_side(client: dict, invoices: list[dict] | None, today: date) -> dict:
 
     real = [i for i in (invoices or []) if (i.get("status") or "") != "void"]
     if real:
-        paid = sum(float(i.get("amount_paid") or 0) for i in real if i.get("status") == "paid")
-        billed = sum(float(i.get("amount_due") or 0) for i in real
+        # A refunded dollar (the gate, or the true-up at the exit) was given
+        # back, so it is not a fee: the invoice counts net of it.
+        def kept(i, field):
+            return max(0.0, float(i.get(field) or 0) - float(i.get("refunded_usd") or 0))
+        paid_rows = [i for i in real if i.get("status") == "paid"]
+        paid = sum(kept(i, "amount_paid") for i in paid_rows)
+        billed = sum(kept(i, "amount_due") for i in real
                      if i.get("status") in ("open", "paid", "uncollectible"))
         return {"fees_paid": paid, "fees_billed": billed, "fees_basis": "invoiced",
-                "billed_months": len([i for i in real if i.get("status") == "paid"]),
+                "billed_months": len([i for i in paid_rows
+                                      if not float(i.get("refunded_usd") or 0) or kept(i, "amount_paid") > 0]),
                 "monthly_fee": fee, "months_elapsed": months,
                 "engagement_start": start, "engagement_start_source": source}
 
@@ -119,6 +125,24 @@ def compute(client: dict, directives: list[dict], claims: list[dict],
 
     measured_rows = [d for d in directives if d.get("measured_impact_usd") is not None]
     measured = sum(float(d["measured_impact_usd"]) for d in measured_rows)
+    # The band: a measured price step, markdown or reallocation carries the
+    # distribution it was banked from (evidence.after.measured_distribution);
+    # its 5th and 95th percentiles sum with the point values of the rest, and
+    # the basis says what share of the dollars actually had a band.
+    lo = hi = 0.0
+    banded_dollars = 0.0
+    for d in measured_rows:
+        dist = ((d.get("evidence") or {}).get("after") or {}).get("measured_distribution") or {}
+        usd = float(d["measured_impact_usd"])
+        if dist.get("p5") is not None and dist.get("p95") is not None:
+            # never wider than the banked figure allows above it: the promise cap applied to the point
+            lo += min(usd, float(dist["p5"]))
+            hi += min(max(usd, float(dist["p95"])), max(usd, float(dist["p95"])))
+            banded_dollars += abs(usd)
+        else:
+            lo += usd
+            hi += usd
+    banded_share = banded_dollars / sum(abs(float(d["measured_impact_usd"])) for d in measured_rows) if measured_rows and measured else 0.0
     by_attribution: dict[str, float] = {}
     for d in measured_rows:
         tier = d.get("attribution") or "unrecorded"
@@ -176,6 +200,11 @@ def compute(client: dict, directives: list[dict], claims: list[dict],
         "recovered_count": len(ours),
         "recovered_unattributed": num(recovered_unattributed),
         "value_total": num(value),
+        "value_p5": num(lo + recovered),
+        "value_p95": num(hi + recovered),
+        "value_interval_basis": {"banded_share_of_measured": num(banded_share, 4),
+                                 "note": ("measured moves that carry a distribution contribute their 5th and 95th "
+                                          "percentiles; the rest and every recovery contribute their point")},
         "roi_multiple": num(multiple, 2),
         "identified_unbanked": num(identified),
         "identified_parts": {"directives": num(unbanked_directives), "claims": num(unbanked_claims)},
@@ -194,6 +223,11 @@ def record_line(ledger: dict) -> str:
     proven = float(ledger.get("value_total") or 0)
     found = float(ledger.get("identified_unbanked") or 0)
     billed = float(ledger.get("fees_billed") or 0)
-    return (f"Your Profit Record: ${proven:,.0f} proven since day one · "
+    # the band beside the number, when at least half the proven dollars carry one
+    basis = ledger.get("value_interval_basis") or {}
+    band = ""
+    if float(basis.get("banded_share_of_measured") or 0) >= 0.5 and ledger.get("value_p5") is not None:
+        band = f" (range ${float(ledger['value_p5']):,.0f}–${float(ledger['value_p95']):,.0f})"
+    return (f"Your Profit Record: ${proven:,.0f} proven since day one{band} · "
             f"${found:,.0f} found and filed, not yet banked · ${billed:,.0f} billed to date"
             + (f" · {proven / billed:.1f}× proven ÷ billed." if billed > 0 else "."))

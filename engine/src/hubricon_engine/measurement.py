@@ -49,6 +49,7 @@ from datetime import date
 import numpy as np
 from scipy import stats
 
+MEASUREMENT_HORIZON_DAYS = 30      # the window a 30-day promise is made for
 MEASURE_MIN_USD = 25.0          # below this, close it rather than bank noise
 MIN_AFTER_DAYS = 14             # an after-window shorter than this proves nothing
 PRICE_TOLERANCE = 0.02          # observed vs instructed price, before we call it unexecuted
@@ -75,6 +76,11 @@ UNBANKABLE_KINDS = {
     "traffic_watch",
     "buybox_watch",
     "settlement_step",        # "we are tracing the lines" is not an action with a proof
+    "cannibalisation_watch",  # a step NOT taken: nothing to measure, the finding is the record
+    "expedite_air",           # the avoided stockout is the same unobservable counterfactual as a reorder
+    "budget_order_set",       # the reorders it replaces, under a cash constraint: the same counterfactual
+    "cpc_drift",              # a regime break named: the refit and the correction that follows bank
+    "conversion_drift",
 }
 
 
@@ -257,6 +263,13 @@ def measure_ad_bleed(d: dict, search_terms: list[dict], since: date, today: date
     # which case the cap is skipped rather than applied wrongly.
     campaign_baseline_total = ev.get("campaign_baseline_spend") or {}
 
+    # a directive drafted before 2026-09-24 stored the campaign's DAILY spend
+    # here; a campaign cannot have spent less in the window than its own bleed
+    # terms did, so a figure under that is a day and is scaled to the window
+    campaign_baseline_total = {
+        c: (float(v) * float(baseline_days) if v is not None and float(v) < baseline_campaign.get(c, 0.0) else v)
+        for c, v in campaign_baseline_total.items()}
+
     saved, dead = 0.0, []
     for camp in campaigns:
         bleed_expected = baseline_campaign.get(camp, 0.0) * scale
@@ -398,9 +411,12 @@ def measure_spend_step(d: dict, ppc_spend: list[dict], since: date, today: date)
     if baseline is None or flagged is None or flagged <= baseline:
         return _closed(d, "No spend step-up recorded on this directive.")
 
+    # ppc_spend rows carry `report_date` (ingest/ppc_campaign.py). This read
+    # `date` until 2026-09-23 and so never found a row: every spend step came
+    # back "not yet" forever. Pinned by test_spend_step_reads_report_date.
     rows = [r for r in ppc_spend
             if str(r.get("campaign_name") or "") == str(campaign or "")
-            and r.get("date") and date.fromisoformat(str(r["date"])[:10]) > since]
+            and r.get("report_date") and date.fromisoformat(str(r["report_date"])[:10]) > since]
     if len(rows) < MIN_AFTER_DAYS:
         return _not_yet(d, f"Only {len(rows)} day(s) of spend since the correction; {MIN_AFTER_DAYS} needed.")
     daily = sum(float(r.get("spend") or 0) for r in rows) / len(rows)
@@ -473,10 +489,28 @@ def _split_fees(row: dict) -> tuple[float, float]:
     line — puts everything in the proportional bucket, which is what the
     engine assumed before the split existed."""
     split = row.get("fee_split") or {}
+    total = float(row.get("amazon_fees") or 0)
     if split.get("basis") == "itemized":
-        return (float(split.get("proportional_fees") or 0),
-                float(split.get("fixed_fees") or 0))
-    return float(row.get("amazon_fees") or 0), 0.0
+        if split.get("proportional_fees") is not None or split.get("fixed_fees") is not None:
+            return (float(split.get("proportional_fees") or 0),
+                    float(split.get("fixed_fees") or 0))
+        # an itemised split that carries only the rate and the per-unit fee
+        # (a row rebuilt outside margin.run): rebuild the dollars from the
+        # row's own revenue and units, capped at the fees it actually paid.
+        # Found 2026-09-24 by the model-risk harness, whose after-rows carried
+        # the split without the totals and were read as fee-free — a
+        # counterfactual at the old price then charged no referral fee and
+        # booked every step as a four-figure loss.
+        rate = split.get("proportional_rate")
+        per_unit = split.get("fixed_per_unit")
+        if rate is not None or per_unit is not None:
+            prop = float(rate or 0) * float(row.get("revenue") or 0)
+            fixed = float(per_unit or 0) * float(row.get("units") or 0)
+            if total > 0 and prop + fixed > total:
+                scale = total / (prop + fixed)
+                prop, fixed = prop * scale, fixed * scale
+            return prop, fixed
+    return total, 0.0
 
 
 def _observed(rows: list[dict]) -> dict | None:
@@ -519,7 +553,8 @@ def _counterfactual_profit(eps: float, p0: float, p1: float, units_after: float,
 
 def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: float,
                                  unit_cost: float, fee_rate: float, fixed_fee: float,
-                                 factual: float) -> dict | None:
+                                 factual: float, cross_terms: list[dict] | None = None,
+                                 realisation: dict | None = None) -> dict | None:
     """The measured delta as a distribution, and the conservative quantile of it
     that gets banked.
 
@@ -557,13 +592,36 @@ def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: fl
     shock = (rng.standard_t(dof, size=MEASURE_DRAWS) if dof and dof >= 1
              else rng.standard_normal(MEASURE_DRAWS))
     draws = float(eps) + float(se) * shock
+    if realisation and realisation.get("applied"):
+        # the batch's pooled volume response, with its own uncertainty, on
+        # the same draws; clipped so a wild κ cannot flip the sign of demand
+        k = float(realisation["kappa"]) + float(realisation["se"] or 0.0) * rng.standard_normal(MEASURE_DRAWS)
+        draws = draws * np.clip(k, 0.0, 2.0)
     q_cf = units_after * (p0 / p1) ** draws if p1 > 0 else np.full(MEASURE_DRAWS, units_after)
     counterfactual = q_cf * (p0 * (1 - fee_rate) - unit_cost - fixed_fee)
     delta = factual - counterfactual
+    sibling_delta = None
+    cross = ev.get("cross_effect") or {}
+    if cross_terms and cross.get("eps_cross") is not None and p1 > 0:
+        # the siblings, anchored on THEIR after-period units exactly as the SKU
+        # is on its own: what they would have sold at the SKU's old price
+        se_c = float(cross.get("std_err") or 0)
+        dof_c = cross.get("dof")
+        if se_c > 0:
+            shock_c = rng.standard_t(dof_c, size=MEASURE_DRAWS) if dof_c and dof_c >= 1 else rng.standard_normal(MEASURE_DRAWS)
+            eps_c = float(cross["eps_cross"]) + se_c * shock_c
+        else:
+            eps_c = np.full(MEASURE_DRAWS, float(cross["eps_cross"]))
+        sibling_delta = np.zeros(MEASURE_DRAWS)
+        for t in cross_terms:
+            q_cf_j = t["units_after"] * (p0 / p1) ** (eps_c * float(t["weight"]))
+            sibling_delta += (t["units_after"] - q_cf_j) * float(t["contribution"])
+        delta = delta + sibling_delta
     delta = delta[np.isfinite(delta)]
     if delta.size == 0:
         return None
     return {
+        "sibling_p50": round(float(np.quantile(sibling_delta, 0.5)), 2) if sibling_delta is not None else None,
         "banked": float(np.quantile(delta, MEASURE_QUANTILE)),
         "p5": round(float(np.quantile(delta, 0.05)), 2),
         "p50": round(float(np.quantile(delta, 0.50)), 2),
@@ -573,6 +631,161 @@ def _counterfactual_distribution(ev: dict, p0: float, p1: float, units_after: fl
         "draws": int(delta.size),
         "seed": MEASURE_SEED,
     }
+
+
+# ── the pooled volume response ──────────────────────────────────────────────
+# One month of one SKU cannot say whether the volume response the promise
+# assumed actually happened: at a 20% month-to-month demand sd a 5% step's
+# expected 12% volume move is inside the noise. Two dozen steps can. Before
+# any step is measured, the realised volume change of every price step and
+# markdown in the batch is regressed, through the origin, on the change its
+# own elasticity predicted:
+#
+#     r_i = κ · ε̂_i · ln(p1_i / p0_i) + noise_i,   Var(noise_i) = 2 σ_i²
+#
+# with σ_i the SKU's own residual sd from the fit (two periods' worth, since
+# the baseline carries its own month). κ̂ = 1 is "the catalogue's volume moved
+# as the fits said"; κ̂ = 0 is "it did not move at all". Every counterfactual
+# in the batch then runs on ε̂_i · κ, κ drawn from its own estimate and
+# standard error, so a cut that produced no volume response anywhere is
+# measured as the margin it gave away — the loss it was — while a step that
+# landed in a bad month on a catalogue whose volume did respond keeps its
+# anchored reading. κ is APPLIED only when it sits REALISATION_T standard
+# errors from 1: each SKU's own posterior already carries the response
+# uncertainty, and folding a pooled ±0.2 into every draw on top of it halved
+# the dollars a correct engine banked on the harness. Below
+# MIN_STEPS_FOR_REALISATION steps κ is not estimated at all.
+#
+# Raised from two to three standard errors on 2026-09-24. On ±5% steps the
+# predicted volume change is about ten per cent and κ's own error about 0.2,
+# so at two standard errors a correct engine's batch trips it about one time
+# in twenty on the month's shocks alone — and then every counterfactual in it
+# is scaled by half (the Simons–Thorp–Griffin bench: κ = 0.54 ± 0.19 on a
+# world whose steps delivered what their fits said, $721 banked of $3,472
+# true). A batch that did not respond at all sits five standard errors out
+# and is still caught; a partial shortfall a single step can show is held by
+# that step's own observed-change ceiling.
+REALISATION_T = 3.0
+# Added 2026-09-24 after the model-risk harness showed the per-SKU observed
+# change booking the month's weather against the step (see _cap_at_observed).
+MIN_STEPS_FOR_REALISATION = 6
+DEFAULT_DEMAND_SD_LOG = 0.20
+OBSERVED_CAP_NOISE_Z = 1.0   # the ceiling allows the SKU this many of its own month-to-month sds
+
+
+def volume_realisation(directives: list[dict], margins: list[dict], since_of) -> dict:
+    """κ over the batch's price steps and markdowns that have an after window.
+    `since_of(d)` gives the date a directive was acted on, or None."""
+    xs, ys, ws = [], [], []
+    by_sku_period = {(m.get("sku"), str(m.get("period_start"))): m for m in margins}
+    for d in directives:
+        if d.get("kind") not in ("price_step", "markdown"):
+            continue
+        ev = d.get("evidence") or {}
+        since = since_of(d)
+        sku, p0, eps = ev.get("sku"), ev.get("p0"), ev.get("elasticity")
+        base_units = ev.get("baseline_units")
+        if since is None or not sku or not p0 or eps is None or not base_units:
+            continue
+        after_rows = [m for m in margins if m.get("sku") == sku and m.get("period_start")
+                      and date.fromisoformat(str(m["period_start"])[:10]) > since]
+        after = _observed(after_rows)
+        if not after or after["units"] <= 0 or after["price"] <= 0:
+            continue
+        after_days = sum(_period_days(r) for r in after_rows) or None
+        base_row = by_sku_period.get((sku, str(ev.get("baseline_period"))))
+        # the baseline row when the caller passed the history; else the
+        # evidence's own period length; else the export's cadence, one period
+        base_days = (_period_days(base_row) if base_row else None) or ev.get("period_days") \
+            or (after_days / max(1, len(after_rows)) if after_days else None)
+        if not base_days or not after_days:
+            continue
+        x = float(eps) * float(np.log(after["price"] / float(p0)))
+        # The fits' prediction includes the family's: a sibling that moved in
+        # the same sweep moves this SKU's volume by ε_cross times the change
+        # in its sibling index. Corrected 2026-09-24 — κ read only the SKU's
+        # own term, so a family whose SKUs all rose together (each one's loss
+        # partly refilled by its siblings' rises) read as "the volume did not
+        # respond": on the Simons–Thorp–Griffin bench's dirty world κ came out
+        # 0.54 ± 0.19, was applied to every counterfactual, and the Record
+        # banked $721 of $3,472 of true gains.
+        ce = ev.get("cross_effect") or {}
+        if ce.get("eps_cross") is not None and ce.get("siblings"):
+            moves = []
+            for sib in ce["siblings"]:
+                j = sib.get("sku")
+                b = by_sku_period.get((j, str(ev.get("baseline_period"))))
+                a = _observed([m for m in margins if m.get("sku") == j and m.get("period_start")
+                               and date.fromisoformat(str(m["period_start"])[:10]) > since])
+                if a and b and a["price"] > 0 and float(b.get("units") or 0) > 0 and float(b.get("revenue") or 0) > 0:
+                    moves.append(float(np.log(a["price"] / (float(b["revenue"]) / float(b["units"])))))
+            if moves:
+                x += float(ce["eps_cross"]) * float(np.mean(moves))
+        if abs(x) < 1e-6:
+            continue
+        r = float(np.log((after["units"] / after_days) / (float(base_units) / base_days)))
+        sd = float((ev.get("mc_inputs") or {}).get("demand_sd_log") or DEFAULT_DEMAND_SD_LOG)
+        xs.append(x); ys.append(r); ws.append(1.0 / (2.0 * max(sd, 0.02) ** 2))
+    n = len(xs)
+    if n < MIN_STEPS_FOR_REALISATION:
+        return {"kappa": 1.0, "se": None, "n_steps": n, "estimated": False, "applied": False,
+                "basis": f"{n} measurable steps, {MIN_STEPS_FOR_REALISATION} needed; every counterfactual runs on its own fit"}
+    x, y, w = np.array(xs), np.array(ys), np.array(ws)
+    sxx = float(np.sum(w * x * x))
+    kappa = float(np.sum(w * x * y) / sxx)
+    # the residuals, scaled by the fits' own noise, say how well κ is pinned:
+    # a batch whose volume moved exactly as its fits said pins it exactly
+    resid = y - kappa * x
+    scale = float(np.sum(w * resid**2) / max(1, n - 1))
+    se = max(float(np.sqrt(scale / sxx)), 0.02)
+    applied = bool(abs(kappa - 1.0) >= REALISATION_T * se)
+    return {"kappa": round(kappa, 4), "se": round(se, 4), "n_steps": n, "estimated": True, "applied": applied,
+            "basis": (f"realised volume change of {n} steps regressed on the change their fits predicted: "
+                      f"κ = {kappa:.2f} ± {se:.2f} (1 = as the fits said, 0 = no response); "
+                      + ("applied to every counterfactual" if applied else "within noise of 1, so every counterfactual runs on its own fit"))}
+
+
+def _cap_at_observed(delta: float, observed: float | None, subject: str,
+                     noise_sd: float | None = None) -> tuple[float, str]:
+    """The observed change as a CEILING on a positive model reading, never as
+    a floor. Returns (delta, note).
+
+    Corrected 2026-09-24. The cap used to replace the reading with the
+    observed change whenever the reading exceeded it — including when the
+    observed change was negative, which booked the month's weather against
+    the step: on the model-risk harness a step whose anchored counterfactual
+    read +$350 (and whose true effect was +$350) was banked at −$293 because
+    the SKU's August shock reverted in September. Over three worlds the
+    Record's realisation ratio read −0.4 to −1.1 against a true 0.4 to 0.7.
+    The ceiling's own rationale says the raw change "is not a measurement",
+    and a number that is not a measurement cannot be banked as a loss. So: a
+    positive reading is capped at the observed rise plus OBSERVED_CAP_NOISE_Z
+    of the SKU's own month-to-month noise (`noise_sd`, in dollars, from the
+    fit's residual sd), and at zero when the SKU's profit fell by more than
+    that; a negative reading — the model's own, anchored on the after period
+    and blind to the weather, and carrying the batch's pooled volume response
+    — stands. The no-response case that the ceiling was written for is now
+    caught by `volume_realisation`, which turns the reading itself into the
+    loss."""
+    if observed is None or delta <= 0:
+        return delta, ""
+    ceiling = float(observed) + OBSERVED_CAP_NOISE_Z * float(noise_sd or 0.0)
+    if delta <= ceiling:
+        return delta, ""
+    if ceiling > 0:
+        return ceiling, (f", and capped at the ${observed:,.2f} {subject} actually rose"
+                         + (f" (allowing ${OBSERVED_CAP_NOISE_Z * float(noise_sd):,.2f} of its own month-to-month noise)" if noise_sd else ""))
+    return 0.0, (f", and held at $0.00 because {subject} did not rise (it moved ${observed:,.2f}, "
+                 f"beyond what the month's own noise explains, so nothing is banked either way)")
+
+
+def _noise_sd_usd(ev: dict, factual: float, periods: int = 1) -> float | None:
+    """The SKU's month-to-month profit noise in dollars: the fit's residual sd
+    on log units, two periods' worth, times the after window's profit per period."""
+    sd = (ev.get("mc_inputs") or {}).get("demand_sd_log")
+    if sd is None or factual is None:
+        return None
+    return float(np.sqrt(2.0) * float(sd) * abs(float(factual)) / max(1, periods))
 
 
 def _observed_profit_change(ev: dict, after: dict, factual: float) -> float | None:
@@ -593,7 +806,7 @@ def _observed_profit_change(ev: dict, after: dict, factual: float) -> float | No
 
 
 def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
-                       since: date, today: date) -> dict:
+                       since: date, today: date, realisation: dict | None = None) -> dict:
     ev = d.get("evidence") or {}
     sku, p0, p_new = ev.get("sku"), ev.get("p0"), ev.get("p_new")
     if not sku or not p0:
@@ -626,8 +839,22 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     ci = ev.get("ci95") or []
 
     factual = after["revenue"] - after["fees"] - after["cogs"]
+    # the family: each sibling's own after window, at its own realised
+    # contribution, so a cut that stole from Red is charged for Red
+    cross_terms, family_change = [], 0.0
+    for sib in ((ev.get("cross_effect") or {}).get("siblings") or []):
+        rows_j = [m for m in margins if m.get("sku") == sib.get("sku") and m.get("period_start")
+                  and date.fromisoformat(str(m["period_start"])[:10]) > since]
+        after_j = _observed(rows_j)
+        if not after_j or after_j["units"] <= 0 or after_j["cogs"] is None:
+            continue
+        factual_j = after_j["revenue"] - after_j["fees"] - after_j["cogs"]
+        cross_terms.append({"sku": sib["sku"], "units_after": after_j["units"],
+                            "contribution": factual_j / after_j["units"], "weight": sib.get("weight") or 0.0})
+        if sib.get("baseline_profit") is not None:
+            family_change += factual_j / max(1, len(after_j["periods"])) - float(sib["baseline_profit"])
     distribution = _counterfactual_distribution(ev, p0, p1, after["units"], unit_cost,
-                                                fee_rate, fixed_fee, factual)
+                                                fee_rate, fixed_fee, factual, cross_terms or None, realisation)
     if distribution is not None:
         delta = distribution["banked"]
         candidates = distribution["epsilon_range"]
@@ -657,9 +884,16 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     # it can be wrong in is the direction that costs us credit. So: the model
     # reading, capped at what actually happened.
     observed_change = _observed_profit_change(ev, after, factual)
-    if observed_change is not None and delta > observed_change:
-        delta = observed_change
-        reading += f", and capped at the ${observed_change:,.2f} this SKU's own profit actually rose"
+    if observed_change is not None and cross_terms:
+        observed_change += family_change   # the cap is the FAMILY's own change, not the SKU's
+    noise_sd = _noise_sd_usd(ev, factual, len(after["periods"]))
+    ceiling = (None if observed_change is None
+               else float(observed_change) + OBSERVED_CAP_NOISE_Z * float(noise_sd or 0.0))
+    delta, cap_note = _cap_at_observed(delta, observed_change, f"this {'family' if cross_terms else 'SKU'}'s own profit",
+                                       noise_sd)
+    reading += cap_note
+    if realisation and realisation.get("applied"):
+        reading += f"; the batch's volume response κ = {realisation['kappa']:.2f} ± {realisation['se']:.2f}"
 
     promised = d.get("expected_impact_usd")
     capped = delta
@@ -679,7 +913,7 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
         buybox_note = (f" Buy Box share fell {before_bb[-1] - after_bb[-1]:.0f} points over the same window — "
                        f"the step cost the Featured Offer.")
 
-    if abs(capped) < MEASURE_MIN_USD and not buybox_note:
+    if abs(capped) < MEASURE_MIN_USD and not buybox_note and distribution is None:
         return _closed(d, f"The step moved less than ${MEASURE_MIN_USD:,.0f} on {sku}; not material.",
                        # same key as the measured path: a later audit reads one
                        # field whatever the verdict was
@@ -694,6 +928,9 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
     after_blob = {"p1": round(p1, 2), "units_after": after["units"],
                   "factual_profit": round(factual, 2), "uncapped": round(delta, 2),
                   "elasticities": candidates}
+    if cross_terms:
+        after_blob["siblings"] = [{"sku": t["sku"], "units_after": t["units_after"]} for t in cross_terms]
+        after_blob["sibling_delta_p50"] = distribution.get("sibling_p50") if distribution else None
     if distribution is not None:
         after_blob["measured_distribution"] = {
             "p5": distribution["p5"], "p25": distribution["banked"],
@@ -701,8 +938,184 @@ def measure_price_step(d: dict, margins: list[dict], traffic: list[dict],
             "quantile_banked": MEASURE_QUANTILE, "draws": distribution["draws"],
             "seed": distribution["seed"],
         }
+        # what the batch needs to bank this step as part of a book
+        after_blob["book"] = {"p5": distribution["p5"], "p50": distribution["p50"], "p95": distribution["p95"],
+                              "ceiling": None if ceiling is None else round(ceiling, 2),
+                              "promise": None if promised is None else float(promised),
+                              "common_share": _common_share(ev)}
     return _verdict(d, "measured", note, usd=round(capped, 2), attribution="attributable",
                     evidence_after=after_blob, window=window)
+
+
+def _common_share(ev: dict) -> float:
+    se, common = ev.get("std_err"), ev.get("eps_common_se")
+    if not se or common is None:
+        return 0.0
+    return float(min(1.0, (float(common) / float(se)) ** 2))
+
+
+# ── banking the book ────────────────────────────────────────────────────────
+# Banking every price step at its own 25th percentile and summing is not a
+# conservative total, it is a wrong one: a sum of individual lower quantiles
+# sits far below the batch's own lower quantile, because the steps'
+# measurement errors partly cancel. On the model-risk bench (2026-09-24), fifty
+# honest steps with medians near +$50 and 25th percentiles near −$70 summed to
+# a banked −$108 against a true +$3,239. The batch's price steps are banked as
+# one book: its 25th percentile, from each step's measured distribution drawn
+# as a split normal on its own 5th/50th/95th percentiles with the step's shared
+# elasticity error on one common factor; the haircut from the sum of medians
+# to that figure is spread over the steps in proportion to their downside, and
+# every step's own ceiling (its observed profit change plus its noise) and its
+# promise still cap it. A batch of one is banked exactly as before.
+BOOK_KINDS = ("price_step",)
+BOOK_DRAWS = 4000
+BOOK_SEED = 20260925
+
+
+def bank_the_book(verdicts: list[dict]) -> list[dict]:
+    rows = [(i, v["evidence_after"]["book"]) for i, v in enumerate(verdicts)
+            if v.get("kind") in BOOK_KINDS and v.get("verdict") == "measured"
+            and (v.get("evidence_after") or {}).get("book")]
+    if len(rows) < 2:
+        return verdicts
+    rng = np.random.default_rng(BOOK_SEED)
+    z_common = rng.standard_normal(BOOK_DRAWS)
+    total = np.zeros(BOOK_DRAWS)
+    down = []
+    for k, (_, b) in enumerate(rows):
+        own = np.random.default_rng([BOOK_SEED, k + 1]).standard_normal(BOOK_DRAWS)
+        rho = float(b.get("common_share") or 0.0)
+        z = np.sqrt(rho) * z_common + np.sqrt(1.0 - rho) * own
+        lo = max(float(b["p50"]) - float(b["p5"]), 0.0) / 1.6448536
+        hi = max(float(b["p95"]) - float(b["p50"]), 0.0) / 1.6448536
+        total += float(b["p50"]) + np.where(z < 0, lo, hi) * z
+        down.append(lo**2)
+    p25_book = float(np.quantile(total, MEASURE_QUANTILE))
+    haircut = max(0.0, sum(float(b["p50"]) for _, b in rows) - p25_book)
+    wsum = sum(down) or 1.0
+    out = list(verdicts)
+    for (i, b), dv in zip(rows, down):
+        banked = float(b["p50"]) - haircut * dv / wsum
+        note = (f" Banked with the batch's {len(rows)} price steps as one book: the book's "
+                f"{MEASURE_QUANTILE:.0%} percentile is ${p25_book:,.2f} against medians summing to "
+                f"${p25_book + haircut:,.2f}, and this step carries ${haircut * dv / wsum:,.2f} of that margin")
+        ceiling = b.get("ceiling")
+        if ceiling is not None and banked > 0:
+            if ceiling <= 0:
+                banked, note = 0.0, note + "; held at $0.00 because its own profit did not rise beyond its noise"
+            elif banked > ceiling:
+                banked, note = float(ceiling), note + f"; capped at its observed ceiling ${ceiling:,.2f}"
+        promise = b.get("promise")
+        if promise is not None and promise > 0 and banked > promise:
+            banked, note = float(promise), note + f"; capped at the ${promise:,.2f} promised"
+        v = dict(out[i])
+        v["measured_impact_usd"] = round(banked, 2)
+        v["measurement_notes"] = v["measurement_notes"] + note + "."
+        v["evidence_after"] = {**v["evidence_after"], "book_banked": {"n": len(rows), "p25_book": round(p25_book, 2),
+                                                                      "haircut_share": round(haircut * dv / wsum, 2)}}
+        out[i] = v
+    return out
+
+
+def measure_markdown(d: dict, margins: list[dict], inv_econ: dict | None,
+                     since: date, today: date, realisation: dict | None = None) -> dict:
+    """A markdown is measured BEFORE landed cost. The promise is a difference in
+    cash proceeds — landed cost is sunk and cancels — and selling more units at
+    a lower price raises COGS in the accounting window, so the price-step
+    reading (net of COGS) would book a markdown that won as a loss. Same
+    counterfactual, anchored on the after-period's own units, with unit cost
+    zero and the factual before COGS; plus the carry the cleared stock no
+    longer bills, read off the next inventory-economics pass and capped at the
+    promised carry."""
+    ev = d.get("evidence") or {}
+    sku, p0, p_new = ev.get("sku"), ev.get("p0"), ev.get("p_new")
+    if not sku or not p0 or not p_new:
+        return _closed(d, "No markdown baseline recorded on this directive.")
+    after_rows = [m for m in margins if m.get("sku") == sku and m.get("period_start")
+                  and date.fromisoformat(str(m["period_start"])[:10]) > since]
+    after = _observed(after_rows)
+    if not after:
+        return _not_yet(d, f"No margin period for {sku} since the markdown.")
+    window = (after["periods"][0], after["periods"][-1])
+    p1 = after["price"]
+    if abs(p1 - p_new) / p_new > PRICE_TOLERANCE and abs(p1 - p0) / p0 <= PRICE_TOLERANCE:
+        return _stalled(d, f"The price on file for {sku} is still ${p1:,.2f} — the markdown to "
+                           f"${p_new:,.2f} has not been made, so there is nothing to measure.",
+                        since, today, window)
+    if after["revenue"] <= 0 or after["units"] <= 0:
+        return _not_yet(d, f"{sku} recorded no sales in the measured window.")
+    fee_rate = min(0.9, max(0.0, after["proportional_fees"] / after["revenue"]))
+    fixed_fee = after["fixed_fees"] / after["units"]
+    factual = after["revenue"] - after["fees"]          # before landed cost
+    distribution = _counterfactual_distribution(ev, p0, p1, after["units"], 0.0, fee_rate, fixed_fee, factual,
+                                                realisation=realisation)
+    if distribution is None:
+        return _closed(d, f"The markdown on {sku} carries no posterior to integrate; nothing is banked.")
+    delta = distribution["banked"]
+    reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+               f"(median ${distribution['p50']:,.2f}, 5th ${distribution['p5']:,.2f}), before landed cost")
+    periods = max(1, len(after["periods"]))
+    if ev.get("baseline_revenue") is not None and ev.get("baseline_fees") is not None and ev.get("baseline_units"):
+        observed = factual / periods - (float(ev["baseline_revenue"]) - float(ev["baseline_fees"]))
+        delta, cap_note = _cap_at_observed(delta, observed, "this SKU's own cash proceeds",
+                                           _noise_sd_usd(ev, factual, periods))
+        reading += cap_note
+    carry = 0.0
+    row_now = next((r for r in (inv_econ or {}).get("rows", []) if r.get("sku") == sku), None)
+    if row_now is not None and ev.get("carry_month_now") is not None:
+        now = float(row_now.get("aged_surcharge_month") or 0) + float(row_now.get("storage_next_month") or 0)
+        saving = max(0.0, float(ev["carry_month_now"]) - now) * periods
+        carry = min(saving, float(ev.get("carry_saving_p50") or 0))
+    total = delta + carry
+    if abs(total) < MEASURE_MIN_USD:
+        return _closed(d, f"The markdown moved less than ${MEASURE_MIN_USD:,.0f} on {sku}; not material.",
+                       evidence_after={"delta": round(delta, 2), "carry_saving": round(carry, 2)})
+    note = (f"{sku} sold {after['units']:,.0f} units at ${p1:,.2f} in {window[0]} → {window[1]}, "
+            f"${factual:,.2f} of cash proceeds before landed cost. At ${p0:,.2f} the fitted curve puts the same demand "
+            f"at ${factual - delta:,.2f} — a difference of ${delta:,.2f}, {reading}"
+            + (f"; plus ${carry:,.2f} of storage and surcharge the cleared stock no longer bills." if carry else "."))
+    return _verdict(d, "measured", note, usd=round(total, 2), attribution="attributable",
+                    evidence_after={"p1": round(p1, 2), "units_after": after["units"],
+                                    "factual_before_cogs": round(factual, 2), "uncapped": round(distribution["banked"], 2),
+                                    "carry_saving": round(carry, 2),
+                                    "measured_distribution": {"p5": distribution["p5"], "p25": distribution["banked"],
+                                                              "p50": distribution["p50"], "p95": distribution["p95"],
+                                                              "quantile_banked": MEASURE_QUANTILE,
+                                                              "draws": distribution["draws"], "seed": distribution["seed"]}},
+                    window=window)
+
+
+def measure_sku_exit(d: dict, margins: list[dict], since: date, today: date) -> dict:
+    """An exit is banked only as the periods without the SKU pass: each margin
+    period after the decision in which the SKU sold nothing banks the loaded
+    monthly loss it no longer makes, capped at the promise. Still selling is
+    not yet; still selling ninety days on is never carried out."""
+    ev = d.get("evidence") or {}
+    sku = ev.get("sku")
+    monthly = ev.get("blended_monthly")
+    if not sku or monthly is None:
+        return _closed(d, "No loaded-contribution baseline recorded on this directive.")
+    after_rows = sorted([m for m in margins if m.get("sku") == sku and m.get("period_start")
+                         and date.fromisoformat(str(m["period_start"])[:10]) > since], key=lambda m: str(m["period_start"]))
+    if not after_rows:
+        return _not_yet(d, f"No margin period since the decision on {sku}.")
+    window = (str(after_rows[0]["period_start"]), str(after_rows[-1].get("period_end") or after_rows[-1]["period_start"]))
+    still_selling = [m for m in after_rows if float(m.get("units") or 0) > 0]
+    gone = [m for m in after_rows if float(m.get("units") or 0) <= 0]
+    if still_selling and not gone:
+        return _stalled(d, f"{sku} sold {sum(float(m.get('units') or 0) for m in still_selling):,.0f} units since the "
+                           f"decision — the exit has not happened, so there is nothing to bank.", since, today, window)
+    months = sum(_period_days(m) / 30.0 for m in gone)
+    avoided = max(0.0, -float(monthly)) * months
+    if avoided < MEASURE_MIN_USD:
+        return _closed(d, f"The exit of {sku} has avoided less than ${MEASURE_MIN_USD:,.0f} so far; not material.",
+                       evidence_after={"months_gone": round(months, 2)})
+    note = (f"{sku} sold nothing in {len(gone)} period(s) since the decision ({window[0]} → {window[1]}); at its loaded "
+            f"loss of ${abs(float(monthly)):,.2f} a month that is ${avoided:,.2f} not lost"
+            + (f", with {len(still_selling)} earlier period(s) still selling not counted." if still_selling else "."))
+    return _verdict(d, "measured", note, usd=round(avoided, 2), attribution="attributable",
+                    evidence_after={"months_gone": round(months, 2), "periods_gone": len(gone),
+                                    "periods_still_selling": len(still_selling)}, window=window)
 
 
 def measure_negative_margin(d: dict, margins: list[dict], inventory: list[dict],
@@ -783,35 +1196,292 @@ def measure_negative_margin(d: dict, margins: list[dict], inventory: list[dict],
                       f"none of the three routes was taken.", evidence_after={"net_after": after["net"]})
 
 
-def measure_campaign_trim(d: dict, ads_rows: list[dict], since: date, today: date) -> dict:
+def measure_campaign_trim(d: dict, ads_rows: list[dict], since: date, today: date,
+                          ppc_spend: list[dict] | None = None, negated: dict | None = None) -> dict:
     """Gross spend saved is flattery — those dollars were buying something.
-    Net saving is the only figure measurement can confirm."""
+    Net saving is the only figure measurement can confirm.
+
+    Corrected 2026-09-24. This compared the campaign's DAILY spend before and
+    after and banked one day's net against a promise made for thirty: every
+    trim was booked at a thirtieth of what it did (the model-risk bench,
+    banked/promised 0.05 over twenty-one trims). It now reads the campaign's
+    own daily rows after the change, as the reallocation does: the
+    counterfactual sales at the old spend are what the campaign actually sold
+    at the new one scaled by the fitted curve's ratio f(s_old)/f(s_new) on
+    the curve's own draws, the net is the spend saved less the margin that
+    ratio says was given up, over the days measured, banked at
+    MEASURE_QUANTILE, capped at the observed change in the campaign's net and
+    at the promise prorated to the window. A directive drafted before the
+    curve rode in its evidence falls back to the marginal-return reading,
+    scaled to the window."""
+    from .models.ad_allocation import params_vector
+    from .models.ad_efficiency import curve_values, draw_params
+
     ev = d.get("evidence") or {}
     name = ev.get("campaign_name")
     before_spend = float(ev.get("current_spend") or 0)
     avg_margin = float(ev.get("avg_margin") or 0)
-    row = next((r for r in ads_rows if r.get("campaign_name") == name), None)
-    if row is None:
-        return _not_yet(d, f"No ad-efficiency read for “{name}” since the change.")
-    after_spend = float(row.get("current_spend") or 0)
-    if after_spend >= before_spend:
-        return _verdict(d, "measured",
-                        f"“{name}” is still spending ${after_spend:,.2f} against ${before_spend:,.2f} — "
-                        f"the trim has not happened.", usd=0.0, attribution="isolated")
-    cut = before_spend - after_spend
-    roas = float(row.get("marginal_roas") or ev.get("marginal_roas") or 0)
-    forgone = max(0.0, cut * roas * avg_margin)
-    net = cut - forgone
+    horizon = float(ev.get("horizon_days") or MEASUREMENT_HORIZON_DAYS)
     promised = d.get("expected_impact_usd")
-    capped = min(net, float(promised)) if promised is not None and net > float(promised) > 0 else net
+
+    days, spend_sum, sales_sum = set(), 0.0, 0.0
+    for r in ppc_spend or []:
+        if r.get("campaign_name") != name or not r.get("report_date"):
+            continue
+        day = date.fromisoformat(str(r["report_date"])[:10])
+        if day <= since:
+            continue
+        days.add(day)
+        spend_sum += float(r.get("spend") or 0)
+        sales_sum += float(r.get("sales") or 0)
+    n_days = len(days)
+    if n_days < MIN_AFTER_DAYS:
+        # no daily file for the window: the ad-efficiency read's daily spend, as before, scaled to a window
+        row = next((r for r in ads_rows if r.get("campaign_name") == name), None)
+        if row is None or n_days == 0 and not ads_rows:
+            return _not_yet(d, f"No daily spend for “{name}” covering {MIN_AFTER_DAYS}+ days since the change.")
+        if row is None:
+            return _not_yet(d, f"No ad-efficiency read for “{name}” since the change.")
+        after_spend = float(row.get("current_spend") or 0)
+        if after_spend >= before_spend:
+            return _verdict(d, "measured", f"“{name}” is still spending ${after_spend:,.2f} against "
+                                           f"${before_spend:,.2f} — the trim has not happened.",
+                            usd=0.0, attribution="isolated")
+        cut = before_spend - after_spend
+        roas = float(row.get("marginal_roas") or ev.get("marginal_roas") or 0)
+        net = (cut - max(0.0, cut * roas * avg_margin)) * horizon
+        capped = min(net, float(promised)) if promised is not None and net > float(promised) > 0 else net
+        if abs(capped) < MEASURE_MIN_USD:
+            return _closed(d, f"The trim on “{name}” netted less than ${MEASURE_MIN_USD:,.0f}.")
+        return _verdict(d, "measured", f"“{name}” came down ${cut:,.2f} a day; at a marginal ROAS of {roas:,.2f} "
+                                       f"the net over {horizon:.0f} days is ${net:,.2f} (no daily file for the window).",
+                        usd=round(capped, 2), attribution="attributable")
+    window = (min(days).isoformat(), max(days).isoformat())
+    s_after, sales_after = spend_sum / n_days, sales_sum / n_days
+    target = float(ev.get("breakeven_used") or before_spend)
+    waste = float((negated or {}).get(name, 0.0))
+    # a negation on the same campaign removed `waste` a day of zero-sale spend
+    # on its own: the curve (fitted on blended spend) is read at blended spend
+    # on both sides, and only the spend beyond the negation is the trim's
+    before_eff = max(before_spend - waste, 0.0)
+    moved = (before_spend - (s_after + waste)) / max(before_spend - target, 1e-9)
+    if moved < REALLOCATION_EXECUTION_SHARE:
+        return _stalled(d, f"“{name}” is spending ${s_after:,.2f} a day against ${before_spend:,.2f} before and "
+                           f"${target:,.2f} recommended — the trim has not been made.", since, today, window)
+    cov = ev.get("curve_cov")
+    theta, vals = None, None
+    spends = [max(before_spend, 0.01), max(s_after + waste, 0.01)]
+    if len(ev.get("form_fits") or []) > 1:
+        # the same forms the promise pooled over
+        from .models.ad_efficiency import form_mixture_values
+        vals = form_mixture_values(ev["form_fits"], spends, 400 * len(ev["form_fits"]), MEASURE_SEED)
+    elif ev.get("curve_model") in ("hill", "log") and cov is not None:
+        theta = draw_params(ev["curve_model"], params_vector({"curve_model": ev["curve_model"],
+                                                              "curve_params": ev.get("curve_params")}),
+                            np.asarray(cov, dtype=float), 400, np.random.default_rng(MEASURE_SEED))
+        if theta is not None and len(theta) >= 50:
+            vals = curve_values(ev["curve_model"], theta, spends)
+    if vals is not None and len(vals) >= 50:
+        counterfactual = sales_after * vals[:, 0] / np.maximum(vals[:, 1], 1e-9)
+        gains = n_days * ((before_eff - s_after) - avg_margin * (counterfactual - sales_after))
+        gains = gains[np.isfinite(gains)]
+        delta = float(np.quantile(gains, MEASURE_QUANTILE))
+        reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+                   f"(median ${float(np.quantile(gains, 0.5)):,.2f})")
+    else:
+        roas = float(ev.get("marginal_roas") or 0)
+        cut = before_eff - s_after
+        gains = None
+        delta = n_days * (cut - max(0.0, cut * roas * avg_margin))
+        reading = f"at the marginal ROAS of {roas:,.2f} recorded on the directive"
+    sales_before = ev.get("current_sales")
+    if sales_before is not None:
+        observed = n_days * ((avg_margin * sales_after - s_after) - (avg_margin * float(sales_before) - before_spend)
+                             - waste)
+        delta, cap_note = _cap_at_observed(delta, observed, "the campaign's own net")
+        reading += cap_note
+    prorated = float(promised) * n_days / horizon if promised is not None else None
+    capped = delta
+    if prorated is not None and delta > prorated > 0:
+        capped = prorated
+        reading += f", and at the ${prorated:,.2f} promised for {n_days} days"
     if abs(capped) < MEASURE_MIN_USD:
-        return _closed(d, f"The trim on “{name}” netted less than ${MEASURE_MIN_USD:,.0f}.")
-    return _verdict(d, "measured",
-                    f"“{name}” came down ${cut:,.2f}. At a marginal ROAS of {roas:,.2f} and a "
-                    f"{avg_margin:.0%} contribution margin, roughly ${forgone:,.2f} of profit came off with it — "
-                    f"a net ${net:,.2f}.",
-                    usd=round(capped, 2), attribution="attributable",
-                    evidence_after={"spend_after": after_spend, "forgone": round(forgone, 2)})
+        return _closed(d, f"The trim on “{name}” netted less than ${MEASURE_MIN_USD:,.0f} over {n_days} days.")
+    note = (f"Over {window[0]} → {window[1]} “{name}” spent ${s_after:,.2f} a day against ${before_spend:,.2f} "
+            f"before and sold ${sales_after:,.2f} a day — a net ${delta:,.2f} over {n_days} days, {reading}.")
+    after_ev = {"spend_after": round(s_after, 2), "sales_after": round(sales_after, 2), "days": n_days,
+                "executed_share": round(moved, 3)}
+    if gains is not None:
+        after_ev["measured_distribution"] = {"p5": round(float(np.quantile(gains, 0.05)), 2),
+                                             "p25": round(float(np.quantile(gains, 0.25)), 2),
+                                             "p50": round(float(np.quantile(gains, 0.50)), 2),
+                                             "p95": round(float(np.quantile(gains, 0.95)), 2),
+                                             "quantile_banked": MEASURE_QUANTILE, "draws": int(gains.size),
+                                             "seed": MEASURE_SEED}
+    return _verdict(d, "measured", note, usd=round(capped, 2), attribution="attributable",
+                    evidence_after=after_ev, window=window)
+
+
+# How much of the prescribed move must have happened, averaged over the
+# campaigns the plan moved, before a reallocation counts as made. Below it the
+# directive is stalled, not measured: a plan half-executed is a different plan.
+REALLOCATION_EXECUTION_SHARE = 0.5
+
+
+def negated_daily_spend(directives: list[dict], today: date) -> dict[str, float]:
+    """{campaign: daily spend removed by negative-matched terms} for every
+    ad_bleed_terms directive already acted on. A reallocation or a trim on the
+    same campaign would otherwise read that drop as its own move: the
+    campaign's spend fell by the waste, its sales did not, and a curve-anchored
+    counterfactual books the gap as a loss (the model-risk bench,
+    2026-09-24: four reallocations banked −$9,960 against a true +$3,783)."""
+    out: dict[str, float] = {}
+    for d in directives:
+        if d.get("kind") != "ad_bleed_terms":
+            continue
+        since = _acted_on(d)
+        if since is None or since > today:
+            continue
+        ev = d.get("evidence") or {}
+        days = float(ev.get("baseline_days") or 30.0)
+        for t in ev.get("terms") or []:
+            camp = t.get("campaign_name")
+            if camp:
+                out[camp] = out.get(camp, 0.0) + float(t.get("spend") or 0) / days
+    return out
+
+
+def measure_budget_reallocation(d: dict, ppc_spend: list[dict], since: date, today: date,
+                                negated: dict | None = None) -> dict:
+    """The reallocation, measured on the campaigns' own after-window.
+
+    Anchored PER CAMPAIGN, as the price step is anchored on its after period:
+    each campaign's counterfactual sales at its old spend are what it actually
+    sold at its new spend, scaled by the stored curve's ratio f(s_old)/f(s_new)
+    on draws of that curve's own covariance. Whatever demand shock hit the
+    window hit factual and counterfactual alike, campaign by campaign; a single
+    account-wide factor would assume the shock hit every campaign in
+    proportion, which it need not. Banked at MEASURE_QUANTILE of the joint
+    draws, capped at the observed change in the set's net and at the promise
+    prorated to the window."""
+    from .models.ad_allocation import params_vector
+    from .models.ad_efficiency import curve_values, draw_params
+
+    ev = d.get("evidence") or {}
+    plan = [c for c in (ev.get("campaigns") or []) if c.get("status") == "ok"]
+    margin = float(ev.get("avg_margin") or 0)
+    horizon = float(ev.get("horizon_days") or MEASUREMENT_HORIZON_DAYS)
+    if not plan or margin <= 0:
+        return _closed(d, "No reallocation plan recorded on this directive.")
+    names = {c["campaign_name"] for c in plan}
+
+    after: dict[str, dict] = {n: {"days": set(), "spend": 0.0, "sales": 0.0} for n in names}
+    for r in ppc_spend:
+        name = r.get("campaign_name")
+        if name not in names or not r.get("report_date"):
+            continue
+        day = date.fromisoformat(str(r["report_date"])[:10])
+        if day <= since:
+            continue
+        a = after[name]
+        a["days"].add(day)
+        a["spend"] += float(r.get("spend") or 0)
+        a["sales"] += float(r.get("sales") or 0)
+    days = sorted(set().union(*(a["days"] for a in after.values())))
+    if len(days) < MIN_AFTER_DAYS:
+        return _not_yet(d, f"Only {len(days)} day(s) of spend since the reallocation; {MIN_AFTER_DAYS} needed.")
+    n_days = len(days)
+    window = (days[0].isoformat(), days[-1].isoformat())
+
+    cur = {c["campaign_name"]: float(c.get("current") or 0) for c in plan}
+    rec = {c["campaign_name"]: float(c.get("recommended") or 0) for c in plan}
+    sales_before = {c["campaign_name"]: float(c.get("current_sales") or 0) for c in plan}
+    s_after = {n: after[n]["spend"] / n_days for n in names}
+    sales_after = {n: after[n]["sales"] / n_days for n in names}
+    # spend a negative match removed from the same campaign: the old
+    # allocation, after the negation, would have spent that much less
+    # The curve was fitted on blended spend, waste included, so it is read at
+    # blended spend on both sides: the old allocation after the negation is
+    # f(cur) sold for cur − waste spent, the new one f(s_after + waste) sold
+    # for s_after spent.
+    waste = {n: float((negated or {}).get(n, 0.0)) for n in names}
+    cur_eff = {n: max(cur[n] - waste[n], 0.0) for n in names}
+
+    # Execution gate: did the spend actually move toward the plan?
+    ratios = [max(0.0, (s_after[n] + waste[n] - cur[n]) / (rec[n] - cur[n]))
+              for n in names if abs(rec[n] - cur[n]) >= 0.5]
+    executed = float(np.mean(ratios)) if ratios else 0.0
+    if executed < REALLOCATION_EXECUTION_SHARE:
+        return _stalled(d, f"Spend has moved {executed:.0%} of the way to the recommended allocation — "
+                           f"the reallocation has not been made, so there is nothing to measure.",
+                        since, today, window)
+
+    rng = np.random.default_rng(MEASURE_SEED)
+    # Every campaign's draws first: rejection inside the fit's bounds leaves
+    # each campaign a different number of accepted draws, and draw d of one is
+    # paired with draw d of every other only after truncating to the common
+    # count — the same pairing the allocation was promised on.
+    thetas = {}
+    for c in plan:
+        n = c["campaign_name"]
+        cov = c.get("curve_cov")
+        theta = (draw_params(c["curve_model"], params_vector(c), np.asarray(cov, dtype=float), 400, rng)
+                 if cov is not None else None)
+        if theta is None:
+            return _closed(d, f"The stored response curve for “{n}” cannot be redrawn, so the counterfactual "
+                              f"cannot be rebuilt honestly.")
+        thetas[n] = theta
+    m_draws = min(len(t) for t in thetas.values())
+    if m_draws < 50:
+        return _closed(d, f"Only {m_draws} joint parameter draws land inside the fits' bounds; the counterfactual "
+                          f"cannot be rebuilt honestly.")
+    gains = np.zeros(m_draws)
+    for c in plan:
+        n = c["campaign_name"]
+        vals = curve_values(c["curve_model"], thetas[n][:m_draws], [max(cur[n], 0.01), max(s_after[n] + waste[n], 0.01)])
+        counterfactual = sales_after[n] * vals[:, 0] / np.maximum(vals[:, 1], 1e-9)
+        gains = gains + margin * (sales_after[n] - counterfactual) - (s_after[n] - cur_eff[n])
+    gains = gains * n_days
+    gains = gains[np.isfinite(gains)]
+    if gains.size == 0:
+        return _closed(d, "The counterfactual draws were not finite; nothing is banked.")
+    delta = float(np.quantile(gains, MEASURE_QUANTILE))
+    reading = (f"taken at the {MEASURE_QUANTILE:.0%} percentile of the fitted range "
+               f"(median ${float(np.quantile(gains, 0.5)):,.2f})")
+
+    before_net = sum(margin * sales_before[n] - cur[n] for n in names)
+    after_net = sum(margin * sales_after[n] - s_after[n] for n in names)
+    # the negation's saving is the negation's, not the reallocation's
+    observed = (after_net - before_net - sum(waste.values())) * n_days
+    delta, cap_note = _cap_at_observed(delta, observed, "the campaign set's own net")
+    reading += cap_note
+
+    promised = d.get("expected_impact_usd")
+    prorated = float(promised) * n_days / horizon if promised is not None else None
+    capped = delta
+    if prorated is not None and delta > prorated > 0:
+        capped = prorated
+        reading += f", and at the ${prorated:,.2f} promised for {n_days} days"
+    if abs(capped) < MEASURE_MIN_USD:
+        return _closed(d, f"The reallocation moved less than ${MEASURE_MIN_USD:,.0f} over {n_days} days; not material.",
+                       evidence_after={"delta": round(delta, 2), "executed_share": round(executed, 3)})
+    note = (f"Over {window[0]} → {window[1]} the {len(plan)} campaigns spent ${sum(s_after.values()):,.2f}/day "
+            f"against ${sum(cur.values()):,.2f}/day before and sold ${sum(sales_after.values()):,.2f}/day. At the old "
+            f"allocation the fitted curves put the same days at ${sum(sales_after.values()) - float(np.median(gains)) / n_days / max(margin, 1e-9):,.2f}/day "
+            f"— a net difference of ${delta:,.2f}, {reading}.")
+    return _verdict(d, "measured", note, usd=round(capped, 2), attribution="attributable",
+                    evidence_after={"spend_after": {n: round(v, 2) for n, v in s_after.items()},
+                                    "sales_after": {n: round(v, 2) for n, v in sales_after.items()},
+                                    "executed_share": round(executed, 3), "days": n_days,
+                                    "uncapped": round(float(np.quantile(gains, MEASURE_QUANTILE)), 2),
+                                    "measured_distribution": {
+                                        "p5": round(float(np.quantile(gains, 0.05)), 2),
+                                        "p25": round(float(np.quantile(gains, 0.25)), 2),
+                                        "p50": round(float(np.quantile(gains, 0.50)), 2),
+                                        "p95": round(float(np.quantile(gains, 0.95)), 2),
+                                        "quantile_banked": MEASURE_QUANTILE, "draws": int(gains.size),
+                                        "seed": MEASURE_SEED}},
+                    window=window)
 
 
 def measure_branded_pause(d: dict, search_terms: list[dict], margins: list[dict],
@@ -893,8 +1563,65 @@ def _dedupe_overlapping(verdicts: list[dict], directives_by_id: dict) -> list[di
     return out
 
 
+def measure_ad_switchback(d: dict, switchbacks: list[dict] | None, since: date, today: date) -> dict:
+    """An information purchase: no dollars, the estimate on the record."""
+    ev = d.get("evidence") or {}
+    schedule = ev.get("schedule") or {}
+    name = ev.get("campaign_name")
+    end = schedule.get("end_date")
+    result = next((t.get("result") for t in (switchbacks or [])
+                   if t.get("campaign") == name and t.get("result")), None)
+    if result is None:
+        if end and today <= date.fromisoformat(str(end)[:10]):
+            return _not_yet(d, f"The ON/OFF test on “{name}” runs until {end}.")
+        return _stalled(d, f"No analysis on file for the ON/OFF test on “{name}”; run `hubricon adtest … analyze`.",
+                        since, today)
+    if result.get("status") == "ok":
+        return _closed(d, f"Measured: {result['incrementality']:.2f} of “{name}”'s attributed sales are incremental "
+                          f"(90% range {result['ci90'][0]:.2f} to {result['ci90'][1]:.2f}) — {result['reading']}. "
+                          f"The break-even is corrected from the next run; nothing is banked on the test.",
+                       evidence_after={"incrementality": result["incrementality"], "ci90": result["ci90"],
+                                       "p_permutation": result.get("p_permutation"),
+                                       "compliance": result.get("compliance")})
+    if result.get("status") == "not_executed":
+        return _closed(d, f"The campaign kept spending on its OFF days, so the test on “{name}” identified nothing.",
+                       evidence_after={"compliance": result.get("compliance")})
+    return _closed(d, f"The test on “{name}” came back {result.get('status')}; nothing is banked.")
+
+
+def measure_price_experiment(d: dict, experiments: list[dict] | None, since: date, today: date) -> dict:
+    """An information purchase: the experimental elasticity on the record, no
+    dollars. The price steps built on it carry their own promises."""
+    ev = d.get("evidence") or {}
+    sku, start, end = ev.get("sku"), ev.get("start_date"), ev.get("end_date")
+    result = next((e for e in (experiments or [])
+                   if e.get("item_id") == sku and str(e.get("start_date")) == str(start)), None)
+    if result is None:
+        if end and today <= date.fromisoformat(str(end)[:10]):
+            return _not_yet(d, f"The randomised test on {sku} runs until {end}.")
+        return _stalled(d, f"No analysis on file for the randomised test on {sku}; run `hubricon pricetest … analyze`.",
+                        since, today)
+    details = result.get("details") or {}
+    if result.get("status") == "ok":
+        sentence = details.get("bias_sentence") or (
+            f"The randomised test puts {sku}'s elasticity at {float(result['elasticity']):.2f} "
+            f"({details.get('ci95', ['?', '?'])[0]} to {details.get('ci95', ['?', '?'])[1]}).")
+        return _closed(d, f"Measured. {sentence} The next fit uses it, unshrunk; nothing is banked on the test.",
+                       evidence_after={"elasticity_exp": result["elasticity"], "std_err": result["std_err"],
+                                       "ci95": details.get("ci95"), "bias_estimate": details.get("bias_estimate"),
+                                       "bias_se": details.get("bias_se"), "compliance": result.get("compliance"),
+                                       "p_permutation": details.get("p_permutation")})
+    if result.get("status") == "not_executed":
+        return _closed(d, f"The price on {sku} sat at the assigned arm on only "
+                          f"{float(result.get('compliance') or 0):.0%} of days, so the test identified nothing.",
+                       evidence_after={"compliance": result.get("compliance")})
+    return _closed(d, f"The randomised test on {sku} came back {result.get('status')}; nothing is banked.",
+                   evidence_after={"status": result.get("status")})
+
+
 def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: list[dict],
-            claims: list[dict], today: date | None = None, inv_econ: dict | None = None) -> list[dict]:
+            claims: list[dict], today: date | None = None, inv_econ: dict | None = None,
+            switchbacks: list[dict] | None = None, experiments: list[dict] | None = None) -> list[dict]:
     """One verdict per directive that is due a measurement.
 
     `data` is the canonical export dict every model reads (cli._load_data), so
@@ -914,6 +1641,8 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
            # closing it would silently retire work that is genuinely pending —
            # so it is left exactly as it is, for a person to settle.
            and d.get("kind")]
+    realisation = volume_realisation(due, margins, _acted_on)
+    negated = negated_daily_spend(directives, today)
     verdicts = []
     for d in due:
         kind = d.get("kind")
@@ -935,11 +1664,21 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
         elif kind == "spend_step":
             verdicts.append(measure_spend_step(d, ppc_spend, since, today))
         elif kind == "price_step":
-            verdicts.append(measure_price_step(d, margins, traffic, since, today))
+            verdicts.append(measure_price_step(d, margins, traffic, since, today, realisation))
+        elif kind == "markdown":
+            verdicts.append(measure_markdown(d, margins, inv_econ, since, today, realisation))
         elif kind == "negative_margin_sku":
             verdicts.append(measure_negative_margin(d, margins, inventory, since, today))
+        elif kind == "sku_exit":
+            verdicts.append(measure_sku_exit(d, margins, since, today))
         elif kind == "campaign_trim":
-            verdicts.append(measure_campaign_trim(d, ads_rows, since, today))
+            verdicts.append(measure_campaign_trim(d, ads_rows, since, today, ppc_spend, negated))
+        elif kind == "budget_reallocation":
+            verdicts.append(measure_budget_reallocation(d, ppc_spend, since, today, negated))
+        elif kind == "ad_switchback":
+            verdicts.append(measure_ad_switchback(d, switchbacks, since, today))
+        elif kind == "price_experiment":
+            verdicts.append(measure_price_experiment(d, experiments, since, today))
         elif kind == "branded_pause":
             verdicts.append(measure_branded_pause(d, search_terms, margins, since, today))
         elif kind in ("low_inventory_fee", "aged_surcharge", "peak_storage_premium"):
@@ -952,6 +1691,7 @@ def measure(directives: list[dict], data: dict, margins: list[dict], ads_rows: l
             verdicts.append(_closed(d, f"No measurement family defined for {kind!r}."))
 
     verdicts = _dedupe_overlapping(verdicts, {d["id"]: d for d in due if d.get("id")})
+    verdicts = bank_the_book(verdicts)
 
     # Materiality, applied last so every family gets the same floor.
     final = []

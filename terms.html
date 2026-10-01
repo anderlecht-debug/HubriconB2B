@@ -4,72 +4,68 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Terms of Service — Hubricon</title>
-<meta name="description" content="The terms behind the free Profit Teardown and Managed Profit: the Proving Month, the flat fee, the Profit Record, the standing mandate, and the exit.">
+<meta name="description" content="The terms behind Managed Profit: the call, the Proving Month, the flat fee, the Profit Record, the standing mandate, and the exit.">
 <link rel="canonical" href="https://www.hubricon.com/terms">
-<meta name="theme-color" content="#f2f3f8">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ctext x='32' y='46' font-family='Arial Narrow,Arial' font-size='40' font-weight='bold' fill='%23FFC000' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* Legal pages share the welcome page's paper-and-gold system: one column, readable. */
-:root{
-  --bg: hsl(222 28% 96%); --panel: hsl(0 0% 100%); --panel-2: hsl(222 26% 94%);
-  --amber: hsl(40 96% 33%); --ink: hsl(228 44% 11%); --ink-soft: hsl(228 26% 26%);
-  --ink-faint: hsl(228 16% 42%); --hairline: hsl(228 30% 20% / .14);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+/* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
+.wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+h1 { font-size: var(--t-display-m); }
+h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
+h3 { font-size: var(--t-18); letter-spacing: -0.01em; line-height: 1.3; margin: var(--s-5) 0 var(--s-2); }
+p { margin: 0 0 var(--s-4); max-width: 68ch; font-size: var(--t-16); }
+ul, ol { margin: 0 0 var(--s-4); padding-left: var(--s-5); max-width: 68ch; font-size: var(--t-16); }
+li { margin-bottom: var(--s-2); }
+a { color: var(--ink); text-underline-offset: 3px; }
+.meta { font-size: var(--t-14); color: var(--ink-3); margin: var(--s-3) 0 var(--s-6); }
+.lede { font-size: var(--t-20); line-height: 1.55; color: var(--ink); max-width: 58ch; margin-bottom: var(--s-3); }
+.panel { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-5) var(--s-6); margin: var(--s-5) 0 var(--s-3); }
+.panel ul { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
+th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
+th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
+@media (max-width: 640px) {
+  .panel { padding: var(--s-4); }
+  th, td { display: block; padding: var(--s-1) 0; border: 0; }
+  tr { display: block; padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 }
-*{ box-sizing: border-box; margin: 0; }
-body{ background: var(--bg); color: var(--ink-soft); font-family: var(--sans); font-size: 15.5px; line-height: 1.7; padding: 40px 20px 90px; }
-.wrap{ max-width: 720px; margin: 0 auto; }
-h1, h2, h3{ font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
-h1{ font-size: clamp(30px, 6vw, 42px); line-height: 1.12; text-wrap: balance; }
-h2{ font-size: 22px; margin: 40px 0 10px; }
-h3{ font-size: 16.5px; margin: 22px 0 6px; }
-p{ margin: 0 0 14px; max-width: 68ch; }
-ul, ol{ margin: 0 0 16px; padding-left: 22px; max-width: 68ch; }
-li{ margin-bottom: 6px; }
-a{ color: var(--amber); }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); text-decoration: none; }
-.wordmark i{ font-style: normal; color: var(--amber); }
-.masthead{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--hairline); padding-bottom: 18px; margin-bottom: 34px; }
-.masthead .mono{ font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); letter-spacing: .08em; text-transform: uppercase; }
-.meta{ font-family: var(--mono); font-size: 12px; color: var(--ink-faint); letter-spacing: .04em; margin: 12px 0 26px; }
-.lede{ font-family: var(--serif); font-weight: 300; font-size: 19px; line-height: 1.65; color: var(--ink); max-width: 58ch; margin-bottom: 8px; }
-.panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px; padding: 22px 26px; margin: 18px 0 8px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
-.panel ul{ margin-bottom: 0; }
-mark{ background: hsl(45 100% 85%); color: var(--ink); padding: 0 4px; border-radius: 3px; }
-footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18px; font-size: 13px; color: var(--ink-faint); line-height: 1.8; }
-@media (max-width: 560px){ .panel{ padding: 18px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/">Hubric<i>o</i>n</a>
+    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Terms</span>
   </div>
 
   <h1>Terms of Service</h1>
-  <p class="meta">Effective September 11, 2026 · <a href="/privacy">Privacy Policy</a></p>
+  <p class="meta">Effective September 30, 2026 · Approved by Hagen Simmons, founder · <a href="/privacy">Privacy Policy</a></p>
 
-  <p class="lede">These terms cover the free Profit Teardown and Managed Profit. They are written in
+  <p class="lede">These terms cover Managed Profit and the call that comes before it. They are written in
   plain English on purpose. There is no second version in smaller type.</p>
   <p>"Hubricon", "we" and "us" mean Hagen Simmons, doing business as Hubricon, in Dallas, Texas, United
-  States. "You" means the business that applies for a Teardown or takes Managed Profit. By booking a Teardown
-  call, granting us a seat on your store, uploading files, or saying yes to Managed Profit, you accept
+  States. "You" means the business that books a call with us or takes Managed Profit. By booking a call,
+  granting us a seat on your store, uploading files, or saying yes to Managed Profit, you accept
   these terms.</p>
 
   <div class="panel">
     <ul>
-      <li><b>The Teardown is free</b> and creates no obligation.</li>
+      <li><b>The call is free</b> and creates no obligation.</li>
       <li><b>The first month of Managed Profit is free.</b> If you stay, it is $6,000 a month, flat, month to month.</li>
-      <li><b>Invoiced by email, paid by ACH, net seven days.</b> No card on file, so nothing is ever charged automatically.</li>
-      <li><b>Cancel with one email, effective immediately.</b> Your data and your Profit Record export are free, any time.</li>
+      <li><b>A month is invoiced only if it clears the fee.</b> Your Profit Record measures every month on its own. More than $6,000, and that month is invoiced by email, paid by ACH, net seven days. $6,000 or less, and that month is free: nothing credited, nothing carried. No card on file, so nothing is ever charged automatically.</li>
+      <li><b>Cancel with one email, effective immediately.</b> Any month you paid for that does not clear on its own number comes back. Your data and your Profit Record export are free, any time.</li>
+      <li><b>The work carries on in a month that does not clear.</b> That month is not invoiced, and nothing stops.</li>
       <li><b>We act inside a standing mandate you set</b>, and you hold a veto on every move.</li>
     </ul>
   </div>
@@ -83,31 +79,58 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   It is not software you license: Hubricon is where the work is delivered to you and where every move
   and its result is recorded, not a tool you operate.</p>
 
-  <h2>2. The Profit Teardown</h2>
-  <p>The Teardown is free and creates no obligation on either side. It is produced within twenty-four
-  hours of your seat going live or your files arriving. You keep the written report and the recorded
-  walkthrough whether or not you take Managed Profit. If the Teardown finds nothing worth fixing, we tell you so.</p>
+  <h2>2. The call</h2>
+  <p>The call is free and creates no obligation on either side. We look at your numbers with you. If
+  the arithmetic does not clear our fee at your size, we tell you so. Anything you show us is
+  confidential under section 10, whether or not you take Managed Profit.</p>
 
   <h2>3. Managed Profit and the Proving Month</h2>
-  <p>Managed Profit (the retainer) starts on the day you say yes after the Teardown. The first thirty
+  <p>Managed Profit (the retainer) starts on the day you say yes after the call. The first thirty
   days are the Proving Month: free, and they include the full service: the plan, the corrections
-  executed, a Profit Brief every two weeks with its recorded walkthrough and full report, the Profit Record. In that month we deliver the Teardown within
-  twenty-four hours of your files (section 2), your ninety-day plan on the kickoff call, and the first
+  executed, a Profit Brief every two weeks with its recorded walkthrough and full report, the Profit Record. In that month we deliver
+  our first full read of every SKU once your files arrive, your ninety-day plan on the kickoff call, and the first
   corrections inside the first fourteen days. The free month is free regardless of outcome, and
   whether or not we manage all of that. If we do not find you more than we cost, you walk away
   owing nothing.</p>
   <p>If you stay past day thirty, the fee is $6,000 per month, flat. It is never a percentage of your
   ad spend or your revenue. Managed Profit is month to month with no minimum term.</p>
-  <p>The guarantee does not stop at day thirty. An invoice your Profit Record has not covered is void:
-  whenever a new invoice is issued we check that the value the Profit Record has measured or identified
-  (proven on your own later exports, or found and filed) since day one (the day you said yes) covers everything we
-  have billed you, that invoice included. If it does not, that
-  invoice is void and nothing is owed for the month; if it had already been paid, the same amount is
-  credited against your next. The work carries on either way.</p>
+  <p>After the Proving Month, every month is judged on its own number. A month runs from the same date
+  each month as the day you said yes. About a week after it ends, once its exports have landed, your
+  Profit Record measures what every move earned in that month, from that month's own exports, by the
+  rules below. That is done once, and the result stands, except that a dollar you dispute and the record
+  cannot defend comes off it. If the month's number is more than the fee, the month is invoiced. If it is
+  not, the month is free: no invoice is sent and nothing is owed, nothing is credited, and nothing
+  carries into the next month, in either direction. Dollars found but not yet measured do not count.</p>
+  <p>Each month's invoice is held as a draft until its month has been measured, so the number is on your
+  Profit Record before any invoice exists. If an invoice ever reaches you before that check and the month
+  then comes out short, it is void all the same, and if you have already paid it, it is refunded in full
+  to the account it was paid from, not credited against a later invoice. The work carries on either way.</p>
+<!-- build:attribution -->
+<h3 id="how-a-dollar-counts">How your Profit Record counts a dollar</h3>
+<p>These are the rules your Record is kept by. They are agreed before any number is on it, so neither of us can bend them once one is.</p>
+<p><b>Before.</b> Every move is written down with the dollars we expect it to earn over its first thirty days, before it goes live.</p>
+<p><b>After.</b> It is measured on your own later exports, and every dollar is graded by how we know it:</p>
+<ul>
+  <li><b>Direct.</b> The platform's own record shows the money moved: Amazon paid a reimbursement on a claim we filed. Counted in full.</li>
+  <li><b>Isolated.</b> Measured on the exact line the move named, against that line's own level before the change: the change, times the volume you actually sold.</li>
+  <li><b>Attributable.</b> Where demand moved too, measured against a stated counterfactual, from the same model that made the promise, at the least favourable end of its own range.</li>
+  <li><b>Unmeasurable.</b> Where we cannot separate our move from everything else, nothing is counted, and the Record says so.</li>
+</ul>
+<p><b>Four rules apply to every dollar.</b></p>
+<ul>
+  <li><b>Never above the promise.</b> An isolated or attributable result counts at most what we said it would earn. Anything more is shown and named, never added. A direct dollar counts what the platform actually paid.</li>
+  <li><b>Nothing under $25.</b> A smaller result is noise: the move closes and counts nothing.</li>
+  <li><b>Once.</b> The same movement on the same SKU in the same period is credited to one move only, the oldest.</li>
+  <li><b>It has to last.</b> Every month, each move is measured again on that month's exports alone, against the level before it went live. A leak that stopped holding earns nothing that month.</li>
+</ul>
+<p><b>Misses stay.</b> A move that earned less than we expected is recorded at what it earned.</p>
+<p><b>Every month stands on its own.</b> About a week after a month ends, once its exports have landed, everything every move earned in it is added up, once. That one number is the month's: nothing found but not yet measured counts, and nothing carries from one month to the next.</p>
+<p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
+<!-- /build:attribution -->
 
   <h2>4. Invoicing and payment</h2>
-  <p>We invoice by email at the start of each paid month. Invoices are paid by ACH and are due seven
-  days after they are issued. We keep no card on file, so nothing is charged automatically: each month
+  <p>Months are invoiced in arrears: a month is invoiced by email after it ends, once the check in
+  section 3 has cleared it. Invoices are paid by ACH and are due seven days after they are sent. We keep no card on file, so nothing is charged automatically: each month
   is invoiced, and you pay it. If an invoice is more than fourteen days late we pause execution and
   monitoring until it is settled.</p>
   <p><b>Recovery Only.</b> If you take reimbursement filing alone rather than Managed Profit, there is
@@ -120,8 +143,12 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   <h2>5. Cancelling</h2>
   <p>Either of us can end Managed Profit by email, effective immediately, with no notice period and no
   fee. From the moment we receive your email we make no further changes in your account. The seat is
-  yours to revoke. A month you have already paid for is not refunded when you cancel inside it; the
-  month after it is simply never invoiced.</p>
+  yours to revoke.</p>
+  <p>When Managed Profit ends, we true up. We check every month we invoiced once more against its own
+  number, as section 3 measures it and after any dispute. An invoice for a month that does not clear the
+  fee is voided if you have not paid it and refunded in full, to the account it was paid from, if you
+  have. We issue that refund within seven days of your email. The month in progress when you cancel is
+  never invoiced.</p>
 
   <h2>6. The seat and the standing mandate</h2>
   <p>On Amazon you grant us one Seller Central user with exactly four permissions: Business Reports
@@ -178,11 +205,16 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   <p>We keep your data, your numbers and your plans confidential, and we never use one client's data to
   advise another. You keep our methods, models and unpublished materials confidential. The Privacy
   Policy describes the providers who process data on our behalf. Anonymised publication under
-  section 9 is one of two exceptions on our side. The other needs your separate, explicit consent,
+  section 9 is one of three exceptions on our side. The second needs your separate, explicit consent,
   given on the same private page: aggregate statistics from your account (a rate, a ratio, a fitted
-  slope; never a figure of yours, never your name) may then calibrate the public estimates our
-  teardowns make, and every estimate that uses them says how many accounts stand behind it. Without
-  that consent your data calibrates nothing.</p>
+  slope; never a figure of yours, never your name) may then calibrate the estimates we make from
+  public pages, and every estimate that uses them says how many accounts stand behind it. Without
+  that consent your data calibrates nothing. The third also needs your separate, explicit consent,
+  given on the same private page: aggregates from your account (which fee changed, which way, roughly
+  when, and by what percentage; never a figure of yours, never your name, a SKU or an ASIN) may then
+  inform the alerts we send other clients about a change on the platform's side, and our measure of
+  what each kind of move delivers, and every alert that uses them says how many accounts stand behind
+  it. Without that consent your data informs no other client.</p>
 
   <h2>11. Data and intellectual property</h2>
   <p>Your data is yours. We hold it only to deliver the service, and you can export it and your full
@@ -196,7 +228,8 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   fee. Neither of us is liable to the other for indirect or consequential loss or for lost profits. We
   are not liable for a platform's own actions, such as fee changes, listing suppressions, payout holds
   or account suspensions, unless they result from us acting outside your mandate. Nothing here limits liability
-  for fraud or for anything the law does not allow to be limited.</p>
+  for fraud or for anything the law does not allow to be limited. The voids and refunds promised in sections 3
+  and 5 are not claims under this section and are not limited by it.</p>
 
   <h2>13. General</h2>
   <p>We are an independent contractor, not your employee or partner. Neither of us is exclusive to the
@@ -218,7 +251,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   Hubricon · Dallas, Texas, United States</p>
 
   <footer>
-    Hubricon · Managed Profit · <a href="/">www.hubricon.com</a> · <a href="/privacy">Privacy Policy</a>
+    Hubricon · <a href="/">Home</a> · <a href="/learn">Learn</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/privacy">Privacy Policy</a>
   </footer>
 </div>
 </body>

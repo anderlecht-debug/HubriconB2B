@@ -1,0 +1,253 @@
+/* ============================================================================
+   Hubricon: the design system. Every page reads this file; no page keeps a
+   private palette, type scale or spacing.
+
+   Precision in service of trust. Bright white, a lot of air, ink for everything,
+   and one cold electric blue used only on money and the leak. Dark sections
+   separate acts; they never decorate. One sans, two weights, tabular numerals.
+   Written 2026-09-30 from HUBRICON_SPEC.md ("Visual direction"); BRAND.md
+   describes it in words.
+   ============================================================================ */
+
+:root {
+  /* colour */
+  --paper: #ffffff;
+  --paper-2: #f5f6f8;                /* a quiet panel, never a card shadow */
+  --ink: #0a0e17;
+  --ink-2: #3b4250;                  /* body copy */
+  --ink-3: #636b7a;                  /* captions, labels, axes: 5.3:1 on paper */
+  --ink-4: #9aa1ae;                  /* a chart's second neutral: a fee, a cost, a ghosted series */
+  --rule: #e4e7ec;
+  --rule-2: #cdd2da;
+  --blue: #0b5fff;                   /* money and the leak. Nothing else. 5.0:1 on paper */
+  --blue-wash: rgb(11 95 255 / 0.07);
+
+  --night: #070a11;
+  --night-2: #0d121c;
+  --night-ink: #f3f5f9;
+  --night-ink-2: #a8b0bf;
+  --night-ink-3: #7c8596;
+  --night-ink-4: #4f5768;
+  --night-rule: #1d2431;
+  --night-blue: #5b94ff;
+
+  /* type: one sans, two weights */
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --regular: 400;
+  --strong: 600;
+  --t-12: 0.75rem;
+  --t-14: 0.875rem;
+  --t-16: 1rem;
+  --t-18: 1.125rem;
+  --t-20: 1.25rem;
+  --t-24: 1.5rem;
+  --t-display-s: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+  --t-display-m: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
+  --t-display-l: clamp(2.375rem, 1.2rem + 4.6vw, 4.5rem);
+  --track-display: -0.032em;
+  --track-label: 0.08em;
+
+  /* space: one scale, everywhere */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 128px;
+  --section: clamp(var(--s-8), 9vw, var(--s-10));
+  --gutter: clamp(var(--s-4), 4vw, var(--s-6));
+  --wide: 1120px;
+  --measure: 60ch;
+  --radius: 10px;
+
+  /* charts: weights, washes and motion read from here, never set in a chart */
+  --line-hair: 1px;
+  --line-step: 2px;
+  --line-pct: 2px;
+  --line-leak: 3px;
+  --mc-path-draw: 0.28;              /* a path's opacity while it draws */
+  --mc-path-rest: 0.07;              /* and once it has settled */
+  --mc-band: 0.13;                   /* the P10–P90 band */
+  --mc-draw-ms: 2000ms;
+  --mc-band-ms: 400ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A dark section is the same system with the ink and paper swapped, so every
+   component and chart inside it needs no second style. */
+.night {
+  --paper: var(--night);
+  --paper-2: var(--night-2);
+  --ink: var(--night-ink);
+  --ink-2: var(--night-ink-2);
+  --ink-3: var(--night-ink-3);
+  --ink-4: var(--night-ink-4);
+  --rule: var(--night-rule);
+  --rule-2: #2c3443;
+  --blue: var(--night-blue);
+  --blue-wash: rgb(91 148 255 / 0.1);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+
+/* ---------------------------------------------------------------- base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: var(--font);
+  font-weight: var(--regular);
+  font-size: var(--t-18);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+img, svg, video { display: block; max-width: 100%; }
+a { color: inherit; }
+b, strong { font-weight: var(--strong); color: var(--ink); }
+::selection { background: rgb(11 95 255 / 0.16); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+h1, h2, h3 {
+  color: var(--ink);
+  font-weight: var(--strong);
+  letter-spacing: var(--track-display);
+  line-height: 1.06;
+  text-wrap: balance;
+}
+h1 { font-size: var(--t-display-l); }
+h2 { font-size: var(--t-display-m); }
+h3 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
+p { text-wrap: pretty; }
+
+/* -------------------------------------------------------------- layout ---- */
+.wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; }
+.section { padding-block: var(--section); }
+.section + .section:not(.night) { border-top: 1px solid var(--rule); }
+.night + .section, .section + .night { border-top: 0; }
+.measure { max-width: var(--measure); }
+.stack > * + * { margin-top: var(--s-5); }
+.lede { font-size: var(--t-20); line-height: 1.55; color: var(--ink-2); max-width: 52ch; }
+
+/* -------------------------------------------------------------- pieces ---- */
+/* Every number tabular. Not set on body: Inter's tabular feature also widens the
+   hyphen, and prose like "founder-operated" would read "founder - operated". */
+.tnum, .money, .price, .est, .chart, .board, [data-fill]:not([data-fill^="who"]) { font-variant-numeric: tabular-nums; }
+.money { color: var(--blue); }            /* the only use of the accent in text */
+
+.label {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  font-size: var(--t-12); font-weight: var(--strong);
+  letter-spacing: var(--track-label); text-transform: uppercase;
+  color: var(--ink-3);
+}
+.label-box {                               /* the honesty label: present on every proof screen */
+  border: 1px solid var(--rule-2); border-radius: 6px; padding: var(--s-1) var(--s-3); line-height: 1.6;
+}
+.est {                                     /* "estimate", beside a number */
+  font-size: var(--t-12); font-weight: var(--regular); letter-spacing: 0.02em;
+  color: var(--ink-3); vertical-align: 0.35em; margin-left: var(--s-1);
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
+  min-height: 52px; padding: 0 var(--s-6);
+  font: var(--strong) var(--t-16) / 1 var(--font); letter-spacing: -0.005em;
+  color: var(--paper); background: var(--ink);
+  border: 0; border-radius: var(--radius); cursor: pointer;
+  text-decoration: none; white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+.btn:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+.btn .arrow { transition: transform 0.25s var(--ease-out); }
+.btn:hover .arrow { transform: translateX(3px); }
+.btn:active { transform: translateY(1px); }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); margin-top: var(--s-7); }
+.cta-note { font-size: var(--t-14); color: var(--ink-3); }
+
+.figure { margin: 0; }
+.figure svg { width: 100%; height: auto; overflow: visible; }
+.figure .chart-wide { max-width: 960px; }
+.figure figcaption { margin-top: var(--s-4); font-size: var(--t-14); line-height: 1.55; color: var(--ink-3); max-width: 72ch; text-wrap: balance; }
+.chart-narrow { display: none; }
+@media (max-width: 640px) {
+  .chart-wide { display: none; }
+  .chart-narrow { display: block; }
+}
+
+.fold { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.fold summary {
+  list-style: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--s-4);
+  padding: var(--s-5) 0; font-weight: var(--strong); color: var(--ink); font-size: var(--t-18);
+}
+.fold summary::-webkit-details-marker { display: none; }
+.fold summary::after {
+  content: ""; flex: none; width: 10px; height: 10px; margin-right: var(--s-1);
+  border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3);
+  transform: translateY(-3px) rotate(45deg); transition: transform 0.25s var(--ease-out);
+}
+.fold[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+.fold .fold-body { padding-bottom: var(--s-6); color: var(--ink-2); font-size: var(--t-16); }
+.fold + .fold { border-top: 0; }
+
+/* -------------------------------------------------------------- charts ---- */
+.chart text { fill: var(--ink-3); font-family: var(--font); }
+.chart .ink { fill: var(--ink); }
+.chart .strong { font-weight: var(--strong); }
+.chart .grid { stroke: var(--rule); stroke-width: var(--line-hair); shape-rendering: crispEdges; }
+.chart .axis { stroke: var(--rule-2); stroke-width: var(--line-hair); shape-rendering: crispEdges; }
+.chart .step { fill: none; stroke: var(--ink); stroke-width: var(--line-step); stroke-linejoin: miter; }
+.chart .step-alt { fill: none; stroke: var(--ink-3); stroke-width: 1.25px; stroke-dasharray: 5 4; }
+.chart .key-solid { stroke: var(--ink); stroke-width: var(--line-step); }
+.chart .leak { stroke: var(--blue); stroke-width: var(--line-leak); stroke-linecap: butt; }
+.chart .leak-text { fill: var(--blue); font-weight: var(--strong); }
+.chart .dot { fill: var(--ink); }
+.chart .dot-hollow { fill: var(--paper); stroke: var(--ink); stroke-width: var(--line-step); }
+.chart .tick { stroke: var(--ink-3); stroke-width: var(--line-hair); }
+
+/* The Monte Carlo: ten thousand futures, drawn once, then still. */
+.mc .mc-path { fill: none; stroke: var(--blue); stroke-width: 1; stroke-opacity: var(--mc-path-rest); }
+.mc .mc-band { fill: var(--blue); fill-opacity: var(--mc-band); stroke: none; }
+.mc .mc-pct { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linecap: round; }
+.mc .mc-pct.p50 { stroke: var(--ink); }
+.mc .mc-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
+.mc .mc-value { fill: var(--blue); font-weight: var(--strong); }
+.mc .mc-value.p50 { fill: var(--ink); }
+.mc--mood .mc-path { stroke-opacity: calc(var(--mc-path-rest) * 1.4); }
+.mc--mood .mc-pct { stroke-opacity: 0.7; stroke-width: 1.5px; }
+
+/* Motion. A tiny script in <head> adds .motion only when scripts run and the
+   visitor has not asked for less motion; without it every chart is its finished
+   still frame. A chart waits, drawn-out, until it is on screen, then plays once. */
+.motion [data-play]:not(.played):not(.playing) .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.motion [data-play]:not(.played):not(.playing) .fade { opacity: 0; }
+.playing .draw { stroke-dasharray: 1; animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both; }
+.playing .mc-path.draw {
+  animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both,
+             settle 900ms ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
+}
+.playing .fade { animation: fade var(--mc-band-ms) ease var(--after, var(--mc-draw-ms)) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes settle { from { stroke-opacity: var(--mc-path-draw); } to { stroke-opacity: var(--mc-path-rest); } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.mc--mood.playing .mc-path.draw {
+  animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both,
+             settle-mood 900ms ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
+}
+@keyframes settle-mood { from { stroke-opacity: var(--mc-path-draw); } to { stroke-opacity: calc(var(--mc-path-rest) * 1.4); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  .night { --paper: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #ccc; --blue: #0b5fff; }
+}

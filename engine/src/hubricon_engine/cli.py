@@ -41,12 +41,13 @@ from . import onboarding
 from . import storage
 from . import issue
 from . import measurement
+from . import meter
 from . import value as valuemod
 from . import calibration, proof, referral, speed
 from . import loop as loopmod
 from .alerts import DEDUPE_DAYS, compute_alerts, dedupe
 from .briefing import build_memo, build_script, parse_loom_id, period_deltas
-from .directives import draft_directives, resolve_brand_terms
+from .directives import draft_directives, plan_prices, resolve_brand_terms, trim_candidates
 from .growth_plan import latest_period_totals, pace, propose_plan
 from .ingest import PARSERS, parse_all
 from .notify import alert_email_body, email_configured, send_email
@@ -63,8 +64,10 @@ from .price_tests import (
 from .ingest.headers import IngestError
 from .ingest.readers import ReadError, read_table
 from .models import (
-    ad_efficiency, anomaly, cashflow, elasticity, forecast, health_score,
-    inventory_econ, inventory_sim, margin, recovery, risk,
+    ad_allocation, ad_efficiency, anomaly, assortment, cash_orders, cashflow, clv, cross_price, data_quality, drift,
+    elasticity, forecast, health_score, stress,
+    incrementality, inventory_econ, inventory_sim, margin, markdown, price_experiment, recovery, replenishment, risk,
+    seasonality,
 )
 from .models.anomaly import summarize as summarize_anomalies
 
@@ -78,6 +81,7 @@ CHANNEL_TABLES = (
     "ppc_spend",
     "inventory_levels",
     "settlement_transactions",
+    "customer_orders",
 )
 # Amazon's bleed exports. They describe a warehouse holding a seller's units;
 # a Shopify store has none, so a Shopify run loads nothing from them rather
@@ -89,8 +93,9 @@ DATA_TABLES = CHANNEL_TABLES + SHARED_TABLES + AMAZON_ONLY_TABLES
 
 # Every model, in dependency order: forecast feeds inventory, inventory
 # economics and risk; cash feeds health; value closes the loop.
-ALL_MODELS = ("margin", "forecast", "inventory", "elasticity", "ads", "recovery",
-              "anomaly", "invecon", "risk", "cash", "health")
+ALL_MODELS = ("dataq", "margin", "season", "experiments", "elasticity", "forecast", "inventory", "crossprice", "anomaly",
+              "incrementality", "clv", "ads", "adalloc", "recovery", "risk", "invecon", "markdown", "replenish",
+              "assortment", "cash", "cashorders", "stress", "health")
 DEFAULT_MODELS = ",".join(ALL_MODELS)
 
 CLAIM_FIELDS = ("claim_type", "sku", "fnsku", "asin", "order_id", "event_date", "units", "unit_value",
@@ -209,6 +214,24 @@ def _save_output(db, run_id: str, client_id: str, model: str, payload) -> None:
         [{"run_id": run_id, "client_id": client_id, "model": model, "payload": payload}],
         on_conflict="run_id,model",
     )
+
+
+def _load_price_tests(db, client_id: str, designed: bool = True) -> list[dict]:
+    rows = db.table("price_tests").select("*").eq("client_id", client_id).execute().data
+    return [r for r in rows if r.get("design")] if designed else rows
+
+
+def _load_experiments(db, run_id: str | None) -> list[dict]:
+    return ((_load_outputs(db, run_id).get("price_experiments") or {}).get("rows") or []) if run_id else []
+
+
+def _load_switchbacks(db, client_id: str) -> list[dict]:
+    """Every ON/OFF ad test the client has planned, with its analysis when one
+    has run. They live in model_outputs under `ad_switchback:<campaign>` on the
+    run current when they were planned, so they outlive any single run."""
+    rows = (db.table("model_outputs").select("model, payload").eq("client_id", client_id)
+            .like("model", "ad_switchback:%").execute().data)
+    return [r["payload"] for r in rows if r.get("payload")]
 
 
 def _load_outputs(db, run_id: str | None) -> dict:
@@ -332,14 +355,59 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
     try:
         avg_margin = None
         margin_rows = inventory_rows = elast_rows = ads_rows = forecast_rows = anomaly_rows = None
+        ad_breaks = cross = None
         rec = inv_econ = risk_out = cash = health = claims = None
+        dq = None
+        if "dataq" in wanted:
+            # before any model: do the exports agree with each other, and are they all there
+            dq = data_quality.run(data, today)
+            _save_output(db, run_id, client["id"], "data_quality", dq)
+            print(f"  data quality: {dq['status']} — {dq['basis']}")
 
         if "margin" in wanted:
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
             _write_results(db, "margin_results", margin_rows, run_id, client["id"])
+        seasonal = None
+        if "season" in wanted:
+            seasonal = seasonality.indices(data)
+            _save_output(db, run_id, client["id"], "seasonality", seasonal)
+            print("  seasonality: "
+                  + (f"peak-to-trough {float(seasonal['amplitude']):.2f}× over {seasonal['months_observed']} months "
+                     f"({seasonal['basis_label']})" if seasonal["status"] == "ok"
+                     else f"{seasonal['status']} — {seasonal.get('basis', '')}"))
+        # the fits before the forecast: it restates each month's demand at
+        # today's price on the SKU's own elasticity
+        experiments = None
+        if "experiments" in wanted:
+            tests = _load_price_tests(db, client["id"])
+            if tests:
+                # the observational fit first, so the experiment can say how far
+                # the history's curve was off; then the fit the optimizer uses
+                experiments = price_experiment.run(data, tests, elasticity.run(data, seasonal=seasonal))
+                _save_output(db, run_id, client["id"], "price_experiments", {"rows": experiments})
+                for e in experiments:
+                    if e.get("test_id"):
+                        db.table("price_tests").update({"analysis": e}).eq("id", e["test_id"]).execute()
+                ok = [e for e in experiments if e["status"] == "ok"]
+                print(f"  price experiments: {len(ok)} of {len(experiments)} analysed"
+                      + (f"; bias vs history {', '.join(f'{e['item_id']} {e['details'].get('bias_estimate'):+.2f}' for e in ok if e['details'].get('bias_estimate') is not None)}"
+                         if any(e["details"].get("bias_estimate") is not None for e in ok) else ""))
+        # the previous succeeded run on this channel: what the fits looked like last time
+        prev_run = _latest_run(db, client["id"], None, channel, required=False)
+        prev_el = (db.table("elasticity_results").select("*").eq("run_id", prev_run["id"]).execute().data
+                   if prev_run else [])
+        prev_ads = (db.table("ad_efficiency_results").select("*").eq("run_id", prev_run["id"]).execute().data
+                    if prev_run else [])
+        if "elasticity" in wanted:
+            elast_rows = elasticity.run(data, experiments=experiments, seasonal=seasonal)
+            # a fit that moved since last run walks half as far this cycle; the
+            # mark has to be on the row before the drafting pass reads it back
+            drift_el = drift.compare_runs(elast_rows, prev_el, [], [])
+            drift.apply_to_elasticity(elast_rows, drift_el)
+            _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
         if "forecast" in wanted:
-            forecast_rows = forecast.run(data)
+            forecast_rows = forecast.run(data, seasonal=seasonal, elasticity_rows=elast_rows)
             _save_output(db, run_id, client["id"], "forecast", {"rows": forecast_rows})
             ok = [f for f in forecast_rows if f["status"] == "ok"]
             gains = [float(f["fva_pct"]) for f in ok if f.get("fva_pct") is not None]
@@ -348,7 +416,8 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
         if "inventory" in wanted:
             overrides = {f["item_id"]: forecast.rate_moments(f) for f in (forecast_rows or [])
                          if f["status"] == "ok" and f["level"] == "sku"}
-            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides)
+            inventory_rows = inventory_sim.run(data, rng, simulations=simulations, rate_overrides=overrides,
+                                               seasonal=seasonal, today=today)
             _write_results(db, "inventory_sim_results", inventory_rows, run_id, client["id"])
             # the joint view: how many SKUs run out in the same lead time once
             # demand shares a common factor, beside the independent figure the
@@ -361,11 +430,61 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 print(f"  inventory panel: {c['expected_stockouts']:.1f} SKUs expected out of "
                       f"stock, {c['p95_stockouts']:.0f} at the 95th percentile "
                       f"(independent draws would say {i['p95_stockouts']:.0f})")
-        if "elasticity" in wanted:
-            elast_rows = elasticity.run(data)
-            _write_results(db, "elasticity_results", elast_rows, run_id, client["id"])
+        if "crossprice" in wanted:
+            cross = cross_price.run(data, elast_rows, seasonal=seasonal)
+            _save_output(db, run_id, client["id"], "cross_price", cross)
+            print(f"  cross-price: {cross['status']}"
+                  + (f" — {cross['n_fitted']} of {cross['n_families']} variant families fitted" if cross["status"] != "no_variant_mapping" else ""))
+        if "anomaly" in wanted:
+            # before the ad fit: a cost-per-click or conversion break under a
+            # campaign is a regime the response curve must not average across
+            anomaly_rows = anomaly.run(data)
+            _save_output(db, run_id, client["id"], "anomaly", {"rows": anomaly_rows})
+            s = summarize_anomalies(anomaly_rows)
+            print(f"  anomaly: {s['scanned']} series scanned, {s['flagged']} flagged, "
+                  f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
+        incr = None
+        if "incrementality" in wanted:
+            incr = incrementality.run(data, _load_switchbacks(db, client["id"]))
+            incr["data_quality_flags"] = data_quality.flags_for(dq, "ppc_spend", "asin_traffic", "sku_economics",
+                                                                 "settlement_transactions")
+            _save_output(db, run_id, client["id"], "incrementality", incr)
+            obs = incr["observational"]
+            print("  incrementality: "
+                  + (f"observational ι {obs['incrementality']:.2f} ({obs['ci95'][0]:.2f}–{obs['ci95'][1]:.2f}), "
+                     f"{obs['reading']}" if obs["status"] == "ok" else f"observational {obs['status']}")
+                  + (f"; switchback ι {incr['incrementality_for_breakeven']:.2f} adjusts the break-even"
+                     if incr.get("incrementality_for_breakeven") is not None else ""))
+        clv_out = None
+        if "clv" in wanted:
+            clv_out = clv.run(data.get("customer_orders") or [], margin_rows, today, channel=channel,
+                              ppc_spend=data.get("ppc_spend"))
+            _save_output(db, run_id, client["id"], "clv", clv_out)
+            print("  lifetime value: "
+                  + (f"{float(clv_out['expected_repeats_52w']):.2f} repeat orders per customer over a year, "
+                     f"multiplier {float(clv_out['clv_multiplier']):.2f}× on the allowable acquisition cost "
+                     f"(holdout actual/predicted {clv_out['calibration']['actual_over_predicted']})"
+                     if clv_out["status"] in ("ok", "poorly_calibrated", "uncalibrated") else clv_out["status"])
+                  + (" — moves the ad break-even" if clv_out["status"] == "ok" else ""))
         if "ads" in wanted:
-            ads_rows = ad_efficiency.run(data, avg_margin=avg_margin)
+            iota = (incr or {}).get("incrementality_for_breakeven")
+            mult = float(clv_out["clv_multiplier"]) if clv_out and clv_out.get("status") == "ok" else None
+            pb = (clv_out or {}).get("payback") or {}
+            clv_extra = ({"ltv_cac": pb.get("ltv_cac"), "payback_weeks": pb.get("payback_weeks"),
+                          "cac": ((clv_out or {}).get("cac") or {}).get("cac")} if pb.get("status") == "ok" else None)
+            breaks = ad_breaks = ad_efficiency.regime_breaks(anomaly_rows)
+            ads_rows = ad_efficiency.run(data, avg_margin=avg_margin, incrementality=iota,
+                                         incrementality_basis="switchback" if iota is not None else None,
+                                         clv_multiplier=mult, clv_basis="calibrated" if mult else None,
+                                         breaks=breaks, clv_extra=clv_extra)
+            if breaks:
+                print(f"  ad efficiency: {len(breaks)} campaign(s) refitted after a cost-per-click or conversion break")
+        if "elasticity" in wanted or "ads" in wanted:
+            drift_out = drift.compare_runs(elast_rows or [], prev_el, ads_rows or [], prev_ads)
+            _save_output(db, run_id, client["id"], "drift", drift_out)
+            print("  drift: "
+                  + (f"{drift_out['n_drifted']} of {drift_out['n_pairs']} fits moved since the last run"
+                     if drift_out["status"] == "ok" else drift_out["status"]))
             _write_results(db, "ad_efficiency_results", ads_rows, run_id, client["id"])
         if "recovery" in wanted and not channels.has_recovery(channel):
             print("  recovery: not applicable to Shopify (no reimbursement window)")
@@ -379,24 +498,26 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                       f"${float(s['live_ev'] or 0):,.0f} expected, {s['n_expiring']} expiring")
             else:
                 print("  recovery: no bleed reports on file yet (ledger, returns, reimbursements, transactions)")
-        if "anomaly" in wanted:
-            anomaly_rows = anomaly.run(data)
-            _save_output(db, run_id, client["id"], "anomaly", {"rows": anomaly_rows})
-            s = summarize_anomalies(anomaly_rows)
-            print(f"  anomaly: {s['scanned']} series scanned, {s['flagged']} flagged, "
-                  f"${float(s['dollar_impact_total'] or 0):,.0f}/period adverse")
         base_inventory = inventory_rows if inventory_rows is not None else inventory_sim.run(data, rng, simulations=simulations)
         base_margins = margin_rows if margin_rows is not None else margin.run(data)
-        if "invecon" in wanted:
-            inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
-                                          simulations, today, channel=channel)
-            _save_output(db, run_id, client["id"], "invecon", inv_econ)
-            if inv_econ["status"] == "ok":
-                b = inv_econ["summary"]["bleed"]
-                print(f"  inventory economics: {inv_econ['summary']['n_skus']} SKUs priced, fee bleed "
-                      f"${float(b['total_month'] or 0):,.0f}/month, {len(inv_econ['summary']['econ_orders'])} "
-                      f"economic order(s), {len(inv_econ['summary']['liquidation_candidates'])} liquidation candidate(s)")
+        if "adalloc" in wanted:
+            base_ads = ads_rows if ads_rows is not None else ad_efficiency.run(data, avg_margin=avg_margin)
+            alloc_margin = avg_margin if avg_margin is not None else margin.average_margin(base_margins)
+            # campaigns a trim will move this cycle are held out of the
+            # reallocation: one promise per campaign per run
+            alloc = ad_allocation.run(base_ads, alloc_margin,
+                                      exclude=set(trim_candidates(base_ads, alloc_margin or 0.0)),
+                                      risk_share=client.get("risk_budget_share"),
+                                      daily=ad_efficiency.campaign_points(data["ppc_spend"], ad_breaks))
+            _save_output(db, run_id, client["id"], "ad_allocation", alloc)
+            if alloc["status"] == "ok":
+                print(f"  ad allocation: ${float(alloc['total_moved_daily']) if alloc.get('total_moved_daily') else 0:,.0f}/day "
+                      f"moved across {sum(1 for c in alloc['campaigns'] if c.get('status') == 'ok')} campaigns, "
+                      f"+${float(alloc['delta_p50'] or 0):,.0f} expected over {alloc['horizon_days']} days")
+            else:
+                print(f"  ad allocation: {alloc['status']}" + (f" — {alloc['reason']}" if alloc.get("reason") else ""))
         if "risk" in wanted:
+            # before the order sizing: the survival curve prices obsolescence
             risk_out = risk.run(data, base_margins, forecast_rows, base_inventory, ads_rows, rng, min(simulations, 10000))
             _save_output(db, run_id, client["id"], "risk", risk_out)
             v = risk_out.get("var") or {}
@@ -405,8 +526,57 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                   + (f"expected net ${float(v['expected_net']):,.0f}, worst-5% ${float(v['worst_5pct_net']):,.0f}"
                      if v.get("status") == "ok" else "VaR skipped (no unit economics)")
                   + (f"; HHI {float(c['hhi']):,.0f} ({c.get('level')})" if c.get("hhi") is not None else ""))
+        if "invecon" in wanted:
+            # orders are sized on demand at the prices this sweep will set:
+            # the drafter recomputes the same plan from the same inputs
+            cross_now = cross if cross is not None else _load_outputs(db, run_id).get("cross_price")
+            plan = (plan_prices(elast_rows, base_margins, cross_now, risk_share=client.get("risk_budget_share"))
+                    if elast_rows else None)
+            inv_econ = inventory_econ.run(data, base_inventory, base_margins, forecast_rows, rng,
+                                          simulations, today, channel=channel, seasonal=seasonal, risk_out=risk_out,
+                                          price_plan=plan)
+            if "markdown" in wanted:
+                md = markdown.run(data, inv_econ, elast_rows, base_margins, base_inventory, today, channel,
+                                  risk_share=client.get("risk_budget_share"))
+                _save_output(db, run_id, client["id"], "markdown", md)
+                if md["status"] == "ok":
+                    # one liquidation list on the desk: the three-way decision's
+                    inv_econ["summary"]["liquidation_candidates"] = md["summary"]["liquidation_candidates"]
+                    inv_econ["summary"]["liquidation_value"] = md["summary"]["liquidation_value"]
+                    s_ = md["summary"]
+                    print(f"  markdown: {s_['n_valued']} SKUs valued three ways — {len(s_['markdown_candidates'])} to mark "
+                          f"down, {len(s_['liquidation_candidates'])} to liquidate, {len(s_['stretch_candidates'])} to stretch"
+                          + (f" ({s_['n_no_elasticity']} without an elasticity, two-way only)" if s_["n_no_elasticity"] else ""))
+                else:
+                    print(f"  markdown: {md['status']}")
+            inv_econ["data_quality_flags"] = data_quality.flags_for(dq, "sku_economics", "inventory_levels", "inventory_health")
+            _save_output(db, run_id, client["id"], "invecon", inv_econ)
+            if "replenish" in wanted:
+                rep = replenishment.run(inv_econ, data, rng, today, channel)
+                _save_output(db, run_id, client["id"], "replenishment", rep)
+                rs = rep["summary"]
+                print(f"  replenishment: {rs['n_with_terms']} of {rs['n_skus']} SKUs carry supplier terms; "
+                      f"{len(rs['price_breaks_taken'])} price break(s) taken, {len(rs['expedite_air'])} to expedite by air, "
+                      f"{rs['wire_events_saved']} wire(s) saved across {rs['n_suppliers']} supplier(s)")
+            if inv_econ["status"] == "ok":
+                b = inv_econ["summary"]["bleed"]
+                print(f"  inventory economics: {inv_econ['summary']['n_skus']} SKUs priced, fee bleed "
+                      f"${float(b['total_month'] or 0):,.0f}/month, {len(inv_econ['summary']['econ_orders'])} "
+                      f"economic order(s), {len(inv_econ['summary']['liquidation_candidates'])} liquidation candidate(s)")
+        if "assortment" in wanted:
+            cross_out = _load_outputs(db, run_id).get("cross_price")
+            asrt = assortment.run(base_margins, inv_econ, data, risk_out, cross_out, today)
+            _save_output(db, run_id, client["id"], "assortment", asrt)
+            if asrt["status"] == "ok":
+                a_ = asrt["summary"]
+                print(f"  assortment: {a_['n_skus']} SKUs loaded — {len(a_['cut'])} to cut, {len(a_['merge'])} to merge, "
+                      f"${float(a_['avoided_loss_12m_p50'] or 0):,.0f} of twelve-month loss avoidable")
+            else:
+                print(f"  assortment: {asrt['status']}")
         if "cash" in wanted:
-            cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel)
+            cash = cashflow.run(client, base_inventory, base_margins, rng, channel=channel,
+                                seasonal=seasonal, today=today, keep_paths="stress" in wanted)
+            cash_paths = cash.pop("_paths", None) if cash else None
             if cash is None:
                 print("  cash horizon: skipped (set inputs with `hubricon cash <client> --balance --opex`)")
             else:
@@ -415,12 +585,34 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                     [{**cash, "run_id": run_id, "client_id": client["id"]}],
                     on_conflict="run_id",
                 )
+                # the cone with its ruin ladder, for the drafting pass and the stress scenarios
+                cash["details"]["data_quality_flags"] = data_quality.flags_for(dq, "sku_economics", "inventory_levels")
+                _save_output(db, run_id, client["id"], "cash", cash)
                 print(f"  cash_horizon_results: p(ruin) {float(cash['p_ruin']):.1%}, "
                       f"5th-pct low ${float(cash['min_p5']):,.0f} on day {cash['min_p5_day']}")
+        if "stress" in wanted:
+            st = stress.run(cash_paths, cash)
+            _save_output(db, run_id, client["id"], "stress", st)
+            if st["status"] == "ok":
+                w = st["scenarios"][1] if len(st["scenarios"]) > 1 else None
+                print(f"  stress: base p(ruin) {float(st['base']['p_ruin']):.1%}"
+                      + (f"; worst is {w['label']} → {float(w['p_ruin']):.1%}" if w else "")
+                      + ("" if st["reproduces_cone"] else " — BASE DOES NOT REPRODUCE THE CONE"))
+            else:
+                print(f"  stress: {st['status']}")
+        if "cashorders" in wanted:
+            co = cash_orders.run(inv_econ, cash, today)
+            _save_output(db, run_id, client["id"], "cash_orders", co)
+            if co["status"] == "constrained":
+                print(f"  cash orders: cash funds ${float(co['wire_total']):,.0f} of ${float(co['unconstrained_total']):,.0f}; "
+                      f"shadow price {float(co['lambda']):.3f}/$; bridge ${float(co['bridge_capital']):,.0f} funds the rest")
+            else:
+                print(f"  cash orders: {co['status']}")
         if "health" in wanted:
             data_present = {t: bool(data[t]) for t in DATA_TABLES}
             health = health_score.compute(base_margins, cash, risk_out, base_inventory, inv_econ,
-                                          ads_rows, forecast_rows, rec, data_present, channel=channel)
+                                          ads_rows, forecast_rows, rec, data_present, channel=channel,
+                                          data_quality=dq)
             _save_output(db, run_id, client["id"], "health", health)
             if health["status"] == "ok":
                 top = health["top_drivers"][0] if health["top_drivers"] else None
@@ -542,13 +734,21 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
     results = {t: db.table(t).select("*").eq("run_id", run_id).execute().data
                for t in ("inventory_sim_results", "ad_efficiency_results", "elasticity_results", "margin_results")}
     search_terms = dbmod.fetch_all(db, "ppc_search_terms", client["id"], filters={"channel": channel})
+    ppc_spend = dbmod.fetch_all(db, "ppc_spend", client["id"], filters={"channel": channel})
     outputs = _load_outputs(db, run_id)
     drafts = draft_directives(results["inventory_sim_results"], results["ad_efficiency_results"],
                               results["elasticity_results"], results["margin_results"],
                               search_terms=search_terms, brand_terms=resolve_brand_terms(client),
                               recovery=outputs.get("recovery"), inv_econ=outputs.get("invecon"),
                               anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
-                              channel=channel)
+                              channel=channel, ad_allocation=outputs.get("ad_allocation"),
+                              incrementality=outputs.get("incrementality"), client_id=client["id"],
+                              experiments=_load_price_tests(db, client["id"]),
+                              cross_price=outputs.get("cross_price"), markdown=outputs.get("markdown"),
+                              replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
+                              assortment=outputs.get("assortment"),
+                              risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"),
+                              ppc_spend_rows=ppc_spend)
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -586,7 +786,9 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
             "module": d["module"],
             "kind": d["kind"],
             "dedupe_key": key,
-            "evidence": d["evidence"],
+            # the drafting score is not a column; it rides in evidence so the
+            # issue pass can break ties on it
+            "evidence": {**(d["evidence"] or {}), "score": round(float(d.get("score") or 0), 4)},
             "mandate": d["mandate"],
             "action_text": d["action_text"],
             "expected_impact_usd": d["expected_impact_usd"],
@@ -630,10 +832,13 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
     claims = _fetch_claims(db, client["id"])
 
     verdicts = measurement.measure(directives, data, margins, ads_rows, claims,
-                                   inv_econ=_load_outputs(db, run_id).get("invecon"))
+                                   inv_econ=_load_outputs(db, run_id).get("invecon"),
+                                   switchbacks=_load_switchbacks(db, client["id"]),
+                                   experiments=_load_experiments(db, run_id))
     if not apply:
         return verdicts
     by_id = {d["id"]: d for d in directives}
+    settled = []
     for v in verdicts:
         patch = measurement.to_patch(v, run_id)
         if patch is None:
@@ -643,7 +848,83 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
             evidence["after"] = v["evidence_after"]
         patch["evidence"] = evidence
         db.table("directives").update(patch).eq("id", v["directive_id"]).execute()
+        settled.append({**by_id[v["directive_id"]], **patch})
+    if settled:
+        # The Seal's second entry (seal.py): what was measured, chained after
+        # what was called. Named status in the log; never fails the sweep.
+        from . import seal
+        res = seal.seal_measured(db, client["id"], settled)
+        print(f"  seal: {res['status']}"
+              + (f", {res['sealed']} measured entr{'y' if res['sealed'] == 1 else 'ies'}" if res["sealed"] else "")
+              + (f" — {res['reason']}" if res.get("reason") else ""))
     return verdicts
+
+
+def _close_months(db, client: dict, run_id: str, channel: str, today: date | None = None) -> list[dict]:
+    """Measure every retainer month that has closed on this channel and has no row
+    yet, once (monthly.py), and write it. The row stands; the operator's gate reads
+    it to decide the month's invoice. A database without record_months is named in
+    one line and nothing else happens: billing simply waits for the months."""
+    from . import monthly
+    today = today or date.today()
+    months = [m for m in monthly.billing_months(client, today) if m["closed"]]
+    if not months:
+        return []
+    try:
+        have = {int(r["month_index"]) for r in db.table("record_months").select("month_index")
+                .eq("client_id", client["id"]).eq("channel", channel).execute().data}
+    except Exception as err:
+        print(f"  months: not measured — apply supabase/migrations/20261001000001_record_months.sql ({str(err)[:80]})")
+        return []
+    todo = [m for m in months if m["index"] not in have]
+    if not todo:
+        return []
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .eq("channel", channel).execute().data)
+    data = _load_data(db, client["id"], channel)
+    margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
+    ads_rows = db.table("ad_efficiency_results").select("*").eq("run_id", run_id).execute().data
+    claims = _fetch_claims(db, client["id"]) if channel == "amazon" else []
+    inv_econ = _load_outputs(db, run_id).get("invecon")
+    written = []
+    for m in todo:
+        verdicts = monthly.measure_month(directives, data, margins, ads_rows, claims, m, inv_econ=inv_econ)
+        row = monthly.month_row(client, m, verdicts, channel=channel)
+        db.table("record_months").insert(row).execute()
+        written.append(row)
+        print(f"  month {m['index']} ({m['start']} → {m['end']}, {channel}): ${row['attributed_usd']:,.2f} attributed"
+              + (" · free" if m["free"] else f" · {'clears' if row['clears'] else 'does not clear'} "
+                                            f"the ${row['fee_usd']:,.0f} fee"))
+    return written
+
+
+def cmd_dispute(args):
+    """HUBRICON_SPEC.md, disputes: a dollar the client questions is settled by opening
+    its record together; if the record does not settle it, it comes off the month,
+    removed, not split. This takes it off: record_months.disputed_usd rises (the
+    trigger allows nothing else, and never downward), the note is kept, and the
+    operator's next pass judges the month again: a billed month the dispute takes
+    under the fee is voided if unpaid and refunded if paid."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    rows = (db.table("record_months").select("*").eq("client_id", client["id"])
+            .eq("month_index", args.month).eq("channel", args.channel).execute().data)
+    if not rows:
+        sys.exit(f"{name}: month {args.month} on {args.channel} has not been measured; nothing to dispute yet.")
+    row = rows[0]
+    room = float(row["attributed_usd"]) - float(row.get("disputed_usd") or 0)
+    take = round(min(float(args.usd), max(0.0, room)), 2)
+    if take <= 0:
+        sys.exit(f"{name}: month {args.month} has nothing left on it to take off.")
+    note = f"{date.today().isoformat()}: ${take:,.2f} removed — {args.note}"
+    db.table("record_months").update({
+        "disputed_usd": round(float(row.get("disputed_usd") or 0) + take, 2),
+        "dispute_notes": ((row.get("dispute_notes") or "") + ("\n" if row.get("dispute_notes") else "") + note),
+    }).eq("id", row["id"]).execute()
+    after = round(room - take, 2)
+    print(f"{name}: month {args.month} ({row['month_start']} → {row['month_end']}, {args.channel}) now stands at "
+          f"${after:,.2f}; ${take:,.2f} came off. The operator's next pass judges it again.")
 
 
 def cmd_replay(args):
@@ -675,7 +956,9 @@ def cmd_replay(args):
                     .eq("run_id", run["id"]).execute().data)
         claims = _fetch_claims(db, client["id"])
         card = replaymod.replay(directives, data, margins, ads_rows, claims,
-                               inv_econ=_load_outputs(db, run["id"]).get("invecon"))
+                               inv_econ=_load_outputs(db, run["id"]).get("invecon"),
+                               switchbacks=_load_switchbacks(db, client["id"]),
+                               experiments=_load_experiments(db, run["id"]))
     print(replaymod.render(card))
 
 
@@ -705,6 +988,8 @@ def cmd_directives(args):
                 state = "issued but NOT notified — no veto window opened, so none of them can auto-approve"
             if res["held"]:
                 state += f"; {res['held']} draft(s) held for the next issue"
+            if res.get("seal"):
+                state += f"; seal: {res['seal']}" + (f" ({res['seal_reason']})" if res.get("seal_reason") else "")
 
     print(f"{len(inserted)} directive(s) {state}:")
     for r in inserted:
@@ -813,6 +1098,12 @@ def cmd_measure(args):
         patch["measurement_notes"] = " ".join(notes)
     db.table("directives").update(patch).eq("id", row["id"]).execute()
     print(f"Recorded ${args.impact:,.0f} on {row['id'][:8]} ({row['action_text'][:60]}…)")
+    # A number typed by hand is sealed as one (`by_hand`), and a correction
+    # supersedes the entry before it rather than replacing it.
+    from . import seal
+    full = db.table("directives").select("*").eq("id", row["id"]).execute().data
+    res = seal.seal_measured(db, client["id"], full, sealed=seal.BY_HAND)
+    print(f"  seal: {res['status']}" + (f" — {res['reason']}" if res.get("reason") else ""))
 
 
 def _find_claim(db, client_id: str, prefix: str) -> dict:
@@ -933,6 +1224,68 @@ def cmd_pricetest(args):
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
 
+    if args.action == "plan" and getattr(args, "design", "fixed") == "randomized":
+        from .directives import _fee_history
+        from .models.price_experiment import design as design_experiment
+
+        if not args.sku or not args.start:
+            sys.exit("a randomized plan needs --sku and --start YYYY-MM-DD")
+        run = _latest_run(db, client["id"], None)
+        margins = [m for m in db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
+                   if m.get("sku") == args.sku]
+        if not margins:
+            sys.exit(f"No margin row for {args.sku} on the latest run — a randomised test needs the unit economics.")
+        latest = max(margins, key=lambda m: str(m["period_start"]))
+        fit = latest_elasticity(
+            db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data, args.sku)
+        d = design_experiment(client["id"], args.sku, args.start, latest, fit, _fee_history(args.sku, margins))
+        if d.get("status") != "ok":
+            sys.exit(f"Cannot design the test: {d.get('status')} — {d.get('basis', '')}")
+        test = db.table("price_tests").insert({
+            "client_id": client["id"], "sku": args.sku, "asin": latest.get("asin"),
+            "baseline_price": d["p0"], "test_price": d["p0"], "start_date": d["start_date"],
+            "end_date": d["end_date"], "design": d,
+        }).execute().data[0]
+        print(f"Planned {test['id'][:8]}: randomised test on {args.sku} around ${d['p0']:.2f}, "
+              f"{d['n_blocks']} blocks of {d['block_days']} days ({d['allocation']}; seed {d['seed']}):")
+        for b in d["blocks"]:
+            print(f"  {b['start']}..{b['end']}  ${b['price']:.2f}  ({d['arms'][b['arm']]:+.1%})")
+        cost = d.get("expected_test_cost")
+        if cost:
+            print(f"Expected {cost['p50']:+,.0f} against holding (90% range {cost['p5']:+,.0f} to {cost['p95']:+,.0f}).")
+        print("Set each block's price on its first day; `start` when it begins, `analyze` when it ends.")
+        return
+
+    if args.action == "analyze":
+        from .models import daily
+        from .models.price_experiment import analyze
+
+        if not args.test:
+            sys.exit("analyze needs --test <id prefix>")
+        test = _find_test(db, client["id"], args.test)
+        if not test.get("design"):
+            sys.exit(f"Test {test['id'][:8]} is a fixed-price test; only a randomised design can be analysed.")
+        run = _latest_run(db, client["id"], None)
+        data = _load_data(db, client["id"], _run_channel(client, run))
+        series = daily.daily_sku_series(data["settlement_transactions"], test["sku"],
+                                        test["design"]["start_date"], test["design"]["end_date"])
+        fit = latest_elasticity(
+            db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data, test["sku"])
+        if fit and (fit.get("details") or {}).get("source") == "experiment":
+            fit = None
+        result = analyze({**test["design"], "sku": test["sku"]}, series, fit)
+        note = (result["details"].get("bias_sentence") if result["status"] == "ok"
+                else f"{result['status']}: {result['details'].get('basis', '')}")
+        db.table("price_tests").update({"analysis": result, "outcome_notes": note}).eq("id", test["id"]).execute()
+        if result["status"] == "ok":
+            print(f"ε = {result['elasticity']:.2f} (95% {result['details']['ci95'][0]:.2f} to "
+                  f"{result['details']['ci95'][1]:.2f}; permutation p {result['details']['p_permutation']}).")
+            print(note or "")
+            print("The next `hubricon run` fits on it, unshrunk.")
+        else:
+            print(note)
+        return
+
     if args.action == "plan":
         if not args.sku or args.to is None:
             sys.exit("plan needs --sku and --to <test price>")
@@ -1002,6 +1355,64 @@ def cmd_pricetest(args):
               f"price variation into the elasticity fit.")
     else:
         sys.exit(f"Unknown action {args.action!r}")
+
+
+def cmd_adtest(args):
+    """Plan and analyse an ON/OFF switchback on one campaign — the experiment
+    that identifies ad incrementality, which no monthly export can."""
+    from datetime import date
+
+    from .models import daily
+    from .models.incrementality import analyze_switchback, design_switchback
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    tests = _load_switchbacks(db, client["id"])
+
+    if args.action == "list":
+        if not tests:
+            print("No ad tests yet — `hubricon adtest <client> plan --campaign ... --start YYYY-MM-DD`")
+            return
+        for t in tests:
+            r = t.get("result") or {}
+            print(f"  {t['campaign']:<32} {t['start_date']}..{t['end_date']}  "
+                  + (f"ι {r['incrementality']:.2f} ({r['ci90'][0]:.2f}–{r['ci90'][1]:.2f})" if r.get("status") == "ok"
+                     else r.get("status", "planned")))
+        return
+
+    if not args.campaign:
+        sys.exit(f"{args.action} needs --campaign")
+    run = _latest_run(db, client["id"], None)
+    key = f"ad_switchback:{args.campaign}"
+
+    if args.action == "plan":
+        start = args.start or (date.today() + timedelta(days=1)).isoformat()
+        schedule = design_switchback(client["id"], args.campaign, start)
+        _save_output(db, run["id"], client["id"], key, schedule)
+        print(f"Planned {schedule['n_blocks']} blocks of {schedule['block_days']} days on “{args.campaign}” "
+              f"from {start} to {schedule['end_date']} (seed {schedule['seed']}):")
+        for b in schedule["blocks"]:
+            print(f"  {b['start']}..{b['end']}  {b['arm'].upper()}")
+        print("Pause the campaign on every OFF block; the daily settlement file is what the analysis reads.")
+        return
+
+    if args.action == "analyze":
+        test = next((t for t in tests if t.get("campaign") == args.campaign), None)
+        if test is None:
+            sys.exit(f"No planned test on “{args.campaign}” — plan it first.")
+        channel = _run_channel(client, run)
+        data = _load_data(db, client["id"], channel)
+        totals = daily.daily_totals(data["settlement_transactions"], test["start_date"], test["end_date"])
+        result = analyze_switchback(test, totals, data["ppc_spend"])
+        _save_output(db, run["id"], client["id"], key, {**test, "result": result})
+        if result["status"] == "ok":
+            print(f"ι = {result['incrementality']:.2f} (90% range {result['ci90'][0]:.2f}–{result['ci90'][1]:.2f}, "
+                  f"permutation p {result['p_permutation']:.3f}) — {result['reading']}. "
+                  f"The next `hubricon run` corrects the break-even.")
+        else:
+            print(f"{result['status']}: {(result.get('details') or {}).get('basis', '')}")
+        return
+    sys.exit(f"Unknown action {args.action!r}")
 
 
 def cmd_report(args):
@@ -1170,7 +1581,7 @@ def cmd_execute(args):
     log, and the sweep escalates anything approved and still not executed."""
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
-    rows = [r for r in db.table("directives").select("id, status, action_text, executed_at")
+    rows = [r for r in db.table("directives").select("id, status, action_text, executed_at, kind, evidence")
             .eq("client_id", client["id"]).execute().data
             if r["id"].startswith(args.directive.lower())]
     if len(rows) != 1:
@@ -1186,6 +1597,18 @@ def cmd_execute(args):
     }).eq("id", row["id"]).execute()
     print(f"Executed {row['id'][:8]} ({row['action_text'][:60]}…)"
           + (f" — ref {args.ref}" if args.ref else ""))
+    if row.get("kind") == "price_experiment":
+        # the schedule becomes a running price test, so the daily Buy Box watch
+        # and the analysis pass both see it
+        ev = row.get("evidence") or {}
+        design = ev.get("design") or {}
+        db.table("price_tests").insert({
+            "client_id": client["id"], "sku": ev.get("sku"), "baseline_price": ev.get("p0"),
+            "test_price": ev.get("p0"), "start_date": design.get("start_date"), "end_date": design.get("end_date"),
+            "status": "running", "design": design, "directive_id": row["id"],
+        }).execute()
+        print(f"Randomised test on {ev.get('sku')} is running {design.get('start_date')}..{design.get('end_date')}; "
+              f"set each block's price on its first day.")
 
 
 def cmd_watch(args):
@@ -1305,6 +1728,12 @@ def cmd_export(args):
         manifest.append(f"  ledger.json — ${float(ledger['value_total']):,.0f} measured against "
                         f"${float(ledger['fees_paid']):,.0f} in fees [{ledger['fees_basis']}]")
 
+        # The Seal: every entry's canonical document, leaf and heads, and the
+        # verifier beside them, so anyone can check the Record offline.
+        from . import seal
+        manifest += seal.write_export(z, db, client["id"],
+                                      Path(__file__).resolve().parents[3] / "scripts" / "verify-record.mjs")
+
         if not args.no_files:
             uploads = db.table("uploads").select("*").eq("client_id", client["id"]).execute().data
             for u in uploads:
@@ -1331,6 +1760,14 @@ def cmd_export(args):
         z.writestr("MANIFEST.txt", "\n".join(manifest) + "\n")
     print("\n".join(manifest))
     print(f"\nWrote {out} ({out.stat().st_size / 1_000_000:.1f} MB). It is theirs, free, any time.")
+
+
+def cmd_seal(args):
+    """The Seal (seal.py): `status`, `verify <client>` or `verify --global`
+    (exit 1 at the first broken entry), and `sync` to seal, labelled late,
+    whatever was issued or measured before the table existed."""
+    from . import seal
+    sys.exit(seal.run_cli(dbmod.connect(), args, dbmod.resolve_client))
 
 
 def cmd_request(args):
@@ -1428,7 +1865,7 @@ def cmd_script(args):
         issue_number=issue_count + 1, health=outputs.get("health"), value=outputs.get("value"),
         recovery=outputs.get("recovery"), forecast_rows=(outputs.get("forecast") or {}).get("rows"),
         risk=outputs.get("risk"), anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-        inv_econ=outputs.get("invecon"),
+        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
     )
     if args.facts:
         print("\nFACTS the narrator may cite (every figure the engine computed):")
@@ -1492,6 +1929,7 @@ def _issue_due(db, client: dict, today: date) -> tuple[bool, str]:
     return True, f"{since}d since issue No. {last[0]['issue_number']:03d}"
 
 
+@meter.metered("issue")
 def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> dict | None:
     """Publish the next issue from the latest run: letter, report, video, email.
 
@@ -1535,7 +1973,7 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
                 forecast_rows=(outputs.get("forecast") or {}).get("rows"),
                 risk=outputs.get("risk"),
                 anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-                inv_econ=outputs.get("invecon"))
+                inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"))
             result = narrate.narrate(facts)
             if result.get("text"):
                 memo = result["text"]
@@ -1635,9 +2073,11 @@ def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: b
 
 
 # Letters whose body already IS the three Profit Record numbers.
-RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived"})
+# The billing letters carry the Record's numbers as their subject already.
+RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"})
 
 
+@meter.metered("email", timed=False)
 def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
                        blocks: list[dict], send: bool) -> bool:
     """Send a recurring client email exactly once.
@@ -1774,6 +2214,12 @@ def cmd_cash(args):
         patch["cash_as_of"] = args.as_of or date.today().isoformat()
     if args.opex is not None:
         patch["monthly_fixed_costs"] = args.opex
+    if getattr(args, "buffer", None) is not None:
+        patch["min_cash_buffer_usd"] = args.buffer
+    if getattr(args, "risk_share", None) is not None:
+        if not 0.05 <= args.risk_share <= 0.30:
+            sys.exit("--risk-share must sit between 0.05 and 0.30: the share of a month's net one move may put at risk.")
+        patch["risk_budget_share"] = args.risk_share
     if patch:
         db.table("clients").update(patch).eq("id", client["id"]).execute()
         client = {**client, **patch}
@@ -1795,12 +2241,48 @@ def cmd_cash(args):
     print(f"  inputs: ${float(client['cash_on_hand']):,.0f} on hand "
           f"(as of {client.get('cash_as_of') or today.isoformat()}), "
           f"${float(client['monthly_fixed_costs']):,.0f}/mo fixed costs")
-    print(f"  p(dip below $0 in {cash['horizon_days']}d): {float(cash['p_ruin']):.1%}")
+    floor = float(client.get("min_cash_buffer_usd") or 0)
+    print(f"  p(dip below ${floor:,.0f} in {cash['horizon_days']}d): {float(cash['p_ruin']):.1%}"
+          + (" (buffer client-stated)" if floor else "")
+          + f"; risk budget {float(client.get('risk_budget_share') or 0.15):.0%} of monthly net per move")
     print(f"  5th-percentile low: ${float(cash['min_p5']):,.0f} around "
           f"{(today + timedelta(days=cash['min_p5_day'])).strftime('%b %d')}")
     for w in cash["details"]["wires"][:6]:
         print(f"  wire {(today + timedelta(days=w['day'])).strftime('%b %d')}: "
               f"${w['amount']:,.0f} — {w['sku']}")
+
+
+def cmd_benchmark(args):
+    """Where the client sits against the consenting book, as percentiles."""
+    from .models import benchmark
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    out = benchmark.run(db, client["id"])
+    if out["status"] != "ok":
+        print(f"{out['status']}: {out['basis']}")
+        return
+    print(f"{client['company_name'] or client['contact_email']} against {out['n_clients']} consenting clients:")
+    for ratio, r in out["ratios"].items():
+        if r.get("status") != "ok":
+            print(f"  {ratio:<18} {r['status']}")
+            continue
+        print(f"  {ratio:<18} {float(r['value']):8.3f}  percentile {float(r['percentile']):5.0%} "
+              f"({float(r['percentile_p5']):.0%}–{float(r['percentile_p95']):.0%}), book median {float(r['book_median']):.3f} — {r['reading']}")
+
+
+def cmd_stress(args):
+    """The 'what would break you' table from the latest run."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    run = _latest_run(db, client["id"], None)
+    st = _load_outputs(db, run["id"]).get("stress")
+    if not st or st.get("status") != "ok":
+        sys.exit("No stress table on the latest run — `hubricon run` with cash inputs on file first.")
+    print(f"What would break {client['company_name'] or client['contact_email']} — 90 days, {st['basis']}")
+    for r in st["scenarios"]:
+        print(f"  {r['label']:<48} p(ruin) {float(r['p_ruin']):6.1%}  trough p5 ${float(r['trough_p5'] or 0):>10,.0f}"
+              f"  Δp(ruin) {float(r['p_ruin_delta']):+.1%}")
 
 
 def cmd_console(args):
@@ -1887,10 +2369,15 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
         if res["issued"] and not res["notified"]:
             print(f"  {res['issued']} directive(s) issued but NOT notified — no veto window opened, "
                   f"so none of them can auto-approve.")
+        if res["issued"]:
+            print(f"  seal: {res.get('seal')}" + (f" — {res['seal_reason']}" if res.get("seal_reason") else ""))
 
     # Measure what was approved before, from the exports that just landed, then
     # recompute the ledger so this sweep's own findings are in it.
     verdicts = _measure_for_run(db, client, run_id, channel)
+    # Then every month that has closed, once, on its own number (monthly.py): the
+    # number the month's invoice is judged against.
+    out["months_closed"] = len(_close_months(db, client, run_id, channel))
     out["measured"] = sum(1 for v in verdicts if v["verdict"] == "measured")
     out["measured_usd"] = round(sum(float(v["measured_impact_usd"] or 0)
                                     for v in verdicts if v["verdict"] == "measured"), 2)
@@ -1956,6 +2443,7 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
     return out
 
 
+@meter.metered("sweep")
 def _sweep_client(db, client: dict, send_alerts: bool, issue_drafts: bool = False) -> dict:
     """Ingest -> run -> draft -> alert for one client. Returns digest facts.
 
@@ -1967,6 +2455,16 @@ def _sweep_client(db, client: dict, send_alerts: bool, issue_drafts: bool = Fals
                "parsed": 0, "failed": 0, "ran": False, "drafts": 0, "alerts": 0, "emailed": False,
                "issued": 0, "auto_approved": 0, "lapsed": 0, "measured": 0, "measured_usd": 0.0}
     summary["parsed"], summary["failed"] = _ingest_client(db, client)
+
+    # The Seal: anything issued or measured that is not on this client's chain
+    # yet (issued before the table existed, or a write that did not land) is
+    # sealed now and labelled late. Named status in the log; never fails the sweep.
+    from . import seal
+    caught = seal.catch_up(db, client["id"])
+    if caught["status"] not in (seal.ALREADY, seal.NOTHING):
+        print(f"  seal catch-up: {caught['status']}"
+              + (f", {caught['sealed']} entries sealed late" if caught.get("sealed") else "")
+              + (f" — {caught['reason']}" if caught.get("reason") else ""))
 
     running = channels.channels_for(client.get("platform"))
     for channel in running:
@@ -2106,10 +2604,69 @@ def cmd_downsell(args):
     share = float(args.share) if args.share is not None else billing.RECOVERY_SHARE
     if not 0 < share <= 0.5:
         sys.exit("--share must be a fraction between 0 and 0.5 (0.25 = a quarter of what lands)")
-    db.table("clients").update({"plan": "recovery", "recovery_share": share}).eq("id", client["id"]).execute()
+    sub = client.get("stripe_subscription_id")
+    if sub and not billing.stripe_configured():
+        sys.exit(f"{name} has a live retainer subscription ({sub}) and STRIPE_SECRET_KEY is not set, "
+                 "so it cannot be ended. Set the key and rerun.")
+    # The row first: the webhook marks a client churned when the subscription
+    # ON THEIR ROW ends, and this client is changing plans, not leaving.
+    db.table("clients").update({"plan": "recovery", "recovery_share": share, "stripe_subscription_id": None}) \
+        .eq("id", client["id"]).execute()
+    if sub:
+        # The flat fee ends with the switch. Left running, the subscription
+        # would keep raising $6,000 invoices the recovery pass never looks at.
+        _end_subscription(billing, sub)
+        print(f"{name}: retainer subscription {sub} ended, no final invoice.")
     print(f"{name}: recovery-only at {share * 100:.0f}% of reimbursements Amazon pays on claims we file, "
           f"invoiced at month end (minimum ${billing.RECOVERY_MIN_INVOICE_USD:,.0f}, smaller amounts roll forward). "
           f"No retainer, no day-30 subscription. Claims: `hubricon recover {args.client} list|file|paid`.")
+
+
+def _end_subscription(billing, subscription_id: str) -> None:
+    try:
+        billing.cancel_subscription(subscription_id)
+    except RuntimeError as err:
+        # Already ended (in the dashboard, or by an earlier run): the goal holds.
+        if "canceled" not in str(err) and "No such subscription" not in str(err):
+            sys.exit(f"Stripe would not end {subscription_id}: {err}")
+
+
+def cmd_cancel(args):
+    """terms §5: the client emailed to end Managed Profit, effective at once.
+
+    Nothing did this before: the subscription kept raising invoices until
+    someone remembered the dashboard. Now one command ends it in Stripe with
+    no final invoice and marks the client churned, so the sweep, the briefs
+    and the veto queue stop. The exit true-up (held drafts voided unsent,
+    anything billed beyond the Record voided or refunded, and the letter that
+    says so) is the operator's next hourly pass, which holds the Stripe key and
+    the mail key; this prints what it will do."""
+    import sys as _sys
+    from . import billing, operator
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if client.get("stripe_subscription_id"):
+        if not billing.stripe_configured():
+            sys.exit(f"{name}'s subscription cannot be ended: STRIPE_SECRET_KEY is not set, and left running it "
+                     "keeps raising invoices. Set the key and rerun.")
+        _end_subscription(billing, client["stripe_subscription_id"])
+        print(f"{name}: subscription {client['stripe_subscription_id']} ended in Stripe, no final invoice.")
+    db.table("clients").update({"status": "churned"}).eq("id", client["id"]).execute()
+    print(f"{name}: marked churned — no further changes are made in their account.")
+    if client.get("exit_trued_up_at") or not client.get("stripe_customer_id"):
+        print("  Nothing to true up: " + ("already done." if client.get("exit_trued_up_at") else "never billed."))
+        return
+    preview = operator.Pass(db, send=False, dry=True)
+    preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing)
+    for line in preview.notes:
+        print(f"  {line.replace('[dry] ', 'next operator pass: ')}")
+
+
+def cmd_stripe_smoke(args):
+    """Every Stripe call the billing path makes, against a TEST-mode key."""
+    from . import stripe_smoke
+    sys.exit(stripe_smoke.run(os.environ.get("STRIPE_SECRET_KEY", "")))
 
 
 def cmd_casestudy(args):
@@ -2209,6 +2766,32 @@ def cmd_calibrate(args):
     print(f"\n{live} of {len(rows)} calibration row(s) carry a value; the rest say why not.")
 
 
+def cmd_fleet(args):
+    """The network pass (fleet.py): a platform-wide change seen across accounts
+    that granted the `network` consent, announced once to every client it
+    applies to. The weekly sweep runs it after the per-client models."""
+    from . import fleet
+
+    db = dbmod.connect()
+    if args.action == "show":
+        print(fleet.show(db))
+        return
+    out = fleet.run(db, send=args.alert, dry=args.dry_run)
+    print(fleet.render(out))
+    if args.dry_run:
+        print("\nDry run: nothing recorded, nobody alerted.")
+
+
+def cmd_book(args):
+    """What each kind of move delivered, measured over promised, across the
+    accounts that granted the `network` consent (book.py). Report only."""
+    from . import book
+
+    db = dbmod.connect()
+    out = book.run(db)
+    print(json.dumps(out, indent=2, default=str) if args.json else book.render(out))
+
+
 def cmd_partner(args):
     """Referral partners: the people who already hold a list of sellers."""
     db = dbmod.connect()
@@ -2260,7 +2843,7 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
 
     # -- the deliverables ----------------------------------------------------
     can_video, why = video.available()
-    add("A video with every issue", "index, welcome, terms §2", can_video,
+    add("A video with every issue", "welcome, terms §3", can_video,
         f"speech via {tts.provider()}" if can_video else why)
 
     mail = email_configured()
@@ -2270,18 +2853,51 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
     add("Corrections stated before they go live", "terms §6", mail,
         "the veto notice needs email; without it nothing auto-approves, by design"
         if not mail else "sweep --issue notifies, then opens the window")
+    from . import seal as sealmod
+    sealed = sealmod.table_status(db)
+    # Not yet a promise any page or email makes (the email prints a seal only when
+    # one exists; /manifesto lists the Seal as "not live yet"), so the label says
+    # so: the digest line is a reminder to switch it on, not a client let down.
+    add("Every move sealed before its email",
+        "the pre-move email, once switched on; /manifesto calls it not live yet",
+        sealed["status"] == "ready",
+        "each promise is fingerprinted and chained before the notice; `hubricon seal verify`"
+        if sealed["status"] == "ready" else sealed["reason"])
 
     stripe_ok = billing.stripe_configured() and bool(os.environ.get("STRIPE_PRICE_ID"))
-    add("No invoice unless we found more than we cost", "terms §3, 8 surfaces", stripe_ok,
-        "the day-30 pass creates the subscription" if stripe_ok
-        else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — a client who clears the bar is "
-             "flagged in the digest instead of billed. Nobody is ever wrongly billed.")
+    add("A month is billed only if it clears the fee", "terms §3, index, welcome", stripe_ok,
+        "billing runs in arrears: each invoice is held at draft until its month is measured, sent if the month "
+        "cleared the fee, voided unsent if it did not" if stripe_ok
+        else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — no subscription starts, so no invoice exists. "
+             "Every month is still measured. Nobody is billed.")
+    try:
+        db.table("record_months").select("id").limit(1).execute()
+        months_ok, months_detail = True, "the weekly sweep writes each closed month once (monthly.py); it stands"
+    except Exception:
+        months_ok, months_detail = False, ("migration 20261001000001_record_months.sql not applied — no month is "
+                                           "measured, so every invoice waits held and nobody is billed")
+    add("Every closed month is measured once, on its own exports", "terms §3", months_ok, months_detail)
 
     add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
         "hubricon export <client>")
-    add("An invoice the Profit Record hasn't covered is void", "terms §3, index, welcome", stripe_ok,
-        "every new invoice is judged by the day-30 bar; one the ledger has not covered is voided" if stripe_ok
-        else "STRIPE_SECRET_KEY missing — an uncovered invoice is flagged in the digest instead of voided")
+    # The refund and the true-up write the columns of this migration, and the
+    # operator's billing pass waits until they exist.
+    try:
+        db.table("clients").select("exit_trued_up_at, late_teardown_month_at").limit(1).execute()
+        db.table("invoices").select("refunded_usd").limit(1).execute()
+        schema = None
+    except Exception:
+        schema = ("migration 20260925000001_guarantee_stack.sql not applied — the operator's billing pass is "
+                  "paused until it is")
+    if schema:
+        add("The billing pass can run", "terms §3, §5", False, schema)
+    add("A month a dispute takes under the fee is refunded, not credited", "terms §3", stripe_ok,
+        "at the exit, a credit note refunds the ACH payment to the account it came from" if stripe_ok
+        else "STRIPE_SECRET_KEY missing — the refund is flagged in the digest instead of made")
+    add("Trued up the day you leave", "terms §5, index", stripe_ok,
+        "`hubricon cancel` ends the subscription; the next pass checks every billed month again, voids the unpaid "
+        "and refunds the paid ones that no longer clear"
+        if stripe_ok else "STRIPE_SECRET_KEY missing — a departed client's true-up is flagged, not made")
     add("Recovery-only clients pay only on money that landed", "terms §4", True,
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
@@ -2321,7 +2937,9 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
             first = c.get("first_issue_at")
             waited = speed.hours(landed, first or datetime.now(timezone.utc))
             within = waited is not None and waited <= speed.SLA_HOURS
-            add(f"{name}: the Teardown inside {speed.SLA_HOURS} hours of the exports", "welcome, index, terms §2",
+            # Not a client promise since the Teardown was retired (2026-09-30): our own
+            # speed target for the first full read, kept because time to value is a moat.
+            add(f"{name}: Issue 001 inside {speed.SLA_HOURS} hours of the exports", "internal target",
                 within,
                 f"Issue 001 landed {waited}h after the exports" if first
                 else f"exports landed {waited}h ago and Issue 001 has not published — `hubricon operator`")
@@ -3065,6 +3683,24 @@ def main():
     p.add_argument("--retainer", action="store_true", help="move the client back onto the flat retainer")
     p.set_defaults(fn=cmd_downsell)
 
+    p = sub.add_parser("cancel", help="terms §5: end Managed Profit now — subscription ended, client churned, "
+                                      "exit true-up on the next operator pass")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_cancel)
+
+    p = sub.add_parser("dispute", help="take a disputed dollar the record cannot defend off a measured month; "
+                                       "the next operator pass judges the month again")
+    p.add_argument("client")
+    p.add_argument("--month", type=int, required=True, help="the retainer month's index (0 is the Proving Month)")
+    p.add_argument("--usd", type=float, required=True, help="dollars to take off; never more than the month has")
+    p.add_argument("--note", required=True, help="what was disputed and why the record did not settle it")
+    p.add_argument("--channel", default="amazon", choices=["amazon", "shopify"])
+    p.set_defaults(fn=cmd_dispute)
+
+    p = sub.add_parser("stripe-smoke", help="run every Stripe call the billing path makes against a TEST-mode "
+                                            "key (STRIPE_SECRET_KEY=sk_test_…), then clean up")
+    p.set_defaults(fn=cmd_stripe_smoke)
+
     p = sub.add_parser("casestudy", help="index.html §3b: one real client's case study, previewed, published or taken down")
     p.add_argument("client")
     p.add_argument("--publish", action="store_true", help="publish when every rule passes; otherwise print why and exit 1")
@@ -3082,6 +3718,16 @@ def main():
     p.add_argument("--out", help="output path (default: <slug>-hubricon-export-<date>.zip)")
     p.add_argument("--no-files", action="store_true", help="tables and ledger only, skip raw uploads")
     p.set_defaults(fn=cmd_export)
+
+    p = sub.add_parser("seal", help="the Seal: status, verify a client's Record (or --global), sync late entries")
+    p.add_argument("action", choices=["status", "verify", "sync"])
+    p.add_argument("client", nargs="?", help="verify/sync: this client (verify with none checks the global chain)")
+    p.add_argument("--global", dest="global_chain", action="store_true", help="verify the chain across every client")
+    p.add_argument("--witness", action="append", default=[],
+                   help="a short seal from an email, or a head captured earlier, that must be in the chain")
+    p.add_argument("--no-live", dest="no_live", action="store_true",
+                   help="verify the chain only, without comparing today's directive rows")
+    p.set_defaults(fn=cmd_seal)
 
     p = sub.add_parser("request", help="track a deletion / access / correction request against its clock")
     p.add_argument("action", choices=["open", "close", "list"], nargs="?", default="list")
@@ -3168,7 +3814,18 @@ def main():
     p.add_argument("--balance", type=float, help="cash on hand (USD)")
     p.add_argument("--opex", type=float, help="monthly fixed operating costs (USD)")
     p.add_argument("--as-of", dest="as_of", help="balance date YYYY-MM-DD (default today)")
+    p.add_argument("--buffer", type=float, help="minimum cash buffer (USD): the cone counts a path as ruined below it")
+    p.add_argument("--risk-share", dest="risk_share", type=float,
+                   help="share of a month's net one move may put at risk before it needs an explicit yes (0.05–0.30)")
     p.set_defaults(fn=cmd_cash)
+
+    p = sub.add_parser("benchmark", help="where the client sits against the consenting book, as percentiles")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_benchmark)
+
+    p = sub.add_parser("stress", help="what would break the account: fee rise, suppression, dearer clicks, late supplier, held payout")
+    p.add_argument("client")
+    p.set_defaults(fn=cmd_stress)
 
     p = sub.add_parser("console", help="render the internal briefing console for Loom screen-share")
     p.add_argument("client")
@@ -3202,6 +3859,19 @@ def main():
     p = sub.add_parser("calibrate", help="learn the cold engine's guesses from consenting clients' real accounts")
     p.add_argument("action", nargs="?", default="run", choices=["run", "show"])
     p.set_defaults(fn=cmd_calibrate)
+
+    p = sub.add_parser("fleet", help="the network pass: a platform-wide change seen across accounts that granted "
+                                     "the network consent, announced once to every client it applies to")
+    p.add_argument("action", nargs="?", default="run", choices=["run", "show"])
+    p.add_argument("--alert", action="store_true",
+                   help="email each client told, and the founder a digest (needs RESEND_API_KEY)")
+    p.add_argument("--dry-run", action="store_true", help="detect and print; record nothing, alert nobody")
+    p.set_defaults(fn=cmd_fleet)
+
+    p = sub.add_parser("book", help="what each kind of move delivered, measured over promised, across accounts "
+                                    "that granted the network consent (report only)")
+    p.add_argument("--json", action="store_true", help="print the table as JSON")
+    p.set_defaults(fn=cmd_book)
 
     p = sub.add_parser("partner", help="referral partners: add, list, draft the intro email")
     p.add_argument("action", nargs="?", default="list", choices=["add", "list", "email"])
@@ -3286,11 +3956,20 @@ def main():
                    help="shopify: where stores come from (default: category searches of Shopify's own marketplace)")
     p.set_defaults(fn=cmd_harvest)
 
+    p = sub.add_parser("adtest", help="plan and analyse an ON/OFF switchback on a campaign (ad incrementality)")
+    p.add_argument("client")
+    p.add_argument("action", choices=["plan", "analyze", "list"])
+    p.add_argument("--campaign")
+    p.add_argument("--start", help="first day YYYY-MM-DD (default: tomorrow)")
+    p.set_defaults(fn=cmd_adtest)
+
     p = sub.add_parser("pricetest", help="plan and track a price test (the wedge program)")
     p.add_argument("client")
-    p.add_argument("action", choices=["plan", "start", "track", "complete", "abort", "list"])
+    p.add_argument("action", choices=["plan", "start", "track", "complete", "abort", "list", "analyze"])
     p.add_argument("--sku")
-    p.add_argument("--to", type=float, help="test price")
+    p.add_argument("--to", type=float, help="test price (fixed design)")
+    p.add_argument("--design", choices=["fixed", "randomized"], default="fixed",
+                   help="randomized: six 7-day blocks around the current price, drawn by the engine")
     p.add_argument("--baseline", type=float, help="override the observed baseline price")
     p.add_argument("--start", help="start date YYYY-MM-DD (default: when you run `start`)")
     p.add_argument("--days", type=int, default=DEFAULT_TEST_DAYS)
@@ -3312,8 +3991,12 @@ def main():
         simulations=20000, seed=42, run=None, out=None, channel=None,
     )
 
+    from . import economics
+    economics.register(sub)  # `hubricon economics` and `hubricon log`
+
     args = parser.parse_args()
-    args.fn(args)
+    with meter.job(args.command):  # a scheduled command's wall time is a cost of its own (meter.py)
+        args.fn(args)
 
 
 if __name__ == "__main__":

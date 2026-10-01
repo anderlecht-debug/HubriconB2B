@@ -857,6 +857,61 @@ account and recording it (`hubricon execute`), the daily Buy Box reading on a
 live price test (`hubricon watch`), and confirming when an ad spend step-up was
 intended. Everything else measures itself.
 
+## The Seal: every promise written down before it goes live, provably (2026-09-25)
+
+"We write the expected dollars down before a move goes live" was true and
+uncheckable: the promise sat in a `directives` row we can edit. `seal.py`
+makes it arithmetic a client, a buyer's diligence team or a lender can redo.
+
+Each move gets two entries in `record_seals`: **called**, written by
+`issue.issue_drafts` between the status flip and the email (the move, its
+target, the expected dollars, the promised band, the mandate, a SHA-256 of the
+evidence); and **measured**, written when the sweep banks or closes it
+(`cli._measure_for_run`) or a number is recorded by hand (`hubricon measure`,
+sealed `by_hand`, a correction superseding the entry before it). Each entry is
+RFC 8785 canonical JSON; its leaf is `sha256(document)`; `head_n =
+sha256(head_{n-1} || leaf_n)` from 64 zeros, once per client and once across
+all clients. The pre-move email prints each move's short seal (the first twelve
+hex of its leaf) beside its expected dollars, so the client's inbox dates what
+was called. `public_record_seal()` (anon-callable, like `public_results()`)
+returns only the global head, its entry count and the last sealed time.
+
+    uv run hubricon seal status                  # the global head, the published head, each client's entries
+    uv run hubricon seal verify <client>         # every leaf, link and double entry, plus today's rows; exit 1 at the first broken entry
+    uv run hubricon seal verify --global         # the chain across every client, from genesis to the published head
+    uv run hubricon seal verify <client> --witness 3f9a1c0b2e7d   # a short seal from their email must be in it
+    uv run hubricon seal sync [<client>]         # seal, labelled late, what was issued or measured before the table existed
+    node scripts/verify-record.mjs <export.zip>  # what a third party runs; no dependencies
+    node --test scripts/verify-record.test.mjs   # the verifier, pinned to scripts/record-seal.golden.json
+
+**What must be applied.** Migration `20260925000002_record_seal.sql`, by hand.
+Until it is, nothing breaks: moves are issued and emailed exactly as before,
+without seals, and the sweep log, `hubricon promises` and the operator digest
+all name the missing migration. After it: `hubricon seal sync` once (or let
+Monday's sweep do it; it runs the same catch-up for every client), then
+`hubricon seal status` should report the published head equal to the table's.
+Moves issued before that day are sealed `late`, and say so wherever they are
+read; nothing sealed after the fact can pass for a promise called before.
+
+**What the database enforces.** A row must extend both chains (a trigger
+checks its prev heads), its heads must be `sha256(prev || leaf)` (CHECKs), and
+nothing may update, delete or truncate a row, the service role included. The
+one exception is a client's deletion (privacy §5): the foreign key sets their
+rows' client to null, and the trigger drops the document and keeps the leaf, so
+every other client's global chain still verifies. Setting a client to null by
+hand while the client exists is refused.
+
+**What it cannot do.** Whoever owns the database can still rewrite the table
+consistently; the Seal makes that rewrite disagree with the witnesses (the
+short seals in client inboxes, any earlier capture of the global head, any
+earlier export), which is why `--witness` exists. The short seal is 48 bits: a
+receipt a person can read, not a proof; the full leaf is in the export. **The
+next step is an external timestamp anchor**: stamp the global head with
+OpenTimestamps on each sweep, or have the Wayback Machine capture a GET
+endpoint serving `public_record_seal()`, and keep the proofs beside the head's
+sequence number. No network call is made for it today. Neither Hubricon (the
+portal) nor the public site shows seals or the head yet.
+
 ## The loop past paid: proof, the ask, the month, and what it teaches the cold engine
 
 The business is meant to run as a loop — effort, customers, results, word of
@@ -938,7 +993,7 @@ pass that starts their billing, and nowhere else. A referrer already on a
 subscription gets a Stripe customer-balance credit for one month
 (`Idempotency-Key: referral-<referred id>`), which applies itself to their next
 ACH invoice; a referrer still in their free month, or one whose gate came back
-`short`, gets `free_months + 1`, which `billing.due_for_decision` honours.
+`short`, gets `free_months + 1`, which `billing.due_to_start` honours.
 Partners are never auto-paid: the digest says "pay the partner per terms".
 
 ```
@@ -1005,15 +1060,23 @@ raises for a retainer is judged by the same bar as day 30 — measured plus
 identified value since the retainer began — against everything billed through
 that invoice (`billing.rolling_verdict`). The decision is written on the
 `invoices` row (`gate_decision`, `gate_value`, `gate_fees`), so it is taken
-exactly once. Covered is silent apart from the digest; not covered is
-**voided** if the invoice is still open, or **credited** to the customer
-balance if ACH already settled it (`billing.waive_invoice`), and the client
-gets one letter saying which and why. Void invoices drop out of the ledger's
-fee denominator, so a waived month is a month that was never billed.
+exactly once. Since 2026-09-25 the webhook holds each retainer invoice at
+draft, so the usual case is a draft: covered, it is finalized and sent
+(`billing.release_invoice`); not covered, it is voided unsent and the client
+gets no letter, because there is no invoice to explain. An open invoice (a
+hold that failed) not covered is **voided**, and one ACH already settled is
+**refunded** through a credit note (`billing.waive_invoice`; it used to be a
+customer-balance credit), and the client gets one letter saying which and why.
+Void invoices and refunded dollars drop out of the ledger's fee denominator
+(`invoices.refunded_usd`), so a waived month is a month that was never billed.
 
 Read-only until `STRIPE_SECRET_KEY` is set: without it an uncovered invoice
-is a digest warning, never a silent bill. As of 2026-09-11 no workflow passes `STRIPE_SECRET_KEY` or `STRIPE_PRICE_ID` to the scheduled operator (`grep -rn STRIPE .github/workflows/` is empty), so the day-30 pass and the rolling void both stop at the digest; the index Layer 2 copy was softened to match and the "voided within the hour" sentence may return once the two secrets are added to the Production environment and the env block of the operator.yml "Run the operator" step. terms §3, welcome and the index
-guarantee say the sentence; `hubricon promises` tracks it.
+is a digest warning, never a silent bill. `operator.yml` passes
+`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID`, but as of 2026-09-25 neither secret
+exists in the GitHub Production environment (`gh secret list --env Production`),
+so the day-30 pass and the rolling gate stop at the digest until they are
+added. terms §3, welcome and the index guarantee say the sentence;
+`hubricon promises` tracks it.
 
 ### The smaller door: recovery-only
 
@@ -1058,6 +1121,77 @@ The site does not show the downsell anywhere. Since 2026-09-18 the application
 books every brand that answers its four questions; an Amazon seller under $3M or
 on someone else's brand arrives on the calendar tagged `fit:below` in the
 booking's `utm_content`, and Hagen offers Recovery Only by hand after the call.
+
+## Stripe, end to end (2026-09-25)
+
+Until this date Stripe had never run: the production database held zero
+invoices, zero Stripe events and zero Stripe customers, and the operator had
+no key. The code also had ten faults that would have surfaced on the first
+paying client. All are fixed and tested:
+
+1. The webhook endpoint was created with three events, so an **open** invoice
+   never reached the mirror and the gate could only ever credit after payment,
+   never void. `lib/stripe_events.js` now exports `WEBHOOK_EVENTS`, and
+   `npm run stripe:setup` adds any missing event to the existing endpoint.
+2. Webhooks arrive in any order; a late `invoice.created` could drag a paid
+   invoice back to draft. The mirror now only moves a row forward.
+3. `invoice.paid` for an unknown customer **created a client**. It no longer
+   creates anything: the operator provisions every booking.
+4. A client whose ACH payment failed went `past_due` and fell out of the
+   billing pass, so the invoice that most needed voiding stood. The pass now
+   includes `past_due`.
+5. `invoice.paid` on a client who had left set them `active` again. It no
+   longer revives a churned client.
+6. `start_billing` had no guard: a DB write failing after Stripe succeeded
+   meant a second subscription the next hour. It now finds the live one first
+   and carries an idempotency key.
+7. The Recovery Only invoice created its line item before its invoice; a
+   failure between the two left a pending item that rode along on the next
+   invoice. The invoice now comes first, the item attaches by id, and the
+   claim set is stamped on the invoice so a retry at any distance finishes it
+   rather than billing again.
+8. Two gate decisions in one pass did not see each other; a voided month was
+   still counted against the next. Decisions now update the pass's own copy.
+9. `hubricon downsell` to Recovery Only left the $6,000 subscription running.
+   It now clears the row, then ends the subscription (in that order, so the
+   webhook does not read the switch as a departure).
+10. The setup script told the founder to create subscriptions by hand, which
+    bypasses the day-30 gate entirely. It now says never to, and why.
+
+The guarantee stack built on top (terms §2, §3, §5):
+
+- **The hold.** `invoice.created` on a retainer draft sets `auto_advance=false`;
+  the gate sends or voids it. A failed hold is a 500, so Stripe retries, and
+  Stripe waits on a failing `invoice.created` before it finalizes.
+- **Refund, not credit** on a paid invoice the gate did not cover.
+- **The exit true-up.** `hubricon cancel <client>` ends the subscription (no
+  final invoice, no proration) and marks the client churned; the next operator
+  pass voids any held draft, voids unpaid invoices newest first while a gap
+  remains, refunds the rest newest first, records `exit_trued_up_at`, and
+  sends one letter. A Stripe-side cancellation reaches the same pass through
+  `customer.subscription.deleted`.
+- **The late-Teardown month**, once per client, on the clock the digest reads.
+
+Schema: `supabase/migrations/20260925000001_guarantee_stack.sql` (additive:
+`invoices.refunded_usd`, `clients.exit_trued_up_at`, `clients.exit_refund_usd`,
+`clients.late_teardown_month_at`). Apply it before the operator runs this code;
+without it the exit pass names the migration in the digest.
+
+### Going live, in order
+
+```
+npm run stripe:setup                       # with the live key: product, price, all webhook events, ACH check
+gh secret set STRIPE_SECRET_KEY --env Production
+gh secret set STRIPE_PRICE_ID   --env Production --body price_...
+cd engine
+STRIPE_SECRET_KEY=sk_test_... uv run hubricon stripe-smoke   # every Stripe call, on a TEST key, cleaned up
+uv run hubricon promises                   # every billing promise should read ok
+```
+
+The Vercel key needs Invoices: write (the hold). The engine pins
+`billing.STRIPE_VERSION` to the webhook SDK's version (stripe@18.5 →
+2025-08-27.basil); a test fails if they drift. Never create a subscription or
+an invoice by hand in the dashboard.
 No code path does that; the hourly operator's only automated offer to a booked
 client is the day-14 downsell. (`api/gate.js` still accepts a `recovery` request and files it as a
 prospect at `wants_teardown` with a `recovery-only (site gate)` note, for which
@@ -1222,6 +1356,10 @@ Each of these used to depend on someone remembering. They are now jobs.
 | First fixes live in week one | welcome.html | `hubricon execute` records it; the sweep escalates anything approved and unexecuted past 7 days |
 | Buy Box watched daily through a price step | index.html, terms.html §6 | `hubricon watch --alert` |
 | "If we don't find you more than we cost, you walk away owing nothing" | 8 surfaces, terms.html §3 | The operator's day-30 pass is the **only** code that starts billing. Below the bar no subscription is created — there is no invoice to write off |
+| A month is invoiced only if it clears the fee | index, welcome, terms.html §3 | billing in arrears; `lib/stripe_events.js` holds every retainer draft (`auto_advance=false`); `operator._month_gate` waits until its month is measured (`record_months`), sends it if the month cleared and voids it unsent if not |
+| A paid month the Record did not cover is refunded, not credited | terms.html §3, method | `billing.waive_invoice` → a credit note with `refund_amount` |
+| Trued up the day you leave | index, welcome, terms.html §5, method | `hubricon cancel` ends the subscription; `operator._exit_true_up` voids the unpaid and refunds the gap, once (`clients.exit_trued_up_at`) |
+| A Teardown later than 24h makes the first paid month free | index, apply, terms.html §2, method | `operator._late_teardown_month` on `speed.teardown_late`, once (`clients.late_teardown_month_at`); the clock starts at the first parsed upload's `uploaded_at` |
 | Free data + Profit Record export, any time | 11 times across 6 surfaces | `hubricon export <client>`; Hubricon's "Request your export" opens a tracked request |
 | Deletion in 30 days · DSAR in 7 · breach notice in 72h · 14 days' notice of a terms change | privacy.html, terms.html §14 | `hubricon request`; the operator escalates anything within two days of its deadline and shouts when one is overdue |
 | The 90-day plan drafted from the Teardown | welcome.html Step 2 | `draft_plan_for_run` inside the teardown; it stays `draft` until the founder commits it on the kickoff call |
@@ -1233,6 +1371,7 @@ a silent failure:
 |---|---|
 | `ELEVENLABS_API_KEY` | Issues publish with the letter and report, no video (or set `HUBRICON_TTS=local` for a local voice) |
 | `STRIPE_PRICE_ID` | A client who clears the guarantee is flagged in the digest instead of being billed. Nobody is ever wrongly billed |
+| `STRIPE_SECRET_KEY` | Nothing is billed, sent, voided or refunded; each is flagged in the digest instead. Held drafts wait unsent |
 
     hubricon promises                # which promises the machine can keep, right now
     hubricon promises --client <x>   # …and that client's own clocks
@@ -1367,6 +1506,27 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
 
 ## The 60-second Teardown (`/teardown`)
 
+> **Retired 2026-09-30** (`HUBRICON_SPEC.md`: the per-prospect Teardown is killed). The page
+> is in `archive/teardown.html`, `/teardown` redirects home, and nothing on the site links
+> to it. `lib/fees.js` stays: the home page's public-data case study runs on it
+> (`scripts/case-study.mjs`). `api/quick.js` and `lib/tool_email.js` still exist and still
+> link to `/teardown`; nothing posts to them now. The rest of the Teardown went the same day:
+> terms §2 is "The call", the operator's late-Teardown month is gone, client emails and the
+> portal say "your first full read", and the cold channel is held paused in code
+> (`HUBRICON_COLD`, see `HUBRICON.md`).
+>
+> **The founder's dictated fee figures, re-derived from `ratecard.json` on 2026-09-30.** The
+> first three were quoted before Amazon's 3.5% fuel and logistics surcharge (in force since
+> 2026-04-17); quote the surcharged figure. The USPS one does not match the card.
+>
+> | Dictated | On the card, with the surcharge | Verdict |
+> |---|---|---|
+> | Crossing $10: 82¢ to $1.01 a unit | **$0.85 to $1.05** (every standard row, both cards) | right before the surcharge |
+> | Crossing $50: 26¢ | **$0.27** | right before the surcharge |
+> | Peak step: 19¢ to 54¢ across 63 cells | **$0.20 to $0.56** (21 rows × 3 price columns, the over-3-lb base included) | right before the surcharge; the $2.81 extra-large figure is off this card |
+> | $9.95 → $10.49 nets 46¢ after referral | **+$0.46** at 15% referral, against a $0.85–$1.05 step: the raise loses $0.39–$0.59 a unit | right |
+> | USPS 15.9 oz → just over 16 oz: 96¢ to $4.47 | **$0.68 to $2.27** across zones 1–8 (Ground Advantage Commercial, Notice 123, 2026-07-12) | wrong; use the card |
+
 The lead magnet in front of the call. A visitor types five numbers off their
 own product page — price, item weight, package dimensions, category, rank,
 and optionally a landed cost — and the page prices one unit off Amazon's own
@@ -1435,3 +1595,274 @@ refuse a datacenter fall back to typing; that case is expected and the page
 says so. The capture creates the prospect exactly as the Amazon side does;
 `teardown_requests` reads the platform from `tool_runs` when the harvest
 does not know the address, so a Shopify merchant gets Shopify instructions.
+
+## Unit economics: `hubricon economics` (2026-09-25)
+
+One founder serves every account for a flat $6,000, so whether Hubricon
+scales is arithmetic, not opinion: what one more account costs in compute, in
+third-party usage and above all in the founder's minutes, and whether that
+number falls as the engine automates more. Carnegie's rule is to know the
+cost of every unit, every week. Until this date the only unit on file was
+`model_runs`' two timestamps.
+
+### What is counted, and where
+
+| Cost | Counted in | How |
+|---|---|---|
+| Engine compute | `model_runs` (as before); `meter.job` around every scheduled command in `cli.main`; `@meter.metered` on the per-client work (`_sweep_client`, `_publish_issue`, the operator's Teardown) | wall seconds, per account and per GitHub job |
+| Anthropic tokens | `narrate.py`, `triage.py` | the response's own `usage`; a server-side fallback's attempts each at their own model (`usage.iterations`) |
+| ElevenLabs characters | `tts.py` | on a voiced request only |
+| Resend emails | `notify.py` | on an accepted send only; a count, never a recipient |
+| Founder minutes | `hubricon log`, and the calendar | below |
+| Fixed platform costs | `cost_config` | the founder's figures; placeholders until he sets them |
+
+Everything lands in `usage_events`, attributed to the account whose work it
+was (or the prospect, for triage). Anything outside such work, such as the
+digest or a `hubricon script` run by hand, is the machine's own. The meter
+is never fatal. A capture cannot raise into a brief, an email or a sweep, a
+failed write is dropped with one line on stderr, and after three failures in
+a row it goes quiet for the rest of the run. Until migration
+`20260925000004_unit_economics.sql` is applied that line is all it does, and
+the report says what it cannot measure.
+
+### Logging the founder's time
+
+```
+cd engine
+uv run hubricon log acme 30 pricing review with Dana          # a client: uuid, prefix, email or company name
+uv run hubricon log lee@brand.com 15 answered the fee question   # a prospect, by email
+uv run hubricon log all 60 Monday review of every account        # work for every account at once
+uv run hubricon log acme 20 --on 2026-10-02 the call ran long    # a day other than today
+```
+
+Log what serving a client costs you: calls nobody booked, email threads,
+executing moves in Seller Central or Shopify, filing claims, recording a
+walkthrough, reviewing a draft before it goes out. Log selling against the
+prospect. `all` is work done for the whole book at once. Do not log building
+Hubricon itself: that is investment, not the cost of an account, and logging
+it would hide the very fall in minutes the engine exists to produce.
+
+The calendar logs two things for you. `hubricon economics` writes each of
+them into `founder_time` once, the first time it runs after they happen:
+
+- **Every booked call that has happened**, at the length its Calendly event
+  names ("20 Minute Meeting"), else the site's stated 20 minutes.
+- **Each client's kickoff**: the Kickoff booking, else the day the standing
+  mandate was agreed, at 45 minutes (welcome.html).
+
+A booked call counts at its scheduled length whether or not it happened. For
+a no-show, set that row's `minutes` to 0 in Supabase. Do not delete the row,
+because the next report would write it again. An edited row is never
+overwritten.
+
+### Reading it
+
+```
+uv run hubricon economics                    # this month, to date
+uv run hubricon economics --month 2026-10    # a closed month
+uv run hubricon economics --config           # every price, plan fee and rate, and whose each is
+uv run hubricon economics --set founder.hourly_rate_usd 200
+```
+
+Every figure is tagged. **[m] is measured**: read from the engine's own
+records (Stripe's invoices as mirrored, usage the meter wrote, minutes
+logged, a booking's own length). **[a] is assumed**: a measured quantity at a
+price from `cost_config`, which names its basis (`placeholder`, the length
+the site states, or the founder's own figure). The header counts the
+placeholders still standing.
+
+An **account** is a client in service, from the yes (`retainer_started_at`)
+or the kickoff, whichever came first, until they leave. A client an invoice
+bills that month also counts. Time and usage before that are what winning
+them cost. They are reported under *Winning accounts*, with a cost per
+account won, and never in cost to serve.
+
+- **Per account**: revenue that stood (billed and not voided or refunded),
+  voided, compute, third-party (tokens, characters, emails and Stripe's fees
+  on paid invoices), founder minutes and their shadow cost at
+  `founder.hourly_rate_usd`, cost to serve, contribution. Minutes logged to
+  `all` are spread evenly and the page says so.
+- **Fixed base**: every `fixed.*` in `cost_config`, the runner minutes that
+  were no account's, and usage no account carried. It is spread per account.
+  With zero accounts it is carried by nobody, and the page says that
+  instead of dividing.
+- **Runner minutes**: GitHub bills each job rounded up to the minute. One
+  job can run two commands (`issue` then `watch`, `sweep` then `calibrate`),
+  so events are grouped by run, and each gets `setup_seconds_per_job` for the
+  checkout and install the engine cannot see. If fewer runs were recorded than
+  the schedule fired, the minutes are called a floor. With no runs recorded
+  at all, the schedule gives the least the month can have cost.
+- **Scale curve**: accounts, minutes and cost to serve per account, fixed
+  per account and all-in, month over month for up to a year. A month with
+  nothing recorded on its accounts reads "—", never zero.
+
+### The three numbers
+
+1. **Founder minutes per account-month.** This decides whether one person
+   can serve the book. It should fall as the engine takes work over. If it
+   does not, automation is not arriving where the time goes.
+2. **Cost to serve per account**, against $6,000. Founder time dominates it.
+   Compute and tokens are small change unless something is wrong.
+3. **Capacity**: accounts one founder can run in the stated working week
+   (`founder.working_hours_per_week`) at the measured minutes. For a month
+   still running, it is paced to the whole month. It is marked an upper
+   bound when only the calendar's minutes exist, because a founder who logs
+   nothing looks infinitely scalable.
+
+### What only the founder can set
+
+Every price ships as a labelled placeholder, not a fact. Replace them with
+`--set`, or by editing the row in Supabase, which marks it his figure:
+
+| Key | Placeholder | What it should be |
+|---|---|---|
+| `founder.hourly_rate_usd` | 150 | what an hour of yours is worth in cost to serve |
+| `founder.working_hours_per_week` | 50 | the week you actually intend to work |
+| `fixed.*` (supabase, vercel, github, google_workspace, calendly, instantly, elevenlabs, resend) | list prices, unverified | the invoices. Add others with `--set fixed.<name> <usd>` |
+| `rate.github_actions.*` | $0.008 a minute, 2,000 included, 60 s setup | your plan's rates; 0 a minute if the repo is public |
+| `rate.anthropic.<model>.*` | mid-2026 list prices | the price list; a model with no rate is shown unpriced, never guessed |
+| `rate.elevenlabs.*`, `rate.resend.*`, `rate.stripe.*` | plan quotas and overage, Stripe's invoicing and ACH fees | your plans |
+
+What it cannot tell you: minutes nobody logged; whether a booked call
+happened; the day a client left (not recorded, so the exit true-up stands in);
+anything outside the engine, such as the cloud routine on your claude.ai plan,
+the harvest on the Mac, or the site's own mail (the 60-second Teardown's copy
+from `api/quick.js` and the portal's sign-in links reach Resend without passing
+the engine, so the Resend line is the engine's share; add any of these as
+`fixed.*` if they should count); and a price. It only ever multiplies by the
+ones you give it.
+
+## The network: a change on the platform's side (2026-09-25)
+
+Every consenting account makes every account safer. When Amazon moves a fee it
+moves it for every seller at once; one account's own sweep is strict by design and
+sees a small step late, or never on a thin catalogue. `fleet.py` asks each
+consenting account whether its FBA fee per unit or its referral rate stepped
+across its SKUs at once, then whether that many accounts could agree
+within the same 45 days by coincidence (the arithmetic, its null and its floors are
+in `engine/MATH_METHODS.md` §8c). A change is declared when at least three accounts
+agree and the agreement clears a false-discovery level of 1%; every current client
+who pays that fee then gets one alert, once, in Hubricon and by email: what changed,
+around when, how big on the typical SKU, how many accounts stand behind it, and
+whether their own exports show it yet.
+
+**Consent.** Only clients who ticked the separate `network` box on their private
+/say page (and have not unticked it), who are current and who are not internal are
+read as sources. What leaves an account is an event — fee type, direction,
+approximate date, size as a ratio — never a figure, a name, a SKU or an ASIN.
+
+**Who is told** is one constant, `fleet.RECIPIENT_POLICY`: `every_client` (the
+default — the consent governs the source, not the recipient) or
+`contributors_only` (give-to-get). The founder's call; nothing else reads it.
+
+```
+uv run hubricon fleet --dry-run     # detect and print; record nothing, alert nobody
+uv run hubricon fleet               # record platform_changes and write the alerts (Hubricon only)
+uv run hubricon fleet --alert       # …and email each client told, and the founder a digest;
+                                    #    an alert written earlier without an email is emailed now, once
+uv run hubricon fleet show          # every change recorded, newest first
+uv run hubricon book                # realisation by move kind across consenting accounts (report only)
+uv run hubricon book --json
+```
+
+**Where it runs.** By hand for now: `hubricon fleet --alert` after a Monday sweep.
+Its place as the Monday sweep's last step (`.github/workflows/sweep.yml`, after every
+client's models and the calibration, `if: always()`, and `|| echo` so a failure warns
+and never fails the sweep) is held on the local branch `workflow-fleet`, because GitHub
+refuses workflow edits from a token without the `workflow` scope. To land it: run
+`~/.local/bin/gh auth refresh -h github.com -s workflow`, then merge that branch into
+`main` and push; it also adds `fleet` to `meter.SCHEDULED` so its runner time is
+counted. Below
+three consenting accounts with a run from the last three weeks it prints
+`insufficient_accounts` and does nothing else, which is what it will print until
+three clients have said yes.
+
+**Before it can record anything** the founder applies
+`supabase/migrations/20260925000003_network.sql` (the consent kind, the alert
+module, `platform_changes`, and the one-alert-per-client-per-change index). Without
+it the pass says `schema_missing`, names the file, and writes nothing. Apply it
+before the /say page's `network` box deploys: until it is, the page saves every
+other answer and tells a client who ticked the box that their yes is not saved
+yet (the old check constraint on `consents.kind` refuses the new kind).
+
+**`hubricon book`** pools `replay.score`'s realisation ratio — measured over
+promised — by move kind across the same consenting accounts, with the accounts and
+moves behind each and a band from resampling accounts; under five accounts it
+refuses. Report only: no promise, expected dollar or invoice reads it. It is the
+data asset a later, bench-validated change will use to price day-one promises.
+
+## The month close (since 2026-09-30)
+
+The guarantee runs per month (`HUBRICON.md`, the guarantee). Each Monday sweep, after
+measuring the moves, `cli._close_months` writes a `record_months` row for every retainer
+month that ended at least `monthly.CLOSE_LAG_DAYS` (7) days ago and has none, per channel.
+The hourly operator's `_month_gate` then judges each held invoice against the month it
+bills (in arrears). Two things to know:
+
+- **Apply `supabase/migrations/20261001000001_record_months.sql` before deploying** the
+  per-month code. Without the table the sweep prints one line and measures nothing, and
+  every invoice waits held: nobody is billed, which is the safe failure, but nobody is
+  billed.
+- **A dispute** that the record cannot settle comes off the month by raising its
+  `disputed_usd` (the trigger allows only that, and only upward). Do it in the Supabase
+  editor until a CLI command exists; the gate and the exit true-up read the month after
+  disputes.
+
+## /learn: the courses (since 2026-09-30)
+
+`HUBRICON_SPEC.md` ("Education hub"): one complete course before any second, one email to
+enter, everything inside open, three columns, templates before videos, linked from footers
+only. What exists:
+
+| Piece | Where |
+|---|---|
+| The hub, one card per course that exists | `learn/index.html` |
+| Course 1, **The Fee Staircase**: eight lessons, the five beats of the case study taught end to end | `learn/fee-staircase.html`, `assets/learn.js` |
+| Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
+| The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
+
+**Every figure is built, none typed.** The lessons' numbers are `data-fill` keys and the two
+fee cards are build blocks, all computed by `scripts/build-pages.mjs` (`learnFigures`) from
+`ratecard.json` and the case study through `lib/fees.js`; the worked examples are invented
+listings, priced the same way, and say so. `node scripts/build-pages.mjs` rebuilds the page.
+
+**The spreadsheet is the engine's arithmetic in cells.** `scripts/learn/fee_staircase_template.py`
+writes it from `ratecard.json` and the storage schedule; `scripts/learn/verify_fee_staircase.py`
+recalculates a copy in LibreOffice and holds it to the 41 golden cases that pin `lib/fees.js` to
+the Python (tier, dimensional and billable weight, both cards' fees, the band edge, the rank
+curve, all four edges' gap per unit), then `--publish` rebuilds the shipped file with its
+values and writes `scripts/learn/fee-staircase.stamp.json`. `scripts/learn/learn.test.mjs`
+fails when `ratecard.json` or the file has moved since. When Amazon publishes a new card:
+
+    uv run --no-project --with openpyxl python scripts/learn/verify_fee_staircase.py --publish
+    node scripts/build-pages.mjs
+
+One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth
+decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a
+hundredth of a cent; every figure agrees to the cent.
+
+**The gate.** The email opens the course in the browser (`localStorage`, key
+`hubricon.learn`) whatever the server says, except a 400 for a bad address: a fault of ours
+never locks a reader out. Without scripts every lesson shows in order. A new sign-up gets one
+email (the link and the spreadsheet, Resend, with RFC 8058 one-click unsubscribe headers); a
+repeat gets nothing. Notes "a new course is out" go only to addresses with no unsubscribed
+row. Privacy §1 "Courses" and §8 describe exactly this.
+
+**Live since 2026-09-30** (c0d872c), the founder having read the lessons. Migrations
+`20261001000001_record_months`, `20261001000002_learners` and the held-back
+`20260925000004_unit_economics` were applied that night through the Supabase connector.
+**Vercel still needs `RESEND_API_KEY` and `POSTAL_ADDRESS`** (Production): the GitHub
+operator has both, the site has neither, so a sign-up is kept and the course opens but no
+email goes (`funnel_events.payload.email_error = "RESEND_API_KEY not set"`). The key in
+`.env` is a send-only key and was proven against Resend's test inbox the same night. Once
+it is set, send the link to anyone who signed up meanwhile: `learners` rows with
+`email_sent_at` null.
+
+**Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
+pattern with `data-course`, a card in `learn/index.html`, its page in `PAGES` if it carries
+figures. `lib/learn.test.mjs` refuses a listed course whose page or template is missing, and
+`scripts/learn/learn.test.mjs` refuses a hub card for a course that is not listed.
+
+An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired
+look), is parked: it runs on the seller's own reports, so it is not the public-data first
+course the spec asks for. It is a candidate for a later course, rebuilt on the design system.

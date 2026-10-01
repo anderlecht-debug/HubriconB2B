@@ -1,8 +1,11 @@
 # What Hubricon is
 
 *The reference answer. If you are an assistant picking this repo up cold, read this
-first, then `OPERATIONS.md` for how the machine runs and `GROWTH.md` for where
-customers come from. Last rewritten 2026-09-11.*
+first, then `MONOPOLY.md` for what the business is building toward and the rules every
+change is held to, `BRAND.md` for how everything looks and sounds, `OPERATIONS.md` for
+how the machine runs and `GROWTH.md` for where customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.
+The rebuild decided on 2026-09-27 is governed by `HUBRICON_SPEC.md`: where it and this file
+disagree, the spec wins, and nothing in it licenses a claim this file's honesty rules forbid.*
 
 ---
 
@@ -15,15 +18,16 @@ decisions with the dollars it was expected to earn before it happened and the
 dollars it actually earned afterwards, measured from the client's own later
 exports. That record is called the **Profit Record**, and it is the product. The
 fee is $6,000 a month, flat. The first month is free. Every invoice after that is
-void unless the Profit Record has proven more value than Hubricon has billed since
-day one. It is run by one person.
+held until the Profit Record shows more value than Hubricon has billed since day
+one, and voided unsent if it does not; a client who leaves is trued up to the
+Record. It is run by one person.
 
 ---
 
 ## Who the customer is
 
-A private-label brand doing **$3M–$20M a year** on Amazon, on Shopify, or
-on both. Ten or more SKUs. Their own brand, not wholesale or arbitrage. Someone
+A private-label brand doing **$1M–$30M a year** on Amazon, on Shopify, or
+on both (the founder's decision of 2026-09-27, `HUBRICON_SPEC.md`; it was $3M–$20M). Ten or more SKUs. Their own brand, not wholesale or arbitrage. Someone
 who owns the goals and is tired of being the only person in the building who runs
 the numbers.
 
@@ -45,8 +49,12 @@ Nobody in that stack can answer "which decision made the profit". That gap is th
 entire business.
 
 **Who it is not for:** someone who wants day-to-day creative campaign management,
-or another dashboard subscription. The floor is derived from the guarantee, not
-chosen: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
+or another dashboard subscription. **The honesty check the band carries:** the arithmetic
+below, written for the old $3M floor, says a $2M brand has roughly $3,600 a month to find,
+under the $6,000 fee. The site therefore never claims the bill is cleared at the bottom of
+the band; it says "we only take on accounts where the arithmetic clears the bill, and if
+yours doesn't, we tell you on the call", and the guarantee makes a wrong call cost
+Hubricon, not the client. The floor arithmetic as it stood: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
 recoverable) a $2M brand has roughly $3,600 a month to find and a $3M brand roughly
 $5,400, so below $3M every invoice voids and the service runs unpaid. Since
 2026-09-18 the site's application books every brand that answers its four
@@ -89,6 +97,20 @@ at kickoff. Reorders and claims are prepared, dated and valued, and wait for an
 explicit yes. Everything else — a bigger price step, a new campaign, anything
 touching inventory orders — needs written approval.
 
+**The network (2026-09-25).** Every consenting account makes every account safer.
+When Amazon moves a fee it moves it for everyone, and a step that shows in three or
+more accounts at once is told to every client who pays that fee — sooner, and with
+fewer false alarms, than one account's own sweep can manage (`fleet.py`; by hand
+for now, weekly after the models once the sweep step on the branch `workflow-fleet` lands; who is told is one constant, `fleet.RECIPIENT_POLICY`, and the
+founder's call). No client's data informs another unless they granted the separate
+`network` consent; what leaves an account is an event (which fee, which way,
+roughly when, by what ratio), never a figure of theirs, their name, a SKU or an
+ASIN; every alert says how many accounts stand behind it. The same accounts feed
+`hubricon book`, what each kind of move has actually delivered, measured over
+promised — report only, for now. Migration `20260925000003_network.sql` was
+applied to production on 2026-09-25; the pass stays inert until three clients have
+said yes.
+
 **Access.** One permissions-scoped user on Seller Central with exactly four
 permissions (Business Reports view, Fulfillment reports view, Pricing edit,
 Campaign Manager edit), or one Shopify collaborator account limited to Orders,
@@ -116,8 +138,12 @@ own Seller Central or Shopify exports and graded by **how we know**:
 - **attributable** — measured against a stated counterfactual
 - **unmeasurable** — we could not isolate it, so nothing is banked and the row says so
 
-Four guards apply to every measurement, enforced centrally in
-`measurement.py::_verdict` so no new measurement family can skip them:
+Four guards are written in `measurement.py`'s docstring. Three are enforced in
+code: the cap (centrally, in `_verdict`), the materiality floor (centrally, after
+every family runs) and one dollar, one move (`_dedupe_overlapping`). **Persistence is
+not enforced yet** (found 2026-09-30): no family re-reads the latest export or emits
+`reverted`, so the site does not claim it. The monthly re-measurement planned for the
+per-month guarantee is what will enforce it.
 
 1. **Capped at the promise.** An isolated or attributable result is banked at the
    expected figure; any excess is recorded and named, never totalled. (Direct is
@@ -172,29 +198,52 @@ and takes the calls. There is no account manager and no support tier. That caps
 how many accounts can run at once, but no ceiling is published and no brand is
 refused, because the founder takes every call.
 
-### The guarantee: Proven or Void
+### The guarantee: Proven or Void, month by month
 
-Four layers, all in `terms.html` and all enforced in code.
+Since 2026-09-30 the guarantee runs per month, as `HUBRICON_SPEC.md` ("The
+mechanics") specifies; until then it was one cumulative bar (proven plus found
+since day one against everything billed). The four layers are the spec's, all in
+`terms.html` §3 and §5 and all enforced in code; `hubricon promises` names any that
+cannot run for want of a secret or a migration.
 
-- **Layer 1 — the Proving Month is free, unconditionally.** Thirty days of the full
-  service. If the client does not get a written Teardown within 24 hours of their
-  files, a 90-day plan on the kickoff call, and the first moves live inside two
-  weeks, the month was free anyway and they keep everything. No card exists to charge.
-- **Layer 2 — proven or void, every invoice after.** If what the Profit Record has
-  proven, plus what it has found and filed, does not exceed everything billed since
-  day one — that invoice included — the invoice is void. Already paid, it is
-  credited. At day 30 the code that would raise the invoice checks the record
-  first, so below the bar **no invoice is created at all**. The bar is cumulative.
-- **Layer 3 — the work does not stop.** A void invoice pauses nothing. Work
-  continues until the record catches up, and no new invoice stands until it has.
-- **Layer 4 — the exit is always open.** Cancel by one email, effective
-  immediately. No notice, no fee, no card on file. Data and full record export
-  free. And if the email announcing a planned move does not go out, nothing moves:
-  the veto window only opens on a sent notice, which is code, not policy.
+- **The Proving Month is free.** Month 0 of the retainer, unconditionally, plus any
+  month a referral earned (`free_months`). No card exists to charge.
+- **Proven or void, every month on its own.** `monthly.py` re-measures every made
+  move on each closed month's exports alone, against the move's own pre-move
+  baseline, with the cap, the $25 floor and one dollar one move; a leak that
+  stopped holding earns nothing that month (this is what makes persistence a rule).
+  The weekly sweep writes one `record_months` row per client, month and channel a
+  week after the month ends; the row stands (a trigger refuses any change but a
+  dispute, which can only take dollars off). Billing runs in arrears: when the free
+  months end the subscription starts with a trial to the end of the first billed
+  month, so every invoice Stripe raises bills a month that has happened. The
+  webhook holds each at draft; the operator's gate (`_month_gate`) waits until its
+  month is measured, then sends it if the month's number is above the fee and
+  voids it unsent if not. Found-but-unmeasured dollars do not count, and nothing
+  carries between months. A paid invoice for a month that did not clear is
+  **refunded to the bank, never credited**.
+- **Service until proven.** A month that does not clear is not invoiced, and the
+  work carries on.
+- **The open exit.** Cancel by one email, effective immediately. The next operator
+  pass checks every billed month once more against its own number after disputes,
+  voids unpaid invoices for months that no longer clear and refunds paid ones
+  (terms §5, within seven days). The month in progress is never invoiced.
+
+**Signed off.** The plain-English attribution text (terms §3, the shared block in
+`scripts/blocks/attribution.html`) and the per-month guarantee were approved by
+Hagen Simmons, founder, on 2026-09-30, and shipped that day with the migration
+`20261001000001_record_months.sql` applied (without it no month is measured, every
+invoice waits held, and nobody is billed: the safe failure). The guarantee clause
+and the liability limit still get one review by a licensed Texas attorney before
+the first client signs, as the spec requires.
+
+Also: if the email announcing a planned move does not go out, nothing moves.
+The veto window only opens on a sent notice, which is code, not policy.
 
 What is explicitly **not** promised: a result. Forecasts are probabilities and
-Amazon changes its fees without asking. The promise is that the invoice can never
-outrun the proof.
+Amazon changes its fees without asking. The promise is that no month is billed
+unless its own number cleared the fee, and that nobody leaves having paid for a
+month that did not.
 
 **The price of the free month** is a short testimonial and permission to publish an
 anonymised result — asked once, on a private page, each a separate yes. Plus a
@@ -212,7 +261,7 @@ monthly fee, 25% of reimbursements Amazon actually pays on claims Hubricon filed
 |---|---|---|
 | Day 0 | Four-question application, then book the 20-minute call on the spot | 2 + 20 min |
 | Day 0 | Grant one seat, or send ~15 min of exports, plus a one-row-per-SKU cost sheet | 2–20 min |
-| Within 24h | **Profit Teardown**: every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Written report plus a recorded walkthrough. Baseline recorded before anything is touched. | — |
+| Once the files land | **First full read** (Profit Brief No. 001): every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Written report plus a recorded walkthrough. Baseline recorded before anything is touched. 24 hours is our internal target, not a promise. | — |
 | Kickoff | 90-day plan presented: quarterly targets and the three or four moves that get there. Standing mandate agreed. | 45 min |
 | Every cycle | One email three days **before** anything moves, listing each planned move with its expected dollars. Reply no to any of them. | 5–10 min |
 | Every 2 weeks | **Profit Brief**: a short video plus a written letter — what was found, what moved, what it earned, and the running record | — |
@@ -237,19 +286,24 @@ every two weeks.
 - `value.py` / `measurement.py` / `billing.py` — the record, the grading, the gate
 - `directives.py` / `issue.py` — moves drafted, emailed before they go live, veto windows
 - `operator.py` / `cli.py` — the funnel machine and about forty commands
+- `meter.py` / `economics.py` — what an account-month costs: tokens, characters, emails and runner seconds counted where they are incurred, the founder's minutes logged (`hubricon log`), all priced per account in `hubricon economics`
 - `cold/` — the outbound engine that prices a public listing and writes to its seller
 
 **Data** — Supabase Postgres, 42 migrations, ~55 tables, row-level security. Model
 tables are service-role only; the client portal reads through RPCs.
 
-**Client-facing** — static pages on Vercel: `index.html` (landing), `portal.html`
-(the client's own sign-in, called simply *Hubricon*), `welcome.html`, `terms.html`,
-`privacy.html`, `results.html`, `teardown.html` (a browser calculator), `intake.html`
-(secure upload). Serverless routes in `api/` for intake, consent, teardown and the
-Stripe webhook.
+**Client-facing** — static pages on Vercel: `index.html` (landing) and `apply.html` (the
+booking step), both on the design system in `/assets/hubricon.css` since 2026-09-30;
+`manifesto.html` (the argument at length), `portal.html` (the client's own sign-in, called
+simply *Hubricon*), `welcome.html`, `terms.html`, `privacy.html`, `results.html`,
+`intake.html` (secure upload), still in the night system until rebuilt. The home page's
+figures and charts are baked in from `data/` by `scripts/build-pages.mjs`; never type a
+number into it. Superseded pages are in `archive/`, not deployed. Serverless routes in
+`api/` for intake, consent, teardown and the Stripe webhook.
 
 **Scheduled** — GitHub Actions. An hourly operator (outbound, replies, bookings,
-nudges, teardowns, billing gates), a daily issue job (Profit Briefs and the Buy Box
+nudges, first reads, billing gates; cold outbound held paused by default since
+2026-09-30, `HUBRICON_COLD=on` resumes it), a daily issue job (Profit Briefs and the Buy Box
 watch), a Monday sweep (ingest, models, measurement, and the move queue).
 
 **Billing** — Stripe, invoiced by email, ACH, net-7. No card on file, ever.
@@ -258,20 +312,32 @@ watch), a Monday sweep (ingest, models, measurement, and the move queue).
 
 ## How customers arrive
 
-1. **The 60-second Teardown** at `/teardown` — a browser calculator that prices one
-   listing off Amazon's or USPS's published rate card. No call, nothing stored
-   unless asked. Solves one narrow problem completely and reveals the next.
-2. **The 90-second demo** — built into the site and behind a single constant until
-   the video exists (see `OPERATIONS.md`). The red button is the only solid fill
-   and the only red on the site, deliberately.
-3. **The free Profit Teardown** — the whole catalogue, back in 24 hours, kept
-   whether or not they engage.
-4. **The Proving Month** — thirty days of the full service, free.
-5. **Paid**, month to month, proven or void.
+Since 2026-09-27 (`HUBRICON_SPEC.md`, "The funnel" and "Channel decision"):
 
-Outbound is a cold engine that harvests public Amazon and Shopify sellers, prices a
-real finding on one of their listings, and writes about that finding. Role inboxes
-are never cold-emailed — that is a standing founder decision.
+1. **Content** names one public-data leak on the viewer's world. It is the one channel;
+   cold outreach is paused on purpose until real proof exists.
+2. **The home page** proves the method on one real listing modeled from public data
+   (`data/case-study.json`, labelled on every screen) and has one action: **Book your call**.
+3. **/apply**: four answers, then the calendar. Every brand that answers can book.
+4. **The call**: the exports are opened live and the leaks public pages cannot see
+   (aged stock, the low-inventory fee, an ad target set wrong) are priced on screen.
+5. **The Proving Month** — thirty days of the full service, free. Then **paid**, month
+   to month, proven or void.
+
+**Killed:** the per-prospect Teardown and the 60-second calculator (`/teardown` redirects
+home; the page is in `archive/`, its arithmetic lives on in `lib/fees.js`). Retired
+everywhere on 2026-09-30, as the spec's decision says ("supersedes the repo everywhere"):
+terms §2 is now the call, the late-Teardown month is gone from the terms and the
+operator, client emails and the portal call Issue 001 "your first full read", and
+/method, /how-it-works and /sample-teardown are archived.
+
+**Cold outreach, paused in code.** It was still running in production on 2026-09-30
+(the hourly operator pushed leads to Instantly; 155 cold emails sent in all), and the
+operator re-activated any campaign paused by hand. Since then the operator holds every
+Hubricon campaign paused unless `HUBRICON_COLD=on`, and still syncs replies and sends
+the replies the founder approved. It takes effect when main is deployed. The cold copy
+(the Instantly campaign and `cold/`) still sells the Teardown; it is rewritten when cold
+is revisited, which the spec ties to real proof.
 
 ---
 
@@ -291,6 +357,8 @@ rounds against Hormozi's and Becker's standards plus a burned-seller read.
 | **Proven or Void** | The guarantee |
 | **found / proven** | The two states of a dollar |
 | **Recovery Only** | The downsell. Emails and terms only, never the site |
+| **Paid on proof** | The brand line (2026-09-25): the whole business in three words. The hero's stamp, the footer, the manifesto, the seal's ring |
+| **The seal** | A promise's fingerprint on the Profit Record, taken before its email is sent; the email prints the first twelve characters beside the expected dollars |
 
 **Retired, and never to be reintroduced in client copy:** desk, ledger (the terms
 define it once), quantitative, retainer (the terms keep it once as the legal noun),
@@ -309,6 +377,43 @@ void gate; the veto that cannot open on an unsent email; claims counted only whe
 Amazon actually pays; the 24-hour Teardown clock; the free export; the daily Buy
 Box check; Amazon's 2026 peak fee card, verified against Amazon's own announcement.
 
+**The Seal, live since 2026-09-25** (`seal.py`; migration
+`20260925000002_record_seal.sql` applied to production that day): every move of a
+real client (never an internal or test account) is fingerprinted and hash-chained onto the
+client's Record before the email announcing it is sent, and the email prints its
+seal beside the expected dollars; every measurement is chained after the promise
+it answers; the table refuses every edit and deletion, the service role's
+included; `hubricon seal verify` and the dependency-free
+`scripts/verify-record.mjs` recompute all of it from the Record export, and name
+the first broken entry. On a database without the table, moves go out unsealed and
+`hubricon promises` says so. **Not true yet:** no external timestamp anchor
+exists for the public head, and whoever owns the database could still rewrite
+the table consistently; the Seal makes such a rewrite disagree with what clients'
+inboxes and earlier exports already hold, which is evidence, not prevention.
+
+**Also true and verifiable in code, since 2026-09-25 (the network):** only clients
+who granted the separate `network` consent, and are current, are read as sources
+(`fleet.consenting_accounts`, which `hubricon book` reads through too); nothing
+leaves an account but an event; fewer than three agreeing accounts declare nothing
+and say `insufficient_accounts`; every network alert says how many accounts stand
+behind it; one change is announced once per client; `hubricon book` writes nothing.
+
+**The public-data case study, live on the home page since 2026-09-30.** One real Amazon
+listing, read from its public page on 2026-09-03, priced by `lib/fees.js` (the engine's
+fee card, golden-tested against the Python) and simulated 10,000 years by
+`scripts/case-study.mjs`: a weight-band step of $0.26 a unit ($0.28 on the peak card),
+$6,400 to $19,200 a year. Every figure is an estimate and says so; the page names the
+category and band, never the brand (the input, `scripts/case-study/listing.json`, is
+git-ignored because the repo is public, and never deployed; `scripts/case-study.test.mjs`
+fails if the name reaches a published file).
+It is proof of method, not a result. The listing could not be re-read live from this
+machine (Amazon gates automated reads), so it must be checked by eye before each publish.
+
+**How often public data shows nothing, measured.** Of 1,856 Amazon brands with a priced
+listing in the harvest, the engine's detectors found nothing to say about 1,473 (79.4%)
+on 2026-09-30 (`engine/scripts/silence_rate.py`). The "roughly half" in COLD_ENGINE.md
+was an expectation; the site prints the measured figure.
+
 **Not true, and never to be implied:** there are **zero paying customers and zero
 published results**. `results.html` reads zero honestly and says so. No testimonial,
 logo, client count or dollar result may appear until a real one exists. Industry
@@ -321,9 +426,12 @@ Every judge across three rounds named the same thing as the largest remaining ga
 the empty results wall. No copy closes it. Only the first five brands do.
 
 **Known gaps that are founder actions, not code problems** — see the full table in
-`OPERATIONS.md`: the Stripe secrets need pasting into the Production environment
-before the void can actually run; the Stripe product needs its one-command rename;
-the four-permission seat cannot open a support case, so claims are filed with the
+`OPERATIONS.md`: `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` need adding to GitHub's
+Production environment before the operator can bill, hold, void or refund (as of
+2026-09-25 they are absent; Vercel's webhook has its keys); `npm run stripe:setup`
+must run once to subscribe the webhook to every invoice event and rename the
+product; `hubricon stripe-smoke` with a test key proves the Stripe calls; the
+four-permission seat cannot open a support case, so claims are filed with the
 client's yes.
 
 ---
@@ -339,6 +447,10 @@ client's yes.
 | The record, graded | `engine/src/hubricon_engine/{value,measurement}.py` |
 | The gate that voids an invoice | `engine/src/hubricon_engine/billing.py` |
 | Turning on the 90-second demo | `OPERATIONS.md`, one constant in two files |
+| What the business is building toward, and the moat test every change passes | `MONOPOLY.md` |
+| The brand: the line, the voice, the tokens, the assets and how to regenerate them | `BRAND.md` |
+| The argument at length, for founders | `manifesto.html` (/manifesto) |
+| Every promise sealed, and how anyone checks one | `engine/src/hubricon_engine/seal.py`, `scripts/verify-record.mjs` |
 
 ---
 

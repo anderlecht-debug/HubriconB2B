@@ -20,6 +20,11 @@ def test_the_gate_answer_reads_the_booking_string_in_both_shapes():
     assert proof.revenue_band_from_answers({"utm": "rev:$3M–$5M|model:Private label|fit:core"}) == "$3M–$5M"
     assert proof.revenue_band_from_answers({"rev": "Under $3M"}) == "under $3M"
     assert proof.revenue_band_from_answers({"utm": "rev:$5M–$20M|fit:core"}) == "$5M–$20M"
+    # the $1M–$30M chips (2026-09-30)
+    assert proof.revenue_band_from_answers({"utm": "rev:$1M–$3M|model:Private label|fit:core"}) == "$1M–$3M"
+    assert proof.revenue_band_from_answers({"rev": "$3M–$10M"}) == "$3M–$10M"
+    assert proof.revenue_band_from_answers({"utm": "rev:$10M–$30M|fit:core|channel:Both"}) == "$10M–$30M"
+    assert proof.revenue_band_from_answers({"rev": "$30M+"}) == "$30M+"
     assert proof.revenue_band_from_answers({"utm": "model:x"}) is None
     assert proof.revenue_band_from_answers(None) is None
 
@@ -49,7 +54,7 @@ def test_direct_measurements_are_one_card_each_and_other_tiers_are_not():
 
 
 def test_the_gate_bar_is_not_the_proof_bar():
-    """billing.verdict counts identified-but-unbanked value; a card must not."""
+    """A public card counts proven value only, never found-but-unbanked."""
     cleared = {**CLIENT, "billing_decision": "cleared"}
     assert proof.detect(cleared, _ledger(0.0, identified=9000.0), [], []) == []
     rows = proof.detect(cleared, _ledger(7000.0, multiple=1.2), [], [])
@@ -98,7 +103,7 @@ def test_the_proof_line_is_none_until_there_is_something_to_prove():
 def test_one_result_names_the_brand_by_category_and_band_and_never_by_name():
     line = proof.line_from([{"industry": "kitchen", "revenue_band": "$1M–$5M", "amount_usd": 12300}])
     assert "kitchen brand" in line and "$1M–$5M" in line and "$12,300" in line
-    assert "hubricon.com/results" in line
+    assert "hubricon.com/honesty" in line
     assert "Test" not in line
 
 
