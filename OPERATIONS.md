@@ -185,7 +185,7 @@ platform. `engine/src/hubricon_engine/channels.py` is the single place the
 | Fee cliffs (low-inventory, aged surcharge, peak storage) | priced in | none; the newsvendor still runs |
 | Reimbursement recovery | the whole Amazon claims channel | not applicable — no warehouse loses units on your behalf |
 | Watched during a price step | Buy Box share | conversion rate |
-| The seat | a Seller Central user, four permissions | a collaborator account: Orders, Products, Analytics, Reports, Marketing, Discounts |
+| The seat | a Seller Central user, four permissions | a staff account (Grow, Advanced or Plus) with a role limited to Orders, Products, Discounts and Analytics reports; no Finance, so payouts come by upload; Meta partner and Google Ads Standard access granted separately |
 
 `margin_results.amazon_fees` keeps its column name on both channels — the
 column is older than the second platform. `channels.fee_label()` is what it
@@ -222,11 +222,14 @@ page's cards and signatures) are held together by
 
 **Customer data.** A Shopify orders export carries the customer's name, email
 and address, because that is how the platform stores an order. The parser
-reads ten fields from it — order name, status, dates, refund total, SKU,
-quantity, price, discount — and writes a per-SKU monthly aggregate. No
-customer name, email, address, phone or payment detail is ever written to the
-database. The privacy page says exactly this, and the upload card tells the
-client they may delete those columns first.
+reads eleven fields from it (order name, email, financial status, created and
+cancelled dates, refund total, and each line's SKU, name, quantity, price and
+discount) and writes a per-SKU monthly aggregate plus one row per order with a
+customer code: SHA-256 of the lower-cased email joined to the account's
+identifier, a pseudonym used only to count repeat orders. The email itself and
+every customer name, address, phone or payment detail is never written to the
+database. The privacy page says exactly this; deleting the email column costs
+only the repeat-customer measure.
 
 **Where the platform comes from.** The site's application gate asks "Where you
 sell" and rides the answer along on the Calendly booking; the operator reads

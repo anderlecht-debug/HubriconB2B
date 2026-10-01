@@ -182,22 +182,31 @@ th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--t
   Manager (view and edit). Through that seat we download sales and traffic reports, SKU economics and
   fee reports, advertising reports, inventory, reimbursement and returns reports, and settlement data,
   and we make the pricing and advertising changes you have authorised.</p>
-  <p>On Shopify, you approve one collaborator account limited to Orders, Products, Analytics, Reports,
-  Marketing and Discounts. It has no access to Settings, Finances or payouts. Through it we read your
-  order, product, inventory and payout history and make the pricing and discount changes you have
-  authorised.</p>
+  <p>On Shopify, you add one staff account with a role limited to Orders (view and export), Products
+  (view, view cost, edit price and export), Discounts (view, create and delete) and Analytics reports:
+  a staff account with no access to Finance, payouts, Customers, Settings or apps. Through it we export
+  your orders and products and make the pricing and discount changes you have authorised; payout
+  exports come from you, by upload. If you advertise on Meta or Google, you also give us partner access
+  to your Meta ad account and Standard access to your Google Ads account, used for advertising changes
+  and their reports only. Google's Standard access can see billing; we do not use it.</p>
   <p>Neither seat can see banking, tax or account settings. On Amazon, the reports we pull describe your
   products, orders in aggregate, fees and campaigns, and contain no customer names, addresses or payment
   details.</p>
   <p><b>Shopify orders are the one exception, and we handle it deliberately.</b> A Shopify order record
   carries the customer's name, email and shipping address, because that is how the platform stores an
-  order. We do not want that data and we do not keep it. Our parser reads ten fields from an order —
-  order name, status, dates, refund total, SKU, quantity, price and discount — and writes a per-SKU,
-  per-month aggregate. No customer name, email, address, phone or payment detail is ever written to our
-  database. If you upload the orders CSV rather than granting a seat, you are welcome to delete the
-  customer columns first; the models never read them. The file you upload is stored as sent, in the
+  order. We keep none of it. Our parser reads eleven fields from an order: order name, email, financial
+  status, created and cancelled dates, refund total, and each line's SKU, name, quantity, price and
+  discount. It writes a per-SKU, per-month aggregate, and one row per order holding the order name,
+  date, units, revenue and a customer code: a SHA-256 hash of the lower-cased email joined to your
+  account's identifier, so the same customer has the same code within your account and a different one
+  in any other. We use it only to count repeat orders, which can raise what an advertisement can
+  afford. The code is a pseudonym, not anonymity: anyone holding both the email and your account
+  identifier could recompute it. The email address itself, and every customer name, address, phone
+  number and payment detail, is never written to our database. If you delete the email column,
+  everything else works, but repeat-customer value is not measured. The file you upload is stored as sent, in the
   encrypted bucket described below, and is deleted with the rest of your data when you ask.</p>
-  <p>You can revoke either seat in one click, any day.</p>
+  <p>You can revoke either seat any day: on Amazon in one click, on Shopify by removing the staff
+  account under Settings → Users. Meta and Google access is removed in each one's own settings.</p>
 
   <h3>Clients: files you upload</h3>
   <p>Your first exports come through a private upload link, as can any files you would rather send
@@ -255,7 +264,8 @@ th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--t
   </table>
 
   <h2>5. Security</h2>
-  <p>Your store access is one named, permission-scoped user that you can revoke in one click.
+  <p>Your store access is one named, permission-scoped user that you can revoke any day: on Amazon in
+  one click, on Shopify by removing the staff account under Settings → Users.
   Raw data and model outputs live in a database with row-level security. Hubricon signs you in with a
   one-time link sent to your own address — we never set, see or store a password, so there is no
   password to steal, and row-level security scopes every read to your workspace alone. The engine's
