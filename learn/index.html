@@ -19,69 +19,189 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* /learn: one card per course that exists in full, and no card for anything else.
+/* /learn: the library. A live course is a tile that opens it; a planned one says Planned,
+   links nowhere and names no date (data/library.json, scripts/site-blocks.mjs).
    Every value is a token from /assets/hubricon.css. */
-.top { display: flex; align-items: center; justify-content: space-between; padding-block: var(--s-5); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
 
 .page-head { padding-block: var(--s-8) var(--s-7); }
 .page-head h1 { margin-top: var(--s-3); max-width: 15ch; }
 .page-head .lede { margin-top: var(--s-5); max-width: 56ch; }
+main.wrap { padding-bottom: var(--section); }
+:root { --wide: 1200px; }
 
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--s-5); }
-.card { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-6); border: 1px solid var(--rule); border-radius: var(--radius); text-decoration: none; color: var(--ink-2); transition: border-color 0.2s ease; }
-.card:hover { border-color: var(--rule-2); }
-.card .badges { display: flex; flex-wrap: wrap; gap: var(--s-2); }
-.badge { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--rule-2); border-radius: 999px; padding: 2px var(--s-3); }
-.card h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
-.card p { font-size: var(--t-16); }
-.card .meta { font-size: var(--t-14); color: var(--ink-3); }
-.card .go { margin-top: auto; font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
-.card:hover .go { text-decoration: underline; text-underline-offset: 3px; }
 
-.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); margin-top: var(--section); font-size: var(--t-14); color: var(--ink-3); }
-.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
-.foot nav { display: flex; flex-wrap: wrap; gap: var(--s-5); justify-self: end; }
-.foot a { color: var(--ink-2); text-decoration: none; }
-.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 640px) {
   .page-head { padding-top: var(--s-5); }
-  .foot-in { grid-template-columns: minmax(0, 1fr); }
-  .foot nav { justify-self: start; }
 }
 </style>
 </head>
 <body>
 
-<header class="wrap top">
-  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/#case-study">Proof</a>
+      <a class="nav-tab" href="/#how">How it works</a>
+      <a class="nav-tab" href="/#offer">The offer</a>
+      <a class="nav-tab" href="/#results">Results</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Pricing</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/#case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
 </header>
+<!-- /build:nav -->
 
 <main class="wrap">
   <section class="page-head">
     <span class="label">Learn</span>
     <h1>The arithmetic, given away.</h1>
-    <p class="lede">Each course here is complete: every lesson, every formula, the spreadsheet. One email opens it. Run it on your own listings tonight.</p>
+    <p class="lede">A live course here is complete: every lesson, every formula, the spreadsheet. One email opens it. Run it on your own listings tonight. The planned ones open the same way, each once it is finished.</p>
   </section>
 
-  <div class="cards">
-    <a class="card" href="/learn/fee-staircase">
-      <div class="badges"><span class="badge">Free</span><span class="badge">Amazon</span></div>
-      <h2>The Fee Staircase</h2>
-      <p>Find what Amazon's fee steps cost any listing, from five numbers on its public page. The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.</p>
-      <p class="meta">8 lessons · 1 spreadsheet</p>
-      <span class="go">Open the course →</span>
-    </a>
+<!-- build:library-hub -->
+<div class="lib">
+  <a class="tile tile-live tile-feature" href="/learn/fee-staircase" data-play>
+    <div class="tile-cover night"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 152 H84 V128 H148 V100 H212 V66 H276 V34 H300"/>
+      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M148 128 V100"/>
+      <circle class="cv-hollow fade" style="--after:1100ms" cx="140" cy="128" r="5"/>
+      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg><span class="cover-title">The Fee Staircase</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">8 lessons</span><span class="go-badge">1 spreadsheet</span></div>
+      <h3>The Fee Staircase</h3>
+      <p>Find what Amazon&#39;s fee steps cost any listing, from five numbers on its public page.</p>
+      <p class="tile-detail">The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.</p>
+      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
+    </div>
+  </a>
+  <div class="lib-planned">
+    <p class="lib-k">Planned for the library <span>· free when each is complete, one email to enter</span></p>
+    <div class="lib-grid">
+  <article class="tile tile-planned" data-play>
+    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true"><path class="cv-grid" d="M16 160 H310"/><path class="cv-dim draw" pathLength="1" style="--delay:0ms" d="M10 160 V36 H38 V160"/><path class="cv-dim draw" pathLength="1" style="--delay:160ms" d="M62 66 V36 H90 V66"/><path class="cv-dim draw" pathLength="1" style="--delay:320ms" d="M114 92 V66 H142 V92"/><path class="cv-dim draw" pathLength="1" style="--delay:480ms" d="M166 114 V92 H194 V114"/><rect class="cv-blue fade" style="--after:940ms" x="218" y="114" width="28" height="14"/><path class="cv-line draw" pathLength="1" style="--delay:800ms" d="M270 160 V128 H298 V160"/><path class="cv-guide draw" pathLength="1" style="--delay:900ms" d="M38 36 H62 M90 66 H114 M142 92 H166 M194 114 H218 M246 128 H270"/></svg><span class="cover-title">The Money You Can&#39;t See</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">8 lessons planned</span></div>
+      <h3>The Money You Can&#39;t See</h3>
+      <p>Fees, leakage, reimbursements, and the unit costs no report shows you.</p>
+      <details class="tile-more"><summary>What it will cover</summary><ol><li>What Amazon owes you and won&#39;t mention</li><li>Your bestseller might be your worst product</li><li>Your FBA fee is not your FBA fee</li><li>What a return actually costs</li><li>Ad spend with no sales behind it</li><li>Storage fees that compound while you sleep</li><li>The reimbursement windows closing on you</li><li>Shopify&#39;s quiet margin killer: the shipping subsidy</li></ol></details>
+    </div>
+  </article>
+  <article class="tile tile-planned" data-play>
+    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <defs><clipPath id="cv-capital-and-cash-hub-below"><rect x="0" y="96" width="320" height="84"/></clipPath></defs>
+      <path class="cv-zero" d="M20 96 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/>
+      <g clip-path="url(#cv-capital-and-cash-hub-below)"><path class="cv-leak draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/></g></svg><span class="cover-title">Capital &amp; Cash</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">7 lessons planned</span></div>
+      <h3>Capital &amp; Cash</h3>
+      <p>Cash conversion, inventory as capital, runway, and the arithmetic of the reorder.</p>
+      <details class="tile-more"><summary>What it will cover</summary><ol><li>The cash conversion cycle</li><li>You don&#39;t have a revenue problem. You have a cash trough</li><li>The wire you&#39;re guessing on</li><li>Why one service level is wrong for most SKUs</li><li>Inventory is a bet, and how to price it</li><li>How much cash to hold</li><li>The cost of reordering two weeks late</li></ol></details>
+    </div>
+  </article>
+  <article class="tile tile-planned" data-play>
+    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M24 156 C 90 30, 210 30, 296 156"/>
+      <path class="cv-guide draw" pathLength="1" style="--delay:1000ms" d="M96 75 H152"/>
+      <circle class="cv-hollow fade" style="--after:900ms" cx="96" cy="75" r="5"/>
+      <circle class="cv-bluedot fade" style="--after:1200ms" cx="152" cy="62" r="6"/></svg><span class="cover-title">Pricing</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">3 lessons planned</span></div>
+      <h3>Pricing</h3>
+      <p>Elasticity, testing a price, and the arithmetic of every discount.</p>
+      <details class="tile-more"><summary>What it will cover</summary><ol><li>Elasticity in plain English</li><li>The price increase you&#39;re afraid of is probably free</li><li>Discounting: the math of what you gave away</li></ol></details>
+    </div>
+  </article>
+  <article class="tile tile-planned" data-play>
+    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true"><path class="cv-wash fade" style="--after:1400ms" d="M24 98 Q 160 98, 300 52 L300 140 Q 160 98, 24 98 Z"/><path class="cv-path draw" pathLength="1" style="--delay:0ms" d="M24 98 Q 160 98, 300 34"/><path class="cv-path draw" pathLength="1" style="--delay:60ms" d="M24 98 Q 160 98, 300 52"/><path class="cv-path draw" pathLength="1" style="--delay:120ms" d="M24 98 Q 160 98, 300 68"/><path class="cv-path draw" pathLength="1" style="--delay:180ms" d="M24 98 Q 160 98, 300 82"/><path class="cv-path draw" pathLength="1" style="--delay:240ms" d="M24 98 Q 160 98, 300 96"/><path class="cv-path draw" pathLength="1" style="--delay:300ms" d="M24 98 Q 160 98, 300 110"/><path class="cv-path draw" pathLength="1" style="--delay:360ms" d="M24 98 Q 160 98, 300 124"/><path class="cv-path draw" pathLength="1" style="--delay:420ms" d="M24 98 Q 160 98, 300 140"/><path class="cv-path draw" pathLength="1" style="--delay:480ms" d="M24 98 Q 160 98, 300 156"/><path class="cv-line draw" pathLength="1" style="--delay:600ms" d="M24 98 Q 160 98, 300 96"/></svg><span class="cover-title">Decisions Under Uncertainty</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">6 lessons planned</span></div>
+      <h3>Decisions Under Uncertainty</h3>
+      <p>Sample size, base rates, survivorship bias, expected value, and Monte Carlo on one real decision.</p>
+      <details class="tile-more"><summary>What it will cover</summary><ol><li>Survivorship bias, with numbers</li><li>The sample size your test needed</li><li>Base rates: the question before a big decision</li><li>When your data is just noise</li><li>Expected value: a decision you can defend</li><li>Monte Carlo, on one real business decision</li></ol></details>
+    </div>
+  </article>
+  <article class="tile tile-planned" data-play>
+    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-dim draw" pathLength="1" style="--delay:0ms" d="M24 44 H296 V76 H24 Z"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:300ms" d="M24 108 H196 V140 H24 Z"/>
+      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M196 124 H296"/>
+      <path class="cv-guide" d="M296 76 V140"/></svg><span class="cover-title">The Operator&#39;s Math</span></div>
+    <div class="tile-body">
+      <div class="go-badges"><span class="go-badge">4 lessons planned</span></div>
+      <h3>The Operator&#39;s Math</h3>
+      <p>Contribution margin, payback, and the numbers in a P&amp;L that mislead.</p>
+      <details class="tile-more"><summary>What it will cover</summary><ol><li>Contribution margin, not gross margin</li><li>Where LTV to CAC misleads</li><li>Payback period: the growth metric that can&#39;t be faked</li><li>Every number in your P&amp;L that lies, ranked</li></ol></details>
+    </div>
+  </article>
+    </div>
   </div>
+</div>
+<!-- /build:library-hub -->
 </main>
 
-<footer class="foot">
-  <div class="wrap foot-in">
-    <span>Hubricon</span>
-    <nav aria-label="Footer"><a href="/">Home</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
   </div>
 </footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

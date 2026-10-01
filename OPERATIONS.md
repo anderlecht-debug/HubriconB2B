@@ -1859,9 +1859,32 @@ it is set, send the link to anyone who signed up meanwhile: `learners` rows with
 `email_sent_at` null.
 
 **Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
-pattern with `data-course`, a card in `learn/index.html`, its page in `PAGES` if it carries
-figures. `lib/learn.test.mjs` refuses a listed course whose page or template is missing, and
-`scripts/learn/learn.test.mjs` refuses a hub card for a course that is not listed.
+pattern with `data-course`, its page in `PAGES` if it carries figures, and in
+`data/library.json` its status changed from `planned` to `live` with a `path`. The hub, the
+home page's library, the Education tab and the footer all rebuild from that file
+(`node scripts/build-pages.mjs`). `lib/learn.test.mjs` refuses a listed course whose page or
+template is missing, and `scripts/learn/learn.test.mjs` and `scripts/site-blocks.test.mjs`
+refuse a link to a course that is not live.
+
+## The library, the video slots and the results wall (since 2026-10-01)
+
+The founder's call on 2026-10-01: the home page gets Apple-style tabs with an Education tab,
+the free training the way Acquisition.com shows it, the trust "in their face", and "the
+empty space where we can just plug in the videos eventually". Everything shared lives in
+`scripts/site-blocks.mjs` and is baked into every public page by
+`node scripts/build-pages.mjs`: the nav, the footer, the library, the slots, the wall.
+
+| To do this | Edit | Then |
+|---|---|---|
+| Put a video in a slot | `data/library.json`: the slot's `src` (a path under `/media/` or a full `https://` URL) and, if you have one, `poster`. Slots: `films.case_study` (the home page's case-study film), each course's `trailer`, each live lesson's `video` | `node scripts/build-pages.mjs`, then the tests |
+| Plan a course | an entry with `"status": "planned"`, a cover (`staircase`, `waterfall`, `trough`, `curve`, `fan`, `bars`) and its lessons. It shows as Planned, links nowhere, names no date | the same |
+| Publish a client's words | `data/testimonials.json`: `client`, `quote` (verbatim), `consent_on` (the date of their written yes, terms §9), `record_month`, and `video` if they recorded one. The test refuses an entry without consent, a date or a month | the same |
+| Change the scoreboard illustration | `data/scoreboard-illustration.json`; every dollar is counted by the terms' rules in code, so it cannot show a month the terms would not | the same |
+
+The results wall's count and its cards come live from `public_results()`, which returns only
+rows a client consented to publish; until then it reads zero and shows reserved frames, as
+the spec's honesty rails ask. `/media/` is served as is; keep a film under about 50 MB or host
+it elsewhere and use the `https://` form.
 
 An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired
 look), is parked: it runs on the seller's own reports, so it is not the public-data first

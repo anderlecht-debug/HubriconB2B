@@ -34,17 +34,13 @@
 <style>
 /* /learn/<course>: three columns, the lesson list, the lesson, the standing invitation.
    Every value is a token from /assets/hubricon.css. */
-.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding-block: var(--s-5); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
-.crumb { font-size: var(--t-14); color: var(--ink-3); text-decoration: none; }
-.crumb:hover { color: var(--ink); }
-.course-wrap { width: min(1280px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+:root { --wide: 1280px; }
+.course-wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; }
 
 .course { display: grid; grid-template-columns: 232px minmax(0, 1fr) 248px; gap: var(--s-7); align-items: start; padding-block: var(--s-6) var(--section); }
 
 /* left: the lessons */
-.toc { position: sticky; top: var(--s-5); }
+.toc { position: sticky; top: calc(var(--nav-h) + var(--s-5)); }
 .toc summary { display: none; }
 .toc ol { list-style: none; border-top: 1px solid var(--rule); }
 .toc li { border-bottom: 1px solid var(--rule); }
@@ -125,7 +121,7 @@
 .pager .next { text-align: right; margin-left: auto; }
 
 /* right: the standing invitation, present and quiet */
-.invite { position: sticky; top: var(--s-5); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.invite { position: sticky; top: calc(var(--nav-h) + var(--s-5)); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
 .invite p { margin-top: var(--s-3); font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
 .invite .btn { margin-top: var(--s-5); width: 100%; min-height: 44px; padding: 0 var(--s-4); font-size: var(--t-14); background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
 .invite .btn:hover { background: var(--paper-2); }
@@ -139,11 +135,6 @@ html:not(.js) .cover { display: none; }
 html:not(.js) .lesson + .lesson { margin-top: var(--section); padding-top: var(--section); border-top: 1px solid var(--rule); }
 html:not(.js) .pager { display: none; }
 
-.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
-.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
-.foot nav { display: flex; flex-wrap: wrap; gap: var(--s-5); justify-self: end; }
-.foot a { color: var(--ink-2); text-decoration: none; }
-.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 1140px) {
   .course { grid-template-columns: 220px minmax(0, 1fr); }
@@ -165,18 +156,67 @@ html:not(.js) .pager { display: none; }
   .prose p, .prose li { font-size: var(--t-16); }
 }
 @media (max-width: 640px) {
-  .foot-in { grid-template-columns: minmax(0, 1fr); }
-  .foot nav { justify-self: start; }
   .join { padding: var(--s-5); }
 }
 </style>
 </head>
 <body data-course="fee-staircase">
 
-<header class="course-wrap top">
-  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
-  <a class="crumb" href="/learn">Learn</a>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/#case-study">Proof</a>
+      <a class="nav-tab" href="/#how">How it works</a>
+      <a class="nav-tab" href="/#offer">The offer</a>
+      <a class="nav-tab" href="/#results">Results</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Pricing</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/#case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
 </header>
+<!-- /build:nav -->
 
 <div class="course-wrap course">
 
@@ -242,6 +282,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">Your cost model is a line. Amazon's is a staircase. A unit one ounce past an edge pays the whole step, on every sale, for as long as nothing changes.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: the Rate card sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-staircase --><!-- /build:video-staircase -->
       <div class="prose">
         <p>Ask an operator what one more ounce costs to ship through Amazon and the answer is usually "a little more". That is a line: heavier costs a bit more, pricier costs a bit more, and a small change makes a small difference.</p>
         <p>Amazon's fulfilment fee is not a line. It is flat for a stretch, then it steps up, then it is flat again. Inside a step, an extra ounce costs nothing. Across an edge, the next ounce costs the whole step. And the step is paid on every unit, every month, until the unit or the price moves.</p>
@@ -304,6 +345,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">Five numbers on any Amazon product page put a listing on the staircase: the price, the weight, the three sides, the category and the sales rank.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: the One listing sheet, the yellow cells.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-read-the-listing --><!-- /build:video-read-the-listing -->
       <div class="prose">
         <p>You can run this course on your own listings, on a competitor's, or on a listing you are thinking of launching against. Everything it needs is public.</p>
 
@@ -350,6 +392,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">Five lines of arithmetic put a listing on the card: its sides sorted, its billable weight, its tier, its price column and the row it lands on. Then one more: the edge it sits just past.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: One listing, "What Amazon sees" and the four edges.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-find-the-step --><!-- /build:video-find-the-step -->
       <div class="prose">
         <h3>The five lines</h3>
         <ol>
@@ -404,6 +447,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">The finding is the gap between the listing as it is and the same listing one step the other way: an ounce lighter, a cent cheaper, a fraction of an inch thinner, a smaller box. This lesson prices each, and what it costs to get there.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: One listing, the four edges and "Is the change worth making?"</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-counterfactual --><!-- /build:video-counterfactual -->
       <div class="prose">
         <h3>An ounce lighter</h3>
         <p class="formula">gap per unit = the fee now − the fee at the edge below</p>
@@ -465,6 +509,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">A sales rank is a position, not a count. Turning it into units takes a curve, and the curve can be wrong by a factor of two either way. So every monthly figure in this course is a range.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: One listing, "Volume, from the rank" and "What each edge is worth".</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-volume --><!-- /build:video-volume -->
       <div class="prose">
         <h3>The curve</h3>
         <p>Hubricon's engine fits a power law from rank to units. For a rank of <span data-fill="learn_uc_knee">1,000</span> or worse in a top-level category:</p>
@@ -504,6 +549,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">A single forecast is a guess written to the cent. Draw the uncertain things ten thousand times, read the spread, and plan on the low end.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: the Ten thousand months sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-ten-thousand-months --><!-- /build:video-ten-thousand-months -->
       <div class="prose">
         <h3>What is uncertain, and what is not</h3>
         <p>The fee is not uncertain: it is on the card. Three things are.</p>
@@ -559,6 +605,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">The biggest step on Amazon's cards cannot be seen from outside. It is in your inventory report, and Amazon checks it on the 15th of every month.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: The 271-day cliff sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-the-cliff --><!-- /build:video-the-cliff -->
       <div class="prose">
         <h3>Two charges, and one of them is a cliff</h3>
         <p>Every standard-size unit in an Amazon warehouse pays monthly storage by the cubic foot: <span data-fill="learn_stor_off">$0.78</span> a cubic foot from January to September, <span data-fill="learn_stor_peak">$2.40</span> from October to December.</p>
@@ -618,6 +665,7 @@ html:not(.js) .pager { display: none; }
         <p class="lede">One listing teaches the method. The money is in running every SKU at once, fixing them in order, and stopping where the arithmetic says stop.</p>
       </header>
       <div class="tpl"><p><b>The template</b>This lesson: the Catalogue sheet.</p><a href="/learn/files/hubricon-fee-staircase.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-every-sku --><!-- /build:video-every-sku -->
       <div class="prose">
         <h3>Load the catalogue</h3>
         <p>The Catalogue sheet takes 500 SKUs, one a row: price, category, weight in ounces (or pounds, in the next column), three sides, sales rank, and two optional columns: your units a month, and Amazon's own fee per unit.</p>
@@ -673,12 +721,24 @@ html:not(.js) .pager { display: none; }
 
 </div>
 
-<footer class="foot">
-  <div class="course-wrap foot-in">
-    <span>Hubricon</span>
-    <nav aria-label="Footer"><a href="/">Home</a><a href="/learn">Learn</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
   </div>
 </footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
 <script type="module" src="/assets/learn.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

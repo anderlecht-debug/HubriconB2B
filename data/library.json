@@ -1,0 +1,114 @@
+{
+  "about": "The course library as every page shows it (scripts/site-blocks.mjs). A live course links to its page; a planned one says Planned, links nowhere and names no date. Every video slot is a src that is null until the video exists: set it (a path under /media/ or a full https URL) and run node scripts/build-pages.mjs, and the slot plays it. The planned courses are the five pillars of the content calendar (HubriconB2B-content: docs/content/hubricon-30-day-content-calendar.md); their lessons are its episodes.",
+  "films": {
+    "case_study": {
+      "src": null,
+      "poster": null,
+      "title": "The case study, as a film",
+      "waiting": "The case study, told as a film in five beats, will play here: the staircase, where this listing sits, the counterfactual, ten thousand months, the cliff."
+    }
+  },
+  "courses": [
+    {
+      "slug": "fee-staircase",
+      "status": "live",
+      "title": "The Fee Staircase",
+      "path": "/learn/fee-staircase",
+      "cover": "staircase",
+      "summary": "Find what Amazon's fee steps cost any listing, from five numbers on its public page.",
+      "detail": "The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.",
+      "extras": ["1 spreadsheet"],
+      "template": "/learn/files/hubricon-fee-staircase.xlsx",
+      "start": { "text": "Lesson 2: a number for your own listing tonight", "href": "/learn/fee-staircase#read-the-listing" },
+      "trailer": null,
+      "lessons": [
+        { "id": "staircase", "title": "The staircase", "video": null },
+        { "id": "read-the-listing", "title": "Read the listing", "video": null },
+        { "id": "find-the-step", "title": "Find the step", "video": null },
+        { "id": "counterfactual", "title": "The counterfactual", "video": null },
+        { "id": "volume", "title": "Volume from rank", "video": null },
+        { "id": "ten-thousand-months", "title": "Ten thousand months", "video": null },
+        { "id": "the-cliff", "title": "The 271-day cliff", "video": null },
+        { "id": "every-sku", "title": "Every SKU, in order", "video": null }
+      ]
+    },
+    {
+      "slug": "money-you-cant-see",
+      "status": "planned",
+      "title": "The Money You Can't See",
+      "cover": "waterfall",
+      "summary": "Fees, leakage, reimbursements, and the unit costs no report shows you.",
+      "trailer": null,
+      "lessons": [
+        { "title": "What Amazon owes you and won't mention" },
+        { "title": "Your bestseller might be your worst product" },
+        { "title": "Your FBA fee is not your FBA fee" },
+        { "title": "What a return actually costs" },
+        { "title": "Ad spend with no sales behind it" },
+        { "title": "Storage fees that compound while you sleep" },
+        { "title": "The reimbursement windows closing on you" },
+        { "title": "Shopify's quiet margin killer: the shipping subsidy" }
+      ]
+    },
+    {
+      "slug": "capital-and-cash",
+      "status": "planned",
+      "title": "Capital & Cash",
+      "cover": "trough",
+      "summary": "Cash conversion, inventory as capital, runway, and the arithmetic of the reorder.",
+      "trailer": null,
+      "lessons": [
+        { "title": "The cash conversion cycle" },
+        { "title": "You don't have a revenue problem. You have a cash trough" },
+        { "title": "The wire you're guessing on" },
+        { "title": "Why one service level is wrong for most SKUs" },
+        { "title": "Inventory is a bet, and how to price it" },
+        { "title": "How much cash to hold" },
+        { "title": "The cost of reordering two weeks late" }
+      ]
+    },
+    {
+      "slug": "pricing",
+      "status": "planned",
+      "title": "Pricing",
+      "cover": "curve",
+      "summary": "Elasticity, testing a price, and the arithmetic of every discount.",
+      "trailer": null,
+      "lessons": [
+        { "title": "Elasticity in plain English" },
+        { "title": "The price increase you're afraid of is probably free" },
+        { "title": "Discounting: the math of what you gave away" }
+      ]
+    },
+    {
+      "slug": "decisions-under-uncertainty",
+      "status": "planned",
+      "title": "Decisions Under Uncertainty",
+      "cover": "fan",
+      "summary": "Sample size, base rates, survivorship bias, expected value, and Monte Carlo on one real decision.",
+      "trailer": null,
+      "lessons": [
+        { "title": "Survivorship bias, with numbers" },
+        { "title": "The sample size your test needed" },
+        { "title": "Base rates: the question before a big decision" },
+        { "title": "When your data is just noise" },
+        { "title": "Expected value: a decision you can defend" },
+        { "title": "Monte Carlo, on one real business decision" }
+      ]
+    },
+    {
+      "slug": "operators-math",
+      "status": "planned",
+      "title": "The Operator's Math",
+      "cover": "bars",
+      "summary": "Contribution margin, payback, and the numbers in a P&L that mislead.",
+      "trailer": null,
+      "lessons": [
+        { "title": "Contribution margin, not gross margin" },
+        { "title": "Where LTV to CAC misleads" },
+        { "title": "Payback period: the growth metric that can't be faked" },
+        { "title": "Every number in your P&L that lies, ranked" }
+      ]
+    }
+  ]
+}

@@ -15,9 +15,7 @@
 <style>
 /* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
 .wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
-.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
+.masthead { display: flex; justify-content: flex-start; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
 .masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
 h1 { font-size: var(--t-display-m); }
 h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
@@ -33,7 +31,6 @@ a { color: var(--ink); text-underline-offset: 3px; }
 table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
 th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
-footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
 @media (max-width: 640px) {
   .panel { padding: var(--s-4); }
   th, td { display: block; padding: var(--s-1) 0; border: 0; }
@@ -42,10 +39,64 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 </style>
 </head>
 <body>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/#case-study">Proof</a>
+      <a class="nav-tab" href="/#how">How it works</a>
+      <a class="nav-tab" href="/#offer">The offer</a>
+      <a class="nav-tab" href="/#results">Results</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Pricing</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/#case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Terms</span>
   </div>
 
@@ -84,7 +135,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   the arithmetic does not clear our fee at your size, we tell you so. Anything you show us is
   confidential under section 10, whether or not you take Managed Profit.</p>
 
-  <h2>3. Managed Profit and the Proving Month</h2>
+  <h2 id="proving-month">3. Managed Profit and the Proving Month</h2>
   <p>Managed Profit (the retainer) starts on the day you say yes after the call. The first thirty
   days are the Proving Month: free, and they include the full service: the plan, the corrections
   executed, a Profit Brief every two weeks with its recorded walkthrough and full report, the Profit Record. In that month we deliver
@@ -128,7 +179,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 <p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
 <!-- /build:attribution -->
 
-  <h2>4. Invoicing and payment</h2>
+  <h2 id="invoicing">4. Invoicing and payment</h2>
   <p>Months are invoiced in arrears: a month is invoiced by email after it ends, once the check in
   section 3 has cleared it. Invoices are paid by ACH and are due seven days after they are sent. We keep no card on file, so nothing is charged automatically: each month
   is invoiced, and you pay it. If an invoice is more than fourteen days late we pause execution and
@@ -140,7 +191,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   $50 rolls into the next month. Reimbursements Amazon pays on its own initiative, on claims we did
   not file, are never counted.</p>
 
-  <h2>5. Cancelling</h2>
+  <h2 id="cancelling">5. Cancelling</h2>
   <p>Either of us can end Managed Profit by email, effective immediately, with no notice period and no
   fee. From the moment we receive your email we make no further changes in your account. The seat is
   yours to revoke.</p>
@@ -201,7 +252,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   you are not yet invoiced. One credit per brand introduced, applied when that brand's first invoice is raised
   after its own thirtieth day, and never before.</p>
 
-  <h2>10. Confidentiality</h2>
+  <h2 id="confidentiality">10. Confidentiality</h2>
   <p>We keep your data, your numbers and your plans confidential, and we never use one client's data to
   advise another. You keep our methods, models and unpublished materials confidential. The Privacy
   Policy describes the providers who process data on our behalf. Anonymised publication under
@@ -250,9 +301,24 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <p>Hagen Simmons, founder · <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a><br>
   Hubricon · Dallas, Texas, United States</p>
 
-  <footer>
-    Hubricon · <a href="/">Home</a> · <a href="/learn">Learn</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/privacy">Privacy Policy</a>
-  </footer>
 </div>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
 </body>
 </html>

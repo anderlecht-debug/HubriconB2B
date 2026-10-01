@@ -1,0 +1,4 @@
+{
+  "about": "A client's own words for the home page's results wall (scripts/site-blocks.mjs). An entry goes in only with that client's written consent to publish it (terms section 9), the date they gave it, and the Record month the words speak to. The words are theirs, verbatim; never paraphrased, never drafted for them. video is null or { src, poster }. Until there are three, the wall shows a reserved frame for each missing one, and says so. scripts/site-blocks.test.mjs refuses an entry without consent, a date or a Record month.",
+  "testimonials": []
+}

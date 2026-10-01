@@ -51,8 +51,12 @@ it owns the question; ours is *"show me the Record."*
 The offer headline stays the offer: *More profit than our bill every month, or you
 don't pay.* Since 2026-09-30 "Paid on proof" is a line in words only: the stamp and the
 seal that carried it are retired with the night system. The home page is judged by the
-Hormozi standard (one action, under ~900 visible words; 822 on 2026-09-30, counted by
-`scripts/build-pages.mjs`).
+Hormozi standard: one action, and no proof that does not exist. (The 900-word cap was retired
+by the founder on 2026-10-01, when the trust section, the results wall and the library came
+onto the page.) Since 2026-10-01 the creed closes the problem section, in three lines, the
+third in ink: *Your agency is paid on spend. Your software is paid to report. We're paid on
+proof.* The method names the Profit Record's section: *Called before. Measured after.* And
+the product is shown, not said: every move on the scoreboard illustration has its receipt.
 
 ## Positioning
 
@@ -144,9 +148,17 @@ at display size in a film takes proportional digits; tabular digits are for colu
 ### Space and layout
 
 One spacing scale (4, 8, 12, 16, 24, 32, 48, 64, 96, 128 px), one content width (1120 px),
-one radius (10 px). One idea per screen. No navigation on a funnel page: the wordmark,
-the content, one button. The button is ink, always reads **Book your call →**, and always
-goes to `/apply`.
+one radius (10 px). One idea per screen. The button is ink, always reads **Book your call →**,
+and always goes to `/apply`.
+
+**The bar (since 2026-10-01, the founder's call: "we are mimicking Apple's .com with the
+education tab").** Every public page opens with one bar: the mark, the tabs **Proof · How it
+works · The offer · Results · Education · Trust**, and the call. Education and Trust open a
+panel the width of the window, Apple's way: large links in the first column, the rest
+quieter, the page behind it blurred. On a phone the tabs fold into one menu of large links.
+The glass is white over whatever scrolls under it; a hairline appears once the page moves.
+`/apply` keeps no bar: once someone is booking, nothing else is offered. The footer is the
+same on every page: the mark, *Paid on proof.*, four columns, the one legal line.
 
 ### The mark
 
@@ -183,6 +195,13 @@ band fills over 0.4 s. It never loops and never asks for attention again. Under
 `prefers-reduced-motion`, or when the page's script never arrives, the still frame is all
 there is.
 
+The same rule, since 2026-10-01, for everything else that moves (`/assets/site.js`): a
+section's parts rise into place once as they arrive (`data-reveal`, 28 px, about a second,
+staggered a beat apart); the true-today numbers and the scoreboard's total count up once to
+the figure the page already prints (`data-count`); the scoreboard's bar fills to the bill
+and past it; each course cover draws its line. Nothing loops, nothing moves again, and with
+the switch off every one of them is simply there.
+
 ### The pieces a page is built from (since 2026-10-01)
 
 In `/assets/hubricon.css`, so every page draws them the same way:
@@ -200,6 +219,22 @@ In `/assets/hubricon.css`, so every page draws them the same way:
 The home page's hero carries the Monte Carlo as mood, wide and muted behind the headline, and the
 case study's third visual is the aging strip (`agingStripSVG`): one unit's clock from today,
 the day-271 band in the accent, the visitor's own calendar dates under the day marks.
+
+Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
+
+- **The course tile** (`.tile`, `.tile-cover`, `.tile-feature`): a night cover drawn from the
+  house visuals in miniature, then the facts. One cover per course, one motif each: the
+  staircase (fees), the waterfall with one bar in blue (the money you can't see), the cash
+  trough below zero in blue (capital and cash), the profit curve with its peak in blue
+  (pricing), the fan (decisions under uncertainty), the margin bars with the gap in blue (the
+  operator's math). A live course is a link; a planned one is labelled Planned and links nowhere.
+- **The video slot** (`.film`, `.lesson-video`): the space a video will fill. Empty, it shows
+  the house visual and says what will play there, in the future tense; full, it plays.
+- **The results wall** (`.wall-frames`, `.frame`): a client's own words beside their Record,
+  with consent, or a reserved frame for each one missing, dashed, numbered. It reads zero
+  until a client fills it, and says so in the largest type on the page.
+- **The receipt** (`.rcpt`): a move, how we know, the dollars called before, measured after,
+  and what they count for under the rules.
 
 ### Labels that never come off
 

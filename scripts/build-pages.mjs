@@ -4,22 +4,25 @@
 //   node scripts/build-pages.mjs --check   exit 1 if any page is out of date
 //
 // Reads ratecard.json (Amazon's published cards), data/montecarlo.json and
-// data/case-study.json (written by scripts/case-study.mjs) and scripts/blocks/,
-// then, on each page:
+// data/case-study.json (written by scripts/case-study.mjs), scripts/blocks/, and the
+// data behind the shared pieces (scripts/site-blocks.mjs: data/library.json,
+// data/testimonials.json, data/scoreboard-illustration.json), then, on each page:
 //   - replaces whatever sits between <!-- build:NAME --> and <!-- /build:NAME -->
-//     with the block of that name: a chart's finished still frame, or shared text
+//     with the block of that name: a chart's finished still frame, shared text
 //     such as the attribution rules, which the terms and /honesty must carry word
-//     for word;
+//     for word, or a shared piece: the nav, the footer, the library, a video slot,
+//     the results wall, the scoreboard;
 //   - fills every element marked data-fill="key" with the figure it names, so no
 //     number on a page is typed by hand;
 //   - writes the FAQPage structured data from the FAQ as the page shows it;
-//   - on the home page, counts the words a visitor sees on load (the Hormozi
-//     standard: under ~900).
+//   - on the home page, counts the words a visitor sees on load (printed, no longer
+//     capped: the founder retired the 900-word cap on 2026-10-01).
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
 import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, usd } from "../assets/charts.mjs";
 import { STORAGE } from "./case-study.mjs";
+import { siteBlocks } from "./site-blocks.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), "utf8");
@@ -62,6 +65,7 @@ export function figures(rc, mc, cs) {
   const learn = learnFigures(rc, cs);
   const blocks = {
     ...learn.blocks,
+    ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
     // The hero's: wide, wordless, behind the headline (HUBRICON_SPEC.md: "muted behind or beside it").
@@ -281,7 +285,10 @@ export const PAGES = [
   { file: "index.html", requireAllFills: true },
   { file: "honesty.html" },
   { file: "terms.html" },
+  { file: "privacy.html" },
+  { file: "your-data.html" },
   { file: "portal.html" },
+  { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
 ];
 

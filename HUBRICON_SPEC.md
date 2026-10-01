@@ -15,6 +15,15 @@ This doc is the source of truth for the Hubricon rebuild. Where it and the repo 
 - **Open decisions** are the only blanks; leave a marked `TODO` in code rather than guessing.
 - **Done, phase 1:** one landing page that states the offer, plays the one video, shows the public-data proof with the Monte Carlo animation, and books a call, responsive, no placeholder copy. Explicitly out of phase 1: `/learn`, the portal scoreboard, `results.html` and `intake.html`, those come after the landing page is live. Build the Monte Carlo against its sample JSON so the page is finishable before the case study brand is chosen.
 
+## Amended by the founder (2026-10-01)
+
+Decided by Hagen Simmons after the first build of the landing page, in his words, and carried through the repo. Where these lines and a line below disagree, these win. The honesty rails above are unchanged.
+
+- **Tabs on every page.** "We are mimicking Apple's .com with the education tab." The landing page and every public page carry one bar: Proof, How it works, The offer, Results, Education, Trust, and the call. This replaces "No navigation bar" and "no navigation on the funnel page". The call stays the only button; `/apply` keeps no bar.
+- **The education library on the landing page,** "the way Alex Hormozi has it on acquisition.com". Courses not yet made appear too, "so that we have the empty space where we can just plug in the videos eventually": each is labelled Planned, links nowhere and names no date, and a live course is still one that exists in full. This replaces "Do not add a course preview to the landing page", "linked from the footer only" and "No card for anything not yet built". The one-video rule becomes slots: the case-study film keeps its place in section 4, and every course and lesson has a slot that says what will play there until it does.
+- **Trust and testimonials, shoved in their face.** A trust section names where every promise is written down, and a results wall with a frame for each client's words and Record. It reads zero, and says so, until a real client consents; no testimonial is written for anyone.
+- **Everything on the page.** "The education tab, the courses, the legal stuff, everything needs to be on that landing page", with the animation: each section and number arrives once, then stays still. The 900-word cap is retired.
+
 ## The spine
 
 Hubricon stands for precision, and what the buyer is actually paying for is trust with someone close to their money. Every decision gets one test: does this make me more trustworthy to a skeptical operator, or less?

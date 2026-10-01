@@ -24,9 +24,12 @@ model change.
 - **One client's data never advises another** without the consent the terms name (§10).
 - **The home page meets the Hormozi standard:** one action ("Book your call →", to
   `/apply`, the only button), no proof that does not exist, and the spec's ten sections in
-  the spec's order. Since 2026-10-01 (the founder's call) it also carries a trust section and
-  a free-training card as quiet links, and the 900-word cap is retired.
-  `scripts/build-pages.test.mjs` checks the action, the links and the order.
+  the spec's order. Since 2026-10-01 (the founder's call, recorded in `HUBRICON_SPEC.md`,
+  "Amended by the founder") every public page has the tab bar with Education and Trust, and
+  the home page adds the trust section, the results wall and the education library; the
+  900-word cap is retired. A planned course says Planned and links nowhere; an empty video
+  slot says what will play there; a testimonial needs the client's dated consent.
+  `scripts/build-pages.test.mjs` and `scripts/site-blocks.test.mjs` check all of it.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
   `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.
 - **One design system.** Every page reads `/assets/hubricon.css`. No page keeps a private

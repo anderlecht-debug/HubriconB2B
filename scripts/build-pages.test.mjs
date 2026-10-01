@@ -21,13 +21,16 @@ for (const page of PAGES) {
   });
 }
 
-test("the spec's ten sections, in the spec's order, with the founder's two additions in theirs", () => {
-  // HUBRICON_SPEC.md, "Landing page, section by section". The trust and free-training sections
-  // were added by the founder on 2026-10-01 ("everything needs to be on that landing page"),
-  // and the 900-word cap retired with them.
+test("the spec's ten sections in the spec's order, with the founder's additions in theirs", () => {
+  // HUBRICON_SPEC.md, "Landing page, section by section", and its amendments of 2026-10-01:
+  // the founder added the trust section, the results wall and the education library
+  // ("everything needs to be on that landing page") and retired the 900-word cap.
   assert.match(html, /<section class="hero"/, "1 · the hero");
   const order = [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map(([, id]) => id).filter((id) => id !== "result");
-  assert.deepEqual(order, ["problem", "staircase", "case-study", "how", "offer", "scoreboard", "trust", "who", "faq", "learn", "book"]);
+  assert.deepEqual(order, ["problem", "staircase", "case-study", "how", "offer", "trust", "scoreboard", "results", "learn", "who", "faq", "book"]);
+  const spec = ["problem", "staircase", "case-study", "how", "offer", "scoreboard", "who", "faq", "book"];
+  assert.deepEqual(order.filter((id) => spec.includes(id)), spec, "the spec's own sections never move");
+  assert.ok(html.indexOf("The guarantee, in four layers") > html.indexOf('id="offer"'), "the four guarantee layers live in the offer, never above it (spec §6)");
   assert.ok(visibleWords(html) > 0);
 });
 
@@ -40,9 +43,14 @@ test("one action: every button says the same thing and goes to the same place", 
   }
   for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  assert.deepEqual([...new Set(otherLinks)].sort(),
-    ["/", "/honesty", "/learn", "/learn/fee-staircase", "/privacy", "/terms", "/terms#how-a-dollar-counts", "/your-data"],
-    "no navigation competes with the call: the wordmark, the trust cards, the course card and the footer");
+  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|privacy|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
+  // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
+  // education tab"); none of them is a button, and none of them sells anything but the call.
+  const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];
+  for (const t of ["Proof", "How it works", "The offer", "Results", "Education", "Trust"]) assert.match(tabs, new RegExp(`>${t}<`), `the ${t} tab`);
+  assert.match(tabs, /href="\/learn"[^>]*>Education/);
+  assert.doesNotMatch(tabs, /class="btn/);
+  for (const id of ["case-study", "how", "offer", "results", "trust"]) assert.match(html, new RegExp(`<section[^>]*id="${id}"`), `the #${id} tab has a section to land on`);
 });
 
 test("the case study says what it is on its own screen", () => {
@@ -61,7 +69,7 @@ test("nothing from the retired funnel or the retired look", () => {
 });
 
 test("no page on the design system keeps a palette of its own", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html"]) {
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html"]) {
     const style = read(page).match(/<style>([\s\S]*?)<\/style>/)[1];
     assert.doesNotMatch(style, /#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i, `${page}: colours belong in /assets/hubricon.css`);
     assert.match(read(page), /href="\/assets\/hubricon\.css"/);
