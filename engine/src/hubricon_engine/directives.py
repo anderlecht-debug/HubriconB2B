@@ -1262,8 +1262,8 @@ def _compare_at_directive(step: dict, row: dict) -> dict | None:
     key are the price step's own (pricing_engine.price_move sized it on the
     SKU's fitted demand curve inside the standing step cap, and the downside
     guard has already read it); what changes is the reason on the record and
-    the words: the list price the store set, the compare-at it set above it,
-    and how long the two have stood apart. Kind stays `price_step`, so
+    the words: the list price the store set, the compare-at it lists above
+    it today, and how long the price has held. Kind stays `price_step`, so
     measurement values it exactly as it values every price step.
 
     None when the step would carry the list price past the compare-at: the

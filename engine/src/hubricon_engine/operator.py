@@ -563,17 +563,31 @@ class Pass:
         A client who has said yes gets the moves it found in the same pass
         (issue.issue_drafts: sealed, the notice, then the veto window), and one
         whose yes comes after the read gets them on the next pass rather than
-        at Monday's sweep. Nobody who has not said yes is sent a move."""
+        at Monday's sweep. Nobody who has not said yes is sent a move.
+
+        A client on BOTH platforms (2026-10-01) gets one read per platform,
+        each run on that platform's rows and saying which it is. The reads wait
+        for both platforms' core files (the four lib/intake.js counts), or 24
+        hours after the last upload, and then a read is written for each
+        platform that has data, in the same pass: Profit Brief No. 001 for
+        Amazon and No. 002 for Shopify when both are in. A platform with no
+        rows yet gets no read (never an empty Amazon read for a Shopify-only
+        upload); its read is written later, when its own core files are in or
+        24 hours after its own last upload. Until then every "both" client was
+        read once, as Amazon."""
         from . import cli  # lazy: cli imports the world
 
         clients = self.db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data
         for c in clients:
             if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
                 continue
-            issued = (self.db.table("briefings").select("id").eq("client_id", c["id"])
-                      .eq("issue_number", 1).limit(1).execute().data)
-            if issued:
+            chans = channels.channels_for(c.get("platform"))
+            read = self._first_read_channels(c)
+            if read and (len(chans) == 1 or set(chans) <= read):
                 self._first_moves_after_yes(c)
+                continue
+            if read:
+                self._later_first_read(c, cli, [ch for ch in chans if ch not in read])
                 continue
             pending = self.db.table("uploads").select("id").eq("client_id", c["id"]).eq("status", "uploaded").execute().data
             if pending:
@@ -586,10 +600,14 @@ class Pass:
                     if failed:
                         self.human.append(f"{failed} upload(s) from {c['contact_email']} failed to parse; "
                                           "see uploads.parse_error.")
-            has_data = bool(
-                self.db.table("sku_economics").select("id").eq("client_id", c["id"]).limit(1).execute().data
-                or self.db.table("asin_traffic").select("id").eq("client_id", c["id"]).limit(1).execute().data
-            )
+            if len(chans) == 1:
+                has_data = bool(
+                    self.db.table("sku_economics").select("id").eq("client_id", c["id"]).limit(1).execute().data
+                    or self.db.table("asin_traffic").select("id").eq("client_id", c["id"]).limit(1).execute().data
+                )
+            else:
+                with_data = [ch for ch in chans if self._channel_has_data(c, ch)]
+                has_data = bool(with_data)
             if not has_data:
                 continue
             # The clock speed-to-value runs from, set once and never moved:
@@ -600,7 +618,7 @@ class Pass:
                 outbound.log_event(self.db, "exports_landed", client_id=c["id"])
             uploads = (self.db.table("uploads").select("report_type,status,uploaded_at,created_at")
                        .eq("client_id", c["id"]).execute().data)
-            ready = onboarding.first_read_ready(uploads, channels.client_channel(c) or "amazon", _now())
+            ready = self._first_read_ready(uploads, chans, _now())
             if not ready["ready"]:
                 waits = ", ".join(onboarding.FILE_GAPS.get(k, (k,))[0] for k in ready["missing"])
                 self.say(f"{c['company_name'] or c['contact_email']}: first read waits for {waits}, or until "
@@ -608,13 +626,125 @@ class Pass:
                 continue
             if self.dry:
                 self.say(f"[dry] would run the models and publish Issue 001 for {c['contact_email']}"
+                         + (f" ({', '.join(channels.label(ch) for ch in with_data)}, one read each)"
+                            if len(chans) > 1 else "")
                          + (f" (without {', '.join(ready['missing'])})" if ready["missing"] else ""))
                 continue
             try:
-                self._publish_first_issue(c, cli, missing=ready["missing"])
+                if len(chans) == 1:
+                    self._publish_first_issue(c, cli, missing=ready["missing"])
+                else:
+                    self._publish_first_reads(c, cli, with_data, ready["missing"])
             except Exception as err:  # never let one client's data break the pass
                 self.warnings.append(f"First read for {c['contact_email']} failed: {err}")
                 print(f"  FIRST READ FAILED for {c['contact_email']}: {err}", file=sys.stderr)
+
+    # -- the first read, per platform ----------------------------------------------
+    FIRST_READ_TITLE = "Your first full read"
+
+    def _first_read_channels(self, c: dict) -> set[str]:
+        """The platforms this client already has a first read of. Issue 001 is
+        one (on the channel its run was computed on); so is any later Brief
+        titled as a first read, which is how a "both" client's second platform
+        is recorded ("Your first full read · Shopify")."""
+        rows = (self.db.table("briefings").select("id, issue_number, title, run_id")
+                .eq("client_id", c["id"]).execute().data)
+        out = set()
+        for r in rows:
+            title = str(r.get("title") or "")
+            if r.get("issue_number") != 1 and not title.startswith(self.FIRST_READ_TITLE):
+                continue
+            ch = next((k for k, lab in channels.LABEL.items() if title.endswith(f"· {lab}")), None)
+            if ch is None and r.get("run_id"):
+                run = (self.db.table("model_runs").select("params").eq("id", r["run_id"]).limit(1).execute().data)
+                ch = ((run[0].get("params") or {}).get("channel") if run else None)
+            out.add(ch or channels.client_channel(c) or "amazon")
+        return out
+
+    def _channel_has_data(self, c: dict, channel: str) -> bool:
+        if self.db.table("sku_economics").select("id").eq("client_id", c["id"]).eq("channel", channel) \
+                .limit(1).execute().data:
+            return True
+        return channel == "amazon" and bool(
+            self.db.table("asin_traffic").select("id").eq("client_id", c["id"]).limit(1).execute().data)
+
+    @staticmethod
+    def _upload_channel(report_type: str | None) -> str | None:
+        """The platform an upload belongs to: the parser's CHANNEL, Amazon for
+        the parsers that predate the second platform, None for the shared cost
+        sheet."""
+        from .ingest import PARSERS
+        if report_type == "cogs" or report_type not in PARSERS:
+            return None
+        return getattr(PARSERS[report_type], "CHANNEL", "amazon")
+
+    @staticmethod
+    def _first_read_ready(uploads: list[dict], chans: tuple[str, ...] | list[str], now: datetime) -> dict:
+        """onboarding.first_read_ready over every platform the client sells on:
+        ready when each platform's core files are parsed, or 24 hours after the
+        last upload. For one platform it is that function unchanged."""
+        if len(chans) == 1:
+            return onboarding.first_read_ready(uploads, chans[0], now)
+        each = [onboarding.first_read_ready(uploads, ch, now) for ch in chans]
+        missing = [k for r in each for k in r["missing"]]
+        by = [r["publish_by"] for r in each if r.get("publish_by")]
+        return {"ready": all(r["ready"] for r in each), "missing": missing,
+                "why": "core" if not missing else ("waited" if all(r["ready"] for r in each) else "waiting"),
+                "publish_by": max(by) if by else None}
+
+    def _publish_first_reads(self, c: dict, cli, with_data: list[str], missing: list[str]) -> None:
+        """A "both" client's first reads, one per platform with data, in one
+        pass: numbered in platform order, one email after the last."""
+        core = onboarding.CORE_FILES
+        for i, ch in enumerate(with_data):
+            others = [x for x in channels.channels_for(c.get("platform")) if x != ch]
+            self._publish_first_issue(
+                c, cli, missing=[k for k in missing if k in core.get(ch, ())], channel=ch, issue_no=i + 1,
+                notify=i == len(with_data) - 1, email_missing=missing,
+                siblings={x: (with_data.index(x) + 1 if x in with_data else None) for x in others})
+
+    def _later_first_read(self, c: dict, cli, unread: list[str]) -> None:
+        """A "both" client whose first read covered one platform, because the
+        other's files had not come: that platform's own first read, once its
+        rows are in and its core files are, or 24 hours after its own last
+        upload. Numbered as the next Brief; no "first read ready" email, since
+        that email names Profit Brief No. 001 (the founder is told instead)."""
+        pending = self.db.table("uploads").select("id").eq("client_id", c["id"]).eq("status", "uploaded").execute().data
+        if pending and not self.dry:
+            parsed, failed = cli._ingest_client(self.db, c)
+            self.say(f"{c['company_name'] or c['contact_email']}: parsed {parsed} upload(s)"
+                     + (f", {failed} FAILED" if failed else ""))
+            if failed:
+                self.human.append(f"{failed} upload(s) from {c['contact_email']} failed to parse; "
+                                  "see uploads.parse_error.")
+        due = [ch for ch in unread if self._channel_has_data(c, ch)]
+        uploads = (self.db.table("uploads").select("report_type,status,uploaded_at,created_at")
+                   .eq("client_id", c["id"]).execute().data) if due else []
+        for ch in due:
+            mine = [u for u in uploads if self._upload_channel(u.get("report_type")) == ch]
+            ready = onboarding.first_read_ready(mine, ch, _now())
+            company = c["company_name"] or c["contact_email"]
+            if not ready["ready"]:
+                waits = ", ".join(onboarding.FILE_GAPS.get(k, (k,))[0] for k in ready["missing"])
+                self.say(f"{company}: the {channels.label(ch)} first read waits for {waits}, or until "
+                         f"{ready['publish_by'].strftime('%a %b %d %H:%M UTC')}.")
+                continue
+            if self.dry:
+                self.say(f"[dry] would publish the {channels.label(ch)} first read for {c['contact_email']}")
+                continue
+            try:
+                issue_no = cli._next_issue_number(self.db, c["id"])
+                self._publish_first_issue(c, cli, missing=ready["missing"], channel=ch, issue_no=issue_no,
+                                          notify=False, siblings={})
+                self.human.append(
+                    f"{company}: their {channels.label(ch)} first read published as Profit Brief No. "
+                    f"{issue_no:03d}. The 'first read ready' email names No. 001 only, so none went: tell them.")
+            except Exception as err:  # never let one client's data break the pass
+                self.warnings.append(f"{channels.label(ch)} first read for {c['contact_email']} failed: {err}")
+                print(f"  FIRST READ FAILED for {c['contact_email']} ({ch}): {err}", file=sys.stderr)
+        # a yes after the first read: its moves on the next pass, as for any
+        # client (only if nothing was ever issued; Monday's sweep after that)
+        self._first_moves_after_yes(c)
 
     def _first_file_at(self, c: dict) -> datetime | None:
         rows = (self.db.table("uploads").select("uploaded_at").eq("client_id", c["id"]).eq("status", "parsed")
@@ -622,12 +752,17 @@ class Pass:
         return _parse_ts(rows[0]["uploaded_at"]) if rows else None
 
     @staticmethod
-    def _first_read_letter(memo: str, missing: list[str], stage: str) -> str:
+    def _first_read_letter(memo: str, missing: list[str], stage: str, extra: list[str] | None = None,
+                           opening: str | None = None) -> str:
         """Issue 001's letter, told where the client stands and what the read
         could not see. The stock line "Nothing needs your decision this period
         — the watch continues either way" is true of a client mid-service and
         of nobody else here: a prospect has no watch, and a client who said yes
-        is about to be sent their first moves."""
+        is about to be sent their first moves.
+
+        `opening` goes straight after the salutation (a two-platform read says
+        which platform it is); `extra` paragraphs (where a Shopify read's fees
+        came from, what the store's own files show) go before the close."""
         if stage == "agreed":
             nxt = ("Any moves this read found are listed in their own notice, each with its expected dollars, "
                    "before anything in your account changes. Moves inside your standing yes go live when the "
@@ -637,7 +772,11 @@ class Pass:
             nxt = ("Nothing in this read changes anything in your account. Moves are made only after you say yes "
                    "to Managed Profit, and each is listed with its expected dollars before it goes live.")
         stock = "Nothing needs your decision this period — the watch continues either way."
-        add = [x for x in (onboarding.missing_note(missing), None if stock in memo else nxt) if x]
+        if opening:
+            hello = re.search(r"^Dear [^\n]*,\n", memo, flags=re.M)
+            memo = (memo[:hello.end()] + "\n" + opening + "\n" + memo[hello.end():] if hello
+                    else opening + "\n\n" + memo)
+        add = [x for x in (*(extra or []), onboarding.missing_note(missing), None if stock in memo else nxt) if x]
         memo = memo.replace(stock, nxt)
         if not add:
             return memo
@@ -646,17 +785,66 @@ class Pass:
         block = "\n\n".join(add)
         return memo[:at] + "\n\n" + block + memo[at:] if at >= 0 else memo.rstrip() + "\n\n" + block
 
+    @staticmethod
+    def _platform_opening(channel: str, siblings: dict | None) -> str | None:
+        """A two-platform client's read names its platform, and where the
+        other platform's read is (or that it comes when the files do)."""
+        if siblings is None:
+            return None
+        what = {"amazon": "Amazon account", "shopify": "Shopify store"}
+        line = f"This read covers your {what.get(channel, channels.label(channel))} only."
+        for other, n in siblings.items():
+            line += (f" Your {what.get(other, channels.label(other))} has its own read, Profit Brief No. {n:03d}."
+                     if n else f" Your {channels.label(other)} files are not in yet; your "
+                               f"{what.get(other, channels.label(other))} gets its own read when they are.")
+        return line
+
+    def _shopify_findings(self, c: dict, cli, run_id: str) -> dict | None:
+        """What the store's own files show (models/shopify_findings: the
+        compare-at discount and the parcel band, each found, not proven),
+        saved on the run as `shopify_findings` before the moves are drafted,
+        so a drafting pass that reads it (directives.compare_at_directives)
+        sees it. Never a reason for the read not to publish."""
+        from .models import shopify_findings
+        try:
+            findings = shopify_findings.run(cli._load_data(self.db, c["id"], "shopify"))
+            cli._save_output(self.db, run_id, c["id"], "shopify_findings", findings)
+            return findings
+        except Exception as err:
+            self.warnings.append(f"Shopify findings for {c['contact_email']} skipped: {err}")
+            return None
+
+    @staticmethod
+    def _shopify_extras(findings: dict | None, margins: list[dict], drafted: list[dict] | None) -> list[str]:
+        """A Shopify read's own paragraphs: where its processing fees came from
+        (models/margin.fee_basis_line), then the findings in words."""
+        from .models import margin as marginmod
+        from .models import shopify_findings
+        stepped = {(d.get("evidence") or {}).get("sku") for d in drafted or []
+                   if d.get("kind") == "price_step" and float((d.get("evidence") or {}).get("step_fraction") or 0) > 0}
+        return ([x for x in (marginmod.fee_basis_line(margins),) if x]
+                + shopify_findings.letter_paragraphs(findings, stepped))
+
     @meter.metered("teardown")
-    def _publish_first_issue(self, c: dict, cli, missing: list[str] | None = None) -> None:
+    def _publish_first_issue(self, c: dict, cli, missing: list[str] | None = None, channel: str | None = None,
+                             issue_no: int = 1, notify: bool = True, email_missing: list[str] | None = None,
+                             siblings: dict | None = None) -> None:
+        """One first read. For a single-platform client it is Issue 001 as it
+        always was; a two-platform client gets one of these per platform
+        (`channel`, `issue_no`, `siblings` naming the other platform's read),
+        with the email after the last (`notify`)."""
         from . import lifecycle, narrate, storage
         from .models.anomaly import summarize as summarize_anomalies
         from .report.html_report import generate
 
         missing = list(missing or [])
+        both = siblings is not None
+        channel = channel or channels.client_channel(c) or "amazon"
         call = lifecycle.call_at(self.db, c["id"])
         stage = lifecycle.stage(c, call)
-        run_id = cli._run_models(self.db, c, set(cli.ALL_MODELS), 20000, 42)
-        cli._draft_for_run(self.db, c, run_id)
+        run_id = cli._run_models(self.db, c, set(cli.ALL_MODELS), 20000, 42, channel=channel)
+        findings = self._shopify_findings(c, cli, run_id) if channel == "shopify" else None
+        drafted = cli._draft_for_run(self.db, c, run_id)
         # welcome.html: the 90-day plan is drafted from the first read and
         # presented on the kickoff call. It stays a draft until then.
         cli.draft_plan_for_run(self.db, c, run_id)
@@ -665,13 +853,13 @@ class Pass:
         first_name = (c.get("contact_name") or "").split(" ")[0]
         company = c["company_name"] or c["contact_email"]
         deltas = period_deltas(margins)
-        memo = build_memo(company, first_name, deltas, [], [], elasticity, 0.0, 0, issue_number=1,
-                          channel=channels.client_channel(c) or "amazon")
+        memo = build_memo(company, first_name, deltas, [], [], elasticity, 0.0, 0, issue_number=issue_no,
+                          channel=channel)
         if narrate.available():
             outputs = cli._load_outputs(self.db, run_id)
             try:
                 facts = narrate.build_facts(
-                    company, first_name, deltas, [], [], 0.0, 0, issue_number=1,
+                    company, first_name, deltas, [], [], 0.0, 0, issue_number=issue_no,
                     health=outputs.get("health"), value=outputs.get("value"), recovery=outputs.get("recovery"),
                     forecast_rows=(outputs.get("forecast") or {}).get("rows"), risk=outputs.get("risk"),
                     anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
@@ -682,12 +870,14 @@ class Pass:
                     memo = result["text"]
             except Exception as err:
                 print(f"  narrated letter skipped: {err}")
-        memo = self._first_read_letter(memo, missing, stage)
+        extra = self._shopify_extras(findings, margins, drafted) if channel == "shopify" else []
+        memo = self._first_read_letter(memo, missing, stage, extra=extra,
+                                       opening=self._platform_opening(channel, siblings))
 
         video_path = None
         with tempfile.TemporaryDirectory() as tmp:
             path = generate(self.db, c, run_id=run_id, out_dir=tmp)
-            report_path = f"reports/{c['id']}/issue-001.html"
+            report_path = f"reports/{c['id']}/issue-{issue_no:03d}.html"
             self.db.storage.from_(storage.BUCKET).upload(
                 report_path, path.read_bytes(), {"content-type": "text/html", "upsert": "true"})
 
@@ -698,34 +888,50 @@ class Pass:
             from . import video as videomod
             from .briefing import build_beats
             beats = build_beats(company, first_name, deltas, [], [], elasticity, 0.0, 0)
-            made = videomod.render(company, 1, beats, _Path(tmp) / "issue-001.mp4")
+            made = videomod.render(company, issue_no, beats, _Path(tmp) / f"issue-{issue_no:03d}.mp4")
             if made:
-                video_path = f"reports/{c['id']}/issue-001.mp4"
+                video_path = f"reports/{c['id']}/issue-{issue_no:03d}.mp4"
                 self.db.storage.from_(storage.BUCKET).upload(
                     video_path, made.read_bytes(), {"content-type": "video/mp4", "upsert": "true"})
 
+        where = {"amazon": "Amazon account", "shopify": "Shopify store"}.get(channel, channels.label(channel))
         self.db.table("briefings").insert({
             "client_id": c["id"], "run_id": run_id, "video_id": None, "video_path": video_path,
-            "memo": memo, "issue_number": 1,
-            "report_path": report_path, "title": "Your first full read",
-            "headline": "Profit Brief No. 001 — your first full read",
+            "memo": memo, "issue_number": issue_no,
+            "report_path": report_path,
+            "title": self.FIRST_READ_TITLE + (f" · {channels.label(channel)}" if both else ""),
+            "headline": (f"Profit Brief No. {issue_no:03d} — your first full read"
+                         + (f" of your {where}" if both else "")),
         }).execute()
         speed.set_once(self.db, c, "first_issue_at")
-        sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True, stage=stage, call_at=call, missing=missing)
+        # `reads` names every read this pass wrote, {channel: issue number}, for
+        # an email that can say there are two (onboarding's teardown_ready
+        # names No. 001 only today and ignores what it does not use)
+        reads = ({channel: issue_no, **{x: n for x, n in (siblings or {}).items() if n}} if both else None)
+        sent = (self._touch(c, "teardown_ready", PORTAL_URL, force=True, stage=stage, call_at=call,
+                            missing=missing if email_missing is None else email_missing,
+                            **({"reads": reads} if reads else {}))
+                if notify else False)
         outbound.log_event(self.db, "teardown_delivered", client_id=c["id"],
                            payload={"run_id": run_id, "emailed": sent, "video": bool(video_path),
-                                    "missing": missing, "stage": stage})
+                                    "missing": missing, "stage": stage, "channel": channel,
+                                    "issue_number": issue_no})
         self.db.table("prospects").update({"status": "client", "last_event_at": _iso()}).eq("email", c["contact_email"]).execute()
-        self.say(f"Published Issue 001 for {company}"
+        self.say(f"Published Issue {issue_no:03d} for {company}"
+                 + (f" ({channels.label(channel)})" if both else "")
                  + (" with video" if video_path else " (no video — see the warning)")
                  + (f", without {', '.join(missing)}" if missing else "")
-                 + f"; client {'emailed' if sent else 'NOT emailed'}.")
+                 + (f"; client {'emailed' if sent else 'NOT emailed'}." if notify else "."))
         if not video_path:
             # The copy promises a recorded walkthrough. If the pipeline could
             # not make one, that is a promise outstanding, not a nice-to-have.
             self.warnings.append(
-                f"Issue 001 for {company} shipped WITHOUT the recorded walkthrough the site promises. "
+                f"Issue {issue_no:03d} for {company} shipped WITHOUT the recorded walkthrough the site promises. "
                 f"Record one now: `hubricon brief {c['contact_email']} --video <url>`.")
+        if not notify:
+            # a read in a two-platform pass leaves the first moves to the pass's
+            # last read; a later platform's read leaves them to its caller
+            return
         if stage == "agreed":
             self._issue_first_moves(c)
 
