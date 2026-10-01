@@ -88,7 +88,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <div class="panel">
     <span class="step-no">Step 2 · One seat, for the moves</span>
     <h2>Add one seat.</h2>
-    <p>Prices and ads change inside your own account, through one user with narrow permissions
+    <p>Moves go live inside your own accounts, through access you grant with narrow permissions
     (<a href="/terms">terms §6</a>). The seat is how a move you have not said no to goes live. It is
     also how each later month's reports reach us after this first handoff: we download them through the seat
     ourselves, by hand. No software of ours logs in to your account.</p>
@@ -109,19 +109,37 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
       </ul>
     </div>
     <div id="seat-shopify">
-      <p style="margin-top: var(--s-4)"><b id="shopify-lead">On Shopify instead?</b> Reply to any email from us
-      with your store URL (and your collaborator request code, if your store sets one under
-      Settings → Users → Security). We send a collaborator request from the address above; you approve
-      it under Settings → Users → Collaborators and grant exactly these:</p>
+      <p style="margin-top: var(--s-4)"><b id="shopify-lead">On Shopify instead?</b> Add one staff user. Shopify
+      allows them on the Grow, Advanced and Plus plans. First make its role: Settings → Users → Roles → Add role,
+      name it Hubricon, and tick exactly these permissions:</p>
       <ul class="perm">
-        <li><span><b>Orders</b>, <b>Analytics</b>, <b>Reports</b>, <b>Marketing</b>: view</span></li>
-        <li><span><b>Products</b> and <b>Discounts</b>: edit (that is how a price step happens)</span></li>
-        <li class="no"><span><b>Settings, Finances and Payouts stay off.</b> A collaborator account never touches them.</span></li>
+        <li><b>Orders</b>: View, Export</li>
+        <li><b>Products</b>: View, View cost, Edit price, Export (Edit price is how a price step happens)</li>
+        <li><b>Discounts</b>: View, create, and delete</li>
+        <li><b>Analytics &amp; reports</b>: Reports</li>
+        <li class="no"><b>Everything else stays off.</b> Finance, Customers, Settings, apps and every other edit. Locked out by design.</li>
       </ul>
+      <span class="path">Shopify: Settings → Users → Add users → Admin user → the email above → assign the Hubricon role</span>
+      <p class="why">It takes one of your plan's user seats. Each later month we export your orders and products
+      through it ourselves, by hand. <b>Payouts sit under Finance, which this user cannot open</b>, so a payouts
+      export always comes from you, on your upload page. On Shopify's Basic plan Shopify allows no staff users:
+      reply and say so, and we settle the route with you. Until a seat exists nothing goes live in your store, and
+      your exports keep coming through your upload page.</p>
+      <h3 style="margin-top: var(--s-5)">Your ad accounts, separately.</h3>
+      <p style="margin-top: var(--s-2)">A Shopify user cannot reach Meta or Google, so if you advertise there, each
+      account gets its own access, for ad changes only. Skip any you do not run.</p>
+      <ul class="perm">
+        <li><b>Meta</b>: we send you our business portfolio ID. In Meta Business Suite → Settings → Users → Partners →
+        Add → Give a partner access to your assets, enter it, and give your ad account access to manage campaigns
+        and view performance. Not full control.</li>
+        <li><b>Google Ads</b>: Admin → Access and security → the plus button → the email above → Standard. It is the
+        narrowest access Google offers that can change a campaign; it can also see billing, which we do not use.</li>
+      </ul>
+      <p class="why">Each later month we export your Meta and Google reports through that access ourselves, by hand.</p>
     </div>
     <p class="why" id="seat-both">Selling on both? Grant both seats; the models read each channel on its own and the
     briefs say which one a number came from.</p>
-    <p class="why">Want it gone? One click on that same screen revokes the seat, any day you choose; the service
+    <p class="why">Want it gone? Removing it takes a minute on that same screen, any day you choose; the service
     pauses until it is back. The narrow scope is the point: you hand over the work without handing over the
     keys.</p>
     <p class="fallback">Not ready to grant it yet? Then nothing goes live in your account. Your files still come
@@ -173,9 +191,10 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
     that does not clear comes back to your bank.</p></div>
       <div><h3>What can you change in my account, exactly?</h3>
         <p>Only what your standing yes allows (the terms call it the standing mandate). That means bounded
-        price steps, capped at 5% per SKU per two-week cycle with your Buy Box (Amazon) or conversion rate
-        (Shopify) watched while the step is live, plus ad corrections. Anything bigger needs your explicit yes
-        first. And you can say no to any move before it goes live.</p></div>
+        price steps, capped at 5% per SKU per two-week cycle, plus ad corrections. On Amazon your Buy Box is
+        watched while a step is live; on Shopify a step is read on your orders, the units it sells at the new
+        price in the exports that follow. Anything bigger needs your explicit yes first. And you can say no to
+        any move before it goes live.</p></div>
       <div><h3>What does the free month cost me, really?</h3>
         <p>Once your Profit Record shows proven value, we ask you for two things, once, on a private page: a short
         testimonial, and permission to publish your results with the numbers anonymized. Each is a separate yes,
@@ -184,9 +203,11 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
         against your next invoice (or a free month is added if you are not yet invoiced), applied when their first
         invoice is raised after that day and never before (<a href="/terms">terms §9</a>).</p></div>
       <div><h3>How do I revoke access?</h3>
-        <p>Amazon: Settings → User Permissions → remove the user. Shopify: Settings → Users →
-        Collaborators → remove. One click, effective instantly, and the service pauses until a seat is back. Your
-        data and your full Profit Record export are yours, free, any time, including the day you cancel.</p></div>
+        <p>Amazon: Settings → User Permissions → remove the user. Shopify: Settings → Users → the Hubricon
+        user → Actions → Remove. Meta: Settings → Users → Partners → remove us. Google Ads: Admin → Access and
+        security → remove the user. Effective at once. Without the store seat the service pauses until it is back;
+        without the ad access, only ad moves do. Your data and your full Profit Record export are yours, free, any
+        time, including the day you cancel.</p></div>
       <div><h3>Who do I talk to?</h3>
         <p>The founder. Always. Reply to any Hubricon email and it lands with the person who
         builds your models and answers for every brief. There is no support tier.</p></div>
