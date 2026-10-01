@@ -548,3 +548,46 @@ export function parcelSVG(pc, opts) {
     [`${oz.toFixed(1)} oz bills as ${billed(oz)}`, `Farthest zone ${perUnit(rowAt(oz)[7])}`, `Nearest zone ${perUnit(rowAt(oz)[0])}`]]));
   return frame(w, h, "stairs", { id: `${id}-t`, text: "The parcel staircase: USPS Ground Advantage by weight" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
+
+// ---------------------------------------------------------------- one order's money
+
+/**
+ * o: The Shopify Margin's order figures. One bar per zone (the nearest and the farthest), the
+ * price split left to right into Shopify Payments, the label, packing, landed cost and what is
+ * kept before ads; only what is kept is in the money colour.
+ */
+export function orderSVG(o, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const bars = o.zones.map((z, i) => ({ z, parts: [
+    ["Shopify Payments", o.fee], ["The label", o.labels[i]], ["Packing", o.packing], ["Landed cost", o.landed], ["Kept before ads", o.price - o.fee - o.labels[i] - o.packing - o.landed],
+  ] }));
+  const X = scale(0, o.price, m.l, w - m.r);
+  const bh = Math.min(56, (h - m.t - m.b) / (bars.length * 1.9));
+  let body = "";
+  bars.forEach((b, i) => {
+    const y = m.t + i * bh * 1.9;
+    body += `<text class="ink strong" x="${m.l}" y="${r1(y - 8)}" font-size="${font}">Zone ${b.z}</text>`;
+    let x0 = 0;
+    b.parts.forEach(([name, v], k) => {
+      const kept = k === b.parts.length - 1;
+      const x = X(x0), wd = X(x0 + v) - X(x0);
+      body += `<rect class="${kept ? "seg seg-kept" : "seg"} fade" style="--after:${k * 120}ms" x="${r1(x)}" y="${r1(y)}" width="${r1(Math.max(0, wd))}" height="${r1(bh)}"/>`;
+      if (wd > font * 3.4) body += `<text class="${kept ? "seg-text-kept" : "seg-text"} fade" style="--after:${k * 120 + 200}ms" x="${r1(x + wd / 2)}" y="${r1(y + bh / 2)}" font-size="${font}" text-anchor="middle" dominant-baseline="middle">$${v.toFixed(2)}</text>`;
+      x0 += v;
+    });
+  });
+  // the names once, under the last bar, each at its own segment's middle where it fits
+  const last = bars[bars.length - 1], yl = m.t + (bars.length - 1) * bh * 1.9 + bh + font + 10;
+  let x0 = 0;
+  const names = [];
+  last.parts.forEach(([name, v]) => { names.push({ x: X(x0 + v / 2), name }); x0 += v; });
+  names.forEach((nm, k) => {
+    const anchor = k === 0 ? "start" : k === names.length - 1 ? "end" : "middle";
+    const x = k === 0 ? m.l : k === names.length - 1 ? w - m.r : nm.x;
+    body += `<text x="${r1(x)}" y="${r1(yl + (k % 2) * (font + 4))}" font-size="${font - 1}" text-anchor="${anchor}">${esc(nm.name)}</text>`;
+  });
+  body += `<text x="${w - m.r}" y="${m.t - font - 8}" font-size="${font}" text-anchor="end">Price $${o.price.toFixed(2)}</text>`;
+  const desc = `One order at $${o.price.toFixed(2)}: Shopify Payments $${o.fee.toFixed(2)}, the label $${o.labels[0].toFixed(2)} to the nearest zone and $${o.labels[1].toFixed(2)} to the farthest, packing $${o.packing.toFixed(2)}, landed cost $${o.landed.toFixed(2)}; ` +
+    `kept before ads $${(o.price - o.fee - o.labels[1] - o.packing - o.landed).toFixed(2)} to $${(o.price - o.fee - o.labels[0] - o.packing - o.landed).toFixed(2)}.`;
+  return frame(w, h, "order", { id: `${id}-t`, text: "Where one order's money goes, nearest zone and farthest" }, { id: `${id}-d`, text: desc }, body);
+}

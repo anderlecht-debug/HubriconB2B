@@ -229,6 +229,57 @@
       ]
     },
     {
+      "slug": "shopify-margin",
+      "status": "live",
+      "title": "The Shopify Margin",
+      "path": "/learn/shopify-margin",
+      "cover": "parcel",
+      "audience": "For Shopify sellers",
+      "summary": "Where an order's money goes, the pound line under every parcel, what free shipping costs, and the most an ad sale can cost.",
+      "detail": "Shopify Payments and USPS Ground Advantage by zone, the 2 lb step a fraction of an ounce past a pound, the free-shipping line, the compare-at you never charge, break-even ROAS, and your own Products export read in your browser.",
+      "extras": [
+        "1 spreadsheet"
+      ],
+      "template": "/learn/files/hubricon-shopify-margin.xlsx",
+      "start": {
+        "text": "Lesson 2: the pound line under every parcel",
+        "href": "/learn/shopify-margin#pound-line"
+      },
+      "trailer": null,
+      "lessons": [
+        {
+          "id": "order-money",
+          "title": "Where an order's money goes",
+          "video": null
+        },
+        {
+          "id": "pound-line",
+          "title": "The pound line",
+          "video": null
+        },
+        {
+          "id": "free-shipping",
+          "title": "The free-shipping line",
+          "video": null
+        },
+        {
+          "id": "compare-at",
+          "title": "The compare-at you never charge",
+          "video": null
+        },
+        {
+          "id": "ad-ceiling",
+          "title": "The most an ad sale can cost",
+          "video": null
+        },
+        {
+          "id": "every-variant",
+          "title": "Every variant, from your own export",
+          "video": null
+        }
+      ]
+    },
+    {
       "slug": "decisions-under-uncertainty",
       "status": "planned",
       "title": "Decisions Under Uncertainty",

@@ -827,6 +827,11 @@ html:not(.js) .course-page .pager { display: none; }
 .cash .cash-p50 { fill: none; stroke: var(--ink); stroke-width: var(--line-pct); stroke-linejoin: round; }
 .cash .cash-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
 .chart .dot-blue { fill: var(--blue); }
+/* The Shopify Margin: one order's money. Only what is kept is the money colour. */
+.order .seg { fill: var(--paper-2); stroke: var(--rule-2); stroke-width: 1; }
+.order .seg-kept { fill: var(--blue); stroke: var(--blue); }
+.order .seg-text { fill: var(--ink); font-variant-numeric: tabular-nums; }
+.order .seg-text-kept { fill: var(--paper); font-weight: var(--strong); font-variant-numeric: tabular-nums; }
 /* The readout a reader scrubs (assets/site.js): a hairline, a dot on each line, the figures in a quiet box */
 .chart.scrubbable { touch-action: pan-y; cursor: crosshair; }
 .chart .scrub-rule { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }

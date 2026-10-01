@@ -1938,6 +1938,7 @@ only. What exists:
 | Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
 | Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
 | Course 3, **Capital & Cash** (2026-10-01): seven lessons, the days a dollar is gone, the low point after a wire, the reorder point and order, the service level each margin pays for, hold against liquidate, the cash a bad month needs, and what a late wire costs | `learn/capital-and-cash.html`, figures in `data/learn-capital-cash.json`, spreadsheet `learn/files/hubricon-capital-and-cash.xlsx` |
+| Course 4, **The Shopify Margin** (2026-10-01): six lessons for Shopify sellers: an order's money by zone, the pound line, the free-shipping line, the compare-at (with the FTC's former-price rule, 16 CFR 233.1), break-even ROAS, and the Products export read in the browser by /call's own reading | `learn/shopify-margin.html`, `assets/learn-shopify-margin.js`, figures in `data/learn-shopify-margin.json`, spreadsheet `learn/files/hubricon-shopify-margin.xlsx` |
 | Each course on one page (2026-10-01): every rule and formula in eight cells, one printed Letter page, each cell linked to its lesson; figures are the course page's own fills | `learn/fee-staircase-card.html`, `learn/price-curve-card.html`, "a course on one page" in `/assets/hubricon.css` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
 
@@ -1988,6 +1989,16 @@ print the engine's figure. After any change to those models or to the payout and
     node scripts/build-pages.mjs
 
 `scripts/learn/capital-cash.test.mjs` fails when an engine module the figures came from has moved.
+
+**The Shopify Margin is the engine's two Shopify cards.** `scripts/learn/shopify_margin.py`
+prices an invented product on `cold/priors.py`'s USPS Ground Advantage rows and Shopify Payments
+plan rates (the same cards `lib/fees.js` carries and `/call` reads, held to them by
+`lib/fees.golden.json`), writes `data/learn-shopify-margin.json`, and checks its six-sheet
+spreadsheet on 132 golden cases. When USPS or Shopify reprices, update `priors.py`, regenerate
+the rate card, then:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/shopify_margin.py --publish
+    node scripts/build-pages.mjs
 
 One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth
 decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a

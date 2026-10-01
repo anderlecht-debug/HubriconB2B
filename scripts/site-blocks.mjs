@@ -171,6 +171,14 @@ function cover(kind, id) {
         + ends.map((y, i) => draw(`M24 98 Q 160 98, 300 ${y}`, "cv-path", i * 60)).join("")
         + draw("M24 98 Q 160 98, 300 96", "cv-line", 600);
     },
+    // The Shopify Margin: one flat rate under a pound, one tall step at the line, a parcel just past it
+    parcel: () => `
+      <path class="cv-grid" d="M20 160 H300"/>
+      ${draw("M20 126 H156 V64 H300")}
+      ${draw("M156 126 V64", "cv-leak", 900)}
+      <circle class="cv-hollow fade" style="--after:1100ms" cx="146" cy="126" r="5"/>
+      <circle class="cv-dot fade" style="--after:1100ms" cx="168" cy="64" r="5"/>
+      <path class="cv-guide" d="M156 160 V132"/>`,
     bars: () => `
       ${draw("M24 44 H296 V76 H24 Z", "cv-dim")}
       ${draw("M24 108 H196 V140 H24 Z", "cv-line", 300)}

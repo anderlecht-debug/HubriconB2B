@@ -20,7 +20,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, usd } from "../assets/charts.mjs";
 import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
@@ -72,10 +72,12 @@ export function figures(rc, mc, cs) {
   const learn = learnFigures(rc, cs);
   const pc = priceCurveFigures(json("data/learn-price-curve.json"));
   const cc = capitalCashFigures(json("data/learn-capital-cash.json"));
+  const sm = shopifyMarginFigures(json("data/learn-shopify-margin.json"), rc);
   const blocks = {
     ...learn.blocks,
     ...pc.blocks,
     ...cc.blocks,
+    ...sm.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     // /case-study: the home page's sections as they stand (the build loop refreshes it after index.html)
@@ -148,6 +150,7 @@ export function figures(rc, mc, cs) {
       ...learn.fill,
       ...pc.fill,
       ...cc.fill,
+      ...sm.fill,
     },
   };
 }
@@ -352,6 +355,46 @@ function priceCurveFigures(pc) {
 }
 
 /**
+ * The Shopify Margin's figures (/learn/shopify-margin). Every number is the engine's cards (cold/priors.py:
+ * USPS Ground Advantage and Shopify Payments), computed by scripts/learn/shopify_margin.py into
+ * data/learn-shopify-margin.json for an invented product. The rate card here is the same card,
+ * exported; the parcel chart reads it, and must agree with the example's labels.
+ */
+function shopifyMarginFigures(sm, rc) {
+  const money = (v) => `$${v.toFixed(2)}`;
+  const dollars = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+  const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
+  const x = sm.example, o = sm.order, p = sm.pound, f = sm.free, a = sm.anchor, ads = sm.ads;
+  const plan = sm.cards.payments[x.plan];
+  const lo = Math.min(...o.label_now), hi = Math.max(...o.label_now);
+  if (JSON.stringify(rc.carrier.ground_commercial["32"]) !== JSON.stringify(sm.cards.usps["32"])) {
+    throw new Error("shopify-margin: the rate card's USPS rows differ from the ones the course was computed on; rerun scripts/learn/shopify_margin.py");
+  }
+  const fill = {
+    learn_sm_price: money(x.price), learn_sm_compare: money(x.compare_at), learn_sm_oz: String(x.packed_oz), learn_sm_landed: money(x.landed_cost),
+    learn_sm_packing: money(x.packing), learn_sm_fee: money(o.fee), learn_sm_rate: `${+(plan[0] * 100).toFixed(2)}%`, learn_sm_fixed: money(plan[1]),
+    learn_sm_gateway: pct(sm.cards.gateway_surcharge[x.plan]), learn_sm_label_lo: money(lo), learn_sm_label_hi: money(hi),
+    learn_sm_kept_lo: money(o.contribution_lo), learn_sm_kept_hi: money(o.contribution_hi), learn_sm_usps_effective: longDate(rc.carrier.effective),
+    learn_sm_over_by: String(p.over_by), learn_sm_step_lo: money(p.step[0]), learn_sm_step_hi: money(p.step[1]), learn_sm_orders: x.orders.toLocaleString("en-US"),
+    learn_sm_month_lo: dollars(p.month_lo), learn_sm_month_hi: dollars(p.month_hi), learn_sm_line: dollars(x.free_line), learn_sm_share_over: pct(x.share_over),
+    learn_sm_orders_over: f.orders_over.toLocaleString("en-US"), learn_sm_free_lo: dollars(f.subsidy_lo), learn_sm_free_hi: dollars(f.subsidy_hi),
+    learn_sm_anchor: money(a.per_unit), learn_sm_anchor_share: pct(a.share), learn_sm_cat_share: pct(a.catalogue_share), learn_sm_step5: money(a.step5),
+    learn_sm_roas_lo: ads.roas_lo.toFixed(2), learn_sm_roas_hi: ads.roas_hi.toFixed(2), learn_sm_roas_under_lo: ads.roas_under_lo.toFixed(2), learn_sm_roas_under_hi: ads.roas_under_hi.toFixed(2),
+  };
+  const order = { price: x.price, fee: o.fee, packing: x.packing, landed: x.landed_cost, labels: [o.label_now[0], o.label_now[7]], zones: [1, 8] };
+  const parcel = { rows: rc.carrier.ground_commercial, parcel_oz: x.packed_oz, step: p.step };
+  return {
+    fill,
+    blocks: {
+      "sm-order-wide": orderSVG(order, { id: "smo-w", w: 680, h: 250, m: { t: 44, r: 8, b: 56, l: 8 }, font: 13 }),
+      "sm-order-narrow": orderSVG(order, { id: "smo-n", w: 360, h: 250, m: { t: 40, r: 4, b: 60, l: 4 }, font: 12 }),
+      "sm-parcel-wide": parcelSVG(parcel, { id: "smp-w", w: 680, h: 360, m: { t: 64, r: 24, b: 48, l: 64 }, font: 13 }),
+      "sm-parcel-narrow": parcelSVG(parcel, { id: "smp-n", w: 360, h: 360, m: { t: 60, r: 16, b: 42, l: 50 }, font: 12 }),
+    },
+  };
+}
+
+/**
  * Capital & Cash's figures (/learn/capital-and-cash). Every number is the engine's, computed by
  * scripts/learn/capital_cash.py into data/learn-capital-cash.json from an invented garlic press
  * (The Price Curve's) and an invented spatula set. Nothing here does arithmetic beyond formatting,
@@ -480,9 +523,11 @@ export const PAGES = [
   { file: "learn/fee-staircase.html" },
   { file: "learn/price-curve.html" },
   { file: "learn/capital-and-cash.html" },
+  { file: "learn/shopify-margin.html" },
   { file: "learn/fee-staircase-card.html" },
   { file: "learn/price-curve-card.html" },
   { file: "learn/capital-and-cash-card.html" },
+  { file: "learn/shopify-margin-card.html" },
 ];
 
 /** The home page's staircase and case study, whole, for /case-study. */
