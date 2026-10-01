@@ -417,8 +417,10 @@ $6,400 to $19,200 a year. Every figure is an estimate and says so; the page name
 category and band, never the brand (the input, `scripts/case-study/listing.json`, is
 git-ignored because the repo is public, and never deployed; `scripts/case-study.test.mjs`
 fails if the name reaches a published file).
-It is proof of method, not a result. The listing could not be re-read live from this
-machine (Amazon gates automated reads), so it must be checked by eye before each publish.
+It is proof of method, not a result. Check the listing by eye before each publish. On
+2026-10-01 a real browser read the live page and its screenshot was checked: price,
+fulfilment, weight and size unchanged, so the 8 oz step holds; rank #102 in Automotive
+against #99 at capture, which the page dates to its read.
 
 **How often public data shows nothing, measured.** Of 1,856 Amazon brands with a priced
 listing in the harvest, the engine's detectors found nothing to say about 1,473 (79.4%)
