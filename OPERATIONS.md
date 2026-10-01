@@ -1974,6 +1974,15 @@ One known difference: on an exact half-cent LibreOffice and JavaScript round the
 decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a
 hundredth of a cent; every figure agrees to the cent.
 
+**Every lesson asks before it tells (2026-10-01).** Each lesson in each live course ends with
+"Check yourself": two questions before its "Do this now", each answer behind a click, because
+trying to recall before reading is what makes a lesson stay (retrieval practice). The answers'
+figures are fills too: The Price Curve's exercise SKU ($20, landed cost $5, fixed fees $4,
+referral 15%) is priced in `priceCurveFigures` by `assets/price-curve.mjs`, the port the golden
+cases hold to the engine. `scripts/learn/learn.test.mjs` refuses a lesson without its two
+questions, a wide table that is not in its own scroll box, and a stylesheet where `hidden`
+loses to a panel's own display.
+
 **The gate.** The email opens the course in the browser (`localStorage`, key
 `hubricon.learn`) whatever the server says, except a 400 for a bad address: a fault of ours
 never locks a reader out. Without scripts every lesson shows in order. A new sign-up gets one

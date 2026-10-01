@@ -66,6 +66,37 @@ test("three columns: the lessons, the lesson with the spreadsheet under its head
   }
 });
 
+test("every lesson in every live course asks two questions before its task, each answer behind a click", () => {
+  // Retrieval practice: trying to answer before reading the answer is what makes a lesson stay.
+  for (const c of Object.values(COURSES)) {
+    const page = read(`${c.path.slice(1)}.html`);
+    const lessons = [...page.matchAll(/<article class="lesson" id="([^"]+)"[\s\S]*?<\/article>/g)];
+    assert.ok(lessons.length >= 1, c.path);
+    for (const [whole, id] of lessons) {
+      const check = whole.match(/<div class="check">[\s\S]*?<\/ol>\s*<\/div>/)?.[0];
+      assert.ok(check, `${c.path}#${id}: Check yourself`);
+      assert.ok(whole.indexOf(check) < whole.indexOf('<div class="do">'), `${c.path}#${id}: the questions come before the task`);
+      const items = [...check.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(([, li]) => li);
+      assert.equal(items.length, 2, `${c.path}#${id}: two questions`);
+      for (const li of items) assert.match(li, /^<p>[\s\S]+?\?<\/p><details><summary>The answer<\/summary><p>[\s\S]+<\/p><\/details>$/, `${c.path}#${id}: a question, then its answer behind a click`);
+    }
+  }
+});
+
+test("on a phone nothing scrolls the page sideways, and a panel with nothing to say shows nothing", () => {
+  // A table of six columns does not fit 390 pixels: it scrolls inside its own box.
+  for (const c of Object.values(COURSES)) {
+    const page = read(`${c.path.slice(1)}.html`);
+    for (const m of page.matchAll(/<table class="data">[\s\S]*?<\/thead>/g)) {
+      if ((m[0].match(/<th scope="col">/g) || []).length < 6) continue;
+      const before = page.slice(0, m.index);
+      assert.match(before.slice(before.lastIndexOf("<div")), /^<div class="(table-scroll|card-table)" role="region" aria-label="[^"]+" tabindex="0">\s*$/, `${c.path}: a wide table scrolls in its own box`);
+    }
+  }
+  // The [hidden] attribute beats a panel's own display, so an empty reading is never an empty box.
+  assert.match(read("assets/hubricon.css"), /\.course-page \[hidden\] \{ display: none !important; \}/);
+});
+
 test("the invitation is one quiet call to the call; nothing inside a lesson sells", () => {
   const invite = course.match(/<aside class="invite"[\s\S]*?<\/aside>/)[0];
   assert.equal([...invite.matchAll(/<a\b/g)].length, 1);

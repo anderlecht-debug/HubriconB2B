@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
 import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, usd } from "../assets/charts.mjs";
+import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
 
@@ -247,7 +248,8 @@ function learnFigures(rc, cs) {
  * The Price Curve's figures (/learn/price-curve). Every number is the engine's, computed by
  * scripts/learn/price_curve.py into data/learn-price-curve.json from an invented listing: its
  * history and costs are invented, its fees are Amazon's. Nothing here does arithmetic beyond
- * formatting and the charts' own drawing.
+ * formatting and the charts' own drawing, except the "Check yourself" answers, which come from
+ * assets/price-curve.mjs: the course's own port, held to the engine by its golden cases.
  */
 function priceCurveFigures(pc) {
   const sign = (v) => (v < 0 ? "−" : "+");
@@ -284,6 +286,25 @@ function priceCurveFigures(pc) {
     learn_pc_np_eps: neg(pc.near_pole.elasticity), learn_pc_np_se: pc.near_pole.std_err.toFixed(2),
     learn_pc_np_lo: neg(pc.near_pole.ci[0]), learn_pc_np_hi: neg(pc.near_pole.ci[1]), learn_pc_np_factor: pc.near_pole.pole_factor.toFixed(1),
     learn_pc_in_eps: neg(pc.inelastic.elasticity, 1),
+    // "Check yourself": one invented SKU for every exercise, answers from the course's own arithmetic.
+    ...(() => {
+      const X = { p: 20, cost: 5, fixed: 4, f: 0.15 };
+      const best = priceCurve.bestPrice(-2, X.cost, X.f, X.fixed);
+      return {
+        learn_pc_q_p: dollars(X.p), learn_pc_q_cost: dollars(X.cost), learn_pc_q_fixed: dollars(X.fixed), learn_pc_q_f: pct(X.f, 0),
+        learn_pc_q_costs: dollars(X.cost + X.fixed), learn_pc_q_gross: money((X.cost + X.fixed) / (1 - X.f)),
+        learn_pc_q_raise_price: dollars(X.p * 1.05), learn_pc_q_coupon_price: dollars(X.p * 0.75),
+        learn_pc_q_inelastic: pct(1 - 1.05 ** -0.7),
+        learn_pc_q_margin: money(X.p * (1 - X.f) - X.cost - X.fixed),
+        learn_pc_q_best: money(best),
+        learn_pc_q_raise: pct(-priceCurve.breakEven(X.p, X.p * 1.05, X.cost, X.f, X.fixed)),
+        learn_pc_q_raise_margin: money(X.p * 1.05 * (1 - X.f) - X.cost - X.fixed),
+        learn_pc_q_coupon_margin: money(X.p * 0.75 * (1 - X.f) - X.cost - X.fixed),
+        learn_pc_q_coupon: pct(priceCurve.breakEven(X.p, X.p * 0.75, X.cost, X.f, X.fixed), 0),
+        learn_pc_q_step: money(priceCurve.stepPrice(X.p, X.p * 1.12, "up")),
+        learn_pc_t3: priceCurve.tCritical(3).toFixed(2),
+      };
+    })(),
     learn_pc_lo_best: money((e.landed_cost + e.fixed) / (1 - e.referral) * f.ci[0] / (1 + f.ci[0])),
     learn_pc_hi_best: money((e.landed_cost + e.fixed) / (1 - e.referral) * f.ci[1] / (1 + f.ci[1])),
   };
@@ -299,7 +320,7 @@ function priceCurveFigures(pc) {
       // The example, for the course's own "Fill in the example": the same figures the page prints.
       "pc-example-json": `\n<script type="application/json" id="pc-example">${JSON.stringify({ history: pc.history.map(({ days, units, price }) => ({ days, units, price })), economics: e, discount: d.rate })}</script>\n`,
       "pc-history": `\n<table class="data"><thead><tr><th scope="col">Period</th><th scope="col">Days</th><th scope="col">Units</th><th scope="col">Average price</th><th scope="col">Units a day</th></tr></thead><tbody>${rows}</tbody></table>\n`,
-      "pc-breakeven": `\n<table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody>${be}</tbody></table>\n`,
+      "pc-breakeven": `\n<div class="table-scroll" role="region" aria-label="Break-even units at each price change" tabindex="0"><table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody>${be}</tbody></table></div>\n`,
       "pc-fit-wide": fitSVG(fitData, { id: "pcf-w", w: 680, h: 360, m: { t: 40, r: 16, b: 46, l: 56 }, font: 13 }),
       "pc-fit-narrow": fitSVG(fitData, { id: "pcf-n", w: 360, h: 300, m: { t: 36, r: 10, b: 42, l: 44 }, font: 12 }),
       "pc-profit-wide": profitSVG(curve, { id: "pcp-w", w: 680, h: 380, m: { t: 40, r: 132, b: 46, l: 64 }, font: 13 }),

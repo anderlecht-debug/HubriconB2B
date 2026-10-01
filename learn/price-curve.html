@@ -177,6 +177,13 @@
           <p><b>The example all the way through</b> is an invented listing: <span data-fill="learn_pc_what">an invented stainless garlic press</span> at <span data-fill="learn_pc_price">$24.99</span>, selling about <span data-fill="learn_pc_units">523</span> units a month. Its history is invented and its fees are Amazon's. By lesson 3 its elasticity reads about <span data-fill="learn_pc_eps">−1.86</span>: a 1% raise loses about <span data-fill="learn_pc_eps_abs">1.86</span>% of its units.</p>
         </div>
       </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>A SKU's elasticity is −0.7. A 5% raise loses about what share of its units, and does profit rise or fall?</p><details><summary>The answer</summary><p>About <span data-fill="learn_pc_q_inelastic">3.4%</span> of its units, less than the 5% added to the price, and the added price lands in the margin: profit rises. Between 0 and −1 there is no best price; walk up and measure.</p></details></li>
+          <li><p>Why can a raise that loses units still make more money?</p><details><summary>The answer</summary><p>Because the raise lands in the margin whole, less the referral fee, while landed cost and the fixed fees stay where they were. Contribution per unit grows faster than the price, so the units lost have to pass a break-even before profit falls (lesson 5).</p></details></li>
+        </ol>
+      </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -247,6 +254,13 @@
           <p class="yours-actions"><button type="button" class="link-btn" id="yours-example">Fill in the example</button><button type="button" class="link-btn" id="yours-clear">Clear</button></p>
         </section>
       </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>Your periods are 15 and 16 days long. Why does the fit use units a day?</p><details><summary>The answer</summary><p>A 16-day period sells more than a 15-day one at the same price. If the long periods fall at one price, the fit reads the extra day as that price's effect. Units a day takes the length out.</p></details></li>
+          <li><p>Your price was the same in every period. What can the fit tell you?</p><details><summary>The answer</summary><p>Nothing: a price that never moved cannot say what a different one would do. The sheet needs at least 2% variation (the standard deviation of the prices over their mean) and says so instead of fitting. Lesson 7 is how to move it on purpose.</p></details></li>
+        </ol>
+      </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -291,6 +305,13 @@
         <h3>Too close to −1</h3>
         <p>Lesson 4's formula multiplies by elasticity ÷ (1 + elasticity), and that factor runs away near −1: at <span data-fill="learn_pc_np_eps">−1.15</span> it is already <span data-fill="learn_pc_np_factor">7.7</span>. An interval from <span data-fill="learn_pc_np_lo">−1.66</span> to <span data-fill="learn_pc_np_hi">−0.64</span> covers best prices from a few percent above today's to no limit at all. A price printed to the cent there would be a guess with a decimal point on it.</p>
         <p>So the sheet, like the engine, names no best price when the interval includes −1, when the estimate sits within two standard errors of −1, or when one standard error would move the best price by more than <span data-fill="learn_pc_pole_log_sd">50%</span>. It still names the direction, and near −1 the direction is up.</p>
+      </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>A fit reads −1.4, with a 95% interval from −2.3 to −0.5. Can it name a best price?</p><details><summary>The answer</summary><p>No. The interval includes −1, where the best price runs away to no limit. It names the direction instead: up.</p></details></li>
+          <li><p>Two fits have the same standard error, one on 5 periods and one on 12. Why is the first one's interval wider?</p><details><summary>The answer</summary><p>With 5 periods there are 3 degrees of freedom, and the 95% multiplier is <span data-fill="learn_pc_t3">3.18</span>; with 12 it is <span data-fill="learn_pc_t">2.23</span>. Fewer periods, less certainty, a wider interval.</p></details></li>
+        </ol>
       </div>
       <div class="do">
         <h3>Do this now</h3>
@@ -338,6 +359,13 @@
         <h3>What the formula assumes</h3>
         <p>That the fees per unit stay the same between today's price and the new one. Amazon's fulfilment fee changes where a price crosses $10 or $50. If a move crosses one, the sheet says so: price both sides with <a href="/learn/fee-staircase">The Fee Staircase</a>.</p>
       </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>Take the exercise SKU (<span data-fill="learn_pc_q_p">$20</span>, landed cost <span data-fill="learn_pc_q_cost">$5</span>, fixed fees <span data-fill="learn_pc_q_fixed">$4</span> a unit, referral <span data-fill="learn_pc_q_f">15%</span>), with an elasticity of −2. What is its best price?</p><details><summary>The answer</summary><p>Costs that do not move with price: <span data-fill="learn_pc_q_costs">$9</span>. Grossed up for the referral fee: <span data-fill="learn_pc_q_gross">$10.59</span>. At −2 the factor is −2 ÷ (1 − 2) = 2, so the best price is <span class="money" data-fill="learn_pc_q_best">$21.18</span>, a little above today's <span data-fill="learn_pc_q_p">$20</span>.</p></details></li>
+          <li><p>Why must the referral fee be kept apart from the fulfilment fee?</p><details><summary>The answer</summary><p>The referral fee is a percentage of the price, so it grows with it; the fulfilment fee does not. Treat the fixed fee like landed cost and gross the whole thing up by the percentage. Lumping every fee into one percentage moves the best price the wrong way.</p></details></li>
+        </ol>
+      </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -363,7 +391,7 @@
         <div class="worked">
           <p><b>The invented listing</b> makes <span data-fill="learn_pc_margin">$10.69</span> a unit today. A 5% raise breaks even if its units fall <span data-fill="learn_pc_be5">9.0%</span>. Its elasticity says they fall <span data-fill="learn_pc_im5">8.7%</span>, so the raise makes <span data-fill="learn_pc_d5">+$22</span> a month.</p>
           <!-- build:pc-breakeven -->
-<table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody><tr><th scope="row">−10%</th><td class="num">$22.49</td><td class="num">$8.57</td><td class="num">+24.8%</td><td class="num">+21.6%</td><td class="num">−$141</td></tr><tr><th scope="row">−5%</th><td class="num">$23.74</td><td class="num">$9.63</td><td class="num">+11.0%</td><td class="num">+10.0%</td><td class="num">−$51</td></tr><tr><th scope="row">−2%</th><td class="num">$24.49</td><td class="num">$10.27</td><td class="num">+4.1%</td><td class="num">+3.8%</td><td class="num">−$17</td></tr><tr><th scope="row">+2%</th><td class="num">$25.49</td><td class="num">$11.12</td><td class="num">−3.8%</td><td class="num">−3.6%</td><td class="num">+$12</td></tr><tr><th scope="row">+5%</th><td class="num">$26.24</td><td class="num">$11.76</td><td class="num">−9.0%</td><td class="num">−8.7%</td><td class="num">+$22</td></tr><tr><th scope="row">+10%</th><td class="num">$27.49</td><td class="num">$12.82</td><td class="num">−16.6%</td><td class="num">−16.2%</td><td class="num">+$22</td></tr></tbody></table>
+<div class="table-scroll" role="region" aria-label="Break-even units at each price change" tabindex="0"><table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody><tr><th scope="row">−10%</th><td class="num">$22.49</td><td class="num">$8.57</td><td class="num">+24.8%</td><td class="num">+21.6%</td><td class="num">−$141</td></tr><tr><th scope="row">−5%</th><td class="num">$23.74</td><td class="num">$9.63</td><td class="num">+11.0%</td><td class="num">+10.0%</td><td class="num">−$51</td></tr><tr><th scope="row">−2%</th><td class="num">$24.49</td><td class="num">$10.27</td><td class="num">+4.1%</td><td class="num">+3.8%</td><td class="num">−$17</td></tr><tr><th scope="row">+2%</th><td class="num">$25.49</td><td class="num">$11.12</td><td class="num">−3.8%</td><td class="num">−3.6%</td><td class="num">+$12</td></tr><tr><th scope="row">+5%</th><td class="num">$26.24</td><td class="num">$11.76</td><td class="num">−9.0%</td><td class="num">−8.7%</td><td class="num">+$22</td></tr><tr><th scope="row">+10%</th><td class="num">$27.49</td><td class="num">$12.82</td><td class="num">−16.6%</td><td class="num">−16.2%</td><td class="num">+$22</td></tr></tbody></table></div>
 <!-- /build:pc-breakeven -->
           <p class="source">An invented listing · not a client · not a result. "Break-even units" is how far units can fall (or must rise) before profit moves; "Elasticity says" is what the fit expects them to do.</p>
         </div>
@@ -374,6 +402,13 @@
 
         <h3>And the asymmetry</h3>
         <p>Read the table the other way. A 10% cut on this listing has to sell <span data-fill="learn_pc_be_m10">24.8%</span> more units just to stand still; its elasticity says it sells <span data-fill="learn_pc_im_m10">21.6%</span> more. The cut costs <span data-fill="learn_pc_d_m10">−$141</span> a month. A raise has to be badly wrong to lose money. A cut has to be right to break even.</p>
+      </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>The exercise SKU (<span data-fill="learn_pc_q_p">$20</span>, landed cost <span data-fill="learn_pc_q_cost">$5</span>, fixed fees <span data-fill="learn_pc_q_fixed">$4</span> a unit, referral <span data-fill="learn_pc_q_f">15%</span>) makes how much a unit, and how far can its units fall on a 5% raise before profit does?</p><details><summary>The answer</summary><p>It makes <span data-fill="learn_pc_q_margin">$8.00</span> a unit; at <span data-fill="learn_pc_q_raise_price">$21</span> it makes <span data-fill="learn_pc_q_raise_margin">$8.85</span>. Units can fall <span data-fill="learn_pc_q_raise">9.6%</span> before the raise loses money: 1 − <span data-fill="learn_pc_q_margin">$8.00</span> ÷ <span data-fill="learn_pc_q_raise_margin">$8.85</span>.</p></details></li>
+          <li><p>Why does a cut have to be right to break even, when a raise has to be badly wrong to lose?</p><details><summary>The answer</summary><p>A cut takes the whole change out of the margin, so it must sell a larger share of extra units than the share of price it gave up. A raise puts the change into the margin, so it can lose a larger share of units than it added in price before it stops paying.</p></details></li>
+        </ol>
       </div>
       <div class="do">
         <h3>Do this now</h3>
@@ -410,6 +445,13 @@
           <li><b>Rank.</b> A sale that lifts your sales rank can sell more at full price afterwards. That is a bet on rank. It may be a good one, but it is a separate bet, and it should be made knowing what the sale itself cost.</li>
           <li><b>Stock that is about to age.</b> Sometimes a discount is cheaper than the storage it saves: <a href="/learn/fee-staircase">The Fee Staircase</a>, lesson 7, prices the 271-day cliff.</li>
         </ul>
+      </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>A 25% coupon on the exercise SKU: what is left a unit, and how many more units must it sell to make the same money?</p><details><summary>The answer</summary><p>At <span data-fill="learn_pc_q_coupon_price">$15</span> it keeps <span data-fill="learn_pc_q_coupon_margin">$3.75</span> a unit, against <span data-fill="learn_pc_q_margin">$8.00</span> at full price. It has to sell <span data-fill="learn_pc_q_coupon">113%</span> more units: more than twice as many, just to stand still.</p></details></li>
+          <li><p>What two things can a sale buy that the Discount sheet does not price?</p><details><summary>The answer</summary><p>A better sales rank afterwards, which is a separate bet on rank; and clearing stock before it ages past the 271-day cliff, which The Fee Staircase prices in its lesson 7.</p></details></li>
+        </ol>
       </div>
       <div class="do">
         <h3>Do this now</h3>
@@ -451,6 +493,13 @@
           <li><b>A range on the profit.</b> The sheet gives one number for the change. The engine draws the elasticity, the volume and the fees thousands of times and sizes the step so that the bad end stays inside a budget: double the uncertainty, and the step shrinks.</li>
         </ul>
       </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>The best price for the exercise SKU is 12% above today's <span data-fill="learn_pc_q_p">$20</span>. What is the next price?</p><details><summary>The answer</summary><p>The cap is 5% a step: <span class="money" data-fill="learn_pc_q_step">$21.00</span>. Write down what you expect, then measure for two weeks before the next step.</p></details></li>
+          <li><p>Your Buy Box share drops while a step is live. What do you do?</p><details><summary>The answer</summary><p>Reverse the step. The model cannot see the Buy Box; you can.</p></details></li>
+        </ol>
+      </div>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -485,6 +534,13 @@
 
         <h3>How often</h3>
         <p>Every two weeks: one step for each SKU at the top, one new period into each history, the ranking read again. A catalogue walked this way finds its prices, and the record of each step is the proof of what pricing earned.</p>
+      </div>
+      <div class="check">
+        <h3>Check yourself</h3>
+        <ol>
+          <li><p>One SKU is at the top of the ranking; another is marked "Too close to −1". Which do you move first?</p><details><summary>The answer</summary><p>The one at the top of the ranking. Then the one near −1: its direction is up, and a 5% step is the cheapest way to learn the distance.</p></details></li>
+          <li><p>A SKU has three periods of history. What do you do with it?</p><details><summary>The answer</summary><p>It is unread, not wrong: no fit, so no best price. Move its price on purpose, one 5% step at a time, until it has five periods and a price that moved.</p></details></li>
+        </ol>
       </div>
       <div class="do">
         <h3>Do this now</h3>

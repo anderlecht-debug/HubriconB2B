@@ -604,6 +604,10 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .course-page .data thead th { font-size: var(--t-14); color: var(--ink-3); font-weight: var(--strong); }
 .course-page .data td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .course-page .card-table { overflow-x: auto; margin-top: var(--s-5); }
+/* A table wider than a phone scrolls inside its own box; the page never scrolls sideways. */
+.course-page .table-scroll { overflow-x: auto; }
+.course-page .table-scroll:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 560px) { .course-page .table-scroll .data { font-size: var(--t-14); } }
 .course-page .card-table:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .course-page .card-table table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: var(--t-14); font-variant-numeric: tabular-nums; }
 .course-page .card-table caption { text-align: left; font-weight: var(--strong); color: var(--ink); font-size: var(--t-16); padding-bottom: var(--s-3); }
@@ -662,9 +666,20 @@ html:not(.js) .course-page .pager { display: none; }
   .course-page .join { padding: var(--s-5); }
 }
 
+/* Check yourself: two questions a lesson, the answer behind a click. Trying first is what makes it stay. */
+.course-page .check { margin-top: var(--s-7); max-width: 68ch; }
+.course-page .check h3 { font-size: var(--t-20); }
+.course-page .check ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-4); font-size: var(--t-16); }
+.course-page .check li > p { color: var(--ink); }
+.course-page .check details { margin-top: var(--s-2); }
+.course-page .check summary { cursor: pointer; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-2); }
+.course-page .check details p { margin-top: var(--s-2); padding-left: var(--s-4); border-left: 2px solid var(--rule-2); color: var(--ink-2); }
+
 /* ------------------------------------------------- a course on your numbers ---- */
 /* The reader's own numbers, typed into a lesson and read back by the lessons after it.
    Hidden without scripts: the lessons and the spreadsheet stand on their own. */
+/* hidden means hidden: a panel's own display must never show an empty box before it has something to say. */
+.course-page [hidden] { display: none !important; }
 .course-page .yours { margin-top: var(--s-7); padding: var(--s-6); border: 1px solid var(--ink); border-radius: var(--radius); display: grid; gap: var(--s-5); }
 .course-page .yours-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-2) var(--s-4); }
 .course-page .yours-head h3 { margin: 0; font-size: var(--t-24); }
