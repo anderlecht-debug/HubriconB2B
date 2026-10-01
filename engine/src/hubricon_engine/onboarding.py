@@ -242,8 +242,8 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
                 {"p": "Welcome aboard. Everything you need is on one page:"},
                 {"button": "Open your welcome page", "url": welcome},
                 {"p": f"Fastest path, no {seat} required: {n} exports through your private upload page. "
-                      "The models run the moment your last file lands, and your written Profit Teardown is in "
-                      "Hubricon within 24 hours."},
+                      "The models run the moment your last file lands, and your first full read, Profit "
+                      "Brief No. 001, is in Hubricon as soon as they finish."},
                 {"button": "Open your secure upload page", "url": link},
                 {"ol": exports},
                 *([{"p": note}] if note else []),
@@ -255,22 +255,22 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
         }
     if kind == "files":
         return {
-            "subject": "Your Profit Teardown — 15 minutes of exports and you're done",
+            "subject": "15 minutes of exports and you're done",
             "greeting": greeting,
             "blocks": [
                 {"p": f"No seat needed — {n} exports through your private upload page and we're off (no account required):"},
                 {"button": "Open your private upload page", "url": link},
                 {"ol": exports},
                 *([{"p": note}] if note else []),
-                {"p": "The models run the moment your last file lands — your written Profit Teardown is in "
-                      "Hubricon within 24 hours."},
+                {"p": "The models run the moment your last file lands — your first full read, Profit Brief "
+                      "No. 001, is in Hubricon as soon as they finish."},
                 {"p": "Managed Profit is $6,000 a month, flat, and month one is free. If we don't find you more than we cost, "
       "walk away owing nothing — and after that, any invoice your Profit Record hasn't covered is void."},
             ],
         }
     if kind == "nudge":
         return {
-            "subject": "15 minutes and your Teardown starts",
+            "subject": "15 minutes and your models start",
             "greeting": greeting,
             "blocks": [
                 {"p": "Quick nudge — your models are waiting on your files."},
@@ -281,10 +281,10 @@ def email_spec(kind: str, first_name: str | None, link: str, portal_url: str | N
         }
     if kind == "teardown_ready":
         return {
-            "subject": "Your Profit Teardown is ready",
+            "subject": "Your first full read is ready",
             "greeting": greeting,
             "blocks": [
-                {"p": "The models have run on your files. Your written Profit Teardown, Profit Brief No. 001, is in Hubricon:"},
+                {"p": "The models have run on your files. Your first full read, Profit Brief No. 001, is in Hubricon:"},
                 {"button": "Open Hubricon", "url": portal},
                 {"p": "Sign in with this email address; the link arrives in seconds and works once."},
                 {"p": "Your Profit Record starts today at $0: the baseline is recorded before anything is "

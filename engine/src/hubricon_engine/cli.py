@@ -2006,10 +2006,8 @@ def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: b
 
 
 # Letters whose body already IS the three Profit Record numbers.
-# The billing letters carry the Record's numbers as their subject already, and
-# the late-Teardown letter goes to a founder who has no Record yet.
-RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up",
-                                  "late_teardown"})
+# The billing letters carry the Record's numbers as their subject already.
+RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"})
 
 
 @meter.metered("email", timed=False)
@@ -2775,7 +2773,7 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
 
     # -- the deliverables ----------------------------------------------------
     can_video, why = video.available()
-    add("A video with every issue", "index, welcome, terms §2", can_video,
+    add("A video with every issue", "welcome, terms §3", can_video,
         f"speech via {tts.provider()}" if can_video else why)
 
     mail = email_configured()
@@ -2804,8 +2802,8 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
 
     add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
         "hubricon export <client>")
-    # The refund, the true-up and the late-Teardown month write the columns of
-    # this migration, and the operator's billing pass waits until they exist.
+    # The refund and the true-up write the columns of this migration, and the
+    # operator's billing pass waits until they exist.
     try:
         db.table("clients").select("exit_trued_up_at, late_teardown_month_at").limit(1).execute()
         db.table("invoices").select("refunded_usd").limit(1).execute()
@@ -2814,7 +2812,7 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         schema = ("migration 20260925000001_guarantee_stack.sql not applied — the operator's billing pass is "
                   "paused until it is")
     if schema:
-        add("The billing pass can run", "terms §2, §3, §5", False, schema)
+        add("The billing pass can run", "terms §3, §5", False, schema)
     add("No bill reaches you before the Record covers it", "terms §3, index, welcome", stripe_ok,
         "the webhook holds each retainer invoice at draft; the gate sends it if covered, voids it unsent if not"
         if stripe_ok else "STRIPE_SECRET_KEY missing — a held invoice waits unsent and an uncovered one is "
@@ -2825,8 +2823,6 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
     add("Trued up the day you leave", "terms §5, index", stripe_ok,
         "`hubricon cancel` ends the subscription; the next pass voids the unpaid and refunds the rest of any gap"
         if stripe_ok else "STRIPE_SECRET_KEY missing — a departed client's true-up is flagged, not made")
-    add("A late Teardown makes the first paid month free", "terms §2, index", not schema,
-        schema or "the billing pass adds the month on the 24-hour clock and tells the client; no key needed")
     add("Recovery-only clients pay only on money that landed", "terms §4", True,
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
@@ -2866,7 +2862,9 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
             first = c.get("first_issue_at")
             waited = speed.hours(landed, first or datetime.now(timezone.utc))
             within = waited is not None and waited <= speed.SLA_HOURS
-            add(f"{name}: the Teardown inside {speed.SLA_HOURS} hours of the exports", "welcome, index, terms §2",
+            # Not a client promise since the Teardown was retired (2026-09-30): our own
+            # speed target for the first full read, kept because time to value is a moat.
+            add(f"{name}: Issue 001 inside {speed.SLA_HOURS} hours of the exports", "internal target",
                 within,
                 f"Issue 001 landed {waited}h after the exports" if first
                 else f"exports landed {waited}h ago and Issue 001 has not published — `hubricon operator`")

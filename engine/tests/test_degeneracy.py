@@ -399,7 +399,9 @@ def test_the_published_formulas_match_the_code():
     from hubricon_engine.models import anomaly
     from hubricon_engine.models.pricing_engine import STEP_CAP
 
-    page = " ".join((Path(__file__).resolve().parents[2] / "method.html").read_text().split())
+    # Archived on 2026-09-30 with the Teardown funnel it carried; its formulas are the seed
+    # for /learn and /honesty, so they are still held to the code until they move there.
+    page = " ".join((Path(__file__).resolve().parents[2] / "archive" / "method.html").read_text().split())
 
     # the optimum, with the fixed fee in it
     assert "P*</b> = [(c + F) / (1 − f)] · ε / (1 + ε)" in page

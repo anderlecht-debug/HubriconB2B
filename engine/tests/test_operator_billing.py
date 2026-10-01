@@ -232,11 +232,10 @@ def test_every_client_email_closes_on_the_record_line_except_the_billing_letters
     subject, text, html = sent[-1]
     assert line in text and line in html and text.index("It is ready.") < text.index(line)
 
-    for kind in ("guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up", "late_teardown"):
+    for kind in ("guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"):
         assert cli._send_client_email(db, client, kind, f"ref-{kind}", "verdict", [{"p": "The arithmetic."}], True)
         assert "Your Profit Record:" not in sent[-1][1]
-    assert cli.RECORD_FOOTER_EXEMPT == {"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up",
-                                        "late_teardown"}
+    assert cli.RECORD_FOOTER_EXEMPT == {"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"}
 
     # A footer failure never blocks the letter.
     monkeypatch.setattr(cli, "_fetch_claims", lambda db, cid: (_ for _ in ()).throw(RuntimeError("claims table missing")))
@@ -390,29 +389,24 @@ def test_the_exit_true_up_voids_the_unpaid_refunds_the_rest_and_runs_once(monkey
     assert len(calls) == 4                    # once per client, for all time
 
 
-def test_a_late_teardown_adds_a_free_month_once_and_never_to_a_client_already_billing(monkeypatch):
+def test_a_slow_first_issue_no_longer_adds_a_free_month(monkeypatch):
+    """The Teardown and its late-month promise were retired on 2026-09-30
+    (HUBRICON_SPEC.md: "The Teardown is killed"), so a slow first read of a
+    client's files writes nothing and sends nothing."""
     letters = []
     monkeypatch.setattr(cli, "_send_client_email", lambda db, c, kind, ref, subject, blocks, send: letters.append(kind) or False)
     landed = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat()
-    on_time = (datetime.now(timezone.utc) - timedelta(hours=10)).isoformat()
     db = FakeDB(clients=[
-        _client(id="late", status="pending", stripe_subscription_id=None, retainer_started_at=None,
-                exports_landed_at=landed, first_issue_at=None),
-        _client(id="fast", status="pending", stripe_subscription_id=None, retainer_started_at=None,
-                exports_landed_at=landed, first_issue_at=on_time),
-        _client(id="paying", status="active", exports_landed_at=landed, first_issue_at=None),
-        _client(id="recov", status="pending", plan="recovery", stripe_subscription_id=None,
+        _client(id="slow", status="pending", stripe_subscription_id=None, retainer_started_at=None,
                 exports_landed_at=landed, first_issue_at=None),
     ], directives=[], recovery_claims=[], invoices=[], client_emails=[], funnel_events=[])
     for _ in range(2):
         operator.Pass(db, send=False, dry=False).billing()
-    by = {r["id"]: r for r in db.rows("clients")}
-    assert by["late"]["free_months"] == 2 and by["late"]["late_teardown_month_at"]
-    assert by["fast"]["free_months"] == 1 and not by["fast"].get("late_teardown_month_at")   # 20h: on time
-    assert by["paying"]["free_months"] == 1 and by["recov"]["free_months"] == 1
-    assert letters == ["late_teardown"]
-    # The extra month is honoured by the day-30 clock: day 45 of a two-month Proving Month is not due.
-    assert billing.due_for_decision({**by["late"], "retainer_started_at": "2026-08-01"}, date(2026, 9, 15))[0] is False
+    slow = db.rows("clients")[0]
+    assert slow["free_months"] == 1 and not slow.get("late_teardown_month_at")
+    assert letters == []
+    # A free month granted by hand is still honoured by the day-30 clock.
+    assert billing.due_for_decision({**slow, "free_months": 2, "retainer_started_at": "2026-08-01"}, date(2026, 9, 15))[0] is False
 
 
 def test_the_teardown_clock_starts_when_the_first_readable_file_was_uploaded():
@@ -473,7 +467,7 @@ def test_the_promise_check_names_the_missing_migration_and_the_guarantees_it_blo
     monkeypatch.setenv("STRIPE_PRICE_ID", "price_x")
     db = FakeDB(clients=[], data_requests=[], invoices=[])
     rows = {r[0]: r for r in cli.promise_rows(db)}
-    assert rows["A late Teardown makes the first paid month free"][2] is True
+    assert "A late Teardown makes the first paid month free" not in rows   # retired with the Teardown, 2026-09-30
     assert "The billing pass can run" not in rows
     for name in ("No bill reaches you before the Record covers it", "Trued up the day you leave",
                  "A paid month the Record stops covering is refunded, not credited"):
@@ -489,4 +483,3 @@ def test_the_promise_check_names_the_missing_migration_and_the_guarantees_it_blo
     monkeypatch.setattr(db, "table", table)
     rows = {r[0]: r for r in cli.promise_rows(db)}
     assert rows["The billing pass can run"][2] is False and "20260925000001" in rows["The billing pass can run"][3]
-    assert rows["A late Teardown makes the first paid month free"][2] is False

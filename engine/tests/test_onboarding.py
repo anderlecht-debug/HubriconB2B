@@ -45,7 +45,9 @@ def test_welcome_email_leads_with_the_upload_page():
     html = render_html(spec)
     assert text.startswith("Hi Priya,")
     assert text.index(link) < text.index("Prefer to grant a seat")  # upload path first, seat second
-    assert "24 hours" in text and "month one is free" in text
+    assert "month one is free" in text and "first full read" in text
+    # The Teardown and its 24-hour promise were retired on 2026-09-30 (HUBRICON_SPEC.md).
+    assert "24 hours" not in text and "Teardown" not in text
     assert link in html and "<ol" in html and "Hubricon" in html
 
 

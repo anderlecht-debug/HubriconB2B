@@ -9,6 +9,7 @@ Endpoints (https://developer.instantly.ai, API v2, Growth plan and above):
   GET  /accounts                       linked mailboxes + warmup state
   GET  /campaigns, POST /campaigns     find / create the campaign
   POST /campaigns/{id}/activate
+  POST /campaigns/{id}/pause
   GET  /campaigns/analytics
   GET  /lead-lists, POST /leads/list   lead lists the founder built in Instantly
   POST /leads                          enroll a lead into the campaign
@@ -129,6 +130,9 @@ class Instantly:
 
     def activate_campaign(self, campaign_id: str) -> dict:
         return self._call("POST", f"/campaigns/{campaign_id}/activate", body={})
+
+    def pause_campaign(self, campaign_id: str) -> dict:
+        return self._call("POST", f"/campaigns/{campaign_id}/pause", body={})
 
     def update_campaign(self, campaign_id: str, fields: dict) -> dict:
         """PATCH /campaigns/{id}: e.g. {"sequences": [...]} swaps the copy in place,

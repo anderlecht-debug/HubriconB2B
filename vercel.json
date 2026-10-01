@@ -1,7 +1,40 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/t/:token", "destination": "/api/teardown?t=:token" },
-    { "source": "/say/:token", "destination": "/api/consent?t=:token" }
+    {
+      "source": "/t/:token",
+      "destination": "/api/teardown?t=:token"
+    },
+    {
+      "source": "/say/:token",
+      "destination": "/api/consent?t=:token"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/teardown",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/sample-teardown",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/how-it-works",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/method",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/archive/:path*",
+      "destination": "/",
+      "permanent": false
+    }
   ]
 }

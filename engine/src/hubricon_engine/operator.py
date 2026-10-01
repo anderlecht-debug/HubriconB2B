@@ -74,6 +74,9 @@ class Pass:
                                  "Environments → Production, and the next hourly run starts sending.")
             return
         api = instantly.Instantly()
+        if outbound.cold_paused():
+            self._outbound_paused(api)
+            return
         try:
             # The one sentence of record the copy may carry, read here so the
             # campaign PATCHes itself the pass after a result is published.
@@ -146,6 +149,34 @@ class Pass:
                     self.warnings.append(f"Outbound: {v}")
             except Exception as err:  # a diagnostic must never break the pass
                 self.warnings.append(f"Outbound health check failed: {err}")
+        except instantly.InstantlyError as err:
+            self.warnings.append(f"Instantly: {err}")
+
+    def _outbound_paused(self, api) -> None:
+        """Cold is paused (HUBRICON_SPEC.md): nothing is enrolled, pushed, dispatched or
+        activated, and any Hubricon campaign still active is paused. The conversations
+        already started keep going: replies still sync into triage and the replies the
+        founder approved still send."""
+        self.say(f"Cold outreach is paused (HUBRICON_SPEC.md, channel decision). Set "
+                 f"{outbound.COLD_ENV}=on in the operator's environment to resume.")
+        try:
+            for n in outbound.hold_campaigns(self.db, api, self.dry):
+                self.say(n)
+        except instantly.InstantlyError as err:  # the replies below must still sync
+            self.warnings.append(f"Could not pause a cold campaign; pause it in Instantly's dashboard: {err}")
+        try:
+            cid = (outbound.get_state(self.db, "instantly.campaign", {}) or {}).get("id")
+            if not cid:
+                return
+            for n in outbound.sync_campaign_leads(self.db, api, cid):
+                self.say(n)
+            _, notes = outbound.sync_replies(self.db, api, cid, self.dry)
+            for n in notes:
+                self.say(n)
+            _, notes = outbound.send_approved(self.db, api, self.dry)
+            for n in notes:
+                self.say(n)
+            outbound.set_state(self.db, "instantly.analytics", {**outbound.campaign_summary(api, cid), "as_of": _iso()})
         except instantly.InstantlyError as err:
             self.warnings.append(f"Instantly: {err}")
 
@@ -444,8 +475,8 @@ class Pass:
         self.db.table("briefings").insert({
             "client_id": c["id"], "run_id": run_id, "video_id": None, "video_path": video_path,
             "memo": memo, "issue_number": 1,
-            "report_path": report_path, "title": "Profit Teardown",
-            "headline": "Profit Brief No. 001 — your Profit Teardown",
+            "report_path": report_path, "title": "Your first full read",
+            "headline": "Profit Brief No. 001 — your first full read",
         }).execute()
         speed.set_once(self.db, c, "first_issue_at")
         sent = self._touch(c, "teardown_ready", PORTAL_URL, force=True)
@@ -483,10 +514,6 @@ class Pass:
             if onboarding.is_internal(c["contact_email"], c.get("contact_name")):
                 continue
             company = c["company_name"] or c["contact_email"]
-            try:
-                self._late_teardown_month(c, cli)
-            except Exception as err:  # one client's failure never stops the pass for the rest
-                self.warnings.append(f"{company}: the late-Teardown check failed: {err}")
             # The smaller door: no retainer, a share of what Amazon paid back,
             # invoiced at month end. Never enters the day-30 machinery.
             if (c.get("plan") or "retainer") == "recovery":
@@ -580,8 +607,9 @@ class Pass:
                     self.warnings.append(f"{c['company_name'] or c['contact_email']}: the exit true-up failed: {err}")
 
     def _guarantee_schema_ready(self) -> bool:
-        """The refund, the exit true-up and the late-Teardown month write the
-        columns of migration 20260925000001. Without them a refund could be
+        """The refund and the exit true-up write the columns of migration
+        20260925000001 (its late_teardown_month_at column is unused since the
+        Teardown was retired on 2026-09-30). Without them a refund could be
         made in Stripe and not recorded, then made again once Stripe's
         idempotency key expired, so the whole pass waits, loudly, rather than
         half-run. Nobody is billed early; somebody may be billed late."""
@@ -594,38 +622,6 @@ class Pass:
             self.warnings.append(f"Billing paused: apply supabase/migrations/20260925000001_guarantee_stack.sql "
                                  f"({str(err)[:100]}). Nothing is billed, sent, voided or refunded until it is.")
             return False
-
-    def _late_teardown_month(self, c: dict, cli) -> None:
-        """terms §2: a Teardown later than 24 hours from the client's files
-        makes their first paid month free as well. Once per client, on the
-        clock the digest and `hubricon promises` already read, and never for
-        the recovery-only plan, which has no month to give."""
-        if (c.get("late_teardown_month_at") or c.get("stripe_subscription_id")
-                or (c.get("plan") or "retainer") != "retainer"):
-            return
-        late, hours = speed.teardown_late(c)
-        if not late:
-            return
-        company = c["company_name"] or c["contact_email"]
-        if self.dry:
-            self.say(f"[dry] {company}: Teardown {hours:.0f}h after the files — would add a free month")
-            return
-        months = int(c.get("free_months") or 1) + 1
-        self.db.table("clients").update({"free_months": months, "late_teardown_month_at": _iso()}) \
-            .eq("id", c["id"]).execute()
-        c.update({"free_months": months, "late_teardown_month_at": _iso()})
-        cli._send_client_email(self.db, c, "late_teardown", str(c["id"]),
-                               "Your Teardown was late, so your first paid month is free too",
-                               [{"p": f"We promise your Profit Teardown within 24 hours of your files. Yours took "
-                                      f"{'more than ' if not c.get('first_issue_at') else ''}{hours:.0f} hours, "
-                                      f"so we broke that promise, and the terms say what it costs us."},
-                                {"p": "If you say yes to Managed Profit, your first paid month is free as well: "
-                                      "no invoice for it, whatever your Profit Record shows. You don't need to "
-                                      "ask or reply; it is already on your account."},
-                                {"button": "Open Hubricon", "url": PORTAL_URL}], self.send)
-        self.human.append(f"{company}: the Teardown came {hours:.0f}h after the files, past the 24h promise, so "
-                          f"their first paid month is free ({months} free months now). Find out why.")
-        self.say(f"{company}: late Teardown ({hours:.0f}h) — free months now {months}.")
 
     def _rolling_gate(self, c: dict, cli, billing, value) -> None:
         """terms §3: our invoices never run ahead of the ledger.
