@@ -54,7 +54,7 @@ def test_direct_measurements_are_one_card_each_and_other_tiers_are_not():
 
 
 def test_the_gate_bar_is_not_the_proof_bar():
-    """billing.verdict counts identified-but-unbanked value; a card must not."""
+    """A public card counts proven value only, never found-but-unbanked."""
     cleared = {**CLIENT, "billing_decision": "cleared"}
     assert proof.detect(cleared, _ledger(0.0, identified=9000.0), [], []) == []
     rows = proof.detect(cleared, _ledger(7000.0, multiple=1.2), [], [])

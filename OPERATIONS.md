@@ -993,7 +993,7 @@ pass that starts their billing, and nowhere else. A referrer already on a
 subscription gets a Stripe customer-balance credit for one month
 (`Idempotency-Key: referral-<referred id>`), which applies itself to their next
 ACH invoice; a referrer still in their free month, or one whose gate came back
-`short`, gets `free_months + 1`, which `billing.due_for_decision` honours.
+`short`, gets `free_months + 1`, which `billing.due_to_start` honours.
 Partners are never auto-paid: the digest says "pay the partner per terms".
 
 ```
@@ -1356,7 +1356,7 @@ Each of these used to depend on someone remembering. They are now jobs.
 | First fixes live in week one | welcome.html | `hubricon execute` records it; the sweep escalates anything approved and unexecuted past 7 days |
 | Buy Box watched daily through a price step | index.html, terms.html §6 | `hubricon watch --alert` |
 | "If we don't find you more than we cost, you walk away owing nothing" | 8 surfaces, terms.html §3 | The operator's day-30 pass is the **only** code that starts billing. Below the bar no subscription is created — there is no invoice to write off |
-| No invoice reaches the client before the Record covers it | index, welcome, terms.html §3 | `lib/stripe_events.js` holds every retainer draft (`auto_advance=false`); `operator._rolling_gate` sends it if covered and voids it unsent if not |
+| A month is invoiced only if it clears the fee | index, welcome, terms.html §3 | billing in arrears; `lib/stripe_events.js` holds every retainer draft (`auto_advance=false`); `operator._month_gate` waits until its month is measured (`record_months`), sends it if the month cleared and voids it unsent if not |
 | A paid month the Record did not cover is refunded, not credited | terms.html §3, method | `billing.waive_invoice` → a credit note with `refund_amount` |
 | Trued up the day you leave | index, welcome, terms.html §5, method | `hubricon cancel` ends the subscription; `operator._exit_true_up` voids the unpaid and refunds the gap, once (`clients.exit_trued_up_at`) |
 | A Teardown later than 24h makes the first paid month free | index, apply, terms.html §2, method | `operator._late_teardown_month` on `speed.teardown_late`, once (`clients.late_teardown_month_at`); the clock starts at the first parsed upload's `uploaded_at` |
@@ -1790,3 +1790,20 @@ promised — by move kind across the same consenting accounts, with the accounts
 moves behind each and a band from resampling accounts; under five accounts it
 refuses. Report only: no promise, expected dollar or invoice reads it. It is the
 data asset a later, bench-validated change will use to price day-one promises.
+
+## The month close (since 2026-09-30)
+
+The guarantee runs per month (`HUBRICON.md`, the guarantee). Each Monday sweep, after
+measuring the moves, `cli._close_months` writes a `record_months` row for every retainer
+month that ended at least `monthly.CLOSE_LAG_DAYS` (7) days ago and has none, per channel.
+The hourly operator's `_month_gate` then judges each held invoice against the month it
+bills (in arrears). Two things to know:
+
+- **Apply `supabase/migrations/20261001000001_record_months.sql` before deploying** the
+  per-month code. Without the table the sweep prints one line and measures nothing, and
+  every invoice waits held: nobody is billed, which is the safe failure, but nobody is
+  billed.
+- **A dispute** that the record cannot settle comes off the month by raising its
+  `disputed_usd` (the trigger allows only that, and only upward). Do it in the Supabase
+  editor until a CLI command exists; the gate and the exit true-up read the month after
+  disputes.

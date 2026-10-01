@@ -77,6 +77,11 @@ input[type=email]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 .score-more { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); max-width: 72ch; }
 .score-more b { color: var(--ink); }
 
+.months { margin-top: var(--s-6); max-width: 640px; }
+.months table { min-width: 0; }
+.months td.out { color: var(--ink-3); }
+.months td.out.clear { color: var(--blue); font-weight: var(--strong); }
+
 /* section heads */
 .block { padding-block: var(--s-7); border-top: 1px solid var(--rule); }
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
@@ -321,6 +326,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
       <div class="bar" id="score-bar" role="img" aria-label=""><span class="bar-fill" id="bar-fill" style="width: 0%"></span><span class="bar-bill" id="bar-bill" hidden></span></div>
       <div class="bar-keys" id="bar-keys"><span class="k-bill" id="k-bill" hidden>Billed</span><span class="k-proven" id="k-proven">Proven</span></div>
       <div class="score-more" id="score-more"></div>
+      <div class="months" id="months" hidden></div>
     </section>
 
     <!-- waiting on you: the veto, before anything goes live -->
@@ -357,7 +363,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
         <div class="onboard">
           <div class="step"><span class="when">Days 0–1</span><span>Data ingested, models calibrated, and your baseline recorded before anything is touched. Every later move is measured against it, so a good month is never mistaken for our work.</span></div>
           <div class="step"><span class="when">Days 1–30</span><span>Profit Brief No. 001. First moves emailed before they go live. A Profit Brief every two weeks from there, and the weekly watch begins.</span></div>
-          <div class="step"><span class="when">Day 30</span><span>The Record decides whether an invoice exists at all.</span></div>
+          <div class="step"><span class="when">Every month after</span><span>Each month is measured on its own a week after it ends, and invoiced only if it cleared the fee.</span></div>
         </div>
       </div>
       <div style="margin-top: var(--s-6)">
@@ -390,14 +396,15 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: now
   <li><b>Attributable.</b> Where demand moved too, measured against a stated counterfactual, from the same model that made the promise, at the least favourable end of its own range.</li>
   <li><b>Unmeasurable.</b> Where we cannot separate our move from everything else, nothing is counted, and the Record says so.</li>
 </ul>
-<p><b>Three rules apply to every dollar.</b></p>
+<p><b>Four rules apply to every dollar.</b></p>
 <ul>
   <li><b>Never above the promise.</b> An isolated or attributable result counts at most what we said it would earn. Anything more is shown and named, never added. A direct dollar counts what the platform actually paid.</li>
   <li><b>Nothing under $25.</b> A smaller result is noise: the move closes and counts nothing.</li>
   <li><b>Once.</b> The same movement on the same SKU in the same period is credited to one move only, the oldest.</li>
+  <li><b>It has to last.</b> Every month, each move is measured again on that month's exports alone, against the level before it went live. A leak that stopped holding earns nothing that month.</li>
 </ul>
 <p><b>Misses stay.</b> A move that earned less than we expected is recorded at what it earned.</p>
-<p><b>Not yet a rule.</b> A move is measured once, over its first thirty days. Whether its effect lasts beyond that is not yet re-measured, so nothing is claimed for it.</p>
+<p><b>Every month stands on its own.</b> About a week after a month ends, once its exports have landed, everything every move earned in it is added up, once. That one number is the month's: nothing found but not yet measured counts, and nothing carries from one month to the next.</p>
 <p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
 <!-- /build:attribution -->
       </div>
@@ -1086,55 +1093,87 @@ function countUp(el, to, key){
   requestAnimationFrame(step);
 }
 
-function renderScore(v, directives, clientId){
+/* A month's rows, one per channel, summed after disputes. */
+function monthsOf(rows){
+  const by = new Map();
+  for (const r of rows){
+    const k = Number(r.month_index);
+    const m = by.get(k) || { index: k, start: r.month_start, end: r.month_end, free: r.free, fee: Number(r.fee_usd) || 6000, total: 0, disputed: 0 };
+    m.total += Number(r.attributed_usd || 0) - Number(r.disputed_usd || 0);
+    m.disputed += Number(r.disputed_usd || 0);
+    by.set(k, m);
+  }
+  return [...by.values()].sort((a, b) => a.index - b.index);
+}
+const monthLabel = (m) => `${fdate(m.start)} – ${fdate(m.end)}`;
+
+function renderScore(v, directives, clientId, monthRows){
+  const months = monthsOf(monthRows || []);
   const measuredRows = directives.filter((d) => d.measured_impact_usd != null && d.measured_at);
-  const proven = v ? Number(v.value_total) || 0 : measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0);
   const billed = v ? Number(v.fees_billed) || 0 : 0;
   const found = v ? Number(v.identified_unbanked) || 0 : 0;
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-  const thisMonth = measuredRows.filter((d) => asDate(d.measured_at) >= monthStart)
-    .reduce((t, d) => t + Number(d.measured_impact_usd), 0);
+  /* Proven since day one: every measured month added up, once the months exist;
+     before the first month closes, the first measurements of the moves so far. */
+  const proven = months.length ? months.reduce((t, m) => t + m.total, 0)
+    : (v ? Number(v.value_total) || 0 : measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0));
 
   const total = $("#score-total");
   total.classList.toggle("money", proven > 0);
   countUp(total, proven, `hubricon_proven_${clientId}`);
 
   const parts = [];
-  if (!measuredRows.length && proven <= 0){
+  const last = months[months.length - 1];
+  if (last){
+    parts.push(`${monthLabel(last)}: your Record measured <b class="money">${usd(last.total)}</b>.`);
+    if (last.free) parts.push("That was your Proving Month: free, whatever it measured.");
+    else if (last.total > last.fee) parts.push(`Our bill for it: <b>${usd(last.fee)}</b>. You are <b class="money">${usd(last.total - last.fee)}</b> up on the month.`);
+    else parts.push(`That is under the <b>${usd(last.fee)}</b> fee, so the month is free: no invoice, nothing carried.`);
+  } else if (!measuredRows.length && proven <= 0){
     parts.push("Nothing proven yet. Your baseline is recorded before anything is touched; each move is measured on your next exports, and its dollars land here.");
   } else {
-    parts.push(thisMonth !== 0 ? `This month your Record measured <b class="money">${usd(thisMonth)}</b>.` : "Nothing new measured yet this month.");
+    parts.push("Your first month is measured about a week after it ends; its number appears here before any invoice exists.");
   }
-  if (billed <= 0){
-    parts.push("Nothing billed: this is your Proving Month.");
-  } else if (proven >= billed){
-    parts.push(`We have billed <b>${usd(billed)}</b> since day one. You are <b class="money">${usd(proven - billed)}</b> ahead.`);
-  } else {
-    parts.push(`We have billed <b>${usd(billed)}</b> since day one, against what the Record has proven and found. An invoice it has not covered is void.`);
-  }
+  if (billed <= 0 && !(last && !last.free)) parts.push("Nothing billed: this is your Proving Month.");
   $("#score-line").innerHTML = parts.join(" ");
 
-  const showBar = proven > 0 || billed > 0;
+  /* The bar, every time: what the month made against the bill. */
+  const barMonth = last && !last.free ? last : null;
+  const fill = barMonth ? Math.max(0, barMonth.total) : Math.max(0, proven);
+  const fee = barMonth ? barMonth.fee : 0;
+  const showBar = fill > 0 || fee > 0;
   $("#score-bar").hidden = !showBar; $("#bar-keys").hidden = !showBar;
-  const scale = Math.max(proven, billed, 1);
-  $("#bar-fill").style.width = `${(Math.max(0, proven) / scale * 100).toFixed(2)}%`;
+  const scale = Math.max(fill, fee, 1);
+  $("#bar-fill").style.width = `${(fill / scale * 100).toFixed(2)}%`;
   const bill = $("#bar-bill"), kb = $("#k-bill");
-  if (billed > 0){
-    const x = (billed / scale * 100).toFixed(2);
+  if (fee > 0){
+    const x = (fee / scale * 100).toFixed(2);
     bill.hidden = false; bill.style.left = `${x}%`;
-    kb.hidden = false; kb.style.left = `${x}%`; kb.textContent = `Billed ${usd(billed)}`;
+    kb.hidden = false; kb.style.left = `${x}%`; kb.textContent = `Fee ${usd(fee)}`;
+    /* Near the right end the label sits left of the tick, clear of the measured key. */
+    kb.style.transform = Number(x) > 55 ? "translateX(calc(-100% - 8px))" : "translateX(-50%)";
   } else {
     bill.hidden = true; kb.hidden = true;
   }
-  $("#k-proven").textContent = billed > 0 ? `Proven ${usd(proven)}` : `Proven ${usd(proven)} · nothing billed`;
-  $("#score-bar").setAttribute("aria-label", `Proven ${usd(proven)} against ${usd(billed)} billed`);
+  $("#k-proven").textContent = barMonth ? `Measured ${usd(fill)}` : `Proven ${usd(proven)} · nothing billed`;
+  $("#score-bar").setAttribute("aria-label", barMonth ? `${usd(fill)} measured against a ${usd(fee)} fee` : `Proven ${usd(proven)}`);
 
   const more = [];
-  if (found > 0) more.push(`<span><b>${usd(found)}</b> found, not yet banked: moves made and claims filed, at their expected dollars, until your exports or Amazon read them back.</span>`);
-  if (v && Number(v.recovered) > 0) more.push(`<span>Of the proven, <b>${usd(v.measured)}</b> on moves and <b>${usd(v.recovered)}</b> on claims we filed.</span>`);
+  if (billed > 0) more.push(`<span>Billed since day one: <b>${usd(billed)}</b>.</span>`);
+  if (found > 0) more.push(`<span><b>${usd(found)}</b> found, not yet measured: moves made and claims filed. They count in the month your exports or Amazon read them back, and not before.</span>`);
   if (v && Number(v.recovered_unattributed) > 0) more.push(`<span>Amazon also paid <b>${usd(v.recovered_unattributed)}</b> without a claim from us. It is yours either way, and not counted here.</span>`);
-  if (billed > 0 && proven > 0) more.push(`<span>Proven ÷ billed: <b>${(proven / billed).toFixed(1)}×</b></span>`);
   $("#score-more").innerHTML = more.join("");
+
+  /* Month by month, oldest first: each month's number, the fee, and what it meant. */
+  const table = $("#months");
+  if (months.length){
+    table.innerHTML = `<div class="scroll"><table><tr><th>Month</th><th class="num">Measured</th><th class="num">Fee</th><th>Outcome</th></tr>`
+      + months.map((m) => {
+        const out = m.free ? "Free: the Proving Month" : m.total > m.fee ? "Cleared: invoiced" : "Under the fee: free";
+        return `<tr><td>${monthLabel(m)}</td><td class="num">${usd(m.total)}</td><td class="num">${m.free ? "—" : usd(m.fee)}</td>`
+          + `<td class="out ${!m.free && m.total > m.fee ? "clear" : ""}">${out}${m.disputed ? ` · ${usd(m.disputed)} disputed and removed` : ""}</td></tr>`;
+      }).join("") + `</table></div>`;
+    table.hidden = false;
+  }
 }
 
 /* ── 2 · the leaks: every move, what state it is in, what it earned, how we know ── */
@@ -1152,8 +1191,13 @@ function leakRow(d, kind){
   if (kind === "sealed"){
     const m = Number(d.measured_impact_usd);
     amount = `<span class="usd ${m > 0 ? "money" : ""}">${usd(m)}</span>`;
-    meta = `<b>Made ${fdate(d.executed_at || d.responded_at || d.issued_at)}</b> · measured ${fdate(d.measured_at)} over its first thirty days`
-      + (exp ? ` · we said ${exp}` : "") + (tier ? ` · ${esc(tier)}` : "");
+    const held = (leakRow.latest || {})[d.id];
+    meta = `<b>Made ${fdate(d.executed_at || d.responded_at || d.issued_at)}</b> · ${usd(m)} over its first thirty days`
+      + (exp ? ` · we said ${exp}` : "") + (tier ? ` · ${esc(tier)}` : "")
+      + (held ? (d.attribution === "direct"
+                  ? (held.usd > 0 ? ` · <b>Amazon paid ${usd(held.usd)} in ${fdate(held.month.month_start)} – ${fdate(held.month.month_end)}</b>` : "")
+                  : held.usd > 0 ? ` · <b>still holding: ${usd(held.usd)} in ${fdate(held.month.month_start)} – ${fdate(held.month.month_end)}</b>`
+                  : ` · <b>stopped holding by ${fdate(held.month.month_start)} – ${fdate(held.month.month_end)}</b>`) : "");
   } else if (kind === "made"){
     amount = `<span class="usd quiet">${exp ? `${exp} expected` : "—"}</span>`;
     meta = `<b>Made ${fdate(d.executed_at)}</b> · measured on your next exports`;
@@ -1170,7 +1214,13 @@ function leakRow(d, kind){
   return `<div class="leak"><span class="what">${esc(d.action_text)}</span>${amount}<span class="meta">${meta}</span>`
     + (note ? `<details><summary>How we know</summary><p>${esc(note)}</p></details>` : "") + `</div>`;
 }
-function renderLeaks(directives, briefs, since){
+function renderLeaks(directives, briefs, since, monthRows){
+  /* What each move earned in the latest measured month, from the month rows. */
+  const latest = {};
+  for (const r of (monthRows || []).slice().sort((a, b) => Number(a.month_index) - Number(b.month_index))){
+    for (const mv of r.moves || []) latest[mv.directive_id] = { usd: mv.verdict === "measured" ? Number(mv.usd || 0) : 0, month: r };
+  }
+  leakRow.latest = latest;
   const live = directives.filter((d) => d.status !== "draft");
   const sealed = live.filter((d) => d.measured_at && d.measured_impact_usd != null);
   const closed = live.filter((d) => !sealed.includes(d) && (d.status === "closed" || d.measured_at));
@@ -1514,6 +1564,7 @@ async function load(){
     rest("/rest/v1/rpc/desk_cash", { method: "POST", body: "{}" }).catch(() => []),
     rest("/rest/v1/chart_packs?select=payload&order=created_at.desc&limit=1").catch(() => []),
   ]);
+  const monthRows = await rest("/rest/v1/record_months?select=*&order=month_index.asc").catch(() => []);
   try { renderHorizon(cashRows); } catch {}
   try { renderPack(packRows[0]?.payload); } catch {}
   try { renderDumbbells(directives); } catch {}
@@ -1539,7 +1590,7 @@ async function load(){
 
   /* 1 · the monitor */
   const since = fmonth(client.created_at);
-  try { renderScore(packRows[0]?.payload?.value, directives, client.id); } catch {}
+  try { renderScore(packRows[0]?.payload?.value, directives, client.id, monthRows || []); } catch {}
 
   /* before it goes live */
   const awaiting = directives.filter((d) => d.status === "issued");
@@ -1688,7 +1739,7 @@ async function load(){
   }
 
   /* 2 · the leaks */
-  renderLeaks(directives, briefs, since);
+  renderLeaks(directives, briefs, since, monthRows || []);
 
   /* evidence: the client's own price tests — the full report carries the rest */
   const pt = $("#ptests");

@@ -1,9 +1,9 @@
-"""The day-30 guarantee.
+"""The guarantee, month by month.
 
-terms.html §3: "if we don't find you more than we cost, you walk away owing
-nothing." The point of these tests is that the promise is structural — the same
-code that checks it is the only code that starts billing, so it cannot be
-broken by forgetting.
+HUBRICON_SPEC.md: each month is measured once, on its own; above the fee it is
+billed, at or below it the month is free, with nothing credited or carried. The
+point of these tests is that the promise is structural: the code that judges a
+month is the only code that lets its invoice out.
 """
 from datetime import date
 
@@ -12,80 +12,8 @@ from hubricon_engine import billing
 TODAY = date(2026, 9, 4)
 
 
-def test_nothing_is_decided_before_the_free_month_is_up():
-    due, why = billing.due_for_decision({"retainer_started_at": "2026-08-20"}, TODAY)
-    assert due is False and "day 15 of the free 30" in why
-
-
-def test_a_client_with_no_agreed_start_date_is_never_billed():
-    """The clock used to run from the day the row was provisioned — at booking,
-    before the Teardown existed. A missing start date must stall billing, not
-    guess at it."""
-    due, why = billing.due_for_decision({"created_at": "2026-01-01"}, TODAY)
-    assert due is False and "no retainer start date" in why
-
-
-def test_billing_is_never_started_twice():
-    due, why = billing.due_for_decision(
-        {"retainer_started_at": "2026-06-01", "stripe_subscription_id": "sub_1"}, TODAY)
-    assert due is False and why == "already billing"
-
-
-def test_the_bar_is_measured_plus_identified_against_the_fee():
-    """The measurement engine deliberately under-claims; it must not under-claim
-    its way into refusing revenue for work that was really delivered."""
-    v = billing.verdict({"value_total": 4000, "identified_unbanked": 3000}, {"monthly_fee_usd": 6000})
-    assert v["total"] == 7000 and v["clears"] is True
-
-    short = billing.verdict({"value_total": 1000, "identified_unbanked": 500}, {"monthly_fee_usd": 6000})
-    assert short["total"] == 1500 and short["clears"] is False
-
-
-def test_exactly_the_fee_does_not_clear_it():
-    """'More than we cost' means more, not equal."""
-    v = billing.verdict({"value_total": 6000, "identified_unbanked": 0}, {"monthly_fee_usd": 6000})
-    assert v["clears"] is False
-
-
-def test_the_short_email_says_no_invoice_exists_not_that_one_was_waived():
-    v = billing.verdict({"value_total": 900, "identified_unbanked": 100}, {"monthly_fee_usd": 6000})
-    blocks = billing.short_email_blocks(v, "https://x/portal")
-    text = " ".join(b.get("p", "") for b in blocks)
-    assert "there is no invoice" in text
-    assert "isn't a discount or a credit" in text
-    assert "nothing was raised at all" in text
-    # The three lines use the names in force, and the retired words never appear.
-    listed = next(b["ol"] for b in blocks if "ol" in b)
-    assert listed == ["Proven on your Profit Record, from your own exports: $900",
-                      "Found and filed, not yet banked: $100",
-                      "Against Managed Profit: $6,000 a month"]
-    whole = text + " " + " ".join(listed)
-    assert "Decision Ledger" not in whole and "retainer" not in whole
-    # The door back in is the same arithmetic, later: the Record clearing the fee, then an invoice.
-    later = ("If the Record clears $6,000 later — a claim Amazon pays, a price step that reads out — "
-             "the first invoice comes then, by email, with this same arithmetic on top of it. Not before.")
-    assert later in text
-    paras = [b["p"] for b in blocks if "p" in b]
-    assert paras.index(later) == len(paras) - 1                 # the last word before any smaller door
-
-
-def test_the_cleared_email_shows_the_arithmetic_before_the_invoice():
-    v = billing.verdict({"value_total": 20000, "identified_unbanked": 4000}, {"monthly_fee_usd": 6000})
-    blocks = billing.cleared_email_blocks(v, "https://x/portal")
-    listed = next(b["ol"] for b in blocks if "ol" in b)
-    assert any("$20,000" in x for x in listed) and any("$4,000" in x for x in listed)
-    assert any("$6,000" in x for x in listed)
-    assert "Found and filed, not yet banked: $4,000" in listed
-    text = " ".join(b.get("p", "") for b in blocks)
-    assert "4.0× the fee" in text and "net seven days" in text
-    # The Proving Month was already Managed Profit; what starts now is the paid months.
-    assert "so the paid months start and your first invoice comes by email" in text
-    assert "Managed Profit starts" not in text
-
-
 def test_the_terms_are_the_ones_the_site_publishes():
     assert billing.NET_DAYS == 7        # terms.html §4: ACH, net seven days
-    assert billing.FREE_DAYS == 30      # welcome.html: "Day 30 — your first invoice"
 
 
 # -- the rolling gate --------------------------------------------------------------------
@@ -108,30 +36,6 @@ def test_only_undecided_invoices_inside_the_retainer_are_judged_oldest_first():
     assert [i["id"] for i in out] == ["i2"]          # judged, void and pre-retainer all excluded
     out = billing.unjudged_invoices([INV2, INV1], CLIENT)
     assert [i["id"] for i in out] == ["i1", "i2"]
-
-
-def test_fees_billed_through_counts_up_to_this_invoice_and_skips_void_ones():
-    assert billing.fees_billed_through([VOID, INV1, INV2], INV1) == 6000
-    assert billing.fees_billed_through([VOID, INV1, INV2], INV2) == 12000
-
-
-def test_the_rolling_bar_is_ahead_of_the_bills_and_a_tie_goes_to_the_client():
-    """Both gates now read the same. `verdict` has always required the Record to
-    EXCEED the fee ("$6,000 or under and there is no invoice"); `rolling_verdict`
-    used to settle for level, so the two disagreed on an exact tie and no single
-    sentence could describe both. A tie is now uncovered, which is the reading
-    that costs us the invoice rather than the client."""
-    ledger = {"value_total": 9000, "identified_unbanked": 3001}
-    v = billing.rolling_verdict(ledger, [INV1, INV2], INV2, CLIENT)
-    assert v["fees_billed"] == 12000 and v["total"] == 12001 and v["covered"] is True
-    level = billing.rolling_verdict({"value_total": 9000, "identified_unbanked": 3000},
-                                    [INV1, INV2], INV2, CLIENT)
-    assert level["total"] == 12000 and level["covered"] is False        # a tie is not covered
-    short = billing.rolling_verdict({"value_total": 9000, "identified_unbanked": 2999}, [INV1, INV2], INV2, CLIENT)
-    assert short["covered"] is False
-    # The day-30 gate reads the same way, so one sentence describes both.
-    assert billing.verdict({"value_total": 6000, "identified_unbanked": 0}, CLIENT)["clears"] is False
-    assert billing.verdict({"value_total": 6001, "identified_unbanked": 0}, CLIENT)["clears"] is True
 
 
 def test_a_held_draft_is_voided_unsent_an_open_one_voided_and_a_paid_one_refunded_not_credited():
@@ -177,58 +81,6 @@ def test_a_covered_draft_is_finalized_without_the_auto_send_then_sent_once():
     sent = billing.release_invoice({**INV2, "status": "draft", "stripe_invoice_id": "in_d"}, stripe=stripe)
     assert calls == [("invoices/in_d/finalize", {"auto_advance": "false"}), ("invoices/in_d/send", {})]
     assert sent["hosted_invoice_url"] == "https://pay/in_d"
-
-
-def test_a_held_draft_counts_toward_its_own_bar_and_a_refund_comes_off_the_bills():
-    draft = {**INV2, "status": "draft"}
-    assert billing.fees_billed_through([INV1, draft], draft) == 12000         # judged with itself in
-    assert billing.fees_billed_through([INV1, {**draft, "id": "o"}], INV1) == 6000
-    refunded = {**INV1, "refunded_usd": 6000}
-    assert billing.fees_billed_through([refunded, INV2], INV2) == 6000       # a refunded month was not billed
-    assert [i["id"] for i in billing.unjudged_invoices([draft, INV1], CLIENT)] == ["i1", "i2"]
-    recovery = {**INV2, "id": "r", "raw": {"metadata": {"hubricon_plan": "recovery"}}}
-    assert billing.unjudged_invoices([recovery], CLIENT) == []                # priced off money that landed
-
-
-def test_the_waived_letter_says_void_or_refunded_and_never_discount_or_credit():
-    v = billing.rolling_verdict({"value_total": 5000, "identified_unbanked": 0}, [INV1, INV2], INV2, CLIENT)
-    blocks = billing.waived_email_blocks(v, "voided", "https://x/portal")
-    text = " ".join(b.get("p", "") for b in blocks)
-    assert "the invoice is void" in text and "hasn't covered is void" in text and "discount" not in text
-    assert "Found and filed, not yet banked: $0" in next(b["ol"] for b in blocks if "ol" in b)
-    text = " ".join(b.get("p", "") for b in billing.waived_email_blocks(v, "refunded", "https://x/portal"))
-    assert "refunded in full to the bank account it came from" in text and "credited" not in text
-
-
-# -- the exit true-up ----------------------------------------------------------------------
-
-def test_at_the_exit_an_unpaid_invoice_is_voided_before_any_refund_and_the_rest_is_refunded():
-    paid_a = {**INV1, "id": "a", "stripe_invoice_id": "in_a", "period_start": "2026-09-01"}
-    paid_b = {**INV1, "id": "b", "stripe_invoice_id": "in_b", "period_start": "2026-10-01"}
-    open_c = {**INV2, "id": "c", "stripe_invoice_id": "in_c", "period_start": "2026-11-01"}
-    # Billed $18,000; the Record fell to $9,500 after found dollars measured short.
-    t = billing.exit_true_up({"value_total": 8000, "identified_unbanked": 1500}, [paid_a, paid_b, open_c])
-    assert t["billed"] == 18000 and t["gap"] == 8500
-    assert [i["id"] for i in t["voids"]] == ["c"] and t["voided"] == 6000
-    assert [(i["id"], a) for i, a in t["refunds"]] == [("b", 2500.0)] and t["refunded"] == 2500
-    # Ahead of the bills, or level: nothing changes hands.
-    level = billing.exit_true_up({"value_total": 18000, "identified_unbanked": 0}, [paid_a, paid_b, open_c])
-    assert level["gap"] == 0 and not level["voids"] and not level["refunds"]
-    # Earlier refunds are counted once, never twice.
-    again = billing.exit_true_up({"value_total": 0, "identified_unbanked": 0},
-                                 [{**paid_a, "refunded_usd": 6000}, {**paid_b, "refunded_usd": 1000}])
-    assert again["billed"] == 5000 and [(i["id"], a) for i, a in again["refunds"]] == [("b", 5000.0)]
-
-
-def test_the_exit_letter_names_the_arithmetic_and_what_came_back():
-    t = billing.exit_true_up({"value_total": 8000, "identified_unbanked": 1500},
-                             [{**INV1, "id": "a", "stripe_invoice_id": "in_a"},
-                              {**INV2, "id": "c", "stripe_invoice_id": "in_c"}])
-    text = " ".join(b.get("p", "") for b in billing.exit_email_blocks(t, "https://x"))
-    assert "$2,500 more than the Record shows" in text and "is void" in text and "credited" not in text
-    ahead = billing.exit_true_up({"value_total": 20000, "identified_unbanked": 0}, [INV1])
-    text = " ".join(b.get("p", "") for b in billing.exit_email_blocks(ahead, "https://x"))
-    assert "nothing changes hands" in text
 
 
 def test_a_refund_is_a_credit_note_with_a_key_made_of_what_it_returns():
@@ -278,17 +130,6 @@ def test_every_call_is_made_at_the_webhooks_api_version():
     if sdk.exists():
         assert billing.STRIPE_VERSION == re.search(r"ApiVersion = '([^']+)'", sdk.read_text()).group(1)
 
-
-def test_the_short_letter_names_the_smaller_door_only_when_asked():
-    v = billing.verdict({"value_total": 900, "identified_unbanked": 100}, {"monthly_fee_usd": 6000})
-    plain = " ".join(b.get("p", "") for b in billing.short_email_blocks(v, "https://x/portal"))
-    assert "RECOVERY" not in plain
-    door = " ".join(b.get("p", "") for b in billing.short_email_blocks(v, "https://x/portal", recovery_door=True, share=0.2))
-    assert "Reply RECOVERY" in door and "20% of what actually lands" in door and "nothing until it lands" in door
-    assert door.index("Not before.") < door.index("Reply RECOVERY")    # the later-invoice line precedes the door
-
-
-# -- the recovery-only plan ---------------------------------------------------------------
 
 def _claim(i, paid_on, amount, ours=True, status="paid", invoiced=None):
     return {"id": f"k{i}", "status": status, "paid_amount": amount, "paid_at": f"{paid_on}T12:00:00Z",
@@ -379,3 +220,112 @@ def test_a_recovery_invoice_a_failed_run_left_behind_is_finished_never_duplicate
 
         assert billing.invoice_recovery_share(client, due, stripe=stripe)["id"] == "in_old"
         assert calls == expected
+
+
+# -- per month ----------------------------------------------------------------------
+
+CLIENT = {"id": "c1", "retainer_started_at": "2026-08-02", "free_months": 1, "monthly_fee_usd": 6000,
+          "platform": "amazon"}
+
+
+def _months(today=date(2026, 12, 20)):
+    from hubricon_engine import monthly
+    return monthly.billing_months(CLIENT, today)
+
+
+def _row(k, usd, channel="amazon", disputed=0.0):
+    return {"client_id": "c1", "month_index": k, "channel": channel, "attributed_usd": usd, "disputed_usd": disputed}
+
+
+def test_nothing_starts_until_the_free_months_are_over():
+    due, why, first = billing.due_to_start(CLIENT, date(2026, 8, 20))
+    assert due is False and first is None and "free" in why
+    due, why, first = billing.due_to_start(CLIENT, date(2026, 9, 2))
+    assert due is True and first["index"] == 1 and first["end"] == date(2026, 10, 1)
+    two_free = {**CLIENT, "free_months": 2}
+    assert billing.due_to_start(two_free, date(2026, 9, 20))[0] is False
+    assert billing.due_to_start(two_free, date(2026, 10, 2))[2]["index"] == 2
+
+
+def test_a_client_with_no_agreed_start_date_is_never_billed_and_billing_never_starts_twice():
+    due, why, _ = billing.due_to_start({"created_at": "2026-01-01"}, TODAY)
+    assert due is False and "no retainer start date" in why
+    due, why, _ = billing.due_to_start({**CLIENT, "stripe_subscription_id": "sub_1"}, date(2026, 12, 1))
+    assert due is False and why == "already billing"
+
+
+def test_the_subscription_trials_to_the_day_after_the_first_billed_month(monkeypatch):
+    sent = {}
+    def fake(path, data=None, idempotency_key=None, method=None):
+        if path.startswith("customers?"):
+            return {"data": [{"id": "cus_1"}]}
+        if path.startswith("subscriptions?"):
+            return {"data": []}
+        sent.update(data or {})
+        return {"id": "sub_1"}
+    monkeypatch.setattr(billing, "_stripe", fake)
+    first = _months()[1]
+    billing.start_billing({**CLIENT, "contact_email": "a@b.co"}, "price_1", first)
+    from datetime import datetime, timezone
+    assert datetime.fromtimestamp(int(sent["trial_end"]), timezone.utc).date() == date(2026, 10, 2)
+    assert sent["collection_method"] == "send_invoice" and sent["metadata[hubricon_first_billed_month]"] == "1"
+
+
+def test_an_invoice_bills_the_month_that_ended_before_it_began():
+    months = _months()
+    assert billing.invoice_month({"period_start": "2026-10-02"}, months)["index"] == 1
+    assert billing.invoice_month({"period_start": "2026-11-02"}, months)["index"] == 2
+    assert billing.invoice_month({"period_start": "2026-08-10"}, months) is None
+
+
+def test_a_month_clears_only_above_the_fee_on_its_own_number_after_disputes():
+    m = _months()[1]
+    assert billing.month_verdict([_row(1, 6000.01)], m, CLIENT)["clears"] is True
+    assert billing.month_verdict([_row(1, 6000.0)], m, CLIENT)["clears"] is False          # a tie is the client's
+    assert billing.month_verdict([_row(1, 7000.0, disputed=1200.0)], m, CLIENT)["clears"] is False
+    # Other months' numbers say nothing about this one: no surplus carries in.
+    assert billing.month_verdict([_row(0, 50000.0), _row(2, 50000.0), _row(1, 100.0)], m, CLIENT)["clears"] is False
+    # The Proving Month is free whatever it measures.
+    assert billing.month_verdict([_row(0, 50000.0)], _months()[0], CLIENT)["clears"] is False
+
+
+def test_a_two_platform_month_waits_for_both_channels_then_adds_them():
+    both = {**CLIENT, "platform": "both"}
+    m = _months()[1]
+    v = billing.month_verdict([_row(1, 9000.0, "amazon")], m, both)
+    assert v["measured"] is False and v["clears"] is False
+    v = billing.month_verdict([_row(1, 4000.0, "amazon"), _row(1, 2500.0, "shopify")], m, both)
+    assert v["measured"] is True and v["total"] == 6500.0 and v["clears"] is True
+
+
+def test_the_letters_say_the_month_number_first_and_never_discount_or_credit():
+    m = _months()[1]
+    cleared = billing.cleared_month_email_blocks(billing.month_verdict([_row(1, 8000.0)], m, CLIENT), "https://x/portal")
+    assert "$8,000" in cleared[0]["p"] and "clears the $6,000 fee by $2,000" in cleared[0]["p"]
+    v = billing.month_verdict([_row(1, 2500.0)], m, CLIENT)
+    for how in ("voided", "refunded"):
+        text = " ".join(b.get("p", "") for b in billing.unbilled_email_blocks(v, how, "https://x/portal"))
+        assert "the month is free" in text and "nothing carried" in text
+        assert "discount" not in text.lower() and "credited" not in text.lower()
+        assert ("refunded in full" in text) is (how == "refunded")
+
+
+def test_at_the_exit_months_that_do_not_clear_come_back_and_months_that_did_stand():
+    months = _months()
+    invoices = [_inv("cleared", "paid", "2026-10-02"), _inv("short", "paid", "2026-11-02"),
+                _inv("open", "open", "2026-12-02")]
+    for i in invoices:
+        i["amount_paid"] = 6000 if i["status"] == "paid" else 0
+    rows = [_row(1, 9000.0), _row(2, 7000.0, disputed=2000.0)]           # month 3 was never measured
+    t = billing.exit_true_up(rows, months, invoices, CLIENT)
+    assert [i["stripe_invoice_id"] for i in t["voids"]] == ["in_open"]
+    assert [(i["stripe_invoice_id"], a) for i, a in t["refunds"]] == [("in_short", 6000.0)]
+    assert t["voided"] == 6000.0 and t["refunded"] == 6000.0 and t["gap"] == 12000.0
+    letter = " ".join(b.get("p", "") + " ".join(b.get("ol", [])) for b in billing.exit_email_blocks(t, "https://x"))
+    assert "did not clear" in letter and "cleared" in letter
+
+
+def _inv(i, status, start, amount=6000):
+    return {"id": f"i{i}", "client_id": "c1", "stripe_invoice_id": f"in_{i}", "status": status,
+            "amount_due": amount, "amount_paid": amount if status == "paid" else 0,
+            "period_start": start, "issued_at": f"{start}T00:00:00Z", "gate_decision": None}

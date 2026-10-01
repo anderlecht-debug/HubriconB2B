@@ -191,7 +191,7 @@ def credit_referrer(db, referred: dict, stripe=None) -> dict | None:
     one month, which applies itself to their next ACH invoice — no coupon
     object, and it works whether or not they are mid-cycle. A referrer still in
     their own free month (or one the gate came back `short` for) gets
-    `free_months + 1`, which `billing.due_for_decision` honours. Idempotent
+    `free_months + 1`, which `billing.due_to_start` honours. Idempotent
     on the referred client's `referral_credit_applied_at`.
     """
     if referred.get("referral_credit_applied_at"):

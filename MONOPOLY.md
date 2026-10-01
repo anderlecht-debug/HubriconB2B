@@ -112,7 +112,7 @@ What the product is at each star, for a founder at $5M a year.
 | 2 | A dashboard. Everything that happened, nothing decided. | the market |
 | 3 | A good PPC agency. Better ROAS on ads alone, still paid on spend. | the market |
 | 4 | A fractional CFO. A monthly P&L; nothing per SKU, nothing executed. | the market |
-| 5 | Five money decisions made in your account, each called in writing before it goes live, measured on your exports, no invoice until the Record covers it. | **live in code** |
+| 5 | Five money decisions made in your account, each called in writing before it goes live, measured on your exports, each month billed only if its own Record clears the fee (per month since 2026-09-30; it was: no invoice until the Record covers it). | **live in code** |
 | 6 | The engine keeps score of itself, and you can see it: promised against measured for every move (live in the portal), plus a published hit rate, the share of calls whose measured outcome landed inside the promised band. | half live; the hit rate is next |
 | 7 | Every call sealed: tamper-evident, time-witnessed pre-registration a buyer or lender can verify without trusting us. | **live 2026-09-25** (`seal.py`, `scripts/verify-record.mjs`; migration applied, first seals with the first real client's first move) |
 | 8 | The first move is as good as the hundredth: a platform change caught in one consenting account is flagged in all; day-one promises priced from what every consenting brand's moves actually delivered. | **detector live 2026-09-25**, inert until three clients consent; priors after the bench |

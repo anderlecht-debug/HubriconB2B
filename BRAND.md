@@ -61,7 +61,7 @@ For private-label brands doing $1M–$30M a year on Amazon and Shopify (the band
 finance function and five tools that report but never decide, Hubricon is the only
 service that makes the money decisions inside the account and is paid only on proof:
 each move called in writing before it goes live, measured on the owner's own reports,
-and no invoice until the Record covers it.
+and no month billed unless its own Record cleared the fee.
 
 ## The enemy
 

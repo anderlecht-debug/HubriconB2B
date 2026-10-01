@@ -198,45 +198,50 @@ and takes the calls. There is no account manager and no support tier. That caps
 how many accounts can run at once, but no ceiling is published and no brand is
 refused, because the founder takes every call.
 
-### The guarantee: Proven or Void
+### The guarantee: Proven or Void, month by month
 
-Rebuilt on 2026-09-25 as a stack of four named guarantees, each answering one
-fear a founder brings to a stranger's $6,000 invoice. All four are in
-`terms.html` and all four are enforced in code; `hubricon promises` names any
-that cannot run for want of a secret.
+Since 2026-09-30 the guarantee runs per month, as `HUBRICON_SPEC.md` ("The
+mechanics") specifies; until then it was one cumulative bar (proven plus found
+since day one against everything billed). The four layers are the spec's, all in
+`terms.html` §3 and §5 and all enforced in code; `hubricon promises` names any that
+cannot run for want of a secret or a migration.
 
-- **Month one is free.** Thirty days of the full service, unconditionally.
-  No card exists to charge.
-- **No bill until the Record covers it.** Every retainer invoice is held at
-  draft by the webhook (`lib/stripe_events.js`) until the operator's gate has
-  judged it: if what the Profit Record has proven, plus what it has found and
-  filed, is more than everything billed since day one (that invoice included),
-  it is sent; if not, it is voided before it reaches the client. At day 30 the
-  code that would start billing checks the Record first, so below the bar **no
-  subscription exists at all**. The bar is cumulative. The work does not stop
-  while the Record catches up. If an invoice ever reaches a client before the
-  check and they paid it, it is **refunded to their bank, never credited**.
-- **Leave any day, trued up.** Cancel by one email, effective immediately, no
-  notice, no fee. `hubricon cancel` ends the subscription; the next operator
-  pass checks the Record once more against everything billed and not refunded,
-  voids anything unpaid, and refunds any gap left (terms §5, within seven days).
-  Found dollars that carried an invoice and later measured short come back
-  here. Data and the full Record export free, any day.
-- **Service until proven.** The work carries on while the Record catches up: a
-  month the Record has not covered is not invoiced, and nothing stops.
+- **The Proving Month is free.** Month 0 of the retainer, unconditionally, plus any
+  month a referral earned (`free_months`). No card exists to charge.
+- **Proven or void, every month on its own.** `monthly.py` re-measures every made
+  move on each closed month's exports alone, against the move's own pre-move
+  baseline, with the cap, the $25 floor and one dollar one move; a leak that
+  stopped holding earns nothing that month (this is what makes persistence a rule).
+  The weekly sweep writes one `record_months` row per client, month and channel a
+  week after the month ends; the row stands (a trigger refuses any change but a
+  dispute, which can only take dollars off). Billing runs in arrears: when the free
+  months end the subscription starts with a trial to the end of the first billed
+  month, so every invoice Stripe raises bills a month that has happened. The
+  webhook holds each at draft; the operator's gate (`_month_gate`) waits until its
+  month is measured, then sends it if the month's number is above the fee and
+  voids it unsent if not. Found-but-unmeasured dollars do not count, and nothing
+  carries between months. A paid invoice for a month that did not clear is
+  **refunded to the bank, never credited**.
+- **Service until proven.** A month that does not clear is not invoiced, and the
+  work carries on.
+- **The open exit.** Cancel by one email, effective immediately. The next operator
+  pass checks every billed month once more against its own number after disputes,
+  voids unpaid invoices for months that no longer clear and refunds paid ones
+  (terms §5, within seven days). The month in progress is never invoiced.
 
-The fourth guarantee was "Late Teardown, free month" until 2026-09-30, when the spec
-killed the Teardown; the four layers are now the spec's own (free Proving Month, proven
-or void, service until proven, the open exit). Terms §2 is now "The call", and the
-operator no longer adds a month on the 24-hour clock.
+**Before this ships** the migration `20261001000001_record_months.sql` must be
+applied: without it no month is measured, every invoice waits held, and nobody is
+billed (the safe failure). The guarantee clause and the liability limit get one
+review by a licensed Texas attorney before the first client signs, as the spec
+requires.
 
 Also: if the email announcing a planned move does not go out, nothing moves.
 The veto window only opens on a sent notice, which is code, not policy.
 
 What is explicitly **not** promised: a result. Forecasts are probabilities and
-Amazon changes its fees without asking. The promise is that the invoice can
-never outrun the proof, and that nobody leaves having paid more than the
-Record shows.
+Amazon changes its fees without asking. The promise is that no month is billed
+unless its own number cleared the fee, and that nobody leaves having paid for a
+month that did not.
 
 **The price of the free month** is a short testimonial and permission to publish an
 anonymised result — asked once, on a private page, each a separate yes. Plus a

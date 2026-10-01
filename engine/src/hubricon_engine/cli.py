@@ -860,6 +860,73 @@ def _measure_for_run(db, client: dict, run_id: str, channel: str, apply: bool = 
     return verdicts
 
 
+def _close_months(db, client: dict, run_id: str, channel: str, today: date | None = None) -> list[dict]:
+    """Measure every retainer month that has closed on this channel and has no row
+    yet, once (monthly.py), and write it. The row stands; the operator's gate reads
+    it to decide the month's invoice. A database without record_months is named in
+    one line and nothing else happens: billing simply waits for the months."""
+    from . import monthly
+    today = today or date.today()
+    months = [m for m in monthly.billing_months(client, today) if m["closed"]]
+    if not months:
+        return []
+    try:
+        have = {int(r["month_index"]) for r in db.table("record_months").select("month_index")
+                .eq("client_id", client["id"]).eq("channel", channel).execute().data}
+    except Exception as err:
+        print(f"  months: not measured — apply supabase/migrations/20261001000001_record_months.sql ({str(err)[:80]})")
+        return []
+    todo = [m for m in months if m["index"] not in have]
+    if not todo:
+        return []
+    directives = (db.table("directives").select("*").eq("client_id", client["id"])
+                  .eq("channel", channel).execute().data)
+    data = _load_data(db, client["id"], channel)
+    margins = db.table("margin_results").select("*").eq("run_id", run_id).execute().data
+    ads_rows = db.table("ad_efficiency_results").select("*").eq("run_id", run_id).execute().data
+    claims = _fetch_claims(db, client["id"]) if channel == "amazon" else []
+    inv_econ = _load_outputs(db, run_id).get("invecon")
+    written = []
+    for m in todo:
+        verdicts = monthly.measure_month(directives, data, margins, ads_rows, claims, m, inv_econ=inv_econ)
+        row = monthly.month_row(client, m, verdicts, channel=channel)
+        db.table("record_months").insert(row).execute()
+        written.append(row)
+        print(f"  month {m['index']} ({m['start']} → {m['end']}, {channel}): ${row['attributed_usd']:,.2f} attributed"
+              + (" · free" if m["free"] else f" · {'clears' if row['clears'] else 'does not clear'} "
+                                            f"the ${row['fee_usd']:,.0f} fee"))
+    return written
+
+
+def cmd_dispute(args):
+    """HUBRICON_SPEC.md, disputes: a dollar the client questions is settled by opening
+    its record together; if the record does not settle it, it comes off the month,
+    removed, not split. This takes it off: record_months.disputed_usd rises (the
+    trigger allows nothing else, and never downward), the note is kept, and the
+    operator's next pass judges the month again: a billed month the dispute takes
+    under the fee is voided if unpaid and refunded if paid."""
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    rows = (db.table("record_months").select("*").eq("client_id", client["id"])
+            .eq("month_index", args.month).eq("channel", args.channel).execute().data)
+    if not rows:
+        sys.exit(f"{name}: month {args.month} on {args.channel} has not been measured; nothing to dispute yet.")
+    row = rows[0]
+    room = float(row["attributed_usd"]) - float(row.get("disputed_usd") or 0)
+    take = round(min(float(args.usd), max(0.0, room)), 2)
+    if take <= 0:
+        sys.exit(f"{name}: month {args.month} has nothing left on it to take off.")
+    note = f"{date.today().isoformat()}: ${take:,.2f} removed — {args.note}"
+    db.table("record_months").update({
+        "disputed_usd": round(float(row.get("disputed_usd") or 0) + take, 2),
+        "dispute_notes": ((row.get("dispute_notes") or "") + ("\n" if row.get("dispute_notes") else "") + note),
+    }).eq("id", row["id"]).execute()
+    after = round(room - take, 2)
+    print(f"{name}: month {args.month} ({row['month_start']} → {row['month_end']}, {args.channel}) now stands at "
+          f"${after:,.2f}; ${take:,.2f} came off. The operator's next pass judges it again.")
+
+
 def cmd_replay(args):
     """Replay every measured directive and score the promises against outcomes.
 
@@ -2308,6 +2375,9 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
     # Measure what was approved before, from the exports that just landed, then
     # recompute the ledger so this sweep's own findings are in it.
     verdicts = _measure_for_run(db, client, run_id, channel)
+    # Then every month that has closed, once, on its own number (monthly.py): the
+    # number the month's invoice is judged against.
+    out["months_closed"] = len(_close_months(db, client, run_id, channel))
     out["measured"] = sum(1 for v in verdicts if v["verdict"] == "measured")
     out["measured_usd"] = round(sum(float(v["measured_impact_usd"] or 0)
                                     for v in verdicts if v["verdict"] == "measured"), 2)
@@ -2588,7 +2658,7 @@ def cmd_cancel(args):
         print("  Nothing to true up: " + ("already done." if client.get("exit_trued_up_at") else "never billed."))
         return
     preview = operator.Pass(db, send=False, dry=True)
-    preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing, valuemod)
+    preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing)
     for line in preview.notes:
         print(f"  {line.replace('[dry] ', 'next operator pass: ')}")
 
@@ -2795,10 +2865,18 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         if sealed["status"] == "ready" else sealed["reason"])
 
     stripe_ok = billing.stripe_configured() and bool(os.environ.get("STRIPE_PRICE_ID"))
-    add("No invoice unless we found more than we cost", "terms §3, 8 surfaces", stripe_ok,
-        "the day-30 pass creates the subscription" if stripe_ok
-        else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — a client who clears the bar is "
-             "flagged in the digest instead of billed. Nobody is ever wrongly billed.")
+    add("A month is billed only if it clears the fee", "terms §3, index, welcome", stripe_ok,
+        "billing runs in arrears: each invoice is held at draft until its month is measured, sent if the month "
+        "cleared the fee, voided unsent if it did not" if stripe_ok
+        else "STRIPE_SECRET_KEY / STRIPE_PRICE_ID missing — no subscription starts, so no invoice exists. "
+             "Every month is still measured. Nobody is billed.")
+    try:
+        db.table("record_months").select("id").limit(1).execute()
+        months_ok, months_detail = True, "the weekly sweep writes each closed month once (monthly.py); it stands"
+    except Exception:
+        months_ok, months_detail = False, ("migration 20261001000001_record_months.sql not applied — no month is "
+                                           "measured, so every invoice waits held and nobody is billed")
+    add("Every closed month is measured once, on its own exports", "terms §3", months_ok, months_detail)
 
     add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
         "hubricon export <client>")
@@ -2813,15 +2891,12 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
                   "paused until it is")
     if schema:
         add("The billing pass can run", "terms §3, §5", False, schema)
-    add("No bill reaches you before the Record covers it", "terms §3, index, welcome", stripe_ok,
-        "the webhook holds each retainer invoice at draft; the gate sends it if covered, voids it unsent if not"
-        if stripe_ok else "STRIPE_SECRET_KEY missing — a held invoice waits unsent and an uncovered one is "
-                          "flagged in the digest instead of voided. Nobody is wrongly billed; nobody is billed.")
-    add("A paid month the Record stops covering is refunded, not credited", "terms §3, index", stripe_ok,
-        "a credit note refunds the ACH payment to the account it came from" if stripe_ok
+    add("A month a dispute takes under the fee is refunded, not credited", "terms §3", stripe_ok,
+        "at the exit, a credit note refunds the ACH payment to the account it came from" if stripe_ok
         else "STRIPE_SECRET_KEY missing — the refund is flagged in the digest instead of made")
     add("Trued up the day you leave", "terms §5, index", stripe_ok,
-        "`hubricon cancel` ends the subscription; the next pass voids the unpaid and refunds the rest of any gap"
+        "`hubricon cancel` ends the subscription; the next pass checks every billed month again, voids the unpaid "
+        "and refunds the paid ones that no longer clear"
         if stripe_ok else "STRIPE_SECRET_KEY missing — a departed client's true-up is flagged, not made")
     add("Recovery-only clients pay only on money that landed", "terms §4", True,
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
@@ -3612,6 +3687,15 @@ def main():
                                       "exit true-up on the next operator pass")
     p.add_argument("client")
     p.set_defaults(fn=cmd_cancel)
+
+    p = sub.add_parser("dispute", help="take a disputed dollar the record cannot defend off a measured month; "
+                                       "the next operator pass judges the month again")
+    p.add_argument("client")
+    p.add_argument("--month", type=int, required=True, help="the retainer month's index (0 is the Proving Month)")
+    p.add_argument("--usd", type=float, required=True, help="dollars to take off; never more than the month has")
+    p.add_argument("--note", required=True, help="what was disputed and why the record did not settle it")
+    p.add_argument("--channel", default="amazon", choices=["amazon", "shopify"])
+    p.set_defaults(fn=cmd_dispute)
 
     p = sub.add_parser("stripe-smoke", help="run every Stripe call the billing path makes against a TEST-mode "
                                             "key (STRIPE_SECRET_KEY=sk_test_…), then clean up")

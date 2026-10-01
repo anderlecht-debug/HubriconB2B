@@ -68,13 +68,15 @@ test("the terms and /honesty carry the attribution rules word for word", () => {
 
 test("the rules claim only the guards the engine enforces", () => {
   const block = text(read("scripts/blocks/attribution.html"));
-  // measurement.py enforces the cap, the $25 floor and one dollar, one move; persistence is not yet code.
-  assert.match(block, /Three rules apply to every dollar/);
+  // measurement.py enforces the cap, the $25 floor and one dollar, one move; monthly.py re-measures
+  // every move on each month's own exports, which is what makes "it has to last" a rule.
+  assert.match(block, /Four rules apply to every dollar/);
   assert.match(block, /Nothing under \$25/);
-  assert.doesNotMatch(block, /it has to last|only if it lasts|still be there in your latest export/i);
+  assert.match(block, /It has to last/);
   const engine = read("engine/src/hubricon_engine/measurement.py");
   assert.match(engine, /^MEASURE_MIN_USD = 25\.0/m);
   assert.match(engine, /^MEASUREMENT_HORIZON_DAYS = 30/m);
+  assert.match(read("engine/src/hubricon_engine/monthly.py"), /^def measure_month\(/m);
 });
 
 test("/honesty says there are no client results before it says anything else", () => {
