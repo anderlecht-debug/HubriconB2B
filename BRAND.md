@@ -244,6 +244,8 @@ Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
   until a client fills it, and says so in the largest type on the page.
 - **The receipt** (`.rcpt`): a move, how we know, the dollars called before, measured after,
   and what they count for under the rules.
+- **A hash** (`.hash`, on `/verify` and the printed Record): set in Inter with
+  `font-feature-settings: "zero"` and tabular numerals, in groups of eight; never a monospace face.
 - **The course's email field** (`.join-tile`): on the featured course card, where
   Acquisition.com asks for its email. One field, its own outline button ("Open the course →"),
   one line of what follows and the privacy link. It sends what the course page's form sends and

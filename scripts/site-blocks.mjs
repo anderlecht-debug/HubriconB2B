@@ -37,7 +37,7 @@ const TRUST = [
   ["Your data", "/your-data", "What we ask for, where it lives, and how you take it back."],
 ];
 const WRITING = [["The terms", "/terms"], ["Privacy", "/privacy"], ["The guarantee", "/#offer"]];
-const PROOF = [["The case study", "/#case-study"], ["The results wall", "/#results"]];
+const PROOF = [["The case study", "/#case-study"], ["The results wall", "/#results"], ["Check a Profit Record", "/verify"]];
 
 // ------------------------------------------------------------------ the nav ----
 /* The motion switch, first thing in the body: .motion only when scripts run and the
@@ -80,7 +80,7 @@ function nav(lib) {
     <div class="sheet-in">
       <div class="sheet-group">${TABS.map(([t, h]) => `<a class="sheet-big" href="${h}">${esc(t)}</a>`).join("")}</div>
       <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a>${live.map((c) => `<a class="sheet-mid" href="${c.path}">${esc(c.title)}</a>`).join("")}</div>
-      <div class="sheet-group"><p class="sheet-k">Trust</p>${TRUST.map(([t, h]) => `<a class="sheet-mid" href="${h}">${esc(t)}</a>`).join("")}<a class="sheet-mid" href="/terms">The terms</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p>${TRUST.map(([t, h]) => `<a class="sheet-mid" href="${h}">${esc(t)}</a>`).join("")}<a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
     </div>
   </div>`;
   return `
@@ -121,7 +121,7 @@ function foot(lib) {
     <div class="foot-cols">
       ${col("The work", TABS)}
       ${col("Education", [["All courses", "/learn"], ...live.map((c) => [c.title, c.path])])}
-      ${col("Trust", TRUST.map(([t, h]) => [t, h]))}
+      ${col("Trust", [...TRUST.map(([t, h]) => [t, h]), ["Check a Profit Record", "/verify"]])}
       ${col("Legal", [["Terms", "/terms"], ["Privacy", "/privacy"]])}
     </div>
     <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>

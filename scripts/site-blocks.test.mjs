@@ -14,7 +14,7 @@ const read = (p) => readFileSync(new URL(p, root), "utf8");
 const json = (p) => JSON.parse(read(p));
 const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 const lib = json("data/library.json");
-const PUBLIC = ["index.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "learn/index.html", "learn/fee-staircase.html"];
+const PUBLIC = ["index.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "verify.html", "learn/index.html", "learn/fee-staircase.html"];
 
 test("every public page carries the one nav and the one footer, and the script that runs them", () => {
   const blocks = siteBlocks();

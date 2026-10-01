@@ -38,8 +38,9 @@ test("on the one design system, in the one face: no palette, no monospace, hashe
   assert.match(rule, /font-feature-settings: "zero"/);
   assert.match(rule, /font-variant-numeric: tabular-nums/);
   assert.equal(page.groups("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), "01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef");
-  assert.doesNotMatch(html, /class="btn\b/, "the call is the only solid button on the site, and this page books nothing");
-  assert.doesNotMatch(html, /<!-- build:/, "the shared nav and footer are built in by the site's own build, not here");
+  const own = html.replace(/<!-- build:(nav|foot) -->[\s\S]*?<!-- \/build:\1 -->/g, "");
+  assert.doesNotMatch(own, /class="btn\b/, "this page books nothing: the only call on it is the site's own, in the bar");
+  assert.deepEqual([...html.matchAll(/<!-- build:([a-z-]+) -->/g)].map(([, b]) => b), ["nav", "foot"], "the bar and the footer are the site's, built in by scripts/build-pages.mjs; nothing else is");
 });
 
 test("it says plainly what the Seal cannot prove yet", () => {

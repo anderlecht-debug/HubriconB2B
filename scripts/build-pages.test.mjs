@@ -43,7 +43,7 @@ test("one action: every button says the same thing and goes to the same place", 
   }
   for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
+  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
   // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
   // education tab"); none of them is a button, and none of them sells anything but the call.
   const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];

@@ -287,6 +287,7 @@ export const PAGES = [
   { file: "terms.html" },
   { file: "privacy.html" },
   { file: "your-data.html" },
+  { file: "verify.html" },
   { file: "portal.html" },
   { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
