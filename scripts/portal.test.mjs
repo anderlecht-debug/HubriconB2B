@@ -312,7 +312,8 @@ test("the migration lets a member withdraw only what the terms name, and give ba
   assert.match(migration, /revoke execute on function public\.set_my_consent\(uuid, text, boolean\) from public, anon;/);
   assert.match(migration, /revoke execute on function public\.my_portal\(uuid\) from public, anon;/);
   // the kinds the RPC accepts are the /say page's, less the one the terms do not name
-  const say = read("api/consent.js").match(/const KINDS = \[([^\]]+)\]/)[1].match(/"([a-z_]+)"/g).map((s) => s.slice(1, -1));
+  // (the /say page's words and kinds moved to lib/consent_page.js on 2026-10-01)
+  const say = read("lib/consent_page.js").match(/export const KINDS = \[([^\]]+)\]/)[1].match(/"([a-z_]+)"/g).map((s) => s.slice(1, -1));
   same(say.filter((k) => k !== "named_results").sort(), ["anonymised_results", "calibration", "network", "testimonial"]);
 });
 
