@@ -33,7 +33,7 @@
    "kind": "staircase",
    "seconds": 30,
    "heading": "One step down: {{step_np}} a unit less.",
-   "caption": "{{step_peak}} less from {{peak_from}}. On roughly {{units}} units a month, {{leak_p10}} to {{leak_p90}} a year, estimate."
+   "caption": "{{leak_p10}} to {{leak_p90}} a year, estimate."
   },
   {
    "id": "b5",

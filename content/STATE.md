@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-01T04:55:04+00:00 · style locked: False
+Updated 2026-10-01T04:59:09+00:00 · style locked: False
 
 ## Capabilities
 
@@ -18,8 +18,6 @@ Updated 2026-10-01T04:55:04+00:00 · style locked: False
 
 ## Awaiting your review
 
-- T01 · October 15: what Amazon's holiday fees cost one listing, to the cent · gate `review` → see `content/REVIEW.md`
-- F01 · The case-study film: one listing, a fraction of an ounce past an edge · gate `review` → see `content/REVIEW.md`
 - V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
 - V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
 - V05 · Cash conversion cycle: the number that decides whether you survive · gate `review` → see `content/REVIEW.md`
@@ -39,6 +37,8 @@ Updated 2026-10-01T04:55:04+00:00 · style locked: False
 
 ## Blocked on founder input
 
+- T01 · October 15: what Amazon's holiday fees cost one listing, to the cent: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.
+- F01 · The case-study film: one listing, a fraction of an ounce past an edge: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.

@@ -1,8 +1,9 @@
-/* The film's stage: the site's design system at 1920 × 1080. Every value is a token
+/* The film's stage: the site's design system at 1920 × 1080, in Inter Display at sizes a
+   phone can read (the founder's pick of four, 2026-09-30: text 40 px and up at 1080p). Every value is a token
    from /assets/hubricon.css; this file only lays the stage out and adds the one
    text entrance the charts do not already carry. Frozen with the style lock. */
 
-html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--paper); }
+html, body { margin: 0; font-optical-sizing: auto; width: 1920px; height: 1080px; overflow: hidden; background: var(--paper); }
 #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
 
 .scene { position: absolute; inset: 0; padding: 120px 160px 132px; display: flex; flex-direction: column; justify-content: center; }
@@ -13,17 +14,17 @@ html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; backgro
 .display + .display { margin-top: 28px; }
 .display.small { font-size: 72px; max-width: 22ch; }
 .display .money { color: var(--blue); }
-.heading { font-size: 60px; font-weight: var(--strong); letter-spacing: -0.028em; line-height: 1.1; color: var(--ink); max-width: 28ch; }
-.caption { margin-top: 28px; font-size: 32px; line-height: 1.45; color: var(--ink-2); max-width: 52ch; }
-.number { font-size: 168px; font-weight: var(--strong); letter-spacing: -0.045em; line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
+.heading { font-size: 72px; font-weight: var(--strong); letter-spacing: -0.028em; line-height: 1.1; color: var(--ink); max-width: 28ch; }
+.caption { margin-top: 24px; font-size: 44px; line-height: 1.4; color: var(--ink-2); max-width: 46ch; }
+.number { font-size: 168px; font-weight: var(--strong); letter-spacing: -0.04em; line-height: 1; color: var(--blue); font-variant-numeric: lining-nums proportional-nums; }
 .number.ink { color: var(--ink); }   /* a figure that is not money or the leak */
-.number-sub { margin-top: 32px; font-size: 52px; font-weight: var(--strong); letter-spacing: -0.02em; color: var(--ink); max-width: 26ch; }
+.number-sub { margin-top: 32px; font-size: 56px; font-weight: var(--strong); letter-spacing: -0.02em; color: var(--ink); max-width: 26ch; }
 .est { font-size: 28px; color: var(--ink-3); vertical-align: 0.9em; margin-left: 12px; letter-spacing: 0.02em; font-weight: var(--regular); }
 
 /* A chart takes the stage's width; the site's own SVG, scaled. */
-.chart-frame { margin-top: 40px; flex: 1; min-height: 0; display: flex; align-items: center; }
-.chart-frame svg { width: 100%; height: 100%; max-height: 640px; }
-.chart-frame .chart text { font-size: inherit; }
+.chart-frame { margin-top: 32px; flex: 1; min-height: 0; display: flex; align-items: center; }
+.chart-frame svg { width: 100%; height: 100%; }
+
 
 .ctas { margin-top: 56px; display: flex; gap: 40px; align-items: center; }
 .cta-btn { display: inline-flex; align-items: center; gap: 20px; height: 96px; padding: 0 48px; border-radius: 16px; background: var(--ink); color: var(--paper); font-size: 40px; font-weight: var(--strong); }
@@ -34,9 +35,9 @@ html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; backgro
 
 /* Always on a proof scene; never animated, never off. */
 .corner { position: absolute; left: 160px; right: 160px; bottom: 56px; display: flex; justify-content: space-between; align-items: center; }
-.corner .label-box { font-size: 20px; padding: 6px 16px; }
-.mark { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-weight: var(--strong); font-size: 28px; letter-spacing: -0.02em; margin-left: auto; }
-.mark svg { width: 34px; height: 34px; }
+.corner .label-box { font-size: 28px; padding: 8px 18px; letter-spacing: 0.06em; }
+.mark { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-weight: var(--strong); font-size: 34px; letter-spacing: -0.02em; margin-left: auto; }
+.mark svg { width: 40px; height: 40px; }
 
 /* Text arrives once: a short rise and fade, then still. --at staggers it. */
 .in { animation: film-in 700ms var(--ease-out) var(--at, 0ms) both; }

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-01T04:55:04+00:00",
+ "updated_at": "2026-10-01T04:59:09+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -25,8 +25,8 @@
     "case_study",
     "ratecard"
    ],
-   "status": "awaiting",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -34,8 +34,8 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
-    "tts": "todo",
+    "review": "approved",
+    "tts": "blocked",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -63,6 +63,16 @@
      "at": "2026-10-01T03:54:02+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-01T04:58:57+00:00",
+     "step": "review",
+     "note": "approved by the founder Approved by Hagen Simmons 2026-09-30: 'I am liking everything I'm seeing.'"
+    },
+    {
+     "at": "2026-10-01T04:59:09+00:00",
+     "step": "tts",
+     "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films."
     }
    ]
   },
@@ -79,8 +89,8 @@
     "case_study",
     "ratecard"
    ],
-   "status": "awaiting",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -88,8 +98,8 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
-    "tts": "todo",
+    "review": "approved",
+    "tts": "blocked",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -117,6 +127,16 @@
      "at": "2026-10-01T03:54:02+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-01T04:58:58+00:00",
+     "step": "review",
+     "note": "approved by the founder Approved by Hagen Simmons 2026-09-30: 'I am liking everything I'm seeing.'"
+    },
+    {
+     "at": "2026-10-01T04:59:09+00:00",
+     "step": "tts",
+     "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films."
     }
    ]
   },

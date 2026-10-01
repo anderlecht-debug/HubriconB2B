@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { checkBoard } from "./check.mjs";
 import { beats } from "./record.mjs";
-import { sceneHTML, STYLE_REEL, fill } from "./scenes.mjs";
+import { sceneHTML, STYLE_REEL, fill, FILM_CHART } from "./scenes.mjs";
 import { figures } from "../../scripts/build-pages.mjs";
 
 const root = new URL("../../", import.meta.url);
@@ -40,9 +40,10 @@ test("the style reel says only what the home page already says, with the site's 
   for (const s of STYLE_REEL.scenes) assert.ok(sceneHTML(s, built).length > 100);
 });
 
-test("a chart scene is the site's own chart, under its label", () => {
+test("a chart scene is the site's own chart code, drawn at film size, under its label", () => {
   const html = sceneHTML({ id: "x", kind: "staircase", heading: "h" }, built);
-  assert.ok(html.includes(built.blocks["stairs-wide"]), "the home page's staircase, not a redrawing");
+  assert.ok(html.includes(FILM_CHART.staircase(built.charts)), "the home page's staircase function, not a redrawing");
+  assert.match(FILM_CHART.staircase(built.charts), /font-size="30"/, "labels a phone can read");
   assert.match(html, /Modeled from public data · Not a client · Not a result/);
 });
 
