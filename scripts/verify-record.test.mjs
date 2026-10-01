@@ -9,15 +9,18 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash, randomBytes } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import {
-  FORMAT, GENESIS, SealError, canonicalize, sha256, leafOf, link, verifyBundle, readZipEntry, loadBundle,
+  FORMAT, GENESIS, SealError, canonicalize, sha256, leafOf, link, verifyBundle, readZipEntry, loadBundle, locate, cleanHash,
 } from "./verify-record.mjs";
+import * as page from "../assets/verify.js";
 
 const golden = JSON.parse(readFileSync(new URL("./record-seal.golden.json", import.meta.url)));
 const SCRIPT = fileURLToPath(new URL("./verify-record.mjs", import.meta.url));
 const clone = (v) => JSON.parse(JSON.stringify(v));
+const coreOf = (src) => src.slice(src.indexOf("// ---- core: begin"), src.indexOf("// ---- core: end ----"));
 
 function mutate(bundle, t) {
   const b = clone(bundle);
@@ -168,4 +171,76 @@ test("the command: exit 0 when intact, 1 at the first broken entry, 2 when unrea
   writeFileSync(junk, "{\"format\": \"something-else\"}");
   run = spawnSync(process.execPath, [SCRIPT, junk], { encoding: "utf8" });
   assert.equal(run.status, 2);
+});
+
+test("SHA-256 is computed in the core, and it is the same SHA-256 as Node's, at every length", () => {
+  for (let n = 0; n <= 300; n++) {
+    const b = randomBytes(n);
+    assert.equal(sha256(b), createHash("sha256").update(b).digest("hex"), `${n} bytes`);
+  }
+  const big = randomBytes(1 << 20);
+  assert.equal(sha256(big), createHash("sha256").update(big).digest("hex"), "a megabyte");
+  assert.equal(sha256("é€😀"), createHash("sha256").update("é€😀", "utf8").digest("hex"), "a string is hashed as its UTF-8");
+});
+
+test("hubricon.com/verify runs the same core, byte for byte, and it needs no Node", () => {
+  const script = readFileSync(new URL("./verify-record.mjs", import.meta.url), "utf8");
+  const browser = readFileSync(new URL("../assets/verify.js", import.meta.url), "utf8");
+  const core = coreOf(script);
+  assert.ok(core.length > 1000, "the core is marked in scripts/verify-record.mjs");
+  assert.equal(coreOf(browser), core, "assets/verify.js carries scripts/verify-record.mjs's core unchanged: copy it across");
+  assert.doesNotMatch(core, /\bBuffer\b|\bprocess\.|node:|require\(/, "nothing in the core is Node's");
+  assert.doesNotMatch(browser, /^import\s/m, "the page imports nothing");
+});
+
+test("the browser's copy checks the golden export as the command does, and reads the zip itself", async () => {
+  assert.deepEqual(page.verifyBundle(golden.export), verifyBundle(golden.export));
+  for (const t of golden.tampered) assert.deepEqual(page.verifyBundle(mutate(golden.export, t)), verifyBundle(mutate(golden.export, t)), t.name);
+  const data = Buffer.from(JSON.stringify(golden.export), "utf8");
+  for (const method of [0, 8]) {
+    const buf = zip([{ name: "MANIFEST.txt", data: Buffer.from("x"), method }, { name: "record-seal.json", data, method }]);
+    assert.deepEqual(await page.readRecord(new Uint8Array(buf)), golden.export, `zip method ${method}, through DecompressionStream`);
+  }
+  assert.deepEqual(await page.readRecord(new Uint8Array(data)), golden.export, "a bare record-seal.json");
+  await assert.rejects(page.readRecord(new Uint8Array(zip([{ name: "other.json", data, method: 8 }]))), /no record-seal\.json/);
+});
+
+test("the browser's own Web Crypto agrees with the core on every leaf and link, and would say if it did not", async () => {
+  const ok = await page.crossCheck(golden.export);
+  assert.equal(ok.agree, true);
+  assert.equal(ok.hashes, golden.export.entries.length * 3 + golden.export.global.leaves.length);
+});
+
+test("a head from a printed page: found at its place, grouped or bare, quoted or not; never vouched for alone", () => {
+  const b = golden.export;
+  const at4 = b.entries[3];
+  const grouped = `"${at4.head.match(/.{8}/g).join(" ")}"`;
+  assert.equal(cleanHash(grouped), at4.head);
+  const hit = locate(b, grouped).hits;
+  assert.deepEqual(hit.map((h) => [h.where, h.seq, h.of]), [["head", 4, 6]]);
+  assert.equal(hit[0].sealed_at, at4.document.sealed_at);
+  assert.deepEqual(locate(b, at4.leaf.slice(0, 12)).hits, [], "a measured entry's leaf is not an email's seal");
+  assert.deepEqual(locate(b, b.entries[1].leaf.slice(0, 12)).hits.map((h) => [h.where, h.seq]), [["seal", 2]]);
+  assert.deepEqual(locate(b, b.global.head).hits.map((h) => [h.where, h.global_seq]), [["global_chain", 9]]);
+  assert.equal(locate(b, "not a hash").readable, false);
+
+  const state = { record: b, result: verifyBundle(b), sample: false };
+  assert.match(page.describeFind(state, grouped), /head after entry 4 of 6, sealed Oct 26, 2026\. Every entry up to it is exactly what it was/);
+  assert.match(page.describeFind({ record: null }, grouped), /^Load a Record export first\. A hash on its own proves nothing/);
+  const broken = mutate(b, golden.tampered[0]);
+  assert.match(page.describeFind({ record: broken, result: verifyBundle(broken) }, grouped), /did not pass the check above, so finding a hash in it would prove nothing/);
+  // A Record rewritten consistently checks out on its own; the printed head it could not rewrite is not in it.
+  const { bundle, witness_that_catches_it } = golden.rewritten;
+  const rewritten = { record: bundle, result: verifyBundle(bundle) };
+  assert.equal(rewritten.result.status, "ok");
+  for (const w of witness_that_catches_it) assert.match(page.describeFind(rewritten, w), /^Not in this Record\./);
+});
+
+test("the published head is compared at the same position, and a gap is said to be a gap", () => {
+  const b = golden.export;
+  const state = { record: b, result: verifyBundle(b), sample: false };
+  assert.match(page.describePublished({ head: b.global.head, entries: b.global.entries }, state), /matches/);
+  assert.match(page.describePublished({ head: GENESIS, entries: b.global.entries }, state), /differ/);
+  assert.match(page.describePublished({ head: GENESIS, entries: b.global.entries + 5 }, state), /Joining the two needs the fingerprints in between/);
+  assert.match(page.describePublished({ head: b.global.head, entries: 9 }, { ...state, sample: true }), /sample is invented/);
 });
