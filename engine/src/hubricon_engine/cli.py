@@ -984,11 +984,15 @@ def cmd_directives(args):
             print("not notified — window not opened: RESEND_API_KEY is not set, so the drafts stay drafts.")
         else:
             res = issue.issue_drafts(db, client, _run_channel(client, run), PORTAL_URL, send=True)
-            if res["issued"] and res["notified"]:
+            if res.get("gated"):
+                # lifecycle.may_send: a move notice goes only to a client who has said yes
+                state = (f"NOT issued — the client is '{res['gated']}', and moves go only to a client who has "
+                         f"said yes; {res['held']} draft(s) stay drafts, unsent and unsealed")
+            elif res["issued"] and res["notified"]:
                 state = "issued and notified (veto window open)"
             elif res["issued"]:
                 state = "issued but NOT notified — no veto window opened, so none of them can auto-approve"
-            if res["held"]:
+            if res["held"] and not res.get("gated"):
                 state += f"; {res['held']} draft(s) held for the next issue"
             if res.get("seal"):
                 state += f"; seal: {res['seal']}" + (f" ({res['seal_reason']})" if res.get("seal_reason") else "")
@@ -2372,7 +2376,7 @@ def cmd_issue(args):
     today = date.today()
     clients = ([dbmod.resolve_client(db, args.client)] if args.client
                else db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data)
-    published = 0
+    published = held = 0
     for client in clients:
         name = client["company_name"] or client["contact_email"]
         if onboarding.is_internal(client["contact_email"], client.get("contact_name")) and not args.client:
@@ -2386,9 +2390,17 @@ def cmd_issue(args):
             print("  [dry] would publish the next issue")
             continue
         for channel in channels.channels_for(client.get("platform")):
-            if _publish_issue(db, client, channel, send=args.send, today=today):
+            res = _publish_issue(db, client, channel, send=args.send, today=today)
+            if not res:
+                continue
+            # From No. 002 a Brief is drafted and waits for `hubricon approve`:
+            # nothing reached the client, so it is not counted as published.
+            if res.get("held"):
+                held += 1
+            else:
                 published += 1
-    print(f"\n{published} issue(s) published.")
+    print(f"\n{published} issue(s) published."
+          + (f" {held} held for your approval: hubricon approve <client> --show" if held else ""))
 
 
 def cmd_brief(args):

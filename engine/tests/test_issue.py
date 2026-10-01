@@ -312,3 +312,44 @@ def test_the_gate_reads_the_row_as_it_is_now_not_the_row_it_was_handed(monkeypat
     assert issue.issue_drafts(yes, {"id": "c1", "contact_email": "d@x.test"}, "amazon", "https://x")["issued"] == 1
     no = Rows(clients=[{"id": "c1", "status": "declined"}], directives=[_d(1)])
     assert issue.issue_drafts(no, CLIENT, "amazon", "https://x")["gated"] == "declined"
+
+
+def test_issue_flag_for_a_client_who_has_not_said_yes_says_the_moves_wait_for_the_yes(monkeypatch, capsys):
+    """issue_drafts holds every draft of a client who has not said yes
+    (lifecycle.may_send). The command used to call that "held for the next
+    issue"; it says why they were held instead."""
+    from hubricon_engine import cli
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda *a, **k: True)
+    monkeypatch.setattr(cli, "email_configured", lambda: True)
+    db = FakeDB([_d(1), _d(2)])
+    args = _directives_args(db, monkeypatch, issue_flag=True)
+    called = {**CLIENT, "retainer_started_at": None}
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: called)
+    cli.cmd_directives(args)
+    out = capsys.readouterr().out
+    assert "NOT issued" in out and "said yes" in out and "2 draft(s) stay drafts" in out
+    assert "held for the next issue" not in out
+    assert [d["status"] for d in db.rows("directives")] == ["draft", "draft"]
+
+
+def test_hubricon_issue_counts_a_held_draft_as_held_not_published(monkeypatch, capsys):
+    """From No. 002 a Brief waits for `hubricon approve`; the summary must not
+    call it published."""
+    from types import SimpleNamespace
+    from hubricon_engine import cli
+    db = FakeDB([])
+    monkeypatch.setattr(cli.dbmod, "connect", lambda: db)
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: {**CLIENT, "company_name": "Acme",
+                                                                          "platform": "amazon"})
+    monkeypatch.setattr(cli, "_issue_due", lambda _db, _c, _t: (True, "due"))
+    results = iter([{"issue_number": 2, "held": True, "emailed": False}])
+    monkeypatch.setattr(cli, "_publish_issue", lambda *a, **k: next(results))
+    cli.cmd_issue(SimpleNamespace(client="dana@acme.test", force=False, dry_run=False, send=True))
+    out = capsys.readouterr().out
+    assert "0 issue(s) published. 1 held for your approval" in out
+
+    results = iter([{"issue_number": 1, "emailed": True}])
+    cli.cmd_issue(SimpleNamespace(client="dana@acme.test", force=False, dry_run=False, send=True))
+    out = capsys.readouterr().out
+    assert "1 issue(s) published." in out and "held for your approval" not in out
