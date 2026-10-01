@@ -24,9 +24,9 @@ model change.
 - **One client's data never advises another** without the consent the terms name (§10).
 - **The home page meets the Hormozi standard:** one action ("Book your call →", to
   `/apply`), under about 900 visible words, no proof that does not exist.
-  `scripts/build-home.test.mjs` checks all three.
+  `scripts/build-pages.test.mjs` checks all three.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
-  `node scripts/case-study.mjs` then `node scripts/build-home.mjs`; the test fails a stale page.
+  `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.
 - **One design system.** Every page reads `/assets/hubricon.css`. No page keeps a private
   palette. Blue is for money and the leak, nothing else.
 - **Model changes re-run the bench.** Any change to elasticity, pricing, forecast,

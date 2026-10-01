@@ -12,6 +12,11 @@
   ],
   "redirects": [
     {
+      "source": "/results",
+      "destination": "/honesty",
+      "permanent": false
+    },
+    {
       "source": "/teardown",
       "destination": "/",
       "permanent": false

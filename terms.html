@@ -6,51 +6,46 @@
 <title>Terms of Service — Hubricon</title>
 <meta name="description" content="The terms behind Managed Profit: the call, the Proving Month, the flat fee, the Profit Record, the standing mandate, and the exit.">
 <link rel="canonical" href="https://www.hubricon.com/terms">
-<meta name="theme-color" content="#f2f3f8">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23FFC000' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23FFC000'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* Legal pages share the welcome page's paper-and-gold system: one column, readable. */
-:root{
-  --bg: hsl(222 28% 96%); --panel: hsl(0 0% 100%); --panel-2: hsl(222 26% 94%);
-  --amber: hsl(40 96% 33%); --ink: hsl(228 44% 11%); --ink-soft: hsl(228 26% 26%);
-  --ink-faint: hsl(228 16% 42%); --hairline: hsl(228 30% 20% / .14);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+/* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
+.wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+h1 { font-size: var(--t-display-m); }
+h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
+h3 { font-size: var(--t-18); letter-spacing: -0.01em; line-height: 1.3; margin: var(--s-5) 0 var(--s-2); }
+p { margin: 0 0 var(--s-4); max-width: 68ch; font-size: var(--t-16); }
+ul, ol { margin: 0 0 var(--s-4); padding-left: var(--s-5); max-width: 68ch; font-size: var(--t-16); }
+li { margin-bottom: var(--s-2); }
+a { color: var(--ink); text-underline-offset: 3px; }
+.meta { font-size: var(--t-14); color: var(--ink-3); margin: var(--s-3) 0 var(--s-6); }
+.lede { font-size: var(--t-20); line-height: 1.55; color: var(--ink); max-width: 58ch; margin-bottom: var(--s-3); }
+.panel { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-5) var(--s-6); margin: var(--s-5) 0 var(--s-3); }
+.panel ul { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
+th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
+th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
+@media (max-width: 640px) {
+  .panel { padding: var(--s-4); }
+  th, td { display: block; padding: var(--s-1) 0; border: 0; }
+  tr { display: block; padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 }
-*{ box-sizing: border-box; margin: 0; }
-body{ background: var(--bg); color: var(--ink-soft); font-family: var(--sans); font-size: 15.5px; line-height: 1.7; padding: 40px 20px 90px; }
-.wrap{ max-width: 720px; margin: 0 auto; }
-h1, h2, h3{ font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
-h1{ font-size: clamp(30px, 6vw, 42px); line-height: 1.12; text-wrap: balance; }
-h2{ font-size: 22px; margin: 40px 0 10px; }
-h3{ font-size: 16.5px; margin: 22px 0 6px; }
-p{ margin: 0 0 14px; max-width: 68ch; }
-ul, ol{ margin: 0 0 16px; padding-left: 22px; max-width: 68ch; }
-li{ margin-bottom: 6px; }
-a{ color: var(--amber); }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); text-decoration: none; }
-.wordmark i{ font-style: normal; color: var(--amber); }
-.masthead{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--hairline); padding-bottom: 18px; margin-bottom: 34px; }
-.masthead .mono{ font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); letter-spacing: .08em; text-transform: uppercase; }
-.meta{ font-family: var(--mono); font-size: 12px; color: var(--ink-faint); letter-spacing: .04em; margin: 12px 0 26px; }
-.lede{ font-family: var(--serif); font-weight: 300; font-size: 19px; line-height: 1.65; color: var(--ink); max-width: 58ch; margin-bottom: 8px; }
-.panel{ background: var(--panel); border: 1px solid var(--hairline); border-radius: 14px; padding: 22px 26px; margin: 18px 0 8px; box-shadow: 0 1px 2px hsl(228 40% 15% / .05); }
-.panel ul{ margin-bottom: 0; }
-mark{ background: hsl(45 100% 85%); color: var(--ink); padding: 0 4px; border-radius: 3px; }
-footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18px; font-size: 13px; color: var(--ink-faint); line-height: 1.8; }
-@media (max-width: 560px){ .panel{ padding: 18px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/">Hubric<i>o</i>n</a>
+    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Terms</span>
   </div>
 
@@ -107,6 +102,27 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   reaches you before that check has run and the check then comes out short, it is void all the same, and
   if you have already paid it, it is refunded in full to the account it was paid from, not credited
   against a later invoice. The work carries on either way.</p>
+<!-- build:attribution -->
+<h3 id="how-a-dollar-counts">How your Profit Record counts a dollar</h3>
+<p>These are the rules your Record is kept by. They are agreed before any number is on it, so neither of us can bend them once one is.</p>
+<p><b>Before.</b> Every move is written down with the dollars we expect it to earn over its first thirty days, before it goes live.</p>
+<p><b>After.</b> It is measured on your own later exports, and every dollar is graded by how we know it:</p>
+<ul>
+  <li><b>Direct.</b> The platform's own record shows the money moved: Amazon paid a reimbursement on a claim we filed. Counted in full.</li>
+  <li><b>Isolated.</b> Measured on the exact line the move named, against that line's own level before the change: the change, times the volume you actually sold.</li>
+  <li><b>Attributable.</b> Where demand moved too, measured against a stated counterfactual, from the same model that made the promise, at the least favourable end of its own range.</li>
+  <li><b>Unmeasurable.</b> Where we cannot separate our move from everything else, nothing is counted, and the Record says so.</li>
+</ul>
+<p><b>Three rules apply to every dollar.</b></p>
+<ul>
+  <li><b>Never above the promise.</b> An isolated or attributable result counts at most what we said it would earn. Anything more is shown and named, never added. A direct dollar counts what the platform actually paid.</li>
+  <li><b>Nothing under $25.</b> A smaller result is noise: the move closes and counts nothing.</li>
+  <li><b>Once.</b> The same movement on the same SKU in the same period is credited to one move only, the oldest.</li>
+</ul>
+<p><b>Misses stay.</b> A move that earned less than we expected is recorded at what it earned.</p>
+<p><b>Not yet a rule.</b> A move is measured once, over its first thirty days. Whether its effect lasts beyond that is not yet re-measured, so nothing is claimed for it.</p>
+<p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
+<!-- /build:attribution -->
 
   <h2>4. Invoicing and payment</h2>
   <p>Each paid month is invoiced by email once the check in section 3 has cleared it, normally within a
@@ -232,7 +248,7 @@ footer{ margin-top: 48px; border-top: 1px solid var(--hairline); padding-top: 18
   Hubricon · Dallas, Texas, United States</p>
 
   <footer>
-    Hubricon · Managed Profit · <a href="/">www.hubricon.com</a> · <a href="/privacy">Privacy Policy</a>
+    Hubricon · <a href="/">Home</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/privacy">Privacy Policy</a>
   </footer>
 </div>
 </body>

@@ -290,7 +290,7 @@ booking step), both on the design system in `/assets/hubricon.css` since 2026-09
 `manifesto.html` (the argument at length), `portal.html` (the client's own sign-in, called
 simply *Hubricon*), `welcome.html`, `terms.html`, `privacy.html`, `results.html`,
 `intake.html` (secure upload), still in the night system until rebuilt. The home page's
-figures and charts are baked in from `data/` by `scripts/build-home.mjs`; never type a
+figures and charts are baked in from `data/` by `scripts/build-pages.mjs`; never type a
 number into it. Superseded pages are in `archive/`, not deployed. Serverless routes in
 `api/` for intake, consent, teardown and the Stripe webhook.
 

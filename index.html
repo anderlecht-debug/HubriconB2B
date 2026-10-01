@@ -107,7 +107,7 @@
 
 .foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
 .foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
-.foot nav { display: flex; gap: var(--s-5); justify-self: end; }
+.foot nav { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); justify-self: end; }
 .foot a { color: var(--ink-2); text-decoration: none; }
 .foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .foot .legal { grid-column: 1 / -1; max-width: 80ch; }
@@ -190,7 +190,7 @@
       "name": "What happens to my data?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days."
+        "text": "We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. How we handle it."
       }
     }
   ]
@@ -407,7 +407,7 @@
       <details class="fold" data-q="bad-month"><summary>What happens in a month that underperforms?</summary>
         <div class="fold-body"><p>Nothing you have to ask for. If the Record hasn't covered the bill, the invoice is void before it reaches you, and the work carries on. Leave any day with one email; anything billed beyond what your Record shows comes back to your bank.</p></div></details>
       <details class="fold" data-q="data"><summary>What happens to my data?</summary>
-        <div class="fold-body"><p>We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days.</p></div></details>
+        <div class="fold-body"><p>We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. <a href="/your-data">How we handle it.</a></p></div></details>
     </div>
   </div>
 </section>
@@ -425,7 +425,7 @@
 <footer class="foot">
   <div class="wrap foot-in">
     <span>Hubricon</span>
-    <nav aria-label="Legal"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+    <nav aria-label="Footer"><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
     <p class="legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
   </div>
 </footer>

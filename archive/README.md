@@ -14,3 +14,4 @@ deleted. Nothing here is deployed (`.vercelignore`), and `/teardown` redirects h
 | `sample-teardown.html` | The Teardown deliverable on a synthetic 24-SKU brand | A sample of the killed deliverable |
 
 `/method`, `/how-it-works` and `/sample-teardown` redirect home (`vercel.json`).
+| `results.html` | The results wall in the night system, reading $0 | `/honesty` is the results wall now (the spec: the same page matures from "no results yet" into the wall). `/results` redirects there |

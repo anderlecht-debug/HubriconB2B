@@ -33,7 +33,9 @@ from datetime import datetime, timezone
 from . import narrate
 from . import value as valuemod
 
-RESULTS_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/results"
+# /honesty is the results wall since 2026-09-30: it reads zero until a client publishes, then
+# fills, with the method and the misses kept beneath (HUBRICON_SPEC.md). /results redirects there.
+RESULTS_URL = os.environ.get("INTAKE_BASE_URL", "https://www.hubricon.com") + "/honesty"
 
 KINDS = ("first_recovered", "gate_cleared", "roi_3x", "roi_5x", "direct_measured")
 

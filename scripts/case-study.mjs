@@ -5,7 +5,7 @@
 //                          share_losing. Nothing else.
 //   data/case-study.json   every other figure the page prints, each with its basis.
 //
-//   node scripts/case-study.mjs            (then: node scripts/build-home.mjs)
+//   node scripts/case-study.mjs            (then: node scripts/build-pages.mjs)
 //
 // Nothing here is a second simulator. Fees, size tier, the rank→units curve and
 // the volume and cost uncertainty are lib/fees.js — the archived Teardown's own

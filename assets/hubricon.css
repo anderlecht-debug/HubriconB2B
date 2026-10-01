@@ -136,7 +136,7 @@ p { text-wrap: pretty; }
 /* -------------------------------------------------------------- pieces ---- */
 /* Every number tabular. Not set on body: Inter's tabular feature also widens the
    hyphen, and prose like "founder-operated" would read "founder - operated". */
-.tnum, .money, .price, .est, .chart, .board, [data-fill]:not([data-fill="who"]) { font-variant-numeric: tabular-nums; }
+.tnum, .money, .price, .est, .chart, .board, [data-fill]:not([data-fill^="who"]) { font-variant-numeric: tabular-nums; }
 .money { color: var(--blue); }            /* the only use of the accent in text */
 
 .label {

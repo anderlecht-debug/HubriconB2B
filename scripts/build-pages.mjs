@@ -1,17 +1,21 @@
-// Bakes the home page's figures and numbers into index.html.
+// Bakes figures, numbers and shared text into the pages that carry them.
 //
-//   node scripts/build-home.mjs           rewrite index.html
-//   node scripts/build-home.mjs --check   exit 1 if index.html is out of date
+//   node scripts/build-pages.mjs           rewrite every page in PAGES
+//   node scripts/build-pages.mjs --check   exit 1 if any page is out of date
 //
 // Reads ratecard.json (Amazon's published cards), data/montecarlo.json and
-// data/case-study.json (written by scripts/case-study.mjs), then:
-//   - renders every chart as its finished still frame between
-//     <!-- build:NAME --> and <!-- /build:NAME --> markers;
+// data/case-study.json (written by scripts/case-study.mjs) and scripts/blocks/,
+// then, on each page:
+//   - replaces whatever sits between <!-- build:NAME --> and <!-- /build:NAME -->
+//     with the block of that name: a chart's finished still frame, or shared text
+//     such as the attribution rules, which the terms and /honesty must carry word
+//     for word;
 //   - fills every element marked data-fill="key" with the figure it names, so no
-//     number on the page is typed by hand;
+//     number on a page is typed by hand;
 //   - writes the FAQPage structured data from the FAQ as the page shows it;
-//   - counts the words a visitor sees on load (the Hormozi standard: under ~900).
-// scripts/build-home.test.mjs runs the --check path, so a stale page fails CI.
+//   - on the home page, counts the words a visitor sees on load (the Hormozi
+//     standard: under ~900).
+// scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
 import { monteCarloSVG, staircaseSVG, agingSVG, usd } from "../assets/charts.mjs";
@@ -54,7 +58,8 @@ export function figures(rc, mc, cs) {
   };
 
   const end = mc.months.length - 1;
-  return {
+  const blocks = {
+    attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
     "mc-mood-narrow": monteCarloSVG(mc, { id: "mc-mood-n", w: 360, h: 200, m: { t: 6, r: 6, b: 6, l: 6 }, paths: 20, variant: "mood" }),
     "mc-wide": monteCarloSVG(mc, { id: "mc-w", w: 760, h: 420, m: { t: 24, r: 120, b: 44, l: 64 }, font: 13 }),
@@ -63,11 +68,15 @@ export function figures(rc, mc, cs) {
     "stairs-narrow": staircaseSVG(stairs, { id: "st-n", w: 360, h: 340, m: { t: 56, r: 8, b: 40, l: 46 }, font: 11, xMax: 16 }),
     "aging-wide": agingSVG(aging, { id: "ag-w", w: 760, h: 300, m: { t: 32, r: 24, b: 48, l: 64 }, font: 13 }),
     "aging-narrow": agingSVG(aging, { id: "ag-n", w: 360, h: 260, m: { t: 28, r: 8, b: 40, l: 46 }, font: 11 }),
+  };
+  return {
+    blocks,
     fill: {
       years: n(cs.simulation.years),
       months_total: n(cs.simulation.months),
       months_losing: n(mc.share_losing * cs.simulation.months),
       who: cs.who,
+      who_lower: cs.who.charAt(0).toLowerCase() + cs.who.slice(1),
       category: cs.category,
       leak_p10: usd(cs.leak_per_year.p10),
       leak_p90: usd(cs.leak_per_year.p90),
@@ -83,6 +92,8 @@ export function figures(rc, mc, cs) {
       aged_rate_after: dollars2(cs.aging.bands.find((b) => b.from === 271).surcharge_per_cuft),
       brands_modeled: n(cs.selection.brands_modeled),
       brands_silent: n(cs.selection.brands_silent),
+      silence_share: `${Math.round((cs.selection.brands_silent / cs.selection.brands_modeled) * 100)}%`,
+      silence_on: longDate(cs.selection.measured_on),
       captured_on: longDate(cs.captured_on),
       priced_on: longDate(cs.priced_on),
       rank_band: cs.listing.rank_band,
@@ -122,36 +133,51 @@ export function visibleWords(html) {
   return text(b).split(" ").filter((w) => /[\p{L}\p{N}$]/u.test(w)).length;
 }
 
-export function build(html, built) {
-  let out = html;
-  for (const [name, svg] of Object.entries(built)) {
-    if (name === "fill") continue;
-    const re = new RegExp(`(<!-- build:${name} -->)[\\s\\S]*?(<!-- /build:${name} -->)`);
-    if (!re.test(out)) throw new Error(`index.html has no build:${name} marker`);
-    out = out.replace(re, (_, a, z) => `${a}${svg}${z}`);
-  }
+/** One page, rebuilt. `requireAllFills` is for the home page, which shows every figure. */
+export function build(html, built, { requireAllFills = false, name = "page" } = {}) {
+  let out = html.replace(/(<!-- build:([a-z0-9-]+) -->)[\s\S]*?(<!-- \/build:\2 -->)/g, (whole, a, block, z) => {
+    if (block === "faq-jsonld") return whole;
+    if (!(block in built.blocks)) throw new Error(`${name}: build:${block} has no block`);
+    return `${a}${built.blocks[block]}${z}`;
+  });
   const used = new Set();
   out = out.replace(/(<([a-z0-9]+)\b[^>]*\bdata-fill="([a-z0-9_]+)"[^>]*>)([^<]*)(<\/\2>)/g, (_, open, _tag, key, _old, close) => {
-    if (!(key in built.fill)) throw new Error(`data-fill="${key}" has no figure`);
+    if (!(key in built.fill)) throw new Error(`${name}: data-fill="${key}" has no figure`);
     used.add(key);
     return `${open}${built.fill[key]}${close}`;
   });
-  const unused = Object.keys(built.fill).filter((k) => !used.has(k));
-  if (unused.length) throw new Error(`figures computed but never shown: ${unused.join(", ")}`);
+  if (requireAllFills) {
+    const unused = Object.keys(built.fill).filter((k) => !used.has(k) && !OTHER_PAGES_ONLY.has(k));
+    if (unused.length) throw new Error(`${name}: figures computed but never shown: ${unused.join(", ")}`);
+  }
   out = out.replace(/(<!-- build:faq-jsonld -->)[\s\S]*?(<!-- \/build:faq-jsonld -->)/, (_, a, z) => `${a}\n${faqJsonLd(out)}\n${z}`);
   return out;
 }
 
+// Figures only /honesty prints.
+const OTHER_PAGES_ONLY = new Set(["who_lower", "silence_share", "silence_on"]);
+
+export const PAGES = [
+  { file: "index.html", requireAllFills: true },
+  { file: "honesty.html" },
+  { file: "terms.html" },
+];
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
-  const before = read("index.html");
-  const after = build(before, built);
-  const words = visibleWords(after);
-  if (process.argv.includes("--check")) {
-    if (before !== after) { console.error("index.html is out of date: run node scripts/build-home.mjs"); process.exit(1); }
-    console.log(`index.html is current · ${words} visible words`);
-  } else {
-    writeFileSync(new URL("index.html", root), after);
-    console.log(`index.html ${before === after ? "unchanged" : "rebuilt"} · ${words} visible words`);
+  const check = process.argv.includes("--check");
+  let stale = 0;
+  for (const page of PAGES) {
+    const before = read(page.file);
+    const after = build(before, built, { requireAllFills: page.requireAllFills, name: page.file });
+    const words = page.file === "index.html" ? ` · ${visibleWords(after)} visible words` : "";
+    if (check) {
+      if (before !== after) { stale++; console.error(`${page.file} is out of date: run node scripts/build-pages.mjs`); }
+      else console.log(`${page.file} is current${words}`);
+    } else {
+      writeFileSync(new URL(page.file, root), after);
+      console.log(`${page.file} ${before === after ? "unchanged" : "rebuilt"}${words}`);
+    }
   }
+  if (stale) process.exit(1);
 }

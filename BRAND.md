@@ -52,7 +52,7 @@ The offer headline stays the offer: *More profit than our bill every month, or y
 don't pay.* Since 2026-09-30 "Paid on proof" is a line in words only: the stamp and the
 seal that carried it are retired with the night system. The home page is judged by the
 Hormozi standard (one action, under ~900 visible words; 822 on 2026-09-30, counted by
-`scripts/build-home.mjs`).
+`scripts/build-pages.mjs`).
 
 ## Positioning
 
@@ -111,7 +111,7 @@ novelty. We are a high-ticket service; the humour lives in the precision.
 
 Decided in `HUBRICON_SPEC.md` ("Visual direction") and built in `/assets/hubricon.css`,
 which every page reads. A page keeps its layout inline and its colours nowhere: no page
-has a private palette (`scripts/build-home.test.mjs` fails the home page if it tries).
+has a private palette (`scripts/build-pages.test.mjs` fails the home page if it tries).
 Think a quant fund or Stripe, not a private bank.
 
 ### Colour
@@ -166,7 +166,7 @@ numbers by `/assets/charts.mjs`:
 - **The aging cliff.** Storage plus the aged-inventory surcharge by age, the day-271 step in
   blue.
 
-Every chart is baked into the page as its finished still frame (`scripts/build-home.mjs`),
+Every chart is baked into the page as its finished still frame (`scripts/build-pages.mjs`),
 so a visitor without scripts sees the result. Line weights, the band's wash and timings are
 tokens (`--line-*`, `--mc-*`).
 

@@ -1,6 +1,6 @@
 // The home page's three pictures, as SVG strings: the Monte Carlo, Amazon's fee
 // staircase and the aged-inventory cliff. Pure functions of their data, so
-// scripts/build-home.mjs bakes each one into index.html as its finished still
+// scripts/build-pages.mjs bakes each one into index.html as its finished still
 // frame: a visitor without scripts, or who never scrolls to it, sees the result.
 // The browser only animates what is already drawn (assets/home.js, and the
 // .draw / .fade classes in assets/hubricon.css). Colours, weights and timings

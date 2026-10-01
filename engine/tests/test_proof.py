@@ -103,7 +103,7 @@ def test_the_proof_line_is_none_until_there_is_something_to_prove():
 def test_one_result_names_the_brand_by_category_and_band_and_never_by_name():
     line = proof.line_from([{"industry": "kitchen", "revenue_band": "$1M–$5M", "amount_usd": 12300}])
     assert "kitchen brand" in line and "$1M–$5M" in line and "$12,300" in line
-    assert "hubricon.com/results" in line
+    assert "hubricon.com/honesty" in line
     assert "Test" not in line
 
 
