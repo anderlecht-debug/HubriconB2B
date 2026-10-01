@@ -2657,7 +2657,12 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
                                   recovery=outputs.get("recovery"),
                                   anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
                                   health=outputs.get("health"), previous_health=prev_health,
-                                  channel=channel), recent)
+                                  channel=channel,
+                                  # every Inventory Age snapshot on file: the aged-cliff
+                                  # early warning compares the two latest (alerts.py)
+                                  inventory_health=(dbmod.fetch_all(db, "inventory_health", client["id"])
+                                                    if channels.has_fee_cliffs(channel) else None)),
+                         recent)
     out["alerts"] = len(fresh)
     # The alerts land in the portal now, unsent. The Monday note carries them
     # under "Watching" once the founder approves it (HUBRICON_SPEC.md, "Customer

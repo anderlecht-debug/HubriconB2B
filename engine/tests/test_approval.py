@@ -477,3 +477,36 @@ def test_the_command_keeps_the_directive_meaning_and_sends_drafts_otherwise(mail
     with pytest.raises(SystemExit):
         cli.cmd_approve(SimpleNamespace(client="all", show=False, stale=False, discard=False,
                                         directive="new1", decline=False))
+
+
+def test_the_sweep_hands_the_aged_inventory_snapshots_to_the_early_warning(mail, monkeypatch):
+    """alerts.aged_cliff_alerts only runs on the Inventory Age rows it is given,
+    and the sweep gave it none, so the warning never fired. Amazon's sweep hands
+    over every snapshot of this client; Shopify, which has no fee cliffs, none."""
+    _sweep_stubs(monkeypatch, [])
+    seen = []
+    monkeypatch.setattr(cli, "compute_alerts", lambda *a, **k: seen.append(k) or [])
+    health = [{"client_id": "c1", "sku": "SKU-1", "snapshot_date": "2026-09-21"},
+              {"client_id": "c1", "sku": "SKU-1", "snapshot_date": "2026-09-28"},
+              {"client_id": "c2", "sku": "OTHER", "snapshot_date": "2026-09-28"}]
+    db = _db(sku_economics=[SKU_ROW], weekly_notes=[], inventory_health=health)
+    cli._sweep_channel(db, dict(AGREED), "amazon", "Acme", send_alerts=True)
+    assert [r["snapshot_date"] for r in seen[-1]["inventory_health"]] == ["2026-09-21", "2026-09-28"]
+    shop = _db(sku_economics=[{**SKU_ROW, "channel": "shopify"}], weekly_notes=[], inventory_health=health)
+    cli._sweep_channel(shop, {**AGREED, "platform": "shopify"}, "shopify", "Acme", send_alerts=True)
+    assert seen[-1]["inventory_health"] is None
+
+
+def test_the_aged_inventory_warning_reaches_the_portal_from_the_sweep(mail, monkeypatch):
+    """Through the real compute_alerts: the client's snapshots reach the aged-cliff
+    check, and what it flags lands in the portal's alerts."""
+    from hubricon_engine import alerts
+    _sweep_stubs(monkeypatch, [])
+    monkeypatch.setattr(cli, "compute_alerts", alerts.compute_alerts)
+    monkeypatch.setattr(alerts, "aged_cliff_alerts",
+                        lambda rows, channel="amazon", today=None: [{"severity": "warning", "module": "inventory",
+                                                                     "message": f"aged: {len(rows or [])} rows"}])
+    db = _db(sku_economics=[SKU_ROW], weekly_notes=[],
+             inventory_health=[{"client_id": "c1", "sku": "SKU-1", "snapshot_date": "2026-09-28"}])
+    out = cli._sweep_channel(db, dict(AGREED), "amazon", "Acme", send_alerts=True)
+    assert out["alerts"] == 1 and any(a.get("message") == "aged: 1 rows" for a in db.rows("alerts"))
