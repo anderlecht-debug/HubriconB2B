@@ -24,7 +24,7 @@ const FPS = 30, W = 1920, H = 1080, BREATH = 0.45;
 const json = (p) => JSON.parse(readFileSync(join(ROOT, p), "utf8"));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function chromeBin() {
+export function chromeBin() {
   if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
   const pw = join(homedir(), ".cache/ms-playwright");
   if (existsSync(pw)) {
@@ -36,7 +36,7 @@ function chromeBin() {
 }
 
 const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml" };
-function serve() {
+export function serve() {
   return new Promise((resolve) => {
     const srv = createServer((req, res) => {
       const path = join(ROOT, decodeURIComponent(new URL(req.url, "http://x").pathname));
@@ -48,7 +48,7 @@ function serve() {
   });
 }
 
-async function cdp(chrome) {
+export async function cdp(chrome) {
   const port = 9400 + Math.floor(Math.random() * 400);
   const prof = mkdtempSync(join(tmpdir(), "hubricon-film-"));
   const proc = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-color-profile=srgb",
