@@ -358,43 +358,45 @@ class Pass:
 
     # -- 3. TEARDOWN replies -------------------------------------------------
     def teardown_requests(self) -> None:
+        """The Recovery Only door (api/gate), and what is left of TEARDOWN replies.
+
+        The written Teardown is retired (HUBRICON_SPEC.md: "The Teardown is
+        killed … exports are read on or after the call"). A prospect who still
+        replies TEARDOWN to an old email is answered by triage with the call and
+        the free course, and is moved to 'interested' here: no client row, no
+        upload link and no stage-less email before they have even booked."""
         rows = (self.db.table("prospects").select("*").eq("status", "wants_teardown")
                 .is_("client_id", "null").execute().data)
         for p in rows:
             email = p["email"]
             if onboarding.is_internal(email):
                 continue
-            if self.dry:
-                self.say(f"[dry] would provision {email} (replied TEARDOWN)")
-                continue
-            name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x) or None
             note = p.get("fit_notes") or ""
             recovery = note.startswith(RECOVERY_NOTE)
-            if recovery:
-                # Recovery Only is Amazon's door; the gate answer says whether
-                # the brand also sells on Shopify.
-                m = re.search(r"channel:(\w+)", note)
-                platform = "both" if m and m.group(1).lower() == "both" else "amazon"
-            else:
-                # A prospect the harvest found on a Shopify store must not be sent
-                # Seller Central instructions: the harvest row knows the platform,
-                # and so does the 60-second Teardown's capture (tool_runs) for a
-                # merchant who arrived through /teardown rather than the cold lane.
-                harvested = (self.db.table("harvest_sellers").select("platform")
-                             .eq("email", email).limit(1).execute().data)
-                platform = (harvested[0].get("platform") if harvested else None)
-                if not platform:
-                    runs = (self.db.table("tool_runs").select("platform").eq("email", email)
-                            .order("created_at", desc=True).limit(1).execute().data)
-                    platform = runs[0].get("platform") if runs else None
-                platform = platform or "amazon"
+            if not recovery:
+                if self.dry:
+                    self.say(f"[dry] would move {email} (replied TEARDOWN) to interested")
+                    continue
+                self.db.table("prospects").update({"status": "interested", "last_event_at": _iso()}) \
+                    .eq("id", p["id"]).execute()
+                outbound.log_event(self.db, "teardown_retired", prospect_id=p["id"])
+                self.human.append(f"{email} replied TEARDOWN. The Teardown is retired, so they were offered "
+                                  "the call and the free course; nothing was provisioned.")
+                continue
+            if self.dry:
+                self.say(f"[dry] would provision {email} (Recovery Only)")
+                continue
+            name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x) or None
+            # Recovery Only is Amazon's door; the gate answer says whether
+            # the brand also sells on Shopify.
+            m = re.search(r"channel:(\w+)", note)
+            platform = "both" if m and m.group(1).lower() == "both" else "amazon"
             client, link, created = onboarding.provision(self.db, email, name, p.get("company_name"), platform)
-            sent = self._touch(client, "recovery_welcome" if recovery else "files", link, force=True)
+            sent = self._touch(client, "recovery_welcome", link, force=True)
             self.db.table("prospects").update({"client_id": client["id"], "last_event_at": _iso()}).eq("id", p["id"]).execute()
-            outbound.log_event(self.db, "recovery_provisioned" if recovery else "teardown_requested",
-                               prospect_id=p["id"], client_id=client["id"],
+            outbound.log_event(self.db, "recovery_provisioned", prospect_id=p["id"], client_id=client["id"],
                                payload={"created": created, "files_sent": sent})
-            self.say(f"Provisioned {email} from {'a Recovery Only request (api/gate)' if recovery else 'a TEARDOWN reply'}; "
+            self.say(f"Provisioned {email} from a Recovery Only request (api/gate); "
                      f"upload page {'sent' if sent else 'NOT sent'}.")
 
     # -- 4. nudges -----------------------------------------------------------

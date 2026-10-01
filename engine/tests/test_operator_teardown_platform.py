@@ -1,46 +1,30 @@
-"""A prospect who asked for a Teardown gets the instructions for their own
-platform. The harvest knows a cold prospect's platform; the 60-second
-Teardown's capture (tool_runs) knows a tool lead's. Neither known: Amazon,
-as before."""
+"""What is left of the TEARDOWN door, now the Teardown is retired.
+
+A prospect who still replies TEARDOWN to an old email is answered by triage
+with the call and the free course; the operator moves them to 'interested' and
+provisions nothing: no client row, no upload link, no email before a booking.
+The Recovery Only door (api/gate) still provisions, on its own email."""
 from __future__ import annotations
 
 from fakedb import FakeDB
 from hubricon_engine import onboarding, operator
 
 
-def _run(monkeypatch, *, harvest, runs):
+def test_a_teardown_reply_provisions_nothing_and_becomes_interest_in_the_call(monkeypatch):
     db = FakeDB(
         prospects=[{"id": "p1", "email": "owner@brand.com", "first_name": "Ada", "status": "wants_teardown", "client_id": None}],
-        harvest_sellers=harvest, tool_runs=runs, funnel_events=[], client_touches=[],
+        harvest_sellers=[], tool_runs=[], funnel_events=[], client_touches=[],
     )
-    seen = {}
-    monkeypatch.setattr(onboarding, "provision", lambda _db, email, name, company, platform: (
-        seen.__setitem__("platform", platform) or ({"id": "c1", "contact_email": email}, "https://x/upload", True)))
-    monkeypatch.setattr(operator.Pass, "_touch", lambda self, client, kind, link, force=False: seen.__setitem__("kind", kind) or True)
-    operator.Pass(db, send=False, dry=False).teardown_requests()
-    return seen, db
-
-
-def test_a_tool_lead_from_a_shopify_store_gets_shopify_instructions(monkeypatch):
-    seen, db = _run(monkeypatch, harvest=[], runs=[{"email": "owner@brand.com", "platform": "shopify", "created_at": "2026-09-09T10:00:00+00:00"}])
-    assert seen["platform"] == "shopify" and seen["kind"] == "files"
-    assert db.rows("prospects")[0]["client_id"] == "c1"
-
-
-def test_the_latest_run_decides_when_a_lead_ran_both_lanes(monkeypatch):
-    seen, _ = _run(monkeypatch, harvest=[], runs=[
-        {"email": "owner@brand.com", "platform": "shopify", "created_at": "2026-09-08T10:00:00+00:00"},
-        {"email": "owner@brand.com", "platform": "amazon", "created_at": "2026-09-09T10:00:00+00:00"},
-    ])
-    assert seen["platform"] == "amazon"
-
-
-def test_the_harvest_row_wins_over_the_tool_and_nothing_known_means_amazon(monkeypatch):
-    seen, _ = _run(monkeypatch, harvest=[{"email": "owner@brand.com", "platform": "shopify"}],
-                   runs=[{"email": "owner@brand.com", "platform": "amazon", "created_at": "2026-09-09T10:00:00+00:00"}])
-    assert seen["platform"] == "shopify"
-    seen, _ = _run(monkeypatch, harvest=[], runs=[])
-    assert seen["platform"] == "amazon"
+    called = []
+    monkeypatch.setattr(onboarding, "provision", lambda *a, **k: called.append("provision"))
+    monkeypatch.setattr(operator.Pass, "_touch", lambda *a, **k: called.append("touch") or True)
+    p = operator.Pass(db, send=True, dry=False)
+    p.teardown_requests()
+    assert called == []
+    row = db.rows("prospects")[0]
+    assert row["status"] == "interested" and row["client_id"] is None
+    assert [e["kind"] for e in db.rows("funnel_events")] == ["teardown_retired"]
+    assert any("TEARDOWN" in h and "nothing was provisioned" in h for h in p.human)
 
 
 def test_a_recovery_request_from_the_site_gets_the_recovery_email_not_the_teardown_one(monkeypatch):

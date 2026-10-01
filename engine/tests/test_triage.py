@@ -20,13 +20,16 @@ def test_the_facts_describe_the_mandate_and_the_referral_month_the_engine_actual
     that lapse after three weeks) and the referral month as referral.py pays
     it (at the referred founder's first standing invoice, not a calendar day)."""
     from hubricon_engine.issue import EXPLICIT_LAPSE_DAYS
-    mandate = next(line for line in triage.FACTS.splitlines() if line.startswith("- Ongoing execution"))
+    mandate = next(line for line in triage.FACTS.splitlines() if line.startswith("- After a yes"))
     assert ("bounded price steps capped at 5% per cycle and ad corrections inside limits they set on the "
-            "kickoff call; a bigger price step, a new campaign or a reorder waits for their written yes, "
+            "kickoff call) are emailed before they go live and go live after 72 hours unless they say no; "
+            "a bigger price step, a new campaign or a reorder waits for their written yes, "
             "and lapses after three weeks without one") in mandate
     assert "within limits they approve" not in mandate and EXPLICIT_LAPSE_DAYS == 21
+    # The referral month in terms §9's own words (since 2026-10-01): credited when
+    # the referred brand's first invoice is raised after its own thirtieth day.
     referral = next(line for line in triage.FACTS.splitlines() if line.startswith("- Referral"))
-    assert "when that founder's first invoice stands after their day 30" in referral
+    assert "when that brand's first invoice is raised after its own thirtieth day" in referral
     assert "stays past" not in referral
 
 
@@ -63,11 +66,24 @@ def test_plain_no_is_a_decline_but_no_problem_is_not():
 def test_interested_and_not_now_have_templates_with_the_right_links():
     assert classify_rules("Re:", "Interested. How does this work?") == "interested"
     d = draft_for("interested", "Priya Patel")
-    assert d.startswith("Great, Priya.") and CALENDLY_URL in d and "TEARDOWN" in d
+    assert d.startswith("Good, Priya.") and CALENDLY_URL in d and triage.LEARN_URL in d
     assert classify_rules("Re:", "Not right now, circle back in Q1") == "not_now"
-    assert "90 days" in draft_for("not_now", None) and "Hi there" not in draft_for("not_now", None)
+    d = draft_for("not_now", None)
+    assert CALENDLY_URL in d and "Hi there" not in d
+    assert "90 days" not in d and "check back" not in d, "nothing schedules a follow-up, so nothing promises one"
     d = draft_for("wants_teardown", "Sam")
-    assert EXEC_EMAIL in d and "24 hours" in d
+    assert "Teardown is retired" in d and CALENDLY_URL in d and "24 hours" not in d
+
+
+def test_the_fact_sheet_offers_only_what_exists_today():
+    f = triage.FACTS
+    assert "$1M–$30M" in f and "$3M" not in f and "$20M" not in f
+    assert "/teardown" not in f and "reply TEARDOWN" not in f and "TEARDOWN" not in f
+    assert "Teardown are retired" in f
+    assert "No client results are published yet" in f
+    assert "within 24 hours" not in f
+    for v in triage.STATUS_AFTER.values():
+        assert v != "wants_teardown", "a TEARDOWN reply no longer opens a door that is closed"
 
 
 def test_questions_are_left_for_a_writer_when_claude_is_off(monkeypatch):
