@@ -1,28 +1,35 @@
-<!-- Source for /og.png (1200x630). Render with Playwright or headless Chrome from a local
-     server at the repo root, so /brand/ resolves:
-       python3 -m http.server 8765   (repo root)
-       then screenshot http://localhost:8765/scripts/og.html at 1200x630 once fonts are ready.
-     Keep the copy in step with the hero on index.html. Brand system: BRAND.md. -->
+<!-- Source for /og.png (1200x630). Render from a local server at the repo root:
+       python3 -m http.server 8765
+       then screenshot http://127.0.0.1:8765/scripts/og.html at 1200x630 once fonts are ready.
+     The fan is the home page's own: /assets/charts.mjs over /data/montecarlo.json.
+     Keep the copy in step with the hero on index.html. Design system: /assets/hubricon.css. -->
 <!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-html,body{margin:0;width:1200px;height:630px;background:#050A1F;color:#F4F6FC;font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;overflow:hidden;position:relative}
-.film{position:absolute;inset:0;background:url(/brand/hero-printer.webp) 78% 50%/cover no-repeat}
-.shade{position:absolute;inset:0;background:linear-gradient(90deg,#050A1F 0%,rgba(5,10,31,.94) 38%,rgba(5,10,31,.45) 66%,rgba(5,10,31,.05) 88%),linear-gradient(0deg,#050A1F 0%,rgba(5,10,31,0) 30%)}
-.w{position:absolute;left:64px;top:52px;width:700px}
-.logo{display:flex;align-items:center;gap:12px;font-family:Anton,"Arial Narrow",Impact,sans-serif;font-size:34px;letter-spacing:.04em;text-transform:uppercase}
-.logo em{font-style:normal;color:#FFC000}
-.logo svg{width:36px;height:36px;color:#FFC000}
-.stamp{display:inline-block;margin-top:34px;font-family:Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:.09em;line-height:1;color:#FFC000;font-size:21px;padding:.42em .7em .36em;border:.16em double currentColor;border-radius:.22em;transform:rotate(-4deg)}
-h1{margin:22px 0 0;font-family:Anton,"Arial Narrow",Impact,sans-serif;font-weight:400;text-transform:uppercase;font-size:74px;line-height:.98;letter-spacing:.01em}
-.foot{position:absolute;left:64px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:flex-end;font-size:16px;color:#C3C8DB;letter-spacing:.02em}
-.foot .url{color:#FFC000;letter-spacing:.16em;font-weight:500}
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--paper); }
+.card { position: relative; width: 1200px; height: 630px; box-sizing: border-box; padding: 64px; display: grid; grid-template-columns: 640px 1fr; gap: 48px; }
+.wordmark { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); font-weight: var(--strong); font-size: 30px; letter-spacing: -0.02em; }
+.wordmark svg { width: 36px; height: 36px; }
+h1 { margin-top: 56px; font-size: 64px; line-height: 1.04; }
+.sub { margin-top: 24px; font-size: 22px; color: var(--ink-2); }
+.url { position: absolute; left: 64px; bottom: 56px; font-size: 20px; color: var(--ink-3); letter-spacing: 0.02em; }
+.fan { align-self: center; }
+.fan figcaption { margin-top: 12px; font-size: 15px; color: var(--ink-3); text-align: right; }
 </style></head><body>
-<div class="film"></div><div class="shade"></div>
-<div class="w">
-  <div class="logo"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubric<em>o</em>n</span></div>
-  <span class="stamp">Paid on proof</span>
-  <h1>More profit than our bill, every month. Or you don't pay.</h1>
+<div class="card">
+  <div>
+    <div class="wordmark"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</div>
+    <h1>More profit than our bill every month, or you don't pay.</h1>
+    <p class="sub">For Amazon and Shopify brands doing $1M to $30M a year.</p>
+  </div>
+  <figure class="figure fan"><div id="fan"></div><figcaption>One real listing, 10,000 simulated years. Modeled from public data.</figcaption></figure>
+  <span class="url">hubricon.com</span>
 </div>
-<div class="foot"><span>Managed Profit · Amazon &amp; Shopify brands · $3M–$20M/yr · month one free</span><span class="url">HUBRICON.COM</span></div>
+<script type="module">
+import { monteCarloSVG } from "/assets/charts.mjs";
+const mc = await (await fetch("/data/montecarlo.json")).json();
+document.getElementById("fan").innerHTML = monteCarloSVG(mc, { id: "og", w: 420, h: 380, m: { t: 6, r: 6, b: 6, l: 6 }, variant: "mood" });
+document.documentElement.dataset.ready = "1";
+</script>
 </body></html>

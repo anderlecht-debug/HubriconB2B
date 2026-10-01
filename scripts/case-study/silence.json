@@ -1,0 +1,18 @@
+{
+  "measured_on": "2026-09-30",
+  "brands_modeled": 1856,
+  "brands_silent": 1473,
+  "share_silent": 0.7936,
+  "listings_read": 11594,
+  "captured_between": [
+    "2026-09-03",
+    "2026-09-30"
+  ],
+  "findings_by_kind": {
+    "fee_band_edge": 628,
+    "size_tier_edge": 100,
+    "price_band_edge": 33,
+    "dim_weight_overage": 1
+  },
+  "basis": "Amazon sellers in harvest_sellers with at least one listing carrying a price and a rank-based volume estimate; silent = cold/findings.detect returned nothing on the rate card in force on measured_on."
+}

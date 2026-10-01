@@ -1,0 +1,179 @@
+{
+  "label": "Modeled from public data. Not a client. Not a result.",
+  "captured_on": "2026-09-03",
+  "priced_on": "2026-09-30",
+  "who": "A car-care brand",
+  "what": "its best-selling paint scratch remover",
+  "category": "Automotive",
+  "listing": {
+    "price_band": "$10 to $50",
+    "item_weight_oz": 8.818,
+    "tier": "large_standard",
+    "rank_band": "top 100 in Automotive",
+    "est_monthly_units": 3559,
+    "est_annual_sales": [
+      500000,
+      1600000
+    ]
+  },
+  "step": {
+    "edge_oz": 8,
+    "over_by_oz": 0.818,
+    "non_peak": {
+      "fee_now": 4.347,
+      "fee_at_edge": 4.0882,
+      "step": 0.2588
+    },
+    "peak": {
+      "fee_now": 4.6368,
+      "fee_at_edge": 4.3573,
+      "step": 0.2795
+    }
+  },
+  "leak_per_year": {
+    "p10": 6400,
+    "p50": 11200,
+    "p90": 19200
+  },
+  "profit_basis": {
+    "referral": 2.64,
+    "landed_cost": 5.49,
+    "landed_cost_share": 0.25,
+    "excludes": [
+      "advertising",
+      "storage",
+      "returns"
+    ]
+  },
+  "aging": {
+    "cubic_feet_per_unit": 0.0319,
+    "storage_effective": "2026-01-15",
+    "under_181_per_1000_units_month": 24.87,
+    "bands": [
+      {
+        "from": 181,
+        "to": 210,
+        "surcharge_per_cuft": 0.5,
+        "per_1000_units_month": 40.81
+      },
+      {
+        "from": 211,
+        "to": 240,
+        "surcharge_per_cuft": 1,
+        "per_1000_units_month": 56.76
+      },
+      {
+        "from": 241,
+        "to": 270,
+        "surcharge_per_cuft": 1.5,
+        "per_1000_units_month": 72.7
+      },
+      {
+        "from": 271,
+        "to": 300,
+        "surcharge_per_cuft": 5.45,
+        "per_1000_units_month": 198.67
+      },
+      {
+        "from": 301,
+        "to": 330,
+        "surcharge_per_cuft": 5.7,
+        "per_1000_units_month": 206.64
+      },
+      {
+        "from": 331,
+        "to": 365,
+        "surcharge_per_cuft": 5.9,
+        "per_1000_units_month": 213.02
+      },
+      {
+        "from": 366,
+        "to": null,
+        "surcharge_per_cuft": 6.9,
+        "per_1000_units_month": 244.91
+      }
+    ]
+  },
+  "simulation": {
+    "years": 10000,
+    "months": 120000,
+    "seed": 20260930,
+    "start": "2026-10-01",
+    "volume_sigma": 0.4214,
+    "landed_cost_drift": "±10% a month",
+    "calendar": [
+      {
+        "start": "2026-10-01",
+        "peak_share": 0.5484
+      },
+      {
+        "start": "2026-11-01",
+        "peak_share": 1
+      },
+      {
+        "start": "2026-12-01",
+        "peak_share": 1
+      },
+      {
+        "start": "2027-01-01",
+        "peak_share": 0.4516
+      },
+      {
+        "start": "2027-02-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-03-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-04-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-05-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-06-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-07-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-08-01",
+        "peak_share": 0
+      },
+      {
+        "start": "2027-09-01",
+        "peak_share": 0
+      }
+    ]
+  },
+  "cards": {
+    "non_peak": {
+      "source": "Amazon US FBA fulfilment fees, 2026 non-peak schedule",
+      "effective": "2026-01-15",
+      "through": "2026-10-14"
+    },
+    "peak": {
+      "source": "Amazon US FBA fulfilment fees, 2026 holiday peak schedule",
+      "effective": "2026-10-15",
+      "through": "2027-01-14"
+    },
+    "fuel_surcharge": 0.035,
+    "fuel_surcharge_from": "2026-04-17",
+    "referral_rate": 0.12
+  },
+  "selection": {
+    "brands_modeled": 1856,
+    "brands_silent": 1473,
+    "measured_on": "2026-09-30",
+    "captured_between": [
+      "2026-09-03",
+      "2026-09-30"
+    ]
+  }
+}

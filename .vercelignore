@@ -10,3 +10,5 @@ reports
 # Remove a line here when that page's blocker clears; nothing links to them meanwhile.
 teardowns
 research
+# Superseded pages, kept for reference (HUBRICON_SPEC.md: archive, don't delete). Not served.
+archive

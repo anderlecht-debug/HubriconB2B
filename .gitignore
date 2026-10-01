@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .claude/settings.local.json
+# The case study's one listing names the brand. The repo is public and the page is anonymised,
+# so the input stays on the machine that builds the page (HUBRICON.md, the public-data case study).
+scripts/case-study/listing.json

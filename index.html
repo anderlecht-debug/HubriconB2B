@@ -4,690 +4,433 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hubricon — More profit than our bill, or you don't pay</title>
-<meta name="description" content="Paid on proof. Managed Profit for Amazon and Shopify brands doing $3M–$20M: we make the five money decisions in your account and grade each on your own reports. $6,000/mo flat. Month one free. Proven or Void.">
+<meta name="description" content="More profit than our bill every month, or you don't pay. For Amazon and Shopify brands doing $1M to $30M a year: every leak found, sealed and measured on your own reports. $6,000 a month, flat.">
 <link rel="canonical" href="https://www.hubricon.com/">
-<meta name="theme-color" content="#050A1F">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050A1F'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23FFC000' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23FFC000'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.hubricon.com/">
 <meta property="og:title" content="Hubricon — More profit than our bill, or you don't pay">
-<meta property="og:description" content="Paid on proof. Managed Profit for Amazon and Shopify brands doing $3M–$20M a year. $6,000/mo flat. Month one free. Proven or Void.">
+<meta property="og:description" content="For Amazon and Shopify brands doing $1M to $30M a year. Every leak found, sealed and measured on your own reports.">
 <meta property="og:image" content="https://www.hubricon.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Hubricon — More profit than our bill, or you don't pay">
-<meta name="twitter:description" content="Paid on proof. Managed Profit for Amazon and Shopify brands doing $3M–$20M a year. $6,000/mo flat. Month one free. Proven or Void.">
+<meta name="twitter:description" content="For Amazon and Shopify brands doing $1M to $30M a year. Every leak found, sealed and measured on your own reports.">
 <meta name="twitter:image" content="https://www.hubricon.com/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
-<link rel="preload" as="image" href="/brand/hero-printer.webp" type="image/webp" fetchpriority="high">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<script>
+/* Motion only when scripts run and the visitor hasn't asked for less of it. If the
+   page's module never arrives, the class comes off and every chart is its still frame. */
+(function (d) {
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+<style>
+/* The home page's layout. Every value is a token from /assets/hubricon.css. */
+.top { display: flex; align-items: center; justify-content: space-between; padding-block: var(--s-5); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+
+.hero { padding-block: var(--s-8) var(--section); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: center; }
+.hero h1 { max-width: 16ch; }
+.nowrap { white-space: nowrap; }
+@media (max-width: 400px) { .nowrap { white-space: normal; } }
+.hero .lede { margin-top: var(--s-5); }
+.hero-figure figcaption { text-align: right; margin-left: auto; }
+
+.section-head { margin-bottom: var(--s-7); }
+.section-head h2 { margin-top: var(--s-3); max-width: 20ch; }
+#problem h2 { max-width: 19ch; }
+#problem .lede { margin-top: var(--s-6); max-width: 58ch; }
+
+.case-who { margin-top: var(--s-6); font-size: var(--t-16); color: var(--ink-3); }
+.case-headline { margin-top: var(--s-3); max-width: 21ch; }
+#case-study > .wrap > .lede { margin-top: var(--s-5); max-width: 60ch; }
+.case-video { margin-top: var(--s-7); aspect-ratio: 16 / 9; background: var(--paper-2); border-radius: var(--radius); overflow: hidden; }
+.case-video video { width: 100%; height: 100%; object-fit: cover; }
+.case-figure { margin-top: var(--s-9); }
+.case-figure h3 { margin-bottom: var(--s-2); }
+.case-figure .figure-intro { font-size: var(--t-16); color: var(--ink-2); max-width: 60ch; margin-bottom: var(--s-6); }
+.selection { margin-top: var(--s-9); padding-top: var(--s-6); border-top: 1px solid var(--rule); font-size: var(--t-20); line-height: 1.5; color: var(--ink); max-width: 46ch; }
+#case-study .fold { margin-top: var(--s-7); }
+.fold-body ul { list-style: none; display: grid; gap: var(--s-3); max-width: 72ch; }
+.fold-body li { padding-left: var(--s-5); position: relative; }
+.fold-body li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; border-top: 1px solid var(--ink-3); }
+
+.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-7); margin-top: var(--s-8); counter-reset: step; }
+.steps li { counter-increment: step; border-top: 1px solid var(--ink); padding-top: var(--s-5); }
+.steps li::before { content: counter(step); display: block; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); margin-bottom: var(--s-5); }
+.steps h3 { margin-bottom: var(--s-3); }
+.steps p { font-size: var(--t-16); }
+
+.offer-line { font-size: var(--t-display-m); max-width: 17ch; }
+.offer-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: end; }
+.offer-why { font-size: var(--t-18); }
+.scope-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); margin-top: var(--s-9); padding-top: var(--s-7); border-top: 1px solid var(--rule); }
+.price { font-size: var(--t-display-s); font-weight: var(--strong); color: var(--ink); letter-spacing: var(--track-display); line-height: 1.1; }
+.price + p { margin-top: var(--s-4); font-size: var(--t-16); }
+.scope { list-style: none; display: grid; gap: 0; }
+.scope li { padding: var(--s-4) 0; border-bottom: 1px solid var(--rule); font-size: var(--t-16); color: var(--ink-2); }
+.scope li:first-child { padding-top: 0; }
+.scope b { color: var(--ink); }
+
+.board-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); align-items: center; }
+.board-grid .lede { margin-top: var(--s-5); }
+.board { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-7); }
+.board-k { margin-top: var(--s-6); font-size: var(--t-14); color: var(--ink-3); }
+.board-big { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; margin-top: var(--s-2); }
+.board-line { margin-top: var(--s-5); font-size: var(--t-18); color: var(--ink-2); max-width: 40ch; }
+.bar { position: relative; margin-top: var(--s-6); height: 12px; border-radius: 3px; background: var(--rule); }
+.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--blue); }
+.bar-bill { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
+.bar-keys { position: relative; height: var(--s-5); margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
+.bar-keys span { position: absolute; top: 0; white-space: nowrap; }
+.bar-keys .k-bill { transform: translateX(-50%); }
+.bar-keys .k-measured { right: 0; }
+
+.who-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
+.who-grid p { font-size: var(--t-18); }
+
+.faq-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
+
+.close { text-align: center; padding-block: var(--section) calc(var(--section) * 1.15); }
+.close h2 { margin-inline: auto; max-width: 16ch; }
+.close .cta { justify-content: center; }
+
+.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
+.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
+.foot nav { display: flex; gap: var(--s-5); justify-self: end; }
+.foot a { color: var(--ink-2); text-decoration: none; }
+.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.foot .legal { grid-column: 1 / -1; max-width: 80ch; }
+
+/* a real client's result, published with their consent; hidden until one exists */
+.result-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-7); }
+.result-numbers div { border-top: 1px solid var(--ink); padding-top: var(--s-4); }
+.result-numbers b { display: block; font-size: var(--t-display-s); letter-spacing: var(--track-display); color: var(--blue); margin: var(--s-2) 0; }
+.result-numbers p, .result-numbers span { font-size: var(--t-14); color: var(--ink-3); }
+.result-quote { margin-top: var(--s-7); font-size: var(--t-24); line-height: 1.4; color: var(--ink); max-width: 46ch; }
+
+@media (max-width: 900px) {
+  .hero-grid, .offer-grid, .scope-grid, .board-grid, .who-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+  .hero-figure figcaption { text-align: left; margin-left: 0; }
+  .steps { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); margin-top: var(--s-7); }
+  .scope-grid { margin-top: var(--s-8); }
+}
+@media (max-width: 640px) {
+  .hero { padding-top: var(--s-5); }
+  .board { padding: var(--s-5); }
+  .btn { width: 100%; }
+  .cta { margin-top: var(--s-6); }
+  .result-numbers { grid-template-columns: minmax(0, 1fr); }
+  .foot-in { grid-template-columns: minmax(0, 1fr); }
+  .foot nav { justify-self: start; }
+}
+</style>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "Hubricon",
-  "slogan": "Paid on proof.",
   "url": "https://www.hubricon.com/",
-  "description": "Managed Profit for Amazon and Shopify product brands doing $3M–$20M a year: prices, advertising, inventory, fee cliffs and Amazon reimbursement claims decided per SKU, executed for the client inside their own account, and every move recorded on a Profit Record with the dollars expected before and the dollars measured after from the client's own exports. Founder-operated.",
+  "description": "For Amazon and Shopify brands doing $1M to $30M a year: every SKU modeled every week, every leak found and sealed, and every dollar graded on the client's own reports. No invoice until the Profit Record shows more profit than has been billed. Founder-operated.",
   "priceRange": "$6,000/month flat",
   "founder": {"@type": "Person", "name": "Hagen Simmons", "jobTitle": "Founder"},
   "areaServed": "US"
 }
 </script>
-<style>
-/* ============================================================
-   Hubricon — Paid on proof.
-   The acquisition.com skeleton in Hubricon's brand: bar, nav,
-   the film, four numbers, the creed, one guarantee and its two
-   outcomes, four receipts, one price, four questions, five
-   rules, the application, footer. One action everywhere.
-   Brand system: BRAND.md. Night, signal amber, receipt paper,
-   void red; Anton for the stamp, IBM Plex Mono for the receipt.
-   ============================================================ */
-:root{
-  --bg: hsl(225 72% 7%);            /* night #050A1F */
-  --band: hsl(224 62% 10%);
-  --raise: hsl(224 58% 13%);
-  --amber: hsl(45 100% 50%);        /* signal #FFC000 */
-  --paper: #F2EDE3;                 /* receipt paper */
-  --paper-ink: #16181F;
-  --paper-60: hsl(228 16% 10% / .62);
-  --paper-rule: hsl(228 16% 10% / .22);
-  --void: #CF3B2D;                  /* the VOID stamp */
-  --serious: hsl(8 72% 58%);
-  --ok: hsl(152 55% 52%);
-  --ok-ink: hsl(152 62% 28%);
-  --ink-100: hsl(220 40% 98%);
-  --ink-70: hsl(220 40% 98% / .72);
-  --ink-60: hsl(220 40% 98% / .58);
-  --ink-40: hsl(220 40% 98% / .34);
-  --rule-20: hsl(220 40% 98% / .18);
-  --rule-08: hsl(220 40% 98% / .08);
-  --font-head: "Anton", "Arial Narrow", Impact, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
-  --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --w: min(1160px, calc(100% - 32px));
-  --speckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --zigzag: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
-}
-*{ box-sizing: border-box; margin: 0; padding: 0; }
-html{ scroll-behavior: smooth; scroll-padding-top: 120px; }
-body{ background: var(--bg); color: var(--ink-70); font-family: var(--font-mono); font-size: 16px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-::selection{ background: hsl(45 100% 50% / .25); color: var(--ink-100); }
-a{ color: inherit; text-decoration: none; }
-svg{ display: block; }
-img, video{ display: block; max-width: 100%; }
-img{ height: auto; }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
-h1,h2,h3{ font-family: var(--font-head); font-weight: 400; color: var(--ink-100); text-transform: uppercase; letter-spacing: .015em; line-height: .98; text-wrap: balance; }
-b{ color: var(--ink-100); font-weight: 700; }
-.link{ color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
-.link:hover{ color: var(--ink-100); }
-.grain{ position: fixed; inset: -4%; z-index: 90; pointer-events: none; opacity: .045; will-change: transform; animation: grain 1.4s steps(4) infinite;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
-@keyframes grain{ 0%{ transform: translate(0,0); } 25%{ transform: translate(-2%,1%); } 50%{ transform: translate(1%,-2%); } 75%{ transform: translate(-1%,2%); } 100%{ transform: translate(0,0); } }
-
-/* buttons */
-.btn{ display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
-  padding: 16px 28px; border-radius: 999px; border: 0; cursor: pointer; white-space: nowrap; transition: transform .25s var(--ease-out), box-shadow .25s, background-color .25s; }
-.btn:active{ transform: scale(.98); }
-.btn-amber{ color: var(--bg); background: var(--amber); box-shadow: 0 10px 36px hsl(45 100% 40% / .28); }
-.btn-amber:hover{ box-shadow: 0 12px 48px hsl(45 100% 42% / .45); }
-.btn-white{ background: var(--ink-100); color: var(--bg); }
-.btn-lg{ font-size: 15px; padding: 20px 40px; }
-
-/* the stamp: Proven or Void, in ink */
-.stamp{ display: inline-block; font-family: var(--font-head); font-weight: 400; text-transform: uppercase; letter-spacing: .09em; line-height: 1; white-space: nowrap;
-  padding: .42em .7em .36em; border: .16em double currentColor; border-radius: .22em; transform: rotate(-5deg);
-  -webkit-mask-image: var(--speckle); mask-image: var(--speckle); -webkit-mask-size: 180px; mask-size: 180px; }
-.stamp.amber{ color: var(--amber); }
-.stamp.void{ color: var(--void); }
-.stamp.ok{ color: var(--ok-ink); }
-
-/* the seal: ring text around the H */
-.seal{ color: var(--amber); overflow: visible; }
-.seal .ring{ transform-origin: 100px 100px; animation: turn 60s linear infinite; }
-.seal text{ font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; fill: currentColor; }
-@keyframes turn{ to{ transform: rotate(360deg); } }
-
-/* announcement bar + nav */
-.bar{ background: var(--amber); color: var(--bg); text-align: center; font-size: 13px; font-weight: 700; padding: 11px 16px; }
-.bar a{ display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.bar .new{ background: var(--bg); color: var(--amber); border-radius: 999px; padding: 2px 9px; font-size: 10px; letter-spacing: .12em; }
-.nav{ position: sticky; top: 0; z-index: 80; background: hsl(225 72% 7% / .9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule-08); }
-.nav-in{ width: var(--w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
-.nav-logo{ display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-size: 24px; letter-spacing: .04em; color: var(--ink-100); text-transform: uppercase; flex: none; }
-.nav-logo em{ font-style: normal; color: var(--amber); }
-.nav-logo svg{ width: 26px; height: 26px; color: var(--amber); }
-.nav-links{ display: flex; flex: 1; justify-content: center; gap: 30px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .12em; }
-.nav-links a{ color: var(--ink-70); transition: color .2s; }
-.nav-links a:hover{ color: var(--ink-100); }
-.nav .btn{ padding: 12px 20px; font-size: 12px; }
-@media (max-width: 920px){ .nav-links{ display: none; } }
-@media (max-width: 430px){ .nav-logo{ font-size: 20px; } .nav .btn{ display: none; } }
-
-/* sections */
-.sect{ position: relative; padding: 112px 0; }
-.sect.band{ background: var(--band); border-top: 1px solid var(--rule-08); border-bottom: 1px solid var(--rule-08); }
-.in{ width: var(--w); margin: 0 auto; }
-.center{ text-align: center; }
-.h2{ font-size: clamp(36px, 5vw, 66px); max-width: 20ch; margin: 0 auto 14px; }
-.lede{ font-size: clamp(15px, 1.3vw, 18px); max-width: 60ch; margin: 0 auto; }
-.eyebrow{ font-size: 11px; text-transform: uppercase; letter-spacing: .24em; color: var(--amber); margin-bottom: 18px; font-weight: 500; }
-.tag{ display: inline-block; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); border: 1px solid var(--rule-20); border-radius: 99px; padding: 3px 10px; }
-.cta{ margin-top: 44px; display: flex; justify-content: center; }
-
-/* the film */
-.hero{ position: relative; overflow: hidden; min-height: min(86vh, 820px); display: flex; align-items: center; padding: 96px 0; isolation: isolate; }
-.hero-film{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; z-index: -2; background: var(--bg); }
-.hero-shade{ position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, var(--bg) 0%, hsl(225 72% 7% / .92) 30%, hsl(225 72% 7% / .45) 58%, hsl(225 72% 7% / .05) 80%),
-              linear-gradient(0deg, var(--bg) 0%, hsl(225 72% 7% / 0) 26%); }
-.hero-in{ width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
-.hero-in > *{ max-width: 660px; }
-.hero .stamp{ font-size: 15px; transform: rotate(-4deg); margin-left: 2px; }
-.hero h1{ font-size: clamp(50px, 6.6vw, 100px); max-width: 13.5ch; }
-.hero-sub{ font-size: clamp(16px, 1.45vw, 19px); color: var(--ink-70); max-width: 50ch; }
-.hero-meta{ font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
-.hero-seal{ position: absolute; right: max(24px, calc((100% - 1160px) / 2)); bottom: 40px; width: 132px; height: 132px; opacity: .9; }
-
-/* four numbers */
-.stats{ padding: 56px 0; }
-.stats .in{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-.stat{ border-left: 3px solid var(--amber); padding: 6px 0 6px 20px; }
-.stat b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: clamp(38px, 4vw, 56px); line-height: 1; color: var(--ink-100); }
-.stat span{ display: block; margin-top: 8px; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-60); }
-
-/* the creed */
-.creed h2{ font-size: clamp(34px, 5vw, 76px); line-height: 1.04; max-width: none; }
-.creed h2 span{ display: block; }
-.creed h2 .dim{ color: var(--ink-40); }
-.creed h2 .lit{ color: var(--amber); }
-.creed .after{ display: grid; grid-template-columns: minmax(0, 60ch) auto; gap: 24px 48px; align-items: end; margin-top: 40px; }
-.creed .after p{ font-size: clamp(15px, 1.3vw, 18px); }
-
-/* the guarantee */
-.guarantee{ position: relative; width: var(--w); margin: 0 auto; padding: 48px 52px; border-radius: 24px; background: var(--raise); border: 1px solid hsl(45 100% 50% / .45); box-shadow: 0 0 0 1px hsl(45 100% 50% / .08), 0 30px 80px hsl(45 100% 40% / .10);
-  display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px 56px; align-items: center; }
-.guarantee h2{ font-size: clamp(36px, 4.6vw, 62px); max-width: 15ch; }
-.terms{ list-style: none; display: grid; gap: 16px; counter-reset: t; }
-.terms li{ position: relative; padding-left: 44px; counter-increment: t; font-size: 15px; }
-.terms li::before{ content: counter(t, decimal-leading-zero); position: absolute; left: 0; top: -3px; font-family: var(--font-head); font-size: 22px; color: var(--amber); }
-.outcomes-head{ width: var(--w); margin: 72px auto 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-.outcomes-head h3{ font-size: clamp(24px, 2.6vw, 34px); }
-.outcomes{ width: var(--w); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.outcomes figure{ position: relative; border-radius: 20px; overflow: hidden; background: #000; border: 1px solid var(--rule-08); }
-.outcomes img{ width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
-.outcomes figcaption{ position: absolute; left: 0; right: 0; bottom: 0; padding: 48px 22px 18px; font-size: 14px; color: var(--ink-100); background: linear-gradient(0deg, hsl(225 72% 5% / .92), hsl(225 72% 5% / 0)); }
-.outcomes figcaption b{ font-family: var(--font-head); font-weight: 400; font-size: 20px; letter-spacing: .03em; text-transform: uppercase; margin-right: 6px; }
-.outcomes .p b{ color: var(--amber); } .outcomes .v b{ color: #FF6B5A; }
-
-/* four receipts */
-.cards{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 52px; }
-.card{ background: var(--raise); border: 1px solid var(--rule-08); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; text-align: left; }
-.card h3{ font-size: 21px; letter-spacing: .03em; }
-.card p{ font-size: 14.5px; color: var(--ink-70); }
-.receipt{ position: relative; background: var(--paper); color: var(--paper-ink); font-size: 11.5px; line-height: 1.55; padding: 14px 14px 26px; min-height: 236px; display: flex; flex-direction: column; gap: 3px;
-  -webkit-mask: var(--zigzag); mask: var(--zigzag); box-shadow: inset 0 -40px 60px -50px hsl(30 30% 30% / .25); font-variant-numeric: tabular-nums; }
-.receipt .rh{ display: flex; justify-content: space-between; gap: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px dashed var(--paper-rule); }
-.receipt .rh span:last-child{ font-weight: 500; color: var(--paper-60); }
-.receipt .rl{ display: flex; gap: 6px; align-items: baseline; }
-.receipt .rl span:first-child{ white-space: nowrap; }
-.receipt .rl i{ flex: 1; border-bottom: 1px dotted var(--paper-rule); transform: translateY(-3px); min-width: 8px; }
-.receipt .rl span:last-child{ white-space: nowrap; font-weight: 700; }
-.receipt .note{ color: var(--paper-60); }
-.receipt .neg{ color: var(--void); } .receipt .pos{ color: var(--ok-ink); }
-.card .receipt p{ font-size: 11.5px; color: var(--paper-ink); }
-.receipt .foot{ margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; min-height: 40px; }
-.card .receipt .note{ font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-60); }
-.receipt .stamp{ font-size: 19px; margin-right: 2px; }
-.receipt .rule{ border-top: 1px dashed var(--paper-rule); margin: 4px 0 2px; }
-
-/* price */
-.price{ position: relative; width: min(560px, 100%); margin: 40px auto 0; background: var(--raise); border: 1px solid hsl(45 100% 50% / .45); border-radius: 24px; padding: 40px 40px 36px; text-align: center; box-shadow: 0 0 0 1px hsl(45 100% 50% / .08), 0 30px 80px hsl(45 100% 40% / .10); }
-.price .num{ font-family: var(--font-head); font-size: clamp(64px, 8vw, 104px); color: var(--ink-100); line-height: 1; }
-.price .num small{ font-size: .22em; color: var(--ink-60); letter-spacing: .1em; margin-left: .3em; }
-.price ul{ list-style: none; margin: 22px 0 28px; display: grid; gap: 8px; font-size: 15px; color: var(--ink-70); }
-.price .stamp{ position: absolute; top: 26px; right: -14px; font-size: 15px; transform: rotate(9deg); }
-.anchor{ margin: 28px auto 0; max-width: 60ch; font-size: 15.5px; color: var(--ink-70); }
-
-/* four questions */
-.faq{ max-width: 900px; margin: 40px auto 0; border-top: 1px dashed var(--rule-20); }
-.faq details{ border-bottom: 1px dashed var(--rule-20); }
-.faq summary{ cursor: pointer; list-style: none; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 24px 4px; font-family: var(--font-head); font-size: clamp(20px, 2.2vw, 26px); letter-spacing: .02em; text-transform: uppercase; color: var(--ink-100); }
-.faq summary::-webkit-details-marker{ display: none; }
-.faq summary::after{ content: "+"; font-size: 26px; color: var(--amber); transition: transform .25s var(--ease-out); flex: none; }
-.faq details[open] summary::after{ transform: rotate(45deg); }
-.faq details > p{ padding: 0 4px 24px; font-size: 15px; color: var(--ink-70); max-width: 66ch; }
-
-/* five rules */
-.rules{ display: grid; grid-template-columns: 5fr 7fr; gap: 56px; align-items: center; }
-.rules figure{ border-radius: 20px; overflow: hidden; border: 1px solid var(--rule-08); background: #000; }
-.rules figure img{ width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
-.rules h2{ font-size: clamp(36px, 4.6vw, 60px); margin-bottom: 26px; }
-.rule-list{ list-style: none; display: grid; gap: 0; counter-reset: r; border-top: 1px solid var(--rule-08); margin-bottom: 26px; }
-.rule-list li{ counter-increment: r; display: grid; grid-template-columns: 44px 1fr; gap: 4px 12px; padding: 16px 0; border-bottom: 1px solid var(--rule-08); font-size: 15px; }
-.rule-list li::before{ content: counter(r, upper-roman) "."; font-family: var(--font-head); font-size: 20px; color: var(--amber); line-height: 1.2; grid-row: span 2; }
-.rule-list li b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: 21px; letter-spacing: .03em; text-transform: uppercase; line-height: 1.1; }
-
-/* the application */
-.close{ position: relative; overflow: hidden; padding: 110px 0 0; text-align: center; }
-.close::before{ content:""; position:absolute; inset:0; pointer-events:none; background: radial-gradient(50% 45% at 50% 26%, hsl(45 100% 50% / .09), transparent 70%); }
-.close-in{ position: relative; width: var(--w); margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 34px; }
-.close .seal{ width: 150px; height: 150px; }
-.close h2{ font-size: clamp(40px, 6vw, 84px); max-width: 16ch; }
-
-/* footer */
-.footer{ margin-top: 110px; text-align: left; background: hsl(226 70% 5%); border-top: 1px solid var(--rule-08); padding: 56px 0 40px; }
-.footer .in{ display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
-.footer .nav-logo{ font-size: 26px; }
-.footer .motto{ margin-top: 14px; font-family: var(--font-head); font-size: 18px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-60); }
-.footer h4{ font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-100); margin-bottom: 14px; }
-.footer ul{ list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--ink-70); }
-.footer ul a:hover{ color: var(--ink-100); }
-.footer .legal{ grid-column: 1 / -1; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--rule-08); font-size: 12px; color: var(--ink-60); max-width: 90ch; }
-
-/* mobile sticky CTA */
-.sticky-cta{ position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 70; display: none; padding: 8px; border-radius: 999px; background: hsl(224 55% 12% / .95); border: 1px solid var(--rule-20); transform: translateY(120%); visibility: hidden; transition: transform .4s var(--ease-out), visibility 0s .4s; }
-.sticky-cta.show{ transform: translateY(0); visibility: visible; transition: transform .4s var(--ease-out), visibility 0s; }
-.sticky-cta .btn{ flex: 1 1 0; }
-@media (max-width: 760px){ .sticky-cta{ display: flex; } }
-
-/* case study, filled only from public_case_study() */
-.case-before{ font-family: var(--font-head); text-transform: uppercase; font-size: clamp(26px, 3.2vw, 42px); line-height: 1.08; color: var(--ink-100); max-width: 28ch; margin: 0 auto 24px; }
-.case-before::before{ content: "\201C"; color: var(--amber); } .case-before::after{ content: "\201D"; color: var(--amber); }
-.case-numbers{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
-.case-number{ padding: 22px 24px; background: var(--raise); border-radius: 16px; }
-.case-number .k{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-60); }
-.case-number b{ display: block; font-family: var(--font-head); font-weight: 400; font-size: clamp(34px, 4vw, 50px); line-height: 1; margin: 8px 0; }
-.case-number p{ font-size: 12px; color: var(--ink-60); }
-.record{ background: var(--raise); border-radius: 16px; padding: 22px 24px; }
-.record table{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-.record th{ text-align: left; font-weight: 400; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-60); padding: 6px 8px; border-bottom: 1px solid var(--rule-20); }
-.record td{ padding: 12px 8px; border-bottom: 1px solid var(--rule-08); color: var(--ink-70); vertical-align: top; }
-.record th.num, .record td.num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.record .pos{ color: var(--ok); } .record .miss{ color: var(--serious); } .record .pend{ color: var(--ink-60); }
-.case-quote{ margin: 32px auto 0; font-size: clamp(17px, 1.9vw, 22px); line-height: 1.5; color: var(--ink-100); max-width: 52ch; border-left: 2px solid var(--amber); padding-left: 18px; }
-
-/* motion + responsive */
-.js [data-reveal]{ opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .8s var(--ease-out); }
-.js [data-reveal].revealed{ opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce), print{
-  [data-reveal]{ opacity: 1 !important; transform: none !important; transition: none !important; }
-  .grain, .seal .ring{ animation: none; } .sticky-cta{ transition: none; } html{ scroll-behavior: auto; }
-}
-@media (max-width: 1080px){
-  .cards{ grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 920px){
-  .stats .in{ grid-template-columns: 1fr 1fr; }
-  .guarantee{ grid-template-columns: 1fr; padding: 36px 32px; }
-  .creed .after{ grid-template-columns: 1fr; }
-  .rules{ grid-template-columns: 1fr; gap: 36px; }
-  .rules figure{ max-width: 420px; }
-  .rules figure img{ aspect-ratio: 16 / 10; object-position: 50% 62%; }
-  .footer .in{ grid-template-columns: 1fr 1fr; }
-  .hero-seal{ display: none; }
-}
-@media (max-width: 760px){
-  .sect{ padding: 76px 0; }
-  .hero{ min-height: 0; align-items: flex-end; padding: 62vw 0 56px; }
-  .hero-film{ height: 78vw; object-position: 76% 50%; }
-  .hero-shade{ background: linear-gradient(0deg, var(--bg) 0%, var(--bg) calc(100% - 78vw + 1px), hsl(225 72% 7% / .6) calc(100% - 40vw), hsl(225 72% 7% / .15) 100%); }
-  .hero h1{ font-size: clamp(44px, 12vw, 64px); }
-  .stats{ padding: 40px 0; }
-  .stats .in{ grid-template-columns: 1fr 1fr; gap: 18px 14px; }
-  .stat b{ font-size: 34px; white-space: nowrap; }
-  .guarantee{ padding: 28px 20px; }
-  .outcomes{ grid-template-columns: 1fr; }
-  .outcomes-head{ margin-top: 56px; }
-  .cards{ grid-template-columns: 1fr; }
-  .price{ padding: 30px 20px; } .price .num small{ display: block; margin: 8px 0 0; } .price .stamp{ right: 8px; top: 12px; font-size: 13px; }
-  .btn{ white-space: normal; text-align: center; line-height: 1.35; }
-  .hero .btn-lg, .cta .btn, .price .btn, .close .btn{ width: 100%; padding-left: 14px; padding-right: 14px; letter-spacing: .05em; }
-  .hero-cta{ width: 100%; }
-  .footer .in{ grid-template-columns: 1fr; }
-  .case-numbers{ grid-template-columns: 1fr; }
-  #case .record th:last-child, #case .record td:last-child{ display: none; }
-}
-</style>
-</head>
-<body>
-
-<div class="grain" aria-hidden="true"></div>
-
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <symbol id="mark" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></symbol>
-  </defs>
-</svg>
-
-<div class="bar" id="teardown"><a href="/teardown"><span class="new">Free</span>The 60-second Teardown: price one listing off Amazon's published rate card →</a></div>
-
-<nav class="nav" aria-label="Primary">
-  <div class="nav-in">
-    <a class="nav-logo" href="#top" aria-label="Hubricon, home"><svg aria-hidden="true"><use href="#mark"/></svg><span>Hubric<em>o</em>n</span></a>
-    <div class="nav-links">
-      <a href="#offer">Offer</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-      <a href="/manifesto">Manifesto</a>
-    </div>
-    <a class="btn btn-white" href="/apply" data-cta="nav">Start your free Proving Month</a>
-  </div>
-</nav>
-
-<!-- ═══ THE FILM ═══ -->
-<header class="hero" id="top">
-  <video class="hero-film" id="hero-film" muted loop playsinline preload="none" poster="/brand/hero-printer.webp" aria-hidden="true" tabindex="-1">
-    <source src="/brand/hero-printer.webm" type="video/webm">
-    <source src="/brand/hero-printer.mp4" type="video/mp4">
-  </video>
-  <div class="hero-shade" aria-hidden="true"></div>
-  <div class="hero-in">
-    <span class="stamp amber">Paid on proof</span>
-    <h1>More profit than our bill, every month. Or you don't pay.</h1>
-    <p class="hero-sub">We make the five money decisions in your account, put in writing what each should earn before it goes live, and grade it on your own reports.</p>
-    <div class="hero-cta"><a class="btn btn-amber btn-lg" href="/apply" data-cta="hero">Start your free Proving Month</a></div>
-    <p class="hero-meta">Managed Profit · Amazon &amp; Shopify brands · <span style="white-space:nowrap">$3M–$20M/yr</span></p>
-  </div>
-  <svg class="seal hero-seal" viewBox="0 0 200 200" aria-hidden="true"><path id="seal-path-a" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" fill="none"/><circle cx="100" cy="100" r="97" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="64" fill="none" stroke="currentColor" stroke-width="1.5"/><g class="ring"><text><textPath href="#seal-path-a" textLength="500" lengthAdjust="spacing">PAID ON PROOF · PROVEN OR VOID · CALLED BEFORE · MEASURED AFTER · </textPath></text></g><path d="M81 72h11v22h16V72h11v56h-11v-23H92v23H81z" fill="currentColor"/></svg>
-</header>
-
-<!-- ═══ FOUR NUMBERS ═══ -->
-<section class="stats band sect" data-reveal>
-  <div class="in">
-    <div class="stat"><b>$6,000</b><span>a month, flat</span></div>
-    <div class="stat"><b>24 hrs</b><span>from your files to your Profit Teardown</span></div>
-    <div class="stat"><b>~90 min</b><span>of your time in month one</span></div>
-    <div class="stat"><b>$0</b><span>until the Record covers the bill</span></div>
-  </div>
-</section>
-
-<!-- ═══ THE CREED ═══ -->
-<section class="sect creed" id="proof" data-reveal>
-  <div class="in">
-    <div class="eyebrow">The difference</div>
-    <h2><span class="dim">Your agency is paid on spend.</span> <span class="dim">Your software is paid to report.</span> <span class="lit">We're paid on proof.</span></h2>
-    <div class="after">
-      <p>Before a move goes live, you get it in writing with the dollars we expect. After, it's measured on your own reports, misses included. The invoice can never outrun the proof.</p>
-      <a class="link" href="/manifesto">Read the manifesto →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ PROVEN OR VOID ═══ -->
-<section class="sect band" id="guarantee" data-reveal>
-  <div class="guarantee">
-    <div>
-      <div class="eyebrow">Proven or Void</div>
-      <h2>If the Record hasn't covered our bill, there is no bill.</h2>
-    </div>
-    <ol class="terms">
-      <li><b>Month one is free.</b> The Proving Month costs $0, whatever it finds.</li>
-      <li><b>No bill until the Record covers it.</b> Each invoice waits until dollars proven, plus dollars found and filed, cover everything billed since day one. Short of that, it's void before it reaches you. The work doesn't stop.</li>
-      <li><b>Leave any day, trued up.</b> One email ends it. Billed more than your Record shows? We void what's unpaid and refund the rest to your bank. Your Record exports free, any day.</li>
-      <li><b>Late Teardown, free month.</b> Not in your inbox within 24 hours of your files? Your first paid month is free too.</li>
-    </ol>
-  </div>
-  <div class="outcomes-head"><h3>Every invoice ends one of two ways.</h3><span class="tag">Illustration</span></div>
-  <div class="outcomes">
-    <figure class="p"><img src="/brand/stamp-proven.webp" alt="A receipt stamped PROVEN in amber ink" width="1400" height="792" loading="lazy" decoding="async"><figcaption><b>Covered.</b> The invoice goes out.</figcaption></figure>
-    <figure class="v"><img src="/brand/stamp-void.webp" alt="An invoice stamped VOID in red ink" width="1400" height="792" loading="lazy" decoding="async"><figcaption><b>Not covered.</b> It's void before it reaches you.</figcaption></figure>
-  </div>
-</section>
-
-<!-- ═══ THE OFFER ═══ -->
-<section class="sect center" id="offer" data-reveal>
-  <div class="in">
-    <h2 class="h2">What $6,000 a month buys</h2>
-    <p class="lede">Prices, ad bleed, reorders, fee cliffs, Amazon claims. Every move gets a receipt.</p>
-    <div class="cards" id="demo">
-      <div class="card">
-        <div class="receipt" role="group" aria-label="Sample Teardown excerpt: net margin per SKU, demo data">
-          <div class="rh"><span>Profit Teardown</span><span>Sample</span></div>
-          <div class="rl"><span>SKU-BLUE net</span><i></i><span class="pos">+40%</span></div>
-          <div class="rl"><span>SKU-RED net</span><i></i><span class="pos">+26%</span></div>
-          <div class="rl"><span>GADGET net</span><i></i><span class="neg">−7%</span></div>
-          <div class="rule"></div>
-          <div class="rl"><span>Stockout odds</span><i></i><span>per SKU</span></div>
-          <div class="rl"><span>Claims, dated</span><i></i><span>per case</span></div>
-          <div class="foot"><p class="note">Demo data</p><span class="stamp amber">24 hrs</span></div>
-        </div>
-        <h3>The Profit Teardown</h3>
-        <p>Every SKU's true margin, stockout odds, ad break-even, dated claims. Inside 24 hours of your files.</p>
-      </div>
-      <div class="card">
-        <div class="receipt" role="group" aria-label="Sample move, demo data: expected $6,200, measured $6,840">
-          <div class="rh"><span>Move 014</span><span>Sample</span></div>
-          <p>Cut 140 zero-sale search terms.</p>
-          <div class="rule"></div>
-          <div class="rl"><span>Called · Aug 21</span><i></i><span>$6,200</span></div>
-          <div class="rl"><span>Live · Aug 24</span><i></i><span>—</span></div>
-          <div class="rl"><span>Measured · Sep 18</span><i></i><span class="pos">$6,840</span></div>
-          <div class="foot"><p class="note">Demo data</p><span class="stamp ok">Proven</span></div>
-        </div>
-        <h3>Moves, made for you</h3>
-        <p>First moves live inside two weeks. One email before each. Reply no and it stops.</p>
-      </div>
-      <div class="card">
-        <div class="receipt" role="group" aria-label="Sample Profit Record totals, demo data: proven $11,770, billed $6,000">
-          <div class="rh"><span>Profit Record</span><span>Sample</span></div>
-          <div class="rl"><span>Proven</span><i></i><span class="pos">$11,770</span></div>
-          <div class="rl"><span>Found, not yet banked</span><i></i><span>$2,410</span></div>
-          <div class="rl"><span>Billed since day one</span><i></i><span>$6,000</span></div>
-          <div class="rule"></div>
-          <div class="rl"><span>Invoice</span><i></i><span>Stands</span></div>
-          <div class="foot"><p class="note">Misses stay on it · Demo data</p></div>
-        </div>
-        <h3>The Profit Record</h3>
-        <p>Dollars expected before. Dollars measured after, on your own exports. Misses included.</p>
-      </div>
-      <div class="card">
-        <div class="receipt" role="group" aria-label="What the seat can touch">
-          <div class="rh"><span>One scoped seat</span><span>Access</span></div>
-          <div class="rl"><span>Reports</span><i></i><span class="pos">Yes</span></div>
-          <div class="rl"><span>Pricing</span><i></i><span class="pos">Yes</span></div>
-          <div class="rl"><span>Campaigns</span><i></i><span class="pos">Yes</span></div>
-          <div class="rl"><span>Banking, payouts</span><i></i><span class="neg">No</span></div>
-          <div class="rl"><span>Account settings</span><i></i><span class="neg">No</span></div>
-          <div class="foot"><p class="note">Revoked in one click</p></div>
-        </div>
-        <h3>Your account, your veto</h3>
-        <p>Nothing moves before you're told. Banking, payouts and settings stay out of reach.</p>
-      </div>
-    </div>
-    <div class="cta"><a class="btn btn-amber btn-lg" href="/apply" data-cta="offer">Start your free Proving Month</a></div>
-  </div>
-</section>
-
-<!-- ═══ PRICE ═══ -->
-<section class="sect band center" id="pricing" data-reveal>
-  <div class="in">
-    <h2 class="h2">One plan. One price.</h2>
-    <div class="price">
-      <span class="stamp void" aria-hidden="true">Void unless proven</span>
-      <div class="num">$6,000<small>/MO FLAT</small></div>
-      <ul>
-        <li>Month one free</li>
-        <li>Never a percentage of ad spend</li>
-        <li>No setup fee, no card on file</li>
-        <li>Month-to-month, trued up when you leave</li>
-      </ul>
-      <a class="btn btn-amber btn-lg" href="/apply" data-cta="pricing">Start your free Proving Month</a>
-    </div>
-    <p class="anchor">Bought separately, four vendors bill $5,700–$15,000+ a month. None executes across all of it. None grades it. Published price lists, 2025–26. <a class="link" href="/method#sources">Sources →</a></p>
-  </div>
-</section>
-
-<!-- ═══ FOUR QUESTIONS ═══ -->
-<section class="sect center" id="faq" data-reveal>
-  <div class="in">
-    <h2 class="h2">Built for your own brand at $3M–$20M.</h2>
-    <div class="faq">
-      <details data-q="fit"><summary>Who is it for?</summary>
-        <p>Your own brand on Amazon, Shopify or both, $3M–$20M a year, 10+ SKUs. Under $3M or reselling, book anyway. On the call we check whether the arithmetic holds at your size.</p></details>
-      <details data-q="veto"><summary>What can move without my yes?</summary>
-        <p>Only moves inside the bounds you set at kickoff, after an email with the expected dollars and three days to say no.</p></details>
-      <details data-q="seat"><summary>What about my tools and my agency?</summary>
-        <p>Keep them. Our seat reads reports and edits pricing and campaigns; banking stays locked.</p></details>
-      <details data-q="nothing"><summary>What if you find nothing worth fixing?</summary>
-        <p>We say so. You keep the Teardown. You owe nothing.</p></details>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ FIVE RULES ═══ -->
-<section class="sect band" id="rules" data-reveal>
-  <div class="in rules">
-    <figure><img src="/brand/stamp-tool.webp" alt="A steel hand stamp beside a tin of red ink" width="1200" height="1500" loading="lazy" decoding="async"></figure>
-    <div>
-      <div class="eyebrow">How we work</div>
-      <h2>Five rules we don't break.</h2>
-      <ol class="rule-list">
-        <li><b>We call it before we make it.</b> At least three days before a move goes live, you get it in writing with the dollars we expect.</li>
-        <li><b>No email, no move.</b> If that email doesn't go out, nothing changes in your account.</li>
-        <li><b>Misses stay on the Record.</b> A move that came in short is shown at what it earned.</li>
-        <li><b>Never a percentage of your spend.</b> Our advice can't inflate our invoice.</li>
-        <li><b>The invoice can't outrun the proof.</b> Short of the Record, it's void.</li>
-      </ol>
-      <a class="link" href="/manifesto">Read the manifesto →</a>
-    </div>
-  </div>
-</section>
-
-<!-- One case study, told in full, or nothing. Filled only from public_case_study(). No row, no section. -->
-<section class="sect center" id="case" data-reveal hidden>
-  <div class="in">
-    <div class="eyebrow" data-case="eyebrow"></div>
-    <blockquote class="case-before" data-case="before"></blockquote>
-    <div class="case-numbers" data-case="numbers"></div>
-    <div class="record" role="group" aria-label="Their Profit Record, identifiers masked">
-      <span class="tag">Their Profit Record · SKUs masked</span>
-      <table data-case="record"></table>
-    </div>
-    <blockquote class="case-quote" data-case="quote"></blockquote>
-  </div>
-</section>
-
-<!-- ═══ THE APPLICATION ═══ -->
-<section class="close" id="apply" data-reveal>
-  <div class="close-in">
-    <svg class="seal close-seal" viewBox="0 0 200 200" aria-hidden="true"><path id="seal-path-b" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" fill="none"/><circle cx="100" cy="100" r="97" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="64" fill="none" stroke="currentColor" stroke-width="1.5"/><g class="ring"><text><textPath href="#seal-path-b" textLength="500" lengthAdjust="spacing">PAID ON PROOF · PROVEN OR VOID · CALLED BEFORE · MEASURED AFTER · </textPath></text></g><path d="M81 72h11v22h16V72h11v56h-11v-23H92v23H81z" fill="currentColor"/></svg>
-    <h2>Your Proving Month starts with one 20&#8209;minute call.</h2>
-    <a class="btn btn-amber btn-lg" href="/apply" data-cta="close">Start your free Proving Month</a>
-  </div>
-  <footer class="footer">
-    <div class="in">
-      <div><a class="nav-logo" href="#top"><svg aria-hidden="true"><use href="#mark"/></svg><span>Hubric<em>o</em>n</span></a><p class="motto">Paid on proof.</p></div>
-      <div><h4>Product</h4><ul><li><a href="/teardown">60-second Teardown</a></li><li><a href="/method">The method</a></li><li><a href="/results">Results</a></li></ul></div>
-      <div><h4>Company</h4><ul><li><a href="/manifesto">Manifesto</a></li><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
-      <p class="legal"><span data-proof-pending>No published results yet; the first posts when a client agrees to publish theirs. </span>Dollar figures on this page are our price, published vendor price lists, or arithmetic from named, interested sources, not results of ours. Sample receipts are demo data; photographs are illustrations. © 2026 Hubricon</p>
-    </div>
-  </footer>
-</section>
-
-<!-- mobile sticky CTA -->
-<div class="sticky-cta" id="sticky-cta" aria-hidden="true">
-  <a class="btn btn-amber" href="/apply" data-cta="sticky">Start your free Proving Month</a>
-</div>
-
+<!-- build:faq-jsonld -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "Who is it for?", "acceptedAnswer": {"@type": "Answer", "text": "Your own brand on Amazon, Shopify or both, $3M–$20M a year, 10+ SKUs. Under $3M or reselling, book anyway. On the call we check whether the arithmetic holds at your size."}},
-    {"@type": "Question", "name": "What can move without my yes?", "acceptedAnswer": {"@type": "Answer", "text": "Only moves inside the bounds you set at kickoff, after an email with the expected dollars and three days to say no."}},
-    {"@type": "Question", "name": "What about my tools and my agency?", "acceptedAnswer": {"@type": "Answer", "text": "Keep them. Our seat reads reports and edits pricing and campaigns; banking stays locked."}},
-    {"@type": "Question", "name": "What if you find nothing worth fixing?", "acceptedAnswer": {"@type": "Answer", "text": "We say so. You keep the Teardown. You owe nothing."}}
+    {
+      "@type": "Question",
+      "name": "How do you know which dollars you made?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (Amazon paid it), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only if it lasts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What counts as profit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, a claim Amazon paid. Misses stay on the Record at what they actually earned."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why isn't this too good to be true?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because the bill waits for the proof. Your first month is free. After that, no invoice goes out until your Record shows more than we've billed since day one. We can afford that only because we take on accounts where the math clears."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens in a month that underperforms?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nothing you have to ask for. If the Record hasn't covered the bill, the invoice is void before it reaches you, and the work carries on. Leave any day with one email; anything billed beyond what your Record shows comes back to your bank."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens to my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days."
+      }
+    }
   ]
 }
 </script>
+<!-- /build:faq-jsonld -->
+</head>
+<body>
 
-<script>
-"use strict";
-document.documentElement.classList.add("js");
+<header class="wrap top">
+  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+</header>
 
-/* ── Vercel Web Analytics ── */
-window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-function track(name, data) { try { window.va("event", { name, data }); } catch (e) {} }
+<main>
 
-/* A client's referral link (hubricon.com/?ref=<code>) is kept for the visit and
-   rides the booking, so the operator can credit the sender when this brand
-   clears its own day 30. */
-const REF_OK = /^[A-Za-z0-9_-]{4,32}$/;
-try {
-  const incoming = new URLSearchParams(location.search).get("ref");
-  if (incoming && REF_OK.test(incoming)) sessionStorage.setItem("hubricon_ref", incoming);
-} catch (e) {}
+<!-- 1 · The promise -->
+<section class="hero" aria-labelledby="headline">
+  <div class="wrap hero-grid">
+    <div>
+      <h1 id="headline">More profit than our bill every month, <span class="nowrap">or you don't pay.</span></h1>
+      <script>
+      /* Three headlines, one per visitor, kept for the visit after. ?h=A|B|C forces one. */
+      (function () {
+        var H = {
+          A: "More profit than our bill every month, or you don't pay.",
+          B: "Always know exactly where your money is made and lost, or you don't pay.",
+          C: "Your Amazon P&L is an average. Your losses are hiding in the steps."
+        };
+        var v;
+        try { v = new URLSearchParams(location.search).get("h"); } catch (e) {}
+        if (!H[v]) { try { v = localStorage.getItem("hubricon_h"); } catch (e) {} }
+        if (!H[v]) { v = "ABC".charAt(Math.floor(Math.random() * 3)); }
+        try { localStorage.setItem("hubricon_h", v); } catch (e) {}
+        document.documentElement.setAttribute("data-headline", v);
+        if (v !== "A") document.getElementById("headline").textContent = H[v];
+      })();
+      </script>
+      <p class="lede">For Amazon and Shopify brands doing $1M to $30M a year.</p>
+      <div class="cta">
+        <a class="btn" href="/apply" data-cta="hero">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+        <span class="cta-note">20 minutes. No card, ever.</span>
+      </div>
+    </div>
+    <figure class="figure hero-figure" data-play>
+      <div class="chart-wide"><!-- build:mc-mood-wide --><svg class="chart mc mc--mood" viewBox="0 0 560 440" role="img" aria-labelledby="mc-mood-w-t mc-mood-w-d" preserveAspectRatio="xMidYMid meet"><title id="mc-mood-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-mood-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><path class="mc-band fade" d="M8,432 L53.3,409.7 L98.7,387.9 L144,366 L189.3,343.9 L234.7,321.2 L280,298.6 L325.3,276.2 L370.7,253.6 L416,231.1 L461.3,208.6 L506.7,186.2 L552,163.6 L552,342 L506.7,349.6 L461.3,357.1 L416,364.7 L370.7,372.2 L325.3,379.8 L280,387.4 L234.7,394.9 L189.3,402.5 L144,410 L98.7,417.3 L53.3,424.6 L8,432Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M8,432 L53.3,427.4 L98.7,422.7 L144,418.2 L189.3,413.4 L234.7,408.8 L280,403.8 L325.3,398.8 L370.7,394.2 L416,389.6 L461.3,384.7 L506.7,379.8 L552,374.9"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M8,432 L53.3,426.4 L98.7,420.9 L144,414.9 L189.3,409.3 L234.7,403.5 L280,397.7 L325.3,391.6 L370.7,385.4 L416,379.3 L461.3,373.6 L506.7,368 L552,362.4"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M8,432 L53.3,425.5 L98.7,419.1 L144,412.6 L189.3,406 L234.7,399.8 L280,393.5 L325.3,386.7 L370.7,380.2 L416,374 L461.3,367.7 L506.7,361.3 L552,354.8"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M8,432 L53.3,425.3 L98.7,418.9 L144,411.9 L189.3,404.7 L234.7,397.5 L280,390.7 L325.3,383.9 L370.7,376.9 L416,370.3 L461.3,363.3 L506.7,356.2 L552,349.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M8,432 L53.3,425 L98.7,417.8 L144,411 L189.3,403.5 L234.7,395.8 L280,388.5 L325.3,380.9 L370.7,373.3 L416,365.9 L461.3,358.7 L506.7,351.6 L552,344.3"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M8,432 L53.3,424.2 L98.7,416.6 L144,408.6 L189.3,401.2 L234.7,393.7 L280,386 L325.3,378 L370.7,370.2 L416,362.2 L461.3,354.8 L506.7,347.4 L552,339.9"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M8,432 L53.3,424 L98.7,416.4 L144,409 L189.3,400.7 L234.7,392.4 L280,384.9 L325.3,376.5 L370.7,368.6 L416,360.5 L461.3,352.5 L506.7,344.3 L552,335.9"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M8,432 L53.3,423.7 L98.7,416.1 L144,407.8 L189.3,399.7 L234.7,391.1 L280,382.7 L325.3,374.3 L370.7,366 L416,357.4 L461.3,349.3 L506.7,340.8 L552,332.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M8,432 L53.3,423.1 L98.7,414.6 L144,406 L189.3,397.5 L234.7,388.7 L280,380.3 L325.3,371.8 L370.7,363.1 L416,354.8 L461.3,345.8 L506.7,336.8 L552,328.3"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M8,432 L53.3,423.3 L98.7,414.2 L144,405.1 L189.3,396.1 L234.7,387.4 L280,378.3 L325.3,369.2 L370.7,359.9 L416,351.4 L461.3,342.9 L506.7,333.8 L552,325"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M8,432 L53.3,423 L98.7,413.7 L144,405.2 L189.3,396 L234.7,386.6 L280,377 L325.3,367.6 L370.7,358.7 L416,349.4 L461.3,340.5 L506.7,330.8 L552,321.7"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M8,432 L53.3,423 L98.7,414 L144,404.2 L189.3,394.6 L234.7,385 L280,376 L325.3,366.7 L370.7,356.8 L416,347 L461.3,337.3 L506.7,327.7 L552,318.7"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M8,432 L53.3,422.8 L98.7,413.5 L144,403.5 L189.3,393.6 L234.7,384.2 L280,374.2 L325.3,363.8 L370.7,354.3 L416,344.8 L461.3,335.4 L506.7,325.4 L552,315.8"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M8,432 L53.3,422.4 L98.7,412.9 L144,403.2 L189.3,393.6 L234.7,383.4 L280,373 L325.3,362.6 L370.7,352.8 L416,342.8 L461.3,332.1 L506.7,321.9 L552,312.2"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M8,432 L53.3,422.3 L98.7,411.7 L144,402.2 L189.3,392.3 L234.7,381.9 L280,371.7 L325.3,361.5 L370.7,351 L416,340.1 L461.3,329.6 L506.7,318.9 L552,308.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M8,432 L53.3,421.8 L98.7,411.7 L144,400.9 L189.3,390.7 L234.7,379.7 L280,369.3 L325.3,358.2 L370.7,347.9 L416,336.8 L461.3,326.4 L506.7,316 L552,305.6"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M8,432 L53.3,421.8 L98.7,410.9 L144,400.2 L189.3,389 L234.7,377.7 L280,366.4 L325.3,356 L370.7,345.3 L416,334.5 L461.3,323.8 L506.7,312.8 L552,302.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M8,432 L53.3,421.5 L98.7,410.7 L144,399.6 L189.3,389 L234.7,377.6 L280,366.1 L325.3,354.6 L370.7,343.5 L416,333 L461.3,321.4 L506.7,309.9 L552,299.1"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M8,432 L53.3,421 L98.7,410.2 L144,399.2 L189.3,388.4 L234.7,376.7 L280,365.7 L325.3,354.2 L370.7,342.5 L416,330.6 L461.3,319 L506.7,307.2 L552,296.1"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M8,432 L53.3,420.8 L98.7,409.5 L144,398.2 L189.3,386.8 L234.7,375.6 L280,363.5 L325.3,351.4 L370.7,340.2 L416,328.4 L461.3,316.1 L506.7,305 L552,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M8,432 L53.3,420.3 L98.7,408.5 L144,396.9 L189.3,384.6 L234.7,372.6 L280,361.1 L325.3,349.5 L370.7,337.3 L416,324.8 L461.3,313.2 L506.7,301.2 L552,289.7"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M8,432 L53.3,419.6 L98.7,408.3 L144,396.5 L189.3,384.2 L234.7,372.6 L280,359.7 L325.3,347.5 L370.7,334.6 L416,322.3 L461.3,310.3 L506.7,298.4 L552,286.7"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M8,432 L53.3,420.2 L98.7,408.5 L144,396.2 L189.3,383.6 L234.7,370.9 L280,358.4 L325.3,345.6 L370.7,333.4 L416,321.2 L461.3,308.8 L506.7,296.1 L552,283.4"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M8,432 L53.3,419.3 L98.7,407.1 L144,395.5 L189.3,383.2 L234.7,370.3 L280,358 L325.3,344.6 L370.7,332 L416,319.8 L461.3,306.4 L506.7,293.2 L552,280.1"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M8,432 L53.3,419.2 L98.7,406.9 L144,394.4 L189.3,381.2 L234.7,368.4 L280,355.6 L325.3,342.6 L370.7,329.2 L416,316.5 L461.3,303 L506.7,289.4 L552,276.5"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M8,432 L53.3,418.7 L98.7,406.3 L144,392.7 L189.3,378.9 L234.7,365.9 L280,353.1 L325.3,340.1 L370.7,326.7 L416,313.6 L461.3,299.7 L506.7,286.2 L552,273.4"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M8,432 L53.3,418.5 L98.7,405.6 L144,392.2 L189.3,378.8 L234.7,365.3 L280,352.2 L325.3,339 L370.7,325.2 L416,310.9 L461.3,297.1 L506.7,283.3 L552,269.9"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M8,432 L53.3,417.6 L98.7,404.6 L144,391.6 L189.3,377.7 L234.7,363.9 L280,350.3 L325.3,336.7 L370.7,322.7 L416,309.2 L461.3,295 L506.7,280.6 L552,266.6"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M8,432 L53.3,417.7 L98.7,403.8 L144,389.2 L189.3,374.8 L234.7,360.9 L280,347.4 L325.3,333.7 L370.7,319.1 L416,305.6 L461.3,291.7 L506.7,277.3 L552,263.1"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M8,432 L53.3,418.3 L98.7,404.6 L144,390 L189.3,374.8 L234.7,360.6 L280,346.8 L325.3,332.3 L370.7,317.2 L416,302.7 L461.3,288.9 L506.7,274.9 L552,259.6"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M8,432 L53.3,417.8 L98.7,403.9 L144,388.8 L189.3,373.9 L234.7,358.9 L280,343.2 L325.3,327.9 L370.7,313.4 L416,298.4 L461.3,284 L506.7,269.4 L552,255.1"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M8,432 L53.3,417.6 L98.7,403 L144,388.6 L189.3,373.6 L234.7,358.5 L280,343.8 L325.3,328.9 L370.7,314.3 L416,299.4 L461.3,283.1 L506.7,267.5 L552,251.4"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M8,432 L53.3,416.2 L98.7,400.7 L144,385.4 L189.3,370.2 L234.7,355.3 L280,339.6 L325.3,323.8 L370.7,308.6 L416,293.7 L461.3,278.5 L506.7,263 L552,247.3"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M8,432 L53.3,416.8 L98.7,401.5 L144,385.2 L189.3,369.5 L234.7,353.3 L280,337.6 L325.3,321.2 L370.7,306.1 L416,290.6 L461.3,275.5 L506.7,260.1 L552,243.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M8,432 L53.3,416.6 L98.7,400.3 L144,384.9 L189.3,368.8 L234.7,352.6 L280,336.2 L325.3,320.2 L370.7,303.6 L416,287.5 L461.3,271.8 L506.7,254.8 L552,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M8,432 L53.3,415.2 L98.7,399.6 L144,383.3 L189.3,367.2 L234.7,350.3 L280,334.1 L325.3,317.4 L370.7,300.3 L416,284.6 L461.3,267.2 L506.7,251 L552,234.6"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M8,432 L53.3,414.4 L98.7,396.7 L144,380.3 L189.3,363.9 L234.7,347.2 L280,330.5 L325.3,313.5 L370.7,295.5 L416,279 L461.3,262.4 L506.7,245.5 L552,228.2"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M8,432 L53.3,414.6 L98.7,397.6 L144,379.8 L189.3,362.4 L234.7,345.4 L280,328 L325.3,310 L370.7,293.2 L416,274.6 L461.3,257.3 L506.7,239.5 L552,222"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M8,432 L53.3,413.2 L98.7,395.6 L144,377.4 L189.3,359.2 L234.7,341.3 L280,323.7 L325.3,305.7 L370.7,288.5 L416,269.3 L461.3,250.7 L506.7,233.2 L552,216"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M8,432 L53.3,414 L98.7,396.3 L144,378.2 L189.3,360.1 L234.7,341.9 L280,323 L325.3,303.7 L370.7,286 L416,267 L461.3,247.6 L506.7,229.3 L552,210.2"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M8,432 L53.3,413 L98.7,395.3 L144,376.1 L189.3,356.4 L234.7,338.3 L280,318.5 L325.3,298.6 L370.7,279 L416,258.9 L461.3,240.5 L506.7,221.9 L552,203.4"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M8,432 L53.3,412.2 L98.7,392.6 L144,374.1 L189.3,354.3 L234.7,334.2 L280,314 L325.3,294.4 L370.7,275.7 L416,255.7 L461.3,235.5 L506.7,215.1 L552,195.7"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M8,432 L53.3,410.8 L98.7,391.6 L144,372.5 L189.3,352.9 L234.7,331.7 L280,312 L325.3,290.8 L370.7,270.2 L416,250 L461.3,228.5 L506.7,209 L552,187.7"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M8,432 L53.3,411.1 L98.7,390.1 L144,368.4 L189.3,347 L234.7,326.6 L280,305.1 L325.3,282.7 L370.7,261.8 L416,241.6 L461.3,219.5 L506.7,198.2 L552,177.7"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M8,432 L53.3,411.1 L98.7,390 L144,367.2 L189.3,345.5 L234.7,322.4 L280,300.1 L325.3,277.1 L370.7,254.9 L416,233.7 L461.3,212.2 L506.7,191 L552,167.9"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M8,432 L53.3,408.4 L98.7,386.7 L144,365.3 L189.3,342.3 L234.7,320.3 L280,296.1 L325.3,273.6 L370.7,250.7 L416,227.1 L461.3,204.1 L506.7,180.1 L552,157.5"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M8,432 L53.3,407.8 L98.7,385.2 L144,361.6 L189.3,337.8 L234.7,311.7 L280,285.5 L325.3,260.4 L370.7,236.9 L416,213.3 L461.3,188.7 L506.7,165.2 L552,140.5"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M8,432 L53.3,405.7 L98.7,381.5 L144,356 L189.3,329.6 L234.7,302.7 L280,277.7 L325.3,250.9 L370.7,224.5 L416,198.6 L461.3,173.8 L506.7,148.4 L552,121.5"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M8,432 L53.3,404 L98.7,375.4 L144,348.8 L189.3,321.8 L234.7,292.1 L280,264 L325.3,234.1 L370.7,206.5 L416,176.5 L461.3,148.8 L506.7,118.2 L552,88.5"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M8,432 L53.3,397.4 L98.7,361.2 L144,327.7 L189.3,293.3 L234.7,256.9 L280,219.3 L325.3,184.4 L370.7,150.6 L416,113.5 L461.3,78.4 L506.7,43.8 L552,8"/><path class="mc-pct draw p10" pathLength="1" d="M8,432 L53.3,424.6 L98.7,417.3 L144,410 L189.3,402.5 L234.7,394.9 L280,387.4 L325.3,379.8 L370.7,372.2 L416,364.7 L461.3,357.1 L506.7,349.6 L552,342"/><path class="mc-pct draw p90" pathLength="1" d="M8,432 L53.3,409.7 L98.7,387.9 L144,366 L189.3,343.9 L234.7,321.2 L280,298.6 L325.3,276.2 L370.7,253.6 L416,231.1 L461.3,208.6 L506.7,186.2 L552,163.6"/><path class="mc-pct draw p50" pathLength="1" d="M8,432 L53.3,419 L98.7,406.3 L144,393.4 L189.3,380.5 L234.7,367.3 L280,354.1 L325.3,341 L370.7,327.8 L416,314.5 L461.3,301.3 L506.7,288.2 L552,275"/></svg><!-- /build:mc-mood-wide --></div>
+      <div class="chart-narrow"><!-- build:mc-mood-narrow --><svg class="chart mc mc--mood" viewBox="0 0 360 200" role="img" aria-labelledby="mc-mood-n-t mc-mood-n-d" preserveAspectRatio="xMidYMid meet"><title id="mc-mood-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-mood-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><path class="mc-band fade" d="M6,194 L35,184.1 L64,174.4 L93,164.8 L122,154.9 L151,144.9 L180,134.8 L209,124.9 L238,114.9 L267,104.9 L296,94.9 L325,85 L354,75 L354,154.1 L325,157.5 L296,160.8 L267,164.2 L238,167.5 L209,170.9 L180,174.2 L151,177.6 L122,180.9 L93,184.2 L64,187.5 L35,190.7 L6,194Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M6,194 L35,192 L64,189.9 L93,187.9 L122,185.8 L151,183.7 L180,181.5 L209,179.3 L238,177.2 L267,175.2 L296,173 L325,170.9 L354,168.7"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M6,194 L35,191 L64,188.2 L93,185.1 L122,181.9 L151,178.7 L180,175.7 L209,172.7 L238,169.6 L267,166.6 L296,163.5 L325,160.4 L354,157.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M6,194 L35,190.5 L64,187.2 L93,183.6 L122,180.3 L151,177 L180,173.6 L209,170.1 L238,166.6 L267,163 L296,159.8 L325,156.5 L354,153.2"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M6,194 L35,190.1 L64,186.3 L93,182.5 L122,178.7 L151,174.8 L180,171.1 L209,167.3 L238,163.4 L267,159.7 L296,155.8 L325,151.8 L354,148"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M6,194 L35,190 L64,185.9 L93,182.1 L122,178.1 L151,173.9 L180,169.6 L209,165.4 L238,161.5 L267,157.4 L296,153.4 L325,149.1 L354,145.1"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M6,194 L35,189.7 L64,185.5 L93,181.2 L122,177 L151,172.4 L180,167.8 L209,163.3 L238,158.9 L267,154.4 L296,149.7 L325,145.2 L354,140.9"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M6,194 L35,189.5 L64,185 L93,180.2 L122,175.7 L151,170.8 L180,166.2 L209,161.3 L238,156.7 L267,151.8 L296,147.2 L325,142.6 L354,138"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M6,194 L35,189.1 L64,184.3 L93,179.4 L122,174.7 L151,169.5 L180,164.6 L209,159.5 L238,154.3 L267,149 L296,143.9 L325,138.7 L354,133.8"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M6,194 L35,188.5 L64,183.5 L93,178.3 L122,172.8 L151,167.7 L180,161.9 L209,156.5 L238,150.8 L267,145.3 L296,140.1 L325,134.8 L354,129.6"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M6,194 L35,188.4 L64,183 L93,177.8 L122,172.4 L151,166.6 L180,161.2 L209,155.2 L238,149.6 L267,144.3 L296,138.3 L325,132.5 L354,126.7"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M6,194 L35,188 L64,182.3 L93,176.3 L122,170.4 L151,164.4 L180,158.6 L209,152.8 L238,146.7 L267,140.3 L296,134.2 L325,128.1 L354,122.1"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M6,194 L35,187.7 L64,181.5 L93,175 L122,168.6 L151,162.5 L180,156.5 L209,150.4 L238,143.9 L267,138 L296,131.8 L325,125.4 L354,119.1"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M6,194 L35,187.6 L64,181.1 L93,174.8 L122,168.1 L151,161.4 L180,154.9 L209,148.3 L238,141.8 L267,135.2 L296,128 L325,121.1 L354,113.9"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M6,194 L35,187.2 L64,179.9 L93,173.1 L122,166 L151,158.8 L180,151.5 L209,144.4 L238,137.1 L267,129.9 L296,123 L325,115.4 L354,108.3"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M6,194 L35,186.2 L64,178.4 L93,171.1 L122,163.8 L151,156.4 L180,149 L209,141.5 L238,133.5 L267,126.2 L296,118.8 L325,111.3 L354,103.6"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M6,194 L35,186 L64,178.2 L93,170.2 L122,162.1 L151,154.1 L180,145.7 L209,137.1 L238,129.3 L267,120.8 L296,112.2 L325,104.1 L354,95.7"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M6,194 L35,185.2 L64,176.5 L93,168.3 L122,159.5 L151,150.6 L180,141.7 L209,133 L238,124.7 L267,115.8 L296,106.9 L325,97.8 L354,89.2"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M6,194 L35,184.7 L64,175.4 L93,165.3 L122,155.7 L151,145.4 L180,135.5 L209,125.3 L238,115.5 L267,106.1 L296,96.5 L325,87.2 L354,76.9"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M6,194 L35,183.3 L64,173.2 L93,162.8 L122,152.2 L151,140.7 L180,129.1 L209,117.9 L238,107.5 L267,97.1 L296,86.1 L325,75.7 L354,64.8"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M6,194 L35,178.6 L64,162.6 L93,147.7 L122,132.5 L151,116.4 L180,99.7 L209,84.2 L238,69.2 L267,52.8 L296,37.2 L325,21.9 L354,6"/><path class="mc-pct draw p10" pathLength="1" d="M6,194 L35,190.7 L64,187.5 L93,184.2 L122,180.9 L151,177.6 L180,174.2 L209,170.9 L238,167.5 L267,164.2 L296,160.8 L325,157.5 L354,154.1"/><path class="mc-pct draw p90" pathLength="1" d="M6,194 L35,184.1 L64,174.4 L93,164.8 L122,154.9 L151,144.9 L180,134.8 L209,124.9 L238,114.9 L267,104.9 L296,94.9 L325,85 L354,75"/><path class="mc-pct draw p50" pathLength="1" d="M6,194 L35,188.3 L64,182.6 L93,176.9 L122,171.2 L151,165.3 L180,159.5 L209,153.6 L238,147.8 L267,141.9 L296,136.1 L325,130.2 L354,124.4"/></svg><!-- /build:mc-mood-narrow --></div>
+      <figcaption>One real listing, <span data-fill="years">10,000</span> simulated years. Modeled from public data.</figcaption>
+    </figure>
+  </div>
+</section>
 
-/* Every button leads to the VSL step at /apply; count the click, then let it navigate. */
-document.addEventListener("click", ev => {
-  const a = ev.target.closest?.("[data-cta]");
-  if (a) track("cta_click", { section: a.dataset.cta || "" });
-});
+<!-- 2 · The problem -->
+<section class="section night" id="problem">
+  <div class="wrap">
+    <h2>Your mental model is linear. Amazon's cost structure is a staircase.</h2>
+    <p class="lede">A P&amp;L is an average. A cliff only shows up as a counterfactual: what the same unit would cost an ounce lighter, or a cent cheaper. No report anyone sells contains one, so your tools, your agency and your bookkeeper all miss the same leak at once.</p>
+  </div>
+</section>
 
-/* FAQ opens */
-document.querySelectorAll(".faq details").forEach(d => {
-  d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q }); });
-});
+<!-- 3 · The signature: the staircase -->
+<section class="section" id="staircase">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="label">Amazon's 2026 fulfilment fees</span>
+      <h2>Less than an ounce past the edge. Paid on every unit.</h2>
+    </div>
+    <figure class="figure" data-play>
+      <div class="chart-wide"><!-- build:stairs-wide --><svg class="chart stairs" viewBox="0 0 760 420" role="img" aria-labelledby="st-w-t st-w-d" preserveAspectRatio="xMidYMid meet"><title id="st-w-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-w-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="64" x2="736" y1="325.5" y2="325.5"/><text x="54" y="325.5" font-size="13" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="64" x2="736" y1="245.1" y2="245.1"/><text x="54" y="245.1" font-size="13" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="64" x2="736" y1="164.8" y2="164.8"/><text x="54" y="164.8" font-size="13" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="grid" x1="64" x2="736" y1="84.4" y2="84.4"/><text x="54" y="84.4" font-size="13" text-anchor="end" dominant-baseline="middle">$5.50</text><line class="axis" x1="64" x2="736" y1="372" y2="372"/><line class="tick" x1="64" x2="64" y1="372" y2="377"/><text x="64" y="395" font-size="13" text-anchor="middle">0</text><line class="tick" x1="198.4" x2="198.4" y1="372" y2="377"/><text x="198.4" y="395" font-size="13" text-anchor="middle">4</text><line class="tick" x1="332.8" x2="332.8" y1="372" y2="377"/><text x="332.8" y="395" font-size="13" text-anchor="middle">8</text><line class="tick" x1="467.2" x2="467.2" y1="372" y2="377"/><text x="467.2" y="395" font-size="13" text-anchor="middle">12</text><line class="tick" x1="601.6" x2="601.6" y1="372" y2="377"/><text x="601.6" y="395" font-size="13" text-anchor="middle">16</text><line class="tick" x1="736" x2="736" y1="372" y2="377"/><text x="736" y="395" font-size="13" text-anchor="middle">20 oz</text><path class="step-alt fade" style="--after:0ms" d="M64,308 H198.4 V268 H332.8 V223.1 H467.2 V154.9 H601.6 V80.1 H736"/><path class="step draw" pathLength="1" d="M64,347.9 H198.4 V311.3 H332.8 V269.7 H467.2 V203.2 H601.6 V130 H736"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="64" x2="86.1" y1="11.700000000000001" y2="11.700000000000001"/><text class="ink" x="94.1" y="11.700000000000001" font-size="12" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="64" x2="86.1" y1="32.5" y2="32.5"/><text x="94.1" y="32.5" font-size="12" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="332.8" x2="332.8" y1="311.3" y2="269.7"/><circle class="dot-hollow" cx="332.8" cy="311.3" r="5.5"/><circle class="dot" cx="360.3" cy="269.7" r="5.5"/><text class="leak-text" x="322.8" y="290.5" font-size="14" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="371.8" y="288.7" font-size="13">8.8 oz · this listing</text><text x="344.3" y="332.3" font-size="13">8.0 oz · one step down</text></g></svg><!-- /build:stairs-wide --></div>
+      <div class="chart-narrow"><!-- build:stairs-narrow --><svg class="chart stairs" viewBox="0 0 360 340" role="img" aria-labelledby="st-n-t st-n-d" preserveAspectRatio="xMidYMid meet"><title id="st-n-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-n-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="46" x2="352" y1="251.3" y2="251.3"/><text x="36" y="251.3" font-size="11" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="46" x2="352" y1="167.2" y2="167.2"/><text x="36" y="167.2" font-size="11" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="46" x2="352" y1="83.1" y2="83.1"/><text x="36" y="83.1" font-size="11" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="axis" x1="46" x2="352" y1="300" y2="300"/><line class="tick" x1="46" x2="46" y1="300" y2="305"/><text x="46" y="321" font-size="11" text-anchor="middle">0</text><line class="tick" x1="122.5" x2="122.5" y1="300" y2="305"/><text x="122.5" y="321" font-size="11" text-anchor="middle">4</text><line class="tick" x1="199" x2="199" y1="300" y2="305"/><text x="199" y="321" font-size="11" text-anchor="middle">8</text><line class="tick" x1="275.5" x2="275.5" y1="300" y2="305"/><text x="275.5" y="321" font-size="11" text-anchor="middle">12</text><line class="tick" x1="352" x2="352" y1="300" y2="305"/><text x="352" y="321" font-size="11" text-anchor="middle">16 oz</text><path class="step-alt fade" style="--after:0ms" d="M46,233 H122.5 V191.2 H199 V144.2 H275.5 V72.8 H352"/><path class="step draw" pathLength="1" d="M46,274.8 H122.5 V236.5 H199 V192.9 H275.5 V123.3 H352"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="46" x2="64.7" y1="9.9" y2="9.9"/><text class="ink" x="72.7" y="9.9" font-size="10" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="46" x2="64.7" y1="27.5" y2="27.5"/><text x="72.7" y="27.5" font-size="10" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="199" x2="199" y1="236.5" y2="192.9"/><circle class="dot-hollow" cx="199" cy="236.5" r="4.5"/><circle class="dot" cx="214.6" cy="192.9" r="4.5"/><text class="leak-text" x="189" y="214.7" font-size="12" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="225.1" y="209.9" font-size="11">8.8 oz · this listing</text><text x="209.5" y="255.5" font-size="11">8.0 oz · one step down</text></g></svg><!-- /build:stairs-narrow --></div>
+      <figcaption>Large standard size, priced $10 to $50, with Amazon's <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge. Solid: <span data-fill="card_np">Jan 15 to Oct 14, 2026</span>. Dashed: the holiday card, <span data-fill="card_peak">Oct 15 to Jan 14</span>. The dots are one real listing, modeled from public data.</figcaption>
+    </figure>
+  </div>
+</section>
 
-/* The film: plays only while it is on screen, and never for a visitor who asked
-   for less motion or less data. The poster is the loop's first frame, so a
-   visitor who never gets the film sees the same picture, still. */
-(() => {
-  const film = document.getElementById("hero-film");
-  if (!film) return;
-  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    || (navigator.connection && navigator.connection.saveData);
-  if (still) return;
-  let started = false;
-  new IntersectionObserver(([e]) => {
-    if (e.isIntersecting) {
-      if (!started) { film.preload = "auto"; started = true; }
-      film.play().catch(() => {});
-    } else {
-      film.pause();
-    }
-  }, { threshold: 0.15 }).observe(film);
-})();
+<!-- A real client's result, told in full, or nothing. Filled only from public_case_study(). -->
+<section class="section" id="result" hidden>
+  <div class="wrap">
+    <span class="label" data-result="eyebrow"></span>
+    <h2 class="case-headline" data-result="before"></h2>
+    <div class="result-numbers" data-result="numbers"></div>
+    <p class="result-quote" data-result="quote"></p>
+    <p class="cta-note">This client's first month was free, and we asked for these words as its price (terms §9).</p>
+  </div>
+</section>
 
-/* mobile sticky CTA — appears once the hero scrolls out, hides over the application */
-const hero = document.getElementById("top");
-const sticky = document.getElementById("sticky-cta");
-if (hero && sticky) {
-  const close = document.getElementById("apply");
-  let heroIn = true, closeIn = false;
-  const sync = () => {
-    const show = !heroIn && !closeIn;
-    sticky.classList.toggle("show", show);
-    sticky.setAttribute("aria-hidden", show ? "false" : "true");
-  };
-  new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(hero);
-  if (close) new IntersectionObserver(([e]) => { closeIn = e.isIntersecting; sync(); }, { threshold: 0.05 }).observe(close);
-}
+<!-- 4 · Proof: the public-data case study -->
+<section class="section" id="case-study">
+  <div class="wrap">
+    <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+    <p class="case-who"><span data-fill="who">A car-care brand</span> · one listing · <span data-fill="category">Automotive</span></p>
+    <h2 class="case-headline"><span class="money"><span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span></span> a year, paid on one step of Amazon's fee staircase.<span class="est">estimate</span></h2>
+    <p class="lede">Its best-selling paint scratch remover lists an item weight of <span data-fill="weight">8.8</span> ounces. Above <span data-fill="edge">8</span>, every unit pays <span class="money" data-fill="step_np">$0.26</span> more to fulfil, <span data-fill="step_peak">$0.28</span> from October 15, on an estimated <span data-fill="units">3,600</span> units a month.</p>
 
-/* The two anon-callable functions in the schema. Both re-check consent on every read. */
-const PUBLISHABLE = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
-async function rpc(name) {
-  try {
-    const res = await fetch(`https://cgqvdnhgbfxikzdqqaws.supabase.co/rest/v1/rpc/${name}`, {
-      method: "POST", body: "{}",
-      headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${PUBLISHABLE}`, "content-type": "application/json" },
-    });
-    return res.ok ? await res.json() : null;
-  } catch (e) { return null; }
-}
+    <!-- TODO(video): the case study told as the five-beat film (HUBRICON_SPEC.md, "Education").
+         Set VIDEO in /assets/home.js when it exists; until then nothing renders here. -->
+    <div class="case-video" id="case-video" hidden></div>
 
-/* Once a client has consented and a result is published, the "no published
-   results yet" clause is spent. */
-(async () => {
-  const pending = document.querySelector("[data-proof-pending]");
-  if (!pending) return;
-  const rows = await rpc("public_results");
-  if (Array.isArray(rows) && rows.length) pending.hidden = true;
-})();
+    <figure class="figure case-figure" data-play>
+      <h3>Ten thousand years of this one listing</h3>
+      <p class="figure-intro">Each faint line is one simulated year of profit. The band holds eight years in ten, the bad end included.</p>
+      <div class="chart-wide"><!-- build:mc-wide --><svg class="chart mc mc--full" viewBox="0 0 760 420" role="img" aria-labelledby="mc-w-t mc-w-d" preserveAspectRatio="xMidYMid meet"><title id="mc-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="64" x2="640" y1="376" y2="376"/><text x="54" y="376" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="640" y1="295" y2="295"/><text x="54" y="295" font-size="13" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="64" x2="640" y1="214" y2="214"/><text x="54" y="214" font-size="13" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="64" x2="640" y1="133.1" y2="133.1"/><text x="54" y="133.1" font-size="13" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="64" x2="640" y1="52.1" y2="52.1"/><text x="54" y="52.1" font-size="13" text-anchor="end" dominant-baseline="middle">$1M</text><text x="64" y="401" font-size="13" text-anchor="start">Today</text><text x="352" y="401" font-size="13" text-anchor="middle">6 months</text><text x="640" y="401" font-size="13" text-anchor="end">12 months</text><path class="mc-band fade" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2 L640,301.3 L592,307.6 L544,313.8 L496,320.1 L448,326.4 L400,332.7 L352,339 L304,345.2 L256,351.5 L208,357.7 L160,363.8 L112,369.9 L64,376Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M64,376 L112,372.2 L160,368.3 L208,364.6 L256,360.6 L304,356.7 L352,352.6 L400,348.4 L448,344.6 L496,340.8 L544,336.7 L592,332.7 L640,328.6"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M64,376 L112,371.3 L160,366.8 L208,361.8 L256,357.1 L304,352.4 L352,347.5 L400,342.4 L448,337.3 L496,332.2 L544,327.5 L592,322.9 L640,318.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M64,376 L112,370.6 L160,365.3 L208,359.9 L256,354.4 L304,349.3 L352,344 L400,338.4 L448,333 L496,327.9 L544,322.6 L592,317.3 L640,311.9"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M64,376 L112,370.5 L160,365.1 L208,359.3 L256,353.3 L304,347.4 L352,341.7 L400,336.1 L448,330.3 L496,324.8 L544,319 L592,313.1 L640,307.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M64,376 L112,370.2 L160,364.2 L208,358.5 L256,352.3 L304,346 L352,339.9 L400,333.6 L448,327.2 L496,321.1 L544,315.1 L592,309.3 L640,303.2"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M64,376 L112,369.5 L160,363.2 L208,356.6 L256,350.4 L304,344.2 L352,337.8 L400,331.2 L448,324.7 L496,318 L544,311.9 L592,305.7 L640,299.5"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M64,376 L112,369.3 L160,363 L208,356.9 L256,350 L304,343.2 L352,336.9 L400,329.9 L448,323.4 L496,316.7 L544,310 L592,303.2 L640,296.3"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M64,376 L112,369.1 L160,362.8 L208,355.9 L256,349.2 L304,342.1 L352,335.1 L400,328.1 L448,321.2 L496,314.1 L544,307.3 L592,300.3 L640,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M64,376 L112,368.6 L160,361.5 L208,354.4 L256,347.4 L304,340.1 L352,333.1 L400,326 L448,318.8 L496,311.9 L544,304.5 L592,297 L640,289.9"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M64,376 L112,368.8 L160,361.2 L208,353.7 L256,346.2 L304,339 L352,331.4 L400,323.8 L448,316.1 L496,309.1 L544,302 L592,294.5 L640,287.1"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M64,376 L112,368.5 L160,360.8 L208,353.7 L256,346.1 L304,338.3 L352,330.3 L400,322.5 L448,315.1 L496,307.5 L544,300.1 L592,292 L640,284.4"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M64,376 L112,368.6 L160,361 L208,353 L256,345 L304,337 L352,329.5 L400,321.8 L448,313.5 L496,305.5 L544,297.4 L592,289.4 L640,281.9"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M64,376 L112,368.3 L160,360.7 L208,352.3 L256,344.1 L304,336.3 L352,328 L400,319.4 L448,311.5 L496,303.6 L544,295.8 L592,287.5 L640,279.5"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M64,376 L112,368 L160,360.1 L208,352.1 L256,344.1 L304,335.6 L352,327 L400,318.4 L448,310.3 L496,301.9 L544,293 L592,284.6 L640,276.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M64,376 L112,368 L160,359.2 L208,351.3 L256,343 L304,334.4 L352,326 L400,317.5 L448,308.7 L496,299.7 L544,291 L592,282.1 L640,273.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M64,376 L112,367.5 L160,359.2 L208,350.1 L256,341.7 L304,332.6 L352,324 L400,314.7 L448,306.2 L496,297 L544,288.3 L592,279.7 L640,271.1"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M64,376 L112,367.5 L160,358.5 L208,349.6 L256,340.3 L304,330.9 L352,321.6 L400,312.9 L448,304 L496,295.1 L544,286.2 L592,277 L640,268.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M64,376 L112,367.3 L160,358.3 L208,349.1 L256,340.3 L304,330.9 L352,321.3 L400,311.7 L448,302.5 L496,293.8 L544,284.2 L592,274.6 L640,265.7"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M64,376 L112,366.8 L160,357.9 L208,348.7 L256,339.8 L304,330.1 L352,321 L400,311.4 L448,301.7 L496,291.8 L544,282.2 L592,272.4 L640,263.2"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M64,376 L112,366.7 L160,357.3 L208,348 L256,338.5 L304,329.2 L352,319.2 L400,309.1 L448,299.8 L496,290 L544,279.7 L592,270.6 L640,260.7"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M64,376 L112,366.3 L160,356.5 L208,346.9 L256,336.6 L304,326.7 L352,317.1 L400,307.5 L448,297.4 L496,287 L544,277.4 L592,267.4 L640,257.9"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M64,376 L112,365.7 L160,356.3 L208,346.5 L256,336.4 L304,326.7 L352,316 L400,305.8 L448,295.2 L496,284.9 L544,275 L592,265.1 L640,255.4"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M64,376 L112,366.2 L160,356.5 L208,346.3 L256,335.8 L304,325.3 L352,314.9 L400,304.3 L448,294.1 L496,284 L544,273.7 L592,263.2 L640,252.6"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M64,376 L112,365.4 L160,355.4 L208,345.7 L256,335.5 L304,324.8 L352,314.5 L400,303.4 L448,293 L496,282.9 L544,271.7 L592,260.8 L640,249.9"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M64,376 L112,365.4 L160,355.1 L208,344.8 L256,333.8 L304,323.2 L352,312.6 L400,301.8 L448,290.7 L496,280.1 L544,268.9 L592,257.6 L640,246.9"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M64,376 L112,364.9 L160,354.6 L208,343.4 L256,331.9 L304,321.1 L352,310.5 L400,299.7 L448,288.5 L496,277.7 L544,266.1 L592,255 L640,244.3"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M64,376 L112,364.8 L160,354.1 L208,342.9 L256,331.8 L304,320.7 L352,309.7 L400,298.8 L448,287.4 L496,275.4 L544,264 L592,252.6 L640,241.4"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M64,376 L112,364 L160,353.3 L208,342.5 L256,331 L304,319.5 L352,308.2 L400,296.9 L448,285.2 L496,274 L544,262.3 L592,250.3 L640,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M64,376 L112,364.1 L160,352.6 L208,340.4 L256,328.5 L304,317 L352,305.8 L400,294.4 L448,282.3 L496,271.1 L544,259.5 L592,247.6 L640,235.7"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M64,376 L112,364.6 L160,353.3 L208,341.1 L256,328.5 L304,316.7 L352,305.2 L400,293.2 L448,280.7 L496,268.7 L544,257.2 L592,245.6 L640,232.9"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M64,376 L112,364.2 L160,352.6 L208,340.1 L256,327.8 L304,315.3 L352,302.3 L400,289.6 L448,277.5 L496,265.1 L544,253.2 L592,241 L640,229.2"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M64,376 L112,364.1 L160,351.9 L208,340 L256,327.5 L304,315 L352,302.7 L400,290.4 L448,278.3 L496,265.9 L544,252.4 L592,239.4 L640,226.1"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M64,376 L112,362.9 L160,350 L208,337.3 L256,324.7 L304,312.3 L352,299.3 L400,286.1 L448,273.5 L496,261.2 L544,248.6 L592,235.7 L640,222.7"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M64,376 L112,363.4 L160,350.7 L208,337.2 L256,324.1 L304,310.7 L352,297.6 L400,284 L448,271.5 L496,258.6 L544,246.1 L592,233.3 L640,219.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M64,376 L112,363.2 L160,349.6 L208,336.9 L256,323.5 L304,310.1 L352,296.5 L400,283.2 L448,269.4 L496,256.1 L544,243 L592,228.9 L640,215.5"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M64,376 L112,362 L160,349.1 L208,335.6 L256,322.2 L304,308.2 L352,294.7 L400,280.9 L448,266.7 L496,253.6 L544,239.2 L592,225.7 L640,212.1"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M64,376 L112,361.4 L160,346.7 L208,333.1 L256,319.5 L304,305.6 L352,291.7 L400,277.6 L448,262.7 L496,249 L544,235.2 L592,221.1 L640,206.8"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M64,376 L112,361.6 L160,347.4 L208,332.7 L256,318.2 L304,304.1 L352,289.7 L400,274.8 L448,260.8 L496,245.3 L544,231 L592,216.2 L640,201.7"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M64,376 L112,360.4 L160,345.8 L208,330.7 L256,315.5 L304,300.7 L352,286 L400,271.1 L448,256.9 L496,241 L544,225.5 L592,210.9 L640,196.7"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M64,376 L112,361.1 L160,346.4 L208,331.4 L256,316.3 L304,301.2 L352,285.6 L400,269.5 L448,254.8 L496,239 L544,222.9 L592,207.7 L640,191.9"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M64,376 L112,360.3 L160,345.6 L208,329.6 L256,313.2 L304,298.2 L352,281.7 L400,265.3 L448,249 L496,232.3 L544,217.1 L592,201.6 L640,186.2"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M64,376 L112,359.6 L160,343.3 L208,327.9 L256,311.5 L304,294.8 L352,278.1 L400,261.8 L448,246.2 L496,229.6 L544,212.8 L592,195.9 L640,179.8"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M64,376 L112,358.4 L160,342.4 L208,326.6 L256,310.3 L304,292.8 L352,276.4 L400,258.8 L448,241.7 L496,224.9 L544,207 L592,190.9 L640,173.2"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M64,376 L112,358.7 L160,341.2 L208,323.2 L256,305.5 L304,288.5 L352,270.6 L400,252 L448,234.7 L496,217.9 L544,199.6 L592,181.9 L640,164.9"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M64,376 L112,358.7 L160,341.1 L208,322.2 L256,304.2 L304,285 L352,266.5 L400,247.4 L448,229 L496,211.4 L544,193.5 L592,176 L640,156.8"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M64,376 L112,356.4 L160,338.4 L208,320.6 L256,301.6 L304,283.3 L352,263.2 L400,244.5 L448,225.5 L496,205.9 L544,186.8 L592,166.9 L640,148.1"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M64,376 L112,355.9 L160,337.1 L208,317.6 L256,297.8 L304,276.1 L352,254.4 L400,233.5 L448,214 L496,194.5 L544,174 L592,154.5 L640,134"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M64,376 L112,354.2 L160,334.1 L208,312.9 L256,291 L304,268.7 L352,247.9 L400,225.7 L448,203.7 L496,182.3 L544,161.6 L592,140.6 L640,118.2"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M64,376 L112,352.8 L160,329 L208,307 L256,284.5 L304,259.9 L352,236.5 L400,211.7 L448,188.8 L496,163.9 L544,140.9 L592,115.5 L640,90.8"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M64,376 L112,347.2 L160,317.2 L208,289.4 L256,260.8 L304,230.6 L352,199.4 L400,170.5 L448,142.4 L496,111.6 L544,82.5 L592,53.8 L640,24"/><path class="mc-pct draw p10" pathLength="1" d="M64,376 L112,369.9 L160,363.8 L208,357.7 L256,351.5 L304,345.2 L352,339 L400,332.7 L448,326.4 L496,320.1 L544,313.8 L592,307.6 L640,301.3"/><path class="mc-pct draw p90" pathLength="1" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2"/><path class="mc-pct draw p50" pathLength="1" d="M64,376 L112,365.2 L160,354.6 L208,344 L256,333.2 L304,322.3 L352,311.3 L400,300.4 L448,289.5 L496,278.5 L544,267.5 L592,256.6 L640,245.7"/><g class="fade"><text x="654" y="146" font-size="12">P90</text><text class="mc-value p90" x="654" y="162.9" font-size="14">$687,000</text></g><g class="fade"><text x="654" y="238.5" font-size="12">Median</text><text class="mc-value p50" x="654" y="255.4" font-size="14">$402,000</text></g><g class="fade"><text x="654" y="294.1" font-size="12">P10</text><text class="mc-value p10" x="654" y="311" font-size="14">$230,000</text></g></svg><!-- /build:mc-wide --></div>
+      <div class="chart-narrow"><!-- build:mc-narrow --><svg class="chart mc mc--full" viewBox="0 0 360 320" role="img" aria-labelledby="mc-n-t mc-n-d" preserveAspectRatio="xMidYMid meet"><title id="mc-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="46" x2="286" y1="284" y2="284"/><text x="36" y="284" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="286" y1="222.3" y2="222.3"/><text x="36" y="222.3" font-size="11" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="46" x2="286" y1="160.7" y2="160.7"/><text x="36" y="160.7" font-size="11" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="46" x2="286" y1="99" y2="99"/><text x="36" y="99" font-size="11" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="46" x2="286" y1="37.4" y2="37.4"/><text x="36" y="37.4" font-size="11" text-anchor="end" dominant-baseline="middle">$1M</text><text x="46" y="307" font-size="11" text-anchor="start">Today</text><text x="166" y="307" font-size="11" text-anchor="middle">6 months</text><text x="286" y="307" font-size="11" text-anchor="end">12 months</text><path class="mc-band fade" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3 L286,227.1 L266,231.9 L246,236.7 L226,241.5 L206,246.2 L186,251 L166,255.8 L146,260.6 L126,265.4 L106,270.1 L86,274.7 L66,279.3 L46,284Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M46,284 L66,281.1 L86,278.1 L106,275.3 L126,272.3 L146,269.3 L166,266.2 L186,263 L206,260.1 L226,257.2 L246,254.1 L266,251 L286,247.9"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M46,284 L66,279.8 L86,275.7 L106,271.3 L126,266.7 L146,262.2 L166,257.9 L186,253.6 L206,249.2 L226,245 L246,240.6 L266,236.1 L286,231.6"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M46,284 L66,279 L86,274.2 L106,269.2 L126,264.5 L146,259.8 L166,254.9 L186,249.9 L206,244.9 L226,239.9 L246,235.2 L266,230.5 L286,225.8"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M46,284 L66,278.4 L86,273 L106,267.5 L126,262.2 L146,256.7 L166,251.3 L186,246 L206,240.4 L226,235.2 L246,229.5 L266,223.9 L286,218.4"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M46,284 L66,278.3 L86,272.4 L106,267 L126,261.3 L146,255.3 L166,249.2 L186,243.3 L206,237.7 L226,231.8 L246,226.2 L266,220 L286,214.3"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M46,284 L66,277.9 L86,271.9 L106,265.8 L126,259.7 L146,253.3 L166,246.7 L186,240.2 L206,234 L226,227.6 L246,220.8 L266,214.4 L286,208.3"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M46,284 L66,277.5 L86,271.2 L106,264.3 L126,257.9 L146,250.9 L166,244.4 L186,237.3 L206,230.8 L226,223.8 L246,217.2 L266,210.7 L286,204.1"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M46,284 L66,277 L86,270.2 L106,263.2 L126,256.4 L146,249 L166,242.1 L186,234.9 L206,227.4 L226,219.9 L246,212.6 L266,205.1 L286,198.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M46,284 L66,276.1 L86,269 L106,261.6 L126,253.8 L146,246.5 L166,238.3 L186,230.6 L206,222.4 L226,214.6 L246,207.1 L266,199.6 L286,192.2"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M46,284 L66,276 L86,268.3 L106,261 L126,253.2 L146,245 L166,237.2 L186,228.7 L206,220.8 L226,213.1 L246,204.6 L266,196.3 L286,188"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M46,284 L66,275.5 L86,267.3 L106,258.8 L126,250.4 L146,241.9 L166,233.5 L186,225.2 L206,216.5 L226,207.4 L246,198.7 L266,190 L286,181.5"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M46,284 L66,275 L86,266.2 L106,256.9 L126,247.8 L146,239.1 L166,230.5 L186,221.9 L206,212.6 L226,204.1 L246,195.3 L266,186.2 L286,177.2"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M46,284 L66,274.9 L86,265.7 L106,256.6 L126,247.1 L146,237.6 L166,228.2 L186,218.8 L206,209.6 L226,200.2 L246,189.9 L266,180 L286,169.9"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M46,284 L66,274.3 L86,263.9 L106,254.2 L126,244 L146,233.8 L166,223.5 L186,213.4 L206,202.8 L226,192.7 L246,182.7 L266,172 L286,161.8"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M46,284 L66,272.9 L86,261.7 L106,251.4 L126,240.9 L146,230.4 L166,219.8 L186,209.1 L206,197.7 L226,187.3 L246,176.8 L266,166.1 L286,155.2"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M46,284 L66,272.7 L86,261.5 L106,250 L126,238.5 L146,227.1 L166,215.1 L186,202.9 L206,191.7 L226,179.7 L246,167.4 L266,155.9 L286,143.8"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M46,284 L66,271.5 L86,259.1 L106,247.4 L126,234.9 L146,222.2 L166,209.4 L186,197 L206,185.2 L226,172.5 L246,159.8 L266,146.9 L286,134.6"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M46,284 L66,270.8 L86,257.4 L106,243 L126,229.3 L146,214.7 L166,200.7 L186,186.1 L206,172.1 L226,158.6 L246,145.1 L266,131.7 L286,117.1"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M46,284 L66,268.7 L86,254.4 L106,239.5 L126,224.5 L146,208 L166,191.4 L186,175.5 L206,160.7 L226,145.8 L246,130.2 L266,115.3 L286,99.8"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M46,284 L66,262.1 L86,239.2 L106,218.1 L126,196.3 L146,173.3 L166,149.5 L186,127.5 L206,106.1 L226,82.7 L246,60.5 L266,38.7 L286,16"/><path class="mc-pct draw p10" pathLength="1" d="M46,284 L66,279.3 L86,274.7 L106,270.1 L126,265.4 L146,260.6 L166,255.8 L186,251 L206,246.2 L226,241.5 L246,236.7 L266,231.9 L286,227.1"/><path class="mc-pct draw p90" pathLength="1" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3"/><path class="mc-pct draw p50" pathLength="1" d="M46,284 L66,275.8 L86,267.7 L106,259.6 L126,251.5 L146,243.1 L166,234.8 L186,226.5 L206,218.2 L226,209.7 L246,201.4 L266,193.1 L286,184.8"/><g class="fade"><text x="300" y="108.3" font-size="10">P90</text><text class="mc-value p90" x="300" y="122.6" font-size="12">$687k</text></g><g class="fade"><text x="300" y="178.7" font-size="10">Median</text><text class="mc-value p50" x="300" y="193" font-size="12">$402k</text></g><g class="fade"><text x="300" y="221" font-size="10">P10</text><text class="mc-value p10" x="300" y="235.3" font-size="12">$230k</text></g></svg><!-- /build:mc-narrow --></div>
+      <figcaption>Cumulative profit from today, before advertising, storage and returns. Months at a loss: <span data-fill="months_losing">0</span> of <span data-fill="months_total">120,000</span>. Those three costs are where months turn negative, and no public page shows them.</figcaption>
+    </figure>
 
-/* One case study, told in full, or nothing. public_case_study() returns a row
-   only for a real client whose Proving Month closed, who wrote the before-state
-   and the quote, and who said yes to publishing. No row, no section. */
-(async () => {
-  const sect = document.getElementById("case");
-  const cs = sect ? await rpc("public_case_study") : null;
-  if (!cs || !cs.before || !cs.quote || !Array.isArray(cs.record) || !cs.record.length || !Array.isArray(cs.numbers)) return;
-  const $ = k => sect.querySelector(`[data-case="${k}"]`);
-  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  const usd = v => v == null ? "—" : "$" + Math.round(Number(v)).toLocaleString("en-US");
-  const closed = cs.closed_on ? new Date(cs.closed_on + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }) : "";
-  $("eyebrow").textContent = `${cs.brand || `A ${cs.industry || "private-label"} brand`}${closed ? ` · Proving Month closed ${closed}` : ""}`;
-  $("before").textContent = cs.before;
-  $("numbers").replaceChildren(...cs.numbers.map(n => {
-    const card = el("div", "case-number");
-    card.append(el("span", "k", n.label), el("b", null, usd(n.amount_usd)), el("p", null, n.method));
-    return card;
-  }));
-  const table = $("record");
-  const head = el("tr");
-  ["Move", "Expected", "Measured", "How we know"].forEach((h, i) => head.append(el("th", i === 1 || i === 2 ? "num" : null, h)));
-  table.replaceChildren(head, ...cs.record.map(r => {
-    const tr = el("tr");
-    const measured = r.measured == null ? "— not yet" : usd(r.measured);
-    tr.append(el("td", null, r.move), el("td", "num", usd(r.expected)),
-              el("td", `num ${r.measured == null ? "pend" : r.miss ? "miss" : "pos"}`, measured), el("td", null, r.how));
-    return tr;
-  }));
-  $("quote").textContent = cs.quote;
-  sect.hidden = false;
-  track("case_study_shown", { named: Boolean(cs.brand) });
-})();
+    <figure class="figure case-figure" data-play>
+      <h3>The cliff public pages can't see</h3>
+      <p class="figure-intro">At day 271, Amazon's aged-inventory surcharge goes from <span data-fill="aged_rate_before">$1.50</span> to <span data-fill="aged_rate_after">$5.45</span> a cubic foot.</p>
+      <div class="chart-wide"><!-- build:aging-wide --><svg class="chart aging" viewBox="0 0 760 300" role="img" aria-labelledby="ag-w-t ag-w-d" preserveAspectRatio="xMidYMid meet"><title id="ag-w-t">What 1,000 units cost to store, by age</title><desc id="ag-w-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="64" x2="736" y1="252" y2="252"/><text x="54" y="252" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="736" y1="168.8" y2="168.8"/><text x="54" y="168.8" font-size="13" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="64" x2="736" y1="85.7" y2="85.7"/><text x="54" y="85.7" font-size="13" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="64" x2="64" y1="252" y2="257"/><text x="64" y="275" font-size="13" text-anchor="middle">Day 0</text><line class="tick" x1="368.1" x2="368.1" y1="252" y2="257"/><text x="368.1" y="275" font-size="13" text-anchor="middle">181</text><line class="tick" x1="519.3" x2="519.3" y1="252" y2="257"/><text x="519.3" y="275" font-size="13" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="678.9" x2="678.9" y1="252" y2="257"/><text x="678.9" y="275" font-size="13" text-anchor="middle">366</text><line class="axis" x1="64" x2="736" y1="252" y2="252"/><path class="step draw" pathLength="1" d="M64,231.3 H368.1 V218.1 H418.5 V204.8 H468.9 V191.5 H519.3 V86.8 H569.7 V80.1 H620.1 V74.8 H678.9 V48.3 H736"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="519.3" x2="519.3" y1="191.5" y2="86.8"/><text class="leak-text" x="507.3" y="82.8" font-size="14" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-wide --></div>
+      <div class="chart-narrow"><!-- build:aging-narrow --><svg class="chart aging" viewBox="0 0 360 260" role="img" aria-labelledby="ag-n-t ag-n-d" preserveAspectRatio="xMidYMid meet"><title id="ag-n-t">What 1,000 units cost to store, by age</title><desc id="ag-n-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="46" x2="352" y1="220" y2="220"/><text x="36" y="220" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="352" y1="147.4" y2="147.4"/><text x="36" y="147.4" font-size="11" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="46" x2="352" y1="74.8" y2="74.8"/><text x="36" y="74.8" font-size="11" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="46" x2="46" y1="220" y2="225"/><text x="46" y="241" font-size="11" text-anchor="middle">Day 0</text><line class="tick" x1="184.5" x2="184.5" y1="220" y2="225"/><text x="184.5" y="241" font-size="11" text-anchor="middle">181</text><line class="tick" x1="253.3" x2="253.3" y1="220" y2="225"/><text x="253.3" y="241" font-size="11" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="326" x2="326" y1="220" y2="225"/><text x="326" y="241" font-size="11" text-anchor="middle">366</text><line class="axis" x1="46" x2="352" y1="220" y2="220"/><path class="step draw" pathLength="1" d="M46,201.9 H184.5 V190.4 H207.4 V178.8 H230.4 V167.2 H253.3 V75.8 H276.3 V70 H299.2 V65.4 H326 V42.2 H352"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="253.3" x2="253.3" y1="167.2" y2="75.8"/><text class="leak-text" x="241.3" y="71.8" font-size="12" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-narrow --></div>
+      <figcaption>Storage plus surcharge on 1,000 of these units, by age, Jan–Sep rates. How close your stock sits to day 271 is in your inventory-age report. That's what the call is for.</figcaption>
+    </figure>
 
-/* motion: one fade per section */
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); } });
-}, { threshold: 0.06 });
-document.querySelectorAll("[data-reveal]").forEach(s => io.observe(s));
-</script>
+    <p class="selection">We picked this listing because it had a finding. Of <span data-fill="brands_modeled">1,856</span> Amazon brands we've modeled from public pages, <span data-fill="brands_silent">1,473</span> showed nothing worth fixing. We say so.</p>
+
+    <details class="fold">
+      <summary>Method, assumptions, and what public data can't see</summary>
+      <div class="fold-body">
+        <ul>
+          <li>Read from the listing's public page on <span data-fill="captured_on">September 3, 2026</span>: price band, item weight, dimensions (large standard size) and sales rank (<span data-fill="rank_band">top 100 in Automotive</span>). Priced on <span data-fill="priced_on">September 30, 2026</span>.</li>
+          <li>Fees: Amazon's published 2026 US fulfilment schedules, <span data-fill="card_np_full">January 15 to October 14</span> and <span data-fill="card_peak_full">October 15 to January 14</span>, plus the <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge; a <span data-fill="referral">12%</span> referral fee.</li>
+          <li>The item weight is a floor. Amazon bills the packed weight, so the unit sits at least this far past the edge.</li>
+          <li>Volume: about <span data-fill="units">3,600</span> units a month from the public sales rank, a curve that can be wrong by half or double; simulated that wide. This one listing: an estimated <span data-fill="sales_lo">$0.5M</span> to <span data-fill="sales_hi">$1.6M</span> a year in sales.</li>
+          <li>Landed cost: assumed at <span data-fill="landed">25%</span> of price, drifting 10% either way each month. No public page shows it.</li>
+          <li>Simulation: <span data-fill="years">10,000</span> years of twelve months from October 2026, each month on the card in force. Year-end profit: P10 <span data-fill="mc_p10">$230,000</span>, median <span data-fill="mc_p50">$402,000</span>, P90 <span data-fill="mc_p90">$687,000</span>.</li>
+          <li>Storage and aged-inventory rates: Amazon's schedule effective <span data-fill="storage_effective">January 15, 2026</span>.</li>
+          <li>What public data can't see: advertising, returns, the real landed cost, the packed weight, and how long each unit has sat.</li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="cta">
+      <a class="btn" href="/apply" data-cta="case-study">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · How it works -->
+<section class="section" id="how">
+  <div class="wrap">
+    <h2 class="measure">About ninety minutes of your time. Then we run it.</h2>
+    <ol class="steps">
+      <li><h3>Book the call.</h3><p>Twenty minutes. We open your reports with you and price what public pages can't show: aged stock, low-inventory fees, an ad target set wrong.</p></li>
+      <li><h3>Hand over your exports, once.</h3><p>One scoped seat or a folder of reports. Banking, payouts and settings stay out of reach.</p></li>
+      <li><h3>We move. The Record measures.</h3><p>Every move is written down with its expected dollars before it goes live, then measured on your own reports, every week.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 6 · The offer and the risk reversal -->
+<section class="section night" id="offer">
+  <div class="wrap">
+    <div class="offer-grid">
+      <h2 class="offer-line">More profit than our bill every month, or you don't pay.</h2>
+      <p class="offer-why"><b>Why we can say it.</b> No invoice reaches you until your Profit Record shows more profit than we've billed since day one. Short of that, it's void. So we only take on accounts where the arithmetic clears the bill, and if yours doesn't, we tell you on the call.</p>
+    </div>
+    <div class="scope-grid">
+      <div>
+        <p class="price">$6,000 a month, flat.</p>
+        <p>Never a percentage of ad spend. Month to month. Your first month is free.</p>
+      </div>
+      <ul class="scope">
+        <li><b>Every SKU modeled, every week:</b> true margin, demand, stockout odds.</li>
+        <li><b>Every leak found and sealed:</b> prices, ad bleed, reorders, fee cliffs, Amazon claims.</li>
+        <li><b>Every dollar graded</b> on your own reports, misses included.</li>
+        <li><b>Inventory timed</b> against the fee cliffs.</li>
+        <li><b>The guarantee</b> around all of it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · The scoreboard -->
+<section class="section" id="scoreboard">
+  <div class="wrap board-grid">
+    <div>
+      <h2>What you'll see every month.</h2>
+      <p class="lede">One number, one sentence, one bar. Every move behind it is one click down, each with how we know.</p>
+    </div>
+    <figure class="board" aria-label="Illustration of the monthly scoreboard, not a client's numbers">
+      <span class="label">Illustration · not a client's numbers</span>
+      <p class="board-k">Proven since day one</p>
+      <p class="board-big money">$48,210</p>
+      <p class="board-line">This month your Record measured <b class="money">$9,140</b>. Our bill was <b>$6,000</b>. You're up <b class="money">$3,140</b>.</p>
+      <div class="bar" role="img" aria-label="Measured $9,140 against a $6,000 bill"><span class="bar-fill" style="width: 100%"></span><span class="bar-bill" style="left: 65.6%"></span></div>
+      <div class="bar-keys"><span class="k-bill" style="left: 65.6%">Our bill</span><span class="k-measured">Measured</span></div>
+    </figure>
+  </div>
+</section>
+
+<!-- 8 · Who runs it -->
+<section class="section" id="who">
+  <div class="wrap who-grid">
+    <h2>Who runs it.</h2>
+    <div class="stack">
+      <p>Hubricon is founder-operated. An applied mathematician builds the models and answers for every move. There's no photo here: the math has no age.</p>
+      <p>One operator means a limited number of accounts at once.</p>
+      <p>Everything we hold of yours, and your whole Record, exports free within one working day. Any day, including the day you leave.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · The skeptic's questions -->
+<section class="section" id="faq">
+  <div class="wrap faq-grid">
+    <h2>Questions worth asking.</h2>
+    <div>
+      <details class="fold" data-q="attribution"><summary>How do you know which dollars you made?</summary>
+        <div class="fold-body"><p>Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (Amazon paid it), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only if it lasts.</p></div></details>
+      <details class="fold" data-q="profit"><summary>What counts as profit?</summary>
+        <div class="fold-body"><p>Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, a claim Amazon paid. Misses stay on the Record at what they actually earned.</p></div></details>
+      <details class="fold" data-q="too-good"><summary>Why isn't this too good to be true?</summary>
+        <div class="fold-body"><p>Because the bill waits for the proof. Your first month is free. After that, no invoice goes out until your Record shows more than we've billed since day one. We can afford that only because we take on accounts where the math clears.</p></div></details>
+      <details class="fold" data-q="bad-month"><summary>What happens in a month that underperforms?</summary>
+        <div class="fold-body"><p>Nothing you have to ask for. If the Record hasn't covered the bill, the invoice is void before it reaches you, and the work carries on. Leave any day with one email; anything billed beyond what your Record shows comes back to your bank.</p></div></details>
+      <details class="fold" data-q="data"><summary>What happens to my data?</summary>
+        <div class="fold-body"><p>We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days.</p></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · The close -->
+<section class="section close" id="book">
+  <div class="wrap">
+    <h2>More profit than our bill every month, or you don't pay.</h2>
+    <div class="cta"><a class="btn" href="/apply" data-cta="close">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>Hubricon</span>
+    <nav aria-label="Legal"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
+    <p class="legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+
+<script type="module" src="/assets/home.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
