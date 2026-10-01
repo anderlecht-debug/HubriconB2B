@@ -182,8 +182,10 @@ def test_the_veto_email_carries_the_record_line_and_a_footer_failure_never_block
     db = FakeDB([_d(1), _d(2, status="done", executed_at="2026-09-01T00:00:00Z", measured_impact_usd=None)])
     res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True
-    # d2 is made and unmeasured ($200 expected): found, not yet banked.
-    assert "Your Profit Record: $0 proven since day one · $200 found and filed, not yet banked · $0 billed to date." in sent[-1]
+    # d2 is made and unmeasured ($200 expected): found, not yet banked. The footer
+    # here is built without the database, so it names no since-day-one figure
+    # rather than a second one (value.record_line); value.record_footer gives it one.
+    assert "Your Profit Record: $200 found and filed, not yet banked · $0 billed to date." in sent[-1]
 
     def boom(db, cid):
         raise RuntimeError("invoices table missing")

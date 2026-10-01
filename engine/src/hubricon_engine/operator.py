@@ -1492,6 +1492,13 @@ class Pass:
             for q in queue[:10]:
                 lines.append(f"  - {q['prospects']['email']}: {(q.get('subject') or '')[:60]}")
             lines.append("")
+        # The notes and Briefs the machine drafted and only the founder sends
+        # (approval.py; HUBRICON_SPEC.md, "Customer experience" 4).
+        try:
+            from . import approval
+            lines += approval.digest_lines(self.db)
+        except Exception as err:
+            lines += [f"Waiting for your approval: could not be read ({err}).", ""]
         if self.human:
             lines += ["Only you can do these:"] + [f"  - {h}" for h in self.human] + [""]
         if self.warnings:
