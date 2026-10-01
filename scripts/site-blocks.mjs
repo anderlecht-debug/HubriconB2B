@@ -119,7 +119,7 @@ function foot(lib) {
       <p class="foot-motto">Paid on proof.</p>
     </div>
     <div class="foot-cols">
-      ${col("The work", TABS)}
+      ${col("The work", [...TABS, ["The manifesto", "/manifesto"]])}
       ${col("Education", [["All courses", "/learn"], ...live.map((c) => [c.title, c.path])])}
       ${col("Trust", [...TRUST.map(([t, h]) => [t, h]), ["Check a Profit Record", "/verify"]])}
       ${col("Legal", [["Terms", "/terms"], ["Privacy", "/privacy"]])}

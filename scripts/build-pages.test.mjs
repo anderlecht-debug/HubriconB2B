@@ -43,7 +43,7 @@ test("one action: every button says the same thing and goes to the same place", 
   }
   for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
+  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|manifesto|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
   // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
   // education tab"); none of them is a button, and none of them sells anything but the call.
   const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];
@@ -100,7 +100,7 @@ test("the case study says what it is on its own screen", () => {
 });
 
 test("nothing from the retired funnel or the retired look", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html"]) {
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "manifesto.html", "verify.html"]) {
     const h = read(page);
     for (const gone of ["Teardown", "Anton", "Fraunces", "Iowan", "#FFC000", "Demo data", "Start your free Proving Month"]) {
       assert.ok(!h.includes(gone), `"${gone}" is still on ${page}`);
@@ -109,7 +109,7 @@ test("nothing from the retired funnel or the retired look", () => {
 });
 
 test("no page on the design system keeps a palette of its own", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html"]) {
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html", "manifesto.html", "verify.html"]) {
     const style = read(page).match(/<style>([\s\S]*?)<\/style>/)[1];
     assert.doesNotMatch(style, /#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i, `${page}: colours belong in /assets/hubricon.css`);
     assert.match(read(page), /href="\/assets\/hubricon\.css"/);

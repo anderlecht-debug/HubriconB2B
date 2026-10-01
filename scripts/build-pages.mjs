@@ -288,6 +288,7 @@ export const PAGES = [
   { file: "privacy.html" },
   { file: "your-data.html" },
   { file: "verify.html" },
+  { file: "manifesto.html" },
   { file: "portal.html" },
   { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
