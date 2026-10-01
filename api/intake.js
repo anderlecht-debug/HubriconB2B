@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { dispatchOperator, intakeView } from "../lib/intake.js";
+import { resolveTokenFor } from "../lib/token.js";
 
 /**
  * Tokenized client intake.
@@ -87,12 +87,9 @@ function missingEnv() {
     : null;
 }
 
+// One link, one job: this page opens only upload links (lib/token.js).
 async function resolveToken(db, token) {
-  if (typeof token !== "string" || token.length < 20 || token.length > 200) return null;
-  const hash = createHash("sha256").update(token).digest("hex");
-  const { data, error } = await db.rpc("validate_intake_token", { p_token_hash: hash });
-  if (error || !data || data.length === 0) return null;
-  return data[0]; // { client_id, company_name }
+  return resolveTokenFor(db, token, "upload");
 }
 
 function isIsoDate(value) {

@@ -1,6 +1,7 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { KINDS, form, saved } from "../lib/consent_page.js";
+import { resolveTokenFor } from "../lib/token.js";
 
 /**
  * The page where a client answers the price of the free month.
@@ -43,12 +44,9 @@ function missingEnv() {
     : null;
 }
 
+// One link, one job: this page opens only consent links (lib/token.js).
 async function resolveToken(db, token) {
-  if (typeof token !== "string" || token.length < 20 || token.length > 200) return null;
-  const hash = createHash("sha256").update(token).digest("hex");
-  const { data, error } = await db.rpc("validate_intake_token", { p_token_hash: hash });
-  if (error || !data || data.length === 0) return null;
-  return data[0]; // { client_id, company_name }
+  return resolveTokenFor(db, token, "consent");
 }
 
 function newCode() {
