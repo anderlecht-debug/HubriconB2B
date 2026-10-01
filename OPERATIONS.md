@@ -181,7 +181,7 @@ platform. `engine/src/hubricon_engine/channels.py` is the single place the
 | What | Amazon | Shopify |
 |---|---|---|
 | Fee stack, in prose | referral, FBA fulfilment, storage | payment processing, shipping labels, apps, 3PL |
-| Payout cycle (the cash cone) | every 14 days | daily |
+| Payout timing (the cash cone) | payable 10 days after the sale (DD+7, 2-day delivery assumed), settled every 14 days, 4 days to the bank; the 14 days Amazon holds on day one counted; ads charged as spent | daily, 4 days from sale to bank |
 | Fee cliffs (low-inventory, aged surcharge, peak storage) | priced in | none; the newsvendor still runs |
 | Reimbursement recovery | the whole Amazon claims channel | not applicable — no warehouse loses units on your behalf |
 | Watched during a price step | Buy Box share | conversion rate |
@@ -2092,7 +2092,7 @@ they run ads: Reports → Fulfillment → **Manage Inventory Health** (Inventory
 Fulfillment → **Fee Preview**, and Advertising → Reports → Sponsored Products **Campaign** report
 by day. Type a landed cost (share of price) and their target ACoS. The page shows one number,
 then the aged-inventory surcharge (Amazon's own estimate where the report carries it), the
-cliff at the next snapshot, the low-inventory-level fee at the last 30 days' pace, units past a
+cliff at the next snapshot, the low-inventory-level fee by size tier (from Fee Preview), charged only when both the 30- and 90-day supply are under 28, with the exemptions the report shows, units past a
 fee edge at their real units, and break-even ACoS per SKU against their target.
 
 **Nothing leaves their browser.** FileReader in, `/lib/call.js` arithmetic, no analytics script,
