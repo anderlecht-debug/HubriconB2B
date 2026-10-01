@@ -198,7 +198,7 @@ FILE_GAPS = {
 
 
 def _ts(v) -> datetime | None:
-    return lifecycle._ts(v)
+    return lifecycle.ts(v)
 
 
 def first_read_ready(uploads: list[dict], channel: str | None, now: datetime | None = None) -> dict:

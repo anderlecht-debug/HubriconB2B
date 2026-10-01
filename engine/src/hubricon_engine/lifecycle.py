@@ -45,7 +45,9 @@ ALLOWED: dict[str, frozenset[str]] = {
 }
 
 
-def _ts(v) -> datetime | None:
+def ts(v) -> datetime | None:
+    """A timestamp from the database (ISO text, a trailing Z, or a datetime) as
+    an aware UTC datetime; None when empty or unreadable."""
     if not v:
         return None
     if isinstance(v, datetime):
@@ -55,6 +57,9 @@ def _ts(v) -> datetime | None:
     except ValueError:
         return None
     return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+_ts = ts    # the old private name, for any caller not yet moved
 
 
 def stage(client: dict, call_at=None, now: datetime | None = None) -> str:
@@ -67,7 +72,7 @@ def stage(client: dict, call_at=None, now: datetime | None = None) -> str:
         return "declined"
     if client.get("retainer_started_at") or status in ("active", "past_due"):
         return "agreed"
-    when = _ts(call_at)
+    when = ts(call_at)
     if when and when <= now:
         return "called"
     return "booked"
@@ -87,7 +92,7 @@ def call_at(db, client_id: str):
             .order("created_at", desc=True).execute().data) or []
     for b in rows:
         if not KICKOFF_EVENT.search(b.get("event_type") or "") and b.get("starts_at"):
-            return _ts(b["starts_at"])
+            return ts(b["starts_at"])
     return None
 
 

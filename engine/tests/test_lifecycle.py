@@ -55,3 +55,13 @@ def test_the_call_is_the_latest_booking_that_is_not_a_kickoff():
     ])
     assert lifecycle.call_at(db, "c1") == datetime(2026, 10, 9, 15, tzinfo=timezone.utc)
     assert lifecycle.stage_of(db, {"id": "c1", "status": "pending"}, NOW) == "booked"   # rescheduled to the 9th
+
+
+def test_ts_reads_every_timestamp_the_database_hands_back():
+    """lifecycle.ts is public: onboarding and the operator read the yes and the
+    call through it. The old private name stays an alias."""
+    assert lifecycle.ts("2026-10-01T09:30:00Z") == datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
+    assert lifecycle.ts("2026-10-01T09:30:00") == datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
+    assert lifecycle.ts(datetime(2026, 10, 1)) == datetime(2026, 10, 1, tzinfo=timezone.utc)
+    assert lifecycle.ts(None) is None and lifecycle.ts("not a date") is None
+    assert lifecycle._ts is lifecycle.ts

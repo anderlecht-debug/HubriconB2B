@@ -2082,8 +2082,9 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
     4, has the system draft from the graded numbers and the founder approve,
     never write from scratch. The draft is not in the portal (the briefings
     policy shows members published rows only) and no email goes. Issue 001, the
-    first full read, is NOT held: its promise is speed, so the operator
-    publishes it the hour the files land, and it reaches this path only on
+    first full read, is NOT held: the operator publishes it on its next pass
+    after the core files are in, or 24 hours after the last upload
+    (onboarding.first_read_ready), and it reaches this path only on
     `hubricon issue --force` for a client with no issue yet, where it publishes
     as it always has. Without migration 20261001000004 there is no draft state,
     so every issue publishes and sends as before and the founder's digest says

@@ -1,18 +1,31 @@
-"""The operator: one hourly pass that runs the funnel end to end.
+"""The operator: one pass, scheduled hourly, that runs the funnel end to end.
 
-  1. Outbound  — campaign up, leads in, replies triaged and answered (Instantly).
-  2. Bookings  — Calendly bookings the cloud routine parsed → client + welcome email.
-  3. TEARDOWN  — prospects who replied with the keyword → client + upload page.
-  4. Nudges    — clients who haven't uploaded after 3 / 7 days, once each.
-  5. Teardown  — new uploads parsed; first successful run → Issue 001 in the
-                 desk, report file in storage, "it's ready" email.
-  6. Billing   — the day-30 gate; the only code that starts a subscription.
-  7. Proof     — every verified dollar becomes a result row; consented rows
-                 go public and the cold copy picks up the record by itself.
-  8. Digest    — the PMF scoreboard, the loop past paid, speed to value, and
-                 anything only a human can do, emailed to the founder daily.
+GitHub runs the schedule late, sometimes by hours, so nothing here is ever
+promised to a client as "within the hour".
 
-Everything is idempotent, so an hourly run that finds nothing does nothing.
+  1. Outbound   — campaign up, leads in, replies triaged and answered
+                  (Instantly); cold sending is paused unless switched on.
+  2. Bookings   — Calendly bookings the cloud routine parsed → a pending
+                  client and the call prep: what the call is, the one thing to
+                  do before it, and the optional upload page for a first read.
+  3. Replies    — prospects who replied asking for the read → client + upload page.
+  4. Nudges     — the agreed letter on the yes, when `hubricon retainer` could
+                  not send it; then the upload link again after the call, only
+                  where the client's stage allows it (lifecycle.py).
+  5. First read — uploads parsed as they land; when the core files are in, or a
+                  day after the last upload, Profit Brief No. 001 in Hubricon,
+                  the report in storage and the "it's ready" email, and the
+                  first moves with it for a client who has said yes.
+  6. Billing    — the guarantee month by month; the only code that starts a
+                  subscription.
+  7. Proof      — every verified dollar becomes a result row; consented rows
+                  go public.
+  8. Clocks     — export requests built and emailed; exit true-ups counted.
+  9. Digest     — the promises the machine cannot keep right now, the PMF
+                  scoreboard, speed to value, and anything only a human can
+                  do, emailed to the founder daily.
+
+Everything is idempotent, so a pass that finds nothing does nothing.
 """
 
 import os
@@ -442,7 +455,7 @@ class Pass:
                 continue        # never anyone's first email
             start = call
             if stage == "agreed":
-                yes = lifecycle._ts(c.get("retainer_started_at"))
+                yes = lifecycle.ts(c.get("retainer_started_at"))
                 start = max(d for d in (call, yes) if d) if (call or yes) else None
             if not start:
                 continue
@@ -470,7 +483,7 @@ class Pass:
                 continue
             if (c.get("plan") or "retainer") == "recovery" or c.get("retainer_source") == "first_invoice":
                 continue
-            yes = lifecycle._ts(c.get("retainer_started_at"))
+            yes = lifecycle.ts(c.get("retainer_started_at"))
             if not yes or now - yes > timedelta(days=onboarding.AGREED_LETTER_DAYS):
                 continue
             if (self.db.table("client_touches").select("kind").eq("client_id", c["id"]).eq("kind", "agreed")
