@@ -75,10 +75,13 @@ Five money decisions, made for the client, inside their own account.
 
 1. **Prices.** Per-SKU demand elasticity with a 95% confidence interval, then the
    profit-maximising price derived from it. Steps are capped at 5% per SKU per
-   two-week cycle, and Buy Box share (Amazon) or conversion rate (Shopify) is read
-   while the step is live so a step too far is caught in days.
-2. **Ads.** Every search term or ad set that spent with zero attributed sales,
-   listed in dollars and negative-matched. The account's spend-response curve is
+   two-week cycle. On Amazon the Buy Box share is read while the step is live, so a
+   step too far is caught in days; a Shopify store has no Buy Box and nothing reads
+   its conversion rate yet, so a Shopify step is read on the client's own orders,
+   the units the product sells before and after it.
+2. **Ads.** Every Amazon or Google search term that spent with zero attributed
+   sales, listed in dollars and negative-matched. Meta is read at campaign level, so
+   a Meta campaign is trimmed toward its break-even, never named ad set by ad set. The account's spend-response curve is
    fitted and the break-even point derived from the client's own margin, rather
    than from a target somebody typed into a tool.
 3. **Inventory.** Twenty thousand simulated demand paths per SKU against supplier
@@ -115,9 +118,13 @@ said yes.
 
 **Access.** One permissions-scoped user on Seller Central with exactly four
 permissions (Business Reports view, Fulfillment reports view, Pricing edit,
-Campaign Manager edit), or one Shopify collaborator account limited to Orders,
-Products, Analytics, Reports, Marketing and Discounts. Neither can touch banking,
-tax, payouts or account settings. Revocable in one click. Clients who prefer not
+Campaign Manager edit), or one Shopify staff account (Grow, Advanced or Plus) with a
+role limited to Orders (view, export), Products (view, view cost, edit price,
+export), Discounts and Analytics reports, and no access to Finance, payouts,
+Customers, Settings or apps; a Shopify store's Meta and Google ad accounts are
+granted separately (Meta partner access, Google Ads Standard). None can touch
+banking, tax, payouts or account settings, and each is revocable by the client.
+Shopify payouts come by upload, since the seat has no Finance access. Clients who prefer not
 to grant a seat can send CSV exports through a secure upload page instead.
 
 ---
