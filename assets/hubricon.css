@@ -827,6 +827,13 @@ html:not(.js) .course-page .pager { display: none; }
 .cash .cash-p50 { fill: none; stroke: var(--ink); stroke-width: var(--line-pct); stroke-linejoin: round; }
 .cash .cash-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
 .chart .dot-blue { fill: var(--blue); }
+/* The readout a reader scrubs (assets/site.js): a hairline, a dot on each line, the figures in a quiet box */
+.chart.scrubbable { touch-action: pan-y; cursor: crosshair; }
+.chart .scrub-rule { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .scrub-dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.chart .scrub-box { fill: var(--paper); stroke: var(--rule-2); stroke-width: 1; }
+.chart .scrub-text { fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chart .scrub-text.scrub-head { fill: var(--ink); font-weight: var(--strong); }
 .mc .mc-pct { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linecap: round; }
 .mc .mc-pct.p50 { stroke: var(--ink); }
 .mc .mc-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
@@ -862,6 +869,9 @@ html:not(.js) .course-page .pager { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Asked for less motion: a section dissolves in, it never slides (.calm, set by the switch) */
+.calm .armed[data-reveal] { opacity: 0; transform: none; transition: none; }
+.calm [data-reveal].in { transform: none !important; transition: opacity 0.6s ease var(--d, 0ms) !important; }
 @media print {
   .night { --paper: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #ccc; --blue: #0b5fff; }
 }

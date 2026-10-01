@@ -42,12 +42,17 @@ const PROOF = [["The case study", "/#case-study"], ["The results wall", "/#resul
 // ------------------------------------------------------------------ the nav ----
 /* The motion switch, first thing in the body: .motion only when scripts run and the
    visitor hasn't asked for less of it; if /assets/site.js never arrives, it comes off
-   and every chart and section is simply there. */
+   and every chart and section is simply there. A visitor who asked for less motion gets
+   .calm: sections dissolve in, the way Apple replaces motion with a cross-fade, and
+   charts and numbers show their finished frame (HUBRICON_SPEC.md, the Monte Carlo's
+   reduced-motion rule). */
 const SWITCH = `<script>
 (function (d) {
   d.classList.add("js");
   try {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
     d.classList.add("motion");
     setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
   } catch (e) {}

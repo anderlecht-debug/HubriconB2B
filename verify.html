@@ -91,7 +91,9 @@ main.wrap { padding-bottom: var(--section); }
 (function (d) {
   d.classList.add("js");
   try {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
     d.classList.add("motion");
     setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
   } catch (e) {}

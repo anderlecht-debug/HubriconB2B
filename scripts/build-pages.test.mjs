@@ -87,6 +87,25 @@ test("the only other control is the course's optional email, and it looks like t
   assert.match(js, /body\.emailed\)/, "it says an email was sent only when the server says it was");
 });
 
+test("every chart a reader studies can be scrubbed, and asking for less motion gets a dissolve, not nothing", () => {
+  // The founder, 2026-10-01: "the animations still need to actually be animated … making the site more interactive"
+  const charts = (page) => [...read(page).matchAll(/<svg class="chart ([a-z]+)[^"]*"[^>]*>/g)];
+  for (const page of ["index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/capital-and-cash.html"]) {
+    for (const [tag, kind] of charts(page)) {
+      if (/mc--mood|aging|strip/.test(tag)) continue;   // the hero's mood and the age bands carry no values to read
+      const m = tag.match(/data-scrub="([^"]+)"/);
+      assert.ok(m, `${page}: a ${kind} chart without a readout`);
+      const data = JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"));
+      assert.ok(data.p.length > 3 && data.p.every(([x, ys, lines]) => Number.isFinite(x) && ys.length && lines.length), `${page}: ${kind} readout`);
+    }
+  }
+  const js = read("assets/site.js"), css = read("assets/hubricon.css");
+  assert.match(js, /svg\.chart\[data-scrub\]/);
+  assert.match(read("scripts/site-blocks.mjs"), /prefers-reduced-motion: reduce\)"\)\.matches\) \{ d\.classList\.add\("calm"\)/);
+  assert.match(css, /\.calm \.armed\[data-reveal\] \{ opacity: 0; transform: none;/);
+  assert.match(js, /if \(calm && !el\.hasAttribute\("data-reveal"\)\) return;/, "charts and numbers keep their finished frame when motion is reduced");
+});
+
 test("nothing is blank for want of a scroll: only an armed element or the hero's chart starts hidden", () => {
   // HUBRICON_SPEC.md, the Monte Carlo's contract: before it fires, show the finished still frame.
   const css = read("assets/hubricon.css");

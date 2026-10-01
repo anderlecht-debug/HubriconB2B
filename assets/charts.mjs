@@ -51,8 +51,15 @@ function spread(items, gap, lo, hi) {
   return s;
 }
 
-function frame(w, h, cls, title, desc, body) {
-  return `<svg class="chart ${cls}" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="${title.id} ${desc.id}" preserveAspectRatio="xMidYMid meet">` +
+/**
+ * The readout a reader can scrub (assets/site.js): {f: font, t: top, b: bottom, p: [[x, [y…], [line…]], …]}
+ * in the chart's own units. A progressive enhancement: the chart's <desc> already says what it shows.
+ */
+const scrubOf = (font, top, bottom, rows) => ({ f: font, t: r1(top), b: r1(bottom), p: rows.map(([x, ys, lines]) => [r1(x), ys.map(r1), lines]) });
+
+function frame(w, h, cls, title, desc, body, scrub = null) {
+  const data = scrub ? ` data-scrub="${esc(JSON.stringify(scrub))}"` : "";
+  return `<svg class="chart ${cls}" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="${title.id} ${desc.id}" preserveAspectRatio="xMidYMid meet"${data}>` +
     `<title id="${title.id}">${esc(title.text)}</title><desc id="${desc.id}">${esc(desc.text)}</desc>${body}</svg>`;
 }
 
@@ -119,7 +126,9 @@ export function monteCarloSVG(mc, opts) {
   const desc = `Each faint line is one simulated year of one listing's cumulative profit, starting today. ` +
     `After ${months[end]} months, one year in ten ends below ${usd(mc.percentiles.p10[end], { step: 1000 })}, the median year at ${usd(mc.percentiles.p50[end], { step: 1000 })}, ` +
     `and one in ten above ${usd(mc.percentiles.p90[end], { step: 1000 })}. Share of simulated months at a loss: ${(mc.share_losing * 100).toFixed(1)}%.`;
-  return frame(w, h, `mc mc--${variant}`, { id: `${id}-t`, text: "Ten thousand simulated years of one listing's profit" }, { id: `${id}-d`, text: desc }, body);
+  const scrub = full ? scrubOf(font, m.t, h - m.b, months.map((mo, i) => [X(mo), [Y(mc.percentiles.p90[i]), Y(mc.percentiles.p50[i]), Y(mc.percentiles.p10[i])],
+    [mo === 0 ? "Today" : `Month ${mo}`, `P90 ${usd(mc.percentiles.p90[i], { step: 1000 })}`, `Median ${usd(mc.percentiles.p50[i], { step: 1000 })}`, `P10 ${usd(mc.percentiles.p10[i], { step: 1000 })}`]])) : null;
+  return frame(w, h, `mc mc--${variant}`, { id: `${id}-t`, text: "Ten thousand simulated years of one listing's profit" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 // ---------------------------------------------------------------- the staircase
@@ -186,7 +195,11 @@ export function staircaseSVG(st, opts) {
 
   const desc = `Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. ` +
     `This listing ships at ${st.listing.oz.toFixed(1)} ounces, just past the ${st.edge.oz}-ounce edge, so every unit pays ${perUnit(st.step)} more than it would one step down.`;
-  return frame(w, h, "stairs", { id: `${id}-t`, text: "Amazon's fee staircase, with one listing just past an edge" }, { id: `${id}-d`, text: desc }, body);
+  const feeAt = (rows, oz) => (rows.find(([e]) => oz <= e) || rows[rows.length - 1])[1];
+  const ozs = Array.from({ length: Math.round(xMax * 2) }, (_, i) => (i + 1) / 2);
+  const scrub = scrubOf(font, m.t, h - m.b, ozs.map((oz) => [X(oz), [Y(feeAt(treads, oz)), Y(feeAt(alt, oz))],
+    [`${oz.toFixed(1)} oz`, `${perUnit(feeAt(treads, oz))}, ${st.label}`, `${perUnit(feeAt(alt, oz))}, ${st.altLabel}`]]));
+  return frame(w, h, "stairs", { id: `${id}-t`, text: "Amazon's fee staircase, with one listing just past an edge" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 // ---------------------------------------------------------------- the aging cliff
@@ -312,7 +325,8 @@ export function fitSVG(fit, opts) {
   const lab = `Elasticity ${minus(fit.elasticity, 2)}, interval ${minus(fit.lo, 2)} to ${minus(fit.hi, 2)}`;
   body += `<text class="ink strong fade" style="--after:var(--mc-draw-ms)" x="${w - m.r}" y="${m.t - font}" font-size="${font}" text-anchor="end">${esc(lab)}</text>`;
   const desc = `Each dot is one period's average price and units sold a day. The line is the demand curve the log-log fit draws through them: ${lab}.`;
-  return frame(w, h, "fit", { id: `${id}-t`, text: "One listing's sales history and the demand curve fitted to it" }, { id: `${id}-d`, text: desc }, body);
+  const scrub = scrubOf(font, m.t, h - m.b, xs.map((x, i) => { const p = pLo + ((pHi - pLo) * i) / n; return [x, [ys[i]], [`At $${p.toFixed(2)}`, `${curve(p).toFixed(1)} units a day, on the fit`]]; }));
+  return frame(w, h, "fit", { id: `${id}-t`, text: "One listing's sales history and the demand curve fitted to it" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 const minus = (v, d) => (v < 0 ? `−${Math.abs(v).toFixed(d)}` : v.toFixed(d));
@@ -374,7 +388,9 @@ export function profitSVG(pc, opts) {
   body += `</g>`;
   const desc = `Profit a month against price. The solid line uses the fitted elasticity, ${minus(pc.eps, 2)}; the dashed lines use the ends of its interval. ` +
     `All three pass through today's price. The solid line is flat across the top: a few percent either side of the best price costs little.`;
-  return frame(w, h, "profit", { id: `${id}-t`, text: "Profit a month against price, at the fitted elasticity and at the ends of its interval" }, { id: `${id}-d`, text: desc }, body);
+  const scrub = scrubOf(font, m.t, h - m.b, curves[0].map(([p, v], i) => [X(p), [Y(v), Y(curves[1][i][1]), Y(curves[2][i][1])],
+    [`At $${p.toFixed(2)}`, `${usd(v)} a month at ${minus(pc.eps, 2)}`, `${usd(curves[1][i][1])} at ${minus(pc.lo, 2)}`, `${usd(curves[2][i][1])} at ${minus(pc.hi, 2)}`]]));
+  return frame(w, h, "profit", { id: `${id}-t`, text: "Profit a month against price, at the fitted elasticity and at the ends of its interval" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 // ---------------------------------------------------------------- the cash path
@@ -429,7 +445,10 @@ export function cashSVG(c, opts) {
       `After the wire of ${whole(c.wire)} on day ${c.wire_day}, the bad case bottoms at ${whole(c.trough_p5)} on day ${c.trough_day}, the day before a payout.`
     : `The median bank balance over ${days} days, starting at ${whole(c.start)}. Fixed costs drain it every day, payouts lift it every ${c.payout_days[1] - c.payout_days[0]} days, ` +
       `and the wire of ${whole(c.wire)} on day ${c.wire_day} takes it to its low point, ${whole(c.trough_median)} on day ${c.trough_day}, the day before the next payout.`;
-  return frame(w, h, "cash", { id: `${id}-t`, text: band ? "The bank balance over 90 days, ten thousand ways" : "The bank balance over 90 days, the median path" }, { id: `${id}-d`, text: desc }, body);
+  const scrub = scrubOf(font, m.t, h - m.b, p50.map((v, d) => [X(d), band ? [Y(p95[d]), Y(v), Y(p5[d])] : [Y(v)],
+    band ? [d === 0 ? "Today" : `Day ${d}`, `1 in 20 above ${whole(p95[d])}`, `Median ${whole(v)}`, `1 in 20 below ${whole(p5[d])}`]
+         : [d === 0 ? "Today" : `Day ${d}`, `Balance ${whole(v)}`]]));
+  return frame(w, h, "cash", { id: `${id}-t`, text: band ? "The bank balance over 90 days, ten thousand ways" : "The bank balance over 90 days, the median path" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 // ---------------------------------------------------------------- two weeks late
@@ -463,7 +482,9 @@ export function lateSVG(late, opts) {
   body += `</g>`;
   const desc = `The chance the stock runs out before the order lands, by how many days after the reorder point the wire goes. ` +
     `On time it is ${Math.round(a.p_out * 100)}%; two weeks late it is ${Math.round(b.p_out * 100)}%.`;
-  return frame(w, h, "late", { id: `${id}-t`, text: "The chance of running out, by days late" }, { id: `${id}-d`, text: desc }, body);
+  const scrub = scrubOf(font, m.t, h - m.b, curve.map((p) => [X(p.days_late), [Y(p.p_out)],
+    [p.days_late === 0 ? "On time" : `${p.days_late} days late`, `${(p.p_out * 100).toFixed(1)}% chance of running out`, `${Math.round(p.units_short)} units short, on average`]]));
+  return frame(w, h, "late", { id: `${id}-t`, text: "The chance of running out, by days late" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
 
 // ---------------------------------------------------------------- the parcel staircase
@@ -520,5 +541,10 @@ export function parcelSVG(pc, opts) {
   body += `</g>`;
   const desc = `USPS Ground Advantage's 2026 commercial rates climb a step at every pound, because anything over a pound bills at the next whole pound. ` +
     `A parcel at ${pc.parcel_oz} ounces pays the 2 lb rate: ${perUnit(pc.step[0])} to ${perUnit(pc.step[1])} more a parcel than one under a pound, depending on the zone.`;
-  return frame(w, h, "stairs", { id: `${id}-t`, text: "The parcel staircase: USPS Ground Advantage by weight" }, { id: `${id}-d`, text: desc }, body);
+  const rowAt = (oz) => pc.rows[oz < 16 ? "0" : oz === 16 ? "16" : String(Math.ceil(oz / 16) * 16)];
+  const billed = (oz) => (oz < 16 ? "under a pound" : `${Math.ceil(oz / 16)} lb`);
+  const ozs = Array.from({ length: xMax * 2 }, (_, i) => (i + 1) / 2);
+  const scrub = scrubOf(font, m.t, h - m.b, ozs.map((oz) => [X(oz), [Y(rowAt(oz)[7]), Y(rowAt(oz)[0])],
+    [`${oz.toFixed(1)} oz bills as ${billed(oz)}`, `Farthest zone ${perUnit(rowAt(oz)[7])}`, `Nearest zone ${perUnit(rowAt(oz)[0])}`]]));
+  return frame(w, h, "stairs", { id: `${id}-t`, text: "The parcel staircase: USPS Ground Advantage by weight" }, { id: `${id}-d`, text: desc }, body, scrub);
 }

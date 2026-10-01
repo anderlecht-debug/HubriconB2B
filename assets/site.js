@@ -7,6 +7,7 @@ window.__hubriconMotion = true;
 
 const root = document.documentElement;
 const motion = root.classList.contains("motion");
+const calm = root.classList.contains("calm");   // asked for less motion: a dissolve, nothing else
 
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 export const track = (name, data) => { try { window.va("event", { name, data }); } catch (e) {} };
@@ -68,7 +69,7 @@ function countUp(el, final) {
   };
   requestAnimationFrame(tick);
 }
-if (motion) {
+if (motion || calm) {
   const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;   // draw, band, the paths settling
   const playChart = (el) => {
     el.classList.add("playing");
@@ -77,8 +78,9 @@ if (motion) {
   };
   const arm = (el) => {
     if (el.classList.contains("armed")) return;
+    if (calm && !el.hasAttribute("data-reveal")) return;   // charts and numbers keep their finished frame
     el.classList.add("armed");
-    if (el.hasAttribute("data-count")) {
+    if (motion && el.hasAttribute("data-count")) {
       el.dataset.final = el.textContent;
       el.setAttribute("aria-label", el.textContent);
       el.textContent = el.textContent.replace(DIGITS, "0");
@@ -86,10 +88,10 @@ if (motion) {
   };
   const play = (el) => {
     if (!el.classList.contains("armed")) return;          // never put back: it is already its still frame
-    if (el.hasAttribute("data-play")) return playChart(el);
+    if (motion && el.hasAttribute("data-play")) return playChart(el);
     el.classList.remove("armed");
     if (el.hasAttribute("data-reveal")) el.classList.add("in");
-    if (el.hasAttribute("data-count")) countUp(el, el.dataset.final);
+    if (motion && el.hasAttribute("data-count")) countUp(el, el.dataset.final);
   };
   const arriving = new IntersectionObserver((entries) => {
     for (const e of entries) {
@@ -104,11 +106,65 @@ if (motion) {
       if (e.isIntersecting && e.boundingClientRect.top > innerHeight) { arm(e.target); nearing.unobserve(e.target); }
     }
   }, { rootMargin: "0px 0px 100% 0px" });
-  for (const el of document.querySelectorAll('[data-play="load"]')) playChart(el);
+  if (motion) for (const el of document.querySelectorAll('[data-play="load"]')) playChart(el);
   for (const el of document.querySelectorAll('[data-play]:not([data-play="load"]), [data-reveal], [data-count]')) {
     nearing.observe(el);
     arriving.observe(el);
   }
+}
+
+/* -- Charts a reader can scrub ------------------------------------------------------ */
+// Every chart with data-scrub (assets/charts.mjs) reads out its values where the pointer or a
+// finger rests: a hairline, a dot on each line, and the figures beside them. The chart itself
+// does not move; the readout is the reader's. Off the chart, or with Escape, it goes away.
+const SVGNS = "http://www.w3.org/2000/svg";
+const mk = (tag, attrs, parent) => { const n = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); parent?.append(n); return n; };
+for (const svg of document.querySelectorAll("svg.chart[data-scrub]")) {
+  let data;
+  try { data = JSON.parse(svg.dataset.scrub); } catch (e) { continue; }
+  if (!data.p?.length) continue;
+  const vb = svg.viewBox.baseVal;
+  const g = mk("g", { class: "scrub", "aria-hidden": "true" }, svg);
+  const rule = mk("line", { class: "scrub-rule", y1: data.t, y2: data.b }, g);
+  const dots = data.p[0][1].map(() => mk("circle", { class: "scrub-dot", r: data.f < 13 ? 3.5 : 4.5 }, g));
+  const box = mk("rect", { class: "scrub-box", rx: 6 }, g);
+  const lines = Math.max(...data.p.map((p) => p[2].length));
+  const texts = Array.from({ length: lines }, (_, i) => mk("text", { class: i ? "scrub-text" : "scrub-text scrub-head", "font-size": data.f }, g));
+  g.style.display = "none";
+  let shown = -1;
+  const show = (i) => {
+    if (i === shown) return;
+    shown = i;
+    const [x, ys, label] = data.p[i];
+    rule.setAttribute("x1", x); rule.setAttribute("x2", x);
+    dots.forEach((d, k) => { d.setAttribute("cx", x); d.setAttribute("cy", ys[k] ?? -99); });
+    const lh = data.f * 1.45, pad = data.f * 0.7;
+    texts.forEach((t, k) => { t.textContent = label[k] || ""; });
+    g.style.display = "";
+    const w = Math.max(...texts.map((t) => t.getComputedTextLength())) + pad * 2;
+    const h = label.length * lh + pad * 1.2;
+    const right = x + 12 + w <= vb.x + vb.width;
+    const bx = right ? x + 12 : x - 12 - w, by = Math.max(data.t, Math.min(data.b - h, Math.min(...ys) - h / 2));
+    box.setAttribute("x", bx); box.setAttribute("y", by); box.setAttribute("width", w); box.setAttribute("height", h);
+    texts.forEach((t, k) => { t.setAttribute("x", bx + pad); t.setAttribute("y", by + pad + lh * (k + 0.75)); });
+  };
+  const hide = () => { g.style.display = "none"; shown = -1; };
+  const at = (ev) => {
+    const m = svg.getScreenCTM();
+    if (!m) return;
+    const x = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m.inverse()).x;
+    let best = 0;
+    for (let i = 1; i < data.p.length; i++) if (Math.abs(data.p[i][0] - x) < Math.abs(data.p[best][0] - x)) best = i;
+    show(best);
+  };
+  svg.classList.add("scrubbable");
+  svg.addEventListener("pointermove", at);
+  svg.addEventListener("pointerdown", at);
+  svg.addEventListener("pointerleave", hide);
+  svg.addEventListener("pointercancel", hide);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+  let tracked = false;
+  svg.addEventListener("pointerenter", () => { if (!tracked) { tracked = true; track("chart_scrub", { chart: svg.classList[1] || "chart", page: location.pathname }); } });
 }
 
 /* -- The opt-in: the course in your inbox ----------------------------------------- */
