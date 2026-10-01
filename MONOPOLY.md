@@ -136,9 +136,11 @@ What the product is at each star, for a founder at $5M a year.
    pass, store it with the run, and show it in the portal and, once consented, on
    /results: calls scored, band coverage, realisation ratio. Honest from the first
    measured move, labelled "too few to judge" below `MIN_SCORED_FOR_CALIBRATION`.
-3. **Time to first proof.** The Teardown's guarantee is 24 hours; the ten-times version
-   is the same Teardown the hour the files land. `MATH_SCORECARD.md` owns the model
-   work list; this is the product-speed item beside it.
+3. **Time to first proof.** The first full read of a client's files (Issue 001) has an
+   internal 24-hour target; the ten-times version is the same read the hour the files land.
+   (Until 2026-09-30 this was the Teardown's 24-hour guarantee; the spec killed the
+   Teardown.) `MATH_SCORECARD.md` owns the model work list; this is the product-speed
+   item beside it.
 
 ---
 
@@ -277,8 +279,12 @@ off the home page, the manifesto, the film and the stills (Higgsfield), the shar
 3. **The data is the client's.** Pooling only under the `network` consent, only
    aggregates, and every pooled figure carries its account count.
 4. **Flat price.** Economies go to the client and to the guarantee's reach first.
-5. **Beachhead first.** Nothing for customers outside $3M–$20M private label until ten
-   Proving Months have closed.
+5. **Beachhead first.** Nothing for customers outside $1M–$30M private label until ten
+   Proving Months have closed. (The band was $3M–$20M until the founder widened it on
+   2026-09-27, `HUBRICON_SPEC.md`. That brings council 12's Walton move forward on the
+   founder's word rather than on a measured cost to serve: the guarantee now reaches
+   $1M–$3M brands, the site never claims the bill is cleared at that size, and the call
+   is where the arithmetic is checked.)
 6. **Calibrated or silent.** Any model change re-runs the Simons–Thorp–Griffin bench,
    seeds 101/202/303 and 404/505/606, before it ships.
 

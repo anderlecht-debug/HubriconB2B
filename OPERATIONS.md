@@ -1506,6 +1506,27 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
 
 ## The 60-second Teardown (`/teardown`)
 
+> **Retired 2026-09-30** (`HUBRICON_SPEC.md`: the per-prospect Teardown is killed). The page
+> is in `archive/teardown.html`, `/teardown` redirects home, and nothing on the site links
+> to it. `lib/fees.js` stays: the home page's public-data case study runs on it
+> (`scripts/case-study.mjs`). `api/quick.js` and `lib/tool_email.js` still exist and still
+> link to `/teardown`; nothing posts to them now. The rest of the Teardown went the same day:
+> terms §2 is "The call", the operator's late-Teardown month is gone, client emails and the
+> portal say "your first full read", and the cold channel is held paused in code
+> (`HUBRICON_COLD`, see `HUBRICON.md`).
+>
+> **The founder's dictated fee figures, re-derived from `ratecard.json` on 2026-09-30.** The
+> first three were quoted before Amazon's 3.5% fuel and logistics surcharge (in force since
+> 2026-04-17); quote the surcharged figure. The USPS one does not match the card.
+>
+> | Dictated | On the card, with the surcharge | Verdict |
+> |---|---|---|
+> | Crossing $10: 82¢ to $1.01 a unit | **$0.85 to $1.05** (every standard row, both cards) | right before the surcharge |
+> | Crossing $50: 26¢ | **$0.27** | right before the surcharge |
+> | Peak step: 19¢ to 54¢ across 63 cells | **$0.20 to $0.56** (21 rows × 3 price columns, the over-3-lb base included) | right before the surcharge; the $2.81 extra-large figure is off this card |
+> | $9.95 → $10.49 nets 46¢ after referral | **+$0.46** at 15% referral, against a $0.85–$1.05 step: the raise loses $0.39–$0.59 a unit | right |
+> | USPS 15.9 oz → just over 16 oz: 96¢ to $4.47 | **$0.68 to $2.27** across zones 1–8 (Ground Advantage Commercial, Notice 123, 2026-07-12) | wrong; use the card |
+
 The lead magnet in front of the call. A visitor types five numbers off their
 own product page — price, item weight, package dimensions, category, rank,
 and optionally a landed cost — and the page prices one unit off Amazon's own

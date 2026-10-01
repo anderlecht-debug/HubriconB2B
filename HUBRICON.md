@@ -3,7 +3,9 @@
 *The reference answer. If you are an assistant picking this repo up cold, read this
 first, then `MONOPOLY.md` for what the business is building toward and the rules every
 change is held to, `BRAND.md` for how everything looks and sounds, `OPERATIONS.md` for
-how the machine runs and `GROWTH.md` for where customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.*
+how the machine runs and `GROWTH.md` for where customers come from. Last rewritten 2026-09-11; the guarantee section 2026-09-25.
+The rebuild decided on 2026-09-27 is governed by `HUBRICON_SPEC.md`: where it and this file
+disagree, the spec wins, and nothing in it licenses a claim this file's honesty rules forbid.*
 
 ---
 
@@ -24,8 +26,8 @@ Record. It is run by one person.
 
 ## Who the customer is
 
-A private-label brand doing **$3M–$20M a year** on Amazon, on Shopify, or
-on both. Ten or more SKUs. Their own brand, not wholesale or arbitrage. Someone
+A private-label brand doing **$1M–$30M a year** on Amazon, on Shopify, or
+on both (the founder's decision of 2026-09-27, `HUBRICON_SPEC.md`; it was $3M–$20M). Ten or more SKUs. Their own brand, not wholesale or arbitrage. Someone
 who owns the goals and is tired of being the only person in the building who runs
 the numbers.
 
@@ -47,8 +49,12 @@ Nobody in that stack can answer "which decision made the profit". That gap is th
 entire business.
 
 **Who it is not for:** someone who wants day-to-day creative campaign management,
-or another dashboard subscription. The floor is derived from the guarantee, not
-chosen: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
+or another dashboard subscription. **The honesty check the band carries:** the arithmetic
+below, written for the old $3M floor, says a $2M brand has roughly $3,600 a month to find,
+under the $6,000 fee. The site therefore never claims the bill is cleared at the bottom of
+the band; it says "we only take on accounts where the arithmetic clears the bill, and if
+yours doesn't, we tell you on the call", and the guarantee makes a wrong call cost
+Hubricon, not the client. The floor arithmetic as it stood: on the page's own inputs (20% of ad spend leaking, 1% of FBA revenue
 recoverable) a $2M brand has roughly $3,600 a month to find and a $3M brand roughly
 $5,400, so below $3M every invoice voids and the service runs unpaid. Since
 2026-09-18 the site's application books every brand that answers its four
@@ -212,9 +218,13 @@ that cannot run for want of a secret.
   voids anything unpaid, and refunds any gap left (terms §5, within seven days).
   Found dollars that carried an invoice and later measured short come back
   here. Data and the full Record export free, any day.
-- **Late Teardown, free month.** A Teardown more than 24 hours after the
-  client's first readable upload (or first seat pull) adds a second free month,
-  once, whatever the Record shows. The client is told; they do not ask.
+- **Service until proven.** The work carries on while the Record catches up: a
+  month the Record has not covered is not invoiced, and nothing stops.
+
+The fourth guarantee was "Late Teardown, free month" until 2026-09-30, when the spec
+killed the Teardown; the four layers are now the spec's own (free Proving Month, proven
+or void, service until proven, the open exit). Terms §2 is now "The call", and the
+operator no longer adds a month on the 24-hour clock.
 
 Also: if the email announcing a planned move does not go out, nothing moves.
 The veto window only opens on a sent notice, which is code, not policy.
@@ -240,7 +250,7 @@ monthly fee, 25% of reimbursements Amazon actually pays on claims Hubricon filed
 |---|---|---|
 | Day 0 | Four-question application, then book the 20-minute call on the spot | 2 + 20 min |
 | Day 0 | Grant one seat, or send ~15 min of exports, plus a one-row-per-SKU cost sheet | 2–20 min |
-| Within 24h | **Profit Teardown**: every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Written report plus a recorded walkthrough. Baseline recorded before anything is touched. | — |
+| Once the files land | **First full read** (Profit Brief No. 001): every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Written report plus a recorded walkthrough. Baseline recorded before anything is touched. 24 hours is our internal target, not a promise. | — |
 | Kickoff | 90-day plan presented: quarterly targets and the three or four moves that get there. Standing mandate agreed. | 45 min |
 | Every cycle | One email three days **before** anything moves, listing each planned move with its expected dollars. Reply no to any of them. | 5–10 min |
 | Every 2 weeks | **Profit Brief**: a short video plus a written letter — what was found, what moved, what it earned, and the running record | — |
@@ -271,14 +281,18 @@ every two weeks.
 **Data** — Supabase Postgres, 42 migrations, ~55 tables, row-level security. Model
 tables are service-role only; the client portal reads through RPCs.
 
-**Client-facing** — static pages on Vercel: `index.html` (landing), `manifesto.html` (the argument at length), `portal.html`
-(the client's own sign-in, called simply *Hubricon*), `welcome.html`, `terms.html`,
-`privacy.html`, `results.html`, `teardown.html` (a browser calculator), `intake.html`
-(secure upload). Serverless routes in `api/` for intake, consent, teardown and the
-Stripe webhook.
+**Client-facing** — static pages on Vercel: `index.html` (landing) and `apply.html` (the
+booking step), both on the design system in `/assets/hubricon.css` since 2026-09-30;
+`manifesto.html` (the argument at length), `portal.html` (the client's own sign-in, called
+simply *Hubricon*), `welcome.html`, `terms.html`, `privacy.html`, `results.html`,
+`intake.html` (secure upload), still in the night system until rebuilt. The home page's
+figures and charts are baked in from `data/` by `scripts/build-home.mjs`; never type a
+number into it. Superseded pages are in `archive/`, not deployed. Serverless routes in
+`api/` for intake, consent, teardown and the Stripe webhook.
 
 **Scheduled** — GitHub Actions. An hourly operator (outbound, replies, bookings,
-nudges, teardowns, billing gates), a daily issue job (Profit Briefs and the Buy Box
+nudges, first reads, billing gates; cold outbound held paused by default since
+2026-09-30, `HUBRICON_COLD=on` resumes it), a daily issue job (Profit Briefs and the Buy Box
 watch), a Monday sweep (ingest, models, measurement, and the move queue).
 
 **Billing** — Stripe, invoiced by email, ACH, net-7. No card on file, ever.
@@ -287,21 +301,32 @@ watch), a Monday sweep (ingest, models, measurement, and the move queue).
 
 ## How customers arrive
 
-1. **The 60-second Teardown** at `/teardown` — a browser calculator that prices one
-   listing off Amazon's or USPS's published rate card. No call, nothing stored
-   unless asked. Solves one narrow problem completely and reveals the next.
-2. **The 90-second demo** — built into the site and behind a single constant until
-   the video exists (see `OPERATIONS.md`). Its red button is the only red button
-   on the site, deliberately; elsewhere red is only ink (the VOID stamp, a loss).
-   See `BRAND.md`.
-3. **The free Profit Teardown** — the whole catalogue, back in 24 hours, kept
-   whether or not they engage.
-4. **The Proving Month** — thirty days of the full service, free.
-5. **Paid**, month to month, proven or void.
+Since 2026-09-27 (`HUBRICON_SPEC.md`, "The funnel" and "Channel decision"):
 
-Outbound is a cold engine that harvests public Amazon and Shopify sellers, prices a
-real finding on one of their listings, and writes about that finding. Role inboxes
-are never cold-emailed — that is a standing founder decision.
+1. **Content** names one public-data leak on the viewer's world. It is the one channel;
+   cold outreach is paused on purpose until real proof exists.
+2. **The home page** proves the method on one real listing modeled from public data
+   (`data/case-study.json`, labelled on every screen) and has one action: **Book your call**.
+3. **/apply**: four answers, then the calendar. Every brand that answers can book.
+4. **The call**: the exports are opened live and the leaks public pages cannot see
+   (aged stock, the low-inventory fee, an ad target set wrong) are priced on screen.
+5. **The Proving Month** — thirty days of the full service, free. Then **paid**, month
+   to month, proven or void.
+
+**Killed:** the per-prospect Teardown and the 60-second calculator (`/teardown` redirects
+home; the page is in `archive/`, its arithmetic lives on in `lib/fees.js`). Retired
+everywhere on 2026-09-30, as the spec's decision says ("supersedes the repo everywhere"):
+terms §2 is now the call, the late-Teardown month is gone from the terms and the
+operator, client emails and the portal call Issue 001 "your first full read", and
+/method, /how-it-works and /sample-teardown are archived.
+
+**Cold outreach, paused in code.** It was still running in production on 2026-09-30
+(the hourly operator pushed leads to Instantly; 155 cold emails sent in all), and the
+operator re-activated any campaign paused by hand. Since then the operator holds every
+Hubricon campaign paused unless `HUBRICON_COLD=on`, and still syncs replies and sends
+the replies the founder approved. It takes effect when main is deployed. The cold copy
+(the Instantly campaign and `cold/`) still sells the Teardown; it is rewritten when cold
+is revisited, which the spec ties to real proof.
 
 ---
 
@@ -361,6 +386,22 @@ who granted the separate `network` consent, and are current, are read as sources
 leaves an account but an event; fewer than three agreeing accounts declare nothing
 and say `insufficient_accounts`; every network alert says how many accounts stand
 behind it; one change is announced once per client; `hubricon book` writes nothing.
+
+**The public-data case study, live on the home page since 2026-09-30.** One real Amazon
+listing, read from its public page on 2026-09-03, priced by `lib/fees.js` (the engine's
+fee card, golden-tested against the Python) and simulated 10,000 years by
+`scripts/case-study.mjs`: a weight-band step of $0.26 a unit ($0.28 on the peak card),
+$6,400 to $19,200 a year. Every figure is an estimate and says so; the page names the
+category and band, never the brand (the input, `scripts/case-study/listing.json`, is
+git-ignored because the repo is public, and never deployed; `scripts/case-study.test.mjs`
+fails if the name reaches a published file).
+It is proof of method, not a result. The listing could not be re-read live from this
+machine (Amazon gates automated reads), so it must be checked by eye before each publish.
+
+**How often public data shows nothing, measured.** Of 1,856 Amazon brands with a priced
+listing in the harvest, the engine's detectors found nothing to say about 1,473 (79.4%)
+on 2026-09-30 (`engine/scripts/silence_rate.py`). The "roughly half" in COLD_ENGINE.md
+was an expectation; the site prints the measured figure.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero
 published results**. `results.html` reads zero honestly and says so. No testimonial,
