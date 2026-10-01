@@ -257,6 +257,15 @@ Every proof screen carries **Modeled from public data · Not a client · Not a r
 Every estimate says "estimate" beside it. Ranges, never points, rounded down. An
 illustration says it is one.
 
+### Email (since 2026-10-01)
+
+Every client email has one look, the site's in an inbox: set in Inter, -apple-system,
+'Segoe UI', Roboto, Helvetica, Arial, sans-serif; ink #0a0e17 on white, #3b4250 for what is
+secondary; one hairline #e4e7ec before the sign-off; the button in ink with the one 10px
+radius; 520px wide; Hagen's signature. No blue except on money. The values live in one place
+per language: `lib/tool_email.js` (EMAIL_*) and `engine/src/hubricon_engine/onboarding.py`
+(EMAIL_*).
+
 ## Retired 2026-09-30: the night system
 
 From 2026-09-25 to 2026-09-30 the site ran on Night `#050A1F`, Signal amber `#FFC000`,
