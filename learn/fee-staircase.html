@@ -305,6 +305,26 @@
         <p>Any of the four counts only if it is worth at least 8 cents a unit. These thresholds are ours, not Amazon's: they are the ones Hubricon's engine uses to decide an edge deserves a person's attention. They sit on the Rate card sheet. Change them if your business disagrees.</p>
         <p>Edges overlap: a lighter unit can also drop a tier. So they are never added together. The largest single edge is the finding.</p>
       </div>
+        <section class="yours" id="yours-listing" hidden aria-labelledby="yl-h">
+          <div class="yours-head"><h3 id="yl-h">Your listing</h3><p class="yours-note">Typed here, kept in this browser. Nothing you type leaves it.</p></div>
+          <div class="yours-grid">
+            <div class="yours-econ">
+              <label>Name, for your notes <input name="name" autocomplete="off"></label>
+              <label>Price <input name="price" inputmode="decimal" autocomplete="off"></label>
+              <label>Category <select name="category"></select></label>
+              <label>Item weight, ounces <input name="weight" inputmode="decimal" autocomplete="off"></label>
+            </div>
+            <div class="yours-econ">
+              <label>Longest side, inches <input name="l" inputmode="decimal" autocomplete="off"></label>
+              <label>Median side, inches <input name="w" inputmode="decimal" autocomplete="off"></label>
+              <label>Shortest side, inches <input name="h" inputmode="decimal" autocomplete="off"></label>
+              <label>Sales rank, if you want a yearly figure <input name="rank" inputmode="numeric" autocomplete="off"></label>
+              <label>Landed cost, if you want the floor <input name="cost" inputmode="decimal" autocomplete="off"></label>
+            </div>
+          </div>
+          <div class="yours-out-inline" id="listing-out" aria-live="polite"></div>
+          <p class="yours-actions"><button type="button" class="link-btn" id="listing-example">Fill in the example</button></p>
+        </section>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -523,6 +543,12 @@
         <p>Amazon ages stock first in, first out. Hold more than about 270 days of cover and some units cross the cliff before they sell, at this pace, whatever else happens.</p>
         <p>Before the 15th the choices are three: sell the oldest units through, with a price or a promotion; remove them; or liquidate them. Set the one-time cost of each against a few months of surcharge at the new rate. The sheet gives you the monthly side of that comparison; Seller Central quotes the other.</p>
       </div>
+        <section class="yours" id="yours-stock" hidden aria-labelledby="ys-h">
+          <div class="yours-head"><h3 id="ys-h">Your stock's clock</h3><p class="yours-note">Read in this browser. Nothing is uploaded.</p></div>
+          <p>Seller Central: Reports, Fulfillment, Manage Inventory Health. Download it as .txt or .csv and drop it here.</p>
+          <label class="yours-drop"><input type="file" accept=".txt,.csv,.tsv,text/plain,text/csv"><b>Drop your Inventory Age report here, or tap to choose it.</b><span class="yours-drop-state">Nothing read yet.</span></label>
+          <div class="yours-out-inline" id="stock-out" aria-live="polite" hidden></div>
+        </section>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
@@ -576,10 +602,17 @@
         <p>Each is computable from your own exports, with the same discipline as this course: published cards, stated assumptions, ranges, and a counterfactual.</p>
         <p>Run the template again every quarter, and the week Amazon publishes a new card.</p>
       </div>
+        <section class="yours" id="yours-catalogue" hidden aria-labelledby="yc-h">
+          <div class="yours-head"><h3 id="yc-h">Your catalogue</h3><p class="yours-note">Read in this browser. Nothing is uploaded.</p></div>
+          <p>Seller Central: Reports, Fulfillment, Fee Preview. Amazon's own measurement and fee for every SKU. Download it as .txt or .csv and drop it here.</p>
+          <label class="yours-drop"><input type="file" accept=".txt,.csv,.tsv,text/plain,text/csv"><b>Drop your Fee Preview report here, or tap to choose it.</b><span class="yours-drop-state">Nothing read yet.</span></label>
+          <div class="yours-out-inline" id="catalogue-out" aria-live="polite" hidden></div>
+          <p class="yours-actions"><button type="button" class="link-btn" data-memo-print hidden>Print your fee memo</button> <span class="yours-note">One page from your own listing and reports, to keep or to show someone.</span></p>
+        </section>
       <div class="do">
         <h3>Do this now</h3>
         <ol>
-          <li>Paste your catalogue and sort by Rank.</li>
+          <li>Drop your Fee Preview report into Your catalogue above, or paste it into the Catalogue sheet and sort by Rank.</li>
           <li>Take the top three to a decision this week.</li>
         </ol>
       </div>
@@ -614,8 +647,13 @@
   </div>
 </footer>
 <!-- /build:foot -->
+<section class="memo" data-yours="memo" hidden aria-label="Your fee memo, for print"></section>
+<!-- build:fs-example-json -->
+<script type="application/json" id="fs-example">{"name":"An invented kitchen item (lesson 4's example)","price":10.49,"category":"kitchen & dining","weight":13,"l":9,"w":6,"h":2,"rank":"","cost":""}</script>
+<!-- /build:fs-example-json -->
 <script type="module" src="/assets/site.js"></script>
 <script type="module" src="/assets/learn.js"></script>
+<script type="module" src="/assets/learn-fee-staircase.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

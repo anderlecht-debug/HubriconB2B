@@ -173,7 +173,8 @@ function learnFigures(rc, cs) {
   const ten = jumps(0, 1);
 
   // Worked example: the price edge. An invented 13 oz kitchen item at $10.49.
-  const px = fees.describeItem(rc, { price: 10.49, category: "kitchen & dining", itemWeightOz: 13, dims: "9 x 6 x 2" });
+  const PX = { price: 10.49, category: "kitchen & dining", itemWeightOz: 13, dims: [9, 6, 2] };
+  const px = fees.describeItem(rc, PX);
   const pxFind = fees.priceBandEdge(rc, nonPeak, px, day);
   const pxHi = fee(nonPeak, px.tier, px.billableWeightOz, px.price), pxLo = fee(nonPeak, px.tier, px.billableWeightOz, pxFind.evidence.targetPrice);
   // The size tier: an invented 6 oz item, 15 × 12 × 0.9 in, at $12.99.
@@ -188,8 +189,12 @@ function learnFigures(rc, cs) {
   const band = (from) => cs.aging.bands.find((b) => b.from === from);
   const aged = (from) => dollars2(band(from).surcharge_per_cuft);
 
+  // The course's own "Fill in the example" (assets/learn-fee-staircase.js): lesson 4's invented listing.
+  const fsExample = { name: "An invented kitchen item (lesson 4's example)", price: PX.price, category: PX.category, weight: PX.itemWeightOz,
+    l: PX.dims[0], w: PX.dims[1], h: PX.dims[2], rank: "", cost: "" };
   return {
     blocks: {
+      "fs-example-json": `\n<script type="application/json" id="fs-example">${JSON.stringify(fsExample)}</script>\n`,
       "learn-card-small": table("small_standard", "Small standard: fulfilment fee per unit, with the fuel and logistics surcharge", "Small standard fee card"),
       "learn-card-large": table("large_standard", "Large standard: fulfilment fee per unit, with the fuel and logistics surcharge", "Large standard fee card"),
     },

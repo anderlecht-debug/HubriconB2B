@@ -86,7 +86,7 @@ test("nothing is blank for want of a scroll: only an armed element or the hero's
   const css = read("assets/hubricon.css");
   for (const rule of css.match(/[^{}]+\{[^}]*(opacity:\s*0(?![.\d])|stroke-dashoffset:\s*1(?![.\d])|scaleX\(0\))[^}]*\}/g) || []) {
     const sel = rule.slice(0, rule.indexOf("{"));
-    if (/@keyframes|^\s*(from|to)\b/.test(sel) || /nav|fly|sheet|scrim|motion \.nav/.test(sel)) continue;
+    if (/@keyframes|^\s*(from|to)\b/.test(sel) || /nav|fly|sheet|scrim|motion \.nav|drop input/.test(sel)) continue;
     assert.match(sel, /\.armed|data-play="load"/, `"${sel.trim()}" hides content without being armed`);
   }
   assert.match(html, /<figure class="figure" data-play="load">/, "the hero's chart draws as the page opens");

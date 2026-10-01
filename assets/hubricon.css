@@ -691,6 +691,28 @@ html:not(.js) .course-page .pager { display: none; }
 .course-page .yours-chart svg { width: 100%; height: auto; overflow: visible; }
 @media (max-width: 760px) { .course-page .yours-grid { grid-template-columns: minmax(0, 1fr); } .course-page .yours { padding: var(--s-4); } }
 
+.course-page .yours select { min-height: 40px; padding: 0 var(--s-3); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: 6px; width: 100%; }
+.course-page .yours-drop { position: relative; display: grid; gap: var(--s-2); padding: var(--s-5); border: 1px dashed var(--rule-2); border-radius: var(--radius); cursor: pointer; }
+.course-page .yours-drop:hover, .course-page .yours-drop.over { border-color: var(--ink); background: var(--paper-2); }
+.course-page .yours-drop.loaded { border-style: solid; border-color: var(--ink); }
+.course-page .yours-drop.bad { border-style: solid; }
+.course-page .yours-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.course-page .yours-drop b { font-size: var(--t-16); color: var(--ink); }
+.course-page .yours-drop-state { font-size: var(--t-14); font-weight: var(--regular); color: var(--ink-3); }
+.course-page .yours-facts { width: 100%; border-collapse: collapse; font-size: var(--t-16); }
+.course-page .yours-facts th { text-align: left; vertical-align: top; width: 34%; padding: var(--s-2) var(--s-4) var(--s-2) 0; border-bottom: 1px solid var(--rule); color: var(--ink); font-weight: var(--strong); }
+.course-page .yours-facts td { padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.course-page .yours-list { padding-left: var(--s-5); display: grid; gap: var(--s-2); font-size: var(--t-16); }
+.course-page .yours-out-inline { display: grid; gap: var(--s-4); }
+.course-page .yours-out-inline p { font-size: var(--t-16); }
+.course-page .yours-table-wide { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+.course-page .yours-table-wide th { text-align: left; padding: 0 var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule-2); color: var(--ink-3); }
+.course-page .yours-table-wide td { padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.course-page .yours-table-wide .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.course-page .yours-sub { display: block; font-size: var(--t-12); color: var(--ink-3); }
+@media (max-width: 640px) { .course-page .yours-facts th { width: 42%; } .course-page .yours-table-wide { font-size: var(--t-12); } }
+@media print { .course-page .memo h3 { font-size: 13pt; margin: 12pt 0 4pt; } }
+
 /* The pricing memo: never on screen; in print, the whole page once the reader has numbers. */
 .course-page .memo { display: none; }
 @media print {
