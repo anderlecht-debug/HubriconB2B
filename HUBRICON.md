@@ -138,8 +138,12 @@ own Seller Central or Shopify exports and graded by **how we know**:
 - **attributable** — measured against a stated counterfactual
 - **unmeasurable** — we could not isolate it, so nothing is banked and the row says so
 
-Four guards apply to every measurement, enforced centrally in
-`measurement.py::_verdict` so no new measurement family can skip them:
+Four guards are written in `measurement.py`'s docstring. Three are enforced in
+code: the cap (centrally, in `_verdict`), the materiality floor (centrally, after
+every family runs) and one dollar, one move (`_dedupe_overlapping`). **Persistence is
+not enforced yet** (found 2026-09-30): no family re-reads the latest export or emits
+`reverted`, so the site does not claim it. The monthly re-measurement planned for the
+per-month guarantee is what will enforce it.
 
 1. **Capped at the promise.** An isolated or attributable result is banked at the
    expected figure; any excess is recorded and named, never totalled. (Direct is
