@@ -100,7 +100,7 @@ test("the case study says what it is on its own screen", () => {
 });
 
 test("nothing from the retired funnel or the retired look", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "manifesto.html", "verify.html"]) {
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
     const h = read(page);
     for (const gone of ["Teardown", "Anton", "Fraunces", "Iowan", "#FFC000", "Demo data", "Start your free Proving Month"]) {
       assert.ok(!h.includes(gone), `"${gone}" is still on ${page}`);
@@ -109,7 +109,7 @@ test("nothing from the retired funnel or the retired look", () => {
 });
 
 test("no page on the design system keeps a palette of its own", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html", "manifesto.html", "verify.html"]) {
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
     const style = read(page).match(/<style>([\s\S]*?)<\/style>/)[1];
     assert.doesNotMatch(style, /#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i, `${page}: colours belong in /assets/hubricon.css`);
     assert.match(read(page), /href="\/assets\/hubricon\.css"/);

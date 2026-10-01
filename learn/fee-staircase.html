@@ -32,135 +32,11 @@
 })(document.documentElement);
 </script>
 <style>
-/* /learn/<course>: three columns, the lesson list, the lesson, the standing invitation.
-   Every value is a token from /assets/hubricon.css. */
+/* The Fee Staircase. The course layout is shared: /assets/hubricon.css, "course pages". */
 :root { --wide: 1280px; }
-.course-wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; }
-
-.course { display: grid; grid-template-columns: 232px minmax(0, 1fr) 248px; gap: var(--s-7); align-items: start; padding-block: var(--s-6) var(--section); }
-
-/* left: the lessons */
-.toc { position: sticky; top: calc(var(--nav-h) + var(--s-5)); }
-.toc summary { display: none; }
-.toc ol { list-style: none; border-top: 1px solid var(--rule); }
-.toc li { border-bottom: 1px solid var(--rule); }
-.toc a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--s-2); padding: var(--s-3) 0; text-decoration: none; color: var(--ink-2); font-size: var(--t-14); line-height: 1.4; }
-.toc a .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.toc a:hover { color: var(--ink); }
-.toc a[aria-current="true"] { color: var(--ink); font-weight: var(--strong); }
-.toc a[aria-current="true"] .n { color: var(--blue); }
-.toc a.seen::after { content: "✓"; color: var(--ink-4); }
-.toc .course-name { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-3); }
-.toc .tpl-link { display: block; margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-2); }
-
-/* centre */
-.lesson-col { min-width: 0; }
-.cover h1 { margin-top: var(--s-3); font-size: var(--t-display-m); max-width: 14ch; }
-.cover .lede { margin-top: var(--s-5); }
-.outcomes { margin-top: var(--s-6); list-style: none; display: grid; gap: var(--s-3); max-width: 60ch; }
-.outcomes li { padding-left: var(--s-5); position: relative; font-size: var(--t-16); }
-.outcomes li::before { content: ""; position: absolute; left: 0; top: 12px; width: 10px; height: 2px; background: var(--ink); }
-.join { margin-top: var(--s-7); max-width: 560px; padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); }
-.join label { display: block; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-2); }
-.join .row { display: flex; gap: var(--s-3); }
-.join input[type="email"] { flex: 1; min-width: 0; min-height: 52px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
-.join input[type="email"]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
-.join .fine { margin-top: var(--s-4); font-size: var(--t-14); color: var(--ink-3); line-height: 1.55; }
-.join .fine a { color: var(--ink-2); }
-.join .err { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink); font-weight: var(--strong); }
-.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-.cover .contents { margin-top: var(--s-8); }
-.cover .contents h2 { font-size: var(--t-24); letter-spacing: -0.018em; }
-.cover .contents ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-2); font-size: var(--t-16); }
-.cover .contents b { font-weight: var(--strong); }
-
-.lesson-head h2 { margin-top: var(--s-3); font-size: var(--t-display-s); }
-.lesson-head .lede { margin-top: var(--s-4); max-width: 60ch; }
-.tpl { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-5); padding: var(--s-4) var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
-.tpl p { font-size: var(--t-14); color: var(--ink-2); }
-.tpl p b { display: block; font-size: var(--t-16); }
-.tpl a { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); white-space: nowrap; }
-
-.prose { margin-top: var(--s-7); max-width: 68ch; }
-.prose > * + * { margin-top: var(--s-4); }
-.prose h3 { margin-top: var(--s-7); }
-.prose p, .prose li { font-size: var(--t-18); }
-.prose ol, .prose ul { padding-left: var(--s-5); display: grid; gap: var(--s-3); }
-.prose .formula { padding: var(--s-4) var(--s-5); background: var(--paper-2); border-radius: var(--radius); font-size: var(--t-16); color: var(--ink); font-variant-numeric: tabular-nums; }
-.prose .formula + .formula { margin-top: var(--s-2); }
-.prose .source { font-size: var(--t-14); color: var(--ink-3); }
-.prose .figure { margin-top: var(--s-6); margin-bottom: var(--s-6); }
-.prose .figure .label-box { margin-bottom: var(--s-4); }
-.worked { padding: var(--s-5); border-left: 2px solid var(--ink); background: var(--paper-2); border-radius: 0 var(--radius) var(--radius) 0; }
-.worked > * + * { margin-top: var(--s-3); }
-.worked p, .worked li { font-size: var(--t-16); }
-
-.data { width: 100%; border-collapse: collapse; font-size: var(--t-16); }
-.data th[scope="row"] { white-space: nowrap; }
-.data th, .data td { text-align: left; padding: var(--s-3) var(--s-3) var(--s-3) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-.data thead th { font-size: var(--t-14); color: var(--ink-3); font-weight: var(--strong); }
-.data td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.card-table { overflow-x: auto; margin-top: var(--s-5); }
-.card-table:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.card-table table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: var(--t-14); font-variant-numeric: tabular-nums; }
-.card-table caption { text-align: left; font-weight: var(--strong); color: var(--ink); font-size: var(--t-16); padding-bottom: var(--s-3); }
-.card-table th, .card-table td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
-.card-table thead th { color: var(--ink-3); font-weight: var(--strong); }
-.card-table thead tr:first-child th[colspan] { text-align: center; color: var(--ink); border-bottom: 1px solid var(--rule-2); }
-.card-table tbody th { text-align: left; color: var(--ink); font-weight: var(--strong); }
-.card-table td:nth-child(5), .card-table th[scope="col"]:nth-child(4) { border-left: 1px solid var(--rule-2); }
-.card-table tr.over th, .card-table tr.over td { color: var(--ink-3); }
-
-.do { margin-top: var(--s-8); padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); max-width: 68ch; }
-.do h3 { font-size: var(--t-20); }
-.do ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-3); font-size: var(--t-16); }
-.pager { margin-top: var(--s-7); padding-top: var(--s-5); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: var(--s-4); max-width: 68ch; }
-.pager a { text-decoration: none; color: var(--ink-2); font-size: var(--t-16); }
-.pager a b { display: block; color: var(--ink); }
-.pager a:hover b { text-decoration: underline; text-underline-offset: 3px; }
-.pager .next { text-align: right; margin-left: auto; }
-
-/* right: the standing invitation, present and quiet */
-.invite { position: sticky; top: calc(var(--nav-h) + var(--s-5)); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
-.invite p { margin-top: var(--s-3); font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
-.invite .btn { margin-top: var(--s-5); width: 100%; min-height: 44px; padding: 0 var(--s-4); font-size: var(--t-14); background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
-.invite .btn:hover { background: var(--paper-2); }
-
-/* States. Without scripts, every lesson shows in order and the form is not needed.
-   With them, the email opens the course, then one lesson shows at a time. */
-.js .lesson, .js:not(.learn-in) .tpl-link { display: none; }
-.js.learn-in .lesson.current { display: block; }
-.js.learn-in .cover { display: none; }
-html:not(.js) .cover { display: none; }
-html:not(.js) .lesson + .lesson { margin-top: var(--section); padding-top: var(--section); border-top: 1px solid var(--rule); }
-html:not(.js) .pager { display: none; }
-
-
-@media (max-width: 1140px) {
-  .course { grid-template-columns: 220px minmax(0, 1fr); }
-  .invite { position: static; grid-column: 2; max-width: 68ch; }
-}
-@media (max-width: 860px) {
-  .course { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding-top: 0; }
-  .invite { grid-column: 1; }
-  .toc { position: static; }
-  .toc summary { display: flex; justify-content: space-between; align-items: center; list-style: none; cursor: pointer; padding: var(--s-4) 0; font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
-  .toc summary::-webkit-details-marker { display: none; }
-  .toc summary::after { content: ""; width: 9px; height: 9px; border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3); transform: translateY(-3px) rotate(45deg); }
-  .toc[open] summary::after { transform: translateY(2px) rotate(-135deg); }
-  .toc .course-name { display: none; }
-  .toc ol { border-top: 0; }
-  .js:not(.learn-in) .toc { display: none; }
-  .join .row { flex-direction: column; }
-  .join .btn { width: 100%; }
-  .prose p, .prose li { font-size: var(--t-16); }
-}
-@media (max-width: 640px) {
-  .join { padding: var(--s-5); }
-}
 </style>
 </head>
-<body data-course="fee-staircase">
+<body class="course-page" data-course="fee-staircase">
 
 <!-- build:nav -->
 <header class="nav" data-nav>
@@ -185,9 +61,9 @@ html:not(.js) .pager { display: none; }
         <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
         <div class="nav-fly" id="fly-education">
           <div class="fly-in">
-            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a></div>
-            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Pricing</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
-            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a></div>
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a></div>
           </div>
         </div>
       </div>
@@ -210,7 +86,7 @@ html:not(.js) .pager { display: none; }
   <div class="nav-sheet" id="nav-sheet">
     <div class="sheet-in">
       <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
-      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a></div>
       <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
     </div>
   </div>
@@ -730,7 +606,7 @@ html:not(.js) .pager { display: none; }
     </div>
     <div class="foot-cols">
       <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a><a href="/manifesto">The manifesto</a></div>
-      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a></div>
       <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
       <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
     </div>

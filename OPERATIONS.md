@@ -1935,6 +1935,8 @@ only. What exists:
 | The hub, one card per course that exists | `learn/index.html` |
 | Course 1, **The Fee Staircase**: eight lessons, the five beats of the case study taught end to end | `learn/fee-staircase.html`, `assets/learn.js` |
 | Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
+| Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
+| Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
 
 **Every figure is built, none typed.** The lessons' numbers are `data-fill` keys and the two
@@ -1951,6 +1953,21 @@ values and writes `scripts/learn/fee-staircase.stamp.json`. `scripts/learn/learn
 fails when `ratecard.json` or the file has moved since. When Amazon publishes a new card:
 
     uv run --no-project --with openpyxl python scripts/learn/verify_fee_staircase.py --publish
+    node scripts/build-pages.mjs
+
+**The Price Curve is the engine's pricing in cells, and its figures are the engine's own.**
+`scripts/learn/price_curve.py` computes the worked example (an invented listing: invented
+history and costs, Amazon's fees from `cold/priors.py`) with `models/elasticity.py`'s `_fit`
+and `models/pricing_engine.py`'s `optimal_price`, `profit_delta` and `near_unit_elastic`, plus
+the same price test re-run 200 times, into `data/learn-price-curve.json`; it builds the
+spreadsheet as formulas, recalculates a copy in LibreOffice and holds it to 80 golden cases (40
+random histories through the fit, HC3 error, t-interval and the guard against −1; 40 catalogue
+rows through the best price, the step and the profit change) and the example's own sheets.
+`--publish` ships the file and `scripts/learn/price-curve.stamp.json`, which pins the hashes of
+the two engine modules; `scripts/learn/price-curve.test.mjs` fails when either module or the
+file moves. After any change to the elasticity or pricing models (which also re-runs the bench):
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/price_curve.py --publish
     node scripts/build-pages.mjs
 
 One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth

@@ -20,7 +20,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, usd } from "../assets/charts.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
 
@@ -63,8 +63,10 @@ export function figures(rc, mc, cs) {
 
   const end = mc.months.length - 1;
   const learn = learnFigures(rc, cs);
+  const pc = priceCurveFigures(json("data/learn-price-curve.json"));
   const blocks = {
     ...learn.blocks,
+    ...pc.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
@@ -122,6 +124,7 @@ export function figures(rc, mc, cs) {
       card_peak_full: `${longDate(cs.cards.peak.effective).replace(/, \d{4}$/, "")} to ${longDate(cs.cards.peak.through).replace(/, \d{4}$/, "")}`,
       storage_effective: longDate(cs.aging.storage_effective),
       ...learn.fill,
+      ...pc.fill,
     },
   };
 }
@@ -235,6 +238,69 @@ function learnFigures(rc, cs) {
   };
 }
 
+/**
+ * The Price Curve's figures (/learn/price-curve). Every number is the engine's, computed by
+ * scripts/learn/price_curve.py into data/learn-price-curve.json from an invented listing: its
+ * history and costs are invented, its fees are Amazon's. Nothing here does arithmetic beyond
+ * formatting and the charts' own drawing.
+ */
+function priceCurveFigures(pc) {
+  const sign = (v) => (v < 0 ? "−" : "+");
+  const neg = (v, d = 2) => (v < 0 ? `−${Math.abs(v).toFixed(d)}` : v.toFixed(d));
+  const money = (v) => `$${v.toFixed(2)}`;
+  const dollars = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+  const signed$ = (v) => `${sign(v)}$${Math.abs(Math.round(v)).toLocaleString("en-US")}`;
+  const pct = (v, d = 1) => `${(Math.abs(v) * 100).toFixed(d)}%`;
+  const e = pc.economics, b = pc.best, f = pc.fit, d = pc.discount, r = pc.runs;
+  const five = pc.table.find((t) => Math.abs(t.change - 0.05) < 1e-9);
+  const tenOff = pc.table.find((t) => Math.abs(t.change + 0.10) < 1e-9);
+  const fill = {
+    learn_pc_what: pc.what,
+    learn_pc_n: String(f.n), learn_pc_dof: String(f.dof), learn_pc_t: f.t.toFixed(2), learn_pc_cv: pct(f.price_cv),
+    learn_pc_eps: neg(f.elasticity), learn_pc_eps_abs: Math.abs(f.elasticity).toFixed(2),
+    learn_pc_p_min: money(Math.min(...pc.history.map((h) => h.price))), learn_pc_p_max: money(Math.max(...pc.history.map((h) => h.price))),
+    learn_pc_se: f.std_err.toFixed(2), learn_pc_se_classical: f.std_err_classical.toFixed(2),
+    learn_pc_lo: neg(f.ci[0]), learn_pc_hi: neg(f.ci[1]), learn_pc_r2: f.r_squared.toFixed(2),
+    learn_pc_min_periods: String(pc.rules.min_periods), learn_pc_min_cv: pct(pc.rules.min_price_cv, 0),
+    learn_pc_cap: pct(pc.rules.step_cap, 0), learn_pc_pole_log_sd: pct(pc.rules.pole_optimum_log_sd, 0),
+    learn_pc_price: money(e.price), learn_pc_units: e.units_month.toLocaleString("en-US"), learn_pc_cost: money(e.landed_cost),
+    learn_pc_referral: pct(e.referral, 0), learn_pc_fba: money(e.fba_fee), learn_pc_fixed: money(e.fixed + e.landed_cost),
+    learn_pc_margin: money(e.margin), learn_pc_profit: dollars(e.profit_month), learn_pc_weight: `${pc.weight_oz}`,
+    learn_pc_base: money(b.base), learn_pc_factor: b.factor.toFixed(2), learn_pc_best: money(b.price),
+    learn_pc_best_up: pct(b.price / e.price - 1), learn_pc_step: money(b.step_price),
+    learn_pc_step_delta: signed$(b.step_delta), learn_pc_best_delta: signed$(b.best_delta),
+    learn_pc_be5: pct(five.breakeven), learn_pc_im5: pct(five.implied), learn_pc_d5: signed$(five.delta),
+    learn_pc_be_m10: pct(tenOff.breakeven), learn_pc_im_m10: pct(tenOff.implied), learn_pc_d_m10: signed$(tenOff.delta),
+    learn_pc_disc: pct(d.rate, 0), learn_pc_disc_price: money(d.price), learn_pc_disc_margin: money(d.margin),
+    learn_pc_disc_needed: pct(d.needed, 0), learn_pc_disc_implied: pct(d.implied, 0), learn_pc_disc_delta: signed$(d.delta),
+    learn_pc_runs: String(r.runs), learn_pc_true: neg(r.true_elasticity, 1), learn_pc_se10: r.se_p10.toFixed(2),
+    learn_pc_se50: r.se_p50.toFixed(2), learn_pc_se90: r.se_p90.toFixed(2), learn_pc_guard_share: pct(r.guard_share, 0),
+    learn_pc_up_share: pct(r.up_share, 0),
+    learn_pc_np_eps: neg(pc.near_pole.elasticity), learn_pc_np_se: pc.near_pole.std_err.toFixed(2),
+    learn_pc_np_lo: neg(pc.near_pole.ci[0]), learn_pc_np_hi: neg(pc.near_pole.ci[1]), learn_pc_np_factor: pc.near_pole.pole_factor.toFixed(1),
+    learn_pc_in_eps: neg(pc.inelastic.elasticity, 1),
+    learn_pc_lo_best: money((e.landed_cost + e.fixed) / (1 - e.referral) * f.ci[0] / (1 + f.ci[0])),
+    learn_pc_hi_best: money((e.landed_cost + e.fixed) / (1 - e.referral) * f.ci[1] / (1 + f.ci[1])),
+  };
+  const fitData = { points: pc.history.map((h) => ({ price: h.price, perDay: h.units / h.days })), intercept: f.intercept,
+    elasticity: f.elasticity, lo: f.ci[0], hi: f.ci[1] };
+  const curve = { p0: e.price, q0: e.units_month, cost: e.landed_cost, fee: e.referral, fixed: e.fixed, eps: f.elasticity,
+    lo: f.ci[0], hi: f.ci[1], best: b.price, step: b.step_price, range: [e.price * 0.76, e.price * 1.4] };
+  const rows = pc.history.map((h) => `<tr><th scope="row">${h.label}</th><td class="num">${h.days}</td><td class="num">${h.units.toLocaleString("en-US")}</td><td class="num">${money(h.price)}</td><td class="num">${(h.units / h.days).toFixed(1)}</td></tr>`).join("");
+  const be = pc.table.map((t) => `<tr><th scope="row">${sign(t.change)}${pct(t.change, 0)}</th><td class="num">${money(t.price)}</td><td class="num">${money(t.margin)}</td><td class="num">${t.breakeven === null ? "—" : `${sign(t.breakeven)}${pct(t.breakeven)}`}</td><td class="num">${sign(t.implied)}${pct(t.implied)}</td><td class="num">${signed$(t.delta)}</td></tr>`).join("");
+  return {
+    fill,
+    blocks: {
+      "pc-history": `\n<table class="data"><thead><tr><th scope="col">Period</th><th scope="col">Days</th><th scope="col">Units</th><th scope="col">Average price</th><th scope="col">Units a day</th></tr></thead><tbody>${rows}</tbody></table>\n`,
+      "pc-breakeven": `\n<table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody>${be}</tbody></table>\n`,
+      "pc-fit-wide": fitSVG(fitData, { id: "pcf-w", w: 680, h: 360, m: { t: 40, r: 16, b: 46, l: 56 }, font: 13 }),
+      "pc-fit-narrow": fitSVG(fitData, { id: "pcf-n", w: 360, h: 300, m: { t: 36, r: 10, b: 42, l: 44 }, font: 12 }),
+      "pc-profit-wide": profitSVG(curve, { id: "pcp-w", w: 680, h: 380, m: { t: 40, r: 132, b: 46, l: 64 }, font: 13 }),
+      "pc-profit-narrow": profitSVG(curve, { id: "pcp-n", w: 360, h: 320, m: { t: 36, r: 12, b: 42, l: 50 }, font: 12, narrow: true }),
+    },
+  };
+}
+
 const decode = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
 const text = (html) => decode(html.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 
@@ -292,6 +358,7 @@ export const PAGES = [
   { file: "portal.html" },
   { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
+  { file: "learn/price-curve.html" },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

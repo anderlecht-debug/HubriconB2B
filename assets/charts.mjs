@@ -275,3 +275,104 @@ export function agingStripSVG(ag, opts) {
   const desc = `A unit that reaches Amazon today is in the cheapest storage band until day 181, steps up each month after, and at day ${ag.cliff} goes from $${Math.round(before)} to $${Math.round(after)} a month for every 1,000 units.`;
   return frame(w, h, "strip", { id: `${id}-t`, text: "One unit's clock toward the 271-day cliff" }, { id: `${id}-d`, text: desc }, body);
 }
+
+// ---------------------------------------------------------------- the price curve
+
+/**
+ * The fit: one SKU's periods as dots (price against units a day) and the demand curve the
+ * log-log fit draws through them, units = e^a · price^ε. fit: {points: [{price, perDay}],
+ * intercept, elasticity, lo, hi}.
+ */
+export function fitSVG(fit, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const prices = fit.points.map((p) => p.price), rates = fit.points.map((p) => p.perDay);
+  const pLo = Math.min(...prices) * 0.97, pHi = Math.max(...prices) * 1.03;
+  const curve = (p) => Math.exp(fit.intercept) * p ** fit.elasticity;
+  const xt = niceTicks(pLo, pHi, 4), yt = niceTicks(Math.min(...rates) * 0.9, Math.max(...rates) * 1.08, 4);
+  const X = scale(pLo, pHi, m.l, w - m.r);
+  const y0 = Math.min(yt[0], Math.min(...rates) * 0.9), y1 = Math.max(yt[yt.length - 1], Math.max(...rates) * 1.08);
+  const Y = scale(y0, y1, h - m.b, m.t);
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${t}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const t of xt.filter((t) => t >= pLo && t <= pHi)) {
+    body += `<line class="tick" x1="${r1(X(t))}" x2="${r1(X(t))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(t))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">$${t}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Units a day</text>`;
+  const n = 48, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) { const p = pLo + ((pHi - pLo) * i) / n; xs.push(X(p)); ys.push(Y(curve(p))); }
+  body += `<path class="step draw" pathLength="1" d="${line(pts(xs, ys))}"/>`;
+  const r = font < 13 ? 4 : 5;
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .6)">` +
+    fit.points.map((p) => `<circle class="dot" cx="${r1(X(p.price))}" cy="${r1(Y(p.perDay))}" r="${r}"/>`).join("") + `</g>`;
+  const lab = `Elasticity ${minus(fit.elasticity, 2)}, interval ${minus(fit.lo, 2)} to ${minus(fit.hi, 2)}`;
+  body += `<text class="ink strong fade" style="--after:var(--mc-draw-ms)" x="${w - m.r}" y="${m.t - font}" font-size="${font}" text-anchor="end">${esc(lab)}</text>`;
+  const desc = `Each dot is one period's average price and units sold a day. The line is the demand curve the log-log fit draws through them: ${lab}.`;
+  return frame(w, h, "fit", { id: `${id}-t`, text: "One listing's sales history and the demand curve fitted to it" }, { id: `${id}-d`, text: desc }, body);
+}
+
+const minus = (v, d) => (v < 0 ? `−${Math.abs(v).toFixed(d)}` : v.toFixed(d));
+
+/**
+ * Profit a month against price, at the fitted elasticity and at both ends of its interval.
+ * All three pass through today's price, where volume is what it is. pc: {p0, q0, cost, fee,
+ * fixed, eps, lo, hi, best, step, range: [lo, hi]}.
+ */
+export function profitSVG(pc, opts) {
+  const { id, w, h, m, font = 13, narrow = false } = opts;
+  const prof = (e, p) => pc.q0 * (p / pc.p0) ** e * (p * (1 - pc.fee) - pc.cost - pc.fixed);
+  const [pLo, pHi] = pc.range;
+  const n = 64, curves = [pc.eps, pc.lo, pc.hi].map((e) => {
+    const out = [];
+    for (let i = 0; i <= n; i++) { const p = pLo + ((pHi - pLo) * i) / n; out.push([p, prof(e, p)]); }
+    return out;
+  });
+  const vals = curves.flat().map(([, v]) => v);
+  const yt = niceTicks(Math.min(...vals), Math.max(...vals), 4);
+  const y0 = Math.min(yt[0], Math.min(...vals)), y1 = Math.max(yt[yt.length - 1], Math.max(...vals));
+  const X = scale(pLo, pHi, m.l, w - m.r), Y = scale(y0, y1, h - m.b, m.t);
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${usd(t, { compact: true })}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const t of niceTicks(pLo, pHi, narrow ? 3 : 5).filter((t) => t >= pLo && t <= pHi)) {
+    body += `<line class="tick" x1="${r1(X(t))}" x2="${r1(X(t))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(t))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">$${t}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Profit a month</text>`;
+  const path = (c) => line(pts(c.map(([p]) => X(p)), c.map(([, v]) => Y(v))));
+  body += `<path class="curve-alt fade" style="--after:0ms" d="${path(curves[1])}"/>`;
+  body += `<path class="curve-alt fade" style="--after:0ms" d="${path(curves[2])}"/>`;
+  body += `<path class="curve draw" pathLength="1" d="${path(curves[0])}"/>`;
+  // the three curves' names, at the right edge, spread so none sits on another
+  const ends = spread([
+    { y: Y(curves[0][n][1]), t: `${minus(pc.eps, 2)}, the estimate`, cls: "leak-text" },
+    { y: Y(curves[1][n][1]), t: `${minus(pc.lo, 2)}`, cls: "" },
+    { y: Y(curves[2][n][1]), t: `${minus(pc.hi, 2)}`, cls: "" },
+  ], font + 4, m.t, h - m.b);
+  if (!narrow) body += `<g class="fade" style="--after:var(--mc-draw-ms)">` + ends.map((e) => `<text class="${e.cls}" x="${w - m.r + 8}" y="${r1(e.y)}" font-size="${font}" dominant-baseline="middle">${esc(e.t)}</text>`).join("") + `</g>`;
+  const r = font < 13 ? 4.5 : 5.5;
+  const today = [X(pc.p0), Y(prof(pc.eps, pc.p0))], step = [X(pc.step), Y(prof(pc.eps, pc.step))];
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  body += `<circle class="dot" cx="${r1(today[0])}" cy="${r1(today[1])}" r="${r}"/>`;
+  body += `<text class="ink strong" x="${r1(today[0] - r - 4)}" y="${r1(today[1] + font + 8)}" font-size="${font}" text-anchor="end">Today $${pc.p0.toFixed(2)}</text>`;
+  body += `<circle class="dot-hollow" cx="${r1(step[0])}" cy="${r1(step[1])}" r="${r}"/>`;
+  // Next's label starts right of the best-price line when the two are close, never across it.
+  const nextX = pc.best && pc.best > pc.step ? Math.max(step[0] + r + 4, X(pc.best) + 6) : step[0] + r + 4;
+  body += `<text x="${r1(nextX)}" y="${r1(step[1] + font + 8)}" font-size="${font}">Next $${pc.step.toFixed(2)}</text>`;
+  if (pc.best) {
+    const best = [X(pc.best), Y(prof(pc.eps, pc.best))];
+    body += `<line class="leak" x1="${r1(best[0])}" x2="${r1(best[0])}" y1="${r1(best[1])}" y2="${h - m.b}"/>`;
+    body += `<text class="leak-text" x="${r1(best[0] + 8)}" y="${r1(h - m.b - font)}" font-size="${font}">Best $${pc.best.toFixed(2)}</text>`;
+  }
+  body += `</g>`;
+  const desc = `Profit a month against price. The solid line uses the fitted elasticity, ${minus(pc.eps, 2)}; the dashed lines use the ends of its interval. ` +
+    `All three pass through today's price. The solid line is flat across the top: a few percent either side of the best price costs little.`;
+  return frame(w, h, "profit", { id: `${id}-t`, text: "Profit a month against price, at the fitted elasticity and at the ends of its interval" }, { id: `${id}-d`, text: desc }, body);
+}

@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Price Curve — a free course from Hubricon</title>
+<meta name="description" content="Read your own price elasticity from your sales history, find the price that makes the most, and walk toward it in steps you can measure. Eight lessons and a spreadsheet, free.">
+<link rel="canonical" href="https://www.hubricon.com/learn/price-curve">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/learn/price-curve">
+<meta property="og:title" content="The Price Curve — a free course from Hubricon">
+<meta property="og:description" content="Read your own price elasticity, find the price that makes the most, and price every raise and discount before you run it. Eight lessons and the spreadsheet, free.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<script>
+/* Before first paint: scripts are running (so the lessons wait behind the email), the
+   visitor may already be in, and motion is allowed unless they asked for less. */
+(function (d) {
+  d.classList.add("js");
+  try { if ((JSON.parse(localStorage.getItem("hubricon.learn") || "{}").courses || {})["price-curve"]) d.classList.add("learn-in"); } catch (e) {}
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+<style>
+/* The Price Curve. The course layout is shared: /assets/hubricon.css, "course pages". */
+:root { --wide: 1280px; }
+</style>
+</head>
+<body class="course-page" data-course="price-curve">
+
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/#case-study">Proof</a>
+      <a class="nav-tab" href="/#how">How it works</a>
+      <a class="nav-tab" href="/#offer">The offer</a>
+      <a class="nav-tab" href="/#results">Results</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Capital &amp; Cash</span><span class="fly-planned">Decisions Under Uncertainty</span><span class="fly-planned">The Operator&#39;s Math</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for your own listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/#case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
+
+<div class="course-wrap course">
+
+  <details class="toc" id="toc" open>
+    <summary>Lessons</summary>
+    <p class="course-name">The Price Curve</p>
+    <ol>
+      <li><a href="#elasticity"><span class="n">1</span><span>Elasticity, in plain English</span></a></li>
+      <li><a href="#your-history"><span class="n">2</span><span>Read your own history</span></a></li>
+      <li><a href="#the-fit"><span class="n">3</span><span>The fit, and how sure it is</span></a></li>
+      <li><a href="#best-price"><span class="n">4</span><span>The price that makes the most</span></a></li>
+      <li><a href="#the-raise"><span class="n">5</span><span>The raise that's probably free</span></a></li>
+      <li><a href="#discounts"><span class="n">6</span><span>What a discount gives away</span></a></li>
+      <li><a href="#move-it"><span class="n">7</span><span>Move it, and measure it</span></a></li>
+      <li><a href="#catalogue"><span class="n">8</span><span>Every SKU, in order</span></a></li>
+    </ol>
+    <a class="tpl-link" href="/learn/files/hubricon-price-curve.xlsx" download data-template>The template (.xlsx) ↓</a>
+  </details>
+
+  <main class="lesson-col" id="main">
+
+    <section class="cover" aria-labelledby="cover-h">
+      <span class="label">Free course · 8 lessons · 1 spreadsheet</span>
+      <h1 id="cover-h">The Price Curve</h1>
+      <p class="lede">Read your own price elasticity from your sales history, find the price that makes the most, and walk toward it in steps you can measure. Then price every discount before you run it.</p>
+      <ul class="outcomes">
+        <li>Read your elasticity from your own sales, with how sure it is.</li>
+        <li>Know when the data cannot name a price, and what it can still tell you.</li>
+        <li>Find the price that makes the most, with Amazon's fees split the way they move.</li>
+        <li>Price a raise and a discount before you run them: what each has to sell to pay.</li>
+        <li>Walk toward the best price in steps of at most 5%, and measure each one.</li>
+        <li>Rank your whole catalogue by what its next step is worth.</li>
+      </ul>
+      <form class="join" id="join" novalidate>
+        <label for="email">Your email</label>
+        <div class="row">
+          <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button class="btn" type="submit">Open the course <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="fine">One email opens every lesson and the spreadsheet. We send you the link so you can come back, and a short note when a new course is out; one click unsubscribes. Nothing inside is held back and nothing inside is for sale. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="err" id="join-err" role="alert" hidden></p>
+      </form>
+      <div class="contents">
+        <h2>What is inside</h2>
+        <ol>
+          <li><b>Elasticity, in plain English.</b> How far your units move when your price does.</li>
+          <li><b>Read your own history.</b> Where the numbers are, and the two rules before any fit.</li>
+          <li><b>The fit, and how sure it is.</b> The line, its interval, and when it cannot name a price.</li>
+          <li><b>The price that makes the most.</b> One formula, with the fees split the way they move.</li>
+          <li><b>The raise that's probably free.</b> How many units a raise can lose and still pay.</li>
+          <li><b>What a discount gives away.</b> How many units a sale has to sell to pay for itself.</li>
+          <li><b>Move it, and measure it.</b> Steps of at most 5%, called before, measured after.</li>
+          <li><b>Every SKU, in order.</b> The whole catalogue, ranked by what its next step is worth.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ═══ Lesson 1 ═══ -->
+    <article class="lesson" id="elasticity" aria-labelledby="l1-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 1 of 8</span>
+        <h2 id="l1-h">Elasticity, in plain English</h2>
+        <p class="lede">Your price elasticity is how far your units move when your price does. It is one number per SKU, and every price you have ever set was a guess at it.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Start here, and the example the file opens on.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-elasticity --><!-- /build:video-elasticity -->
+      <div class="prose">
+        <p>If a SKU's elasticity is −2, a 1% raise loses about 2% of its units. At −0.5 it loses about half a percent. The sign is always negative: a higher price sells fewer units. The size is the whole question.</p>
+
+        <h3>Why it decides the price</h3>
+        <p>Revenue is price times units. Profit is contribution times units, and contribution moves faster than price: a dollar added to the price lands in the margin whole, less the referral fee, while landed cost and the fulfilment fee stay where they were. So a raise that loses units can still make more money. Elasticity says how many units, and so which way to move.</p>
+
+        <h3>Three kinds of SKU</h3>
+        <ul>
+          <li><b>Between 0 and −1: inelastic.</b> A raise loses a smaller share of units than it adds to the price. Profit keeps rising with the price, so there is no best price to find: walk up, and measure each step.</li>
+          <li><b>Below −1: elastic.</b> There is one price where profit peaks. Lesson 4 finds it.</li>
+          <li><b>Near −1: the hard case.</b> The best price could be a little above today's or several times it. Lesson 3 says when the data cannot tell, and what it tells you instead.</li>
+        </ul>
+
+        <div class="worked">
+          <p><b>The example all the way through</b> is an invented listing: <span data-fill="learn_pc_what">an invented stainless garlic press</span> at <span data-fill="learn_pc_price">$24.99</span>, selling about <span data-fill="learn_pc_units">523</span> units a month. Its history is invented and its fees are Amazon's. By lesson 3 its elasticity reads about <span data-fill="learn_pc_eps">−1.86</span>: a 1% raise loses about <span data-fill="learn_pc_eps_abs">1.86</span>% of its units.</p>
+        </div>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Pick your three SKUs with the most units.</li>
+          <li>For each, write down what you think a 5% raise would do to its units. Keep the note: lesson 5 checks it.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a class="next" href="#your-history">Next<b>Read your own history →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 2 ═══ -->
+    <article class="lesson" id="your-history" aria-labelledby="l2-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 2 of 8</span>
+        <h2 id="l2-h">Read your own history</h2>
+        <p class="lede">Elasticity comes from your own sales: periods when your price was different, and what your units did in each.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Your history, the yellow cells.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-your-history --><!-- /build:video-your-history -->
+      <div class="prose">
+        <h3>Where the numbers are</h3>
+        <p>On Amazon, Business Reports has "Detail Page Sales and Traffic by Child Item". Set a date range and it gives each SKU's units ordered and ordered product sales. On Shopify, the Sales by product report gives the same two numbers for any range. The average price for a period is sales divided by units, so coupons and promotions are already in it.</p>
+
+        <h3>One row per period</h3>
+        <p>Half-months work well: long enough to sell, short enough to catch a change. For each period type the days in it, the units and the average price. Twelve half-months, six months of history, is a good start.</p>
+
+        <h3>Units a day, not units a period</h3>
+        <p>A 16-day period sells more than a 15-day one at the same price. If the long periods happen to fall at one price, a fit reads the extra day as that price's effect. Hubricon's engine measured the trap on calendar half-months: more than a whole unit of elasticity, wrong. The sheet divides units by days before anything else.</p>
+
+        <h3>Two rules before any fit</h3>
+        <p>At least <span data-fill="learn_pc_min_periods">5</span> periods. And the price has to have moved: at least <span data-fill="learn_pc_min_cv">2%</span> variation, the standard deviation of the prices over their mean. Below either, the sheet says so and fits nothing, because a price that never moved cannot tell you what a different one would do. These are the engine's own rules.</p>
+
+        <h3>Periods to leave out</h3>
+        <ul>
+          <li>Stockouts: the units were capped by stock, not by price.</li>
+          <li>Big event deals: a different customer arrives on Prime Day.</li>
+          <li>A launch, or a listing change: the product was not the same one.</li>
+        </ul>
+        <p>Leave those rows blank rather than adjusting them. A period with no sales is ignored.</p>
+
+        <div class="worked">
+          <p><b>The invented listing's history:</b> twelve half-months, February to July 2026. The seller tried prices between <span data-fill="learn_pc_p_min">$21.99</span> and <span data-fill="learn_pc_p_max">$27.49</span>, so the price varied <span data-fill="learn_pc_cv">6.6%</span>: well clear of the 2% rule.</p>
+          <!-- build:pc-history -->
+<table class="data"><thead><tr><th scope="col">Period</th><th scope="col">Days</th><th scope="col">Units</th><th scope="col">Average price</th><th scope="col">Units a day</th></tr></thead><tbody><tr><th scope="row">Feb 1–14</th><td class="num">14</td><td class="num">237</td><td class="num">$24.99</td><td class="num">16.9</td></tr><tr><th scope="row">Feb 15–28</th><td class="num">14</td><td class="num">252</td><td class="num">$24.99</td><td class="num">18.0</td></tr><tr><th scope="row">Mar 1–15</th><td class="num">15</td><td class="num">313</td><td class="num">$22.99</td><td class="num">20.9</td></tr><tr><th scope="row">Mar 16–31</th><td class="num">16</td><td class="num">299</td><td class="num">$22.99</td><td class="num">18.7</td></tr><tr><th scope="row">Apr 1–15</th><td class="num">15</td><td class="num">211</td><td class="num">$26.99</td><td class="num">14.1</td></tr><tr><th scope="row">Apr 16–30</th><td class="num">15</td><td class="num">213</td><td class="num">$26.99</td><td class="num">14.2</td></tr><tr><th scope="row">May 1–15</th><td class="num">15</td><td class="num">256</td><td class="num">$23.99</td><td class="num">17.1</td></tr><tr><th scope="row">May 16–31</th><td class="num">16</td><td class="num">216</td><td class="num">$27.49</td><td class="num">13.5</td></tr><tr><th scope="row">Jun 1–15</th><td class="num">15</td><td class="num">300</td><td class="num">$21.99</td><td class="num">20.0</td></tr><tr><th scope="row">Jun 16–30</th><td class="num">15</td><td class="num">237</td><td class="num">$25.49</td><td class="num">15.8</td></tr><tr><th scope="row">Jul 1–15</th><td class="num">15</td><td class="num">258</td><td class="num">$24.99</td><td class="num">17.2</td></tr><tr><th scope="row">Jul 16–31</th><td class="num">16</td><td class="num">282</td><td class="num">$24.99</td><td class="num">17.6</td></tr></tbody></table>
+<!-- /build:pc-history -->
+          <p class="source">An invented listing · not a client · not a result.</p>
+        </div>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Pull twelve half-months for your best seller and type them into Your history.</li>
+          <li>If the sheet says the price has not moved enough, that is the finding: lesson 7 is how to move it on purpose.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#elasticity">Previous<b>← Elasticity, in plain English</b></a><a class="next" href="#the-fit">Next<b>The fit, and how sure it is →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 3 ═══ -->
+    <article class="lesson" id="the-fit" aria-labelledby="l3-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 3 of 8</span>
+        <h2 id="l3-h">The fit, and how sure it is</h2>
+        <p class="lede">A straight line through the logs gives the elasticity. The interval around it answers the question nobody asks: how sure?</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Your history, "The fit", and the grey working beside your rows.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-the-fit --><!-- /build:video-the-fit -->
+      <div class="prose">
+        <h3>The line</h3>
+        <p>Take the log of each period's price and of its units a day, and draw the straight line that fits them best. Its slope is the elasticity: on logs, a slope is a percentage per percentage. Drawn back on ordinary axes, the line becomes the demand curve.</p>
+        <figure class="figure">
+          <span class="label label-box">An invented listing · Not a client · Not a result</span>
+          <div class="chart-wide"><!-- build:pc-fit-wide --><svg class="chart fit" viewBox="0 0 680 360" role="img" aria-labelledby="pcf-w-t pcf-w-d" preserveAspectRatio="xMidYMid meet"><title id="pcf-w-t">One listing's sales history and the demand curve fitted to it</title><desc id="pcf-w-d">Each dot is one period's average price and units sold a day. The line is the demand curve the log-log fit draws through them: Elasticity −1.86, interval −2.48 to −1.24.</desc><line class="grid" x1="56" x2="664" y1="304.8" y2="304.8"/><text x="46" y="304.8" font-size="13" text-anchor="end" dominant-baseline="middle">12.5</text><line class="grid" x1="56" x2="664" y1="238.8" y2="238.8"/><text x="46" y="238.8" font-size="13" text-anchor="end" dominant-baseline="middle">15</text><line class="grid" x1="56" x2="664" y1="172.9" y2="172.9"/><text x="46" y="172.9" font-size="13" text-anchor="end" dominant-baseline="middle">17.5</text><line class="grid" x1="56" x2="664" y1="106.9" y2="106.9"/><text x="46" y="106.9" font-size="13" text-anchor="end" dominant-baseline="middle">20</text><line class="grid" x1="56" x2="664" y1="40.9" y2="40.9"/><text x="46" y="40.9" font-size="13" text-anchor="end" dominant-baseline="middle">22.5</text><line class="axis" x1="56" x2="664" y1="314" y2="314"/><line class="tick" x1="114.3" x2="114.3" y1="314" y2="319"/><text x="114.3" y="337" font-size="13" text-anchor="middle">$22</text><line class="tick" x1="288.4" x2="288.4" y1="314" y2="319"/><text x="288.4" y="337" font-size="13" text-anchor="middle">$24</text><line class="tick" x1="462.5" x2="462.5" y1="314" y2="319"/><text x="462.5" y="337" font-size="13" text-anchor="middle">$26</text><line class="tick" x1="636.6" x2="636.6" y1="314" y2="319"/><text x="636.6" y="337" font-size="13" text-anchor="middle">$28</text><text x="0" y="27" font-size="13">Units a day</text><path class="step draw" pathLength="1" d="M56,43.9 L68.7,51.3 L81.3,58.6 L94,65.7 L106.7,72.7 L119.3,79.6 L132,86.4 L144.7,93 L157.3,99.5 L170,105.9 L182.7,112.1 L195.3,118.3 L208,124.3 L220.7,130.2 L233.3,136.1 L246,141.8 L258.7,147.4 L271.3,152.9 L284,158.3 L296.7,163.7 L309.3,168.9 L322,174.1 L334.7,179.1 L347.3,184.1 L360,189 L372.7,193.8 L385.3,198.6 L398,203.2 L410.7,207.8 L423.3,212.3 L436,216.8 L448.7,221.1 L461.3,225.4 L474,229.6 L486.7,233.8 L499.3,237.9 L512,241.9 L524.7,245.9 L537.3,249.8 L550,253.6 L562.7,257.4 L575.3,261.2 L588,264.8 L600.7,268.5 L613.3,272 L626,275.5 L638.7,279 L651.3,282.4 L664,285.8"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .6)"><circle class="dot" cx="374.6" cy="187.9" r="5"/><circle class="dot" cx="374.6" cy="159.7" r="5"/><circle class="dot" cx="200.5" cy="84" r="5"/><circle class="dot" cx="200.5" cy="141.5" r="5"/><circle class="dot" cx="548.7" cy="263.4" r="5"/><circle class="dot" cx="548.7" cy="259.9" r="5"/><circle class="dot" cx="287.5" cy="184.3" r="5"/><circle class="dot" cx="592.2" cy="278.4" r="5"/><circle class="dot" cx="113.4" cy="106.9" r="5"/><circle class="dot" cx="418.1" cy="217.7" r="5"/><circle class="dot" cx="374.6" cy="180.8" r="5"/><circle class="dot" cx="374.6" cy="169.6" r="5"/></g><text class="ink strong fade" style="--after:var(--mc-draw-ms)" x="664" y="27" font-size="13" text-anchor="end">Elasticity −1.86, interval −2.48 to −1.24</text></svg><!-- /build:pc-fit-wide --></div>
+          <div class="chart-narrow"><!-- build:pc-fit-narrow --><svg class="chart fit" viewBox="0 0 360 300" role="img" aria-labelledby="pcf-n-t pcf-n-d" preserveAspectRatio="xMidYMid meet"><title id="pcf-n-t">One listing's sales history and the demand curve fitted to it</title><desc id="pcf-n-d">Each dot is one period's average price and units sold a day. The line is the demand curve the log-log fit draws through them: Elasticity −1.86, interval −2.48 to −1.24.</desc><line class="grid" x1="44" x2="350" y1="250.5" y2="250.5"/><text x="34" y="250.5" font-size="12" text-anchor="end" dominant-baseline="middle">12.5</text><line class="grid" x1="44" x2="350" y1="197.1" y2="197.1"/><text x="34" y="197.1" font-size="12" text-anchor="end" dominant-baseline="middle">15</text><line class="grid" x1="44" x2="350" y1="143.6" y2="143.6"/><text x="34" y="143.6" font-size="12" text-anchor="end" dominant-baseline="middle">17.5</text><line class="grid" x1="44" x2="350" y1="90.2" y2="90.2"/><text x="34" y="90.2" font-size="12" text-anchor="end" dominant-baseline="middle">20</text><line class="grid" x1="44" x2="350" y1="36.8" y2="36.8"/><text x="34" y="36.8" font-size="12" text-anchor="end" dominant-baseline="middle">22.5</text><line class="axis" x1="44" x2="350" y1="258" y2="258"/><line class="tick" x1="73.3" x2="73.3" y1="258" y2="263"/><text x="73.3" y="280" font-size="12" text-anchor="middle">$22</text><line class="tick" x1="161" x2="161" y1="258" y2="263"/><text x="161" y="280" font-size="12" text-anchor="middle">$24</text><line class="tick" x1="248.6" x2="248.6" y1="258" y2="263"/><text x="248.6" y="280" font-size="12" text-anchor="middle">$26</text><line class="tick" x1="336.2" x2="336.2" y1="258" y2="263"/><text x="336.2" y="280" font-size="12" text-anchor="middle">$28</text><text x="0" y="24" font-size="12">Units a day</text><path class="step draw" pathLength="1" d="M44,39.2 L50.4,45.2 L56.8,51.1 L63.1,56.9 L69.5,62.5 L75.9,68.1 L82.2,73.6 L88.6,78.9 L95,84.2 L101.4,89.4 L107.8,94.4 L114.1,99.4 L120.5,104.3 L126.9,109.1 L133.2,113.8 L139.6,118.5 L146,123 L152.4,127.5 L158.8,131.9 L165.1,136.2 L171.5,140.5 L177.9,144.6 L184.2,148.7 L190.6,152.8 L197,156.7 L203.4,160.6 L209.8,164.5 L216.1,168.3 L222.5,172 L228.9,175.6 L235.2,179.2 L241.6,182.7 L248,186.2 L254.4,189.7 L260.8,193 L267.1,196.3 L273.5,199.6 L279.9,202.8 L286.2,206 L292.6,209.1 L299,212.2 L305.4,215.2 L311.8,218.2 L318.1,221.1 L324.5,224 L330.9,226.8 L337.3,229.6 L343.6,232.4 L350,235.1"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .6)"><circle class="dot" cx="204.3" cy="155.9" r="4"/><circle class="dot" cx="204.3" cy="133" r="4"/><circle class="dot" cx="116.7" cy="71.7" r="4"/><circle class="dot" cx="116.7" cy="118.3" r="4"/><circle class="dot" cx="292" cy="217" r="4"/><circle class="dot" cx="292" cy="214.2" r="4"/><circle class="dot" cx="160.5" cy="152.9" r="4"/><circle class="dot" cx="313.9" cy="229.1" r="4"/><circle class="dot" cx="72.9" cy="90.2" r="4"/><circle class="dot" cx="226.2" cy="180" r="4"/><circle class="dot" cx="204.3" cy="150.1" r="4"/><circle class="dot" cx="204.3" cy="141" r="4"/></g><text class="ink strong fade" style="--after:var(--mc-draw-ms)" x="350" y="24" font-size="12" text-anchor="end">Elasticity −1.86, interval −2.48 to −1.24</text></svg><!-- /build:pc-fit-narrow --></div>
+          <figcaption>Each dot is one half-month: its average price and the units it sold a day. The curve is the fit.</figcaption>
+        </figure>
+
+        <h3>How sure</h3>
+        <p>Every period is a noisy draw, so the slope is too. Its standard error says how far another twelve periods like these could put it. The sheet computes it the way Hubricon's engine does, HC3, which lets a period at an unusual price carry more noise than the rest instead of quietly steering the line. On this history that is <span data-fill="learn_pc_se">0.28</span>, against <span data-fill="learn_pc_se_classical">0.22</span> the simple way: the honest interval is the wider one.</p>
+        <p>With few periods, a 95% interval is not plus or minus two standard errors. On 12 periods it is plus or minus <span data-fill="learn_pc_t">2.23</span>; on five it is plus or minus 3.18. The sheet uses the right multiplier for your count.</p>
+        <div class="worked">
+          <p><b>The invented listing's fit:</b> elasticity <span data-fill="learn_pc_eps">−1.86</span>, standard error <span data-fill="learn_pc_se">0.28</span>, 95% interval <span data-fill="learn_pc_lo">−2.48</span> to <span data-fill="learn_pc_hi">−1.24</span>, on <span data-fill="learn_pc_n">12</span> periods. The line explains <span data-fill="learn_pc_r2">0.88</span> of the variation (R²).</p>
+        </div>
+
+        <h3>What one history can and cannot tell you</h3>
+        <p>Hubricon's engine ran this exact price test <span data-fill="learn_pc_runs">200</span> times on a listing whose true elasticity is <span data-fill="learn_pc_true">−1.6</span>, each time with fresh noise. The median standard error was <span data-fill="learn_pc_se50">0.28</span>; one run in ten came out under <span data-fill="learn_pc_se10">0.18</span> and one in ten over <span data-fill="learn_pc_se90">0.45</span>. In <span data-fill="learn_pc_guard_share">50%</span> of the runs the interval sat too close to −1 to name a price at all. In <span data-fill="learn_pc_up_share">96%</span> of them, the direction came out right: up.</p>
+        <p>That is the shape of pricing one SKU from its own history. The direction is usually knowable long before the distance is.</p>
+
+        <h3>Too close to −1</h3>
+        <p>Lesson 4's formula multiplies by elasticity ÷ (1 + elasticity), and that factor runs away near −1: at <span data-fill="learn_pc_np_eps">−1.15</span> it is already <span data-fill="learn_pc_np_factor">7.7</span>. An interval from <span data-fill="learn_pc_np_lo">−1.66</span> to <span data-fill="learn_pc_np_hi">−0.64</span> covers best prices from a few percent above today's to no limit at all. A price printed to the cent there would be a guess with a decimal point on it.</p>
+        <p>So the sheet, like the engine, names no best price when the interval includes −1, when the estimate sits within two standard errors of −1, or when one standard error would move the best price by more than <span data-fill="learn_pc_pole_log_sd">50%</span>. It still names the direction, and near −1 the direction is up.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Read your fit and write down the interval, not only the number.</li>
+          <li>If the sheet says "Too close to −1", you have learned the direction: up. Lesson 7 is how to learn the distance.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#your-history">Previous<b>← Read your own history</b></a><a class="next" href="#best-price">Next<b>The price that makes the most →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 4 ═══ -->
+    <article class="lesson" id="best-price" aria-labelledby="l4-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 4 of 8</span>
+        <h2 id="l4-h">The price that makes the most</h2>
+        <p class="lede">For an elastic SKU there is one price where profit peaks. It takes three costs and your elasticity, and it is flatter at the top than you would think.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Your price, the yellow cells and "Best price".</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-best-price --><!-- /build:video-best-price -->
+      <div class="prose">
+        <h3>Split the fees the way they move</h3>
+        <p>Amazon's referral fee is a percentage of the price, so it grows when the price does. The fulfilment fee is fixed per unit by size and weight, and storage is fixed per unit too. Treat the fixed fees like landed cost, and gross the whole thing up by the percentage. Lumping every fee into one percentage moves the best price the wrong way.</p>
+        <p class="formula">Best price = (landed cost + fixed fees per unit) ÷ (1 − referral rate) × elasticity ÷ (1 + elasticity)</p>
+        <p class="source">Valid for elasticity below −1. It is the price where one more cent loses exactly as much in units as it adds in margin.</p>
+        <div class="worked">
+          <p><b>The invented listing:</b> landed cost <span data-fill="learn_pc_cost">$6.20</span>; fulfilment fee <span data-fill="learn_pc_fba">$4.35</span>, from Amazon's 2026 non-peak card for a <span data-fill="learn_pc_weight">12</span>-ounce large standard unit priced $10 to $50; referral <span data-fill="learn_pc_referral">15%</span>.</p>
+          <p>Costs that do not move with price: <span data-fill="learn_pc_fixed">$10.55</span>. Grossed up for the referral fee: <span data-fill="learn_pc_base">$12.41</span>. At elasticity <span data-fill="learn_pc_eps">−1.86</span> the factor is <span data-fill="learn_pc_factor">2.16</span>, so the best price is <span class="money" data-fill="learn_pc_best">$26.84</span>, <span data-fill="learn_pc_best_up">7.4%</span> above today's <span data-fill="learn_pc_price">$24.99</span>.</p>
+        </div>
+        <figure class="figure">
+          <span class="label label-box">An invented listing · Not a client · Not a result</span>
+          <div class="chart-wide"><!-- build:pc-profit-wide --><svg class="chart profit" viewBox="0 0 680 380" role="img" aria-labelledby="pcp-w-t pcp-w-d" preserveAspectRatio="xMidYMid meet"><title id="pcp-w-t">Profit a month against price, at the fitted elasticity and at the ends of its interval</title><desc id="pcp-w-d">Profit a month against price. The solid line uses the fitted elasticity, −1.86; the dashed lines use the ends of its interval. All three pass through today's price. The solid line is flat across the top: a few percent either side of the best price costs little.</desc><line class="grid" x1="64" x2="548" y1="229.7" y2="229.7"/><text x="54" y="229.7" font-size="13" text-anchor="end" dominant-baseline="middle">$5k</text><line class="grid" x1="64" x2="548" y1="112.3" y2="112.3"/><text x="54" y="112.3" font-size="13" text-anchor="end" dominant-baseline="middle">$6k</text><line class="axis" x1="64" x2="548" y1="334" y2="334"/><line class="tick" x1="94.5" x2="94.5" y1="334" y2="339"/><text x="94.5" y="357" font-size="13" text-anchor="middle">$20</text><line class="tick" x1="245.8" x2="245.8" y1="334" y2="339"/><text x="245.8" y="357" font-size="13" text-anchor="middle">$25</text><line class="tick" x1="397.1" x2="397.1" y1="334" y2="339"/><text x="397.1" y="357" font-size="13" text-anchor="middle">$30</text><text x="0" y="27" font-size="13">Profit a month</text><path class="curve-alt fade" style="--after:0ms" d="M64,137.9 L71.6,134.7 L79.1,132 L86.7,129.9 L94.3,128.3 L101.8,127.2 L109.4,126.5 L116.9,126.3 L124.5,126.4 L132.1,126.8 L139.6,127.6 L147.2,128.7 L154.8,130 L162.3,131.5 L169.9,133.3 L177.4,135.3 L185,137.5 L192.6,139.9 L200.1,142.4 L207.7,145 L215.3,147.8 L222.8,150.7 L230.4,153.8 L237.9,156.9 L245.5,160.1 L253.1,163.4 L260.6,166.7 L268.2,170.1 L275.8,173.6 L283.3,177.2 L290.9,180.7 L298.4,184.3 L306,188 L313.6,191.7 L321.1,195.4 L328.7,199.1 L336.3,202.9 L343.8,206.6 L351.4,210.4 L358.9,214.1 L366.5,217.9 L374.1,221.7 L381.6,225.5 L389.2,229.3 L396.8,233 L404.3,236.8 L411.9,240.6 L419.4,244.3 L427,248 L434.6,251.8 L442.1,255.5 L449.7,259.2 L457.3,262.8 L464.8,266.5 L472.4,270.1 L479.9,273.7 L487.5,277.3 L495.1,280.9 L502.6,284.5 L510.2,288 L517.8,291.5 L525.3,295 L532.9,298.5 L540.4,301.9 L548,305.3"/><path class="curve-alt fade" style="--after:0ms" d="M64,334 L71.6,323.7 L79.1,313.8 L86.7,304.2 L94.3,294.9 L101.8,286 L109.4,277.3 L116.9,268.9 L124.5,260.8 L132.1,252.9 L139.6,245.3 L147.2,237.9 L154.8,230.8 L162.3,223.9 L169.9,217.2 L177.4,210.6 L185,204.3 L192.6,198.2 L200.1,192.3 L207.7,186.5 L215.3,180.9 L222.8,175.5 L230.4,170.2 L237.9,165.1 L245.5,160.1 L253.1,155.2 L260.6,150.5 L268.2,146 L275.8,141.5 L283.3,137.2 L290.9,133 L298.4,128.9 L306,124.9 L313.6,121.1 L321.1,117.3 L328.7,113.6 L336.3,110.1 L343.8,106.6 L351.4,103.2 L358.9,99.9 L366.5,96.7 L374.1,93.6 L381.6,90.6 L389.2,87.6 L396.8,84.7 L404.3,81.9 L411.9,79.1 L419.4,76.5 L427,73.9 L434.6,71.3 L442.1,68.9 L449.7,66.4 L457.3,64.1 L464.8,61.8 L472.4,59.6 L479.9,57.4 L487.5,55.3 L495.1,53.2 L502.6,51.2 L510.2,49.2 L517.8,47.3 L525.3,45.4 L532.9,43.5 L540.4,41.7 L548,40"/><path class="curve draw" pathLength="1" d="M64,244.3 L71.6,236.8 L79.1,229.9 L86.7,223.4 L94.3,217.4 L101.8,211.8 L109.4,206.5 L116.9,201.7 L124.5,197.2 L132.1,193.1 L139.6,189.2 L147.2,185.7 L154.8,182.4 L162.3,179.4 L169.9,176.6 L177.4,174.1 L185,171.8 L192.6,169.7 L200.1,167.8 L207.7,166.1 L215.3,164.6 L222.8,163.2 L230.4,162 L237.9,161 L245.5,160.1 L253.1,159.3 L260.6,158.7 L268.2,158.2 L275.8,157.8 L283.3,157.5 L290.9,157.3 L298.4,157.2 L306,157.2 L313.6,157.3 L321.1,157.5 L328.7,157.8 L336.3,158.1 L343.8,158.5 L351.4,159 L358.9,159.5 L366.5,160.1 L374.1,160.8 L381.6,161.5 L389.2,162.2 L396.8,163.1 L404.3,163.9 L411.9,164.8 L419.4,165.8 L427,166.8 L434.6,167.8 L442.1,168.8 L449.7,169.9 L457.3,171.1 L464.8,172.2 L472.4,173.4 L479.9,174.6 L487.5,175.8 L495.1,177.1 L502.6,178.4 L510.2,179.7 L517.8,181 L525.3,182.3 L532.9,183.7 L540.4,185.1 L548,186.5"/><g class="fade" style="--after:var(--mc-draw-ms)"><text class="" x="556" y="40" font-size="13" dominant-baseline="middle">−1.24</text><text class="leak-text" x="556" y="186.5" font-size="13" dominant-baseline="middle">−1.86, the estimate</text><text class="" x="556" y="305.3" font-size="13" dominant-baseline="middle">−2.48</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><circle class="dot" cx="245.5" cy="160.1" r="5.5"/><text class="ink strong" x="236" y="181.1" font-size="13" text-anchor="end">Today $24.99</text><circle class="dot-hollow" cx="283.3" cy="157.5" r="5.5"/><text x="307.6" y="178.5" font-size="13">Next $26.24</text><line class="leak" x1="301.6" x2="301.6" y1="157.2" y2="334"/><text class="leak-text" x="309.6" y="321" font-size="13">Best $26.84</text></g></svg><!-- /build:pc-profit-wide --></div>
+          <div class="chart-narrow"><!-- build:pc-profit-narrow --><svg class="chart profit" viewBox="0 0 360 320" role="img" aria-labelledby="pcp-n-t pcp-n-d" preserveAspectRatio="xMidYMid meet"><title id="pcp-n-t">Profit a month against price, at the fitted elasticity and at the ends of its interval</title><desc id="pcp-n-d">Profit a month against price. The solid line uses the fitted elasticity, −1.86; the dashed lines use the ends of its interval. All three pass through today's price. The solid line is flat across the top: a few percent either side of the best price costs little.</desc><line class="grid" x1="50" x2="348" y1="192.2" y2="192.2"/><text x="40" y="192.2" font-size="12" text-anchor="end" dominant-baseline="middle">$5k</text><line class="grid" x1="50" x2="348" y1="95.5" y2="95.5"/><text x="40" y="95.5" font-size="12" text-anchor="end" dominant-baseline="middle">$6k</text><line class="axis" x1="50" x2="348" y1="278" y2="278"/><line class="tick" x1="68.8" x2="68.8" y1="278" y2="283"/><text x="68.8" y="300" font-size="12" text-anchor="middle">$20</text><line class="tick" x1="161.9" x2="161.9" y1="278" y2="283"/><text x="161.9" y="300" font-size="12" text-anchor="middle">$25</text><line class="tick" x1="255.1" x2="255.1" y1="278" y2="283"/><text x="255.1" y="300" font-size="12" text-anchor="middle">$30</text><text x="0" y="24" font-size="12">Profit a month</text><path class="curve-alt fade" style="--after:0ms" d="M50,116.6 L54.7,113.9 L59.3,111.7 L64,110 L68.6,108.7 L73.3,107.8 L77.9,107.2 L82.6,107 L87.2,107.1 L91.9,107.5 L96.6,108.1 L101.2,109 L105.9,110.1 L110.5,111.4 L115.2,112.8 L119.8,114.5 L124.5,116.3 L129.2,118.2 L133.8,120.3 L138.5,122.5 L143.1,124.8 L147.8,127.2 L152.4,129.6 L157.1,132.2 L161.8,134.8 L166.4,137.5 L171.1,140.3 L175.7,143.1 L180.4,146 L185,148.9 L189.7,151.8 L194.3,154.8 L199,157.8 L203.7,160.9 L208.3,163.9 L213,167 L217.6,170 L222.3,173.1 L226.9,176.2 L231.6,179.3 L236.3,182.5 L240.9,185.6 L245.6,188.7 L250.2,191.8 L254.9,194.9 L259.5,198 L264.2,201.1 L268.8,204.2 L273.5,207.2 L278.2,210.3 L282.8,213.4 L287.5,216.4 L292.1,219.4 L296.8,222.4 L301.4,225.4 L306.1,228.4 L310.7,231.4 L315.4,234.3 L320.1,237.2 L324.7,240.1 L329.4,243 L334,245.9 L338.7,248.7 L343.3,251.6 L348,254.4"/><path class="curve-alt fade" style="--after:0ms" d="M50,278 L54.7,269.5 L59.3,261.4 L64,253.5 L68.6,245.8 L73.3,238.5 L77.9,231.3 L82.6,224.4 L87.2,217.7 L91.9,211.3 L96.6,205 L101.2,198.9 L105.9,193 L110.5,187.3 L115.2,181.8 L119.8,176.5 L124.5,171.3 L129.2,166.2 L133.8,161.3 L138.5,156.6 L143.1,152 L147.8,147.5 L152.4,143.2 L157.1,138.9 L161.8,134.8 L166.4,130.9 L171.1,127 L175.7,123.2 L180.4,119.6 L185,116 L189.7,112.6 L194.3,109.2 L199,105.9 L203.7,102.7 L208.3,99.6 L213,96.6 L217.6,93.7 L222.3,90.8 L226.9,88 L231.6,85.3 L236.3,82.7 L240.9,80.1 L245.6,77.6 L250.2,75.2 L254.9,72.8 L259.5,70.5 L264.2,68.2 L268.8,66 L273.5,63.9 L278.2,61.8 L282.8,59.8 L287.5,57.8 L292.1,55.8 L296.8,53.9 L301.4,52.1 L306.1,50.3 L310.7,48.6 L315.4,46.8 L320.1,45.2 L324.7,43.6 L329.4,42 L334,40.4 L338.7,38.9 L343.3,37.4 L348,36"/><path class="curve draw" pathLength="1" d="M50,204.2 L54.7,198 L59.3,192.3 L64,187 L68.6,182 L73.3,177.4 L77.9,173.1 L82.6,169.1 L87.2,165.4 L91.9,162 L96.6,158.8 L101.2,155.9 L105.9,153.2 L110.5,150.7 L115.2,148.5 L119.8,146.4 L124.5,144.5 L129.2,142.8 L133.8,141.2 L138.5,139.8 L143.1,138.5 L147.8,137.4 L152.4,136.4 L157.1,135.6 L161.8,134.8 L166.4,134.2 L171.1,133.7 L175.7,133.3 L180.4,132.9 L185,132.7 L189.7,132.6 L194.3,132.5 L199,132.5 L203.7,132.6 L208.3,132.7 L213,132.9 L217.6,133.2 L222.3,133.5 L226.9,133.9 L231.6,134.4 L236.3,134.9 L240.9,135.4 L245.6,136 L250.2,136.6 L254.9,137.3 L259.5,138 L264.2,138.8 L268.8,139.5 L273.5,140.3 L278.2,141.2 L282.8,142.1 L287.5,143 L292.1,143.9 L296.8,144.8 L301.4,145.8 L306.1,146.8 L310.7,147.8 L315.4,148.8 L320.1,149.9 L324.7,151 L329.4,152.1 L334,153.2 L338.7,154.3 L343.3,155.4 L348,156.6"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><circle class="dot" cx="161.8" cy="134.8" r="4.5"/><text class="ink strong" x="153.3" y="154.8" font-size="12" text-anchor="end">Today $24.99</text><circle class="dot-hollow" cx="185" cy="132.7" r="4.5"/><text x="202.3" y="152.7" font-size="12">Next $26.24</text><line class="leak" x1="196.3" x2="196.3" y1="132.5" y2="278"/><text class="leak-text" x="204.3" y="266" font-size="12">Best $26.84</text></g></svg><!-- /build:pc-profit-narrow --></div>
+          <figcaption>Profit a month against price. Solid: at the fitted elasticity. Dashed: at the two ends of its interval, which put the best price anywhere from <span data-fill="learn_pc_lo_best">$20.79</span> to <span data-fill="learn_pc_hi_best">$64.39</span>. All three pass through today's price.</figcaption>
+        </figure>
+
+        <h3>The lesson in the flat top</h3>
+        <p>At the best price this listing makes <span data-fill="learn_pc_best_delta">+$25</span> a month more than today, on <span data-fill="learn_pc_profit">$5,593</span>. Near the peak, a few percent either way costs little. Far from it, or on a discount, the curve falls away fast. That is why the next two lessons matter more than the cent.</p>
+
+        <h3>When there is no best price</h3>
+        <p>An inelastic SKU, between 0 and −1, has no peak: profit rises with the price until something the model does not see stops it, like a competitor or the Buy Box. And a SKU too close to −1 has a peak nobody can locate. In both cases the sheet says "none" and points up; lesson 7 is how to walk.</p>
+
+        <h3>What the formula assumes</h3>
+        <p>That the fees per unit stay the same between today's price and the new one. Amazon's fulfilment fee changes where a price crosses $10 or $50. If a move crosses one, the sheet says so: price both sides with <a href="/learn/fee-staircase">The Fee Staircase</a>.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Type your landed cost, your fulfilment fee from Seller Central's Fee Preview report, and your referral rate into Your price.</li>
+          <li>Read the best price, and the interval's two ends beside it in your head: the distance is only as good as the interval.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#the-fit">Previous<b>← The fit, and how sure it is</b></a><a class="next" href="#the-raise">Next<b>The raise that's probably free →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 5 ═══ -->
+    <article class="lesson" id="the-raise" aria-labelledby="l5-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 5 of 8</span>
+        <h2 id="l5-h">The raise that's probably free</h2>
+        <p class="lede">Before you raise a price, work out how many units it can lose and still make the same money. It is usually more than the fear says.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Your price, the table under the best price.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-the-raise --><!-- /build:video-the-raise -->
+      <div class="prose">
+        <p>A raise makes the same money if the units it loses are exactly paid for by the margin it adds. That gives the break-even in one line, and it needs no elasticity at all:</p>
+        <p class="formula">Units can fall by = 1 − contribution per unit today ÷ contribution per unit at the new price</p>
+        <div class="worked">
+          <p><b>The invented listing</b> makes <span data-fill="learn_pc_margin">$10.69</span> a unit today. A 5% raise breaks even if its units fall <span data-fill="learn_pc_be5">9.0%</span>. Its elasticity says they fall <span data-fill="learn_pc_im5">8.7%</span>, so the raise makes <span data-fill="learn_pc_d5">+$22</span> a month.</p>
+          <!-- build:pc-breakeven -->
+<table class="data"><thead><tr><th scope="col">Change</th><th scope="col">Price</th><th scope="col">Per unit</th><th scope="col">Break-even units</th><th scope="col">Elasticity says</th><th scope="col">Profit a month</th></tr></thead><tbody><tr><th scope="row">−10%</th><td class="num">$22.49</td><td class="num">$8.57</td><td class="num">+24.8%</td><td class="num">+21.6%</td><td class="num">−$141</td></tr><tr><th scope="row">−5%</th><td class="num">$23.74</td><td class="num">$9.63</td><td class="num">+11.0%</td><td class="num">+10.0%</td><td class="num">−$51</td></tr><tr><th scope="row">−2%</th><td class="num">$24.49</td><td class="num">$10.27</td><td class="num">+4.1%</td><td class="num">+3.8%</td><td class="num">−$17</td></tr><tr><th scope="row">+2%</th><td class="num">$25.49</td><td class="num">$11.12</td><td class="num">−3.8%</td><td class="num">−3.6%</td><td class="num">+$12</td></tr><tr><th scope="row">+5%</th><td class="num">$26.24</td><td class="num">$11.76</td><td class="num">−9.0%</td><td class="num">−8.7%</td><td class="num">+$22</td></tr><tr><th scope="row">+10%</th><td class="num">$27.49</td><td class="num">$12.82</td><td class="num">−16.6%</td><td class="num">−16.2%</td><td class="num">+$22</td></tr></tbody></table>
+<!-- /build:pc-breakeven -->
+          <p class="source">An invented listing · not a client · not a result. "Break-even units" is how far units can fall (or must rise) before profit moves; "Elasticity says" is what the fit expects them to do.</p>
+        </div>
+
+        <h3>Why a raise is usually safer than it feels</h3>
+        <p>The fear prices a raise in revenue: 5% more per unit against some share of the units. The break-even prices it in margin, and every dollar of a raise lands in the margin. The thinner the margin, the more units a raise can lose and still pay, because the same dollar is a bigger share of a small contribution.</p>
+
+        <h3>And the asymmetry</h3>
+        <p>Read the table the other way. A 10% cut on this listing has to sell <span data-fill="learn_pc_be_m10">24.8%</span> more units just to stand still; its elasticity says it sells <span data-fill="learn_pc_im_m10">21.6%</span> more. The cut costs <span data-fill="learn_pc_d_m10">−$141</span> a month. A raise has to be badly wrong to lose money. A cut has to be right to break even.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Take the note from lesson 1. For each SKU, read the +5% row: how far units can fall before the raise loses money.</li>
+          <li>If what you feared is less than the break-even, the raise is free money on your own numbers.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#best-price">Previous<b>← The price that makes the most</b></a><a class="next" href="#discounts">Next<b>What a discount gives away →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 6 ═══ -->
+    <article class="lesson" id="discounts" aria-labelledby="l6-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 6 of 8</span>
+        <h2 id="l6-h">What a discount gives away</h2>
+        <p class="lede">A discount is a raise in reverse, and the arithmetic is harsher: every dollar off comes out of the margin, not out of the price.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Discount.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-discounts --><!-- /build:video-discounts -->
+      <div class="prose">
+        <p class="formula">Extra units it must sell = contribution per unit today ÷ contribution per unit on the discount − 1</p>
+        <div class="worked">
+          <p><b>A <span data-fill="learn_pc_disc">20%</span> sale on the invented listing:</b> <span data-fill="learn_pc_disc_price">$19.99</span>, which leaves <span data-fill="learn_pc_disc_margin">$6.45</span> a unit. It has to sell <span data-fill="learn_pc_disc_needed">66%</span> more units to make the same money. Its elasticity says it sells <span data-fill="learn_pc_disc_implied">51%</span> more. Run for a month, the sale costs <span data-fill="learn_pc_disc_delta">−$488</span>.</p>
+          <p class="source">An invented listing · not a client · not a result.</p>
+        </div>
+
+        <h3>Add what the deal itself costs</h3>
+        <p>A coupon or a deal can carry its own fee per unit sold. The sheet has a cell for it: it comes straight off the contribution, so it raises the units the sale must sell.</p>
+
+        <h3>What the sheet does not price</h3>
+        <ul>
+          <li><b>Rank.</b> A sale that lifts your sales rank can sell more at full price afterwards. That is a bet on rank. It may be a good one, but it is a separate bet, and it should be made knowing what the sale itself cost.</li>
+          <li><b>Stock that is about to age.</b> Sometimes a discount is cheaper than the storage it saves: <a href="/learn/fee-staircase">The Fee Staircase</a>, lesson 7, prices the 271-day cliff.</li>
+        </ul>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Before your next promotion, type its discount into the Discount sheet.</li>
+          <li>Compare "must sell" with "your elasticity says". If the second is smaller, decide what else the sale is buying, and whether it is worth the difference.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#the-raise">Previous<b>← The raise that's probably free</b></a><a class="next" href="#move-it">Next<b>Move it, and measure it →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 7 ═══ -->
+    <article class="lesson" id="move-it" aria-labelledby="l7-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 7 of 8</span>
+        <h2 id="l7-h">Move it, and measure it</h2>
+        <p class="lede">Walk toward the best price; never jump. Write down what you expect before each step, and measure it after.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Your price, "Next price" and "Change a month".</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-move-it --><!-- /build:video-move-it -->
+      <div class="prose">
+        <h3>At most <span data-fill="learn_pc_cap">5%</span> at a time</h3>
+        <p>The fit describes prices near the ones you have tried, not prices far beyond them. Amazon's Buy Box weighs your price against other sellers'. So a step is never more than 5%, and the next one waits for the measurement. The invented listing's best price is <span data-fill="learn_pc_best">$26.84</span>; its next step stops at <span data-fill="learn_pc_step">$26.24</span>.</p>
+
+        <h3>Called before, measured after</h3>
+        <ol>
+          <li><b>Before it goes live,</b> write down three things: the new price, the units a day you expect, and the change a month the sheet expects. Writing it first is what stops a result from being explained after the fact.</li>
+          <li><b>While it is live,</b> watch your Buy Box share on Amazon, or your conversion rate on Shopify. If either drops, reverse the step: the model cannot see that, and you can.</li>
+          <li><b>After two weeks,</b> add the period to Your history. The fit moves, the interval tightens, and the next step starts from the new reading.</li>
+        </ol>
+        <p>Each step is also an experiment. A history whose price never moved becomes one that can be read.</p>
+
+        <h3>What one sheet cannot do</h3>
+        <p>Three things lie beyond a single SKU's spreadsheet. Each is in Hubricon's engine, and each is worth knowing about even if you never use it:</p>
+        <ul>
+          <li><b>Borrowing strength.</b> A SKU with a thin history is pulled toward its catalogue's common elasticity, by exactly as much as its own estimate is noisy. A single SKU has nothing to be pulled toward.</li>
+          <li><b>Prices set because demand moved.</b> If you raised a price because it was selling fast, the history mixes your decision with the market's, and the fit reads demand too steep or too flat. That has to be tested for and corrected.</li>
+          <li><b>A range on the profit.</b> The sheet gives one number for the change. The engine draws the elasticity, the volume and the fees thousands of times and sizes the step so that the bad end stays inside a budget: double the uncertainty, and the step shrinks.</li>
+        </ul>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Take your best seller's "Next price" and write down the expected change a month beside it, dated.</li>
+          <li>Make the move, watch the Buy Box for two weeks, then add the period to Your history.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#discounts">Previous<b>← What a discount gives away</b></a><a class="next" href="#catalogue">Next<b>Every SKU, in order →</b></a></nav>
+    </article>
+
+    <!-- ═══ Lesson 8 ═══ -->
+    <article class="lesson" id="catalogue" aria-labelledby="l8-h">
+      <header class="lesson-head">
+        <span class="label">Lesson 8 of 8</span>
+        <h2 id="l8-h">Every SKU, in order</h2>
+        <p class="lede">Fit each SKU that has the history for it, put the readings in one table, and start where the next step is worth the most.</p>
+      </header>
+      <div class="tpl"><p><b>The template</b>This lesson: Catalogue.</p><a href="/learn/files/hubricon-price-curve.xlsx" download data-template>Download (.xlsx) ↓</a></div>
+<!-- build:video-catalogue --><!-- /build:video-catalogue -->
+      <div class="prose">
+        <ol>
+          <li><b>Fit each SKU.</b> Run its history through Your history, one SKU at a time, and copy four readings into Catalogue: the elasticity, its standard error and the interval's two ends.</li>
+          <li><b>Add its economics.</b> Price, units a month, landed cost, referral rate, and the fixed fees per unit.</li>
+          <li><b>Read the ranking.</b> The sheet names each SKU's best price where it can, its direction, the next step, and what that step is worth a month, ranked.</li>
+        </ol>
+
+        <h3>Where to start</h3>
+        <p>At the top of the ranking. Then the SKUs marked "Too close to −1": their direction is up, and a 5% step is the cheapest way to learn the distance.</p>
+
+        <h3>Where to stop</h3>
+        <p>At SKUs without five periods or with a price that never moved. They are not wrong; they are unread. Moving them on purpose, one 5% step at a time, is how they get a reading.</p>
+
+        <h3>How often</h3>
+        <p>Every two weeks: one step for each SKU at the top, one new period into each history, the ranking read again. A catalogue walked this way finds its prices, and the record of each step is the proof of what pricing earned.</p>
+      </div>
+      <div class="do">
+        <h3>Do this now</h3>
+        <ol>
+          <li>Put your top ten SKUs into Catalogue.</li>
+          <li>Take the top three steps this fortnight. Write the expected change beside each, and check it in two weeks.</li>
+        </ol>
+      </div>
+      <nav class="pager" aria-label="Lesson pages"><a href="#move-it">Previous<b>← Move it, and measure it</b></a></nav>
+    </article>
+
+  </main>
+
+  <aside class="invite" aria-label="Hubricon">
+    <span class="label">If you would rather it were run</span>
+    <p>Hubricon runs this arithmetic, and the rest of it on fees, ads, inventory and Amazon claims, across a whole catalogue every week.</p>
+    <p>A month is billed only if the profit it measured clears the fee.</p>
+    <a class="btn" href="/apply" data-cta="learn">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+  </aside>
+
+</div>
+
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
+<script type="module" src="/assets/learn.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

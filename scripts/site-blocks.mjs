@@ -229,7 +229,7 @@ function joinForm(c) {
       </form>`;
 }
 
-function liveTile(c, i, { feature }) {
+function liveTile(c, i, { feature, wide = false }) {
   // The featured course carries the email form, and a tile with a trailer carries a
   // video, so neither can be one link: the cover and the title carry it instead.
   const trailer = Boolean(c.trailer && c.trailer.src);
@@ -242,7 +242,7 @@ function liveTile(c, i, { feature }) {
   const art = trailer
     ? video(c.trailer, `${c.title}: trailer`, `trailer:${c.slug}`)
     : `<span class="cover-k">Course ${i + 1}</span>${cover(c.cover, `cv-${c.slug}`)}<span class="cover-title">${esc(c.title)}</span>`;
-  const cls = `tile tile-live${feature ? " tile-feature" : ""}`;
+  const cls = `tile tile-live${feature ? " tile-feature" : ""}${wide ? " tile-wide" : ""}`;
   const coverEl = trailer || whole
     ? `<div class="tile-cover night">${art}</div>`
     : `<a class="tile-cover night" href="${c.path}" tabindex="-1" aria-hidden="true">${art}</a>`;
@@ -255,7 +255,7 @@ function liveTile(c, i, { feature }) {
     <div class="tile-body">
       <div class="go-badges">${badges}</div>
       <h3>${title}</h3>
-      <p>${esc(c.summary)}</p>${feature ? `\n      <p class="tile-detail">${esc(c.detail)}</p>${joinForm(c)}` : ""}
+      <p>${esc(c.summary)}</p>${feature ? `\n      <p class="tile-detail">${esc(c.detail)}</p>${joinForm(c)}` : wide ? `\n      <p class="tile-detail">${esc(c.detail)}</p>` : ""}
       ${go}
     </div>
   ${close}`;
@@ -278,8 +278,17 @@ function plannedTile(c, { hub }) {
 function library(lib, { hub }) {
   const live = lib.courses.filter((c) => c.status === "live");
   const planned = lib.courses.filter((c) => c.status === "planned");
+  // One featured course carries the email, the way Acquisition.com features one; every other
+  // live course is a tile that opens its own page, where its own email opens it.
+  const [first, ...more] = live;
+  const others = more.length ? `
+  <div class="lib-live">
+    <p class="lib-k">Also free, complete now</p>
+    <div class="lib-live-list">${more.map((c, i) => liveTile(c, i + 1, { feature: false, wide: true })).join("")}
+    </div>
+  </div>` : "";
   return `
-<div class="lib">${live.map((c, i) => liveTile(c, i, { feature: true })).join("")}
+<div class="lib">${liveTile(first, 0, { feature: true })}${others}
   <div class="lib-planned">
     <p class="lib-k">Planned for the library <span>· free when each is complete, one email to enter</span></p>
     <div class="${hub ? "lib-grid" : "rail"}">${planned.map((c) => plannedTile(c, { hub })).join("")}

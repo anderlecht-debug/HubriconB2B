@@ -6,7 +6,13 @@
       "poster": null,
       "title": "The case study, as a film",
       "waiting": "The case study, told as a film in five beats, will play here.",
-      "beats": ["The staircase", "Where this listing sits", "The counterfactual", "Ten thousand months", "The cliff"]
+      "beats": [
+        "The staircase",
+        "Where this listing sits",
+        "The counterfactual",
+        "Ten thousand months",
+        "The cliff"
+      ]
     }
   },
   "courses": [
@@ -18,19 +24,116 @@
       "cover": "staircase",
       "summary": "Find what Amazon's fee steps cost any listing, from five numbers on its public page.",
       "detail": "The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.",
-      "extras": ["1 spreadsheet"],
+      "extras": [
+        "1 spreadsheet"
+      ],
       "template": "/learn/files/hubricon-fee-staircase.xlsx",
-      "start": { "text": "Lesson 2: a number for your own listing tonight", "href": "/learn/fee-staircase#read-the-listing" },
+      "start": {
+        "text": "Lesson 2: a number for your own listing tonight",
+        "href": "/learn/fee-staircase#read-the-listing"
+      },
       "trailer": null,
       "lessons": [
-        { "id": "staircase", "title": "The staircase", "video": null },
-        { "id": "read-the-listing", "title": "Read the listing", "video": null },
-        { "id": "find-the-step", "title": "Find the step", "video": null },
-        { "id": "counterfactual", "title": "The counterfactual", "video": null },
-        { "id": "volume", "title": "Volume from rank", "video": null },
-        { "id": "ten-thousand-months", "title": "Ten thousand months", "video": null },
-        { "id": "the-cliff", "title": "The 271-day cliff", "video": null },
-        { "id": "every-sku", "title": "Every SKU, in order", "video": null }
+        {
+          "id": "staircase",
+          "title": "The staircase",
+          "video": null
+        },
+        {
+          "id": "read-the-listing",
+          "title": "Read the listing",
+          "video": null
+        },
+        {
+          "id": "find-the-step",
+          "title": "Find the step",
+          "video": null
+        },
+        {
+          "id": "counterfactual",
+          "title": "The counterfactual",
+          "video": null
+        },
+        {
+          "id": "volume",
+          "title": "Volume from rank",
+          "video": null
+        },
+        {
+          "id": "ten-thousand-months",
+          "title": "Ten thousand months",
+          "video": null
+        },
+        {
+          "id": "the-cliff",
+          "title": "The 271-day cliff",
+          "video": null
+        },
+        {
+          "id": "every-sku",
+          "title": "Every SKU, in order",
+          "video": null
+        }
+      ]
+    },
+    {
+      "slug": "price-curve",
+      "status": "live",
+      "title": "The Price Curve",
+      "path": "/learn/price-curve",
+      "cover": "curve",
+      "summary": "Read your own price elasticity, find the price that makes the most, and price every raise and discount before you run it.",
+      "detail": "Elasticity from your own sales history with an honest interval, the best price with Amazon's fees split the way they move, the break-even on a raise and a discount, and steps of at most 5% you can measure.",
+      "extras": [
+        "1 spreadsheet"
+      ],
+      "template": "/learn/files/hubricon-price-curve.xlsx",
+      "start": {
+        "text": "Lesson 5: whether your next raise pays",
+        "href": "/learn/price-curve#the-raise"
+      },
+      "trailer": null,
+      "lessons": [
+        {
+          "id": "elasticity",
+          "title": "Elasticity, in plain English",
+          "video": null
+        },
+        {
+          "id": "your-history",
+          "title": "Read your own history",
+          "video": null
+        },
+        {
+          "id": "the-fit",
+          "title": "The fit, and how sure it is",
+          "video": null
+        },
+        {
+          "id": "best-price",
+          "title": "The price that makes the most",
+          "video": null
+        },
+        {
+          "id": "the-raise",
+          "title": "The raise that's probably free",
+          "video": null
+        },
+        {
+          "id": "discounts",
+          "title": "What a discount gives away",
+          "video": null
+        },
+        {
+          "id": "move-it",
+          "title": "Move it, and measure it",
+          "video": null
+        },
+        {
+          "id": "catalogue",
+          "title": "Every SKU, in order",
+          "video": null
+        }
       ]
     },
     {
@@ -41,14 +144,30 @@
       "summary": "Fees, leakage, reimbursements, and the unit costs no report shows you.",
       "trailer": null,
       "lessons": [
-        { "title": "What Amazon owes you and won't mention" },
-        { "title": "Your bestseller might be your worst product" },
-        { "title": "Your FBA fee is not your FBA fee" },
-        { "title": "What a return actually costs" },
-        { "title": "Ad spend with no sales behind it" },
-        { "title": "Storage fees that compound while you sleep" },
-        { "title": "The reimbursement windows closing on you" },
-        { "title": "Shopify's quiet margin killer: the shipping subsidy" }
+        {
+          "title": "What Amazon owes you and won't mention"
+        },
+        {
+          "title": "Your bestseller might be your worst product"
+        },
+        {
+          "title": "Your FBA fee is not your FBA fee"
+        },
+        {
+          "title": "What a return actually costs"
+        },
+        {
+          "title": "Ad spend with no sales behind it"
+        },
+        {
+          "title": "Storage fees that compound while you sleep"
+        },
+        {
+          "title": "The reimbursement windows closing on you"
+        },
+        {
+          "title": "Shopify's quiet margin killer: the shipping subsidy"
+        }
       ]
     },
     {
@@ -59,26 +178,27 @@
       "summary": "Cash conversion, inventory as capital, runway, and the arithmetic of the reorder.",
       "trailer": null,
       "lessons": [
-        { "title": "The cash conversion cycle" },
-        { "title": "You don't have a revenue problem. You have a cash trough" },
-        { "title": "The wire you're guessing on" },
-        { "title": "Why one service level is wrong for most SKUs" },
-        { "title": "Inventory is a bet, and how to price it" },
-        { "title": "How much cash to hold" },
-        { "title": "The cost of reordering two weeks late" }
-      ]
-    },
-    {
-      "slug": "pricing",
-      "status": "planned",
-      "title": "Pricing",
-      "cover": "curve",
-      "summary": "Elasticity, testing a price, and the arithmetic of every discount.",
-      "trailer": null,
-      "lessons": [
-        { "title": "Elasticity in plain English" },
-        { "title": "The price increase you're afraid of is probably free" },
-        { "title": "Discounting: the math of what you gave away" }
+        {
+          "title": "The cash conversion cycle"
+        },
+        {
+          "title": "You don't have a revenue problem. You have a cash trough"
+        },
+        {
+          "title": "The wire you're guessing on"
+        },
+        {
+          "title": "Why one service level is wrong for most SKUs"
+        },
+        {
+          "title": "Inventory is a bet, and how to price it"
+        },
+        {
+          "title": "How much cash to hold"
+        },
+        {
+          "title": "The cost of reordering two weeks late"
+        }
       ]
     },
     {
@@ -89,12 +209,24 @@
       "summary": "Sample size, base rates, survivorship bias, expected value, and Monte Carlo on one real decision.",
       "trailer": null,
       "lessons": [
-        { "title": "Survivorship bias, with numbers" },
-        { "title": "The sample size your test needed" },
-        { "title": "Base rates: the question before a big decision" },
-        { "title": "When your data is just noise" },
-        { "title": "Expected value: a decision you can defend" },
-        { "title": "Monte Carlo, on one real business decision" }
+        {
+          "title": "Survivorship bias, with numbers"
+        },
+        {
+          "title": "The sample size your test needed"
+        },
+        {
+          "title": "Base rates: the question before a big decision"
+        },
+        {
+          "title": "When your data is just noise"
+        },
+        {
+          "title": "Expected value: a decision you can defend"
+        },
+        {
+          "title": "Monte Carlo, on one real business decision"
+        }
       ]
     },
     {
@@ -105,10 +237,18 @@
       "summary": "Contribution margin, payback, and the numbers in a P&L that mislead.",
       "trailer": null,
       "lessons": [
-        { "title": "Contribution margin, not gross margin" },
-        { "title": "Where LTV to CAC misleads" },
-        { "title": "Payback period: the growth metric that can't be faked" },
-        { "title": "Every number in your P&L that lies, ranked" }
+        {
+          "title": "Contribution margin, not gross margin"
+        },
+        {
+          "title": "Where LTV to CAC misleads"
+        },
+        {
+          "title": "Payback period: the growth metric that can't be faked"
+        },
+        {
+          "title": "Every number in your P&L that lies, ranked"
+        }
       ]
     }
   ]
