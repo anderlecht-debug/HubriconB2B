@@ -258,3 +258,80 @@ def test_record_line_is_the_portal_strip_in_one_sentence():
     assert value.record_line({"value_total": 5415.4, "identified_unbanked": 2400, "fees_billed": 0}) == (
         "Your Profit Record: $2,400 found and filed, not yet banked · $0 billed to date.")
     assert value.record_line({}) == "Your Profit Record: $0 found and filed, not yet banked · $0 billed to date."
+
+
+# -- the one figure, wherever a client reads it (2026-10-01) --------------------------------
+
+_ONE = {"id": "c1", "company_name": "Acme", "contact_email": "dana@acme.com", "contact_name": "Dana Reyes",
+        "platform": "amazon", "status": "active", "retainer_started_at": "2026-08-02T00:00:00Z",
+        "monthly_fee_usd": 6000, "free_months": 1}
+
+
+def _one_db():
+    """A client whose closed month says $2,800 after a $200 dispute, while the
+    moves' own measured dollars add up to $1,900: a fourth figure would show."""
+    from fakedb import FakeDB
+    return FakeDB(
+        clients=[dict(_ONE)],
+        model_runs=[{"id": "run1", "client_id": "c1", "status": "succeeded", "started_at": "2026-09-28T11:00:00Z",
+                     "params": {"channel": "amazon"}}],
+        directives=[{"id": "d1", "client_id": "c1", "channel": "amazon", "status": "done", "module": "pricing",
+                     "kind": "price_step", "action_text": "Raise SKU-1 from $19.99 to $21.49.",
+                     "expected_impact_usd": 2500, "measured_impact_usd": 1900,
+                     "measured_at": "2026-09-14T00:00:00Z", "executed_at": "2026-08-10T00:00:00Z",
+                     "created_at": "2026-08-05T00:00:00Z"}],
+        record_months=[{"id": "m0", "client_id": "c1", "channel": "amazon", "month_index": 0,
+                        "month_start": "2026-08-02", "month_end": "2026-09-01", "free": True,
+                        "attributed_usd": 3000.0, "disputed_usd": 200.0, "fee_usd": 6000.0, "moves": []}],
+        recovery_claims=[], invoices=[], price_tests=[], briefings=[], alerts=[],
+        margin_results=[], elasticity_results=[], inventory_sim_results=[], ad_efficiency_results=[],
+        model_outputs=[],
+    )
+
+
+def test_the_report_states_the_one_record_figure_with_its_label(tmp_path):
+    """report.html.j2 used to print the sum of measured_impact_usd as "proven to
+    date": a fourth figure beside the Record's. It prints proven_since_day_one."""
+    from hubricon_engine.report import html_report
+    html = html_report.generate(_one_db(), dict(_ONE), "run1", out_dir=str(tmp_path)).read_text()
+    assert '<b class="good">$2,800</b><span>Proven on your Profit Record since day one</span>' in html
+    assert "proven to date" not in html
+    assert "$1,900" in html                       # the move's own measurement stays on its row
+
+
+def test_the_chart_pack_carries_the_record_figure_and_only_what_was_invoiced():
+    """The portal reads the pack's value slice: the one figure and its label, and
+    billed as value.billed_to_date. Fees on an assumed basis, and the multiple
+    and status made from them, would be a second bill beside the Record's."""
+    from hubricon_engine import chart_pack
+    ledger = {"value_total": 900.0, "measured": 900.0, "fees_paid": 12000.0, "fees_basis": "assumed",
+              "fees_billed": 12000.0, "roi_multiple": 0.08, "status": "at_risk", "identified_unbanked": 300.0}
+    months = [{"attributed_usd": 3000.0, "disputed_usd": 200.0, "month_end": "2026-09-01", "moves": []}]
+    proven = value.proven_from(dict(_ONE), ledger, months, date(2026, 10, 1))
+    sec = chart_pack.value_section(ledger, proven)
+    assert sec["proven"]["usd"] == 2800.0 and sec["proven"]["label"] == value.PROVEN_LABEL
+    assert sec["billed_to_date"] == 0.0                     # nothing invoiced, nothing billed
+    assert not {"fees_paid", "roi_multiple", "status", "fees_billed", "billed_months"} & set(sec)
+    bare = chart_pack.value_section({**ledger, "fees_basis": "invoiced", "fees_billed": 6000.0})
+    assert "proven" not in bare and bare["billed_to_date"] == 6000.0 and bare["value_total"] == 900.0
+    assert chart_pack.value_section(None) is None
+
+
+def test_the_script_and_the_letter_draft_read_the_one_record_figure(monkeypatch, tmp_path, capsys):
+    """`hubricon script` used to hand the builders the moves' summed dollars, so
+    the narration, the letter draft and the narrator's facts named a figure the
+    Record does not."""
+    from types import SimpleNamespace
+    from hubricon_engine import cli, config
+    db = _one_db()
+    monkeypatch.setattr(cli.dbmod, "connect", lambda: db)
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: dict(_ONE))
+    monkeypatch.setattr(cli, "_latest_run", lambda _db, _cid, _run: {"id": "run1", "params": {"channel": "amazon"}})
+    monkeypatch.setattr(config, "REPO_ROOT", tmp_path)
+    cli.cmd_script(SimpleNamespace(client="dana@acme.com", facts=True, no_ai=True))
+    out = capsys.readouterr().out
+    script, facts = out.split("FACTS the narrator may cite")
+    assert "$2,800 proven since day one" in script and "$1,900 measured" not in script
+    assert '"$2,800"' in facts and "proven since day one" in facts
+    memo = next((tmp_path / "reports" / "acme").glob("memo-*.md")).read_text()
+    assert "$2,800 proven since day one" in memo

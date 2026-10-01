@@ -270,13 +270,11 @@ def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
 def _record_line(db, client: dict) -> str | None:
     """The Profit Record footer for the veto email. Never blocks the notice:
     the window only opens for people who were told, so a footer failure must
-    not turn into a missed email."""
+    not turn into a missed email. It carries the same proven-since-day-one
+    figure as every other client email (value.record_footer)."""
     try:
         from . import value
-        from .cli import _fetch_claims, _fetch_invoices   # lazy: cli imports the world
-        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-        return value.record_line(value.compute(client, directives, _fetch_claims(db, client["id"]),
-                                               _fetch_invoices(db, client["id"])))
+        return value.record_footer(db, client)
     except Exception:
         return None
 

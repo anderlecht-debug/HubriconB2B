@@ -637,6 +637,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 data["ppc_search_terms"], resolve_brand_terms(client),
                 value=value_out, health=health, claims=claims, recovery=rec, forecast_rows=forecast_rows,
                 inv_econ=inv_econ, risk=risk_out, anomaly_rows=anomaly_rows, today=today,
+                proven=valuemod.proven_since_day_one(db, client, value_out, today),
             )
             dbmod.chunked_upsert(db, "chart_packs",
                                  [{"run_id": run_id, "client_id": client["id"], "payload": pack}],
@@ -809,7 +810,8 @@ def _refresh_value(db, client: dict, run_id: str) -> dict:
     _save_output(db, run_id, client["id"], "value", v)
     packs = (db.table("chart_packs").select("payload").eq("run_id", run_id).limit(1).execute().data)
     if packs:
-        payload = {**packs[0]["payload"], "value": chart_pack.value_section(v)}
+        payload = {**packs[0]["payload"],
+                   "value": chart_pack.value_section(v, valuemod.proven_since_day_one(db, client, v))}
         dbmod.chunked_upsert(db, "chart_packs",
                              [{"run_id": run_id, "client_id": client["id"], "payload": payload}],
                              on_conflict="run_id")
@@ -1948,6 +1950,10 @@ def cmd_script(args):
     alerts = (db.table("alerts").select("*").eq("client_id", client["id"])
               .order("created_at", desc=True).limit(10).execute().data)
     ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in directives)
+    # The Record's one figure, as the issue itself reads it: the script and the
+    # letter draft never state a second "proven" number.
+    ledger = valuemod.load_ledger(db, client)
+    proven = valuemod.proven_since_day_one(db, client, ledger)
 
     first_name = (client.get("contact_name") or "").split(" ")[0]
     company = client["company_name"] or client["contact_email"]
@@ -1956,10 +1962,12 @@ def cmd_script(args):
         "client_id", client["id"]).execute().count or 0
 
     script = build_script(company, first_name, deltas, directives, alerts, elasticity,
-                          ledger_measured, len(directives))
+                          ledger_measured, len(directives), proven=proven)
     memo = build_memo(company, first_name, deltas, directives, alerts, elasticity,
                       ledger_measured, len(directives), issue_number=issue_count + 1,
-                      channel=_run_channel(client, run))
+                      channel=_run_channel(client, run),
+                      ledger_found=float(ledger.get("identified_unbanked") or 0),
+                      fees_billed=valuemod.billed_to_date(ledger), proven=proven)
 
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
@@ -1978,7 +1986,7 @@ def cmd_script(args):
         issue_number=issue_count + 1, health=outputs.get("health"), value=outputs.get("value"),
         recovery=outputs.get("recovery"), forecast_rows=(outputs.get("forecast") or {}).get("rows"),
         risk=outputs.get("risk"), anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
+        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"), proven=proven,
     )
     if args.facts:
         print("\nFACTS the narrator may cite (every figure the engine computed):")

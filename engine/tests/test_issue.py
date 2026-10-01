@@ -28,6 +28,9 @@ class FakeTable:
         self._filters[("in", col)] = list(vals)
         return self
 
+    def order(self, *_a, **_k):
+        return self
+
     def execute(self):
         rows = [r for r in self.db.rows(self.name) if self._matches(r)]
         if self._patch is not None:
@@ -177,20 +180,19 @@ def test_the_veto_email_carries_the_record_line_and_a_footer_failure_never_block
     sent = []
     monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
     monkeypatch.setattr("hubricon_engine.notify.send_email", lambda to, subject, text, html=None, **k: sent.append(text) or True)
-    monkeypatch.setattr("hubricon_engine.cli._fetch_claims", lambda db, cid: [])
-    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", lambda db, cid: [])
     db = FakeDB([_d(1), _d(2, status="done", executed_at="2026-09-01T00:00:00Z", measured_impact_usd=None)])
     res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True
-    # d2 is made and unmeasured ($200 expected): found, not yet banked. The footer
-    # here is built without the database, so it names no since-day-one figure
-    # rather than a second one (value.record_line); value.record_footer gives it one.
-    assert "Your Profit Record: $200 found and filed, not yet banked · $0 billed to date." in sent[-1]
+    # d2 is made and unmeasured ($200 expected): found, not yet banked. The footer is
+    # value.record_footer, so it names the same since-day-one figure as every other
+    # client email: no record_months row yet, so the measured-so-far basis.
+    assert "Your Profit Record: $0 measured so far" in sent[-1]
+    assert "$200 found and filed, not yet banked · $0 billed to date." in sent[-1]
 
-    def boom(db, cid):
+    def boom(*_a, **_k):
         raise RuntimeError("invoices table missing")
 
-    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", boom)
+    monkeypatch.setattr("hubricon_engine.value.record_footer", boom)
     db = FakeDB([_d(3)])
     res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True and "Your Profit Record:" not in sent[-1]

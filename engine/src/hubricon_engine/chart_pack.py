@@ -209,16 +209,29 @@ def risk_map(inventory_rows: list[dict]) -> list[dict]:
         if r.get("stockout_probability") is not None and r.get("days_of_cover") is not None]
 
 
-def value_section(value: dict | None) -> dict | None:
+def value_section(value: dict | None, proven: dict | None = None) -> dict | None:
+    """The value ledger's slice Hubricon reads, held to the one Record figure.
+
+    A client sees one "proven" number (value.proven_since_day_one): `proven`
+    itself when the caller has it, and `value_total`, the measured-so-far
+    figure the portal falls back to before a month closes. What was billed is
+    value.billed_to_date, invoiced only. The ledger's fees on an 'assumed'
+    basis, and the multiple and status made from them, are not carried: they
+    would be a second bill and a second multiple beside the Record's."""
+    from . import value as valuemod
+
     if not value:
         return None
-    keys = ("value_total", "measured", "measured_count", "recovered", "recovered_count", "fees_paid",
-            "billed_months", "monthly_fee", "roi_multiple", "identified_unbanked", "status", "engagement_start",
-            # The provenance the desk needs to stop telling an uninvoiced client
-            # they are "under three times", plus the audit split behind the total.
-            "fees_basis", "fees_billed", "engagement_start_source",
+    keys = ("value_total", "measured", "measured_count", "recovered", "recovered_count",
+            "monthly_fee", "identified_unbanked", "engagement_start",
+            # the provenance behind the figures, and the audit split behind the total
+            "fees_basis", "engagement_start_source",
             "recovered_unattributed", "measured_by_attribution")
-    return {k: value.get(k) for k in keys}
+    out = {k: value.get(k) for k in keys}
+    out["billed_to_date"] = valuemod.billed_to_date(value)
+    if proven:
+        out["proven"] = {k: proven.get(k) for k in ("usd", "basis", "label", "as_of", "first_close", "disputed_usd")}
+    return out
 
 
 def health_section(health: dict | None) -> dict | None:
@@ -386,9 +399,9 @@ def anomalies_section(anomaly_rows: list[dict] | None) -> dict | None:
 
 def build_pack(margins, fits, inventory_rows, ads_rows, search_terms, brand_terms, *,
                value=None, health=None, claims=None, recovery=None, forecast_rows=None,
-               inv_econ=None, risk=None, anomaly_rows=None, today=None) -> dict:
+               inv_econ=None, risk=None, anomaly_rows=None, today=None, proven=None) -> dict:
     sections = {
-        "value": value_section(value),
+        "value": value_section(value, proven),
         "health": health_section(health),
         "waterfall": waterfall(margins),
         "sku_stacks": sku_stacks(margins),

@@ -55,7 +55,14 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         db.table("directives").select("*").eq("client_id", client["id"])
         .neq("status", "draft").order("created_at", desc=True).execute().data
     )
-    ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in ledger)
+    # The one figure a client sees everywhere (value.proven_since_day_one), with
+    # its own label: never a fourth sum of measured_impact_usd. Unreadable, the
+    # report leaves it out rather than print a different number.
+    try:
+        from .. import value
+        proven = value.proven_since_day_one(db, client)
+    except Exception:
+        proven = None
     price_tests = (
         db.table("price_tests").select("*").eq("client_id", client["id"])
         .order("created_at", desc=True).execute().data
@@ -84,7 +91,7 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         elasticity=elasticity,
         ads=ads,
         ledger=ledger,
-        ledger_measured=ledger_measured,
+        proven=proven,
         price_tests=price_tests,
         chart_stockout=charts.stockout_bars(inventory),
         chart_elasticity=charts.elasticity_scatter(elasticity),

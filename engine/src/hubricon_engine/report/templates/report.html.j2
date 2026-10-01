@@ -86,7 +86,7 @@ footer{ margin-top: 60px; font-size: 11px; color: var(--ink-60); border-top: 1px
     <h2>The Profit Record</h2>
     <p class="small" style="margin-top:2px">Every move we make is written on your Profit Record with the dollars expected, your decision, and the dollars measured on your own later exports — cumulative, since day one.</p>
     <div class="kpis" style="margin:14px 0 4px">
-      <div class="kpi"><b class="good">${{ "{:,.0f}".format(ledger_measured) }}</b><span>proven to date</span></div>
+      {% if proven %}<div class="kpi"><b class="good">${{ "{:,.0f}".format(proven.usd|float) }}</b><span>{{ proven.label }}</span></div>{% endif %}
       <div class="kpi"><b>{{ ledger|length }}</b><span>moves issued</span></div>
       <div class="kpi"><b>{{ ledger|selectattr("status", "in", ["approved", "done"])|list|length }}</b><span>approved or completed</span></div>
     </div>
