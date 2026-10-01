@@ -74,6 +74,9 @@ export function figures(rc, mc, cs) {
   };
   return {
     blocks,
+    // The charts' own inputs, so a film can draw the same charts at its own size
+    // (content/film/scenes.mjs) instead of scaling the page's.
+    charts: { stairs, aging, mc },
     fill: {
       years: n(cs.simulation.years),
       months_total: n(cs.simulation.months),
