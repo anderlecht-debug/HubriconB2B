@@ -274,9 +274,11 @@ From 2026-09-25 to 2026-09-30 the site ran on Night `#050A1F`, Signal amber `#FF
 receipt paper, Anton and IBM Plex Mono, with the stamp, the seal, the receipt and the
 low-key still life as its icons. The spec retired it for the funnel ("the Rockefeller
 reading a ledger feeling"). The old home page and /apply are in `archive/`; the full
-description is in this file's git history (`git show ea46b1b:BRAND.md`). /manifesto,
-/method, /portal, /results and /intake still wear it until they are rebuilt on the tokens,
-which is why the asset inventory below is kept.
+description is in this file's git history (`git show ea46b1b:BRAND.md`). Every served
+page is on the tokens now (/manifesto was the last, rebuilt 2026-10-01; /method and /results
+redirect). The assets below are kept for the archive and the content pipeline, and since
+2026-10-01 they are not deployed (`.vercelignore`: `brand`, and `hagen.jpg`, because the
+founder is off camera).
 
 ## The asset inventory
 

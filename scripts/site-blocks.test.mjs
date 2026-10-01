@@ -14,7 +14,7 @@ const read = (p) => readFileSync(new URL(p, root), "utf8");
 const json = (p) => JSON.parse(read(p));
 const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 const lib = json("data/library.json");
-const PUBLIC = ["index.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "verify.html", "manifesto.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/fee-staircase-card.html", "learn/price-curve-card.html", "learn/capital-and-cash.html", "learn/capital-and-cash-card.html"];
+const PUBLIC = ["index.html", "case-study.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "verify.html", "manifesto.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/fee-staircase-card.html", "learn/price-curve-card.html", "learn/capital-and-cash.html", "learn/capital-and-cash-card.html"];
 
 test("every public page carries the one nav and the one footer, and the script that runs them", () => {
   const blocks = siteBlocks();
@@ -69,6 +69,10 @@ test("an empty video slot says, in the future tense, what will play there; a ful
     assert.doesNotMatch(blocks["film-case"], /<video|play-button|▶/, "nothing pretends to play");
   }
   for (const c of lib.courses.filter((x) => x.status === "live")) {
+    const trailer = blocks[`trailer-${c.slug}`];
+    if (c.trailer && c.trailer.src) assert.match(trailer, /<video/);
+    else assert.match(trailer, /will play here/, `${c.slug}: an empty trailer slot says what will play there`);
+    assert.match(read(`${c.path.slice(1)}.html`), new RegExp(`<!-- build:trailer-${c.slug} -->`), `${c.slug}: the trailer slot sits on the cover`);
     for (const l of c.lessons) {
       const slot = blocks[`video-${l.id}`];
       if (l.video) assert.match(slot, /<video/);

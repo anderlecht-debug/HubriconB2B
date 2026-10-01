@@ -306,8 +306,8 @@ booking step), both on the design system in `/assets/hubricon.css` since 2026-09
 each month's real invoice state, named and sealed leaks, a heartbeat, one-click permission
 withdrawal and a one-page print, since 2026-10-01), `intake.html` (secure upload, remembers
 every file), `welcome.html`, `terms.html`, `privacy.html`, `call.html` and `verify.html`
-(anyone checks a Record export in the browser), all on the same design system;
-`manifesto.html` (the argument at length) is not yet on it. The home page's
+(anyone checks a Record export in the browser), and `manifesto.html` (the argument at
+length, rebuilt 2026-10-01), all on the same design system. The home page's
 figures and charts are baked in from `data/` by `scripts/build-pages.mjs`; never type a
 number into it. Superseded pages are in `archive/`, not deployed. Serverless routes in
 `api/` for intake, consent, teardown and the Stripe webhook.

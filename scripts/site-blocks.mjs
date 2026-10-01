@@ -37,7 +37,7 @@ const TRUST = [
   ["Your data", "/your-data", "What we ask for, where it lives, and how you take it back."],
 ];
 const WRITING = [["The terms", "/terms"], ["Privacy", "/privacy"], ["The guarantee", "/#offer"]];
-const PROOF = [["The case study", "/#case-study"], ["The results wall", "/#results"], ["Check a Profit Record", "/verify"]];
+const PROOF = [["The case study", "/case-study"], ["The results wall", "/#results"], ["Check a Profit Record", "/verify"]];
 
 // ------------------------------------------------------------------ the nav ----
 /* The motion switch, first thing in the body: .motion only when scripts run and the
@@ -213,6 +213,18 @@ function lessonVideos(lib) {
         ? `\n<div class="lesson-video">${video(l.video, `${c.title}: ${l.title}`, `lesson:${l.id}`)}</div>\n`
         : `\n<p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>\n`;
     }
+  }
+  return out;
+}
+
+/* Each live course's trailer slot, on its cover: the trailer when it exists, until then a line
+   that says what will play there (the spec's amendment: "every course and lesson has a slot"). */
+function courseTrailers(lib) {
+  const out = {};
+  for (const c of lib.courses.filter((x) => x.status === "live")) {
+    out[`trailer-${c.slug}`] = c.trailer && c.trailer.src
+      ? `\n<div class="lesson-video">${video(c.trailer, `${c.title}: trailer`, `trailer:${c.slug}`)}</div>\n`
+      : `\n<p class="lesson-video-waiting"><span class="label">Trailer</span><span>A two-minute trailer of the whole course will play here.</span></p>\n`;
   }
   return out;
 }
@@ -413,6 +425,7 @@ export function siteBlocks() {
     "library-hub": library(lib, { hub: true }),
     "film-case": filmCase(lib),
     ...lessonVideos(lib),
+    ...courseTrailers(lib),
     ...optins(lib),
     wall: wall(json("data/testimonials.json").testimonials),
     board: board(json("data/scoreboard-illustration.json")),

@@ -43,7 +43,7 @@ test("one action: every button says the same thing and goes to the same place", 
   }
   for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|manifesto|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
+  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|manifesto|case-study|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
   // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
   // education tab"); none of them is a button, and none of them sells anything but the call.
   const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];
@@ -85,6 +85,21 @@ test("the only other control is the course's optional email, and it looks like t
   assert.match(js, /email, course: form\.dataset\.join, website: form\.website\.value, source:/, "it sends what the course page sends, nothing more");
   assert.doesNotMatch(js, /location\.href\s*=/, "the reader stays where they are");
   assert.match(js, /body\.emailed\)/, "it says an email was sent only when the server says it was");
+});
+
+test("the case study has its own page, the home page's own sections; the sitemap and robots name the public site", () => {
+  const home = read("index.html"), page = read("case-study.html");
+  for (const id of ["staircase", "case-study"]) {
+    const sec = (h) => h.match(new RegExp(`<section class="section" id="${id}">[\\s\\S]*?\\n</section>`))[0];
+    assert.equal(sec(page), sec(home), `/case-study's #${id} is the home page's, as built`);
+  }
+  const map = read("sitemap.xml");
+  for (const p of ["/", "/case-study", "/learn", "/learn/capital-and-cash", "/verify", "/manifesto"]) assert.ok(map.includes(`<loc>https://www.hubricon.com${p}</loc>`), `sitemap: ${p}`);
+  for (const p of ["/portal", "/apply", "/call", "/intake", "/welcome"]) assert.ok(!map.includes(`hubricon.com${p}<`), `sitemap leaves out ${p}`);
+  const robots = read("robots.txt");
+  assert.match(robots, /Sitemap: https:\/\/www\.hubricon\.com\/sitemap\.xml/);
+  assert.match(robots, /Disallow: \/portal/);
+  assert.match(read(".vercelignore"), /^hagen\.jpg$/m, "the founder is off camera");
 });
 
 test("every chart a reader studies can be scrubbed, and asking for less motion gets a dissolve, not nothing", () => {

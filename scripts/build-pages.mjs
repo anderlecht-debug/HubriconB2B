@@ -78,6 +78,8 @@ export function figures(rc, mc, cs) {
     ...cc.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
+    // /case-study: the home page's sections as they stand (the build loop refreshes it after index.html)
+    "case-study-page": caseStudySections(read("index.html")),
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
     // The hero's: wide, wordless, behind the headline (HUBRICON_SPEC.md: "muted behind or beside it").
     "mc-mood-hero": monteCarloSVG(mc, { id: "mc-mood-h", w: 1000, h: 560, m: { t: 12, r: 12, b: 12, l: 12 }, variant: "mood" }),
@@ -471,6 +473,7 @@ export const PAGES = [
   { file: "privacy.html" },
   { file: "your-data.html" },
   { file: "verify.html" },
+  { file: "case-study.html" },
   { file: "manifesto.html" },
   { file: "portal.html" },
   { file: "learn/index.html" },
@@ -482,13 +485,34 @@ export const PAGES = [
   { file: "learn/capital-and-cash-card.html" },
 ];
 
+/** The home page's staircase and case study, whole, for /case-study. */
+export function caseStudySections(home) {
+  const take = (id) => {
+    const m = home.match(new RegExp(`<section class="section" id="${id}">[\\s\\S]*?\\n</section>`));
+    if (!m) throw new Error(`index.html has no #${id} section for /case-study`);
+    return m[0];
+  };
+  return `\n${take("staircase")}\n\n${take("case-study")}\n`;
+}
+
+/** The sitemap: every public page the build knows, by its clean URL. The client's own pages and the noindex ones stay out. */
+export function sitemap(pages = PAGES) {
+  const url = (f) => `https://www.hubricon.com/${f.replace(/(^|\/)index\.html$/, "").replace(/\.html$/, "").replace(/\/$/, "")}`;
+  const urls = pages.map((p) => p.file).filter((f) => f !== "portal.html" && !/<meta name="robots" content="noindex">/.test(read(f)))
+    .map((f) => `  <url><loc>${url(f)}</loc></url>`);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
   const check = process.argv.includes("--check");
+  writeFileSync(new URL("sitemap.xml", root), sitemap());
   let stale = 0;
   for (const page of PAGES) {
     const before = read(page.file);
     const after = build(before, built, { requireAllFills: page.requireAllFills, name: page.file });
+    // /case-study carries the home page's own staircase and case-study sections, as just built
+    if (page.file === "index.html") built.blocks["case-study-page"] = caseStudySections(after);
     const words = page.file === "index.html" ? ` · ${visibleWords(after)} visible words` : "";
     if (check) {
       if (before !== after) { stale++; console.error(`${page.file} is out of date: run node scripts/build-pages.mjs`); }
