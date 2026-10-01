@@ -113,12 +113,33 @@ What the product is at each star, for a founder at $5M a year.
 | 3 | A good PPC agency. Better ROAS on ads alone, still paid on spend. | the market |
 | 4 | A fractional CFO. A monthly P&L; nothing per SKU, nothing executed. | the market |
 | 5 | Five money decisions made in your account, each called in writing before it goes live, measured on your exports, each month billed only if its own Record clears the fee (per month since 2026-09-30; it was: no invoice until the Record covers it). | **live in code** |
-| 6 | The engine keeps score of itself, and you can see it: promised against measured for every move (live in the portal), plus a published hit rate, the share of calls whose measured outcome landed inside the promised band. | half live; the hit rate is next |
-| 7 | Every call sealed: tamper-evident, time-witnessed pre-registration a buyer or lender can verify without trusting us. | **live 2026-09-25** (`seal.py`, `scripts/verify-record.mjs`; migration applied, first seals with the first real client's first move) |
+| 6 | The engine keeps score of itself, and you can see it: promised against measured for every move (live in the portal), plus a published hit rate, the share of calls whose measured outcome landed inside the promised band. | half live; the hit rate is next. Since 2026-10-01 the portal names each leak in the client's own SKU names, groups it sealed and holding, called or missed, and every client surface shows one proven figure |
+| 7 | Every call sealed: tamper-evident, time-witnessed pre-registration a buyer or lender can verify without trusting us. | **live 2026-09-25** (`seal.py`, `scripts/verify-record.mjs`; migration applied, first seals with the first real client's first move). Visible since 2026-10-01: each seal in the portal, the head on its print, and hubricon.com/verify in any browser. Still no external anchor |
 | 8 | The first move is as good as the hundredth: a platform change caught in one consenting account is flagged in all; day-one promises priced from what every consenting brand's moves actually delivered. | **detector live 2026-09-25**, inert until three clients consent; priors after the bench |
-| 9 | The Record is an asset. A diligence-grade export that raises what the brand is worth to a buyer or a lender. | later |
+| 9 | The Record is an asset. A diligence-grade export that raises what the brand is worth to a buyer or a lender. | first step 2026-10-01: a one-page print of the Record carrying its full head, checkable at /verify against the export the machine sends as a seven-day link; the diligence-grade pack is later |
 | 10 | The engine runs the P&L to targets you set and you approve by exception; each quarter shows the counterfactual, your brand without the moves. | later |
 | 11 | The Record is the standard. Buyers, lenders and platforms ask for it the way a lender asks for a credit score, and a brand without one is priced at a discount. Hubricon is to decision quality what a rating agency is to credit. | the ambition |
+
+### The 11-star journey (2026-10-01)
+
+The ladder above rates what the product is. This one rates what the customer lives through,
+end to end, and every rung is a gain that costs us nothing at the margin: software, data
+already held, never founder hours per client. `OPERATIONS.md`, "The journey, stage by stage",
+says how each runs.
+
+| ★ | The customer gets | How |
+|---|---|---|
+| 1 | Reachable: a call booked in two minutes | `/apply`, Calendly |
+| 2 | True: nothing on any surface that isn't, and one proven figure everywhere | `value.proven_since_day_one`; prospect replies rewritten; single-purpose links |
+| 3 | Respected: emailed only for the stage they are in; a no means silence | `lifecycle.py`, `hubricon declined` |
+| 4 | Prepared: always knows what happens next, and when | the prep panel and call prep; the agreed letter's dates; the upload page's status line |
+| 5 | The job done: five decisions, each called before it goes live, each month billed only if it clears | live in code since 2026-09-30 |
+| 6 | An instrument that remembers: every file's state, every leak named the way they name it | `/intake` checklist; the portal's grouped, named leaks |
+| 7 | A heartbeat and a seal: the system is visibly watching, every Monday, and every move is sealed | the weekly note (approved by Hagen), the portal's last/next check, seals shown |
+| 8 | Told something they didn't ask | the call reading to keep; the forward line once a month closes; the freshest warning under the number |
+| 9 | Theirs: their names, their permissions, their data out in one link | SKU names, one-click withdrawal, the export as a seven-day link |
+| 10 | The scary moment caught early, and leaving never means going blind | the aged-inventory early warning; the exit letter's "what to keep watching" |
+| 11 | Made to look smart in front of someone else | the one-page Record print, checkable by anyone at /verify |
 
 ### The next three builds, in order
 

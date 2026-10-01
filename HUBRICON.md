@@ -58,9 +58,11 @@ Hubricon, not the client. The floor arithmetic as it stood: on the page's own in
 recoverable) a $2M brand has roughly $3,600 a month to find and a $3M brand roughly
 $5,400, so below $3M every invoice voids and the service runs unpaid. Since
 2026-09-18 the site's application books every brand that answers its four
-questions; one under $3M or on someone else's label arrives tagged `fit:below` in
-the booking's `utm_content`, and Hagen settles it on the call; nothing in the engine
-reads that tag, and the hourly operator provisions every non-test booking. The
+questions; one under $1M or on someone else's label arrives tagged `fit:q2` in
+the booking's `utm_content` (`fit:a7` in the band), and Hagen settles it on the call;
+nothing in the engine reads that tag. The operator provisions every non-test booking
+and sends the call prep; nothing that belongs to a client follows until the yes
+(`lifecycle.py`, since 2026-10-01). The
 below-the-bar screen (Teardown, Recovery Only request, position list) is gone from
 the site. Recovery Only is offered by Hagen, by email, after the call; `api/gate.js` still
 accepts that request, but nothing on the site posts to it.
@@ -141,9 +143,12 @@ own Seller Central or Shopify exports and graded by **how we know**:
 Four guards are written in `measurement.py`'s docstring. Three are enforced in
 code: the cap (centrally, in `_verdict`), the materiality floor (centrally, after
 every family runs) and one dollar, one move (`_dedupe_overlapping`). **Persistence is
-not enforced yet** (found 2026-09-30): no family re-reads the latest export or emits
-`reverted`, so the site does not claim it. The monthly re-measurement planned for the
-per-month guarantee is what will enforce it.
+enforced month by month** (since 2026-09-30): `monthly.py` re-measures every made move on
+each closed month's exports alone, so a leak that stopped holding earns nothing that month,
+and that is the figure every invoice is judged on and every client surface calls "proven"
+(`value.proven_since_day_one`, since 2026-10-01). The measurement families themselves still
+do not re-read the latest export or emit `reverted`, so the "measured so far" figure shown
+before a client's first month closes carries no persistence and says so in its label.
 
 1. **Capped at the promise.** An isolated or attributable result is banked at the
    expected figure; any excess is recorded and named, never totalled. (Direct is
@@ -259,14 +264,17 @@ monthly fee, 25% of reimbursements Amazon actually pays on claims Hubricon filed
 
 | When | What happens | Their time |
 |---|---|---|
-| Day 0 | Four-question application, then book the 20-minute call on the spot | 2 + 20 min |
-| Day 0 | Grant one seat, or send ~15 min of exports, plus a one-row-per-SKU cost sheet | 2–20 min |
-| Once the files land | **First full read** (Profit Brief No. 001): every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Written report plus a recorded walkthrough. Baseline recorded before anything is touched. 24 hours is our internal target, not a promise. | — |
+| Day 0 | Four-question application, then book the 20-minute call on the spot; a prep panel says what to request in Seller Central first, and the call prep email repeats it | 2 + 20 min |
+| The call | Their own reports opened and priced in their browser, nothing uploaded; they can print the reading to keep | 20 min |
+| The yes | `hubricon retainer`: the agreed letter with the Proving Month's first and last day and what happens next, dated. A no (`hubricon declined`) means nothing more is sent unasked | — |
+| Files | ~15 min of exports on the upload page, which remembers each file (Received / Read / Needs a fix) and shows their status line; one seat for the moves | 2–20 min |
+| Once the core files land (or a day after the last one) | **First full read** (Profit Brief No. 001): every SKU's true net margin, stockout odds, demand curves, ad break-even, dated claims. Baseline recorded before anything is touched. For a client who said yes, the first moves go out with it | — |
 | Kickoff | 90-day plan presented: quarterly targets and the three or four moves that get there. Standing mandate agreed. | 45 min |
-| Every cycle | One email three days **before** anything moves, listing each planned move with its expected dollars. Reply no to any of them. | 5–10 min |
-| Every 2 weeks | **Profit Brief**: a short video plus a written letter — what was found, what moved, what it earned, and the running record | — |
-| Weekly | Sweep: re-ingest, re-run models, re-measure the record, raise alerts | — |
-| Day 30 | The record decides. Below $6,000 proven and found, no invoice exists. | — |
+| Every cycle | One email **before** anything moves, listing each planned move with its expected dollars and its seal. Inside the mandate it goes live after 72 hours unless they say no | 5–10 min |
+| Weekly | A short note: what was found, what is sealed and holding, what is being watched, approved by Hagen before it is sent | 2 min |
+| Every 2 weeks | **Profit Brief**: a short video plus a written letter, approved before it is sent | — |
+| Each month | The month closes on its own exports: above $6,000 measured, that month is invoiced; at or below, it is free. Found-but-unmeasured dollars do not count | — |
+| Leaving | One email. The exit letter always goes: the true-up, a seven-day link to the full export, and what to keep watching | — |
 
 Total client time: about ninety minutes in month one, then five to ten minutes
 every two weeks.
@@ -294,9 +302,12 @@ tables are service-role only; the client portal reads through RPCs.
 
 **Client-facing** — static pages on Vercel: `index.html` (landing) and `apply.html` (the
 booking step), both on the design system in `/assets/hubricon.css` since 2026-09-30;
-`manifesto.html` (the argument at length), `portal.html` (the client's own sign-in, called
-simply *Hubricon*), `welcome.html`, `terms.html`, `privacy.html`, `results.html`,
-`intake.html` (secure upload), still in the night system until rebuilt. The home page's
+`portal.html` (the client's own sign-in, called simply *Hubricon*: one proven number,
+each month's real invoice state, named and sealed leaks, a heartbeat, one-click permission
+withdrawal and a one-page print, since 2026-10-01), `intake.html` (secure upload, remembers
+every file), `welcome.html`, `terms.html`, `privacy.html`, `call.html` and `verify.html`
+(anyone checks a Record export in the browser), all on the same design system;
+`manifesto.html` (the argument at length) is not yet on it. The home page's
 figures and charts are baked in from `data/` by `scripts/build-pages.mjs`; never type a
 number into it. Superseded pages are in `archive/`, not deployed. Serverless routes in
 `api/` for intake, consent, teardown and the Stripe webhook.
@@ -374,7 +385,7 @@ built on not overstating.
 
 **True and verifiable in code:** the measurement grading and its four guards; the
 void gate; the veto that cannot open on an unsent email; claims counted only when
-Amazon actually pays; the 24-hour Teardown clock; the free export; the daily Buy
+Amazon actually pays; Issue 001 publishing when the core files are in, or a day after the last upload; the free export, fulfilled by the machine as a seven-day link once migration 20261001000005 is applied; the daily Buy
 Box check; Amazon's 2026 peak fee card, verified against Amazon's own announcement.
 
 **The Seal, live since 2026-09-25** (`seal.py`; migration
@@ -415,7 +426,7 @@ on 2026-09-30 (`engine/scripts/silence_rate.py`). The "roughly half" in COLD_ENG
 was an expectation; the site prints the measured figure.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero
-published results**. `results.html` reads zero honestly and says so. No testimonial,
+published results**. `/results` redirects to `/honesty`, and the home page's results wall reads zero honestly and says so. No testimonial,
 logo, client count or dollar result may appear until a real one exists. Industry
 statistics on the site are labelled as arithmetic from named, interested sources,
 because research found no independent study behind any of them — and one claim

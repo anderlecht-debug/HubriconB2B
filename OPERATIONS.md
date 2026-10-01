@@ -8,12 +8,15 @@ Internal names: issue = Profit Brief (client-facing), directive = move, ledger/v
 ## The loop
 
 ```
-Instantly campaign ──► reply ──► triage ──► TEARDOWN? ──► client + upload page
-      ▲                                   └► interested ──► Calendly ──► booking ──► client + welcome
-      │                                   └► question ──► answered from the fact sheet
-   lead lists + SuperSearch                                     │
-                                                                ▼
+content · the site ──► /apply ──► Calendly ──► booking ──► client (booked) + call prep email
+cold replies (paused) ──► triage ──► the call and the free course; a TEARDOWN reply provisions nothing
+                                                                │
+                                         the call ──► `hubricon retainer` (yes: agreed letter) · `hubricon declined` (no: silence)
+                                                                │
                                            uploads ──► models ──► Profit Brief No. 001 in Hubricon ──► "it's ready" email
+                                                                │                (moves go with it, for a client who said yes)
+                                                                ▼
+                                   Monday: weekly note drafted ──► `hubricon approve` ──► sent · month close ──► invoice or void
                                                                 │
                                                                 ▼
                                                  Stripe (paid) ──► renewed past the free month = PMF signal
@@ -23,7 +26,7 @@ Three components, each doing only what it is placed to do:
 
 | Component | Where it runs | Sees | Does |
 |---|---|---|---|
-| `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign, enrollment, reply sync + rule/Claude triage, sending replies, provisioning bookings and TEARDOWN requests, nudges, teardown runs, the daily digest |
+| `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign (held paused unless `HUBRICON_COLD=on`), reply sync + rule/Claude triage, sending replies, provisioning bookings (the call prep), Recovery Only requests, nudges after the call, first reads, billing gates, exports, exit letters, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
 | `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients, once per channel a client sells on |
 | `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
@@ -32,6 +35,110 @@ Three components, each doing only what it is placed to do:
 The routine never sends email. The operator never reads the inbox. Both talk
 through Supabase (`bookings`, `prospect_messages`, `funnel_events`,
 `operator_state`).
+
+## The journey, stage by stage (since 2026-10-01)
+
+Hagen's brief that day: at every rung from 1 to 11, find what the customer gets that costs us
+nothing at the margin, and build the machine behind it. The audit behind it found the machine had
+no idea whether anyone had said yes: every booking became a client, got "You're in" before the
+call, nudges off the booking date, and could get move notices the mandate approves after 72 hours.
+
+**The stages** (`engine/src/hubricon_engine/lifecycle.py`, read from rows that already exist):
+`booked` (call ahead) · `called` (call passed, no answer recorded) · `agreed` (`retainer_started_at`
+set) · `declined` · `churned`. Every automated client email asks `lifecycle.may_send(stage, kind)`.
+
+| Stage | What the machine may send, unasked | What the founder does |
+|---|---|---|
+| booked | the call prep (what the call is, what to request in Seller Central first, the upload link as an option); the first read if they sent files | take the call |
+| called | the first read; the upload link again 3 and 7 days after the call; Recovery Only 14 days after it (Amazon, once) | `hubricon retainer <client>` on a yes · `hubricon declined <client>` on a no |
+| agreed | the agreed letter (the Proving Month's first and last day as `monthly.billing_months` counts them, what happens next, dated); the first read with its moves; move notices; the weekly note and Briefs, once approved | `hubricon approve all --show` after the digest |
+| declined / churned | nothing; the exit letter and billing letters follow money, not a stage | — |
+
+**What runs where.**
+- *Booking.* The call prep is retried on later passes until it goes. A second booking from an
+  address that is already a client (a reschedule) is linked, and nothing is re-sent.
+- *Uploads.* `/intake` remembers every file (Received / Read / Needs a fix, with what to fix in
+  plain words, `lib/intake.js`) and shows the client's own status line: call, files, first read,
+  Proving Month dates and first move notices, only dates the code schedules. An upload wakes the
+  operator (`workflow_dispatch`) when `GITHUB_DISPATCH_TOKEN` and `GITHUB_DISPATCH_REPO` are set on
+  Vercel; the daily digest goes only from the scheduled 13:17 UTC run.
+- *The first read* (Issue 001) publishes when the core files are in (Amazon: business report and
+  SKU economics; Shopify: orders and products) or a day after the last upload, and names what is
+  missing. For a client who said yes, its moves go out in the same pass.
+- *Monday.* The sweep drafts a weekly note per agreed client: found, sealed and holding, watching
+  (quiet weeks included). From Brief No. 002 the daily issue job drafts and never sends. Nothing
+  reaches a client until `hubricon approve` (drafts over ten days old, or whose Record figure has
+  moved, are refused unless `--stale`). The digest lists what is waiting.
+- *One figure.* Every client surface that says "proven" uses `value.proven_since_day_one`: the
+  sum of `record_months` after disputes, or before the first month closes "Measured so far". Billing
+  letters carry no cumulative footer.
+- *The portal* shows the same figure, each month's real invoice state, leaks named in the client's
+  own SKU names and grouped (sealed and holding, called, missed), each move's seal, the Record head,
+  a heartbeat (last checked, next check), one quiet line for the freshest warning, a straight-line
+  forward line after a month closes (labelled not a forecast), one-click permission withdrawal, and
+  a one-page print whose footer carries the full Record head for /verify.
+- *Watching.* `alerts.py` flags stock in the 91–180-day bucket that its own sell-through will not
+  clear before day 181, with the surcharge that would start (an estimate from the bucket midpoint).
+- *Export.* An `access` request is fulfilled by the operator: the zip (`cli.build_export`, now
+  with `record_months`, `record_seals` and HOW-TO-VERIFY.txt) is stored at
+  `exports/<client>/<request>.zip` and a seven-day signed link goes to the contact email only. If
+  storage or email fails, the digest says `Run: hubricon export <client>`.
+- *Leaving.* `hubricon cancel [--emailed YYYY-MM-DD]` ends the subscription, marks the client
+  churned and opens an exit clock (`data_requests` kind 'exit', seven days); the next pass trues up
+  and sends the exit letter once, billed or not, with the export link and "what to keep watching"
+  (each leak still held shut in the last closed month, worded as a condition). The digest and
+  `hubricon promises` show each refund owed, OVERDUE past seven days.
+- *Links.* An upload link opens only `/intake` and a consent link only `/say` (`lib/token.js`);
+  rotating upload links spares consent links.
+- *Proof anyone can check.* `/verify` checks a Record export in the browser with the same core as
+  `scripts/verify-record.mjs` (test-enforced, byte for byte), shows the published head, and finds a
+  pasted head or seal in a verified export. It says what the Seal cannot prove yet.
+- *Prospects.* `triage.py`'s fact sheet offers only the call and the free course; a TEARDOWN reply
+  is answered with both and provisions nothing.
+
+**Waiting on the founder's go** (none is applied or set; each degrades safely without it):
+
+| Item | What it switches on |
+|---|---|
+| migration `20261001000003_journey_lifecycle.sql` | `declined`, the call-prep and agreed touches (until then the agreed letter waits and `declined` refuses) |
+| migration `20261001000004_notes_approved.sql` | the weekly note and the approval gate on Briefs (until then Briefs send as before and the digest warns APPROVAL GATE OFF) |
+| migration `20261001000005_exit_and_export.sql` | the exit clock and the private `exports` bucket (if the role cannot create it, make a private bucket `exports` in the dashboard) |
+| migration `20261001000006_portal_consents.sql` | the portal's call date and one-click withdrawal |
+| migration `20261001000007_token_purpose.sql` | single-purpose links (privacy §5 is true from here) |
+| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` in GitHub, then `npm run stripe:setup` | billing, refunds and the exit true-up (the operator prints PROMISE NOT KEPT until then) |
+| `RESEND_API_KEY` on Vercel | the /learn welcome email (the operator's emails run in GitHub, which has the key) |
+| `GITHUB_DISPATCH_TOKEN`, `GITHUB_DISPATCH_REPO` on Vercel | uploads wake the operator |
+| Calendly: the confirmation and 24-hour reminder text (below); name the kickoff event with "kickoff" | prep before the call; `lifecycle.call_at` never mistakes a kickoff for the call |
+| Supabase → Auth → Email Templates: paste `supabase/templates/magic-link.html` | the sign-in email on the design system |
+| the inbox routine's prompt: read `fit:q2` as below the band, `fit:a7` as in it | the fit tag survives the new codes |
+
+**Calendly's confirmation email** (subject `Your call with Hubricon, [Event Date] at [Event Time]`):
+
+> Hi [Invitee First Name],
+> Your call is booked: [Event Date], [Event Time] ([Time Zone]), twenty minutes, at [Location].
+> We open your own reports together and price, in your browser, what public pages can't show. If
+> the arithmetic won't clear our bill at your size, we say so on the call. No card, no contract to
+> sign on it.
+> **If you sell on Amazon:** 1. Request Fee Preview and Inventory Age in Seller Central today
+> (Reports, Fulfillment, Fee Preview; Reports, Fulfillment, Manage Inventory Health). Amazon builds
+> both on request, which can take a while. Download each as .txt or .csv. 2. Have your Sponsored
+> Products campaign or search-term report, by day, as .csv. 3. Know your landed cost as a % of price
+> and the ACoS you aim for; a CSV with a sku and a landed cost works too.
+> **If you sell on Shopify:** 1. Be signed in to Shopify admin on the computer you take the call
+> from, able to export Products (Products, Export, All products, CSV). 2. Know your landed cost as a
+> % of price.
+> Nothing is uploaded on the call; it is priced in your browser.
+> Another time: [Reschedule Link] · [Cancel Link]
+> Hagen, Hubricon
+
+**The 24-hour reminder** (subject `Tomorrow: your Hubricon call at [Event Time]`):
+
+> Hi [Invitee First Name], your call is tomorrow, [Event Date] at [Event Time], twenty minutes:
+> [Location]. Amazon: if you haven't yet, request Fee Preview and Inventory Age in Seller Central
+> now, so they have time to build, and have your campaign or search-term report, landed cost % and
+> target ACoS to hand. Shopify: be signed in to Shopify admin where you take the call, able to export
+> Products, and know your landed cost %. Nothing is uploaded on the call; it is priced in your
+> browser. Need another time? [Reschedule Link]
 
 ## The one-time setup (five minutes, once)
 
@@ -909,8 +1016,12 @@ receipt a person can read, not a proof; the full leaf is in the export. **The
 next step is an external timestamp anchor**: stamp the global head with
 OpenTimestamps on each sweep, or have the Wayback Machine capture a GET
 endpoint serving `public_record_seal()`, and keep the proofs beside the head's
-sequence number. No network call is made for it today. Neither Hubricon (the
-portal) nor the public site shows seals or the head yet.
+sequence number. No network call is made for it today. Since 2026-10-01 the
+portal shows each move's seal ("Called {date} · seal {12}") and the Record head,
+its one-page print carries the full head, and hubricon.com/verify checks a Record
+export in any browser with the same core as `scripts/verify-record.mjs`
+(test-enforced, byte for byte), shows the published head from
+`public_record_seal()`, and finds a pasted head or seal in a verified export.
 
 ## The loop past paid: proof, the ask, the month, and what it teaches the cold engine
 
@@ -1093,13 +1204,13 @@ cards, same ask.
 **Where it sits in the funnel:**
 
 ```
-cold email / teardown page ─► TEARDOWN reply or booking ─► welcome + upload page
+booking ─► call prep (upload link optional) ─► the call
         │                                │
-        │                     day 3 nudge · day 7 files             (unchanged)
+        │                     after the call: day 3 nudge · day 7 files   (never before the call, never after a no)
         │                                │
-        │                     day 14, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
+        │                     14 days after the call, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
         │
-   site gate: under $3M or not own brand ─► books anyway, tagged fit:below ─► call ─► Amazon: Hagen offers Recovery Only by hand (or the day-14 DOWNSELL) ─► reply ─► `hubricon downsell`
+   site gate: under $1M or not own brand ─► books anyway, tagged fit:q2 ─► call ─► Amazon: Hagen offers Recovery Only by hand (or the day-14 DOWNSELL) ─► reply ─► `hubricon downsell`
                                          │
    exports land ─► Issue 001 ─► day-30 gate ─┬─ clears ─► retainer ─► rolling gate on every invoice
                                              └─ short  ─► the letter names the smaller door ─► reply RECOVERY
@@ -1118,9 +1229,11 @@ uv run hubricon downsell <client> --retainer     # back onto the flat fee
 ```
 
 The site does not show the downsell anywhere. Since 2026-09-18 the application
-books every brand that answers its four questions; an Amazon seller under $3M or
-on someone else's brand arrives on the calendar tagged `fit:below` in the
-booking's `utm_content`, and Hagen offers Recovery Only by hand after the call.
+books every brand that answers its four questions; an Amazon seller under $1M or
+on someone else's brand arrives on the calendar tagged `fit:q2` in the
+booking's `utm_content` (`fit:a7` = in the band; codes since 2026-10-01, so a
+prospect never reads a verdict in a URL), and Hagen offers Recovery Only by hand
+after the call.
 
 ## Stripe, end to end (2026-09-25)
 
@@ -1501,7 +1614,7 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
   re-contacts them automatically yet.
 - Nobody is turned away before the founder has talked to them. The site's
   application never declines; every non-test booking is provisioned and
-  welcomed. The routine's fit flag (`bookings.qualified` / `dq_reason`) is
+  sent the call prep (since 2026-10-01; until then it was sent "You're in"). The routine's fit flag (`bookings.qualified` / `dq_reason`) is
   informational and shows up in the digest as "sell on this call".
 
 ## The 60-second Teardown (`/teardown`)
@@ -1565,7 +1678,10 @@ aggregates only, from 30 listings up; `POST` records a run in `tool_runs`
 and creates (or advances) a `prospects` row at `wants_teardown`, source
 `tool`. That is the whole deep follow-up: the hourly operator already
 provisions every `wants_teardown` prospect and emails the private upload
-page, so a tool lead gets the full Teardown path with no new job.
+page, so a tool lead gets the full Teardown path with no new job. (Until
+2026-10-01. The Teardown is retired: a `wants_teardown` prospect is now moved
+to `interested`, answered with the call and the free course, and nothing is
+provisioned.)
 
 The result is reproducible from its URL — the inputs ride in the hash — so
 "copy a link" and "send me this" both work without storing anything a
