@@ -102,21 +102,31 @@ main.wrap { padding-bottom: var(--section); }
 
 <!-- build:library-hub -->
 <div class="lib">
-  <a class="tile tile-live tile-feature" href="/learn/fee-staircase" data-play>
-    <div class="tile-cover night"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+  <article class="tile tile-live tile-feature" data-play>
+    <a class="tile-cover night" href="/learn/fee-staircase" tabindex="-1" aria-hidden="true"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
       <path class="cv-grid" d="M20 160 H300"/>
       <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 152 H84 V128 H148 V100 H212 V66 H276 V34 H300"/>
       <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M148 128 V100"/>
       <circle class="cv-hollow fade" style="--after:1100ms" cx="140" cy="128" r="5"/>
-      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg><span class="cover-title">The Fee Staircase</span></div>
+      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg><span class="cover-title">The Fee Staircase</span></a>
     <div class="tile-body">
       <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">8 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3>The Fee Staircase</h3>
+      <h3><a href="/learn/fee-staircase">The Fee Staircase</a></h3>
       <p>Find what Amazon&#39;s fee steps cost any listing, from five numbers on its public page.</p>
       <p class="tile-detail">The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.</p>
-      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
+      <form class="join-tile" data-join="fee-staircase" data-path="/learn/fee-staircase" data-first="staircase" novalidate>
+        <label for="join-fee-staircase">Your email opens every lesson now</label>
+        <div class="join-row">
+          <input id="join-fee-staircase" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Open the course <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="join-fee-staircase-website">Leave this empty</label><input id="join-fee-staircase-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">Free. One email, about ten seconds. We send the link and the spreadsheet, then only a note when a new course is out; one click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form>
+      <a class="go-look" href="/learn/fee-staircase">Or look inside first <span class="arrow" aria-hidden="true">→</span></a>
     </div>
-  </a>
+  </article>
   <div class="lib-planned">
     <p class="lib-k">Planned for the library <span>· free when each is complete, one email to enter</span></p>
     <div class="lib-grid">

@@ -196,11 +196,18 @@ band fills over 0.4 s. It never loops and never asks for attention again. Under
 there is.
 
 The same rule, since 2026-10-01, for everything else that moves (`/assets/site.js`): a
-section's parts rise into place once as they arrive (`data-reveal`, 28 px, about a second,
+section's parts rise into place once as they arrive (`data-reveal`, 20 px, under a second,
 staggered a beat apart); the true-today numbers and the scoreboard's total count up once to
 the figure the page already prints (`data-count`); the scoreboard's bar fills to the bill
-and past it; each course cover draws its line. Nothing loops, nothing moves again, and with
-the switch off every one of them is simply there.
+and past it; each course cover draws its line. Nothing loops and nothing moves again.
+
+**Nothing is ever blank for want of a scroll** (the spec's contract for the Monte Carlo:
+"before it fires, show the finished still frame"). Every chart, section and number is in the
+HTML as its finished still frame. The script puts one back to its start only while it is
+still below the screen, within a screen of arriving, and plays it as it arrives; what is
+on screen at load, or what a visitor jumps past, stays as it is. The hero's chart is the one
+that draws as the page opens (`data-play="load"`). `scripts/build-pages.test.mjs` fails any
+rule that hides content without that.
 
 ### The pieces a page is built from (since 2026-10-01)
 
@@ -235,6 +242,10 @@ Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
   until a client fills it, and says so in the largest type on the page.
 - **The receipt** (`.rcpt`): a move, how we know, the dollars called before, measured after,
   and what they count for under the rules.
+- **The course's email field** (`.join-tile`): on the featured course card, where
+  Acquisition.com asks for its email. One field, its own outline button ("Open the course →"),
+  one line of what follows and the privacy link. It sends what the course page's form sends and
+  opens the course at lesson 1. The call is still the only solid button.
 
 ### Labels that never come off
 

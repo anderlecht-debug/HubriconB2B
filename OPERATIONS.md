@@ -1881,6 +1881,13 @@ empty space where we can just plug in the videos eventually". Everything shared 
 | Publish a client's words | `data/testimonials.json`: `client`, `quote` (verbatim), `consent_on` (the date of their written yes, terms §9), `record_month`, and `video` if they recorded one. The test refuses an entry without consent, a date or a month | the same |
 | Change the scoreboard illustration | `data/scoreboard-illustration.json`; every dollar is counted by the terms' rules in code, so it cannot show a month the terms would not | the same |
 
+**The email on the home page.** The featured course card in Education (home and `/learn`)
+carries the same email form as the course page: it posts `{email, course, website, source}`
+to `/api/learn`, marks the course opened in the visitor's browser (`hubricon.learn`, the
+course page's own key) and opens lesson 1. Same table (`learners`), same one email, same
+unsubscribe; a sign-up from the home page looks exactly like one from the course page. The
+welcome email says "You asked for this on hubricon.com", true from either.
+
 The results wall's count and its cards come live from `public_results()`, which returns only
 rows a client consented to publish; until then it reads zero and shows reserved frames, as
 the spec's honesty rails ask. `/media/` is served as is; keep a film under about 50 MB or host

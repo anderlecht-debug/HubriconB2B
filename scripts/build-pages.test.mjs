@@ -43,7 +43,7 @@ test("one action: every button says the same thing and goes to the same place", 
   }
   for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
   const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|privacy|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
+  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
   // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
   // education tab"); none of them is a button, and none of them sells anything but the call.
   const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];
@@ -51,6 +51,46 @@ test("one action: every button says the same thing and goes to the same place", 
   assert.match(tabs, /href="\/learn"[^>]*>Education/);
   assert.doesNotMatch(tabs, /class="btn/);
   for (const id of ["case-study", "how", "offer", "results", "trust"]) assert.match(html, new RegExp(`<section[^>]*id="${id}"`), `the #${id} tab has a section to land on`);
+});
+
+test("the call repeats after each proof block, the same words and the same colour", () => {
+  // HUBRICON_SPEC.md, "Global rules for the page": after the case study, the offer and the Record, and at the close.
+  const where = [...html.matchAll(/<a\b[^>]*data-cta="([^"]+)"/g)].map(([, w]) => w);
+  for (const w of ["hero", "case-study", "offer", "record", "close"]) assert.ok(where.includes(w), `a call at ${w}`);
+  for (const id of ["case-study", "offer", "scoreboard"]) {
+    const sect = html.match(new RegExp(`<section[^>]*id="${id}"[\\s\\S]*?</section>`))[0];
+    assert.match(sect, /<a class="btn btn-lg" href="\/apply"/, `#${id} ends on the call`);
+  }
+});
+
+test("the only other control is the email that opens a course, and it looks like the field's, not the call's", () => {
+  const forms = [...html.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
+  assert.equal(forms.length, 1, "one form on the page");
+  const f = forms[0];
+  assert.match(f, /data-join="fee-staircase"/);
+  assert.deepEqual([...f.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n), ["email", "website"], "the address, and the field bots fill");
+  assert.doesNotMatch(f, /class="btn/, "the submit is not styled as the call");
+  assert.match(f, /href="\/privacy#learn"/);
+  assert.match(f, /one click unsubscribes/);
+  const learnSection = html.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
+  assert.ok(learnSection.includes(f), "it sits in the Education section, on the featured course");
+  const js = read("assets/site.js");
+  assert.match(js, /fetch\("\/api\/learn"/);
+  assert.match(js, /email, course: form\.dataset\.join, website: form\.website\.value, source:/, "it sends what the course page sends, nothing more");
+  assert.match(read("assets/learn.js"), /const KEY = "hubricon\.learn"/);
+  assert.match(js, /const LEARN_KEY = "hubricon\.learn"/, "and opens the course the way the course page remembers it");
+});
+
+test("nothing is blank for want of a scroll: only an armed element or the hero's chart starts hidden", () => {
+  // HUBRICON_SPEC.md, the Monte Carlo's contract: before it fires, show the finished still frame.
+  const css = read("assets/hubricon.css");
+  for (const rule of css.match(/[^{}]+\{[^}]*(opacity:\s*0(?![.\d])|stroke-dashoffset:\s*1(?![.\d])|scaleX\(0\))[^}]*\}/g) || []) {
+    const sel = rule.slice(0, rule.indexOf("{"));
+    if (/@keyframes|^\s*(from|to)\b/.test(sel) || /nav|fly|sheet|scrim|motion \.nav/.test(sel)) continue;
+    assert.match(sel, /\.armed|data-play="load"/, `"${sel.trim()}" hides content without being armed`);
+  }
+  assert.match(html, /<figure class="figure" data-play="load">/, "the hero's chart draws as the page opens");
+  assert.equal((html.match(/data-play="load"/g) || []).length, 1);
 });
 
 test("the case study says what it is on its own screen", () => {

@@ -115,21 +115,4 @@ if (isIn()) {
 document.querySelectorAll("[data-template]").forEach((a) => a.addEventListener("click", () => track("template_download", { course: COURSE })));
 document.addEventListener("click", (ev) => { if (ev.target.closest?.("[data-cta]")) track("cta_click", { section: "learn", course: COURSE }); });
 
-/* -- The charts: drawn once when they come into view, then still -------------------- */
-const ms = (name, fallback) => {
-  const v = getComputedStyle(root).getPropertyValue(name).trim();
-  return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : fallback;
-};
-if (root.classList.contains("motion")) {
-  const total = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const fig = e.target;
-      io.unobserve(fig);
-      fig.classList.add("playing");
-      setTimeout(() => { fig.classList.add("played"); fig.classList.remove("playing"); }, total);
-    }
-  }, { threshold: 0.3 });
-  document.querySelectorAll("[data-play]").forEach((f) => io.observe(f));
-}
+// The charts draw once as they arrive: /assets/site.js, which every page with the bar loads.

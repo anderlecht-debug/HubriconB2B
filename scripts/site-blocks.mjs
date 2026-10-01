@@ -207,26 +207,52 @@ function lessonVideos(lib) {
 // ---------------------------------------------------------------- the library ----
 const lessonCount = (c) => (Array.isArray(c.lessons) ? c.lessons.length : c.lessons);
 
+/* The email that opens a course, where Acquisition.com asks for it: on the free training's
+   featured card, one field. It sends what the course page's own form sends (the address,
+   the course, the campaign tag of the link if there is one) to /api/learn, and opens the
+   course in place: /assets/site.js. The submit is a plain button, never the call's. */
+function joinForm(c) {
+  const id = `join-${c.slug}`;
+  return `
+      <form class="join-tile" data-join="${c.slug}" data-path="${c.path}" data-first="${c.lessons[0].id}" novalidate>
+        <label for="${id}">Your email opens every lesson now</label>
+        <div class="join-row">
+          <input id="${id}" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
+          <button type="submit">Open the course ${ARROW}</button>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="${id}-website">Leave this empty</label><input id="${id}-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <p class="join-fine">Free. One email, about ten seconds. We send the link and the spreadsheet, then only a note when a new course is out; one click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-err" role="alert" hidden></p>
+      </form>`;
+}
+
 function liveTile(c, i, { feature }) {
-  // With a trailer the card can't be one link (a video can't sit inside one), so the
-  // title and the go-line carry the link instead.
+  // The featured course carries the email form, and a tile with a trailer carries a
+  // video, so neither can be one link: the cover and the title carry it instead.
   const trailer = Boolean(c.trailer && c.trailer.src);
+  const whole = !trailer && !feature;
   const badges = ["Free", `${lessonCount(c)} lessons`, ...(c.extras || [])].map((b) => `<span class="go-badge">${esc(b)}</span>`).join("");
-  const title = trailer ? `<a href="${c.path}">${esc(c.title)}</a>` : esc(c.title);
-  const go = trailer ? `<a class="go-to" href="${c.path}">Take the course ${ARROW}</a>` : `<span class="go-to">Take the course ${ARROW}</span>`;
+  const title = whole ? esc(c.title) : `<a href="${c.path}">${esc(c.title)}</a>`;
+  const go = feature
+    ? `<a class="go-look" href="${c.path}">Or look inside first ${ARROW}</a>`
+    : whole ? `<span class="go-to">Take the course ${ARROW}</span>` : `<a class="go-to" href="${c.path}">Take the course ${ARROW}</a>`;
   const art = trailer
     ? video(c.trailer, `${c.title}: trailer`, `trailer:${c.slug}`)
     : `<span class="cover-k">Course ${i + 1}</span>${cover(c.cover, `cv-${c.slug}`)}<span class="cover-title">${esc(c.title)}</span>`;
-  const [open, close] = trailer
-    ? [`<article class="tile tile-live${feature ? " tile-feature" : ""}">`, "</article>"]
-    : [`<a class="tile tile-live${feature ? " tile-feature" : ""}" href="${c.path}" data-play>`, "</a>"];
+  const cls = `tile tile-live${feature ? " tile-feature" : ""}`;
+  const coverEl = trailer || whole
+    ? `<div class="tile-cover night">${art}</div>`
+    : `<a class="tile-cover night" href="${c.path}" tabindex="-1" aria-hidden="true">${art}</a>`;
+  const [open, close] = whole
+    ? [`<a class="${cls}" href="${c.path}" data-play>`, "</a>"]
+    : [`<article class="${cls}"${trailer ? "" : " data-play"}>`, "</article>"];
   return `
   ${open}
-    <div class="tile-cover night">${art}</div>
+    ${coverEl}
     <div class="tile-body">
       <div class="go-badges">${badges}</div>
       <h3>${title}</h3>
-      <p>${esc(c.summary)}</p>${feature ? `\n      <p class="tile-detail">${esc(c.detail)}</p>` : ""}
+      <p>${esc(c.summary)}</p>${feature ? `\n      <p class="tile-detail">${esc(c.detail)}</p>${joinForm(c)}` : ""}
       ${go}
     </div>
   ${close}`;

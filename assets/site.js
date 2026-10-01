@@ -1,6 +1,7 @@
 // Every public page's behaviour. Everything visible is already in the HTML; this file
-// opens the phone menu, plays each chart and section once as it scrolls in, counts
-// the true-today numbers up, and keeps the footer's one live line true.
+// opens the phone menu, plays each chart and section once as it scrolls in, counts the
+// true-today numbers up, opens a course from one email, and keeps the footer's one live
+// line true.
 "use strict";
 window.__hubriconMotion = true;
 
@@ -42,29 +43,20 @@ if (nav) {
   scrolled();
 }
 
-/* -- Charts: drawn once when they come into view, then still ------------------------ */
+/* -- Motion: everything plays once as it arrives, then stays still ------------------- */
+// HUBRICON_SPEC.md, the Monte Carlo's contract, held for everything that moves: before it
+// plays, an element shows its finished still frame, never a blank box. So an element is put
+// back to its start (.armed) only while it is still below the screen, within a screen of
+// it, and plays as it arrives. What is on screen at load, or what a visitor jumps past,
+// stays as it is. The one exception is the hero's chart (data-play="load"), which the
+// stylesheet holds at its start from the first paint and which draws as the page opens.
 const ms = (name, fallback) => {
   const v = getComputedStyle(root).getPropertyValue(name).trim();
   return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : fallback;
 };
-if (motion) {
-  const total = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;   // draw, band, the paths settling
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const fig = e.target;
-      io.unobserve(fig);
-      fig.classList.add("playing");
-      setTimeout(() => { fig.classList.add("played"); fig.classList.remove("playing"); }, total);
-    }
-  }, { threshold: 0.3 });
-  document.querySelectorAll("[data-play]").forEach((f) => io.observe(f));
-}
-
-/* -- Sections arrive once; true-today numbers count up to what they already say ------ */
-function countUp(el) {
-  const final = el.textContent;
-  const m = final.match(/\d[\d,]*/);
+const DIGITS = /\d[\d,]*/;
+function countUp(el, final) {
+  const m = final.match(DIGITS);
   if (!m) return;
   const target = Number(m[0].replace(/,/g, ""));
   const show = (v) => { el.textContent = final.replace(m[0], Math.round(v).toLocaleString("en-US")); };
@@ -77,22 +69,99 @@ function countUp(el) {
   requestAnimationFrame(tick);
 }
 if (motion) {
-  const counting = [...document.querySelectorAll("[data-count]")];
-  for (const el of counting) {
-    el.setAttribute("aria-label", el.textContent);
-    el.dataset.final = el.textContent;
-    el.textContent = el.textContent.replace(/\d[\d,]*/, "0");
-  }
-  const io = new IntersectionObserver((entries) => {
+  const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;   // draw, band, the paths settling
+  const playChart = (el) => {
+    el.classList.add("playing");
+    el.classList.remove("armed");
+    setTimeout(() => { el.classList.add("played"); el.classList.remove("playing"); }, chartMs);
+  };
+  const arm = (el) => {
+    if (el.classList.contains("armed")) return;
+    el.classList.add("armed");
+    if (el.hasAttribute("data-count")) {
+      el.dataset.final = el.textContent;
+      el.setAttribute("aria-label", el.textContent);
+      el.textContent = el.textContent.replace(DIGITS, "0");
+    }
+  };
+  const play = (el) => {
+    if (!el.classList.contains("armed")) return;          // never put back: it is already its still frame
+    if (el.hasAttribute("data-play")) return playChart(el);
+    el.classList.remove("armed");
+    if (el.hasAttribute("data-reveal")) el.classList.add("in");
+    if (el.hasAttribute("data-count")) countUp(el, el.dataset.final);
+  };
+  const arriving = new IntersectionObserver((entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
-      io.unobserve(e.target);
-      if (e.target.hasAttribute("data-count")) { e.target.textContent = e.target.dataset.final; countUp(e.target); }
-      else e.target.classList.add("in");
+      arriving.unobserve(e.target); nearing.unobserve(e.target);
+      play(e.target);
     }
-  }, { rootMargin: "0px 0px -6% 0px", threshold: 0.1 });
-  document.querySelectorAll("[data-reveal], [data-count]").forEach((el) => io.observe(el));
+  }, { rootMargin: "0px 0px -6% 0px" });
+  const nearing = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      // Within a screen of arriving, and still wholly below it: safe to put back to its start.
+      if (e.isIntersecting && e.boundingClientRect.top > innerHeight) { arm(e.target); nearing.unobserve(e.target); }
+    }
+  }, { rootMargin: "0px 0px 100% 0px" });
+  for (const el of document.querySelectorAll('[data-play="load"]')) playChart(el);
+  for (const el of document.querySelectorAll('[data-play]:not([data-play="load"]), [data-reveal], [data-count]')) {
+    nearing.observe(el);
+    arriving.observe(el);
+  }
 }
+
+/* -- The email that opens a course --------------------------------------------------- */
+// HUBRICON_SPEC.md, "Email to enter, the Acquisition.com model": one address registers you
+// for a course and everything inside is open. This is the featured card's form; it posts
+// what the course page's form posts, remembers the course as opened in this browser the
+// way the course page does, and takes the visitor straight into its first lesson.
+const LEARN_KEY = "hubricon.learn";
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+document.querySelectorAll("form[data-join]").forEach((form) => {
+  const err = form.querySelector(".join-err");
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    err.hidden = true;
+    const email = form.email.value.trim();
+    if (!EMAIL.test(email)) {
+      err.textContent = "That doesn't look like an email address. Check it and try again.";
+      err.hidden = false;
+      form.email.focus();
+      return;
+    }
+    const button = form.querySelector("button");
+    button.disabled = true;
+    let res = null;
+    try {
+      const params = new URLSearchParams(location.search);
+      res = await fetch("/api/learn", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, course: form.dataset.join, website: form.website.value, source: params.get("utm_source") || params.get("ref") || "" }),
+      });
+    } catch (e) { res = null; }
+    // A bad address is the visitor's to fix. Anything else is ours: the course opens anyway.
+    if (res && res.status === 400) {
+      const body = await res.json().catch(() => ({}));
+      err.textContent = body.error || "That address was not accepted. Check it and try again.";
+      err.hidden = false;
+      button.disabled = false;
+      return;
+    }
+    try {
+      const s = JSON.parse(localStorage.getItem(LEARN_KEY) || "{}");
+      s.courses = { ...(s.courses || {}), [form.dataset.join]: new Date().toISOString().slice(0, 10) };
+      localStorage.setItem(LEARN_KEY, JSON.stringify(s));
+    } catch (e) {}
+    track("learn_registered", { course: form.dataset.join, from: location.pathname });
+    const done = document.createElement("p");
+    done.className = "join-done";
+    done.textContent = "You're in. Opening lesson 1…";
+    form.replaceChildren(done);
+    location.href = `${form.dataset.path}#${form.dataset.first}`;
+  });
+});
 
 /* -- Videos: counted when someone presses play ------------------------------------ */
 document.querySelectorAll("video[data-track]").forEach((v) => {

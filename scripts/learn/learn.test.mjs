@@ -21,7 +21,7 @@ const course = read("learn/fee-staircase.html");
 
 test("the hub links every live course and only those; a planned one says so and goes nowhere", () => {
   const main = hub.slice(hub.indexOf("<main"), hub.indexOf("</main>"));
-  const links = [...main.matchAll(/<a class="tile[^"]*" href="([^"]+)"/g)].map(([, h]) => h);
+  const links = [...new Set([...main.matchAll(/<a\b[^>]*href="(\/learn\/[a-z-]+)"/g)].map(([, h]) => h))];
   assert.deepEqual(links.sort(), Object.values(COURSES).map((c) => c.path).sort());
   const planned = [...main.matchAll(/<article class="tile tile-planned"[\s\S]*?<\/article>/g)].map(([t]) => t);
   assert.ok(planned.length >= 1);
@@ -86,7 +86,9 @@ test("/learn is in every footer and the Education tab; on the home page it is ne
   // The founder put the free training on the home page and in the bar on 2026-10-01; the call stays the only button.
   const home = read("index.html");
   for (const [tag] of home.matchAll(/<a\b[^>]*href="\/learn[^"]*"[^>]*>/g)) assert.doesNotMatch(tag, /class="btn/, tag);
-  assert.match(home, /<section[^>]*id="learn"[\s\S]*?class="tile tile-live[^"]*" href="\/learn\/fee-staircase"/);
+  const learn = home.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
+  assert.match(learn, /<h3><a href="\/learn\/fee-staircase">The Fee Staircase<\/a><\/h3>/, "the featured course links to its page");
+  assert.match(learn, /<form class="join-tile" data-join="fee-staircase"/, "and opens from one email, where Acquisition.com asks for it");
   for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "learn/index.html", "learn/fee-staircase.html"]) {
     const h = read(page);
     const foot = h.slice(h.lastIndexOf("<footer"));
