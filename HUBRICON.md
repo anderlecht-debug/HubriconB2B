@@ -229,11 +229,13 @@ cannot run for want of a secret or a migration.
   voids unpaid invoices for months that no longer clear and refunds paid ones
   (terms §5, within seven days). The month in progress is never invoiced.
 
-**Before this ships** the migration `20261001000001_record_months.sql` must be
-applied: without it no month is measured, every invoice waits held, and nobody is
-billed (the safe failure). The guarantee clause and the liability limit get one
-review by a licensed Texas attorney before the first client signs, as the spec
-requires.
+**Signed off.** The plain-English attribution text (terms §3, the shared block in
+`scripts/blocks/attribution.html`) and the per-month guarantee were approved by
+Hagen Simmons, founder, on 2026-09-30, and shipped that day with the migration
+`20261001000001_record_months.sql` applied (without it no month is measured, every
+invoice waits held, and nobody is billed: the safe failure). The guarantee clause
+and the liability limit still get one review by a licensed Texas attorney before
+the first client signs, as the spec requires.
 
 Also: if the email announcing a planned move does not go out, nothing moves.
 The veto window only opens on a sent notice, which is code, not policy.
