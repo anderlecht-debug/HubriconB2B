@@ -161,6 +161,7 @@ export const PAGES = [
   { file: "index.html", requireAllFills: true },
   { file: "honesty.html" },
   { file: "terms.html" },
+  { file: "portal.html" },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

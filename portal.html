@@ -5,559 +5,343 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hubricon</title>
 <meta name="robots" content="noindex">
-</head>
-<body>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* ══════════════════════════════════════════════════════════════════
-   THE PRIVATE DESK — calm is credibility.
-   Serif editorial display (Fraunces) for numbers, titles, the letter;
-   the brand mono for labels and data. White paper with navy ink and
-   deep-gold accents — the accents are darkened from the brand amber
-   so lines and labels keep contrast on white. Motion ≤ .2s.
-   ══════════════════════════════════════════════════════════════════ */
-:root{
-  --bg:        hsl(222 28% 96%);
-  --panel:     hsl(0 0% 100%);
-  --panel-2:   hsl(222 26% 94%);
-  --amber:     hsl(40 96% 33%);
-  --ok:        hsl(150 58% 28%);
-  --serious:   hsl(8 70% 42%);
-  --c1: #4553C8;   /* chart categorical — validated for CVD on white */
-  --c2: #00939D;
-  --c3: #B07C10;
-  --c4: #1F8049;
-  --ink:       hsl(228 44% 11%);
-  --ink-soft:  hsl(228 26% 26%);
-  --ink-faint: hsl(228 16% 42%);
-  --hairline:  hsl(228 30% 20% / .14);
-  --rule:      hsl(228 30% 20% / .30);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-}
-*{ box-sizing: border-box; margin: 0; padding: 0; }
-html{ scroll-behavior: smooth; }
-body{
-  background: var(--bg); color: var(--ink-soft);
-  font-family: var(--sans); font-size: 15px; line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-  min-height: 100svh; padding: 34px 20px 110px;
-}
-::selection{ background: hsl(45 100% 50% / .22); color: var(--ink); }
-a{ color: var(--amber); text-decoration: none; }
-a:hover{ text-decoration: underline; }
-:focus-visible{ outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+/* ============================================================================
+   Hubricon, the client's scoreboard (HUBRICON_SPEC.md, "The scoreboard, deep"
+   and the 11-of-5 brief, rungs 5 to 7). A monitor, not a growth dashboard:
+   1. what the Record has proven since day one, biggest, then the bill and the
+      difference in one sentence and one bar;
+   2. the leaks: each move named, its dollars, how we know, what state it is in;
+   3. the method and the full read, folded, for the rare reader.
+   Every value is a token from /assets/hubricon.css. Blue is the client's money.
+   No red, no green: a loss is ink with a minus sign.
+   ============================================================================ */
+body { font-size: var(--t-16); }
+.wrap { width: min(980px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+.hidden { display: none; }
+[hidden] { display: none !important; }
+a { text-underline-offset: 3px; }
 
-.wrap{ max-width: 900px; margin: 0 auto; }
+/* the bar across the top */
+.top { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-block: var(--s-5); border-bottom: 1px solid var(--rule); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+.who { text-align: right; font-size: var(--t-14); color: var(--ink-3); line-height: 1.5; }
+.who b { color: var(--ink); }
+.who button { margin-left: var(--s-3); }
+.objective { margin-top: var(--s-5); font-size: var(--t-16); color: var(--ink-2); }
+.objective b { color: var(--ink); }
 
-/* type roles */
-.serif{ font-family: var(--serif); }
-h1, h2{
-  font-family: var(--serif); font-weight: 500; color: var(--ink);
-  letter-spacing: -.01em; line-height: 1.15;
+button {
+  font: var(--strong) var(--t-14) / 1 var(--font); cursor: pointer;
+  min-height: 40px; padding: 0 var(--s-4); border-radius: 8px;
+  border: 1px solid var(--rule-2); background: var(--paper); color: var(--ink);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
-h1{ font-size: clamp(26px, 4.5vw, 34px); }
-h2{ font-size: 21px; }
-.label{
-  font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600;
-  color: var(--ink-faint); display: block;
-}
-.fig{
-  font-family: var(--serif); font-weight: 500; color: var(--ink);
-  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
-}
+button:hover { border-color: var(--ink-3); }
+button.primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+button.primary:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+button.link { min-height: 0; padding: 0; border: 0; background: none; color: var(--ink-2); text-decoration: underline; font-weight: var(--regular); }
+button:disabled { opacity: 0.4; cursor: default; }
+input[type=email] { width: 100%; min-height: 48px; padding: 0 var(--s-4); border: 1px solid var(--rule-2); border-radius: 8px; font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); }
+input[type=email]:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 
-/* panels */
-.panel{
-  background: var(--panel); border: 1px solid var(--hairline);
-  border-radius: 14px; padding: 30px 34px; margin-bottom: 22px;
-  box-shadow: 0 1px 2px hsl(228 40% 15% / .05);
-}
-section{ margin-bottom: 8px; }
-.sect-label{ margin: 34px 0 12px; display: flex; align-items: baseline; gap: 14px; }
-.sect-label .label{ display: inline; }
-.sect-label::after{ content: ""; flex: 1; height: 1px; background: var(--hairline); }
+/* sign-in */
+.login-box { max-width: 440px; margin: 14vh auto 0; }
+.login-box h1 { font-size: var(--t-display-s); margin-top: var(--s-6); }
+.login-box p { margin: var(--s-4) 0 var(--s-5); color: var(--ink-2); }
+.login-row { display: flex; gap: var(--s-2); }
+.banner { display: none; margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: 8px; background: var(--paper-2); font-size: var(--t-14); color: var(--ink); }
+.banner.err { border-left: 3px solid var(--ink); }
 
-button{
-  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: .02em;
-  cursor: pointer; border-radius: 8px; padding: 9px 16px;
-  border: 1px solid var(--rule); background: none; color: var(--ink);
-  transition: border-color .2s, color .2s, background-color .2s;
-}
-button:hover{ border-color: var(--amber); color: var(--amber); }
-/* the one bright-amber moment on the page: the brand amber holds as a
-   fill behind near-navy text, while the --amber token stays deep gold */
-button.primary{ background: hsl(45 100% 50%); border-color: hsl(45 95% 45%); color: hsl(228 45% 10%); font-weight: 700; }
-button.primary:hover{ color: hsl(228 45% 10%); filter: brightness(1.04); }
-button.decline:hover{ border-color: var(--serious); color: var(--serious); }
-button:disabled{ opacity: .4; cursor: default; }
-input[type=email]{
-  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 9px;
-  color: var(--ink); font-family: var(--sans); font-size: 15px; padding: 12px 14px; width: 100%;
-}
-select{
-  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 8px;
-  color: var(--ink); font-family: var(--sans); font-size: 13px; padding: 7px 10px; color-scheme: light;
-}
-input[type=range]{ accent-color: var(--amber); flex: 1; min-width: 150px; }
+/* 1 · the monitor */
+.score { padding-block: var(--s-8) var(--s-7); }
+.score-total { font-size: clamp(3rem, 1.6rem + 6vw, 5.5rem); font-weight: var(--strong); letter-spacing: -0.04em; line-height: 1; margin-top: var(--s-3); color: var(--ink); }
+.score-total.money { color: var(--blue); }
+.score-line { margin-top: var(--s-5); font-size: var(--t-20); line-height: 1.5; color: var(--ink-2); max-width: 56ch; }
+.score-line b { color: var(--ink); }
+.score-line .money { font-weight: var(--strong); }
+.bar { position: relative; margin-top: var(--s-6); height: 12px; border-radius: 3px; background: var(--rule); max-width: 640px; }
+.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--blue); }
+.bar-bill { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
+.bar-keys { position: relative; height: var(--s-5); margin-top: var(--s-3); max-width: 640px; font-size: var(--t-14); color: var(--ink-3); }
+.bar-keys span { position: absolute; top: 0; white-space: nowrap; }
+.bar-keys .k-bill { transform: translateX(-50%); }
+.bar-keys .k-proven { right: 0; }
+.score-more { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); max-width: 72ch; }
+.score-more b { color: var(--ink); }
 
-/* masthead */
-.masthead{
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
-  padding-bottom: 22px; border-bottom: 1px solid var(--hairline); margin-bottom: 30px;
-}
-.wordmark{ font-family: var(--serif); font-weight: 600; font-size: 20px; color: var(--ink); letter-spacing: .01em; }
-.wordmark i{ font-style: normal; color: var(--amber); }
-.prepared{ text-align: right; font-size: 12px; color: var(--ink-faint); line-height: 1.8; }
-.prepared b{ color: var(--ink-soft); font-weight: 400; }
-.prepared button{ margin-top: 6px; padding: 5px 12px; font-size: 11px; }
-.objective{
-  font-family: var(--serif); font-size: 16.5px; color: var(--ink-soft);
-  font-style: italic; margin: -12px 0 30px;
-}
-.objective b{ font-style: normal; color: var(--ink); font-weight: 500; }
+/* section heads */
+.block { padding-block: var(--s-7); border-top: 1px solid var(--rule); }
+.block-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+.block-head h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
+.block-head .hint { max-width: 52ch; }
+.hint { font-size: var(--t-14); color: var(--ink-3); }
 
-/* position hero */
-.position{ padding: 40px 34px; }
-.pos-num{ font-size: clamp(44px, 8vw, 64px); line-height: 1; margin: 8px 0 4px; }
-.pos-num.good{ color: var(--ok); }
-.pos-sub{ font-size: 13.5px; color: var(--ink-faint); }
-.spark{ margin-top: 18px; }
-.pos-tiles{
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
-  border-top: 1px solid var(--hairline); margin-top: 28px; padding-top: 22px;
-}
-.pos-tile{ padding: 0 18px; border-left: 1px solid var(--hairline); }
-.pos-tile:first-child{ border-left: 0; padding-left: 0; }
-.pos-tile .fig{ font-size: 26px; display: block; margin: 4px 0 2px; }
-.pos-tile .d{ font-size: 12.5px; }
-.d.up{ color: var(--ok); } .d.down{ color: var(--serious); }
+/* waiting on you */
+.decision { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: var(--s-4); padding-block: var(--s-5); border-top: 1px solid var(--rule); }
+.decision:first-child { border-top: 0; padding-top: 0; }
+.decision .no { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); padding-top: 2px; }
+.decision .mod, .part { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.part { display: block; margin-top: var(--s-1); }
+.decision .text { font-size: var(--t-18); color: var(--ink); margin: var(--s-2) 0 var(--s-4); max-width: 62ch; }
+.decision .row { display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap; }
+.decision .stake { margin-left: var(--s-2); font-size: var(--t-14); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.decision .stamp { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
 
-/* the plan */
-.target{ margin-bottom: 18px; }
-.target .t-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
-.target .t-name{ font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
-.target .t-cur{ font-family: var(--serif); font-weight: 500; font-size: 17px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.t-bar{ position: relative; height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
-.t-fill{ position: absolute; top: 0; bottom: 0; left: 0; background: var(--ok); border-radius: 4px; }
-.t-fill.behind{ background: var(--amber); }
-.t-meta{ display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-faint); margin-top: 5px; font-variant-numeric: tabular-nums; }
-.init{ display: grid; grid-template-columns: 1fr auto; gap: 6px 18px; padding: 15px 0; border-top: 1px solid var(--hairline); align-items: start; }
-.init:first-of-type{ border-top: 0; padding-top: 6px; }
-.init h3{ font-family: var(--serif); font-weight: 500; font-size: 16.5px; color: var(--ink); }
-.init .thesis{ font-size: 13.5px; color: var(--ink-soft); max-width: 58ch; }
-.init .prog{ font-size: 12.5px; color: var(--ink-faint); margin-top: 5px; }
-.init .exp{ font-family: var(--serif); font-weight: 500; color: var(--ink); font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.part{ font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); display: block; margin-top: 2px; }
+/* 2 · the leaks */
+.leak { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-5); padding-block: var(--s-4); border-top: 1px solid var(--rule); }
+.leak:first-child { border-top: 0; padding-top: 0; }
+.leak .what { color: var(--ink); max-width: 62ch; }
+.leak .usd { text-align: right; font-size: var(--t-20); font-weight: var(--strong); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.leak .usd.money { color: var(--blue); }
+.leak .usd.quiet { color: var(--ink-3); font-weight: var(--regular); font-size: var(--t-16); }
+.leak .meta { grid-column: 1 / -1; font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.leak .meta b { color: var(--ink-2); font-weight: var(--strong); }
+.leak details { grid-column: 1 / -1; font-size: var(--t-14); color: var(--ink-2); }
+.leak summary { cursor: pointer; color: var(--ink-3); width: fit-content; }
+.leak details p { margin-top: var(--s-2); max-width: 72ch; }
+.group-label { margin: var(--s-6) 0 var(--s-3); }
+.candor { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); margin-bottom: var(--s-5); }
+.candor .c { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-4) var(--s-5); font-size: var(--t-14); color: var(--ink-2); }
+.candor .c b { display: block; font-size: var(--t-20); color: var(--ink); font-variant-numeric: tabular-nums; margin-bottom: var(--s-1); }
+.candor .win b { color: var(--blue); }
 
-/* the ledger's audit column: small, quiet, and always readable */
-#ledger .how{ max-width: 420px; font-size: 12.5px; color: var(--ink-60); line-height: 1.45; }
-#ledger .how b{ display: block; color: var(--ink); font-weight: 500; margin-bottom: 2px; }
-
-/* the briefing */
-.issue-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
-.issue-no{ font-family: var(--serif); font-size: 14.5px; color: var(--amber); letter-spacing: .06em; }
-.issue-headline{ font-family: var(--serif); font-size: 20px; color: var(--ok); font-variant-numeric: tabular-nums; }
-.video-wrap{ position: relative; padding-top: 56.25%; border-radius: 10px; overflow: hidden; background: var(--panel-2); margin-bottom: 24px; }
-.video-wrap iframe, .video-wrap video{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--panel-2); }
-.letter{
-  font-family: var(--serif); font-weight: 300; font-size: 17.5px; line-height: 1.85;
-  color: var(--ink); max-width: 62ch;
-}
-.letter p{ margin-bottom: 1.1em; }
-.letter .signoff{ color: var(--ink-soft); margin-top: 1.6em; }
-.tldr{ font-size: 14px; color: var(--ink-soft); max-width: 68ch; margin-top: 4px; }
-.next-delivery{
-  border-left: 2px solid var(--amber); padding: 4px 0 4px 16px;
-  font-size: 14px; color: var(--ink-soft);
-}
-.onboard{ margin-top: 20px; display: grid; gap: 10px; }
-.onboard .step{ display: flex; gap: 14px; align-items: baseline; font-size: 13.5px; }
-.onboard .when{ min-width: 88px; color: var(--amber); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; }
-
-/* decisions */
-.decision{ display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 22px 0; border-top: 1px solid var(--hairline); }
-.decision:first-of-type{ border-top: 0; padding-top: 4px; }
-.decision .no{ font-family: var(--serif); font-size: 22px; color: var(--amber); }
-.decision .mod{ font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
-.decision .text{ font-family: var(--serif); font-weight: 300; font-size: 16.5px; line-height: 1.7; color: var(--ink); margin: 6px 0 12px; max-width: 62ch; }
-.decision .row{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.decision .stake{ font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.decision .stamp{ font-size: 11.5px; color: var(--ink-faint); margin-top: 10px; font-style: italic; font-family: var(--serif); }
-.state{ font-size: 12.5px; }
-.state.approved, .state.done{ color: var(--ok); }
-.state.declined{ color: var(--serious); }
-
-/* charts — colors live in these classes, never in SVG attributes */
-.chart{ width: 100%; height: auto; display: block; }
-.chart .grid{ stroke: var(--hairline); stroke-width: 1; }
-.chart .ax{ fill: var(--ink-faint); font-family: var(--mono); font-size: 11.5px; }
-.chart .lbl{ fill: var(--ink-soft); font-family: var(--mono); font-size: 12px; }
-/* white halo so labels stay readable where they cross a mark */
-.chart .lbl, .chart .ax, #hz-svg .lbl, #hz-svg .ax{ paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; }
-.chart .ink{ stroke: var(--ink-soft); stroke-width: 2.2; fill: none; }
-.chart .goldl{ stroke: var(--amber); stroke-width: 2.5; fill: none; }
-.chart .goldf{ fill: var(--amber); }
-.chart .okl{ stroke: var(--ok); stroke-width: 2.5; fill: none; }
-.chart .okf{ fill: var(--ok); }
-.chart .badl{ stroke: var(--serious); stroke-width: 1.7; stroke-dasharray: 6 5; fill: none; }
-.chart .badsolid{ stroke: var(--serious); stroke-width: 2.5; }
-.chart .badf{ fill: var(--serious); }
-.chart .mutf{ fill: var(--ink-faint); }
-.chart .band{ fill: hsl(40 90% 45% / .13); }
-.chart .dash{ stroke: var(--rule); stroke-width: 1.2; stroke-dasharray: 4 5; }
-.chart .hollow{ fill: var(--panel); stroke: var(--ink-faint); stroke-width: 1.6; }
-.chart .c1{ fill: var(--c1); } .chart .c2{ fill: var(--c2); }
-.chart .c3{ fill: var(--c3); } .chart .c4{ fill: var(--c4); }
-.chart-duo{ display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-.cap{ font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
-.legend{ display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: var(--ink-soft); }
-.legend i{ width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
-.legend .c1{ background: var(--c1); } .legend .c2{ background: var(--c2); }
-.legend .c3{ background: var(--c3); } .legend .c4{ background: var(--c4); }
-.stack-row{ display: grid; grid-template-columns: minmax(90px, 160px) 1fr 120px; gap: 12px; align-items: center; padding: 7px 0; font-size: 13.5px; }
-.stack-row .segs{ display: flex; gap: 2px; height: 16px; }
-.stack-row .seg{ border-radius: 3px; display: block; }
-.seg.c1{ background: var(--c1); } .seg.c2{ background: var(--c2); }
-.seg.c3{ background: var(--c3); } .seg.c4{ background: var(--c4); }
-.stack-row .s-net{ text-align: right; font-variant-numeric: tabular-nums; }
-.stack-row .s-net.good{ color: var(--ok); } .stack-row .s-net.risk{ color: var(--serious); }
-.stack-row .s-sku{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-soft); }
-.p-row{ padding: 18px 0 8px; border-top: 1px solid var(--hairline); }
-.p-row:first-child{ border-top: 0; padding-top: 0; }
-.p-cap{ display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-bottom: 10px; }
-.p-sku{ font-family: var(--serif); font-size: 17px; color: var(--ink); }
-.bleed-row{ display: grid; grid-template-columns: minmax(110px, 190px) 1fr 80px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13.5px; }
-.bleed-row .bar{ height: 12px; border-radius: 3px; background: var(--ink-faint); }
-.bleed-row.top .bar{ background: var(--amber); }
-.bleed-row.rest .bar{ opacity: .4; }
-.bleed-row .amt{ text-align: right; font-variant-numeric: tabular-nums; }
-@media (max-width: 700px){ .chart-duo{ grid-template-columns: 1fr; } }
-
-/* numerals are the typography: the currency sign steps back from the value */
-.fig .cur{ font-weight: 300; color: var(--ink-faint); margin-right: 1px; }
-
-/* value delivered vs fees */
-.value-strip{
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
-  border-bottom: 1px solid var(--hairline); margin-bottom: 24px; padding-bottom: 20px;
-}
-.value-strip .v{ padding: 0 18px; border-left: 1px solid var(--hairline); }
-.value-strip .v:first-child{ border-left: 0; padding-left: 0; }
-.value-strip .fig{ font-size: 24px; display: block; margin: 4px 0 2px; }
-.value-strip .d{ font-size: 12.5px; color: var(--ink-faint); }
-
-/* the health score */
-.health{ display: grid; grid-template-columns: 200px 1fr; gap: 34px; align-items: start; }
-.health .score{
-  font-family: var(--serif); font-weight: 500; font-size: 72px; line-height: 1; color: var(--ink);
-  font-variant-numeric: tabular-nums; letter-spacing: -.03em; margin-top: 6px;
-}
-.health .score small{ font-size: 17px; color: var(--ink-faint); letter-spacing: 0; margin-left: 4px; font-weight: 400; }
-.health .grade{ display: inline-block; margin-top: 10px; font-family: var(--serif); font-size: 19px; color: var(--amber); }
-.driver{
-  display: grid; grid-template-columns: minmax(130px, 180px) 1fr 52px 96px; gap: 14px; align-items: center;
-  padding: 9px 0 2px; border-top: 1px solid var(--hairline); font-size: 13.5px;
-}
-.driver:first-child{ border-top: 0; padding-top: 0; }
-.driver .bar{ height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
-.driver .bar i{ display: block; height: 100%; border-radius: 4px; background: var(--ok); }
-.driver .bar i.mid{ background: var(--amber); } .driver .bar i.low{ background: var(--serious); }
-.driver .sc{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-family: var(--serif); font-size: 16px; }
-.driver .usd{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-faint); font-size: 12.5px; }
-.driver-note{ font-size: 12.5px; color: var(--ink-faint); padding: 2px 0 8px; }
-
-/* money found */
-.claim{
-  display: grid; grid-template-columns: 118px 1fr 84px 92px 118px; gap: 12px; align-items: baseline;
-  padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px;
-}
-.claim:first-child{ border-top: 0; }
-.claim .num{ text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
-.claim .type{ font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
-.claim .when{ text-align: right; font-size: 12px; }
-
-/* demand fans */
-.fan-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 22px; }
-.chart .fan{ fill: hsl(40 90% 45% / .15); }
-.chart .fan2{ fill: hsl(40 90% 45% / .30); }
-
-/* concentration meter */
-.meter{
-  position: relative; height: 10px; border-radius: 5px; opacity: .85;
-  background: linear-gradient(90deg, var(--ok) 0 10%, var(--amber) 10% 18%, var(--serious) 18% 100%);
-}
-.meter i{ position: absolute; top: -5px; width: 3px; height: 20px; background: var(--ink); border-radius: 2px; margin-left: -1px; }
-.share-row{ display: grid; grid-template-columns: minmax(110px, 190px) 1fr 60px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13.5px; }
-.share-row .bar{ height: 12px; border-radius: 3px; background: var(--c1); }
-.share-row .pct{ text-align: right; font-variant-numeric: tabular-nums; }
-.anom-row{ display: grid; grid-template-columns: 1fr 120px 96px; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
-.anom-row:first-child{ border-top: 0; }
-.anom-row .spark2{ width: 120px; height: 26px; display: block; }
-.anom-row .spark2 polyline{ fill: none; stroke: var(--ink-faint); stroke-width: 1.5; }
-.anom-row .spark2 circle{ fill: var(--serious); }
-.anom-row .usd{ text-align: right; font-variant-numeric: tabular-nums; color: var(--serious); }
-.anom-row .what b{ color: var(--ink); font-weight: 500; }
-.anom-row .what span{ display: block; font-size: 12px; color: var(--ink-faint); }
+/* the brief */
+.issue-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+.issue-no { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); letter-spacing: 0.02em; }
+.issue-headline { font-size: var(--t-20); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.video-wrap { position: relative; padding-top: 56.25%; border-radius: var(--radius); overflow: hidden; background: var(--paper-2); margin-bottom: var(--s-5); }
+.video-wrap iframe, .video-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--paper-2); }
+.letter { font-size: var(--t-18); line-height: 1.7; color: var(--ink); max-width: 62ch; }
+.letter p { margin-bottom: 1em; }
+.letter .signoff { color: var(--ink-2); margin-top: 1.4em; }
+.tldr { font-size: var(--t-14); color: var(--ink-2); max-width: 68ch; }
+.next-delivery { border-left: 2px solid var(--ink); padding: var(--s-1) 0 var(--s-1) var(--s-4); color: var(--ink-2); max-width: 68ch; }
+.onboard { margin-top: var(--s-5); display: grid; gap: var(--s-3); }
+.onboard .step { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--s-4); font-size: var(--t-14); color: var(--ink-2); }
+.onboard .when { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+.archive-item { display: flex; gap: var(--s-4); align-items: baseline; padding-block: var(--s-3); border-top: 1px solid var(--rule); font-size: var(--t-14); color: var(--ink-2); cursor: pointer; }
+.archive-item:hover { color: var(--ink); }
+.archive-item .n { min-width: 74px; font-weight: var(--strong); color: var(--ink); }
+.archive-item .kinds { margin-left: auto; color: var(--ink-3); }
+.report-link { font-size: var(--t-14); margin-top: var(--s-4); }
 
 /* the watch */
-#horizon, #riskmap, #risk, #conc, #anom{ margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--hairline); }
-.hz-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
-#hz-svg{ width: 100%; height: auto; display: block; }
-#hz-svg .grid{ stroke: var(--hairline); }
-#hz-svg .ax{ fill: var(--ink-faint); font-family: var(--mono); font-size: 11.5px; }
-#hz-svg .lbl{ font-family: var(--mono); font-size: 12px; }
-/* SVG colors live here, not in presentation attributes — var() only
-   resolves in CSS, and this is what keeps the chart on-theme */
-#hz-svg .hz-p5{ fill: none; stroke: var(--amber); stroke-width: 1; opacity: .45; }
-#hz-svg .hz-med{ fill: none; stroke: var(--amber); stroke-width: 2; }
-#hz-svg .hz-zero{ stroke: var(--serious); stroke-width: 1.2; stroke-dasharray: 6 5; opacity: .8; }
-#hz-svg .hz-wire{ stroke: var(--serious); stroke-width: 2; opacity: .7; }
-#hz-svg .lbl-amber{ fill: var(--amber); }
-#hz-svg .lbl-faint{ fill: var(--ink-faint); }
-#hz-svg .lbl-serious{ fill: var(--serious); }
-.spark .spark-line{ fill: none; stroke: var(--ok); stroke-width: 2; stroke-linejoin: round; }
-.spark .spark-dot{ fill: var(--ok); }
-.hz-note{ font-size: 13px; color: var(--ink-faint); margin-top: 10px; max-width: 74ch; }
-.watch-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
-.watch-item{ display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
-.watch-item:first-of-type{ border-top: 0; }
-.watch-item .what{ color: var(--ink-soft); }
-.chip{ font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; font-weight: 600; }
-.chip.watching{ color: var(--amber); }
-.chip.clear{ color: var(--ok); }
-.chip.escalated{ color: var(--serious); }
-.log-item{ display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13px; }
-.log-item:first-of-type{ border-top: 0; }
-.log-item .when{ color: var(--ink-faint); font-size: 11.5px; padding-top: 2px; }
-.log-item .what{ color: var(--ink-soft); }
+.watch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-7); }
+.watch-item, .log-item { padding-block: var(--s-3); border-top: 1px solid var(--rule); font-size: var(--t-14); color: var(--ink-2); }
+.watch-item { display: flex; justify-content: space-between; gap: var(--s-3); align-items: baseline; }
+.watch-item:first-of-type, .log-item:first-of-type { border-top: 0; padding-top: 0; }
+.log-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--s-3); }
+.log-item .when { color: var(--ink-3); }
+.chip { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; white-space: nowrap; color: var(--ink-3); }
+.chip.escalated { color: var(--ink); }
+.chip.clear { color: var(--ink-2); }
 
-/* instruments (simulator) */
-.sim{ border-top: 1px solid var(--hairline); padding: 20px 0 8px; }
-.sim:first-of-type{ border-top: 0; padding-top: 0; }
-.sim h3{ font-family: var(--serif); font-weight: 500; font-size: 16px; color: var(--ink); margin-bottom: 2px; }
-.sim .note{ font-size: 12.5px; color: var(--ink-faint); margin-bottom: 12px; }
-.sim-row{ display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-.sim-val{ font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 62px; }
-.sim-out{ display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-.sim-out .o{ background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 14px; }
-.sim-out .o b{ display: block; font-family: var(--serif); font-weight: 500; font-size: 19px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.sim-out .o b.pos{ color: var(--ok); } .sim-out .o b.neg{ color: var(--serious); }
-.sim-out .o span{ font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); }
-.sim-warn{ margin-top: 10px; font-size: 11.5px; color: var(--serious); display: none; }
+/* 3 · the folds */
+.fold summary h2 { font-size: var(--t-20); letter-spacing: -0.015em; }
+.fold-body > section + section, .fold-body > div + div { margin-top: var(--s-7); padding-top: var(--s-6); border-top: 1px solid var(--rule); }
+.fold-body h3 { font-size: var(--t-18); letter-spacing: -0.01em; margin-bottom: var(--s-3); }
+.method p, .method li { max-width: 68ch; }
+.method > * + * { margin-top: var(--s-3); }
+.method ul { list-style: none; display: grid; gap: var(--s-2); }
+.method li { padding-left: var(--s-5); position: relative; }
+.method li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; border-top: 1px solid var(--ink-3); }
+.sect-label { margin-bottom: var(--s-3); }
+.label { display: block; }
 
-/* the record */
-.tenure{ font-size: 13px; color: var(--ink-faint); margin-bottom: 18px; }
-.candor{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
-.candor .c{ background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 18px; font-size: 13.5px; }
-.candor .c b{ display: block; font-family: var(--serif); font-weight: 500; font-size: 19px; margin-bottom: 2px; }
-.candor .win b{ color: var(--ok); }
-.candor .miss b{ color: var(--ink); }
-table{ width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 540px; }
-th{ text-align: left; color: var(--ink-faint); font-weight: 600; text-transform: uppercase; font-size: 10.5px;
-  letter-spacing: .1em; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
-td{ padding: 8px 10px; border-bottom: 1px solid var(--hairline); color: var(--ink-soft); }
-tr:last-child td{ border-bottom: 0; }
-td.num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.risk{ color: var(--serious); } .good{ color: var(--ok); }
-.scroll{ overflow-x: auto; }
-.archive-item{
-  display: flex; gap: 16px; align-items: baseline; padding: 10px 0;
-  border-top: 1px solid var(--hairline); font-size: 13.5px; cursor: pointer; color: var(--ink-soft);
+/* the read: the period, the plan, the analytics */
+.pos-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
+.pos-tile { border-top: 1px solid var(--ink); padding-top: var(--s-3); }
+.fig { font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.fig .cur { color: var(--ink-3); font-weight: var(--regular); margin-right: 1px; }
+.pos-tile .fig { display: block; font-size: var(--t-24); margin: var(--s-1) 0; }
+.pos-tile .d, .d { font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.d.up { color: var(--blue); } .d.down { color: var(--ink); }
+.target { margin-bottom: var(--s-5); }
+.target .t-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); margin-bottom: var(--s-2); }
+.target .t-name, .t-name { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.target .t-cur { font-size: var(--t-18); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.t-bar { position: relative; height: 8px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.t-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--ink); }
+.t-fill.behind { background: var(--ink-4); }
+.t-meta { display: flex; justify-content: space-between; margin-top: var(--s-1); font-size: var(--t-12); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.init { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-5); padding-block: var(--s-4); border-top: 1px solid var(--rule); }
+.init:first-of-type { border-top: 0; padding-top: 0; }
+.init h3 { font-size: var(--t-16); margin: 0; }
+.init .thesis { font-size: var(--t-14); color: var(--ink-2); max-width: 58ch; }
+.init .prog { font-size: var(--t-14); color: var(--ink-3); margin-top: var(--s-1); }
+.init .exp { font-weight: var(--strong); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* charts drawn by the scripts below: colours live in these classes, never in attributes */
+.chart { width: 100%; height: auto; display: block; }
+.chart .grid, #hz-svg .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .ax, .chart .lbl, #hz-svg .ax, #hz-svg .lbl { fill: var(--ink-3); font-family: var(--font); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart .lbl, #hz-svg .lbl { fill: var(--ink-2); }
+.chart .lbl, .chart .ax, #hz-svg .lbl, #hz-svg .ax { paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
+.chart .ink { stroke: var(--ink); stroke-width: 2; fill: none; }
+.chart .goldl { stroke: var(--blue); stroke-width: 2.5; fill: none; }
+.chart .goldf { fill: var(--blue); }
+.chart .okl { stroke: var(--blue); stroke-width: 2.5; fill: none; }
+.chart .okf { fill: var(--blue); }
+.chart .badl { stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 6 5; fill: none; }
+.chart .badsolid { stroke: var(--ink); stroke-width: 2.5; }
+.chart .badf { fill: var(--ink); }
+.chart .mutf { fill: var(--ink-4); }
+.chart .band, .chart .fan { fill: var(--blue); fill-opacity: var(--mc-band); }
+.chart .fan2 { fill: var(--blue); fill-opacity: calc(var(--mc-band) * 2); }
+.chart .dash { stroke: var(--rule-2); stroke-width: 1.2; stroke-dasharray: 4 5; }
+.chart .hollow { fill: var(--paper); stroke: var(--ink-3); stroke-width: 1.6; }
+.chart .c1, .seg.c1, .legend .c1 { fill: var(--ink-4); background: var(--ink-4); }
+.chart .c2, .seg.c2, .legend .c2 { fill: var(--rule-2); background: var(--rule-2); }
+.chart .c3, .seg.c3, .legend .c3 { fill: var(--ink-3); background: var(--ink-3); }
+.chart .c4, .seg.c4, .legend .c4 { fill: var(--blue); background: var(--blue); }
+.chart-duo { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-6); }
+.cap { font-size: var(--t-12); color: var(--ink-3); margin-top: var(--s-1); }
+.legend { display: flex; gap: var(--s-4); flex-wrap: wrap; margin-top: var(--s-4); font-size: var(--t-14); color: var(--ink-2); }
+.legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.stack-row { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 120px; gap: var(--s-3); align-items: center; padding-block: 6px; font-size: var(--t-14); }
+.stack-row .segs { display: flex; gap: 2px; height: 14px; }
+.stack-row .seg { border-radius: 2px; display: block; }
+.stack-row .s-net { text-align: right; font-variant-numeric: tabular-nums; }
+.stack-row .s-sku { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.p-row { padding-block: var(--s-5) var(--s-2); border-top: 1px solid var(--rule); }
+.p-row:first-child { border-top: 0; padding-top: 0; }
+.p-cap { display: flex; gap: var(--s-4); align-items: baseline; flex-wrap: wrap; margin-bottom: var(--s-3); }
+.p-sku { font-size: var(--t-18); font-weight: var(--strong); color: var(--ink); }
+.bleed-row, .share-row { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr) 80px; gap: var(--s-3); align-items: center; padding-block: 5px; font-size: var(--t-14); }
+.bleed-row .bar, .share-row .bar { height: 12px; border-radius: 2px; background: var(--ink-4); }
+.bleed-row.top .bar { background: var(--ink); }
+.bleed-row.rest .bar { opacity: 0.4; }
+.bleed-row .amt, .share-row .pct { text-align: right; font-variant-numeric: tabular-nums; }
+.health { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--s-7); align-items: start; }
+.health .score { font-size: 4.5rem; font-weight: var(--strong); line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+.health .score small { font-size: var(--t-18); color: var(--ink-3); letter-spacing: 0; margin-left: 4px; font-weight: var(--regular); }
+.health .grade { display: inline-block; margin-top: var(--s-3); font-weight: var(--strong); color: var(--ink); }
+.driver { display: grid; grid-template-columns: minmax(130px, 180px) minmax(0, 1fr) 52px 96px; gap: var(--s-3); align-items: center; padding-top: var(--s-2); border-top: 1px solid var(--rule); font-size: var(--t-14); }
+.driver:first-child { border-top: 0; padding-top: 0; }
+.driver .bar { height: 8px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.driver .bar i { display: block; height: 100%; border-radius: 3px; background: var(--ink); }
+.driver .bar i.mid, .driver .bar i.low { background: var(--ink-4); }
+.driver .sc, .driver .usd { text-align: right; font-variant-numeric: tabular-nums; }
+.driver .sc { color: var(--ink); font-weight: var(--strong); }
+.driver .usd, .driver-note { color: var(--ink-3); font-size: var(--t-12); }
+.driver-note { padding: 2px 0 var(--s-2); }
+.claim { display: grid; grid-template-columns: 118px minmax(0, 1fr) 84px 92px 118px; gap: var(--s-3); align-items: baseline; padding-block: var(--s-2); border-top: 1px solid var(--rule); font-size: var(--t-14); }
+.claim:first-child { border-top: 0; }
+.claim .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.claim .type { font-size: var(--t-12); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); font-weight: var(--strong); }
+.claim .when { text-align: right; font-size: var(--t-12); }
+.fan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: var(--s-5); }
+.meter { position: relative; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--rule) 0 10%, var(--rule-2) 10% 18%, var(--ink-4) 18% 100%); }
+.meter i { position: absolute; top: -5px; width: 3px; height: 20px; background: var(--ink); border-radius: 2px; margin-left: -1px; }
+.anom-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 96px; gap: var(--s-3); align-items: center; padding-block: var(--s-2); border-top: 1px solid var(--rule); font-size: var(--t-14); }
+.anom-row:first-child { border-top: 0; }
+.anom-row .spark2 { width: 120px; height: 26px; display: block; }
+.anom-row .spark2 polyline { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
+.anom-row .spark2 circle { fill: var(--ink); }
+.anom-row .usd { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.anom-row .what b { color: var(--ink); }
+.anom-row .what span { display: block; font-size: var(--t-12); color: var(--ink-3); }
+#horizon, #riskmap, #risk, #conc, #anom { margin-bottom: var(--s-6); padding-bottom: var(--s-6); border-bottom: 1px solid var(--rule); }
+.hz-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-3); }
+#hz-svg { width: 100%; height: auto; display: block; }
+#hz-svg .hz-cone { fill: var(--blue); fill-opacity: 0.08; }
+#hz-svg .hz-p5 { fill: none; stroke: var(--blue); stroke-width: 1; opacity: 0.45; }
+#hz-svg .hz-med { fill: none; stroke: var(--blue); stroke-width: 2; }
+#hz-svg .hz-zero { stroke: var(--ink-3); stroke-width: 1.2; stroke-dasharray: 6 5; }
+#hz-svg .hz-wire { stroke: var(--ink); stroke-width: 2; opacity: 0.7; }
+#hz-svg .lbl-amber { fill: var(--blue); } #hz-svg .lbl-faint { fill: var(--ink-3); } #hz-svg .lbl-serious { fill: var(--ink); }
+.hz-note { font-size: var(--t-14); color: var(--ink-3); margin-top: var(--s-3); max-width: 74ch; }
+.sim-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s-3); }
+.sim-out .o { background: var(--paper-2); border-radius: 8px; padding: var(--s-3) var(--s-4); }
+.sim-out .o b { display: block; font-size: var(--t-20); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.sim-out .o b.pos { color: var(--blue); }
+.sim-out .o span { font-size: var(--t-12); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--ink-3); }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-14); min-width: 540px; }
+th { text-align: left; color: var(--ink-3); font-weight: var(--strong); text-transform: uppercase; font-size: var(--t-12); letter-spacing: var(--track-label); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule-2); }
+td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule); color: var(--ink-2); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.risk { color: var(--ink); font-weight: var(--strong); }
+.good { color: var(--blue); }
+.state { font-size: var(--t-14); }
+
+.foot { border-top: 1px solid var(--rule); margin-top: var(--s-8); padding-block: var(--s-6) var(--s-9); font-size: var(--t-14); color: var(--ink-3); line-height: 1.8; }
+.foot a { color: var(--ink-2); }
+
+@media (max-width: 760px) {
+  .top { flex-direction: column; align-items: flex-start; }
+  .who { text-align: left; }
+  .watch-grid, .candor, .chart-duo, .health, .pos-tiles { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
+  .driver { grid-template-columns: 1fr 1fr; }
+  .driver .bar { grid-column: 1 / -1; }
+  .claim { grid-template-columns: 1fr 1fr; }
+  .leak { grid-template-columns: minmax(0, 1fr); }
+  .leak .usd { text-align: left; }
+  .login-row { flex-direction: column; }
 }
-.archive-item:hover{ color: var(--ink); }
-.archive-item:first-of-type{ border-top: 0; }
-.archive-item .n{ font-family: var(--serif); color: var(--amber); min-width: 74px; }
-.archive-item .kinds{ margin-left: auto; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
-
-/* evidence */
-details.panel{ padding: 0; }
-details.panel summary{
-  cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
-  gap: 12px; padding: 18px 26px; font-family: var(--serif); font-size: 16px; color: var(--ink);
-}
-details.panel summary::-webkit-details-marker{ display: none; }
-details.panel summary::after{ content: "+"; color: var(--amber); font-size: 17px; }
-details.panel[open] summary::after{ content: "−"; }
-details.panel .inner{ padding: 0 26px 22px; }
-.report-link{ font-size: 13.5px; margin: 6px 0 18px; }
-
-.hint{ font-size: 13.5px; color: var(--ink-faint); }
-.banner{ border-radius: 10px; padding: 12px 16px; margin: 14px 0; font-size: 14px;
-  background: hsl(45 100% 50% / .1); color: var(--ink); display: none; }
-.banner.err{ background: hsl(8 65% 60% / .12); }
-.hidden{ display: none; }
-[hidden]{ display: none !important; } /* the hidden attribute must beat .label's display:block */
-.login-box{ max-width: 430px; margin: 12vh auto 0; }
-.login-box p{ margin: 12px 0 20px; }
-.login-row{ display: flex; gap: 10px; }
-footer{
-  margin-top: 46px; border-top: 1px solid var(--hairline); padding-top: 18px;
-  font-size: 12.5px; color: var(--ink-faint); line-height: 1.9;
-}
-
-@media (max-width: 700px){
-  .panel{ padding: 22px 20px; }
-  .position{ padding: 28px 20px; }
-  .pos-tiles{ grid-template-columns: 1fr; gap: 14px; }
-  .pos-tile{ border-left: 0; padding: 0; }
-  .value-strip{ grid-template-columns: 1fr; gap: 14px; }
-  .value-strip .v{ border-left: 0; padding: 0; }
-  .health{ grid-template-columns: 1fr; }
-  .driver{ grid-template-columns: 1fr 1fr; }
-  .driver .bar{ grid-column: 1 / -1; }
-  .claim{ grid-template-columns: 1fr 1fr; }
-  .watch-grid{ grid-template-columns: 1fr; }
-  .candor{ grid-template-columns: 1fr; }
-  .masthead{ flex-direction: column; }
-  .prepared{ text-align: left; }
-}
-@media (prefers-reduced-motion: reduce){ *{ transition: none !important; } }
 </style>
+</head>
+<body>
 
 <div class="wrap">
 
-  <!-- login -->
+  <!-- sign-in -->
   <div id="login" class="login-box">
-    <h1>Sign in to Hubricon</h1>
-    <p>Enter the email your account was set up with — we'll send a one-time sign-in link. No passwords, and you'll stay signed in on this device.</p>
+    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+    <h1>Sign in to your Profit Record.</h1>
+    <p>Enter the email your account was set up with. We send a one-time sign-in link: no password to set, and you stay signed in on this device.</p>
     <div class="login-row">
-      <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
+      <input type="email" id="email" placeholder="you@company.com" autocomplete="email" aria-label="Your email">
       <button class="primary" id="send">Send link</button>
     </div>
-    <div class="banner" id="login-banner"></div>
+    <div class="banner" id="login-banner" role="status"></div>
   </div>
 
-  <!-- Hubricon: the Profit Record and everything behind it -->
   <div id="app" class="hidden">
 
-    <div class="masthead">
-      <span class="wordmark">Hubric<i>o</i>n</span>
-      <div class="prepared">
-        <b id="company">—</b><span id="plat"></span><br>
-        Hubricon · Managed Profit · as of <span id="asof"></span><br>
-        <button id="signout">Sign out</button>
-      </div>
-    </div>
+    <header class="top">
+      <span class="wordmark"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</span>
+      <div class="who"><b id="company">—</b><span id="plat"></span> · as of <span id="asof"></span><button class="link" id="signout">Sign out</button></div>
+    </header>
     <p class="objective hidden" id="objective">Your stated objective: <b id="objective-text"></b></p>
 
-    <!-- 1 · the position -->
-    <div class="panel position" id="position">
-      <div class="value-strip" id="value-strip">
-        <div class="v"><span class="label">Proven since day one</span><span class="fig" id="v-total">$0</span><span class="d" id="v-total-d">nothing proven yet — measurement starts with your first move</span></div>
-        <div class="v"><span class="label">Found, not yet banked</span><span class="fig" id="v-found">$0</span><span class="d" id="v-found-d">nothing found and unbanked right now</span></div>
-        <div class="v"><span class="label">Billed to date</span><span class="fig" id="v-fees">$0</span><span class="d" id="v-fees-d">Proving Month — nothing invoiced yet</span></div>
-        <div class="v"><span class="label">Proven ÷ billed</span><span class="fig" id="v-roi">—</span><span class="d" id="v-roi-d">the multiple starts at your first invoice</span></div>
-      </div>
-      <span class="label" id="pos-label">Proven on your Profit Record since day one</span>
-      <div class="fig pos-num good" id="pos-num">$0</div>
-      <div class="pos-sub" id="pos-sub"></div>
-      <svg class="spark" id="spark" width="240" height="44" viewBox="0 0 240 44" style="display:none" aria-hidden="true"></svg>
-      <div class="pos-tiles">
-        <div class="pos-tile"><span class="label">Net profit, latest period</span><span class="fig" id="d-net">—</span><span class="d" id="d-net-d"></span></div>
-        <div class="pos-tile"><span class="label">Revenue, latest period</span><span class="fig" id="d-rev">—</span><span class="d" id="d-rev-d"></span></div>
-        <div class="pos-tile"><span class="label">Blended net margin</span><span class="fig" id="d-pct">—</span><span class="d"></span></div>
-      </div>
-      <div id="trend" class="hidden" style="margin-top:24px; border-top:1px solid var(--hairline); padding-top:20px">
-        <svg class="chart" id="trend-svg" viewBox="0 0 920 170" role="img" aria-label="Net profit and revenue by month"></svg>
-      </div>
-    </div>
-
-
-    <!-- 2 · the plan -->
-    <div class="sect-label"><span class="label">The plan</span></div>
-    <div class="panel" id="plan-panel">
-      <div id="plan-body" class="hidden">
-        <div class="issue-head">
-          <span class="issue-no" id="plan-label"></span>
-          <span class="hint" id="plan-window"></span>
-        </div>
-        <div id="plan-targets"></div>
-        <div style="margin-top:26px">
-          <span class="label" style="margin-bottom:8px">The roadmap</span>
-          <div id="roadmap"></div>
-        </div>
-      </div>
-      <div id="plan-pending">
-        <p class="next-delivery"><b style="color:var(--ink)">Your 90-day plan is drafted from your first full read</b> and presented on your kickoff call: quarterly targets for profit, revenue, and margin, plus the three or four moves that get you there. Every move on your Profit Record executes a step of that plan.</p>
-      </div>
-    </div>
-
-    <!-- 2b · where the money goes -->
-    <section id="money-sect" class="hidden">
-      <div class="sect-label"><span class="label">Where the money goes</span></div>
-      <div class="panel">
-        <svg class="chart" id="waterfall-svg" viewBox="0 0 920 260" role="img" aria-label="Latest period: revenue stepping down to net profit"></svg>
-        <div id="stacks" style="margin-top:24px"></div>
-        <div class="legend"><span><i class="c1"></i>Platform fees</span><span><i class="c2"></i>COGS</span><span><i class="c3"></i>Ad spend</span><span><i class="c4"></i>Net profit</span></div>
-        <p class="hint" style="margin-top:12px">Latest period, computed from your own exports. Bars are proportional across SKUs; a red figure is a SKU that sold at a loss.</p>
-      </div>
+    <!-- 1 · the monitor: everything we have proven, the bill, the difference -->
+    <section class="score" id="score" aria-live="polite">
+      <span class="label" id="score-label">Proven on your Profit Record since day one</span>
+      <div class="score-total" id="score-total">$0</div>
+      <p class="score-line" id="score-line">Nothing proven yet.</p>
+      <div class="bar" id="score-bar" role="img" aria-label=""><span class="bar-fill" id="bar-fill" style="width: 0%"></span><span class="bar-bill" id="bar-bill" hidden></span></div>
+      <div class="bar-keys" id="bar-keys"><span class="k-bill" id="k-bill" hidden>Billed</span><span class="k-proven" id="k-proven">Proven</span></div>
+      <div class="score-more" id="score-more"></div>
     </section>
 
-    <!-- 2b' · money found -->
-    <section id="found-sect" class="hidden">
-      <div class="sect-label"><span class="label">Money found — what Amazon owes you</span></div>
-      <div class="panel">
-        <div class="sim-out" id="mf-tiles" style="margin-bottom:20px"></div>
-        <div id="mf-claims"></div>
-        <p class="hint" id="mf-note" style="margin-top:14px"></p>
-      </div>
+    <!-- waiting on you: the veto, before anything goes live -->
+    <section class="block" id="desk-sect">
+      <div class="block-head"><h2>Before it goes live</h2><span class="hint">Every move is written down with its expected dollars before it happens. Decline any of them.</span></div>
+      <div id="desk"></div>
     </section>
 
-    <!-- 2c · the mathematics of your prices -->
-    <section id="pricing-sect" class="hidden">
-      <div class="sect-label"><span class="label">The mathematics of your prices</span></div>
-      <div class="panel">
-        <div id="pricing-rows"></div>
-        <p class="hint" style="margin-top:14px">The demand curve is fitted to your observed months (the dots) with its 95% confidence band — that band is us showing our work. The profit curve follows from it and your true unit economics: the gold dot is the move waiting for your yes, P* the destination. Steps are capped at 5% per cycle, Buy Box watched while the step is live.</p>
+    <!-- 2 · the leaks -->
+    <section class="block" id="leaks-sect">
+      <div class="block-head"><h2>Every move, and what it earned</h2><span class="hint" id="tenure"></span></div>
+      <div class="candor" id="candor" hidden>
+        <div class="c win"><b id="wins-num">$0</b><span id="wins-text">measured wins</span></div>
+        <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
       </div>
+      <div id="leaks"><p class="hint">Your moves appear here the day they are issued, and their dollars the day your own exports measure them.</p></div>
     </section>
 
-    <!-- 2c' · the demand outlook -->
-    <section id="fc-sect" class="hidden">
-      <div class="sect-label"><span class="label">The demand outlook</span></div>
-      <div class="panel">
-        <div class="fan-grid" id="fans"></div>
-        <p class="hint" style="margin-top:14px">Each SKU's daily sales rate as observed (the line), then the next period as a range: the darker band holds the middle half of outcomes, the lighter band nine in ten. The method is chosen by backtesting against a naive forecast, and the accuracy gain is stated — a forecast that cannot beat "same as last month" says so.</p>
-      </div>
-    </section>
-
-    <!-- 2e · inventory economics -->
-    <section id="inv-sect" class="hidden">
-      <div class="sect-label"><span class="label">Inventory economics</span></div>
-      <div class="panel">
-        <div class="sim-out" id="inv-tiles" style="margin-bottom:20px"></div>
-        <div id="inv-orders"></div>
-        <div id="inv-liq" class="hidden" style="margin-top:22px"></div>
-        <p class="hint" id="inv-note" style="margin-top:14px"></p>
-      </div>
-    </section>
-
-    <!-- 2d · advertising efficiency -->
-    <section id="ads-sect" class="hidden">
-      <div class="sect-label"><span class="label">Advertising efficiency</span></div>
-      <div class="panel">
-        <div class="chart-duo" id="ad-curves"></div>
-        <div id="bleed-wrap" class="hidden" style="margin-top:26px">
-          <span class="label" style="margin-bottom:4px">Spend with zero attributed sales</span>
-          <p class="hint" id="bleed-total" style="margin-bottom:10px"></p>
-          <div id="bleed-rows"></div>
-        </div>
-        <div id="brand-wrap" class="hidden" style="margin-top:26px">
-          <span class="label" style="margin-bottom:4px">Paying for your own brand</span>
-          <p class="hint" id="brand-note" style="margin-bottom:8px"></p>
-          <svg class="chart" id="brand-svg" viewBox="0 0 920 92" role="img" aria-label="Recapturable branded spend range"></svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3 · the briefing -->
-    <div class="sect-label"><span class="label">The Profit Brief</span></div>
-    <div class="panel" id="issue-panel">
+    <!-- the latest Profit Brief -->
+    <section class="block" id="issue-panel">
+      <div class="block-head"><h2>The latest Profit Brief</h2></div>
       <div id="issue-body" class="hidden">
         <div class="issue-head">
           <span class="issue-no" id="issue-no"></span>
@@ -566,119 +350,202 @@ footer{
         <div class="video-wrap hidden" id="video-wrap"><iframe id="brief-frame" title="Your Profit Brief" allowfullscreen loading="lazy"></iframe><video id="brief-video" class="hidden" controls preload="metadata" playsinline title="Your Profit Brief"></video></div>
         <div class="letter" id="letter"></div>
         <p class="tldr" id="issue-tldr"></p>
+        <p class="report-link hidden" id="report-link-wrap">The full written report: <a href="#" id="report-link">open</a></p>
       </div>
       <div id="issue-pending">
-        <p class="next-delivery"><b style="color:var(--ink)">Your first full read — Profit Brief No. 001 — is in preparation.</b> It lands once your data is complete and the models have run: a written letter, your recorded walkthrough, and the full report.</p>
+        <p class="next-delivery"><b>Your first full read, Profit Brief No. 001, is in preparation.</b> It lands once your data is complete and the models have run: a written letter, your recorded walkthrough, and the full report.</p>
         <div class="onboard">
-          <div class="step"><span class="when">Days 0–1</span><span>Data ingested · models calibrated · baseline recorded before anything is touched — this becomes the number every future brief measures against, so a good month can never be mistaken for our work.</span></div>
-          <div class="step"><span class="when">Days 1–30</span><span>Profit Brief No. 001 delivered · first moves emailed before they go live · a Profit Brief every two weeks from there · the watch begins (weekly sweeps, Buy Box read on any live price test).</span></div>
-          <div class="step"><span class="when">Days 30–90</span><span>The Record decides at day 30 · first proven results land on your Profit Record · price-testing program under way.</span></div>
+          <div class="step"><span class="when">Days 0–1</span><span>Data ingested, models calibrated, and your baseline recorded before anything is touched. Every later move is measured against it, so a good month is never mistaken for our work.</span></div>
+          <div class="step"><span class="when">Days 1–30</span><span>Profit Brief No. 001. First moves emailed before they go live. A Profit Brief every two weeks from there, and the weekly watch begins.</span></div>
+          <div class="step"><span class="when">Day 30</span><span>The Record decides whether an invoice exists at all.</span></div>
         </div>
       </div>
-    </div>
-
-    <!-- 3 · decisions -->
-    <div class="sect-label"><span class="label">Before it goes live</span></div>
-    <div class="panel" id="desk-panel"><div id="desk"></div></div>
-
-    <!-- 4 · the watch -->
-    <div class="sect-label"><span class="label">What we're watching</span></div>
-    <div class="panel">
-      <div id="horizon" class="hidden">
-        <div class="hz-head">
-          <span class="label">The cash horizon — next 90 days</span>
-          <span class="chip" id="hz-chip"></span>
-        </div>
-        <svg id="hz-svg" viewBox="0 0 920 240" role="img" aria-label="Simulated cash position over the next 90 days"></svg>
-        <p class="hz-note" id="hz-note"></p>
-      </div>
-      <div id="risk" class="hidden">
-        <div class="hz-head"><span class="label">Profit at risk — next period</span><span class="chip" id="risk-chip"></span></div>
-        <div class="sim-out" id="risk-tiles"></div>
-        <p class="hz-note" id="risk-note"></p>
-      </div>
-      <div id="conc" class="hidden">
-        <div class="hz-head"><span class="label">Concentration — how much rides on one listing</span><span class="chip" id="conc-chip"></span></div>
-        <div class="meter" style="margin:12px 0 6px"><i id="conc-pin"></i></div>
-        <div class="t-meta"><span>diversified</span><span>1,800 · highly concentrated</span><span>one SKU</span></div>
-        <div id="conc-rows" style="margin-top:14px"></div>
-        <p class="hz-note" id="conc-note"></p>
-      </div>
-      <div id="anom" class="hidden">
-        <div class="hz-head"><span class="label">Fee creep and traffic shifts</span><span class="chip escalated" id="anom-chip"></span></div>
-        <div id="anom-rows"></div>
-        <p class="hz-note">Statistical change-point and CUSUM tests on your own fee-per-unit, conversion, and traffic series. A flag means a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.</p>
-      </div>
-      <div id="riskmap" class="hidden">
-        <div class="hz-head"><span class="label">Inventory risk — every SKU on one map</span></div>
-        <svg class="chart" id="risk-svg" viewBox="0 0 920 250" role="img" aria-label="Stockout probability vs days of cover per SKU"></svg>
-        <p class="hz-note">Days of cover run out toward the right; the dashed line is our 25% threshold. A SKU above it already has a reorder waiting for your yes.</p>
-      </div>
-      <div class="watch-grid">
-        <div>
-          <span class="label" style="margin-bottom:10px">Under watch</span>
-          <div id="watchlist"></div>
-        </div>
-        <div>
-          <span class="label" style="margin-bottom:10px">Recent work</span>
-          <div id="log"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5 · the record -->
-    <div class="sect-label"><span class="label">Your Profit Record — every move gets a receipt</span></div>
-    <div class="panel">
-      <p class="tenure" id="tenure"></p>
-      <div id="dumbbells" class="hidden" style="margin-bottom:22px">
-        <span class="label" style="margin-bottom:10px">Promised vs measured — every claim, drawn</span>
-        <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per move"></svg>
-      </div>
-      <div class="candor" id="candor" style="display:none">
-        <div class="c win"><b id="wins-num">$0</b><span id="wins-text">measured wins</span></div>
-        <div class="c miss"><b id="miss-num">—</b><span id="miss-text">the honest miss</span></div>
-      </div>
-      <div class="scroll"><table id="ledger">
-        <tr><th>Move</th><th class="num">Expected</th><th>Status</th><th class="num">Measured</th><th>How we know</th></tr>
-      </table></div>
-      <div style="margin-top:26px">
-        <span class="label" style="margin-bottom:8px">Profit Brief archive</span>
+      <div style="margin-top: var(--s-6)">
+        <span class="label sect-label">Earlier briefs</span>
         <div id="archive"><p class="hint">Your first Profit Brief will appear here.</p></div>
-      </div>
-    </div>
-
-    <!-- 5b · the health score -->
-    <section id="health-sect" class="hidden">
-      <div class="sect-label"><span class="label">The Health Score</span></div>
-      <div class="panel">
-        <div class="health">
-          <div>
-            <span class="label">Out of one hundred</span>
-            <div class="score" id="hs-score">—</div>
-            <span class="grade" id="hs-grade"></span>
-            <p class="hint" id="hs-note" style="margin-top:12px; max-width: 24ch"></p>
-          </div>
-          <div id="hs-drivers"></div>
-        </div>
-        <p class="hint" style="margin-top:18px">Six parts, each with the dollars behind its deduction, weighted over whichever ones your data supports. The thresholds are stated rules, not a black box — argue with any of them.</p>
       </div>
     </section>
 
-    <!-- 6 · evidence -->
-    <div class="sect-label"><span class="label">The full report</span></div>
-    <p class="report-link hidden" id="report-link-wrap">Full written report: <a href="#" id="report-link">Profit Brief —</a></p>
+    <!-- what we are watching -->
+    <section class="block">
+      <div class="block-head"><h2>What we are watching</h2></div>
+      <div class="watch-grid">
+        <div><span class="label sect-label">Under watch</span><div id="watchlist"></div></div>
+        <div><span class="label sect-label">Recent work</span><div id="log"></div></div>
+      </div>
+    </section>
 
-    <details class="panel">
-      <summary>Price tests</summary>
-      <div class="inner"><div class="scroll"><table id="ptests">
-        <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
-      </table></div></div>
+    <!-- 3 · folded: the method, then the full read -->
+    <details class="fold" id="method-fold">
+      <summary><h2>How these numbers are made</h2></summary>
+      <div class="fold-body method">
+<!-- build:attribution -->
+<h3 id="how-a-dollar-counts">How your Profit Record counts a dollar</h3>
+<p>These are the rules your Record is kept by. They are agreed before any number is on it, so neither of us can bend them once one is.</p>
+<p><b>Before.</b> Every move is written down with the dollars we expect it to earn over its first thirty days, before it goes live.</p>
+<p><b>After.</b> It is measured on your own later exports, and every dollar is graded by how we know it:</p>
+<ul>
+  <li><b>Direct.</b> The platform's own record shows the money moved: Amazon paid a reimbursement on a claim we filed. Counted in full.</li>
+  <li><b>Isolated.</b> Measured on the exact line the move named, against that line's own level before the change: the change, times the volume you actually sold.</li>
+  <li><b>Attributable.</b> Where demand moved too, measured against a stated counterfactual, from the same model that made the promise, at the least favourable end of its own range.</li>
+  <li><b>Unmeasurable.</b> Where we cannot separate our move from everything else, nothing is counted, and the Record says so.</li>
+</ul>
+<p><b>Three rules apply to every dollar.</b></p>
+<ul>
+  <li><b>Never above the promise.</b> An isolated or attributable result counts at most what we said it would earn. Anything more is shown and named, never added. A direct dollar counts what the platform actually paid.</li>
+  <li><b>Nothing under $25.</b> A smaller result is noise: the move closes and counts nothing.</li>
+  <li><b>Once.</b> The same movement on the same SKU in the same period is credited to one move only, the oldest.</li>
+</ul>
+<p><b>Misses stay.</b> A move that earned less than we expected is recorded at what it earned.</p>
+<p><b>Not yet a rule.</b> A move is measured once, over its first thirty days. Whether its effect lasts beyond that is not yet re-measured, so nothing is claimed for it.</p>
+<p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
+<!-- /build:attribution -->
+      </div>
     </details>
 
-    <footer>
-      Your data is yours: a complete export of everything we hold — raw files, tables, results, your Profit Record — at any time, free. That's policy, not a favor.
+    <details class="fold" id="full-read">
+      <summary><h2>The full read</h2></summary>
+      <div class="fold-body">
+
+        <section>
+          <h3>The latest period</h3>
+          <div class="pos-tiles">
+            <div class="pos-tile"><span class="label">Net profit</span><span class="fig" id="d-net">—</span><span class="d" id="d-net-d"></span></div>
+            <div class="pos-tile"><span class="label">Revenue</span><span class="fig" id="d-rev">—</span><span class="d" id="d-rev-d"></span></div>
+            <div class="pos-tile"><span class="label">Blended net margin</span><span class="fig" id="d-pct">—</span><span class="d"></span></div>
+          </div>
+          <div id="trend" class="hidden" style="margin-top: var(--s-6)">
+            <svg class="chart" id="trend-svg" viewBox="0 0 920 170" role="img" aria-label="Net profit and revenue by month"></svg>
+          </div>
+        </section>
+
+        <section id="plan-panel">
+          <h3>The plan</h3>
+          <div id="plan-body" class="hidden">
+            <div class="issue-head"><span class="issue-no" id="plan-label"></span><span class="hint" id="plan-window"></span></div>
+            <div id="plan-targets"></div>
+            <span class="label sect-label" style="margin-top: var(--s-5)">The roadmap</span>
+            <div id="roadmap"></div>
+          </div>
+          <div id="plan-pending">
+            <p class="next-delivery"><b>Your 90-day plan is drafted from your first full read</b> and presented on your kickoff call: quarterly targets for profit, revenue and margin, and the three or four moves that get you there. Every move on your Profit Record carries out a step of it.</p>
+          </div>
+        </section>
+
+        <section id="dumbbells" class="hidden">
+          <h3>Promised against measured, every move</h3>
+          <svg class="chart" id="db-svg" viewBox="0 0 920 200" role="img" aria-label="Expected versus measured impact per move"></svg>
+        </section>
+
+        <section id="money-sect" class="hidden">
+          <h3>Where the money goes</h3>
+          <svg class="chart" id="waterfall-svg" viewBox="0 0 920 260" role="img" aria-label="Latest period: revenue stepping down to net profit"></svg>
+          <div id="stacks" style="margin-top: var(--s-5)"></div>
+          <div class="legend"><span><i class="c1"></i>Platform fees</span><span><i class="c2"></i>Landed cost</span><span><i class="c3"></i>Ad spend</span><span><i class="c4"></i>Net profit</span></div>
+          <p class="hint" style="margin-top: var(--s-3)">Latest period, from your own exports. Bars are proportional across SKUs; a figure with a minus sign is a SKU that sold at a loss.</p>
+        </section>
+
+        <section id="found-sect" class="hidden">
+          <h3>What Amazon owes you</h3>
+          <div class="sim-out" id="mf-tiles" style="margin-bottom: var(--s-5)"></div>
+          <div id="mf-claims"></div>
+          <p class="hint" id="mf-note" style="margin-top: var(--s-3)"></p>
+        </section>
+
+        <section id="pricing-sect" class="hidden">
+          <h3>The mathematics of your prices</h3>
+          <div id="pricing-rows"></div>
+          <p class="hint" style="margin-top: var(--s-3)">The demand curve is fitted to your observed months (the dots) with its 95% confidence band: that band is us showing our work. The profit curve follows from it and your true unit economics. Steps are capped at 5% per cycle, with the Buy Box watched while a step is live.</p>
+        </section>
+
+        <section id="fc-sect" class="hidden">
+          <h3>The demand outlook</h3>
+          <div class="fan-grid" id="fans"></div>
+          <p class="hint" style="margin-top: var(--s-3)">Each SKU's daily sales rate as observed, then the next period as a range: the darker band holds the middle half of outcomes, the lighter band nine in ten. The method is chosen by backtesting against a naive forecast, and the gain is stated; a forecast that cannot beat "same as last month" says so.</p>
+        </section>
+
+        <section id="inv-sect" class="hidden">
+          <h3>Inventory economics</h3>
+          <div class="sim-out" id="inv-tiles" style="margin-bottom: var(--s-5)"></div>
+          <div id="inv-orders"></div>
+          <div id="inv-liq" class="hidden" style="margin-top: var(--s-5)"></div>
+          <p class="hint" id="inv-note" style="margin-top: var(--s-3)"></p>
+        </section>
+
+        <section id="ads-sect" class="hidden">
+          <h3>Advertising efficiency</h3>
+          <div class="chart-duo" id="ad-curves"></div>
+          <div id="bleed-wrap" class="hidden" style="margin-top: var(--s-6)">
+            <span class="label sect-label">Spend with zero attributed sales</span>
+            <p class="hint" id="bleed-total" style="margin-bottom: var(--s-3)"></p>
+            <div id="bleed-rows"></div>
+          </div>
+          <div id="brand-wrap" class="hidden" style="margin-top: var(--s-6)">
+            <span class="label sect-label">Paying for your own brand</span>
+            <p class="hint" id="brand-note" style="margin-bottom: var(--s-2)"></p>
+            <svg class="chart" id="brand-svg" viewBox="0 0 920 92" role="img" aria-label="Recapturable branded spend range"></svg>
+          </div>
+        </section>
+
+        <section>
+          <h3>Risk</h3>
+          <div id="horizon" class="hidden">
+            <div class="hz-head"><span class="label">The cash horizon, next 90 days</span><span class="chip" id="hz-chip"></span></div>
+            <svg id="hz-svg" viewBox="0 0 920 240" role="img" aria-label="Simulated cash position over the next 90 days"></svg>
+            <p class="hz-note" id="hz-note"></p>
+          </div>
+          <div id="risk" class="hidden">
+            <div class="hz-head"><span class="label">Profit at risk, next period</span><span class="chip" id="risk-chip"></span></div>
+            <div class="sim-out" id="risk-tiles"></div>
+            <p class="hz-note" id="risk-note"></p>
+          </div>
+          <div id="conc" class="hidden">
+            <div class="hz-head"><span class="label">Concentration: how much rides on one listing</span><span class="chip" id="conc-chip"></span></div>
+            <div class="meter" style="margin: var(--s-3) 0 var(--s-2)"><i id="conc-pin"></i></div>
+            <div class="t-meta"><span>diversified</span><span>1,800 · highly concentrated</span><span>one SKU</span></div>
+            <div id="conc-rows" style="margin-top: var(--s-3)"></div>
+            <p class="hz-note" id="conc-note"></p>
+          </div>
+          <div id="anom" class="hidden">
+            <div class="hz-head"><span class="label">Fee creep and traffic shifts</span><span class="chip escalated" id="anom-chip"></span></div>
+            <div id="anom-rows"></div>
+            <p class="hz-note">Change-point and CUSUM tests on your own fee-per-unit, conversion and traffic series. A flag is a shift the noise cannot explain, dated to when it began; the dollar figure is that shift at last period's volume.</p>
+          </div>
+          <div id="riskmap" class="hidden">
+            <div class="hz-head"><span class="label">Inventory risk, every SKU on one map</span></div>
+            <svg class="chart" id="risk-svg" viewBox="0 0 920 250" role="img" aria-label="Stockout probability against days of cover per SKU"></svg>
+            <p class="hz-note">Days of cover run out toward the right; the dashed line is the 25% threshold. A SKU above it already has a reorder waiting for your yes.</p>
+          </div>
+          <p class="hint" id="risk-empty">The risk views appear after your first models run.</p>
+        </section>
+
+        <section id="health-sect" class="hidden">
+          <h3>The Health Score</h3>
+          <div class="health">
+            <div>
+              <span class="label">Out of one hundred</span>
+              <div class="score" id="hs-score">—</div>
+              <span class="grade" id="hs-grade"></span>
+              <p class="hint" id="hs-note" style="margin-top: var(--s-3); max-width: 24ch"></p>
+            </div>
+            <div id="hs-drivers"></div>
+          </div>
+          <p class="hint" style="margin-top: var(--s-4)">Six parts, each with the dollars behind its deduction, weighted over whichever ones your data supports. The thresholds are stated rules, not a black box: argue with any of them.</p>
+        </section>
+
+        <section>
+          <h3>Price tests</h3>
+          <div class="scroll"><table id="ptests">
+            <tr><th>SKU</th><th class="num">Move</th><th>Window</th><th class="num">Buy Box</th><th>Status</th></tr>
+          </table></div>
+        </section>
+      </div>
+    </details>
+
+    <footer class="foot">
+      Your data is yours: a complete export of everything we hold, raw files, tables, results and your whole Profit Record, free, any day.
       <a href="#" id="export-link">Request your export</a> and it lands in your inbox within one working day.<br>
-      Reply to any Hubricon email to reach the person who builds your models. There is no support tier.
+      Reply to any Hubricon email to reach the person who builds your models. <a href="/your-data">How we handle your data</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
     </footer>
   </div>
 </div>
@@ -910,6 +777,9 @@ async function respond(id, approve, row){
     row.querySelectorAll("button").forEach((b) => (b.disabled = false));
   }
 }
+
+/* An ellipsis only where something was actually cut. */
+const clip = (t, n) => { const x = String(t || ""); return x.length > n ? x.slice(0, n).trimEnd() + "…" : x; };
 
 /* ── chart helpers ── */
 const lin = (d0, d1, r0, r1) => { const s = (d1 - d0) || 1; return (v) => r0 + ((Number(v) - d0) / s) * (r1 - r0); };
@@ -1193,41 +1063,150 @@ function renderDumbbells(dirs){
   $("#dumbbells").classList.remove("hidden");
 }
 
-/* ── value delivered vs fees ── */
+/* ── 1 · the monitor: proven since day one, the bill, the difference ── */
+const usd = (v) => (Number(v) < 0 ? "−$" : "$") + Math.abs(Math.round(Number(v) || 0)).toLocaleString("en-US");
 const moneyCur = (v) => v == null ? "—" : `<span class="cur">${Number(v) < 0 ? "−$" : "$"}</span>${Math.abs(Number(v)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-function renderValue(v){
-  if (!v) return;
-  $("#value-strip").classList.remove("hidden");
-  $("#v-total").innerHTML = moneyCur(v.value_total);
-  /* Reimbursements Amazon paid on a claim WE filed are our result; ones it
-     paid on its own reconciliation are the client's money either way, and are
-     shown beside the total rather than inside it. */
-  const extra = Number(v.recovered_unattributed || 0);
-  $("#v-total-d").textContent = `${money(v.measured)} proven on moves · ${money(v.recovered)} recovered on claims we filed`
-    + (extra > 0 ? ` · ${money(extra)} more reimbursed without a claim from us, not counted here` : "");
-  $("#v-fees").innerHTML = moneyCur(Number(v.fees_billed) || 0);
-  $("#v-fees-d").textContent = v.fees_basis === "invoiced"
-    ? `${v.billed_months} invoice${v.billed_months === 1 ? "" : "s"} raised · ${money(v.fees_paid)} paid`
-    : v.billed_months
-      ? `${v.billed_months} billed month${v.billed_months === 1 ? "" : "s"} after the free month`
-      : "Proving Month — nothing invoiced yet";
-  $("#v-found").innerHTML = moneyCur(Number(v.identified_unbanked) || 0);
-  $("#v-found-d").textContent = Number(v.identified_unbanked) > 0
-    ? "moves made and claims filed, at their expected dollars — counted toward the bar until the export or Amazon reads them back"
-    : "nothing found and unbanked right now";
-  const billed = Number(v.fees_billed) || 0; $("#v-roi").textContent = billed > 0 ? `${(Number(v.value_total) / billed).toFixed(1)}×` : "—";
-  const d = $("#v-roi-d");
-  const line = {
-    strong: ["up", "every dollar billed came back more than five times over"],
-    holding: ["", "covered — every invoice to date stands on the Record"],
-    at_risk: ["down", "below three to one — any invoice the Record hasn't covered is void, and the work deepens until it is"],
-    /* Nothing has been invoiced, so there is no multiple to fall short of.
-       This used to read "under three times" to clients who had never been
-       billed, because the denominator was assumed from their signup date. */
-    free_month: ["", "your Proving Month — the multiple starts at your first invoice"],
-  }[v.status] || ["", ""];
-  d.className = "d " + line[0];
-  d.textContent = line[1];
+
+/* Rung 7 of the spec's scoreboard: the number has a heartbeat. When it has
+   moved since this device last saw it, it counts up once to where it is now. */
+function countUp(el, to, key){
+  let from = to;
+  try {
+    const seen = localStorage.getItem(key);
+    if (seen != null && Number.isFinite(Number(seen))) from = Number(seen);
+    localStorage.setItem(key, String(to));
+  } catch {}
+  if (from === to || matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = usd(to); return; }
+  const t0 = performance.now(), dur = 1400, ease = (t) => 1 - Math.pow(1 - t, 3);
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / dur);
+    el.textContent = usd(from + (to - from) * ease(t));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function renderScore(v, directives, clientId){
+  const measuredRows = directives.filter((d) => d.measured_impact_usd != null && d.measured_at);
+  const proven = v ? Number(v.value_total) || 0 : measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0);
+  const billed = v ? Number(v.fees_billed) || 0 : 0;
+  const found = v ? Number(v.identified_unbanked) || 0 : 0;
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const thisMonth = measuredRows.filter((d) => asDate(d.measured_at) >= monthStart)
+    .reduce((t, d) => t + Number(d.measured_impact_usd), 0);
+
+  const total = $("#score-total");
+  total.classList.toggle("money", proven > 0);
+  countUp(total, proven, `hubricon_proven_${clientId}`);
+
+  const parts = [];
+  if (!measuredRows.length && proven <= 0){
+    parts.push("Nothing proven yet. Your baseline is recorded before anything is touched; each move is measured on your next exports, and its dollars land here.");
+  } else {
+    parts.push(thisMonth !== 0 ? `This month your Record measured <b class="money">${usd(thisMonth)}</b>.` : "Nothing new measured yet this month.");
+  }
+  if (billed <= 0){
+    parts.push("Nothing billed: this is your Proving Month.");
+  } else if (proven >= billed){
+    parts.push(`We have billed <b>${usd(billed)}</b> since day one. You are <b class="money">${usd(proven - billed)}</b> ahead.`);
+  } else {
+    parts.push(`We have billed <b>${usd(billed)}</b> since day one, against what the Record has proven and found. An invoice it has not covered is void.`);
+  }
+  $("#score-line").innerHTML = parts.join(" ");
+
+  const showBar = proven > 0 || billed > 0;
+  $("#score-bar").hidden = !showBar; $("#bar-keys").hidden = !showBar;
+  const scale = Math.max(proven, billed, 1);
+  $("#bar-fill").style.width = `${(Math.max(0, proven) / scale * 100).toFixed(2)}%`;
+  const bill = $("#bar-bill"), kb = $("#k-bill");
+  if (billed > 0){
+    const x = (billed / scale * 100).toFixed(2);
+    bill.hidden = false; bill.style.left = `${x}%`;
+    kb.hidden = false; kb.style.left = `${x}%`; kb.textContent = `Billed ${usd(billed)}`;
+  } else {
+    bill.hidden = true; kb.hidden = true;
+  }
+  $("#k-proven").textContent = billed > 0 ? `Proven ${usd(proven)}` : `Proven ${usd(proven)} · nothing billed`;
+  $("#score-bar").setAttribute("aria-label", `Proven ${usd(proven)} against ${usd(billed)} billed`);
+
+  const more = [];
+  if (found > 0) more.push(`<span><b>${usd(found)}</b> found, not yet banked: moves made and claims filed, at their expected dollars, until your exports or Amazon read them back.</span>`);
+  if (v && Number(v.recovered) > 0) more.push(`<span>Of the proven, <b>${usd(v.measured)}</b> on moves and <b>${usd(v.recovered)}</b> on claims we filed.</span>`);
+  if (v && Number(v.recovered_unattributed) > 0) more.push(`<span>Amazon also paid <b>${usd(v.recovered_unattributed)}</b> without a claim from us. It is yours either way, and not counted here.</span>`);
+  if (billed > 0 && proven > 0) more.push(`<span>Proven ÷ billed: <b>${(proven / billed).toFixed(1)}×</b></span>`);
+  $("#score-more").innerHTML = more.join("");
+}
+
+/* ── 2 · the leaks: every move, what state it is in, what it earned, how we know ── */
+const TIER = {
+  direct: "confirmed by the platform's own record",
+  isolated: "measured on the exact line the move named",
+  attributable: "measured against a stated counterfactual",
+  none: "not measurable, so nothing banked",
+};
+function leakRow(d, kind){
+  const tier = d.attribution ? (TIER[d.attribution] || d.attribution) : "";
+  const note = d.measurement_notes || "";
+  const exp = d.expected_impact_usd != null ? usd(d.expected_impact_usd) : null;
+  let amount = "", meta = "";
+  if (kind === "sealed"){
+    const m = Number(d.measured_impact_usd);
+    amount = `<span class="usd ${m > 0 ? "money" : ""}">${usd(m)}</span>`;
+    meta = `<b>Made ${fdate(d.executed_at || d.responded_at || d.issued_at)}</b> · measured ${fdate(d.measured_at)} over its first thirty days`
+      + (exp ? ` · we said ${exp}` : "") + (tier ? ` · ${esc(tier)}` : "");
+  } else if (kind === "made"){
+    amount = `<span class="usd quiet">${exp ? `${exp} expected` : "—"}</span>`;
+    meta = `<b>Made ${fdate(d.executed_at)}</b> · measured on your next exports`;
+  } else if (kind === "approved"){
+    amount = `<span class="usd quiet">${exp ? `${exp} expected` : "—"}</span>`;
+    meta = d.auto_approved_at ? `<b>Approved ${fdate(d.auto_approved_at)}</b>, inside your standing mandate, when the veto window closed` : `<b>Approved ${fdate(d.responded_at || d.issued_at)}</b> · going in`;
+  } else if (kind === "closed"){
+    amount = `<span class="usd quiet">$0</span>`;
+    meta = `<b>Closed ${fdate(d.measured_at || d.responded_at)}</b> · nothing banked` + (tier ? ` · ${esc(tier)}` : "");
+  } else {
+    amount = `<span class="usd quiet">—</span>`;
+    meta = `<b>${d.status === "lapsed" ? "Lapsed" : "Declined"} ${fdate(d.responded_at || d.issued_at)}</b> · not made`;
+  }
+  return `<div class="leak"><span class="what">${esc(d.action_text)}</span>${amount}<span class="meta">${meta}</span>`
+    + (note ? `<details><summary>How we know</summary><p>${esc(note)}</p></details>` : "") + `</div>`;
+}
+function renderLeaks(directives, briefs, since){
+  const live = directives.filter((d) => d.status !== "draft");
+  const sealed = live.filter((d) => d.measured_at && d.measured_impact_usd != null);
+  const closed = live.filter((d) => !sealed.includes(d) && (d.status === "closed" || d.measured_at));
+  const made = live.filter((d) => !sealed.includes(d) && !closed.includes(d) && d.executed_at && !["declined", "lapsed"].includes(d.status));
+  const approved = live.filter((d) => d.status === "approved" && !sealed.includes(d) && !made.includes(d) && !closed.includes(d));
+  const notMade = live.filter((d) => ["declined", "lapsed"].includes(d.status));
+  const groups = [
+    ["Measured", sealed, "sealed"],
+    ["Made, measuring on your next exports", made, "made"],
+    ["Approved, going in", approved, "approved"],
+    ["Closed without a dollar", closed, "closed"],
+    ["Declined or lapsed", notMade, "declined"],
+  ].filter(([, rows]) => rows.length);
+  const executed = sealed.length + made.length + closed.length;
+  $("#tenure").textContent = `Client since ${since || "—"} · ${briefs.length} brief${briefs.length === 1 ? "" : "s"} · ${live.length} move${live.length === 1 ? "" : "s"} issued · ${executed} made`;
+  if (groups.length){
+    $("#leaks").innerHTML = groups.map(([label, rows, kind]) =>
+      `<span class="label group-label">${label}</span>` + rows.map((d) => leakRow(d, kind)).join("")).join("");
+  }
+  /* The honest miss: a measured move that came in under what we said, shown beside the wins. */
+  if (sealed.length){
+    const wins = sealed.filter((d) => Number(d.measured_impact_usd) > 0);
+    $("#candor").hidden = false;
+    $("#wins-num").textContent = usd(wins.reduce((t, d) => t + Number(d.measured_impact_usd), 0));
+    $("#wins-text").textContent = `across ${wins.length} measured win${wins.length === 1 ? "" : "s"}`;
+    const misses = sealed.filter((d) => d.expected_impact_usd && Number(d.measured_impact_usd) < Number(d.expected_impact_usd));
+    if (misses.length){
+      const worst = misses.slice().sort((a, b) =>
+        (Number(a.measured_impact_usd) - Number(a.expected_impact_usd)) - (Number(b.measured_impact_usd) - Number(b.expected_impact_usd)))[0];
+      $("#miss-num").textContent = `${usd(worst.expected_impact_usd)} → ${usd(worst.measured_impact_usd)}`;
+      $("#miss-text").textContent = "the furthest a move came in under what we said; misses stay on the Record";
+    } else {
+      $("#miss-num").textContent = "None yet";
+      $("#miss-text").textContent = "when a move comes in under what we said, it stays here";
+    }
+  }
 }
 
 /* ── the health score ── */
@@ -1421,7 +1400,6 @@ function renderAnomalies(a){
 /* ── the chart pack: engine-computed series, drawn here ── */
 function renderPack(pack){
   if (!pack) return;
-  try { renderValue(pack.value); } catch {}
   try { renderHealth(pack.health); } catch {}
   try { renderMoneyFound(pack.money_found); } catch {}
   try { if (pack.forecast_fans?.length) renderFans(pack.forecast_fans); } catch {}
@@ -1473,11 +1451,7 @@ function renderHorizon(rows){
   for (let day = 15; day < P5.length; day += 15){
     svg += `<text x="${sx(day).toFixed(1)}" y="${H - 8}" class="ax" text-anchor="middle">${dayLabel(day)}</text>`;
   }
-  svg += `<defs><linearGradient id="hz-cone" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="hsl(42 90% 45%)" stop-opacity="0.18"/>
-      <stop offset="1" stop-color="hsl(42 90% 45%)" stop-opacity="0.03"/>
-    </linearGradient></defs>
-    <path d="M ${line(P95).replaceAll(" ", " L ")} L ${P5.map((v, i) => pt(i, v)).reverse().join(" L ")} Z" fill="url(#hz-cone)"/>
+  svg += `<path d="M ${line(P95).replaceAll(" ", " L ")} L ${P5.map((v, i) => pt(i, v)).reverse().join(" L ")} Z" class="hz-cone"/>
     <polyline points="${line(P5)}" class="hz-p5"/>
     <polyline points="${line(P50)}" class="hz-med"/>
     <line x1="${L}" x2="${W - R}" y1="${sy(0).toFixed(1)}" y2="${sy(0).toFixed(1)}" class="hz-zero"/>
@@ -1563,35 +1537,9 @@ async function load(){
     }
   }
 
-  /* position hero */
-  const measuredRows = directives.filter((d) => d.measured_impact_usd != null && d.measured_at);
-  const measured = measuredRows.reduce((t, d) => t + Number(d.measured_impact_usd), 0);
+  /* 1 · the monitor */
   const since = fmonth(client.created_at);
-  const packValue = packRows[0]?.payload?.value;
-  if (packValue && Number(packValue.value_total) > 0){
-    ["#pos-label","#pos-num","#pos-sub"].forEach((s) => { $(s).hidden = true; });
-  } else if (measured > 0 || measuredRows.length){
-    ["#pos-label","#pos-num","#pos-sub"].forEach((s) => { $(s).hidden = true; });
-  } else {
-    $("#pos-label").textContent = "Your Proving Month";
-    $("#pos-num").textContent = since || "—";
-    $("#pos-num").classList.remove("good");
-    $("#pos-num").style.fontSize = "clamp(28px, 5vw, 40px)";
-    $("#pos-sub").textContent = "Baseline period — your baseline is recorded before anything is touched. Measurement begins with your first approved move, and every claim lands on your Profit Record below.";
-  }
-  /* sparkline of cumulative measured impact */
-  if (measuredRows.length >= 2){
-    const pts = measuredRows.sort((a, b) => a.measured_at.localeCompare(b.measured_at));
-    let acc = 0;
-    const series = pts.map((d) => (acc += Number(d.measured_impact_usd)));
-    const max = Math.max(...series, 1);
-    const spark = $("#spark");
-    spark.style.display = "block";
-    const step = 232 / (series.length - 1);
-    const poly = series.map((v, i) => `${(4 + i * step).toFixed(1)},${(40 - (v / max) * 34).toFixed(1)}`).join(" ");
-    spark.innerHTML = `<polyline points="${poly}" class="spark-line"/>
-      <circle cx="${(4 + (series.length - 1) * step).toFixed(1)}" cy="${(40 - 34).toFixed(1)}" r="3" class="spark-dot"/>`;
-  }
+  try { renderScore(packRows[0]?.payload?.value, directives, client.id); } catch {}
 
   /* before it goes live */
   const awaiting = directives.filter((d) => d.status === "issued");
@@ -1599,7 +1547,7 @@ async function load(){
   const desk = $("#desk");
   desk.innerHTML = "";
   if (!awaiting.length){
-    desk.innerHTML = `<p class="hint">Nothing awaiting you — ${executed} move${executed === 1 ? "" : "s"} executed to date. The watch continues below.</p>`;
+    desk.innerHTML = `<p class="hint">Nothing is waiting on you.${executed ? ` ${executed} move${executed === 1 ? "" : "s"} made to date.` : ""}</p>`;
   }
   awaiting.forEach((d, i) => {
     const row = document.createElement("div");
@@ -1615,7 +1563,7 @@ async function load(){
           <button class="decline">Decline</button>
           <span class="stake">${d.expected_impact_usd ? "expected " + money(d.expected_impact_usd) : ""}</span>
         </div>
-        <p class="stamp">Reviewed and signed off — Hubricon, ${fdate(d.issued_at || d.created_at)}</p>
+        <p class="stamp">Issued by Hubricon, ${fdate(d.issued_at || d.created_at)}.</p>
         ${vetoLine(d)}
       </div>`;
     row.querySelector(".primary").addEventListener("click", () => respond(d.id, true, row));
@@ -1699,7 +1647,7 @@ async function load(){
   for (const a of alerts.filter((a) => a.severity !== "info").slice(0, 6)){
     watchItems.push({
       order: a.severity === "critical" ? 0 : 1,
-      html: `<span class="what">${esc(a.message.slice(0, 90))}${a.message.length > 90 ? "…" : ""}</span>
+      html: `<span class="what">${esc(clip(a.message, 90))}</span>
         <span class="chip escalated">${a.severity === "critical" ? "escalated — action issued" : "flagged at last sweep"}</span>`,
     });
   }
@@ -1720,15 +1668,15 @@ async function load(){
 
   /* the watch: activity log — specific named work, never counters */
   const events = [];
-  for (const u of uploads) events.push({ t: u.parsed_at, what: `Ingested ${u.original_filename} — ${u.row_count ?? "?"} rows verified` });
-  for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${a.message.slice(0, 90)}${a.message.length > 90 ? "…" : ""}` });
-  for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Move issued: ${d.action_text.slice(0, 80)}…` });
+  for (const u of uploads) events.push({ t: u.parsed_at, what: `Read ${u.original_filename}: ${u.row_count ?? "?"} rows verified` });
+  for (const a of alerts) events.push({ t: a.created_at, what: `Alert raised: ${clip(a.message, 90)}` });
+  for (const d of directives.filter((x) => x.issued_at).slice(0, 5)) events.push({ t: d.issued_at, what: `Move issued: ${clip(d.action_text, 80)}` });
   /* An auto-approval is not a click, and the log should never imply one. */
   for (const d of directives.filter((x) => x.auto_approved_at).slice(0, 5))
-    events.push({ t: d.auto_approved_at, what: `Approved automatically — the veto window closed: ${d.action_text.slice(0, 70)}…` });
+    events.push({ t: d.auto_approved_at, what: `Approved inside your standing mandate when the veto window closed: ${clip(d.action_text, 70)}` });
   for (const d of directives.filter((x) => x.executed_at).slice(0, 5))
-    events.push({ t: d.executed_at, what: `Executed in your account: ${d.action_text.slice(0, 70)}…` });
-  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku} — Buy Box watched while the step is live` });
+    events.push({ t: d.executed_at, what: `Made in your account: ${clip(d.action_text, 70)}` });
+  for (const t of ptests.filter((t) => t.start_date)) events.push({ t: t.start_date, what: `Price test opened on ${t.sku}; Buy Box watched while the step is live` });
   events.sort((a, b) => String(b.t).localeCompare(String(a.t)));
   const log = $("#log");
   log.innerHTML = events.length ? "" : `<p class="hint">Work appears here as it happens.</p>`;
@@ -1739,49 +1687,8 @@ async function load(){
     log.appendChild(el);
   }
 
-  /* the record */
-  const issues = briefs.length;
-  $("#tenure").textContent = `Client since ${since || "—"} · ${issues} brief${issues === 1 ? "" : "s"} · ${directives.length} move${directives.length === 1 ? "" : "s"} · ${executed} executed`;
-  const wins = measuredRows.filter((d) => Number(d.measured_impact_usd) > 0);
-  if (measuredRows.length){
-    $("#candor").style.display = "";
-    $("#wins-num").textContent = money(wins.reduce((t, d) => t + Number(d.measured_impact_usd), 0));
-    $("#wins-text").textContent = `across ${wins.length} measured win${wins.length === 1 ? "" : "s"}`;
-    const misses = measuredRows.filter((d) => d.expected_impact_usd && Number(d.measured_impact_usd) < Number(d.expected_impact_usd));
-    if (misses.length){
-      const worst = misses.sort((a, b) =>
-        (Number(a.measured_impact_usd) - Number(a.expected_impact_usd)) -
-        (Number(b.measured_impact_usd) - Number(b.expected_impact_usd)))[0];
-      $("#miss-num").textContent = `${money(worst.expected_impact_usd)} → ${money(worst.measured_impact_usd)}`;
-      $("#miss-text").textContent = "we said, it measured — the misses stay on the record too";
-    } else {
-      $("#miss-num").textContent = "none yet";
-      $("#miss-text").textContent = "when a call comes in under, it stays on this record";
-    }
-  }
-  const ledger = $("#ledger");
-  ledger.querySelectorAll("tr:not(:first-child)").forEach((r) => r.remove());
-  /* "How we know" is the audit surface of the whole ledger: the attribution
-     tier plus the note naming the export line the number came from. Without
-     it the attribution standard is a private policy rather than something a
-     client can check. */
-  const TIER = {
-    direct: "Counterparty's own record",
-    isolated: "Measured on the line we named",
-    attributable: "Against a stated counterfactual",
-    none: "Not attributable — nothing banked",
-  };
-  for (const d of directives.filter((x) => x.status !== "draft")){
-    const tier = d.attribution ? (TIER[d.attribution] || d.attribution) : "";
-    const note = d.measurement_notes || "";
-    ledger.insertAdjacentHTML("beforeend", `<tr>
-      <td>${esc(d.action_text)}</td>
-      <td class="num">${d.expected_impact_usd ? money(d.expected_impact_usd) : "—"}</td>
-      <td><span class="state ${esc(d.status)}">${esc(d.status)}</span></td>
-      <td class="num ${Number(d.measured_impact_usd) > 0 ? "good" : ""}">${d.measured_impact_usd != null ? money(d.measured_impact_usd) : "—"}</td>
-      <td class="how">${tier ? `<b>${esc(tier)}</b>` : ""}${note ? `<span>${esc(note)}</span>` : (tier ? "" : "—")}</td>
-    </tr>`);
-  }
+  /* 2 · the leaks */
+  renderLeaks(directives, briefs, since);
 
   /* evidence: the client's own price tests — the full report carries the rest */
   const pt = $("#ptests");
@@ -1800,9 +1707,12 @@ async function load(){
 }
 
 (async () => {
-  if (await ensureSession()) load().catch(() => {});
+  if (await ensureSession()) load().then(() => {
+    $("#risk-empty").hidden = ["#horizon", "#risk", "#conc", "#anom", "#riskmap"].some((sel) => !$(sel).classList.contains("hidden"));
+  }).catch(() => {});
   else showLogin();
 })();
 </script>
+
 </body>
 </html>

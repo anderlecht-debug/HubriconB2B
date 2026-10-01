@@ -16,6 +16,7 @@
   --ink: #0a0e17;
   --ink-2: #3b4250;                  /* body copy */
   --ink-3: #636b7a;                  /* captions, labels, axes: 5.3:1 on paper */
+  --ink-4: #9aa1ae;                  /* a chart's second neutral: a fee, a cost, a ghosted series */
   --rule: #e4e7ec;
   --rule-2: #cdd2da;
   --blue: #0b5fff;                   /* money and the leak. Nothing else. 5.0:1 on paper */
@@ -26,6 +27,7 @@
   --night-ink: #f3f5f9;
   --night-ink-2: #a8b0bf;
   --night-ink-3: #7c8596;
+  --night-ink-4: #4f5768;
   --night-rule: #1d2431;
   --night-blue: #5b94ff;
 
@@ -83,6 +85,7 @@
   --ink: var(--night-ink);
   --ink-2: var(--night-ink-2);
   --ink-3: var(--night-ink-3);
+  --ink-4: var(--night-ink-4);
   --rule: var(--night-rule);
   --rule-2: #2c3443;
   --blue: var(--night-blue);
