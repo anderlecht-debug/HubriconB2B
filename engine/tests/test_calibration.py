@@ -80,3 +80,19 @@ def test_compute_reads_only_consenting_non_internal_clients():
                  {"id": "c3", "contact_email": "c@brand.com", "platform": "amazon"}],
     )
     assert [c["id"] for c in calibration.consented_clients(db)] == ["c1"]
+
+
+def test_a_client_who_left_or_said_no_calibrates_nothing_whatever_they_once_granted():
+    """The consent was given by a client, about the work we were doing for them:
+    from the day they leave (churned) or say no (declined) their data calibrates
+    nothing, the rule fleet.py keeps for the network's sources."""
+    db = FakeDB(
+        consents=[{"client_id": c, "kind": "calibration", "granted": True} for c in ("c1", "c2", "c3", "c4", "c5")],
+        clients=[{"id": "c1", "contact_email": "a@brand.com", "status": "active"},
+                 {"id": "c2", "contact_email": "b@brand.com", "status": "churned"},
+                 {"id": "c3", "contact_email": "c@brand.com", "status": "declined"},
+                 {"id": "c4", "contact_email": "d@brand.com", "status": "past_due"},
+                 {"id": "c5", "contact_email": "e@brand.com", "status": "pending"}],
+    )
+    assert sorted(c["id"] for c in calibration.consented_clients(db)) == ["c1", "c4", "c5"]
+    assert sorted(c["id"] for c in calibration.consented_clients(db, statuses=None)) == ["c1", "c2", "c3", "c4", "c5"]
