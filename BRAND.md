@@ -131,10 +131,15 @@ a warm one as retail urgency. Our own price is ink: the blue is for the client's
 
 ### Type
 
-One sans, two weights: **Inter** 400 and 600, from Google Fonts. Headlines at -0.032em,
+One sans, two weights: **Inter** 400 and 600, from Google Fonts, always loaded with its
+optical-size axis (`family=Inter:opsz,wght@14..32,400;14..32,600`) so text from about 20px
+up takes **Inter Display**, the cut Inter draws for large sizes: tighter, crisper. Requested
+without that axis, every headline falls back to the small-text cut and reads generic (found
+and fixed 2026-09-30, the founder's pick of four on real frames). Headlines at -0.032em,
 balanced. Every number tabular (`font-variant-numeric: tabular-nums`) on figures, money,
 charts and every `data-fill` value, but not on prose: Inter's tabular feature also widens
-the hyphen, and "founder-operated" would read "founder - operated".
+the hyphen, and "founder-operated" would read "founder - operated". A figure standing alone
+at display size in a film takes proportional digits; tabular digits are for columns.
 
 ### Space and layout
 
