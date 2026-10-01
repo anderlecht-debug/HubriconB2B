@@ -91,7 +91,9 @@ export async function render(board, out, { audio = null, stills = null } = {}) {
   const page = await cdp(chromeBin());
   const silent = out.replace(/\.mp4$/, ".video.mp4");
   const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-c:v", "mjpeg", "-framerate", String(FPS), "-i", "-",
-    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-preset", "slow", "-movflags", "+faststart", audio ? silent : out], { stdio: ["pipe", "inherit", "inherit"] });
+    // JPEG frames are full-range; phones expect broadcast-range BT.709, so convert and say so.
+    "-vf", "scale=in_range=pc:out_range=tv,format=yuv420p", "-c:v", "libx264", "-profile:v", "high", "-level", "4.0", "-crf", "16", "-preset", "slow",
+    "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-movflags", "+faststart", audio ? silent : out], { stdio: ["pipe", "inherit", "inherit"] });
   const write = (buf) => new Promise((r) => (ff.stdin.write(buf) ? r() : ff.stdin.once("drain", r)));
 
   try {
