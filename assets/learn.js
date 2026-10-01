@@ -43,9 +43,9 @@ function paintStart() {
   if (i < 0) return;
   // Pick up at the lesson after the last one opened, or that one if it was the last.
   const j = Math.min(i + 1, lessons.length - 1);
-  const title = links[j].textContent.replace(/^\d+/, "").trim();
   start.setAttribute("href", `#${lessons[j].id}`);
-  start.firstChild.textContent = `Continue with lesson ${j + 1}, ${title} `;
+  start.firstChild.textContent = `Continue with lesson ${j + 1} `;
+  start.setAttribute("aria-label", `Continue with lesson ${j + 1}: ${links[j].textContent.replace(/^\d+/, "").trim()}`);
 }
 
 function paintToc(current) {

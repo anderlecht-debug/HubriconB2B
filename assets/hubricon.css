@@ -464,6 +464,8 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
 .film-beats li { display: grid; gap: var(--s-2); align-content: start; padding-top: var(--s-3); border-top: 1px solid var(--rule-2); font-size: var(--t-16); line-height: 1.35; color: var(--ink); }
 .film-beats span { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .lesson-video { margin: var(--s-5) 0; border-radius: var(--radius); overflow: hidden; }
+.lesson-video-waiting { margin: var(--s-4) 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
+.lesson-video-waiting .label { color: var(--ink-3); }
 @media (max-width: 760px) {
   .film-waiting { padding: var(--s-5); }
   .film-note { font-size: var(--t-14); }
@@ -659,7 +661,7 @@ html:not(.js) .course-page .pager { display: none; }
   .course-page .toc[open] summary::after { transform: translateY(2px) rotate(-135deg); }
   .course-page .toc .course-name { display: none; }
   .course-page .toc ol { border-top: 0; }
-  .course-page .start .btn { width: 100%; }
+  .course-page .start .btn { width: 100%; white-space: normal; }
   .course-page .prose p, .course-page .prose li { font-size: var(--t-16); }
 }
 
@@ -817,6 +819,12 @@ html:not(.js) .course-page .pager { display: none; }
 /* The Monte Carlo: ten thousand futures, drawn once, then still. */
 .mc .mc-path { fill: none; stroke: var(--blue); stroke-width: 1; stroke-opacity: var(--mc-path-rest); }
 .mc .mc-band { fill: var(--blue); fill-opacity: var(--mc-band); stroke: none; }
+/* Capital & Cash: the bank balance. Money is blue: the band and its bad edge; the median is ink. */
+.cash .cash-band { fill: var(--blue); fill-opacity: var(--mc-band); stroke: none; }
+.cash .cash-p5 { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linejoin: round; }
+.cash .cash-p50 { fill: none; stroke: var(--ink); stroke-width: var(--line-pct); stroke-linejoin: round; }
+.cash .cash-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
+.chart .dot-blue { fill: var(--blue); }
 .mc .mc-pct { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linecap: round; }
 .mc .mc-pct.p50 { stroke: var(--ink); }
 .mc .mc-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }

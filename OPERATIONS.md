@@ -1937,6 +1937,7 @@ only. What exists:
 | Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
 | Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
 | Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
+| Course 3, **Capital & Cash** (2026-10-01): seven lessons, the days a dollar is gone, the low point after a wire, the reorder point and order, the service level each margin pays for, hold against liquidate, the cash a bad month needs, and what a late wire costs | `learn/capital-and-cash.html`, figures in `data/learn-capital-cash.json`, spreadsheet `learn/files/hubricon-capital-and-cash.xlsx` |
 | Each course on one page (2026-10-01): every rule and formula in eight cells, one printed Letter page, each cell linked to its lesson; figures are the course page's own fills | `learn/fee-staircase-card.html`, `learn/price-curve-card.html`, "a course on one page" in `/assets/hubricon.css` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
 
@@ -1970,6 +1971,23 @@ file moves. After any change to the elasticity or pricing models (which also re-
 
     cd engine && uv run --with openpyxl python ../scripts/learn/price_curve.py --publish
     node scripts/build-pages.mjs
+
+**Capital & Cash is the engine's cash and inventory models, run on the course's examples.**
+`scripts/learn/capital_cash.py` runs the invented garlic press (The Price Curve's, same rate and
+costs) and an invented spatula set through `inventory_sim.run`, `cashflow.run` (10,000 paths),
+`inventory_econ.critical_fractile`, `demand_over_cycle` and `hold_vs_liquidate`, and writes
+`data/learn-capital-cash.json`; `capitalCashFigures` in `scripts/build-pages.mjs` fills the page
+and draws the cash path, the cash band and the late-wire curve. The spreadsheet carries the same
+arithmetic as formulas and is checked against the engine on golden cases (the reorder point,
+the order and the wire; the service level row by row; hold against liquidate month by month; the
+late-wire table). Where the engine counts lead-time demand exactly (a Poisson count on a lognormal
+rate), the sheet uses the lognormal alone and the check holds it within a few units; the lessons
+print the engine's figure. After any change to those models or to the payout and fee constants:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/capital_cash.py --publish
+    node scripts/build-pages.mjs
+
+`scripts/learn/capital-cash.test.mjs` fails when an engine module the figures came from has moved.
 
 One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth
 decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a

@@ -376,3 +376,92 @@ export function profitSVG(pc, opts) {
     `All three pass through today's price. The solid line is flat across the top: a few percent either side of the best price costs little.`;
   return frame(w, h, "profit", { id: `${id}-t`, text: "Profit a month against price, at the fitted elasticity and at the ends of its interval" }, { id: `${id}-d`, text: desc }, body);
 }
+
+// ---------------------------------------------------------------- the cash path
+
+/**
+ * c: Capital & Cash's cash figures (data/learn-capital-cash.json "cash"). The median path,
+ * in steps, from today's balance; with opts.band, the 5th–95th percentile band and the 5th
+ * percentile line under it. The wire and the low point are marked; the payouts are the steps.
+ */
+export function cashSVG(c, opts) {
+  const { id, w, h, m, font = 13, band = false, narrow = false } = opts;
+  // these labels repeat figures the lesson prints, rounded as the lesson rounds them
+  const whole = (v) => `${v < 0 ? "−" : ""}$${Math.round(Math.abs(v)).toLocaleString("en-US")}`;
+  const days = c.p50.length;
+  const at = (arr) => [c.start, ...arr];                  // day 0 is today's balance
+  const p50 = at(c.p50), p5 = at(c.p5), p95 = at(c.p95);
+  const all = band ? [...p5, ...p95] : p50;
+  const yt = niceTicks(Math.min(0, ...all), Math.max(...all), 4);
+  const y0 = Math.min(yt[0], ...all), y1 = Math.max(yt[yt.length - 1], ...all);
+  const X = scale(0, days, m.l, w - m.r), Y = scale(y0, y1, h - m.b, m.t);
+  // steps: the balance holds through a day and moves at its end
+  const stepped = (arr) => `M${r1(X(0))},${r1(Y(arr[0]))}` + arr.slice(1).map((v, i) => ` H${r1(X(i + 1))} V${r1(Y(v))}`).join("");
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${usd(t, { compact: true })}</text>`;
+  }
+  body += `<line class="cash-zero" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(0))}" y2="${r1(Y(0))}"/>`;
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  const xl = narrow ? [[0, "Today", "start"], [days, `${days} days`, "end"]] : [[0, "Today", "start"], [30, "30 days", "middle"], [60, "60 days", "middle"], [days, `${days} days`, "end"]];
+  for (const [v, t, a] of xl) body += `<text x="${r1(X(v))}" y="${h - m.b + font + 12}" font-size="${font}" text-anchor="${a}">${t}</text>`;
+  if (band) {
+    const lo = p5.map((v, i) => [X(i), Y(v)]), hi = p95.map((v, i) => [X(i), Y(v)]);
+    body += `<path class="cash-band fade" d="M${hi.map(([x, y]) => `${r1(x)},${r1(y)}`).join(" L")} L${lo.reverse().map(([x, y]) => `${r1(x)},${r1(y)}`).join(" L")}Z"/>`;
+    body += `<path class="cash-p5 draw" pathLength="1" d="${stepped(p5)}"/>`;
+  }
+  body += `<path class="cash-p50 draw" pathLength="1" d="${stepped(p50)}"/>`;
+  // the wire, and the low point the median reaches before the next payout
+  const r = font < 13 ? 4.5 : 5.5;
+  const wx = X(c.wire_day), wy0 = Y(p50[c.wire_day - 1]), wy1 = Y(p50[c.wire_day]);
+  const tx = X(c.trough_day), ty = Y(band ? c.trough_p5 : c.trough_median);
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  body += `<line class="leak" x1="${r1(wx)}" x2="${r1(wx)}" y1="${r1(wy0)}" y2="${r1(wy1)}"/>`;
+  // the wire's name sits right of the drop, at its top, clear of the path on either side
+  body += `<text class="leak-text" x="${r1(wx + 8)}" y="${r1(wy0 + font * 0.4)}" font-size="${font}" dominant-baseline="middle">The wire ${whole(c.wire)}</text>`;
+  body += `<circle class="${band ? "dot-blue" : "dot"}" cx="${r1(tx)}" cy="${r1(ty)}" r="${r}"/>`;
+  const label = band ? `Bad case ${whole(c.trough_p5)}, day ${c.trough_day}` : `Low point ${whole(c.trough_median)}, day ${c.trough_day}`;
+  body += `<text class="ink strong" x="${r1(tx + r + 6)}" y="${r1(ty + font + 6)}" font-size="${font}">${label}</text>`;
+  body += `</g>`;
+  const desc = band
+    ? `Ten thousand simulated paths of the bank balance over ${days} days. The band holds nine paths in ten; its lower edge is the 5th percentile. ` +
+      `After the wire of ${whole(c.wire)} on day ${c.wire_day}, the bad case bottoms at ${whole(c.trough_p5)} on day ${c.trough_day}, the day before a payout.`
+    : `The median bank balance over ${days} days, starting at ${whole(c.start)}. Fixed costs drain it every day, payouts lift it every ${c.payout_days[1] - c.payout_days[0]} days, ` +
+      `and the wire of ${whole(c.wire)} on day ${c.wire_day} takes it to its low point, ${whole(c.trough_median)} on day ${c.trough_day}, the day before the next payout.`;
+  return frame(w, h, "cash", { id: `${id}-t`, text: band ? "The bank balance over 90 days, ten thousand ways" : "The bank balance over 90 days, the median path" }, { id: `${id}-d`, text: desc }, body);
+}
+
+// ---------------------------------------------------------------- two weeks late
+
+/** late: Capital & Cash's "late" figures. The chance of running out, by days late. */
+export function lateSVG(late, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const curve = late.curve, n = curve[curve.length - 1].days_late;
+  const top = Math.max(...curve.map((p) => p.p_out));
+  const yt = niceTicks(0, top, 4);
+  const X = scale(0, n, m.l, w - m.r), Y = scale(0, Math.max(yt[yt.length - 1], top), h - m.b, m.t);
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${Math.round(t * 100)}%</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const d of [0, 7, 14, 21, 28].filter((d) => d <= n)) {
+    body += `<line class="tick" x1="${r1(X(d))}" x2="${r1(X(d))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(d))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">${d === 0 ? "On time" : `${d} days`}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Chance of running out before the order lands</text>`;
+  body += `<path class="curve draw" pathLength="1" d="${line(pts(curve.map((p) => X(p.days_late)), curve.map((p) => Y(p.p_out))))}"/>`;
+  const r = font < 13 ? 4.5 : 5.5;
+  const a = late.on_time, b = late.two_weeks;
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  body += `<circle class="dot" cx="${r1(X(0))}" cy="${r1(Y(a.p_out))}" r="${r}"/>`;
+  body += `<text class="ink strong" x="${r1(X(0) + r + 6)}" y="${r1(Y(a.p_out) - r - 4)}" font-size="${font}">${Math.round(a.p_out * 100)}%</text>`;
+  body += `<circle class="dot-blue" cx="${r1(X(b.days_late))}" cy="${r1(Y(b.p_out))}" r="${r}"/>`;
+  body += `<text class="leak-text" x="${r1(X(b.days_late) - r - 6)}" y="${r1(Y(b.p_out) - r - 4)}" font-size="${font}" text-anchor="end">${Math.round(b.p_out * 100)}%, two weeks late</text>`;
+  body += `</g>`;
+  const desc = `The chance the stock runs out before the order lands, by how many days after the reorder point the wire goes. ` +
+    `On time it is ${Math.round(a.p_out * 100)}%; two weeks late it is ${Math.round(b.p_out * 100)}%.`;
+  return frame(w, h, "late", { id: `${id}-t`, text: "The chance of running out, by days late" }, { id: `${id}-d`, text: desc }, body);
+}

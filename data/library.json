@@ -172,32 +172,56 @@
     },
     {
       "slug": "capital-and-cash",
-      "status": "planned",
+      "status": "live",
       "title": "Capital & Cash",
+      "path": "/learn/capital-and-cash",
       "cover": "trough",
-      "summary": "Cash conversion, inventory as capital, runway, and the arithmetic of the reorder.",
+      "summary": "How long a dollar is gone, where your bank balance bottoms out, when to wire and how much, and how much cash to hold.",
+      "detail": "The cash conversion cycle, the low point after a wire, the reorder point and order from your own sales, the service level each SKU's margin pays for, hold against liquidate, and the cash a bad month needs.",
+      "extras": [
+        "1 spreadsheet"
+      ],
+      "template": "/learn/files/hubricon-capital-and-cash.xlsx",
+      "start": {
+        "text": "Lesson 6: how much cash to hold",
+        "href": "/learn/capital-and-cash#how-much-cash"
+      },
       "trailer": null,
       "lessons": [
         {
-          "title": "The cash conversion cycle"
+          "id": "cash-cycle",
+          "title": "The cash conversion cycle",
+          "video": null
         },
         {
-          "title": "You don't have a revenue problem. You have a cash trough"
+          "id": "cash-trough",
+          "title": "You don't have a revenue problem. You have a cash trough",
+          "video": null
         },
         {
-          "title": "The wire you're guessing on"
+          "id": "the-wire",
+          "title": "The wire you're guessing on",
+          "video": null
         },
         {
-          "title": "Why one service level is wrong for most SKUs"
+          "id": "service-level",
+          "title": "Why one service level is wrong for most SKUs",
+          "video": null
         },
         {
-          "title": "Inventory is a bet, and how to price it"
+          "id": "inventory-bet",
+          "title": "Inventory is a bet, and how to price it",
+          "video": null
         },
         {
-          "title": "How much cash to hold"
+          "id": "how-much-cash",
+          "title": "How much cash to hold",
+          "video": null
         },
         {
-          "title": "The cost of reordering two weeks late"
+          "id": "two-weeks-late",
+          "title": "The cost of reordering two weeks late",
+          "video": null
         }
       ]
     },

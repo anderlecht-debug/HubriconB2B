@@ -201,7 +201,12 @@ function lessonVideos(lib) {
   const out = {};
   for (const c of lib.courses.filter((x) => x.status === "live")) {
     for (const l of c.lessons) {
-      out[`video-${l.id}`] = l.video ? `\n<div class="lesson-video">${video(l.video, `${c.title}: ${l.title}`, `lesson:${l.id}`)}</div>\n` : "";
+      // Until a lesson's video exists, its slot says what will play there (the spec's amendment:
+      // "every course and lesson has a slot that says what will play there until it does").
+      // Nothing pretends to play: no frame, no button.
+      out[`video-${l.id}`] = l.video
+        ? `\n<div class="lesson-video">${video(l.video, `${c.title}: ${l.title}`, `lesson:${l.id}`)}</div>\n`
+        : `\n<p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>\n`;
     }
   }
   return out;

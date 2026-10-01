@@ -20,7 +20,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, usd } from "../assets/charts.mjs";
 import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
@@ -65,9 +65,11 @@ export function figures(rc, mc, cs) {
   const end = mc.months.length - 1;
   const learn = learnFigures(rc, cs);
   const pc = priceCurveFigures(json("data/learn-price-curve.json"));
+  const cc = capitalCashFigures(json("data/learn-capital-cash.json"));
   const blocks = {
     ...learn.blocks,
     ...pc.blocks,
+    ...cc.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
@@ -126,6 +128,7 @@ export function figures(rc, mc, cs) {
       storage_effective: longDate(cs.aging.storage_effective),
       ...learn.fill,
       ...pc.fill,
+      ...cc.fill,
     },
   };
 }
@@ -329,6 +332,75 @@ function priceCurveFigures(pc) {
   };
 }
 
+/**
+ * Capital & Cash's figures (/learn/capital-and-cash). Every number is the engine's, computed by
+ * scripts/learn/capital_cash.py into data/learn-capital-cash.json from an invented garlic press
+ * (The Price Curve's) and an invented spatula set. Nothing here does arithmetic beyond formatting,
+ * the sums the lesson shows the reader doing, and the charts' own drawing.
+ */
+function capitalCashFigures(cc) {
+  const money = (v) => `$${v.toFixed(2)}`;
+  const dollars = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+  const n0 = (v) => Math.round(v).toLocaleString("en-US");
+  const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
+  const g = cc.garlic, r = cc.reorder, cy = cc.cycle, c = cc.cash, l = cc.late, sv = cc.service, h = cc.hold;
+  const sg = sv.garlic, ss = sv.spatula;
+  const fill = {
+    learn_cc_price: money(g.price), learn_cc_landed: money(g.landed_cost), learn_cc_margin: money(g.margin), learn_cc_lead: String(g.lead_days),
+    learn_cc_rate: r.rate.toFixed(1), learn_cc_rate_sd: r.rate_sd.toFixed(1), learn_cc_units_month: n0(r.units_month), learn_cc_on_hand: n0(g.on_hand),
+    learn_cc_sell_days: n0(cy.sell_days), learn_cc_payout_cycle: String(cy.payout_cycle), learn_cc_half_sell: (cy.sell_days / 2).toFixed(1).replace(/\.0$/, ""),
+    learn_cc_reserve: String(cy.reserve_days), learn_cc_transit: String(cy.transit_days), learn_cc_paid_days: n0(cy.paid_days),
+    learn_cc_ccc: cy.ccc.toFixed(1).replace(/\.0$/, ""),
+    // the cash a cycle holds: units a day × landed cost × the days a dollar is gone (the lesson's own sum)
+    learn_cc_tied: dollars(r.rate * g.landed_cost * cy.ccc),
+    learn_cc_lead_cv: pct(r.lead_cv), learn_cc_lead_mean: n0(r.lead_demand_mean), learn_cc_rop: n0(r.reorder_point), learn_cc_rop_cf: n0(r.closed_form_rop),
+    learn_cc_safety: n0(r.safety_stock), learn_cc_cover_extra: String(r.cover_extra_days), learn_cc_qty: n0(r.reorder_qty),
+    learn_cc_wire: dollars(r.wire), learn_cc_wire_day: String(c.wire_day), learn_cc_cycle_days: String(r.cycle_days), learn_cc_rate2: r.rate.toFixed(2),
+    learn_cc_days_above: ((g.on_hand - r.reorder_point) / r.rate).toFixed(1),
+    learn_cc_start: dollars(c.start), learn_cc_fixed: dollars(c.fixed_month), learn_cc_ads: dollars(c.ad_month), learn_cc_horizon: String(c.horizon_days),
+    learn_cc_paths: n0(c.paths), learn_cc_trough_day: String(c.trough_day), learn_cc_trough_med: dollars(c.trough_median),
+    learn_cc_trough_p5: dollars(c.trough_p5), learn_cc_trough_es: dollars(c.trough_es), learn_cc_need_es: dollars(c.need_es),
+    learn_cc_start_less: dollars(c.start - 500), learn_cc_start_less2: dollars(c.start - 1000),
+    learn_cc_ruin_less: pct(c.ruin_at["-500"]), learn_cc_ruin_less2: pct(c.ruin_at["-1000"]),
+    learn_cc_p_on: pct(l.on_time.p_out), learn_cc_p_late: pct(l.two_weeks.p_out), learn_cc_short_on: n0(l.on_time.units_short),
+    learn_cc_short_late: n0(l.two_weeks.units_short), learn_cc_late_pos: n0(l.two_weeks.position), learn_cc_late_days: String(l.days),
+    learn_cc_lost_on: dollars(l.lost_on_time), learn_cc_lost_late: dollars(l.lost_late),
+    learn_cc_lost_extra: dollars(l.lost_late - l.lost_on_time), learn_cc_carry_saved: dollars(l.carry_saved),
+    learn_cc_lilf: money(sg.c_u_parts.low_inventory_fee), learn_cc_lilf_lo: money(sv.lilf_lo), learn_cc_lilf_hi: money(sv.lilf_hi), learn_cc_capital: pct(sv.capital_rate), learn_cc_obsolescence: pct(sv.obsolescence_rate),
+    learn_cc_g_q: pct(sg.q, 1), learn_cc_g_cu: money(sg.c_u), learn_cc_g_co: money(sg.c_o), learn_cc_g_up_q: n0(sg.up_to_q), learn_cc_g_up_95: n0(sg.up_to_95),
+    learn_cc_s_q: pct(ss.q, 1), learn_cc_s_up_q: n0(ss.up_to_q), learn_cc_s_up_95: n0(ss.up_to_95), learn_cc_s_extra: n0(ss.up_to_95 - ss.up_to_q),
+    learn_cc_recovery: pct(h.recovery), learn_cc_h_pos: n0(h.position), learn_cc_h_age: String(h.age_days), learn_cc_h_rate: String(h.rate),
+    learn_cc_h_horizon: String(h.hold_horizon), learn_cc_h_cover: n0(h.rate * h.hold_horizon), learn_cc_h_excess: n0(h.excess),
+    learn_cc_h_hold: dollars(h.hold_npv), learn_cc_h_liq: dollars(h.liquidate), learn_cc_h_months: String(h.months), learn_cc_h_unit: money(h.per_unit_hold),
+  };
+  if (Math.floor((g.on_hand - r.reorder_point) / r.rate) + 1 !== c.wire_day) {
+    // lesson 3 shows the days of sales above the reorder point and says the wire goes the day after
+    throw new Error(`capital-and-cash: lesson 3's arithmetic (${((g.on_hand - r.reorder_point) / r.rate).toFixed(1)} days) does not give the engine's wire day ${c.wire_day}`);
+  }
+  if (r.reorder_point - Math.round(r.lead_demand_mean) !== r.safety_stock) {
+    // the lesson shows the safety stock as the reorder point less the average lead-time demand, as the engine does
+    throw new Error(`capital-and-cash: reorder point − average lead-time demand (${r.reorder_point - Math.round(r.lead_demand_mean)}) is not the engine's safety stock (${r.safety_stock})`);
+  }
+  if (!(l.lost_late - l.lost_on_time > l.carry_saved)) {
+    // lesson 7 says late costs more than it saves; on this example it must
+    throw new Error(`capital-and-cash: two weeks late now costs ${l.lost_late - l.lost_on_time} and saves ${l.carry_saved}; rewrite lesson 7`);
+  }
+  const row = (name, x) => `<tr><th scope="row">${name}</th><td class="num">${money(x.margin)}</td><td class="num">${money(x.c_u)}</td><td class="num">${money(x.c_o)}</td><td class="num">${pct(x.q, 1)}</td></tr>`;
+  const service = `\n<div class="table-scroll" role="region" aria-label="The service level each SKU earns" tabindex="0"><table class="data"><thead><tr><th scope="col">SKU</th><th scope="col">Margin a unit</th><th scope="col">One short costs</th><th scope="col">One left over costs</th><th scope="col">Service level</th></tr></thead><tbody>${row("Garlic press", { ...sg, margin: g.margin })}${row("Spatula set", ss)}</tbody></table></div>\n`;
+  const pathData = { ...c };
+  return {
+    fill,
+    blocks: {
+      "cc-path-wide": cashSVG(pathData, { id: "ccp-w", w: 680, h: 360, m: { t: 24, r: 24, b: 46, l: 64 }, font: 13 }),
+      "cc-path-narrow": cashSVG(pathData, { id: "ccp-n", w: 360, h: 320, m: { t: 20, r: 12, b: 42, l: 50 }, font: 12, narrow: true }),
+      "cc-cone-wide": cashSVG(pathData, { id: "ccc-w", w: 680, h: 360, m: { t: 24, r: 24, b: 46, l: 64 }, font: 13, band: true }),
+      "cc-cone-narrow": cashSVG(pathData, { id: "ccc-n", w: 360, h: 320, m: { t: 20, r: 12, b: 42, l: 50 }, font: 12, band: true, narrow: true }),
+      "cc-late": lateSVG(l, { id: "ccl", w: 680, h: 340, m: { t: 40, r: 24, b: 46, l: 52 }, font: 13 }),
+      "cc-service": service,
+    },
+  };
+}
+
 const decode = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
 const text = (html) => decode(html.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 
@@ -387,8 +459,10 @@ export const PAGES = [
   { file: "learn/index.html" },
   { file: "learn/fee-staircase.html" },
   { file: "learn/price-curve.html" },
+  { file: "learn/capital-and-cash.html" },
   { file: "learn/fee-staircase-card.html" },
   { file: "learn/price-curve-card.html" },
+  { file: "learn/capital-and-cash-card.html" },
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {
