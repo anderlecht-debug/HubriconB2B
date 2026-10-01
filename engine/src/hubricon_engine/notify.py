@@ -98,7 +98,7 @@ def alert_email_body(company: str, alerts: list[dict], first_name: str | None = 
 # Printed once, after the moves, when at least one carries a seal (seal.py).
 SEAL_NOTE = ("The seal beside each move is its fingerprint on your Profit Record, taken before this "
              "email was sent. If a promise were changed afterwards it would no longer match its seal, "
-             "and your Record export lets anyone check that.")
+             "and anyone can check that at hubricon.com/verify with your Record export.")
 
 
 def directive_email_body(client: dict, directives: list[dict], closes_at, portal_url: str,

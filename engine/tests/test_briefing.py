@@ -59,7 +59,10 @@ def test_build_script_hits_all_beats_with_real_numbers():
     desk = script.split("## Before it goes live")[1].split("## The record")[0]
     assert "Old test." not in desk
     assert "$1,240" in script                                  # ledger close
-    assert "Approve or decline" in script
+    # true for both mandates: a standing move goes live unless declined, an explicit one waits
+    assert "Inside your standing mandate it goes live after 72 hours unless you say no" in script
+    assert "anything outside it waits for your yes" in script
+    assert "nothing moves without you" not in script
 
 
 def test_build_memo_is_a_numbered_letter_with_real_numbers():

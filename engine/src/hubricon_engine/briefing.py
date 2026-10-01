@@ -53,6 +53,13 @@ def _signed(v: float) -> str:
     return ("up " if v >= 0 else "down ") + _money(v)
 
 
+# What happens to a listed move, true for both mandates (issue.py): a standing
+# one goes live when its veto window closes unless declined; an explicit one
+# never moves without a yes.
+MANDATE_SENTENCE = ("Each move is listed before it goes live. Inside your standing mandate it goes live "
+                    "after 72 hours unless you say no; anything outside it waits for your yes.")
+
+
 def _proven(proven: dict | None, ledger_measured: float, ledger_count: int) -> dict:
     """The Record's one figure (value.proven_since_day_one). A caller that only
     has the old pair of numbers gets them read as what they are: measured so far."""
@@ -136,8 +143,8 @@ def build_memo(company: str, first_name: str, deltas: dict | None,
     if issued:
         paragraphs.append(
             f"There {'is one decision' if len(issued) == 1 else f'are {len(issued)} decisions'} "
-            f"waiting for your yes below — each states the exact move, the expected dollars, and how "
-            f"we'll measure it. Approve or decline; nothing moves without you."
+            f"waiting below — each states the exact move, the expected dollars, and how we'll measure it. "
+            f"{MANDATE_SENTENCE}"
         )
     else:
         paragraphs.append("Nothing needs your decision this period — the watch continues either way.")
@@ -225,7 +232,7 @@ def build_beats(company: str, first_name: str, deltas: dict | None,
                    for d in issued]
         speech = (f"There {'is one decision' if len(issued) == 1 else f'are {len(issued)} decisions'} "
                   f"waiting below this video. Each one states the action, the expected dollars, and how "
-                  f"we'll measure it. Approve or decline — nothing moves without you.")
+                  f"we'll measure it. {MANDATE_SENTENCE}")
     else:
         actions = []
         speech = ("Nothing needs your decision this period. The watch continues either way, and I'll "
