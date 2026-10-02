@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:17:04+00:00 · style locked: False
+Updated 2026-10-02T16:19:25+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:17:04+00:00 · style locked: False
 
 ## Now
 
-- V11 · Discounting: the math of what you just gave away · step script
+- V11 · Discounting: the math of what you just gave away · step critique
 
 ## Awaiting your review
 
