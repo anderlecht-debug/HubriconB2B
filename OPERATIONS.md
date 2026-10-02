@@ -2077,6 +2077,34 @@ home page's library, the Education tab and the footer all rebuild from that file
 template is missing, and `scripts/learn/learn.test.mjs` and `scripts/site-blocks.test.mjs`
 refuse a link to a course that is not live.
 
+## The short home page and the tabs' pages (since 2026-10-01 evening)
+
+The founder's call: "a short first page, not a lot of scrolling … all the other information
+about the business on the tabs." `index.html` is five bands (hero, `#proof`, `#offer`,
+`#learn` as a strip of covers, `#book`); `scripts/build-pages.test.mjs` caps its own words
+(`HOME_WORDS_MAX`) and pins the order. Everything else has a page under a tab, generated once
+from the old home page's sections and maintained by hand since:
+
+| Tab | Page | What it holds |
+|---|---|---|
+| Proof | `case-study.html` | the store study (three calls, figures, the misses, method), then the problem, the staircase and the one-listing Amazon study; `requireAllFills` lives here |
+| How it works | `how-it-works.html` | the three steps, the Profit Record illustration (`#record`), who runs it, the FAQ and its JSON-LD |
+| The offer | `offer.html` | the creed, the offer, the four guarantee layers (`#guarantee`), the trust tiles (`#trust`) |
+| Education | `learn/index.html` | the library and the optional email |
+
+Links to the old home anchors (`/#case-study`, `/#faq`, `/#trust`, `/#results`, …) are sent to
+their new pages by `assets/home.js`; clicks, FAQ opens and the strip dates are tracked from
+`assets/site.js` on every page. `vercel.json` sends `/method` to `/how-it-works`, and must never
+redirect a path the build writes (a test checks).
+
+**The store study.** `cd engine && uv run --with openpyxl python scripts/store_case_study.py`
+downloads "Online Retail II" once into `~/.hubricon/uci` (CC BY 4.0; never committed), runs
+`models/clv.py` and `models/forecast.py` unmodified, and writes `data/store-study.json` with
+totals only. Then `node scripts/build-pages.mjs`. `scripts/store-study.test.mjs` pins the
+engine files' hashes, so a change to clv, forecast or seasonality fails until it is re-run.
+No Amazon page is read for it: Amazon answers automated reads with "Continued access by an
+unauthorized AI agent violates Amazon's Conditions of Use" (2026-10-01).
+
 ## The library, the video slots and the results wall (since 2026-10-01)
 
 The founder's call on 2026-10-01: the home page gets Apple-style tabs with an Education tab,
@@ -2092,16 +2120,17 @@ empty space where we can just plug in the videos eventually". Everything shared 
 | Publish a client's words | `data/testimonials.json`: `client`, `quote` (verbatim), `consent_on` (the date of their written yes, terms §9), `record_month`, and `video` if they recorded one. The test refuses an entry without consent, a date or a month | the same |
 | Change the scoreboard illustration | `data/scoreboard-illustration.json`; every dollar is counted by the terms' rules in code, so it cannot show a month the terms would not | the same |
 
-**The email on the home page.** The featured course card in Education (home and `/learn`)
+**The course's email.** The featured course card on `/learn` (on the home page until it went short)
 carries the same email form as the course page: it posts `{email, course, website, source}`
 to `/api/learn`, marks the course opened in the visitor's browser (`hubricon.learn`, the
 course page's own key) and opens lesson 1. Same table (`learners`), same one email, same
 unsubscribe; a sign-up from the home page looks exactly like one from the course page. The
 welcome email says "You asked for this on hubricon.com", true from either.
 
-The results wall's count and its cards come live from `public_results()`, which returns only
-rows a client consented to publish; until then it reads zero and shows reserved frames, as
-the spec's honesty rails ask. `/media/` is served as is; keep a film under about 50 MB or host
+The results wall is off every page since 2026-10-01 evening (the founder: an empty wall "only
+hurts us"). Its block (`wall`), the testimonial guard and the `public_results()` code stay;
+when a client consents, put the `<!-- build:wall -->` block and a Results tab back; the
+site-blocks test allows them once `data/testimonials.json` holds a consented entry. `/media/` is served as is; keep a film under about 50 MB or host
 it elsewhere and use the `https://` form.
 
 An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired

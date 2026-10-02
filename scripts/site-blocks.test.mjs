@@ -14,7 +14,7 @@ const read = (p) => readFileSync(new URL(p, root), "utf8");
 const json = (p) => JSON.parse(read(p));
 const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 const lib = json("data/library.json");
-const PUBLIC = ["index.html", "case-study.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "verify.html", "manifesto.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/fee-staircase-card.html", "learn/price-curve-card.html", "learn/capital-and-cash.html", "learn/capital-and-cash-card.html", "learn/shopify-margin.html", "learn/shopify-margin-card.html", "learn/operators-math.html", "learn/operators-math-card.html"];
+const PUBLIC = ["index.html", "case-study.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "verify.html", "manifesto.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/fee-staircase-card.html", "learn/price-curve-card.html", "learn/capital-and-cash.html", "learn/capital-and-cash-card.html", "learn/shopify-margin.html", "learn/shopify-margin-card.html", "learn/operators-math.html", "learn/operators-math-card.html", "how-it-works.html", "offer.html"];
 
 test("every public page carries the one nav and the one footer, and the script that runs them", () => {
   const blocks = siteBlocks();
@@ -97,9 +97,17 @@ test("the results wall: a client's own words with consent, a date and a Record m
   assert.equal((wall.match(/frame-reserved/g) || []).length, Math.max(0, 3 - list.length));
   assert.throws(() => checkTestimonial({ client: "A", quote: "Great.", record_month: "2026-11" }), /consent_on/);
   assert.throws(() => checkTestimonial({ client: "A", quote: "Great.", consent_on: "yes", record_month: "2026-11" }), /date/);
-  const home = read("index.html");
-  assert.match(home, /id="wall-count">0</, "the wall reads zero until a result exists (spec, honesty rails)");
-  assert.doesNotMatch(text(home), /\b(\d+\+? (happy )?clients|trusted by|as seen (in|on))\b/i, "no client count or logo bar");
+  // The founder, 2026-10-01 evening: a wall that reads zero "does the opposite of what we want …
+  // we can add it later". Its code stays; no public page carries it, or links to it, until a
+  // client's consent fills a frame.
+  for (const page of PUBLIC) {
+    const h = read(page);
+    if (!list.length) {
+      assert.doesNotMatch(h, /id="results"|data-wall/, `${page}: no results wall while it would read zero`);
+      assert.doesNotMatch(h, />Results<|>The results wall</, `${page}: no link to a results wall`);
+    }
+    assert.doesNotMatch(text(h), /\b(\d+\+? (happy )?clients|trusted by|as seen (in|on))\b/i, `${page}: no client count or logo bar`);
+  }
 });
 
 test("the scoreboard illustration is counted by the terms' rules and labelled as an illustration", () => {
@@ -115,17 +123,26 @@ test("the scoreboard illustration is counted by the terms' rules and labelled as
   assert.ok(b.includes(`$${(il.proven_before_this_month + month).toLocaleString("en-US")}`));
   const rules = text(read("scripts/blocks/attribution.html"));
   for (const r of ["Never above the promise", "Nothing under $25", "Misses stay"]) assert.ok(rules.includes(r), `the terms still say "${r}"`);
-  const sb = read("index.html").match(/<section[^>]*id="scoreboard"[\s\S]*?<\/section>/)[0];
+  const sb = read("how-it-works.html").match(/<section[^>]*id="record"[\s\S]*?<\/section>/)[0];
   assert.match(sb, /Illustration · not a client's numbers/);
 });
 
 test("every trust tile points at the paragraph that says it", () => {
   const terms = read("terms.html");
-  const trust = read("index.html").match(/<section[^>]*id="trust"[\s\S]*?<\/section>/)[0];
+  const trust = read("offer.html").match(/<section[^>]*id="trust"[\s\S]*?<\/section>/)[0];
   for (const [, page, anchor] of trust.matchAll(/href="\/(terms|your-data|honesty)(?:#([a-z-]+))?"/g)) {
     if (anchor) assert.match(page === "terms" ? terms : read(`${page}.html`), new RegExp(`id="${anchor}"`), `/${page}#${anchor}`);
   }
   assert.match(terms, /<h2 id="invoicing">[\s\S]*?We keep no card on file/);
   assert.match(terms, /<h2 id="proving-month">[\s\S]*?never a percentage of your\s+ad spend/);
   assert.match(read("your-data.html"), /Never used to advise another client/);
+});
+
+test("the home page's course strip links every live course, and only live ones", () => {
+  const lib = json("data/library.json");
+  const strip = siteBlocks()["library-strip"];
+  const hrefs = [...strip.matchAll(/<a class="strip-tile" href="([^"]+)"/g)].map(([, h]) => h);
+  assert.deepEqual(hrefs, lib.courses.filter((c) => c.status === "live").map((c) => c.path));
+  for (const c of lib.courses.filter((x) => x.status !== "live")) assert.ok(!strip.includes(c.title), `${c.title} is planned: not on the strip`);
+  assert.ok(read("index.html").includes(strip.trim()), "the home page carries the strip as built");
 });

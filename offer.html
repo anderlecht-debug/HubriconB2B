@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How we handle your data — Hubricon</title>
-<meta name="description" content="Six straight answers: what you trust us with, what we ask for, where it lives, what we never do, what happens if something goes wrong, and how you take it back.">
-<link rel="canonical" href="https://www.hubricon.com/your-data">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.hubricon.com/your-data">
-<meta property="og:title" content="How we handle your data — Hubricon">
-<meta property="og:description" content="Six straight answers: what you trust us with, what we ask for, where it lives, what we never do, what happens if something goes wrong, and how you take it back.">
+<title>The offer — Hubricon</title>
+<meta name="description" content="More profit than our bill every month, or you don't pay: $6,000 a month, the first month free, each month measured on your own reports before any invoice exists. The guarantee in four layers, and where every promise is written down.">
+<link rel="canonical" href="https://www.hubricon.com/offer">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/offer">
+<meta property="og:title" content="The offer — Hubricon">
+<meta property="og:description" content="More profit than our bill every month, or you don't pay: $6,000 a month, the first month free, each month measured on your own reports before any invoice exists. The guarantee in four layers, and where every promise is written down.">
 <meta property="og:image" content="https://www.hubricon.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#ffffff">
@@ -19,28 +19,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* /your-data's layout. Every value is a token from /assets/hubricon.css. */
-
-.page-head { padding-block: var(--s-8) var(--s-7); }
-.page-head h1 { margin-top: var(--s-3); max-width: 16ch; }
-.page-head .lede { margin-top: var(--s-5); max-width: 56ch; }
-
-.answers { list-style: none; counter-reset: a; border-top: 1px solid var(--rule); }
-.answers li { counter-increment: a; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); padding-block: var(--s-7); border-bottom: 1px solid var(--rule); }
-.answers h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
-.answers h2::before { content: counter(a); display: block; font-size: var(--t-14); color: var(--ink-3); letter-spacing: 0; margin-bottom: var(--s-3); }
-.answers p { font-size: var(--t-18); }
-.answers p + p { margin-top: var(--s-4); }
-.legal-note { margin-top: var(--s-7); font-size: var(--t-16); color: var(--ink-3); max-width: 60ch; }
-.legal-note a { color: var(--ink-2); text-underline-offset: 3px; }
-
-
-@media (max-width: 900px) {
-  .answers li { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); padding-block: var(--s-6); }
-}
-@media (max-width: 640px) {
-  .page-head { padding-top: var(--s-5); }
-}
+/* /offer: the offer, the four layers of the guarantee, and where every promise is written down. */
+.page-head .offer-line { font-size: var(--t-display-xl); max-width: 14ch; margin-top: var(--s-4); }
+#offer .creed { margin-top: 0; padding-top: 0; border-top: 0; margin-bottom: var(--s-9); }
 </style>
 </head>
 <body>
@@ -102,57 +83,66 @@
 </header>
 <!-- /build:nav -->
 
-<main class="wrap">
-  <section class="page-head">
-    <span class="label">How we handle your data</span>
-    <h1>Six straight answers, before you have to ask.</h1>
-    <p class="lede">Your exports hold your revenue, your margins, your costs and your weak spots. We treat them as the most sensitive thing you own.</p>
-  </section>
+<main>
 
-  <ol class="answers">
-    <li>
-      <h2>We ask for the least the work needs.</h2>
-      <div>
-        <p>On Amazon, one Seller Central user with exactly four permissions: Business Reports view, Fulfillment reports view, Pricing edit and Campaign Manager edit. On Shopify, one staff account whose role is limited to orders, products, discounts and analytics reports, with no access to Finance or payouts; payout exports come from you, by upload.</p>
-        <p>Neither can touch banking, tax, payouts or account settings, and either is revocable any day: on Amazon in one click, on Shopify by removing the staff account under Settings → Users. Or grant no seat at all and upload the reports yourself.</p>
-      </div>
-    </li>
-    <li>
-      <h2>It lives in one place.</h2>
-      <div>
-        <p>One database and one file store, encrypted in transit and at rest, with every read scoped to your workspace alone. One person, the founder, holds access to production. Upload links do one job and expire after ninety days.</p>
-        <p>Ask what we hold of yours and where, and you get a straight answer within seven days.</p>
-      </div>
-    </li>
-    <li>
-      <h2>What we never do.</h2>
-      <div>
-        <p>Never sold. Never used to advise another client. Your raw reports, uploads and credentials are never sent to an AI provider: the model that drafts the wording of your briefs sees a short table of results our engine already computed, and our code rejects any draft containing a number the table did not supply.</p>
-        <p>Anything pooled across accounts needs your separate yes, and even then it is an anonymous aggregate, never a figure of yours, your name, a SKU or an ASIN.</p>
-      </div>
-    </li>
-    <li>
-      <h2>If something goes wrong, you hear it from us.</h2>
-      <div>
-        <p>If we learn of a breach affecting your data, we tell you within seventy-two hours of confirming it: what happened, and what we are doing about it.</p>
-      </div>
-    </li>
-    <li>
-      <h2>It stays yours.</h2>
-      <div>
-        <p>Your data and your whole Profit Record export free, any day, within one working day, including the day you leave.</p>
-        <p>Ask, and your reports, uploads and model outputs are deleted within thirty days. We keep only what invoicing and the law require, and any result you agreed we may publish in anonymised form.</p>
-      </div>
-    </li>
-    <li>
-      <h2>Who else touches it.</h2>
-      <div>
-        <p>A short list of providers, each named with what it does in the <a href="/privacy">privacy policy</a>: database and storage, hosting, email, scheduling, invoicing, the voice and wording of your briefs, video hosting, and the job that runs your weekly monitoring. Nothing is added to that list without the page changing first.</p>
-      </div>
-    </li>
-  </ol>
+<section class="wrap page-head" aria-labelledby="of-h">
+  <span class="label">The offer</span>
+  <h1 id="of-h" class="offer-line">More profit than our bill every month, or you don't pay.</h1>
+</section>
 
-  <p class="legal-note">The binding versions are the <a href="/privacy">privacy policy</a> and sections 10 and 11 of the <a href="/terms">terms</a>. This page says the same thing in fewer words.</p>
+<section class="section night" id="offer">
+  <div class="wrap">
+    <div class="creed">
+      <p data-reveal>Your agency is paid on spend.</p>
+      <p data-reveal style="--d: 180ms">Your software is paid to report.</p>
+      <p data-reveal style="--d: 360ms">We're paid on proof.</p>
+    </div>
+    <div class="offer-grid" data-reveal style="--d: 160ms">
+      <p class="offer-why"><b>Why we can say it.</b> Every month is measured on its own exports before any invoice exists. A month that clears the fee is billed. One that doesn't is free: no credit, nothing carried. So we only take on accounts where the arithmetic clears the bill, and if yours doesn't, we tell you on the call.</p>
+      <div>
+        <p class="price">$6,000 a month, flat.</p>
+        <p>Never a percentage of ad spend. Month to month. Your first month is free.</p>
+        <ul class="scope">
+          <li><b>Every SKU modeled, every week:</b> true margin, demand, stockout odds.</li>
+          <li><b>Every leak found and sealed:</b> prices, ad bleed on Amazon, Google and Meta, reorders, fee cliffs, and on Amazon, claims.</li>
+          <li><b>Every dollar graded</b> on your own reports, misses included.</li>
+          <li><b>Inventory timed</b> against stockouts, and on Amazon, against the fee cliffs.</li>
+          <li><b>Amazon, Shopify, or both:</b> one engine reads either, from your own exports.</li>
+        </ul>
+      </div>
+    </div>
+    <h3 class="layers-head" id="guarantee" data-reveal>The guarantee, in four layers</h3>
+    <div class="layers">
+      <div class="layer" data-reveal><span class="layer-n">1</span><h3>The Proving Month is free.</h3><p>Your first month costs nothing, whatever it measures. There's no card on file to charge.</p></div>
+      <div class="layer" data-reveal style="--d: 100ms"><span class="layer-n">2</span><h3>Proven or void, every month.</h3><p>Each month is measured on its own exports. Above the fee, it's invoiced. At or below it, it's free: nothing credited, nothing carried.</p></div>
+      <div class="layer" data-reveal style="--d: 200ms"><span class="layer-n">3</span><h3>Service until proven.</h3><p>A month that doesn't clear isn't invoiced, and the work carries on.</p></div>
+      <div class="layer" data-reveal style="--d: 300ms"><span class="layer-n">4</span><h3>The open exit.</h3><p>Leave with one email. Any month you paid for that doesn't clear on its own number is refunded in full, issued within seven days of your email.</p></div>
+    </div>
+    <div class="cta">
+      <a class="btn btn-lg" href="/apply" data-cta="offer">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <span class="cta-note">Your first month is free, whatever it measures. No card, ever.</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="trust">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="label">Trust</span>
+      <h2>Don't trust us. <span class="tone">Check us.</span></h2>
+      <p class="lede">Every promise on this page is written down somewhere you can read before you book. Here is where.</p>
+    </div>
+    <div class="trust-grid">
+      <a class="go-card trust-tile" href="/terms#how-a-dollar-counts" data-reveal><span class="go-k">How a dollar counts</span><h3>The rules come first.</h3><p>Every dollar on your Record is graded by rules agreed before any number is on it. A dollar we can't separate from everything else counts nothing.</p><span class="go-to">Read the rules →</span></a>
+      <a class="go-card trust-tile" href="/terms#invoicing" data-reveal style="--d: 80ms"><span class="go-k">Terms, section 4</span><h3>No card on file. Ever.</h3><p>Nothing is charged automatically. A month is invoiced only after it has been measured and cleared, and you pay it by bank transfer.</p><span class="go-to">Read section 4 →</span></a>
+      <a class="go-card trust-tile" href="/terms#proving-month" data-reveal style="--d: 160ms"><span class="go-k">Terms, section 3</span><h3>Never a cut of your ad spend.</h3><p>A flat fee, never a percentage of ad spend or revenue. We earn nothing more when you spend more.</p><span class="go-to">Read section 3 →</span></a>
+      <a class="go-card trust-tile" href="/your-data" data-reveal><span class="go-k">Your data</span><h3>Your data advises no one else.</h3><p>Never sold, never used to advise another client. Your raw reports never go to an AI provider.</p><span class="go-to">Read the six answers →</span></a>
+      <a class="go-card trust-tile" href="/honesty" data-reveal style="--d: 80ms"><span class="go-k">What is true today</span><h3>We say what isn't true yet.</h3><p>No client results yet, and we say it first. Every number on this site is labelled for exactly what it is.</p><span class="go-to">See what's true →</span></a>
+      <a class="go-card trust-tile" href="/terms" data-reveal style="--d: 160ms"><span class="go-k">The terms</span><h3>One version, in plain English.</h3><p>The guarantee, the exit and the limits, approved by the founder. There's no second version in smaller type.</p><span class="go-to">Read the terms →</span></a>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- build:foot -->

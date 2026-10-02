@@ -334,8 +334,10 @@ Since 2026-09-27 (`HUBRICON_SPEC.md`, "The funnel" and "Channel decision"):
 
 1. **Content** names one public-data leak on the viewer's world. It is the one channel;
    cold outreach is paused on purpose until real proof exists.
-2. **The home page** proves the method on one real listing modeled from public data
-   (`data/case-study.json`, labelled on every screen) and has one action: **Book your call**.
+2. **The home page** is short (the founder, 2026-10-01 evening) and proves the method on a
+   real store's published orders, read by the engine: three calls made before, measured after
+   (`data/store-study.json`, `/case-study`, labelled on every screen). It has one action:
+   **Book your call**. The rest of the business is on the tabs' pages.
 3. **/apply**: four answers, then the calendar. Every brand that answers can book.
 4. **The call**: the exports are opened live and the leaks public pages cannot see
    (aged stock, the low-inventory fee, an ad target set wrong) are priced on screen.
@@ -416,7 +418,20 @@ leaves an account but an event; fewer than three agreeing accounts declare nothi
 and say `insufficient_accounts`; every network alert says how many accounts stand
 behind it; one change is announced once per client; `hubricon book` writes nothing.
 
-**The public-data case study, live on the home page since 2026-09-30.** One real Amazon
+**The store study, the proof since 2026-10-01 evening.** A real UK online retailer's published
+order history ("Online Retail II", December 2009 to December 2011, UCI Machine Learning
+Repository, CC BY 4.0), read by the engine unmodified (`engine/scripts/store_case_study.py` →
+`data/store-study.json`). Each call is made from the orders before a cut-off and measured on
+the orders after: repeat orders at the engine's own calibration cut-off (`clv.CALIBRATION_SHARE`,
+June 7, 2011): 7,671 called, 7,865 placed; regular customers named as slipping away: 274 of 498
+never came back, against 386 of 1,946 not named; peak-season units for the 200 best sellers,
+called a month ahead: 0.8% apart over the quarter, up to 13.9% in a month, and each product's
+80% range held only 56–66% of products. It claims no profit (no costs, ads or stock in the data)
+and publishes no elasticity (wholesale prices fall with order size). It replaced a brand-level
+Amazon study when Amazon began answering automated reads with "Continued access by an
+unauthorized AI agent violates Amazon's Conditions of Use": no catalogue is read live.
+
+**The public-data case study, on /case-study, second, since 2026-10-01 evening (on the home page 2026-09-30 to 2026-10-01).** One real Amazon
 listing, read from its public page on 2026-09-03, priced by `lib/fees.js` (the engine's
 fee card, golden-tested against the Python) and simulated 10,000 years by
 `scripts/case-study.mjs`: a weight-band step of $0.26 a unit ($0.28 on the peak card),
@@ -443,7 +458,8 @@ schedule (read from Amazon's page, not re-read). The storage utilization surchar
 modelled.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero
-published results**. `/results` redirects to `/honesty`, and the home page's results wall reads zero honestly and says so. No testimonial,
+published results**. `/results` redirects to `/honesty`, which says so first; no page carries a results wall
+until a client fills one (the founder took the empty wall off on 2026-10-01: it "only hurts us"). No testimonial,
 logo, client count or dollar result may appear until a real one exists. Industry
 statistics on the site are labelled as arithmetic from named, interested sources,
 because research found no independent study behind any of them — and one claim
@@ -451,7 +467,7 @@ because research found no independent study behind any of them — and one claim
 chain is broken.
 
 Every judge across three rounds named the same thing as the largest remaining gap:
-the empty results wall. No copy closes it. Only the first five brands do.
+the missing client results. No copy closes that. Only the first five brands do.
 
 **Known gaps that are founder actions, not code problems** — see the full table in
 `OPERATIONS.md`: `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` need adding to GitHub's

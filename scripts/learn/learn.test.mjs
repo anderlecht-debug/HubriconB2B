@@ -181,8 +181,12 @@ test("/learn is in every footer and the Education tab; on the home page it is ne
   const home = read("index.html");
   for (const [tag] of home.matchAll(/<a\b[^>]*href="\/learn[^"]*"[^>]*>/g)) assert.doesNotMatch(tag, /class="btn/, tag);
   const learn = home.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
-  assert.match(learn, /<h3><a href="\/learn\/fee-staircase">The Fee Staircase<\/a><\/h3>/, "the featured course links to its page");
-  assert.match(learn, /<form class="join-tile" data-join="fee-staircase"/, "and opens from one email, where Acquisition.com asks for it");
+  assert.match(learn, /<a class="strip-tile" href="\/learn\/fee-staircase"/, "every live course opens from the home page's strip");
+  assert.match(learn, /<a class="more" href="\/learn">All courses/);
+  // the featured course and its optional email live on /learn since the home page went short (2026-10-01 evening)
+  const hub = read("learn/index.html");
+  assert.match(hub, /<h3><a href="\/learn\/fee-staircase">The Fee Staircase<\/a><\/h3>/, "the featured course links to its page");
+  assert.match(hub, /<form class="join-tile" data-join="fee-staircase"/, "and carries the optional email, where Acquisition.com asks for it");
   for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "terms.html", "privacy.html", "learn/index.html", "learn/fee-staircase.html"]) {
     const h = read(page);
     const foot = h.slice(h.lastIndexOf("<footer"));

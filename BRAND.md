@@ -51,10 +51,10 @@ it owns the question; ours is *"show me the Record."*
 The offer headline stays the offer: *More profit than our bill every month, or you
 don't pay.* Since 2026-09-30 "Paid on proof" is a line in words only: the stamp and the
 seal that carried it are retired with the night system. The home page is judged by the
-Hormozi standard: one action, and no proof that does not exist. (The 900-word cap was retired
-by the founder on 2026-10-01, when the trust section, the results wall and the library came
-onto the page.) Since 2026-10-01 the creed closes the problem section, in three lines, the
-third in ink: *Your agency is paid on spend. Your software is paid to report. We're paid on
+Hormozi standard: one action, and no proof that does not exist. Since 2026-10-01 evening it is
+also short, the founder's call ("a short first page, not a lot of scrolling … the rest on the
+tabs"): five bands, its own words capped, and every other section on the page under its tab.
+The creed opens /offer, in three lines, the third in ink: *Your agency is paid on spend. Your software is paid to report. We're paid on
 proof.* The method names the Profit Record's section: *Called before. Measured after.* And
 the product is shown, not said: every move on the scoreboard illustration has its receipt.
 
@@ -153,7 +153,9 @@ and always goes to `/apply`.
 
 **The bar (since 2026-10-01, the founder's call: "we are mimicking Apple's .com with the
 education tab").** Every public page opens with one bar: the mark, the tabs **Proof · How it
-works · The offer · Results · Education · Trust**, and the call. Education and Trust open a
+works · The offer · Education · Trust**, each a page of its own (`/case-study`,
+`/how-it-works`, `/offer`, `/learn`, and Trust's panel), and the call. No Results tab until a
+client fills one (the founder, 2026-10-01 evening). Education and Trust open a
 panel the width of the window, Apple's way: large links in the first column, the rest
 quieter, the page behind it blurred. On a phone the tabs fold into one menu of large links.
 The glass is white over whatever scrolls under it; a hairline appears once the page moves.
@@ -240,18 +242,23 @@ Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
   five beats, from `data/library.json`) rather than redrawing a chart the visitor has just
   read; full, it plays.
 - **The results wall** (`.wall-frames`, `.frame`): a client's own words beside their Record,
-  with consent, or a reserved frame for each one missing, dashed, numbered. It reads zero
-  until a client fills it, and says so in the largest type on the page.
+  with consent. Off every page since 2026-10-01 evening (the founder: a wall that reads zero
+  "only hurts us" for now); the piece is kept, and goes up with the first client who says yes.
+- **The call** (`.calls`, `.call`): a call the engine made and what happened after, side by
+  side in display type, the store study's three on the home page and on `/case-study`. A miss
+  is stated beside it, never left out.
+- **The course strip** (`.lib-strip`, `.strip-tile`): every live course as a small cover and a
+  title, the home page's education band; on a phone, one row that swipes inside its own box.
 - **The receipt** (`.rcpt`): a move, how we know, the dollars called before, measured after,
   and what they count for under the rules.
 - **A hash** (`.hash`, on `/verify` and the printed Record): set in Inter with
   `font-feature-settings: "zero"` and tabular numerals, in groups of eight; never a monospace face.
 - **The course's email field** (`.join-tile`): optional, since every lesson is open (the
-  founder's call, 2026-10-01). On the featured course card under "Start lesson 1, no email
-  needed", under each course's start and at the end of its last lesson. One field marked
+  founder's call, 2026-10-01). On /learn's featured course card under "Start lesson 1, no email
+  needed", under each course's start and at the end of its last lesson; never on the home page. One field marked
   Optional, its own outline button ("Send it to me →"), one line of what follows and the privacy
-  link. It never moves the reader; it says what happened. The call is still the only solid
-  button on the home page.
+  link. It never moves the reader; it says what happened. The call is the only button on the
+  home page, which carries no form.
 
 ### Labels that never come off
 

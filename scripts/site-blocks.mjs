@@ -28,16 +28,18 @@ export const MARK = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32"
 const ARROW = '<span class="arrow" aria-hidden="true">→</span>';
 const CHEV = '<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
 
-/** The tabs, in the order they sit on the bar. */
-const TABS = [["Proof", "/#case-study"], ["How it works", "/#how"], ["The offer", "/#offer"], ["Results", "/#results"]];
+/** The tabs, in the order they sit on the bar: each one a page of its own, so the home page can be
+    short (HUBRICON_SPEC.md, "A short first page", the founder's call of 2026-10-01). No Results tab
+    until a client's consent fills one: a wall that reads zero argues against us. */
+const TABS = [["Proof", "/case-study"], ["How it works", "/how-it-works"], ["The offer", "/offer"]];
 /** Where every promise is written down. */
 const TRUST = [
   ["How a dollar counts", "/terms#how-a-dollar-counts", "The rules your Record is kept by, agreed before any number is on it."],
   ["What is true today", "/honesty", "No client results yet, and every number we publish labelled for what it is."],
   ["Your data", "/your-data", "What we ask for, where it lives, and how you take it back."],
 ];
-const WRITING = [["The terms", "/terms"], ["Privacy", "/privacy"], ["The guarantee", "/#offer"]];
-const PROOF = [["The case study", "/case-study"], ["The results wall", "/#results"], ["Check a Profit Record", "/verify"]];
+const WRITING = [["The terms", "/terms"], ["Privacy", "/privacy"], ["The guarantee", "/offer#guarantee"]];
+const PROOF = [["The case study", "/case-study"], ["Check a Profit Record", "/verify"]];
 
 // ------------------------------------------------------------------ the nav ----
 /* The motion switch, first thing in the body: .motion only when scripts run and the
@@ -99,7 +101,7 @@ ${SWITCH}
         <a class="nav-tab" href="/learn" aria-controls="fly-education">Education${CHEV}</a>${education}
       </div>
       <div class="nav-group">
-        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust${CHEV}</a>${trust}
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust${CHEV}</a>${trust}
       </div>
     </nav>
     <div class="nav-end">
@@ -346,6 +348,21 @@ function library(lib, { hub }) {
 `;
 }
 
+/* The home page's education band: every live course as a small cover that opens it, and
+   nothing else. The featured card and its opt-in live on /learn, so the home page stays short. */
+function libraryStrip(lib) {
+  const live = lib.courses.filter((c) => c.status === "live");
+  return `
+<div class="lib-strip">${live.map((c, i) => `
+  <a class="strip-tile" href="${c.path}" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course ${i + 1}</span>${cover(c.cover, `cv-strip-${c.slug}`)}</span>
+    <span class="strip-t">${esc(c.title)}</span>
+    <span class="strip-a">${esc([c.audience, `${lessonCount(c)} lessons`].filter(Boolean).join(" · "))}</span>
+  </a>`).join("")}
+</div>
+`;
+}
+
 // ---------------------------------------------------------- the results wall ----
 export function checkTestimonial(t) {
   for (const k of ["client", "quote", "consent_on", "record_month"]) {
@@ -431,6 +448,7 @@ export function siteBlocks() {
     foot: foot(lib),
     "library-home": library(lib, { hub: false }),
     "library-hub": library(lib, { hub: true }),
+    "library-strip": libraryStrip(lib),
     "film-case": filmCase(lib),
     ...lessonVideos(lib),
     ...courseTrailers(lib),

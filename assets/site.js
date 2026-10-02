@@ -221,6 +221,34 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
 /* -- A page meant for paper: the one-page course cards ------------------------------- */
 document.querySelectorAll("[data-print]").forEach((b) => b.addEventListener("click", () => { track("card_print", { page: location.pathname }); window.print(); }));
 
+/* -- What a visitor reaches for, on every page ------------------------------------------- */
+// Moved here from the home page's own script when the home page went short (2026-10-01): the
+// call buttons, the questions and the method folds now live on the pages behind the tabs.
+{
+  const headline = document.documentElement.getAttribute("data-headline") || null;
+  document.addEventListener("click", (ev) => {
+    const a = ev.target.closest?.("[data-cta]");
+    if (a) track("cta_click", { section: a.dataset.cta || "", page: location.pathname, ...(headline ? { h: headline } : {}) });
+    const course = ev.target.closest?.('a[href^="/learn"]');
+    if (course) track("learn_click", { href: course.getAttribute("href"), page: location.pathname });
+  });
+  document.querySelectorAll("details[data-q]").forEach((d) => {
+    d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q, page: location.pathname }); });
+  });
+  document.querySelectorAll("#case-study details, #method details").forEach((d) => {
+    d.addEventListener("toggle", () => { if (d.open) track("method_open", { page: location.pathname }); });
+  });
+  const receipts = document.querySelector(".receipts");
+  receipts?.addEventListener("toggle", () => { if (receipts.open) track("receipts_open", { page: location.pathname }); });
+  // The aging strip: the calendar date each day falls on, for whoever is reading.
+  const today = new Date();
+  const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  document.querySelectorAll(".strip-date[data-days]").forEach((t) => {
+    const d = new Date(today); d.setDate(d.getDate() + Number(t.dataset.days));
+    t.textContent = Number(t.dataset.days) === 0 ? fmt(today) : fmt(d);
+  });
+}
+
 /* -- Videos: counted when someone presses play ------------------------------------ */
 document.querySelectorAll("video[data-track]").forEach((v) => {
   v.addEventListener("play", () => track("video_play", { v: v.dataset.track }), { once: true });

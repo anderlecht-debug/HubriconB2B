@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The public-data case study — Hubricon</title>
-<meta name="description" content="One real Amazon listing, modeled from public data: the fee step it pays on every unit, ten thousand simulated years of its profit, and the storage cliff its stock walks toward. Every figure an estimate. Not a client, not a result.">
+<title>Proof: a real store's orders, read by our engine — Hubricon</title>
+<meta name="description" content="Hubricon's engine on a real online retailer's published orders: repeat customers, customers slipping away and peak-season demand, each called before and measured after, misses included. Then one real Amazon listing, modeled from its public page.">
 <link rel="canonical" href="https://www.hubricon.com/case-study">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://www.hubricon.com/case-study">
-<meta property="og:title" content="The public-data case study — Hubricon">
-<meta property="og:description" content="One real Amazon listing, modeled from public data: the fee step it pays on every unit, ten thousand simulated years of its profit, and the storage cliff its stock walks toward. Every figure an estimate. Not a client, not a result.">
+<meta property="og:title" content="Proof: a real store's orders, read by our engine — Hubricon">
+<meta property="og:description" content="Hubricon's engine on a real online retailer's published orders: repeat customers, customers slipping away and peak-season demand, each called before and measured after, misses included. Then one real Amazon listing, modeled from its public page.">
 <meta property="og:image" content="https://www.hubricon.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#ffffff">
@@ -19,13 +19,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* /case-study: the home page's case study on its own page, for the content to link to
-   (HUBRICON_SPEC.md, "Where it lives"). Its sections are the home page's own, copied in by
-   scripts/build-pages.mjs at every build, so the two can never disagree. */
-.page-head { padding-block: var(--s-8) var(--s-5); }
-.page-head h1 { margin-top: var(--s-3); max-width: 20ch; }
-.page-head .lede { margin-top: var(--s-5); max-width: 62ch; }
-@media (max-width: 640px) { .page-head { padding-top: var(--s-5); } }
+/* /case-study, the Proof tab: a real store's published orders read by the engine (called before,
+   measured after), then one real Amazon listing read from its public page. */
+#customers, #slipping, #demand { padding-block: var(--section); }
+#customers .problem-grid, #slipping .problem-grid, #demand .problem-grid { margin-top: var(--s-7); }
+#demand .table-scroll { margin-top: var(--s-6); }
+#method { padding-top: 0; }
 </style>
 </head>
 <body>
@@ -47,10 +46,9 @@
   <div class="nav-in">
     <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
     <nav class="nav-tabs" aria-label="Main">
-      <a class="nav-tab" href="/#case-study">Proof</a>
-      <a class="nav-tab" href="/#how">How it works</a>
-      <a class="nav-tab" href="/#offer">The offer</a>
-      <a class="nav-tab" href="/#results">Results</a>
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
       <div class="nav-group">
         <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
         <div class="nav-fly" id="fly-education">
@@ -62,12 +60,12 @@
         </div>
       </div>
       <div class="nav-group">
-        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
         <div class="nav-fly" id="fly-trust">
           <div class="fly-in">
             <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
-            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
-            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
           </div>
         </div>
       </div>
@@ -79,7 +77,7 @@
   </div>
   <div class="nav-sheet" id="nav-sheet">
     <div class="sheet-in">
-      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
       <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
       <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
     </div>
@@ -89,12 +87,150 @@
 <!-- /build:nav -->
 
 <main>
-  <section class="wrap page-head">
-    <span class="label">The public-data case study</span>
-    <h1>One real listing. One step of Amazon's fee staircase.</h1>
-    <p class="lede">Read from a best-selling listing's public page and run through Hubricon's arithmetic: the step it pays on every unit, ten thousand simulated years of its profit, and the storage cliff its stock walks toward. Modeled from public data. Not a client, not a result, and every figure an estimate. On Shopify the same step sits in the carrier's rate card, drawn below it.</p>
-  </section>
-<!-- build:case-study-page -->
+
+<section class="wrap page-head" aria-labelledby="cs-h">
+  <span class="label label-box">Modeled on published data · Not a client · Not a result</span>
+  <h1 id="cs-h">A real store's orders, read by our engine.</h1>
+  <p class="lede">A real online retailer published every order it took from <span data-fill="store_from">December 2009</span> to <span data-fill="store_to">December 2011</span>, for anyone to study: about <span data-fill="store_sales">£9.8M</span> a year, <span data-fill="store_customers">5,852</span> customers, <span data-fill="store_products">4,902</span> products. We gave the orders to our engine, unmodified, and asked it to call what came next using only what came before. Then we opened what happened.</p>
+  <div class="calls">
+      <div class="call" data-reveal>
+        <p class="call-k">Repeat orders from its customers, the next <span data-fill="store_weeks">26</span> weeks</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_called">7,671</dd></div><div><dt>Happened</dt><dd data-fill="store_happened">7,865</dd></div></dl>
+        <p class="call-note"><span data-fill="store_off">2.5%</span> <span data-fill="store_more_less">more</span> than called. The engine chose its own cut-off, by a rule written before this study.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 120ms">
+        <p class="call-k">Regular customers it named as slipping away</p>
+        <dl><div><dt>Named</dt><dd data-fill="store_named">498</dd></div><div><dt>Never came back</dt><dd data-fill="store_named_gone">274</dd></div></dl>
+        <p class="call-note">They had spent <span class="money" data-fill="store_lost_spend">£318,525</span> the year before. Of the regulars it didn't name, <span data-fill="store_steady_back_share">80%</span> came back.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 240ms">
+        <p class="call-k">Peak-season units of its <span data-fill="store_top_n">200</span> best sellers, called a month ahead</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_q_called">542,981</dd></div><div><dt>Sold</dt><dd data-fill="store_q_happened">538,415</dd></div></dl>
+        <p class="call-note">September to November. <span data-fill="store_q_off">0.8%</span> apart over the quarter; a single month missed by up to <span data-fill="store_worst">13.9%</span>.</p>
+      </div>
+    </div>
+</section>
+
+<!-- 1 · Repeat customers: called at the engine's own cut-off, counted after -->
+<section class="section" id="customers">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="label">Call 1 · Repeat customers</span>
+      <h2>It called the next <span data-fill="store_weeks">26</span> weeks of repeat orders. <span class="tone">They came in <span data-fill="store_off">2.5%</span> <span data-fill="store_more_less">more</span> than called.</span></h2>
+    </div>
+    <figure class="exhibit" data-play data-reveal>
+      <div class="exhibit-head"><span>Fig. 1 · Repeat orders after the cut-off, called and counted</span><span class="label-box">Modeled on published data</span></div>
+      <div class="exhibit-body">
+        <div class="chart-wide"><!-- build:store-calls-wide --><svg class="chart calls" viewBox="0 0 680 340" role="img" aria-labelledby="sc-w-t sc-w-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:13,&quot;t&quot;:44,&quot;b&quot;:296,&quot;p&quot;:[[64,[296,296],[&quot;The cut-off&quot;,&quot;Called 0&quot;,&quot;Happened 0&quot;]],[86.2,[286.6,286.7],[&quot;Week 1&quot;,&quot;Called 297&quot;,&quot;Happened 294&quot;]],[108.4,[277.3,278.4],[&quot;Week 2&quot;,&quot;Called 594&quot;,&quot;Happened 560&quot;]],[130.7,[268,271.1],[&quot;Week 3&quot;,&quot;Called 890&quot;,&quot;Happened 792&quot;]],[152.9,[258.7,264.3],[&quot;Week 4&quot;,&quot;Called 1,185&quot;,&quot;Happened 1,006&quot;]],[175.1,[249.4,256.8],[&quot;Week 5&quot;,&quot;Called 1,480&quot;,&quot;Happened 1,246&quot;]],[197.3,[240.1,248.7],[&quot;Week 6&quot;,&quot;Called 1,774&quot;,&quot;Happened 1,503&quot;]],[219.6,[230.9,240.7],[&quot;Week 7&quot;,&quot;Called 2,068&quot;,&quot;Happened 1,757&quot;]],[241.8,[221.6,233.4],[&quot;Week 8&quot;,&quot;Called 2,361&quot;,&quot;Happened 1,988&quot;]],[264,[212.4,225.5],[&quot;Week 9&quot;,&quot;Called 2,653&quot;,&quot;Happened 2,239&quot;]],[286.2,[203.2,218.5],[&quot;Week 10&quot;,&quot;Called 2,945&quot;,&quot;Happened 2,460&quot;]],[308.4,[194.1,210.2],[&quot;Week 11&quot;,&quot;Called 3,237&quot;,&quot;Happened 2,724&quot;]],[330.7,[184.9,204.1],[&quot;Week 12&quot;,&quot;Called 3,527&quot;,&quot;Happened 2,917&quot;]],[352.9,[175.7,195.6],[&quot;Week 13&quot;,&quot;Called 3,818&quot;,&quot;Happened 3,186&quot;]],[375.1,[166.6,186.5],[&quot;Week 14&quot;,&quot;Called 4,108&quot;,&quot;Happened 3,475&quot;]],[397.3,[157.5,178.9],[&quot;Week 15&quot;,&quot;Called 4,397&quot;,&quot;Happened 3,719&quot;]],[419.6,[148.4,168.9],[&quot;Week 16&quot;,&quot;Called 4,686&quot;,&quot;Happened 4,034&quot;]],[441.8,[139.3,159.7],[&quot;Week 17&quot;,&quot;Called 4,974&quot;,&quot;Happened 4,327&quot;]],[464,[130.2,149.6],[&quot;Week 18&quot;,&quot;Called 5,262&quot;,&quot;Happened 4,648&quot;]],[486.2,[121.2,140.4],[&quot;Week 19&quot;,&quot;Called 5,550&quot;,&quot;Happened 4,940&quot;]],[508.4,[112.2,131.6],[&quot;Week 20&quot;,&quot;Called 5,837&quot;,&quot;Happened 5,218&quot;]],[530.7,[103.1,121],[&quot;Week 21&quot;,&quot;Called 6,123&quot;,&quot;Happened 5,554&quot;]],[552.9,[94.1,109],[&quot;Week 22&quot;,&quot;Called 6,409&quot;,&quot;Happened 5,937&quot;]],[575.1,[85.1,95.4],[&quot;Week 23&quot;,&quot;Called 6,695&quot;,&quot;Happened 6,368&quot;]],[597.3,[76.1,80.3],[&quot;Week 24&quot;,&quot;Called 6,980&quot;,&quot;Happened 6,848&quot;]],[619.6,[67.2,67.1],[&quot;Week 25&quot;,&quot;Called 7,265&quot;,&quot;Happened 7,266&quot;]],[641.8,[58.2,53.9],[&quot;Week 26&quot;,&quot;Called 7,549&quot;,&quot;Happened 7,685&quot;]],[664,[54.4,48.3],[&quot;Week 27&quot;,&quot;Called 7,671&quot;,&quot;Happened 7,865&quot;]]]}"><title id="sc-w-t">Repeat orders after the cut-off: the engine's call against what happened</title><desc id="sc-w-d">The engine fitted the store's customers on every order up to its cut-off and called 7,671 repeat orders for the next 26.4 weeks. 7,865 happened. The dashed line is the call, the solid line what happened, week by week.</desc><line class="grid" x1="64" x2="664" y1="296" y2="296"/><text x="54" y="296" font-size="13" text-anchor="end" dominant-baseline="middle">0</text><line class="grid" x1="64" x2="664" y1="233" y2="233"/><text x="54" y="233" font-size="13" text-anchor="end" dominant-baseline="middle">2,000</text><line class="grid" x1="64" x2="664" y1="170" y2="170"/><text x="54" y="170" font-size="13" text-anchor="end" dominant-baseline="middle">4,000</text><line class="grid" x1="64" x2="664" y1="107" y2="107"/><text x="54" y="107" font-size="13" text-anchor="end" dominant-baseline="middle">6,000</text><line class="grid" x1="64" x2="664" y1="44" y2="44"/><text x="54" y="44" font-size="13" text-anchor="end" dominant-baseline="middle">8,000</text><line class="axis" x1="64" x2="664" y1="296" y2="296"/><line class="tick" x1="64" x2="64" y1="296" y2="301"/><text x="64" y="319" font-size="13" text-anchor="start">The cut-off</text><line class="tick" x1="241.8" x2="241.8" y1="296" y2="301"/><text x="241.8" y="319" font-size="13" text-anchor="middle">Week 8</text><line class="tick" x1="419.6" x2="419.6" y1="296" y2="301"/><text x="419.6" y="319" font-size="13" text-anchor="middle">Week 16</text><line class="tick" x1="597.3" x2="597.3" y1="296" y2="301"/><text x="597.3" y="319" font-size="13" text-anchor="middle">Week 24</text><text x="0" y="31" font-size="13">Repeat orders since the cut-off</text><path class="step-alt fade" style="--after:0ms" d="M64,296 L86.2,286.6 L108.4,277.3 L130.7,268 L152.9,258.7 L175.1,249.4 L197.3,240.1 L219.6,230.9 L241.8,221.6 L264,212.4 L286.2,203.2 L308.4,194.1 L330.7,184.9 L352.9,175.7 L375.1,166.6 L397.3,157.5 L419.6,148.4 L441.8,139.3 L464,130.2 L486.2,121.2 L508.4,112.2 L530.7,103.1 L552.9,94.1 L575.1,85.1 L597.3,76.1 L619.6,67.2 L641.8,58.2 L664,54.4"/><path class="step draw" pathLength="1" style="--delay:300ms" d="M64,296 L86.2,286.7 L108.4,278.4 L130.7,271.1 L152.9,264.3 L175.1,256.8 L197.3,248.7 L219.6,240.7 L241.8,233.4 L264,225.5 L286.2,218.5 L308.4,210.2 L330.7,204.1 L352.9,195.6 L375.1,186.5 L397.3,178.9 L419.6,168.9 L441.8,159.7 L464,149.6 L486.2,140.4 L508.4,131.6 L530.7,121 L552.9,109 L575.1,95.4 L597.3,80.3 L619.6,67.1 L641.8,53.9 L664,48.3"/><g class="fade" style="--after:var(--mc-draw-ms)"><text x="664" y="31" font-size="13" text-anchor="end"><tspan>- - called 7,671</tspan><tspan class="ink strong" dx="13">— happened 7,865</tspan></text></g></svg><!-- /build:store-calls-wide --></div>
+        <div class="chart-narrow"><!-- build:store-calls-narrow --><svg class="chart calls" viewBox="0 0 360 300" role="img" aria-labelledby="sc-n-t sc-n-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:12,&quot;t&quot;:40,&quot;b&quot;:260,&quot;p&quot;:[[50,[260,260],[&quot;The cut-off&quot;,&quot;Called 0&quot;,&quot;Happened 0&quot;]],[61.1,[251.8,251.9],[&quot;Week 1&quot;,&quot;Called 297&quot;,&quot;Happened 294&quot;]],[72.2,[243.7,244.6],[&quot;Week 2&quot;,&quot;Called 594&quot;,&quot;Happened 560&quot;]],[83.3,[235.5,238.2],[&quot;Week 3&quot;,&quot;Called 890&quot;,&quot;Happened 792&quot;]],[94.4,[227.4,232.3],[&quot;Week 4&quot;,&quot;Called 1,185&quot;,&quot;Happened 1,006&quot;]],[105.6,[219.3,225.7],[&quot;Week 5&quot;,&quot;Called 1,480&quot;,&quot;Happened 1,246&quot;]],[116.7,[211.2,218.7],[&quot;Week 6&quot;,&quot;Called 1,774&quot;,&quot;Happened 1,503&quot;]],[127.8,[203.1,211.7],[&quot;Week 7&quot;,&quot;Called 2,068&quot;,&quot;Happened 1,757&quot;]],[138.9,[195.1,205.3],[&quot;Week 8&quot;,&quot;Called 2,361&quot;,&quot;Happened 1,988&quot;]],[150,[187,198.4],[&quot;Week 9&quot;,&quot;Called 2,653&quot;,&quot;Happened 2,239&quot;]],[161.1,[179,192.4],[&quot;Week 10&quot;,&quot;Called 2,945&quot;,&quot;Happened 2,460&quot;]],[172.2,[171,185.1],[&quot;Week 11&quot;,&quot;Called 3,237&quot;,&quot;Happened 2,724&quot;]],[183.3,[163,179.8],[&quot;Week 12&quot;,&quot;Called 3,527&quot;,&quot;Happened 2,917&quot;]],[194.4,[155,172.4],[&quot;Week 13&quot;,&quot;Called 3,818&quot;,&quot;Happened 3,186&quot;]],[205.6,[147,164.4],[&quot;Week 14&quot;,&quot;Called 4,108&quot;,&quot;Happened 3,475&quot;]],[216.7,[139.1,157.7],[&quot;Week 15&quot;,&quot;Called 4,397&quot;,&quot;Happened 3,719&quot;]],[227.8,[131.1,149.1],[&quot;Week 16&quot;,&quot;Called 4,686&quot;,&quot;Happened 4,034&quot;]],[238.9,[123.2,141],[&quot;Week 17&quot;,&quot;Called 4,974&quot;,&quot;Happened 4,327&quot;]],[250,[115.3,132.2],[&quot;Week 18&quot;,&quot;Called 5,262&quot;,&quot;Happened 4,648&quot;]],[261.1,[107.4,124.1],[&quot;Week 19&quot;,&quot;Called 5,550&quot;,&quot;Happened 4,940&quot;]],[272.2,[99.5,116.5],[&quot;Week 20&quot;,&quot;Called 5,837&quot;,&quot;Happened 5,218&quot;]],[283.3,[91.6,107.3],[&quot;Week 21&quot;,&quot;Called 6,123&quot;,&quot;Happened 5,554&quot;]],[294.4,[83.8,96.7],[&quot;Week 22&quot;,&quot;Called 6,409&quot;,&quot;Happened 5,937&quot;]],[305.6,[75.9,84.9],[&quot;Week 23&quot;,&quot;Called 6,695&quot;,&quot;Happened 6,368&quot;]],[316.7,[68.1,71.7],[&quot;Week 24&quot;,&quot;Called 6,980&quot;,&quot;Happened 6,848&quot;]],[327.8,[60.2,60.2],[&quot;Week 25&quot;,&quot;Called 7,265&quot;,&quot;Happened 7,266&quot;]],[338.9,[52.4,48.7],[&quot;Week 26&quot;,&quot;Called 7,549&quot;,&quot;Happened 7,685&quot;]],[350,[49.1,43.7],[&quot;Week 27&quot;,&quot;Called 7,671&quot;,&quot;Happened 7,865&quot;]]]}"><title id="sc-n-t">Repeat orders after the cut-off: the engine's call against what happened</title><desc id="sc-n-d">The engine fitted the store's customers on every order up to its cut-off and called 7,671 repeat orders for the next 26.4 weeks. 7,865 happened. The dashed line is the call, the solid line what happened, week by week.</desc><line class="grid" x1="50" x2="350" y1="260" y2="260"/><text x="40" y="260" font-size="12" text-anchor="end" dominant-baseline="middle">0</text><line class="grid" x1="50" x2="350" y1="205" y2="205"/><text x="40" y="205" font-size="12" text-anchor="end" dominant-baseline="middle">2,000</text><line class="grid" x1="50" x2="350" y1="150" y2="150"/><text x="40" y="150" font-size="12" text-anchor="end" dominant-baseline="middle">4,000</text><line class="grid" x1="50" x2="350" y1="95" y2="95"/><text x="40" y="95" font-size="12" text-anchor="end" dominant-baseline="middle">6,000</text><line class="grid" x1="50" x2="350" y1="40" y2="40"/><text x="40" y="40" font-size="12" text-anchor="end" dominant-baseline="middle">8,000</text><line class="axis" x1="50" x2="350" y1="260" y2="260"/><line class="tick" x1="50" x2="50" y1="260" y2="265"/><text x="50" y="282" font-size="12" text-anchor="start">The cut-off</text><line class="tick" x1="138.9" x2="138.9" y1="260" y2="265"/><text x="138.9" y="282" font-size="12" text-anchor="middle">Week 8</text><line class="tick" x1="227.8" x2="227.8" y1="260" y2="265"/><text x="227.8" y="282" font-size="12" text-anchor="middle">Week 16</text><line class="tick" x1="316.7" x2="316.7" y1="260" y2="265"/><text x="316.7" y="282" font-size="12" text-anchor="middle">Week 24</text><text x="0" y="28" font-size="12">Repeat orders since the cut-off</text><path class="step-alt fade" style="--after:0ms" d="M50,260 L61.1,251.8 L72.2,243.7 L83.3,235.5 L94.4,227.4 L105.6,219.3 L116.7,211.2 L127.8,203.1 L138.9,195.1 L150,187 L161.1,179 L172.2,171 L183.3,163 L194.4,155 L205.6,147 L216.7,139.1 L227.8,131.1 L238.9,123.2 L250,115.3 L261.1,107.4 L272.2,99.5 L283.3,91.6 L294.4,83.8 L305.6,75.9 L316.7,68.1 L327.8,60.2 L338.9,52.4 L350,49.1"/><path class="step draw" pathLength="1" style="--delay:300ms" d="M50,260 L61.1,251.9 L72.2,244.6 L83.3,238.2 L94.4,232.3 L105.6,225.7 L116.7,218.7 L127.8,211.7 L138.9,205.3 L150,198.4 L161.1,192.4 L172.2,185.1 L183.3,179.8 L194.4,172.4 L205.6,164.4 L216.7,157.7 L227.8,149.1 L238.9,141 L250,132.2 L261.1,124.1 L272.2,116.5 L283.3,107.3 L294.4,96.7 L305.6,84.9 L316.7,71.7 L327.8,60.2 L338.9,48.7 L350,43.7"/><g class="fade" style="--after:var(--mc-draw-ms)"><text x="350" y="28" font-size="12" text-anchor="end"><tspan>- - called 7,671</tspan><tspan class="ink strong" dx="12">— happened 7,865</tspan></text></g></svg><!-- /build:store-calls-narrow --></div>
+      </div>
+      <figcaption class="exhibit-cap">Dashed: the call, made on <span data-fill="store_cut">June 7, 2011</span> from <span data-fill="store_at_cut">4,935</span> customers' orders up to that day. Solid: what they ordered, week by week, to <span data-fill="store_end">December 9, 2011</span>. Hover or touch the chart to read any week.</figcaption>
+    </figure>
+    <div class="problem-grid" data-reveal>
+      <p><b>Who chose the date.</b> The engine fits its repeat-purchase model on the first three quarters of a store's calendar and calls the last quarter, a rule written into it before this study. Here that put the cut-off at <span data-fill="store_cut">June 7, 2011</span>. We did not move it.</p>
+      <p><b>What it is used for.</b> On a client, this call sets what a new customer is worth, and so how much an advertisement can afford to win one. Its best tenth of customers, ranked at the cut-off, placed <span data-fill="store_top_decile">43%</span> of the repeat orders that followed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Customers slipping away: named at the cut-off -->
+<section class="section" id="slipping">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="label">Call 2 · Customers slipping away</span>
+      <h2>It named <span data-fill="store_named">498</span> regulars as slipping. <span class="tone"><span data-fill="store_named_gone">274</span> never ordered again.</span></h2>
+    </div>
+    <figure class="exhibit" data-play data-reveal>
+      <div class="exhibit-head"><span>Fig. 2 · Regular customers at the cut-off: named, and not</span><span class="label-box">Modeled on published data</span></div>
+      <div class="exhibit-body">
+        <div class="chart-wide"><!-- build:store-slipping-wide --><svg class="chart order slipping" viewBox="0 0 680 150" role="img" aria-labelledby="ss-w-t ss-w-d" preserveAspectRatio="xMidYMid meet"><title id="ss-w-t">Regular customers the engine named as slipping away, against the rest: who never came back</title><desc id="ss-w-d">Of 2,444 regular customers at the cut-off, the engine named 498 as unlikely to order again; 274 of them never did. Of the 1,946 it did not name, 386 never did.</desc><text class="ink" x="0" y="28" font-size="13" dominant-baseline="middle">Named at the cut-off (498)</text><rect class="seg seg-kept fade" style="--after:0ms" x="200" y="8" width="259.7" height="40"/><rect class="seg fade" style="--after:0ms" x="459.7" y="8" width="212.3" height="40"/><text class="seg-text-kept fade" style="--after:200ms" x="210" y="28" font-size="13" dominant-baseline="middle">55% never came back</text><text class="ink" x="0" y="112" font-size="13" dominant-baseline="middle">Not named (1,946)</text><rect class="seg seg-kept fade" style="--after:160ms" x="200" y="92" width="93.6" height="40"/><rect class="seg fade" style="--after:160ms" x="293.6" y="92" width="378.4" height="40"/><text class="seg-text fade" style="--after:360ms" x="303.6" y="112" font-size="13" dominant-baseline="middle">20% never came back</text></svg><!-- /build:store-slipping-wide --></div>
+        <div class="chart-narrow"><!-- build:store-slipping-narrow --><svg class="chart order slipping" viewBox="0 0 360 190" role="img" aria-labelledby="ss-n-t ss-n-d" preserveAspectRatio="xMidYMid meet"><title id="ss-n-t">Regular customers the engine named as slipping away, against the rest: who never came back</title><desc id="ss-n-d">Of 2,444 regular customers at the cut-off, the engine named 498 as unlikely to order again; 274 of them never did. Of the 1,946 it did not name, 386 never did.</desc><text class="ink" x="0" y="20" font-size="12">Named at the cut-off (498)</text><rect class="seg seg-kept fade" style="--after:0ms" x="0" y="28" width="195.9" height="40"/><rect class="seg fade" style="--after:0ms" x="195.9" y="28" width="160.1" height="40"/><text class="seg-text-kept fade" style="--after:200ms" x="10" y="48" font-size="12" dominant-baseline="middle">55% never came back</text><text class="ink" x="0" y="116" font-size="12">Not named (1,946)</text><rect class="seg seg-kept fade" style="--after:160ms" x="0" y="124" width="70.6" height="40"/><rect class="seg fade" style="--after:160ms" x="70.6" y="124" width="285.4" height="40"/><text class="seg-text fade" style="--after:360ms" x="80.6" y="144" font-size="12" dominant-baseline="middle">20% never came back</text></svg><!-- /build:store-slipping-narrow --></div>
+      </div>
+      <figcaption class="exhibit-cap">A regular is a customer with three or more orders before the cut-off: <span data-fill="store_regulars">2,444</span> of them. Named: those the engine expected to order less than once more before the data ends.</figcaption>
+    </figure>
+    <div class="problem-grid" data-reveal>
+      <p><b>Named in June.</b> Of the <span data-fill="store_named">498</span> it named, <span data-fill="store_named_gone">274</span> (<span data-fill="store_named_gone_share">55%</span>) never came back. Of the <span data-fill="store_steady">1,946</span> it did not name, <span data-fill="store_steady_gone">386</span> (<span data-fill="store_steady_gone_share">20%</span>) never did.</p>
+      <p><b>What they were worth.</b> The <span data-fill="store_named">498</span> had spent <span data-fill="store_named_spend">£494,622</span> in the year before the cut-off; the <span data-fill="store_named_gone">274</span> who were lost, <span class="money" data-fill="store_lost_spend">£318,525</span>. Named months ahead, that is the money a store can still act on.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Peak demand: called a month ahead -->
+<section class="section" id="demand">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="label">Call 3 · Peak-season demand</span>
+      <h2>It called the peak a month at a time. <span class="tone">Over the quarter, <span data-fill="store_q_off">0.8%</span> apart.</span></h2>
+    </div>
+    <figure class="exhibit" data-play data-reveal>
+      <div class="exhibit-head"><span>Fig. 3 · The <span data-fill="store_top_n">200</span> best sellers, month by month, and three months called ahead</span><span class="label-box">Modeled on published data</span></div>
+      <div class="exhibit-body">
+        <div class="chart-wide"><!-- build:store-demand-wide --><svg class="chart demand" viewBox="0 0 680 360" role="img" aria-labelledby="sd-w-t sd-w-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:13,&quot;t&quot;:44,&quot;b&quot;:316,&quot;p&quot;:[[56,[213.2],[&quot;Dec 2009&quot;,&quot;113,328 units&quot;]],[82.4,[235.7],[&quot;Jan 2010&quot;,&quot;88,604 units&quot;]],[108.9,[233.1],[&quot;Feb 2010&quot;,&quot;91,455 units&quot;]],[135.3,[204.2],[&quot;Mar 2010&quot;,&quot;123,338 units&quot;]],[161.7,[205.8],[&quot;Apr 2010&quot;,&quot;121,545 units&quot;]],[188.2,[206.4],[&quot;May 2010&quot;,&quot;120,919 units&quot;]],[214.6,[190.5],[&quot;Jun 2010&quot;,&quot;138,461 units&quot;]],[241,[206.3],[&quot;Jul 2010&quot;,&quot;120,938 units&quot;]],[267.5,[190.7],[&quot;Aug 2010&quot;,&quot;138,163 units&quot;]],[293.9,[166.5],[&quot;Sep 2010&quot;,&quot;164,887 units&quot;]],[320.3,[147],[&quot;Oct 2010&quot;,&quot;186,447 units&quot;]],[346.8,[82],[&quot;Nov 2010&quot;,&quot;258,122 units&quot;]],[373.2,[125.5],[&quot;Dec 2010&quot;,&quot;210,083 units&quot;]],[399.7,[153.4],[&quot;Jan 2011&quot;,&quot;179,363 units&quot;]],[426.1,[230.8],[&quot;Feb 2011&quot;,&quot;93,983 units&quot;]],[452.5,[194.5],[&quot;Mar 2011&quot;,&quot;134,031 units&quot;]],[479,[219.5],[&quot;Apr 2011&quot;,&quot;106,472 units&quot;]],[505.4,[188],[&quot;May 2011&quot;,&quot;141,220 units&quot;]],[531.8,[210],[&quot;Jun 2011&quot;,&quot;116,934 units&quot;]],[558.3,[209.5],[&quot;Jul 2011&quot;,&quot;117,421 units&quot;]],[584.7,[194.2],[&quot;Aug 2011&quot;,&quot;134,308 units&quot;]],[611.1,[185.3,169.3],[&quot;Sep 2011&quot;,&quot;Called 144,190&quot;,&quot;Sold 161,804&quot;]],[637.6,[148.8,172],[&quot;Oct 2011&quot;,&quot;Called 184,451&quot;,&quot;Sold 158,807&quot;]],[664,[121.7,118.5],[&quot;Nov 2011&quot;,&quot;Called 214,340&quot;,&quot;Sold 217,804&quot;]]]}"><title id="sd-w-t">Monthly units of the store's 200 best sellers, and the three months the engine called ahead</title><desc id="sd-w-d">Units a month for the store's 200 best sellers from Dec 2009. For Sep 2011, Oct 2011, Nov 2011, the engine called each month at the end of the one before: Sep 2011 called 144,190, sold 161,804; Oct 2011 called 184,451, sold 158,807; Nov 2011 called 214,340, sold 217,804. Over the three months it called 542,981 and 538,415 sold.</desc><line class="grid" x1="56" x2="664" y1="316" y2="316"/><text x="46" y="316" font-size="13" text-anchor="end" dominant-baseline="middle">0</text><line class="grid" x1="56" x2="664" y1="225.3" y2="225.3"/><text x="46" y="225.3" font-size="13" text-anchor="end" dominant-baseline="middle">100k</text><line class="grid" x1="56" x2="664" y1="134.7" y2="134.7"/><text x="46" y="134.7" font-size="13" text-anchor="end" dominant-baseline="middle">200k</text><line class="grid" x1="56" x2="664" y1="44" y2="44"/><text x="46" y="44" font-size="13" text-anchor="end" dominant-baseline="middle">300k</text><line class="axis" x1="56" x2="664" y1="316" y2="316"/><line class="tick" x1="82.4" x2="82.4" y1="316" y2="321"/><text x="82.4" y="339" font-size="13" text-anchor="middle">Jan 2010</text><line class="tick" x1="241" x2="241" y1="316" y2="321"/><text x="241" y="339" font-size="13" text-anchor="middle">Jul 2010</text><line class="tick" x1="399.7" x2="399.7" y1="316" y2="321"/><text x="399.7" y="339" font-size="13" text-anchor="middle">Jan 2011</text><line class="tick" x1="558.3" x2="558.3" y1="316" y2="321"/><text x="558.3" y="339" font-size="13" text-anchor="middle">Jul 2011</text><text x="0" y="31" font-size="13">Units a month, its 200 best sellers</text><path class="step draw" pathLength="1" d="M56,213.2 L82.4,235.7 L108.9,233.1 L135.3,204.2 L161.7,205.8 L188.2,206.4 L214.6,190.5 L241,206.3 L267.5,190.7 L293.9,166.5 L320.3,147 L346.8,82 L373.2,125.5 L399.7,153.4 L426.1,230.8 L452.5,194.5 L479,219.5 L505.4,188 L531.8,210 L558.3,209.5 L584.7,194.2"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><circle class="dot-hollow" cx="611.1" cy="185.3" r="5.5"/><circle class="dot" cx="611.1" cy="169.3" r="5.5"/><circle class="dot-hollow" cx="637.6" cy="148.8" r="5.5"/><circle class="dot" cx="637.6" cy="172" r="5.5"/><circle class="dot-hollow" cx="664" cy="121.7" r="5.5"/><circle class="dot" cx="664" cy="118.5" r="5.5"/></g><text class="fade" style="--after:var(--mc-draw-ms)" x="664" y="31" font-size="13" text-anchor="end">○ called a month ahead · ● what sold</text></svg><!-- /build:store-demand-wide --></div>
+        <div class="chart-narrow"><!-- build:store-demand-narrow --><svg class="chart demand" viewBox="0 0 360 300" role="img" aria-labelledby="sd-n-t sd-n-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:12,&quot;t&quot;:40,&quot;b&quot;:260,&quot;p&quot;:[[44,[176.9],[&quot;Dec 2009&quot;,&quot;113,328 units&quot;]],[57.3,[195],[&quot;Jan 2010&quot;,&quot;88,604 units&quot;]],[70.6,[192.9],[&quot;Feb 2010&quot;,&quot;91,455 units&quot;]],[83.9,[169.6],[&quot;Mar 2010&quot;,&quot;123,338 units&quot;]],[97.2,[170.9],[&quot;Apr 2010&quot;,&quot;121,545 units&quot;]],[110.5,[171.3],[&quot;May 2010&quot;,&quot;120,919 units&quot;]],[123.8,[158.5],[&quot;Jun 2010&quot;,&quot;138,461 units&quot;]],[137.1,[171.3],[&quot;Jul 2010&quot;,&quot;120,938 units&quot;]],[150.4,[158.7],[&quot;Aug 2010&quot;,&quot;138,163 units&quot;]],[163.7,[139.1],[&quot;Sep 2010&quot;,&quot;164,887 units&quot;]],[177,[123.3],[&quot;Oct 2010&quot;,&quot;186,447 units&quot;]],[190.3,[70.7],[&quot;Nov 2010&quot;,&quot;258,122 units&quot;]],[203.7,[105.9],[&quot;Dec 2010&quot;,&quot;210,083 units&quot;]],[217,[128.5],[&quot;Jan 2011&quot;,&quot;179,363 units&quot;]],[230.3,[191.1],[&quot;Feb 2011&quot;,&quot;93,983 units&quot;]],[243.6,[161.7],[&quot;Mar 2011&quot;,&quot;134,031 units&quot;]],[256.9,[181.9],[&quot;Apr 2011&quot;,&quot;106,472 units&quot;]],[270.2,[156.4],[&quot;May 2011&quot;,&quot;141,220 units&quot;]],[283.5,[174.2],[&quot;Jun 2011&quot;,&quot;116,934 units&quot;]],[296.8,[173.9],[&quot;Jul 2011&quot;,&quot;117,421 units&quot;]],[310.1,[161.5],[&quot;Aug 2011&quot;,&quot;134,308 units&quot;]],[323.4,[154.3,141.3],[&quot;Sep 2011&quot;,&quot;Called 144,190&quot;,&quot;Sold 161,804&quot;]],[336.7,[124.7,143.5],[&quot;Oct 2011&quot;,&quot;Called 184,451&quot;,&quot;Sold 158,807&quot;]],[350,[102.8,100.3],[&quot;Nov 2011&quot;,&quot;Called 214,340&quot;,&quot;Sold 217,804&quot;]]]}"><title id="sd-n-t">Monthly units of the store's 200 best sellers, and the three months the engine called ahead</title><desc id="sd-n-d">Units a month for the store's 200 best sellers from Dec 2009. For Sep 2011, Oct 2011, Nov 2011, the engine called each month at the end of the one before: Sep 2011 called 144,190, sold 161,804; Oct 2011 called 184,451, sold 158,807; Nov 2011 called 214,340, sold 217,804. Over the three months it called 542,981 and 538,415 sold.</desc><line class="grid" x1="44" x2="350" y1="260" y2="260"/><text x="34" y="260" font-size="12" text-anchor="end" dominant-baseline="middle">0</text><line class="grid" x1="44" x2="350" y1="186.7" y2="186.7"/><text x="34" y="186.7" font-size="12" text-anchor="end" dominant-baseline="middle">100k</text><line class="grid" x1="44" x2="350" y1="113.3" y2="113.3"/><text x="34" y="113.3" font-size="12" text-anchor="end" dominant-baseline="middle">200k</text><line class="grid" x1="44" x2="350" y1="40" y2="40"/><text x="34" y="40" font-size="12" text-anchor="end" dominant-baseline="middle">300k</text><line class="axis" x1="44" x2="350" y1="260" y2="260"/><line class="tick" x1="57.3" x2="57.3" y1="260" y2="265"/><text x="57.3" y="282" font-size="12" text-anchor="middle">Jan 2010</text><line class="tick" x1="217" x2="217" y1="260" y2="265"/><text x="217" y="282" font-size="12" text-anchor="middle">Jan 2011</text><text x="0" y="28" font-size="12">Units a month, its 200 best sellers</text><path class="step draw" pathLength="1" d="M44,176.9 L57.3,195 L70.6,192.9 L83.9,169.6 L97.2,170.9 L110.5,171.3 L123.8,158.5 L137.1,171.3 L150.4,158.7 L163.7,139.1 L177,123.3 L190.3,70.7 L203.7,105.9 L217,128.5 L230.3,191.1 L243.6,161.7 L256.9,181.9 L270.2,156.4 L283.5,174.2 L296.8,173.9 L310.1,161.5"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><circle class="dot-hollow" cx="323.4" cy="154.3" r="4.5"/><circle class="dot" cx="323.4" cy="141.3" r="4.5"/><circle class="dot-hollow" cx="336.7" cy="124.7" r="4.5"/><circle class="dot" cx="336.7" cy="143.5" r="4.5"/><circle class="dot-hollow" cx="350" cy="102.8" r="4.5"/><circle class="dot" cx="350" cy="100.3" r="4.5"/></g><text class="fade" style="--after:var(--mc-draw-ms)" x="350" y="28" font-size="12" text-anchor="end">○ called · ● sold</text></svg><!-- /build:store-demand-narrow --></div>
+      </div>
+      <figcaption class="exhibit-cap">At the end of August, September and October 2011, the engine called the next month's units for the best sellers to date, from the orders before it and nothing after. Hover or touch the chart to read any month.</figcaption>
+    </figure>
+<!-- build:store-demand-table -->
+        <div class="table-scroll" role="region" aria-label="Each month the engine called, against what sold" tabindex="0"><table class="data">
+          <thead><tr><th scope="col">Month</th><th scope="col">Called on</th><th scope="col">Called</th><th scope="col">Sold</th><th scope="col">Sold against called</th><th scope="col">Products inside their 80% range</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">September 2011</th><td>August 31, 2011</td><td class="num">144,190</td><td class="num">161,804</td><td class="num">+12.2%</td><td class="num">130 of 200</td></tr>
+            <tr><th scope="row">October 2011</th><td>September 30, 2011</td><td class="num">184,451</td><td class="num">158,807</td><td class="num">−13.9%</td><td class="num">132 of 200</td></tr>
+            <tr><th scope="row">November 2011</th><td>October 31, 2011</td><td class="num">214,340</td><td class="num">217,804</td><td class="num">+1.6%</td><td class="num">113 of 200</td></tr>
+          </tbody>
+          <tfoot><tr><th scope="row">The quarter</th><td></td><td class="num">542,981</td><td class="num">538,415</td><td class="num">−0.8%</td><td></td></tr></tfoot>
+        </table></div>
+        <!-- /build:store-demand-table -->
+    <div class="problem-grid" data-reveal>
+      <p><b>Where it was right.</b> The quarter's total, <span data-fill="store_q_called">542,981</span> units called against <span data-fill="store_q_happened">538,415</span> sold. Product by product, it beat "the same month last year" in <span data-fill="store_beat_ly">3</span> of 3 months.</p>
+      <p><b>Where it missed.</b> A single month was off by up to <span data-fill="store_worst">13.9%</span>. Against "the same as last month" it was closer in only <span data-fill="store_beat_lm">1</span> of 3 months. And each product's 80% range held the real number for <span data-fill="store_band_lo">56%</span> to <span data-fill="store_band_hi">66%</span> of products, not 80%: the ranges were too narrow, and we say so.</p>
+    </div>
+  </div>
+</section>
+
+<!-- What we did not publish, and how every number was made -->
+<section class="section" id="method">
+  <div class="wrap">
+    <p class="selection" data-reveal>We did not publish a price finding. This store sells wholesale as well as retail, so its price per unit falls as an order grows; an elasticity read from its average prices would measure that discount, not demand.</p>
+    <details class="fold">
+      <summary>The data, the method, and what this study cannot show</summary>
+      <div class="fold-body">
+        <ul>
+          <li>The data: "Online Retail II", every order line a UK online retailer took from <span data-fill="store_from">December 2009</span> to <span data-fill="store_to">December 2011</span>, <span data-fill="store_lines">1,037,081</span> lines in <span data-fill="store_orders">39,516</span> orders, published by the <a href="https://archive.ics.uci.edu/dataset/502/online+retail+ii">UCI Machine Learning Repository</a> under CC BY 4.0 (Chen, D., 2012, <a href="https://doi.org/10.24432/C5CG6D">doi:10.24432/C5CG6D</a>). The store is not named in it and is not a client.</li>
+          <li>Cleaning: cancelled orders, zero-priced lines and lines that are not products (postage, fees, adjustments) are left out. Customers are the ones the data numbers, <span data-fill="store_known">87%</span> of sales; <span data-fill="store_home_share">86%</span> of sales went to the UK.</li>
+          <li>Call 1 and Call 2: the engine's repeat-purchase model (models/clv.py, BG/NBD), unmodified, one order a customer a day.</li>
+          <li>Call 3: the engine's demand forecast (models/forecast.py, with its seasonality), unmodified; each month's call used the 200 best sellers by sales to date.</li>
+          <li>The script: engine/scripts/store_case_study.py writes data/store-study.json; the page prints nothing it does not compute.</li>
+          <li>What this cannot show: profit. The data has no costs, no advertising and no stock levels, so every call here is about customers and units, never about margin, and none of it is a result for anyone.</li>
+        </ul>
+      </div>
+    </details>
+    <div class="cta">
+      <a class="btn btn-lg" href="/apply" data-cta="case-study">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <span class="cta-note">We run the same engine on your own reports, on the call.</span>
+    </div>
+  </div>
+</section>
+
+<section class="section night" id="problem">
+  <div class="wrap">
+    <h2 data-reveal><span class="tone">Your mental model is linear.</span> Your costs are a staircase.</h2>
+    <div class="problem-grid" data-reveal style="--d: 120ms">
+      <p><b>A P&amp;L is an average.</b> It tells you what fulfilment cost across everything you shipped. It cannot tell you that one SKU sits an ounce past an edge, because the cheaper version of it never shipped.</p>
+      <p><b>A cliff only shows up as a counterfactual:</b> what the same unit would cost an ounce lighter, or a cent cheaper. No report anyone sells contains one, so your tools, your agency and your bookkeeper all miss the same leak at once.</p>
+    </div>
+    <div class="problem-grid platforms" data-reveal style="--d: 200ms">
+      <p><b>On Amazon, the steps are imposed on you.</b> The fee card moves at every weight band, every price band and every size tier, and a unit one ounce past an edge pays the whole step.</p>
+      <p><b>On Shopify, you built them.</b> The parcel you pack meets the carrier's pound line, the compare-at you set is a discount on every order, and the free-shipping line is a step you drew yourself.</p>
+    </div>
+    <div class="creed">
+      <p data-reveal>Your agency is paid on spend.</p>
+      <p data-reveal style="--d: 180ms">Your software is paid to report.</p>
+      <p data-reveal style="--d: 360ms">We're paid on proof.</p>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="staircase">
   <div class="wrap">
     <div class="section-head" data-reveal>
@@ -124,6 +260,7 @@
   <div class="wrap">
     <div class="case-head" data-reveal>
       <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
+      <span class="label">The second study · one real Amazon listing, from its public page</span>
       <p class="case-who"><span data-fill="who">A car-care brand</span> · one listing · <span data-fill="category">Automotive</span></p>
       <h2 class="case-headline"><span class="money"><span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span></span> a year, paid on one step of Amazon's fee staircase.<span class="est">estimate</span></h2>
       <p class="lede">Its best-selling paint scratch remover lists an item weight of <span data-fill="weight">8.8</span> ounces. Above <span data-fill="edge">8</span>, every unit pays <span class="money" data-fill="step_np">$0.26</span> more to fulfil, <span data-fill="step_peak">$0.28</span> from October 15, on an estimated <span data-fill="units">3,500</span> units a month.</p>
@@ -179,14 +316,14 @@
     </details>
 
     <div class="cta">
-      <a class="btn btn-lg" href="/apply" data-cta="case-study">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-lg" href="/apply" data-cta="listing">Book your call <span class="arrow" aria-hidden="true">→</span></a>
       <span class="cta-note">We open your own reports and price what public pages can't show.</span>
     </div>
     <p class="bridge">Rather run it yourself first? Every step of this case study is taught free: <a href="/learn/fee-staircase">The Fee Staircase course →</a></p>
     <p class="bridge">Selling on Shopify? This listing is an Amazon one, because Amazon's pages are public. Your store's steps are in your own exports, and two free courses run on them today: <a href="/learn/price-curve">The Price Curve</a> and <a href="/learn/capital-and-cash">Capital &amp; Cash</a>.</p>
   </div>
 </section>
-<!-- /build:case-study-page -->
+
 </main>
 
 <!-- build:foot -->
@@ -197,7 +334,7 @@
       <p class="foot-motto">Paid on proof.</p>
     </div>
     <div class="foot-cols">
-      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
       <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
       <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
       <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>

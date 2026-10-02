@@ -731,3 +731,130 @@ export function paybackSVG(pb, opts) {
     [i === 0 ? "The first order" : `Week ${i}`, `${money(v)} of margin back`, v >= pb.cac ? "Paid back" : `${money(pb.cac - v)} still out`]]));
   return frame(w, h, "payback", { id: `${id}-t`, text: "A new customer's margin back, week by week, against what they cost" }, { id: `${id}-d`, text: desc }, body, scrub);
 }
+
+// ---------------------------------------------------------------- the store study
+
+const whole = (v) => Math.round(v).toLocaleString("en-US");
+
+/**
+ * Repeat orders a real store's customers placed after the engine's cut-off, week by week: the
+ * engine's call (dashed, made at the cut-off with nothing after it) and what happened (solid).
+ * c: data/store-study.json "customers".
+ */
+export function callsSVG(c, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const W = c.path.weeks, called = c.path.called, measured = c.path.measured, N = W[W.length - 1];
+  const top = Math.max(...called, ...measured);
+  const yt = niceTicks(0, top * 1.05, 4);
+  const X = scale(0, N, m.l, w - m.r), Y = scale(0, yt[yt.length - 1], h - m.b, m.t);
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${whole(t)}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const t of [0, 8, 16, 24].filter((t) => t <= N)) {
+    body += `<line class="tick" x1="${r1(X(t))}" x2="${r1(X(t))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(t))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="${t === 0 ? "start" : "middle"}">${t === 0 ? "The cut-off" : `Week ${t}`}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Repeat orders since the cut-off</text>`;
+  body += `<path class="step-alt fade" style="--after:0ms" d="${line(pts(W.map(X), called.map(Y)))}"/>`;
+  body += `<path class="step draw" pathLength="1" style="--delay:300ms" d="${line(pts(W.map(X), measured.map(Y)))}"/>`;
+  const ends = spread([{ y: Y(called[called.length - 1]), t: `Called ${whole(c.called)}`, cls: "" },
+    { y: Y(measured[measured.length - 1]), t: `Happened ${whole(c.measured)}`, cls: "ink strong" }], font + 6, m.t, h - m.b);
+  // the key, top right on the axis name's line, clear of both lines
+  void ends;
+  body += `<g class="fade" style="--after:var(--mc-draw-ms)"><text x="${w - m.r}" y="${m.t - font}" font-size="${font}" text-anchor="end">` +
+    `<tspan>- - called ${whole(c.called)}</tspan><tspan class="ink strong" dx="${font}">— happened ${whole(c.measured)}</tspan></text></g>`;
+  const desc = `The engine fitted the store's customers on every order up to its cut-off and called ${whole(c.called)} repeat orders for the next ${c.holdout_weeks} weeks. ` +
+    `${whole(c.measured)} happened. The dashed line is the call, the solid line what happened, week by week.`;
+  const scrub = scrubOf(font, m.t, h - m.b, W.map((wk, i) => [X(wk), [Y(called[i]), Y(measured[i])],
+    [wk === 0 ? "The cut-off" : `Week ${wk}`, `Called ${whole(called[i])}`, `Happened ${whole(measured[i])}`]]));
+  return frame(w, h, "calls", { id: `${id}-t`, text: "Repeat orders after the cut-off: the engine's call against what happened" }, { id: `${id}-d`, text: desc }, body, scrub);
+}
+
+/**
+ * The regulars the engine named as slipping away at its cut-off, against the regulars it did not:
+ * how many of each never ordered again before the data ends. The ones who never came back are the
+ * money, so they alone are blue. s: data/store-study.json "slipping".
+ */
+export function slippingSVG(s, opts) {
+  const { id, w, h, m, font = 13, labelW = 170 } = opts;
+  const rows = [
+    { k: `Named at the cut-off (${whole(s.named)})`, gone: s.named_did_not, back: s.named_came_back },
+    { k: `Not named (${whole(s.steady)})`, gone: s.steady - s.steady_came_back, back: s.steady_came_back },
+  ];
+  // with no room beside the bars (a phone), each row's name sits above its bar
+  const above = labelW === 0;
+  const bw = w - m.l - m.r - labelW, bh = Math.min(40, (h - m.t - m.b) / (above ? 3.6 : 3.2));
+  let body = "";
+  rows.forEach((r, i) => {
+    const y = m.t + (above ? font + 8 : 0) + i * bh * (above ? 2.4 : 2.1), total = r.gone + r.back, gw = (r.gone / total) * bw;
+    const x0 = m.l + labelW;
+    body += above
+      ? `<text class="ink" x="${m.l}" y="${r1(y - 8)}" font-size="${font}">${esc(r.k)}</text>`
+      : `<text class="ink" x="${m.l}" y="${r1(y + bh / 2)}" font-size="${font}" dominant-baseline="middle">${esc(r.k)}</text>`;
+    body += `<rect class="seg seg-kept fade" style="--after:${i * 160}ms" x="${r1(x0)}" y="${r1(y)}" width="${r1(gw)}" height="${r1(bh)}"/>`;
+    body += `<rect class="seg fade" style="--after:${i * 160}ms" x="${r1(x0 + gw)}" y="${r1(y)}" width="${r1(bw - gw)}" height="${r1(bh)}"/>`;
+    const pct = Math.round((r.gone / total) * 100);
+    const textW = `${pct}% never came back`.length * font * 0.58;
+    if (gw > textW + 20) body += `<text class="seg-text-kept fade" style="--after:${i * 160 + 200}ms" x="${r1(x0 + 10)}" y="${r1(y + bh / 2)}" font-size="${font}" dominant-baseline="middle">${pct}% never came back</text>`;
+    else body += `<text class="seg-text fade" style="--after:${i * 160 + 200}ms" x="${r1(x0 + gw + 10)}" y="${r1(y + bh / 2)}" font-size="${font}" dominant-baseline="middle">${pct}% never came back</text>`;
+  });
+  const desc = `Of ${whole(s.regulars)} regular customers at the cut-off, the engine named ${whole(s.named)} as unlikely to order again; ${whole(s.named_did_not)} of them never did. ` +
+    `Of the ${whole(s.steady)} it did not name, ${whole(s.steady - s.steady_came_back)} never did.`;
+  return frame(w, h, "order slipping", { id: `${id}-t`, text: "Regular customers the engine named as slipping away, against the rest: who never came back" }, { id: `${id}-d`, text: desc }, body);
+}
+
+/**
+ * The 200 best sellers' units, month by month, and the three months the engine called a month
+ * ahead: the call (hollow) against what sold (solid). d: data/store-study.json "demand".
+ */
+export function demandSVG(d, opts) {
+  const { id, w, h, m, font = 13, narrow = false } = opts;
+  const H = d.history, n = H.length;
+  const calls = new Map(d.calls.map((c) => [c.month, c]));
+  const top = Math.max(...H.map((x) => x.units), ...d.calls.map((c) => c.called));
+  const yt = niceTicks(0, top * 1.08, 4);
+  while (yt[yt.length - 1] < top) yt.push(yt[yt.length - 1] + (yt[1] - yt[0]));
+  const X = scale(0, n - 1, m.l, w - m.r), Y = scale(0, yt[yt.length - 1], h - m.b, m.t);
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const label = (ym) => `${MON[+ym.slice(5, 7) - 1]} ${ym.slice(0, 4)}`;
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${usd(t, { compact: true }).replace("$", "")}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  // a tick at each January (and July, when there is room); the first month only when no January sits beside it
+  H.forEach((x, i) => {
+    const jan = x.month.endsWith("-01"), jul = !narrow && x.month.endsWith("-07");
+    if (jan || jul || (i === 0 && !H.slice(1, 4).some((y) => y.month.endsWith("-01")))) {
+      body += `<line class="tick" x1="${r1(X(i))}" x2="${r1(X(i))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+      body += `<text x="${r1(X(i))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">${label(x.month)}</text>`;
+    }
+  });
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Units a month, its 200 best sellers</text>`;
+  const firstCall = H.findIndex((x) => calls.has(x.month));
+  const known = H.slice(0, firstCall);
+  body += `<path class="step draw" pathLength="1" d="${line(pts(known.map((_, i) => X(i)), known.map((x) => Y(x.units))))}"/>`;
+  const r = font < 13 ? 4.5 : 5.5;
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  H.forEach((x, i) => {
+    const c = calls.get(x.month);
+    if (!c) return;
+    body += `<circle class="dot-hollow" cx="${r1(X(i))}" cy="${r1(Y(c.called))}" r="${r}"/>`;
+    body += `<circle class="dot" cx="${r1(X(i))}" cy="${r1(Y(c.measured))}" r="${r}"/>`;
+  });
+  body += `</g>`;
+  // the key, top right, on the same line as the axis name and clear of the data
+  body += `<text class="fade" style="--after:var(--mc-draw-ms)" x="${w - m.r}" y="${m.t - font}" font-size="${font}" text-anchor="end">${narrow ? "○ called · ● sold" : "○ called a month ahead · ● what sold"}</text>`;
+  const q = d.quarter;
+  const desc = `Units a month for the store's 200 best sellers from ${label(H[0].month)}. For ${d.calls.map((c) => label(c.month)).join(", ")}, the engine called each month at the end of the one before: ` +
+    d.calls.map((c) => `${label(c.month)} called ${whole(c.called)}, sold ${whole(c.measured)}`).join("; ") + `. Over the three months it called ${whole(q.called)} and ${whole(q.measured)} sold.`;
+  const scrub = scrubOf(font, m.t, h - m.b, H.map((x, i) => {
+    const c = calls.get(x.month);
+    return [X(i), c ? [Y(c.called), Y(c.measured)] : [Y(x.units)], c ? [label(x.month), `Called ${whole(c.called)}`, `Sold ${whole(c.measured)}`] : [label(x.month), `${whole(x.units)} units`]];
+  }));
+  return frame(w, h, "demand", { id: `${id}-t`, text: "Monthly units of the store's 200 best sellers, and the three months the engine called ahead" }, { id: `${id}-d`, text: desc }, body, scrub);
+}

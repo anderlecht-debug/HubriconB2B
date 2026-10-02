@@ -23,18 +23,19 @@ model change.
   `brand`, or `none (why)`.
 - **One client's data never advises another** without the consent the terms name (§10).
 - **The home page meets the Hormozi standard:** one action ("Book your call →", to
-  `/apply`, the only button), no proof that does not exist, and the spec's ten sections in
-  the spec's order. Since 2026-10-01 (the founder's call, recorded in `HUBRICON_SPEC.md`,
-  "Amended by the founder") every public page has the tab bar with Education and Trust, and
-  the home page adds the trust section, the results wall and the education library; the
-  900-word cap is retired. A planned course says Planned and links nowhere; an empty video
-  slot says what will play there; a testimonial needs the client's dated consent. The one
-  other control is the course's optional email field in Education (an outline button, the
-  field's own; every lesson is open without it, the founder's call of 2026-10-01), and nothing
-  that moves is ever blank before it plays.
+  `/apply`, the only button), no proof that does not exist, and since 2026-10-01 evening (the
+  founder's call, recorded in `HUBRICON_SPEC.md`, "Amended by the founder") a short first page:
+  five bands (the promise, the proof, the offer, the library strip, the call), its own words
+  capped by the test. Every other section lives on the page under its tab: Proof is
+  `/case-study`, How it works is `/how-it-works`, The offer is `/offer`, Education is `/learn`,
+  Trust opens the pages that say it. No results wall and no Results tab until a client's dated
+  consent fills a frame. A planned course says Planned and links nowhere; an empty video slot
+  says what will play there; the course's optional email lives on `/learn` and the course
+  pages, never the home page; and nothing that moves is ever blank before it plays.
   `scripts/build-pages.test.mjs` and `scripts/site-blocks.test.mjs` check all of it.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
-  `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.
+  `node scripts/case-study.mjs` (the Amazon listing) and `engine/scripts/store_case_study.py`
+  (the store study), then `node scripts/build-pages.mjs`; the test fails a stale page.
 - **One design system.** Every page reads `/assets/hubricon.css`. No page keeps a private
   palette. Blue is for money and the leak, nothing else.
 - **Model changes re-run the bench.** Any change to elasticity, pricing, forecast,
@@ -46,5 +47,5 @@ model change.
 ## Tests
 
 - Engine: `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 5 minutes).
-- Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page
-  and the public-data case study).
+- Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page,
+  the tab pages and both case studies).

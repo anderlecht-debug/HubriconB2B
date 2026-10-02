@@ -4,7 +4,8 @@
 //   node scripts/build-pages.mjs --check   exit 1 if any page is out of date
 //
 // Reads ratecard.json (Amazon's published cards), data/montecarlo.json and
-// data/case-study.json (written by scripts/case-study.mjs), scripts/blocks/, and the
+// data/case-study.json (written by scripts/case-study.mjs), data/store-study.json
+// (engine/scripts/store_case_study.py), scripts/blocks/, and the
 // data behind the shared pieces (scripts/site-blocks.mjs: data/library.json,
 // data/testimonials.json, data/scoreboard-illustration.json), then, on each page:
 //   - replaces whatever sits between <!-- build:NAME --> and <!-- /build:NAME -->
@@ -15,12 +16,13 @@
 //   - fills every element marked data-fill="key" with the figure it names, so no
 //     number on a page is typed by hand;
 //   - writes the FAQPage structured data from the FAQ as the page shows it;
-//   - on the home page, counts the words a visitor sees on load (printed, no longer
-//     capped: the founder retired the 900-word cap on 2026-10-01).
+//   - on the home page, counts the words a visitor sees on load: printed here, and capped
+//     by scripts/build-pages.test.mjs since the founder asked for a short first page
+//     (HUBRICON_SPEC.md, "A short first page", 2026-10-01 evening).
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, waterfallSVG, responseSVG, paybackSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, waterfallSVG, responseSVG, paybackSVG, callsSVG, slippingSVG, demandSVG, usd } from "../assets/charts.mjs";
 import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
@@ -74,16 +76,16 @@ export function figures(rc, mc, cs) {
   const cc = capitalCashFigures(json("data/learn-capital-cash.json"));
   const sm = shopifyMarginFigures(json("data/learn-shopify-margin.json"), rc);
   const om = operatorsMathFigures(json("data/learn-operators-math.json"), rc);
+  const st = storeFigures(json("data/store-study.json"));
   const blocks = {
     ...learn.blocks,
     ...pc.blocks,
     ...cc.blocks,
     ...sm.blocks,
     ...om.blocks,
+    ...st.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
-    // /case-study: the home page's sections as they stand (the build loop refreshes it after index.html)
-    "case-study-page": caseStudySections(read("index.html")),
     "mc-mood-wide": monteCarloSVG(mc, { id: "mc-mood-w", w: 560, h: 440, m: { t: 8, r: 8, b: 8, l: 8 }, variant: "mood" }),
     // The hero's: wide, wordless, behind the headline (HUBRICON_SPEC.md: "muted behind or beside it").
     "mc-mood-hero": monteCarloSVG(mc, { id: "mc-mood-h", w: 1000, h: 560, m: { t: 12, r: 12, b: 12, l: 12 }, variant: "mood" }),
@@ -154,6 +156,7 @@ export function figures(rc, mc, cs) {
       ...cc.fill,
       ...sm.fill,
       ...om.fill,
+      ...st.fill,
     },
   };
 }
@@ -398,6 +401,66 @@ function shopifyMarginFigures(sm, rc) {
 }
 
 /**
+ * The store study's figures (/case-study, and the home page's proof). Every number is the engine's
+ * call or the store's own later orders, computed by engine/scripts/store_case_study.py into
+ * data/store-study.json from a real retailer's published order history (UCI, CC BY 4.0). Nothing
+ * here does arithmetic beyond formatting and the differences between a call and what happened.
+ */
+function storeFigures(ss) {
+  const n = (v) => Math.round(v).toLocaleString("en-US");
+  const pounds = (v) => `£${n(v)}`;
+  const share = (a, b) => `${Math.round((a / b) * 100)}%`;
+  // a miss is said as it was, rounded down to a tenth of a percent: never flattered
+  const off = (called, happened) => `${(Math.floor(Math.abs(happened / called - 1) * 1000) / 10).toFixed(1)}%`;
+  const MON = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const ym = (s) => `${MON[+s.slice(5, 7) - 1]} ${s.slice(0, 4)}`;
+  const day = (s) => { const [y, m, d] = s.split("-").map(Number); return `${MON[m - 1]} ${d}, ${y}`; };
+  const f = ss.store, c = ss.customers, sl = ss.slipping, d = ss.demand, q = d.quarter;
+  const fill = {
+    store_sales: `£${(Math.floor(f.sales_2010 / 1e5) / 10).toFixed(1)}M`, store_customers: n(f.customers), store_products: n(f.products),
+    store_from: ym(f.from), store_to: ym(f.to), store_home_share: share(f.home_share, 1), store_known: share(f.known_customer_share, 1),
+    store_lines: n(f.order_lines), store_orders: n(f.orders),
+    store_cut: day(c.cut), store_end: day(c.end), store_weeks: String(Math.floor(c.holdout_weeks)), store_at_cut: n(c.customers_at_cut),
+    store_called: n(c.called), store_happened: n(c.measured), store_off: off(c.called, c.measured),
+    store_more_less: c.measured >= c.called ? "more" : "fewer", store_top_decile: share(c.top_decile_share, 1),
+    store_regulars: n(sl.regulars), store_named: n(sl.named), store_named_gone: n(sl.named_did_not),
+    store_named_gone_share: share(sl.named_did_not, sl.named), store_steady: n(sl.steady),
+    store_steady_gone: n(sl.steady - sl.steady_came_back), store_steady_gone_share: share(sl.steady - sl.steady_came_back, sl.steady),
+    store_steady_back_share: share(sl.steady_came_back, sl.steady),
+    store_lost_spend: pounds(sl.lost_spend_year_before), store_named_spend: pounds(sl.named_spend_year_before),
+    store_top_n: String(d.top_n), store_q_called: n(q.called), store_q_happened: n(q.measured), store_q_off: off(q.called, q.measured),
+    store_band_lo: share(Math.min(...d.calls.map((x) => x.inside_band / x.products)), 1),
+    store_band_hi: share(Math.max(...d.calls.map((x) => x.inside_band / x.products)), 1),
+    store_beat_ly: String(d.calls.filter((x) => x.mae.engine < x.mae.same_month_last_year).length),
+    store_beat_lm: String(d.calls.filter((x) => x.mae.engine < x.mae.last_month).length),
+    // the worst single month, sold against called, as the table states it
+    store_worst: off(1, Math.max(...d.calls.map((x) => Math.abs(x.measured / x.called - 1))) + 1),
+  };
+  const rows = d.calls.map((x) => `
+            <tr><th scope="row">${ym(x.month)}</th><td>${day(x.called_on)}</td><td class="num">${n(x.called)}</td><td class="num">${n(x.measured)}</td><td class="num">${x.measured >= x.called ? "+" : "−"}${off(x.called, x.measured)}</td><td class="num">${x.inside_band} of ${x.products}</td></tr>`).join("");
+  const table = `
+        <div class="table-scroll" role="region" aria-label="Each month the engine called, against what sold" tabindex="0"><table class="data">
+          <thead><tr><th scope="col">Month</th><th scope="col">Called on</th><th scope="col">Called</th><th scope="col">Sold</th><th scope="col">Sold against called</th><th scope="col">Products inside their 80% range</th></tr></thead>
+          <tbody>${rows}
+          </tbody>
+          <tfoot><tr><th scope="row">The quarter</th><td></td><td class="num">${n(q.called)}</td><td class="num">${n(q.measured)}</td><td class="num">${q.measured >= q.called ? "+" : "−"}${off(q.called, q.measured)}</td><td></td></tr></tfoot>
+        </table></div>
+        `;
+  return {
+    fill,
+    blocks: {
+      "store-calls-wide": callsSVG(c, { id: "sc-w", w: 680, h: 340, m: { t: 44, r: 16, b: 44, l: 64 }, font: 13 }),
+      "store-calls-narrow": callsSVG(c, { id: "sc-n", w: 360, h: 300, m: { t: 40, r: 10, b: 40, l: 50 }, font: 12 }),
+      "store-slipping-wide": slippingSVG(sl, { id: "ss-w", w: 680, h: 150, m: { t: 8, r: 8, b: 8, l: 0 }, font: 13, labelW: 200 }),
+      "store-slipping-narrow": slippingSVG(sl, { id: "ss-n", w: 360, h: 190, m: { t: 8, r: 4, b: 8, l: 0 }, font: 12, labelW: 0 }),
+      "store-demand-wide": demandSVG(d, { id: "sd-w", w: 680, h: 360, m: { t: 44, r: 16, b: 44, l: 56 }, font: 13 }),
+      "store-demand-narrow": demandSVG(d, { id: "sd-n", w: 360, h: 300, m: { t: 40, r: 10, b: 40, l: 44 }, font: 12, narrow: true }),
+      "store-demand-table": table,
+    },
+  };
+}
+
+/**
  * The Operator's Math's figures (/learn/operators-math). Every number is the engine's, computed by
  * scripts/learn/operators_math.py into data/learn-operators-math.json from an invented coffee roaster
  * (its customers and its ad curve simulated from stated parameters): the label and payment cards from
@@ -553,7 +616,13 @@ export function visibleWords(html) {
   return text(b).split(" ").filter((w) => /[\p{L}\p{N}$]/u.test(w)).length;
 }
 
-/** One page, rebuilt. `requireAllFills` is for the home page, which shows every figure. */
+/** The words a visitor reads in the page's own content: <main>, without the bar, its panels or the footer. */
+export function mainWords(html) {
+  const i = html.indexOf("<main"), j = html.indexOf("</main>");
+  return i < 0 || j < 0 ? 0 : visibleWords("<body>" + html.slice(i, j));
+}
+
+/** One page, rebuilt. `requireAllFills` is for /case-study, the Proof tab, which shows every figure computed. */
 export function build(html, built, { requireAllFills = false, name = "page" } = {}) {
   let out = html.replace(/(<!-- build:([a-z0-9-]+) -->)[\s\S]*?(<!-- \/build:\2 -->)/g, (whole, a, block, z) => {
     if (block === "faq-jsonld") return whole;
@@ -578,13 +647,16 @@ export function build(html, built, { requireAllFills = false, name = "page" } = 
 const OTHER_PAGES_ONLY = new Set(["who_lower", "silence_share", "silence_on"]);
 
 export const PAGES = [
-  { file: "index.html", requireAllFills: true },
+  { file: "index.html" },
   { file: "honesty.html" },
   { file: "terms.html" },
   { file: "privacy.html" },
   { file: "your-data.html" },
   { file: "verify.html" },
-  { file: "case-study.html" },
+  // /case-study is the Proof tab and carries every figure the case studies compute
+  { file: "case-study.html", requireAllFills: true },
+  { file: "how-it-works.html" },
+  { file: "offer.html" },
   { file: "manifesto.html" },
   { file: "portal.html" },
   { file: "learn/index.html" },
@@ -599,16 +671,6 @@ export const PAGES = [
   { file: "learn/shopify-margin-card.html" },
   { file: "learn/operators-math-card.html" },
 ];
-
-/** The home page's staircase and case study, whole, for /case-study. */
-export function caseStudySections(home) {
-  const take = (id) => {
-    const m = home.match(new RegExp(`<section class="section" id="${id}">[\\s\\S]*?\\n</section>`));
-    if (!m) throw new Error(`index.html has no #${id} section for /case-study`);
-    return m[0];
-  };
-  return `\n${take("staircase")}\n\n${take("case-study")}\n`;
-}
 
 /** The sitemap: every public page the build knows, by its clean URL. The client's own pages and the noindex ones stay out. */
 export function sitemap(pages = PAGES) {
@@ -626,9 +688,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const page of PAGES) {
     const before = read(page.file);
     const after = build(before, built, { requireAllFills: page.requireAllFills, name: page.file });
-    // /case-study carries the home page's own staircase and case-study sections, as just built
-    if (page.file === "index.html") built.blocks["case-study-page"] = caseStudySections(after);
-    const words = page.file === "index.html" ? ` · ${visibleWords(after)} visible words` : "";
+    const words = page.file === "index.html" ? ` · ${mainWords(after)} words in its main content` : "";
     if (check) {
       if (before !== after) { stale++; console.error(`${page.file} is out of date: run node scripts/build-pages.mjs`); }
       else console.log(`${page.file} is current${words}`);

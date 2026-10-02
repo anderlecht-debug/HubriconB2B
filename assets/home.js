@@ -1,7 +1,9 @@
-// The home page's behaviour on top of /assets/site.js (the nav, the motion, the footer's
-// live line). Everything visible is already in the HTML; this file counts clicks, dates
-// the aging strip for whoever is reading, and fills the results wall and a real client's
-// story only from rows a client consented to publish.
+// The home page's behaviour on top of /assets/site.js (the nav, the motion, clicks, the
+// footer's live line). Everything visible is already in the HTML; this file counts which
+// headline a visitor saw, keeps a referral code for /apply, sends a link to one of the old
+// home-page sections to the page it now lives on, and fills a real client's story only
+// from rows a client consented to publish. (The results wall's code stays for the day a
+// client fills one; no page carries the wall until then.)
 "use strict";
 import { track, rpc, results } from "./site.js";
 
@@ -23,30 +25,15 @@ try {
   if (ref && REF_OK.test(ref)) sessionStorage.setItem("hubricon_ref", ref);
 } catch (e) {}
 
-document.addEventListener("click", (ev) => {
-  const a = ev.target.closest?.("[data-cta]");
-  if (a) track("cta_click", { section: a.dataset.cta || "", h: headline });
-  const course = ev.target.closest?.('a[href^="/learn"]');
-  if (course) track("learn_click", { href: course.getAttribute("href") });
-});
-document.querySelectorAll("details[data-q]").forEach((d) => {
-  d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q }); });
-});
-const method = document.querySelector("#case-study details");
-method?.addEventListener("toggle", () => { if (method.open) track("method_open", {}); });
-const receipts = document.querySelector(".receipts");
-receipts?.addEventListener("toggle", () => { if (receipts.open) track("receipts_open", {}); });
-
-/* -- The aging strip: the calendar date each day falls on, for whoever is reading --- */
-// The still frame says "Day 271"; this adds the date a unit reaching Amazon today gets there.
-{
-  const today = new Date();
-  const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  document.querySelectorAll(".strip-date[data-days]").forEach((t) => {
-    const d = new Date(today); d.setDate(d.getDate() + Number(t.dataset.days));
-    t.textContent = Number(t.dataset.days) === 0 ? fmt(today) : fmt(d);
-  });
-}
+/* A link to a section that used to be on the home page lands where it lives now
+   (HUBRICON_SPEC.md, "A short first page", 2026-10-01): shared links keep working. After
+   the referral code is kept, so a shared link loses nothing. */
+const MOVED = {
+  "#case-study": "/case-study", "#staircase": "/case-study#staircase", "#problem": "/case-study#problem",
+  "#how": "/how-it-works", "#scoreboard": "/how-it-works#record", "#who": "/how-it-works#who", "#faq": "/how-it-works#faq",
+  "#trust": "/offer#trust", "#results": "/honesty",
+};
+if (MOVED[location.hash]) location.replace(MOVED[location.hash]);
 
 /* -- The results wall --------------------------------------------------------------- */
 // public_results() returns only rows a client consented to publish, re-checked on every

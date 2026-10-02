@@ -22,158 +22,63 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* The home page. Every value is a token from /assets/hubricon.css; the nav, the footer,
-   the library, the video slots, the wall and the receipts are shared and live there. */
+/* The home page: five bands and no more (HUBRICON_SPEC.md, "A short first page", 2026-10-01).
+   Every value is a token from /assets/hubricon.css; the sections behind the tabs, the calls,
+   the course strip, the nav and the footer are shared and live there. */
 :root { --wide: 1200px; }
 
 /* 1 · the promise, with ten thousand years fanning out behind it */
-.hero { position: relative; overflow: hidden; padding-block: var(--s-7) var(--s-7); border-bottom: 1px solid var(--rule); }
-.hero-art { position: absolute; z-index: 0; right: calc(-1 * var(--s-5)); top: var(--s-9); width: min(54vw, 860px); pointer-events: none; }
+.hero { position: relative; overflow: hidden; padding-block: var(--s-8) var(--s-8); border-bottom: 1px solid var(--rule); }
+.hero-art { position: absolute; z-index: 0; right: calc(-1 * var(--s-5)); top: var(--s-7); width: min(54vw, 860px); pointer-events: none; }
 .hero-art .figure svg { width: 100%; height: auto; }
 .hero-in { position: relative; z-index: 1; }
 .hero h1 { margin-top: var(--s-4); font-size: clamp(2.75rem, 1rem + 5.4vw, 5.25rem); max-width: 15ch; }
 .hero .lede { margin-top: var(--s-5); font-size: var(--t-24); max-width: 36ch; color: var(--ink-2); }
 .hero .cta { margin-top: var(--s-6); }
 .hero-cap { margin-top: var(--s-4); font-size: var(--t-12); color: var(--ink-3); }
-.hero .numbers { position: relative; z-index: 1; margin-top: var(--s-7); padding-top: var(--s-4); background: var(--paper); }
 .nowrap { white-space: nowrap; }
 @media (max-width: 400px) { .nowrap { white-space: normal; } }
 
-.section-head { margin-bottom: var(--s-7); }
-.section-head h2 { margin-top: var(--s-3); max-width: 22ch; }
-.section-head .lede { margin-top: var(--s-5); }
+/* 2 · the proof: three calls, and what happened */
+#proof { padding-block: calc(var(--section) * 0.85); }
+#proof h2 { margin-top: var(--s-4); max-width: 20ch; }
+#proof .calls { margin-top: var(--s-7); }
+#proof .lede { margin-top: var(--s-5); max-width: 60ch; }
+.proof-go { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-6); }
+.proof-go .cta { margin-top: 0; }
+.more { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); text-underline-offset: 3px; }
 
-/* 2 · the problem, said once and large, and who is paid for what */
-#problem { padding-block: calc(var(--section) * 1.2); }
-#problem h2 { font-size: var(--t-display-xl); max-width: 15ch; }
-.problem-grid { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); }
-.problem-grid p { font-size: var(--t-20); line-height: 1.55; }
-.problem-grid b { color: var(--ink); }
-.creed { margin-top: var(--s-9); padding-top: var(--s-7); border-top: 1px solid var(--rule); display: grid; gap: var(--s-2); }
-.creed p { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.06; color: var(--ink-3); text-wrap: balance; }
-.creed p:last-child { color: var(--ink); }
+/* 3 · the offer, said once */
+#offer { padding-block: calc(var(--section) * 0.85); }
+.offer-band { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
+.offer-band h2 { margin-top: var(--s-4); max-width: 16ch; }
+.offer-band .lede { margin-top: var(--s-5); max-width: 46ch; }
+.offer-band .honest { margin-top: var(--s-5); font-size: var(--t-16); color: var(--ink-2); max-width: 46ch; }
+.steps-mini { list-style: none; display: grid; gap: 0; }
+.steps-mini li { display: grid; grid-template-columns: var(--s-8) minmax(0, 1fr); gap: var(--s-1) 0; padding: var(--s-4) 0; border-top: 1px solid var(--rule-2); }
+.steps-mini li:last-child { border-bottom: 1px solid var(--rule-2); }
+.steps-mini .n { grid-row: span 2; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.steps-mini b { font-size: var(--t-18); color: var(--ink); }
+.steps-mini span:not(.n) { font-size: var(--t-14); color: var(--ink-3); }
+.offer-go { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-6); }
+.offer-go .cta { margin-top: 0; }
 
-/* 3 · 4 · the figures */
-.exhibit + .exhibit, .figs { margin-top: var(--s-7); }
-.figs { display: grid; gap: var(--s-7); }
-.case-head { display: grid; gap: var(--s-4); justify-items: start; }
-.exhibit-body .figure-intro { font-size: var(--t-16); color: var(--ink-2); max-width: 64ch; margin-bottom: var(--s-5); }
-.case-who { font-size: var(--t-16); color: var(--ink-3); }
-.case-headline { font-size: var(--t-display-l); max-width: 19ch; }
-.case-head .lede { max-width: 58ch; }
-.selection { margin-top: var(--s-8); padding-left: var(--s-5); border-left: 2px solid var(--ink); font-size: var(--t-24); line-height: 1.45; color: var(--ink); max-width: 44ch; }
-#case-study .fold { margin-top: var(--s-7); }
-.fold-body ul { list-style: none; display: grid; gap: var(--s-3); max-width: 72ch; }
-.fold-body li { padding-left: var(--s-5); position: relative; }
-.fold-body li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; border-top: 1px solid var(--ink-3); }
-.bridge { margin-top: var(--s-5); font-size: var(--t-16); color: var(--ink-2); }
-.bridge a { color: var(--ink); font-weight: var(--strong); text-underline-offset: 3px; }
+/* 4 · the library, as a strip */
+#learn { padding-block: calc(var(--section) * 0.85); }
+#book { padding-block: calc(var(--section) * 0.8); }
+#learn h2 { margin-top: var(--s-4); max-width: 22ch; }
+#learn .more { display: inline-block; margin-top: var(--s-6); }
 
-/* 5 · three steps */
-.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
-.steps li { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-6) var(--s-5) var(--s-5); border-top: 2px solid var(--ink); background: var(--paper-2); border-radius: 0 0 var(--radius) var(--radius); }
-.step-n { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); color: var(--ink-4); line-height: 1; font-variant-numeric: tabular-nums; }
-.step-time { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
-.steps p { font-size: var(--t-16); }
-
-/* 6 · the offer, on its own */
-#offer { padding-block: calc(var(--section) * 1.2); }
-.offer-line { margin-top: var(--s-4); font-size: var(--t-display-xl); max-width: 14ch; }
-.offer-grid { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
-.offer-why { font-size: var(--t-20); line-height: 1.55; }
-.price { font-size: var(--t-display-s); font-weight: var(--strong); color: var(--ink); letter-spacing: var(--track-display); line-height: 1.1; }
-.price + p { margin-top: var(--s-3); font-size: var(--t-16); }
-.scope { list-style: none; margin-top: var(--s-6); }
-.scope li { padding: var(--s-3) 0; border-top: 1px solid var(--rule); font-size: var(--t-16); color: var(--ink-2); }
-.scope b { color: var(--ink); }
-.layers-head { margin-top: var(--s-9); font-size: var(--t-24); letter-spacing: -0.018em; }
-.layers { margin-top: var(--s-5); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
-.layer { padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); display: flex; flex-direction: column; gap: var(--s-3); }
-.layer-n { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.layer h3 { font-size: var(--t-20); }
-.layer p { font-size: var(--t-16); }
-
-/* trust: where every promise is written down */
-.trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
-.trust-tile { padding: var(--s-6) var(--s-5) var(--s-5); background: var(--paper-2); border-color: var(--paper-2); }
-.trust-tile h3 { font-size: var(--t-24); margin-top: var(--s-2); }
-.trust-tile p { color: var(--ink-2); }
-
-/* 7 · the Profit Record, as the thing itself */
-.board-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); align-items: start; }
-.board-grid .lede { margin-top: var(--s-5); }
-.board { padding: var(--s-6) var(--s-6) var(--s-5); }
-.board-k { font-size: var(--t-14); color: var(--ink-3); }
-.board-big { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; margin-top: var(--s-2); font-variant-numeric: tabular-nums; }
-.board-line { margin-top: var(--s-5); font-size: var(--t-18); color: var(--ink-2); max-width: 40ch; }
-.bar { position: relative; margin-top: var(--s-6); height: 12px; border-radius: 3px; background: var(--rule); }
-.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--blue); }
-.bar-bill { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
-.bar-keys { position: relative; height: var(--s-5); margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
-.bar-keys span { position: absolute; top: 0; white-space: nowrap; }
-.bar-keys .k-bill { transform: translateX(-50%); }
-.bar-keys .k-measured { right: 0; }
-.receipts { margin-top: var(--s-6); }
-.receipts summary { font-size: var(--t-16); }
-
-/* the results wall */
-.results-head { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); align-items: end; margin-bottom: var(--s-8); }
-.results-n { display: grid; gap: var(--s-2); }
-.results-zero { font-size: clamp(7rem, 4rem + 14vw, 15rem); font-weight: var(--strong); letter-spacing: -0.06em; line-height: 0.8; color: var(--ink); font-variant-numeric: tabular-nums; }
-.results-head h2 { margin-top: var(--s-3); max-width: 20ch; }
-.results-head .lede { margin-top: var(--s-5); }
-.results-carry { margin-top: var(--s-4); font-size: var(--t-18); color: var(--ink); max-width: 52ch; }
-
-/* a real client's result, published with their consent; hidden until one exists */
-.result-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-7); }
-.result-numbers div { border-top: 1px solid var(--ink); padding-top: var(--s-4); }
-.result-numbers b { display: block; font-size: var(--t-display-s); letter-spacing: var(--track-display); color: var(--blue); margin: var(--s-2) 0; }
-.result-numbers p, .result-numbers span { font-size: var(--t-14); color: var(--ink-3); }
-.result-quote { margin-top: var(--s-7); font-size: var(--t-24); line-height: 1.4; color: var(--ink); max-width: 46ch; }
-
-/* education */
-.learn-head h2 { max-width: 18ch; }
-
-/* 8 · 9 */
-.who-grid, .faq-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
-.who-grid p { font-size: var(--t-18); }
-.who-grid .who-honest { color: var(--ink); }
-
-/* 10 · the close */
-.close { text-align: center; padding-block: calc(var(--section) * 1.3); }
-.close h2 { margin: 0 auto; font-size: var(--t-display-xl); max-width: 14ch; }
-.close .cta { justify-content: center; }
-.close-note { margin-top: var(--s-4); }
-.close + .site-foot { border-top-color: var(--rule); }
-
-@media (max-width: 1100px) {
-  .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (max-width: 900px) {
   .hero { display: flex; flex-direction: column; padding-top: var(--s-8); }
   .hero-in { order: 1; }
   .hero-art { order: 2; position: relative; top: auto; right: auto; width: auto; margin: var(--s-7) var(--gutter) 0; }
-  .hero > .wrap:last-child { order: 3; }
-  .problem-grid, .offer-grid, .board-grid, .who-grid, .faq-grid, .results-head { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
-  .steps { grid-template-columns: minmax(0, 1fr); }
-  .hero .numbers { margin-top: var(--s-8); }
-  .creed { margin-top: var(--s-8); padding-top: var(--s-7); }
+  .offer-band { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
 }
 @media (max-width: 640px) {
-  .hero { padding-top: var(--s-6); }
+  .hero { padding-top: var(--s-6); padding-bottom: var(--s-8); }
   .hero .lede { font-size: var(--t-20); }
-  .board { padding: var(--s-5); }
-  .cta .btn { width: 100%; }
-  .cta { margin-top: var(--s-6); }
-  .layers, .trust-grid { grid-template-columns: minmax(0, 1fr); }
-  .layers { gap: 0; border-bottom: 1px solid var(--rule); }
-  .layer { display: grid; grid-template-columns: var(--s-6) minmax(0, 1fr); gap: var(--s-2) 0; padding: var(--s-5) 0; border: 0; border-top: 1px solid var(--rule); border-radius: 0; }
-  .layer-n { grid-row: span 2; line-height: 1.5; }
-  .trust-tile { padding: var(--s-5) var(--s-4) var(--s-4); gap: var(--s-2); }
-  .trust-tile p { font-size: var(--t-14); }
-  .result-numbers { grid-template-columns: minmax(0, 1fr); }
-  .selection { font-size: var(--t-20); }
+  .proof-go, .offer-go { align-items: stretch; }
 }
 </style>
 <script type="application/ld+json">
@@ -188,114 +93,9 @@
   "areaServed": "US"
 }
 </script>
-<!-- build:faq-jsonld -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How do you know which dollars you made?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (a reimbursement Amazon paid), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only in a month it is still there: every move is measured again each month."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What counts as profit?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, stock that sold instead of aging, and on Amazon, a claim Amazon paid. Misses stay on the Record at what they actually earned."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "I sell on Shopify, not Amazon. Is this for me?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes. The same engine reads a Shopify store from its own exports: orders, products, inventory, payouts, and your Meta and Google ad spend. It prices every SKU, times every reorder, and finds ad spend that brings no sales. On the call we open your Products export with you and price what it shows: prices under their own compare-at, parcels just past a pound line. Two things are Amazon's alone: reimbursement claims and Amazon's fee cards."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How much of my time does it take?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "About ninety minutes, once: twenty on the call, and about an hour to hand over your exports. After that, one email before anything moves, listing each planned move with its expected dollars. Moves inside the bounds you set at kickoff go live after 72 hours unless you say no."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can you touch my bank account or my settings?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. On Amazon you approve one Seller Central user with four permissions: Business Reports and Fulfillment reports to view, Pricing and Campaign Manager to edit. On Shopify, one staff account whose role is limited to Orders, Products, Discounts and Analytics reports, which Shopify allows on its Grow plan and above. Neither can touch banking, tax, payouts or account settings. Revoke either any day: on Amazon in one click, on Shopify under Settings → Users. Rather not grant a seat? Send the exports through a secure upload page instead. What we can see, and what we can't."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What if you find nothing worth fixing?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Then we tell you on the call, and we don't take the work. Most brands we model show nothing worth fixing: 1,473 of the 1,856 Amazon brands we've read from public pages. Saying so is part of the job."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How is this different from an agency or a dashboard?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "An agency is paid on your ad spend, so it is paid whether or not you keep more. A dashboard reports what happened and decides nothing. We make the money decisions, price, ads, reorders and fees, write down what each should earn before it goes live, and are paid only in a month the measured profit clears the fee."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Who is it for, and who isn't it for?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Private-label brands doing $1M to $30M a year on Amazon, Shopify or both, with ten or more SKUs and no finance function. Not for wholesale or arbitrage, and not for anyone who wants creative campaign management or another dashboard. Below the band, the arithmetic rarely clears the fee; if yours doesn't, we tell you on the call."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Why isn't this too good to be true?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Because the bill waits for the proof. Your first month is free. After that, each month is measured on its own, and an invoice goes out only for a month that cleared the fee. We can afford that only because we take on accounts where the math clears."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What happens in a month that underperforms?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Nothing you have to ask for. That month is free: no invoice, no credit, nothing carried into the next, and the work carries on. Leave any day with one email; any month you paid for that doesn't clear on its own number comes back to your bank."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Why are there no testimonials?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Because there are no client results to publish yet. When a client's Record has one, it goes on the results wall with their own words, if they say yes. We won't write testimonials for anyone."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What happens to my data?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. How we handle it."
-      }
-    }
-  ]
-}
-</script>
-<!-- /build:faq-jsonld -->
 </head>
 <body>
+
 <!-- build:nav -->
 <header class="nav" data-nav>
 <script>
@@ -313,10 +113,9 @@
   <div class="nav-in">
     <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
     <nav class="nav-tabs" aria-label="Main">
-      <a class="nav-tab" href="/#case-study">Proof</a>
-      <a class="nav-tab" href="/#how">How it works</a>
-      <a class="nav-tab" href="/#offer">The offer</a>
-      <a class="nav-tab" href="/#results">Results</a>
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
       <div class="nav-group">
         <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
         <div class="nav-fly" id="fly-education">
@@ -328,12 +127,12 @@
         </div>
       </div>
       <div class="nav-group">
-        <a class="nav-tab" href="/#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
         <div class="nav-fly" id="fly-trust">
           <div class="fly-in">
             <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
-            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/#offer">The guarantee</a></div>
-            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/#results">The results wall</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
           </div>
         </div>
       </div>
@@ -345,7 +144,7 @@
   </div>
   <div class="nav-sheet" id="nav-sheet">
     <div class="sheet-in">
-      <div class="sheet-group"><a class="sheet-big" href="/#case-study">Proof</a><a class="sheet-big" href="/#how">How it works</a><a class="sheet-big" href="/#offer">The offer</a><a class="sheet-big" href="/#results">Results</a></div>
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
       <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
       <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
     </div>
@@ -353,6 +152,7 @@
   <div class="nav-scrim" aria-hidden="true"></div>
 </header>
 <!-- /build:nav -->
+
 <main>
 
 <!-- 1 · The promise, with ten thousand years of one listing behind it -->
@@ -390,60 +190,6 @@
     </div>
     <p class="hero-cap">Behind this: one real listing, <span data-fill="years">10,000</span> simulated years. Modeled from public data.</p>
   </div>
-  <div class="wrap">
-    <dl class="numbers" aria-label="True today">
-      <div><dt data-fill="brands_modeled" data-count>1,856</dt><dd>Amazon brands modeled from public pages</dd></div>
-      <div><dt data-fill="brands_silent" data-count>1,473</dt><dd>of them showed nothing worth fixing, and we say so</dd></div>
-      <div><dt data-fill="years" data-count>10,000</dt><dd>simulated years behind the one we show</dd></div>
-      <div><dt>$0</dt><dd>for any month that doesn't clear the fee</dd></div>
-    </dl>
-  </div>
-</section>
-
-<!-- 2 · The problem, and who is paid for what -->
-<section class="section night" id="problem">
-  <div class="wrap">
-    <h2 data-reveal><span class="tone">Your mental model is linear.</span> Your costs are a staircase.</h2>
-    <div class="problem-grid" data-reveal style="--d: 120ms">
-      <p><b>A P&amp;L is an average.</b> It tells you what fulfilment cost across everything you shipped. It cannot tell you that one SKU sits an ounce past an edge, because the cheaper version of it never shipped.</p>
-      <p><b>A cliff only shows up as a counterfactual:</b> what the same unit would cost an ounce lighter, or a cent cheaper. No report anyone sells contains one, so your tools, your agency and your bookkeeper all miss the same leak at once.</p>
-    </div>
-    <div class="problem-grid platforms" data-reveal style="--d: 200ms">
-      <p><b>On Amazon, the steps are imposed on you.</b> The fee card moves at every weight band, every price band and every size tier, and a unit one ounce past an edge pays the whole step.</p>
-      <p><b>On Shopify, you built them.</b> The parcel you pack meets the carrier's pound line, the compare-at you set is a discount on every order, and the free-shipping line is a step you drew yourself.</p>
-    </div>
-    <div class="creed">
-      <p data-reveal>Your agency is paid on spend.</p>
-      <p data-reveal style="--d: 180ms">Your software is paid to report.</p>
-      <p data-reveal style="--d: 360ms">We're paid on proof.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 3 · The signature: the staircase -->
-<section class="section" id="staircase">
-  <div class="wrap">
-    <div class="section-head" data-reveal>
-      <span class="label">Amazon's fee card · the carrier's rate card</span>
-      <h2>Less than an ounce past the edge. <span class="tone">Paid on every unit.</span></h2>
-    </div>
-    <figure class="exhibit" data-play data-reveal style="--d: 120ms">
-      <div class="exhibit-head"><span>Fig. 1 · The fee staircase, one real listing</span><span class="label-box">Modeled from public data</span></div>
-      <div class="exhibit-body">
-        <div class="chart-wide"><!-- build:stairs-wide --><svg class="chart stairs" viewBox="0 0 760 420" role="img" aria-labelledby="st-w-t st-w-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:13,&quot;t&quot;:64,&quot;b&quot;:372,&quot;p&quot;:[[80.8,[347.9,308],[&quot;0.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[97.6,[347.9,308],[&quot;1.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[114.4,[347.9,308],[&quot;1.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[131.2,[347.9,308],[&quot;2.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[148,[347.9,308],[&quot;2.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[164.8,[347.9,308],[&quot;3.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[181.6,[347.9,308],[&quot;3.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[198.4,[347.9,308],[&quot;4.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[215.2,[311.3,268],[&quot;4.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[232,[311.3,268],[&quot;5.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[248.8,[311.3,268],[&quot;5.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[265.6,[311.3,268],[&quot;6.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[282.4,[311.3,268],[&quot;6.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[299.2,[311.3,268],[&quot;7.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[316,[311.3,268],[&quot;7.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[332.8,[311.3,268],[&quot;8.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[349.6,[269.7,223.1],[&quot;8.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[366.4,[269.7,223.1],[&quot;9.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[383.2,[269.7,223.1],[&quot;9.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[400,[269.7,223.1],[&quot;10.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[416.8,[269.7,223.1],[&quot;10.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[433.6,[269.7,223.1],[&quot;11.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[450.4,[269.7,223.1],[&quot;11.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[467.2,[269.7,223.1],[&quot;12.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[484,[203.2,154.9],[&quot;12.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[500.8,[203.2,154.9],[&quot;13.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[517.6,[203.2,154.9],[&quot;13.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[534.4,[203.2,154.9],[&quot;14.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[551.2,[203.2,154.9],[&quot;14.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[568,[203.2,154.9],[&quot;15.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[584.8,[203.2,154.9],[&quot;15.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[601.6,[203.2,154.9],[&quot;16.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[618.4,[130,80.1],[&quot;16.5 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[635.2,[130,80.1],[&quot;17.0 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[652,[130,80.1],[&quot;17.5 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[668.8,[130,80.1],[&quot;18.0 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[685.6,[130,80.1],[&quot;18.5 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[702.4,[130,80.1],[&quot;19.0 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[719.2,[130,80.1],[&quot;19.5 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]],[736,[130,80.1],[&quot;20.0 oz&quot;,&quot;$5.22, Jan 15 – Oct 14&quot;,&quot;$5.53, Oct 15 – Jan 14&quot;]]]}"><title id="st-w-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-w-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="64" x2="736" y1="325.5" y2="325.5"/><text x="54" y="325.5" font-size="13" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="64" x2="736" y1="245.1" y2="245.1"/><text x="54" y="245.1" font-size="13" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="64" x2="736" y1="164.8" y2="164.8"/><text x="54" y="164.8" font-size="13" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="grid" x1="64" x2="736" y1="84.4" y2="84.4"/><text x="54" y="84.4" font-size="13" text-anchor="end" dominant-baseline="middle">$5.50</text><line class="axis" x1="64" x2="736" y1="372" y2="372"/><line class="tick" x1="64" x2="64" y1="372" y2="377"/><text x="64" y="395" font-size="13" text-anchor="middle">0</text><line class="tick" x1="198.4" x2="198.4" y1="372" y2="377"/><text x="198.4" y="395" font-size="13" text-anchor="middle">4</text><line class="tick" x1="332.8" x2="332.8" y1="372" y2="377"/><text x="332.8" y="395" font-size="13" text-anchor="middle">8</text><line class="tick" x1="467.2" x2="467.2" y1="372" y2="377"/><text x="467.2" y="395" font-size="13" text-anchor="middle">12</text><line class="tick" x1="601.6" x2="601.6" y1="372" y2="377"/><text x="601.6" y="395" font-size="13" text-anchor="middle">16</text><line class="tick" x1="736" x2="736" y1="372" y2="377"/><text x="736" y="395" font-size="13" text-anchor="middle">20 oz</text><path class="step-alt fade" style="--after:0ms" d="M64,308 H198.4 V268 H332.8 V223.1 H467.2 V154.9 H601.6 V80.1 H736"/><path class="step draw" pathLength="1" d="M64,347.9 H198.4 V311.3 H332.8 V269.7 H467.2 V203.2 H601.6 V130 H736"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="64" x2="86.1" y1="11.700000000000001" y2="11.700000000000001"/><text class="ink" x="94.1" y="11.700000000000001" font-size="12" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="64" x2="86.1" y1="32.5" y2="32.5"/><text x="94.1" y="32.5" font-size="12" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="332.8" x2="332.8" y1="311.3" y2="269.7"/><circle class="dot-hollow" cx="332.8" cy="311.3" r="5.5"/><circle class="dot" cx="360.3" cy="269.7" r="5.5"/><text class="leak-text" x="322.8" y="290.5" font-size="14" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="371.8" y="288.7" font-size="13">8.8 oz · this listing</text><text x="344.3" y="332.3" font-size="13">8.0 oz · one step down</text></g></svg><!-- /build:stairs-wide --></div>
-        <div class="chart-narrow"><!-- build:stairs-narrow --><svg class="chart stairs" viewBox="0 0 360 420" role="img" aria-labelledby="st-n-t st-n-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:12,&quot;t&quot;:60,&quot;b&quot;:378,&quot;p&quot;:[[58.9,[345.1,290.6],[&quot;0.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[67.8,[345.1,290.6],[&quot;1.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[76.6,[345.1,290.6],[&quot;1.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[85.5,[345.1,290.6],[&quot;2.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[94.4,[345.1,290.6],[&quot;2.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[103.3,[345.1,290.6],[&quot;3.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[112.1,[345.1,290.6],[&quot;3.5 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[121,[345.1,290.6],[&quot;4.0 oz&quot;,&quot;$3.86, Jan 15 – Oct 14&quot;,&quot;$4.11, Oct 15 – Jan 14&quot;]],[129.9,[295.2,236.2],[&quot;4.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[138.8,[295.2,236.2],[&quot;5.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[147.6,[295.2,236.2],[&quot;5.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[156.5,[295.2,236.2],[&quot;6.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[165.4,[295.2,236.2],[&quot;6.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[174.3,[295.2,236.2],[&quot;7.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[183.1,[295.2,236.2],[&quot;7.5 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[192,[295.2,236.2],[&quot;8.0 oz&quot;,&quot;$4.09, Jan 15 – Oct 14&quot;,&quot;$4.36, Oct 15 – Jan 14&quot;]],[200.9,[238.5,174.9],[&quot;8.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[209.8,[238.5,174.9],[&quot;9.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[218.6,[238.5,174.9],[&quot;9.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[227.5,[238.5,174.9],[&quot;10.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[236.4,[238.5,174.9],[&quot;10.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[245.3,[238.5,174.9],[&quot;11.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[254.1,[238.5,174.9],[&quot;11.5 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[263,[238.5,174.9],[&quot;12.0 oz&quot;,&quot;$4.35, Jan 15 – Oct 14&quot;,&quot;$4.64, Oct 15 – Jan 14&quot;]],[271.9,[147.7,81.9],[&quot;12.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[280.8,[147.7,81.9],[&quot;13.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[289.6,[147.7,81.9],[&quot;13.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[298.5,[147.7,81.9],[&quot;14.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[307.4,[147.7,81.9],[&quot;14.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[316.3,[147.7,81.9],[&quot;15.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[325.1,[147.7,81.9],[&quot;15.5 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]],[334,[147.7,81.9],[&quot;16.0 oz&quot;,&quot;$4.76, Jan 15 – Oct 14&quot;,&quot;$5.06, Oct 15 – Jan 14&quot;]]]}"><title id="st-n-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-n-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="50" x2="334" y1="314.5" y2="314.5"/><text x="40" y="314.5" font-size="12" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="50" x2="334" y1="204.9" y2="204.9"/><text x="40" y="204.9" font-size="12" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="50" x2="334" y1="95.3" y2="95.3"/><text x="40" y="95.3" font-size="12" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="axis" x1="50" x2="334" y1="378" y2="378"/><line class="tick" x1="50" x2="50" y1="378" y2="383"/><text x="50" y="400" font-size="12" text-anchor="middle">0</text><line class="tick" x1="121" x2="121" y1="378" y2="383"/><text x="121" y="400" font-size="12" text-anchor="middle">4</text><line class="tick" x1="192" x2="192" y1="378" y2="383"/><text x="192" y="400" font-size="12" text-anchor="middle">8</text><line class="tick" x1="263" x2="263" y1="378" y2="383"/><text x="263" y="400" font-size="12" text-anchor="middle">12</text><line class="tick" x1="334" x2="334" y1="378" y2="383"/><text x="334" y="400" font-size="12" text-anchor="middle">16 oz</text><path class="step-alt fade" style="--after:0ms" d="M50,290.6 H121 V236.2 H192 V174.9 H263 V81.9 H334"/><path class="step draw" pathLength="1" d="M50,345.1 H121 V295.2 H192 V238.5 H263 V147.7 H334"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="50" x2="70.4" y1="10.8" y2="10.8"/><text class="ink" x="78.4" y="10.8" font-size="11" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="50" x2="70.4" y1="30.000000000000004" y2="30.000000000000004"/><text x="78.4" y="30.000000000000004" font-size="11" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="192" x2="192" y1="295.2" y2="238.5"/><circle class="dot-hollow" cx="192" cy="295.2" r="4.5"/><circle class="dot" cx="206.5" cy="238.5" r="4.5"/><text class="leak-text" x="182" y="266.8" font-size="13" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="217" y="256.5" font-size="12">8.8 oz · this listing</text><text x="202.5" y="315.2" font-size="12">8.0 oz · one step down</text></g></svg><!-- /build:stairs-narrow --></div>
-      </div>
-      <figcaption class="exhibit-cap">Large standard size, priced $10 to $50, with Amazon's <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge. Solid: <span data-fill="card_np">Jan 15 to Oct 14, 2026</span>. Dashed: the holiday card, <span data-fill="card_peak">Oct 15 to Jan 14</span>. The solid dot is the listing; the hollow one is the same listing one step down.</figcaption>
-    </figure>
-    <figure class="exhibit" data-play data-reveal style="--d: 120ms">
-      <div class="exhibit-head"><span>Fig. 1b · The same step on Shopify: the parcel staircase</span><span class="label-box">USPS's published rates · An invented parcel</span></div>
-      <div class="exhibit-body">
-        <div class="chart-wide"><!-- build:parcel-wide --><svg class="chart stairs" viewBox="0 0 760 380" role="img" aria-labelledby="pa-w-t pa-w-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:13,&quot;t&quot;:64,&quot;b&quot;:332,&quot;p&quot;:[[71,[278.2,318.4],[&quot;0.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[78,[278.2,318.4],[&quot;1.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[85,[278.2,318.4],[&quot;1.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[92,[278.2,318.4],[&quot;2.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[99,[278.2,318.4],[&quot;2.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[106,[278.2,318.4],[&quot;3.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[113,[278.2,318.4],[&quot;3.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[120,[278.2,318.4],[&quot;4.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[127,[278.2,318.4],[&quot;4.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[134,[278.2,318.4],[&quot;5.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[141,[278.2,318.4],[&quot;5.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[148,[278.2,318.4],[&quot;6.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[155,[278.2,318.4],[&quot;6.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[162,[278.2,318.4],[&quot;7.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[169,[278.2,318.4],[&quot;7.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[176,[278.2,318.4],[&quot;8.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[183,[278.2,318.4],[&quot;8.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[190,[278.2,318.4],[&quot;9.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[197,[278.2,318.4],[&quot;9.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[204,[278.2,318.4],[&quot;10.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[211,[278.2,318.4],[&quot;10.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[218,[278.2,318.4],[&quot;11.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[225,[278.2,318.4],[&quot;11.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[232,[278.2,318.4],[&quot;12.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[239,[278.2,318.4],[&quot;12.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[246,[278.2,318.4],[&quot;13.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[253,[278.2,318.4],[&quot;13.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[260,[278.2,318.4],[&quot;14.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[267,[278.2,318.4],[&quot;14.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[274,[278.2,318.4],[&quot;15.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[281,[278.2,318.4],[&quot;15.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[288,[216.3,299.8],[&quot;16.0 oz bills as 1 lb&quot;,&quot;Farthest zone $10.67&quot;,&quot;Nearest zone $7.61&quot;]],[295,[156.2,289.4],[&quot;16.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[302,[156.2,289.4],[&quot;17.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[309,[156.2,289.4],[&quot;17.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[316,[156.2,289.4],[&quot;18.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[323,[156.2,289.4],[&quot;18.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[330,[156.2,289.4],[&quot;19.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[337,[156.2,289.4],[&quot;19.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[344,[156.2,289.4],[&quot;20.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[351,[156.2,289.4],[&quot;20.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[358,[156.2,289.4],[&quot;21.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[365,[156.2,289.4],[&quot;21.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[372,[156.2,289.4],[&quot;22.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[379,[156.2,289.4],[&quot;22.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[386,[156.2,289.4],[&quot;23.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[393,[156.2,289.4],[&quot;23.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[400,[156.2,289.4],[&quot;24.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[407,[156.2,289.4],[&quot;24.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[414,[156.2,289.4],[&quot;25.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[421,[156.2,289.4],[&quot;25.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[428,[156.2,289.4],[&quot;26.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[435,[156.2,289.4],[&quot;26.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[442,[156.2,289.4],[&quot;27.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[449,[156.2,289.4],[&quot;27.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[456,[156.2,289.4],[&quot;28.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[463,[156.2,289.4],[&quot;28.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[470,[156.2,289.4],[&quot;29.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[477,[156.2,289.4],[&quot;29.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[484,[156.2,289.4],[&quot;30.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[491,[156.2,289.4],[&quot;30.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[498,[156.2,289.4],[&quot;31.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[505,[156.2,289.4],[&quot;31.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[512,[156.2,289.4],[&quot;32.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[519,[77.6,271.7],[&quot;32.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[526,[77.6,271.7],[&quot;33.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[533,[77.6,271.7],[&quot;33.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[540,[77.6,271.7],[&quot;34.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[547,[77.6,271.7],[&quot;34.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[554,[77.6,271.7],[&quot;35.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[561,[77.6,271.7],[&quot;35.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[568,[77.6,271.7],[&quot;36.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[575,[77.6,271.7],[&quot;36.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[582,[77.6,271.7],[&quot;37.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[589,[77.6,271.7],[&quot;37.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[596,[77.6,271.7],[&quot;38.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[603,[77.6,271.7],[&quot;38.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[610,[77.6,271.7],[&quot;39.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[617,[77.6,271.7],[&quot;39.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[624,[77.6,271.7],[&quot;40.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[631,[77.6,271.7],[&quot;40.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[638,[77.6,271.7],[&quot;41.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[645,[77.6,271.7],[&quot;41.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[652,[77.6,271.7],[&quot;42.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[659,[77.6,271.7],[&quot;42.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[666,[77.6,271.7],[&quot;43.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[673,[77.6,271.7],[&quot;43.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[680,[77.6,271.7],[&quot;44.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[687,[77.6,271.7],[&quot;44.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[694,[77.6,271.7],[&quot;45.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[701,[77.6,271.7],[&quot;45.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[708,[77.6,271.7],[&quot;46.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[715,[77.6,271.7],[&quot;46.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[722,[77.6,271.7],[&quot;47.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[729,[77.6,271.7],[&quot;47.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[736,[77.6,271.7],[&quot;48.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]]]}"><title id="pa-w-t">The parcel staircase: USPS Ground Advantage by weight</title><desc id="pa-w-d">USPS Ground Advantage's 2026 commercial rates climb a step at every pound, because anything over a pound bills at the next whole pound. A parcel at 16.4 ounces pays the 2 lb rate: $0.96 to $4.47 more a parcel than one under a pound, depending on the zone.</desc><line class="grid" x1="64" x2="736" y1="302.8" y2="302.8"/><text x="54" y="302.8" font-size="13" text-anchor="end" dominant-baseline="middle">$7.50</text><line class="grid" x1="64" x2="736" y1="234.6" y2="234.6"/><text x="54" y="234.6" font-size="13" text-anchor="end" dominant-baseline="middle">$10.00</text><line class="grid" x1="64" x2="736" y1="166.3" y2="166.3"/><text x="54" y="166.3" font-size="13" text-anchor="end" dominant-baseline="middle">$12.50</text><line class="grid" x1="64" x2="736" y1="98.1" y2="98.1"/><text x="54" y="98.1" font-size="13" text-anchor="end" dominant-baseline="middle">$15.00</text><line class="axis" x1="64" x2="736" y1="332" y2="332"/><line class="tick" x1="64" x2="64" y1="332" y2="337"/><text x="64" y="355" font-size="13" text-anchor="middle">0</text><line class="tick" x1="288" x2="288" y1="332" y2="337"/><text x="288" y="355" font-size="13" text-anchor="middle">16</text><line class="tick" x1="512" x2="512" y1="332" y2="337"/><text x="512" y="355" font-size="13" text-anchor="middle">32</text><line class="tick" x1="736" x2="736" y1="332" y2="337"/><text x="736" y="355" font-size="13" text-anchor="middle">48 oz</text><path class="step-alt fade" style="--after:0ms" d="M64,318.4 H288 V289.4 H512 V271.7 H736"/><path class="step draw" pathLength="1" d="M64,278.2 H288 V156.2 H512 V77.6 H736"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="64" x2="86.1" y1="11.700000000000001" y2="11.700000000000001"/><text class="ink" x="94.1" y="11.700000000000001" font-size="12" dominant-baseline="middle">The farthest zone (8)</text><line class="step-alt" x1="64" x2="86.1" y1="32.5" y2="32.5"/><text x="94.1" y="32.5" font-size="12" dominant-baseline="middle">The nearest zone (1)</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="288" x2="288" y1="278.2" y2="156.2"/><circle class="dot-hollow" cx="286.5" cy="278.2" r="5.5"/><circle class="dot" cx="293.6" cy="156.2" r="5.5"/><text class="leak-text" x="278" y="217.2" font-size="14" text-anchor="end" dominant-baseline="middle">+$0.96 to $4.47</text><text class="leak-text" x="278" y="234.2" font-size="12" text-anchor="end" dominant-baseline="middle">a parcel, by zone</text><text class="ink strong" x="305.1" y="144.7" font-size="13">16.4 oz · an invented parcel</text></g></svg><!-- /build:parcel-wide --></div>
-        <div class="chart-narrow"><!-- build:parcel-narrow --><svg class="chart stairs" viewBox="0 0 360 380" role="img" aria-labelledby="pa-n-t pa-n-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:12,&quot;t&quot;:60,&quot;b&quot;:338,&quot;p&quot;:[[53.1,[282.2,323.8],[&quot;0.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[56.1,[282.2,323.8],[&quot;1.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[59.2,[282.2,323.8],[&quot;1.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[62.3,[282.2,323.8],[&quot;2.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[65.3,[282.2,323.8],[&quot;2.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[68.4,[282.2,323.8],[&quot;3.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[71.4,[282.2,323.8],[&quot;3.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[74.5,[282.2,323.8],[&quot;4.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[77.6,[282.2,323.8],[&quot;4.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[80.6,[282.2,323.8],[&quot;5.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[83.7,[282.2,323.8],[&quot;5.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[86.8,[282.2,323.8],[&quot;6.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[89.8,[282.2,323.8],[&quot;6.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[92.9,[282.2,323.8],[&quot;7.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[95.9,[282.2,323.8],[&quot;7.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[99,[282.2,323.8],[&quot;8.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[102.1,[282.2,323.8],[&quot;8.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[105.1,[282.2,323.8],[&quot;9.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[108.2,[282.2,323.8],[&quot;9.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[111.3,[282.2,323.8],[&quot;10.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[114.3,[282.2,323.8],[&quot;10.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[117.4,[282.2,323.8],[&quot;11.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[120.4,[282.2,323.8],[&quot;11.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[123.5,[282.2,323.8],[&quot;12.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[126.6,[282.2,323.8],[&quot;12.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[129.6,[282.2,323.8],[&quot;13.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[132.7,[282.2,323.8],[&quot;13.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[135.8,[282.2,323.8],[&quot;14.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[138.8,[282.2,323.8],[&quot;14.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[141.9,[282.2,323.8],[&quot;15.0 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[144.9,[282.2,323.8],[&quot;15.5 oz bills as under a pound&quot;,&quot;Farthest zone $8.40&quot;,&quot;Nearest zone $6.93&quot;]],[148,[218,304.6],[&quot;16.0 oz bills as 1 lb&quot;,&quot;Farthest zone $10.67&quot;,&quot;Nearest zone $7.61&quot;]],[151.1,[155.7,293.8],[&quot;16.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[154.1,[155.7,293.8],[&quot;17.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[157.2,[155.7,293.8],[&quot;17.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[160.3,[155.7,293.8],[&quot;18.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[163.3,[155.7,293.8],[&quot;18.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[166.4,[155.7,293.8],[&quot;19.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[169.4,[155.7,293.8],[&quot;19.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[172.5,[155.7,293.8],[&quot;20.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[175.6,[155.7,293.8],[&quot;20.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[178.6,[155.7,293.8],[&quot;21.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[181.7,[155.7,293.8],[&quot;21.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[184.8,[155.7,293.8],[&quot;22.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[187.8,[155.7,293.8],[&quot;22.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[190.9,[155.7,293.8],[&quot;23.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[193.9,[155.7,293.8],[&quot;23.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[197,[155.7,293.8],[&quot;24.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[200.1,[155.7,293.8],[&quot;24.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[203.1,[155.7,293.8],[&quot;25.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[206.2,[155.7,293.8],[&quot;25.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[209.3,[155.7,293.8],[&quot;26.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[212.3,[155.7,293.8],[&quot;26.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[215.4,[155.7,293.8],[&quot;27.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[218.4,[155.7,293.8],[&quot;27.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[221.5,[155.7,293.8],[&quot;28.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[224.6,[155.7,293.8],[&quot;28.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[227.6,[155.7,293.8],[&quot;29.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[230.7,[155.7,293.8],[&quot;29.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[233.8,[155.7,293.8],[&quot;30.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[236.8,[155.7,293.8],[&quot;30.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[239.9,[155.7,293.8],[&quot;31.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[242.9,[155.7,293.8],[&quot;31.5 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[246,[155.7,293.8],[&quot;32.0 oz bills as 2 lb&quot;,&quot;Farthest zone $12.87&quot;,&quot;Nearest zone $7.99&quot;]],[249.1,[74.2,275.4],[&quot;32.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[252.1,[74.2,275.4],[&quot;33.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[255.2,[74.2,275.4],[&quot;33.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[258.3,[74.2,275.4],[&quot;34.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[261.3,[74.2,275.4],[&quot;34.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[264.4,[74.2,275.4],[&quot;35.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[267.4,[74.2,275.4],[&quot;35.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[270.5,[74.2,275.4],[&quot;36.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[273.6,[74.2,275.4],[&quot;36.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[276.6,[74.2,275.4],[&quot;37.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[279.7,[74.2,275.4],[&quot;37.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[282.8,[74.2,275.4],[&quot;38.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[285.8,[74.2,275.4],[&quot;38.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[288.9,[74.2,275.4],[&quot;39.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[291.9,[74.2,275.4],[&quot;39.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[295,[74.2,275.4],[&quot;40.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[298.1,[74.2,275.4],[&quot;40.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[301.1,[74.2,275.4],[&quot;41.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[304.2,[74.2,275.4],[&quot;41.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[307.3,[74.2,275.4],[&quot;42.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[310.3,[74.2,275.4],[&quot;42.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[313.4,[74.2,275.4],[&quot;43.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[316.4,[74.2,275.4],[&quot;43.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[319.5,[74.2,275.4],[&quot;44.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[322.6,[74.2,275.4],[&quot;44.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[325.6,[74.2,275.4],[&quot;45.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[328.7,[74.2,275.4],[&quot;45.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[331.8,[74.2,275.4],[&quot;46.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[334.8,[74.2,275.4],[&quot;46.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[337.9,[74.2,275.4],[&quot;47.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[340.9,[74.2,275.4],[&quot;47.5 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]],[344,[74.2,275.4],[&quot;48.0 oz bills as 3 lb&quot;,&quot;Farthest zone $15.75&quot;,&quot;Nearest zone $8.64&quot;]]]}"><title id="pa-n-t">The parcel staircase: USPS Ground Advantage by weight</title><desc id="pa-n-d">USPS Ground Advantage's 2026 commercial rates climb a step at every pound, because anything over a pound bills at the next whole pound. A parcel at 16.4 ounces pays the 2 lb rate: $0.96 to $4.47 more a parcel than one under a pound, depending on the zone.</desc><line class="grid" x1="50" x2="344" y1="307.7" y2="307.7"/><text x="40" y="307.7" font-size="12" text-anchor="end" dominant-baseline="middle">$7.50</text><line class="grid" x1="50" x2="344" y1="236.9" y2="236.9"/><text x="40" y="236.9" font-size="12" text-anchor="end" dominant-baseline="middle">$10.00</text><line class="grid" x1="50" x2="344" y1="166.2" y2="166.2"/><text x="40" y="166.2" font-size="12" text-anchor="end" dominant-baseline="middle">$12.50</text><line class="grid" x1="50" x2="344" y1="95.4" y2="95.4"/><text x="40" y="95.4" font-size="12" text-anchor="end" dominant-baseline="middle">$15.00</text><line class="axis" x1="50" x2="344" y1="338" y2="338"/><line class="tick" x1="50" x2="50" y1="338" y2="343"/><text x="50" y="360" font-size="12" text-anchor="middle">0</text><line class="tick" x1="148" x2="148" y1="338" y2="343"/><text x="148" y="360" font-size="12" text-anchor="middle">16</text><line class="tick" x1="246" x2="246" y1="338" y2="343"/><text x="246" y="360" font-size="12" text-anchor="middle">32</text><line class="tick" x1="344" x2="344" y1="338" y2="343"/><text x="344" y="360" font-size="12" text-anchor="middle">48 oz</text><path class="step-alt fade" style="--after:0ms" d="M50,323.8 H148 V293.8 H246 V275.4 H344"/><path class="step draw" pathLength="1" d="M50,282.2 H148 V155.7 H246 V74.2 H344"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="50" x2="70.4" y1="10.8" y2="10.8"/><text class="ink" x="78.4" y="10.8" font-size="11" dominant-baseline="middle">The farthest zone (8)</text><line class="step-alt" x1="50" x2="70.4" y1="30.000000000000004" y2="30.000000000000004"/><text x="78.4" y="30.000000000000004" font-size="11" dominant-baseline="middle">The nearest zone (1)</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="148" x2="148" y1="282.2" y2="155.7"/><circle class="dot-hollow" cx="146.5" cy="282.2" r="4.5"/><circle class="dot" cx="150.5" cy="155.7" r="4.5"/><text class="leak-text" x="138" y="219" font-size="13" text-anchor="end" dominant-baseline="middle">+$0.96 to $4.47</text><text class="leak-text" x="138" y="235" font-size="11" text-anchor="end" dominant-baseline="middle">a parcel, by zone</text><text class="ink strong" x="161" y="145.2" font-size="12">16.4 oz · an invented parcel</text></g></svg><!-- /build:parcel-narrow --></div>
-      </div>
-      <figcaption class="exhibit-cap">USPS Ground Advantage commercial rates, effective <span data-fill="usps_effective">July 12, 2026</span>. Anything over a pound bills at the next whole pound, so a parcel at <span data-fill="parcel_oz">16.4</span> ounces pays the 2 lb rate: <span class="money" data-fill="parcel_step_lo">$0.96</span> to <span class="money" data-fill="parcel_step_hi">$4.47</span> more a parcel than one under a pound, by zone. On the call we open your own Products export and find the parcels that sit just past a line.</figcaption>
-    </figure>
-  </div>
 </section>
 
 <!-- A real client's result, told in full, or nothing. Filled only from public_case_study(). -->
@@ -457,396 +203,126 @@
   </div>
 </section>
 
-<!-- 4 · Proof: the public-data case study, in three layers -->
-<section class="section" id="case-study">
+<!-- 2 · The proof: the engine on a real store's own orders, called before and measured after -->
+<section class="section" id="proof">
   <div class="wrap">
-    <div class="case-head" data-reveal>
-      <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
-      <p class="case-who"><span data-fill="who">A car-care brand</span> · one listing · <span data-fill="category">Automotive</span></p>
-      <h2 class="case-headline"><span class="money"><span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span></span> a year, paid on one step of Amazon's fee staircase.<span class="est">estimate</span></h2>
-      <p class="lede">Its best-selling paint scratch remover lists an item weight of <span data-fill="weight">8.8</span> ounces. Above <span data-fill="edge">8</span>, every unit pays <span class="money" data-fill="step_np">$0.26</span> more to fulfil, <span data-fill="step_peak">$0.28</span> from October 15, on an estimated <span data-fill="units">3,500</span> units a month.</p>
-    </div>
-
-    <!-- The case study told as a film (HUBRICON_SPEC.md, "Education"). Its slot is
-         data/library.json's films.case_study: set src and rebuild, and it plays here. -->
-<!-- build:film-case -->
-<div class="film film-waiting night">
-  <p class="film-note"><span class="label">Film</span><span>The case study, told as a film in five beats, will play here.</span></p>
-  <ol class="film-beats"><li><span>01</span>The staircase</li><li><span>02</span>Where this listing sits</li><li><span>03</span>The counterfactual</li><li><span>04</span>Ten thousand months</li><li><span>05</span>The cliff</li></ol>
-</div>
-<!-- /build:film-case -->
-
-    <div class="figs">
-      <figure class="exhibit" data-play data-reveal>
-        <div class="exhibit-head"><span>Fig. 2 · Ten thousand years of this one listing</span><span class="label-box">Estimate</span></div>
-        <div class="exhibit-body">
-          <p class="figure-intro">Each faint line is one simulated year of profit. The band holds eight years in ten, the bad end included.</p>
-          <div class="chart-wide"><!-- build:mc-wide --><svg class="chart mc mc--full" viewBox="0 0 760 420" role="img" aria-labelledby="mc-w-t mc-w-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:13,&quot;t&quot;:24,&quot;b&quot;:376,&quot;p&quot;:[[64,[376,376,376],[&quot;Today&quot;,&quot;P90 $0&quot;,&quot;Median $0&quot;,&quot;P10 $0&quot;]],[112,[357.5,365.2,369.9],[&quot;Month 1&quot;,&quot;P90 $57,000&quot;,&quot;Median $33,000&quot;,&quot;P10 $18,000&quot;]],[160,[339.4,354.6,363.8],[&quot;Month 2&quot;,&quot;P90 $113,000&quot;,&quot;Median $65,000&quot;,&quot;P10 $37,000&quot;]],[208,[321.2,344,357.7],[&quot;Month 3&quot;,&quot;P90 $169,000&quot;,&quot;Median $98,000&quot;,&quot;P10 $56,000&quot;]],[256,[302.9,333.2,351.5],[&quot;Month 4&quot;,&quot;P90 $225,000&quot;,&quot;Median $131,000&quot;,&quot;P10 $75,000&quot;]],[304,[284,322.3,345.2],[&quot;Month 5&quot;,&quot;P90 $284,000&quot;,&quot;Median $165,000&quot;,&quot;P10 $95,000&quot;]],[352,[265.2,311.3,339],[&quot;Month 6&quot;,&quot;P90 $341,000&quot;,&quot;Median $199,000&quot;,&quot;P10 $114,000&quot;]],[400,[246.7,300.4,332.7],[&quot;Month 7&quot;,&quot;P90 $399,000&quot;,&quot;Median $233,000&quot;,&quot;P10 $133,000&quot;]],[448,[227.9,289.5,326.4],[&quot;Month 8&quot;,&quot;P90 $457,000&quot;,&quot;Median $266,000&quot;,&quot;P10 $153,000&quot;]],[496,[209.2,278.5,320.1],[&quot;Month 9&quot;,&quot;P90 $514,000&quot;,&quot;Median $301,000&quot;,&quot;P10 $172,000&quot;]],[544,[190.5,267.5,313.8],[&quot;Month 10&quot;,&quot;P90 $572,000&quot;,&quot;Median $334,000&quot;,&quot;P10 $191,000&quot;]],[592,[171.9,256.6,307.6],[&quot;Month 11&quot;,&quot;P90 $629,000&quot;,&quot;Median $368,000&quot;,&quot;P10 $211,000&quot;]],[640,[153.2,245.7,301.3],[&quot;Month 12&quot;,&quot;P90 $687,000&quot;,&quot;Median $402,000&quot;,&quot;P10 $230,000&quot;]]]}"><title id="mc-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="64" x2="640" y1="376" y2="376"/><text x="54" y="376" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="640" y1="295" y2="295"/><text x="54" y="295" font-size="13" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="64" x2="640" y1="214" y2="214"/><text x="54" y="214" font-size="13" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="64" x2="640" y1="133.1" y2="133.1"/><text x="54" y="133.1" font-size="13" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="64" x2="640" y1="52.1" y2="52.1"/><text x="54" y="52.1" font-size="13" text-anchor="end" dominant-baseline="middle">$1M</text><text x="64" y="401" font-size="13" text-anchor="start">Today</text><text x="352" y="401" font-size="13" text-anchor="middle">6 months</text><text x="640" y="401" font-size="13" text-anchor="end">12 months</text><path class="mc-band fade" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2 L640,301.3 L592,307.6 L544,313.8 L496,320.1 L448,326.4 L400,332.7 L352,339 L304,345.2 L256,351.5 L208,357.7 L160,363.8 L112,369.9 L64,376Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M64,376 L112,372.2 L160,368.3 L208,364.6 L256,360.6 L304,356.7 L352,352.6 L400,348.4 L448,344.6 L496,340.8 L544,336.7 L592,332.7 L640,328.6"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M64,376 L112,371.3 L160,366.8 L208,361.8 L256,357.1 L304,352.4 L352,347.5 L400,342.4 L448,337.3 L496,332.2 L544,327.5 L592,322.9 L640,318.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M64,376 L112,370.6 L160,365.3 L208,359.9 L256,354.4 L304,349.3 L352,344 L400,338.4 L448,333 L496,327.9 L544,322.6 L592,317.3 L640,311.9"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M64,376 L112,370.5 L160,365.1 L208,359.3 L256,353.3 L304,347.4 L352,341.7 L400,336.1 L448,330.3 L496,324.8 L544,319 L592,313.1 L640,307.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M64,376 L112,370.2 L160,364.2 L208,358.5 L256,352.3 L304,346 L352,339.9 L400,333.6 L448,327.2 L496,321.1 L544,315.1 L592,309.3 L640,303.2"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M64,376 L112,369.5 L160,363.2 L208,356.6 L256,350.4 L304,344.2 L352,337.8 L400,331.2 L448,324.7 L496,318 L544,311.9 L592,305.7 L640,299.5"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M64,376 L112,369.3 L160,363 L208,356.9 L256,350 L304,343.2 L352,336.9 L400,329.9 L448,323.4 L496,316.7 L544,310 L592,303.2 L640,296.3"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M64,376 L112,369.1 L160,362.8 L208,355.9 L256,349.2 L304,342.1 L352,335.1 L400,328.1 L448,321.2 L496,314.1 L544,307.3 L592,300.3 L640,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M64,376 L112,368.6 L160,361.5 L208,354.4 L256,347.4 L304,340.1 L352,333.1 L400,326 L448,318.8 L496,311.9 L544,304.5 L592,297 L640,289.9"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M64,376 L112,368.8 L160,361.2 L208,353.7 L256,346.2 L304,339 L352,331.4 L400,323.8 L448,316.1 L496,309.1 L544,302 L592,294.5 L640,287.1"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M64,376 L112,368.5 L160,360.8 L208,353.7 L256,346.1 L304,338.3 L352,330.3 L400,322.5 L448,315.1 L496,307.5 L544,300.1 L592,292 L640,284.4"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M64,376 L112,368.6 L160,361 L208,353 L256,345 L304,337 L352,329.5 L400,321.8 L448,313.5 L496,305.5 L544,297.4 L592,289.4 L640,281.9"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M64,376 L112,368.3 L160,360.7 L208,352.3 L256,344.1 L304,336.3 L352,328 L400,319.4 L448,311.5 L496,303.6 L544,295.8 L592,287.5 L640,279.5"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M64,376 L112,368 L160,360.1 L208,352.1 L256,344.1 L304,335.6 L352,327 L400,318.4 L448,310.3 L496,301.9 L544,293 L592,284.6 L640,276.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M64,376 L112,368 L160,359.2 L208,351.3 L256,343 L304,334.4 L352,326 L400,317.5 L448,308.7 L496,299.7 L544,291 L592,282.1 L640,273.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M64,376 L112,367.5 L160,359.2 L208,350.1 L256,341.7 L304,332.6 L352,324 L400,314.7 L448,306.2 L496,297 L544,288.3 L592,279.7 L640,271.1"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M64,376 L112,367.5 L160,358.5 L208,349.6 L256,340.3 L304,330.9 L352,321.6 L400,312.9 L448,304 L496,295.1 L544,286.2 L592,277 L640,268.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M64,376 L112,367.3 L160,358.3 L208,349.1 L256,340.3 L304,330.9 L352,321.3 L400,311.7 L448,302.5 L496,293.8 L544,284.2 L592,274.6 L640,265.7"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M64,376 L112,366.8 L160,357.9 L208,348.7 L256,339.8 L304,330.1 L352,321 L400,311.4 L448,301.7 L496,291.8 L544,282.2 L592,272.4 L640,263.2"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M64,376 L112,366.7 L160,357.3 L208,348 L256,338.5 L304,329.2 L352,319.2 L400,309.1 L448,299.8 L496,290 L544,279.7 L592,270.6 L640,260.7"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M64,376 L112,366.3 L160,356.5 L208,346.9 L256,336.6 L304,326.7 L352,317.1 L400,307.5 L448,297.4 L496,287 L544,277.4 L592,267.4 L640,257.9"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M64,376 L112,365.7 L160,356.3 L208,346.5 L256,336.4 L304,326.7 L352,316 L400,305.8 L448,295.2 L496,284.9 L544,275 L592,265.1 L640,255.4"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M64,376 L112,366.2 L160,356.5 L208,346.3 L256,335.8 L304,325.3 L352,314.9 L400,304.3 L448,294.1 L496,284 L544,273.7 L592,263.2 L640,252.6"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M64,376 L112,365.4 L160,355.4 L208,345.7 L256,335.5 L304,324.8 L352,314.5 L400,303.4 L448,293 L496,282.9 L544,271.7 L592,260.8 L640,249.9"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M64,376 L112,365.4 L160,355.1 L208,344.8 L256,333.8 L304,323.2 L352,312.6 L400,301.8 L448,290.7 L496,280.1 L544,268.9 L592,257.6 L640,246.9"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M64,376 L112,364.9 L160,354.6 L208,343.4 L256,331.9 L304,321.1 L352,310.5 L400,299.7 L448,288.5 L496,277.7 L544,266.1 L592,255 L640,244.3"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M64,376 L112,364.8 L160,354.1 L208,342.9 L256,331.8 L304,320.7 L352,309.7 L400,298.8 L448,287.4 L496,275.4 L544,264 L592,252.6 L640,241.4"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M64,376 L112,364 L160,353.3 L208,342.5 L256,331 L304,319.5 L352,308.2 L400,296.9 L448,285.2 L496,274 L544,262.3 L592,250.3 L640,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M64,376 L112,364.1 L160,352.6 L208,340.4 L256,328.5 L304,317 L352,305.8 L400,294.4 L448,282.3 L496,271.1 L544,259.5 L592,247.6 L640,235.7"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M64,376 L112,364.6 L160,353.3 L208,341.1 L256,328.5 L304,316.7 L352,305.2 L400,293.2 L448,280.7 L496,268.7 L544,257.2 L592,245.6 L640,232.9"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M64,376 L112,364.2 L160,352.6 L208,340.1 L256,327.8 L304,315.3 L352,302.3 L400,289.6 L448,277.5 L496,265.1 L544,253.2 L592,241 L640,229.2"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M64,376 L112,364.1 L160,351.9 L208,340 L256,327.5 L304,315 L352,302.7 L400,290.4 L448,278.3 L496,265.9 L544,252.4 L592,239.4 L640,226.1"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M64,376 L112,362.9 L160,350 L208,337.3 L256,324.7 L304,312.3 L352,299.3 L400,286.1 L448,273.5 L496,261.2 L544,248.6 L592,235.7 L640,222.7"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M64,376 L112,363.4 L160,350.7 L208,337.2 L256,324.1 L304,310.7 L352,297.6 L400,284 L448,271.5 L496,258.6 L544,246.1 L592,233.3 L640,219.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M64,376 L112,363.2 L160,349.6 L208,336.9 L256,323.5 L304,310.1 L352,296.5 L400,283.2 L448,269.4 L496,256.1 L544,243 L592,228.9 L640,215.5"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M64,376 L112,362 L160,349.1 L208,335.6 L256,322.2 L304,308.2 L352,294.7 L400,280.9 L448,266.7 L496,253.6 L544,239.2 L592,225.7 L640,212.1"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M64,376 L112,361.4 L160,346.7 L208,333.1 L256,319.5 L304,305.6 L352,291.7 L400,277.6 L448,262.7 L496,249 L544,235.2 L592,221.1 L640,206.8"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M64,376 L112,361.6 L160,347.4 L208,332.7 L256,318.2 L304,304.1 L352,289.7 L400,274.8 L448,260.8 L496,245.3 L544,231 L592,216.2 L640,201.7"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M64,376 L112,360.4 L160,345.8 L208,330.7 L256,315.5 L304,300.7 L352,286 L400,271.1 L448,256.9 L496,241 L544,225.5 L592,210.9 L640,196.7"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M64,376 L112,361.1 L160,346.4 L208,331.4 L256,316.3 L304,301.2 L352,285.6 L400,269.5 L448,254.8 L496,239 L544,222.9 L592,207.7 L640,191.9"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M64,376 L112,360.3 L160,345.6 L208,329.6 L256,313.2 L304,298.2 L352,281.7 L400,265.3 L448,249 L496,232.3 L544,217.1 L592,201.6 L640,186.2"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M64,376 L112,359.6 L160,343.3 L208,327.9 L256,311.5 L304,294.8 L352,278.1 L400,261.8 L448,246.2 L496,229.6 L544,212.8 L592,195.9 L640,179.8"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M64,376 L112,358.4 L160,342.4 L208,326.6 L256,310.3 L304,292.8 L352,276.4 L400,258.8 L448,241.7 L496,224.9 L544,207 L592,190.9 L640,173.2"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M64,376 L112,358.7 L160,341.2 L208,323.2 L256,305.5 L304,288.5 L352,270.6 L400,252 L448,234.7 L496,217.9 L544,199.6 L592,181.9 L640,164.9"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M64,376 L112,358.7 L160,341.1 L208,322.2 L256,304.2 L304,285 L352,266.5 L400,247.4 L448,229 L496,211.4 L544,193.5 L592,176 L640,156.8"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M64,376 L112,356.4 L160,338.4 L208,320.6 L256,301.6 L304,283.3 L352,263.2 L400,244.5 L448,225.5 L496,205.9 L544,186.8 L592,166.9 L640,148.1"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M64,376 L112,355.9 L160,337.1 L208,317.6 L256,297.8 L304,276.1 L352,254.4 L400,233.5 L448,214 L496,194.5 L544,174 L592,154.5 L640,134"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M64,376 L112,354.2 L160,334.1 L208,312.9 L256,291 L304,268.7 L352,247.9 L400,225.7 L448,203.7 L496,182.3 L544,161.6 L592,140.6 L640,118.2"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M64,376 L112,352.8 L160,329 L208,307 L256,284.5 L304,259.9 L352,236.5 L400,211.7 L448,188.8 L496,163.9 L544,140.9 L592,115.5 L640,90.8"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M64,376 L112,347.2 L160,317.2 L208,289.4 L256,260.8 L304,230.6 L352,199.4 L400,170.5 L448,142.4 L496,111.6 L544,82.5 L592,53.8 L640,24"/><path class="mc-pct draw p10" pathLength="1" d="M64,376 L112,369.9 L160,363.8 L208,357.7 L256,351.5 L304,345.2 L352,339 L400,332.7 L448,326.4 L496,320.1 L544,313.8 L592,307.6 L640,301.3"/><path class="mc-pct draw p90" pathLength="1" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2"/><path class="mc-pct draw p50" pathLength="1" d="M64,376 L112,365.2 L160,354.6 L208,344 L256,333.2 L304,322.3 L352,311.3 L400,300.4 L448,289.5 L496,278.5 L544,267.5 L592,256.6 L640,245.7"/><g class="fade"><text x="654" y="146" font-size="12">P90</text><text class="mc-value p90" x="654" y="162.9" font-size="14">$687,000</text></g><g class="fade"><text x="654" y="238.5" font-size="12">Median</text><text class="mc-value p50" x="654" y="255.4" font-size="14">$402,000</text></g><g class="fade"><text x="654" y="294.1" font-size="12">P10</text><text class="mc-value p10" x="654" y="311" font-size="14">$230,000</text></g></svg><!-- /build:mc-wide --></div>
-          <div class="chart-narrow"><!-- build:mc-narrow --><svg class="chart mc mc--full" viewBox="0 0 360 340" role="img" aria-labelledby="mc-n-t mc-n-d" preserveAspectRatio="xMidYMid meet" data-scrub="{&quot;f&quot;:12,&quot;t&quot;:16,&quot;b&quot;:302,&quot;p&quot;:[[50,[302,302,302],[&quot;Today&quot;,&quot;P90 $0&quot;,&quot;Median $0&quot;,&quot;P10 $0&quot;]],[69,[286.9,293.3,297],[&quot;Month 1&quot;,&quot;P90 $57,000&quot;,&quot;Median $33,000&quot;,&quot;P10 $18,000&quot;]],[88,[272.2,284.6,292.1],[&quot;Month 2&quot;,&quot;P90 $113,000&quot;,&quot;Median $65,000&quot;,&quot;P10 $37,000&quot;]],[107,[257.5,276,287.1],[&quot;Month 3&quot;,&quot;P90 $169,000&quot;,&quot;Median $98,000&quot;,&quot;P10 $56,000&quot;]],[126,[242.6,267.3,282.1],[&quot;Month 4&quot;,&quot;P90 $225,000&quot;,&quot;Median $131,000&quot;,&quot;P10 $75,000&quot;]],[145,[227.2,258.4,277],[&quot;Month 5&quot;,&quot;P90 $284,000&quot;,&quot;Median $165,000&quot;,&quot;P10 $95,000&quot;]],[164,[212,249.5,271.9],[&quot;Month 6&quot;,&quot;P90 $341,000&quot;,&quot;Median $199,000&quot;,&quot;P10 $114,000&quot;]],[183,[196.9,240.6,266.8],[&quot;Month 7&quot;,&quot;P90 $399,000&quot;,&quot;Median $233,000&quot;,&quot;P10 $133,000&quot;]],[202,[181.7,231.7,261.7],[&quot;Month 8&quot;,&quot;P90 $457,000&quot;,&quot;Median $266,000&quot;,&quot;P10 $153,000&quot;]],[221,[166.5,222.8,256.6],[&quot;Month 9&quot;,&quot;P90 $514,000&quot;,&quot;Median $301,000&quot;,&quot;P10 $172,000&quot;]],[240,[151.3,213.9,251.5],[&quot;Month 10&quot;,&quot;P90 $572,000&quot;,&quot;Median $334,000&quot;,&quot;P10 $191,000&quot;]],[259,[136.2,205,246.4],[&quot;Month 11&quot;,&quot;P90 $629,000&quot;,&quot;Median $368,000&quot;,&quot;P10 $211,000&quot;]],[278,[121,196.1,241.3],[&quot;Month 12&quot;,&quot;P90 $687,000&quot;,&quot;Median $402,000&quot;,&quot;P10 $230,000&quot;]]]}"><title id="mc-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="50" x2="278" y1="302" y2="302"/><text x="40" y="302" font-size="12" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="50" x2="278" y1="236.2" y2="236.2"/><text x="40" y="236.2" font-size="12" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="50" x2="278" y1="170.4" y2="170.4"/><text x="40" y="170.4" font-size="12" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="50" x2="278" y1="104.6" y2="104.6"/><text x="40" y="104.6" font-size="12" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="50" x2="278" y1="38.8" y2="38.8"/><text x="40" y="38.8" font-size="12" text-anchor="end" dominant-baseline="middle">$1M</text><text x="50" y="326" font-size="12" text-anchor="start">Today</text><text x="164" y="326" font-size="12" text-anchor="middle">6 months</text><text x="278" y="326" font-size="12" text-anchor="end">12 months</text><path class="mc-band fade" d="M50,302 L69,286.9 L88,272.2 L107,257.5 L126,242.6 L145,227.2 L164,212 L183,196.9 L202,181.7 L221,166.5 L240,151.3 L259,136.2 L278,121 L278,241.3 L259,246.4 L240,251.5 L221,256.6 L202,261.7 L183,266.8 L164,271.9 L145,277 L126,282.1 L107,287.1 L88,292.1 L69,297 L50,302Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M50,302 L69,298.9 L88,295.7 L107,292.7 L126,289.5 L145,286.3 L164,283 L183,279.6 L202,276.5 L221,273.4 L240,270.1 L259,266.8 L278,263.5"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M50,302 L69,297.5 L88,293.2 L107,288.5 L126,283.6 L145,278.8 L164,274.1 L183,269.6 L202,264.9 L221,260.4 L240,255.7 L259,250.9 L278,246.1"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M50,302 L69,296.7 L88,291.6 L107,286.2 L126,281.2 L145,276.2 L164,270.9 L183,265.6 L202,260.3 L221,254.9 L240,249.9 L259,244.9 L278,239.9"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M50,302 L69,296 L88,290.2 L107,284.4 L126,278.8 L145,272.8 L164,267.1 L183,261.4 L202,255.5 L221,249.9 L240,243.9 L259,237.8 L278,232"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M50,302 L69,295.9 L88,289.6 L107,283.9 L126,277.7 L145,271.4 L164,264.9 L183,258.5 L202,252.5 L221,246.3 L240,240.3 L259,233.8 L278,227.6"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M50,302 L69,295.5 L88,289.1 L107,282.6 L126,276.1 L145,269.2 L164,262.2 L183,255.2 L202,248.6 L221,241.8 L240,234.6 L259,227.8 L278,221.2"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M50,302 L69,295.1 L88,288.3 L107,281 L126,274.2 L145,266.7 L164,259.7 L183,252.2 L202,245.3 L221,237.8 L240,230.7 L259,223.8 L278,216.8"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M50,302 L69,294.6 L88,287.3 L107,279.8 L126,272.6 L145,264.7 L164,257.3 L183,249.6 L202,241.6 L221,233.6 L240,225.8 L259,217.8 L278,210.4"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M50,302 L69,293.6 L88,286 L107,278.1 L126,269.8 L145,262 L164,253.2 L183,245 L202,236.3 L221,228 L240,219.9 L259,211.9 L278,204"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M50,302 L69,293.4 L88,285.2 L107,277.4 L126,269.1 L145,260.4 L164,252.1 L183,243 L202,234.5 L221,226.3 L240,217.3 L259,208.4 L278,199.6"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M50,302 L69,292.9 L88,284.2 L107,275.1 L126,266.1 L145,257 L164,248.2 L183,239.3 L202,230 L221,220.3 L240,211 L259,201.7 L278,192.7"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M50,302 L69,292.4 L88,283 L107,273.1 L126,263.4 L145,254.1 L164,244.9 L183,235.7 L202,225.9 L221,216.8 L240,207.4 L259,197.7 L278,188"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M50,302 L69,292.3 L88,282.4 L107,272.7 L126,262.6 L145,252.5 L164,242.5 L183,232.4 L202,222.6 L221,212.5 L240,201.5 L259,191.1 L278,180.2"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M50,302 L69,291.6 L88,280.6 L107,270.2 L126,259.4 L145,248.4 L164,237.4 L183,226.6 L202,215.4 L221,204.6 L240,193.9 L259,182.5 L278,171.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M50,302 L69,290.1 L88,278.2 L107,267.2 L126,256.1 L145,244.8 L164,233.5 L183,222.1 L202,210 L221,198.8 L240,187.6 L259,176.2 L278,164.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M50,302 L69,289.9 L88,277.9 L107,265.7 L126,253.5 L145,241.3 L164,228.5 L183,215.5 L202,203.5 L221,190.7 L240,177.6 L259,165.2 L278,152.4"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M50,302 L69,288.7 L88,275.5 L107,262.9 L126,249.6 L145,236 L164,222.4 L183,209.2 L202,196.6 L221,183.1 L240,169.4 L259,155.7 L278,142.6"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M50,302 L69,287.9 L88,273.7 L107,258.3 L126,243.7 L145,228.1 L164,213.1 L183,197.5 L202,182.5 L221,168.2 L240,153.7 L259,139.5 L278,123.9"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M50,302 L69,285.7 L88,270.4 L107,254.5 L126,238.5 L145,220.8 L164,203.2 L183,186.2 L202,170.4 L221,154.5 L240,137.9 L259,122 L278,105.4"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M50,302 L69,278.6 L88,254.2 L107,231.6 L126,208.4 L145,183.9 L164,158.5 L183,135 L202,112.2 L221,87.1 L240,63.5 L259,40.2 L278,16"/><path class="mc-pct draw p10" pathLength="1" d="M50,302 L69,297 L88,292.1 L107,287.1 L126,282.1 L145,277 L164,271.9 L183,266.8 L202,261.7 L221,256.6 L240,251.5 L259,246.4 L278,241.3"/><path class="mc-pct draw p90" pathLength="1" d="M50,302 L69,286.9 L88,272.2 L107,257.5 L126,242.6 L145,227.2 L164,212 L183,196.9 L202,181.7 L221,166.5 L240,151.3 L259,136.2 L278,121"/><path class="mc-pct draw p50" pathLength="1" d="M50,302 L69,293.3 L88,284.6 L107,276 L126,267.3 L145,258.4 L164,249.5 L183,240.6 L202,231.7 L221,222.8 L240,213.9 L259,205 L278,196.1"/><g class="fade"><text x="292" y="114.4" font-size="11">P90</text><text class="mc-value p90" x="292" y="130" font-size="13">$687k</text></g><g class="fade"><text x="292" y="189.5" font-size="11">Median</text><text class="mc-value p50" x="292" y="205.1" font-size="13">$402k</text></g><g class="fade"><text x="292" y="234.7" font-size="11">P10</text><text class="mc-value p10" x="292" y="250.3" font-size="13">$230k</text></g></svg><!-- /build:mc-narrow --></div>
-        </div>
-        <figcaption class="exhibit-cap">Cumulative profit from today, before advertising, storage and returns. Months at a loss: <span data-fill="months_losing">0</span> of <span data-fill="months_total">120,000</span>. Those three costs are where months turn negative, and no public page shows them.</figcaption>
-      </figure>
-
-      <figure class="exhibit" data-play data-reveal>
-        <div class="exhibit-head"><span>Fig. 3 · One unit's clock toward the cliff</span><span class="label-box">Amazon's schedule</span></div>
-        <div class="exhibit-body">
-          <p class="figure-intro">At day 271, Amazon's aged-inventory surcharge goes from <span data-fill="aged_rate_before">$1.50</span> to <span data-fill="aged_rate_after">$5.45</span> a cubic foot. Each band shows what 1,000 of these units cost to store a month at that age.</p>
-          <div class="chart-wide"><!-- build:strip-wide --><svg class="chart strip" viewBox="0 0 1040 200" role="img" aria-labelledby="sp-w-t sp-w-d" preserveAspectRatio="xMidYMid meet"><title id="sp-w-t">One unit's clock toward the 271-day cliff</title><desc id="sp-w-d">A unit that reaches Amazon today is in the cheapest storage band until day 181, steps up each month after, and at day 271 goes from $73 to $199 a month for every 1,000 units.</desc><rect class="seg seg-0 fade" style="--after:0ms" x="8" y="44" width="439.3" height="90"/><text class="seg-text fade" style="--after:200ms" x="16" y="89" font-size="15" dominant-baseline="middle">$25</text><rect class="seg seg-1 fade" style="--after:120ms" x="449.3" y="44" width="71.1" height="90"/><text class="seg-text fade" style="--after:320ms" x="457.3" y="89" font-size="15" dominant-baseline="middle">$41</text><rect class="seg seg-2 fade" style="--after:240ms" x="522.4" y="44" width="71.1" height="90"/><text class="seg-text fade" style="--after:440ms" x="530.4" y="89" font-size="15" dominant-baseline="middle">$57</text><rect class="seg seg-3 fade" style="--after:360ms" x="595.6" y="44" width="71.1" height="90"/><text class="seg-text fade" style="--after:560ms" x="603.6" y="89" font-size="15" dominant-baseline="middle">$73</text><rect class="seg seg-leak fade" style="--after:480ms" x="668.7" y="44" width="71.1" height="90"/><text class="seg-text-leak fade" style="--after:680ms" x="676.7" y="89" font-size="15" dominant-baseline="middle">$199</text><rect class="seg seg-leak fade" style="--after:600ms" x="741.9" y="44" width="71.1" height="90"/><text class="seg-text-leak fade" style="--after:800ms" x="749.9" y="89" font-size="15" dominant-baseline="middle">$207</text><rect class="seg seg-leak fade" style="--after:720ms" x="815" y="44" width="83.3" height="90"/><text class="seg-text-leak fade" style="--after:920ms" x="823" y="89" font-size="15" dominant-baseline="middle">$213</text><rect class="seg seg-leak fade" style="--after:840ms" x="900.3" y="44" width="129.7" height="90"/><text class="seg-text-leak fade" style="--after:1040ms" x="908.3" y="89" font-size="15" dominant-baseline="middle">$245</text><line class="tick" x1="8" x2="8" y1="34" y2="140"/><text class="ink strong" x="8" y="28" font-size="15">Today</text><line class="leak fade" style="--after:900ms" x1="667.7" x2="667.7" y1="34" y2="140"/><text class="leak-text fade" style="--after:900ms" x="660.7" y="28" font-size="15" text-anchor="end">$73 → $199 a month</text><line class="tick" x1="8" x2="8" y1="134" y2="140"/><text x="8" y="161" font-size="15" text-anchor="start">Day 0</text><text class="strip-date" data-days="0" x="8" y="182" font-size="14" text-anchor="start"></text><line class="tick" x1="449.3" x2="449.3" y1="134" y2="140"/><text x="449.3" y="161" font-size="15" text-anchor="middle">Day 181</text><text class="strip-date" data-days="181" x="449.3" y="182" font-size="14" text-anchor="middle"></text><line class="tick" x1="668.7" x2="668.7" y1="134" y2="140"/><text x="668.7" y="161" font-size="15" text-anchor="middle" class="ink strong">Day 271</text><text class="strip-date" data-days="271" x="668.7" y="182" font-size="14" text-anchor="middle"></text><line class="tick" x1="900.3" x2="900.3" y1="134" y2="140"/><text x="900.3" y="161" font-size="15" text-anchor="middle">Day 366</text><text class="strip-date" data-days="366" x="900.3" y="182" font-size="14" text-anchor="middle"></text></svg><!-- /build:strip-wide --></div>
-          <div class="chart-narrow"><!-- build:strip-narrow --><svg class="chart strip" viewBox="0 0 360 190" role="img" aria-labelledby="sp-n-t sp-n-d" preserveAspectRatio="xMidYMid meet"><title id="sp-n-t">One unit's clock toward the 271-day cliff</title><desc id="sp-n-d">A unit that reaches Amazon today is in the cheapest storage band until day 181, steps up each month after, and at day 271 goes from $73 to $199 a month for every 1,000 units.</desc><rect class="seg seg-0 fade" style="--after:0ms" x="6" y="40" width="148" height="90"/><text class="seg-text fade" style="--after:200ms" x="14" y="85" font-size="12" dominant-baseline="middle">$25</text><rect class="seg seg-1 fade" style="--after:120ms" x="156" y="40" width="22.9" height="90"/><rect class="seg seg-2 fade" style="--after:240ms" x="180.8" y="40" width="22.9" height="90"/><rect class="seg seg-3 fade" style="--after:360ms" x="205.7" y="40" width="22.9" height="90"/><rect class="seg seg-leak fade" style="--after:480ms" x="230.5" y="40" width="22.9" height="90"/><rect class="seg seg-leak fade" style="--after:600ms" x="255.4" y="40" width="22.9" height="90"/><rect class="seg seg-leak fade" style="--after:720ms" x="280.3" y="40" width="27" height="90"/><rect class="seg seg-leak fade" style="--after:840ms" x="309.3" y="40" width="42.7" height="90"/><text class="seg-text-leak fade" style="--after:1040ms" x="317.3" y="85" font-size="12" dominant-baseline="middle">$245</text><line class="tick" x1="6" x2="6" y1="30" y2="136"/><text class="ink strong" x="6" y="24" font-size="12">Today</text><line class="leak fade" style="--after:900ms" x1="229.5" x2="229.5" y1="30" y2="136"/><text class="leak-text fade" style="--after:900ms" x="222.5" y="24" font-size="12" text-anchor="end">$73 → $199 a month</text><line class="tick" x1="6" x2="6" y1="130" y2="136"/><text x="6" y="154" font-size="12" text-anchor="start">Day 0</text><text class="strip-date" data-days="0" x="6" y="172" font-size="11" text-anchor="start"></text><line class="tick" x1="230.5" x2="230.5" y1="130" y2="136"/><text x="230.5" y="154" font-size="12" text-anchor="middle" class="ink strong">Day 271</text><text class="strip-date" data-days="271" x="230.5" y="172" font-size="11" text-anchor="middle"></text></svg><!-- /build:strip-narrow --></div>
-        </div>
-        <figcaption class="exhibit-cap">A unit that reaches Amazon today, at January-to-September storage rates. How close your own stock already sits is in your inventory-age report. That's what the call is for.</figcaption>
-      </figure>
-    </div>
-
-    <p class="selection" data-reveal>We picked this listing because it had a finding. Of <span data-fill="brands_modeled">1,856</span> Amazon brands we've modeled from public pages, <span data-fill="brands_silent">1,473</span> showed nothing worth fixing. We say so.</p>
-
-    <details class="fold">
-      <summary>Method, assumptions, and what public data can't see</summary>
-      <div class="fold-body">
-        <ul>
-          <li>Read from the listing's public page on <span data-fill="captured_on">September 3, 2026</span>: price band, item weight, dimensions (large standard size) and sales rank (<span data-fill="rank_band">top 100 in Automotive</span>). Priced on <span data-fill="priced_on">September 30, 2026</span>.</li>
-          <li>Fees: Amazon's published 2026 US fulfilment schedules, <span data-fill="card_np_full">January 15 to October 14</span> and <span data-fill="card_peak_full">October 15 to January 14</span>, plus the <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge; a <span data-fill="referral">12%</span> referral fee.</li>
-          <li>The item weight is a floor. Amazon bills the packed weight, so the unit sits at least this far past the edge.</li>
-          <li>Volume: about <span data-fill="units">3,500</span> units a month from the public sales rank, a curve that can be wrong by half or double; simulated that wide. This one listing: an estimated <span data-fill="sales_lo">$0.5M</span> to <span data-fill="sales_hi">$1.6M</span> a year in sales.</li>
-          <li>Landed cost: assumed at <span data-fill="landed">25%</span> of price, drifting 10% either way each month. No public page shows it.</li>
-          <li>Simulation: <span data-fill="years">10,000</span> years of twelve months from October 2026, each month on the card in force. Year-end profit: P10 <span data-fill="mc_p10">$230,000</span>, median <span data-fill="mc_p50">$402,000</span>, P90 <span data-fill="mc_p90">$687,000</span>.</li>
-          <li>Storage and aged-inventory rates: Amazon's schedule effective <span data-fill="storage_effective">January 15, 2026</span>.</li>
-          <li>What public data can't see: advertising, returns, the real landed cost, the packed weight, and how long each unit has sat.</li>
-        </ul>
-      </div>
-    </details>
-
-    <div class="cta">
-      <a class="btn btn-lg" href="/apply" data-cta="case-study">Book your call <span class="arrow" aria-hidden="true">→</span></a>
-      <span class="cta-note">We open your own reports and price what public pages can't show.</span>
-    </div>
-    <p class="bridge">Rather run it yourself first? Every step of this case study is taught free: <a href="/learn/fee-staircase">The Fee Staircase course →</a></p>
-    <p class="bridge">Selling on Shopify? This listing is an Amazon one, because Amazon's pages are public. Your store's steps are in your own exports, and two free courses run on them today: <a href="/learn/price-curve">The Price Curve</a> and <a href="/learn/capital-and-cash">Capital &amp; Cash</a>.</p>
-  </div>
-</section>
-
-<!-- 5 · How it works -->
-<section class="section" id="how">
-  <div class="wrap">
-    <div class="section-head" data-reveal>
-      <span class="label">How it works</span>
-      <h2>About ninety minutes of your time. <span class="tone">Then we run it.</span></h2>
-    </div>
-    <ol class="steps">
-      <li data-reveal><span class="step-n">01</span><span class="step-time">20 minutes</span><h3>Book the call.</h3><p>We open your reports with you and price what public pages can't show. On Amazon: aged stock, low-inventory fees, an ad target set wrong. On Shopify: prices sitting under their own compare-at, parcels just past a pound line.</p></li>
-      <li data-reveal style="--d: 120ms"><span class="step-n">02</span><span class="step-time">Once</span><h3>Hand over your exports.</h3><p>One scoped seat or a folder of reports. Banking, payouts and settings stay out of reach.</p></li>
-      <li data-reveal style="--d: 240ms"><span class="step-n">03</span><span class="step-time">Every week</span><h3>We move. The Record measures.</h3><p>Every move is written down with its expected dollars before it goes live, then measured on your own reports.</p></li>
-    </ol>
-  </div>
-</section>
-
-<!-- 6 · The offer and the risk reversal -->
-<section class="section night" id="offer">
-  <div class="wrap">
-    <span class="label" data-reveal>The offer</span>
-    <h2 class="offer-line" data-reveal style="--d: 80ms">More profit than our bill every month, or you don't pay.</h2>
-    <div class="offer-grid" data-reveal style="--d: 160ms">
-      <p class="offer-why"><b>Why we can say it.</b> Every month is measured on its own exports before any invoice exists. A month that clears the fee is billed. One that doesn't is free: no credit, nothing carried. So we only take on accounts where the arithmetic clears the bill, and if yours doesn't, we tell you on the call.</p>
-      <div>
-        <p class="price">$6,000 a month, flat.</p>
-        <p>Never a percentage of ad spend. Month to month. Your first month is free.</p>
-        <ul class="scope">
-          <li><b>Every SKU modeled, every week:</b> true margin, demand, stockout odds.</li>
-          <li><b>Every leak found and sealed:</b> prices, ad bleed on Amazon, Google and Meta, reorders, fee cliffs, and on Amazon, claims.</li>
-          <li><b>Every dollar graded</b> on your own reports, misses included.</li>
-          <li><b>Inventory timed</b> against stockouts, and on Amazon, against the fee cliffs.</li>
-          <li><b>Amazon, Shopify, or both:</b> one engine reads either, from your own exports.</li>
-        </ul>
-      </div>
-    </div>
-    <h3 class="layers-head" data-reveal>The guarantee, in four layers</h3>
-    <div class="layers">
-      <div class="layer" data-reveal><span class="layer-n">1</span><h3>The Proving Month is free.</h3><p>Your first month costs nothing, whatever it measures. There's no card on file to charge.</p></div>
-      <div class="layer" data-reveal style="--d: 100ms"><span class="layer-n">2</span><h3>Proven or void, every month.</h3><p>Each month is measured on its own exports. Above the fee, it's invoiced. At or below it, it's free: nothing credited, nothing carried.</p></div>
-      <div class="layer" data-reveal style="--d: 200ms"><span class="layer-n">3</span><h3>Service until proven.</h3><p>A month that doesn't clear isn't invoiced, and the work carries on.</p></div>
-      <div class="layer" data-reveal style="--d: 300ms"><span class="layer-n">4</span><h3>The open exit.</h3><p>Leave with one email. Any month you paid for that doesn't clear on its own number is refunded in full, issued within seven days of your email.</p></div>
-    </div>
-    <div class="cta">
-      <a class="btn btn-lg" href="/apply" data-cta="offer">Book your call <span class="arrow" aria-hidden="true">→</span></a>
-      <span class="cta-note">Your first month is free, whatever it measures. No card, ever.</span>
-    </div>
-  </div>
-</section>
-
-<!-- Trust: where every promise is written down -->
-<section class="section" id="trust">
-  <div class="wrap">
-    <div class="section-head" data-reveal>
-      <span class="label">Trust</span>
-      <h2>Don't trust us. <span class="tone">Check us.</span></h2>
-      <p class="lede">Every promise on this page is written down somewhere you can read before you book. Here is where.</p>
-    </div>
-    <div class="trust-grid">
-      <a class="go-card trust-tile" href="/terms#how-a-dollar-counts" data-reveal><span class="go-k">How a dollar counts</span><h3>The rules come first.</h3><p>Every dollar on your Record is graded by rules agreed before any number is on it. A dollar we can't separate from everything else counts nothing.</p><span class="go-to">Read the rules →</span></a>
-      <a class="go-card trust-tile" href="/terms#invoicing" data-reveal style="--d: 80ms"><span class="go-k">Terms, section 4</span><h3>No card on file. Ever.</h3><p>Nothing is charged automatically. A month is invoiced only after it has been measured and cleared, and you pay it by bank transfer.</p><span class="go-to">Read section 4 →</span></a>
-      <a class="go-card trust-tile" href="/terms#proving-month" data-reveal style="--d: 160ms"><span class="go-k">Terms, section 3</span><h3>Never a cut of your ad spend.</h3><p>A flat fee, never a percentage of ad spend or revenue. We earn nothing more when you spend more.</p><span class="go-to">Read section 3 →</span></a>
-      <a class="go-card trust-tile" href="/your-data" data-reveal><span class="go-k">Your data</span><h3>Your data advises no one else.</h3><p>Never sold, never used to advise another client. Your raw reports never go to an AI provider.</p><span class="go-to">Read the six answers →</span></a>
-      <a class="go-card trust-tile" href="/honesty" data-reveal style="--d: 80ms"><span class="go-k">What is true today</span><h3>We say what isn't true yet.</h3><p>No client results yet, and we say it first. Every number on this site is labelled for exactly what it is.</p><span class="go-to">See what's true →</span></a>
-      <a class="go-card trust-tile" href="/terms" data-reveal style="--d: 160ms"><span class="go-k">The terms</span><h3>One version, in plain English.</h3><p>The guarantee, the exit and the limits, approved by the founder. There's no second version in smaller type.</p><span class="go-to">Read the terms →</span></a>
-    </div>
-  </div>
-</section>
-
-<!-- 7 · The Profit Record -->
-<section class="section" id="scoreboard">
-  <div class="wrap board-grid">
     <div data-reveal>
-      <span class="label">The Profit Record</span>
-      <h2>Called before. <span class="tone">Measured after.</span></h2>
-      <p class="lede">Every move gets a receipt: the dollars we expect, written down before it goes live, then the dollars it earned, measured on your own reports. Every Monday the Record is brought up to date; each month closes on one number, one sentence, one bar.</p>
-      <div class="cta">
-        <a class="btn btn-lg" href="/apply" data-cta="record">Book your call <span class="arrow" aria-hidden="true">→</span></a>
-        <span class="cta-note">The call is free and creates no obligation.</span>
+      <span class="label label-box">Modeled on published data · Not a client · Not a result</span>
+      <h2>We gave our engine a real store's orders. <span class="tone">Then we opened what happened next.</span></h2>
+      <p class="lede">A real online retailer, about <span data-fill="store_sales">£9.8M</span> a year, published every order it took for anyone to study. Every call below was made using only the orders before it.</p>
+    </div>
+    <div class="calls">
+      <div class="call" data-reveal>
+        <p class="call-k">Repeat orders from its customers, the next <span data-fill="store_weeks">26</span> weeks</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_called">7,671</dd></div><div><dt>Happened</dt><dd data-fill="store_happened">7,865</dd></div></dl>
+        <p class="call-note"><span data-fill="store_off">2.5%</span> <span data-fill="store_more_less">more</span> than called. The engine chose its own cut-off, by a rule written before this study.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 120ms">
+        <p class="call-k">Regular customers it named as slipping away</p>
+        <dl><div><dt>Named</dt><dd data-fill="store_named">498</dd></div><div><dt>Never came back</dt><dd data-fill="store_named_gone">274</dd></div></dl>
+        <p class="call-note">They had spent <span class="money" data-fill="store_lost_spend">£318,525</span> the year before. Of the regulars it didn't name, <span data-fill="store_steady_back_share">80%</span> came back.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 240ms">
+        <p class="call-k">Peak-season units of its <span data-fill="store_top_n">200</span> best sellers, called a month ahead</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_q_called">542,981</dd></div><div><dt>Sold</dt><dd data-fill="store_q_happened">538,415</dd></div></dl>
+        <p class="call-note">September to November. <span data-fill="store_q_off">0.8%</span> apart over the quarter; a single month missed by up to <span data-fill="store_worst">13.9%</span>.</p>
       </div>
     </div>
-    <figure class="exhibit" aria-label="Illustration of the monthly scoreboard, not a client's numbers" data-reveal style="--d: 120ms">
-      <div class="exhibit-head"><span>Your Profit Record</span><span class="label-box">Illustration · not a client's numbers</span></div>
-<!-- build:board -->
-<div class="board">
-  <p class="board-k">Proven since day one</p>
-  <p class="board-big money" data-count>$48,210</p>
-  <p class="board-line">This month your Record counted <b class="money">$9,140</b>. Our bill was <b>$6,000</b>. You're up <b class="money">$3,140</b>.</p>
-  <div class="bar" role="img" aria-label="Counted $9,140 against a $6,000 bill" data-reveal><span class="bar-fill" style="width: 100.0%"></span><span class="bar-bill" style="left: 65.6%"></span></div>
-  <div class="bar-keys"><span class="k-bill" style="left: 65.6%">Our bill</span><span class="k-measured">Counted</span></div>
-  <details class="fold receipts">
-    <summary><span>This month's receipts <span class="tone">· 7 moves, each called before it went live</span></span></summary>
-    <div class="fold-body">
-      <table class="rcpt">
-        <thead><tr><th>Move</th><th>How we know</th><th class="num">Called before</th><th class="num">Measured after</th><th class="num">Counts</th></tr></thead>
-        <tbody>
-          <tr><td>Amazon: reorder moved up three weeks, ahead of the 271-day surcharge<span class="rcpt-why">Never above the promise: $160 more shown, not added</span></td><td data-k="How we know">Isolated</td><td class="num" data-k="Called before">$3,100</td><td class="num" data-k="Measured after">$3,260</td><td class="num money" data-k="Counts">$3,100</td></tr>
-          <tr><td>Amazon: case pack re-spec&#39;d to land under a weight edge<span class="rcpt-why">A miss stays at what it earned</span></td><td data-k="How we know">Isolated</td><td class="num" data-k="Called before">$2,400</td><td class="num" data-k="Measured after">$2,380</td><td class="num money" data-k="Counts">$2,380</td></tr>
-          <tr><td>Shopify: price raised 4% on a best seller its own sales said could carry it<span class="rcpt-why">Never above the promise: $8 more shown, not added</span></td><td data-k="How we know">Isolated</td><td class="num" data-k="Called before">$1,500</td><td class="num" data-k="Measured after">$1,508</td><td class="num money" data-k="Counts">$1,500</td></tr>
-          <tr><td>Price raised 50 cents on one SKU<span class="rcpt-why">Never above the promise: $140 more shown, not added</span></td><td data-k="How we know">Isolated</td><td class="num" data-k="Called before">$1,200</td><td class="num" data-k="Measured after">$1,340</td><td class="num money" data-k="Counts">$1,200</td></tr>
-          <tr><td>Google Ads stopped on search terms with no sales in sixty days<span class="rcpt-why">A miss stays at what it earned</span></td><td data-k="How we know">Attributable</td><td class="num" data-k="Called before">$800</td><td class="num" data-k="Measured after">$610</td><td class="num money" data-k="Counts">$610</td></tr>
-          <tr><td>Amazon: claim filed for units lost in a fulfilment centre<span class="rcpt-why">What Amazon paid</span></td><td data-k="How we know">Direct</td><td class="num" data-k="Called before">$310</td><td class="num" data-k="Measured after">$350</td><td class="num money" data-k="Counts">$350</td></tr>
-          <tr><td>Coupon removed on a SKU that sold the same without it<span class="rcpt-why">Under $25 counts nothing</span></td><td data-k="How we know">Attributable</td><td class="num" data-k="Called before">$90</td><td class="num" data-k="Measured after">$18</td><td class="num money" data-k="Counts">$0</td></tr>
-        </tbody>
-        <tfoot><tr><td colspan="4">This month, counted once</td><td class="num money" data-k="This month">$9,140</td></tr></tfoot>
-      </table>
+    <div class="proof-go" data-reveal>
+      <div class="cta"><a class="btn btn-lg" href="/apply" data-cta="proof">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+      <a class="more" href="/case-study">Every call, how it was made, and where it missed →</a>
     </div>
-  </details>
-</div>
-<!-- /build:board -->
-    </figure>
   </div>
 </section>
 
-<!-- The results wall: clients' own Records and words, with consent, or a reserved frame -->
-<section class="section night" id="results">
-  <div class="wrap">
-    <div class="results-head">
-      <div class="results-n" data-reveal><span class="results-zero" id="wall-count">0</span><span class="label">client results published</span></div>
-      <div data-reveal style="--d: 120ms">
-        <span class="label">Results</span>
-        <h2>The results wall. <span class="tone">It reads zero until a client fills it.</span></h2>
-        <p class="lede">Every result here will be a client's own Profit Record: measured on their reports, graded by the rules in the terms, and published only if they say yes, with their own words beside it. We won't fill it any other way.</p>
-        <p class="results-carry">Until it fills, the guarantee carries the risk: your first month is free, and no month is billed unless its own Record clears the fee.</p>
+<!-- 3 · The offer, said once -->
+<section class="section night" id="offer">
+  <div class="wrap offer-band">
+    <div data-reveal>
+      <span class="label">The offer</span>
+      <h2>$6,000 a month, billed only in a month that clears it.</h2>
+      <p class="lede">Your first month is free. After that, each month is measured on your own reports before any invoice exists. A month that doesn't clear the fee costs nothing.</p>
+      <p class="honest">Most brands we model show nothing worth fixing: <span data-fill="brands_silent">1,473</span> of <span data-fill="brands_modeled">1,856</span>. We say so on the call, and we don't take that work.</p>
+    </div>
+    <div data-reveal style="--d: 120ms">
+      <ol class="steps-mini">
+        <li><span class="n">01</span><b>Book the call.</b><span>20 minutes. We open your own reports with you.</span></li>
+        <li><span class="n">02</span><b>Hand over your exports.</b><span>Once. One scoped seat, or a folder of reports.</span></li>
+        <li><span class="n">03</span><b>We move. The Record measures.</b><span>Every week, every dollar called before it goes live.</span></li>
+      </ol>
+      <div class="offer-go">
+        <div class="cta"><a class="btn btn-lg" href="/apply" data-cta="offer">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+        <a class="more" href="/offer">The guarantee, in four layers →</a>
       </div>
     </div>
-<!-- build:wall -->
-<div class="wall-frames" data-wall>
-    <div class="frame frame-reserved">
-      <span class="frame-n">01</span>
-      <span class="label">Reserved</span>
-    </div>
-    <div class="frame frame-reserved">
-      <span class="frame-n">02</span>
-      <span class="label">Reserved</span>
-    </div>
-    <div class="frame frame-reserved">
-      <span class="frame-n">03</span>
-      <span class="label">Reserved</span>
-    </div>
-</div>
-<div class="wall-results" id="wall-results" hidden></div>
-<!-- /build:wall -->
   </div>
 </section>
 
-<!-- Education: the free library, the way Acquisition.com gives its training away -->
+<!-- 4 · Education: the free library, as a strip -->
 <section class="section" id="learn">
   <div class="wrap">
-    <div class="section-head learn-head" data-reveal>
+    <div data-reveal>
       <span class="label">Education</span>
-      <h2>The method, given away. <span class="tone">Every lesson, free.</span></h2>
-      <p class="lede">Complete courses: the lessons, the formulas and the spreadsheets. Every lesson is open, no email asked, and nothing is held back for a paid version. Run it on your own numbers tonight, from Seller Central or Shopify.</p>
+      <h2>The method, given away. <span class="tone">Every lesson open, no email asked.</span></h2>
     </div>
-<!-- build:library-home -->
-<div class="lib">
-  <article class="tile tile-live tile-feature" data-play>
-    <a class="tile-cover night" href="/learn/fee-staircase" tabindex="-1" aria-hidden="true"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+<!-- build:library-strip -->
+<div class="lib-strip">
+  <a class="strip-tile" href="/learn/fee-staircase" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
       <path class="cv-grid" d="M20 160 H300"/>
       <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 152 H84 V128 H148 V100 H212 V66 H276 V34 H300"/>
       <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M148 128 V100"/>
       <circle class="cv-hollow fade" style="--after:1100ms" cx="140" cy="128" r="5"/>
-      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg><span class="cover-title">The Fee Staircase</span></a>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">For Amazon sellers</span><span class="go-badge">8 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3><a href="/learn/fee-staircase">The Fee Staircase</a></h3>
-      <p>Find what Amazon&#39;s fee steps cost any listing, from five numbers on its public page.</p>
-      <p class="tile-detail">The 2026 cards, the four edges, volume from rank, ten thousand simulated months, and the 271-day storage cliff.</p>
-      <a class="go-to" href="/learn/fee-staircase#staircase">Start lesson 1, no email needed <span class="arrow" aria-hidden="true">→</span></a>
-      <form class="join-tile" data-join="fee-staircase" novalidate>
-        <label for="join-fee-staircase">Want it in your inbox? <span>Optional</span></label>
-        <div class="join-row">
-          <input id="join-fee-staircase" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@yourbrand.com">
-          <button type="submit">Send it to me <span class="arrow" aria-hidden="true">→</span></button>
-        </div>
-        <div class="hp" aria-hidden="true"><label for="join-fee-staircase-website">Leave this empty</label><input id="join-fee-staircase-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
-        <p class="join-err" role="alert" hidden></p>
-      </form>
-    </div>
-  </article>
-  <div class="lib-live">
-    <p class="lib-k">Also free, complete now</p>
-    <div class="lib-live-list">
-  <a class="tile tile-live tile-wide" href="/learn/price-curve" data-play>
-    <div class="tile-cover night"><span class="cover-k">Course 2</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg></span>
+    <span class="strip-t">The Fee Staircase</span>
+    <span class="strip-a">For Amazon sellers · 8 lessons</span>
+  </a>
+  <a class="strip-tile" href="/learn/price-curve" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 2</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
       <path class="cv-grid" d="M20 160 H300"/>
       <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M24 156 C 90 30, 210 30, 296 156"/>
       <path class="cv-guide draw" pathLength="1" style="--delay:1000ms" d="M96 75 H152"/>
       <circle class="cv-hollow fade" style="--after:900ms" cx="96" cy="75" r="5"/>
-      <circle class="cv-bluedot fade" style="--after:1200ms" cx="152" cy="62" r="6"/></svg><span class="cover-title">The Price Curve</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">Amazon and Shopify</span><span class="go-badge">8 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3>The Price Curve</h3>
-      <p>Read your own price elasticity, find the price that makes the most, and price every raise and discount before you run it.</p>
-      <p class="tile-detail">Elasticity from your own sales history with an honest interval, the best price with your platform&#39;s fees split the way they move, the break-even on a raise and a discount, and steps of at most 5% you can measure.</p>
-      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
-    </div>
+      <circle class="cv-bluedot fade" style="--after:1200ms" cx="152" cy="62" r="6"/></svg></span>
+    <span class="strip-t">The Price Curve</span>
+    <span class="strip-a">Amazon and Shopify · 8 lessons</span>
   </a>
-  <a class="tile tile-live tile-wide" href="/learn/capital-and-cash" data-play>
-    <div class="tile-cover night"><span class="cover-k">Course 3</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
-      <defs><clipPath id="cv-capital-and-cash-below"><rect x="0" y="96" width="320" height="84"/></clipPath></defs>
+  <a class="strip-tile" href="/learn/capital-and-cash" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 3</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <defs><clipPath id="cv-strip-capital-and-cash-below"><rect x="0" y="96" width="320" height="84"/></clipPath></defs>
       <path class="cv-zero" d="M20 96 H300"/>
       <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/>
-      <g clip-path="url(#cv-capital-and-cash-below)"><path class="cv-leak draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/></g></svg><span class="cover-title">Capital &amp; Cash</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">Amazon and Shopify</span><span class="go-badge">7 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3>Capital &amp; Cash</h3>
-      <p>How long a dollar is gone, where your bank balance bottoms out, when to wire and how much, and how much cash to hold.</p>
-      <p class="tile-detail">The cash conversion cycle, the low point after a wire, the reorder point and order from your own sales, the service level each SKU&#39;s margin pays for, hold against liquidate, and the cash a bad month needs.</p>
-      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
-    </div>
+      <g clip-path="url(#cv-strip-capital-and-cash-below)"><path class="cv-leak draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/></g></svg></span>
+    <span class="strip-t">Capital &amp; Cash</span>
+    <span class="strip-a">Amazon and Shopify · 7 lessons</span>
   </a>
-  <a class="tile tile-live tile-wide" href="/learn/shopify-margin" data-play>
-    <div class="tile-cover night"><span class="cover-k">Course 4</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+  <a class="strip-tile" href="/learn/shopify-margin" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 4</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
       <path class="cv-grid" d="M20 160 H300"/>
       <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 126 H156 V64 H300"/>
       <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M156 126 V64"/>
       <circle class="cv-hollow fade" style="--after:1100ms" cx="146" cy="126" r="5"/>
       <circle class="cv-dot fade" style="--after:1100ms" cx="168" cy="64" r="5"/>
-      <path class="cv-guide" d="M156 160 V132"/></svg><span class="cover-title">The Shopify Margin</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">For Shopify sellers</span><span class="go-badge">6 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3>The Shopify Margin</h3>
-      <p>Where an order&#39;s money goes, the pound line under every parcel, what free shipping costs, and the most an ad sale can cost.</p>
-      <p class="tile-detail">Shopify Payments and USPS Ground Advantage by zone, the 2 lb step a fraction of an ounce past a pound, the free-shipping line, the compare-at you never charge, break-even ROAS, and your own Products export read in your browser.</p>
-      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
-    </div>
+      <path class="cv-guide" d="M156 160 V132"/></svg></span>
+    <span class="strip-t">The Shopify Margin</span>
+    <span class="strip-a">For Shopify sellers · 6 lessons</span>
   </a>
-  <a class="tile tile-live tile-wide" href="/learn/operators-math" data-play>
-    <div class="tile-cover night"><span class="cover-k">Course 5</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+  <a class="strip-tile" href="/learn/operators-math" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 5</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
       <path class="cv-dim draw" pathLength="1" style="--delay:0ms" d="M24 44 H296 V76 H24 Z"/>
       <path class="cv-line draw" pathLength="1" style="--delay:300ms" d="M24 108 H196 V140 H24 Z"/>
       <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M196 124 H296"/>
-      <path class="cv-guide" d="M296 76 V140"/></svg><span class="cover-title">The Operator&#39;s Math</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">Free</span><span class="go-badge">Amazon and Shopify</span><span class="go-badge">5 lessons</span><span class="go-badge">1 spreadsheet</span></div>
-      <h3>The Operator&#39;s Math</h3>
-      <p>Contribution margin, the ad target your margin sets, lifetime value on margin, payback, and the numbers in a P&amp;L that mislead.</p>
-      <p class="tile-detail">Contribution before ads and after, break-even ROAS and ACOS, the last ad dollar against the average, LTV to CAC on margin over a year, the week a customer pays back, and your own Orders export read in your browser.</p>
-      <span class="go-to">Take the course <span class="arrow" aria-hidden="true">→</span></span>
-    </div>
+      <path class="cv-guide" d="M296 76 V140"/></svg></span>
+    <span class="strip-t">The Operator&#39;s Math</span>
+    <span class="strip-a">Amazon and Shopify · 5 lessons</span>
   </a>
-    </div>
-  </div>
-  <div class="lib-planned">
-    <p class="lib-k">Planned for the library <span>· free and open when each is complete</span></p>
-    <div class="rail">
-  <article class="tile tile-planned" data-play>
-    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true"><path class="cv-grid" d="M16 160 H310"/><path class="cv-dim draw" pathLength="1" style="--delay:0ms" d="M10 160 V36 H38 V160"/><path class="cv-dim draw" pathLength="1" style="--delay:160ms" d="M62 66 V36 H90 V66"/><path class="cv-dim draw" pathLength="1" style="--delay:320ms" d="M114 92 V66 H142 V92"/><path class="cv-dim draw" pathLength="1" style="--delay:480ms" d="M166 114 V92 H194 V114"/><rect class="cv-blue fade" style="--after:940ms" x="218" y="114" width="28" height="14"/><path class="cv-line draw" pathLength="1" style="--delay:800ms" d="M270 160 V128 H298 V160"/><path class="cv-guide draw" pathLength="1" style="--delay:900ms" d="M38 36 H62 M90 66 H114 M142 92 H166 M194 114 H218 M246 128 H270"/></svg><span class="cover-title">The Money You Can&#39;t See</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">8 lessons planned</span></div>
-      <h3>The Money You Can&#39;t See</h3>
-      <p>Fees, leakage, reimbursements, and the unit costs no report shows you.</p>
-    </div>
-  </article>
-  <article class="tile tile-planned" data-play>
-    <div class="tile-cover night"><span class="cover-k">Planned</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true"><path class="cv-wash fade" style="--after:1400ms" d="M24 98 Q 160 98, 300 52 L300 140 Q 160 98, 24 98 Z"/><path class="cv-path draw" pathLength="1" style="--delay:0ms" d="M24 98 Q 160 98, 300 34"/><path class="cv-path draw" pathLength="1" style="--delay:60ms" d="M24 98 Q 160 98, 300 52"/><path class="cv-path draw" pathLength="1" style="--delay:120ms" d="M24 98 Q 160 98, 300 68"/><path class="cv-path draw" pathLength="1" style="--delay:180ms" d="M24 98 Q 160 98, 300 82"/><path class="cv-path draw" pathLength="1" style="--delay:240ms" d="M24 98 Q 160 98, 300 96"/><path class="cv-path draw" pathLength="1" style="--delay:300ms" d="M24 98 Q 160 98, 300 110"/><path class="cv-path draw" pathLength="1" style="--delay:360ms" d="M24 98 Q 160 98, 300 124"/><path class="cv-path draw" pathLength="1" style="--delay:420ms" d="M24 98 Q 160 98, 300 140"/><path class="cv-path draw" pathLength="1" style="--delay:480ms" d="M24 98 Q 160 98, 300 156"/><path class="cv-line draw" pathLength="1" style="--delay:600ms" d="M24 98 Q 160 98, 300 96"/></svg><span class="cover-title">Decisions Under Uncertainty</span></div>
-    <div class="tile-body">
-      <div class="go-badges"><span class="go-badge">6 lessons planned</span></div>
-      <h3>Decisions Under Uncertainty</h3>
-      <p>Sample size, base rates, survivorship bias, expected value, and Monte Carlo on one real decision.</p>
-    </div>
-  </article>
-    </div>
-  </div>
 </div>
-<!-- /build:library-home -->
+<!-- /build:library-strip -->
+    <a class="more" href="/learn">All courses →</a>
   </div>
 </section>
 
-<!-- 8 · Who runs it -->
-<section class="section" id="who">
-  <div class="wrap who-grid">
-    <div data-reveal>
-      <span class="label">Who runs it</span>
-      <h2>One operator. No photo. The math has no age.</h2>
-    </div>
-    <div class="stack" data-reveal style="--d: 120ms">
-      <p>Hubricon is founder-operated. An applied mathematician builds the models and answers for every move.</p>
-      <p>One operator means a limited number of accounts at once.</p>
-      <p>Everything we hold of yours, and your whole Record, exports free within one working day. Any day, including the day you leave.</p>
-      <p class="who-honest">And most brands we model show nothing worth fixing: <span data-fill="brands_silent">1,473</span> of <span data-fill="brands_modeled">1,856</span>. We say so, and we don't take that work.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 9 · The skeptic's questions -->
-<section class="section" id="faq">
-  <div class="wrap faq-grid">
-    <div data-reveal>
-      <span class="label">Questions</span>
-      <h2>Worth asking before you book.</h2>
-    </div>
-    <div data-reveal style="--d: 120ms">
-      <details class="fold" data-q="attribution"><summary>How do you know which dollars you made?</summary>
-        <div class="fold-body"><p>Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (a reimbursement Amazon paid), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only in a month it is still there: every move is measured again each month.</p></div></details>
-      <details class="fold" data-q="profit"><summary>What counts as profit?</summary>
-        <div class="fold-body"><p>Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, stock that sold instead of aging, and on Amazon, a claim Amazon paid. Misses stay on the Record at what they actually earned.</p></div></details>
-      <details class="fold" data-q="shopify"><summary>I sell on Shopify, not Amazon. Is this for me?</summary>
-        <div class="fold-body"><p>Yes. The same engine reads a Shopify store from its own exports: orders, products, inventory, payouts, and your Meta and Google ad spend. It prices every SKU, times every reorder, and finds ad spend that brings no sales. On the call we open your Products export with you and price what it shows: prices under their own compare-at, parcels just past a pound line. Two things are Amazon's alone: reimbursement claims and Amazon's fee cards.</p></div></details>
-      <details class="fold" data-q="time"><summary>How much of my time does it take?</summary>
-        <div class="fold-body"><p>About ninety minutes, once: twenty on the call, and about an hour to hand over your exports. After that, one email before anything moves, listing each planned move with its expected dollars. Moves inside the bounds you set at kickoff go live after 72 hours unless you say no.</p></div></details>
-      <details class="fold" data-q="access"><summary>Can you touch my bank account or my settings?</summary>
-        <div class="fold-body"><p>No. On Amazon you approve one Seller Central user with four permissions: Business Reports and Fulfillment reports to view, Pricing and Campaign Manager to edit. On Shopify, one staff account whose role is limited to Orders, Products, Discounts and Analytics reports, which Shopify allows on its Grow plan and above. Neither can touch banking, tax, payouts or account settings. Revoke either any day: on Amazon in one click, on Shopify under Settings → Users. Rather not grant a seat? Send the exports through a secure upload page instead. <a href="/your-data">What we can see, and what we can't.</a></p></div></details>
-      <details class="fold" data-q="nothing-found"><summary>What if you find nothing worth fixing?</summary>
-        <div class="fold-body"><p>Then we tell you on the call, and we don't take the work. Most brands we model show nothing worth fixing: <span data-fill="brands_silent">1,473</span> of the <span data-fill="brands_modeled">1,856</span> Amazon brands we've read from public pages. Saying so is part of the job.</p></div></details>
-      <details class="fold" data-q="different"><summary>How is this different from an agency or a dashboard?</summary>
-        <div class="fold-body"><p>An agency is paid on your ad spend, so it is paid whether or not you keep more. A dashboard reports what happened and decides nothing. We make the money decisions, price, ads, reorders and fees, write down what each should earn before it goes live, and are paid only in a month the measured profit clears the fee.</p></div></details>
-      <details class="fold" data-q="who-for"><summary>Who is it for, and who isn't it for?</summary>
-        <div class="fold-body"><p>Private-label brands doing $1M to $30M a year on Amazon, Shopify or both, with ten or more SKUs and no finance function. Not for wholesale or arbitrage, and not for anyone who wants creative campaign management or another dashboard. Below the band, the arithmetic rarely clears the fee; if yours doesn't, we tell you on the call.</p></div></details>
-      <details class="fold" data-q="too-good"><summary>Why isn't this too good to be true?</summary>
-        <div class="fold-body"><p>Because the bill waits for the proof. Your first month is free. After that, each month is measured on its own, and an invoice goes out only for a month that cleared the fee. We can afford that only because we take on accounts where the math clears.</p></div></details>
-      <details class="fold" data-q="bad-month"><summary>What happens in a month that underperforms?</summary>
-        <div class="fold-body"><p>Nothing you have to ask for. That month is free: no invoice, no credit, nothing carried into the next, and the work carries on. Leave any day with one email; any month you paid for that doesn't clear on its own number comes back to your bank.</p></div></details>
-      <details class="fold" data-q="testimonials"><summary>Why are there no testimonials?</summary>
-        <div class="fold-body"><p>Because there are no client results to publish yet. When a client's Record has one, it goes on the results wall with their own words, if they say yes. We won't write testimonials for anyone.</p></div></details>
-      <details class="fold" data-q="data"><summary>What happens to my data?</summary>
-        <div class="fold-body"><p>We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. <a href="/your-data">How we handle it.</a></p></div></details>
-    </div>
-  </div>
-</section>
-
-<!-- 10 · The close -->
+<!-- 5 · The close -->
 <section class="section close night" id="book">
   <div class="wrap">
     <h2 data-reveal>More profit than our bill every month, or you don't pay.</h2>
@@ -865,7 +341,7 @@
       <p class="foot-motto">Paid on proof.</p>
     </div>
     <div class="foot-cols">
-      <div class="foot-col"><p class="foot-k">The work</p><a href="/#case-study">Proof</a><a href="/#how">How it works</a><a href="/#offer">The offer</a><a href="/#results">Results</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
       <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
       <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
       <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>

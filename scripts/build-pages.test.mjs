@@ -1,11 +1,12 @@
-// The baked pages, as built: current with their data, the home page inside the
-// Hormozi standard with one action, the attribution rules identical wherever they
-// appear, and every page honest about what its figures are.
+// The baked pages, as built: current with their data, the home page short and inside the
+// Hormozi standard with one action, every section it gave up on the page under its tab,
+// the attribution rules identical wherever they appear, and every page honest about what
+// its figures are.
 //   node --test scripts/
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { figures, build, visibleWords, PAGES } from "./build-pages.mjs";
+import { figures, build, mainWords, PAGES } from "./build-pages.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), "utf8");
@@ -13,6 +14,12 @@ const json = (p) => JSON.parse(read(p));
 const html = read("index.html");
 const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
 const text = (h) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+const section = (h, id) => (h.match(new RegExp(`<section[^>]*\\bid="${id}"[\\s\\S]*?</section>`)) || [""])[0];
+// The pages behind the tabs (HUBRICON_SPEC.md, "A short first page", 2026-10-01 evening)
+const TAB_PAGES = { "/case-study": "case-study.html", "/how-it-works": "how-it-works.html", "/offer": "offer.html" };
+// The home page's own words, capped: the founder asked for a short first page. Set at the first
+// build's count plus a tenth; raising it is a decision about the page, not a fix for a test.
+const HOME_WORDS_MAX = 435;
 
 for (const page of PAGES) {
   test(`${page.file} is current with its data (node scripts/build-pages.mjs)`, () => {
@@ -21,53 +28,82 @@ for (const page of PAGES) {
   });
 }
 
-test("the spec's ten sections in the spec's order, with the founder's additions in theirs", () => {
-  // HUBRICON_SPEC.md, "Landing page, section by section", and its amendments of 2026-10-01:
-  // the founder added the trust section, the results wall and the education library
-  // ("everything needs to be on that landing page") and retired the 900-word cap.
+test("the short first page: five bands, and every other section on the page under its tab", () => {
+  // The founder, 2026-10-01 evening: "a short first page, not a lot of scrolling … all the other
+  // information about the business on the tabs." The spec's sections are kept, not cut: moved.
   assert.match(html, /<section class="hero"/, "1 · the hero");
   const order = [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map(([, id]) => id).filter((id) => id !== "result");
-  assert.deepEqual(order, ["problem", "staircase", "case-study", "how", "offer", "trust", "scoreboard", "results", "learn", "who", "faq", "book"]);
-  const spec = ["problem", "staircase", "case-study", "how", "offer", "scoreboard", "who", "faq", "book"];
-  assert.deepEqual(order.filter((id) => spec.includes(id)), spec, "the spec's own sections never move");
-  assert.ok(html.indexOf("The guarantee, in four layers") > html.indexOf('id="offer"'), "the four guarantee layers live in the offer, never above it (spec §6)");
-  assert.ok(visibleWords(html) > 0);
+  assert.deepEqual(order, ["proof", "offer", "learn", "book"], "the promise, the proof, the offer, the library, the call");
+  const words = mainWords(html);
+  assert.ok(words <= HOME_WORDS_MAX, `the home page's own words: ${words}, capped at ${HOME_WORDS_MAX}`);
+  assert.doesNotMatch(html, /<figure class="exhibit"/, "no exhibit on the home page: the proof's figures are on /case-study");
+  assert.equal((html.match(/<svg class="chart /g) || []).length, 2, "one chart, the hero's mood, in its wide and narrow frames");
+  const how = read("how-it-works.html"), offer = read("offer.html"), cs = read("case-study.html");
+  for (const id of ["steps", "record", "who", "faq"]) assert.ok(section(how, id), `/how-it-works has #${id}`);
+  assert.match(how, /"@type": "FAQPage"/, "the questions carry their structured data where they are");
+  assert.equal((section(offer, "offer").match(/<div class="layer"/g) || []).length, 4, "/offer carries the guarantee's four layers");
+  assert.match(offer, /id="guarantee"[^>]*>The guarantee, in four layers</);
+  assert.ok(section(offer, "trust"), "/offer has where every promise is written down");
+  for (const id of ["customers", "slipping", "demand", "method", "problem", "staircase", "case-study"]) assert.ok(section(cs, id), `/case-study has #${id}`);
+  assert.doesNotMatch(html, /<div class="layer"/, "the four layers live one click away, never above the call (spec §6)");
+  assert.match(section(html, "offer"), /href="\/offer"[^>]*>The guarantee, in four layers/, "and the offer links to them");
 });
 
 test("one action: every button says the same thing and goes to the same place", () => {
-  const ctas = [...html.matchAll(/<a\b[^>]*data-cta="[^"]+"[^>]*>([\s\S]*?)<\/a>/g)];
-  assert.ok(ctas.length >= 3, "the call to action repeats after each proof block");
-  for (const [tag, inner] of ctas) {
-    assert.match(tag, /href="\/apply"/);
-    assert.equal(inner.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(), "Book your call →");
+  const SOURCES = /^https:\/\/(archive\.ics\.uci\.edu\/dataset\/502\/online\+retail\+ii|doi\.org\/10\.24432\/C5CG6D)$/;   // the store study's data, cited
+  for (const file of ["index.html", ...Object.values(TAB_PAGES)]) {
+    const h = read(file);
+    const ctas = [...h.matchAll(/<a\b[^>]*data-cta="[^"]+"[^>]*>([\s\S]*?)<\/a>/g)];
+    assert.ok(ctas.length >= 2, `${file}: the call to action repeats`);
+    for (const [tag, inner] of ctas) {
+      assert.match(tag, /href="\/apply"/);
+      assert.equal(inner.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(), "Book your call →");
+    }
+    for (const [tag] of h.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, `${file}: only the call is a button`);
+    const otherLinks = [...h.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, x]) => x).filter((x) => x !== "/apply");
+    for (const x of otherLinks) {
+      if (file === "case-study.html" && SOURCES.test(x)) continue;
+      assert.match(x, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|manifesto|case-study(#[a-z-]+)?|how-it-works(#[a-z-]+)?|offer(#[a-z-]+)?|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${file}: ${x}: every other link is the site's own page, a section of one, or a free course`);
+    }
   }
-  for (const [tag] of html.matchAll(/<a\b[^>]*class="btn[^"]*"[^>]*>/g)) assert.match(tag, /href="\/apply"/, "only the call is a button");
-  const otherLinks = [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map(([, h]) => h).filter((h) => h !== "/apply");
-  for (const h of otherLinks) assert.match(h, /^\/(#[a-z-]+|learn(\/[a-z-]+(#[a-z-]+)?|\/files\/[a-z-]+\.xlsx)?|honesty|your-data|verify|manifesto|case-study|privacy(#[a-z-]+)?|terms(#[a-z-]+)?)?$/, `${h}: every other link is the site's own page, a section of this one, or a free course`);
-  // Since 2026-10-01 the bar has tabs (the founder: "we are mimicking Apple's .com with the
-  // education tab"); none of them is a button, and none of them sells anything but the call.
+  // The bar's tabs (the founder, 2026-10-01: "we are mimicking Apple's .com with the education tab"):
+  // each one a page. No Results tab until a client's consent fills one (the founder, the same evening).
   const tabs = html.match(/<nav class="nav-tabs"[\s\S]*?<\/nav>/)[0];
-  for (const t of ["Proof", "How it works", "The offer", "Results", "Education", "Trust"]) assert.match(tabs, new RegExp(`>${t}<`), `the ${t} tab`);
-  assert.match(tabs, /href="\/learn"[^>]*>Education/);
+  assert.deepEqual([...tabs.matchAll(/<a class="nav-tab" href="[^"]+"[^>]*>([^<]+)/g)].map(([, t]) => t), ["Proof", "How it works", "The offer", "Education", "Trust"]);
+  assert.doesNotMatch(tabs, />Results</);
   assert.doesNotMatch(tabs, /class="btn/);
-  for (const id of ["case-study", "how", "offer", "results", "trust"]) assert.match(html, new RegExp(`<section[^>]*id="${id}"`), `the #${id} tab has a section to land on`);
+  for (const [path, file] of Object.entries(TAB_PAGES)) {
+    assert.match(tabs, new RegExp(`<a class="nav-tab" href="${path}"`), `the tab for ${path}`);
+    assert.ok(read(file).includes("<main>"), `${path} is a page`);
+  }
+  assert.match(tabs, /href="\/learn"[^>]*>Education/);
+  // no redirect may stand in front of a page the build writes (Vercel runs redirects first)
+  const sources = new Set(JSON.parse(read("vercel.json")).redirects.map((r) => r.source));
+  for (const page of PAGES) {
+    const url = "/" + page.file.replace(/(^|\/)index\.html$/, "").replace(/\.html$/, "");
+    assert.ok(!sources.has(url.replace(/\/$/, "") || "/"), `${url}: a redirect would hide this page`);
+  }
 });
 
 test("the call repeats after each proof block, the same words and the same colour", () => {
-  // HUBRICON_SPEC.md, "Global rules for the page": after the case study, the offer and the Record, and at the close.
-  const where = [...html.matchAll(/<a\b[^>]*data-cta="([^"]+)"/g)].map(([, w]) => w);
-  for (const w of ["hero", "case-study", "offer", "record", "close"]) assert.ok(where.includes(w), `a call at ${w}`);
-  for (const id of ["case-study", "offer", "scoreboard"]) {
-    const sect = html.match(new RegExp(`<section[^>]*id="${id}"[\\s\\S]*?</section>`))[0];
-    assert.match(sect, /<a class="btn btn-lg" href="\/apply"/, `#${id} ends on the call`);
+  // HUBRICON_SPEC.md, "Global rules for the page": after the proof, the offer and the Record, and at the close.
+  const where = (file) => [...read(file).matchAll(/<a\b[^>]*data-cta="([^"]+)"/g)].map(([, w]) => w);
+  for (const w of ["hero", "proof", "offer", "close"]) assert.ok(where("index.html").includes(w), `home: a call at ${w}`);
+  for (const w of ["case-study", "listing"]) assert.ok(where("case-study.html").includes(w), `/case-study: a call at ${w}`);
+  for (const w of ["record", "how"]) assert.ok(where("how-it-works.html").includes(w), `/how-it-works: a call at ${w}`);
+  assert.ok(where("offer.html").includes("offer"), "/offer: a call after the guarantee");
+  for (const [file, id] of [["index.html", "proof"], ["index.html", "offer"], ["how-it-works.html", "record"], ["offer.html", "offer"], ["case-study.html", "method"]]) {
+    assert.match(section(read(file), id), /<a class="btn btn-lg" href="\/apply"/, `${file} #${id} ends on the call`);
   }
 });
 
-test("the only other control is the course's optional email, and it looks like the field's, not the call's", () => {
-  // Every lesson is open (the founder's call, 2026-10-01): the card opens lesson 1 with no email,
-  // and the email is the opt-in for the link, the spreadsheet and the fee-change notes.
-  const forms = [...html.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
-  assert.equal(forms.length, 1, "one form on the page");
+test("the home page has no form; the course's optional email lives on /learn, and looks like the field's, not the call's", () => {
+  // Every lesson is open (the founder's call, 2026-10-01), and the home page is short (the same
+  // evening): the opt-in is on /learn's featured course and on each course, never on the home page.
+  assert.doesNotMatch(html, /<form\b/, "no form on the home page: the call is the only thing it asks for");
+  const hub = read("learn/index.html");
+  const forms = [...hub.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
+  assert.equal(forms.length, 1, "one form on /learn");
   const f = forms[0];
   assert.match(f, /data-join="fee-staircase"/);
   assert.deepEqual([...f.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n), ["email", "website"], "the address, and the field bots fill");
@@ -76,10 +112,7 @@ test("the only other control is the course's optional email, and it looks like t
   assert.match(f, /One click unsubscribes/);
   assert.match(f, /No email is needed to read it/);
   assert.match(f, /Optional/);
-  const learnSection = html.match(/<section[^>]*id="learn"[\s\S]*?<\/section>/)[0];
-  assert.ok(learnSection.includes(f), "it sits in the Education section, on the featured course");
-  assert.match(learnSection, /<a class="go-to" href="\/learn\/fee-staircase#staircase">Start lesson 1, no email needed/, "the card opens lesson 1 itself");
-  assert.doesNotMatch(text(learnSection), /one email (opens|to enter)|email opens|for an email/i);
+  assert.match(hub, /<a class="go-to" href="\/learn\/fee-staircase#staircase">Start lesson 1, no email needed/, "the card opens lesson 1 itself");
   const js = read("assets/site.js");
   assert.match(js, /fetch\("\/api\/learn"/);
   assert.match(js, /email, course: form\.dataset\.join, website: form\.website\.value, source:/, "it sends what the course page sends, nothing more");
@@ -87,14 +120,15 @@ test("the only other control is the course's optional email, and it looks like t
   assert.match(js, /body\.emailed\)/, "it says an email was sent only when the server says it was");
 });
 
-test("the case study has its own page, the home page's own sections; the sitemap and robots name the public site", () => {
+test("the proof has its own page, the home page states its calls as the page does; the sitemap and robots name the public site", () => {
   const home = read("index.html"), page = read("case-study.html");
-  for (const id of ["staircase", "case-study"]) {
-    const sec = (h) => h.match(new RegExp(`<section class="section" id="${id}">[\\s\\S]*?\\n</section>`))[0];
-    assert.equal(sec(page), sec(home), `/case-study's #${id} is the home page's, as built`);
+  // every call the home page states is the same figure, worded the same, on /case-study
+  for (const [, key, val] of section(home, "proof").matchAll(/data-fill="(store_[a-z_]+)"[^>]*>([^<]*)</g)) {
+    assert.match(page, new RegExp(`data-fill="${key}"[^>]*>${val.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}<`), `${key} reads "${val}" on /case-study too`);
   }
+  assert.match(section(home, "proof"), /href="\/case-study"/, "the proof links to the whole study");
   const map = read("sitemap.xml");
-  for (const p of ["/", "/case-study", "/learn", "/learn/capital-and-cash", "/verify", "/manifesto"]) assert.ok(map.includes(`<loc>https://www.hubricon.com${p}</loc>`), `sitemap: ${p}`);
+  for (const p of ["/", "/case-study", "/how-it-works", "/offer", "/learn", "/learn/capital-and-cash", "/verify", "/manifesto"]) assert.ok(map.includes(`<loc>https://www.hubricon.com${p}</loc>`), `sitemap: ${p}`);
   for (const p of ["/portal", "/apply", "/call", "/intake", "/welcome"]) assert.ok(!map.includes(`hubricon.com${p}<`), `sitemap leaves out ${p}`);
   const robots = read("robots.txt");
   assert.match(robots, /Sitemap: https:\/\/www\.hubricon\.com\/sitemap\.xml/);
@@ -105,9 +139,9 @@ test("the case study has its own page, the home page's own sections; the sitemap
 test("every chart a reader studies can be scrubbed, and asking for less motion gets a dissolve, not nothing", () => {
   // The founder, 2026-10-01: "the animations still need to actually be animated … making the site more interactive"
   const charts = (page) => [...read(page).matchAll(/<svg class="chart ([a-z]+)[^"]*"[^>]*>/g)];
-  for (const page of ["index.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/capital-and-cash.html"]) {
+  for (const page of ["index.html", "case-study.html", "learn/fee-staircase.html", "learn/price-curve.html", "learn/capital-and-cash.html"]) {
     for (const [tag, kind] of charts(page)) {
-      if (/mc--mood|aging|strip/.test(tag)) continue;   // the hero's mood and the age bands carry no values to read
+      if (/mc--mood|aging|strip|chart order/.test(tag)) continue;   // the hero's mood, the age bands and the labelled bars carry no values to read
       const m = tag.match(/data-scrub="([^"]+)"/);
       assert.ok(m, `${page}: a ${kind} chart without a readout`);
       const data = JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"));
@@ -133,14 +167,23 @@ test("nothing is blank for want of a scroll: only an armed element or the hero's
   assert.equal((html.match(/data-play="load"/g) || []).length, 1);
 });
 
-test("the case study says what it is on its own screen", () => {
-  const cs = html.match(/<section[^>]*id="case-study"[\s\S]*?<\/section>/)[0];
-  assert.match(cs, /Modeled from public data · Not a client · Not a result/);
-  assert.match(cs, /class="est">estimate</);
+test("the case studies say what they are on their own screens", () => {
+  assert.match(section(html, "proof"), /Modeled on published data · Not a client · Not a result/, "the home page's proof");
+  const cs = read("case-study.html");
+  assert.match(cs.slice(cs.indexOf("<main>"), cs.indexOf('id="customers"')), /Modeled on published data · Not a client · Not a result/, "the store study's head");
+  for (const [f] of cs.matchAll(/<figure class="exhibit"[\s\S]*?<\/figure>/g)) assert.match(f, /class="label-box"/, "every exhibit carries its label");
+  const listing = section(cs, "case-study");
+  assert.match(listing, /Modeled from public data · Not a client · Not a result/);
+  assert.match(listing, /class="est">estimate</);
+  // the store study cites its source as the licence asks, and says what it cannot show
+  assert.match(cs, /CC BY 4\.0/);
+  assert.match(cs, /doi\.org\/10\.24432\/C5CG6D/);
+  assert.match(text(section(cs, "method")), /What this cannot show: profit/);
+  assert.match(text(section(cs, "demand")), /the ranges were too narrow, and we say so/, "a miss is said where it happened");
 });
 
 test("nothing from the retired funnel or the retired look", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
+  for (const page of ["index.html", "case-study.html", "how-it-works.html", "offer.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
     const h = read(page);
     for (const gone of ["Teardown", "Anton", "Fraunces", "Iowan", "#FFC000", "Demo data", "Start your free Proving Month"]) {
       assert.ok(!h.includes(gone), `"${gone}" is still on ${page}`);
