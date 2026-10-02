@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T16:03:04+00:00",
+ "updated_at": "2026-10-02T16:08:55+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -153,7 +153,7 @@
     "store_study"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own voice: record the script per docs/content/VOICE-RECORDING.md, or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env",
+   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice store-study-film own (so the description says it is his own voice).",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -195,6 +195,11 @@
      "at": "2026-10-02T16:03:02+00:00",
      "step": "tts",
      "note": "blocked The founder's own voice: record the script per docs/content/VOICE-RECORDING.md, or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env"
+    },
+    {
+     "at": "2026-10-02T16:08:52+00:00",
+     "step": "tts",
+     "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assem"
     }
    ]
   },
@@ -485,7 +490,7 @@
     "mc",
     "risk"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -495,7 +500,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "todo",
+    "tts": "in_progress",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",

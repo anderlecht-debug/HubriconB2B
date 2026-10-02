@@ -1,0 +1,80 @@
+{
+ "name": "store-study-film",
+ "facts": "content/videos/store-study-film/facts.json",
+ "scenes": [
+  {
+   "id": "b1",
+   "kind": "number",
+   "seconds": 15,
+   "value": "{{store_called}} called",
+   "sub": "{{store_happened}} happened.",
+   "proof": true
+  },
+  {
+   "id": "b2",
+   "kind": "kinetic",
+   "seconds": 25,
+   "lines": [
+    "Called before.",
+    "Measured after."
+   ],
+   "proof": true
+  },
+  {
+   "id": "b3",
+   "kind": "number",
+   "seconds": 25,
+   "value": "{{store_cut}}",
+   "ink": true,
+   "sub": "the cut-off. It called {{store_called}} repeat orders. {{store_happened}} came in, {{store_off}} more than called.",
+   "proof": true
+  },
+  {
+   "id": "b4",
+   "kind": "number",
+   "seconds": 30,
+   "value": "{{store_named_gone}} of {{store_named}}",
+   "ink": true,
+   "sub": "regulars named as slipping away never came back. They had spent {{store_lost_spend}} the year before.",
+   "proof": true
+  },
+  {
+   "id": "b5",
+   "kind": "number",
+   "seconds": 20,
+   "value": "{{store_q_called}} called",
+   "sub": "{{store_q_happened}} sold. {{store_q_off}} apart.",
+   "proof": true
+  },
+  {
+   "id": "b6",
+   "kind": "kinetic",
+   "seconds": 25,
+   "lines": [
+    "Where it missed.",
+    "One month missed by {{store_worst}}.",
+    "The ranges held {{store_band_lo}} to {{store_band_hi}}.",
+    "Where it promised {{store_band_target}}."
+   ],
+   "proof": true
+  },
+  {
+   "id": "b7",
+   "kind": "kinetic",
+   "seconds": 20,
+   "lines": [
+    "Calls, not profit.",
+    "Your own reports, on the call."
+   ],
+   "proof": true
+  },
+  {
+   "id": "b8",
+   "kind": "end",
+   "seconds": 10,
+   "headline": "You can build this yourself.",
+   "primary": "Book your call",
+   "secondary": "or learn the method, free, at hubricon.com/learn"
+  }
+ ]
+}
