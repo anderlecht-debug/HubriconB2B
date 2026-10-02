@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-02T06:23:14+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-02T06:54:14+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## F02 · day None · tier F · pillar 0 — script gate
 
