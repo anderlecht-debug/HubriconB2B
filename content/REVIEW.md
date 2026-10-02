@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-02T16:20:03+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-02T16:20:12+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V09 · day 9 · tier B · pillar 3 — script gate
 
@@ -64,3 +64,62 @@ hubricon-content approve 09-price-increase-probably-free
 hubricon-content reject  09-price-increase-probably-free --note "what to change"
 ```
 Edit `content/videos/09-price-increase-probably-free/script.md` first if you prefer; it is re-validated on approve.
+
+## V11 · day 11 · tier A · pillar 3 — script gate
+
+**Title:** Discounting: the math of what you gave away  
+**Thumbnail:** 32.3% ⟨contribution_pct_latest⟩ in ink over the waterfall's last bar, the discount taken off the whole width of it  
+**Spiky claim:** A promotion is not a trade of margin for volume. It is a bet that your product is more price-sensitive than your own price history says it is, and on this catalogue the bet loses at every value of elasticity except the one you have least reason to believe.  
+**Misconception:** The discount costs me the discount. Margin is thick, so there's room, and the volume makes it back.  
+**CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
+**Estimated runtime:** about 5 min 41 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. 70.7% ⟨gross_pct_latest⟩ gross margin. That's the number in your head when you price a promotion, and it's why the discount feels affordable. The number it actually comes out of is 32.3% ⟨contribution_pct_latest⟩, and the gap between them is the room you thought you had.
+2. 32.3% ⟨contribution_pct_latest⟩. That's what's left on a unit here once the platform, the goods and the ads are paid. Take a discount out of that and the units you need to stand still aren't proportional to the discount. They're worse.
+3. -1.86 ⟨el_median⟩. That's the middle demand elasticity on this demo catalogue, measured rather than assumed. It says what a discount buys in units. Set it against what the discount costs in margin and most promotions on this shelf never get their money back.
+
+### Script
+
+**[0:00] HOOK**  
+70.7% ⟨gross_pct_latest⟩ gross margin. That's the number in your head when you price a promotion, and it's why the discount feels affordable. The number the discount actually comes out of is 32.3% ⟨contribution_pct_latest⟩, and what it does to the units you need is not proportional to the discount.  
+
+**[0:15] LET THEM BE WRONG**  
+Here's how the decision gets made, and it's a reasonable way to make it. A promotion is a trade. Give up some margin, get more units, and if the volume comes you're ahead. The margin looks thick, so there's room in it. And underneath that sits a rule of thumb nearly everyone carries: the discount costs you the discount. Take a step off the price and you give up that much of what you were making, then make it back on volume. Hold on to that, because both parts of it are wrong, and they're wrong in the same direction.  
+
+**[0:45] THE CRACK**  
+This is the demo catalogue. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Gross margin is 70.7% ⟨gross_pct_latest⟩. After the platform's fees, the landed cost of the goods and the ads those products spend, what's left is 32.3% ⟨contribution_pct_latest⟩. A gap of 38.4% ⟨gross_vs_contribution_gap⟩. The discount doesn't come out of the first number. It comes out of the second, and it comes out whole — a step off the price is the same step off what you keep, not a slice of it.  
+
+**[1:15] CHAPTER 1 — INTUITION**  
+Picture what you keep on a unit as a glass, and the glass is nowhere near full. The discount doesn't take a share of the glass. It takes a fixed depth off the top. So the share of your profit it removes is the discount measured against what was in the glass, which is already far more than the discount measured against the price. That's the first part. Here's the second. To stand still you need enough extra units to refill the profit you poured out, and every new unit now carries less than the old ones did. So the lift you need is what you kept before, divided by what you keep after the discount. That's the whole line. Write it on a sticky note. And look at its shape, because the shape is the point: the lift it demands doesn't rise in step with the discount, it accelerates, and it goes vertical as the discount approaches the margin itself. Now that you've watched it bend, it has a name. Break-even volume lift.  
+
+**[2:45] CHAPTER 2 — THE TURN**  
+Here's the part a careful operator still gets wrong. You'd test that lift against what you believe demand will do. Measure it instead. The fit here reads 22 ⟨el_skus_fit⟩ products off their own price histories, and the middle of them sits at -1.86 ⟨el_median⟩. Take the worked product, TH-OVEMIT-22 ⟨el_sku⟩, at -2.20 ⟨el_point⟩, with an honest interval running from -3.52 ⟨el_ci_low⟩ to -0.88 ⟨el_ci_high⟩. Now take a cut the size of the cap this model puts on any price step, 5% ⟨pm_step_cap⟩, and set them side by side: the lift the arithmetic demands, and the lift the measured elasticity actually delivers. On this catalogue the demand falls short at the middle of the band, and short again at the point estimate. Only at the far elastic end of the interval does the cut get its money back, and the far end is the value you have the least evidence for. So a promotion isn't a trade of margin for volume. It's a bet that your product is more price-sensitive than your own data says it is, placed with the margin you already measured.  
+
+**[4:00] WHAT TO DO**  
+Before the next promotion, in order. Work out what you actually keep per unit on the product being discounted, after fees, landed cost and the ads that product spends. Not gross. Then take the lift: what you kept, divided by what you'd keep after the discount. Write that down before you run anything. Then look up what the product's own price history says it does when the price moves, and if you've never moved the price, say so out loud, because then the lift is a hope rather than a forecast. And when the promotion ends, measure units against the lift you wrote down. Not revenue against last month. Revenue always rises during a discount. That's the discount, not demand.  
+
+**[4:45] THE HONEST LIMIT**  
+What you can do yourself is this arithmetic, on the product you were about to discount, in about the time it takes to find the fee line in the settlement report. Do it once and promotions stop being automatic. What you can't do by hand is the other side of the question: whether the cut takes its units from the product sitting next to it, what it does to the rank you'll be bidding to recover afterwards, whether the units you pulled forward were coming anyway, and all of that re-asked across 24 ⟨n_skus⟩ products every month while the fees and the landed costs move underneath. That part is a model. The arithmetic still changes the decision today, which is why it's the part I'd rather you had. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method is written out in full, with the worksheet, free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the gross figure lands, the contribution figure lands under it, the gap between them opens |  |
+| 0:15 | screenshot: a promotion being set up in the seller's own console, the discount field filled in (a real screenshot replaces this beat when the founder supplies one) |  |
+| 0:45 | waterfall: revenue down to contribution, then the discount taken off the last bar, the bar shrinking by the full width of the step | MARGIN.DECOMP on Tarnhollow demo data |
+| 1:15 | formula: the glass draining by a fixed depth, then the line — lift needed = what you kept, divided by what you keep after the discount — then the curve drawn as the discount deepens and runs away |  |
+| 2:45 | elasticity: the fitted band for the worked product, with the lift the arithmetic demands drawn across it as a line the band has to clear | ELASTICITY.FIT on Tarnhollow demo data |
+| 4:00 | kinetic: the steps landing one at a time, then chapter_card: the lift written down before the promotion runs |  |
+| 4:45 | kinetic: the closing line, held |  |
+
+### Decide
+
+```
+hubricon-content approve 11-discounting-math
+hubricon-content reject  11-discounting-math --note "what to change"
+```
+Edit `content/videos/11-discounting-math/script.md` first if you prefer; it is re-validated on approve.
