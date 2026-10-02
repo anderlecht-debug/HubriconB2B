@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:10:01+00:00 · style locked: False
+Updated 2026-10-02T16:10:15+00:00 · style locked: False
 
 ## Capabilities
 
@@ -39,6 +39,7 @@ Updated 2026-10-02T16:10:01+00:00 · style locked: False
 - V01 · Why most business advice is useless: survivorship bias, with numbers: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
+- V04 · Your A/B test told you nothing. Here's the sample size you needed: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 04-ab-test-sample-size opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
@@ -65,8 +66,8 @@ Updated 2026-10-02T16:10:01+00:00 · style locked: False
 
 ## Next five
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V05 · Cash conversion cycle: the number that decides whether you survive
 - V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
+- V11 · Discounting: the math of what you just gave away
