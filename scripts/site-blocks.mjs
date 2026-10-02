@@ -198,9 +198,8 @@ function video(v, label, track) {
   return `<video class="slot-video" src="${esc(v.src)}"${poster} controls preload="none" playsinline aria-label="${esc(label)}" data-track="${esc(track)}"></video>`;
 }
 
-function filmCase(lib) {
-  const f = lib.films.case_study;
-  if (f.src) return `\n<div class="film">${video(f, f.title, "case_film")}</div>\n`;
+function film(f, track) {
+  if (f.src) return `\n<div class="film">${video(f, f.title, track)}</div>\n`;
   // Until it exists, the slot names what will play, beat by beat. It does not redraw
   // Fig. 1, which the visitor has just read one screen up.
   const beats = f.beats.map((b, i) => `<li><span>${String(i + 1).padStart(2, "0")}</span>${esc(b)}</li>`).join("");
@@ -449,7 +448,8 @@ export function siteBlocks() {
     "library-home": library(lib, { hub: false }),
     "library-hub": library(lib, { hub: true }),
     "library-strip": libraryStrip(lib),
-    "film-case": filmCase(lib),
+    "film-case": film(lib.films.case_study, "case_film"),
+    "film-store": film(lib.films.store_study, "store_film"),
     ...lessonVideos(lib),
     ...courseTrailers(lib),
     ...optins(lib),

@@ -29,6 +29,12 @@
 .wall div { border-top: 1px solid var(--ink); padding-top: var(--s-4); }
 .wall b { display: block; font-size: var(--t-display-s); letter-spacing: var(--track-display); color: var(--ink); line-height: 1.1; }
 .wall.has b { color: var(--blue); }
+.wall[hidden], .cards[hidden] { display: none; }
+.true-now { margin-top: var(--s-8); }
+.true-k { margin-top: var(--s-4); font-size: var(--t-20); color: var(--ink); max-width: 46ch; }
+.true-now .calls { margin-top: var(--s-6); }
+.true-go { margin-top: var(--s-6); font-size: var(--t-16); }
+.true-go a { color: var(--ink); font-weight: var(--strong); text-underline-offset: 3px; }
 .wall span { font-size: var(--t-14); color: var(--ink-3); }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-6); }
 .cards article { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-5); }
@@ -121,16 +127,39 @@
 <section class="wrap page-head">
   <span class="label">What is true today</span>
   <h1 id="headline">No client results yet.</h1>
-  <p class="lede" id="lede">Hubricon has no paying clients and has published no results. We say that first. This page is where the first real ones will appear, graded and labelled, the day a client agrees to publish theirs. Everything below it stays.</p>
+  <p class="lede" id="lede">Hubricon has no paying clients and has published no results. We say that first. What is true, and checkable, is below: our engine's calls on a real store's own orders, each measured after it was made, and the rules every future result will be counted by.</p>
 
   <!-- The results wall. Filled only from public_results(), which returns rows a client
-       consented to publish. At zero it says zero, which is the point of the page. -->
-  <div class="wall" id="wall" aria-live="polite">
+       consented to publish. It stays out of sight until one exists (the founder, 2026-10-01:
+       a row of zeros "only hurts us"); the plain sentence above says what it would. -->
+  <div class="wall" id="wall" aria-live="polite" hidden>
     <div><b id="w-sum">$0</b><span>proven and published</span></div>
     <div><b id="w-count">0</b><span>results published</span></div>
     <div><b id="w-brands">0</b><span>brands</span></div>
   </div>
   <div class="cards" id="cards" hidden></div>
+  <div class="true-now" id="true-now">
+    <p class="label label-box">Modeled on published data · Not a client · Not a result</p>
+    <p class="true-k">What is true today: the engine, run on a real retailer's published orders, called what came next.</p>
+    <div class="calls">
+      <div class="call" data-reveal>
+        <p class="call-k">Repeat orders from its customers, the next <span data-fill="store_weeks">26</span> weeks</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_called">7,671</dd></div><div><dt>Happened</dt><dd data-fill="store_happened">7,865</dd></div></dl>
+        <p class="call-note"><span data-fill="store_off">2.5%</span> <span data-fill="store_more_less">more</span> than called. The engine chose its own cut-off, by a rule written before this study.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 120ms">
+        <p class="call-k">Regular customers it named as slipping away</p>
+        <dl><div><dt>Named</dt><dd data-fill="store_named">498</dd></div><div><dt>Never came back</dt><dd data-fill="store_named_gone">274</dd></div></dl>
+        <p class="call-note">They had spent <span class="money" data-fill="store_lost_spend">£318,525</span> the year before. Of the regulars it didn't name, <span data-fill="store_steady_back_share">80%</span> came back.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 240ms">
+        <p class="call-k">Peak-season units of its <span data-fill="store_top_n">200</span> best sellers, called a month ahead</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_q_called">542,981</dd></div><div><dt>Sold</dt><dd data-fill="store_q_happened">538,415</dd></div></dl>
+        <p class="call-note">September to November. <span data-fill="store_q_off">0.8%</span> apart over the quarter; a single month missed by up to <span data-fill="store_worst">13.9%</span>.</p>
+      </div>
+    </div>
+    <p class="true-go"><a href="/case-study">How every call was made, and where it missed →</a></p>
+  </div>
 </section>
 
 <section class="section">
@@ -177,9 +206,11 @@
 
 <section class="section">
   <div class="wrap part">
-    <h2>The one case study, and how it was picked.</h2>
+    <h2>The case studies, and how they were picked.</h2>
     <div class="prose">
-      <p>The home page models one real Amazon listing from its public page, captured on <span data-fill="captured_on">September 3, 2026</span>: <span data-fill="who_lower">a car-care brand</span>'s best-selling paint scratch remover, sitting just past one of Amazon's weight steps. The estimate is <span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span> a year paid on that one step. It is labelled on every screen as modeled from public data, not a client and not a result. The brand is not named.</p>
+      <p><b>A real store's orders.</b> A UK online retailer published every order it took from <span data-fill="store_from">December 2009</span> to <span data-fill="store_to">December 2011</span> (UCI Machine Learning Repository, CC BY 4.0). We picked it because the data is complete and open to anyone, not because of what it showed. The engine made each call from the orders before a cut-off, the cut-off for repeat customers set by the engine's own rule, and every call is printed beside what happened, misses included. It cannot show profit: the data has no costs, advertising or stock. <a href="/case-study">The study</a>.</p>
+
+      <p><b>One real Amazon listing.</b> The Proof page also models one real Amazon listing from its public page, captured on <span data-fill="captured_on">September 3, 2026</span>: <span data-fill="who_lower">a car-care brand</span>'s best-selling paint scratch remover, sitting just past one of Amazon's weight steps. The estimate is <span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span> a year paid on that one step. It is labelled on every screen as modeled from public data, not a client and not a result. The brand is not named.</p>
       <p>We picked that listing because it had a finding. Most do not.</p>
       <div class="figure-line"><b><span data-fill="brands_silent">1,473</span> of <span data-fill="brands_modeled">1,856</span></b><span>Amazon brands we modeled from public pages showed nothing worth fixing (<span data-fill="silence_share">79%</span>), measured <span data-fill="silence_on">September 30, 2026</span>.</span></div>
       <p>When the numbers say there is nothing to fix, we say so on the call.</p>
@@ -268,6 +299,7 @@ const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls)
   document.getElementById("w-count").textContent = String(rows.length);
   document.getElementById("w-brands").textContent = String(brands);
   document.getElementById("wall").classList.add("has");
+  document.getElementById("wall").hidden = false;
   document.getElementById("headline").textContent = "Every result here was measured on a client's own reports.";
   document.getElementById("lede").textContent = "Each one is a number a client's Profit Record measured from the reports they pulled after the move, or a reimbursement Amazon paid on a claim we filed. Shown by category and revenue band, rounded down, no brand named, published only where the client said yes.";
   const cards = document.getElementById("cards");
