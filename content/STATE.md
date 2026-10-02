@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:24:14+00:00 · style locked: False
+Updated 2026-10-02T16:24:39+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:24:14+00:00 · style locked: False
 
 ## Now
 
-- V16 · The $60,000 wire you're guessing on · step critique
+- V16 · The $60,000 wire you're guessing on · step review
 
 ## Awaiting your review
 
