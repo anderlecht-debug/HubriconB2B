@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-02T16:22:08+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-02T16:22:17+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V09 · day 9 · tier B · pillar 3 — script gate
 
@@ -123,3 +123,62 @@ hubricon-content approve 11-discounting-math
 hubricon-content reject  11-discounting-math --note "what to change"
 ```
 Edit `content/videos/11-discounting-math/script.md` first if you prefer; it is re-validated on approve.
+
+## V15 · day 15 · tier A · pillar 2 — script gate
+
+**Title:** You don't have a revenue problem. You have a cash trough  
+**Thumbnail:** $95,201 ⟨min_median⟩ in ink at the bottom of the cash cone, the ending balance faint above it  
+**Spiky claim:** The ending balance is the least useful number on your cash forecast. A business is killed by the lowest point on the path, and growth makes that point deeper while making every number you watch look better.  
+**Misconception:** Revenue is up, the month closed profitable and the balance is healthy, so cash is fine. If it gets tight I'll see it coming in the bank account.  
+**CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
+**Estimated runtime:** about 5 min 52 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. $337,154 ⟨terminal_p50⟩. That's where the cash on this demo catalogue lands after 90 days ⟨horizon_days⟩, up from $262,000 ⟨cash_on_hand⟩. On the way there it passes through $95,201 ⟨min_median⟩. Nothing on the profit and loss shows you that, and it's the number that ends businesses.
+2. 13 days ⟨min_p5_day⟩. That's how far into the horizon this catalogue reaches its lowest cash, at $95,201 ⟨min_median⟩, inside a stretch that closes profitable. The balance you watch is the one at the end. The one that can kill you is the bottom.
+3. $345,501 ⟨wires_total⟩ leaves this catalogue in supplier wires over 90 days ⟨horizon_days⟩, across 35 ⟨wire_count⟩ of them, while the platform pays on a 14 days ⟨payout_cycle⟩ lag. That gap has a shape. The shape has a bottom, and you can find it before you reach it.
+
+### Script
+
+**[0:00] HOOK**  
+$337,154 ⟨terminal_p50⟩. That's where the cash on this demo catalogue lands after 90 days ⟨horizon_days⟩, up from $262,000 ⟨cash_on_hand⟩. On the way there it passes through $95,201 ⟨min_median⟩. Nothing on the profit and loss shows you that, and the low point is the number that ends businesses.  
+
+**[0:15] LET THEM BE WRONG**  
+Here's the model, and almost every operator at this size runs it. Revenue is growing. The month closed profitable. The balance in the account looks like a balance you can work with. So cash is fine, and if it ever gets tight you'll see it coming, because you look at the account most mornings. That model has one assumption buried in it, and the assumption is that cash moves smoothly between the points where you check it. It doesn't. It moves in steps, on dates somebody else chose, and the steps out are earlier than the steps in.  
+
+**[0:45] THE CRACK**  
+This is the demo catalogue. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products. It starts with $262,000 ⟨cash_on_hand⟩ and carries $31,500 ⟨monthly_fixed_costs⟩ of fixed costs a month. Over 90 days ⟨horizon_days⟩ it ends at $337,154 ⟨terminal_p50⟩, so it grew, and every monthly statement in that window is healthy. Now the part the statements can't show. The lowest the balance gets on the way is $95,201 ⟨min_median⟩, and it gets there on 13 days ⟨min_p5_day⟩. That bottom is not a bad month. It sits inside the good ones.  
+
+**[1:15] CHAPTER 1 — INTUITION**  
+Why there's a bottom at all. You pay for goods when the supplier says so, and you get paid when the platform says so, and those are different calendars. Here the platform settles on a 14 days ⟨payout_cycle⟩ lag. So every unit you sell is money you've already spent and haven't yet received. Now add the lumps. Over this horizon there are 35 ⟨wire_count⟩ supplier wires, $345,501 ⟨wires_total⟩ in total, and they don't arrive evenly — the largest is $23,482 ⟨largest_wire⟩, for TH-ENADUT-03 ⟨largest_wire_sku⟩, leaving on 0 days ⟨largest_wire_day⟩. Stack those against a settlement that's always running behind, and the balance doesn't glide. It falls in steps, refills slowly, and finds a bottom somewhere nobody chose. Growth makes it deeper, not shallower, because growth means ordering more inventory earlier, which pulls the wires forward and pushes the receipts back. That's the thing you're looking for, and now it has a name. The cash trough.  
+
+**[2:45] CHAPTER 2 — THE TURN**  
+Here's where a careful operator still gets it wrong. He builds the forecast as one line. One line gives you one trough, and that trough is a guess wearing a decimal point. Demand isn't a line; it's a range, and the products move together, which makes the range wider than it looks. The correlation across these products is 0.48 ⟨demand_corr⟩, so a soft month is soft nearly everywhere at once. So run it many times instead. 10,000 ⟨n_paths⟩ paths, each with its own demand draw, the same wire calendar underneath. Then read the bottom of each path, not the end of it. On this catalogue the trough at the bad end is $95,201 ⟨trough_p5⟩, and the average of the worst paths is $95,201 ⟨trough_es⟩. Look at how close those sit to the middle one, $95,201 ⟨trough_median⟩. That tells you something specific: this trough isn't being driven by demand at all. It's the wire calendar, and a wire calendar is something you can negotiate. The share of paths that ran out of money is 0.0% ⟨p_ruin⟩, with a simulation error of 0.00% ⟨p_ruin_se⟩. Which doesn't mean it can't happen. It means no path in 10,000 ⟨n_paths⟩ did, and the honest reading of that is a bound, not a promise.  
+
+**[4:00] WHAT TO DO**  
+Build it this week, in a spreadsheet. First, a dated list of money out: every supplier wire with the date it actually leaves, plus rent, payroll and the rest of the fixed costs. Second, money in, lagged by your platform's settlement cycle, not booked on the day of the sale. Then vary the demand. Even a crude version works: run the sales line at your good case, your normal case and a bad one, and keep the wire dates fixed, because the wires don't care what demand did. Then read the minimum of each line, not the ending balance. The lowest of those minimums is your planning number. Set your floor above it, and when it's too close, move a wire before you move a price. A supplier who takes payment a fortnight later changes the bottom of the curve more than a promotion ever will.  
+
+**[4:45] THE HONEST LIMIT**  
+What you can do yourself is the dated calendar and a handful of demand cases, and it's the highest-value afternoon on this list, because it's the one that tells you whether you can take the next purchase order at all. What you can't do by hand is the width of it. Demand that moves together across 24 ⟨n_skus⟩ products, supplier lead times that slip by a week and move a wire with them, the correlation between a soft month and a late container, and the whole thing re-run every week as orders land. A handful of cases gives you a shape. It doesn't give you the bad end, and the bad end is the one you're planning against. That part is a model. The calendar is still worth building tomorrow, because most of the fix is in the dates. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method is written out in full, with the worksheet, free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the ending balance lands, then the low point lands beneath it, the distance between them held |  |
+| 0:15 | screenshot: the bank balance on a phone, checked in the morning (a real screenshot replaces this beat when the founder supplies one) |  |
+| 0:45 | cash_cone: the balance over the horizon, the ending point marked, then the low point marked far beneath it | cash horizon on Tarnhollow demo data |
+| 1:15 | cash_cone: the wires drawn as steps down, the settlements as slower steps up, the trough forming between them | cash horizon on Tarnhollow demo data |
+| 2:45 | paths: the simulated balances drawn faintly, the band around them, the trough percentiles lit at the bottom | cash horizon paths on Tarnhollow demo data |
+| 4:00 | kinetic: the steps landing one at a time, then chapter_card: the minimum of each line circled, the ending balances crossed out |  |
+| 4:45 | kinetic: the closing line, held |  |
+
+### Decide
+
+```
+hubricon-content approve 15-cash-trough
+hubricon-content reject  15-cash-trough --note "what to change"
+```
+Edit `content/videos/15-cash-trough/script.md` first if you prefer; it is re-validated on approve.

@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:22:08+00:00 · style locked: False
+Updated 2026-10-02T16:22:17+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,12 +14,13 @@ Updated 2026-10-02T16:22:08+00:00 · style locked: False
 
 ## Now
 
-- V15 · You don't have a revenue problem. You have a cash trough · step review
+- idle
 
 ## Awaiting your review
 
 - V09 · The price increase you're afraid of is probably free · gate `review` → see `content/REVIEW.md`
 - V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
+- V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
