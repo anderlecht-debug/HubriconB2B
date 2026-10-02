@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T15:38:06+00:00",
+ "updated_at": "2026-10-02T16:03:04+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -152,8 +152,8 @@
    "models": [
     "store_study"
    ],
-   "status": "todo",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "The founder's own voice: record the script per docs/content/VOICE-RECORDING.md, or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -162,7 +162,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "todo",
+    "tts": "blocked",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -190,6 +190,11 @@
      "at": "2026-10-02T15:38:05+00:00",
      "step": "review",
      "note": "approved by the founder Approved by Hagen Simmons 2026-10-02: 'I approve of the content branch.'"
+    },
+    {
+     "at": "2026-10-02T16:03:02+00:00",
+     "step": "tts",
+     "note": "blocked The founder's own voice: record the script per docs/content/VOICE-RECORDING.md, or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env"
     }
    ]
   },
