@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:15:26+00:00 · style locked: False
+Updated 2026-10-02T16:16:33+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:15:26+00:00 · style locked: False
 
 ## Now
 
-- V09 · The price increase you're afraid of is probably free · step critique
+- V09 · The price increase you're afraid of is probably free · step review
 
 ## Awaiting your review
 

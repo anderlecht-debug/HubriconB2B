@@ -1,0 +1,91 @@
+{
+  "slug": "09-price-increase-probably-free",
+  "pass": true,
+  "validator_problems": [],
+  "items": [
+    {
+      "n": 1,
+      "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+      "pass": true,
+      "note": "The hook asserts the opposite without showing it, then the 0:15 beat states the intuitive model in the viewer's own terms (Buy Box, conversion, rank, the ads bought to win the rank back) and grants that it is true except in its size. The correction only arrives at 0:50."
+    },
+    {
+      "n": 2,
+      "question": "Is there a concrete number in the first sentence?",
+      "pass": true,
+      "note": "first sentence carries a {{key}} figure"
+    },
+    {
+      "n": 3,
+      "question": "Is the title's promise fully delivered?",
+      "pass": true,
+      "note": "The title promises that the feared raise is probably free, and the 5:50 beat delivers it on the worked product: the bad end of the simulated band is still a gain, and the chance of losing money is the pm_p_loss figure. The same beat bounds the promise, saying it is a statement about one product with one margin rather than a rule about pricing."
+    },
+    {
+      "n": 4,
+      "question": "Does any notation appear before its intuition?",
+      "pass": true,
+      "note": "Elasticity is the slope of a plot the viewer has already watched being drawn, and is named only after it. The robust standard error is preceded by the reason for it, that the spread around the line is uneven because busy months are noisier. R-squared now carries its meaning in the sentence that names it."
+    },
+    {
+      "n": 5,
+      "question": "Is there exactly one idea, and exactly one CTA?",
+      "pass": true,
+      "note": "1 CTA beat(s); one idea is judged by the skill"
+    },
+    {
+      "n": 6,
+      "question": "Does the CTA match the awareness stage in \u00a78?",
+      "pass": true,
+      "note": "CTA matches \u00a78 for this pillar"
+    },
+    {
+      "n": 7,
+      "question": "Is there one claim a competent operator could dispute?",
+      "pass": true,
+      "note": "A price you have never moved is not a safe price but an unmeasured one, and waiting for a tighter elasticity pays a known cost to avoid an unknown one. A competent operator can dispute both."
+    },
+    {
+      "n": 8,
+      "question": "Is there any gap over 40 seconds without a re-hook?",
+      "pass": true,
+      "note": "no gap over 40 s"
+    },
+    {
+      "n": 9,
+      "question": "Does every number name its model run?",
+      "pass": true,
+      "note": "every chart beat names its run; every key exists"
+    },
+    {
+      "n": 10,
+      "question": "Is any step of the method withheld?",
+      "pass": true,
+      "note": "The whole method is on screen: which columns to export, the log plot, the least-squares slope, the refusal rules on periods and price movement, the confounders and how to handle each, the robust error, simulating across the interval rather than the point, the cap on a single step, and the re-fit afterwards. Nothing is reserved for a paid tier."
+    },
+    {
+      "n": 11,
+      "question": "Does the close state a real limitation rather than pitch?",
+      "pass": true,
+      "note": "The close names three real limits: the work does not survive repetition across the catalogue by hand, an elasticity measured a year ago describes a market that is gone, and the band never gets tight because precision would cost the n_for_se_tenth figure in periods. Then one calm soft close and the course."
+    },
+    {
+      "n": 12,
+      "question": "Any banned phrase present?",
+      "pass": true,
+      "note": "none"
+    },
+    {
+      "n": 13,
+      "question": "Are CLIP markers placed, with at least three usable?",
+      "pass": true,
+      "note": "5 CLIP markers"
+    },
+    {
+      "n": 14,
+      "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1\u20132 exempt)",
+      "pass": true,
+      "note": "Pillar 3, so it must pass. Nothing in the method is specific to Amazon: price and units by period, a log plot, a robust error and a capped step apply to any catalogue. The platform appears only as the party charging the fees, and the fixed-fee-per-unit argument holds for any fulfilment contract."
+    }
+  ]
+}
