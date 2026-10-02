@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T02:44:14+00:00",
+ "updated_at": "2026-10-02T02:49:29+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -137,6 +137,54 @@
      "at": "2026-10-01T04:59:09+00:00",
      "step": "tts",
      "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films."
+    }
+   ]
+  },
+  {
+   "id": "F02",
+   "phase": 2,
+   "kind": "video",
+   "day": null,
+   "title": "The store study's film: a real store's orders, called before and measured after",
+   "pillar": 0,
+   "tier": "F",
+   "slug": "store-study-film",
+   "models": [
+    "store_study"
+   ],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-02T02:49:13+00:00",
+     "step": "script",
+     "note": "drafted 2026-10-01 for the new proof (the store study, /case-study); facts from main's data/store-study.json; critiqued against the spec's hook, teach, soft close and the honesty rails (the misses are a beat of their own)"
+    },
+    {
+     "at": "2026-10-02T02:49:29+00:00",
+     "step": "review",
+     "note": "awaiting parked for the founder: the new proof's film"
     }
    ]
   },

@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T02:44:14+00:00 · style locked: False
+Updated 2026-10-02T02:49:29+00:00 · style locked: False
 
 ## Capabilities
 
@@ -18,6 +18,7 @@ Updated 2026-10-02T02:44:14+00:00 · style locked: False
 
 ## Awaiting your review
 
+- F02 · The store study's film: a real store's orders, called before and measured after · gate `review` → see `content/REVIEW.md`
 - V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
 - V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
 - V05 · Cash conversion cycle: the number that decides whether you survive · gate `review` → see `content/REVIEW.md`

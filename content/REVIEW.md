@@ -1,6 +1,69 @@
 # Review inbox
 
-Updated 2026-10-02T02:44:14+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-02T02:49:29+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+
+## F02 · day None · tier F · pillar 0 — script gate
+
+**Title:** We gave our engine a real store's orders. Then we opened what happened next.  
+**Thumbnail:** "Called 7,671 ⟨store_called⟩ · Happened 7,865 ⟨store_happened⟩" in ink, the dashed line and the solid line meeting  
+**Spiky claim:** A forecast nobody checks is decoration. Ours were called before and measured after, on a real store's own orders, misses printed beside the hits.  
+**Misconception:** You can only find out whether an analytics service is right after you have paid it to be wrong.  
+**CTA:** Book the call. Not ready yet? The whole method is free at hubricon.com/learn.  
+**Estimated runtime:** about 2 min 26 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. 7,671 ⟨store_called⟩. That's how many repeat orders our engine said a real store's customers would place over the next 26 ⟨store_weeks⟩ weeks. It said so in June, from the orders before June and nothing after. Then we opened what happened: 7,865 ⟨store_happened⟩.
+2. 498 ⟨store_named⟩ regular customers, named in June as slipping away. By December, 274 ⟨store_named_gone⟩ of them had never ordered again. Here's how the engine knew, and where it was wrong.
+3. 542,981 ⟨store_q_called⟩ units called, a month at a time, for a real store's peak season. 538,415 ⟨store_q_happened⟩ sold. And one month it missed by 13.9% ⟨store_worst⟩. This film shows both.
+
+### Script
+
+**[0:00] HOOK**  
+7,671 ⟨store_called⟩. That's how many repeat orders our engine said a real store's customers would place over the next 26 ⟨store_weeks⟩ weeks. It said so in June, from the orders before June and nothing after. Then we opened what happened: 7,865 ⟨store_happened⟩.  
+
+**[0:15] THE STORE**  
+The store is real. A retailer in the UK published every order it took from December 2009 ⟨store_from⟩ to December 2011 ⟨store_to⟩, for anyone to study: about £9.8M ⟨store_sales⟩ a year, 5,852 ⟨store_customers⟩ customers. It isn't our client, and none of this is a result for anyone. It's a test. An engine has to call what comes next without seeing it, and the store's own orders mark the answer.  
+
+**[0:40] THE CUT-OFF**  
+The engine picks its own cut-off. It learns from most of a store's calendar and calls the rest, a rule written into it before this test. Here that was June 7, 2011 ⟨store_cut⟩. We didn't move it. It called 7,671 ⟨store_called⟩ repeat orders. 7,865 ⟨store_happened⟩ came in, 2.5% ⟨store_off⟩ more than called.  
+
+**[1:05] THE CUSTOMERS SLIPPING AWAY**  
+On the same day, it named 498 ⟨store_named⟩ regular customers it expected to stop ordering. By December, 274 ⟨store_named_gone⟩ of them had. Of the regulars it didn't name, 20% ⟨store_steady_gone_share⟩ never came back. The ones it named had spent £318,525 ⟨store_lost_spend⟩ the year before. Named months ahead, that's money a store can still act on.  
+
+**[1:35] THE PEAK**  
+Then the hardest call a store makes: stock for the busiest months. At each month-end from August, it called the next month's units for the 200 ⟨store_top_n⟩ best sellers. From September to November it called 542,981 ⟨store_q_called⟩. 538,415 ⟨store_q_happened⟩ sold. 0.8% ⟨store_q_off⟩ apart.  
+
+**[1:55] WHERE IT MISSED**  
+Here's what it got wrong. One month missed by 13.9% ⟨store_worst⟩. And the range it gave each product held the real number for 56% ⟨store_band_lo⟩ to 66% ⟨store_band_hi⟩ of them, where it promised 80% ⟨store_band_target⟩. The ranges were too narrow. We print that beside the hits, because a number you can't check isn't worth paying for.  
+
+**[2:20] WHAT THIS IS**  
+The data has no costs, no advertising and no stock, so this proves calls, not profit. On a call, we run the same engine on your own reports. If the arithmetic doesn't clear our fee at your size, we tell you that too.  
+
+**[2:40] THE CLOSE**  
+You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* Book the call. Not ready yet? The whole method is free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | number: {{store_called}} called, then {{store_happened}} happened, side by side | the store study, modeled on published data |
+| 0:15 | kinetic: "Called before." then "Measured after." |  |
+| 0:40 | number: the cut-off date, then the two lines meeting at the end | the store study, modeled on published data |
+| 1:05 | number: {{store_named_gone}} of {{store_named}}, the lost spend beneath in blue | the store study, modeled on published data |
+| 1:35 | number: {{store_q_called}} called, {{store_q_happened}} sold | the store study, modeled on published data |
+| 1:55 | kinetic: "Where it missed." then the two figures in ink | the store study, modeled on published data |
+| 2:20 | kinetic: "Calls, not profit." then "Your own reports, on the call." |  |
+| 2:40 | kinetic: the two ways out, the call and the course, the call first |  |
+
+### Decide
+
+```
+hubricon-content approve store-study-film
+hubricon-content reject  store-study-film --note "what to change"
+```
+Edit `content/videos/store-study-film/script.md` first if you prefer; it is re-validated on approve.
 
 ## V01 · day 1 · tier A · pillar 4 — script gate
 
