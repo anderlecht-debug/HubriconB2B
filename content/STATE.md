@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:27:06+00:00 · style locked: False
+Updated 2026-10-02T16:27:15+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:27:06+00:00 · style locked: False
 
 ## Now
 
-- V17 · Why 95% service level is wrong for most of your SKUs · step review
+- idle
 
 ## Awaiting your review
 
@@ -22,6 +22,7 @@ Updated 2026-10-02T16:27:06+00:00 · style locked: False
 - V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
 - V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
 - V16 · The $60,000 wire you're guessing on · gate `review` → see `content/REVIEW.md`
+- V17 · Why 95% service level is wrong for most of your SKUs · gate `review` → see `content/REVIEW.md`
 
 ## Done
 

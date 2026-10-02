@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T16:27:06+00:00",
+ "updated_at": "2026-10-02T16:27:15+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -1446,7 +1446,7 @@
     "inventory_econ",
     "inventory_sim"
    ],
-   "status": "in_progress",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -1455,7 +1455,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "todo",
+    "review": "awaiting",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1484,6 +1484,16 @@
      "at": "2026-10-02T16:27:06+00:00",
      "step": "critique",
      "note": "done"
+    },
+    {
+     "at": "2026-10-02T16:27:15+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-02T16:27:15+00:00",
+     "step": "review",
+     "note": "parked for the founder"
     }
    ]
   },
