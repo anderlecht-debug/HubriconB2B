@@ -63,6 +63,13 @@ NOW = datetime.now(timezone.utc)
 START = date.today() - timedelta(days=100)
 
 
+def _utc_today() -> date:
+    """The day the operator stamps (its timestamps are UTC). date.today() is the
+    machine's local day, which differs between UTC midnight and local midnight,
+    and failed this test every evening in Chicago (found 2026-10-01)."""
+    return datetime.now(timezone.utc).date()
+
+
 def _client(**kw):
     base = {"id": "c1", "company_name": "Alpha", "contact_email": "a@alpha.com", "contact_name": "Ana Alpha",
             "status": "active", "platform": "amazon", "plan": "retainer", "monthly_fee_usd": 6000, "free_months": 1,
@@ -219,7 +226,7 @@ def test_a_client_who_leaves_in_the_proving_month_gets_the_letter_once(monkeypat
     assert mail["kind"] == "exit_true_up" and mail["subject"] == "You've left Managed Profit: nothing more is invoiced"
     text = _text(mail["blocks"])
     assert "Nothing was ever charged, so there is nothing to true up and nothing is owed." in text
-    assert "Download your full Profit Record" in text and ("exports", f"c1/exit-{date.today().isoformat()}.zip") in db.storage.objects
+    assert "Download your full Profit Record" in text and ("exports", f"c1/exit-{_utc_today().isoformat()}.zip") in db.storage.objects
     assert db.rows("clients")[0]["exit_trued_up_at"] and db.rows("data_requests")[0]["closed_at"]
     for _ in range(2):
         operator.Pass(db, send=True, dry=False).billing()
@@ -266,7 +273,7 @@ def test_a_billed_client_is_trued_up_and_told_the_refund_was_issued_inside_the_c
     [mail] = sent
     assert mail["subject"] == "You've left Managed Profit: $6,000.00 refunded"
     text = _text(mail["blocks"])
-    assert f"We issued it on {date.today():%B %-d}, within the seven days the terms promise from your email." in text
+    assert f"We issued it on {_utc_today():%B %-d}, within the seven days the terms promise from your email." in text
     assert "It cleared, so it stands." in text and "It did not clear, so it is refunded in full." in text
     assert "If the FBA fee on MUG-12OZ goes back up to $4.12 a unit, the $0.26 a unit step returns." in text
     assert db.rows("data_requests")[0]["closed_at"]                         # the clock closed with the letter

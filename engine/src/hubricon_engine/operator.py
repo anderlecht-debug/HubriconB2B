@@ -1317,7 +1317,7 @@ class Pass:
         from . import storage
         company = c.get("company_name") or c["contact_email"]
         try:
-            pub = storage.publish_export(self.db, c["id"], f"exit-{date.today().isoformat()}",
+            pub = storage.publish_export(self.db, c["id"], f"exit-{_now().date().isoformat()}",
                                          cli.build_export(self.db, c["id"]), cli.export_filename(c))
             return {"url": pub["url"], "expires_at": pub["expires_at"]}
         except Exception as err:
