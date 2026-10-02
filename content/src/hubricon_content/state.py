@@ -294,7 +294,7 @@ def approve(q: dict, ref: str, gate: str = "review", note: str = "") -> dict:
     u["steps"][gate] = "approved"
     u["status"] = "todo"
     if gate == "approve_final":
-        u["publishable"] = bool(u.get("voice") == "founder" and u["steps"].get("qa") == "done")
+        u["publishable"] = bool(u.get("voice") in ("own", "founder") and u["steps"].get("qa") == "done")   # qa.PUBLISHABLE_VOICES
         u["steps"]["upload"] = "todo" if u["publishable"] else "blocked"
         if not u["publishable"]:
             u["blocked_on"] = None  # not a block on the unit; upload alone waits

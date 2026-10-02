@@ -38,9 +38,11 @@ def _service():
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
     if not u.get("publishable"):
-        return {"status": "blocked", "reason": "not publishable: needs voice == founder (ELEVENLABS_VOICE_ID), a passed QA, and approve-final"}
-    if u.get("voice") != "founder":
-        return {"status": "blocked", "reason": "placeholder narration never uploads; set ELEVENLABS_VOICE_ID and re-run tts"}
+        return {"status": "blocked", "reason": "not publishable: needs the founder's voice (his own takes, or the ELEVENLABS_VOICE_ID clone), a passed QA, and approve-final"}
+    from .qa import PUBLISHABLE_VOICES
+    if u.get("voice") not in PUBLISHABLE_VOICES:
+        return {"status": "blocked", "reason": "placeholder narration never uploads: record the founder's own takes "
+                                               "(`hubricon-content voice <slug> own`) or set ELEVENLABS_VOICE_ID and re-run tts"}
     if not TOKEN.exists():
         return {"status": "blocked", "reason": f"YouTube not authorised: put client_secret.json in {SECRETS} and run `hubricon-content youtube-auth` (youtube-token.json)"}
     slug = u["slug"]

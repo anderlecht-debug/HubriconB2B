@@ -26,7 +26,7 @@
     "ratecard"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.",
+   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice october-15 own (so the description says it is his own voice).",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -90,7 +90,7 @@
     "ratecard"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films.",
+   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice case-study-film own (so the description says it is his own voice).",
    "requires_done": null,
    "voice": null,
    "publishable": false,

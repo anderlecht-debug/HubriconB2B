@@ -11,6 +11,20 @@ from . import subtitles
 from . import script as scriptmod
 
 DISCLOSURE = "Narration is an AI clone of Hagen Simmons's voice, used with his permission; the analysis is his."
+# The founder records the films himself first (HUBRICON_SPEC.md: "record in my own voice now"; the
+# clone comes later). A unit's "voice" says which: "own" is his recorded takes (content/film/
+# record.mjs), "founder" is the ElevenLabs clone of his voice (tts.py), anything else a placeholder
+# that never publishes. The description says which it is, and never claims a clone that isn't one.
+OWN_VOICE = "Narrated by Hagen Simmons, in his own voice."
+PUBLISHABLE_VOICES = ("own", "founder")
+
+
+def disclosure_for(voice: str | None) -> str:
+    if voice == "own":
+        return OWN_VOICE
+    if voice == "founder":
+        return DISCLOSURE
+    return "Narration is a placeholder voice. This cut is not for publishing."
 TIER_RANGE = {"A": (270, 460), "B": (450, 900)}
 
 
@@ -112,7 +126,7 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         "no_hold_over_6s": holds == 0,
         "room_tone_present": sil == 0,
         "subtitle_coverage_ge_90": cov >= 0.9,
-        "disclosure_in_description": DISCLOSURE in desc if desc else None,
+        "disclosure_in_description": disclosure_for(u.get("voice")) in desc if desc else None,
         "transcript_match_ge_85": (tm is None) or tm >= 0.85,
         "cut_cadence_2_to_6s": cuts["mean_interval"] is None or 1.0 <= cuts["mean_interval"] <= 6.5,
     }

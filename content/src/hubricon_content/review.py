@@ -70,7 +70,7 @@ def final_block(u: dict) -> str:
            f"- Thumbnail: `content/videos/{slug}/thumbnail.png`",
            f"- Description: `content/videos/{slug}/description.md`",
            f"- Shorts: `content/videos/{slug}/shorts/`",
-           f"- Voice: {u.get('voice')} · publishable once approved: {u.get('voice') == 'founder'}",
+           f"- Voice: {u.get('voice')} · publishable once approved: {u.get('voice') in ('own', 'founder')}",
            f"- QA: {json.dumps({k: v for k, v in qa.items() if k in ('pass', 'duration_s', 'lufs', 'max_hold_s', 'subtitle_coverage')})}", "",
            "```", f"hubricon-content approve-final {slug}", f"hubricon-content reject-final {slug} --note \"what to change\"", "```", ""]
     return "\n".join(out)

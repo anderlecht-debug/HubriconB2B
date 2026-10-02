@@ -152,6 +152,16 @@ def cmd_reject_final(a):
     _reject(a, "approve_final")
 
 
+def cmd_voice(a):
+    """Which voice a unit carries: "own" once the founder's recorded takes are rendered in, "founder" for the clone."""
+    q = _q(); u = _unit_for(q, a.slug)
+    u["voice"] = a.voice
+    u["publishable"] = False   # set again only by approve-final
+    state.save(q)
+    _status_files(q)
+    print(f"{u['id']} voice: {a.voice}")
+
+
 def cmd_next(a):
     q = _q()
     item = state.next_item(q)
@@ -286,6 +296,7 @@ def main(argv=None) -> None:
     p = sub.add_parser("voice-preview", help="hear a parked script's hook and first chapter in the configured voice"); p.add_argument("slug"); p.add_argument("--text", default=None); p.add_argument("--voice", default=None); p.set_defaults(fn=cmd_voice_preview)
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
+    p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own", "founder"]); p.set_defaults(fn=cmd_voice)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)
     p = sub.add_parser("unblock"); p.add_argument("unit"); p.add_argument("--note", default=""); p.set_defaults(fn=cmd_unblock)
 
