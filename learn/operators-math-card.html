@@ -3,47 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How we handle your data — Hubricon</title>
-<meta name="description" content="Six straight answers: what you trust us with, what we ask for, where it lives, what we never do, what happens if something goes wrong, and how you take it back.">
-<link rel="canonical" href="https://www.hubricon.com/your-data">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.hubricon.com/your-data">
-<meta property="og:title" content="How we handle your data — Hubricon">
-<meta property="og:description" content="Six straight answers: what you trust us with, what we ask for, where it lives, what we never do, what happens if something goes wrong, and how you take it back.">
-<meta property="og:image" content="https://www.hubricon.com/og.png">
-<meta name="twitter:card" content="summary_large_image">
+<title>The Operator's Math on one page — Hubricon</title>
+<meta name="description" content="Every rule and formula of The Operator's Math on one printable page: contribution margin, the break-even ROAS and ACOS, the last ad dollar, LTV to CAC on margin, and payback.">
+<link rel="canonical" href="https://www.hubricon.com/learn/operators-math-card">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/learn/operators-math-card">
+<meta property="og:title" content="The Operator's Math on one page — Hubricon">
+<meta property="og:description" content="Every rule and formula of The Operator's Math on one printable page: contribution margin, the break-even ROAS and ACOS, the last ad dollar, LTV to CAC on margin, and payback.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
-<style>
-/* /your-data's layout. Every value is a token from /assets/hubricon.css. */
-
-.page-head { padding-block: var(--s-8) var(--s-7); }
-.page-head h1 { margin-top: var(--s-3); max-width: 16ch; }
-.page-head .lede { margin-top: var(--s-5); max-width: 56ch; }
-
-.answers { list-style: none; counter-reset: a; border-top: 1px solid var(--rule); }
-.answers li { counter-increment: a; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); padding-block: var(--s-7); border-bottom: 1px solid var(--rule); }
-.answers h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
-.answers h2::before { content: counter(a); display: block; font-size: var(--t-14); color: var(--ink-3); letter-spacing: 0; margin-bottom: var(--s-3); }
-.answers p { font-size: var(--t-18); }
-.answers p + p { margin-top: var(--s-4); }
-.legal-note { margin-top: var(--s-7); font-size: var(--t-16); color: var(--ink-3); max-width: 60ch; }
-.legal-note a { color: var(--ink-2); text-underline-offset: 3px; }
-
-
-@media (max-width: 900px) {
-  .answers li { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); padding-block: var(--s-6); }
-}
-@media (max-width: 640px) {
-  .page-head { padding-top: var(--s-5); }
-}
-</style>
 </head>
-<body>
+<body class="sheet-page">
 
 <!-- build:nav -->
 <header class="nav" data-nav>
@@ -104,56 +80,72 @@
 <!-- /build:nav -->
 
 <main class="wrap">
-  <section class="page-head">
-    <span class="label">How we handle your data</span>
-    <h1>Six straight answers, before you have to ask.</h1>
-    <p class="lede">Your exports hold your revenue, your margins, your costs and your weak spots. We treat them as the most sensitive thing you own.</p>
-  </section>
-
-  <ol class="answers">
-    <li>
-      <h2>We ask for the least the work needs.</h2>
-      <div>
-        <p>On Amazon, one Seller Central user with exactly four permissions: Business Reports view, Fulfillment reports view, Pricing edit and Campaign Manager edit. On Shopify, one staff account whose role is limited to orders, products, discounts and analytics reports, with no access to Finance or payouts; payout exports come from you, by upload.</p>
-        <p>Neither can touch banking, tax, payouts or account settings, and either is revocable any day: on Amazon in one click, on Shopify by removing the staff account under Settings → Users. Or grant no seat at all and upload the reports yourself.</p>
-      </div>
-    </li>
-    <li>
-      <h2>It lives in one place.</h2>
-      <div>
-        <p>One database and one file store, encrypted in transit and at rest, with every read scoped to your workspace alone. One person, the founder, holds access to production. Upload links do one job and expire after ninety days.</p>
-        <p>Ask what we hold of yours and where, and you get a straight answer within seven days.</p>
-      </div>
-    </li>
-    <li>
-      <h2>What we never do.</h2>
-      <div>
-        <p>Never sold. Never used to advise another client. Your raw reports, uploads and credentials are never sent to an AI provider: the model that drafts the wording of your briefs sees a short table of results our engine already computed, and our code rejects any draft containing a number the table did not supply.</p>
-        <p>Anything pooled across accounts needs your separate yes, and even then it is an anonymous aggregate, never a figure of yours, your name, a SKU or an ASIN.</p>
-      </div>
-    </li>
-    <li>
-      <h2>If something goes wrong, you hear it from us.</h2>
-      <div>
-        <p>If we learn of a breach affecting your data, we tell you within seventy-two hours of confirming it: what happened, and what we are doing about it.</p>
-      </div>
-    </li>
-    <li>
-      <h2>It stays yours.</h2>
-      <div>
-        <p>Your data and your whole Profit Record export free, any day, within one working day, including the day you leave.</p>
-        <p>Ask, and your reports, uploads and model outputs are deleted within thirty days. We keep only what invoicing and the law require, and any result you agreed we may publish in anonymised form.</p>
-      </div>
-    </li>
-    <li>
-      <h2>Who else touches it.</h2>
-      <div>
-        <p>A short list of providers, each named with what it does in the <a href="/privacy">privacy policy</a>: database and storage, hosting, email, scheduling, invoicing, the voice and wording of your briefs, video hosting, and the job that runs your weekly monitoring. Nothing is added to that list without the page changing first.</p>
-      </div>
-    </li>
-  </ol>
-
-  <p class="legal-note">The binding versions are the <a href="/privacy">privacy policy</a> and sections 10 and 11 of the <a href="/terms">terms</a>. This page says the same thing in fewer words.</p>
+  <header class="sheet-head">
+    <span class="label">The Operator's Math · the course on one page</span>
+    <h1>The operator's math, on one page</h1>
+    <p class="sheet-src">The rules and formulas of all five lessons, the same arithmetic Hubricon's engine runs. Margin rate is contribution before ads ÷ price.</p>
+    <p class="sheet-actions"><button type="button" class="link-btn" data-print>Print it (one page)</button><a href="/learn/operators-math">The full course</a><a href="/learn/files/hubricon-operators-math.xlsx" download>The spreadsheet (.xlsx)</a></p>
+  </header>
+  <div class="sheet">
+    <section class="sheet-cell" aria-labelledby="c1">
+      <h2 id="c1"><span class="n">1</span>Contribution, not gross margin</h2>
+      <p class="sheet-f">contribution before ads = price − landed cost − payment fee − label − packing − refunds</p>
+      <p>Gross margin stops at the shelf. Contribution is what one order adds to the business; take off ad spend per order (a month's ad spend ÷ its orders) for what it adds after ads.</p>
+      <a class="sheet-more" href="/learn/operators-math#contribution">Lesson 1 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c2">
+      <h2 id="c2"><span class="n">2</span>Your break-even</h2>
+      <p class="sheet-f">break-even ROAS = price ÷ contribution before ads</p>
+      <p class="sheet-f">break-even ACOS = contribution before ads ÷ price</p>
+      <p>A target under the break-even buys every first order at a loss. ACOS is ROAS upside down.</p>
+      <a class="sheet-more" href="/learn/operators-math#ad-target">Lesson 2 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c3">
+      <h2 id="c3"><span class="n">3</span>The last dollar, not the average</h2>
+      <p>A platform's ROAS is an average. The next dollar returns less than the average on a campaign that is already spending. Judge the last dollar against the break-even; past where it falls under, each dollar loses on a first order.</p>
+      <a class="sheet-more" href="/learn/operators-math#ad-target">Lesson 2 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c4">
+      <h2 id="c4"><span class="n">4</span>And the customers who come back</h2>
+      <p class="sheet-f">break-even with repeat customers = first-order break-even ÷ lifetime multiplier</p>
+      <p>Only on your own repeat orders, on margin, discounted, and checked against a quarter it did not see. On Amazon no export says who came back: use the first-order break-even.</p>
+      <a class="sheet-more" href="/learn/operators-math#ad-target">Lesson 2 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c5">
+      <h2 id="c5"><span class="n">5</span>LTV to CAC, counted honestly</h2>
+      <p class="sheet-f">CAC = ad spend in a month ÷ customers whose first order fell in it</p>
+      <p class="sheet-f">LTV (52 weeks, margin) = margin rate × (first order + repeat orders × repeat value)</p>
+      <p>Margin, not revenue. A year, not a lifetime. A new customer, not the survivors. Say CAC is blended.</p>
+      <a class="sheet-more" href="/learn/operators-math#ltv-cac">Lesson 3 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c6">
+      <h2 id="c6"><span class="n">6</span>Payback</h2>
+      <p class="sheet-f">margin back by week t = margin rate × (first order + repeat orders by week t × repeat value)</p>
+      <p>Payback is the week it passes CAC. Until then, every new customer is cash out. A store can grow and still run out of cash when payback is longer than its cash lasts.</p>
+      <a class="sheet-more" href="/learn/operators-math#payback">Lesson 4 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c7">
+      <h2 id="c7"><span class="n">7</span>The numbers that mislead</h2>
+      <ol>
+        <li>LTV to CAC on revenue: flatters.</li>
+        <li>Break-even ROAS on the first order alone: too strict where customers come back.</li>
+        <li>Gross margin: flatters.</li>
+        <li>Average ROAS: flatters the last dollar.</li>
+      </ol>
+      <p>Ranked on the course's invented store; on yours the order may differ.</p>
+      <a class="sheet-more" href="/learn/operators-math#ranked">Lesson 5 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c8">
+      <h2 id="c8"><span class="n">8</span>In order</h2>
+      <ol>
+        <li>Contribution before ads on your best seller.</li>
+        <li>Break-even ROAS from it, and the last dollar on your largest campaign.</li>
+        <li>Repeat orders and payback from your own Orders export.</li>
+      </ol>
+      <a class="sheet-more" href="/learn/operators-math#ranked">Lesson 5 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+  </div>
+  <p class="sheet-foot">Free, from <a href="/learn/operators-math">The Operator's Math</a> at hubricon.com/learn. Every lesson is open; no email needed.</p>
 </main>
 
 <!-- build:foot -->

@@ -591,3 +591,143 @@ export function orderSVG(o, opts) {
     `kept before ads $${(o.price - o.fee - o.labels[1] - o.packing - o.landed).toFixed(2)} to $${(o.price - o.fee - o.labels[0] - o.packing - o.landed).toFixed(2)}.`;
   return frame(w, h, "order", { id: `${id}-t`, text: "Where one order's money goes, nearest zone and farthest" }, { id: `${id}-d`, text: desc }, body);
 }
+
+// ---------------------------------------------------------------- The Operator's Math
+
+/**
+ * One order's money, top to bottom: the price, each cost taken off where it falls, what the order
+ * keeps before ads, the ads, and what it keeps after. wf: {price, costs: [[name, $]…], ads}.
+ * The two "kept" bars are the money, so they alone are blue.
+ */
+export function waterfallSVG(wf, opts) {
+  const { id, w, h, m, font = 13, labelW = 150 } = opts;
+  const before = wf.price - wf.costs.reduce((a, [, v]) => a + v, 0), after = before - wf.ads;
+  const rows = [["Price", 0, wf.price, "seg"]];
+  let run = wf.price;
+  for (const [name, v] of wf.costs) { rows.push([name, run - v, run, "seg"]); run -= v; }
+  rows.push(["Kept before ads", 0, before, "seg seg-kept"], ["Ads per order", after, before, "seg"], ["Kept after ads", 0, after, "seg seg-kept"]);
+  const X = scale(0, wf.price, m.l + labelW, w - m.r);
+  const pitch = (h - m.t - m.b) / rows.length, bh = Math.min(30, pitch * 0.66);
+  let body = "";
+  rows.forEach(([name, lo, hi, cls], i) => {
+    const y = m.t + i * pitch, kept = cls.includes("kept"), v = hi - lo;
+    const delay = `style="--after:${i * 110}ms"`;
+    body += `<text class="${kept ? "ink strong" : ""}" x="${m.l}" y="${r1(y + bh / 2)}" font-size="${font}" dominant-baseline="middle">${esc(name)}</text>`;
+    body += `<rect class="${cls} fade" ${delay} x="${r1(X(lo))}" y="${r1(y)}" width="${r1(Math.max(1, X(hi) - X(lo)))}" height="${r1(bh)}"/>`;
+    const txt = `${i === 0 || kept ? "" : "−"}$${v.toFixed(2)}`;
+    // too narrow to hold its figure: the figure goes beside the bar, on the side away from the row's name
+    const inside = X(hi) - X(lo) > font * 4.6, right = !inside && lo === 0;
+    const tx = inside ? X(lo) + (X(hi) - X(lo)) / 2 : right ? X(hi) + 6 : X(lo) - 6;
+    body += `<text class="${inside && kept ? "seg-text-kept" : "seg-text"} fade" ${delay} x="${r1(tx)}" y="${r1(y + bh / 2)}" font-size="${font}" text-anchor="${inside ? "middle" : right ? "start" : "end"}" dominant-baseline="middle">${txt}</text>`;
+  });
+  const desc = `One order at $${wf.price.toFixed(2)}: ` + wf.costs.map(([n, v]) => `${n.toLowerCase()} $${v.toFixed(2)}`).join(", ") +
+    `; it keeps $${before.toFixed(2)} before ads, and $${after.toFixed(2)} after $${wf.ads.toFixed(2)} of ads an order.`;
+  return frame(w, h, "order waterfall", { id: `${id}-t`, text: "Where one order's money goes, and what it keeps" }, { id: `${id}-d`, text: desc }, body);
+}
+
+/** Sales a day on a fitted ad curve (models/ad_efficiency.py's forms), and its slope. */
+function adCurve(model, p) {
+  if (model === "hill") return (s) => (p.a * s ** p.h) / (p.k ** p.h + s ** p.h);
+  if (model === "linear") return (s) => p.roas * s;
+  return (s) => p.a * Math.log1p(p.b * s);
+}
+
+/**
+ * One campaign's days (spend against the sales the platform credits), the curve the engine fitted
+ * through them, the average return (the straight line from nothing to today) and the last dollar's
+ * (the curve's slope at today's spend), and the spend where the last dollar stops paying for a
+ * first order. rs: Operator's Math "ads" figures.
+ */
+export function responseSVG(rs, opts) {
+  const { id, w, h, m, font = 13, narrow = false } = opts;
+  const f = adCurve(rs.model, rs.params);
+  const slope = (s) => (f(s * 1.0001) - f(s * 0.9999)) / (s * 0.0002);
+  const xMax = Math.ceil((rs.max_seen * 1.08) / 50) * 50;
+  const ys = rs.points.map(([, v]) => v);
+  const yt = niceTicks(0, Math.max(...ys, f(xMax)) * 1.05, 4);
+  const X = scale(0, xMax, m.l, w - m.r), Y = scale(0, yt[yt.length - 1], h - m.b, m.t);
+  const money = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">${usd(t, { compact: true })}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const t of niceTicks(0, xMax, narrow ? 3 : 5).filter((t) => t <= xMax)) {
+    body += `<line class="tick" x1="${r1(X(t))}" x2="${r1(X(t))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(t))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">$${t}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Sales a day the platform credits</text>`;
+  body += `<text x="${w - m.r}" y="${h - m.b + 2 * font + 14}" font-size="${font}" text-anchor="end">Ad spend a day</text>`;
+  const r = font < 13 ? 3 : 3.5;
+  body += `<g class="fade" style="--after:0ms">` + rs.points.map(([s, v]) => `<circle class="dot-faint" cx="${r1(X(s))}" cy="${r1(Y(v))}" r="${r}"/>`).join("") + `</g>`;
+  const n = 64, cx = [], cy = [];
+  for (let i = 0; i <= n; i++) { const s = (xMax * i) / n; cx.push(X(s)); cy.push(Y(f(s))); }
+  body += `<path class="fit-line draw" pathLength="1" d="${line(pts(cx, cy))}"/>`;
+  const s0 = rs.spend, v0 = f(s0), be = rs.breakeven;
+  body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+  // the average: a straight line from nothing to today; the last dollar: the curve's slope at today
+  body += `<path class="curve-alt" d="M${r1(X(0))},${r1(Y(0))} L${r1(X(s0))},${r1(Y(v0))}"/>`;
+  const dx = xMax * 0.16, k = slope(s0);
+  body += `<path class="step" d="M${r1(X(s0 - dx))},${r1(Y(v0 - k * dx))} L${r1(X(Math.min(xMax, s0 + dx)))},${r1(Y(v0 + k * Math.min(dx, xMax - s0)))}"/>`;
+  body += `<circle class="dot" cx="${r1(X(s0))}" cy="${r1(Y(v0))}" r="${r + 2}"/>`;
+  body += `<text class="ink strong halo" x="${r1(X(s0) + 10)}" y="${r1(Y(v0) + font + 12)}" font-size="${font}">Today ${money(s0)} a day</text>`;
+  if (!narrow) {
+    // the average's name under its own dashed line, where no day falls; the last dollar's at the end of its slope
+    body += `<text class="halo" x="${r1(X(s0 * 0.6) + 8)}" y="${r1(Y(v0 * 0.6) + font + 8)}" font-size="${font}">Average ${rs.average.toFixed(2)}</text>`;
+    const ex = Math.min(xMax, s0 + dx);
+    body += `<text class="ink strong halo" x="${r1(X(ex) + 6)}" y="${r1(Y(v0 + k * (ex - s0)))}" font-size="${font}" dominant-baseline="middle">Last dollar ${rs.marginal.toFixed(2)}</text>`;
+  }
+  if (be != null) {
+    body += `<line class="leak" x1="${r1(X(be))}" x2="${r1(X(be))}" y1="${r1(Y(f(be)))}" y2="${h - m.b}"/>`;
+    body += `<text class="leak-text" x="${r1(X(be) + 6)}" y="${r1(h - m.b - font)}" font-size="${font}">${narrow ? money(be) : `Break-even, first order: ${money(be)}`}</text>`;
+  }
+  body += `</g>`;
+  const desc = `${rs.points.length} days of one campaign: spend against the sales the platform credits to it, and the curve fitted through them. ` +
+    `At today's ${money(s0)} a day the average return is ${rs.average.toFixed(2)} and the last dollar returns ${rs.marginal.toFixed(2)}. ` +
+    (be != null ? `On a first order alone, the last dollar stops paying at ${money(be)} a day.` : "");
+  const scrub = scrubOf(font, m.t, h - m.b, cx.map((x, i) => { const s = (xMax * i) / n; return [x, [cy[i]],
+    [`At ${money(s)} a day`, `${money(f(s))} of sales, on the curve`, s > 0 ? `The last dollar returns ${slope(s).toFixed(2)}` : ""].filter(Boolean)]; }));
+  return frame(w, h, "response", { id: `${id}-t`, text: "One campaign's spend against its sales: the average dollar and the last dollar" }, { id: `${id}-d`, text: desc }, body, scrub);
+}
+
+/**
+ * A new customer's margin back, week by week (models/clv.py: the first order's margin plus the
+ * expected repeat orders at the repeat order's margin), against what that customer cost.
+ * pb: {weekly: [$ at week 0…52], cac, weeks}.
+ */
+export function paybackSVG(pb, opts) {
+  const { id, w, h, m, font = 13 } = opts;
+  const N = pb.weekly.length - 1;
+  const top = Math.max(...pb.weekly, pb.cac);
+  const yt = niceTicks(0, top * 1.05, 4);
+  const X = scale(0, N, m.l, w - m.r), Y = scale(0, yt[yt.length - 1], h - m.b, m.t);
+  const money = (v) => `$${v.toFixed(2)}`;
+  let body = "";
+  for (const t of yt) {
+    body += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(t))}" y2="${r1(Y(t))}"/>`;
+    body += `<text x="${m.l - 10}" y="${r1(Y(t))}" font-size="${font}" text-anchor="end" dominant-baseline="middle">$${t}</text>`;
+  }
+  body += `<line class="axis" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/>`;
+  for (const t of [0, 13, 26, 39, 52].filter((t) => t <= N)) {
+    body += `<line class="tick" x1="${r1(X(t))}" x2="${r1(X(t))}" y1="${h - m.b}" y2="${h - m.b + 5}"/>`;
+    body += `<text x="${r1(X(t))}" y="${h - m.b + font + 10}" font-size="${font}" text-anchor="middle">${t === 0 ? "First order" : `Week ${t}`}</text>`;
+  }
+  body += `<text x="0" y="${m.t - font}" font-size="${font}">Margin back from one new customer</text>`;
+  body += `<line class="step-alt" x1="${m.l}" x2="${w - m.r}" y1="${r1(Y(pb.cac))}" y2="${r1(Y(pb.cac))}"/>`;
+  body += `<text x="${w - m.r}" y="${r1(Y(pb.cac) - 8)}" font-size="${font}" text-anchor="end">What they cost ${money(pb.cac)}</text>`;
+  body += `<path class="curve draw" pathLength="1" d="${line(pts(pb.weekly.map((_, i) => X(i)), pb.weekly.map((v) => Y(v))))}"/>`;
+  if (pb.weeks != null) {
+    const x = X(pb.weeks), y = Y(pb.weekly[pb.weeks]);
+    body += `<g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)">`;
+    body += `<line class="leak" x1="${r1(x)}" x2="${r1(x)}" y1="${r1(y)}" y2="${h - m.b}"/>`;
+    body += `<circle class="dot-blue" cx="${r1(x)}" cy="${r1(y)}" r="${font < 13 ? 4.5 : 5.5}"/>`;
+    body += `<text class="leak-text" x="${r1(x + 8)}" y="${r1(y + font + 10)}" font-size="${font}">Paid back, week ${pb.weeks}</text>`;
+    body += `</g>`;
+  }
+  const desc = `A new customer's margin back, from the first order through week ${N}, against the ${money(pb.cac)} it cost to win them. ` +
+    (pb.weeks != null ? `It crosses in week ${pb.weeks}.` : `It does not cross within a year.`);
+  const scrub = scrubOf(font, m.t, h - m.b, pb.weekly.map((v, i) => [X(i), [Y(v)],
+    [i === 0 ? "The first order" : `Week ${i}`, `${money(v)} of margin back`, v >= pb.cac ? "Paid back" : `${money(pb.cac - v)} still out`]]));
+  return frame(w, h, "payback", { id: `${id}-t`, text: "A new customer's margin back, week by week, against what they cost" }, { id: `${id}-d`, text: desc }, body, scrub);
+}

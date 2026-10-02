@@ -20,7 +20,7 @@
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
-import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, usd } from "../assets/charts.mjs";
+import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, waterfallSVG, responseSVG, paybackSVG, usd } from "../assets/charts.mjs";
 import * as priceCurve from "../assets/price-curve.mjs";
 import { STORAGE } from "./case-study.mjs";
 import { siteBlocks } from "./site-blocks.mjs";
@@ -73,11 +73,13 @@ export function figures(rc, mc, cs) {
   const pc = priceCurveFigures(json("data/learn-price-curve.json"));
   const cc = capitalCashFigures(json("data/learn-capital-cash.json"));
   const sm = shopifyMarginFigures(json("data/learn-shopify-margin.json"), rc);
+  const om = operatorsMathFigures(json("data/learn-operators-math.json"), rc);
   const blocks = {
     ...learn.blocks,
     ...pc.blocks,
     ...cc.blocks,
     ...sm.blocks,
+    ...om.blocks,
     ...siteBlocks(),
     attribution: "\n" + read("scripts/blocks/attribution.html").trim() + "\n",
     // /case-study: the home page's sections as they stand (the build loop refreshes it after index.html)
@@ -151,6 +153,7 @@ export function figures(rc, mc, cs) {
       ...pc.fill,
       ...cc.fill,
       ...sm.fill,
+      ...om.fill,
     },
   };
 }
@@ -395,6 +398,71 @@ function shopifyMarginFigures(sm, rc) {
 }
 
 /**
+ * The Operator's Math's figures (/learn/operators-math). Every number is the engine's, computed by
+ * scripts/learn/operators_math.py into data/learn-operators-math.json from an invented coffee roaster
+ * (its customers and its ad curve simulated from stated parameters): the label and payment cards from
+ * cold/priors.py, the ad curve from models/ad_efficiency.py, repeat orders and payback from models/clv.py.
+ * Nothing here does arithmetic beyond formatting and the order's own subtraction for the waterfall.
+ */
+function operatorsMathFigures(om, rc) {
+  const money = (v) => `$${v.toFixed(2)}`;
+  const dollars = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
+  const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
+  const x = om.example, u = om.unit, a = om.ads, c = om.customers, p = om.payback, mo = om.month;
+  const row = rc.carrier.ground_commercial["0"];
+  if (Math.abs(row.reduce((t, v) => t + v, 0) / row.length - u.label) > 1e-3 || Math.min(...row) !== u.label_lo || Math.max(...row) !== u.label_hi) {
+    throw new Error("operators-math: the rate card's under-a-pound USPS row differs from the one the course was computed on; rerun scripts/learn/operators_math.py");
+  }
+  const monthName = new Date(`${mo.month}-01T12:00:00Z`).toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+  const fill = {
+    learn_om_price: money(x.price), learn_om_landed: money(x.landed_cost), learn_om_gross: money(u.gross), learn_om_gross_rate: pct(u.gross_rate),
+    learn_om_fee: money(u.fee), learn_om_label: money(u.label), learn_om_label_lo: money(u.label_lo), learn_om_label_hi: money(u.label_hi),
+    learn_om_packing: money(x.packing), learn_om_refund_share: pct(x.refund_share), learn_om_refunds: money(u.refunds),
+    learn_om_before: money(u.before_ads), learn_om_rate: pct(u.rate, 1), learn_om_ad_per_order: money(u.ad_per_order),
+    learn_om_after: money(u.after_ads), learn_om_after_rate: pct(u.after_rate, 1),
+    learn_om_month: monthName, learn_om_month_spend: dollars(mo.spend), learn_om_month_orders: mo.orders.toLocaleString("en-US"), learn_om_month_new: String(mo.new),
+    learn_om_be_roas: a.be_roas.toFixed(2), learn_om_be_acos: pct(a.be_acos, 1), learn_om_target: a.target.toFixed(1),
+    learn_om_cost_at_target: money(a.cost_at_target), learn_om_lost_at_target: money(-a.kept_at_target),
+    learn_om_days: String(a.days), learn_om_spend: dollars(a.spend), learn_om_average: a.average.toFixed(2), learn_om_marginal: a.marginal.toFixed(2),
+    learn_om_marginal_p5: a.marginal_p5.toFixed(2), learn_om_marginal_p95: a.marginal_p95.toFixed(2),
+    learn_om_breakeven: dollars(a.breakeven), learn_om_breakeven_p5: dollars(a.breakeven_p5), learn_om_breakeven_p95: dollars(a.breakeven_p95),
+    learn_om_lost_month: dollars(a.lost_month), learn_om_life_be_roas: a.life_be_roas.toFixed(2), learn_om_life_breakeven: dollars(a.life_breakeven),
+    learn_om_max_seen: dollars(a.max_seen),
+    learn_om_cac: money(c.cac), learn_om_customers: c.n.toLocaleString("en-US"), learn_om_repeats_new: c.repeats_52w_new.toFixed(2),
+    learn_om_repeats_truth: om.truth.repeats_52w_new.toFixed(2), learn_om_first: money(c.first), learn_om_repeat: money(c.repeat),
+    learn_om_rev_ltv: money(c.rev_ltv), learn_om_rev_ltv_cac: c.rev_ltv_cac.toFixed(1), learn_om_margin_ltv: money(c.margin_ltv),
+    learn_om_margin_ltv_cac: c.margin_ltv_cac.toFixed(2), learn_om_margin_ltv_cac_lo: c.margin_ltv_cac_band[0].toFixed(2), learn_om_margin_ltv_cac_hi: c.margin_ltv_cac_band[1].toFixed(2),
+    learn_om_discount: pct(c.discount), learn_om_calibration: c.calibration.toFixed(2), learn_om_multiplier: c.multiplier.toFixed(2),
+    learn_om_first_margin: money(p.weekly[0]), learn_om_weeks: String(p.weeks), learn_om_weeks_lo: String(p.band[0]), learn_om_weeks_hi: String(p.band[1]),
+    learn_om_cash_out: dollars(mo.cash_out),
+  };
+  const wf = { price: x.price, ads: u.ad_per_order,
+    costs: [["Landed cost", x.landed_cost], ["Payment fee", u.fee], ["Label", u.label], ["Packing", x.packing], ["Refunds", u.refunds]] };
+  const val = (r, v) => (r.kind === "share" ? pct(v, v < 0.5 ? 1 : 0) : r.kind === "ratio" ? v.toFixed(v >= 3 ? 1 : 2) : v.toFixed(2));
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const ranked = `
+        <div class="table-scroll" role="region" aria-label="The numbers that mislead, ranked" tabindex="0"><table class="data ranked">
+          <thead><tr><th scope="col">#</th><th scope="col">The number</th><th scope="col">It says</th><th scope="col">True</th><th scope="col">How far off</th></tr></thead>
+          <tbody>
+${om.ranked.map((r, i) => `            <tr><td class="num">${i + 1}</td><th scope="row">${esc(r.number)}<span class="sub">True: ${esc(r.truth)}</span></th><td class="num">${val(r, r.says)}</td><td class="num">${val(r, r.true)}</td><td class="num"><b>${r.factor.toFixed(1)}×</b><span class="sub">${r.flatters ? "flatters" : "too strict"}</span></td></tr>`).join("\n")}
+          </tbody>
+        </table></div>
+        `;
+  return {
+    fill,
+    blocks: {
+      "om-waterfall-wide": waterfallSVG(wf, { id: "omw-w", w: 680, h: 330, m: { t: 8, r: 8, b: 8, l: 0 }, font: 13, labelW: 150 }),
+      "om-waterfall-narrow": waterfallSVG(wf, { id: "omw-n", w: 360, h: 330, m: { t: 8, r: 4, b: 8, l: 0 }, font: 12, labelW: 118 }),
+      "om-response-wide": responseSVG(a, { id: "omr-w", w: 680, h: 380, m: { t: 44, r: 16, b: 62, l: 64 }, font: 13 }),
+      "om-response-narrow": responseSVG(a, { id: "omr-n", w: 360, h: 360, m: { t: 40, r: 10, b: 58, l: 50 }, font: 12, narrow: true }),
+      "om-payback-wide": paybackSVG({ weekly: p.weekly, cac: c.cac, weeks: p.weeks }, { id: "omp-w", w: 680, h: 340, m: { t: 44, r: 16, b: 44, l: 56 }, font: 13 }),
+      "om-payback-narrow": paybackSVG({ weekly: p.weekly, cac: c.cac, weeks: p.weeks }, { id: "omp-n", w: 360, h: 320, m: { t: 40, r: 10, b: 40, l: 44 }, font: 12 }),
+      "om-ranked": ranked,
+    },
+  };
+}
+
+/**
  * Capital & Cash's figures (/learn/capital-and-cash). Every number is the engine's, computed by
  * scripts/learn/capital_cash.py into data/learn-capital-cash.json from an invented garlic press
  * (The Price Curve's) and an invented spatula set. Nothing here does arithmetic beyond formatting,
@@ -524,10 +592,12 @@ export const PAGES = [
   { file: "learn/price-curve.html" },
   { file: "learn/capital-and-cash.html" },
   { file: "learn/shopify-margin.html" },
+  { file: "learn/operators-math.html" },
   { file: "learn/fee-staircase-card.html" },
   { file: "learn/price-curve-card.html" },
   { file: "learn/capital-and-cash-card.html" },
   { file: "learn/shopify-margin-card.html" },
+  { file: "learn/operators-math-card.html" },
 ];
 
 /** The home page's staircase and case study, whole, for /case-study. */

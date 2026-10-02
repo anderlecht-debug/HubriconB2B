@@ -309,23 +309,47 @@
     },
     {
       "slug": "operators-math",
-      "status": "planned",
+      "status": "live",
       "title": "The Operator's Math",
+      "path": "/learn/operators-math",
       "cover": "bars",
-      "summary": "Contribution margin, payback, and the numbers in a P&L that mislead.",
+      "audience": "Amazon and Shopify",
+      "summary": "Contribution margin, the ad target your margin sets, lifetime value on margin, payback, and the numbers in a P&L that mislead.",
+      "detail": "Contribution before ads and after, break-even ROAS and ACOS, the last ad dollar against the average, LTV to CAC on margin over a year, the week a customer pays back, and your own Orders export read in your browser.",
+      "extras": [
+        "1 spreadsheet"
+      ],
+      "template": "/learn/files/hubricon-operators-math.xlsx",
+      "start": {
+        "text": "Lesson 2: your ad target is wrong",
+        "href": "/learn/operators-math#ad-target"
+      },
       "trailer": null,
       "lessons": [
         {
-          "title": "Contribution margin, not gross margin"
+          "id": "contribution",
+          "title": "Contribution margin, not gross margin",
+          "video": null
         },
         {
-          "title": "Where LTV to CAC misleads"
+          "id": "ad-target",
+          "title": "Your ad target is wrong",
+          "video": null
         },
         {
-          "title": "Payback period: the growth metric that can't be faked"
+          "id": "ltv-cac",
+          "title": "Where LTV to CAC misleads",
+          "video": null
         },
         {
-          "title": "Every number in your P&L that lies, ranked"
+          "id": "payback",
+          "title": "Payback: the growth metric that can't be faked",
+          "video": null
+        },
+        {
+          "id": "ranked",
+          "title": "The numbers that mislead, ranked",
+          "video": null
         }
       ]
     }

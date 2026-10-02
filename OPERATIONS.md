@@ -1941,6 +1941,7 @@ only. What exists:
 | Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
 | Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
 | Course 3, **Capital & Cash** (2026-10-01): seven lessons, the days a dollar is gone, the low point after a wire, the reorder point and order, the service level each margin pays for, hold against liquidate, the cash a bad month needs, and what a late wire costs | `learn/capital-and-cash.html`, figures in `data/learn-capital-cash.json`, spreadsheet `learn/files/hubricon-capital-and-cash.xlsx` |
+| Course 5, **The Operator's Math** (2026-10-01): five lessons for any operator: contribution margin before and after ads, the break-even ROAS your margin sets and the last ad dollar against the average, LTV to CAC on margin, payback, and the numbers that mislead, ranked; the reader's own Shopify Orders export counted in the browser | `learn/operators-math.html`, `assets/learn-operators-math.js`, `assets/cohorts.mjs`, figures in `data/learn-operators-math.json`, spreadsheet `learn/files/hubricon-operators-math.xlsx` |
 | Course 4, **The Shopify Margin** (2026-10-01): six lessons for Shopify sellers: an order's money by zone, the pound line, the free-shipping line, the compare-at (with the FTC's former-price rule, 16 CFR 233.1), break-even ROAS, and the Products export read in the browser by /call's own reading | `learn/shopify-margin.html`, `assets/learn-shopify-margin.js`, figures in `data/learn-shopify-margin.json`, spreadsheet `learn/files/hubricon-shopify-margin.xlsx` |
 | Each course on one page (2026-10-01): every rule and formula in eight cells, one printed Letter page, each cell linked to its lesson; figures are the course page's own fills | `learn/fee-staircase-card.html`, `learn/price-curve-card.html`, "a course on one page" in `/assets/hubricon.css` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
@@ -1992,6 +1993,18 @@ print the engine's figure. After any change to those models or to the payout and
     node scripts/build-pages.mjs
 
 `scripts/learn/capital-cash.test.mjs` fails when an engine module the figures came from has moved.
+
+**The Operator's Math is the engine's own models on an invented store.** `scripts/learn/operators_math.py`
+simulates a coffee roaster from stated parameters (its customers from a BG/NBD process, its ad curve
+from a saturating response) and reads it with `models/clv.py` (repeat orders, the lifetime multiplier,
+payback) and `models/ad_efficiency.py` (the last dollar, the break-even spend), on `cold/priors.py`'s
+label and payment cards. The page prints the simulation's truth beside the engine's estimate. The
+spreadsheet is checked on 54 golden cases, and `assets/cohorts.mjs` (the in-browser customer count)
+is held to the script's reference on a synthetic Orders export (`operators-math.golden.json`). When
+clv.py, ad_efficiency.py or priors.py move:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/operators_math.py --publish
+    node scripts/build-pages.mjs
 
 **The Shopify Margin is the engine's two Shopify cards.** `scripts/learn/shopify_margin.py`
 prices an invented product on `cold/priors.py`'s USPS Ground Advantage rows and Shopify Payments
