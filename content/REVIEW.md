@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-02T16:24:39+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-02T16:24:47+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V09 · day 9 · tier B · pillar 3 — script gate
 
@@ -182,3 +182,66 @@ hubricon-content approve 15-cash-trough
 hubricon-content reject  15-cash-trough --note "what to change"
 ```
 Edit `content/videos/15-cash-trough/script.md` first if you prefer; it is re-validated on approve.
+
+## V16 · day 16 · tier B · pillar 2 — script gate
+
+**Title:** The $23,482 ⟨largest_wire⟩ wire you're guessing on  
+**Thumbnail:** 92% ⟨nv_fractile_min⟩ to 98% ⟨nv_fractile_max⟩ in ink across the newsvendor curve fragment, the flat default marked as a single line through it  
+**Spiky claim:** A flat service level is a decision about your money that you never made. Every product has its own right answer, it is set by that product's own costs, and on this catalogue the answers run far enough apart that the flat number is wrong for almost all of them.  
+**Misconception:** I order to a cover number and keep a safety margin on top. More cover is safer, and the number I use works well enough across the catalogue.  
+**CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
+**Estimated runtime:** about 10 min 08 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. $23,482 ⟨largest_wire⟩. That's the biggest single supplier wire leaving this demo catalogue, and the quantity inside it was set by a cover rule. You'd call that prudent. The product's own economics disagree, and they can be read off a settlement report.
+2. 98% ⟨stockout_worst_p⟩. That's the chance one product here runs out before its next delivery lands: 22 days ⟨stockout_worst_cover⟩ of cover against a 50 days ⟨stockout_worst_lead⟩ lead time. The cover rule that produced it looked reasonable on the day it was applied.
+3. 92% ⟨nv_fractile_min⟩ to 98% ⟨nv_fractile_max⟩. That's the range of service levels this catalogue's own margins justify, product by product. Most operators run a single flat number across everything, and 8 ⟨nv_skus_below_95⟩ products here are overstocked because of it.
+
+### Script
+
+**[0:00] HOOK**  
+$23,482 ⟨largest_wire⟩. That's the biggest single supplier wire leaving this demo catalogue, and the quantity inside it was set by a cover rule and a feeling. You'd call that prudent rather than reckless. The product's own economics disagree, and you can read them off reports you already have.  
+
+**[0:15] LET THEM BE WRONG**  
+Here's how the purchase order actually gets decided, and it's not a careless process. You look at what the product sold last month, you pick a cover number — a month, a season, whatever the lead time and the cash allow — you add a margin on top for safety, and you round it to a carton quantity. It's the same rule across the catalogue because a rule you apply differently everywhere isn't a rule, it's a mood. And the margin on top feels conservative: more cover is safer, and the worst thing that happens is money sits on a shelf a little longer. That model has one thing missing, and it isn't the forecast. It's that the cost of being short and the cost of being long are different on every product, and a single rule applied across all of them quietly assumes they're the same.  
+
+**[0:50] THE CRACK**  
+This is the demo catalogue. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨inv_skus⟩ products. Take the product most likely to run out: TH-STAMIX-12 ⟨stockout_worst_sku⟩. It has 22 days ⟨stockout_worst_cover⟩ of cover on hand and a supplier lead time of 50 days ⟨stockout_worst_lead⟩. So the chance it runs out before the next delivery lands is 98% ⟨stockout_worst_p⟩. Not a risk — close to a certainty, and it's been sitting on the shelf in plain sight. Across the catalogue, 6 ⟨n_skus_stockout_gt_20⟩ products carry a meaningful chance of going out inside their own lead times. Now the other direction. The same rule orders too much elsewhere: the inventory fees on stock held past what its own economics justify run $3,874 ⟨nv_bleed_month⟩ a month. One rule, producing a near-certain stockout at one end of the shelf and a standing fee at the other, at the same time.  
+
+**[1:30] CHAPTER 1 — FIND IT**  
+Here's the method, whole. The quantity on a purchase order is a bet, and the useful question is about the last unit in it. Order that unit and one thing happens: either you sell it, or you hold it. So work out both costs for that product. What does being short by one unit cost you? The margin you don't earn on the sale, plus whatever the stockout does to your rank and to the ad spend you'll need afterwards to recover it. On the worked product here, TH-CHEKNI-08 ⟨nv_sku⟩, the unit margin is $28.45 ⟨nv_unit_margin⟩ on a landed cost of $16.60 ⟨nv_unit_cost⟩, and the cost of being one unit short comes out at $29.34 ⟨nv_cu⟩. Now the other side. What does holding one unit too many cost you over a cycle? Storage, the capital tied up, the risk it ages into a higher fee band or gets marked down. On the same product that's $0.74 ⟨nv_co⟩. Look at the size of those against each other, because that's the whole decision. Being short costs many times what being long costs, so you should be willing to carry quite a lot of extra stock to avoid it. How much is set by the ratio: the cost of being short, divided by the cost of being short plus the cost of being long. That fraction is the chance you want to be able to cover. On TH-CHEKNI-08 ⟨nv_sku⟩ it comes out at 98% ⟨nv_fractile⟩. Now it has a name, and you derived it before you heard it: the critical fractile. Then turn it into units. Take your demand over the lead time, take its spread, and set the reorder point at the level that covers demand that share of the time. On TH-STAMIX-12 ⟨stockout_worst_sku⟩ at the flat default, that point is 884 ⟨stockout_worst_rop⟩ units, and the cover it has now is nowhere near it. That's the whole calculation: a pair of costs, one ratio, one reorder point per product.  
+
+**[3:40] CHAPTER 2 — VERIFY IT**  
+Now run it across the shelf and look at the spread. On this catalogue the margin-justified service level runs from 92% ⟨nv_fractile_min⟩ to 98% ⟨nv_fractile_max⟩, with the middle at 97% ⟨nv_fractile_median⟩. Compare that with the flat default most tools and most spreadsheets assume, 95% ⟨service_level_default⟩. The products above it are being starved. The products below it are being overfed: 8 ⟨nv_skus_below_95⟩ of them here have economics that justify less cover than the flat rule gives them, and the difference is money sitting in a warehouse paying rent. Take TH-STAMIX-12 ⟨nv_low_sku⟩, the product with the lowest justified level, 92% ⟨nv_low_fractile⟩. Being short costs $14.58 ⟨nv_low_cu⟩ a unit there, and being long costs $1.22 ⟨nv_low_co⟩. Those are closer together than on the first product, so the bet changes, and the right answer is to carry less. Same catalogue, same supplier, same rule applied to both, and the rule is wrong in opposite directions on the same shelf. One more check, and this is the one people skip. Products don't fail independently. A soft season is soft across most of the shelf at once, and a late container is late for everything on it. Simulate them together and this catalogue expects 5.6 ⟨panel_expected_stockouts⟩ products out of stock inside the same lead time, and at the bad end, 9 ⟨panel_p95_correlated⟩. Treat them as independent and that bad end reads 8 ⟨panel_p95_independent⟩. The gap is small here and it is always in the same direction: assuming independence makes the shelf look safer than it is, and the error grows with how much your products move together.  
+
+**[5:50] WHAT IT'S WORTH**  
+Put a figure on it. On the overfed side, the fees on stock held past what its own economics justify are $3,874 ⟨nv_bleed_month⟩ a month on this catalogue, and the number of products whose cover should be cut rather than raised is 8 ⟨nv_skus_below_95⟩. That's recurring, and nobody sends you an invoice for it that says what it is. On the starved side, 6 ⟨n_skus_stockout_gt_20⟩ products are carrying a real chance of running out inside their lead times, with TH-STAMIX-12 ⟨stockout_worst_sku⟩ close to certain. A stockout doesn't cost you the sale, it costs you the sale plus the rank plus the advertising to buy the rank back, which is why the cost of being short came out so much larger than the cost of being long. And the wire itself. Across the horizon this catalogue sends 35 ⟨wire_count⟩ supplier wires totalling $345,501 ⟨wires_total⟩, the largest being $23,482 ⟨largest_wire⟩ for TH-ENADUT-03 ⟨largest_wire_sku⟩. Every one of those is a dated outflow, and ordering deeper than the economics justify doesn't only cost the fees, it moves the bottom of your cash curve. The engine's own count of orders worth placing on this catalogue right now is 13 ⟨nv_econ_orders⟩, against a shelf of 24 ⟨inv_skus⟩.  
+
+**[7:50] WHAT TO DO**  
+This week, on your top products, in order. First, write down the landed cost and the unit margin for each one. You need both, and the margin has to be after the platform's fees, not gross. Second, write the cost of being short beside it: the margin forgone, plus your own estimate of the rank and the advertising it takes to recover. Put a real figure there even if it's rough, because leaving it out is the same as calling it nothing. Then the cost of being long: storage for a cycle, the capital at your cost of money, and a markdown allowance for anything seasonal. Then take the ratio and get each product's own service level. You'll find it isn't flat, and the ones that surprise you are the ones worth a second look. Then convert it: demand over the lead time, its spread, and the reorder point that covers it that often. Order to that, not to a cover rule. Last, before you send the wire, put it on the dated cash calendar and check what it does to the low point, because a correctly sized order on a date that breaks your trough is still the wrong order. If they disagree, move the date before you cut the quantity, and talk to the supplier about terms before you do either.  
+
+**[9:30] THE HONEST LIMIT**  
+What you can do yourself is the arithmetic on your top products, in an afternoon, and it will change the next purchase order you send. A pair of costs, a ratio, a reorder point. That's a better inventory policy than a flat cover rule and most catalogues this size have never had one. Where it breaks is everything that moves. Lead times that slip, which change the reorder point on every product they touch. Demand that moves across the shelf together rather than product by product, which is what made the simultaneous stockout count worse than the independent one. Fees that change band when a weight or a dimension changes. And the whole thing needing to be re-run every time an order lands, across 24 ⟨inv_skus⟩ products rather than the handful you did by hand, with 20,000 ⟨inv_sims⟩ draws behind each one so the bad end is a measurement rather than a guess. Done by hand it becomes a spreadsheet that was right once. That part is a model. The afternoon still changes the next wire, and the next wire is the biggest discretionary decision you'll make this month. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method is written out in full, with the worksheet, free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the wire figure lands, then the cover rule beneath it, then the product's own answer replacing the rule |  |
+| 0:15 | screenshot: the purchase order being built in a spreadsheet, the cover column filled with the same number down every row (a real screenshot replaces this beat when the founder supplies one) |  |
+| 0:50 | newsvendor: the catalogue's products plotted by cover against lead time, the near-certain stockout lit at one end, the overstocked tail at the other | INVENTORY.PANEL and NEWSVENDOR on Tarnhollow demo data |
+| 1:30 | newsvendor: the cost of being short and the cost of being long as two bars, then the ratio between them becoming the fractile, then the demand distribution with the reorder point drawn on it | NEWSVENDOR on Tarnhollow demo data |
+| 3:40 | newsvendor: every product's justified level plotted against the flat default, the starved and the overfed lit in turn; then paths: simultaneous stockouts, correlated against independent | NEWSVENDOR on Tarnhollow demo data; INVENTORY.PANEL on Tarnhollow demo data |
+| 5:50 | waterfall: the monthly fee bleed, then cash_cone: the wires as dated steps with the largest marked | NEWSVENDOR on Tarnhollow demo data; cash horizon on Tarnhollow demo data |
+| 7:50 | kinetic: the steps landing one at a time; then chapter_card: the service level per product replacing the single flat number |  |
+| 9:30 | kinetic: the closing line, held |  |
+
+### Decide
+
+```
+hubricon-content approve 16-the-wire-you-guess-on
+hubricon-content reject  16-the-wire-you-guess-on --note "what to change"
+```
+Edit `content/videos/16-the-wire-you-guess-on/script.md` first if you prefer; it is re-validated on approve.

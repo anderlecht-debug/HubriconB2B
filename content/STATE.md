@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:24:39+00:00 · style locked: False
+Updated 2026-10-02T16:24:47+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,13 +14,14 @@ Updated 2026-10-02T16:24:39+00:00 · style locked: False
 
 ## Now
 
-- V16 · The $60,000 wire you're guessing on · step review
+- idle
 
 ## Awaiting your review
 
 - V09 · The price increase you're afraid of is probably free · gate `review` → see `content/REVIEW.md`
 - V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
 - V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
+- V16 · The $60,000 wire you're guessing on · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
