@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:16:48+00:00 · style locked: False
+Updated 2026-10-02T16:17:04+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:16:48+00:00 · style locked: False
 
 ## Now
 
-- idle
+- V11 · Discounting: the math of what you just gave away · step script
 
 ## Awaiting your review
 
@@ -69,8 +69,8 @@ Updated 2026-10-02T16:16:48+00:00 · style locked: False
 
 ## Next five
 
-- V11 · Discounting: the math of what you just gave away
 - V15 · You don't have a revenue problem. You have a cash trough
 - V16 · The $60,000 wire you're guessing on
 - V17 · Why 95% service level is wrong for most of your SKUs
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
+- V19 · How much cash should you actually hold?
