@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:08:55+00:00 · style locked: False
+Updated 2026-10-02T16:10:01+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:08:55+00:00 · style locked: False
 
 ## Now
 
-- V01 · Why most business advice is useless: survivorship bias, with numbers · step tts
+- idle
 
 ## Awaiting your review
 
@@ -36,6 +36,7 @@ Updated 2026-10-02T16:08:55+00:00 · style locked: False
 - T01 · October 15: what Amazon's holiday fees cost one listing, to the cent: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice october-15 own (so the description says it is his own voice).
 - F01 · The case-study film: one listing, a fraction of an ounce past an edge: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice case-study-film own (so the description says it is his own voice).
 - F02 · The store study's film: a real store's orders, called before and measured after: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice store-study-film own (so the description says it is his own voice).
+- V01 · Why most business advice is useless: survivorship bias, with numbers: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.

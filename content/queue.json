@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T16:08:55+00:00",
+ "updated_at": "2026-10-02T16:10:01+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -490,8 +490,8 @@
     "mc",
     "risk"
    ],
-   "status": "in_progress",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -500,7 +500,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "in_progress",
+    "tts": "blocked",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -553,6 +553,11 @@
      "at": "2026-10-02T15:38:05+00:00",
      "step": "review",
      "note": "approved by the founder Approved by Hagen Simmons 2026-10-02: 'I approve of the content branch.'"
+    },
+    {
+     "at": "2026-10-02T16:09:58+00:00",
+     "step": "tts",
+     "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
     }
    ]
   },
