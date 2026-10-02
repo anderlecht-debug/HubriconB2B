@@ -4011,7 +4011,15 @@ def _search_fetcher():
 def cmd_harvest(args):
     """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
     from .harvest import run as harvest
+    from .harvest.fetch import AMAZON_OFF
 
+    # The crawl read Amazon's pages; Amazon refuses that now (harvest/fetch.py AMAZON_OFF), and
+    # the leads it fed were for cold outreach, which is paused while content is the one channel
+    # (HUBRICON_SPEC.md). So the scheduled run and every Amazon step stop here, before anything
+    # is opened. A licensed source wired into the harvest is what turns them back on.
+    if args.action in ("all", "crawl", "listings", "profiles", "requalify"):
+        print(f"harvest {args.action}: off. {AMAZON_OFF}")
+        return
     if args.action == "install":
         print(harvest.install_launchd())
         return

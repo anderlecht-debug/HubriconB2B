@@ -51,6 +51,21 @@ class Blocked(RuntimeError):
     """Amazon is answering with captchas; the run stops so tomorrow still works."""
 
 
+# Since 2026-10-01 Amazon answers automated reads with "Continued access by an unauthorized AI
+# agent violates Amazon's Conditions of Use". That is a refusal, not a rate limit, so nothing here
+# reads amazon.com any more: no pacing, browser or profile is a way round it. Amazon data comes
+# from a client's own authorised exports (the product), or from a licensed source wired in its
+# place (Amazon's SP-API with a seller's consent, or a data licence such as Keepa's), never from
+# its pages. Tests that hand the fetcher their own transport are unaffected.
+AMAZON_OFF = ("Amazon's pages are not read: since 2026-10-01 Amazon answers automated reads with "
+              "\"Continued access by an unauthorized AI agent violates Amazon's Conditions of Use\". "
+              "Amazon data comes from a client's own exports, or a licensed source (SP-API, a data licence).")
+
+
+class AmazonOff(Blocked):
+    """Amazon's own pages are off limits to this fetcher (AMAZON_OFF)."""
+
+
 # Amazon fingerprints the client, not just the pace: a plain urllib session
 # drew a captcha on its second product page on 2026-09-03 while the same
 # pages loaded cleanly in headless Chrome from the same connection. So the
@@ -166,6 +181,7 @@ class Fetcher:
         # myshopify ones alike — while the same URLs returned their JSON in
         # headless Chrome from the same connection. `chrome_hosts=("",)` matches
         # every host, which is what the Shopify pass passes.
+        self.live = transport is None          # a real connection, not a test's transport
         chrome = chrome_binary() if transport is None else None
         self.amazon_transport = _chrome_transport(chrome) if chrome else None
         self.chrome_hosts = chrome_hosts
@@ -194,6 +210,8 @@ class Fetcher:
 
     def get(self, url: str, headers: dict | None = None) -> str | None:
         host = urllib.parse.urlparse(url).netloc
+        if self.live and ("amazon." in host or host.endswith("amazon")):
+            raise AmazonOff(AMAZON_OFF)
         self._pace(host)
         hdrs = {
             "User-Agent": self.ua,

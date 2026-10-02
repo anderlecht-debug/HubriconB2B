@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from hubricon_engine.harvest import amazon, enrich, run
-from hubricon_engine.harvest.fetch import Blocked, Cache, Fetcher
+from hubricon_engine.harvest.fetch import AmazonOff, Blocked, Cache, Fetcher
 
 # -- fixtures modeled on the live markup (2026-09-02) ----------------------------
 
@@ -1079,3 +1079,31 @@ def test_status_pages_past_the_thousand_row_cap():
     assert s["by_status"]["pushed"] + s["by_status"]["skip_non_us"] == 2350
     paged = run.all_rows(db, "harvest_sellers", "status", page=500)
     assert len(paged) == 2350 and paged[0]["seller_id"] == "S0"
+
+
+def test_a_live_fetcher_never_reads_amazon(monkeypatch):
+    """Amazon answers automated reads with "Continued access by an unauthorized AI agent violates
+    Amazon's Conditions of Use" (2026-10-01): a refusal, so the live fetcher stops before any
+    request, browser or pacing. A test's own transport is untouched."""
+    calls = []
+    monkeypatch.setattr("hubricon_engine.harvest.fetch.chrome_binary", lambda: None)
+    live = Fetcher(sleep=lambda s: None)
+    live.transport = lambda url, headers, timeout: calls.append(url) or (200, "<html></html>")
+    for url in ("https://www.amazon.com/dp/B000000001", "https://www.amazon.com/s?me=A1&marketplaceID=X", "https://amazon.com/sp?seller=A1"):
+        with pytest.raises(AmazonOff, match="unauthorized AI agent"):
+            live.get(url)
+    assert calls == [], "nothing was requested"
+    assert issubclass(AmazonOff, Blocked), "callers that stop on a block stop on this too"
+    offline = Fetcher(transport=lambda url, headers, timeout: (200, "<html>ok</html>"), sleep=lambda s: None)
+    assert offline.get("https://www.amazon.com/dp/B000000001") == "<html>ok</html>"
+
+
+def test_the_scheduled_harvest_and_every_amazon_step_are_off(capsys, monkeypatch):
+    from types import SimpleNamespace
+
+    from hubricon_engine import cli
+
+    monkeypatch.setattr(cli.dbmod, "connect", lambda: (_ for _ in ()).throw(AssertionError("no database is opened")))
+    for action in ("all", "crawl", "listings", "profiles", "requalify"):
+        cli.cmd_harvest(SimpleNamespace(action=action))
+        assert f"harvest {action}: off." in capsys.readouterr().out
