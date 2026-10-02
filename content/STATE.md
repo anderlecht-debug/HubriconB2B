@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T15:31:23+00:00 · style locked: False
+Updated 2026-10-02T15:38:06+00:00 · style locked: False
 
 ## Capabilities
 
@@ -18,12 +18,7 @@ Updated 2026-10-02T15:31:23+00:00 · style locked: False
 
 ## Awaiting your review
 
-- F02 · The store study's film: a real store's orders, called before and measured after · gate `review` → see `content/REVIEW.md`
-- V01 · Why most business advice is useless: survivorship bias, with numbers · gate `review` → see `content/REVIEW.md`
-- V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
-- V05 · Cash conversion cycle: the number that decides whether you survive · gate `review` → see `content/REVIEW.md`
-- V07 · Contribution margin vs gross margin — the one that actually matters · gate `review` → see `content/REVIEW.md`
-- V08 · Elasticity in plain English, and why your price is probably wrong · gate `review` → see `content/REVIEW.md`
+- nothing waiting
 
 ## Done
 
@@ -68,8 +63,8 @@ Updated 2026-10-02T15:31:23+00:00 · style locked: False
 
 ## Next five
 
-- V09 · The price increase you're afraid of is probably free
-- V11 · Discounting: the math of what you just gave away
-- V15 · You don't have a revenue problem. You have a cash trough
-- V16 · The $60,000 wire you're guessing on
-- V17 · Why 95% service level is wrong for most of your SKUs
+- F02 · The store study's film: a real store's orders, called before and measured after
+- V01 · Why most business advice is useless: survivorship bias, with numbers
+- V04 · Your A/B test told you nothing. Here's the sample size you needed
+- V05 · Cash conversion cycle: the number that decides whether you survive
+- V07 · Contribution margin vs gross margin — the one that actually matters
