@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:24:47+00:00 · style locked: False
+Updated 2026-10-02T16:25:15+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:24:47+00:00 · style locked: False
 
 ## Now
 
-- idle
+- V17 · Why 95% service level is wrong for most of your SKUs · step script
 
 ## Awaiting your review
 
@@ -72,8 +72,8 @@ Updated 2026-10-02T16:24:47+00:00 · style locked: False
 
 ## Next five
 
-- V17 · Why 95% service level is wrong for most of your SKUs
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
 - V19 · How much cash should you actually hold?
 - V22 · Base rates: the question nobody asks before a big decision
 - V23 · When your data is just noise
+- V24 · Expected value: how to make a decision you can defend
