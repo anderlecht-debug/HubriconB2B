@@ -12,6 +12,44 @@ const calm = root.classList.contains("calm");   // asked for less motion: a diss
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 export const track = (name, data) => { try { window.va("event", { name, data }); } catch (e) {} };
 
+/* -- Where a visitor first came from, kept for the booking --------------------------------
+   The spec's gate out of phase 2 is booked calls from published content, so every film, clip
+   and post links here with ?src=<code> (yt-f02, li-v01, …). The first source a browser arrives
+   with is kept for SOURCE_DAYS and rides the booking (/apply appends it to the booking's
+   utm_content as src:<code>), so a call can be traced to the piece that earned it. Without a
+   src, a utm_source (with its campaign) or another site's referral stands in. Only the code is
+   kept: never a person, never a whole address. Storage key and shape are the contract /apply
+   reads: localStorage "hubricon_src" = {"code": "...", "at": "<ISO date>"}. */
+export const SOURCE_KEY = "hubricon_src";
+export const SOURCE_DAYS = 90;
+export const SOURCE_OK = /^[a-z0-9][a-z0-9._-]{0,47}$/;
+export function sourceFrom(search, referrer, ownHost) {
+  const clean = (v) => String(v || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[^a-z0-9]+/, "").slice(0, 48);
+  const p = new URLSearchParams(search || "");
+  const src = clean(p.get("src"));
+  if (src && SOURCE_OK.test(src)) return src;
+  const utm = clean([p.get("utm_source"), p.get("utm_campaign") || p.get("utm_content")].filter(Boolean).join("."));
+  if (utm && SOURCE_OK.test(utm) && !utm.startsWith("hubricon")) return utm;
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, "");
+    if (host && host !== ownHost && !host.endsWith("." + ownHost)) { const r = clean(`ref.${host}`); if (SOURCE_OK.test(r)) return r; }
+  } catch (e) {}
+  return "";
+}
+export function sourceCode() {
+  try {
+    const kept = JSON.parse(localStorage.getItem(SOURCE_KEY) || "null");
+    if (kept && SOURCE_OK.test(kept.code) && (Date.now() - Date.parse(kept.at)) / 864e5 <= SOURCE_DAYS) return kept.code;
+  } catch (e) {}
+  return "";
+}
+try {
+  if (!sourceCode()) {
+    const code = sourceFrom(location.search, document.referrer, location.hostname.replace(/^www\./, ""));
+    if (code) localStorage.setItem(SOURCE_KEY, JSON.stringify({ code, at: new Date().toISOString() }));
+  }
+} catch (e) {}
+
 /* -- The nav ---------------------------------------------------------------------- */
 const nav = document.querySelector("[data-nav]");
 if (nav) {
@@ -193,7 +231,7 @@ document.querySelectorAll("form[data-join]").forEach((form) => {
       res = await fetch("/api/learn", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, course: form.dataset.join, website: form.website.value, source: params.get("utm_source") || params.get("ref") || "" }),
+        body: JSON.stringify({ email, course: form.dataset.join, website: form.website.value, source: params.get("utm_source") || params.get("ref") || sourceCode() || "" }),
       });
       body = await res.json().catch(() => ({}));
     } catch (e) { res = null; }
@@ -228,7 +266,7 @@ document.querySelectorAll("[data-print]").forEach((b) => b.addEventListener("cli
   const headline = document.documentElement.getAttribute("data-headline") || null;
   document.addEventListener("click", (ev) => {
     const a = ev.target.closest?.("[data-cta]");
-    if (a) track("cta_click", { section: a.dataset.cta || "", page: location.pathname, ...(headline ? { h: headline } : {}) });
+    if (a) track("cta_click", { section: a.dataset.cta || "", page: location.pathname, src: sourceCode() || "direct", ...(headline ? { h: headline } : {}) });
     const course = ev.target.closest?.('a[href^="/learn"]');
     if (course) track("learn_click", { href: course.getAttribute("href"), page: location.pathname });
   });

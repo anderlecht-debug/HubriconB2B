@@ -1671,6 +1671,14 @@ class Pass:
                                  f"{c.get('interested', 0):>3} interested   "
                                  f"{c.get('dq', 0):>4} disqualified")
                 lines.append("")
+        # The spec's gate out of phase 2: booked calls from published content, by the piece
+        # that earned each one (the src: code /apply carries; referral.source_from_answers).
+        try:
+            from . import referral
+            booked = self.db.table("bookings").select("answers, is_test, created_at, starts_at").execute().data or []
+            lines += referral.booked_by_source_lines(booked)
+        except Exception as err:
+            lines += [f"Booked calls by source: could not be read ({err}).", ""]
         analytics = outbound.get_state(self.db, "instantly.analytics", {}) or {}
         lines += ["Instantly campaign",
                   "  " + (", ".join(f"{k} {v}" for k, v in analytics.items() if k != "as_of")

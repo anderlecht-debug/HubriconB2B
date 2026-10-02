@@ -26,7 +26,7 @@ from __future__ import annotations
 import os
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from . import billing, onboarding, outbound
 from . import value as valuemod
@@ -36,6 +36,10 @@ ASK_KIND = "consent_ask"
 CONSENT_KINDS = ("testimonial", "anonymised_results", "calibration", "network")
 
 _REF = re.compile(r"\bref\s*[:=]\s*([A-Za-z0-9_-]{4,32})")
+# The content source the site keeps for 90 days and /apply appends as src:<code> (assets/site.js
+# sourceFrom): the film, clip or post that brought the visitor (yt-f02, li-v01, …), so the spec's
+# gate out of phase 2, booked calls from published content, is counted per piece.
+_SRC = re.compile(r"\bsrc\s*[:=]\s*([a-z0-9][a-z0-9._-]{0,47})")
 
 
 def _now() -> str:
@@ -74,6 +78,45 @@ def code_from_answers(answers: dict | None) -> str | None:
         if m:
             return m.group(1)
     return None
+
+
+def source_from_answers(answers: dict | None) -> str | None:
+    """The `src:` token /apply appends to utm_content, in either shape the routine stores."""
+    if not answers:
+        return None
+    direct = str(answers.get("src") or "").strip().lower()
+    if direct and re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,47}", direct):
+        return direct
+    for value in answers.values():
+        m = _SRC.search(str(value).lower())
+        if m:
+            return m.group(1)
+    return None
+
+
+def booked_by_source_lines(bookings: list[dict], days: int = 30, now: datetime | None = None) -> list[str]:
+    """The digest's count of real bookings by the content that brought them: the last `days` and
+    all time. A booking with no source says so; nothing is guessed."""
+    real = [b for b in bookings if not b.get("is_test")]
+    if not real:
+        return []
+    now = now or datetime.now(timezone.utc)
+    recent_from = now - timedelta(days=days)
+    counts: dict[str, list[int]] = {}
+    for b in real:
+        src = source_from_answers(b.get("answers")) or "no source"
+        c = counts.setdefault(src, [0, 0])
+        c[1] += 1
+        at = b.get("created_at") or b.get("starts_at")
+        try:
+            if at and datetime.fromisoformat(str(at).replace("Z", "+00:00")) >= recent_from:
+                c[0] += 1
+        except ValueError:
+            pass
+    lines = [f"Booked calls by source (the content that earned them; last {days} days, all time)"]
+    for src, (recent, total) in sorted(counts.items(), key=lambda kv: (-kv[1][0], -kv[1][1], kv[0])):
+        lines.append(f"  {src:<24} {recent:>4}   {total:>4}")
+    return lines + [""]
 
 
 # -- when to ask -----------------------------------------------------------------------

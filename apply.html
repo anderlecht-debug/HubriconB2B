@@ -232,9 +232,20 @@ try {
 function refCode() {
   try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
 }
+/* The film, clip or post that first brought this visitor (assets/site.js keeps it 90 days as
+   localStorage "hubricon_src"), so the spec's gate out of phase 2, booked calls from published
+   content, is counted per piece (engine: referral.source_from_answers). A short code, nothing else. */
+const SRC_OK = /^[a-z0-9][a-z0-9._-]{0,47}$/;
+function sourceCode() {
+  try {
+    const kept = JSON.parse(localStorage.getItem("hubricon_src") || "null");
+    if (kept && SRC_OK.test(kept.code) && (Date.now() - Date.parse(kept.at)) / 864e5 <= 90) return kept.code;
+  } catch (e) {}
+  return "";
+}
 function bookingUrl(a) {
-  const ref = refCode();
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${FIT_CODE[fitTag(a)]}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
+  const ref = refCode(), src = sourceCode();
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${FIT_CODE[fitTag(a)]}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "") + (src ? `|src:${src}` : "");
   return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
 }
 
