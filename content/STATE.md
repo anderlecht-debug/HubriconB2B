@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:21:54+00:00 · style locked: False
+Updated 2026-10-02T16:22:08+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-02T16:21:54+00:00 · style locked: False
 
 ## Now
 
-- V15 · You don't have a revenue problem. You have a cash trough · step critique
+- V15 · You don't have a revenue problem. You have a cash trough · step review
 
 ## Awaiting your review
 
