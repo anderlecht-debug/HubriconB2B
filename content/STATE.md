@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-02T16:10:28+00:00 · style locked: False
+Updated 2026-10-02T16:10:40+00:00 · style locked: False
 
 ## Capabilities
 
@@ -42,6 +42,7 @@ Updated 2026-10-02T16:10:28+00:00 · style locked: False
 - V04 · Your A/B test told you nothing. Here's the sample size you needed: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 04-ab-test-sample-size opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V05 · Cash conversion cycle: the number that decides whether you survive: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 05-cash-conversion-cycle opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
+- V07 · Contribution margin vs gross margin — the one that actually matters: The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 07-contribution-vs-gross-margin opens the teleprompter on the approved script), or run hubricon-content voice-clone --name "Hagen Simmons" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
@@ -67,8 +68,8 @@ Updated 2026-10-02T16:10:28+00:00 · style locked: False
 
 ## Next five
 
-- V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
 - V11 · Discounting: the math of what you just gave away
 - V15 · You don't have a revenue problem. You have a cash trough
+- V16 · The $60,000 wire you're guessing on
