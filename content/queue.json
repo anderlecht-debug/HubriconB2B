@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-02T16:10:52+00:00",
+ "updated_at": "2026-10-02T16:11:12+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -1043,13 +1043,13 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
-    "facts": "todo",
+    "facts": "done",
     "script": "todo",
     "critique": "todo",
     "review": "todo",
@@ -1066,7 +1066,13 @@
    },
    "review_notes": [],
    "attempts": {},
-   "log": []
+   "log": [
+    {
+     "at": "2026-10-02T16:11:12+00:00",
+     "step": "facts",
+     "note": "done"
+    }
+   ]
   },
   {
    "id": "V10",
