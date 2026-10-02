@@ -14,9 +14,9 @@ const words = (h) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style
 const page = words(html);
 const shopify = words(html.match(/<div id="seat-shopify">([\s\S]*?)\n    <\/div>\n/)[1]);
 
-test("the Shopify seat is a staff user with a role of exactly these permissions", () => {
+test("the Shopify seat is a staff account with a role of exactly these permissions", () => {
   assert.doesNotMatch(page, /collaborator/i, "a collaborator request needs a Shopify Partner organisation nothing shows exists");
-  assert.match(shopify, /Add one staff user\. Shopify allows them on the Grow, Advanced and Plus plans\./);
+  assert.match(shopify, /Add one staff account\. Shopify allows them on the Grow, Advanced and Plus plans\./);
   assert.match(shopify, /Settings → Users → Roles → Add role/);
   const perms = [...html.match(/<div id="seat-shopify">[\s\S]*?<ul class="perm">([\s\S]*?)<\/ul>/)[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(([, li]) => words(li).trim());
   assert.deepEqual(perms, [
@@ -27,7 +27,7 @@ test("the Shopify seat is a staff user with a role of exactly these permissions"
   ]);
   assert.match(shopify, /Everything else stays off\. Finance, Customers, Settings, apps and every other edit\./);
   assert.match(shopify, /Settings → Users → Add users → Admin user → the email above → assign the Hubricon role/);
-  assert.match(shopify, /On Shopify's Basic plan Shopify allows no staff users/, "Basic and Starter allow no staff users at all");
+  assert.match(shopify, /On Shopify's Basic plan Shopify allows no staff accounts/, "Basic and Starter allow no staff accounts at all");
 });
 
 test("the ad accounts are asked for on their own, and later months' files arrive the way they really do", () => {
