@@ -227,6 +227,32 @@ def _step(module: str, fn: str = "run"):
     return handler
 
 
+def cmd_timing(a):
+    from . import timing
+    q = _q(); u = _unit_for(q, a.slug)
+    result = timing.build(u, q, force=a.force, estimate=a.estimate)
+    if not a.estimate:
+        state.save(q)
+    _out(result)
+
+
+def cmd_shots_fill(a):
+    from . import shots
+    q = _q(); u = _unit_for(q, a.slug)
+    _out(shots.fill_unit(u))
+
+
+def cmd_shots_validate(a):
+    from . import shots
+    q = _q(); u = _unit_for(q, a.slug)
+    problems, note = shots.validate_unit(u, picked=a.picked)
+    for p_ in problems:
+        print(f"- {p_}")
+    print(f"{len(problems)} problem(s){note}" if problems else f"clean{note}")
+    if problems:
+        sys.exit(1)
+
+
 def cmd_template(a):
     from . import playbook_template
     p = playbook_template.build()
@@ -294,7 +320,16 @@ def main(argv=None) -> None:
         p = sub.add_parser(name); p.add_argument("slug"); p.add_argument("--note", default=""); p.set_defaults(fn=fn)
     for name, fn in (("reject", cmd_reject), ("reject-final", cmd_reject_final)):
         p = sub.add_parser(name); p.add_argument("slug"); p.add_argument("--note", required=True); p.set_defaults(fn=fn)
-    for name, module in (("tts", "tts"), ("timing", "timing"), ("render-scenes", "render_scenes"), ("assemble", "assemble"),
+    p = sub.add_parser("timing", help="timing.json from the narration, or --estimate: timing.estimate.json at 150 wpm")
+    p.add_argument("slug"); p.add_argument("--force", action="store_true")
+    p.add_argument("--estimate", action="store_true", help="plan before a voice exists; never replaces timing.json")
+    p.set_defaults(fn=cmd_timing)
+    p = sub.add_parser("shots-fill", help="snap shots.json to legal cuts and fill says, reveals and labels from the timing")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_shots_fill)
+    p = sub.add_parser("shots-validate", help="check shots.json against VISUAL_SPEC.md §4, §5, §7.4 and §14.8")
+    p.add_argument("slug"); p.add_argument("--picked", action="store_true", help="also check every pick (after visual-pick)")
+    p.set_defaults(fn=cmd_shots_validate)
+    for name, module in (("tts", "tts"), ("render-scenes", "render_scenes"), ("assemble", "assemble"),
                          ("qa", "qa"), ("thumbnail", "thumbnail"), ("describe", "describe"), ("shorts", "shorts"),
                          ("upload", "upload")):
         p = sub.add_parser(name); p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=_step(module))

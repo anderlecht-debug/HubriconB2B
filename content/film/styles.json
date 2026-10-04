@@ -1,0 +1,644 @@
+{
+ "source": "docs/content/VISUAL_SPEC.md \u00a74, \u00a75, \u00a714 (2026-10-04). The plan contract for shots.json: room, kind, screen-time group, length and the `on` rule of every style. Phase 4 adds each style's render numbers here; the style lock fingerprints this file.",
+ "fps": 30,
+ "kinds": {
+  "world": [
+   "footage",
+   "still",
+   "texture"
+  ],
+  "paper": [
+   "chart",
+   "number",
+   "pair",
+   "grid",
+   "kinetic",
+   "formula",
+   "document",
+   "table",
+   "timeline",
+   "receipt",
+   "archive",
+   "stack",
+   "split",
+   "quote",
+   "chapter",
+   "end"
+  ]
+ },
+ "group_of_kind": {
+  "chart": "charts",
+  "number": "numbers",
+  "pair": "numbers",
+  "grid": "numbers",
+  "kinetic": "numbers",
+  "formula": "numbers",
+  "timeline": "numbers",
+  "end": "numbers",
+  "document": "documents",
+  "table": "documents",
+  "receipt": "documents",
+  "quote": "documents",
+  "archive": "archival",
+  "stack": "archival",
+  "split": "archival",
+  "still": "archival",
+  "footage": "stock",
+  "texture": "ai",
+  "chapter": "chapter"
+ },
+ "sources": {
+  "stock": [
+   "pexels",
+   "pixabay"
+  ],
+  "archival": [
+   "loc",
+   "smithsonian",
+   "commons",
+   "archive",
+   "nara"
+  ],
+  "ai": [
+   "higgsfield"
+  ]
+ },
+ "shares": {
+  "explainer": {
+   "charts": [
+    0.3,
+    0.4
+   ],
+   "numbers": [
+    0.1,
+    0.15
+   ],
+   "documents": [
+    0.08,
+    0.15
+   ],
+   "stock": [
+    0.2,
+    0.3
+   ],
+   "archival": [
+    0.03,
+    0.1
+   ],
+   "ai": [
+    0.0,
+    0.08
+   ],
+   "chapter": [
+    0.0,
+    0.04
+   ]
+  },
+  "history": {
+   "charts": [
+    0.15,
+    0.25
+   ],
+   "numbers": [
+    0.08,
+    0.12
+   ],
+   "documents": [
+    0.1,
+    0.18
+   ],
+   "stock": [
+    0.15,
+    0.25
+   ],
+   "archival": [
+    0.2,
+    0.35
+   ],
+   "ai": [
+    0.0,
+    0.08
+   ],
+   "chapter": [
+    0.0,
+    0.04
+   ]
+  }
+ },
+ "cadence": {
+  "min_s": 3.0,
+  "max_s": 14.0,
+  "chart_max_s": 30.0,
+  "chart_landing_every_s": 8.0,
+  "open_s": 60.0,
+  "open_median_s": 6.0,
+  "open_max_s": 8.0,
+  "hold_after_number_s": 3.0,
+  "world_run_s": 90.0,
+  "paper_run_s": 120.0,
+  "same_kind_run": 3,
+  "texture_change_s": 180.0,
+  "chapter_s": 2.5,
+  "style_length_slack_s": 1.0
+ },
+ "variety": {
+  "window_s": 1200.0,
+  "min_styles": 10,
+  "max_style_share": 0.15,
+  "chart_build_share": 0.25,
+  "same_style_run": 2,
+  "texture_share": 0.08
+ },
+ "cliches": [
+  "handshake",
+  "suit",
+  "suits",
+  "laptop",
+  "laptops",
+  "phone",
+  "phones",
+  "smartphone",
+  "stock ticker",
+  "ticker",
+  "cash",
+  "money",
+  "dollar bills",
+  "bills",
+  "piggy bank",
+  "light bulb",
+  "lightbulb",
+  "chess",
+  "puzzle",
+  "rocket",
+  "drone skyline",
+  "skyline",
+  "smiling",
+  "office desk",
+  "whiteboard",
+  "sticky note",
+  "sticky notes",
+  "particles",
+  "network",
+  "data visualization",
+  "hologram"
+ ],
+ "styles": {
+  "still-push": {
+   "code": "W1",
+   "room": "world",
+   "kinds": [
+    "still"
+   ],
+   "group": "archival",
+   "seconds": [
+    3,
+    14
+   ],
+   "on": "none",
+   "max_scale": 1.08
+  },
+  "still-pan": {
+   "code": "W2",
+   "room": "world",
+   "kinds": [
+    "still"
+   ],
+   "group": "archival",
+   "seconds": [
+    7,
+    14
+   ],
+   "on": "none"
+  },
+  "still-reveal": {
+   "code": "W3",
+   "room": "world",
+   "kinds": [
+    "still"
+   ],
+   "group": "archival",
+   "seconds": [
+    4,
+    14
+   ],
+   "on": "required"
+  },
+  "still-depth": {
+   "code": "W4",
+   "room": "world",
+   "kinds": [
+    "still"
+   ],
+   "group": "archival",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "none",
+   "deferred": "built after the visual trial (\u00a712): it needs segmentation",
+   "per_chapter": 1
+  },
+  "archive-framed": {
+   "code": "W5",
+   "room": "paper",
+   "kinds": [
+    "archive"
+   ],
+   "group": "archival",
+   "seconds": [
+    3,
+    14
+   ],
+   "on": "none"
+  },
+  "archive-stack": {
+   "code": "W6",
+   "room": "paper",
+   "kinds": [
+    "stack"
+   ],
+   "group": "archival",
+   "seconds": [
+    6,
+    14
+   ],
+   "on": "optional"
+  },
+  "footage-establish": {
+   "code": "W7",
+   "room": "world",
+   "kinds": [
+    "footage"
+   ],
+   "group": "stock",
+   "seconds": [
+    6,
+    10
+   ],
+   "on": "none"
+  },
+  "footage-process": {
+   "code": "W8",
+   "room": "world",
+   "kinds": [
+    "footage"
+   ],
+   "group": "stock",
+   "seconds": [
+    3,
+    5
+   ],
+   "on": "none",
+   "group_of": 3,
+   "steps": [
+    "wide",
+    "medium",
+    "detail"
+   ]
+  },
+  "footage-observe": {
+   "code": "W9",
+   "room": "world",
+   "kinds": [
+    "footage"
+   ],
+   "group": "stock",
+   "seconds": [
+    10,
+    14
+   ],
+   "on": "none",
+   "every_s": 90
+  },
+  "footage-insert": {
+   "code": "W10",
+   "room": "world",
+   "kinds": [
+    "footage"
+   ],
+   "group": "stock",
+   "seconds": [
+    3,
+    5
+   ],
+   "on": "optional",
+   "max_run": 2
+  },
+  "split-then-now": {
+   "code": "W11",
+   "room": "paper",
+   "kinds": [
+    "split"
+   ],
+   "group": "archival",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "optional"
+  },
+  "texture": {
+   "code": "W12",
+   "room": "world",
+   "kinds": [
+    "texture"
+   ],
+   "group": "ai",
+   "seconds": [
+    6,
+    10
+   ],
+   "on": "none",
+   "max_run": 1,
+   "illustration": true
+  },
+  "doc-highlight": {
+   "code": "P1",
+   "room": "paper",
+   "kinds": [
+    "document"
+   ],
+   "group": "documents",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "required"
+  },
+  "doc-clipping": {
+   "code": "P2",
+   "room": "paper",
+   "kinds": [
+    "document"
+   ],
+   "group": "documents",
+   "seconds": [
+    4,
+    14
+   ],
+   "on": "required",
+   "params": {
+    "clipping": true
+   }
+  },
+  "table-scan": {
+   "code": "P3",
+   "room": "paper",
+   "kinds": [
+    "table"
+   ],
+   "group": "documents",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "required"
+  },
+  "receipt": {
+   "code": "P4",
+   "room": "paper",
+   "kinds": [
+    "receipt"
+   ],
+   "group": "documents",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "optional"
+  },
+  "number-land": {
+   "code": "P5",
+   "room": "paper",
+   "kinds": [
+    "number"
+   ],
+   "group": "numbers",
+   "seconds": [
+    3,
+    14
+   ],
+   "on": "required"
+  },
+  "number-pair": {
+   "code": "P6",
+   "room": "paper",
+   "kinds": [
+    "pair"
+   ],
+   "group": "numbers",
+   "seconds": [
+    5,
+    14
+   ],
+   "on": "required"
+  },
+  "unit-grid": {
+   "code": "P7",
+   "room": "paper",
+   "kinds": [
+    "grid"
+   ],
+   "group": "numbers",
+   "seconds": [
+    4,
+    14
+   ],
+   "on": "required"
+  },
+  "chart-build": {
+   "code": "P8",
+   "room": "paper",
+   "kinds": [
+    "chart"
+   ],
+   "group": "charts",
+   "seconds": [
+    4,
+    30
+   ],
+   "on": "required",
+   "needs_chart": true
+  },
+  "counterfactual": {
+   "code": "P9",
+   "room": "paper",
+   "kinds": [
+    "chart"
+   ],
+   "group": "charts",
+   "seconds": [
+    4,
+    30
+   ],
+   "on": "required",
+   "needs_chart": true
+  },
+  "range-band": {
+   "code": "P10",
+   "room": "paper",
+   "kinds": [
+    "chart"
+   ],
+   "group": "charts",
+   "seconds": [
+    4,
+    30
+   ],
+   "on": "required",
+   "needs_chart": true
+  },
+  "timeline": {
+   "code": "P11",
+   "room": "paper",
+   "kinds": [
+    "timeline"
+   ],
+   "group": "numbers",
+   "seconds": [
+    5,
+    30
+   ],
+   "on": "optional"
+  },
+  "formula-build": {
+   "code": "P12",
+   "room": "paper",
+   "kinds": [
+    "formula"
+   ],
+   "group": "numbers",
+   "seconds": [
+    4,
+    14
+   ],
+   "on": "optional"
+  },
+  "kinetic-thesis": {
+   "code": "P13",
+   "room": "paper",
+   "kinds": [
+    "kinetic"
+   ],
+   "group": "numbers",
+   "seconds": [
+    3,
+    10
+   ],
+   "on": "none",
+   "every_s": 180,
+   "max_words": 12
+  },
+  "quote": {
+   "code": "P14",
+   "room": "paper",
+   "kinds": [
+    "quote"
+   ],
+   "group": "documents",
+   "seconds": [
+    3,
+    14
+   ],
+   "on": "none"
+  },
+  "chapter": {
+   "code": "P15",
+   "room": "paper",
+   "kinds": [
+    "chapter"
+   ],
+   "group": "chapter",
+   "seconds": [
+    2.5,
+    2.5
+   ],
+   "on": "none"
+  },
+  "end": {
+   "code": "P16",
+   "room": "paper",
+   "kinds": [
+    "end"
+   ],
+   "group": "numbers",
+   "seconds": [
+    4,
+    10
+   ],
+   "on": "none"
+  },
+  "match-bridge": {
+   "code": "C1",
+   "room": "world",
+   "kinds": [
+    "footage"
+   ],
+   "group": "stock",
+   "seconds": [
+    3,
+    14
+   ],
+   "on": "none",
+   "per_chapter": 1
+  },
+  "breath": {
+   "code": "C2",
+   "room": "either",
+   "kinds": [
+    "footage",
+    "still",
+    "texture",
+    "chart",
+    "number",
+    "pair",
+    "grid",
+    "kinetic",
+    "formula",
+    "document",
+    "table",
+    "timeline",
+    "receipt",
+    "archive",
+    "stack",
+    "split",
+    "quote"
+   ],
+   "group": "by-kind",
+   "seconds": [
+    1.5,
+    2
+   ],
+   "on": "none",
+   "every_s": 120,
+   "silent": true
+  },
+  "callback": {
+   "code": "C3",
+   "room": "paper",
+   "kinds": [
+    "chart",
+    "number",
+    "pair",
+    "grid",
+    "kinetic",
+    "formula",
+    "document",
+    "table",
+    "timeline",
+    "receipt",
+    "archive",
+    "stack",
+    "split",
+    "quote"
+   ],
+   "group": "by-kind",
+   "seconds": [
+    4,
+    30
+   ],
+   "on": "required",
+   "needs_callback": true
+  }
+ }
+}

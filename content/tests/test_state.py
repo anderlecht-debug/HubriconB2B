@@ -109,8 +109,10 @@ def test_tier_d_waits_at_steps_still_being_built_and_never_fails_there():
     q = _fresh()
     u = _tier_d(q)
     u["steps"]["tts"] = u["steps"]["timing"] = "done"
+    assert state.next_item(q)["step"] == "shots"          # the shot plan is built
+    state.mark(q, u["id"], "shots", "done")
     nxt = state.next_item(q)
-    assert nxt.get("idle") and u["steps"]["shots"] == "todo" and not u["attempts"]
+    assert nxt.get("idle") and u["steps"]["source"] == "todo" and not u["attempts"]
 
 
 def test_no_long_film_renders_before_the_visual_trial_is_approved():
