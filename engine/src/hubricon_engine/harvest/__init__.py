@@ -16,9 +16,9 @@ Modules:
            JSON-LD review counts, the /policies/ pages) — a second platform in the same rows,
            with the USPS/UPS shipping band as its version of the FBA fee cliff. Nothing
            blocks it, so it keeps running on the days Amazon is answering with captchas.
-  run      the crawl → enrich → push pipeline, status, and the launchd install
+  run      the crawl → enrich → push pipeline, status, and the schedule install
 
-The crawl must run from a residential connection (the founder's Mac):
+The crawl must run from a residential connection (the founder's machine, the Linux desktop since 2026-10-03):
 datacenter ranges get a captcha. Pushing the finished rows to Instantly can
 run anywhere the API key lives, so the hourly operator does it too.
 """

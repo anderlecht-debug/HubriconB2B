@@ -55,7 +55,7 @@ request. They all have their own domain, which means a real inbox rather than
 One caveat, learned the hard way on 2026-09-04: the store endpoints answer 429
 to a plain HTTP client and serve their JSON happily to headless Chrome from the
 same connection. Same fingerprinting lesson Amazon taught, same fix. It still
-has to run from the Mac.
+has to run from the founder's own machine (the Linux desktop since 2026-10-03), not GitHub.
 
     hubricon harvest shopify --limit 40
 
@@ -200,7 +200,7 @@ them.
 
 | When | What | Minutes |
 |---|---|---|
-| Daily 06:10 | `hubricon harvest all` (launchd, automatic) | 0 |
+| Daily 06:10 | `hubricon harvest all` (systemd timer on the founder's machine; off while the Amazon crawl is off) | 0 |
 | Monday | Data post from the harvest table | 20 |
 | Wednesday | Answer three questions on the forums | 15 |
 | Every other Friday | Public teardown of a named brand | 40 |

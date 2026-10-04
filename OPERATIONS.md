@@ -29,8 +29,8 @@ Three components, each doing only what it is placed to do:
 | `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign (held paused unless `HUBRICON_COLD=on`), reply sync + rule/Claude triage, sending replies, provisioning bookings (the call prep), Recovery Only requests, nudges after the call, first reads, billing gates, exports, exit letters, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
 | `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients, once per channel a client sells on |
-| `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
-| `hubricon teardown` | the founder's Mac, by hand | `.env` (Supabase, `POSTAL_ADDRESS`) | the cold engine: a priced finding on a harvested seller, a page at `/t/<token>`, and the email that links to it. Sends nothing; records what you sent |
+| `hubricon harvest` | the founder's machine (the Linux desktop since 2026-10-03; systemd timer, daily 06:10 and 18:10, not installed while the Amazon crawl is off) | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
+| `hubricon teardown` | the founder's machine, by hand (cold outreach is paused) | `.env` (Supabase, `POSTAL_ADDRESS`) | the cold engine: a priced finding on a harvested seller, a page at `/t/<token>`, and the email that links to it. Sends nothing; records what you sent |
 
 The routine never sends email. The operator never reads the inbox. Both talk
 through Supabase (`bookings`, `prospect_messages`, `funnel_events`,
@@ -147,7 +147,7 @@ GitHub → repo → Settings → Environments → **Production** → add:
 | Secret | Why |
 |---|---|
 | `INSTANTLY_API_KEY` | Instantly → Settings → Integrations → API keys → v2 key with `all:all`. Outbound is OFF until this exists. Needs the Growth plan or above. |
-| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. It must be real, and it must match the one in `.env` on the Mac — the two write different messages. Change it and the live campaign's copy is re-pushed on the next pass; teardowns already drafted keep the address they were built with, so rebuild those. |
+| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. It must be real, and it must match the one in `.env` on the founder's machine — the two write different messages. Change it and the live campaign's copy is re-pushed on the next pass; teardowns already drafted keep the address they were built with, so rebuild those. |
 | `ANTHROPIC_API_KEY` | Optional. Lets the hourly run answer prospect questions itself instead of waiting up to 2 h for the routine. Same key as `.env`. |
 | `ANTHROPIC_WORKSPACE_ID` | Goes with the key above (`wrkspc_…`, shown beside the key in the Console; same value as `.env`). Identity-linked keys are refused without it, and the questions silently wait for the routine. |
 
@@ -239,7 +239,7 @@ platform someone set by hand. A prospect the harvest found on a Shopify store
 is provisioned as Shopify when they reply TEARDOWN, so nobody is ever sent
 Seller Central instructions for a store they do not have.
 
-## The free lead harvest (runs on the Mac)
+## The free lead harvest (runs on the founder's machine; Amazon steps off since 2026-10-01)
 
 `hubricon harvest` builds the same rows the paid seller databases sell, from
 public pages: Amazon Best Sellers lists → product pages (brand, seller id,
@@ -249,11 +249,17 @@ site (published contact address, founder's name). GROWTH.md has the
 reasoning and the other free channels.
 
 It has to run from a home connection: Amazon answers datacenter ranges
-(GitHub Actions included) with a captcha. So, once, on the Mac:
+(GitHub Actions included) with a captcha. **Since 2026-10-01 the Amazon steps are off**:
+Amazon now answers automated reads with "Continued access by an unauthorized AI agent
+violates Amazon's Conditions of Use", so `harvest all`, `crawl`, `listings`, `profiles`
+and `requalify` print that and stop (harvest/fetch.py `AMAZON_OFF`); a licensed source
+wired into the harvest is what turns them back on. Since 2026-10-03 the founder's machine
+is a Linux desktop: `install` writes a systemd user timer there (scheduling.py; on a Mac
+it is still the launchd agent). Once a licensed source exists:
 
 ```
 cd engine
-uv run hubricon harvest install        # launchd: daily 06:10, `hubricon harvest all`
+uv run hubricon harvest install        # systemd user timer (launchd on a Mac): 06:10 and 18:10
 uv run hubricon harvest all --max-products 40   # first pass by hand, watch it work
 uv run hubricon harvest status
 ```
@@ -275,7 +281,7 @@ enrolls like any other Hubricon list). Skips are recorded with a reason:
 `skip_size` (a single listing bigger than the $20M ceiling), `no_website`,
 `no_email`. Leads without a found person are addressed "Hi <Brand> team".
 
-Pushing needs the Instantly key. If it is in the root `.env` the Mac pushes
+Pushing needs the Instantly key. If it is in the root `.env` the founder's machine pushes
 at the end of its run; if not, the hourly operator (which has it) pushes
 whatever is `enriched` on its next pass. Either way nothing is contacted
 twice: Instantly skips addresses already in the workspace, and the campaign
@@ -448,7 +454,7 @@ Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run
 waits ten minutes once, then stops for the day; the digest says so.
 
-**Amazon pages go through the Mac's own Chrome** (since 2026-09-03). Amazon
+**Amazon pages went through the machine's own Chrome** (2026-09-03 to 2026-10-01, when the Amazon steps were switched off; on the Linux desktop it finds a system Chrome or Playwright's Chromium). Amazon
 fingerprints the client, not just the pace: a plain Python session drew a
 captcha on its second product page while the same pages loaded cleanly in
 headless Chrome from the same connection. The fetcher runs one headless
@@ -489,7 +495,7 @@ uv run hubricon source push --dry-run           # -> Instantly holding pen
 uv run hubricon source promote                  # -> harvest_sellers, for the teardown
 uv run hubricon source all                      # all of the above, one pass
 uv run hubricon source status
-uv run hubricon source install                  # launchd: 07:40 and 19:40
+uv run hubricon source install                  # systemd user timer (launchd on a Mac): 07:40 and 19:40
 ```
 
 ### Nothing here sends anything
@@ -746,7 +752,7 @@ produced a sendable teardown.
 
 This is cheaper than crawling in every sense. One store is three or four
 requests against a host that does not fight you, instead of a day of Best
-Sellers pages against one that does. Nothing needs the Mac to be awake on a
+Sellers pages against one that does. Nothing needs the founder's machine to be awake on a
 schedule, and nothing gets fingerprinted.
 
 ### The one command
@@ -774,7 +780,7 @@ Nothing here sends an email. `sent` records that you did, which is what makes
 the ninety-day and three-touch rules real — a hand-sent email nobody wrote down
 is a prospect the automated lane will mail again next week.
 
-`POSTAL_ADDRESS` has to be in `.env` on the Mac as well as in the GitHub
+`POSTAL_ADDRESS` has to be in `.env` on the founder's machine as well as in the GitHub
 environment. CAN-SPAM requires it in the message and the engine refuses to draft
 without one.
 
@@ -799,14 +805,14 @@ COLD_DRY_RUN=false hubricon teardown send   dispatch now, from this machine
 
 You do not have to run it. **The hourly operator dispatches every approved
 teardown on its own pass**, because it is the thing that holds
-`INSTANTLY_API_KEY` — your Mac does not. So the loop is: `add` the leads,
+`INSTANTLY_API_KEY` — the `.env` on your machine does not. So the loop is: `add` the leads,
 `review` them, `approve` the ones you want, and the next hourly pass sends them.
 
 `COLD_DRY_RUN: "false"` is set on that job in `operator.yml`, and it has to be:
 the flag defaults to on and is checked once per teardown, so without it the
 campaign is created, the mailboxes are synced, the caps are right, and every
 approved teardown is denied one at a time — a lane that looks healthy and sends
-nothing. It was exactly that for the first hours it existed. On the Mac the flag
+nothing. It was exactly that for the first hours it existed. On the founder's machine the flag
 is still on by default, which is why `teardown send` there needs it spelled out.
 
 Caps: `COLD_PER_MAILBOX_DAILY` (default 30) times the number of mailboxes past
@@ -1505,8 +1511,8 @@ failing and its error was being swallowed, so `operator_state` held no
 
 That cannot recur. Every pass now writes `instantly.health` to `operator_state`
 with plain-English verdicts, and `hubricon doctor` reads it back. The founder's
-Mac has no `INSTANTLY_API_KEY` and no `gh` CLI, so the database is the only log
-that reaches both machines: run `doctor` locally and it reports what the cloud
+machine has no `INSTANTLY_API_KEY`, so the database is the log that reaches both
+(the Linux desktop does have the `gh` CLI, so `gh run view` works there too): run `doctor` locally and it reports what the cloud
 last saw, with the timestamp.
 
 If activation is not sticking, the answer is almost always in the Instantly
@@ -1573,8 +1579,9 @@ Arrives at 8:17 am Chicago from the operator. Sections:
 - **PMF scoreboard** — the numbers above.
 - **Instantly campaign** — sent / replies / bounces as Instantly reports them.
 - **Harvest** — sellers on file by status (candidate / enriched / pushed /
-  skipped). If it stops moving for two days the Mac job is not running:
-  `launchctl list | grep hubricon`, then `~/Library/Logs/hubricon-harvest.err`.
+  skipped). It does not move while the Amazon steps are off (since 2026-10-01). When a
+  scheduled job runs on the founder's Linux desktop: `systemctl --user list-timers | grep
+  hubricon`, then `journalctl --user -u hubricon-sourcing` (or `-u hubricon-harvest`).
 - **Replies waiting for a written answer** — the routine clears these within
   two hours; if a name sits there for a day, the routine is not running
   (check https://claude.ai/code/routines).
@@ -1653,7 +1660,7 @@ everything the crawl has weighed in its category. Then the bridge: what a
 public page cannot show, and the full Teardown.
 
 Nothing is fetched from Amazon. Amazon soft-blocks datacenter fetches and the
-harvest reads pages from the Mac, so the page never tries; the numbers are on
+harvest read pages from the founder's own machine, so the page never tries; the numbers are on
 the listing under "Product information" and typing them is the sixty seconds.
 
 **One table, two languages.** `engine/.../cold/priors.py` stays the only place
@@ -1845,7 +1852,7 @@ Every price ships as a labelled placeholder, not a fact. Replace them with
 What it cannot tell you: minutes nobody logged; whether a booked call
 happened; the day a client left (not recorded, so the exit true-up stands in);
 anything outside the engine, such as the cloud routine on your claude.ai plan,
-the harvest on the Mac, or the site's own mail (the 60-second Teardown's copy
+the harvest on the founder's machine, or the site's own mail (the 60-second Teardown's copy
 from `api/quick.js` and the portal's sign-in links reach Resend without passing
 the engine, so the Resend line is the engine's share; add any of these as
 `fixed.*` if they should count); and a price. It only ever multiplies by the

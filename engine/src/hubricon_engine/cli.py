@@ -3465,7 +3465,7 @@ def cmd_promises(args):
 def cmd_doctor(args):
     """Why is or isn't the cold campaign sending. Read-only; never sends anything.
 
-    On the founder's Mac there is no INSTANTLY_API_KEY (it lives in the GitHub
+    On the founder's machine there is no INSTANTLY_API_KEY (it lives in the GitHub
     Actions Production environment) and no gh CLI, so a live check is usually
     impossible here. The hourly operator writes its findings to operator_state,
     and this command reads them back — the database is the shared log.
@@ -3938,14 +3938,15 @@ def cmd_teardown(args):
 def cmd_source(args):
     """Shopify lead sourcing: discovery, qualification, contact, and the two sinks.
 
-    Runs on the Mac, like the harvest. Nothing here sends an email: `push`
+    Runs on the founder's own machine (since 2026-10-03 the Linux desktop; `install`
+    adds a systemd user timer there). Nothing here sends an email: `push`
     writes to a holding-pen list the operator's enrolment cannot match, and
     `promote` lands rows at `candidate`, where the auto-push does not look.
     """
     from .sourcing import run as sourcing
 
     if args.action == "install":
-        print(sourcing.install_launchd())
+        print(sourcing.install())
         return
 
     db = dbmod.connect()
@@ -4009,7 +4010,7 @@ def _search_fetcher():
 
 
 def cmd_harvest(args):
-    """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
+    """Free leads from public pages; runs on the founder's own machine, not GitHub (Amazon captchas datacenters)."""
     from .harvest import run as harvest
     from .harvest.fetch import AMAZON_OFF
 
@@ -4021,7 +4022,7 @@ def cmd_harvest(args):
         print(f"harvest {args.action}: off. {AMAZON_OFF}")
         return
     if args.action == "install":
-        print(harvest.install_launchd())
+        print(harvest.install())
         return
     db = dbmod.connect()
     calibration.load(db)      # learned curves and ratios, when any exist

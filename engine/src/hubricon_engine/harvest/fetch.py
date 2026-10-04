@@ -68,15 +68,25 @@ class AmazonOff(Blocked):
 
 # Amazon fingerprints the client, not just the pace: a plain urllib session
 # drew a captcha on its second product page on 2026-09-03 while the same
-# pages loaded cleanly in headless Chrome from the same connection. So the
-# Amazon pages go through the Mac's own Chrome when it is installed (one
-# process per page, --dump-dom, a private profile under ~/.hubricon); every
-# other host keeps urllib. HARVEST_AMAZON_CLIENT=urllib turns it off.
+# pages loaded cleanly in headless Chrome from the same connection. So pages
+# that need a browser go through the machine's own Chrome when one is
+# installed (one process per page, --dump-dom, a private profile under
+# ~/.hubricon); every other host keeps urllib. HARVEST_AMAZON_CLIENT=urllib
+# turns it off. (Amazon itself is off: AMAZON_OFF below.) The founder's machine
+# is a Linux desktop since 2026-10-03: a system Chrome or Chromium if present,
+# else the Chromium that Playwright keeps under ~/.cache/ms-playwright.
+def _playwright_chromium() -> str:
+    found = sorted(Path.home().glob(".cache/ms-playwright/chromium-*/chrome-linux*/chrome"))
+    return str(found[-1]) if found else ""
+
+
 CHROME_CANDIDATES = (
     os.environ.get("HARVEST_CHROME", ""),
+    shutil.which("google-chrome-stable") or "", shutil.which("google-chrome") or "",
+    shutil.which("chromium") or "", shutil.which("chromium-browser") or "",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    shutil.which("google-chrome") or "", shutil.which("chromium") or "",
+    _playwright_chromium(),
 )
 
 
