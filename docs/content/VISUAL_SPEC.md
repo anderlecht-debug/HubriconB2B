@@ -211,6 +211,12 @@ long video loses people.
 
 Rough arithmetic: a 40-minute film is about 2,400 s, so about 250–300 shots.
 
+*Rulings, 2026-10-04, from planning the first approved script: (1) a number must be readable, so
+when figures are spoken close together in the first minute, a paper shot may run past 8 s, but only
+to the first legal cut after its last figure's 3-second hold, and it does not count toward the
+opening median; (2) a chapter card is exactly the timing's card segment (2.5 s on tier D; tiers A
+and B keep their 1.1 s).*
+
 ---
 
 ## 5. Screen-time budget
@@ -1205,6 +1211,8 @@ Each is good work somewhere else. None fits an instrument that has to be trusted
   three shots running; `texture` within 8%; one `kinetic-thesis` at most every three minutes; one
   `footage-observe` at most every 90 s; one `breath` at most every two minutes; one `match-bridge` and
   one `still-depth` at most per chapter.
+  *(2026-10-04: a process sequence, W8, is one shot in three parts and counts once toward "never the
+  same style three shots running"; the spec's own W8 is three `footage-process` entries in a row.)*
 - The `visual-pick` skill reads each style's "Failure looks like" lines as its rejection list.
 - The `critique render` skill checks each shot on the contact sheet against its style's recipe.
 - `docs/content/styles/` holds the example frames, `contact.png` and `styles-trial.css`.

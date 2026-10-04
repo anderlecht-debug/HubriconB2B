@@ -24,9 +24,10 @@ VIDEO_STEPS = ["facts", "script", "critique", "review", "tts", "timing", "scenes
 # pick between the timing and the render, one clip per shot, then the Manim charts.
 VIDEO_STEPS_D = ["facts", "script", "critique", "review", "tts", "timing", "shots", "source", "pick",
                  "render_shots", "scenes", "assemble", "qa", "thumbnail", "describe", "shorts", "approve_final", "upload"]
-# Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 1–4). A
-# tier-D unit waits at the first of them, never failing, until its phase lands.
-PENDING_D = {"shots", "source", "pick", "render_shots"}
+# Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 2–4; the shot
+# plan landed 2026-10-04). A tier-D unit waits at the first of them, never failing, until its
+# phase lands.
+PENDING_D = {"source", "pick", "render_shots"}
 GATES = {"review", "approve_final"}
 MAX_ATTEMPTS = 3
 MAX_AWAITING = 5
