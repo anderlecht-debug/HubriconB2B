@@ -43,7 +43,7 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         shifted.write_text("\n".join(lines) + "\n", encoding="utf-8")
         out = d / "shorts" / f"{clip['index']:02d}.mp4"
         cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(v), "-ss", f"{clip['start']:.3f}", "-t", f"{length:.3f}", "-i", str(mix),
-               "-vf", f"{GRAIN},ass={shifted.as_posix()}", "-t", f"{length:.3f}", "-r", "30", "-c:v", "libx264", "-crf", "18",
+               "-vf", f"{GRAIN},{subtitles.ass_filter(shifted)}", "-t", f"{length:.3f}", "-r", "30", "-c:v", "libx264", "-crf", "18",
                "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-shortest", str(out)]
         subprocess.run(cmd, check=True, timeout=1800)
         made.append(out.name)

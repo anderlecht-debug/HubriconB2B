@@ -39,7 +39,27 @@ ALLOW_PLACEHOLDER = os.environ.get("CONTENT_ALLOW_PLACEHOLDER") == "1"
 KOKORO_DIR = CONTENT_DIR / ".cache" / "kokoro"
 KOKORO_VOICE = "am_michael"
 WHISPER_MODEL = os.environ.get("CONTENT_WHISPER_MODEL", "small")
-WHISPER_DEVICE = os.environ.get("CONTENT_WHISPER_DEVICE", "cpu")   # the box has a GPU but no CUDA runtime libraries
+
+
+def _cuda_ready() -> bool:
+    """Load the CUDA libraries the `voice` extra installs (nvidia-cublas-cu12,
+    nvidia-cudnn-cu12) so faster-whisper finds them on the GPU; the system has
+    none of its own. False when they or the GPU are missing."""
+    import ctypes
+    import glob
+    try:
+        import ctranslate2
+        import nvidia
+        base = Path(nvidia.__path__[0])
+        for pat in ("cublas/lib/libcublasLt.so.*", "cublas/lib/libcublas.so.*", "cudnn/lib/libcudnn*.so.*"):
+            for f in sorted(glob.glob(str(base / pat))):
+                ctypes.CDLL(f, mode=ctypes.RTLD_GLOBAL)
+        return ctranslate2.get_cuda_device_count() > 0
+    except (ImportError, OSError, AttributeError):
+        return False
+
+
+WHISPER_DEVICE = os.environ.get("CONTENT_WHISPER_DEVICE")   # unset: the GPU when _cuda_ready(), else the CPU
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’.,-]+")
 
 
@@ -106,7 +126,7 @@ def _whisper_model(device: str | None = None):
     global _whisper
     if _whisper is None:
         from faster_whisper import WhisperModel
-        dev = device or WHISPER_DEVICE
+        dev = device or WHISPER_DEVICE or ("cuda" if _cuda_ready() else "cpu")
         _whisper = WhisperModel(WHISPER_MODEL, device=dev, compute_type="int8_float16" if dev == "cuda" else "int8",
                                 cpu_threads=8)
     return _whisper
@@ -211,6 +231,43 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     if name != "founder":
         u["publishable"] = False
     return {"status": "ok", "voice": name, "beats": len(done), "why": why}
+
+
+def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
+    """The founder's own reading, into the same files the clone writes.
+
+    `record.mjs` keeps one take per beat as takes/b<N>.wav; each becomes
+    audio/vo-NN.wav with alignment/vo-NN.json (the script's own words on
+    faster-whisper's timing), so everything after `tts` is one path whichever
+    voice reads (VISUAL_SPEC.md §7.2). Takes are copied, never altered."""
+    import shutil
+    slug = u["slug"]
+    d = scriptmod.video_dir(slug)
+    facts = scriptmod.load_facts(slug)
+    sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
+    texts = [speakable(b["VO"]) for b in sc["beats"]]
+    wanted = [i for i, t in enumerate(texts, start=1) if t]
+    missing = [f"b{i}" for i in wanted if not (d / "takes" / f"b{i}.wav").exists()]
+    if missing:
+        return {"status": "blocked", "reason": f"no take for {', '.join(missing)}: read them with "
+                                               f"`node content/film/record.mjs {slug}`"}
+    (d / "audio").mkdir(exist_ok=True)
+    (d / "alignment").mkdir(exist_ok=True)
+    for i in wanted:
+        take, audio = d / "takes" / f"b{i}.wav", d / "audio" / f"vo-{i:02d}.wav"
+        meta = d / "alignment" / f"vo-{i:02d}.json"
+        if audio.exists() and meta.exists() and not force and json.loads(meta.read_text(encoding="utf-8")).get("provider") == "own":
+            continue
+        for other in (d / "audio").glob(f"vo-{i:02d}.*"):   # a clone read of this beat steps aside; its copy is in audio/takes
+            if other.suffix != ".wav":
+                other.unlink()
+        shutil.copyfile(take, audio)
+        words = snap_words(texts[i - 1], align(audio))
+        meta.write_text(json.dumps({"beat": i, "name": sc["beats"][i - 1]["name"], "text": texts[i - 1], "provider": "own",
+                                    "words": words}, ensure_ascii=False) + "\n", encoding="utf-8")
+    u["voice"] = "own"
+    u["publishable"] = False   # set again only by approve-final
+    return {"status": "ok", "voice": "own", "beats": len(wanted)}
 
 
 # ── the founder's voice: clone and preview ─────────────────────────────────

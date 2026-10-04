@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 from . import script as scriptmod
+from . import tokens
 from .state import CONTENT_DIR
 
 ENTRY = Path(__file__).resolve().parent / "scenes" / "entry.py"
@@ -52,6 +53,7 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     if not q.get("style_locked") and not (u["id"].startswith("V01") or u["id"].startswith("SMOKE")):
         return {"status": "blocked", "reason": "style not locked yet; V01 must pass QA and `hubricon-content style-lock` first"}
     d = scriptmod.video_dir(slug)
+    tokens.refresh()   # the films' tokens follow the site's CSS (VISUAL_SPEC.md §3.1)
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
     if force and (d / "events.json").exists():
         (d / "events.json").unlink()

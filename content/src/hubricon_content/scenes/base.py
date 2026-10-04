@@ -5,49 +5,88 @@ long it lasts, and at what second each `{{key}}` in the narration is spoken,
 so a number can appear the instant it is said. Charts build progressively
 (axes, then data, then annotation) and every data landing is written to
 `events.json`, where the sound design picks it up as a tick.
+
+The look is the film stage's (VISUAL_SPEC.md §8.4): paper ground, ink lines,
+rule-2 axes, blue only on money and the leak, Inter Display at the stage's own
+sizes and margins, the corner with its label and the mark. Every colour comes
+from content/assets/tokens.json and every size from the stage's CSS, through
+tokens.stage(), so a Manim chart and a stage chart in one film read as one film.
 """
 
+import functools
 import json
 import math
 import os
 from pathlib import Path
 
 import numpy as np
-from manim import (DL, DOWN, DR, LEFT, RIGHT, UL, UP, UR, Axes, Create, DashedLine, Dot, FadeIn, FadeOut,
-                   Line, Rectangle, Scene, Text, VGroup, VMobject, config, linear, smooth)
+from PIL import ImageFont
+from manim import (DOWN, LEFT, ORIGIN, RIGHT, UP, Axes, Circle, DashedLine, FadeIn, FadeOut, Polygon, RoundedRectangle,
+                   Scene, Text, VGroup, VMobject, config, linear, smooth)
+
+from .. import tokens
 
 try:
-    import manimpango
-    for _f in (Path(__file__).resolve().parents[3] / "assets" / "fonts").glob("*.ttf"):
-        try:
-            manimpango.register_font(str(_f))
-        except Exception:
-            pass
+    tokens.register_fonts()
 except Exception:
     pass
 
-NAVY = "#050A1F"
-NAVY_2 = "#0A1130"
-AMBER = "#FFC000"
-INK = "#F4F6FC"
-INK_60 = "#9AA0B4"
-INK_35 = "#5C6280"
-GROUND = "#F2EFE8"
-GREEN = "#10B981"
-RED = "#EF4444"
-HEAD = "Fraunces"
-MONO = "JetBrains Mono"
+PAPER = tokens.colour("paper")
+INK = tokens.colour("ink")
+INK_2 = tokens.colour("ink_2")
+INK_3 = tokens.colour("ink_3")
+INK_4 = tokens.colour("ink_4")
+RULE = tokens.colour("rule")
+RULE_2 = tokens.colour("rule_2")
+BLUE = tokens.colour("blue")
+FONT = tokens.family(display=True)
+T = tokens.load()
+S = tokens.stage()
+
+# Pango's em for one unit of Manim font_size (measured from Inter's cap height,
+# 0.7275 em, on 2026-10-04).
+EM_PER_FONT_SIZE = 0.013880
+# Inter's vertical metrics (units per em 2048): where CSS puts the baseline in a line box.
+ASCENT, DESCENT = 1984 / 2048, 494 / 2048
+# Glyphs that sit flat on the baseline; their bottoms find it.
+FLAT = set("ABDEFHIKLMNPRTXZhiklmnrxz1247")
+# The film stage draws the site's SVG charts 1200 wide in a 1600 px frame, so a
+# chart's px tokens (line weights, 30 px labels) land 4/3 larger on screen.
+CHART_SCALE = 4 / 3
 
 STYLE = {
-    "palette": {"navy": NAVY, "navy_2": NAVY_2, "amber": AMBER, "ink": INK, "ink_60": INK_60, "ink_35": INK_35,
-                "ground": GROUND, "green": GREEN, "red": RED},
-    "type": {"headline": HEAD, "data": MONO, "headline_size": 64, "number_size": 104, "label_size": 22, "caption_size": 19},
-    "chart": {"axis_stroke": 1.5, "axis_color": INK_35, "data_stroke": 2.5, "band_opacity": 0.16, "grid_opacity": 0.0,
-              "build_axes_s": 0.9, "build_data_s": 2.2, "annotation_s": 0.55, "drift_scale": 1.02},
-    "cards": {"hold_s": 1.1, "texture": "plain navy with a hairline rule; a cached texture set may replace the ground"},
-    "restraint": {"amber_elements_per_frame": 1, "callouts_visible": 2, "text_blocks_per_frame": 3,
+    "palette": T["colour"],
+    "type": {"family": FONT, **{k: v for k, v in S.items() if k.endswith("_px") and not isinstance(v, list)}},
+    "chart": {"axis": "rule_2", "text": "ink_3", "line_px": T["line"]["step"] * CHART_SCALE,
+              "leak_px": T["line"]["leak"] * CHART_SCALE, "hair_px": T["line"]["hair"] * CHART_SCALE,
+              "label_px": 30 * CHART_SCALE, "band_opacity": T["chart"]["band"], "path_opacity": T["chart"]["path_rest"],
+              "path_draw_opacity": T["chart"]["path_draw"],
+              "build_axes_s": 0.9, "build_data_s": 2.2, "annotation_s": 0.55, "drift_scale": 1.015},
+    "cards": {"chapter_px": 96, "hairline_px": 120, "hold_s": 2.5},
+    "restraint": {"blue": "money and the leak only", "blue_elements_per_frame": 1, "callouts_visible": 2,
                   "reveal_rate_func": "smooth", "no_gradients_or_glows": True},
 }
+
+
+def cubic_bezier(x1: float, y1: float, x2: float, y2: float):
+    """A CSS cubic-bezier() timing function as a Manim rate_func."""
+    def bez(t, a, b):
+        return 3 * a * (1 - t) ** 2 * t + 3 * b * (1 - t) * t ** 2 + t ** 3
+
+    def rate(x: float) -> float:
+        if x <= 0 or x >= 1:
+            return float(min(1.0, max(0.0, x)))
+        t = x
+        for _ in range(12):   # Newton on x(t) = x
+            dx = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * (1 - t) * t + 3 * (1 - x2) * t ** 2
+            t = min(1.0, max(0.0, t - (bez(t, x1, x2) - x) / dx)) if dx else t
+        return bez(t, y1, y2)
+    return rate
+
+
+EASE_OUT = cubic_bezier(*T["ease_out"])          # the site's --ease-out: every entrance
+EASE_STILL = cubic_bezier(0.37, 0, 0.63, 1)      # VISUAL_SPEC §3.4: the slow move on a still
+ENTER_S, ENTER_RISE_PX = 0.7, 18                 # film.css .in: 700 ms, 18 px
 
 
 def fit(m, max_width: float):
@@ -67,6 +106,11 @@ def money(v: float, digits: int = 0) -> str:
     return ("−" if v < 0 else "") + f"${abs(v):,.{digits}f}"
 
 
+def is_money(value: str) -> bool:
+    """Blue is for money and the leak: a spoken figure in dollars."""
+    return "$" in str(value)
+
+
 def nice_step(lo: float, hi: float, n: int = 5) -> float:
     raw = (hi - lo) / max(1, n)
     mag = 10 ** math.floor(math.log10(raw)) if raw > 0 else 1
@@ -74,6 +118,145 @@ def nice_step(lo: float, hi: float, n: int = 5) -> float:
         if raw <= m * mag:
             return m * mag
     return 10 * mag
+
+
+# ── units: the stage is laid out in px; Manim in frame units ──
+def px() -> float:
+    """Frame units per pixel of the frame being rendered."""
+    return config.frame_height / config.pixel_height
+
+
+def font_size(size_px: float) -> float:
+    return size_px * px() / EM_PER_FONT_SIZE
+
+
+def stroke(size_px: float) -> float:
+    """Manim's stroke_width for a line this many px wide (cairo draws 0.01 frame units per unit)."""
+    return size_px * px() / 0.01
+
+
+def at(x_px: float, y_px: float) -> np.ndarray:
+    """A point given in px from the frame's top-left, as the stage's CSS gives it."""
+    return np.array([(x_px - config.pixel_width / 2) * px(), (config.pixel_height / 2 - y_px) * px(), 0.0])
+
+
+def baseline(m: Text) -> float:
+    """The y of a line's baseline: the bottom of its flat-footed glyphs."""
+    pairs = list(zip(m.hc_text, m.submobjects))
+    glyphs = [g for ch, g in pairs if ch in FLAT and g.has_points()]
+    if not glyphs:
+        glyphs = [g for ch, g in pairs if ch not in "gjpqyQ,;()[]{}" and g.has_points()] or m.submobjects
+    return float(np.median([g.get_bottom()[1] for g in glyphs]))
+
+
+@functools.lru_cache(maxsize=64)
+def _face(display: bool, weight: int, size_px: float):
+    """Pillow's view of the font, shaped by libraqm so kerning counts as it does in Chrome."""
+    return ImageFont.truetype(str(tokens.font_file(weight, display)), size_px, layout_engine=ImageFont.Layout.RAQM)
+
+
+@functools.lru_cache(maxsize=4)
+def _metrics(display: bool, weight: int):
+    from fontTools.ttLib import TTFont
+    f = TTFont(str(tokens.font_file(weight, display)), lazy=True)
+    return f.getBestCmap(), f["hmtx"], f["head"].unitsPerEm
+
+
+def bearing(c: str, size_px: float, weight: int = 600) -> float:
+    """A glyph's left side bearing in px: where its ink starts after its origin."""
+    cmap, hmtx, upm = _metrics(True, weight)
+    g = cmap.get(ord(c))
+    return hmtx[g][1] / upm * size_px if g else 0.0
+
+
+def _opsz(size_px: float) -> float:
+    """How far toward the Display cut Chrome's optical sizing sets this size: 0 at 14 px, 1 from 32 px."""
+    return min(1.0, max(0.0, (size_px - 14) / 18))
+
+
+def advance(s: str, size_px: float, weight: int = 600, track_em: float = 0.0) -> float:
+    """The width CSS gives a line, in px: the glyph advances at this optical size,
+    plus letter-spacing after every character (the browser adds it after the last too)."""
+    t = _opsz(size_px)
+    a = _face(True, weight, size_px).getlength(s)
+    if t < 1:
+        a = t * a + (1 - t) * _face(False, weight, size_px).getlength(s)
+    return a + track_em * size_px * len(s)
+
+
+def type_line(text: str, size_px: float, colour: str = INK, weight: int = 600, track_em: float = 0.0,
+              upper: bool = False) -> Text:
+    """One line of Inter as the stage sets it: the Display cut, widened toward the
+    text cut below 32 px as optical sizing does, letter-spacing included."""
+    s = text.upper() if upper else text
+    m = Text(s, font=FONT, font_size=font_size(size_px), weight="SEMIBOLD" if weight >= 500 else "NORMAL",
+             color=colour, disable_ligatures=True)
+    m.hc_text, m.hc_size, m.hc_weight = s, size_px, weight
+    if _opsz(size_px) < 1 and s.strip():
+        wide = advance(s, size_px, weight) / _face(True, weight, size_px).getlength(s)
+        m.stretch(wide, 0, about_edge=LEFT)
+    if track_em:
+        step = track_em * size_px * px()
+        for i, g in enumerate(m.submobjects):
+            g.shift(RIGHT * step * i)
+    return m
+
+
+def place(m: Text, left_px: float, baseline_px: float) -> Text:
+    """Put a line's origin at left_px (its first glyph's side bearing in from
+    there, as CSS draws it) and its baseline at baseline_px."""
+    lsb = bearing(m.hc_text.lstrip()[:1] or "0", m.hc_size, m.hc_weight)
+    m.shift(RIGHT * (at(left_px + lsb, 0)[0] - m.get_left()[0]) + UP * (at(0, baseline_px)[1] - baseline(m)))
+    return m
+
+
+def first_baseline(top_px: float, size_px: float, line_height: float) -> float:
+    """Where CSS draws the first baseline of a block whose line box starts at top_px."""
+    return top_px + ((line_height - (ASCENT + DESCENT)) / 2 + ASCENT) * size_px
+
+
+def _greedy(words: list[str], size_px: float, max_px: float, weight: int, track_em: float) -> list[str]:
+    lines, cur = [], ""
+    for w in words:
+        trial = (cur + " " + w).strip()
+        # the trailing letter-spacing does not count against the box, as in the browser
+        if cur and advance(trial, size_px, weight, track_em) - track_em * size_px > max_px:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = trial
+    return lines + ([cur] if cur else [])
+
+
+def block(text: str, size_px: float, max_px: float, colour: str = INK, weight: int = 600, track_em: float = 0.0,
+          wrap: str = "pretty") -> list[Text]:
+    """A paragraph wrapped to max_px as the stage wraps it: `balance` for headings
+    (h1–h3, .display), `pretty` for paragraphs (no word alone on the last line)."""
+    words = text.split()
+    lines = _greedy(words, size_px, max_px, weight, track_em)
+    if wrap == "balance" and len(lines) > 1:
+        lo, hi = max_px / len(lines), max_px      # the narrowest box that keeps the same number of lines
+        for _ in range(16):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if len(_greedy(words, size_px, mid, weight, track_em)) > len(lines) else (lo, mid)
+        lines = _greedy(words, size_px, hi, weight, track_em)
+    elif wrap == "pretty" and len(lines) > 1 and len(lines[-1].split()) == 1 and len(lines[-2].split()) > 2:
+        head, last = lines[-2].rsplit(" ", 1)
+        lines[-2:] = [head, last + " " + lines[-1]]
+    return [type_line(ln, size_px, colour, weight, track_em) for ln in lines]
+
+
+def stack(lines: list[Text], left_px: float, top_px: float, size_px: float, line_height: float) -> tuple[VGroup, float]:
+    """Lay wrapped lines down from top_px; returns the group and the block's bottom in px."""
+    b = first_baseline(top_px, size_px, line_height)
+    for i, ln in enumerate(lines):
+        place(ln, left_px, b + i * line_height * size_px)
+    return VGroup(*lines), top_px + len(lines) * line_height * size_px
+
+
+def ch(size_px: float, weight: int = 600) -> float:
+    """CSS's ch: the advance of the zero."""
+    return advance("0", size_px, weight)
 
 
 class HubriconScene(Scene):
@@ -86,10 +269,18 @@ class HubriconScene(Scene):
         self.facts = json.loads((self.d / "facts.json").read_text(encoding="utf-8"))
         self.length = float(self.seg["end"]) - float(self.seg["start"])
         self.events = []
-        self.camera.background_color = NAVY
+        self.camera.background_color = PAPER
         self.W = config.frame_width
         self.H = config.frame_height
+        self.Wpx, self.Hpx = config.pixel_width, config.pixel_height
+        # The stage's padding (film.css .scene); the vertical cut keeps its bottom for the subtitles.
+        top, side, bottom = S["pad_px"]
+        self.pad = {"top": top, "side": side if not self.vertical else 96, "bottom": bottom if not self.vertical else 520,
+                    "chart_top": S["pad_top_chart_px"] if not self.vertical else 200}
+        self.chart_top = None
         self.callout_stack = VGroup()
+        self.entering = []
+        self.corner()
 
     # ── clock ──
     def _trace(self, what: str):
@@ -103,12 +294,24 @@ class HubriconScene(Scene):
         wait() is itself a play() and a hand-kept tally double-counts it."""
         return float(self.renderer.time)
 
+    def enter(self, *mobs):
+        """The stage's entrance (film.css .in): rise 18 px and fade in, ease-out.
+        It plays alongside the scene's next animation, so it costs no time."""
+        for m in mobs:
+            self.entering.append(FadeIn(m, shift=UP * ENTER_RISE_PX * px(), rate_func=EASE_OUT))
+
     def play(self, *anims, **kw):
+        if self.entering:
+            anims, self.entering = (*self.entering, *anims), []
         rt = kw.get("run_time") or max((getattr(a, "run_time", 1.0) for a in anims), default=1.0)
         super().play(*anims, **kw)
         self._trace(f"play {rt:.2f}")
 
     def wait(self, duration=1.0, **kw):
+        if self.entering and duration > 0.01:
+            first = min(duration, ENTER_S)
+            self.play(run_time=first)
+            duration -= first
         if duration > 0.01:
             super().wait(duration, **kw)
 
@@ -122,67 +325,162 @@ class HubriconScene(Scene):
     def landed(self, kind: str = "data"):
         self.events.append({"t": round(float(self.seg["start"]) + self.clock, 3), "kind": kind, "segment": self.seg.get("index")})
 
-    # ── furniture ──
+    # ── furniture: the stage's corner (film.css .corner), on every frame ──
+    def label_text(self) -> str | None:
+        """The honesty label: the proof label on a case-study figure, else the
+        demo label, since every Manim figure comes from the demo catalogue's run."""
+        if self.seg.get("proof"):
+            return "Modeled from public data · Not a client · Not a result"
+        brand = self.facts.get("demo_brand", {}).get("value")   # facts.DEMO_LABEL, from the unit's own facts
+        return f"{brand} demo data" if brand else "demo data"
+
+    def corner(self):
+        side = self.pad["side"]
+        bottom = self.Hpx - S["corner_bottom_px"]
+        size, (pad_y, pad_x) = S["label_px"], S["label_pad_px"]
+        row = size * 1.6 + 2 * pad_y + 2   # the label box: line-height 1.6, its padding, a 1 px border
+        mid = bottom - row / 2
+        parts = VGroup()
+        text = self.label_text()
+        if text:
+            lab = type_line(text, size, INK_3, 600, S["label_track_em"], upper=True)
+            place(lab, side + 1 + pad_x, first_baseline(bottom - row + 1 + pad_y, size, 1.6))
+            w = advance(lab.hc_text, size, 600, S["label_track_em"]) + 2 * pad_x + 2
+            box = RoundedRectangle(width=w * px(), height=row * px(), corner_radius=6 * px(),
+                                   stroke_color=RULE_2, stroke_width=stroke(1), fill_opacity=0)
+            box.move_to(at(side + w / 2, mid))
+            parts.add(box, lab)
+        size, icon = S["mark_px"], S["mark_icon_px"]
+        name = type_line("Hubricon", size, INK, 600, S["mark_track_em"])
+        right = self.Wpx - side
+        origin = right - advance("Hubricon", size, 600, S["mark_track_em"])
+        place(name, origin, mid - (ASCENT + DESCENT) * size / 2 + ASCENT * size)
+        cx, k = origin - 12 - icon / 2, icon / 64
+        ring = Circle(radius=27 * k * px(), stroke_color=INK, stroke_width=stroke(5 * k)).move_to(at(cx, mid))
+        h = [(22.5, 18), (29, 18), (29, 29), (35, 29), (35, 18), (41.5, 18), (41.5, 46), (35, 46), (35, 35.5),
+             (29, 35.5), (29, 46), (22.5, 46)]
+        glyph = Polygon(*[at(cx + (x - 32) * k, mid + (y - 32) * k) for x, y in h], fill_color=INK, fill_opacity=1,
+                        stroke_width=0)
+        parts.add(ring, glyph, name)
+        self.add(parts)
+        return parts
+
     def demo_label(self):
-        lab = Text("Tarnhollow · demo data", font=MONO, font_size=18, color=INK_35).to_corner(DL, buff=0.3)
-        self.add(lab)
-        return lab
+        """The corner carries the label now; kept so older scenes still run."""
+        return None
 
-    def caption(self, text: str, size: int = 19):
-        cap = Text(text, font=MONO, font_size=size, color=INK_35).to_corner(UL, buff=0.4)
-        self.add(cap)
-        return cap
+    def heading(self, text: str, caption: str | None = None) -> float:
+        """A chart scene's top block (film.css .scene.top: .heading, then .caption),
+        drawn at once. Returns the px where the chart starts."""
+        left = self.pad["side"]
+        width = self.Wpx - 2 * left
+        lines = block(text, S["heading_px"], min(width, 28 * ch(S["heading_px"])), INK, 600, S["heading_track_em"], "balance")
+        g, bottom = stack(lines, left, self.pad["chart_top"], S["heading_px"], 1.1)
+        self.enter(g)
+        if caption:
+            cl = block(caption, S["caption_px"], min(width, 46 * ch(S["caption_px"], 400)), INK_2, 400)
+            cg, bottom = stack(cl, left, bottom + 24, S["caption_px"], 1.4)
+            self.enter(cg)
+        self.chart_top = bottom + 32
+        return self.chart_top
 
-    def big_number(self, value: str, label: str, size: int = 104):
-        num = Text(value, font=HEAD, font_size=size, color=AMBER, weight="BOLD")
-        lab = Text(label, font=MONO, font_size=22, color=INK_60)
-        fit(lab, self.W * 0.8)
-        return VGroup(num, lab).arrange(DOWN, buff=0.35)
+    def caption(self, text: str, size: int = 0):
+        """A chart's title line, set as the stage's heading."""
+        return self.heading(text)
 
-    def axes(self, x_range, y_range, x_len=None, y_len=None):
-        # the bottom of the frame belongs to the subtitles; charts keep clear of it
-        x_len = x_len or (self.W * 0.72 if not self.vertical else self.W * 0.82)
-        y_len = y_len or (self.H * 0.52 if not self.vertical else self.H * 0.40)
-        return Axes(x_range=x_range, y_range=y_range, x_length=x_len, y_length=y_len, tips=False,
-                    axis_config={"stroke_color": INK_35, "stroke_width": STYLE["chart"]["axis_stroke"],
-                                 "include_ticks": True, "tick_size": 0.05, "include_numbers": False})
+    def big_number(self, value: str, label: str, size: int = 0):
+        """film.css .number over .number-sub, centred in the stage: blue when it is money."""
+        num = type_line(value, S["number_px"], BLUE if is_money(value) else INK, 600, S["number_track_em"])
+        sub = block(label, S["number_sub_px"], 26 * ch(S["number_sub_px"]), INK, 600, S["number_sub_track_em"]) if label else []
+        left = self.pad["side"]
+        # .number-sub inherits the page's line-height, 1.6
+        height = S["number_px"] + (32 + len(sub) * 1.6 * S["number_sub_px"] if sub else 0)
+        top = self.pad["top"] + (self.Hpx - self.pad["top"] - self.pad["bottom"] - height) / 2
+        place(num, left, first_baseline(top, S["number_px"], 1.0))
+        g, _ = stack(sub, left, top + S["number_px"] + 32, S["number_sub_px"], 1.6)
+        return VGroup(num, *g)
+
+    # ── charts, in the site's chart grammar (assets/hubricon.css .chart) ──
+    def plot_box(self) -> tuple[float, float, float, float]:
+        """The plot area in px: below the heading, inside the stage, the right
+        column kept for the spoken figures."""
+        top = self.chart_top or self.pad["chart_top"] + 120
+        left = self.pad["side"] + 170
+        right = self.Wpx - self.pad["side"] - (380 if not self.vertical else 0)
+        bottom = self.Hpx - self.pad["bottom"] - 70
+        return left, top, right, bottom
+
+    def axes(self, x_range, y_range, x_len=None, y_len=None, room_px: float = 0):
+        """Axes filling the plot box; room_px lifts the floor for labels that wrap."""
+        left, top, right, bottom = self.plot_box()
+        bottom -= room_px
+        ax = Axes(x_range=x_range, y_range=y_range, x_length=x_len or (right - left) * px(),
+                  y_length=y_len or (bottom - top) * px(), tips=False,
+                  axis_config={"stroke_color": RULE_2, "stroke_width": stroke(STYLE["chart"]["hair_px"]),
+                               "include_ticks": False, "include_numbers": False})
+        ax.shift(at(left, bottom) - ax.c2p(x_range[0], y_range[0]))
+        return ax
+
+    def chart_text(self, text: str, colour: str = INK_3, weight: int = 400) -> Text:
+        return type_line(text, STYLE["chart"]["label_px"], colour, weight)
 
     def axis_numbers(self, ax, xs, ys, xfmt=str, yfmt=money):
         g = VGroup()
         for x in xs:
-            g.add(Text(xfmt(x), font=MONO, font_size=16, color=INK_35).next_to(ax.c2p(x, ax.y_range[0]), DOWN, buff=0.15))
+            t = self.chart_text(xfmt(x))
+            # the first label starts at the axis, so it never sits under the y axis's own
+            t.next_to(ax.c2p(x, ax.y_range[0]), DOWN, buff=16 * px(), aligned_edge=LEFT if x <= ax.x_range[0] else ORIGIN)
+            g.add(t)
         for y in ys:
-            g.add(Text(yfmt(y), font=MONO, font_size=16, color=INK_35).next_to(ax.c2p(ax.x_range[0], y), LEFT, buff=0.15))
+            g.add(self.chart_text(yfmt(y)).next_to(ax.c2p(ax.x_range[0], y), LEFT, buff=16 * px()))
         return g
 
-    def polyline(self, ax, xs, ys, color=INK, width=2.0, opacity=1.0):
-        v = VMobject(stroke_color=color, stroke_width=width, stroke_opacity=opacity)
+    def polyline(self, ax, xs, ys, color=INK, width=None, opacity=1.0):
+        v = VMobject(stroke_color=color, stroke_width=width if width is not None else stroke(STYLE["chart"]["line_px"]),
+                     stroke_opacity=opacity)
         v.set_points_as_corners([ax.c2p(x, y) for x, y in zip(xs, ys)])
         return v
 
-    def band(self, ax, xs, lo, hi, color=AMBER, opacity=None):
-        from manim import Polygon
+    def leak_line(self, ax, xs, ys):
+        """The money line: blue, at the leak's weight."""
+        return self.polyline(ax, xs, ys, BLUE, stroke(STYLE["chart"]["leak_px"]))
+
+    def band(self, ax, xs, lo, hi, color=BLUE, opacity=None):
         pts = [ax.c2p(x, y) for x, y in zip(xs, lo)] + [ax.c2p(x, y) for x, y in zip(reversed(list(xs)), reversed(list(hi)))]
         return Polygon(*pts, fill_color=color, fill_opacity=opacity or STYLE["chart"]["band_opacity"], stroke_width=0)
 
-    def callout(self, value: str, label: str, at=None, color=AMBER):
-        """A number and what it is, stacked top-right; the default way an
-        unhandled spoken figure gets on screen the moment it is said."""
-        block = VGroup(Text(value, font=HEAD, font_size=40, color=color, weight="BOLD"),
-                       Text(label, font=MONO, font_size=17, color=INK_60)).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
-        fit(block[1], self.W * 0.30)
-        # one amber element per frame: the figure being spoken. Earlier ones step back to ink.
+    def dashed(self, a, b, color=INK_3):
+        """The site's .step-alt: ink-3, 1.25 px, dashed 5 on 4."""
+        return DashedLine(a, b, color=color, stroke_width=stroke(1.25 * CHART_SCALE), dash_length=5 * CHART_SCALE * px(),
+                          dashed_ratio=5 / 9)
+
+    def callout(self, value: str, label: str, at_=None, color=None):
+        """A number and what it is, stacked in the chart's right column; the
+        default way an unhandled spoken figure gets on screen the moment it is said."""
+        val = type_line(value, 72, color or (BLUE if is_money(value) else INK), 600, S["heading_track_em"])
+        lab = block(label, 36, 340, INK_3, 400)[:2]
+        blk = VGroup(val, *lab)
+        # one blue element per frame: the figure being spoken. Earlier ones step back to ink.
         for prev in self.callout_stack:
             prev[0].set_color(INK)
         if len(self.callout_stack) >= STYLE["restraint"]["callouts_visible"]:
             old = self.callout_stack[0]
             self.callout_stack.remove(old)
             self.play(FadeOut(old), run_time=0.25)
-        self.callout_stack.add(block)
-        self.callout_stack.arrange(DOWN, aligned_edge=RIGHT, buff=0.42).to_corner(UR, buff=0.5)
-        self.play(FadeIn(block, shift=LEFT * 0.15), run_time=STYLE["chart"]["annotation_s"], rate_func=smooth)
+        self.callout_stack.add(blk)
+        self._lay_callouts()
+        self.play(FadeIn(blk, shift=UP * 18 * px()), run_time=STYLE["chart"]["annotation_s"], rate_func=smooth)
         self.landed("annotation")
-        return block
+        return blk
+
+    def _lay_callouts(self):
+        _, top, right, _ = self.plot_box()
+        left, y = right + 48, top
+        for blk in self.callout_stack:
+            val, *lab = blk
+            place(val, left, first_baseline(y, 72, 1.0))
+            _, bottom = stack(lab, left, y + 72 + 12, 36, 1.25)
+            y = bottom + 40
 
     def reveal_loop(self, handlers: dict | None = None, skip: set | None = None):
         """Walk the spoken figures in time order; a handler draws the special
@@ -197,17 +495,21 @@ class HubriconScene(Scene):
             self.wait_until(t)
             fact = self.facts.get(key, {})
             if key in handlers:
-                for prev in self.callout_stack:   # the annotation takes the amber; earlier figures step back
+                for prev in self.callout_stack:   # the annotation takes the blue; earlier figures step back
                     prev[0].set_color(INK)
                 handlers[key](fact.get("value", r.get("value", "")), fact.get("label", ""))
             else:
                 self.callout(fact.get("value", r.get("value", "")), fact.get("label", key))
 
-    def finish(self, group=None):
+    def finish(self, group=None, about=None):
+        """Hold the rest of the segment with the stage's drift (§3.4): what is on
+        screen grows 1.000 → 1.015, centred on the blue, so nothing is frozen."""
         rest = self.length - self.clock
         if rest > 0.05:
             if group is not None:
-                self.play(group.animate.scale(STYLE["chart"]["drift_scale"]), run_time=rest, rate_func=linear)
+                centre = about.get_center() if about is not None else group.get_center()
+                self.play(group.animate.scale(STYLE["chart"]["drift_scale"], about_point=centre), run_time=rest,
+                          rate_func=linear)
             else:
                 self.wait(rest)
         ev = self.d / "events.json"

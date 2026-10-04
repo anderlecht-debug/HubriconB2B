@@ -28,6 +28,8 @@ The advantage this creates is real. Vox must source its data. The engine generat
 
 ## 2 · Screen-time budget
 
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §5, for tier D: stock and archival footage join the mix and AI images stay atmosphere at 8% or less. Kept here for the record.*
+
 | Layer | Share | Content |
 |---|---|---|
 | **Engine-rendered charts** | ~40% | Real `MONTE_CARLO.RUN` cash cones, `ELASTICITY.FIT` curves with confidence bands, `MARGIN.DECOMP` waterfalls, `NEWSVENDOR` service-level cost curves. Built progressively, annotated on top. |
@@ -106,6 +108,8 @@ the analysis is his. Cheap to say, disproportionately expensive to be caught not
 
 ## 6 · Edit rules
 
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §4 and §8.6: shots of 7–11 s (up to 14 s, a chart build up to 30 s), nothing on screen frozen longer than 4 s, and long-form films burn no subtitles. Kept here for the record.*
+
 - **Cut every 2–4 seconds.** Nothing holds longer than about six. A first attempt at this style
   typically holds shots for eight and feels like a webinar.
 - Motion on every still: slow push, slight parallax on layered elements, or a subtle drift. No
@@ -122,6 +126,8 @@ the analysis is his. Cheap to say, disproportionately expensive to be caught not
 ---
 
 ## 7 · Style lock
+
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §3.1: the look is the site's tokens and Inter everywhere, Manim and the subtitles included; navy, amber, Fraunces and JetBrains Mono are retired. The lock extends to `tokens.json`, `grade.json` and `styles.json` once the founder approves the visual trial (§12, phase 5).*
 
 Produce one explainer end to end. Then **freeze** and reuse across all subsequent videos:
 
@@ -189,6 +195,8 @@ Reuse this structure for every explainer.
 ---
 
 ## 11 · Acceptance check
+
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §10, for tier D, which adds the program checks (frozen picture, shot lengths, rooms, duplicates, faces, world exposure, blue discipline, provenance, labels). Items below still hold.*
 
 1. No generated face, avatar or synthetic human appears in any frame.
 2. Higgsfield output never depicts the subject being explained, only atmosphere.

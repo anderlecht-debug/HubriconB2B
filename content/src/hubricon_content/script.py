@@ -29,7 +29,8 @@ FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA):\s*(.*)$")
 HOOK_RE = re.compile(r"^([123])\.\s+(.*)$")
 STAMP_RE = re.compile(r"(\d+):(\d\d)")
 WPM = 150
-WORDS = {"A": (650, 950), "B": (1100, 2200), "F": (280, 520)}   # F: the home page's one film
+# F: the home page's one film. D: the long documentary films, 20 to 50 minutes (VISUAL_SPEC.md §7.1).
+WORDS = {"A": (650, 950), "B": (1100, 2200), "F": (280, 520), "D": (3000, 7500)}
 
 
 def scene_of(visual: str) -> str | None:

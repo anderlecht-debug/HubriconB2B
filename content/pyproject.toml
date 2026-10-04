@@ -14,10 +14,15 @@ dependencies = [
     "soundfile>=0.12",
     "pytest>=8.0",
     "markdown>=3.5",
+    "fonttools>=4.50",
 ]
 
 [project.optional-dependencies]
-voice = ["kokoro-onnx>=0.4", "faster-whisper>=1.0"]
+# The CUDA libraries let faster-whisper align on the GPU; without them it runs on the CPU.
+# av<19: faster-whisper 1.2 passes an argument PyAV 19 removed (found 2026-10-04).
+voice = ["kokoro-onnx>=0.4", "faster-whisper>=1.0", "av<19", "nvidia-cublas-cu12>=12.4", "nvidia-cudnn-cu12>=9.1,<10"]
+# Sourcing filters (VISUAL_SPEC §6.4): faces (YuNet), duplicates, text in frame.
+visual = ["opencv-python-headless>=4.10", "imagehash>=4.3", "pytesseract>=0.3.10"]
 
 [project.scripts]
 hubricon-content = "hubricon_content.cli:main"

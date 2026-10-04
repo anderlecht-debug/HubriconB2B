@@ -162,6 +162,17 @@ def cmd_voice(a):
     print(f"{u['id']} voice: {a.voice}")
 
 
+def cmd_takes_to_vo(a):
+    q = _q(); u = _unit_for(q, a.slug)
+    from . import tts
+    res = tts.takes_to_vo(u, q, force=a.force)
+    state.save(q)
+    _status_files(q)
+    _out(res)
+    if res["status"] != "ok":
+        raise SystemExit(1)
+
+
 def cmd_next(a):
     q = _q()
     item = state.next_item(q)
@@ -297,6 +308,8 @@ def main(argv=None) -> None:
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own", "founder"]); p.set_defaults(fn=cmd_voice)
+    p = sub.add_parser("takes-to-vo", help="the founder's own takes (record.mjs) as the unit's narration")
+    p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_takes_to_vo)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)
     p = sub.add_parser("unblock"); p.add_argument("unit"); p.add_argument("--note", default=""); p.set_defaults(fn=cmd_unblock)
 

@@ -22,7 +22,34 @@
       "Read(./.env)",
       "Read(content/.secrets/**)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "mcp__claude_ai_Claude_Docs",
+      "mcp__claude_ai_Apollo_io",
+      "mcp__claude_ai_Notion",
+      "mcp__claude_ai_Intuit_QuickBooks",
+      "mcp__claude_ai_Google_Drive",
+      "mcp__claude_ai_Miro",
+      "mcp__claude_ai_Indeed",
+      "mcp__claude_ai_Plaid_Developer_Tools",
+      "mcp__claude_ai_Figma",
+      "mcp__claude_ai_Supabase",
+      "mcp__claude_ai_Stripe",
+      "mcp__claude_ai_Vercel",
+      "mcp__claude_ai_Canva",
+      "mcp__claude_ai_Gmail",
+      "mcp__claude_ai_Google_Calendar",
+      "mcp__claude_ai_Higgsfield__generate_video",
+      "mcp__claude_ai_Higgsfield__ai_influencer_generate",
+      "mcp__claude_ai_Higgsfield__build_ai_influencer",
+      "mcp__claude_ai_Higgsfield__create_voice",
+      "mcp__claude_ai_Higgsfield__generate_audio",
+      "mcp__claude_ai_Higgsfield__generate_audio_batch",
+      "mcp__claude_ai_Higgsfield__cancel_trial_auto_renewal",
+      "mcp__claude_ai_Higgsfield__reset_balance",
+      "mcp__claude_ai_Higgsfield__select_workspace",
+      "mcp__claude_ai_Higgsfield__create_website",
+      "mcp__claude_ai_Higgsfield__ads_studio_generate",
+      "mcp__claude_ai_Higgsfield__execute_preset"
     ],
     "allow": [
       "Read",
@@ -65,7 +92,12 @@
       "Bash(fc-list:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "mcp__claude_ai_Higgsfield__generate_image",
+      "mcp__claude_ai_Higgsfield__jobs_wait",
+      "mcp__claude_ai_Higgsfield__job_status",
+      "mcp__claude_ai_Higgsfield__show_generations",
+      "mcp__claude_ai_Higgsfield__balance"
     ]
   }
 }

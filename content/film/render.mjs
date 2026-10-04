@@ -18,6 +18,7 @@ import { extname, join, dirname } from "node:path";
 import { tmpdir, homedir } from "node:os";
 import { figures } from "../../scripts/build-pages.mjs";
 import { sceneHTML, STYLE_REEL } from "./scenes.mjs";
+import { write as writeTokens } from "./tokens.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const FPS = 30, W = 1920, H = 1080, BREATH = 0.45;
@@ -35,7 +36,7 @@ export function chromeBin() {
   throw new Error("no Chrome: set CHROME_BIN");
 }
 
-const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml" };
+const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".ttf": "font/ttf", ".png": "image/png", ".jpg": "image/jpeg" };
 export function serve() {
   return new Promise((resolve) => {
     const srv = createServer((req, res) => {
@@ -76,6 +77,7 @@ export async function cdp(chrome) {
 const seconds = (wav) => Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", wav]).toString().trim());
 
 export async function render(board, out, { audio = null, stills = null } = {}) {
+  writeTokens();   // the films' tokens follow the site's CSS (VISUAL_SPEC.md §3.1)
   const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
   // A film's own facts (content/film/facts.mjs) fill its placeholders alongside the site's figures.
   const facts = board.facts ? Object.fromEntries(Object.entries(json(board.facts)).map(([k, v]) => [k, v.value])) : {};

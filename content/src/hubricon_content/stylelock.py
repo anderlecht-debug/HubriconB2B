@@ -1,12 +1,15 @@
-"""After the first video passes QA: freeze what was actually used (bible §7)."""
+"""After the first video passes QA: freeze what was actually used (bible §7;
+the look itself is the film stage's, VISUAL_SPEC.md §3.1)."""
 
 import json
 from datetime import date
 from pathlib import Path
 
 from . import script as scriptmod
+from .assemble import GRAIN
 from .audio import BED_DB, BED_DUCK_DB, ROOM_TONE_DB, TICK_DB, WHOOSH_DB
 from .scenes.base import STYLE
+from .subtitles import MAX_CHARS
 from .state import CONTENT_DIR
 from .tts import ELEVEN_MODEL, ELEVEN_SETTINGS, KOKORO_VOICE
 
@@ -25,8 +28,10 @@ def write(slug: str, q: dict) -> Path:
                   "whoosh_db": WHOOSH_DB, "target_lufs": -16, "bed_source": mixmeta.get("bed_source")},
         "narration": {"founder_model": ELEVEN_MODEL, "founder_settings": ELEVEN_SETTINGS, "placeholder_voice": KOKORO_VOICE,
                       "per_paragraph": True},
-        "edit": {"fps": 30, "resolution": "1920x1080", "grain": "noise=alls=7:allf=t+u", "cuts": "hard", "chapter_card_s": 1.1,
-                 "subtitles": "burned, JetBrains Mono, 42 chars/line"},
+        "edit": {"fps": 30, "resolution": "1920x1080", "grain": GRAIN, "cuts": "hard",
+                 "chapter_card_s": STYLE["cards"]["hold_s"],
+                 "subtitles": f"burned on shorts and tiers A/B, Inter Display SemiBold, {MAX_CHARS} chars/line; "
+                              "tier D uploads captions.srt and burns nothing"},
         "textures": json.loads(textures.read_text(encoding="utf-8")) if textures.exists() else "procedural glow (no Higgsfield set cached yet)",
     }
     LOCK_JSON.write_text(json.dumps(lock, indent=1) + "\n", encoding="utf-8")

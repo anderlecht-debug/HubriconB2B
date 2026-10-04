@@ -81,3 +81,57 @@ def test_scenes_wait_for_style_lock_except_first_video():
     state.unit(q, "V01")["status"] = "blocked"; state.unit(q, "V01")["blocked_on"] = "test"
     nxt = state.next_item(q)
     assert not (nxt.get("unit") == "V04" and nxt.get("step") == "scenes")
+
+
+def _tier_d(q: dict) -> dict:
+    """A long documentary unit (VISUAL_SPEC.md §7.1), past its script review."""
+    u = state._video_unit({"day": 90, "title": "A long film", "pillar": 1, "tier": "D", "slug": "long-film",
+                           "models": [], "producible": True})
+    q["units"] = [x for x in q["units"] if x["kind"] != "video"] + [u]
+    for x in q["units"]:
+        if x is not u:
+            x["status"] = "done"
+    for s in ("facts", "script", "critique"):
+        u["steps"][s] = "done"
+    u["steps"]["review"] = "approved"
+    return u
+
+
+def test_a_tier_d_unit_runs_the_documentary_chain():
+    u = state._video_unit({"day": 90, "title": "t", "pillar": 1, "tier": "D", "slug": "s", "models": [], "producible": True})
+    assert list(u["steps"]) == state.VIDEO_STEPS_D
+    assert state.steps_for({"tier": "A"}) is state.VIDEO_STEPS
+    from hubricon_content import qa, script
+    assert script.WORDS["D"] == (3000, 7500) and qa.TIER_RANGE["D"] == (1200, 3000)
+
+
+def test_tier_d_waits_at_steps_still_being_built_and_never_fails_there():
+    q = _fresh()
+    u = _tier_d(q)
+    u["steps"]["tts"] = u["steps"]["timing"] = "done"
+    nxt = state.next_item(q)
+    assert nxt.get("idle") and u["steps"]["shots"] == "todo" and not u["attempts"]
+
+
+def test_no_long_film_renders_before_the_visual_trial_is_approved():
+    q = _fresh()
+    u = _tier_d(q)
+    for s in ("tts", "timing", "shots", "source", "pick"):
+        u["steps"][s] = "done"
+    state.PENDING_D.discard("render_shots")
+    try:
+        assert state.next_item(q).get("idle")
+        q["visual_locked"] = True
+        assert state.next_item(q)["step"] == "render_shots"
+    finally:
+        state.PENDING_D.add("render_shots")
+
+
+def test_rejecting_a_long_film_at_the_final_review_sends_it_back_to_the_pick():
+    q = _fresh()
+    u = _tier_d(q)
+    for s in state.VIDEO_STEPS_D[4:-2]:
+        u["steps"][s] = "done"
+    state.mark(q, u["id"], "approve_final", "awaiting")
+    state.reject(q, u["id"], "approve_final", "the port shots repeat")
+    assert u["steps"]["pick"] == "todo" and u["steps"]["source"] == "done" and u["steps"]["upload"] == "blocked"

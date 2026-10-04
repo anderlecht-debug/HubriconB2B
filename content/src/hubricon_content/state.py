@@ -20,6 +20,13 @@ STATE_MD = CONTENT_DIR / "STATE.md"
 
 VIDEO_STEPS = ["facts", "script", "critique", "review", "tts", "timing", "scenes", "assemble",
                "qa", "thumbnail", "describe", "shorts", "approve_final", "upload"]
+# Tier D, the long documentary films (VISUAL_SPEC.md §7.2): a shot plan, sourcing and a
+# pick between the timing and the render, one clip per shot, then the Manim charts.
+VIDEO_STEPS_D = ["facts", "script", "critique", "review", "tts", "timing", "shots", "source", "pick",
+                 "render_shots", "scenes", "assemble", "qa", "thumbnail", "describe", "shorts", "approve_final", "upload"]
+# Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 1–4). A
+# tier-D unit waits at the first of them, never failing, until its phase lands.
+PENDING_D = {"shots", "source", "pick", "render_shots"}
 GATES = {"review", "approve_final"}
 MAX_ATTEMPTS = 3
 MAX_AWAITING = 5
@@ -95,8 +102,13 @@ def refresh_capabilities(q: dict) -> None:
 
 # ── seeding ────────────────────────────────────────────────────────────────
 
+def steps_for(u: dict) -> list[str]:
+    """The step list a video unit runs: tier D's, or the A/B/F chain."""
+    return VIDEO_STEPS_D if str(u.get("tier", "")).upper() == "D" else VIDEO_STEPS
+
+
 def _video_unit(day: dict) -> dict:
-    steps = {s: "todo" for s in VIDEO_STEPS}
+    steps = {s: "todo" for s in steps_for(day)}
     steps["upload"] = "blocked"
     return {
         "id": f"V{day['day']:02d}", "phase": 2 if day["day"] == 1 else 3, "kind": "video",
@@ -152,7 +164,7 @@ def seed() -> dict:
     units = [
         _checklist_unit("P0-tooling", 0, "setup", "Tooling, docs, skills, state, runner, timer", [
             "content venv on Python 3.13 with manim, elevenlabs, google client and the engine importable",
-            "Fraunces fonts in content/assets/fonts and ~/.local/share/fonts",
+            "Inter and Inter Display in content/assets/fonts (VISUAL_SPEC.md §3.1)",
             "docs/content holds the six governing documents; CLAUDE.md, .claude/settings.json, skills, runner, systemd units written",
             "queue.json seeded; STATE.md and REVIEW.md render",
             "demo catalogue committed and parsing through the engine; pytest content/tests passes",
@@ -175,7 +187,7 @@ def _phase_open(q: dict, phase: int) -> bool:
 
 
 def _next_step(u: dict) -> str | None:
-    for s in VIDEO_STEPS:
+    for s in steps_for(u):
         if u["steps"].get(s) not in ("done", "approved"):
             return s
     return None
@@ -225,6 +237,10 @@ def next_item(q: dict) -> dict:
             continue  # the founder's inbox is full; draft nothing more
         if step == "scenes" and not q.get("style_locked") and not u["id"].startswith(FIRST_VIDEO):
             continue  # nothing after the first video renders before the style is locked
+        if step in PENDING_D and steps_for(u) is VIDEO_STEPS_D:
+            continue  # its tooling is not built yet (VISUAL_SPEC.md §12)
+        if step in ("render_shots", "scenes") and steps_for(u) is VIDEO_STEPS_D and not q.get("visual_locked"):
+            continue  # no long film renders before the founder approves the visual trial (§12, phase 5)
         if step == "upload" and not u.get("publishable"):
             continue  # waits for a founder voice and the final sign-off
         if u["steps"][step] == "awaiting":
@@ -264,7 +280,7 @@ def mark(q: dict, ref: str, step: str, outcome: str, note: str = "") -> dict:
                 u["status"] = "stuck"
         log(u, step, f"{outcome} {note}".strip())
         return u
-    if step not in VIDEO_STEPS:
+    if step not in steps_for(u):
         raise SystemExit(f"unknown step {step!r}")
     if outcome == "done":
         u["steps"][step] = "done"
@@ -309,8 +325,9 @@ def reject(q: dict, ref: str, gate: str, note: str) -> dict:
     u.setdefault("review_notes", []).append({"at": now(), "gate": gate, "note": note})
     # Send the unit back to the step the note is about: the script for the
     # first gate, the render chain for the second.
-    back_to = "script" if gate == "review" else "scenes"
-    for s in VIDEO_STEPS[VIDEO_STEPS.index(back_to):]:
+    steps = steps_for(u)
+    back_to = "script" if gate == "review" else ("pick" if steps is VIDEO_STEPS_D else "scenes")
+    for s in steps[steps.index(back_to):]:
         u["steps"][s] = "blocked" if s == "upload" else "todo"
     u["attempts"][gate] = u["attempts"].get(gate, 0) + 1
     u["status"] = "stuck" if u["attempts"][gate] >= MAX_ATTEMPTS else "todo"
