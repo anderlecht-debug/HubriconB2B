@@ -6,5 +6,8 @@ Type=oneshot
 ExecStart=/home/lp9/Hubricon/HubriconB2B-content/scripts/content-tick.sh
 Environment=HOME=/home/lp9
 Nice=10
-MemoryMax=6G
+# Render steps (four Chrome workers, Manim, whisper on the GPU) need more than the 6 GB the
+# script steps did. MemoryHigh throttles before MemoryMax kills; the desktop keeps ~5 GB.
+MemoryHigh=8G
+MemoryMax=10G
 TimeoutStartSec=58min

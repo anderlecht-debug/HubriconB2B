@@ -49,12 +49,20 @@ git fetch -q origin content 2>/dev/null && git merge -q --ff-only origin/content
 # Claude session at all; the state files are refreshed and the tick ends.
 if [ "${CONTENT_DRY_RUN:-0}" != "1" ] && "$WT/content/.venv/bin/hubricon-content" next --dry 2>/dev/null | grep -q '"idle": true'; then
   "$WT/content/.venv/bin/hubricon-content" status --md >/dev/null 2>&1
+  # A rollup that only moved its own timestamps is not news: put the files back, commit nothing.
+  if [ -z "$(git diff -U0 -- content | grep -E '^[-+]' | grep -vE '^(\+\+\+|---)' | grep -vE 'Updated [0-9]{4}-[0-9]{2}-[0-9]{2}T|"updated_at":')" ]; then
+    git checkout -q -- content 2>/dev/null
+  fi
   git add -A content 2>/dev/null; git diff --cached --quiet || git commit -q -m "Content pipeline: the state rollup after an idle tick"
   git push -q origin content 2>/dev/null || true
   printf '%s tick idle (no session started)\n' "$(date -Is)" >> "$RUN/log"
   exit 0
 fi
 
+# A real tick sees the claude.ai connectors so it can reach Higgsfield for the films'
+# texture stills (the founder's call, 2026-10-04). scripts/content-runner.settings.json
+# allows five Higgsfield tools and denies every other connector by name; anything not
+# allowed is refused in a headless session anyway. The dry run stays strict.
 START=$(date +%s)
 if [ "${CONTENT_DRY_RUN:-0}" = "1" ]; then
   OUT=$(timeout 5m "$CLAUDE" -p "Reply with the single word OK and nothing else." \
@@ -63,7 +71,7 @@ if [ "${CONTENT_DRY_RUN:-0}" = "1" ]; then
 else
   OUT=$(timeout 55m "$CLAUDE" -p "Read CLAUDE.md, then follow .claude/skills/content-next/SKILL.md exactly. Stop starting new steps after 40 minutes of work." \
         --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
-        --max-turns 300 --output-format json --no-session-persistence --strict-mcp-config 2>&1); RC=$?
+        --max-turns 300 --output-format json --no-session-persistence 2>&1); RC=$?
 fi
 SECS=$(( $(date +%s) - START ))
 { printf '%s tick rc=%s secs=%s dry=%s\n' "$(date -Is)" "$RC" "$SECS" "${CONTENT_DRY_RUN:-0}"

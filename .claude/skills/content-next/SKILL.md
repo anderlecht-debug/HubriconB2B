@@ -37,3 +37,11 @@ Read `CLAUDE.md` first if you have not this session.
   from `facts.json` only. `hubricon-content script-validate` is the judge.
 - A step that fails three times becomes `stuck`; move on and leave the reason in the log.
 - If `hubricon-content` is not on PATH, use `content/.venv/bin/hubricon-content`.
+- One plain command per Bash call. No `&&`, `;`, `|` or heredocs, and no `timeout` prefix (the
+  runner already caps the session): a headless tick is refused any compound command, and the
+  2026-10-02 tick lost five steps that way. Commit with `git commit -m "<one sentence>"`. A
+  Python snippet goes into a file under `content/.runner/` (Write), then
+  `content/.venv/bin/python content/.runner/<file>.py`.
+- Connectors: only Higgsfield's `generate_image`, `jobs_wait`, `job_status`, `show_generations`
+  and `balance`, and only for a film's texture stills (VISUAL_SPEC.md §6.5). Never generated
+  video, never a person, never anything that spends or changes the account.

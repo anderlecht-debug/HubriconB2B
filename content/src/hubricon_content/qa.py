@@ -25,7 +25,7 @@ def disclosure_for(voice: str | None) -> str:
     if voice == "founder":
         return DISCLOSURE
     return "Narration is a placeholder voice. This cut is not for publishing."
-TIER_RANGE = {"A": (270, 460), "B": (450, 900)}
+TIER_RANGE = {"A": (270, 460), "B": (450, 900), "D": (1200, 3000)}   # D: VISUAL_SPEC.md §7.1
 
 
 def _ffprobe_duration(p: Path) -> float:

@@ -61,13 +61,16 @@ export function checkBoard(board, { scriptText = "" } = {}) {
   return problems;
 }
 
-/** Colours, margins and loudness, read from the rendered film. */
+/** Colours, margins and loudness, read from the rendered film. The one-blue rule and
+ * the safe margin are paper's: a world scene (graded footage, full bleed) is judged
+ * by tier D's blue-discipline check instead (VISUAL_SPEC.md §10). */
 export function checkVideo(mp4, board) {
   const problems = [];
   const W = 480, H = 270, margin = { x: Math.round(W * 0.05), y: Math.round(H * 0.05) };
   let t = 0;
   for (const s of board.scenes) {
     t += s.seconds;
+    if (s.room === "world") continue;
     const at = Math.max(0, t - 0.2).toFixed(2);
     const raw = execFileSync("ffmpeg", ["-loglevel", "error", "-ss", at, "-i", mp4, "-frames:v", "1", "-vf", `scale=${W}:${H}`, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 1 << 24 });
     let offHue = 0, inMargin = 0;
@@ -77,7 +80,7 @@ export function checkVideo(mp4, board) {
       if (sat > 0.3 && max > 0.2) {
         let h = max === r ? 60 * (((g - b) / (max - min)) % 6) : max === g ? 60 * ((b - r) / (max - min) + 2) : 60 * ((r - g) / (max - min) + 4);
         if (h < 0) h += 360;
-        if (h < 195 || h > 245) offHue++;   // the blue family: compression fringes of #0b5fff land near 200
+        if (h < 195 || h > 245) offHue++;   // the blue family: compression fringes of the token blue land near 200
       }
       const edge = x < margin.x || x >= W - margin.x || y < margin.y || y >= H - margin.y;
       if (edge && 1 - min > 0.1) inMargin++;

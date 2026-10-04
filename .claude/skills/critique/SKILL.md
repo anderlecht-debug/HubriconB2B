@@ -28,10 +28,13 @@ Usage: `critique script <slug>` · `critique render <slug>` · `critique copy <p
    frame; textures are never the subject; charts build progressively and carry an annotation;
    subtitles are legible; every on-screen number is readable; the "demo data" label is present
    on chart frames; palette and type match `content/assets/style-lock.json` once it exists.
-3. Run the premium checklist in `docs/content/PREMIUM-STANDARD.md` (one amber element per
-   frame, no glow or gradient furniture, at most three text blocks, direct labels, light
-   subtitles, ElevenLabs or licensed sound in `media/mix.json`, `voice == founder`). A render in
-   any voice but the founder's fails.
+3. Run the premium checklist in `docs/content/PREMIUM-STANDARD.md` as amended by
+   `docs/content/VISUAL_SPEC.md` (2026-10-04): the site's tokens and Inter in every frame, one blue
+   element per frame and blue only on money and the leak, no red or green, no glow or gradient
+   furniture, at most three text blocks, direct labels, unboxed subtitles, ElevenLabs or licensed
+   sound in `media/mix.json`, and the founder's voice (`voice` is `founder` or `own`). A render in
+   any other voice fails. For a tier-D film, also judge `qa/contact.jpg` against VISUAL_SPEC §3
+   and §6: the concrete noun, no clichés, no faces in stock or AI frames, no logos, one grade.
 4. Write `content/videos/<slug>/qa.review.json`: `{"pass": bool, "items": [...], "notes": "..."}`.
 
 ## copy

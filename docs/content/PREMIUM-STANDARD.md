@@ -32,10 +32,14 @@ rule that every number is real. The standard is about discipline in using them.
 
 ## The rules for the videos
 
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §3.1: paper ground, ink, one blue for money and the leak, no red and no green; tokens from `/assets/hubricon.css`.*
+
 **Colour.** Navy ground. Ink for everything that is not the point. One amber element per frame:
 the figure being spoken, or the highlighted path, never both. Green and red only where they
 mean profit and loss; never as decoration. No gradients, glows, halos or vignettes. Grain
 stays subtle.
+
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §3.1: Inter and Inter Display, two weights, everywhere.*
 
 **Type.** Fraunces for the number and the chapter title. JetBrains Mono, small and dim, for
 axes, captions and the demo label. No third face. No more than three text blocks on screen at
@@ -47,6 +51,8 @@ axes, data, annotation. Bands at low opacity. The demo label is always present a
 **Motion.** Eased, never linear, except the slow push that keeps a still alive. Nothing bounces,
 nothing spins, nothing wipes. Chapter cards are typographic: a hairline, the title, a short
 amber rule. Hard cuts.
+
+*Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §8.6: long-form films burn none and upload a caption track; shorts and tiers A/B burn Inter Display in ink with a thin paper outline, still never boxed.*
 
 **Subtitles.** Small, light, sentence case as written in the script, thin outline, wide bottom
 margin. They must never look like auto-captions.
@@ -72,11 +78,11 @@ not exist; the sample tables say demo data.
 
 ## What the critique checks on a render
 
-1. One amber element per frame in the sampled frames.
+1. One amber element per frame in the sampled frames. *(Superseded by VISUAL_SPEC.md, 2026-10-04: one blue element per frame, and blue only on money and the leak.)*
 2. No gradient, glow or halo furniture; chapter cards are typographic.
 3. At most three text blocks per frame; captions small and dim.
 4. Charts have direct labels and a demo label, and no legend or grid.
 5. Subtitles are light and small, never boxed or heavy-outlined.
 6. Sound: `mix.json` shows `sfx_source` and `bed_source` from ElevenLabs or a licensed bed,
    not procedural, before a final sign-off.
-7. Voice: `voice == founder`. Anything else fails the render critique by definition.
+7. Voice: `voice == founder`. Anything else fails the render critique by definition. *(Since 2026-10-04: the founder's own takes, `voice == own`, pass too; both are his voice. VISUAL_SPEC.md §7.2.)*
