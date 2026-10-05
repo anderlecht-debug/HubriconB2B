@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T05:46:56+00:00 · style locked: False
+Updated 2026-10-05T06:17:13+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T05:46:56+00:00 · style locked: False
 
 ## Now
 
-- V01 · Why most business advice is useless: survivorship bias, with numbers · step assemble
+- V01 · Why most business advice is useless: survivorship bias, with numbers · step qa
 
 ## Awaiting your review
 
