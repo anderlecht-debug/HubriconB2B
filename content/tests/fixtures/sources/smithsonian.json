@@ -1,0 +1,155 @@
+{
+ "status": 200,
+ "responseCode": 1,
+ "response": {
+  "rowCount": 1,
+  "rows": [
+   {
+    "id": "ld1-1643399842277-1643399846760-1",
+    "title": "Ledger page from Franklin's GPO account book",
+    "unitCode": "NPM",
+    "type": "edanmdm",
+    "url": "edanmdm:npm_1982.0786.1",
+    "content": {
+     "freetext": {
+      "date": [
+       {
+        "label": "Date",
+        "content": "April 5, 1770-April 5, 1772"
+       }
+      ],
+      "name": [
+       {
+        "label": "Writer",
+        "content": "Benjamin Franklin, American, 1706 - 1790"
+       },
+       {
+        "label": "Associated Person",
+        "content": "John Foxcroft"
+       },
+       {
+        "label": "Associated Person",
+        "content": "John Parker"
+       }
+      ],
+      "notes": [
+       {
+        "label": "Description",
+        "content": "The folio shown here is from Benjamin Franklin's General Post Office account book. It is written entirely by his hand, including eight signatures of his name, and it spanned 1770-1772. The ledger records, among other things, the annual salaries of three hundred pounds to Benjamin Franklin (residing in London during this time) and John Foxcroft, joint postmasters general of the colonies. The ledger also documents the successful lobbying of Secretary of Comptroller John Parker for an increase in his annual allowance."
+       },
+       {
+        "label": "Description",
+        "content": "When the methodically-minded Benjamin Franklin became joint deputy postmaster general in North America, he promptly instituted a new system of accounts, including one that enabled the General Post Office to standardize local postmasters' accounting methods. The new manner of bookkeeping did not abolish the opportunity for the dishonest to profit but it did prove beneficial since the comptroller could now check a new postmaster's accounts against the old for losses."
+       }
+      ],
+      "place": [
+       {
+        "label": "Place",
+        "content": "United States of America"
+       }
+      ],
+      "dataSource": [
+       {
+        "label": "Data Source",
+        "content": "National Postal Museum"
+       }
+      ]
+     },
+     "indexedStructured": {
+      "date": [
+       "1770s"
+      ],
+      "name": [
+       "Parker, John",
+       "Franklin, Benjamin",
+       "Foxcroft, John"
+      ],
+      "place": [
+       "United States of America"
+      ],
+      "topic": [
+       "Postal Administration",
+       "Colonial Era (1607-1776)"
+      ],
+      "geoLocation": [
+       {
+        "Other": {
+         "type": "Place",
+         "content": "United States of America"
+        }
+       }
+      ],
+      "object_type": [
+       "Archival materials"
+      ],
+      "online_media_type": [
+       "Images"
+      ]
+     },
+     "descriptiveNonRepeating": {
+      "guid": "http://n2t.net/ark:/65665/hm8f9810d08-70ca-4e80-b42b-0093c154d067",
+      "title": {
+       "label": "Title",
+       "content": "Ledger page from Franklin's GPO account book"
+      },
+      "record_ID": "npm_1982.0786.1",
+      "unit_code": "NPM",
+      "title_sort": "LEDGER PAGE FROM FRANKLIN'S GPO ACCOUNT BOOK",
+      "data_source": "National Postal Museum",
+      "record_link": "https://postalmuseum.si.edu/object/npm_1982.0786.1",
+      "online_media": {
+       "media": [
+        {
+         "id": "media:NPM-1982_0786_1_c",
+         "guid": "http://n2t.net/ark:/65665/sy705508664-1d1e-41d2-b810-5f0a2198c327",
+         "type": "Images",
+         "idsId": "NPM-1982_0786_1_c",
+         "usage": {
+          "access": "CC0"
+         },
+         "content": "https://ids.si.edu/ids/deliveryService?id=NPM-1982_0786_1_c",
+         "thumbnail": "https://ids.si.edu/ids/deliveryService?id=NPM-1982_0786_1_c",
+         "altTextAccessibility": "Associated Person: John Foxcroft; Associated Person: John Parker; Co-Donor: Alvin R. Kantor; Co-Donor: Marjorie Sered Kantor; Collection: National Postal Museum (SI); Place: UNITED STATES OF AMERICA; Writer: Benjamin Franklin",
+         "extDescrAccessibility": "The folio shown here is from Benjamin Franklin's General Post Office account book. It is written entirely by his hand, including eight signatures of his name, and it spanned 1770-1772. The ledger records, among other things, the annual salaries of three hundred pounds to Benjamin Franklin (residing in London during this time) and John Foxcroft, joint postmasters general of the colonies. The ledger also documents the successful lobbying of Secretary of Comptroller John Parker for an increase in his annual allowance.\n\nWhen the methodically-minded Benjamin Franklin became joint deputy postmaster general in North America, he promptly instituted a new system of accounts, including one that enabled the General Post Office to standardize local postmasters' accounting methods. The new manner of bookkeeping did not abolish the opportunity for the dishonest to profit but it did prove beneficial since the comptroller could now check a new postmaster's accounts against the old for losses. Height x Width: 8 x 13 in. (20.32 x 33.02 cm)",
+         "resources": [
+          {
+           "label": "High-resolution TIFF",
+           "url": "https://ids.si.edu/ids/download?id=NPM-1982_0786_1_c.tif",
+           "width": 7940,
+           "height": 4961,
+           "dimensions": "7940x4961"
+          },
+          {
+           "label": "High-resolution JPEG",
+           "url": "https://ids.si.edu/ids/download?id=NPM-1982_0786_1_c.jpg",
+           "width": 7940,
+           "height": 4961,
+           "dimensions": "7940x4961"
+          },
+          {
+           "label": "Screen Image",
+           "url": "https://ids.si.edu/ids/download?id=NPM-1982_0786_1_c_screen"
+          },
+          {
+           "label": "Thumbnail Image",
+           "url": "https://ids.si.edu/ids/download?id=NPM-1982_0786_1_c_thumb"
+          }
+         ]
+        }
+       ],
+       "mediaCount": 2
+      },
+      "metadata_usage": {
+       "access": "CC0"
+      }
+     }
+    },
+    "hash": "d79c96a2412b8c530eb109569377a0055bbeebc5",
+    "docSignature": "2f2128ae19d607a891f76ecda2bb85e6",
+    "timestamp": "1663786505",
+    "lastTimeUpdated": "1769624156",
+    "version": "1769602483"
+   }
+  ]
+ }
+}

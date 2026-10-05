@@ -36,13 +36,13 @@ any tier-D step in a session. Between `timing` and `assemble` the chain is (§7.
 | tts | `hubricon-content tts <slug>` (the clone) **or** `hubricon-content takes-to-vo <slug>` (the founder's own takes from `record.mjs`) | `audio/vo-NN.*`, `alignment/vo-NN.json` | both voices end in the same files, so everything after is one path |
 | timing | `hubricon-content timing <slug>` | `timing.json` with `cutpoints` | as above |
 | shots | invoke the `shot-plan` skill | `shots.json` | `hubricon-content shots-validate <slug>` prints no problems |
-| source | `hubricon-content source <slug>` | `sources/<shot>.jpg`, `content/.cache/assets/…` | every world shot has three candidates after the filters, or its fallback |
+| source | `hubricon-content source <slug>` (`--shot sNNN` for one) | `sources/<shot>.jpg` and `<shot>.json`, `sources/textures.json`, `content/.cache/…` | exit 0; every world shot has three candidates after the filters, or `source_status: fallback` with its reason; texture shots `awaiting_textures`. A missing key exits 2 naming it: mark the step `blocked` with that line |
 | pick | invoke the `visual-pick` skill | `shots.json` with `asset`, `focus`, `motion` | `hubricon-content shots-validate <slug> --picked` prints no problems |
 | render_shots | `hubricon-content render-shots <slug>` | `shots/<id>.mp4`, one per shot | every clip is exactly its shot's frame count; needs `visual_locked` |
 | scenes | `hubricon-content render-scenes <slug>` | the Manim chart shots only | exit 0 |
 | assemble | `hubricon-content assemble <slug>` | `media/master.mp4`, `media/captions.srt` (nothing burned) | exit 0 |
 
-`next` never offers `source`, `pick` or `render_shots` while their tooling is being built
+`next` never offers `pick` or `render_shots` while their tooling is being built
 (`state.PENDING_D`), and never `render_shots` or `scenes` on a tier-D unit before the founder
 approves the visual trial (`visual_locked`). A rejection at the final review sends a tier-D unit
 back to `pick`.
