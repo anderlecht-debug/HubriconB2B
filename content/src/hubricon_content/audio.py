@@ -9,6 +9,7 @@ effects exist, and the style lock records which was used.
 """
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -108,9 +109,14 @@ def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
         if s.get("room") != "world" or s.get("kind") != "footage" or not s.get("query"):
             continue
         subject = (s.get("params") or {}).get("ambience") or sfx.subject_of(s["query"][0])
+        name = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")[:60] or "room"
+        new = not (sfx.AMBIENCE / f"{name}.mp3").exists()
         f = sfx.ambience(subject)
         if f is None:
             continue
+        if new:
+            from . import meter
+            meter.count(d.name, "elevenlabs", "sound_seconds", 20, subject)
         clip = _decode(f).astype(np.float64)
         peak = np.abs(clip).max()
         if peak <= 0:
