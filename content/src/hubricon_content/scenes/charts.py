@@ -13,8 +13,8 @@ import numpy as np
 from manim import DOWN, LEFT, RIGHT, UP, UR, Create, Dot, FadeIn, FadeOut, GrowFromEdge, ImageMobject, Line, \
     Rectangle, VGroup, linear, smooth
 
-from .base import (BLUE, EASE_OUT, EASE_STILL, INK, INK_3, INK_4, RULE, S, STYLE, HubriconScene, at, block,
-                   ch, is_money, money, nice_step, px, stack, stroke)
+from .base import (BLUE, EASE_OUT, EASE_STILL, FIGURE_HOLD_S, INK, INK_3, INK_4, RULE, S, SHOT_MIN_S, STYLE,
+                   HubriconScene, at, block, ch, is_money, money, nice_step, phrases, px, stack, stroke)
 
 
 def _dot(point, colour=INK, r_px=7):
@@ -46,39 +46,59 @@ class ChapterCard(HubriconScene):
 
 
 class Kinetic(HubriconScene):
-    """Words or numbers landing as they are spoken: the stage's display line,
-    or its number over its label."""
+    """The narration's own sentences, each one its own shot, and a spoken figure
+    taking the whole frame the moment it is said. The cadence is the spec's (§4):
+    the card cuts at a sentence boundary, so the cut lands in the pause the
+    narrator already takes, and nothing holds past fourteen seconds."""
 
     def label_text(self):
         return super().label_text() if self.seg.get("reveals") else None
 
-    def construct(self):
-        vo = self.seg.get("vo", "")
-        first = re.split(r"(?<=[.!?])\s", vo, maxsplit=1)[0] if vo else self.seg.get("name", "")
-        reveals = sorted(self.seg.get("reveals", {}).items(), key=lambda kv: kv[1]["t"])
-        if not reveals:
-            size = S["display_small_px"]
-            lines = block(first, size, min(self.Wpx - 2 * self.pad["side"], 22 * ch(size)), INK, 600,
-                          S["display_track_em"], "balance")
-            height = len(lines) * 1.04 * size
-            top = self.pad["top"] + (self.Hpx - self.pad["top"] - self.pad["bottom"] - height) / 2
-            t, _ = stack(lines, self.pad["side"], top, size, 1.04)
-            self.enter(t)
-            self.play(run_time=min(1.0, max(0.7, self.length * 0.2)))
-            self.landed("annotation")
-            self.finish(t)
-            return
-        shown = None
-        for key, r in reveals:
-            self.wait_until(max(0.0, float(r["t"]) - float(self.seg["start"])))
+    def shots(self) -> list[dict]:
+        """The segment's shots in time order: a card per sentence, a figure where
+        one is spoken. A card that the next shot would cut inside the minimum is
+        dropped rather than flashed, and a figure keeps its own hold."""
+        start = float(self.seg["start"])
+        shots = [{"t": max(0.0, p["start"] - start), "text": p["text"]}
+                 for p in phrases(self.seg.get("words") or [])]
+        for key, r in self.seg.get("reveals", {}).items():
             fact = self.facts.get(key, {})
-            blk = self.big_number(fact.get("value", r.get("value", "")), fact.get("label", key))
-            if shown is not None:
-                self.play(FadeOut(shown, shift=UP * 18 * px()), run_time=0.25)
-            self.play(FadeIn(blk, shift=UP * 18 * px()), run_time=0.7, rate_func=EASE_OUT)
-            self.landed()
-            shown = blk
-        self.finish(shown, about=shown[0])
+            shots.append({"t": max(0.0, float(r["t"]) - start), "figure": fact.get("value", r.get("value", "")),
+                          "label": fact.get("label", key)})
+        shots.sort(key=lambda s: (s["t"], "figure" not in s))
+        if not shots:
+            vo = (self.seg.get("vo") or "").strip() or self.seg.get("name", "")
+            shots = [{"t": 0.0, "text": re.split(r"(?<=[.!?])\s", vo, maxsplit=1)[0]}]
+        if "figure" in shots[0] and shots[0]["t"] > 0.3:
+            # never a blank stage and never an early figure: the sentence the
+            # figure sits in opens the segment, and the figure lands on its word
+            opening = (phrases(self.seg.get("words") or []) or [{"text": self.seg.get("vo", "")}])[0]
+            shots.insert(0, {"t": 0.0, "text": opening["text"]})
+        kept: list[dict] = [dict(shots[0], t=0.0)]   # the picture is up from the segment's first frame
+        for s in shots[1:]:
+            prev = kept[-1]
+            floor_s = FIGURE_HOLD_S if "figure" in prev else SHOT_MIN_S
+            if s["t"] - prev["t"] < floor_s:
+                # a figure is never late, so the shot it would cut into gives way to it;
+                # a card that cannot hold the minimum is not shown at all. The segment's
+                # opening picture stays, so the stage is never blank and no figure is early.
+                if "figure" in s and len(kept) > 1:
+                    kept[-1] = s
+                continue
+            kept.append(s)
+        tail = float(self.seg["end"]) - float(self.seg["start"]) - kept[-1]["t"]
+        if len(kept) > 1 and tail < (FIGURE_HOLD_S if "figure" in kept[-1] else SHOT_MIN_S):
+            kept.pop()                     # the segment ends too soon to cut again: the last shot holds through
+        return kept
+
+    def construct(self):
+        shots = self.shots()
+        for i, s in enumerate(shots):
+            self.wait_until(s["t"])
+            mob = self.big_number(s["figure"], s["label"]) if "figure" in s else self.type_card(s["text"])
+            until = shots[i + 1]["t"] if i + 1 < len(shots) else self.length
+            self.cut_to(mob, until, about=mob[0] if "figure" in s else None)
+        self.finish()
 
 
 class Screenshot(HubriconScene):

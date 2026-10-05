@@ -17,6 +17,7 @@ import functools
 import json
 import math
 import os
+import re
 from pathlib import Path
 
 import numpy as np
@@ -56,6 +57,15 @@ CHART_SCALE = 4 / 3
 
 # The right column's stat captions: how wide they wrap and how many lines they keep.
 CALLOUT_W, CALLOUT_LINES = 340, 4
+
+# The cadence (VISUAL_SPEC.md §4, which retires the bible's two-to-four seconds):
+# a shot runs seven to eleven seconds, never past fourteen, and never under three;
+# a spoken figure holds three seconds before the cut. A segment of narration is
+# longer than any one shot, so a scene cuts inside itself.
+SHOT_S, SHOT_MAX_S, SHOT_MIN_S, FIGURE_HOLD_S = 9.0, 14.0, 3.0, 3.0
+# A kinetic card: how wide its line wraps, and the size it drops to when a long
+# sentence would run past four lines.
+CARD_CH, CARD_LINES, CARD_SMALL_PX = 22, 4, 56
 
 STYLE = {
     "palette": T["colour"],
@@ -260,6 +270,38 @@ def fit_clause(text: str, size_px: float, max_px: float, lines: int, weight: int
     return parts[0]
 
 
+def sentences(words: list[dict]) -> list[dict]:
+    """The narration's sentences with the second each is spoken, read off the
+    alignment. A sentence is where a kinetic card can cut, because the cut lands
+    in the pause the speaker already takes."""
+    out, cur = [], []
+    for w in words:
+        cur.append(w)
+        if re.search(r"[.!?][\"')\]]?$", str(w.get("word", ""))):
+            out.append(cur)
+            cur = []
+    if cur:
+        out.append(cur)
+    return [{"text": " ".join(str(w["word"]) for w in g), "start": float(g[0]["start"]), "end": float(g[-1]["end"])}
+            for g in out if g]
+
+
+def phrases(words: list[dict], min_s: float = SHOT_MIN_S, max_s: float = SHOT_MAX_S) -> list[dict]:
+    """The sentences grouped into shots the cadence allows: a sentence shorter
+    than the minimum shot joins the one after it, so a card is never a flash."""
+    out: list[dict] = []
+    for s in sentences(words):
+        prev = out[-1] if out else None
+        if prev and prev["end"] - prev["start"] < min_s and s["end"] - prev["start"] <= max_s:
+            prev.update(text=f"{prev['text']} {s['text']}", end=s["end"])
+        else:
+            out.append(dict(s))
+    if len(out) > 1 and out[-1]["end"] - out[-1]["start"] < min_s:
+        last = out.pop()
+        out[-1].update(text=f"{out[-1]['text']} {last['text']}", end=last["end"])
+    return out
+
+
 def stack(lines: list[Text], left_px: float, top_px: float, size_px: float, line_height: float) -> tuple[VGroup, float]:
     """Lay wrapped lines down from top_px; returns the group and the block's bottom in px."""
     b = first_baseline(top_px, size_px, line_height)
@@ -297,6 +339,7 @@ class HubriconScene(Scene):
         self.chart_top = None
         self.callout_stack = VGroup()
         self.entering = []
+        self.shot_mobs = []
         self.corner()
 
     # ── clock ──
@@ -412,10 +455,46 @@ class HubriconScene(Scene):
         left = self.pad["side"]
         # .number-sub inherits the page's line-height, 1.6
         height = S["number_px"] + (32 + len(sub) * 1.6 * S["number_sub_px"] if sub else 0)
-        top = self.pad["top"] + (self.Hpx - self.pad["top"] - self.pad["bottom"] - height) / 2
+        top = self.pad["top"] + (self.Hpx - self.pad["top"] - self.floor() - height) / 2
         place(num, left, first_baseline(top, S["number_px"], 1.0))
         g, _ = stack(sub, left, top + S["number_px"] + 32, S["number_sub_px"], 1.6)
         return VGroup(num, *g)
+
+    def floor(self) -> float:
+        """The bottom margin the picture keeps: the stage's own, or the burned-in
+        subtitles' band when that is deeper, so no line of type lands on the words."""
+        return max(self.pad["bottom"], self.sub_band)
+
+    # ── shots: a segment of narration is cut into the cadence's shots (§4) ──
+    def type_card(self, text: str) -> VGroup:
+        """One sentence of the narration as the stage's display line, centred in
+        the stage; a long sentence drops a size rather than running off the page."""
+        size = S["display_small_px"]
+        width = min(self.Wpx - 2 * self.pad["side"], CARD_CH * ch(size))
+        lines = block(text, size, width, INK, 600, S["display_track_em"], "balance")
+        if len(lines) > CARD_LINES:
+            size = CARD_SMALL_PX
+            width = min(self.Wpx - 2 * self.pad["side"], (CARD_CH + 8) * ch(size))
+            lines = block(text, size, width, INK, 600, S["display_track_em"], "balance")
+        height = len(lines) * 1.04 * size
+        top = self.pad["top"] + (self.Hpx - self.pad["top"] - self.floor() - height) / 2
+        g, _ = stack(lines, self.pad["side"], top, size, 1.04)
+        return g
+
+    def cut_to(self, mob, until: float, about=None):
+        """The next shot: what was on the stage is gone in one frame (a hard cut,
+        never a dissolve), the new picture is up, and it pushes slowly while it is
+        held so nothing on screen is ever frozen (§3.4)."""
+        for old in list(self.shot_mobs):
+            self.remove(old)
+        self.shot_mobs = [mob]
+        self.add(mob)
+        self.landed("annotation")
+        rest = max(0.0, until - self.clock)
+        if rest > 0.05:
+            centre = (about or mob).get_center()
+            self.play(mob.animate.scale(STYLE["chart"]["drift_scale"], about_point=centre), run_time=rest,
+                      rate_func=linear)
 
     # ── charts, in the site's chart grammar (assets/hubricon.css .chart) ──
     def plot_box(self) -> tuple[float, float, float, float]:
