@@ -259,6 +259,11 @@
   "label": "supplier wires that leave on or before the low point's day",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "end_p50": {
+  "value": "$336,443",
+  "label": "median cash on the horizon's last day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "end_p5": {
   "value": "$323,149",
   "label": "fifth-percentile cash on the horizon's last day, across every simulated path",
@@ -414,9 +419,9 @@
   "label": "SKUs simulated",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
- "inv_sims": {
-  "value": "0",
-  "label": "simulated lead times per SKU",
+ "inv_method": {
+  "value": "computed exactly",
+  "label": "how each SKU's stockout odds are found (exact: lognormal–Poisson mixture, trapezoid rule in z)",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "stockout_worst_sku": {
@@ -1663,5 +1668,10 @@
   "value": "Beyond Piggly Wiggly",
   "label": "Lisa Tolbert's history of self-service (University of Georgia Press, 2023), which calls Piggly Wiggly the most influential self-service store, 'neither the first nor the only'",
   "source": "https://www.ugapress.org/9780820364414/beyond-piggly-wiggly/"
+ },
+ "p_opening_account": {
+  "value": "the Tennessee Historical Quarterly",
+  "label": "where the historian of the company (Freeman, 1992) tells the opening-day story: the 'beauty contest', the gold coins, the brass band, staff who 'politely refused to select merchandise for visitors' (secondary, via Smithsonian Magazine)",
+  "source": "https://www.smithsonianmag.com/smart-news/bizarre-story-piggly-wiggly-first-self-service-grocery-store-180964708/ (quoting Freeman, Tennessee Historical Quarterly, 1992; secondary)"
  }
 }

@@ -297,6 +297,8 @@ def build_facts(run: dict, data: dict) -> Facts:
             f.put("day0_wires_total", _money(sum(x["amount"] for x in today)), "what they come to", S("cash horizon"))
             before = [x for x in wires if int(x["day"]) <= int(c["min_p5_day"])]
             f.put("wires_to_trough", _money(sum(x["amount"] for x in before)), "supplier wires that leave on or before the low point's day", S("cash horizon"))
+        if c["details"].get("p50"):
+            f.put("end_p50", _money(c["details"]["p50"][-1]), "median cash on the horizon's last day, across every simulated path", S("cash horizon"))
         ladder = c["details"].get("ruin_ladder") or {}
         if ladder.get("post_min_p5"):
             lows = ladder["post_min_p5"]

@@ -74,6 +74,11 @@
   "label": "contribution margin after fees, cost and ads, latest month",
   "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "contribution_pre_ads_pct": {
+  "value": "38.5%",
+  "label": "contribution margin after landed cost and fees, before ads, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "gross_vs_contribution_gap": {
   "value": "38.4%",
   "label": "points of margin between gross and contribution",
@@ -254,6 +259,11 @@
   "label": "supplier wires that leave on or before the low point's day",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "end_p50": {
+  "value": "$336,443",
+  "label": "median cash on the horizon's last day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "end_p5": {
   "value": "$323,149",
   "label": "fifth-percentile cash on the horizon's last day, across every simulated path",
@@ -409,9 +419,9 @@
   "label": "SKUs simulated",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
- "inv_sims": {
-  "value": "0",
-  "label": "simulated lead times per SKU",
+ "inv_method": {
+  "value": "computed exactly",
+  "label": "how each SKU's stockout odds are found (exact: lognormal–Poisson mixture, trapezoid rule in z)",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "stockout_worst_sku": {
@@ -1536,27 +1546,27 @@
  },
  "usps_z1_1lb": {
   "value": "$6.93",
-  "label": "USPS Ground Advantage, zone 1, up to 1 pound",
+  "label": "USPS Ground Advantage, zone 1, a parcel under a pound (ratecard.json row 0)",
   "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
  },
  "usps_z1_2lb": {
-  "value": "$7.61",
-  "label": "USPS Ground Advantage, zone 1, over 1 pound",
+  "value": "$7.99",
+  "label": "USPS Ground Advantage, zone 1, a parcel over a pound, billed at the 2-pound row (ratecard.json row 32)",
   "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
  },
  "usps_z8_1lb": {
   "value": "$8.40",
-  "label": "USPS Ground Advantage, zone 8, up to 1 pound",
+  "label": "USPS Ground Advantage, zone 8, a parcel under a pound (ratecard.json row 0)",
   "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
  },
  "usps_z8_2lb": {
-  "value": "$10.67",
-  "label": "USPS Ground Advantage, zone 8, over 1 pound up to 2",
+  "value": "$12.87",
+  "label": "USPS Ground Advantage, zone 8, a parcel over a pound, billed at the 2-pound row (ratecard.json row 32)",
   "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
  },
  "usps_z8_step": {
-  "value": "$2.27",
-  "label": "the cost of crossing 1 pound in zone 8 (derived)",
+  "value": "$4.47",
+  "label": "the cost of crossing a pound in zone 8 (derived: the 2-pound row less the under-a-pound row)",
   "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
  },
  "usps_zones": {
@@ -1791,7 +1801,7 @@
  },
  "s_cat_weight": {
   "value": "3-pound",
-  "label": "the Sears catalogue's weight, as a postmaster gave it to the Joint Committee, 1914",
+  "label": "the Sears catalogue's weight, as the postmaster at Arlington, Iowa gave it to the Joint Committee",
   "source": "https://archive.org/details/parcelpostreport00unit"
  },
  "s_cat_before": {
@@ -1801,7 +1811,7 @@
  },
  "s_cat_after": {
   "value": "10 cents",
-  "label": "postage on the same catalogue after parcel post",
+  "label": "postage on the same catalogue from Chicago to Arlington, Iowa, after catalogues were admitted to parcel post (1914)",
   "source": "https://archive.org/details/parcelpostreport00unit"
  },
  "s_small_limit": {
@@ -1855,7 +1865,7 @@
   "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
  },
  "s_wood_quote": {
-  "value": "better to lose that business to one's self than to someone else",
+  "value": "Better to lose that business to one's self than to someone else",
   "label": "Robert E. Wood on Sears opening stores that competed with its catalogue (Emmet & Jeuck, p. 341)",
   "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950)"
  },
@@ -1888,5 +1898,20 @@
   "value": "139",
   "label": "the dimensional-weight divisor for a box over a cubic foot (cubic inches, giving pounds)",
   "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.dim_divisor); the Fee Staircase course, lesson on billable weight"
+ },
+ "cs_near_edge": {
+  "value": "2 ounces",
+  "label": "how close above an edge counts as near it, in the Fee Staircase course and the engine (ratecard.json carrier.near_edge_oz)",
+  "source": "ratecard.json (carrier.near_edge_oz); the Fee Staircase course"
+ },
+ "usps_two_lb": {
+  "value": "2 pounds",
+  "label": "the weight a parcel just over a pound is billed at",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "s_radius": {
+  "value": "150 miles",
+  "label": "the branch agency's radius in the Joint Committee's finding",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
  }
 }

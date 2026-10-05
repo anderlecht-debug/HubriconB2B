@@ -12,7 +12,7 @@ Figures are filled in with their key beside them (⟨key⟩). *Picture* lines ar
 
 ## What One More Ounce Cost in 1913 ⟨s_pp_year⟩, and the Fee Staircase You Still Pay
 
-`content/videos/greats-01-sears-parcel-post/` · pillar 1 · tier D · 4,691 spoken words · about 31 min
+`content/videos/greats-01-sears-parcel-post/` · pillar 1 · tier D · 4,758 spoken words · about 31 min
 
 **Spiky claim.** The parcel post years taught a nation of catalogue customers what an ounce cost. The card is still there; what's gone is the moment you see it.  
 **Misconception.** Shipping and fulfilment fees are a fixed cost of selling online. A few cents a unit isn't worth anyone's attention.  
@@ -21,7 +21,7 @@ Figures are filled in with their key beside them (⟨key⟩). *Picture* lines ar
 
 ### Hooks
 
-1. 15 cents ⟨s_beagle_postage⟩. That's what it cost to mail a baby in early 1913 ⟨s_beagle_when⟩, on a card that charged every fraction of a pound as a full pound. That card fed the machine that built Sears. Its descendants are charging you now.
+1. 15 cents ⟨s_beagle_postage⟩. That's what it cost to mail a baby in early 1913 ⟨s_beagle_when⟩, on a card that charged by the pound and by the mile. That card fed the machine that built Sears. Its descendants are charging you now.
 2. In its first year, more than 600 million ⟨s_parcels_year⟩ parcels went through the mail, and Congress found the mail-order houses sent more of them than everyone else combined. The arithmetic on that card never went away. You pay it on every unit.
 3. $0.26 a unit ⟨cs_step⟩, by our estimate. That's what being a fraction of an ounce over one line costs a listing we modelled from public data. In 1913 ⟨s_pp_year⟩, farmers paid the same kind of step. The difference is they could see it.
 
@@ -37,8 +37,7 @@ Figures are filled in with their key beside them (⟨key⟩). *Picture* lines ar
 
 That card fed a machine in Chicago that was assembling 45,000 ⟨s_orders_day⟩ orders a day. A historian of the rural mail wrote in 1964 ⟨s_fuller_year⟩ that the decline of the old general store began the day parcel post went into effect. And the card has descendants. If you sell online, you pay one of them right now, on every unit. So here's the question Sears' customers answered with a pencil: what does one more ounce cost? Make a guess before we go on. Most of us would say one more ounce costs one more ounce's worth: a sliver, too small to bother with. Hold on to that guess.
 
-> *Picture.* footage-establish on a present-day parcel sorting hall (stock, no logos); quote card for Wayne Fuller's line with its source; match-bridge from the archival rate card's staircase to the house staircase chart from the dated fee card, the riser in blue.  
-> *Data.* published: the Parcel Post Act's rates and Amazon's US FBA fee card, 2026, as recorded in ratecard.json  
+> *Picture.* footage-establish on a present-day parcel sorting hall (stock, no logos); quote card for Wayne Fuller's line with its source; still-push on a parcel on a scale, the needle not yet settled (stock, no logos).  
 
 **[1:17] CHAPTER — WHAT A POUND COST**
 
@@ -174,169 +173,169 @@ Then the parcels came. In its opening days, more than 4 million ⟨s_parcels_5da
 
 **[13:26] THE CATALOGUE RODE THE CARD**
 
-There's a quieter number in the Joint Committee's report, and it may matter more than the parcels. The catalogue itself was mail. A postmaster told the committee that a 3-pound ⟨s_cat_weight⟩ Sears catalogue had cost 24 cents ⟨s_cat_before⟩ to mail before the parcel post. After it, 10 cents ⟨s_cat_after⟩. And the committee found that one firm alone had saved approximately $1,000,000 ⟨s_one_firm_saving⟩ a year in postage from that change. The card didn't only cut the cost of delivering an order. It cut the cost of asking for one. Every book that landed on a farm table was a store opened in somebody's kitchen, and the card had made opening it far cheaper.
+There's a quieter number in the Joint Committee's report, and it may matter more than the parcels. The catalogue itself was mail. A postmaster in Iowa told the committee that a 3-pound ⟨s_cat_weight⟩ Sears catalogue had cost 24 cents ⟨s_cat_before⟩ to mail before catalogues were let into the parcel post. After, it cost 10 cents ⟨s_cat_after⟩ to reach his office. And the committee found that one firm alone had saved approximately $1,000,000 ⟨s_one_firm_saving⟩ a year in postage from that change. The card didn't only cut the cost of delivering an order. It cut the cost of asking for one. Every book that landed on a farm table was a store opened in somebody's kitchen, and the card had made opening it far cheaper.
 
 > *Picture.* doc-clipping on the postmaster's testimony and the committee's finding in the Joint Committee report (Internet Archive, public domain), the prices and the saving underlined, the money in blue; still-push on a turn-of-the-century catalogue cover (public domain) toward its title; number-pair: 24 cents ⟨s_cat_before⟩ against 10 cents ⟨s_cat_after⟩.  
 > *Data.* published: the Joint Committee of Congress report, 1914  
 
-**[14:10] THE STORE IN TOWN**
+**[14:14] THE STORE IN TOWN**
 
 Think about what that did to the general store in a farm town. It had a counter, a shelf, a credit book, and it had never competed with a catalogue on the price of moving a parcel, because before 1913 ⟨s_pp_year⟩ the catalogue couldn't move a parcel to the farm cheaply. Now it could. The customer did the arithmetic: the catalogue's price, plus the postage off the card, against the storekeeper's price. That's the sentence our historian wrote. The decline of the old general store began the day parcel post went into effect.
 
 > *Picture.* still-push on a general store interior photograph (Library of Congress, no known restrictions), toward the counter; split-then-now: the general store then, a modern parcel locker bank now (stock, no logos); quote card for Fuller, "RFD: The Changing Face of Rural America".  
 
-**[14:47] CHAPTER — WHO PAID FOR THE OUNCE**
+**[14:52] CHAPTER — WHO PAID FOR THE OUNCE**
 
 Who paid for the ounce.
 
 
-**[14:52] THE TURN**
+**[14:56] THE TURN**
 
-Here is the detail that changes the story. Sears did not pay that postage. The customer did. Open the Sears catalogue of 1917 ⟨s_1917_year⟩ and you find, printed in the book itself, a full table: Rates for Parcel Post Shipments, measuring from Chicago. Zones across the top. Weights down the side. And next to every item in the catalogue, its shipping weight. The instructions told you to work out the postage yourself and include it in your money order.
+Here is the detail that changes the story. Sears did not pay that postage. The customer did. Open a Sears catalogue of 1917 ⟨s_1917_year⟩, this one for electrical goods, and you find, printed in the book itself, a full table: Rates for Parcel Post Shipments, measuring from Chicago. Zones across the top. Weights down the side. And next to every item in the catalogue, its shipping weight. The instructions told you to work out the postage yourself and include it in your money order.
 
 > *Picture.* doc-highlight on the 1917 catalogue's rate table page (Internet Archive, public domain), the heading and "measuring from Chicago" marked in ink; doc-highlight on an item's printed shipping weight; still-push on the catalogue page's footer line, "We Positively Guarantee the Safe Delivery of Everything Shipped by Us."  
 
-**[15:23] THE STAIRCASE WAS VISIBLE**
+**[15:30] THE STAIRCASE WAS VISIBLE**
 
-So the staircase was visible. The catalogue asked every customer to look up their zone, read the item's weight, and do the multiplication. For the unsure, it said this: If in doubt as to what amount is required for any order you are perfectly safe in adding even more than you think necessary, for we will ship by the most economical method and will return you any amount that is left over. ⟨s_doubt_quote⟩ And it warned them about the box: Occasionally, according to the nature of the merchandise, we are obliged to give the actual weight. In such cases a few ounces extra in weight must be allowed for wrapping and packing, according to the nature of the goods. ⟨s_wrap_quote⟩ In effect, a nation of farmers was optimising shipping weight against a rate card. With a pencil.
+So the staircase was visible. The catalogue asked every customer to look up their zone, read the item's weight, and find the postage on the table. For the unsure, it said this: If in doubt as to what amount is required for any order you are perfectly safe in adding even more than you think necessary, for we will ship by the most economical method and will return you any amount that is left over. ⟨s_doubt_quote⟩ And it warned them about the box: Occasionally, according to the nature of the merchandise, we are obliged to give the actual weight. In such cases a few ounces extra in weight must be allowed for wrapping and packing, according to the nature of the goods. ⟨s_wrap_quote⟩ In effect, a nation of farmers was optimising shipping weight against a rate card. With a pencil.
 
-> *Picture.* formula-build: the first pound at its rate, plus each further pound, rounded up, at the additional rate, each term landing as spoken; doc-highlight on "a few ounces extra in weight must be allowed for wrapping and packing", ink; kinetic-thesis: "a nation of farmers was optimising shipping weight against a rate card" (the act's one thesis line).  
+> *Picture.* formula-build: the first pound at its rate, plus each further pound, rounded up, at the additional rate, each term landing as spoken; doc-highlight on "a few ounces extra in weight must be allowed for wrapping and packing", ink; kinetic-thesis: "In effect, a nation of farmers was optimising shipping weight against a rate card." (the act's one thesis line).  
 
-**[16:18] THE FARMER'S PENCIL**
+**[16:26] THE FARMER'S PENCIL**
 
 Let's do one with the pencil. A parcel going to zone 8 ⟨s_z8⟩ weighs a pound and an ounce. The first pound costs 12 cents ⟨s_z8_first⟩. The extra ounce counts as a whole pound, so it costs another 12 cents ⟨s_z8_add⟩. That's 24 cents ⟨s_z8_17oz⟩ in all. Take the ounce out and it's 12 cents ⟨s_z8_first⟩. That one ounce cost as much as the whole first pound. Now flip it. Leave the ounce in, and you've already paid for the second pound. You can add almost a full pound of something else to the order for no more postage at all. A farmer who saw that could order the lamp chimney now instead of next month. One who didn't would pay for another first pound a month later.
 
 > *Picture.* formula-build: first pound, plus the ounce rounded up to a pound, each term landing as spoken, the total in blue; counterfactual on the house staircase redrawn with the 1913 zone 8 rates, the solid dot a hair over the riser, then a second dot sliding along the same tread toward the next riser as "almost a full pound" is spoken; still-push on a catalogue page of lamp chimneys (Internet Archive, public domain).  
 > *Data.* published: computed from the Parcel Post Act's rates  
 
-**[17:08] THE EDGES**
+**[17:15] THE EDGES**
 
 And the card had edges, and the edges decided who won. On August 15, 1913 ⟨s_merge_date⟩, the post office changed the card. Zones 1 and 2 ⟨s_z12⟩ were merged at 5 cents, plus 1 cent a pound ⟨s_merge_rate⟩, because, the official in charge explained, 30% ⟨s_merge_share⟩ of all shipments went to those zones. On January 1, 1914 ⟨s_limit_1914_date⟩, the weight limit nearby rose to 50 pounds ⟨s_limit_1914⟩. And then a congressional committee found the town of Bavaria, Kansas. A 50-pound ⟨s_bavaria_weight⟩ parcel to Bavaria cost 54 cents ⟨s_bavaria_cost⟩ from a mail-order house in Kansas City, 193 miles ⟨s_kc_miles⟩ away by rail. From a merchant in Salina, 7 miles ⟨s_salina_miles⟩ away, it cost the same. The committee's word for it was inequitable. And notice who could fix it. Congress had done something unusual in the Act: it let the Postmaster General change the rates, the zones and the weights himself, with the consent of the Interstate Commerce Commission. The card could be redrawn without a new law. It was, again and again.
 
 > *Picture.* timeline of the card's revisions, each date landing as spoken; table-scan of the merged zones row; still-pan across a Kansas prairie town photograph (Library of Congress); number-pair: 193 miles ⟨s_kc_miles⟩ against 7 miles ⟨s_salina_miles⟩, both paying 54 cents ⟨s_bavaria_cost⟩, the distances in ink, the price in blue.  
 > *Data.* published: the Joint Committee of Congress report, 1914  
 
-**[18:13] THE LESSON OF THE EDGE**
+**[18:20] THE LESSON OF THE EDGE**
 
-A rate card isn't neutral. Wherever it draws a line, somebody sits a hair over it and somebody sits a hair under it, and they pay different prices for nearly the same thing. A merchant who knew where the lines were could arrange his business around them, and Congress found the mail-order houses did. Under the zones, its report said, a mail-order house can establish a branch agency in the territory which the concern seeks to reach, and within a radial distance of 150 miles from the location of such agency the mail-order house gets exactly the same rate as the Government charges the local merchant ⟨s_branch_quote⟩. That's Bavaria. And for the catalogues: From points in the fourth or fifth zones, these catalogues are shipped by freight to some point within the State and distributed from that point by mail. ⟨s_freight_catalogue_quote⟩ By 1918 ⟨s_pi_year⟩, Sears had 72 ⟨s_warehouses⟩ warehouses for its catalogues alone. Position against the card is money.
+A rate card isn't neutral. Wherever it draws a line, somebody sits a hair over it and somebody sits a hair under it, and they pay different prices for nearly the same thing. A merchant who knew where the lines were could arrange his business around them, and Congress found the mail-order houses did. Under the zones, its report said, a mail-order house could set up a branch agency in the territory it wanted to reach. Within 150 miles ⟨s_radius⟩ of it, the house paid exactly the same rate as the local merchant. That's Bavaria. And for the catalogues: From points in the fourth or fifth zones, these catalogues are shipped by freight to some point within the State and distributed from that point by mail. ⟨s_freight_catalogue_quote⟩ By 1918 ⟨s_pi_year⟩, Sears had 72 ⟨s_warehouses⟩ warehouses for its catalogues alone. Position against the card is money.
 
-> *Picture.* doc-clipping on the committee's branch-agency sentence (Internet Archive, public domain), "150 miles" and "the same rate" underlined in ink; still-pan across a map of Kansas with a branch agency's radius drawn in ink and Bavaria inside it; counterfactual on the house staircase redrawn with the 1913 rates, two parcels either side of one riser.  
+> *Picture.* quote card: the committee's branch-agency sentence verbatim (a mail-order house can establish a branch agency in the territory which the concern seeks to reach, and within a radial distance of 150 miles from the location of such agency the mail-order house gets exactly the same rate as the Government charges the local merchant ⟨s_branch_quote⟩); doc-clipping on it in the report (Internet Archive, public domain), "150 miles" and "the same rate" underlined in ink; still-pan across a map of Kansas with a branch agency's radius drawn in ink and Bavaria inside it; counterfactual on the house staircase redrawn with the 1913 rates, two parcels either side of one riser.  
 > *Data.* published: the Joint Committee of Congress report, 1914, and the Parcel Post Act's rates  
 
-**[19:16] THE MYTH**
+**[19:17] THE MYTH**
 
-One more correction, because you'll read it everywhere. The story goes that the parcel post made Sears fill five times as many orders ⟨s_myth_orders⟩ in its first year. Sears' own audited accounts don't support it. Net sales were $77.1 million ⟨s_sales_1912⟩ in the year before parcel post, and $91.4 million ⟨s_sales_1913⟩ in its first year. Up 18.5% ⟨s_growth_1913⟩. The accounts count dollars, not orders. But that many more orders on that much more money would mean the average order collapsed in a single year, and nothing in the record shows that. By 1917 ⟨s_1917_year⟩ sales reached $165.8 million ⟨s_sales_1917⟩. By the end of the decade, $234 million ⟨s_sales_1919⟩. The parcel post was a ramp, not a rocket, and the company that climbed it was the one that had built the machine first.
+One more correction, because you'll read it everywhere. The story goes that the parcel post made Sears fill five times as many orders ⟨s_myth_orders⟩ in its first year. Sears' own annual reports don't support it. Net sales were $77.1 million ⟨s_sales_1912⟩ in the year before parcel post, and $91.4 million ⟨s_sales_1913⟩ in its first year. Up 18.5% ⟨s_growth_1913⟩. The accounts count dollars, not orders. But that many more orders on that much more money would mean the average order collapsed in a single year, and we found nothing in the record that shows it. By 1917 ⟨s_1917_year⟩ sales reached $165.8 million ⟨s_sales_1917⟩. By the end of the decade, $234 million ⟨s_sales_1919⟩. The parcel post was a ramp, not a rocket, and the company that climbed it was the one that had built the machine first.
 
 > *Picture.* doc-highlight on the net sales line of Sears' annual report (Internet Archive, public domain); chart-build of net sales by year, each bar landing as its figure is spoken, the myth's claim struck through in ink beside it.  
 > *Data.* published: Sears, Roebuck and Co. annual reports (Internet Archive)  
 
-**[20:06] HOW IT ENDED**
+**[20:09] HOW IT ENDED**
 
-The catalogue lived a long time. On February 2, 1925 ⟨s_store_1925⟩, Sears opened its first retail store, inside the Chicago plant. When the stores came, the executive who pushed them, Robert Wood, explained why Sears would compete with its own catalogue: better to lose that business to one's self than to someone else ⟨s_wood_quote⟩. By 1931 ⟨s_store_year⟩, stores brought in 53.4% ⟨s_store_share⟩ of its sales. And in 1993 ⟨s_end_year⟩, a newspaper wrote the obituary of the 97-year-old ⟨s_end_age⟩ general merchandise catalogue. It wasn't killed by postage. Cars, cities and chain stores had moved where people shopped, and by the end it was losing money. But the card it rode is still with us.
+The catalogue lived a long time. On February 2, 1925 ⟨s_store_1925⟩, Sears opened its first retail store, inside the Chicago plant. When the stores came, the executive who pushed them, Robert Wood, explained why Sears would compete with its own catalogue: Better to lose that business to one's self than to someone else ⟨s_wood_quote⟩. By 1931 ⟨s_store_year⟩, stores brought in 53.4% ⟨s_store_share⟩ of its sales. And in 1993 ⟨s_end_year⟩, a newspaper wrote the obituary of the 97-year-old ⟨s_end_age⟩ general merchandise catalogue. It wasn't killed by postage. Cars, cities and chain stores had moved where people shopped, and by the end it was losing money. But the card it rode is still with us.
 
 > *Picture.* archive-framed on a Sears retail store photograph of the 1920s (Library of Congress, if no known restrictions, else public-domain Commons); quote card for Wood's line, verbatim, attributed "Robert E. Wood, quoted in Emmet and Jeuck, Catalogues and Counters"; timeline from the first store to the end of the catalogue; breath on a held catalogue page, the bed rising.  
 
-**[20:50] CHAPTER — THE CARD YOU PAY NOW**
+**[20:53] CHAPTER — THE CARD YOU PAY NOW**
 
 The card you pay now.
 
 
-**[20:54] THE DESCENDANT**
+**[20:57] THE DESCENDANT**
 
-Here is today's version of the 1913 ⟨s_pp_year⟩ card. The postal service's ground parcel rate, effective July 12, 2026 ⟨usps_effective⟩. It has 8 zones ⟨usps_zones⟩. Prices go up by the pound. In zone 1 ⟨usps_z1⟩, a one-pound parcel costs $6.93 ⟨usps_z1_1lb⟩. Go an ounce over and it's $7.61 ⟨usps_z1_2lb⟩. In zone 8 ⟨usps_z8⟩, a pound costs $8.40 ⟨usps_z8_1lb⟩. An ounce over: $10.67 ⟨usps_z8_2lb⟩. That ounce costs $2.27 ⟨usps_z8_step⟩. If you sell on Shopify and ship your own orders, this is the card under your margin. The same skeleton Congress wrote over a century ago. Zones across the top. Pounds down the side. Every fraction rounded up.
+Here is today's version of the 1913 ⟨s_pp_year⟩ card. The postal service's ground parcel rate, effective July 12, 2026 ⟨usps_effective⟩. It has 8 zones ⟨usps_zones⟩. Prices go up by the pound. In zone 1 ⟨usps_z1⟩, a parcel under a pound costs $6.93 ⟨usps_z1_1lb⟩. Go an ounce over a pound and it bills as 2 pounds ⟨usps_two_lb⟩: $7.99 ⟨usps_z1_2lb⟩. In zone 8 ⟨usps_z8⟩, under a pound: $8.40 ⟨usps_z8_1lb⟩. An ounce over a pound: $12.87 ⟨usps_z8_2lb⟩. Crossing that line costs $4.47 ⟨usps_z8_step⟩ a parcel. If you sell on Shopify and ship your own orders, this is the card under your margin. The same skeleton Congress wrote over a century ago. Zones across the top. Pounds down the side. Every fraction rounded up.
 
-> *Picture.* match-bridge: the 1913 rate table holds still on screen while the era changes, then table-scan of today's ground rates as recorded in ratecard.json, the zone 8 row and the one-pound line marked, the money cells in blue; counterfactual on the house staircase at the one-pound riser.  
+> *Picture.* match-bridge: the 1913 rate table holds still on screen while the era changes, then table-scan of today's ground rates as recorded in ratecard.json, the zone 8 row and the one-pound line marked, the money cells in blue; counterfactual on the house staircase at the one-pound riser, the dots labelled "an invented parcel".  
 > *Data.* published: USPS Ground Advantage Commercial prices, Notice 123, as recorded in ratecard.json  
 
-**[21:33] THE FULFILMENT FEE**
+**[21:41] THE FULFILMENT FEE**
 
 If you sell on Amazon and use its fulfilment, you pay a different card, built the same way. The fulfilment fee for a standard-size item climbs in steps of weight. For a large standard item priced from $10 to $50 ⟨rc_band⟩, the non-peak card that took effect January 15, 2026 ⟨rc_card_from⟩ charges $4.20 ⟨rc_ls12⟩ from 8 ounces ⟨rc_8oz⟩ up to 12 ounces ⟨rc_12oz⟩. Over 12 ounces ⟨rc_12oz⟩, $4.60 ⟨rc_ls16⟩. One step: $0.40 ⟨rc_ls_step⟩, on every unit, before the fuel and logistics surcharge of 3.5% ⟨rc_fuel⟩ that's added to every fulfilment fee. And from October 15 ⟨rc_peak_from⟩, a peak card raises the steps for the holidays. Your customer never sees this card. You pay it. And unlike the farmer, I'd bet most sellers have never laid their products against it.
 
 > *Picture.* doc-highlight on a typeset extract of Amazon's published fee card as recorded in ratecard.json, dated, never imitating Amazon's interface; table-scan of the large standard rows with the eight, twelve and sixteen ounce lines marked, the step in blue; footage-insert of a parcel on a warehouse scale (stock, no logos).  
 > *Data.* published: Amazon's US FBA fee card, 2026, as recorded in ratecard.json  
 
-**[22:22] THE CASE**
+**[22:30] THE CASE**
 
-Here's what that looks like on one real listing, which we modelled from public data. It belongs to a car-care brand ⟨cs_who⟩: a paint scratch remover ⟨cs_product⟩. Its public page lists an item weight of 8.8 ounces ⟨cs_weight⟩. Packed, it can only weigh more, so that's the least it's over by. The step below sits at 8 ounces ⟨cs_edge⟩. So on every unit it ships, it pays the next step: $0.26 a unit ⟨cs_step⟩ on the non-peak card, $0.28 ⟨cs_step_peak⟩ on the peak card, surcharge included. We estimate it sells an estimated 3,500 units a month ⟨cs_units⟩, from its public sales rank. Before I tell you what that comes to in a year, put your own number on it. Now, its units aren't one number, so we didn't use one. We ran 10,000 ⟨cs_years⟩ simulated years of its sales and costs. In eight in ten ⟨cs_band_share⟩ of them, that one riser comes to between $6,400 ⟨cs_leak_p10⟩ and $19,200 ⟨cs_leak_p90⟩ a year. An estimate. Not a client. Not a result. And not on the brand's P&L as a line of its own, because a P&L has no line for it.
+Here's what that looks like on one real listing, which we modelled from public data. It belongs to a car-care brand ⟨cs_who⟩: a paint scratch remover ⟨cs_product⟩. Its public page lists an item weight of 8.8 ounces ⟨cs_weight⟩. Packed, it can only weigh more, so that's the least it's over by. The step below sits at 8 ounces ⟨cs_edge⟩. So on every unit it ships, it pays the next step: $0.26 a unit ⟨cs_step⟩ on the non-peak card, $0.28 ⟨cs_step_peak⟩ on the peak card, surcharge included. It sells an estimated 3,500 units a month ⟨cs_units⟩, from its public sales rank. Before I tell you what that comes to in a year, put your own number on it. Now, its units aren't one number, so we didn't use one. We ran 10,000 ⟨cs_years⟩ simulated years of its sales and costs. In eight in ten ⟨cs_band_share⟩ of them, that one riser comes to between $6,400 ⟨cs_leak_p10⟩ and $19,200 ⟨cs_leak_p90⟩ a year. An estimate. Not a client. Not a result. And not on the brand's P&L as a line of its own, because a P&L has no line for it.
 
 > *Picture.* counterfactual on the house staircase chart from the case study, the solid dot at 8.8 ounces ⟨cs_weight⟩, the hollow dot at 8 ounces ⟨cs_edge⟩, the riser and its label in blue; breath on "put your own number on it"; range-band on the house Monte Carlo, the band landing on "between", the label "Modeled from public data · Not a client · Not a result" on both.  
 > *Data.* modeled from public data: Hubricon's public-data case study (data/case-study.json)  
 
-**[23:34] THE INVISIBLE LINE ITEM**
+**[23:41] THE INVISIBLE LINE ITEM**
 
-That's the turn our farmer would understand immediately, and a P&L never shows. The P&L shows fulfilment fees as one number. It doesn't show which of them are a step you could have stepped under. In the demo catalogue we use for teaching, Tarnhollow ⟨demo_brand⟩, Amazon's fees, referral and fulfilment together, took 32.1% ⟨fee_share_latest⟩ of revenue last month, $102,395 ⟨fees_latest⟩ in all. That's demo data ⟨demo_label⟩, made to behave like a real catalogue. The total is on the P&L. The steps inside it are not.
+That's the turn our farmer would understand immediately, and a P&L never shows. The P&L shows fulfilment fees as one number. It doesn't show which of them are a step you could have stepped under. In the demo catalogue we use for teaching, Tarnhollow ⟨demo_brand⟩, Amazon's fees, referral, fulfilment, storage and the rest together, took 32.1% ⟨fee_share_latest⟩ of revenue last month, $102,395 ⟨fees_latest⟩ in all. That's demo data ⟨demo_label⟩, made to behave like a real catalogue. The total is on the P&L. The steps inside it are not.
 
 > *Picture.* chart-build of the demo catalogue's monthly waterfall, revenue down to net, the fees bar landing on "fees", labelled Tarnhollow demo data; doc-highlight on a typeset P&L line "Fulfilment fees" with no detail beneath it, ink underline.  
 > *Data.* demo: Tarnhollow demo data, the engine's latest month  
 
-**[24:08] WHERE THE CARD WENT**
+**[24:17] WHERE THE CARD WENT**
 
 So why could a farmer with a pencil see the staircase, when a business with accounting software can't? It isn't that the card is hidden. The cards in this film are published, every one of them. What changed is the moment. In the parcel post years, the customer paid the postage, before the parcel moved, with the card open on the table and the item's weight printed beside its price. Today the seller pays, after the sale, as a deduction in a settlement report or a line on a monthly bill, folded in with everything else. The card is still there. Nobody hands it to you at the moment you could act on it. And a cost you never see at the moment of decision is a cost you never decide.
 
 > *Picture.* split-then-now: the 1917 catalogue's rate table open beside an item's shipping weight, then a typeset settlement report with fees as one deduction (house design, never imitating any platform's interface); footage-observe on a desk with a closed laptop in soft daylight (stock, high-key, no screen visible).  
 
-**[25:01] THE OTHER STAIRCASES**
+**[25:10] THE OTHER STAIRCASES**
 
-And weight is only the first staircase. The fulfilment fee also changes with the price you charge: the card has edges at $10 ⟨rc_edge_lo⟩ and $50 ⟨rc_edge_hi⟩, and a price that crosses one moves the whole product onto a different card. For a box over a cubic foot, the card weighs the box itself: length times width times height, in inches, divided by 139 ⟨rc_dim_divisor⟩, gives a weight in pounds, and the card charges whichever is greater. In 1913 ⟨s_pp_year⟩, size was a limit. Today it's a price. Storage has a cliff of its own. On that same case-study listing, the surcharge for stock that has sat between 241 and 270 days ⟨cs_aged_band⟩ is $1.50 ⟨cs_aged_before⟩ a cubic foot a month. From day 271 ⟨cs_aged_day⟩, it's $5.45 ⟨cs_aged_after⟩. For every 1,000 units ⟨cs_aged_units⟩, storage and surcharge together go from $72.70 ⟨cs_aged_1000_before⟩ a month to $198.67 ⟨cs_aged_1000_after⟩. Nothing about the product changes on that day. Only its age. Our farmer would have recognised every one of these. Same shape. Drawn in dollars, in inches and in days instead of pounds.
+And weight is only the first staircase. The fulfilment fee also changes with the price you charge: the card has edges at $10 ⟨rc_edge_lo⟩ and $50 ⟨rc_edge_hi⟩, and a price that crosses one moves the whole product onto a different card. For a box over a cubic foot, the card weighs the box itself: length times width times height, in inches, divided by 139 ⟨rc_dim_divisor⟩, gives a weight in pounds, and the card charges whichever is greater. In 1913 ⟨s_pp_year⟩, size was a limit. Today it's a price. Storage has a cliff of its own. On that same case-study listing, the surcharge for stock that has sat between 241 and 270 days ⟨cs_aged_band⟩ is $1.50 ⟨cs_aged_before⟩ a cubic foot a month. From day 271 ⟨cs_aged_day⟩, it's $5.45 ⟨cs_aged_after⟩. For every 1,000 units ⟨cs_aged_units⟩, at the January-to-September storage rate, storage and surcharge together go, by our estimate, from $72.70 ⟨cs_aged_1000_before⟩ a month to $198.67 ⟨cs_aged_1000_after⟩. Nothing about the product changes on that day. Only its age. Our farmer would have recognised every one of these. Same shape. Drawn in dollars, in inches and in days instead of pounds.
 
 > *Picture.* table-scan of the price bands with the two edges marked, the edges in blue; formula-build: length, times width, times height, over the divisor, set against the scale's weight, the greater one landing on "whichever is greater"; chart-build on the house aging chart, the cliff landing on day 271 ⟨cs_aged_day⟩, the jump and its label in blue, the proof label on; number-pair: $72.70 ⟨cs_aged_1000_before⟩ against $198.67 ⟨cs_aged_1000_after⟩, labelled "estimate · Modeled from public data · Not a client · Not a result".  
 > *Data.* modeled from public data: Hubricon's public-data case study (data/case-study.json, aging bands); published: Amazon's US FBA fee card, 2026, as recorded in ratecard.json  
 
-**[26:09] HOW TO FIND YOUR STEPS**
+**[26:21] HOW TO FIND YOUR STEPS**
 
 So let's do what the farmer did, with your catalogue. Take your top sellers by units. For each one, find its billable weight: the item, plus the box, plus the packing, or the box's dimensional weight if that's greater. Not the weight on the spec sheet. Sears told its customers the same thing in 1917 ⟨s_1917_year⟩: a few ounces extra for wrapping and packing. On Amazon, the fee preview report lists the weight and the sides it measured for every product; your carrier's invoice shows the weight it billed. Then find each product's line on the card. Write down the next edge below it, and how far over that edge it sits. That distance is the whole game. A product an ounce over a line is a candidate. A product sitting in the middle of a tread is not.
 
 > *Picture.* formula-build: item, plus box, plus packing, against the dimensional weight, the greater rounded up to the card's step, each term landing as spoken; doc-highlight returning to the 1917 catalogue's "a few ounces extra" line; table-scan of a typeset worksheet with columns for product, billable weight, edge below, distance over (empty, no figures); footage-insert of a hand placing a carton on a postal scale (stock, no face).  
 
-**[27:05] THE COUNTERFACTUAL**
+**[27:17] THE COUNTERFACTUAL**
 
-For each candidate, write the counterfactual. What would this unit cost to ship, one step down? The difference, times the units it sells, is the riser's yearly cost. Use the peak card's step from October 15 ⟨rc_peak_from⟩, and the normal card's the rest of the year. And your units aren't one number either: do the multiplication for a slow year and a strong year, and that's your range. Then ask the practical question. Can the packaging lose that ounce? A lighter box, a thinner insert, a different mailer. Here's a rule: if the packaging change costs less a unit than the step, and doesn't add damage, fight the step. If not, put the step in the price, and stop pretending it isn't there.
+For each candidate, write the counterfactual. What would this unit cost to ship, one step down? The difference, times the units it sells, is the riser's yearly cost. Use the peak card's step from October 15 ⟨rc_peak_from⟩, and the normal card's the rest of the year. And your units aren't one number either: do the multiplication for a slow year and a strong year, and that's your range. Then ask the practical question. Can the packaging lose that ounce? A lighter box, a thinner insert, a different mailer. Here's a rule: if the packaging change costs less a unit than the step, and doesn't add damage, fight the step. If the change has a one-time cost, a new carton run or a redesign, divide it by the step times the units a month: that's how many months it takes to pay back. Plan on the slow year. If it doesn't pay, leave it, and count the step in the product's margin.
 
 > *Picture.* counterfactual on the house staircase, the hollow dot one step down landing on "one step down", labelled "Modeled from public data · Not a client · Not a result"; formula-build: the step, times the units, at the peak and normal cards, for a slow year and a strong year, each term landing as spoken (terms only, no figures); footage-process (wide, medium, detail) of repacking: a box cut down, an insert replaced, the parcel weighed again (stock, hands only).  
 > *Data.* modeled from public data: the house staircase chart  
 
-**[27:54] THE ZONES**
+**[28:21] THE ZONES**
 
 If you ship your own orders, do the same with zones. Where do your parcels actually go? A store whose customers sit mostly in the far zones pays a different card than one whose customers are close. Sears' customers knew their zone because the postmaster told them. You can know yours from your own shipping reports. The carrier's card is public. Your mix of zones is in your own data.
 
 > *Picture.* table-scan of today's ground rates by zone with the one-pound line marked; still-push on the 1913 zone map, back to the opening of the staircase chapter.  
 > *Data.* published: USPS Ground Advantage Commercial prices, as recorded in ratecard.json  
 
-**[28:23] WHEN THE CARD CHANGES**
+**[28:50] WHEN THE CARD CHANGES**
 
 And do it again every time the card changes. The 1913 ⟨s_pp_year⟩ card changed on August 15, 1913 ⟨s_merge_date⟩, and again on January 1, 1914 ⟨s_limit_1914_date⟩. Today's cards change on a calendar: the fulfilment fee has a non-peak card and a peak card, and the postal rates move when a notice says they move. A product that sat safely under a line last year can sit over it this year without anything about the product changing. The line moved.
 
-> *Picture.* timeline of card changes, 1913's revisions above, today's effective dates below, each landing as spoken; counterfactual: the same dot, with the riser moving under it; footage-observe on a quiet packing table under daylight (stock), the voice carrying the point.  
+> *Picture.* timeline of card changes, 1913's revisions above, today's effective dates below, each landing as spoken; counterfactual: an invented parcel's dot, with the riser moving under it, labelled "illustration"; footage-observe on a quiet packing table under daylight (stock), the voice carrying the point.  
 > *Data.* published: the 1913 card's revisions and today's fee card dates, as recorded in ratecard.json  
 
-**[28:54] WHERE THE STAIRCASES MEET**
+**[29:21] WHERE THE STAIRCASES MEET**
 
 Here's the part that takes longer than an afternoon. The staircases touch each other. Shave the ounce with a thinner mailer, and the product arrives damaged more often, and every return pays the card again. Buy a bigger box to protect it, and you may cross into the size price. Cut the price to sell more, and you can step across a price edge onto another card. Order deeper to get a better unit cost, and the slowest units walk toward day 271 ⟨cs_aged_day⟩. Hold less to stay young, and you run out in the season that matters. Every one of those moves is arithmetic on its own. Together they push on each other, and they all depend on a number nobody knows yet: how many units you'll actually sell. That's the difference between a staircase and a system.
 
 > *Picture.* chart-build of the house staircase, the aging chart and the price bands set side by side on one paper, a single demo product's dot moving on all three at once as each move is spoken, each crossing marked in blue, labelled Tarnhollow demo data; range-band on the house Monte Carlo as "a number nobody knows yet" is spoken, labelled "Modeled from public data · Not a client · Not a result".  
 > *Data.* demo: Tarnhollow demo data; modeled from public data: the house Monte Carlo  
 
-**[29:50] WHAT YOU CAN DO THIS WEEK**
+**[30:17] WHAT YOU CAN DO THIS WEEK**
 
-So here's this week. List your top products by units. Find each one's billable weight. Find its line on the card you actually pay. Mark the ones within an ounce or so of the edge below. For each, write the counterfactual, at the peak and normal cards, for a slow year and a strong one. Try the packaging on the top few, and fight or price each step by the rule. Then set a reminder for the next card change. That's a few hours. If one of your bestsellers sits an ounce over a line, it may be the cheapest money you find this month.
+So here's this week. List your top products by units. Find each one's billable weight. Find its line on the card you actually pay. Mark the ones within 2 ounces ⟨cs_near_edge⟩ above the edge below. For each, write the counterfactual, at the peak and normal cards, for a slow year and a strong one. Try the packaging on the top few, and fight each step or count it, by the rule. Then set a reminder for the next card change. That's a few hours. If one of your bestsellers sits an ounce over a line, it may be the cheapest money you find this month.
 
 > *Picture.* formula-build listing the steps as terms, each landing as spoken; receipt: one demo row showing a step found, the counterfactual, and the decision, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[30:32] THE HONEST LIMIT**
+**[30:59] THE RETURN**
 
-You can do that by hand for your top products, and it's worth doing. Where it breaks is everything after. Every product, against every card you pay, the fulfilment card, the peak card, the carrier's zones, the storage fees that have their own steps, re-checked every time a card changes, with the units each product will actually sell over the next season rather than last month's. And deciding, for each one, whether the step is worth fighting or worth pricing in, when the moves push on each other. The lookup is a spreadsheet. The forecast and the trade-offs aren't. They're a model: probability, forecasting, the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every month, for every product. The whole method is free at hubricon.com/learn, in the Fee Staircase course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+15 cents ⟨s_beagle_postage⟩. A boy in Ohio, a carrier, a card. The card asked every farmer who ordered to do the arithmetic. The card never went away. It's yours to read now.
+
+> *Picture.* still-push resuming on the cold open's parcel post photograph, the same framing; kinetic-thesis: "The card never went away.".  
+> *Data.* published: the Parcel Post Act's rates  
+
+**[31:12] THE HONEST LIMIT**
+
+You can do this week's list by hand for your top products, and it's worth doing. Where it breaks is everything after. Every product, against every card you pay, the fulfilment card, the peak card, the carrier's zones, the storage fees that have their own steps, re-checked every time a card changes, with the units each product will actually sell over the next season rather than last month's. And deciding, for each one, whether the step is worth fighting or worth pricing in, when the moves push on each other. The lookup is a spreadsheet. The forecast and the trade-offs aren't. They're a model: probability, forecasting, the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method is free at hubricon.com/learn, in the Fee Staircase course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
 
 > *Picture.* range-band on the house Monte Carlo, the band holding while the voice names what it takes, labelled "Modeled from public data · Not a client · Not a result"; chart-build of the staircase with every demo product placed on it at once, the over-the-line ones in blue, labelled Tarnhollow demo data; end card at "hubricon.com/learn".  
 > *Data.* demo: Tarnhollow demo data; modeled from public data: the house Monte Carlo  
 > *Close.* The free Fee Staircase course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
-
-**[31:41] THE RETURN**
-
-15 cents ⟨s_beagle_postage⟩. A boy in Ohio, a carrier, a card. The farmers who read that card did the arithmetic every time they ordered. The card never went away. It's yours to read now.
-
-> *Picture.* still-push resuming on the cold open's parcel post photograph, the same framing; kinetic-thesis: "The card never went away."; end card.  
-> *Data.* published: the Parcel Post Act's rates  
 
 ### Facts table
 
@@ -420,11 +419,11 @@ Every figure in the narration, with its source. History first, then the engine's
 | `s_store_year` | 1931 | store sales overtake mail order | https://www.searsarchives.claeys.co/history/history1925.html |
 | `s_end_year` | 1993 | the year Sears ended its big catalogue | https://www.baltimoresun.com/news/bs-xpm-1993-01-26-1993026112-story.html |
 | `s_end_age` | 97-year-old | the Baltimore Sun's description of the catalogue in 1993 | https://www.baltimoresun.com/news/bs-xpm-1993-01-26-1993026112-story.html |
-| `usps_z1_1lb` | $6.93 | USPS Ground Advantage, zone 1, up to 1 pound | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
-| `usps_z1_2lb` | $7.61 | USPS Ground Advantage, zone 1, over 1 pound | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
-| `usps_z8_1lb` | $8.40 | USPS Ground Advantage, zone 8, up to 1 pound | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
-| `usps_z8_2lb` | $10.67 | USPS Ground Advantage, zone 8, over 1 pound up to 2 | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
-| `usps_z8_step` | $2.27 | the cost of crossing 1 pound in zone 8 (derived) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `usps_z1_1lb` | $6.93 | USPS Ground Advantage, zone 1, a parcel under a pound (ratecard.json row 0) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `usps_z1_2lb` | $7.99 | USPS Ground Advantage, zone 1, a parcel over a pound, billed at the 2-pound row (ratecard.json row 32) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `usps_z8_1lb` | $8.40 | USPS Ground Advantage, zone 8, a parcel under a pound (ratecard.json row 0) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `usps_z8_2lb` | $12.87 | USPS Ground Advantage, zone 8, a parcel over a pound, billed at the 2-pound row (ratecard.json row 32) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `usps_z8_step` | $4.47 | the cost of crossing a pound in zone 8 (derived: the 2-pound row less the under-a-pound row) | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
 | `usps_zones` | 8 zones | USPS Ground Advantage zones | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
 | `usps_effective` | July 12, 2026 | when these USPS prices took effect | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
 | `rc_step_size` | 4 ounces | the weight step for large standard items | Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026 |
@@ -471,9 +470,9 @@ Every figure in the narration, with its source. History first, then the engine's
 | `rc_edge_hi` | $50 | the upper price-band edge on the FBA fee card | Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.price_band_edges) |
 | `s_lessing_year` | 1912 | the year Lessing Rosenwald joined the shipping department (Emmet & Jeuck, p. 134, via Raff & Temin) | https://www.nber.org/system/files/chapters/c10234/c10234.pdf |
 | `s_schedule_years` | six years | from the plant's opening (1906) to Lessing Rosenwald's 'only then becoming fully effective' (1912) | https://www.nber.org/system/files/chapters/c10234/c10234.pdf |
-| `s_cat_weight` | 3-pound | the Sears catalogue's weight, as a postmaster gave it to the Joint Committee, 1914 | https://archive.org/details/parcelpostreport00unit |
+| `s_cat_weight` | 3-pound | the Sears catalogue's weight, as the postmaster at Arlington, Iowa gave it to the Joint Committee | https://archive.org/details/parcelpostreport00unit |
 | `s_cat_before` | 24 cents | postage on a 3-pound Sears catalogue before parcel post (third class, 8 cents a pound) | https://archive.org/details/parcelpostreport00unit |
-| `s_cat_after` | 10 cents | postage on the same catalogue after parcel post | https://archive.org/details/parcelpostreport00unit |
+| `s_cat_after` | 10 cents | postage on the same catalogue from Chicago to Arlington, Iowa, after catalogues were admitted to parcel post (1914) | https://archive.org/details/parcelpostreport00unit |
 | `s_small_limit` | 4 ounces | the lightest parcels' limit, 1913 | https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf |
 | `s_small_rate` | 1 cent an ounce | the rate for parcels of 4 ounces or less, 1913 | https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf |
 | `cs_aged_units` | 1,000 units | the unit count the case study's aging cost is quoted for | Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json |
@@ -484,13 +483,16 @@ Every figure in the narration, with its source. History first, then the engine's
 | `s_branch_quote` | a mail-order house can establish a branch agency in the territory which the concern seeks to reach, and within a radial distance of 150 miles from the location of such agency the mail-order house gets exactly the same rate as the Government charges the local merchant | the Joint Committee on the 1914 zones | https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text) |
 | `s_freight_catalogue_quote` | From points in the fourth or fifth zones, these catalogues are shipped by freight to some point within the State and distributed from that point by mail. | a postmaster's testimony to the Joint Committee | https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text) |
 | `s_one_firm_saving` | approximately $1,000,000 | what the committee found one firm alone saved in postage a year when catalogues moved into parcel post | https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text) |
-| `s_wood_quote` | better to lose that business to one's self than to someone else | Robert E. Wood on Sears opening stores that competed with its catalogue (Emmet & Jeuck, p. 341) | https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950) |
+| `s_wood_quote` | Better to lose that business to one's self than to someone else | Robert E. Wood on Sears opening stores that competed with its catalogue (Emmet & Jeuck, p. 341) | https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950) |
 | `s_limit_1913_adj` | 11-pound | the 1913 weight limit, as an adjective | https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf |
 | `cs_product` | paint scratch remover | the case study's listing | Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026 |
 | `cs_band_share` | eight in ten | the share of simulated years inside the band from the tenth to the ninetieth percentile | Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026 |
 | `rc_8oz` | 8 ounces | the step edge below 12 ounces on the large standard card | Amazon's US FBA fee card, 2026, as recorded in ratecard.json |
 | `rc_fuel` | 3.5% | Amazon's fuel and logistics surcharge on every fulfilment fee, from April 17, 2026 | Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.fuel_surcharge) |
 | `rc_dim_divisor` | 139 | the dimensional-weight divisor for a box over a cubic foot (cubic inches, giving pounds) | Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.dim_divisor); the Fee Staircase course, lesson on billable weight |
+| `cs_near_edge` | 2 ounces | how close above an edge counts as near it, in the Fee Staircase course and the engine (ratecard.json carrier.near_edge_oz) | ratecard.json (carrier.near_edge_oz); the Fee Staircase course |
+| `usps_two_lb` | 2 pounds | the weight a parcel just over a pound is billed at | USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json |
+| `s_radius` | 150 miles | the branch agency's radius in the Joint Committee's finding | https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text) |
 | `demo_brand` | Tarnhollow | the demo brand's name | demo catalogue |
 | `demo_label` | demo data | the label every demo figure carries | demo catalogue |
 | `fee_share_latest` | 32.1% | Amazon fees as a share of revenue | MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01) |
@@ -502,7 +504,7 @@ Every figure in the narration, with its source. History first, then the engine's
 
 ## Woolworth's Kept Its Dime Ceiling for more than 50 years ⟨w_ceiling_span⟩. Here's What It Never Told Them
 
-`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,233 spoken words · about 28 min
+`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,361 spoken words · about 29 min
 
 **Spiky claim.** A price you've never moved isn't a safe price. It's an unmeasured one, and the most famous price in American retail stayed unmeasured for decades.  
 **Misconception.** A price that's working should be left alone. Moving it is a gamble, and holding it is the safe choice.  
@@ -512,8 +514,8 @@ Every figure in the narration, with its source. History first, then the engine's
 ### Hooks
 
 1. $127.65 ⟨w_day1⟩ in nickels, every sale the same price. That's what Frank Woolworth's store took on its first day. His company kept a ceiling over its prices for more than 50 years ⟨w_ceiling_span⟩. It built the tallest building in the world. It also hid a number.
-2. 10 cents ⟨w_dime⟩. A toy maker said he couldn't make it pay at that price. Woolworth's buyer looked at the hand-painted stripes and said: throw the toys in vats. Dip them. Woolworth decided the price first. Plenty of businesses never decide it at all.
-3. January 25, 1933 ⟨w_promise_date⟩. Woolworth's board tells its stockholders it has no intention of going past its new ceiling. Within 3 years ⟨w_promise_span⟩ the ceiling is gone. A held price feels safe. It may be the least measured number in your business.
+2. 10 cents ⟨w_dime⟩. A toy maker said he couldn't make it pay at that price. Woolworth's buyer said: throw the toys in vats. Dip them. The product changed. The price never did. What would it have told him if it had?
+3. January 25, 1933 ⟨w_promise_date⟩. Woolworth's board tells its stockholders it has no intention of going past its new ceiling. Within 3 years ⟨w_promise_span⟩ the ceiling is gone. A held price feels safe. Is it?
 
 ### The film
 
@@ -561,135 +563,135 @@ Now go back to that Saturday in Lancaster, because now you can see what he'd bui
 
 **[4:18] THE PRICE HE TRIED AND DROPPED**
 
-And here's a detail the company's own history keeps, which matters for this film. Early on, Woolworth tried a line of goods at a higher price, 25 cents ⟨w_quarter_test⟩. In the company's words, it did not yield satisfactory sales and profits ⟨w_tried_quote⟩. He dropped it. So the ceiling wasn't superstition. It was a test, run once, early, and then not run again for a very long time. Keep that in mind. A price that's tested once and then held for decades isn't a measurement anymore. It's a memory.
+And here's a detail the company's own history keeps, which matters for this film. Early on, Woolworth tried a line of goods at a higher price, 25 cents ⟨w_quarter_test⟩. In the company's words, it did not yield satisfactory sales and profits ⟨w_tried_quote⟩. He dropped it. So the ceiling wasn't superstition. It was a test, run once, early, and then not run again for a very long time. Keep that in mind.
 
 > *Picture.* doc-highlight on the centennial report's line about the higher-priced goods (Internet Archive), the phrase "did not yield satisfactory sales and profits" underlined in ink; timeline: one early test, then a long empty stretch of years drawn slowly to the right.  
 
-**[4:53] THE CHAIN**
+**[4:46] THE CHAIN**
 
 The machine grew from there. Scranton, November 6, 1880 ⟨w_scranton_date⟩, run by his brother, Sum: the store the company's own history dates the chain from. Then stores run by partners: his cousin Seymour Knox, and Fred Kirby. In 1886 ⟨w_office_year⟩, Woolworth rented desk room in New York for $25 a month ⟨w_office_rent⟩ and did all the buying himself. By 1900 ⟨w_stores_1900_year⟩ he had 59 ⟨w_stores_1900⟩ stores of his own, with the famous carmine red-fronts ⟨w_redfronts⟩. One price, one look, one buyer. You could walk into any of them and know what everything cost before you'd seen any of it.
 
 > *Picture.* still-pan across the Scranton store photograph (Wikimedia Commons, public domain); archive-stack of early five-and-ten storefronts and a 1908 Charlton store interior postcard (Wikimedia Commons, public domain), landing as the partners are named; timeline of store counts, each landing as spoken.  
 
-**[5:31] CHAPTER — PRICE FIRST**
+**[5:24] CHAPTER — PRICE FIRST**
 
 Price first.
 
 
-**[5:34] THE ARITHMETIC OF A NICKEL**
+**[5:27] THE ARITHMETIC OF A NICKEL**
 
 Now the mechanism, because it's the opposite of how most businesses set a price. Most start with a cost and add a margin. Woolworth started with the price and worked backwards. His first cost list priced its goods by the gross, 144 ⟨w_gross⟩ items. At a nickel each, a gross brought in $7.20 ⟨w_gross_value⟩. That figure was fixed. It sat over everything like a ceiling. So every line on his first cost list was really the same question: what does a gross cost? Toy dustpans: $4.75 a gross ⟨w_dustpan_cost⟩, which kept about 34% ⟨w_dustpan_margin⟩ of the price. Animal soap: $5.85 a gross ⟨w_soap_cost⟩, keeping about 19% ⟨w_soap_margin⟩. Skimmers and alphabet plates: $2.50 a gross ⟨w_skimmer_cost⟩, keeping about 65% ⟨w_skimmer_margin⟩. The price never changed. The margin changed on every line.
 
 > *Picture.* table-scan typesetting the first store's cost list as the centennial report records it, the cost per gross and the share kept landing row by row, the share kept in blue because it is money; formula-build: a gross, times a nickel, equals $7.20 ⟨w_gross_value⟩, the ceiling drawn as a hairline across the table.  
 > *Data.* published: the first store's cost list, as recorded in the company's centennial report (1979)  
 
-**[6:23] THE SOAP AND THE SKIMMER**
+**[6:16] THE SOAP AND THE SKIMMER**
 
-Look at what that does to a buyer's mind. The soap barely pays. The skimmer pays handsomely. In a store with one price, the customer doesn't know which is which, and doesn't care. The store has to. So a one-price store isn't simple. It's simple on the outside, and on the inside it's a portfolio: every item carrying a different margin under the same tag, and the buyer's whole job is to keep the average above the line. That's the first thing Woolworth understood. And it's the first thing worth checking in your own catalogue: the products that look alike on the price list and aren't alike at all on the margin.
+Look at what that does to a buyer's mind. The soap barely pays. The skimmer pays handsomely. In a store with one price, the customer doesn't know which is which, and doesn't care. The store has to. So a one-price store isn't simple. It's simple on the outside, and on the inside it's a portfolio: every item carrying a different margin under the same tag, and the buyer's whole job is to keep the average above the line. That's the first thing Woolworth understood. Same tag, different margins. Which means, as we'll see, different best prices.
 
 > *Picture.* chart-build of the three items as bars of the share kept, all under the same price line, the bars in blue; footage-insert of a bar of plain soap and a tin skimmer side by side on paper (stock, no labels).  
 > *Data.* published: computed from the first store's cost list, as recorded in the company's centennial report  
 
-**[7:09] THE RING**
+**[6:55] THE RING**
 
-The next thing changed manufacturing. Because the price was fixed, the only way to sell something new was to make it cost less, and Woolworth's buyers went to manufacturers and showed them how. Here's one, as Woolworth himself told it to the trade paper Printers' Ink. A finger ring sold at retail for around 50 cents ⟨w_ring_price⟩. Its maker sold more than 450 dozen ⟨w_ring_dozen⟩ a year. A Woolworth buyer offered to take 5,000 gross ⟨w_ring_order⟩. That's 720,000 rings ⟨w_ring_units⟩. And he came with suggestions for making it cheaper. The result: ten-cent gold-filled rings ⟨w_ring_result⟩. The price came first. The product was redesigned to meet it.
+The next thing changed manufacturing. Because the price was fixed, the only way to sell something new was to make it cost less, and Woolworth's buyers went to manufacturers and showed them how. Here's one, as Woolworth himself told it to the trade paper Printers' Ink. A finger ring sold at retail for around 50 cents ⟨w_ring_price⟩. Its maker had sold more than 450 dozen ⟨w_ring_dozen⟩ so far that year. A Woolworth buyer offered to take 5,000 gross ⟨w_ring_order⟩ over the next year. That's 720,000 rings ⟨w_ring_units⟩. And he came with suggestions for making it cheaper. The result: ten-cent gold-filled rings ⟨w_ring_result⟩. The price came first. The product was redesigned to meet it.
 
-> *Picture.* doc-clipping on the Printers' Ink article of April 1919 (Internet Archive, public domain), the ring passage underlined in ink; number-pair: more than 450 dozen ⟨w_ring_dozen⟩ a year against 720,000 rings ⟨w_ring_units⟩ in one order; footage-insert of a plain gilt ring turning on a jeweller's tray (stock, close, no logos).  
+> *Picture.* doc-clipping on the Printers' Ink article of April 1919 (Internet Archive, public domain), the ring passage underlined in ink; number-pair: more than 450 dozen ⟨w_ring_dozen⟩ so far that year against 720,000 rings ⟨w_ring_units⟩ over the next; footage-insert of a plain gilt ring turning on a jeweller's tray (stock, close, no logos).  
 
-**[7:50] THE VATS**
+**[7:39] THE VATS**
 
 Here's another. During the war, a German iron toy that sold for a dime was cut off. An American maker was asked to make it, and said he couldn't do it at the price. The Woolworth buyer looked at how it was made and said this: You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe. ⟨w_vats_quote⟩ The price stayed. The product changed to fit it. When the war shut out a European crochet cotton, the buyers coached an American spinner to make one like it, sold as Woolco ⟨w_woolco⟩, still at a dime a ball. A trade magazine summed up the method in 1930 ⟨w_sm_year⟩: A large quantity order and an improved production system has brought hundreds of higher-priced articles down to ten cents. ⟨w_1930_quote⟩
 
 > *Picture.* quote card: the buyer's words, verbatim, attributed "as told to Printers' Ink, April 1919"; footage-process (wide, medium, detail) of dip-coating small metal parts in a vat (stock, hands only, no logos), screen direction left to right; quote card for the 1930 summary.  
 
-**[8:46] THE PRICE WAS THE ADVERTISING**
+**[8:35] THE PRICE WAS THE ADVERTISING**
 
 And one more thing: the price did the marketing. Printers' Ink put it in a single sentence in 1917 ⟨w_pi17_year⟩: Confining the price of goods to ten cents is fundamentally an advertising idea. ⟨w_pi17_ad⟩ A single price is a promise a customer can remember from the sidewalk. And because the buying was so concentrated, it was enormous. In 1901 ⟨w_tribune_year⟩, the New York Tribune reported that Woolworth imported a larger tonnage of toys and Christmas tree ornaments than all other United States buyers put together.
 
 > *Picture.* doc-highlight on the Printers' Ink sentence (Internet Archive), ink underline; still-push on a Woolworth store interior at Christmas, about 1910 (Wikimedia Commons, public domain), toward the ornament counter.  
 
-**[9:19] PROFIT, NOT GLORY**
+**[9:09] PROFIT, NOT GLORY**
 
 Underneath all of it was one rule, and it's the line from this story worth keeping where you can see it. In a letter to his store managers dated January 14, 1891 ⟨w_general_letter⟩, Woolworth wrote: Profit is what we are working for, not sales or glory. Hold on to that sentence. The rest of this film is about what happens when a price stops serving the profit and starts serving the sign.
 
 > *Picture.* quote card: the sentence, verbatim, attributed "F. W. Woolworth, General Letter to managers, January 14, 1891"; kinetic-thesis: "Profit is what we are working for, not sales or glory." (the act's one thesis line).  
 
-**[9:48] THE CATHEDRAL**
+**[9:38] THE CATHEDRAL**
 
 In 1912 ⟨w_merger_year⟩, Woolworth merged his company with his partners' chains: 596 stores ⟨w_merger_stores⟩. That year the company sold $60.6 million ⟨w_sales_1912⟩. And on April 24, 1913 ⟨w_building_open⟩, President Wilson pressed a button in the White House and 80,000 ⟨w_lights⟩ lights came on in a tower on Broadway: 792 feet ⟨w_height⟩ tall, the tallest building in the world until 1930 ⟨w_tallest_until⟩. It cost $13.5 million ⟨w_cost⟩. It was built without a mortgage, and by 1914 ⟨w_owned_by⟩ Woolworth owned it outright. A minister who saw it called it the Cathedral of Commerce. Woolworth said he built it to advertise his stores all over the world. It was paid for, nickel by nickel and dime by dime, by a price that hadn't moved. So far, the moral writes itself: find the price, hold the price.
 
 > *Picture.* archive-framed on the building under construction, about 1912 (Wikimedia Commons, public domain), then on the finished tower, 1913 (Library of Congress, no known restrictions), the push rising up the facade; number-land on 792 feet ⟨w_height⟩; still-depth on the tower at night (Library of Congress), the act's hero photograph.  
 
-**[10:38] CHAPTER — THE CEILING**
+**[10:28] CHAPTER — THE CEILING**
 
 The ceiling.
 
 
-**[10:42] ORTHODOX**
+**[10:31] ORTHODOX**
 
 Then the costs moved. The war in Europe drove up the price of almost everything a five-and-ten ⟨w_five_and_ten⟩ sold, and the big rivals began to sell above the old limit. Woolworth didn't. In May 1917 ⟨w_pi17_date⟩, Printers' Ink wrote: Mr. Woolworth is the only one of the big people in this line who remains strictly orthodox so far as five-and-ten-cent goods are concerned. How long this will continue nobody but Woolworth knows. ⟨w_pi17_orthodox⟩ By the end of that year, the company had 1,000 stores ⟨w_stores_1917⟩.
 
 > *Picture.* doc-clipping on the Printers' Ink paragraph (Internet Archive, public domain), "strictly orthodox" underlined in ink; still-pan across a row of five-and-ten storefronts of the period (Library of Congress, no known restrictions).  
 
-**[11:15] HOW TO HOLD A PRICE**
+**[11:04] HOW TO HOLD A PRICE**
 
 So how do you hold a price when everything under it costs more? A book on chain stores from 1922 ⟨w_chain_year⟩ described exactly how: Woolworth clung to the old policy by decreasing the units. The size was made smaller, less candy was sold for ten cents, matches which had been one cent a box were five cents; things were sold separately, one stocking for ten cents, the pail ten cents and the cover ten. ⟨w_shrink_quote⟩ Look at the stocking. A pair became one. The price on the tag never moved. What the customer got for it did. Your customers have a name for that today, and it isn't a kind one.
 
 > *Picture.* quote card: the passage, verbatim, attributed "Hayward and White, Chain Stores, 1922"; still-push on a Seated Liberty dime (Smithsonian, CC0), the dime seen differently now: the push ends on the coin's edge, not its face; footage-insert of a single stocking laid flat on paper beside an empty space where its pair would be (stock, no labels).  
 
-**[11:59] WHAT IT COST**
+**[11:48] WHAT IT COST**
 
 And the margin moved too. Net earnings were 9.43% ⟨w_net_1917⟩ of sales in 1917 ⟨w_1917⟩. In 1918 ⟨w_1918⟩, 5.46% ⟨w_net_1918⟩. To be fair to the record, that year also carried a federal income tax bill of $1.23 million ⟨w_tax_1918⟩ and a reserve set against inventory ⟨w_reserve⟩, so not all of the drop was the dime. But the dime was the one thing the company had chosen not to let move, so every other cost had to land somewhere else: in the size of the product, in the supplier's margin, or in the company's own. By 1919 ⟨w_1919⟩, net earnings were back to 7.89% ⟨w_net_1919⟩. The ceiling had held. Whether holding it was the most profitable choice is a question the company never had to answer, because in the East it didn't try the other one.
 
 > *Picture.* chart-build of net earnings as a share of sales across the war years, each bar landing as spoken, the fall in blue, the tax and the reserve annotated in ink beside it; breath on the held chart, the bed dropping out a beat before "didn't try the other one".  
 > *Data.* published: F. W. Woolworth Co. annual reports (Internet Archive)  
 
-**[12:50] THE WEST**
+**[12:40] THE WEST**
 
-And here's the correction most retellings miss. Nothing over a dime was never quite the whole truth. West of the Rockies, and in Canada, the stores already had a ceiling of 15 cents ⟨w_west_limit⟩. Charlton's western stores, part of the merged company, sold at 5, 10 and 15 cents ⟨w_west_points⟩. So the company was running different ceilings in different parts of the same chain, for years. That's the closest thing in this story to a price experiment. But it wasn't designed as one, and prices compared across places can't tell you much about price, because the places differ in many ways besides the price. Hold on to that. It matters later.
+And here's the correction most retellings miss. Nothing over a dime was never quite the whole truth. In some districts west of the Rockies, and in Canada, the stores already had a ceiling of 15 cents ⟨w_west_limit⟩. Charlton's western stores, part of the merged company, sold at 5, 10 and 15 cents ⟨w_west_points⟩. So the company was running different ceilings in different parts of the same chain, for years. That's the closest thing in this story to a price experiment. But it wasn't designed as one, and prices compared across places can't tell you much about price, because the places differ in many ways besides the price. Hold on to that. It matters later.
 
 > *Picture.* archive-framed on a western five, ten and fifteen cent storefront of about 1913 (Boulder, Colorado, public library local history, public domain if so marked; else a Seattle Woolworth's of about 1922, Wikimedia Commons, public domain); table-scan: East and West, each with its ceiling, the difference in ink.  
 
-**[13:34] THE FOUNDER'S DEATH**
+**[13:25] THE FOUNDER'S DEATH**
 
-Woolworth died on April 8, 1919 ⟨w_died⟩, at his house on Long Island. The company he left had 1,081 ⟨w_stores_1919⟩ stores and sold $119.5 million ⟨w_sales_1919⟩ that year. And the ceiling had become something more than a policy. It was an identity. In February 1920 ⟨w_parson_date⟩, Printers' Ink reported that the company's president, Hubert Parson, had declared that the company would not under any circumstances even consider breaking away from the ten-cent barrier ⟨w_parson_quote⟩.
+Woolworth died on April 8, 1919 ⟨w_died⟩, at his house on Long Island. By the end of that year the company had 1,081 ⟨w_stores_1919⟩ stores, and it sold $119.5 million ⟨w_sales_1919⟩. And the ceiling had become something more than a policy. It was an identity. In February 1920 ⟨w_parson_date⟩, Printers' Ink reported that the company's president, Hubert Parson, had declared that the company would not under any circumstances even consider breaking away from the ten-cent barrier ⟨w_parson_quote⟩.
 
 > *Picture.* still-push on the National Magazine portrait of Woolworth, July 1919 (Wikimedia Commons, public domain); doc-clipping on the Printers' Ink report about Parson, underlined in ink, attributed as reported speech.  
 
-**[14:03] THE STORES GREW OLD**
+**[13:55] THE STORES GREW OLD**
 
-For a while, the identity paid. In 1927 ⟨w_1927⟩, each store sold $172,500 ⟨w_store_sales_1927⟩ and made $16,800 ⟨w_store_profit_1927⟩. By 1932 ⟨w_1932⟩, deep in the Depression, each made $8,093 ⟨w_store_profit_1932⟩. Much of that was the Depression. But a store held under a dime had only one answer to it: smaller goods. The price that had once made every store a magnet had become a thing every store had to work around.
+For a while, the identity paid. In 1927 ⟨w_1927⟩, each store sold $172,500 ⟨w_store_sales_1927⟩ and made $16,800 ⟨w_store_profit_1927⟩. By 1932 ⟨w_1932⟩, deep in the Depression, each made $8,093 ⟨w_store_profit_1932⟩. Much of that was the Depression. But a store held under a dime couldn't follow its customers to anything that cost more. The price that had once made every store a magnet had become a thing every store had to work around.
 
 > *Picture.* chart-build of profit per store at the two dates, the fall landing on $8,093 ⟨w_store_profit_1932⟩, the profit in blue, the Depression marked in ink across the gap; still-pan across a five-and-ten interior of the early nineteen-thirties (Library of Congress, rights confirmed in sourcing), toward a counter of china.  
 > *Data.* published: The Magazine of Wall Street, November 1936; Time, 1936  
 
-**[14:29] THE TEST**
+**[14:22] THE TEST**
 
 And then the company did the right thing, the right way round. In February 1932 ⟨w_test_date⟩, its president said the stores might become '5, 10 and 20 cent stores' ⟨w_new_sign⟩. They didn't switch the whole chain. They tried a 20-cent ⟨w_new_ceiling⟩ line, mostly china and glassware ⟨w_china⟩, in some of their stores, in the West and the South ⟨w_trial_where⟩, first. Then they adopted it. A test, then a rollout. Remember that phrase. It's the most useful one in this whole story.
 
 > *Picture.* doc-clipping on the Southern Textile Bulletin item of March 1932 (Internet Archive, public domain) reporting the trial in some stores, underlined in ink; timeline from the trial to the adoption, each landing as spoken; footage-insert of plain white china cups stacked on a shelf (stock, no marks).  
 
-**[15:00] WHY THEY MOVED**
+**[14:53] WHY THEY MOVED**
 
 Now look at why, because it's the opposite of the story people tell. The story is that rising prices forced the dime up. In the year it finally moved, prices were falling. The year was 1932 ⟨w_1932⟩, deep in the Depression. The company's own report said that because of lower costs, our selling prices on many lines have been reduced ⟨w_lower_costs_quote⟩. They raised the ceiling while costs were going down. Their reasons: to supply a larger share of what their customers wanted. To end what the report called so-called combination items ⟨w_combination_term⟩, where a thing was sold in pieces to fit under the limit. Their own words: For years we have sold so-called combination items for 10 cents each piece. ⟨w_combination_quote⟩ And competitors without a ten-cent limit ⟨w_rivals⟩ were selling what Woolworth couldn't. The ceiling wasn't protecting anything anymore. It was stopping the company from selling things its customers wanted to buy.
 
 > *Picture.* doc-highlight on the 1932 report to stockholders (Internet Archive), "because of lower costs" underlined in ink; footage-insert of a pail and its lid set apart on a table, then pushed together (stock, no labels).  
 
-**[16:00] THE PROMISE**
+**[15:52] THE PROMISE**
 
 And then, having moved the price once, the company made a promise. In a letter to its stockholders dated January 25, 1933 ⟨w_promise_date⟩, it wrote: Fundamentally the Company is in the 5 and 10 cent business and has every intention of continuing that policy. Furthermore, there is no intention of going beyond the 20 cent selling price. ⟨w_promise_quote⟩ In 1935 ⟨w_limits_removed⟩, the board removed all arbitrary price limits. Soon there were goods at 40 cents ⟨w_ceiling_1935⟩. By the spring of 1936 ⟨w_1936⟩, some cost $1 ⟨w_ceiling_1936⟩. The promise didn't last 3 years ⟨w_promise_span⟩.
 
 > *Picture.* quote card: the promise, verbatim, attributed "F. W. Woolworth Co., report to stockholders, January 25, 1933"; doc-highlight on "no intention of going beyond", ink; timeline: the ceiling stepping up, each step landing as spoken.  
 
-**[16:35] WHAT THE DIME TAUGHT**
+**[16:27] WHAT THE DIME TAUGHT**
 
-So test the moral. Find a price that works and hold it. The dime was brilliant: an advertisement, a discipline on cost, a promise a customer could remember. But the moral is missing a piece. A price that never moves can't tell you what a different price would do. Woolworth knew, to the fraction of a cent, what a gross of soap cost him. What he couldn't know, from inside a ceiling, was what his customers would have paid above it. For decades the company learned a great deal about the cost side of its price, and far less about the demand side, because the demand side only speaks when the price moves. When it finally listened, it did it by testing. And then it promised the new ceiling would hold.
+So test the moral. Find a price that works and hold it. The dime was brilliant: an advertisement, a discipline on cost, a promise a customer could remember. But the moral is missing a piece. A price that never moves can't tell you what a different price would do. Woolworth knew, to the fraction of a cent, what a gross of soap cost him. What he couldn't know, from inside a ceiling, was what his customers would have paid above it. For decades the company learned a great deal about the cost side of its price, and far less about the demand side, because the demand side only speaks when the price moves. When it finally listened, it did it by testing. And then it promised the new ceiling would hold. A price that's tested once and then held for decades isn't a measurement anymore. It's a memory.
 
 > *Picture.* still-push on the dime, the third and last time in the archive, the push ending on the date; kinetic-thesis: "A price that never moves can't tell you what a different price would do."; breath, the bed rising under the held line.  
 
-**[17:28] THE END OF THE STORES**
+**[17:27] THE END OF THE STORES**
 
-The five-and-ten ⟨w_five_and_ten⟩ lasted a long time after that. On July 17, 1997 ⟨w_exit_date⟩, the company announced it was leaving the American Woolworth store business: about 400 stores ⟨w_exit_stores⟩, 9,200 ⟨w_exit_jobs⟩ jobs. A retail consultant told reporters that day: The five-and-dime industry is defunct and has been defunct for at least 25 years. ⟨w_barnard_quote⟩ In November 1, 2001 ⟨w_footlocker⟩ the company renamed itself Foot Locker. The building on Broadway is still standing. The price that built it is gone.
+The five-and-ten ⟨w_five_and_ten⟩ lasted a long time after that. On July 17, 1997 ⟨w_exit_date⟩, the company announced it was leaving the American Woolworth store business: about 400 stores ⟨w_exit_stores⟩, 9,200 ⟨w_exit_jobs⟩ jobs. A retail consultant told reporters that day: The five-and-dime industry is defunct and has been defunct for at least 25 years. ⟨w_barnard_quote⟩ On November 1, 2001 ⟨w_footlocker⟩, the company renamed itself Foot Locker. The building on Broadway is still standing. The price that built it is gone.
 
 > *Picture.* footage-establish on a lower Manhattan street at morning, the Woolworth Building's crown in the frame (stock, no signage legible); quote card for Barnard, attributed "July 1997"; still-push on the tower, 1913 (Library of Congress), the same frame as the cathedral beat.  
 
@@ -698,101 +700,101 @@ The five-and-ten ⟨w_five_and_ten⟩ lasted a long time after that. On July 17,
 Your dime.
 
 
-**[18:01] THE DIME IN YOUR CATALOGUE**
+**[18:00] THE DIME IN YOUR CATALOGUE**
 
 Now your business. You have a dime. Probably several. A price you set once, for a reason that made sense at the time: a round number, a competitor's price, your cost times a markup, whatever the last product sold for. And it's been working, so you've left it alone. That's what Woolworth's company did for more than 50 years ⟨w_ceiling_span⟩: it worked, so it stayed. And it carries the same blind spot. As long as that price doesn't move, your sales history can't tell you what a different one would do. Not a little. Nothing.
 
 > *Picture.* formula-build: cost, times markup, a glance at the competitor, a round number, each term landing as spoken, the result stamped as a single price; footage-insert of a price label printing and being pressed onto a shelf edge (stock, no brand), the modern dime.  
 
-**[18:39] THE NUMBER YOU'RE MISSING**
+**[18:38] THE NUMBER YOU'RE MISSING**
 
 Here's what a price that has moved can tell you. Take one product from the demo catalogue we use for teaching: TH-OVEMIT-22 ⟨el_sku⟩, from Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Its price moved across 12 ⟨el_periods⟩ periods of history, and its units moved with it. Plot them on a scale where every step is the same percentage, price across and units a day up, and fit a line. Through this product's own points alone, the line reads -7.35 ⟨el_raw⟩: steep, from very little movement. So the model doesn't trust it alone. It gives the product's own points 17% ⟨el_own_weight⟩ of the weight, lets the rest of the catalogue carry the rest, and lands at -2.74 ⟨el_point⟩. A rise of a given size in the price costs this product about that multiple of it in units. That number has a name: price elasticity.
 
-> *Picture.* chart-build of the demo product's history on log scales, the points landing period by period, then the steep line through its own points, then the line pulled toward the catalogue's as "the rest of the catalogue" is spoken, the slope labelled, Tarnhollow demo data on the figure.  
+> *Picture.* chart-build of the demo product's history on log scales, the points landing period by period, drawn from the fit's own points with units divided by days, then the steep line through them, then the line pulled toward the catalogue's as "the rest of the catalogue" is spoken, the slope labelled, Tarnhollow demo data on the figure.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
 
-**[19:36] WHY A RAISE THAT LOSES UNITS CAN PAY**
+**[19:35] WHY A RAISE THAT LOSES UNITS CAN PAY**
 
-Here's why it matters more than it looks. When you raise a price, the extra lands in your margin almost whole. Your landed cost doesn't change. Most of your fees don't change. Only the ones charged as a share of the price take a cut of it. So a raise that loses units can still make more money, as long as it doesn't lose too many. How many is too many depends on the slope, and on how much of each sale you keep after landed cost and fees. On this demo catalogue, that's 38.5% ⟨contribution_pre_ads_pct⟩. The gross margin, before fees, is 70.7% ⟨gross_pct_latest⟩. Price off the wrong one and you'll aim at the wrong target. Remember Woolworth's soap and his skimmers: same price, very different margins, very different answers.
+Here's why it matters more than it looks. When you raise a price, the extra lands in your margin almost whole. Your landed cost doesn't change. Most of your fees don't change. Only the ones charged as a share of the price take a cut of it. So a raise that loses units can still make more money, as long as it doesn't lose too many. How many you can afford to lose depends only on how much of each sale you keep after landed cost and fees. How many you will lose is the slope. On this demo catalogue, that's 38.5% ⟨contribution_pre_ads_pct⟩. The gross margin, before fees, is 70.7% ⟨gross_pct_latest⟩. Price off the wrong one and you'll aim at the wrong target. And the slope decides the shape of what comes next. Steeper than minus one, a raise loses a bigger share of units than it adds to the price, so profit rises, peaks and falls: there's a top. Shallower than minus one, a raise loses a smaller share of units than it adds, so profit keeps climbing: no top at all. Remember Woolworth's soap and his skimmers: same price, very different margins, very different answers.
 
 > *Picture.* formula-build: a dollar added to the price, the share-of-price fees taking their cut, the rest landing in the margin in blue; number-pair: 38.5% ⟨contribution_pre_ads_pct⟩ against 70.7% ⟨gross_pct_latest⟩, labelled Tarnhollow demo data; chart-build returning to the soap-and-skimmer bars.  
 > *Data.* demo: Tarnhollow demo data, MARGIN.DECOMP  
 
-**[20:27] THE HILL**
+**[20:53] THE HILL**
 
-Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for every one of the 22 ⟨pm_no_top⟩ products the model would move, the range on the slope is too wide to mark the top. What it can tell you is which way is uphill. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to tell even that.
+Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for every one of the 22 ⟨pm_no_top⟩ products the model would move, the range on the slope is too wide to mark the top. The honest thing it can say is how far it can't see. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to see any of it.
 
-> *Picture.* chart-build of profit hills for the demo products, each drawn as a band whose top smears across the axis while an uphill arrow on each stays sharp, labelled Tarnhollow demo data; then a single vertical line at one price cutting through all of them.  
+> *Picture.* chart-build of profit hills for the demo products, each drawn as a band whose top smears across the axis while the price axis marked where each band's top could be, labelled Tarnhollow demo data; then a single vertical line at one price cutting through all of them.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM  
 
-**[21:19] THE PRODUCTS THAT REFUSED**
+**[21:46] THE PRODUCTS THAT REFUSED**
 
 Here is Woolworth's dime inside a modern catalogue. Across the demo's 24 ⟨n_skus⟩ products, the fit worked on 22 ⟨el_skus_fit⟩. It refused 2 ⟨el_skus_insufficient⟩. Not because those products are special. Because their price never moved enough to draw a line. The rule is plain: the spread of a product's prices, measured against their average, has to reach 2% ⟨el_min_price_cv⟩, across at least 5 ⟨el_min_periods⟩ periods, or the fit says nothing at all. That isn't caution for its own sake. With no movement, there's nothing to measure. Those products are dimes. They might be priced perfectly. Nobody can know, including the person who set the price.
 
 > *Picture.* unit-grid of the demo's 24 ⟨n_skus⟩ products, the fitted ones in ink, the refused ones left as hollow outlines, each landing as spoken; still-push on the dime, cut in as a single insert on "Those products are dimes".  
 
-**[21:59] THE HONEST RANGE**
+**[22:26] THE HONEST RANGE**
 
-And even the products that can be measured come with a range, not a point. That -2.74 ⟨el_point⟩ has an honest interval around it, from -5.85 ⟨el_ci_low⟩ to 0.37 ⟨el_ci_high⟩. It crosses zero ⟨el_ci_crosses⟩. At one end, this product is very sensitive to price. At the other, these 12 ⟨el_periods⟩ periods can't show that price matters at all. A tool that hands you a single number without the range is telling you something it doesn't know.
+And even the products that can be measured come with a range, not a point. That -2.74 ⟨el_point⟩ has an honest interval around it, from -5.85 ⟨el_ci_low⟩ to 0.37 ⟨el_ci_high⟩. It crosses zero ⟨el_ci_crosses⟩. At one end, this product is very sensitive to price. At the other, the estimate can't rule out that price doesn't matter at all. The range comes from the standard error, which is how far another run of periods like these could move the slope, times a multiplier that grows as the periods get fewer. A tool that hands you a single number without the range is telling you something it doesn't know.
 
 > *Picture.* range-band on the demo product's fit, the band opening from the line to the full interval as "range" is spoken, the ends labelled, the zero line marked where the band crosses it, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
 
-**[22:28] WAITING DOESN'T HELP**
+**[23:08] WAITING DOESN'T HELP**
 
-So why not wait for a better number? Because waiting with the price held still adds nothing at all. That's the dime. And even with the price moving, certainty is slow. To shrink the error on this one estimate to a tight band, at the rate this history teaches, would take about 2,337 ⟨n_for_se_tenth⟩ periods of data. Nobody has that. And the fastest way to narrow it isn't more months. It's more movement: the wider your price has ranged, the tighter the slope. A dime that never moves never narrows at all. So the honest move isn't to wait for certainty. It's to decide under uncertainty, in steps small enough that a wrong one is cheap, and to measure every step.
+So why not wait for a better number? Because waiting with the price held still adds nothing at all. That's the dime. And even with the price moving, certainty is slow. To shrink the error on this one estimate to a tight band from its own history would take far more periods than any business will ever have. And the fastest way to narrow it isn't more months. It's more movement: the wider your price has ranged, the tighter the slope. A dime that never moves never narrows at all. So the honest move isn't to wait for certainty. It's to decide under uncertainty, in steps small enough that a wrong one is cheap, and to measure every step.
 
 > *Picture.* number-pair: 12 ⟨el_periods⟩ periods held against 2,337 ⟨n_for_se_tenth⟩, the long one running off the edge of the paper; range-band narrowing as the price's spread widens, not as the months pass, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
 
-**[23:17] THE STEP**
+**[23:56] THE STEP**
 
-That's what the demo's pricing model does. It caps any single move at 5% ⟨pm_step_cap⟩. The biggest move it recommends is on TH-CHEKNI-08 ⟨pm_sku⟩: a 3.0% ⟨pm_step⟩ step, to $59.94 ⟨pm_new_price⟩. The middle of its range: $16 ⟨pm_delta⟩ a month. Draw the elasticity, the volume and the fees over and over, and in 90% ⟨pm_band⟩ of the draws the gain lands between $9 ⟨pm_delta_p5⟩ and $28 ⟨pm_delta_p95⟩. It loses money in 1% ⟨pm_p_loss⟩ of them. The model is 99% ⟨pm_direction_conf⟩ sure of the direction, and it won't name a destination. That's an honest answer: a small step, in the right direction, that you can measure.
+So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at 5% ⟨pm_step_cap⟩, so that a wrong step costs little and a right one shows up in the data. It won't name a destination for any of these products. That's an honest answer. A small step you can measure beats a confident number you can't.
 
-> *Picture.* counterfactual on the demo product's profit band: the current price as the hollow dot, the step as the solid dot, the uphill arrow sharp, the gain between them in blue; range-band of the gain from $9 ⟨pm_delta_p5⟩ to $28 ⟨pm_delta_p95⟩, the share below zero shaded and labelled 1% ⟨pm_p_loss⟩, Tarnhollow demo data.  
+> *Picture.* counterfactual on the demo product's profit band: the top worked out at the estimate and at both ends of the range, three marks on the price axis, the current price as the hollow dot and a small step as the solid dot, the step's size in blue, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, PRICE.OPTIMUM  
 
-**[23:55] WHAT A HELD PRICE COSTS**
+**[24:36] WHAT A HELD PRICE COSTS**
 
-Add up every recommended step and it comes to $166 ⟨pm_total_delta⟩ a month, at the middle of each range. Demo data. Not a client. Not a result. Small, because the model puts 98% ⟨pm_p_optimal⟩ on this catalogue already being priced about right. And it says nothing at all about the 2 ⟨el_skus_insufficient⟩ dimes. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
+So what does a held price cost? On the products that have moved, the model can at least draw a range. On the 2 ⟨el_skus_insufficient⟩ dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
 
-> *Picture.* chart-build of the recommended steps as a waterfall, each product's median gain landing in blue, the total landing on $166 ⟨pm_total_delta⟩; the 2 ⟨el_skus_insufficient⟩ refused products drawn at the end as empty outlines with no bar; labelled Tarnhollow demo data.  
+> *Picture.* range-band of every fitted demo product's interval drawn side by side, then the 2 ⟨el_skus_insufficient⟩ refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, PRICE.OPTIMUM  
 
-**[24:25] WHEN THE PRICE IS THE BRAND**
+**[24:58] WHEN THE PRICE IS THE BRAND**
 
 And sometimes the price is the brand, the way the dime was. A product sold as a gift under a round number. A line that's always the cheapest, or always the premium one. That's a real asset, and Printers' Ink was right about it: a price can be an advertising idea. But treat it like one. An advertising idea has a cost, and you'd measure any other advertising. Know what holding the line costs you in margin each month, the same way you'd know what a campaign costs, and decide on purpose whether it's worth it. Woolworth's successors held theirs until it stopped them selling what their customers wanted. You can know long before that.
 
 > *Picture.* doc-highlight on the Printers' Ink sentence, the same page as the advertising beat; formula-build: the margin a held price gives up each month, set beside a campaign's monthly spend, as terms only, no figures.  
 
-**[25:11] A TEST, THEN ANOTHER TEST**
+**[25:44] A TEST, THEN ANOTHER TEST**
 
 Now go back to 1932 ⟨w_1932⟩, because the company finally did it right: a test, then a rollout. But remember the West. Comparing places tells you about the places as much as the prices, unless the places are picked at random and some are left alone. Most online sellers can't do that: one listing, one price. So the test open to you is in time. A small step, measured against what you wrote down before you took it. Then the next step. Not a test and a promise. A test, then another test.
 
 > *Picture.* split-then-now: the 1932 ⟨w_1932⟩ trial stores on a map of the West and South, then a single demo product's price stepping over time with its predicted and measured units drawn together, labelled Tarnhollow demo data; timeline of steps, each landing as spoken.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[25:49] WHAT YOU CAN DO THIS WEEK**
+**[26:22] WHAT YOU CAN DO THIS WEEK**
 
-So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached 2% ⟨el_min_price_cv⟩ of their average, over at least 5 ⟨el_min_periods⟩ periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the range reaches minus one, there's no top to aim at, and the direction is up. If it's clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope. Then pick one product and step toward it, by no more than 5% ⟨pm_step_cap⟩. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
+So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached 2% ⟨el_min_price_cv⟩ of their average, over at least 5 ⟨el_min_periods⟩ periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the estimate itself sits near minus one, the direction is up. If it's clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope. Work that out at the estimate and at both ends of the range. Where they agree, step that way; where they disagree, step small. Either way, by no more than 5% ⟨pm_step_cap⟩. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
 
 > *Picture.* formula-build listing the steps as terms, each landing as spoken, the best-price formula built term by term; receipt: one demo product's line, its price spread, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[27:18] THE HONEST LIMIT**
+**[28:09] THE RETURN**
 
-You can do that by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. Prices you changed because demand moved, which tilt the line. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Products with too little history, which have to borrow strength from the rest of the catalogue, the way this one did. And a range on every estimate that has to become the right size of step for what's still unknown. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every month, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+$127.65 ⟨w_day1⟩, in nickels, on a Saturday in Lancaster. A ceiling held for more than 50 years ⟨w_ceiling_span⟩. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
+
+> *Picture.* still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".  
+> *Data.* published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report  
+
+**[28:26] THE HONEST LIMIT**
+
+You can do this week's steps by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. Prices you changed because demand moved, which tilt the line. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Products with too little history, which have to borrow strength from the rest of the catalogue, the way this one did. And a range on every estimate that has to become the right size of step for what's still unknown. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
 
 > *Picture.* range-band on the demo catalogue's fits, every product's interval drawn at once, the band holding while the voice names what it takes, labelled Tarnhollow demo data; end card at "hubricon.com/learn".  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
 > *Close.* The free Price Curve course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
-
-**[28:30] THE RETURN**
-
-$127.65 ⟨w_day1⟩, in nickels, on a Saturday in Lancaster. A ceiling held for more than 50 years ⟨w_ceiling_span⟩. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
-
-> *Picture.* still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid."; end card.  
-> *Data.* published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report  
 
 ### Facts table
 
@@ -846,8 +848,8 @@ Every figure in the narration, with its source. History first, then the engine's
 | `w_skimmer_margin` | about 65% | what was left of the price on skimmers (computed from the cost list) | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report) |
 | `w_audit_year` | 1911 | the year of the auditors' visit Woolworth described | https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story') |
 | `w_ring_price` | 50 cents | the finger ring's retail price before Woolworth's buyer | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_worlds-work_1924-12_49_2 |
-| `w_ring_dozen` | more than 450 dozen | the ring maker's yearly sales before | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
-| `w_ring_order` | 5,000 gross | the order Woolworth's buyer offered | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922) |
+| `w_ring_dozen` | more than 450 dozen | the ring maker's sales so far that year, before the buyer's offer | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
+| `w_ring_order` | 5,000 gross | what Woolworth's buyer offered to take over the next year | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922) |
 | `w_ring_units` | 720,000 rings | 5,000 gross, in rings | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
 | `w_ring_result` | ten-cent gold-filled rings | what the ring became | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_worlds-work_1924-12_49_2 |
 | `w_dime` | 10 cents | the toy's price, and the ceiling | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
@@ -878,7 +880,7 @@ Every figure in the narration, with its source. History first, then the engine's
 | `w_net_1918` | 5.46% | net earnings as a share of sales, 1918 | https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports) |
 | `w_net_1919` | 7.89% | net earnings as a share of sales, 1919 | https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports) |
 | `w_tax_1918` | $1.23 million | federal income tax paid in 1918 | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1918) |
-| `w_west_limit` | 15 cents | the ceiling west of the Rockies and in Canada | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 |
+| `w_west_limit` | 15 cents | the ceiling in some districts west of the Rockies and in Canada | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 |
 | `w_west_points` | 5, 10 and 15 cents | the price points in E. P. Charlton's western stores | https://en.wikipedia.org/wiki/E._P._Charlton_%26_Company; https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
 | `w_died` | April 8, 1919 | Woolworth's death, at Glen Cove, Long Island | https://archive.org/details/NYTimes_apr1_15_1919 |
 | `w_stores_1919` | 1,081 | stores in 1919 | https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports) |
@@ -906,10 +908,10 @@ Every figure in the narration, with its source. History first, then the engine's
 | `w_exit_jobs` | 9,200 | jobs, 1997 | https://archives.starbulletin.com/1997/07/17/business/story1.html |
 | `w_barnard_quote` | The five-and-dime industry is defunct and has been defunct for at least 25 years. | Kurt Barnard, retail consultant, July 1997 | https://archives.starbulletin.com/1997/07/17/business/story1.html |
 | `w_footlocker` | November 1, 2001 | the company renamed Foot Locker, Inc. | https://archive.org/details/woolworthvenatorfootlockerannualreports (footlocker2001) |
-| `w_circus` | The circus had come to Lancaster, complete with its traditional parade down city streets. | the scene on opening day, as the company's centennial report tells it (the parade, and Woolworth spending the morning worrying whether anyone would come) | https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story') |
+| `w_circus` | The circus had come to Lancaster, complete with its traditional parade down city streets. | the scene on opening day, as the company's centennial report tells it (the parade, and Woolworth spending the morning worrying whether anyone would come) | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text) |
 | `w_people_quote` | One of the first things I learned was that I could not expect people to come to me. I had to take my store to the people. | Woolworth, The World's Work, April 1913 | https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story') |
-| `w_tried_quote` | did not yield satisfactory sales and profits | the company's centennial report on Woolworth's early experiment with 25-cent goods | https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story') |
-| `w_redfronts` | carmine red-fronts | the identical store fronts, in the company's centennial report | https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story') |
+| `w_tried_quote` | did not yield satisfactory sales and profits | the company's centennial report on Woolworth's early experiment with 25-cent goods | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text) |
+| `w_redfronts` | carmine red-fronts | the identical store fronts, in the company's centennial report | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text) |
 | `w_vats_quote` | You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe. | a Woolworth buyer to an American toy maker during the war, as told to Printers' Ink, April 1919 | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
 | `w_woolco` | Woolco | the crochet cotton an American spinner made, coached by Woolworth's buyers, when the war shut out D.M.C. | https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919) |
 | `w_reserve` | a reserve set against inventory | a charge in the 1918 accounts alongside the federal income tax | https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1918) |
@@ -937,19 +939,8 @@ Every figure in the narration, with its source. History first, then the engine's
 | `gross_pct_latest` | 70.7% | gross margin (revenue less landed cost), latest month | MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `n_for_se_tenth` | 2,337 | periods needed to shrink that error to 0.1 | derived from ELASTICITY.FIT standard error, Tarnhollow demo data |
 | `n_skus` | 24 | SKUs in the demo catalogue | demo catalogue |
-| `pm_band` | 90% | the share of draws between the fifth and ninety-fifth percentiles | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_delta` | $16 | median profit change per month across the simulated draws | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_delta_p5` | $9 | fifth percentile of that change | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_delta_p95` | $28 | ninety-fifth percentile of that change | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_direction_conf` | 99% | the model's confidence in the direction of that step | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_new_price` | $59.94 | its recommended new price | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `pm_no_top` | 22 | SKUs whose range is too wide for the model to name a best price, only a direction | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_p_loss` | 1% | share of the simulated draws in which the move loses money | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_p_optimal` | 98% | the model's probability that the catalogue is already priced at its optimum | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_sku` | TH-CHEKNI-08 | the SKU with the largest median gain from a price move | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_step` | 3.0% | the size of the step | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `pm_step_cap` | 5% | the hard cap on any single price step | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `pm_total_delta` | $166 | the sum of every recommended move's median monthly change | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 
 ---
 
@@ -957,7 +948,7 @@ Every figure in the narration, with its source. History first, then the engine's
 
 ## The Grocer Who Cornered Wall Street, and the Date That Took His Company
 
-`content/videos/greats-03-the-corner/` · pillar 2 · tier D · 4,027 spoken words · about 26 min
+`content/videos/greats-03-the-corner/` · pillar 2 · tier D · 4,130 spoken words · about 27 min
 
 **Spiky claim.** A business doesn't fail on the day it stops making money. It fails on the first day it can't pay a bill that has a date on it, and that day can arrive in its most profitable year.  
 **Misconception.** If the business is profitable and worth more than it owes, the cash will take care of itself.  
@@ -968,274 +959,274 @@ Every figure in the narration, with its source. History first, then the engine's
 
 1. September 1, 1923 ⟨p_pool_date⟩. That was the deadline for the $2,500,000 ⟨p_pool_due⟩ Clarence Saunders owed. He said he owned nearly every Class A share of a profitable grocery chain. He couldn't turn enough of it into cash in time, and he lost the company.
 2. $124 ⟨p_peak⟩ a share, up from $75.50 ⟨p_open⟩ at the open. That spring a grocer from Memphis cornered Wall Street. By August he had resigned from his own company, and his stores were still selling groceries.
-3. $653,058 ⟨p_net_1922⟩. That's what the Piggly Wiggly stores made in profit the year before their founder lost them. Profit wasn't the problem. Cash with a date on it was, and your business keeps the same kind of calendar.
+3. $653,058 ⟨p_net_1922⟩. That's what the Piggly Wiggly stores made the year before their founder lost them. What he couldn't meet was a payment with a date on it, and your business keeps the same kind of calendar.
 
 ### The film
 
 **[0:00] COLD OPEN**
 
-At about 11 a.m. ⟨p_corner_time⟩ on Tuesday, March 20, 1923 ⟨p_corner_date⟩, a man in Memphis sent a telegram to New York and fired his Wall Street operator, Jesse Livermore. Then he called for delivery of 42,000 shares ⟨p_called⟩ of a grocery company's stock. The man was Clarence Saunders, who had built Piggly Wiggly. On the floor of the New York Stock Exchange, the stock opened at $75.50 ⟨p_open⟩. Before the close it touched $124 ⟨p_peak⟩. A newspaper wrote: Fully one-third of the brokers on the floor were crowded about the Piggly Wiggly post. ⟨p_floor_quote⟩ Saunders said he had bought 198,872 ⟨p_claimed⟩ of the 200,000 ⟨p_total_shares⟩ Class A shares. He had cornered Wall Street. That August he told the Associated Press he was unable to get cash on this stock, and that he would lose every nickel he had, even his home.
+At about 11 a.m. ⟨p_corner_time⟩ on Tuesday, March 20, 1923 ⟨p_corner_date⟩, a man in Memphis sent a telegram to New York and fired his Wall Street operator, Jesse Livermore. Then he called for delivery of 42,000 shares ⟨p_called⟩ of a grocery company's stock. The man was Clarence Saunders, who had built Piggly Wiggly. On the floor of the New York Stock Exchange, the stock opened at $75.50 ⟨p_open⟩. Before the close it touched $124 ⟨p_peak⟩. A newspaper wrote: Fully one-third of the brokers on the floor were crowded about the Piggly Wiggly post. ⟨p_floor_quote⟩ Saunders said he had bought 198,872 ⟨p_claimed⟩ of the 200,000 ⟨p_total_shares⟩ Class A shares. He had cornered Wall Street. By August he had resigned from his own company, and his stores were still selling groceries.
 
 > *Picture.* still-push on the 1918 Memphis photograph of a Piggly Wiggly interior with two turnstiles (Library of Congress, no known restrictions), slow, toward the turnstile's arm; doc-clipping on the Chronicle's report of the day's prices (Internet Archive, public domain), $75.50 ⟨p_open⟩ and $124 ⟨p_peak⟩ underlined in ink; number-land on $124 ⟨p_peak⟩; still-push on the Bain portrait of Saunders (Library of Congress, no known restrictions).  
 
-**[0:53] THE QUESTION**
+**[0:49] THE QUESTION**
 
 So how does a man who says he owns nearly all of a profitable company lose it in a matter of months? Not to a competitor. Not to a bad idea: walking the aisles and serving yourself is how almost everyone shops now. The stores kept selling groceries the whole time. So what took it? There's a version of the answer in your business, and this film is going to find it.
 
 > *Picture.* still-pan across the 1917 photograph of the store's shelves (Library of Congress, no known restrictions); match-bridge: a single line of cash falling and refilling across a calendar holds still while the era changes, the 1923 dates becoming a modern catalogue's supplier wires, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[1:23] CHAPTER — THE TURNSTILE**
+**[1:18] CHAPTER — THE TURNSTILE**
 
 The turnstile.
 
 
-**[1:26] THE GROCER**
+**[1:21] THE GROCER**
 
 Saunders was born in 1881 ⟨p_born⟩, in Amherst County, Virginia, to a poor family that farmed tobacco. In 1896 ⟨p_palmyra_year⟩ he went to work in a general store in Palmyra, Tennessee. From there he went into the wholesale grocery trade, and in time to Memphis, where he worked for wholesalers. So he knew groceries from the supply side: what the stores bought, and what they paid for it.
 
 > *Picture.* still-pan across a Memphis street of the period (Library of Congress, no known restrictions), toward a wholesaler's loading door; footage-insert of sacks and crates on a wooden loading floor (stock, no labels).  
 
-**[1:53] HOW A GROCERY WORKED**
+**[1:48] HOW A GROCERY WORKED**
 
 Here's how most grocery stores of the time worked. The goods sat behind a counter. You told a clerk what you wanted. The clerk walked to the shelf, fetched it, wrapped it, and came back. Every item in every order passed through somebody's hands, and the store paid for those hands on every sale, busy day or quiet one. It worked. It was slow, and every sale paid for a clerk's time.
 
 > *Picture.* archive-framed on a counter-service grocery interior of the period (Library of Congress, no known restrictions), the clerk behind the counter; footage-insert of a hand wrapping a parcel in brown paper and string (stock, hands only).  
 
-**[2:22] THE IDEA**
+**[2:18] THE IDEA**
 
-The idea, by the account in the National Register, came to him in 1915 ⟨p_idea_year⟩. Let the customer walk among the goods and take them herself. In September 1916 ⟨p_open_month⟩ he opened the first Piggly Wiggly, at 79 Jefferson ⟨p_address⟩, in Memphis. As a historian of the company tells it, he staged the opening like a fair: a brass band, flowers and balloons for the children, and a stunt with gold coins for the women. And the staff, that same account says, politely refused to select merchandise for visitors. The customers would serve themselves. By the end of that year there were 9 ⟨p_stores_1916⟩ Piggly Wiggly stores in Memphis.
+The idea, by the account in the National Register, came to him in 1915 ⟨p_idea_year⟩. Let the customer walk among the goods and take them herself. In September 1916 ⟨p_open_month⟩ he opened the first Piggly Wiggly, at 79 Jefferson ⟨p_address⟩, in Memphis. As a historian of the company tells it in the Tennessee Historical Quarterly ⟨p_opening_account⟩, he staged the opening like a fair: a brass band, flowers and balloons for the children, and a stunt with gold coins for the women. And the staff, that same account says, politely refused to select merchandise for visitors. The customers would serve themselves. By the end of that year there were 9 ⟨p_stores_1916⟩ Piggly Wiggly stores in Memphis.
 
 > *Picture.* archive-framed on the 1917 entrance photograph, the turnstile with its small wicker baskets (Library of Congress, no known restrictions), the push toward the baskets; footage-insert of a wicker basket being lifted from a stack (stock, hands only, no labels); number-land on 9 ⟨p_stores_1916⟩.  
 
-**[3:05] THE TURNSTILE**
+**[3:02] THE TURNSTILE**
 
 Look at how the store was built, because the design did more than one job. The company's own description, filed with the New York Stock Exchange, says each store had a turnstile that customers passed through on entering. Then they moved through a system of aisles, one after another, and paid at a cashier's counter on the way out. A standard store needed three or four ⟨p_staff⟩ employees. And the filing says this: Over 100 customers can conveniently make their purchases at one time. ⟨p_capacity_quote⟩ So the first job was cost: fewer hands per sale. The second job is in the patent. The point of the layout, it says, is that the customer will be enabled to serve himself and, in so doing, will be required to review the entire assortment of goods carried in stock. Every shopper walked past every shelf. The design that cut the cost of a sale also put every product in front of every buyer.
 
 > *Picture.* doc-highlight on the patent's sheet of drawings, the aisles traced in ink in the order a customer walks them (US patent, public domain); doc-highlight on "required to review the entire assortment of goods carried in stock", ink; still-push on the 1918 check-out counter photograph (Library of Congress, no known restrictions) toward the cash registers.  
 
-**[4:09] NOT THE FIRST**
+**[4:06] NOT THE FIRST**
 
 The patent, number 1,242,872 ⟨p_patent_no⟩, was granted on October 9, 1917 ⟨p_patent_date⟩. And here's the correction you'll want, because the story usually says he invented the supermarket. A federal court in 1924 ⟨p_court_year⟩, in a case Saunders' own old company brought against him, found that self-serving stores have long been in existence. Lisa Tolbert's history of self-service, Beyond Piggly Wiggly ⟨p_tolbert⟩, calls Piggly Wiggly the most influential of them, and neither the first nor the only. That's a fair verdict. It wasn't the first. It was the one that spread.
 
 > *Picture.* doc-highlight on the patent's first page (Google Patents scan, public domain), the number and the date in ink; doc-clipping on the court's sentence, underlined in ink, attributed "Piggly Wiggly Corp. v. Saunders, 1924"; quote card for Tolbert's phrase, attributed "Lisa Tolbert, Beyond Piggly Wiggly, 2023".  
 
-**[4:44] CHAPTER — THE MACHINE**
+**[4:41] CHAPTER — THE MACHINE**
 
 The machine.
 
 
-**[4:47] SELLING THE IDEA**
+**[4:44] SELLING THE IDEA**
 
 How it spread is a lesson in its own right. On September 9, 1918 ⟨p_sale_date⟩, Saunders sold the business, the Piggly Wiggly name and the patent to a new company, Piggly Wiggly Corporation, for $550,000 ⟨p_sale_cash⟩ in cash and 15,000 shares ⟨p_sale_shares⟩. That company licensed the system to independent grocers all over the country, for a fee and a royalty of a fraction of 1% ⟨p_royalty⟩ of their gross sales. Another company, Piggly Wiggly Stores, Incorporated, formed in 1919 ⟨p_stores_inc_year⟩, ran stores of its own. So the business was split: one company owned the idea and rented it out, and another ran the stores. Hold on to that, because both of them come into the corner.
 
 > *Picture.* formula-build: the business, the name and the patent on one side, $550,000 ⟨p_sale_cash⟩ and 15,000 shares ⟨p_sale_shares⟩ on the other, the cash in blue; table-scan of the two companies, side by side, what each owned and what each did, landing as spoken.  
 
-**[5:32] THE BUSINESS WAS WORKING**
+**[5:29] THE BUSINESS WAS WORKING**
 
 And the stores company was working. On March 31, 1922 ⟨p_mar31_1922⟩, by its own filing, it ran 347 ⟨p_stores_1922⟩ stores with about 2,500 ⟨p_staff_1922⟩ employees. On May 3, 1922 ⟨p_listing_date⟩ it applied to list its Class A stock on the New York Stock Exchange: 200,000 ⟨p_total_shares⟩ shares, including 50,000 ⟨p_new_shares⟩ new ones offered to its stockholders at $43 ⟨p_new_price⟩. They were oversubscribed. And the money went, in the filing's words, for the retirement of all existing bank loans. The numbers were improving, too. Sales were $30.2 million ⟨p_sales_1921⟩ in 1921 ⟨p_1921⟩, with $208,662 ⟨p_net_1921⟩ of profit. In 1922 ⟨p_1922⟩, $31.5 million ⟨p_sales_1922⟩, and $653,058 ⟨p_net_1922⟩ of profit. The company paid $550,000 ⟨p_div_1922⟩ in dividends. By Saunders' count the following March, there were 1,241 ⟨p_ad_stores⟩ Piggly Wiggly stores, of every owner, in 41 states and Canada ⟨p_ad_states⟩, and his company owned 659 ⟨p_owned⟩ of them.
 
 > *Picture.* doc-highlight on the listing statement's line about the bank loans (Internet Archive, public domain), ink; chart-build of sales and net profit for the two years, the profit landing in blue as spoken; unit-grid of 1,241 ⟨p_ad_stores⟩ stores with the company's own 659 ⟨p_owned⟩ filled in ink.  
 > *Data.* published: the Commercial & Financial Chronicle, June 17, 1922 and February 24, 1923  
 
-**[6:24] A CASH BUSINESS**
+**[6:21] A CASH BUSINESS**
 
 Notice what kind of business that is. A grocery's customer pays at the counter on the way out, so the money is in the till the day the goods leave the shelf. Groceries don't sit on the shelf for long. A store like that is about as close to a cash machine as retail gets. It had raised money to pay off its bank loans. It was profitable and growing. If you were going to pick a business that couldn't run out of cash, you might well have picked this one.
 
 > *Picture.* still-push on the 1918 check-out counter photograph, toward a cash register's drawer; footage-insert of coins dropping into an old till drawer (stock, close, no marks).  
 
-**[7:01] CHAPTER — THE CORNER**
+**[6:58] CHAPTER — THE CORNER**
 
 The corner.
 
 
-**[7:04] THE RAID**
+**[7:01] THE RAID**
 
 In November 1922 ⟨p_raid_month⟩, some independent Piggly Wiggly licensees in the East failed. They had nothing to do with Saunders' own stores company, but the stock fell anyway, to around $39 ⟨p_low_1922⟩, from above $50 ⟨p_before_raid⟩ before the failures. And professional traders began to sell it short. Here's what that means, because the rest of the story depends on it. A short seller borrows shares he doesn't own and sells them, planning to buy them back later, cheaper, and return them. If the price falls, he profits. If the price rises, he loses. And if he can't find anyone to sell him the shares back at all, he's cornered: he has promised to deliver something that only one person has.
 
 > *Picture.* doc-clipping on a newspaper report of the eastern receivership (Library of Congress, Chronicling America, public domain), underlined in ink; formula-build: borrow the shares, sell them, buy them back, return them, each step landing as spoken, the profit or loss in blue; number-pair: above $50 ⟨p_before_raid⟩ against around $39 ⟨p_low_1922⟩.  
 
-**[7:51] SAUNDERS BUYS**
+**[7:48] SAUNDERS BUYS**
 
 Saunders decided to buy. In a single day that month, a St. Louis paper reported later, he raised a little more than $1,000,000 ⟨p_stl_raised⟩ from 40 St. Louisans ⟨p_stl_people⟩ who were to share in any profits. In December 1922 ⟨p_livermore_date⟩ he hired Jesse Livermore to buy, sell and lend the stock for his account. A correction here, too, because you'll read it the other way: Livermore wasn't one of the short sellers. He was Saunders' own operator, and he said publicly that he'd never traded the stock for himself.
 
 > *Picture.* doc-clipping on the St. Louis Post-Dispatch front page of March 22, 1923 (Internet Archive, public domain), the fundraising sentence underlined in ink; quote card for Livermore's statement, verbatim, attributed "Jesse L. Livermore, March 20, 1923".  
 
-**[8:26] WHERE THE MONEY CAME FROM**
+**[8:23] WHERE THE MONEY CAME FROM**
 
 And the buying took money. A manager of one of the Missouri Piggly Wiggly companies put it plainly: Mr. Saunders in all raised about $10,000,000 ⟨p_raised⟩ for his fight. It came from a pool of investors in the South and St. Louis, promised a share of the profits, and from banks, and the loans were secured on the stock itself. And there was company money in it. Look at Piggly Wiggly Corporation's balance sheet. Its cash at the end of the year: $967,016 ⟨p_corp_cash_before⟩. By the end of June: $22,724 ⟨p_corp_cash_after⟩. Over the same months, its holdings of the stores company's stock went from $1,223,372 ⟨p_corp_stock_before⟩ to $2,446,147 ⟨p_corp_stock_after⟩. The company's cash had become the company's stock.
 
 > *Picture.* quote card: the manager's sentence, verbatim, attributed "George H. Wearen, St. Louis Post-Dispatch, March 22, 1923"; doc-highlight on the Corporation's balance sheet in the Chronicle (Internet Archive, public domain), the cash lines and the stock lines underlined; number-pair: $967,016 ⟨p_corp_cash_before⟩ against $22,724 ⟨p_corp_cash_after⟩, the cash in blue.  
 > *Data.* published: the Commercial & Financial Chronicle, September 1, 1923  
 
-**[9:12] THE INSTALMENT PLAN**
+**[9:09] THE INSTALMENT PLAN**
 
 Then he took the fight to the public. He offered shares at $55 ⟨p_offer_price⟩: $25 ⟨p_down⟩ down, and three notes of $10 ⟨p_notes⟩, which the buyers would pay on June 1, September 1 and December 1, 1923 ⟨p_note_dates⟩. He bought whole newspaper pages to sell it. One began: Shall the Gambler Rule? On a high horse he rides. Bluff is his Coat of Mail, and thus shielded is a yellow heart. Another headline read A Million People Buy From Piggly Wiggly Every Day ⟨p_partners_quote⟩. The Exchange objected to what it called two markets at widely different prices ⟨p_two_markets⟩. Meanwhile the stock climbed: $55.25 ⟨p_jan_low⟩ at its January low, about $69 ⟨p_mar1⟩ on the first of March, and as high as $79.50 ⟨p_mar12⟩ by the middle of the month.
 
 > *Picture.* doc-highlight on the "Shall the Gambler Rule?" advertisement (St. Louis Post-Dispatch, March 8, 1923, Internet Archive, public domain), cropped to the headline and the quoted lines only; table-scan: the price, the down payment and the buyers' notes with their dates, drawn as money coming in, in ink; timeline of the share price through the winter, each figure landing as spoken.  
 
-**[10:00] CORNER DAY**
+**[9:57] CORNER DAY**
 
 Now the day itself, slowly. On Monday the stock closed at $72 ⟨p_mar19⟩. On Tuesday morning Saunders fired Livermore and called for his shares. The short sellers now had to deliver stock they didn't have, and almost nobody but Saunders had any to sell. The price opened at $75.50 ⟨p_open⟩ and ran to $124 ⟨p_peak⟩. By the close it was back at $82 ⟨p_close⟩. That evening, the Exchange's committee suspended dealings in the stock. Its resolution added a sentence: this action was taken after conference with the counsel of Piggly Wiggly Stores, and meets with his approval.
 
 > *Picture.* chart-build of the day's prices, open, high and close, each landing as spoken, the spike in blue; doc-highlight on the Exchange's resolution as the Chronicle printed it (Internet Archive, public domain), "meets with his approval" underlined in ink.  
 > *Data.* published: the Commercial & Financial Chronicle, March 24, 1923  
 
-**[10:38] THE PRICE OF A SHARE YOU MUST HAVE**
+**[10:35] THE PRICE OF A SHARE YOU MUST HAVE**
 
 The next day, Saunders named his price. $150 ⟨p_demand⟩ a share by the following afternoon, he said, or $250 ⟨p_demand_later⟩ after that. He told the Associated Press: A razor to my throat, figuratively speaking, is why I suddenly without warning kicked the pegs from under Wall street. ⟨p_razor_quote⟩ On Thursday, March 22 ⟨p_delisted⟩, the Exchange struck the stock from its list. It gave its reason: such a concentration of holdings as to make impossible a free market for the stock. And it moved the delivery deadline to 2:15 in the afternoon on Monday, March 26 ⟨p_deadline⟩, to give sellers whose stock was coming from distant points time to get it. Here the record splits. The Exchange said Saunders' own attorney had asked for that Monday. Saunders said he never agreed to any postponement. You can read both statements. Nobody has settled it.
 
 > *Picture.* quote card: the razor sentence, verbatim, attributed "Clarence Saunders to the Associated Press, March 1923"; doc-highlight on the Exchange's delisting resolution (Internet Archive, public domain), "impossible a free market" underlined; table-scan: the Exchange's account and Saunders' account side by side, neither marked as right.  
 
-**[11:33] THE SETTLEMENT**
+**[11:31] THE SETTLEMENT**
 
 The extra days were enough. On Friday Saunders offered to supply the shares himself, at $100 ⟨p_settle⟩ each, until that afternoon, and most of the short sellers took it. By Saturday noon only about 4,000 shares ⟨p_left_sat⟩ were still owed. On Monday every delivery was made. The Exchange published its review: Mr. Saunders has received all of the stock at the prices he contracted for it, and is in exactly the same position in all respects as though the stock had been delivered to him on March 21. ⟨p_nyse_review⟩ Saunders had his own summary: Wall Street got licked and then called for 'mamma,' the New York Stock Exchange, to help, and, of course, 'mamma' heard the cry of her petted child. ⟨p_mamma_quote⟩ And one more number, from the Exchange's own count: only 11,200 shares ⟨p_clearing⟩ had been deliverable through its clearing house that Wednesday. The squeeze was real. It was smaller than the headlines.
 
 > *Picture.* timeline from Tuesday to Monday, each day's event landing as spoken; quote card for the Exchange's review, verbatim, attributed "New York Stock Exchange, March 26, 1923"; quote card for Saunders' reply, verbatim, attributed "Associated Press, March 23, 1923"; number-land on 11,200 shares ⟨p_clearing⟩.  
 
-**[12:34] THE TURN**
+**[12:31] THE TURN**
 
 Now look at what he was holding. By his own count, nearly every Class A share. The stock had no exchange to trade on, because the Exchange had removed it. His loans were secured on that stock, and his lenders wanted cash. On paper he was rich: that summer he put his assets at $11 million ⟨p_assets_claimed⟩, against debts the newspapers estimated at about $5,000,000 ⟨p_total_owed⟩. In cash, he had whatever he could sell the stock for, and he had become the only big holder there was. A corner is a trap that closes on both sides. The short sellers couldn't buy. Saunders couldn't sell.
 
 > *Picture.* unit-grid of the 200,000 ⟨p_total_shares⟩ shares, nearly all filled in ink as his, a thin unfilled sliver left; breath, the bed dropping out a beat before "Saunders couldn't sell."; kinetic-thesis: "A corner is a trap that closes on both sides."  
 
-**[13:15] CHAPTER — THE DATE**
+**[13:13] CHAPTER — THE DATE**
 
 The date.
 
 
-**[13:19] THE CALENDAR**
+**[13:16] THE CALENDAR**
 
-So here is the calendar he lived on that year. On one side, money that might come in: the public still owed on its notes, due June 1, September 1 and December 1, 1923 ⟨p_note_dates⟩, but only if the buyers kept paying for a stock that no longer traded. On the other side, money he had to pay. The pool that had financed the corner required $2,500,000 ⟨p_pool_due⟩ before September 1, 1923 ⟨p_pool_date⟩. The Associated Press, that August: The $2,500,000, which the pool required that he pay before Sept. 1 was understood to total approximately half of his obligations. ⟨p_half_quote⟩ And Piggly Wiggly Corporation, the company that owned the idea, had $965,000 ⟨p_corp_notes⟩ of notes due on December 1, 1923 ⟨p_corp_notes_due⟩, against cash, at the end of June, of $22,724 ⟨p_corp_cash_after⟩. None of the dates he owed on cared what the stock was worth. Each of them wanted cash.
+So here is the calendar he lived on that year. On one side, money that might come in: the public still owed on its notes, due June 1, September 1 and December 1, 1923 ⟨p_note_dates⟩, but only if the buyers kept paying for a stock that no longer traded. On the other side, money he had to pay. The pool that had financed the corner required $2,500,000 ⟨p_pool_due⟩ before September 1, 1923 ⟨p_pool_date⟩. The Associated Press, that August: The $2,500,000, which the pool required that he pay before Sept. 1 was understood to total approximately half of his obligations. ⟨p_half_quote⟩ And Piggly Wiggly Corporation, the company that owned the idea, had $965,000 ⟨p_corp_notes⟩ of notes due on December 1, 1923 ⟨p_corp_notes_due⟩, against cash, at the end of June, of $22,724 ⟨p_corp_cash_after⟩. None of these dates cared what the stock was worth. Each of them wanted cash.
 
 > *Picture.* timeline of the year as a calendar, the buyers' notes landing as money in (ink) and each obligation landing as money out on its day (blue), as spoken; doc-clipping on the Associated Press report (St. Louis Post-Dispatch, August 13, 1923, Internet Archive, public domain), "before Sept. 1" underlined in ink.  
 > *Data.* published: the St. Louis Post-Dispatch, August 13, 1923; the Commercial & Financial Chronicle, September 1, 1923  
 
-**[14:16] THE STORES, MEANWHILE**
+**[14:12] THE STORES, MEANWHILE**
 
 And the stores company was no longer the cash machine it had been. Its own balance sheet at the end of June shows it. Cash: from $841,064 ⟨p_si_cash_before⟩ at the start of the year to $391,267 ⟨p_si_cash_after⟩. Merchandise on hand: from $3.44 million ⟨p_si_merch_before⟩ to $2.17 million ⟨p_si_merch_after⟩. Its surplus of $407,007 ⟨p_si_surplus_before⟩ had turned into a deficit of $477,975 ⟨p_si_deficit_after⟩. Saunders said the stores lost approximately $100,000 ⟨p_july_loss⟩ from operations in July. The record doesn't say why in so many words. It does say that the company in the middle of the fight was shrinking while its founder's debts came due.
 
 > *Picture.* chart-build of the stores company's cash, merchandise and surplus at the two dates, each pair landing as spoken, the deficit in blue; doc-highlight on the balance sheet in the Chronicle (Internet Archive, public domain).  
 > *Data.* published: the Commercial & Financial Chronicle, September 1, 1923  
 
-**[14:55] AUGUST**
+**[14:51] AUGUST**
 
 On August 12, 1923 ⟨p_aug⟩, Saunders resigned as president of Piggly Wiggly Stores. He explained himself to the Associated Press. He had offered, he said, to settle with all pool interests by full payment in stock at the cost price to the pool, as I am unable to get cash on this stock. They turned it down. He offered the lenders the asset. The lenders wanted the cash. And he said what he expected: that he would lose every nickel he had, even his home, as he had saved nothing outside in anybody else's name. J. C. Bradford, of Nashville, became president. On August 17, 1923 ⟨p_corp_resign⟩, Saunders resigned from Piggly Wiggly Corporation too.
 
 > *Picture.* quote card: "I am unable to get cash on this stock", verbatim, attributed "Clarence Saunders, Associated Press, August 12, 1923"; doc-highlight on the statement as the Post-Dispatch printed it (Internet Archive, public domain), the sentence underlined in ink; still-push on the Saunders portrait, the second time, closer.  
 
-**[15:40] DETROIT**
+**[15:36] DETROIT**
 
 There was a last attempt. At a receivership hearing on September 21, 1923 ⟨p_ford_date⟩, Saunders testified that the governor of Tennessee, Austin Peay, and Colonel Luke Lea had gone to Detroit to ask Henry Ford for help, and had failed to get an interview. A receiver was named for the stock he had pledged. On February 23, 1924 ⟨p_bankrupt⟩, he filed for bankruptcy. He had said, that August: I have lost my business and my money, but I have gained knowledge and on that knowledge I will attempt to build up another fortune.
 
 > *Picture.* footage-establish on a rail line under a wide morning sky (stock, no markings), never captioned as the journey; doc-clipping on the hearing report (Library of Congress, Chronicling America, public domain), attributed as testimony; quote card for "I have gained knowledge", verbatim, attributed "Associated Press, August 1923".  
 
-**[16:17] THE PINK PALACE**
+**[16:13] THE PINK PALACE**
 
-There was a house, too. In 1922 ⟨p_palace_begun⟩ he had begun a mansion in Memphis, faced in pink Georgia marble. He told the architect to spare no expense. Its interior was never finished, and he never lived in it. It passed to his creditors that summer. A development company bought it, and in August 1926 ⟨p_palace_donated⟩ gave it to the city. In 1930 ⟨p_palace_museum⟩ it opened as a museum. One more correction, because the story is often told the generous way: Saunders didn't give his house to Memphis. His creditors took it, and somebody else gave it.
+There was a house, too. In 1922 ⟨p_palace_begun⟩ he had begun a mansion in Memphis, faced in pink Georgia marble. He told the architect to spare no expense. His plans for its interior were never completed, and he never lived in it. It passed to his creditors that summer. A development company bought it, and in August 1926 ⟨p_palace_donated⟩ gave it to the city. In 1930 ⟨p_palace_museum⟩ it opened as a museum. One more correction, because the story is often told the generous way: Saunders didn't give his house to Memphis. His creditors took it, and somebody else gave it.
 
-> *Picture.* still-push on the Pink Palace (Wikimedia Commons, CC BY-SA 3.0, credited on screen and in the description), slow, toward the upper windows; if the licence is refused in sourcing, kinetic-thesis falls back to the words "Its interior was never finished, and he never lived in it."; timeline from the house begun to the museum opened.  
+> *Picture.* still-push on the Pink Palace (Wikimedia Commons, CC BY-SA 3.0, credited on screen and in the description), slow, toward the upper windows; if the licence is refused in sourcing, kinetic-thesis falls back to the words "His plans for its interior were never completed, and he never lived in it."; timeline from the house begun to the museum opened.  
 
-**[16:55] AFTER**
+**[16:52] AFTER**
 
 The court kept him from using the Piggly Wiggly methods, but not his own name. So by 1929 ⟨p_cs_year⟩ he was back, with 400 ⟨p_cs_stores⟩ Clarence Saunders stores in 225 towns and cities in 18 states ⟨p_cs_towns⟩, the chain he called Sole Owner of My Name. It failed in the Depression. Time magazine summed up his career with a line worth remembering: Mr. Saunders discovered that Wall Street has a cemetery at one end and a river at the other. He died in Memphis in 1953 ⟨p_died⟩. The idea did better than the man. Piggly Wiggly had 1,331 ⟨p_pw_1924⟩ stores in the spring after his bankruptcy, and by one count about 2,660 ⟨p_pw_1932⟩ at its peak.
 
 > *Picture.* quote card for Time's line, verbatim, attributed "Time, February 25, 1929"; unit-grid of Piggly Wiggly's store count growing past his ruin, each count landing as spoken, the 1932 count marked "one count; secondary".  
 
-**[17:40] WHAT THE CORNER TAUGHT**
+**[17:37] WHAT THE CORNER TAUGHT**
 
-So what did the corner teach? Not that ambition is dangerous. The lesson is narrower and more useful than that. Money asks a business more than one question, and the answers differ. The first is: am I worth more than I owe? Saunders could say yes. The second is: will the cash be there on the day each payment is due? Before September 1, 1923 ⟨p_pool_date⟩, the answer was no. He measured his position by what his stock was worth. His lenders measured it by what it would pay on a date. The second measure is the one that ends businesses, and it's the one most businesses don't keep.
+So what did the corner teach? Not that ambition is dangerous. The lesson is narrower and more useful than that. Money asks a business more than one question, and the answers differ. The first is: am I worth more than I owe? Saunders could say yes. The second is: will the cash be there on the day each payment is due? Before September 1, 1923 ⟨p_pool_date⟩, the answer was no. He measured his position by what his stock was worth. His lenders measured it by what it would pay on a date. The second measure is the one that ends businesses, and it's the one a profit and loss statement never shows.
 
 > *Picture.* number-pair: $11 million ⟨p_assets_claimed⟩ against about $5,000,000 ⟨p_total_owed⟩, then the pair struck through and replaced by a single date, September 1, 1923 ⟨p_pool_date⟩, in blue; kinetic-thesis: "Worth is a number. Cash is a date."; breath, the bed rising under the held line.  
 
-**[18:24] CHAPTER — YOUR CALENDAR**
+**[18:22] CHAPTER — YOUR CALENDAR**
 
 Your calendar.
 
 
-**[18:27] YOUR CORNER**
+**[18:25] YOUR CORNER**
 
-Now your business. You probably haven't cornered anything. But if you sell physical products, you own an asset you can't spend until it sells: inventory. And you owe money on dates other people set. A supplier's wire. Payroll. Rent. A tax payment. A card bill. A loan. Your profit is a statement about a month. Your cash is a statement about a day. They're different numbers, and the cash is the one with a date on it.
+Now your business. You probably haven't cornered anything. But if you sell physical products, you own an asset you can't spend until it sells: inventory. And you owe money on dates other people set. A supplier's wire. Payroll. Rent. A tax payment. A card bill. A loan. Let's see what a calendar like that does to a healthy business.
 
 > *Picture.* footage-process (wide, medium, detail) of cartons arriving on pallets in a bright warehouse, a pallet set down, a carton's label (stock, no logos), screen direction left to right; formula-build: the dated payments, each landing on its own day of a calendar as spoken, in blue.  
 
-**[18:58] IS IT SAFE?**
+**[18:50] IS IT SAFE?**
 
-Let's do it on a real-shaped example. The demo catalogue we use for teaching: Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products. Last month it made $102,864 ⟨net_latest⟩ of net profit on $318,632 ⟨rev_latest⟩ of revenue. It starts today with $262,000 ⟨cash_on_hand⟩ in the bank, which is more than 8 months ⟨cash_months⟩ of its fixed costs, and it carries $31,500 ⟨monthly_fixed_costs⟩ a month of them. So, before we draw anything: is this business safe for the next 90 days ⟨horizon_days⟩? Most operators would say yes, easily. Hold that answer.
+Let's do it on a real-shaped example. The demo catalogue we use for teaching: Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products. Last month it made $102,864 ⟨net_latest⟩ of net profit on $318,632 ⟨rev_latest⟩ of revenue. It starts today with $262,000 ⟨cash_on_hand⟩ in the bank, which is more than 8 months ⟨cash_months⟩ of its fixed costs, and it carries $31,500 ⟨monthly_fixed_costs⟩ a month of them. So, before we draw anything: how big a single bill could this business pay in the next 90 days ⟨horizon_days⟩ without bouncing it? Most operators would look at the $262,000 ⟨cash_on_hand⟩ and name something close to it. Hold your number.
 
 > *Picture.* chart-build of the demo's monthly profit, landing on $102,864 ⟨net_latest⟩, labelled Tarnhollow demo data; number-land on $262,000 ⟨cash_on_hand⟩, with more than 8 months ⟨cash_months⟩ beside it in ink; the calendar ahead left blank.  
 > *Data.* demo: Tarnhollow demo data, MARGIN.DECOMP and the cash horizon  
 
-**[19:31] THE TROUGH**
+**[19:28] THE TROUGH**
 
-We ran its next 90 days ⟨horizon_days⟩ as 10,000 ⟨n_paths⟩ different futures, each with its own demand. In the middle of them, it ends the horizon at $340,454 ⟨terminal_p50⟩, higher than it starts. But on the way, the balance falls to $85,242 ⟨min_median⟩, 13 days ⟨min_p5_day⟩ from today. Here's why. Today, 10 ⟨day0_wire_count⟩ supplier wires leave, $130,622 ⟨day0_wires_total⟩ in all, before a single sale from this month can pay. Goods take about 40 days ⟨lead_time_typical⟩ to arrive and be sellable. And the platform pays out every 14 days ⟨payout_cycle⟩, on sales it has already held for a while. Cash goes out for stock before the stock sells, and comes back in after it sells. In between, there's a bottom. Nobody chose that bottom. It fell out of when the wires were set to leave.
+We ran its next 90 days ⟨horizon_days⟩ as 10,000 ⟨n_paths⟩ different futures, each with its own demand. In the middle of them, it ends the horizon at $336,443 ⟨end_p50⟩, higher than it starts. But on the way, the balance falls to $85,242 ⟨min_median⟩, 13 days ⟨min_p5_day⟩ into the horizon. Here's why. As the horizon opens, 10 ⟨day0_wire_count⟩ supplier wires leave, $130,622 ⟨day0_wires_total⟩ in all, before a single sale from this month can pay. Goods take about 40 days ⟨lead_time_typical⟩ to arrive and be sellable. And the platform pays out every 14 days ⟨payout_cycle⟩, on sales it has already held for a while. Cash goes out for stock before the stock sells, and comes back in after it sells. In between, there's a bottom. Nobody chose that bottom. It fell out of when the wires were set to leave.
 
 > *Picture.* chart-build of the demo cash path, day by day, the day's wires drawn as steps down in blue, the payouts as steps up, the trough landing with $85,242 ⟨min_median⟩ labelled, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[20:22] THE CLOCKS**
+**[20:20] THE CLOCKS**
 
-Count it the way the course does, clock by clock. A dollar that leaves for your supplier is gone for the time it takes the goods to arrive and be sellable, plus the time the average unit then waits on the shelf, plus the time from a sale until the money is in your bank. Subtract whatever credit your supplier gives you. That's how long each dollar is away. On this catalogue the goods take about 40 days ⟨lead_time_typical⟩ to land, and the supplier is paid in full when the order is placed. A sale here reaches the bank about 21 days ⟨sale_to_cash_days⟩ after it's made: 10 days ⟨sale_payable_days⟩ until the platform can pay it, then the wait for the next settlement, and 4 days ⟨bank_transit_days⟩ at the bank. Every day you add to that count is a day of sales you have to fund before you see a cent of them.
+Count it the way the course does, clock by clock. A dollar that leaves for your supplier is gone for the time it takes the goods to arrive and be sellable, plus the time the average unit then waits on the shelf, plus the time from a sale until the money is in your bank. Subtract whatever credit your supplier gives you. That's how long each dollar is away. On this catalogue the goods take about 40 days ⟨lead_time_typical⟩ to land, and the supplier is paid in full when the order is placed. The shelf time depends on how much each order covers, so it differs product by product. A sale here reaches the bank about 21 days ⟨sale_to_cash_days⟩ after it's made: 10 days ⟨sale_payable_days⟩ until the platform can pay it, then the wait for the next settlement, and 4 days ⟨bank_transit_days⟩ at the bank. Every day you add to that count is a day of sales you have to fund before you see a cent of them.
 
 > *Picture.* formula-build: the time until it lands, plus the time on the shelf, plus the time until you're paid, minus the supplier's credit, each clock landing as spoken, the sale-to-cash clock built from its three parts, labelled Tarnhollow demo data; footage-insert of a container being lifted from a ship at a bright port (stock, no logos).  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[21:21] THE SAME ON EVERY PATH**
+**[21:27] THE SAME ON EVERY PATH**
 
-And here's the part that should make you sit up. Across those 10,000 ⟨n_paths⟩ futures, each with its own demand, the low point is the same on every one ⟨trough_every_path⟩ of them: $85,242 ⟨min_median⟩, 13 days ⟨min_p5_day⟩ from today. It falls the day before the platform's next payout lands, so nothing a customer does in those days can move it. The wires have already left. The trough was decided when the orders were placed.
+And here's the part that should make you sit up. Across those 10,000 ⟨n_paths⟩ futures, each with its own demand, the low point is the same on every one ⟨trough_every_path⟩ of them: $85,242 ⟨min_median⟩, 13 days ⟨min_p5_day⟩ into the horizon. It falls the day before the next payout lands, which the model sets a full cycle away, the cautious case, because a seller's settlement date isn't on file. So nothing a customer does in those days can move it. The wires have already left. The trough was decided when the orders were placed.
 
 > *Picture.* range-band of the 10,000 ⟨n_paths⟩ cash paths, the fan wide at the end and pinched to a single point at the trough, the pinch in blue, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[21:50] SAUNDERS' SEPTEMBER**
+**[22:03] SAUNDERS' SEPTEMBER**
 
-Now give this healthy catalogue a Saunders problem. A payment a little more than $85,242 ⟨min_median⟩, due on that day. A loan instalment, a tax bill, a deposit on a new order. On every one of those 10,000 ⟨n_paths⟩ futures, the balance goes negative. Not on the bad ones. On all of them. Move the same payment to the horizon's last day, and on all but the worst twentieth of those futures it comes out of a balance above $323,149 ⟨end_p5⟩. Same business. Same profit. Same amount. A different date. That's the whole lesson of September 1, 1923 ⟨p_pool_date⟩, in a modern catalogue. So, your answer. Was it safe?
+Now give this healthy catalogue a Saunders problem. A payment a little more than $85,242 ⟨min_median⟩, due on that day. A loan instalment, a tax bill, a deposit on a new order. On every one of those 10,000 ⟨n_paths⟩ futures, the balance goes negative. Not on the bad ones. On all of them. Move the same payment to the horizon's last day, and on all but the worst twentieth of those futures it comes out of a balance above $323,149 ⟨end_p5⟩. Same business. Same profit. Same amount. A different date. That's the whole lesson of September 1, 1923 ⟨p_pool_date⟩, in a modern catalogue. So, your number. A single bill of more than $85,242 ⟨min_median⟩, landing on that day, would have bounced. Not $262,000 ⟨cash_on_hand⟩. It was safe, by far less than it looked. Your profit is a statement about a month. Your cash is a statement about a day. They're different numbers, and the cash is the one with a date on it.
 
 > *Picture.* counterfactual on the demo cash path: the payment dropped onto the trough's day, the line crossing zero in blue, then the same payment lifted and set down on the horizon's last day, the line staying well above zero, labelled Tarnhollow demo data; timeline returning to the 1923 calendar on the date.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[22:33] VALUE IS NOT CASH**
+**[23:06] VALUE IS NOT CASH**
 
 And notice the other side of Saunders' trap: an asset worth a lot that couldn't be turned into cash by the date. Inventory is that asset, in miniature. On your books, stock is worth what you paid for it. On a date, it's worth what it will sell for by then, after the platform's cut and the payout's wait. Over these 90 days ⟨horizon_days⟩, this catalogue turns $349,342 ⟨wires_total⟩ of cash into stock. Every dollar of it is worth something. None of it pays a bill until it sells and the payout lands.
 
 > *Picture.* formula-build: a dollar wired, the lead time, the selling time, the payout's wait, the dollar back, each clock landing as spoken; number-land on $349,342 ⟨wires_total⟩, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[23:10] WHY RULES OF THUMB MISS IT**
+**[23:43] WHY RULES OF THUMB MISS IT**
 
 You've heard the usual rule: hold a few months of expenses in the bank. This catalogue holds more than 8 months ⟨cash_months⟩ of its fixed costs, far more than the rule asks. And still, between today and the trough, its cash falls $176,758 ⟨cash_drop⟩. That's more than 5 months ⟨cash_drop_months⟩ of fixed costs, gone in under a fortnight, in a month when nothing at all goes wrong. Start this same business with less than $176,758 ⟨cash_drop⟩ in the bank, and that same calendar takes it into the red on every path. The rule is measuring the wrong thing. The drop isn't driven by rent and payroll. It's driven by the wires, and by when they leave relative to when the money comes back.
 
 > *Picture.* number-pair: $31,500 ⟨monthly_fixed_costs⟩ a month against the $176,758 ⟨cash_drop⟩ fall, the fall in blue; chart-build of the demo cash path started lower, the same shape crossing zero on the trough's day, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[23:58] WHAT MOVES THE BOTTOM**
+**[24:31] WHAT MOVES THE BOTTOM**
 
 So what moves the trough? Every lever is a date. When a wire leaves: a deposit now and the balance on shipment, instead of everything up front. How big each order is: smaller, more frequent orders make the bottom shallower, and cost more per unit and per shipment. How long a supplier lets you pay: every day of credit is a day the money stays in your account. When you reorder: a reorder that goes out late saves cash today and buys a stockout later. And the payout schedule you're on. Each of those moves the bottom up or down, and each of them has a price. Choosing among them is the real work of running cash.
 
 > *Picture.* chart-build of an illustrative cash path with each lever applied in turn, the trough rising or falling as each is spoken, drawn without figures and labelled "Illustration"; footage-insert of a hand turning a desk calendar's page (stock, hands only).  
 > *Data.* demo: Tarnhollow demo data, the cash horizon (shape only)  
 
-**[24:45] WHAT YOU CAN DO THIS WEEK**
+**[25:19] WHAT YOU CAN DO THIS WEEK**
 
 So here's this week. List every payment that leaves your account in the next 90 days ⟨horizon_days⟩, on the day it actually leaves: supplier wires, payroll, rent, tax, card bills, loan payments. List every payment that comes in, on the day it actually lands. For a platform payout, that's not the day of the sale. Date it from the day the platform can pay the sale, then the next settlement, then the bank. Draw your balance, day by day. Find the lowest point, and its date. Then ask Saunders' question: what single payment, due on that day, would break me? If the answer is a number you could plausibly owe, move something now. Split a wire. Ask a supplier for a different date. And hold enough that your lowest day still clears a floor you choose. Keep your buffer above the trough, not above the average.
 
 > *Picture.* formula-build listing the steps as terms, each landing as spoken; receipt: one demo row of the calendar, a wire, a payout and the day's balance, the trough day marked in blue, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 
-**[25:44] THE HONEST LIMIT**
+**[26:17] THE RETURN**
 
-You can do that by hand for one path, and it's worth doing. Where it breaks is that one path isn't the future. On this catalogue the bottom came before any sale could pay. On yours, a wire that leaves after a payout puts demand into the bottom, and then it's a range. Demand varies, and products tend to have their bad months together. Lead times slip. Every reorder decision changes a wire, and every wire changes the trough. A real catalogue has dozens of products, each on its own calendar, and the question isn't what happens on the expected path. It's how deep the bottom goes on the bad ones. And how likely you are to hit it. Answering that honestly means simulating thousands of futures. Then reading the bottom of each one. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every month, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Capital and Cash course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+A turnstile in Memphis. A corner in New York. And a payment with a date on it. Saunders said he'd lost his business and his money, but gained knowledge. You can have the knowledge without paying his price. Find your date.
+
+> *Picture.* still-push resuming on the cold open's turnstile photograph in the same framing; then a modern calendar page with one date circled in blue in the same framing; kinetic-thesis: "Find your date.".  
+> *Data.* published: the Library of Congress photograph and the Associated Press report of August 1923  
+
+**[26:34] THE HONEST LIMIT**
+
+You can draw this week's calendar by hand for one path, and it's worth doing. Where it breaks is that one path isn't the future. On this catalogue the bottom came before any sale could pay. On yours, a wire that leaves after a payout puts demand into the bottom, and then it's a range. Demand varies, and products tend to have their bad months together. Lead times slip. Every reorder decision changes a wire, and every wire changes the trough. A real catalogue has dozens of products, each on its own calendar, and the question isn't what happens on the expected path. It's how deep the bottom goes on the bad ones. And how likely you are to hit it. Answering that honestly means simulating thousands of futures. Then reading the bottom of each one, averaging the worst twentieth of those bottoms, and holding enough that the average still clears your floor. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Capital and Cash course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
 
 > *Picture.* range-band of the demo's 10,000 ⟨n_paths⟩ cash paths, the whole fan drawn while the voice names what it takes, the trough marked, labelled Tarnhollow demo data; end card at "hubricon.com/learn".  
 > *Data.* demo: Tarnhollow demo data, the cash horizon  
 > *Close.* The free Capital & Cash course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
-
-**[27:08] THE RETURN**
-
-A turnstile in Memphis. A corner in New York. And a payment with a date on it. Saunders said he'd lost his business and his money, but gained knowledge. You can have the knowledge without paying his price. Find your date.
-
-> *Picture.* still-push resuming on the cold open's turnstile photograph in the same framing; then a modern calendar page with one date circled in blue in the same framing; kinetic-thesis: "Find your date."; end card.  
-> *Data.* published: the Library of Congress photograph and the Associated Press report of August 1923  
 
 ### Facts table
 
@@ -1344,6 +1335,7 @@ Every figure in the narration, with its source. History first, then the engine's
 | `p_1922` | 1922 | year | https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image) |
 | `p_mamma_quote` | Wall Street got licked and then called for 'mamma,' the New York Stock Exchange, to help, and, of course, 'mamma' heard the cry of her petted child. | Saunders, Associated Press from Memphis, March 23, 1923, as the Chronicle printed it | https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review) |
 | `p_tolbert` | Beyond Piggly Wiggly | Lisa Tolbert's history of self-service (University of Georgia Press, 2023), which calls Piggly Wiggly the most influential self-service store, 'neither the first nor the only' | https://www.ugapress.org/9780820364414/beyond-piggly-wiggly/ |
+| `p_opening_account` | the Tennessee Historical Quarterly | where the historian of the company (Freeman, 1992) tells the opening-day story: the 'beauty contest', the gold coins, the brass band, staff who 'politely refused to select merchandise for visitors' (secondary, via Smithsonian Magazine) | https://www.smithsonianmag.com/smart-news/bizarre-story-piggly-wiggly-first-self-service-grocery-store-180964708/ (quoting Freeman, Tennessee Historical Quarterly, 1992; secondary) |
 | `bank_transit_days` | 4 days | days from a settlement to the bank | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `cash_drop` | $176,758 | how far cash falls from today to the median path's low point | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `cash_drop_months` | more than 5 months | that fall in months of fixed costs | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
@@ -1354,6 +1346,7 @@ Every figure in the narration, with its source. History first, then the engine's
 | `demo_brand` | Tarnhollow | the demo brand's name | demo catalogue |
 | `demo_label` | demo data | the label every demo figure carries | demo catalogue |
 | `end_p5` | $323,149 | fifth-percentile cash on the horizon's last day, across every simulated path | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `end_p50` | $336,443 | median cash on the horizon's last day, across every simulated path | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `horizon_days` | 90 days | the cash horizon | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `lead_time_typical` | 40 days | median supplier lead time | MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `min_median` | $85,242 | the median path's low point | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
@@ -1366,7 +1359,6 @@ Every figure in the narration, with its source. History first, then the engine's
 | `rev_latest` | $318,632 | revenue, latest month | MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `sale_payable_days` | 10 days | days from a sale until the platform can pay it (delivery, then DD+7) | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `sale_to_cash_days` | 21 days | days from a sale to cash in the bank, on average: payable, half a settlement cycle, the transfer | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `terminal_p50` | $340,454 | median cash at the end of the horizon, across the paths drawn for the fan | cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `trough_every_path` | every one | how many simulated paths share the same low point (every quantile of the paths' minimum is equal) | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `wires_total` | $349,342 | all supplier wires inside the horizon | cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 

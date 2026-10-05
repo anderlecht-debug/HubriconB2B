@@ -9,7 +9,7 @@ MISCONCEPTION:    Shipping and fulfilment fees are a fixed cost of selling onlin
 RUNTIME:          30–33 min
 
 HOOKS (three, pick one)
-1. {{s_beagle_postage}}. That's what it cost to mail a baby in {{s_beagle_when}}, on a card that charged every fraction of a pound as a full pound. That card fed the machine that built Sears. Its descendants are charging you now.
+1. {{s_beagle_postage}}. That's what it cost to mail a baby in {{s_beagle_when}}, on a card that charged by the pound and by the mile. That card fed the machine that built Sears. Its descendants are charging you now.
 2. In its first year, {{s_parcels_year}} parcels went through the mail, and Congress found the mail-order houses sent more of them than everyone else combined. The arithmetic on that card never went away. You pay it on every unit.
 3. {{cs_step}}, by our estimate. That's what being a fraction of an ounce over one line costs a listing we modelled from public data. In {{s_pp_year}}, farmers paid the same kind of step. The difference is they could see it.
 
@@ -21,8 +21,7 @@ SCRIPT
 
 [0:34] THE QUESTION
   VO: That card fed a machine in Chicago that was assembling {{s_orders_day}} orders a day. A historian of the rural mail wrote in {{s_fuller_year}} that the decline of the old general store began the day parcel post went into effect. And the card has descendants. If you sell online, you pay one of them right now, on every unit. So here's the question Sears' customers answered with a pencil: what does one more ounce cost? Make a guess before we go on. Most of us would say one more ounce costs one more ounce's worth: a sliver, too small to bother with. Hold on to that guess.
-  VISUAL: footage-establish on a present-day parcel sorting hall (stock, no logos); quote card for Wayne Fuller's line with its source; match-bridge from the archival rate card's staircase to the house staircase chart from the dated fee card, the riser in blue.
-  DATA SOURCE: published: the Parcel Post Act's rates and Amazon's US FBA fee card, 2026, as recorded in ratecard.json
+  VISUAL: footage-establish on a present-day parcel sorting hall (stock, no logos); quote card for Wayne Fuller's line with its source; still-push on a parcel on a scale, the needle not yet settled (stock, no logos).
   CLIP: yes
 
 [1:17] CHAPTER — WHAT A POUND COST
@@ -136,145 +135,145 @@ SCRIPT
   CLIP: yes
 
 [13:26] THE CATALOGUE RODE THE CARD
-  VO: There's a quieter number in the Joint Committee's report, and it may matter more than the parcels. The catalogue itself was mail. A postmaster told the committee that a {{s_cat_weight}} Sears catalogue had cost {{s_cat_before}} to mail before the parcel post. After it, {{s_cat_after}}. And the committee found that one firm alone had saved {{s_one_firm_saving}} a year in postage from that change. The card didn't only cut the cost of delivering an order. It cut the cost of asking for one. Every book that landed on a farm table was a store opened in somebody's kitchen, and the card had made opening it far cheaper.
+  VO: There's a quieter number in the Joint Committee's report, and it may matter more than the parcels. The catalogue itself was mail. A postmaster in Iowa told the committee that a {{s_cat_weight}} Sears catalogue had cost {{s_cat_before}} to mail before catalogues were let into the parcel post. After, it cost {{s_cat_after}} to reach his office. And the committee found that one firm alone had saved {{s_one_firm_saving}} a year in postage from that change. The card didn't only cut the cost of delivering an order. It cut the cost of asking for one. Every book that landed on a farm table was a store opened in somebody's kitchen, and the card had made opening it far cheaper.
   VISUAL: doc-clipping on the postmaster's testimony and the committee's finding in the Joint Committee report (Internet Archive, public domain), the prices and the saving underlined, the money in blue; still-push on a turn-of-the-century catalogue cover (public domain) toward its title; number-pair: {{s_cat_before}} against {{s_cat_after}}.
   DATA SOURCE: published: the Joint Committee of Congress report, 1914
   CLIP: yes
 
-[14:10] THE STORE IN TOWN
+[14:14] THE STORE IN TOWN
   VO: Think about what that did to the general store in a farm town. It had a counter, a shelf, a credit book, and it had never competed with a catalogue on the price of moving a parcel, because before {{s_pp_year}} the catalogue couldn't move a parcel to the farm cheaply. Now it could. The customer did the arithmetic: the catalogue's price, plus the postage off the card, against the storekeeper's price. That's the sentence our historian wrote. The decline of the old general store began the day parcel post went into effect.
   VISUAL: still-push on a general store interior photograph (Library of Congress, no known restrictions), toward the counter; split-then-now: the general store then, a modern parcel locker bank now (stock, no logos); quote card for Fuller, "RFD: The Changing Face of Rural America".
   CLIP: no
 
-[14:47] CHAPTER — WHO PAID FOR THE OUNCE
+[14:52] CHAPTER — WHO PAID FOR THE OUNCE
   VO: Who paid for the ounce.
   VISUAL: chapter
 
-[14:52] THE TURN
-  VO: Here is the detail that changes the story. Sears did not pay that postage. The customer did. Open the Sears catalogue of {{s_1917_year}} and you find, printed in the book itself, a full table: Rates for Parcel Post Shipments, measuring from Chicago. Zones across the top. Weights down the side. And next to every item in the catalogue, its shipping weight. The instructions told you to work out the postage yourself and include it in your money order.
+[14:56] THE TURN
+  VO: Here is the detail that changes the story. Sears did not pay that postage. The customer did. Open a Sears catalogue of {{s_1917_year}}, this one for electrical goods, and you find, printed in the book itself, a full table: Rates for Parcel Post Shipments, measuring from Chicago. Zones across the top. Weights down the side. And next to every item in the catalogue, its shipping weight. The instructions told you to work out the postage yourself and include it in your money order.
   VISUAL: doc-highlight on the 1917 catalogue's rate table page (Internet Archive, public domain), the heading and "measuring from Chicago" marked in ink; doc-highlight on an item's printed shipping weight; still-push on the catalogue page's footer line, "We Positively Guarantee the Safe Delivery of Everything Shipped by Us."
   CLIP: yes
 
-[15:23] THE STAIRCASE WAS VISIBLE
-  VO: So the staircase was visible. The catalogue asked every customer to look up their zone, read the item's weight, and do the multiplication. For the unsure, it said this: {{s_doubt_quote}} And it warned them about the box: {{s_wrap_quote}} In effect, a nation of farmers was optimising shipping weight against a rate card. With a pencil.
-  VISUAL: formula-build: the first pound at its rate, plus each further pound, rounded up, at the additional rate, each term landing as spoken; doc-highlight on "a few ounces extra in weight must be allowed for wrapping and packing", ink; kinetic-thesis: "a nation of farmers was optimising shipping weight against a rate card" (the act's one thesis line).
+[15:30] THE STAIRCASE WAS VISIBLE
+  VO: So the staircase was visible. The catalogue asked every customer to look up their zone, read the item's weight, and find the postage on the table. For the unsure, it said this: {{s_doubt_quote}} And it warned them about the box: {{s_wrap_quote}} In effect, a nation of farmers was optimising shipping weight against a rate card. With a pencil.
+  VISUAL: formula-build: the first pound at its rate, plus each further pound, rounded up, at the additional rate, each term landing as spoken; doc-highlight on "a few ounces extra in weight must be allowed for wrapping and packing", ink; kinetic-thesis: "In effect, a nation of farmers was optimising shipping weight against a rate card." (the act's one thesis line).
   CLIP: yes
 
-[16:18] THE FARMER'S PENCIL
+[16:26] THE FARMER'S PENCIL
   VO: Let's do one with the pencil. A parcel going to {{s_z8}} weighs a pound and an ounce. The first pound costs {{s_z8_first}}. The extra ounce counts as a whole pound, so it costs another {{s_z8_add}}. That's {{s_z8_17oz}} in all. Take the ounce out and it's {{s_z8_first}}. That one ounce cost as much as the whole first pound. Now flip it. Leave the ounce in, and you've already paid for the second pound. You can add almost a full pound of something else to the order for no more postage at all. A farmer who saw that could order the lamp chimney now instead of next month. One who didn't would pay for another first pound a month later.
   VISUAL: formula-build: first pound, plus the ounce rounded up to a pound, each term landing as spoken, the total in blue; counterfactual on the house staircase redrawn with the 1913 zone 8 rates, the solid dot a hair over the riser, then a second dot sliding along the same tread toward the next riser as "almost a full pound" is spoken; still-push on a catalogue page of lamp chimneys (Internet Archive, public domain).
   DATA SOURCE: published: computed from the Parcel Post Act's rates
   CLIP: yes
 
-[17:08] THE EDGES
+[17:15] THE EDGES
   VO: And the card had edges, and the edges decided who won. On {{s_merge_date}}, the post office changed the card. {{s_z12}} were merged at {{s_merge_rate}}, because, the official in charge explained, {{s_merge_share}} of all shipments went to those zones. On {{s_limit_1914_date}}, the weight limit nearby rose to {{s_limit_1914}}. And then a congressional committee found the town of Bavaria, Kansas. A {{s_bavaria_weight}} parcel to Bavaria cost {{s_bavaria_cost}} from a mail-order house in Kansas City, {{s_kc_miles}} away by rail. From a merchant in Salina, {{s_salina_miles}} away, it cost the same. The committee's word for it was inequitable. And notice who could fix it. Congress had done something unusual in the Act: it let the Postmaster General change the rates, the zones and the weights himself, with the consent of the Interstate Commerce Commission. The card could be redrawn without a new law. It was, again and again.
   VISUAL: timeline of the card's revisions, each date landing as spoken; table-scan of the merged zones row; still-pan across a Kansas prairie town photograph (Library of Congress); number-pair: {{s_kc_miles}} against {{s_salina_miles}}, both paying {{s_bavaria_cost}}, the distances in ink, the price in blue.
   DATA SOURCE: published: the Joint Committee of Congress report, 1914
   CLIP: yes
 
-[18:13] THE LESSON OF THE EDGE
-  VO: A rate card isn't neutral. Wherever it draws a line, somebody sits a hair over it and somebody sits a hair under it, and they pay different prices for nearly the same thing. A merchant who knew where the lines were could arrange his business around them, and Congress found the mail-order houses did. Under the zones, its report said, {{s_branch_quote}}. That's Bavaria. And for the catalogues: {{s_freight_catalogue_quote}} By {{s_pi_year}}, Sears had {{s_warehouses}} warehouses for its catalogues alone. Position against the card is money.
-  VISUAL: doc-clipping on the committee's branch-agency sentence (Internet Archive, public domain), "150 miles" and "the same rate" underlined in ink; still-pan across a map of Kansas with a branch agency's radius drawn in ink and Bavaria inside it; counterfactual on the house staircase redrawn with the 1913 rates, two parcels either side of one riser.
+[18:20] THE LESSON OF THE EDGE
+  VO: A rate card isn't neutral. Wherever it draws a line, somebody sits a hair over it and somebody sits a hair under it, and they pay different prices for nearly the same thing. A merchant who knew where the lines were could arrange his business around them, and Congress found the mail-order houses did. Under the zones, its report said, a mail-order house could set up a branch agency in the territory it wanted to reach. Within {{s_radius}} of it, the house paid exactly the same rate as the local merchant. That's Bavaria. And for the catalogues: {{s_freight_catalogue_quote}} By {{s_pi_year}}, Sears had {{s_warehouses}} warehouses for its catalogues alone. Position against the card is money.
+  VISUAL: quote card: the committee's branch-agency sentence verbatim ({{s_branch_quote}}); doc-clipping on it in the report (Internet Archive, public domain), "150 miles" and "the same rate" underlined in ink; still-pan across a map of Kansas with a branch agency's radius drawn in ink and Bavaria inside it; counterfactual on the house staircase redrawn with the 1913 rates, two parcels either side of one riser.
   DATA SOURCE: published: the Joint Committee of Congress report, 1914, and the Parcel Post Act's rates
   CLIP: yes
 
-[19:16] THE MYTH
-  VO: One more correction, because you'll read it everywhere. The story goes that the parcel post made Sears fill {{s_myth_orders}} in its first year. Sears' own audited accounts don't support it. Net sales were {{s_sales_1912}} in the year before parcel post, and {{s_sales_1913}} in its first year. Up {{s_growth_1913}}. The accounts count dollars, not orders. But that many more orders on that much more money would mean the average order collapsed in a single year, and nothing in the record shows that. By {{s_1917_year}} sales reached {{s_sales_1917}}. By the end of the decade, {{s_sales_1919}}. The parcel post was a ramp, not a rocket, and the company that climbed it was the one that had built the machine first.
+[19:17] THE MYTH
+  VO: One more correction, because you'll read it everywhere. The story goes that the parcel post made Sears fill {{s_myth_orders}} in its first year. Sears' own annual reports don't support it. Net sales were {{s_sales_1912}} in the year before parcel post, and {{s_sales_1913}} in its first year. Up {{s_growth_1913}}. The accounts count dollars, not orders. But that many more orders on that much more money would mean the average order collapsed in a single year, and we found nothing in the record that shows it. By {{s_1917_year}} sales reached {{s_sales_1917}}. By the end of the decade, {{s_sales_1919}}. The parcel post was a ramp, not a rocket, and the company that climbed it was the one that had built the machine first.
   VISUAL: doc-highlight on the net sales line of Sears' annual report (Internet Archive, public domain); chart-build of net sales by year, each bar landing as its figure is spoken, the myth's claim struck through in ink beside it.
   DATA SOURCE: published: Sears, Roebuck and Co. annual reports (Internet Archive)
   CLIP: yes
 
-[20:06] HOW IT ENDED
+[20:09] HOW IT ENDED
   VO: The catalogue lived a long time. On {{s_store_1925}}, Sears opened its first retail store, inside the Chicago plant. When the stores came, the executive who pushed them, Robert Wood, explained why Sears would compete with its own catalogue: {{s_wood_quote}}. By {{s_store_year}}, stores brought in {{s_store_share}} of its sales. And in {{s_end_year}}, a newspaper wrote the obituary of the {{s_end_age}} general merchandise catalogue. It wasn't killed by postage. Cars, cities and chain stores had moved where people shopped, and by the end it was losing money. But the card it rode is still with us.
   VISUAL: archive-framed on a Sears retail store photograph of the 1920s (Library of Congress, if no known restrictions, else public-domain Commons); quote card for Wood's line, verbatim, attributed "Robert E. Wood, quoted in Emmet and Jeuck, Catalogues and Counters"; timeline from the first store to the end of the catalogue; breath on a held catalogue page, the bed rising.
   CLIP: no
 
-[20:50] CHAPTER — THE CARD YOU PAY NOW
+[20:53] CHAPTER — THE CARD YOU PAY NOW
   VO: The card you pay now.
   VISUAL: chapter
 
-[20:54] THE DESCENDANT
-  VO: Here is today's version of the {{s_pp_year}} card. The postal service's ground parcel rate, effective {{usps_effective}}. It has {{usps_zones}}. Prices go up by the pound. In {{usps_z1}}, a one-pound parcel costs {{usps_z1_1lb}}. Go an ounce over and it's {{usps_z1_2lb}}. In {{usps_z8}}, a pound costs {{usps_z8_1lb}}. An ounce over: {{usps_z8_2lb}}. That ounce costs {{usps_z8_step}}. If you sell on Shopify and ship your own orders, this is the card under your margin. The same skeleton Congress wrote over a century ago. Zones across the top. Pounds down the side. Every fraction rounded up.
-  VISUAL: match-bridge: the 1913 rate table holds still on screen while the era changes, then table-scan of today's ground rates as recorded in ratecard.json, the zone 8 row and the one-pound line marked, the money cells in blue; counterfactual on the house staircase at the one-pound riser.
+[20:57] THE DESCENDANT
+  VO: Here is today's version of the {{s_pp_year}} card. The postal service's ground parcel rate, effective {{usps_effective}}. It has {{usps_zones}}. Prices go up by the pound. In {{usps_z1}}, a parcel under a pound costs {{usps_z1_1lb}}. Go an ounce over a pound and it bills as {{usps_two_lb}}: {{usps_z1_2lb}}. In {{usps_z8}}, under a pound: {{usps_z8_1lb}}. An ounce over a pound: {{usps_z8_2lb}}. Crossing that line costs {{usps_z8_step}} a parcel. If you sell on Shopify and ship your own orders, this is the card under your margin. The same skeleton Congress wrote over a century ago. Zones across the top. Pounds down the side. Every fraction rounded up.
+  VISUAL: match-bridge: the 1913 rate table holds still on screen while the era changes, then table-scan of today's ground rates as recorded in ratecard.json, the zone 8 row and the one-pound line marked, the money cells in blue; counterfactual on the house staircase at the one-pound riser, the dots labelled "an invented parcel".
   DATA SOURCE: published: USPS Ground Advantage Commercial prices, Notice 123, as recorded in ratecard.json
   CLIP: yes
 
-[21:33] THE FULFILMENT FEE
+[21:41] THE FULFILMENT FEE
   VO: If you sell on Amazon and use its fulfilment, you pay a different card, built the same way. The fulfilment fee for a standard-size item climbs in steps of weight. For a large standard item priced from {{rc_band}}, the non-peak card that took effect {{rc_card_from}} charges {{rc_ls12}} from {{rc_8oz}} up to {{rc_12oz}}. Over {{rc_12oz}}, {{rc_ls16}}. One step: {{rc_ls_step}}, on every unit, before the fuel and logistics surcharge of {{rc_fuel}} that's added to every fulfilment fee. And from {{rc_peak_from}}, a peak card raises the steps for the holidays. Your customer never sees this card. You pay it. And unlike the farmer, I'd bet most sellers have never laid their products against it.
   VISUAL: doc-highlight on a typeset extract of Amazon's published fee card as recorded in ratecard.json, dated, never imitating Amazon's interface; table-scan of the large standard rows with the eight, twelve and sixteen ounce lines marked, the step in blue; footage-insert of a parcel on a warehouse scale (stock, no logos).
   DATA SOURCE: published: Amazon's US FBA fee card, 2026, as recorded in ratecard.json
   CLIP: no
 
-[22:22] THE CASE
-  VO: Here's what that looks like on one real listing, which we modelled from public data. It belongs to {{cs_who}}: a {{cs_product}}. Its public page lists an item weight of {{cs_weight}}. Packed, it can only weigh more, so that's the least it's over by. The step below sits at {{cs_edge}}. So on every unit it ships, it pays the next step: {{cs_step}} on the non-peak card, {{cs_step_peak}} on the peak card, surcharge included. We estimate it sells {{cs_units}}, from its public sales rank. Before I tell you what that comes to in a year, put your own number on it. Now, its units aren't one number, so we didn't use one. We ran {{cs_years}} simulated years of its sales and costs. In {{cs_band_share}} of them, that one riser comes to between {{cs_leak_p10}} and {{cs_leak_p90}} a year. An estimate. Not a client. Not a result. And not on the brand's P&L as a line of its own, because a P&L has no line for it.
+[22:30] THE CASE
+  VO: Here's what that looks like on one real listing, which we modelled from public data. It belongs to {{cs_who}}: a {{cs_product}}. Its public page lists an item weight of {{cs_weight}}. Packed, it can only weigh more, so that's the least it's over by. The step below sits at {{cs_edge}}. So on every unit it ships, it pays the next step: {{cs_step}} on the non-peak card, {{cs_step_peak}} on the peak card, surcharge included. It sells {{cs_units}}, from its public sales rank. Before I tell you what that comes to in a year, put your own number on it. Now, its units aren't one number, so we didn't use one. We ran {{cs_years}} simulated years of its sales and costs. In {{cs_band_share}} of them, that one riser comes to between {{cs_leak_p10}} and {{cs_leak_p90}} a year. An estimate. Not a client. Not a result. And not on the brand's P&L as a line of its own, because a P&L has no line for it.
   VISUAL: counterfactual on the house staircase chart from the case study, the solid dot at {{cs_weight}}, the hollow dot at {{cs_edge}}, the riser and its label in blue; breath on "put your own number on it"; range-band on the house Monte Carlo, the band landing on "between", the label "Modeled from public data · Not a client · Not a result" on both.
   DATA SOURCE: modeled from public data: Hubricon's public-data case study (data/case-study.json)
   CLIP: yes
 
-[23:34] THE INVISIBLE LINE ITEM
-  VO: That's the turn our farmer would understand immediately, and a P&L never shows. The P&L shows fulfilment fees as one number. It doesn't show which of them are a step you could have stepped under. In the demo catalogue we use for teaching, {{demo_brand}}, Amazon's fees, referral and fulfilment together, took {{fee_share_latest}} of revenue last month, {{fees_latest}} in all. That's {{demo_label}}, made to behave like a real catalogue. The total is on the P&L. The steps inside it are not.
+[23:41] THE INVISIBLE LINE ITEM
+  VO: That's the turn our farmer would understand immediately, and a P&L never shows. The P&L shows fulfilment fees as one number. It doesn't show which of them are a step you could have stepped under. In the demo catalogue we use for teaching, {{demo_brand}}, Amazon's fees, referral, fulfilment, storage and the rest together, took {{fee_share_latest}} of revenue last month, {{fees_latest}} in all. That's {{demo_label}}, made to behave like a real catalogue. The total is on the P&L. The steps inside it are not.
   VISUAL: chart-build of the demo catalogue's monthly waterfall, revenue down to net, the fees bar landing on "fees", labelled Tarnhollow demo data; doc-highlight on a typeset P&L line "Fulfilment fees" with no detail beneath it, ink underline.
   DATA SOURCE: demo: Tarnhollow demo data, the engine's latest month
   CLIP: no
 
-[24:08] WHERE THE CARD WENT
+[24:17] WHERE THE CARD WENT
   VO: So why could a farmer with a pencil see the staircase, when a business with accounting software can't? It isn't that the card is hidden. The cards in this film are published, every one of them. What changed is the moment. In the parcel post years, the customer paid the postage, before the parcel moved, with the card open on the table and the item's weight printed beside its price. Today the seller pays, after the sale, as a deduction in a settlement report or a line on a monthly bill, folded in with everything else. The card is still there. Nobody hands it to you at the moment you could act on it. And a cost you never see at the moment of decision is a cost you never decide.
   VISUAL: split-then-now: the 1917 catalogue's rate table open beside an item's shipping weight, then a typeset settlement report with fees as one deduction (house design, never imitating any platform's interface); footage-observe on a desk with a closed laptop in soft daylight (stock, high-key, no screen visible).
   CLIP: yes
 
-[25:01] THE OTHER STAIRCASES
-  VO: And weight is only the first staircase. The fulfilment fee also changes with the price you charge: the card has edges at {{rc_edge_lo}} and {{rc_edge_hi}}, and a price that crosses one moves the whole product onto a different card. For a box over a cubic foot, the card weighs the box itself: length times width times height, in inches, divided by {{rc_dim_divisor}}, gives a weight in pounds, and the card charges whichever is greater. In {{s_pp_year}}, size was a limit. Today it's a price. Storage has a cliff of its own. On that same case-study listing, the surcharge for stock that has sat between {{cs_aged_band}} is {{cs_aged_before}} a cubic foot a month. From {{cs_aged_day}}, it's {{cs_aged_after}}. For every {{cs_aged_units}}, storage and surcharge together go from {{cs_aged_1000_before}} a month to {{cs_aged_1000_after}}. Nothing about the product changes on that day. Only its age. Our farmer would have recognised every one of these. Same shape. Drawn in dollars, in inches and in days instead of pounds.
+[25:10] THE OTHER STAIRCASES
+  VO: And weight is only the first staircase. The fulfilment fee also changes with the price you charge: the card has edges at {{rc_edge_lo}} and {{rc_edge_hi}}, and a price that crosses one moves the whole product onto a different card. For a box over a cubic foot, the card weighs the box itself: length times width times height, in inches, divided by {{rc_dim_divisor}}, gives a weight in pounds, and the card charges whichever is greater. In {{s_pp_year}}, size was a limit. Today it's a price. Storage has a cliff of its own. On that same case-study listing, the surcharge for stock that has sat between {{cs_aged_band}} is {{cs_aged_before}} a cubic foot a month. From {{cs_aged_day}}, it's {{cs_aged_after}}. For every {{cs_aged_units}}, at the January-to-September storage rate, storage and surcharge together go, by our estimate, from {{cs_aged_1000_before}} a month to {{cs_aged_1000_after}}. Nothing about the product changes on that day. Only its age. Our farmer would have recognised every one of these. Same shape. Drawn in dollars, in inches and in days instead of pounds.
   VISUAL: table-scan of the price bands with the two edges marked, the edges in blue; formula-build: length, times width, times height, over the divisor, set against the scale's weight, the greater one landing on "whichever is greater"; chart-build on the house aging chart, the cliff landing on {{cs_aged_day}}, the jump and its label in blue, the proof label on; number-pair: {{cs_aged_1000_before}} against {{cs_aged_1000_after}}, labelled "estimate · Modeled from public data · Not a client · Not a result".
   DATA SOURCE: modeled from public data: Hubricon's public-data case study (data/case-study.json, aging bands); published: Amazon's US FBA fee card, 2026, as recorded in ratecard.json
   CLIP: yes
 
-[26:09] HOW TO FIND YOUR STEPS
+[26:21] HOW TO FIND YOUR STEPS
   VO: So let's do what the farmer did, with your catalogue. Take your top sellers by units. For each one, find its billable weight: the item, plus the box, plus the packing, or the box's dimensional weight if that's greater. Not the weight on the spec sheet. Sears told its customers the same thing in {{s_1917_year}}: a few ounces extra for wrapping and packing. On Amazon, the fee preview report lists the weight and the sides it measured for every product; your carrier's invoice shows the weight it billed. Then find each product's line on the card. Write down the next edge below it, and how far over that edge it sits. That distance is the whole game. A product an ounce over a line is a candidate. A product sitting in the middle of a tread is not.
   VISUAL: formula-build: item, plus box, plus packing, against the dimensional weight, the greater rounded up to the card's step, each term landing as spoken; doc-highlight returning to the 1917 catalogue's "a few ounces extra" line; table-scan of a typeset worksheet with columns for product, billable weight, edge below, distance over (empty, no figures); footage-insert of a hand placing a carton on a postal scale (stock, no face).
   CLIP: no
 
-[27:05] THE COUNTERFACTUAL
-  VO: For each candidate, write the counterfactual. What would this unit cost to ship, one step down? The difference, times the units it sells, is the riser's yearly cost. Use the peak card's step from {{rc_peak_from}}, and the normal card's the rest of the year. And your units aren't one number either: do the multiplication for a slow year and a strong year, and that's your range. Then ask the practical question. Can the packaging lose that ounce? A lighter box, a thinner insert, a different mailer. Here's a rule: if the packaging change costs less a unit than the step, and doesn't add damage, fight the step. If not, put the step in the price, and stop pretending it isn't there.
+[27:17] THE COUNTERFACTUAL
+  VO: For each candidate, write the counterfactual. What would this unit cost to ship, one step down? The difference, times the units it sells, is the riser's yearly cost. Use the peak card's step from {{rc_peak_from}}, and the normal card's the rest of the year. And your units aren't one number either: do the multiplication for a slow year and a strong year, and that's your range. Then ask the practical question. Can the packaging lose that ounce? A lighter box, a thinner insert, a different mailer. Here's a rule: if the packaging change costs less a unit than the step, and doesn't add damage, fight the step. If the change has a one-time cost, a new carton run or a redesign, divide it by the step times the units a month: that's how many months it takes to pay back. Plan on the slow year. If it doesn't pay, leave it, and count the step in the product's margin.
   VISUAL: counterfactual on the house staircase, the hollow dot one step down landing on "one step down", labelled "Modeled from public data · Not a client · Not a result"; formula-build: the step, times the units, at the peak and normal cards, for a slow year and a strong year, each term landing as spoken (terms only, no figures); footage-process (wide, medium, detail) of repacking: a box cut down, an insert replaced, the parcel weighed again (stock, hands only).
   DATA SOURCE: modeled from public data: the house staircase chart
   CLIP: no
 
-[27:54] THE ZONES
+[28:21] THE ZONES
   VO: If you ship your own orders, do the same with zones. Where do your parcels actually go? A store whose customers sit mostly in the far zones pays a different card than one whose customers are close. Sears' customers knew their zone because the postmaster told them. You can know yours from your own shipping reports. The carrier's card is public. Your mix of zones is in your own data.
   VISUAL: table-scan of today's ground rates by zone with the one-pound line marked; still-push on the 1913 zone map, back to the opening of the staircase chapter.
   DATA SOURCE: published: USPS Ground Advantage Commercial prices, as recorded in ratecard.json
   CLIP: no
 
-[28:23] WHEN THE CARD CHANGES
+[28:50] WHEN THE CARD CHANGES
   VO: And do it again every time the card changes. The {{s_pp_year}} card changed on {{s_merge_date}}, and again on {{s_limit_1914_date}}. Today's cards change on a calendar: the fulfilment fee has a non-peak card and a peak card, and the postal rates move when a notice says they move. A product that sat safely under a line last year can sit over it this year without anything about the product changing. The line moved.
-  VISUAL: timeline of card changes, 1913's revisions above, today's effective dates below, each landing as spoken; counterfactual: the same dot, with the riser moving under it; footage-observe on a quiet packing table under daylight (stock), the voice carrying the point.
+  VISUAL: timeline of card changes, 1913's revisions above, today's effective dates below, each landing as spoken; counterfactual: an invented parcel's dot, with the riser moving under it, labelled "illustration"; footage-observe on a quiet packing table under daylight (stock), the voice carrying the point.
   DATA SOURCE: published: the 1913 card's revisions and today's fee card dates, as recorded in ratecard.json
   CLIP: no
 
-[28:54] WHERE THE STAIRCASES MEET
+[29:21] WHERE THE STAIRCASES MEET
   VO: Here's the part that takes longer than an afternoon. The staircases touch each other. Shave the ounce with a thinner mailer, and the product arrives damaged more often, and every return pays the card again. Buy a bigger box to protect it, and you may cross into the size price. Cut the price to sell more, and you can step across a price edge onto another card. Order deeper to get a better unit cost, and the slowest units walk toward {{cs_aged_day}}. Hold less to stay young, and you run out in the season that matters. Every one of those moves is arithmetic on its own. Together they push on each other, and they all depend on a number nobody knows yet: how many units you'll actually sell. That's the difference between a staircase and a system.
   VISUAL: chart-build of the house staircase, the aging chart and the price bands set side by side on one paper, a single demo product's dot moving on all three at once as each move is spoken, each crossing marked in blue, labelled Tarnhollow demo data; range-band on the house Monte Carlo as "a number nobody knows yet" is spoken, labelled "Modeled from public data · Not a client · Not a result".
   DATA SOURCE: demo: Tarnhollow demo data; modeled from public data: the house Monte Carlo
   CLIP: yes
 
-[29:50] WHAT YOU CAN DO THIS WEEK
-  VO: So here's this week. List your top products by units. Find each one's billable weight. Find its line on the card you actually pay. Mark the ones within an ounce or so of the edge below. For each, write the counterfactual, at the peak and normal cards, for a slow year and a strong one. Try the packaging on the top few, and fight or price each step by the rule. Then set a reminder for the next card change. That's a few hours. If one of your bestsellers sits an ounce over a line, it may be the cheapest money you find this month.
+[30:17] WHAT YOU CAN DO THIS WEEK
+  VO: So here's this week. List your top products by units. Find each one's billable weight. Find its line on the card you actually pay. Mark the ones within {{cs_near_edge}} above the edge below. For each, write the counterfactual, at the peak and normal cards, for a slow year and a strong one. Try the packaging on the top few, and fight each step or count it, by the rule. Then set a reminder for the next card change. That's a few hours. If one of your bestsellers sits an ounce over a line, it may be the cheapest money you find this month.
   VISUAL: formula-build listing the steps as terms, each landing as spoken; receipt: one demo row showing a step found, the counterfactual, and the decision, labelled Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data
   CLIP: no
 
-[30:32] THE HONEST LIMIT
-  VO: You can do that by hand for your top products, and it's worth doing. Where it breaks is everything after. Every product, against every card you pay, the fulfilment card, the peak card, the carrier's zones, the storage fees that have their own steps, re-checked every time a card changes, with the units each product will actually sell over the next season rather than last month's. And deciding, for each one, whether the step is worth fighting or worth pricing in, when the moves push on each other. The lookup is a spreadsheet. The forecast and the trade-offs aren't. They're a model: probability, forecasting, the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every month, for every product. The whole method is free at hubricon.com/learn, in the Fee Staircase course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+[30:59] THE RETURN
+  VO: {{s_beagle_postage}}. A boy in Ohio, a carrier, a card. The card asked every farmer who ordered to do the arithmetic. The card never went away. It's yours to read now.
+  VISUAL: still-push resuming on the cold open's parcel post photograph, the same framing; kinetic-thesis: "The card never went away.".
+  DATA SOURCE: published: the Parcel Post Act's rates
+  CLIP: no
+
+[31:12] THE HONEST LIMIT
+  VO: You can do this week's list by hand for your top products, and it's worth doing. Where it breaks is everything after. Every product, against every card you pay, the fulfilment card, the peak card, the carrier's zones, the storage fees that have their own steps, re-checked every time a card changes, with the units each product will actually sell over the next season rather than last month's. And deciding, for each one, whether the step is worth fighting or worth pricing in, when the moves push on each other. The lookup is a spreadsheet. The forecast and the trade-offs aren't. They're a model: probability, forecasting, the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method is free at hubricon.com/learn, in the Fee Staircase course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: range-band on the house Monte Carlo, the band holding while the voice names what it takes, labelled "Modeled from public data · Not a client · Not a result"; chart-build of the staircase with every demo product placed on it at once, the over-the-line ones in blue, labelled Tarnhollow demo data; end card at "hubricon.com/learn".
   DATA SOURCE: demo: Tarnhollow demo data; modeled from public data: the house Monte Carlo
   CTA: The free Fee Staircase course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   CLIP: yes
 
-[31:41] THE RETURN
-  VO: {{s_beagle_postage}}. A boy in Ohio, a carrier, a card. The farmers who read that card did the arithmetic every time they ordered. The card never went away. It's yours to read now.
-  VISUAL: still-push resuming on the cold open's parcel post photograph, the same framing; kinetic-thesis: "The card never went away."; end card.
-  DATA SOURCE: published: the Parcel Post Act's rates
-  CLIP: no
-
-RE-HOOK AUDIT: 0:34, 1:06, 1:39, 2:14, 2:50, 3:21, 3:57, 4:27, 4:57, 5:27, 5:59, 6:37, 7:12, 7:44, 8:17, 8:52, 9:23, 9:53, 10:31, 11:03, 11:34, 12:05, 12:38, 13:10, 13:42, 14:15, 14:46, 15:23, 16:01, 16:33, 17:07, 17:45, 18:26, 18:56, 19:26, 20:06, 20:37, 21:08, 21:40, 22:11, 22:41, 23:11, 23:42, 24:15, 24:46, 25:16, 25:46, 26:24, 26:55, 27:31, 28:08, 28:43, 29:14, 29:45, 30:18, 30:58, 31:28 (a new figure, question, picture or turn at each; no gap over 40 s)
+RE-HOOK AUDIT: 0:34, 1:06, 1:39, 2:14, 2:50, 3:21, 3:57, 4:27, 4:57, 5:27, 5:59, 6:37, 7:12, 7:44, 8:17, 8:52, 9:23, 9:53, 10:31, 11:03, 11:34, 12:05, 12:38, 13:10, 13:45, 14:19, 14:50, 15:22, 16:00, 16:33, 17:04, 17:34, 18:13, 18:50, 19:27, 19:58, 20:29, 21:00, 21:32, 22:04, 22:36, 23:07, 23:40, 24:12, 24:45, 25:25, 25:55, 26:27, 26:59, 27:35, 28:13, 28:43, 29:19, 29:54, 30:26, 30:58, 31:39, 32:09 (a new figure, question, picture or turn at each; no gap over 40 s)
 DERIVED ASSETS: LinkedIn post: "If you guessed a sliver, you guessed a slope. The card was a staircase." · X thread spine: the 1913 Act's "fraction of a pound", the catalogue's "a few ounces extra for wrapping", the Bavaria parcel and the 150-mile branch, today's one-ounce step · newsletter section: find your steps in an afternoon · clips: the fraction, the turn, the case
