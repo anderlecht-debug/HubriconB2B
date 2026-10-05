@@ -14,7 +14,7 @@ from manim import DOWN, LEFT, RIGHT, UP, UR, Create, Dot, FadeIn, FadeOut, GrowF
     Rectangle, VGroup, linear, smooth
 
 from .base import (BLUE, EASE_OUT, EASE_STILL, FIGURE_HOLD_S, INK, INK_3, INK_4, RULE, S, SHOT_MIN_S, STYLE,
-                   HubriconScene, at, block, ch, is_money, money, nice_step, phrases, px, stack, stroke)
+                   HubriconScene, at, block, ch, fit, is_money, money, nice_step, phrases, px, stack, stroke)
 
 
 def _dot(point, colour=INK, r_px=7):
@@ -339,19 +339,33 @@ class Elasticity(HubriconScene):
         group = VGroup(ax, nums, dots, bnd, line)
 
         def eps(value, label):
-            t = self.chart_text(f"ε = {value}", INK, 600).next_to(ax.c2p(xs[-1], ys[-1]), UR, buff=16 * px())
-            t.shift(LEFT * 160 * px())
+            # Above the band at the curve's own end, and never past the plot's right
+            # edge. Hung off the last point and shifted back along the line, it landed
+            # on the fit, which ran through its glyphs (V04's frames, 2026-10-05).
+            _, _, right, _ = self.plot_box()
+            t = self.chart_text(f"ε = {value}", INK, 600)
+            t.next_to(ax.c2p(xs[-1], max(band[-1]["hi"], ys[-1])), UP, buff=16 * px())
+            if t.get_right()[0] > at(right, 0)[0]:
+                t.shift(RIGHT * (at(right, 0)[0] - t.get_right()[0]))
             self.play(FadeIn(t), run_time=0.4)
             self.landed("annotation")
             group.add(t)
 
         def ci(value, label):
-            self.play(bnd.animate.set_fill(opacity=STYLE["chart"]["band_opacity"] * 2.5), run_time=0.3)
-            t = self.chart_text(f"{value} · {label}").next_to(ax.c2p(xs[0], band[0]["hi"]), UP, buff=12 * px(),
-                                                              aligned_edge=LEFT)
-            if t.width > (self.Wpx * 0.5) * px():
-                t.scale_to_fit_width(self.Wpx * 0.5 * px())
-            self.play(FadeIn(t), run_time=0.3)
+            # The band's figure replaces itself: the interval's low end, its high end
+            # and its width are one annotation said three times, and drawn at one
+            # anchor the three printed over each other into a smear no one could read
+            # (V04's frames, 2026-10-05). The same way the paths' spread is drawn.
+            left, top, right, _ = self.plot_box()
+            old = getattr(self, "_ci_text", None)
+            if old is None:
+                self.play(bnd.animate.set_fill(opacity=STYLE["chart"]["band_opacity"] * 2.5), run_time=0.3)
+            t = fit(self.chart_text(f"{value} · {label}"), (right - left) * px())
+            t.next_to(ax.c2p(xs[0], band[0]["hi"]), UP, buff=12 * px(), aligned_edge=LEFT)
+            self._ci_text = t
+            self.play(FadeIn(t), *([FadeOut(old)] if old is not None else []), run_time=0.3)
+            if old is not None:
+                group.remove(old)
             self.landed("annotation")
             group.add(t)
 

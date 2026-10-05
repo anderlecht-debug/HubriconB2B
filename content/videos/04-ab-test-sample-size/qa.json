@@ -1,0 +1,36 @@
+{
+ "slug": "04-ab-test-sample-size",
+ "pass": true,
+ "failed": [],
+ "duration_s": 361.7,
+ "tier_range": [
+  270,
+  460
+ ],
+ "lufs": -16.5,
+ "max_hold_s": 0.0,
+ "holds_over_4s": 0,
+ "frozen_s": 0.0,
+ "frozen_runs": 0,
+ "cuts": {
+  "cuts": 46,
+  "mean_interval": 7.69,
+  "max_interval": 24.57,
+  "score": 0.025
+ },
+ "silences": 0,
+ "subtitle_coverage": 1.0,
+ "transcript_match": 0.982,
+ "frames": 36,
+ "checks": {
+  "duration_in_range": true,
+  "loudness_within_1_lu": true,
+  "no_frozen_picture_over_4s": true,
+  "room_tone_present": true,
+  "subtitle_coverage_ge_90": true,
+  "disclosure_in_description": null,
+  "transcript_match_ge_85": true,
+  "cut_cadence_spec_4": true
+ },
+ "voice": "library"
+}

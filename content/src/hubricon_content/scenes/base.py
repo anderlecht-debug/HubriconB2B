@@ -759,6 +759,10 @@ class HubriconScene(Scene):
         default way an unhandled spoken figure gets on screen the moment it is said."""
         val_px, lab_px, measure, lines = self._callout_type()
         val = type_line(value, val_px, color or (BLUE if is_money(value) else INK), 600, S["heading_track_em"])
+        # A figure wider than its column is set smaller, never over the edge: a SKU
+        # code at the callout's size ran off the right of the stage (V04's frames,
+        # 2026-10-05), where the caption under it has always been wrapped to fit.
+        fit(val, measure * px())
         lab = block(fit_clause(label, lab_px, measure, lines), lab_px, measure, INK_3, 400)[:lines]
         blk = VGroup(val, *lab)
         # one blue element per frame: the figure being spoken. Earlier ones step back to ink.
