@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T05:14:47+00:00 · style locked: False
+Updated 2026-10-05T05:15:25+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T05:14:47+00:00 · style locked: False
 
 ## Now
 
-- V08 · Elasticity in plain English, and why your price is probably wrong · step timing
+- V08 · Elasticity in plain English, and why your price is probably wrong · step scenes
 
 ## Awaiting your review
 
