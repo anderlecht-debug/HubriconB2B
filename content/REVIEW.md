@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-05T10:57:24+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-05T11:04:53+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V01 · Why most business advice is useless: survivorship bias, with numbers — final gate
 

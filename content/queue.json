@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T10:57:59+00:00",
+ "updated_at": "2026-10-05T11:04:53+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -1034,7 +1034,7 @@
     "critique": "done",
     "review": "approved",
     "tts": "done",
-    "timing": "in_progress",
+    "timing": "done",
     "scenes": "todo",
     "assemble": "todo",
     "qa": "todo",
@@ -1105,6 +1105,11 @@
     {
      "at": "2026-10-05T05:13:23+00:00",
      "step": "tts",
+     "note": "done"
+    },
+    {
+     "at": "2026-10-05T11:04:50+00:00",
+     "step": "timing",
      "note": "done"
     }
    ]
