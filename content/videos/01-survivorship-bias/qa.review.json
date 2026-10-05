@@ -57,7 +57,7 @@
    "n": 9,
    "check": "Subtitles are burned in, legible, light and never boxed",
    "pass": false,
-   "note": "Still failing, and in the same place. The style is right, unboxed Inter in ink, but on the chart segments the block lands on the plot's own axis-label row and takes the labels with it: f-007 and f-008 lose d182 and d273 under the words, f-012 and f-013 lose them again, and f-018 runs 'the other side and it stopped mattering' straight through d60. The fix is in the subtitle placement or in plot_box's floor, not in the mix: on a chart shot the block has to clear the axis row."
+   "note": "Still failing, and in the same place. The style is right, unboxed Inter in ink, but on the chart segments the block lands on the plot's own axis-label row and takes the labels with it: f-007 and f-008 lose d182 and d273 under the words, f-012 and f-013 lose them again, and f-018 runs 'the other side and it stopped mattering' straight through d60. Measured, for whoever takes it next: subs.ass is one style, alignment 2, MarginV 104, every cue two lines of 44 px, so subtitles.band_px's 214 px should be right and the chart's floor should clear it. It does on most frames (f-006, f-010, f-011 draw the block at about 910 and 954 of 1080, well under the labels at 812). On the frames that fail, the same two-line block is drawn about 96 px higher, at 814 and 860, which is where the labels are. Something is raising the block by a line on those cues, the way libass raises an event when a second one is on screen under it; the cause has to be found before the floor is lowered, because lowering it by two lines would cost the plot a quarter of its height for a fault that is not in the floor."
   },
   {
    "n": 10,
