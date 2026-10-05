@@ -26,6 +26,12 @@ content/videos/**/*.m4a
 content/.manim/
 content/.cache/
 content/videos/00-smoke/
+# per-shot clips and their cache sidecars are rebuilt from the plan (VISUAL_SPEC.md §8.3)
+content/videos/*/shots/
+content/videos/*/sources/
+content/videos/visual-trial/*.json
+content/videos/visual-trial/qa/contact.jpg
+content/videos/visual-trial/qa/first-minute.jpg
 # The case study's one listing names the brand. The repo is public and the page is anonymised,
 # so the input stays on the machine that builds the page (HUBRICON.md, the public-data case study).
 scripts/case-study/listing.json

@@ -19,6 +19,7 @@ import { tmpdir, homedir } from "node:os";
 import { figures } from "../../scripts/build-pages.mjs";
 import { sceneHTML, STYLE_REEL } from "./scenes.mjs";
 import { write as writeTokens } from "./tokens.mjs";
+import { shotHTML } from "./shots.mjs";
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const FPS = 30, W = 1920, H = 1080, BREATH = 0.45;
@@ -169,7 +170,83 @@ export async function render(board, out, { audio = null, stills = null } = {}) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+/**
+ * A long film's shots, one clip each (VISUAL_SPEC.md §8.3): every frame of every shot is
+ * captured, because something always moves (a still's push, a paper shot's drift), so
+ * nothing is held frozen. `jobs` come resolved from render_shots.py: figures filled, times
+ * relative to the shot's first frame, `out`, `frames`, the grain filter `vf` and the
+ * encoder arguments `encode`. Runs on `workers` Chrome pages in parallel.
+ */
+export async function renderShots(jobs, { workers = 4 } = {}) {
+  writeTokens();
+  const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+  const srv = await serve();
+  const queue = [...jobs], results = {};
+  const worker = async () => {
+    const page = await cdp(chromeBin());
+    try {
+      await page.send("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: 1, mobile: false });
+      await page.send("Page.enable");
+      await page.send("Runtime.enable");
+      await page.send("Page.navigate", { url: `http://127.0.0.1:${srv.address().port}/content/film/stage.html` });
+      await page.evaluate("new Promise((r) => { const ok = () => document.fonts.ready.then(r); document.readyState === 'complete' ? ok() : addEventListener('load', ok); })");
+      while (queue.length) {
+        const job = queue.shift();
+        results[job.id] = await renderShot(page, job, built);
+      }
+    } finally {
+      page.close();
+    }
+  };
+  try {
+    await Promise.all(Array.from({ length: Math.max(1, Math.min(workers, jobs.length)) }, worker));
+  } finally {
+    srv.close();
+  }
+  return results;
+}
+
+async function renderShot(page, job, built) {
+  const html = shotHTML(job, built);
+  const info = await page.evaluate(`(async () => {
+    const stage = document.getElementById("stage");
+    stage.innerHTML = ${JSON.stringify(html)};
+    await document.fonts.ready;
+    await Promise.all([...stage.querySelectorAll("img")].map((i) => i.decode().catch(() => null)));
+    stage.querySelectorAll("[data-play]").forEach((f) => f.classList.add("playing"));
+    document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 0; });
+    const r = stage.querySelector(".split-right")?.getBoundingClientRect();
+    return { rect: r ? { x: r.x, y: r.y, w: r.width, h: r.height } : null,
+             broken: [...stage.querySelectorAll("img")].filter((i) => !i.naturalWidth).map((i) => i.getAttribute("src")) };
+  })()`);
+  if (info.broken.length) throw new Error(`${job.id}: images did not load: ${info.broken.join(", ")}`);
+  mkdirSync(dirname(job.out), { recursive: true });
+  const vf = ["scale=in_range=pc:out_range=tv", job.vf, "format=yuv420p"].filter(Boolean).join(",");
+  const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-c:v", "mjpeg", "-framerate", String(FPS), "-i", "-",
+    "-vf", vf, "-frames:v", String(job.frames), "-r", String(FPS), ...job.encode, "-movflags", "+faststart", job.out], { stdio: ["pipe", "inherit", "inherit"] });
+  const write = (buf) => new Promise((r) => (ff.stdin.write(buf) ? r() : ff.stdin.once("drain", r)));
+  const done = new Promise((r, j) => ff.on("close", (c) => (c === 0 ? r() : j(new Error(`ffmpeg exited ${c} on ${job.id}`)))));
+  for (let i = 0; i < job.frames; i++) {
+    await page.evaluate(`document.getAnimations().forEach((a) => { a.currentTime = ${(i * 1000) / FPS}; })`);
+    const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 95 });
+    await write(Buffer.from(shot.result.data, "base64"));
+  }
+  ff.stdin.end();
+  await done;
+  if (job.still) {
+    await page.evaluate(`document.getAnimations().forEach((a) => { a.currentTime = ${(job.still_at ?? job.seconds / 2) * 1000}; })`);
+    const png = await page.send("Page.captureScreenshot", { format: "png" });
+    writeFileSync(job.still, Buffer.from(png.result.data, "base64"));
+  }
+  return { frames: job.frames, rect: info.rect };
+}
+
+if (import.meta.url === `file://${process.argv[1]}` && process.argv[2] === "--shots") {
+  const jobs = JSON.parse(readFileSync(process.argv[3], "utf8"));
+  const wi = process.argv.indexOf("--workers");
+  const results = await renderShots(jobs, { workers: wi > 0 ? Number(process.argv[wi + 1]) : 4 });
+  process.stdout.write(JSON.stringify(results) + "\n");
+} else if (import.meta.url === `file://${process.argv[1]}`) {
   const [what, out, ...rest] = process.argv.slice(2);
   const opt = (k) => { const i = rest.indexOf(k); return i >= 0 ? rest[i + 1] : null; };
   const board = what === "style-reel" ? STYLE_REEL : JSON.parse(readFileSync(what, "utf8"));

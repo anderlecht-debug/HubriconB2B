@@ -110,6 +110,9 @@ def transcript_match(slug: str, master: Path) -> float | None:
 
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
+    if str(u.get("tier", "")).upper() == "D":
+        from . import qa_d   # VISUAL_SPEC.md §10
+        return qa_d.run(u)
     slug = u["slug"]
     d = scriptmod.video_dir(slug)
     master = d / "media" / "master.mp4"

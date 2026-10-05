@@ -236,6 +236,15 @@ def cmd_timing(a):
     _out(result)
 
 
+def cmd_render_shots(a):
+    from . import render_shots
+    q = _q(); u = _unit_for(q, a.slug)
+    res = render_shots.render(u, q, force=a.force, only={x for x in a.only.split(",") if x} or None, workers=a.workers)
+    _out(res)
+    if res.get("status") != "ok":
+        sys.exit(2)
+
+
 def cmd_shots_fill(a):
     from . import shots
     q = _q(); u = _unit_for(q, a.slug)
@@ -324,6 +333,9 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("--force", action="store_true")
     p.add_argument("--estimate", action="store_true", help="plan before a voice exists; never replaces timing.json")
     p.set_defaults(fn=cmd_timing)
+    p = sub.add_parser("render-shots", help="one clip per shot of a picked plan (VISUAL_SPEC.md §8.3)")
+    p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.add_argument("--only", default="")
+    p.add_argument("--workers", type=int, default=None); p.set_defaults(fn=cmd_render_shots)
     p = sub.add_parser("shots-fill", help="snap shots.json to legal cuts and fill says, reveals and labels from the timing")
     p.add_argument("slug"); p.set_defaults(fn=cmd_shots_fill)
     p = sub.add_parser("shots-validate", help="check shots.json against VISUAL_SPEC.md §4, §5, §7.4 and §14.8")
