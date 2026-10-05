@@ -32,8 +32,9 @@ Usage: `critique script <slug>` · `critique render <slug>` · `critique copy <p
    `docs/content/VISUAL_SPEC.md` (2026-10-04): the site's tokens and Inter in every frame, one blue
    element per frame and blue only on money and the leak, no red or green, no glow or gradient
    furniture, at most three text blocks, direct labels, unboxed subtitles, ElevenLabs or licensed
-   sound in `media/mix.json`, and the founder's voice (`voice` is `founder` or `own`). A render in
-   any other voice fails. For a tier-D film, also judge `qa/contact.jpg` against VISUAL_SPEC §3
+   sound in `media/mix.json`, and a publishable voice (`voice` is `own`, `founder`, or `library`, the
+   ElevenLabs library voice the founder chose in `content/assets/voice.json`, disclosed as one). A
+   render in any other voice fails. For a tier-D film, also judge `qa/contact.jpg` against VISUAL_SPEC §3
    and §6: the concrete noun, no clichés, no faces in stock or AI frames, no logos, one grade.
 4. Write `content/videos/<slug>/qa.review.json`: `{"pass": bool, "items": [...], "notes": "..."}`.
 

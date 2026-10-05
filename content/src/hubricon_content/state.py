@@ -64,12 +64,13 @@ def log(u: dict, step: str, note: str) -> None:
 # ── capabilities ───────────────────────────────────────────────────────────
 
 def _founder_voice() -> str | None:
-    """The configured voice, only when it is the founder's own (tts.voice_is_own)."""
+    """The configured narration voice when it may narrate: the founder's own clone, or the
+    library voice he chose in content/assets/voice.json (tts.provider decides)."""
     vid = os.environ.get("ELEVENLABS_VOICE_ID")
     if not (vid and os.environ.get("ELEVENLABS_API_KEY")):
         return None
-    from .tts import voice_is_own
-    return vid if voice_is_own(vid)[0] else None
+    from .tts import provider
+    return vid if provider()[0] in ("founder", "library") else None
 
 
 def capabilities() -> dict:
@@ -320,7 +321,8 @@ def approve(q: dict, ref: str, gate: str = "review", note: str = "") -> dict:
     u["steps"][gate] = "approved"
     u["status"] = "todo"
     if gate == "approve_final":
-        u["publishable"] = bool(u.get("voice") in ("own", "founder") and u["steps"].get("qa") == "done")   # qa.PUBLISHABLE_VOICES
+        from .qa import PUBLISHABLE_VOICES
+        u["publishable"] = bool(u.get("voice") in PUBLISHABLE_VOICES and u["steps"].get("qa") == "done")
         u["steps"]["upload"] = "todo" if u["publishable"] else "blocked"
         if not u["publishable"]:
             u["blocked_on"] = None  # not a block on the unit; upload alone waits

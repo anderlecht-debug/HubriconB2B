@@ -64,6 +64,16 @@ WORD_RE = re.compile(r"[A-Za-z0-9$%'’.,-]+")
 
 
 VOICE_CHECK = CONTENT_DIR / ".cache" / "voice-check.json"
+# A library voice the founder chose by name (content/assets/voice.json). It narrates
+# as itself, never as his voice: the description says what it is (qa.disclosure_for).
+CHOSEN_VOICE = CONTENT_DIR / "assets" / "voice.json"
+
+
+def chosen_voice() -> dict:
+    try:
+        return json.loads(CHOSEN_VOICE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
 VOICE_CHECK_HOURS = 24
 
 
@@ -110,13 +120,16 @@ def voice_is_own(voice_id: str, key: str | None = None, fetch=None) -> tuple[boo
 def provider() -> tuple[str, str]:
     """(name, reason)."""
     if os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_VOICE_ID"):
-        own, name = voice_is_own(os.environ["ELEVENLABS_VOICE_ID"])
+        vid = os.environ["ELEVENLABS_VOICE_ID"]
+        own, name = voice_is_own(vid)
         if own:
             return "founder", "ElevenLabs clone of the founder's voice"
-        return "none", (f"ELEVENLABS_VOICE_ID is '{name}', which is not a voice this ElevenLabs account made: a voice "
-                        "copied from the public library is another person's. Only the founder's own clone narrates. "
-                        "Record per docs/content/VOICE-RECORDING.md, create the Professional Voice Clone, and put its ID "
-                        "in /home/lp9/Hubricon/HubriconB2B/.env.")
+        chosen = chosen_voice()
+        if chosen.get("kind") == "library" and chosen.get("voice_id") == vid:
+            return "library", f"ElevenLabs library voice '{chosen.get('name')}', chosen by the founder on {chosen.get('on')}"
+        return "none", (f"ELEVENLABS_VOICE_ID is '{name}', which this ElevenLabs account did not make and the founder has "
+                        "not chosen in content/assets/voice.json. A library voice narrates only once it is recorded there "
+                        "(and is disclosed as one); the founder's own clone needs no entry.")
     if ALLOW_PLACEHOLDER and (KOKORO_DIR / "kokoro-v1.0.onnx").exists() and (KOKORO_DIR / "voices-v1.0.bin").exists():
         return "placeholder", "Kokoro offline placeholder; never ships"
     if os.environ.get("ELEVENLABS_API_KEY"):
@@ -262,23 +275,23 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         text = texts[i - 1]
         if not text:
             continue
-        ext = "mp3" if name == "founder" else "wav"
+        ext = "mp3" if name in ("founder", "library") else "wav"
         audio = d / "audio" / f"vo-{i:02d}.{ext}"
         meta = d / "alignment" / f"vo-{i:02d}.json"
         if audio.exists() and meta.exists() and not force:
             done.append(i); continue
         prev_text = next((t for t in reversed(texts[: i - 1]) if t), None)
         next_text = next((t for t in texts[i:] if t), None)
-        words = _eleven(text, audio, prev_text, next_text) if name == "founder" else _placeholder(text, audio)
+        words = _eleven(text, audio, prev_text, next_text) if name in ("founder", "library") else _placeholder(text, audio)
         meta.write_text(json.dumps({"beat": i, "name": b["name"], "text": text, "provider": name, "words": words},
                                    indent=None, ensure_ascii=False) + "\n", encoding="utf-8")
-        if name == "founder":   # keep every take; a consistent library is part of the series feel
+        if name in ("founder", "library"):   # keep every take; a consistent library is part of the series feel
             takes = d / "audio" / "takes"; takes.mkdir(exist_ok=True)
             n = len(list(takes.glob(f"vo-{i:02d}-*.mp3"))) + 1
             (takes / f"vo-{i:02d}-{n:02d}.mp3").write_bytes(audio.read_bytes())
         done.append(i)
     u["voice"] = name
-    if name != "founder":
+    if name not in ("founder", "library"):
         u["publishable"] = False
     return {"status": "ok", "voice": name, "beats": len(done), "why": why}
 

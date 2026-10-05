@@ -16,7 +16,10 @@ DISCLOSURE = "Narration is an AI clone of Hagen Simmons's voice, used with his p
 # record.mjs), "founder" is the ElevenLabs clone of his voice (tts.py), anything else a placeholder
 # that never publishes. The description says which it is, and never claims a clone that isn't one.
 OWN_VOICE = "Narrated by Hagen Simmons, in his own voice."
-PUBLISHABLE_VOICES = ("own", "founder")
+# "library": an ElevenLabs library voice the founder chose (content/assets/voice.json, 2026-10-04).
+# It is never presented as his voice; the description says what it is.
+LIBRARY_VOICE = "Narrated by an AI voice from ElevenLabs' voice library; written and analysed by Hagen Simmons."
+PUBLISHABLE_VOICES = ("own", "founder", "library")
 
 
 def disclosure_for(voice: str | None) -> str:
@@ -24,6 +27,8 @@ def disclosure_for(voice: str | None) -> str:
         return OWN_VOICE
     if voice == "founder":
         return DISCLOSURE
+    if voice == "library":
+        return LIBRARY_VOICE
     return "Narration is a placeholder voice. This cut is not for publishing."
 TIER_RANGE = {"A": (270, 460), "B": (450, 900), "D": (1200, 3000)}   # D: VISUAL_SPEC.md §7.1
 
