@@ -530,12 +530,23 @@ def build_facts(run: dict, data: dict) -> Facts:
 
 # ── the step ───────────────────────────────────────────────────────────────
 
+def merge_history(facts: Facts, history: Path) -> Facts:
+    """A history film's own figures (the series' facts tables): each with its value, label and source,
+    so the number guard holds history to the same standard as the engine (docs/content/series/)."""
+    if history.exists():
+        for key, f in json.loads(history.read_text(encoding="utf-8")).items():
+            if not (f.get("value") not in (None, "") and f.get("source")):
+                raise SystemExit(f"{history}: {key} needs a value and a source")
+            facts.put(key, f["value"], f.get("label", key), f["source"])
+    return facts
+
+
 def write(slug: str, force: bool = False) -> Path:
     d = VIDEOS / slug
     d.mkdir(parents=True, exist_ok=True)
     run = cached_run(force=force)
     data = load_data()
-    facts = build_facts(run, data)
+    facts = merge_history(build_facts(run, data), d / "history.json")
     (d / "facts.json").write_text(json.dumps(facts, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     keep = {k: run.get(k) for k in ("today", "seed", "simulations", "waterfall", "sku_stacks", "elasticity_curves",
                                     "profit_curves", "ad_curves", "bleed", "paths", "paths_year", "inventory_panel", "anomaly_summary")}

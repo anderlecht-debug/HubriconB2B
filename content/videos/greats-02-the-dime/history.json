@@ -1,0 +1,532 @@
+{
+ "w_lancaster_date": {
+  "value": "June 21, 1879",
+  "label": "the Lancaster store opens (a Saturday)",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_rent": {
+  "value": "$30 a month",
+  "label": "the Lancaster store's rent",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_stock_1879": {
+  "value": "$410",
+  "label": "the Lancaster store's opening stock, much of it on credit",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_clerks": {
+  "value": "7",
+  "label": "clerks on the Lancaster opening day",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html"
+ },
+ "w_wage": {
+  "value": "$1.50 a week",
+  "label": "a Lancaster clerk's pay",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html"
+ },
+ "w_teatime": {
+  "value": "$47.65",
+  "label": "Lancaster's takings by tea time on the first day",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html"
+ },
+ "w_day1": {
+  "value": "$127.65",
+  "label": "Lancaster's first-day takings",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_day1_count": {
+  "value": "2,553",
+  "label": "nickel purchases on Lancaster's first day (multiplies out to $127.65)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_stock_sold": {
+  "value": "31%",
+  "label": "share of the opening stock sold on the first day",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_letter_quote": {
+  "value": "We could have sold $200 if the store had been larger.",
+  "label": "Woolworth's letter to his father, June 22, 1879 (versions differ slightly)",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_ceiling_span": {
+  "value": "more than 50 years",
+  "label": "from the dime's arrival as the ceiling (1880) to the 20-cent line (1932), in the company's eastern stores",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report); https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_born": {
+  "value": "1852",
+  "label": "Woolworth's birth year, near Rodman, New York",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_start_year": {
+  "value": "1873",
+  "label": "Woolworth starts at Augsbury & Moore, Watertown",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sStoryBegins.html; https://archive.org/details/NYTimes_apr1_15_1919"
+ },
+ "w_unpaid": {
+  "value": "3 months",
+  "label": "how long Woolworth worked unpaid at the start",
+  "source": "https://www.woolworthsmuseum.co.uk/1800sStoryBegins.html; https://archive.org/details/NYTimes_apr1_15_1919"
+ },
+ "w_first_wage": {
+  "value": "$3.50 a week",
+  "label": "Woolworth's first wage",
+  "source": "https://archive.org/details/NYTimes_apr1_15_1919"
+ },
+ "w_return_year": {
+  "value": "1877",
+  "label": "Woolworth returns to Moore & Smith after illness",
+  "source": "https://archive.org/details/sim_worlds-work_1924-12_49_2"
+ },
+ "w_return_wage": {
+  "value": "$10 a week",
+  "label": "Woolworth's wage on his return",
+  "source": "https://archive.org/details/sim_worlds-work_1924-12_49_2"
+ },
+ "w_counter_year": {
+  "value": "1878",
+  "label": "the five-cent counter at Moore & Smith",
+  "source": "https://s-media.nyc.gov/agencies/lpc/lp/1121.pdf; https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_counter_order": {
+  "value": "$100",
+  "label": "the five-cent goods W. H. Moore ordered from Spelman Bros.",
+  "source": "https://s-media.nyc.gov/agencies/lpc/lp/1121.pdf; https://www.woolworthsmuseum.co.uk/1800s-5centTable.html"
+ },
+ "w_counter_quote": {
+  "value": "I persuaded my employers to create a five cent cash counter with me in charge of it.",
+  "label": "Woolworth, 1913",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_utica_date": {
+  "value": "February 22, 1879",
+  "label": "the Utica store opens (Washington's Birthday)",
+  "source": "https://archive.org/details/NYTimes_apr1_15_1919; https://www.woolworthsmuseum.co.uk/1800s-firstWoolworthstore.html"
+ },
+ "w_utica_sign": {
+  "value": "Great Five Cent Store",
+  "label": "the Utica store's name",
+  "source": "https://archive.org/details/NYTimes_apr1_15_1919; https://www.woolworthsmuseum.co.uk/1800s-firstWoolworthstore.html"
+ },
+ "w_utica_stock": {
+  "value": "about $300",
+  "label": "the Utica store's goods on credit from Moore",
+  "source": "https://www.woolworthsmuseum.co.uk/1800s-firstWoolworthstore.html"
+ },
+ "w_utica_low": {
+  "value": "$2.50",
+  "label": "Utica's daily takings at their lowest",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_utica_months": {
+  "value": "about 3 months",
+  "label": "how long the Utica store lasted",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story'); https://www.woolworthsmuseum.co.uk/1800s-firstWoolworthstore.html"
+ },
+ "w_utica_profit": {
+  "value": "$150",
+  "label": "the profit Woolworth said he sold out at",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_ww_year": {
+  "value": "1913",
+  "label": "the year of Woolworth's World's Work interview",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_sign_quote": {
+  "value": "The crowd could not get away from that enticing sign, 'Five Cents.'",
+  "label": "Woolworth, 1913",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_five_and_ten": {
+  "value": "five-and-ten",
+  "label": "the name the stores took once the dime was added",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_charm_quote": {
+  "value": "As soon as we added 10 cent goods to the line, we took away part of the 5 cent store's charm, the charm of finding only one price on a counter, and only one price in a store.",
+  "label": "Woolworth, as the company's 1979 report quotes him ('he later wrote'; original not found)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_quarter_test": {
+  "value": "25 cents",
+  "label": "the higher price Woolworth tried early and dropped",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_scranton_date": {
+  "value": "November 6, 1880",
+  "label": "the Scranton store opens, run by his brother Sum",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_office_year": {
+  "value": "1886",
+  "label": "the New York buying office opens",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_office_rent": {
+  "value": "$25 a month",
+  "label": "desk room at 104 Chambers Street",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_stores_1900_year": {
+  "value": "1900",
+  "label": "the year of the count of his own stores",
+  "source": "https://s-media.nyc.gov/agencies/lpc/lp/1121.pdf"
+ },
+ "w_stores_1900": {
+  "value": "59",
+  "label": "stores of Woolworth's own in 1900",
+  "source": "https://s-media.nyc.gov/agencies/lpc/lp/1121.pdf"
+ },
+ "w_gross": {
+  "value": "144",
+  "label": "items in a gross",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_gross_value": {
+  "value": "$7.20",
+  "label": "what a gross brings in at five cents each (derived)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_dustpan_cost": {
+  "value": "$4.75 a gross",
+  "label": "toy dustpans on the first store's cost list",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_dustpan_margin": {
+  "value": "about 34%",
+  "label": "what was left of the price on a toy dustpan (computed from the cost list: about 34%)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_soap_cost": {
+  "value": "$5.85 a gross",
+  "label": "animal soap on the first store's cost list",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_soap_margin": {
+  "value": "about 19%",
+  "label": "what was left of the price on animal soap (computed from the cost list)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_skimmer_cost": {
+  "value": "$2.50 a gross",
+  "label": "skimmers and ABC plates on the first store's cost list",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_skimmer_margin": {
+  "value": "about 65%",
+  "label": "what was left of the price on skimmers (computed from the cost list)",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_audit_year": {
+  "value": "1911",
+  "label": "the year of the auditors' visit Woolworth described",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_ring_price": {
+  "value": "50 cents",
+  "label": "the finger ring's retail price before Woolworth's buyer",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_worlds-work_1924-12_49_2"
+ },
+ "w_ring_dozen": {
+  "value": "more than 450 dozen",
+  "label": "the ring maker's yearly sales before",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_ring_order": {
+  "value": "5,000 gross",
+  "label": "the order Woolworth's buyer offered",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922)"
+ },
+ "w_ring_units": {
+  "value": "720,000 rings",
+  "label": "5,000 gross, in rings",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_ring_result": {
+  "value": "ten-cent gold-filled rings",
+  "label": "what the ring became",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_worlds-work_1924-12_49_2"
+ },
+ "w_dime": {
+  "value": "10 cents",
+  "label": "the toy's price, and the ceiling",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_sm_year": {
+  "value": "1930",
+  "label": "Sales Management's summary of the method",
+  "source": "https://archive.org/details/sim_sales-management_1930-09-13_23_11 (Sales Management, September 13, 1930)"
+ },
+ "w_1930_quote": {
+  "value": "A large quantity order and an improved production system has brought hundreds of higher-priced articles down to ten cents.",
+  "label": "Sales Management, 1930",
+  "source": "https://archive.org/details/sim_sales-management_1930-09-13_23_11 (Sales Management, September 13, 1930)"
+ },
+ "w_pi17_year": {
+  "value": "1917",
+  "label": "Printers' Ink on the dime as advertising",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 (Printers' Ink, May 31, 1917)"
+ },
+ "w_pi17_ad": {
+  "value": "Confining the price of goods to ten cents is fundamentally an advertising idea.",
+  "label": "Printers' Ink, May 31, 1917",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 (Printers' Ink, May 31, 1917)"
+ },
+ "w_tribune_year": {
+  "value": "1901",
+  "label": "the New York Tribune on Woolworth's imports",
+  "source": "https://blogs.loc.gov/inside_adams/2022/05/nickels-dimes-fw-woolworth/ (quoting the New York Tribune, January 6, 1901)"
+ },
+ "w_general_letter": {
+  "value": "January 14, 1891",
+  "label": "Woolworth's General Letter to store managers",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_merger_year": {
+  "value": "1912",
+  "label": "the merger that formed the F. W. Woolworth Co.",
+  "source": "https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922); https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_merger_stores": {
+  "value": "596 stores",
+  "label": "stores at the merger",
+  "source": "https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922)"
+ },
+ "w_sales_1912": {
+  "value": "$60.6 million",
+  "label": "sales in 1912",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_building_open": {
+  "value": "April 24, 1913",
+  "label": "the Woolworth Building opens",
+  "source": "https://archive.org/details/cathedralofcomme00coch"
+ },
+ "w_lights": {
+  "value": "80,000",
+  "label": "lights switched on at the opening",
+  "source": "https://archive.org/details/cathedralofcomme00coch"
+ },
+ "w_height": {
+  "value": "792 feet",
+  "label": "the Woolworth Building's height",
+  "source": "https://www.skyscraper.org/tallest-towers/woolworth-building/"
+ },
+ "w_tallest_until": {
+  "value": "1930",
+  "label": "the year another building passed it",
+  "source": "https://www.skyscraper.org/tallest-towers/woolworth-building/"
+ },
+ "w_cost": {
+  "value": "$13.5 million",
+  "label": "the building's cost",
+  "source": "https://www.skyscraper.org/tallest-towers/woolworth-building/"
+ },
+ "w_owned_by": {
+  "value": "1914",
+  "label": "by when Woolworth owned the building outright",
+  "source": "https://en.wikipedia.org/wiki/Woolworth_Building (citing the New York Times, August 2, 1911); https://www.skyscraper.org/tallest-towers/woolworth-building/"
+ },
+ "w_pi17_date": {
+  "value": "May 1917",
+  "label": "Printers' Ink on Woolworth's orthodoxy",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 (Printers' Ink, May 31, 1917)"
+ },
+ "w_pi17_orthodox": {
+  "value": "Mr. Woolworth is the only one of the big people in this line who remains strictly orthodox so far as five-and-ten-cent goods are concerned. How long this will continue nobody but Woolworth knows.",
+  "label": "G. A. Nichols, Printers' Ink, May 31, 1917",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9 (Printers' Ink, May 31, 1917)"
+ },
+ "w_stores_1917": {
+  "value": "1,000 stores",
+  "label": "stores at the end of 1917",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_chain_year": {
+  "value": "1922",
+  "label": "Hayward & White's Chain Stores",
+  "source": "https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922)"
+ },
+ "w_shrink_quote": {
+  "value": "Woolworth clung to the old policy by decreasing the units. The size was made smaller, less candy was sold for ten cents, matches which had been one cent a box were five cents; things were sold separately, one stocking for ten cents, the pail ten cents and the cover ten.",
+  "label": "Hayward & White, Chain Stores, 1922",
+  "source": "https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922)"
+ },
+ "w_1917": {
+  "value": "1917",
+  "label": "year",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_1918": {
+  "value": "1918",
+  "label": "year",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_1919": {
+  "value": "1919",
+  "label": "year",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_net_1917": {
+  "value": "9.43%",
+  "label": "net earnings as a share of sales, 1917",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_net_1918": {
+  "value": "5.46%",
+  "label": "net earnings as a share of sales, 1918",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_net_1919": {
+  "value": "7.89%",
+  "label": "net earnings as a share of sales, 1919",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_tax_1918": {
+  "value": "$1.23 million",
+  "label": "federal income tax paid in 1918",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1918)"
+ },
+ "w_west_limit": {
+  "value": "15 cents",
+  "label": "the ceiling west of the Rockies and in Canada",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9"
+ },
+ "w_west_points": {
+  "value": "5, 10 and 15 cents",
+  "label": "the price points in E. P. Charlton's western stores",
+  "source": "https://en.wikipedia.org/wiki/E._P._Charlton_%26_Company; https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_died": {
+  "value": "April 8, 1919",
+  "label": "Woolworth's death, at Glen Cove, Long Island",
+  "source": "https://archive.org/details/NYTimes_apr1_15_1919"
+ },
+ "w_stores_1919": {
+  "value": "1,081",
+  "label": "stores in 1919",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_sales_1919": {
+  "value": "$119.5 million",
+  "label": "sales in 1919",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_parson_date": {
+  "value": "February 1920",
+  "label": "Printers' Ink on H. T. Parson",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1929-02-26_110_9 (Printers' Ink, February 26, 1920; the archive item is mislabelled 1929)"
+ },
+ "w_parson_quote": {
+  "value": "would not under any circumstances even consider breaking away from the ten-cent barrier",
+  "label": "Printers' Ink's report of H. T. Parson's declaration (reported speech, not his own words)",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1929-02-26_110_9 (Printers' Ink, February 26, 1920; the archive item is mislabelled 1929)"
+ },
+ "w_1927": {
+  "value": "1927",
+  "label": "year",
+  "source": "https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_1932": {
+  "value": "1932",
+  "label": "year",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_1936": {
+  "value": "1936",
+  "label": "year",
+  "source": "https://time.com/archive/6820934/business-finance-five-ten-cent-bonds/"
+ },
+ "w_store_sales_1927": {
+  "value": "$172,500",
+  "label": "sales per store, 1927",
+  "source": "https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_store_profit_1927": {
+  "value": "$16,800",
+  "label": "profit per store, 1927",
+  "source": "https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_store_profit_1932": {
+  "value": "$8,093",
+  "label": "profit per store, 1932",
+  "source": "https://time.com/archive/6820934/business-finance-five-ten-cent-bonds/"
+ },
+ "w_test_date": {
+  "value": "February 1932",
+  "label": "the company's president says the stores may add a 20-cent line",
+  "source": "https://time.com/archive/6819377/business-finance-20/"
+ },
+ "w_new_sign": {
+  "value": "'5, 10 and 20 cent stores'",
+  "label": "what the president said the stores might become",
+  "source": "https://time.com/archive/6819377/business-finance-20/"
+ },
+ "w_new_ceiling": {
+  "value": "20-cent",
+  "label": "the new ceiling, 1932",
+  "source": "https://time.com/archive/6819377/business-finance-20/; https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_combination_quote": {
+  "value": "For years we have sold so-called combination items for 10 cents each piece.",
+  "label": "the 1932 report to stockholders",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_promise_date": {
+  "value": "January 25, 1933",
+  "label": "the letter to stockholders in the 1932 report",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_promise_quote": {
+  "value": "Fundamentally the Company is in the 5 and 10 cent business and has every intention of continuing that policy. Furthermore, there is no intention of going beyond the 20 cent selling price.",
+  "label": "the 1932 report to stockholders, letter dated January 25, 1933",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_limits_removed": {
+  "value": "1935",
+  "label": "all arbitrary price limits removed by the board",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_promise_span": {
+  "value": "3 years",
+  "label": "from the January 1933 promise to the 1935 removal of all limits",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports); https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
+ },
+ "w_ceiling_1935": {
+  "value": "40 cents",
+  "label": "the ceiling soon after the limits went",
+  "source": "https://time.com/archive/6820934/business-finance-five-ten-cent-bonds/"
+ },
+ "w_ceiling_1936": {
+  "value": "$1",
+  "label": "the price of some items by spring 1936",
+  "source": "https://time.com/archive/6820934/business-finance-five-ten-cent-bonds/; https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_exit_date": {
+  "value": "July 17, 1997",
+  "label": "the company announces it is leaving the US Woolworth general merchandise business",
+  "source": "https://archives.starbulletin.com/1997/07/17/business/story1.html"
+ },
+ "w_exit_stores": {
+  "value": "about 400 stores",
+  "label": "US Woolworth stores closed, 1997",
+  "source": "https://archives.starbulletin.com/1997/07/17/business/story1.html"
+ },
+ "w_exit_jobs": {
+  "value": "9,200",
+  "label": "jobs, 1997",
+  "source": "https://archives.starbulletin.com/1997/07/17/business/story1.html"
+ },
+ "w_barnard_quote": {
+  "value": "The five-and-dime industry is defunct and has been defunct for at least 25 years.",
+  "label": "Kurt Barnard, retail consultant, July 1997",
+  "source": "https://archives.starbulletin.com/1997/07/17/business/story1.html"
+ },
+ "w_footlocker": {
+  "value": "November 1, 2001",
+  "label": "the company renamed Foot Locker, Inc.",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (footlocker2001)"
+ }
+}
