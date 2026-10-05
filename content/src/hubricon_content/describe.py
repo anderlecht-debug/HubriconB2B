@@ -28,6 +28,37 @@ def data_line(u: dict) -> str:
             "Nothing is illustrative.")
 
 
+ARCHIVAL = {"loc": "Library of Congress", "smithsonian": "Smithsonian Institution", "commons": "Wikimedia Commons",
+            "archive": "Internet Archive", "nara": "National Archives"}
+
+
+def credits(plan: dict) -> str:
+    """Every picture's credit, from the picks' own provenance only (VISUAL_SPEC.md §11)."""
+    stock, archival, ai = {}, [], False
+    for s in plan.get("shots", []):
+        for a in (s["asset"] if isinstance(s.get("asset"), list) else [s.get("asset")]):
+            if not a:
+                continue
+            src = str(a.get("source") or str(a.get("id", "")).split(":")[0])
+            if src in ("pexels", "pixabay"):
+                stock.setdefault(src, set()).add(a.get("author") or "")
+            elif src in ARCHIVAL:
+                line = f"{a.get('title') or 'Photograph'}, {ARCHIVAL[src]}" + (f" ({a['licence']})" if a.get("licence") else "")
+                if line not in archival:
+                    archival.append(line)
+            elif s.get("kind") == "texture" or src == "higgsfield":
+                ai = True
+    out = []
+    if stock:
+        out.append("Footage: " + " and ".join({"pexels": "Pexels (pexels.com)", "pixabay": "Pixabay (pixabay.com)"}[k] for k in sorted(stock)) +
+                   ". Filmed by " + ", ".join(sorted({n for v in stock.values() for n in v if n})) + ".")
+    if archival:
+        out.append("Archival: " + "; ".join(archival) + ".")
+    if ai:
+        out.append("Some illustrations are AI-generated, and say so on screen.")
+    return "\n".join(out)
+
+
 def run(u: dict, q: dict, force: bool = False) -> dict:
     slug = u["slug"]
     d = scriptmod.video_dir(slug)
@@ -54,6 +85,10 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
             "\n".join(links) + "\n\n" + disclosure_for(u.get("voice")) + "\n\n" + data_line(u) + "\n\n" +
             "Tags: " + ", ".join(("amazon fba", "shopify", "ecommerce finance", "unit economics", "profit margin", "cash flow",
                                   "inventory", "pricing", "hubricon")))
+    if (d / "shots.json").exists():
+        cr = credits(json.loads((d / "shots.json").read_text(encoding="utf-8")))
+        if cr:
+            desc += "\n\n" + cr
     (d / "description.md").write_text(desc + "\n", encoding="utf-8")
     pinned = links[1]   # "every piece points to /learn" (HUBRICON_SPEC.md, the content engine)
     (d / "pinned-comment.md").write_text(pinned + "\n", encoding="utf-8")

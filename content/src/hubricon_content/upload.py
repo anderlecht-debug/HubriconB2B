@@ -52,9 +52,12 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     title = desc.splitlines()[0].strip()[:100]
     from googleapiclient.http import MediaFileUpload
     yt = _service()
+    # Synthetic media: any voice that is not the founder's own reading, or any AI image on screen.
+    plan = json.loads((d / "shots.json").read_text(encoding="utf-8")) if (d / "shots.json").exists() else {}
+    synthetic = u.get("voice") != "own" or any(s.get("kind") == "texture" for s in plan.get("shots", []))
     body = {"snippet": {"title": title, "description": desc[:4900], "categoryId": "27",
                         "tags": ["amazon fba", "ecommerce", "unit economics", "hubricon"]},
-            "status": {"privacyStatus": "unlisted", "selfDeclaredMadeForKids": False, "containsSyntheticMedia": True}}
+            "status": {"privacyStatus": "unlisted", "selfDeclaredMadeForKids": False, "containsSyntheticMedia": synthetic}}
     req = yt.videos().insert(part="snippet,status", body=body, media_body=MediaFileUpload(str(master), chunksize=8 * 1024 * 1024, resumable=True))
     res = None
     while res is None:
@@ -66,6 +69,14 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
             yt.thumbnails().set(videoId=vid, media_body=MediaFileUpload(str(thumb))).execute()
         except Exception as err:  # a channel without phone verification cannot set custom thumbnails
             (d / "upload-note.md").write_text(f"thumbnail not set: {err}\n", encoding="utf-8")
+    captions = d / "media" / "captions.srt"
+    if captions.exists():   # long films carry YouTube's caption track, nothing burned (VISUAL_SPEC.md §8.6)
+        yt.captions().insert(part="snippet", body={"snippet": {"videoId": vid, "language": "en", "name": "English", "isDraft": False}},
+                             media_body=MediaFileUpload(str(captions), mimetype="application/octet-stream")).execute()
     u["youtube_id"] = vid
-    (d / "upload.json").write_text(json.dumps({"id": vid, "privacy": "unlisted", "synthetic": True, "title": title}, indent=1) + "\n", encoding="utf-8")
+    (d / "upload.json").write_text(json.dumps({"id": vid, "privacy": "unlisted", "synthetic": synthetic, "title": title,
+                                               "captions": captions.exists()}, indent=1) + "\n", encoding="utf-8")
+    # The handoff to the site (Part C): the main branch fills a /learn video slot from this.
+    (d / "published.json").write_text(json.dumps({"youtube_id": vid, "title": title, "slug": slug, "unit": u.get("id"),
+                                                  "src": f"yt-{str(u.get('id') or slug).lower()}"}, indent=1) + "\n", encoding="utf-8")
     return {"status": "ok", "youtube_id": vid, "privacy": "unlisted"}

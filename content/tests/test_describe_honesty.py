@@ -28,3 +28,17 @@ def test_no_description_offers_what_the_site_no_longer_has():
     for gone in ("Teardown", "/method", "Reimbursement Playbook"):
         assert not any(gone in ln for ln in written), gone
     assert "?src={code}" in src
+
+
+def test_credits_come_from_the_picks_provenance_only():
+    plan = {"shots": [
+        {"kind": "footage", "asset": {"id": "pexels:1", "source": "pexels", "author": "Ana Lima"}},
+        {"kind": "footage", "asset": {"id": "pixabay:2", "source": "pixabay", "author": "Kim Ode"}},
+        {"kind": "still", "asset": {"id": "loc:3", "source": "loc", "title": "Mail-order warehouse, 1925", "licence": "No known restrictions on publication"}},
+        {"kind": "texture", "asset": {"id": "higgsfield:4", "source": "higgsfield"}},
+        {"kind": "number"}]}
+    text = describe.credits(plan)
+    assert "Pexels (pexels.com) and Pixabay (pixabay.com)" in text and "Ana Lima, Kim Ode" in text
+    assert "Mail-order warehouse, 1925, Library of Congress (No known restrictions on publication)" in text
+    assert "AI-generated" in text
+    assert describe.credits({"shots": [{"kind": "number"}]}) == ""

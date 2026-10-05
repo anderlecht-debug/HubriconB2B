@@ -10,6 +10,7 @@ and says so.
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -71,3 +72,35 @@ def ensure(force: bool = False) -> dict:
     manifest_p.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
     out["notes"] = notes
     return out
+
+
+# ── world ambience (VISUAL_SPEC.md §9): one per subject, cached, under its footage ──
+AMBIENCE = SFX / "ambience"
+_STRIP = re.compile(r"\b(daylight|wide|close|up|static|medium|detail|slow|aerial|shot|footage|4k|hd|overcast)\b", re.I)
+
+
+def subject_of(query: str) -> str:
+    """The concrete nouns of a footage query, which is what the ambience should sound like."""
+    words = _STRIP.sub(" ", query).split()
+    return " ".join(words[:4]).lower() or "room"
+
+
+def ambience(subject: str) -> Path | None:
+    """A 20-second bed of a place's own sound (a port, a warehouse), generated once per subject.
+    None when ElevenLabs cannot make it; the film then has room tone alone there."""
+    AMBIENCE.mkdir(parents=True, exist_ok=True)
+    name = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")[:60] or "room"
+    p = AMBIENCE / f"{name}.mp3"
+    if p.exists():
+        return p
+    spec = {"text": f"{subject} ambience: the steady sound of the place, distant activity, no voices, no music, no sudden sounds; "
+                    "seamless, even level throughout", "duration_seconds": 20, "prompt_influence": 0.5}
+    try:
+        p.write_bytes(_post("https://api.elevenlabs.io/v1/sound-generation", spec))
+    except (urllib.error.HTTPError, urllib.error.URLError, RuntimeError, TimeoutError):
+        return None
+    manifest_p = AMBIENCE / "manifest.json"
+    manifest = json.loads(manifest_p.read_text(encoding="utf-8")) if manifest_p.exists() else {}
+    manifest[name] = {**spec, "subject": subject, "source": "elevenlabs sound-generation"}
+    manifest_p.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
+    return p

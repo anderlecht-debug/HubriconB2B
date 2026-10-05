@@ -91,6 +91,43 @@ def _place(track: np.ndarray, clip: np.ndarray, at: float, gain: float) -> None:
         track[i:j] += clip[: j - i] * gain
 
 
+AMBIENCE_DB = -40.0       # VISUAL_SPEC.md §9, under footage; an observational hold up to -36
+AMBIENCE_OBSERVE_DB = -36.0
+AMBIENCE_FADE = 0.4
+
+
+def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
+    """Each footage shot's own place sound, faded in and out over 0.4 s at its cuts."""
+    track = np.zeros(n)
+    plan_p = d / "shots.json"
+    if not plan_p.exists():
+        return track, []
+    from . import sfx
+    used = []
+    for s in json.loads(plan_p.read_text(encoding="utf-8")).get("shots", []):
+        if s.get("room") != "world" or s.get("kind") != "footage" or not s.get("query"):
+            continue
+        subject = (s.get("params") or {}).get("ambience") or sfx.subject_of(s["query"][0])
+        f = sfx.ambience(subject)
+        if f is None:
+            continue
+        clip = _decode(f).astype(np.float64)
+        peak = np.abs(clip).max()
+        if peak <= 0:
+            continue
+        a, b = float(s["start"]), float(s["end"])
+        length = int((b - a + AMBIENCE_FADE) * SR)
+        clip = np.tile(clip / peak, int(np.ceil(length / len(clip))))[:length]
+        fade = np.ones(length)
+        k = int(AMBIENCE_FADE * SR)
+        fade[:k] = np.linspace(0, 1, k)
+        fade[-k:] = np.linspace(1, 0, k)
+        gain = _db(AMBIENCE_OBSERVE_DB if s.get("style") == "footage-observe" else AMBIENCE_DB)
+        _place(track, clip * fade, max(0.0, a - AMBIENCE_FADE / 2), gain)
+        used.append(subject)
+    return track, sorted(set(used))
+
+
 def mix(slug: str) -> Path:
     d = scriptmod.video_dir(slug)
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
@@ -149,7 +186,8 @@ def mix(slug: str) -> Path:
     for ch in timing["chapters"]:
         _place(fx, whoosh, max(0.0, float(ch["at"]) - 0.08), _db(WHOOSH_DB))
 
-    out = vo + bed * bed_gain + room + fx
+    amb, amb_subjects = _ambience(d, n)
+    out = vo + bed * bed_gain + room + fx + amb
     peak = np.abs(out).max()
     if peak > 0.98:
         out = out / peak * 0.98
@@ -162,5 +200,5 @@ def mix(slug: str) -> Path:
         "sample_rate": SR, "room_tone_db": ROOM_TONE_DB, "bed_db": BED_DB, "bed_duck_db": BED_DUCK_DB,
         "tick_db": TICK_DB, "whoosh_db": WHOOSH_DB, "bed_source": bed_source, "sfx_source": sfx_source,
         "ticks": sum(1 for e in events if e.get("kind") == "data"),
-        "whooshes": len(timing["chapters"]), "target_lufs": -16}, indent=1) + "\n", encoding="utf-8")
+        "whooshes": len(timing["chapters"]), "target_lufs": -16, "ambience": amb_subjects}, indent=1) + "\n", encoding="utf-8")
     return final
