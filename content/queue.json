@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T06:17:13+00:00",
+ "updated_at": "2026-10-05T06:22:07+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -512,7 +512,9 @@
     "upload": "todo"
    },
    "review_notes": [],
-   "attempts": {},
+   "attempts": {
+    "qa": 1
+   },
    "log": [
     {
      "at": "2026-09-18T23:18:48+00:00",
@@ -583,6 +585,11 @@
      "at": "2026-10-05T06:13:14+00:00",
      "step": "assemble",
      "note": "done"
+    },
+    {
+     "at": "2026-10-05T06:22:05+00:00",
+     "step": "qa",
+     "note": "failed The render critique fails by eye: nine shots of eighteen to fifty-five seconds with no cuts, subtitles overwriting the chart's x-axis, clipped and colliding stat captions, one blank segment, and a 'client-stated' label on demo figures."
     }
    ]
   },
