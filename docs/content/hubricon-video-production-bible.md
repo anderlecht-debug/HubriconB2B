@@ -110,6 +110,12 @@ the analysis is his. Cheap to say, disproportionately expensive to be caught not
 
 *Superseded by `docs/content/VISUAL_SPEC.md` (2026-10-04), §4 and §8.6: shots of 7–11 s (up to 14 s, a chart build up to 30 s), nothing on screen frozen longer than 4 s, and long-form films burn no subtitles. Kept here for the record.*
 
+*The cadence above is retired for **every** tier, not only for the long films: the spec's §0
+retires "cut every 2–4 s, nothing over 6 s" outright and its §1.4 names the three thresholds that
+used to contradict each other as the reason a film satisfied none of them. A five-minute explainer
+is cut to §4 like a forty-minute one. What stays tier-specific is §8.6: tier A, B and the shorts
+burn their subtitles, long-form uploads a caption track (noted again at item 9 below).*
+
 - **Cut every 2–4 seconds.** Nothing holds longer than about six. A first attempt at this style
   typically holds shots for eight and feels like a webinar.
 - Motion on every still: slow push, slight parallax on layered elements, or a subtle drift. No
@@ -206,7 +212,13 @@ Reuse this structure for every explainer.
 6. Room tone, data ticks, transition SFX and a ducking music bed are present on every video.
 7. Narration is the founder's voice clone, disclosed in the description and in YouTube's
    synthetic-media setting.
-8. No shot holds longer than six seconds.
-9. Subtitles are burned in.
+8. Shots are cut to `VISUAL_SPEC.md` §4, whatever the tier: 7–11 s, never past 14 (a chart build
+   up to 30 s with something new landing at least every 8 s), never under 3, a spoken figure held
+   3 s before the cut, and nothing on screen frozen longer than 4 s. (This replaces the six-second
+   rule that stood here; §0 of the spec retires it.) `hubricon-content qa` reads the cutting off the
+   master with a scene threshold calibrated for ink on paper, and the frozen picture off the scene
+   clips, because burned-in subtitles change underneath a still frame and hide it on the master.
+9. Subtitles are burned in on tier A, tier B and the shorts; long-form films upload a caption track
+   instead (`VISUAL_SPEC.md` §8.6).
 10. The style lock exists as a written spec plus a saved Higgsfield preset before video two.
 11. The Reimbursement Playbook remains unanimated raw screen capture.

@@ -6,6 +6,7 @@ alignment, so the plan can be held to the cadence without rendering a frame."""
 import json
 from pathlib import Path
 
+from hubricon_content import qa
 from hubricon_content.scenes.base import FIGURE_HOLD_S, SHOT_MAX_S, SHOT_MIN_S, phrases, sentences
 from hubricon_content.scenes.charts import Kinetic
 
@@ -84,6 +85,24 @@ def test_a_figure_the_segment_ends_under_is_not_cut_to():
 def test_a_figure_is_never_early():
     seg = seg_of("A sentence that opens the segment and holds.", reveals={"gap": {"t": 3.5, "value": "$1"}})
     assert all(s["t"] >= 3.5 for s, _ in plan(seg) if "figure" in s)
+
+
+# ── what the program check makes of a film's cutting ──
+def test_a_film_the_detector_finds_no_cuts_in_fails():
+    assert not qa.cadence_holds({"cuts": 0, "mean_interval": None, "max_interval": None})
+    assert not qa.cadence_holds({"cuts": 1, "mean_interval": None, "max_interval": None})
+
+
+def test_a_film_cut_to_the_cadence_passes():
+    assert qa.cadence_holds({"cuts": 34, "mean_interval": 8.1, "max_interval": 13.4})
+
+
+def test_a_stretch_longer_than_a_chart_build_fails():
+    assert not qa.cadence_holds({"cuts": 9, "mean_interval": 9.0, "max_interval": 55.2})
+
+
+def test_cutting_faster_than_the_minimum_shot_fails():
+    assert not qa.cadence_holds({"cuts": 200, "mean_interval": 1.4, "max_interval": 4.0})
 
 
 # ── the film in the repo ──
