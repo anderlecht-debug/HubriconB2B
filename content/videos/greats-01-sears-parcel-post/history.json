@@ -1,0 +1,672 @@
+{
+ "s_beagle_postage": {
+  "value": "15 cents",
+  "label": "postage to mail baby James Beagle by parcel post",
+  "source": "https://about.usps.com/publications/pub100.pdf"
+ },
+ "s_beagle_when": {
+  "value": "early 1913",
+  "label": "when James Beagle was mailed",
+  "source": "https://about.usps.com/publications/pub100.pdf"
+ },
+ "s_beagle_insured": {
+  "value": "$50",
+  "label": "what James Beagle was insured for",
+  "source": "https://about.usps.com/publications/pub100.pdf"
+ },
+ "s_pp_year": {
+  "value": "1913",
+  "label": "the year parcel post began",
+  "source": "https://about.usps.com/who/profile/history/pdf/on-this-day.pdf"
+ },
+ "s_pp_start": {
+  "value": "January 1, 1913",
+  "label": "the day parcel post began",
+  "source": "https://about.usps.com/who/profile/history/pdf/on-this-day.pdf"
+ },
+ "s_pp_signed": {
+  "value": "August 24, 1912",
+  "label": "the day the Parcel Post Act was signed",
+  "source": "https://about.usps.com/who/profile/history/pdf/on-this-day.pdf"
+ },
+ "s_wilson_date": {
+  "value": "August 15, 1912",
+  "label": "Woodrow Wilson's speech at Gloucester, New Jersey",
+  "source": "https://archive.org/details/crossroadsoffree007728mbp"
+ },
+ "s_wilson_crowd": {
+  "value": "about 5,000",
+  "label": "farmers in Wilson's audience",
+  "source": "https://archive.org/details/crossroadsoffree007728mbp"
+ },
+ "s_law_days": {
+  "value": "nine days",
+  "label": "from Wilson's speech to the Act's signing",
+  "source": "https://about.usps.com/who/profile/history/pdf/on-this-day.pdf"
+ },
+ "s_old_limit": {
+  "value": "4 pounds",
+  "label": "the weight limit for mail before parcel post",
+  "source": "https://www.uspsoig.gov/sites/default/files/reports/2023-01/rarc-wp-14-004_0.pdf"
+ },
+ "s_old_per_lb": {
+  "value": "16 cents a pound",
+  "label": "the mail rate before parcel post (1 cent an ounce)",
+  "source": "https://www.uspsoig.gov/sites/default/files/reports/2023-01/rarc-wp-14-004_0.pdf"
+ },
+ "s_mail_ton": {
+  "value": "$320 a ton",
+  "label": "mail's price by the ton before 1913",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_freight_ton": {
+  "value": "$1.90 a ton",
+  "label": "rail freight's price by the ton before 1913",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_express_ton": {
+  "value": "about $28 a ton",
+  "label": "the express companies' price by the ton before 1913",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_wanamaker_year": {
+  "value": "1904",
+  "label": "the year The Cosmopolitan printed Wanamaker's remark",
+  "source": "https://archive.org/details/sim_cosmopolitan_1904-02_36_4"
+ },
+ "s_ward_year": {
+  "value": "1911",
+  "label": "the year Montgomery Ward reported how it shipped",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_ward_freight": {
+  "value": "82%",
+  "label": "Montgomery Ward's orders shipped by freight, 1911",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_ward_mail": {
+  "value": "8%",
+  "label": "Montgomery Ward's orders shipped by mail, 1911",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_rail_hi": {
+  "value": "100 pounds",
+  "label": "the Sears catalogue's freight example (heavier)",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_rail_lo": {
+  "value": "20 pounds",
+  "label": "the Sears catalogue's freight example (lighter)",
+  "source": "https://www.prc.gov/sites/default/files/papers/enterprise.pdf"
+ },
+ "s_watch_year": {
+  "value": "1886",
+  "label": "Richard Sears sells his first watches",
+  "source": "https://www.searsarchives.claeys.co/history/history1886.html"
+ },
+ "s_sears_age": {
+  "value": "22",
+  "label": "Richard Sears' age when he started the watch business",
+  "source": "https://www.searsarchives.claeys.co/people/richardsears.html"
+ },
+ "s_chicago_year": {
+  "value": "1887",
+  "label": "the business moves to Chicago",
+  "source": "https://www.searsarchives.claeys.co/stores/history_chicago_first.html"
+ },
+ "s_name_year": {
+  "value": "1893",
+  "label": "the name Sears, Roebuck and Co.",
+  "source": "https://www.searsarchives.claeys.co/history/questions/officialname.html"
+ },
+ "s_rosenwald_year": {
+  "value": "1895",
+  "label": "Julius Rosenwald buys into Sears",
+  "source": "https://www.immigrantentrepreneurship.org/entries/julius-rosenwald/"
+ },
+ "s_rosenwald_stake": {
+  "value": "$75,000 for half the company",
+  "label": "what Nusbaum and Rosenwald paid in 1895",
+  "source": "https://static.moaf.org/docs/Article_88.pdf"
+ },
+ "s_sales_1900": {
+  "value": "more than $10 million",
+  "label": "Sears' sales in 1900",
+  "source": "https://www.chicago.gov/content/dam/city/depts/zlup/Historic_Preservation/Publications/Sears_Roebuck_and_Co_District.pdf"
+ },
+ "s_plant_open": {
+  "value": "January 22, 1906",
+  "label": "Sears moves into its West Side plant",
+  "source": "https://www.chicago.gov/content/dam/city/depts/zlup/Historic_Preservation/Publications/Sears_Roebuck_and_Co_District.pdf"
+ },
+ "s_plant_sqft": {
+  "value": "3 million square feet",
+  "label": "floor area of the Merchandise Building",
+  "source": "https://www.chicago.gov/content/dam/city/depts/zlup/Historic_Preservation/Publications/Sears_Roebuck_and_Co_District.pdf"
+ },
+ "s_slot": {
+  "value": "fifteen-minute",
+  "label": "the schedule system's time slot for each order",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "s_guide_year": {
+  "value": "1914",
+  "label": "the company guidebook A Visit to Sears, Roebuck and Co.",
+  "source": "https://archive.org/details/visittosearsroeb00sear"
+ },
+ "s_orders_day": {
+  "value": "45,000",
+  "label": "complete orders assembled a day, about 1914",
+  "source": "https://archive.org/details/visittosearsroeb00sear"
+ },
+ "s_typists": {
+  "value": "500",
+  "label": "young women operating typewriter billing machines in the Entry Department, 1914",
+  "source": "https://archive.org/details/visittosearsroeb00sear"
+ },
+ "s_shipping_staff": {
+  "value": "1,200",
+  "label": "billers, checkers, weighers, packers and freight handlers, 1914",
+  "source": "https://archive.org/details/visittosearsroeb00sear"
+ },
+ "s_cars_day": {
+  "value": "sixty to seventy-five freight cars",
+  "label": "loaded every day, about 1914",
+  "source": "https://archive.org/details/visittosearsroeb00sear"
+ },
+ "s_ward_guarantee_year": {
+  "value": "1875",
+  "label": "Montgomery Ward adopts 'satisfaction guaranteed or your money back'",
+  "source": "https://www.chicago.gov/content/dam/city/depts/zlup/Historic_Preservation/Publications/Sears_Roebuck_and_Co_District.pdf"
+ },
+ "s_limit_1913": {
+  "value": "11 pounds",
+  "label": "parcel post's weight limit at launch",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_size_1913": {
+  "value": "72 inches",
+  "label": "parcel post's size limit, length and girth combined",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_zone_count": {
+  "value": "8 zones and a local rate",
+  "label": "the 1913 zone system",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z1_first": {
+  "value": "5 cents",
+  "label": "zone 1, the first pound, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z1_add": {
+  "value": "3 cents",
+  "label": "zone 1, each additional pound, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z8_first": {
+  "value": "12 cents",
+  "label": "zone 8, the first pound, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z8_add": {
+  "value": "12 cents",
+  "label": "zone 8, each additional pound, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_11_z1": {
+  "value": "35 cents",
+  "label": "an 11-pound parcel to zone 1, 1913 (from the Act)",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_11_z8": {
+  "value": "$1.32",
+  "label": "an 11-pound parcel to zone 8, 1913 (from the Act)",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_11_local": {
+  "value": "15 cents",
+  "label": "an 11-pound parcel at the local rate, 1913 (from the Act)",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_parcels_5days": {
+  "value": "more than 4 million",
+  "label": "parcels in parcel post's first five days",
+  "source": "https://www.sil.si.edu/ondisplay/parcelpost/intro.htm"
+ },
+ "s_parcels_year": {
+  "value": "more than 600 million",
+  "label": "parcels in parcel post's first year",
+  "source": "https://archive.org/details/jstor-1820221"
+ },
+ "s_count_weeks": {
+  "value": "six weeks",
+  "label": "the length of the 1914 parcel count",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_count_all": {
+  "value": "77,539,521",
+  "label": "parcels dispatched in the six-week 1914 count",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_count_chicago": {
+  "value": "19,818,210",
+  "label": "parcels dispatched from Chicago in the same count",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_avg_postage": {
+  "value": "4.9 cents",
+  "label": "average postage per parcel in the 1914 count",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_jc_date": {
+  "value": "December 1, 1914",
+  "label": "the Joint Committee of Congress report on parcel post",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_fuller_year": {
+  "value": "1964",
+  "label": "Wayne Fuller, RFD: The Changing Face of Rural America",
+  "source": "https://www.uspsoig.gov/sites/default/files/reports/2023-01/rarc-wp-14-004_0.pdf"
+ },
+ "s_merge_date": {
+  "value": "August 15, 1913",
+  "label": "the first revision of the parcel post rates",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_merge_rate": {
+  "value": "5 cents, plus 1 cent a pound",
+  "label": "zones 1 and 2 from August 15, 1913",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_merge_share": {
+  "value": "30%",
+  "label": "share of parcel shipments going to zones 1 and 2, per Roper",
+  "source": "https://archive.org/details/jstor-1820221"
+ },
+ "s_limit_1914": {
+  "value": "50 pounds",
+  "label": "the weight limit within 150 miles from January 1, 1914",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_bavaria_cost": {
+  "value": "54 cents",
+  "label": "a 50-pound parcel to Bavaria, Kansas, 1914",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_kc_miles": {
+  "value": "193 miles",
+  "label": "Kansas City to Bavaria, Kansas, by rail",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_salina_miles": {
+  "value": "7 miles",
+  "label": "Salina to Bavaria, Kansas",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_1917_year": {
+  "value": "1917",
+  "label": "the Sears catalogue with the printed parcel post rate table",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134"
+ },
+ "s_freight_min": {
+  "value": "100 pounds",
+  "label": "the freight minimum the Sears catalogue explained",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134"
+ },
+ "s_warehouses": {
+  "value": "72",
+  "label": "Sears catalogue warehouses in 1918",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1918-08-08_104_6"
+ },
+ "s_pi_year": {
+  "value": "1918",
+  "label": "the Printers' Ink report on Sears' local distribution",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1918-08-08_104_6"
+ },
+ "s_sales_1912": {
+  "value": "$77.1 million",
+  "label": "Sears' net sales, 1912",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_sales_1913": {
+  "value": "$91.4 million",
+  "label": "Sears' net sales, 1913",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_growth_1913": {
+  "value": "18.5%",
+  "label": "growth in Sears' net sales, 1912 to 1913",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_sales_1917": {
+  "value": "$165.8 million",
+  "label": "Sears' net sales, 1917",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_sales_1919": {
+  "value": "$234 million",
+  "label": "Sears' net sales, 1919",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_myth_orders": {
+  "value": "five times as many orders",
+  "label": "the oft-repeated claim about Sears in 1913, unsupported by its audited sales",
+  "source": "https://archive.org/details/searsannualreports"
+ },
+ "s_store_1925": {
+  "value": "February 2, 1925",
+  "label": "the first Sears retail store opens",
+  "source": "https://www.searsarchives.claeys.co/stores/history_chicago_first.html"
+ },
+ "s_store_share": {
+  "value": "53.4%",
+  "label": "the stores' share of Sears' sales in 1931",
+  "source": "https://www.searsarchives.claeys.co/history/history1925.html"
+ },
+ "s_store_year": {
+  "value": "1931",
+  "label": "store sales overtake mail order",
+  "source": "https://www.searsarchives.claeys.co/history/history1925.html"
+ },
+ "s_end_year": {
+  "value": "1993",
+  "label": "the year Sears ended its big catalogue",
+  "source": "https://www.baltimoresun.com/news/bs-xpm-1993-01-26-1993026112-story.html"
+ },
+ "s_end_age": {
+  "value": "97-year-old",
+  "label": "the Baltimore Sun's description of the catalogue in 1993",
+  "source": "https://www.baltimoresun.com/news/bs-xpm-1993-01-26-1993026112-story.html"
+ },
+ "usps_z1_1lb": {
+  "value": "$6.93",
+  "label": "USPS Ground Advantage, zone 1, up to 1 pound",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_z1_2lb": {
+  "value": "$7.61",
+  "label": "USPS Ground Advantage, zone 1, over 1 pound",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_z8_1lb": {
+  "value": "$8.40",
+  "label": "USPS Ground Advantage, zone 8, up to 1 pound",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_z8_2lb": {
+  "value": "$10.67",
+  "label": "USPS Ground Advantage, zone 8, over 1 pound up to 2",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_z8_step": {
+  "value": "$2.27",
+  "label": "the cost of crossing 1 pound in zone 8 (derived)",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_zones": {
+  "value": "8 zones",
+  "label": "USPS Ground Advantage zones",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_effective": {
+  "value": "July 12, 2026",
+  "label": "when these USPS prices took effect",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "rc_step_size": {
+  "value": "4 ounces",
+  "label": "the weight step for large standard items",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_band": {
+  "value": "$10 to $50",
+  "label": "the price band the example uses",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_ls12": {
+  "value": "$4.20",
+  "label": "large standard, 8 to 12 ounces, $10 to $50 price band",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_ls16": {
+  "value": "$4.60",
+  "label": "large standard, 12 to 16 ounces, $10 to $50 price band",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_ls_step": {
+  "value": "$0.40",
+  "label": "the cost of crossing 12 ounces (derived)",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_card_from": {
+  "value": "January 15, 2026",
+  "label": "the non-peak card's effective date",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_peak_from": {
+  "value": "October 15",
+  "label": "the peak card's start",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_who": {
+  "value": "a car-care brand",
+  "label": "the case study's listing",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_weight": {
+  "value": "8.8 ounces",
+  "label": "the listing's shipping weight",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_edge": {
+  "value": "8 ounces",
+  "label": "the nearest step edge below it",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_step": {
+  "value": "$0.26 a unit",
+  "label": "the fee step above 8 ounces, non-peak (estimate)",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_step_peak": {
+  "value": "$0.28",
+  "label": "the same step on the peak card (estimate)",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_units": {
+  "value": "about 3,600 units a month",
+  "label": "the listing's estimated sales (estimate)",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_leak_p10": {
+  "value": "$6,400",
+  "label": "a year on one step, 10th percentile (estimate)",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_leak_p90": {
+  "value": "$19,200",
+  "label": "a year on one step, 90th percentile (estimate)",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_years": {
+  "value": "10,000",
+  "label": "simulated years in the case study",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "s_count_year": {
+  "value": "1914",
+  "label": "the year of Congress's parcel count",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_limit_1914_date": {
+  "value": "January 1, 1914",
+  "label": "the second revision of the parcel post rules",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_bavaria_weight": {
+  "value": "50-pound",
+  "label": "the Bavaria, Kansas example parcel",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_z1": {
+  "value": "zone 1",
+  "label": "the nearest parcel post zone",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z8": {
+  "value": "zone 8",
+  "label": "the farthest parcel post zone",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_z12": {
+  "value": "Zones 1 and 2",
+  "label": "the two nearest zones",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_z1_miles": {
+  "value": "about 50 miles",
+  "label": "zone 1's reach in 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_wanamaker_term": {
+  "value": "1889 to 1893",
+  "label": "John Wanamaker's term as Postmaster General",
+  "source": "https://archive.org/details/sim_cosmopolitan_1904-02_36_4"
+ },
+ "usps_z1": {
+  "value": "zone 1",
+  "label": "USPS Ground Advantage, zone 1",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "usps_z8": {
+  "value": "zone 8",
+  "label": "USPS Ground Advantage, zone 8",
+  "source": "USPS Ground Advantage Commercial prices, Notice 123, effective July 12, 2026 (pe.usps.com), as recorded in ratecard.json"
+ },
+ "rc_12oz": {
+  "value": "12 ounces",
+  "label": "the step edge in the example",
+  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+ },
+ "s_rfd_start": {
+  "value": "October 1, 1896",
+  "label": "Rural Free Delivery's first experimental routes",
+  "source": "https://about.usps.com/who/profile/history/pdf/rural-free-delivery.pdf"
+ },
+ "s_rfd_permanent": {
+  "value": "July 1, 1902",
+  "label": "Rural Free Delivery becomes permanent",
+  "source": "https://about.usps.com/who/profile/history/pdf/on-this-day.pdf"
+ },
+ "s_rfd_carriers_1899": {
+  "value": "under 500",
+  "label": "rural carriers in 1899",
+  "source": "https://about.usps.com/who/profile/history/pdf/universal-service-postal-monopoly-history.pdf"
+ },
+ "s_rfd_carriers_1905": {
+  "value": "over 32,000",
+  "label": "rural carriers in 1905",
+  "source": "https://about.usps.com/who/profile/history/pdf/universal-service-postal-monopoly-history.pdf"
+ },
+ "s_cup_time": {
+  "value": "12:01 a.m.",
+  "label": "when Hitchcock mailed the inaugural trophy cup",
+  "source": "https://postalmuseum.si.edu/object/npm_0.055726.1"
+ },
+ "s_sewing_quote": {
+  "value": "For heaven's sake, quit sending me sewing machines. Every time I go to the station I find another one there. You have shipped me five already.",
+  "label": "a customer's letter to Sears, about 1900 (Emmet & Jeuck, Catalogues and Counters, p. 116)",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "cs_aged_band": {
+  "value": "241 and 270 days",
+  "label": "the aging band below the cliff",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "cs_aged_before": {
+  "value": "$1.50",
+  "label": "aged inventory surcharge a cubic foot a month, 241 to 270 days",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "cs_aged_day": {
+  "value": "day 271",
+  "label": "where the aged inventory surcharge jumps",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "cs_aged_after": {
+  "value": "$5.45",
+  "label": "aged inventory surcharge a cubic foot a month, from day 271",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "cs_aged_1000_before": {
+  "value": "$72.70",
+  "label": "storage and aged surcharge for 1,000 units of the case-study listing a month, days 241 to 270",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "cs_aged_1000_after": {
+  "value": "$198.67",
+  "label": "storage and aged surcharge for 1,000 units of the case-study listing a month, days 271 to 300",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "s_z8_17oz": {
+  "value": "24 cents",
+  "label": "a parcel of a pound and an ounce to zone 8, 1913 (computed from the Act: 12 cents plus 12 cents)",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "rc_edge_lo": {
+  "value": "$10",
+  "label": "the lower price-band edge on the FBA fee card",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.price_band_edges)"
+ },
+ "rc_edge_hi": {
+  "value": "$50",
+  "label": "the upper price-band edge on the FBA fee card",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.price_band_edges)"
+ },
+ "s_lessing_year": {
+  "value": "1912",
+  "label": "the year Lessing Rosenwald joined the shipping department (Emmet & Jeuck, p. 134, via Raff & Temin)",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "s_schedule_years": {
+  "value": "six years",
+  "label": "from the plant's opening (1906) to Lessing Rosenwald's 'only then becoming fully effective' (1912)",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "s_cat_weight": {
+  "value": "3-pound",
+  "label": "the Sears catalogue's weight, as a postmaster gave it to the Joint Committee, 1914",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_cat_before": {
+  "value": "24 cents",
+  "label": "postage on a 3-pound Sears catalogue before parcel post (third class, 8 cents a pound)",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_cat_after": {
+  "value": "10 cents",
+  "label": "postage on the same catalogue after parcel post",
+  "source": "https://archive.org/details/parcelpostreport00unit"
+ },
+ "s_small_limit": {
+  "value": "4 ounces",
+  "label": "the lightest parcels' limit, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "s_small_rate": {
+  "value": "1 cent an ounce",
+  "label": "the rate for parcels of 4 ounces or less, 1913",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "cs_aged_units": {
+  "value": "1,000 units",
+  "label": "the unit count the case study's aging cost is quoted for",
+  "source": "Hubricon's public-data case study (data/case-study.json, aging bands; Modeled from public data · Not a client · Not a result), from Amazon's published 2026 storage and aged inventory surcharge card, effective January 15, 2026, as recorded in ratecard.json"
+ },
+ "s_schedule_wide": {
+  "value": "about two years after the move",
+  "label": "when company forms show the schedule system in wide use",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ }
+}

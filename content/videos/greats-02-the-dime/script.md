@@ -1,0 +1,261 @@
+TITLE:            Woolworth Held One Price for {{w_ceiling_span}}. Here's What It Could Never Tell Him
+THUMBNAIL:        A dime, close and sharp, on paper; beside it a hairline price curve with a single point and its hollow band
+PILLAR:           3
+TIER:             D
+AWARENESS STAGE:  problem-aware
+CTA:              The free Price Curve course at hubricon.com/learn, then the one soft close.
+SPIKY CLAIM:      A price you've never moved isn't a safe price. It's an unmeasured one, and the most famous price in American retail was unmeasured for decades.
+MISCONCEPTION:    A price that's working should be left alone. Moving it is a gamble, and holding it is the safe choice.
+RUNTIME:          29–31 min
+
+HOOKS (three, pick one)
+1. {{w_day1}} in nickels, every sale the same price. That's what Frank Woolworth's store took on its first day. He held one price, then one more, for {{w_ceiling_span}}. It built the tallest building in the world. It also hid a number from him.
+2. {{w_dime}}. A toy maker said he couldn't make it pay at that price. Woolworth's buyer looked at the hand-painted stripes and said: throw the toys in vats. Dip them. Woolworth decided the price first. Most businesses today never decide it at all.
+3. {{w_promise_date}}. Woolworth's board tells its stockholders it has no intention of ever going past its new ceiling. Within {{w_promise_span}} the ceiling is gone. A held price feels safe. It's the least measured number in your business.
+
+SCRIPT
+[0:00] COLD OPEN
+  VO: Saturday, {{w_lancaster_date}}. A circus parade is coming down North Queen Street in Lancaster, Pennsylvania, and a young man whose first store has already closed is opening another he can barely afford. The rent is {{w_rent}}. The stock, {{w_stock_1879}} of it, is mostly on credit. He has {{w_clerks}} clerks at {{w_wage}}, and he hasn't advertised. Every item in the store costs the same: a nickel. By tea time they've taken {{w_teatime}}. By closing, {{w_day1}}. That's {{w_day1_count}} separate sales, at one price, and {{w_stock_sold}} of everything in the store gone in a day. The next morning he wrote to his father: {{w_letter_quote}}
+  VISUAL: still-push on a Shield nickel of the period (Smithsonian National Numismatic Collection, CC0), slow, toward the numeral; archive-framed on an early Woolworth storefront (the Scranton store, about 1880, Wikimedia Commons, public domain), never captioned as Lancaster; unit-grid of {{w_day1_count}} sales filling in ink as the takings rise; number-land on {{w_day1}}; quote card for the letter, attributed "F. W. Woolworth to his father, June 22, 1879".
+  CLIP: yes
+
+[0:47] THE QUESTION
+  VO: His name was Frank Woolworth, and the price he chose would pay for the tallest building in the world. Then he, and the company after him, held a ceiling over it in most of their stores for {{w_ceiling_span}}: first a nickel, then a dime. This film is about what that single price did for him, which was almost everything, and the one thing it could never do: tell him what his customers would have paid. That second part is happening in most businesses right now. Including, very likely, yours.
+  VISUAL: archive-framed on the Woolworth Building at night, about 1913 (Library of Congress, no known restrictions), the push toward the lit crown; match-bridge: a single vertical line on a price axis, every item in the store stacked on it, holds still while the era changes and a modern catalogue's own price curves rise around it, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data
+  CLIP: yes
+
+[1:24] CHAPTER — ONE PRICE
+  VO: One price.
+  VISUAL: chapter
+
+[1:27] THE CLERK
+  VO: Go back a few years. Woolworth was born on a farm near Rodman, in upstate New York, in {{w_born}}. In {{w_start_year}} he got himself a place in a dry goods store in Watertown, Augsbury and Moore. The pay was nothing at all for {{w_unpaid}}, then {{w_first_wage}}. Ill health sent him back to the farm for a while. He came back to the same firm, by then Moore and Smith, in {{w_return_year}}, at {{w_return_wage}}. A farm boy, a clerk, and nobody's idea of a merchant prince.
+  VISUAL: still-push on a portrait of Woolworth (Wikimedia Commons, public domain), toward the eyes; still-pan across a Watertown, New York street photograph of the period (Library of Congress, no known restrictions); footage-insert of a dry goods counter's brass scale and paper twine (stock, close, no labels).
+  CLIP: no
+
+[2:04] THE FIVE-CENT TABLE
+  VO: In {{w_counter_year}}, a travelling salesman told his employer, William Moore, about something he'd seen in Michigan: a counter where everything cost a nickel. Moore ordered {{w_counter_order}} of goods for one from a wholesaler, Spelman Brothers. Woolworth set out the table. In his own words, years later: {{w_counter_quote}} It worked. A correction you'll need, because the story is usually told the other way: Woolworth didn't invent the nickel counter. He ran one, watched what it did, and asked the bigger question. Not what a nickel table could sell. What a whole store could, if every price in it was a nickel.
+  VISUAL: quote card: Woolworth's sentence, verbatim, attributed "The World's Work, April 1913"; footage-insert of a hand setting small tin goods in a row on a wooden counter (stock, hands only, no labels); kinetic-thesis is held for the turn.
+  CLIP: yes
+
+[2:51] UTICA
+  VO: So he tried it. On {{w_utica_date}}, Washington's Birthday, he opened the {{w_utica_sign}} in Utica, New York, with {{w_utica_stock}} of goods on credit from Moore. The daily takings fell as low as {{w_utica_low}}. Within {{w_utica_months}} he'd sold out and closed, at a profit, by his own account, of {{w_utica_profit}}. Decades later he said what he took from it: One of the first things I learned was that I could not expect people to come to me. I had to take my store to the people. He took the lesson to Lancaster.
+  VISUAL: archive-framed on a Utica street scene of the period (Library of Congress, no known restrictions), never captioned as the store; number-pair: the opening day against {{w_utica_low}}, ink; quote card for "I had to take my store to the people", attributed "The World's Work, April 1913".
+  CLIP: no
+
+[3:31] THE CHARM OF ONE PRICE
+  VO: Now go back to that Saturday in Lancaster, because now you can see what he'd built. Not a shop with low prices. A shop with one price. A customer didn't have to ask, haggle, compare or calculate. The sign did the selling. As Woolworth put it in {{w_ww_year}}: {{w_sign_quote}} By the next summer he'd added a second price, a dime, and the store became a {{w_five_and_ten}}. He later wrote that it cost him something: {{w_charm_quote}}
+  VISUAL: still-push on the Scranton store's sign (Wikimedia Commons, public domain) toward its lettering; quote card for the charm, attributed "F. W. Woolworth, as quoted in the company's centennial report, 1979"; still-push on a Seated Liberty dime of the period (Smithsonian National Numismatic Collection, CC0), the second coin landing beside the first.
+  CLIP: yes
+
+[4:20] THE PRICE HE TRIED AND DROPPED
+  VO: And here's a detail the company's own history keeps, which matters for this film. Early on, Woolworth tried a line of goods at a higher price, {{w_quarter_test}}. In the company's words, they did not yield satisfactory sales and profits. He dropped them. So the ceiling wasn't superstition. It was a test, run once, early, and then not run again for a very long time. Keep that in mind. A price that's tested once and then held for decades isn't a measurement anymore. It's a memory.
+  VISUAL: doc-highlight on the centennial report's line about the higher-priced goods (Internet Archive), the phrase "did not yield satisfactory sales and profits" underlined in ink; timeline: one early test, then a long empty stretch of years drawn slowly to the right.
+  CLIP: yes
+
+[4:55] THE CHAIN
+  VO: The machine grew from there. Scranton, {{w_scranton_date}}, run by his brother, Sum, and often called the first true {{w_five_and_ten}}. Then stores run by partners: his cousin Seymour Knox, and Fred Kirby. In {{w_office_year}}, Woolworth rented desk room in New York for {{w_office_rent}} and did all the buying himself. By {{w_stores_1900_year}} he had {{w_stores_1900}} stores of his own, every one with the same carmine-red front. One price, one look, one buyer. You could walk into any of them and know what everything cost before you'd seen any of it.
+  VISUAL: still-pan across the Scranton store photograph (Wikimedia Commons, public domain); archive-stack of early five-and-ten storefronts and a 1908 Charlton store interior postcard (Wikimedia Commons, public domain), landing as the partners are named; timeline of store counts, each landing as spoken.
+  CLIP: no
+
+[5:33] CHAPTER — PRICE FIRST
+  VO: Price first.
+  VISUAL: chapter
+
+[5:36] THE ARITHMETIC OF A NICKEL
+  VO: Now the mechanism, because it's the opposite of how most businesses set a price. Most start with a cost and add a margin. Woolworth started with the price and worked backwards. His first cost list priced its goods by the gross, {{w_gross}} items. At a nickel each, a gross brought in {{w_gross_value}}. That figure was fixed. It sat over everything like a ceiling. So every line on his first cost list was really the same question: what does a gross cost? Toy dustpans: {{w_dustpan_cost}}, which kept {{w_dustpan_margin}} of the price. Animal soap: {{w_soap_cost}}, keeping {{w_soap_margin}}. Skimmers and alphabet plates: {{w_skimmer_cost}}, keeping {{w_skimmer_margin}}. The price never changed. The margin changed on every line.
+  VISUAL: table-scan typesetting the first store's cost list as the centennial report records it, the cost per gross and the share kept landing row by row, the share kept in blue because it is money; formula-build: a gross, times a nickel, equals {{w_gross_value}}, the ceiling drawn as a hairline across the table.
+  DATA SOURCE: published: the first store's cost list, as recorded in the company's centennial report (1979)
+  CLIP: yes
+
+[6:25] THE SOAP AND THE SKIMMER
+  VO: Look at what that does to a buyer's mind. The soap barely pays. The skimmer pays handsomely. In a store with one price, the customer doesn't know which is which, and doesn't care. The store has to. So a one-price store isn't simple. It's simple on the outside, and on the inside it's a portfolio: every item carrying a different margin under the same tag, and the buyer's whole job is to keep the average above the line. That's the first thing Woolworth understood. And it's the first thing worth checking in your own catalogue: the products that look alike on the price list and aren't alike at all on the margin.
+  VISUAL: chart-build of the three items as bars of the share kept, all under the same price line, the bars in blue; footage-insert of a bar of plain soap and a tin skimmer side by side on paper (stock, no labels).
+  DATA SOURCE: published: computed from the first store's cost list, as recorded in the company's centennial report
+  CLIP: no
+
+[7:11] CASH
+  VO: The second thing was cash. In Woolworth's words: We were all doing business on the correct principle, buying goods legitimately, paying cash for them and selling them for cash at a small profit. Once he'd paid off his old employers, he refused to run into debt. When auditors went through the business in {{w_audit_year}}, as he told it, one of them asked to see his bills receivable. I have none, he said. Bills payable? None. And an auditor, on the way out, said there must be something wrong with a business of that size that doesn't owe anything.
+  VISUAL: quote card: the auditors' exchange, verbatim, attributed "F. W. Woolworth, The World's Work, April 1913"; footage-insert of an old ledger's ruled columns, the pages turning (stock, no legible writing); breath under "doesn't owe anything".
+  CLIP: no
+
+[7:50] THE RING
+  VO: The next thing changed manufacturing. Because the price was fixed, the only way to sell something new was to make it cost less, and Woolworth's buyers went to manufacturers and showed them how. Here's one, as Woolworth himself told it to the trade paper Printers' Ink. A finger ring sold at retail for around {{w_ring_price}}. Its maker sold {{w_ring_dozen}} a year. A Woolworth buyer offered to take {{w_ring_order}}. That's {{w_ring_units}}. And he came with suggestions for making it cheaper. The result: {{w_ring_result}}. The price came first. The product was redesigned to meet it.
+  VISUAL: doc-clipping on the Printers' Ink article of April 1919 (Internet Archive, public domain), the ring passage underlined in ink; number-pair: {{w_ring_dozen}} a year against {{w_ring_units}} in one order; footage-insert of a plain gilt ring turning on a jeweller's tray (stock, close, no logos).
+  CLIP: yes
+
+[8:31] THE VATS
+  VO: Here's another. During the war, a German iron toy that sold for a dime was cut off. An American maker was asked to make it, and said he couldn't do it at the price. The Woolworth buyer looked at how it was made and said this: You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe. The price stayed. The product changed to fit it. When the war shut out a European crochet cotton, the buyers coached an American spinner to make one like it, sold as Woolco, still at a dime a ball. A trade magazine summed up the method in {{w_sm_year}}: {{w_1930_quote}}
+  VISUAL: quote card: the buyer's words, verbatim, attributed "as told to Printers' Ink, April 1919"; footage-process (wide, medium, detail) of dip-coating small metal parts in a vat (stock, hands only, no logos), screen direction left to right; quote card for the 1930 summary.
+  CLIP: yes
+
+[9:28] THE PRICE WAS THE ADVERTISING
+  VO: And one more thing: the price did the marketing. Printers' Ink put it in a single sentence in {{w_pi17_year}}: {{w_pi17_ad}} A single price is a promise a customer can remember from the sidewalk. And because the buying was so concentrated, it was enormous. In {{w_tribune_year}}, the New York Tribune reported that Woolworth imported a larger tonnage of toys and Christmas tree ornaments than all other United States buyers put together.
+  VISUAL: doc-highlight on the Printers' Ink sentence (Internet Archive), ink underline; still-push on a Woolworth store interior at Christmas, about 1910 (Wikimedia Commons, public domain), toward the ornament counter.
+  CLIP: no
+
+[10:01] PROFIT, NOT GLORY
+  VO: Underneath all of it was one rule, and it's the line from this story worth keeping where you can see it. In a letter to his store managers dated {{w_general_letter}}, Woolworth wrote: Profit is what we are working for, not sales or glory. Hold on to that sentence. The rest of this film is about what happens when a price stops serving the profit and starts serving the sign.
+  VISUAL: quote card: the sentence, verbatim, attributed "F. W. Woolworth, General Letter to managers, January 14, 1891"; kinetic-thesis: "Profit, not sales or glory." (the act's one thesis line).
+  CLIP: yes
+
+[10:30] THE CATHEDRAL
+  VO: In {{w_merger_year}}, Woolworth merged his company with his partners' chains: {{w_merger_stores}}. That year the company sold {{w_sales_1912}}. And on {{w_building_open}}, President Wilson pressed a button in the White House and {{w_lights}} lights came on in a tower on Broadway: {{w_height}} tall, the tallest building in the world until {{w_tallest_until}}. It cost {{w_cost}}. It was built without a mortgage, and by {{w_owned_by}} Woolworth owned it outright. A minister who saw it called it the Cathedral of Commerce. Woolworth said he built it to advertise his stores all over the world. It was paid for, nickel by nickel and dime by dime, by a price that hadn't moved.
+  VISUAL: archive-framed on the building under construction, about 1912 (Wikimedia Commons, public domain), then on the finished tower, 1913 (Library of Congress, no known restrictions), the push rising up the facade; number-land on {{w_height}}; still-depth on the tower at night (Library of Congress), the act's hero photograph.
+  CLIP: yes
+
+[11:15] CHAPTER — THE CEILING
+  VO: The ceiling.
+  VISUAL: chapter
+
+[11:19] ORTHODOX
+  VO: Then the costs moved. The war in Europe drove up the price of almost everything a {{w_five_and_ten}} sold, and the big rivals began to sell above the old limit. Woolworth didn't. In {{w_pi17_date}}, Printers' Ink wrote: {{w_pi17_orthodox}} By the end of that year, the company had {{w_stores_1917}}.
+  VISUAL: doc-clipping on the Printers' Ink paragraph (Internet Archive, public domain), "strictly orthodox" underlined in ink; still-pan across a row of five-and-ten storefronts of the period (Library of Congress, no known restrictions).
+  CLIP: no
+
+[11:52] HOW TO HOLD A PRICE
+  VO: So how do you hold a price when everything under it costs more? A book on chain stores from {{w_chain_year}} described exactly how: {{w_shrink_quote}} Look at the stocking. A pair became one. The price on the tag never moved. What the customer got for it did. Your customers have a name for that today, and it isn't a kind one.
+  VISUAL: quote card: the passage, verbatim, attributed "Hayward and White, Chain Stores, 1922"; still-push on a Seated Liberty dime (Smithsonian, CC0), the dime seen differently now: the push ends on the coin's edge, not its face; footage-insert of a single stocking laid flat on paper beside an empty space where its pair would be (stock, no labels).
+  CLIP: yes
+
+[12:36] WHAT IT COST
+  VO: And the margin moved too. Net earnings were {{w_net_1917}} of sales in {{w_1917}}. In {{w_1918}}, {{w_net_1918}}. To be fair to the record, that year also carried a federal income tax bill of {{w_tax_1918}} and a reserve set against inventory, so not all of the drop was the dime. But the dime was the one thing the company had chosen not to let move, so every other cost had to land somewhere else: in the size of the product, in the supplier's margin, or in the company's own. By {{w_1919}}, net earnings were back to {{w_net_1919}}. The ceiling had held. Whether holding it was the most profitable choice is a question the company never had to answer, because in the East it never tried the other one.
+  VISUAL: chart-build of net earnings as a share of sales across the war years, each bar landing as spoken, the fall in blue, the tax and the reserve annotated in ink beside it; breath on the held chart, the bed dropping out a beat before "never tried the other one".
+  DATA SOURCE: published: F. W. Woolworth Co. annual reports (Internet Archive)
+  CLIP: yes
+
+[13:27] THE WEST
+  VO: And here's the correction most retellings miss. Nothing over a dime was never quite the whole truth. West of the Rockies, and in Canada, the stores already had a ceiling of {{w_west_limit}}. Charlton's western stores, part of the merged company, sold at {{w_west_points}}. So the company was running different ceilings in different parts of the same chain, for years. That's the closest thing in this story to a price experiment. But it wasn't designed as one, and prices compared across places can't tell you much about price, because the places differ in many ways besides the price. Hold on to that. It matters later.
+  VISUAL: archive-framed on a western five, ten and fifteen cent storefront of about 1913 (Boulder, Colorado, public library local history, public domain if so marked; else a Seattle Woolworth's of about 1922, Wikimedia Commons, public domain); table-scan: East and West, each with its ceiling, the difference in ink.
+  CLIP: no
+
+[14:11] THE FOUNDER'S DEATH
+  VO: Woolworth died on {{w_died}}, at his house on Long Island. The company he left had {{w_stores_1919}} stores and sold {{w_sales_1919}} that year. And the ceiling had become something more than a policy. It was an identity. In {{w_parson_date}}, Printers' Ink reported that the company's president, Hubert Parson, had declared that the company {{w_parson_quote}}.
+  VISUAL: still-push on the National Magazine portrait of Woolworth, July 1919 (Wikimedia Commons, public domain); doc-clipping on the Printers' Ink report about Parson, underlined in ink, attributed as reported speech.
+  CLIP: no
+
+[14:40] THE STORES GREW OLD
+  VO: For a while, the identity paid. The company kept growing through the next decade. But look inside the growth. Sales per store peaked in {{w_1927}}, at {{w_store_sales_1927}}, with {{w_store_profit_1927}} of profit per store. By {{w_1932}}, profit per store was {{w_store_profit_1932}}. The chain was adding stores while each store earned less. The price that had once made every store a magnet had become a thing every store had to work around.
+  VISUAL: chart-build of profit per store by year, the decline landing on {{w_store_profit_1932}}, the profit in blue; still-pan across a five-and-ten interior of the early nineteen-thirties (Library of Congress, rights confirmed in sourcing), toward a counter of china.
+  DATA SOURCE: published: The Magazine of Wall Street, November 1936; Time, 1936
+  CLIP: yes
+
+[15:08] THE TEST
+  VO: And then the company did the right thing, in the right way. In {{w_test_date}}, its president said the stores might become {{w_new_sign}}. They didn't switch the whole chain. They tried a {{w_new_ceiling}} line, mostly china and glassware, in some of their stores, in the West and the South, first. Then they adopted it. A test, then a rollout. Remember that phrase. It's the most useful one in this whole story.
+  VISUAL: doc-clipping on the Southern Textile Bulletin item of March 1932 (Internet Archive, public domain) reporting the trial in some stores, underlined in ink; timeline from the trial to the adoption, each landing as spoken; footage-insert of plain white china cups stacked on a shelf (stock, no marks).
+  CLIP: yes
+
+[15:39] WHY THEY MOVED
+  VO: Now look at why, because it's the opposite of the myth. The story people tell is that inflation broke the dime. It didn't. The year was {{w_1932}}, deep in the Depression, and prices were falling. The company's own report said that because of lower costs, our selling prices on many lines have been reduced. They raised the ceiling while costs were going down. Their reasons: to supply a larger share of what their customers wanted. To end what they called combination pricing, where a thing was sold in pieces to fit under the limit. Their own words: {{w_combination_quote}} And competitors without a limit were selling what Woolworth couldn't. The ceiling wasn't protecting anything anymore. It was stopping the company from selling things its customers wanted to buy.
+  VISUAL: doc-highlight on the 1932 report to stockholders (Internet Archive), "because of lower costs" underlined in ink; kinetic-thesis is not repeated; footage-insert of a pail and its lid set apart on a table, then pushed together (stock, no labels).
+  CLIP: yes
+
+[16:35] THE PROMISE
+  VO: And then, having moved the price once, the company made a promise. In a letter to its stockholders dated {{w_promise_date}}, it wrote: {{w_promise_quote}} In {{w_limits_removed}}, the board removed all arbitrary price limits. Soon there were goods at {{w_ceiling_1935}}. By the spring of {{w_1936}}, some cost {{w_ceiling_1936}}. The promise didn't last {{w_promise_span}}.
+  VISUAL: quote card: the promise, verbatim, attributed "F. W. Woolworth Co., report to stockholders, January 25, 1933"; doc-highlight on "no intention of going beyond", ink; timeline: the ceiling stepping up, each step landing as spoken.
+  CLIP: yes
+
+[17:10] WHAT THE DIME TAUGHT
+  VO: So what did the dime teach? Not that one price is wrong. It was brilliant: an advertisement, a discipline on cost, a promise a customer could remember. The lesson is narrower and more useful than that. A price that never moves can't tell you what a different price would do. Woolworth knew, to the fraction of a cent, what a gross of soap cost him. What he couldn't know, from inside a ceiling, was what his customers would have paid above it. For decades the company learned a great deal about the cost side of its price, and far less about the demand side, because the demand side only speaks when the price moves. When it finally listened, it did it by testing. And then it promised never to need to test again.
+  VISUAL: still-push on the dime, the third and last time in the archive, the push ending on the date; kinetic-thesis: "A price that never moves can't tell you what a different price would do."; breath, the bed rising under the held line.
+  CLIP: yes
+
+[18:04] THE END OF THE STORES
+  VO: The {{w_five_and_ten}} lasted a long time after that. On {{w_exit_date}}, the company announced it was leaving the American Woolworth store business: {{w_exit_stores}}, {{w_exit_jobs}} jobs. A retail consultant told reporters that day: {{w_barnard_quote}} The company renamed itself, and since {{w_footlocker}} it has been called Foot Locker. The building on Broadway is still standing. The price that built it is gone.
+  VISUAL: footage-establish on a lower Manhattan street at morning, the Woolworth Building's crown in the frame (stock, no signage legible); quote card for Barnard, attributed "July 1997"; still-push on the tower, 1913 (Library of Congress), the same frame as the cathedral beat.
+  CLIP: no
+
+[18:36] CHAPTER — YOUR DIME
+  VO: Your dime.
+  VISUAL: chapter
+
+[18:39] THE DIME IN YOUR CATALOGUE
+  VO: Now your business. You have a dime. Probably several. A price you set once, for a reason that made sense at the time: a round number, a competitor's price, your cost times a markup, whatever the last product sold for. And it's been working, so you've left it alone. That's exactly what Woolworth did, with exactly the same logic, and it carries exactly the same blind spot. As long as that price doesn't move, your sales history can't tell you what a different one would do. Not a little. Nothing.
+  VISUAL: formula-build: cost, times markup, a glance at the competitor, a round number, each term landing as spoken, the result stamped as a single price; footage-insert of a price label printing and being pressed onto a shelf edge (stock, no brand), the modern dime.
+  CLIP: yes
+
+[19:16] THE NUMBER YOU'RE MISSING
+  VO: There's a name for what's missing. Price elasticity. It's a ratio: how fast your units fall, against how far your price rises. Take one product from the demo catalogue we use for teaching: {{el_sku}}, from {{demo_brand}}, {{demo_label}}, {{n_skus}} products, about {{annual_revenue_m}} a year. Its price moved across {{el_periods}} periods of history, and its units moved with it. Plot them, price across, units up, and fit a line. The slope reads {{el_point}}. A price rise of a given size costs this product units by about that multiple of it. Nothing in the record shows Woolworth ever had this number for a single item in his stores. You can have it for every product you sell. If the price has moved.
+  VISUAL: chart-build of the demo product's history, the points landing period by period, price across and units up, then the fitted line drawn through them and the slope labelled, Tarnhollow demo data on the figure.
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
+  CLIP: yes
+
+[20:04] WHY A RAISE THAT LOSES UNITS CAN PAY
+  VO: Here's why it matters more than it looks. When you raise a price, the extra lands in your margin almost whole. Your landed cost doesn't change. Most of your fees don't change. Only the ones charged as a share of the price take a cut of it. So a raise that loses units can still make more money, as long as it doesn't lose too many. How many is too many depends on the slope, and on how much of each dollar you keep after everything charged per unit. On this demo catalogue, that's {{contribution_pct_latest}}. The gross margin, before fees and ads, is {{gross_pct_latest}}. Price off the wrong one and you'll aim at the wrong target. Remember Woolworth's soap and his skimmers: same price, very different margins, very different answers.
+  VISUAL: formula-build: a dollar added to the price, the share-of-price fees taking their cut, the rest landing in the margin in blue; number-pair: {{contribution_pct_latest}} against {{gross_pct_latest}}, labelled Tarnhollow demo data; callback to the soap-and-skimmer bars.
+  DATA SOURCE: demo: Tarnhollow demo data, MARGIN.DECOMP
+  CLIP: no
+
+[20:57] THE HILL
+  VO: Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so profit climbs, flattens, then falls. It's a hill, and every product has one. Its top sits where the slope and the margin put it, and nowhere else. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. For some items that point may have been near the top. For others, nowhere near it. From one price that never moved, there was no way to tell which.
+  VISUAL: chart-build of the profit hill under the demo product's demand line as the price sweeps across, the top marked; then many small hills, one per demo product, all cut by the same vertical line at a single price, the gaps between that line and each top in blue, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM
+  CLIP: yes
+
+[21:38] THE PRODUCTS THAT REFUSED
+  VO: Here is Woolworth's dime inside a modern catalogue. Across the demo's {{n_skus}} products, the fit worked on {{el_skus_fit}}. It refused {{el_skus_insufficient}}. Not because those products are special. Because their price never moved enough to draw a line. The rule is plain: the price has to vary by at least {{el_min_price_cv}}, across at least {{el_min_periods}} periods, or the fit says nothing at all. That isn't caution for its own sake. With no movement, there's nothing to measure. Those products are dimes. They might be priced perfectly. Nobody can know, including the person who set the price.
+  VISUAL: unit-grid of the demo's {{n_skus}} products, the fitted ones in ink, the refused ones left as hollow outlines, each landing as spoken; kinetic-thesis is held; still-push on the dime, cut in as a single insert on "Those products are dimes".
+  CLIP: yes
+
+[22:17] THE HONEST RANGE
+  VO: And the products that can be measured come with a range, not a point. That {{el_point}} has an honest interval around it, from {{el_ci_low}} to {{el_ci_high}}. At one end, this product is very sensitive to price. At the other, it's far less sensitive, and the best price could sit well above where it is today. That width is the truth about {{el_periods}} periods of noisy demand. A tool that hands you a single number without the range is telling you something it doesn't know.
+  VISUAL: range-band on the demo product's fit, the band opening from the line to the full interval as "range" is spoken, the ends labelled, Tarnhollow demo data; the hill's top widening into a shaded stretch.
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
+  CLIP: no
+
+[22:51] WAITING DOESN'T HELP
+  VO: So why not wait for a better number? Because waiting with the price held still adds nothing at all. That's the dime. And even with the price moving, certainty is slow. To shrink the error on this one estimate to a tight band, at the rate this history teaches, would take about {{n_for_se_tenth}} periods of data. Nobody has that. So the honest move isn't to wait for certainty. It's to decide under uncertainty, in steps small enough that a wrong one is cheap, and to measure every step.
+  VISUAL: number-pair: {{el_periods}} periods held against {{n_for_se_tenth}}, the long one running off the edge of the paper; range-band narrowing slowly and barely, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
+  CLIP: no
+
+[23:27] THE STEP
+  VO: That's what the demo's pricing model does. It caps any single price move at {{pm_step_cap}}. Of the fitted products, {{pm_count}} have a move worth making. The best is {{pm_sku}}: a {{pm_step}} step, to {{pm_new_price}}. Expected gain: {{pm_delta}} a month. But the model doesn't stop at the expectation. Run the same step across the whole range of what the elasticity might really be, and the gain runs from {{pm_delta_p5}} to {{pm_delta_p95}} a month, with a {{pm_p_loss}} chance that it loses money at all. That's a decision you can take. Not because it's certain. Because the downside is small, and you know how small.
+  VISUAL: counterfactual on the demo product's profit hill: the current price as the hollow dot, the step as the solid dot, the gain between them in blue; range-band of the gain from {{pm_delta_p5}} to {{pm_delta_p95}}, the share below zero shaded and labelled {{pm_p_loss}}, Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data, PRICE.OPTIMUM
+  CLIP: yes
+
+[24:08] WHAT A HELD PRICE COSTS
+  VO: Add up every recommended step across the demo catalogue and it comes to {{pm_total_delta}} a month in expected profit. Demo data. Not a client. Not a result. But it's the shape of what an unmeasured price costs. Not a disaster. A quiet, steady leak, every month a price sits where habit put it.
+  VISUAL: chart-build of the recommended steps as a waterfall, each product's expected gain landing in blue, the total landing on {{pm_total_delta}}, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data, PRICE.OPTIMUM
+  CLIP: yes
+
+[24:30] WHEN THE PRICE IS THE BRAND
+  VO: And sometimes the price is the brand, the way the dime was. A product sold as a gift under a round number. A line that's always the cheapest, or always the premium one. That's a real asset, and Printers' Ink was right about it: a price can be an advertising idea. But treat it like one. An advertising idea has a cost, and you'd measure any other advertising. Know what holding the line costs you in margin each month, the same way you'd know what a campaign costs, and decide on purpose whether it's worth it. Woolworth's successors held theirs until it stopped them selling what their customers wanted. You can know long before that.
+  VISUAL: doc-highlight on the Printers' Ink sentence, the same page as the advertising beat; formula-build: the margin a held price gives up each month, set beside a campaign's monthly spend, both in blue.
+  CLIP: no
+
+[25:17] A TEST, THEN ANOTHER TEST
+  VO: Now go back to {{w_1932}}, because the company finally did it right. It tried the new price in some stores first, then rolled it out. That's the right instinct. But remember the West. The trouble with testing by place is that places differ in many ways besides the price. Comparing prices across places tells you about the places as much as the prices. The cleaner test is in time: the same product, the same store, a small step, measured against what the model said would happen before you took it. Then the next step. Not a test and a promise. A test, then another test.
+  VISUAL: split-then-now: the {{w_1932}} trial stores on a map of the West and South, then a single demo product's price stepping over time with its predicted and measured units drawn together, labelled Tarnhollow demo data; timeline of steps, each landing as spoken.
+  DATA SOURCE: demo: Tarnhollow demo data
+  CLIP: yes
+
+[25:59] PRICE FIRST, COST SECOND
+  VO: And there's the other side of Woolworth's method, which most businesses still don't use. He decided the price first, then made the cost fit it: the ring, the vats, the copied cotton. You can run that from your own numbers. Find the price your hill points to, then ask what the product would have to cost, landed, packed and delivered, to make its margin at that price. Sometimes the answer is a better supplier. Sometimes a smaller box, a different pack, a product redesigned to fit. And sometimes the answer is that the product can't make its margin at any price the market will pay. That's the most valuable thing you can learn about it, and the earlier the better.
+  VISUAL: formula-build run backwards: the price at the hill's top, minus the margin you need, equals the cost the product must reach, each term landing as spoken, the margin in blue; footage-process (wide, medium, detail) of a product being repacked into a smaller carton (stock, hands only, no logos), left to right.
+  CLIP: yes
+
+[26:48] WHAT YOU CAN DO THIS WEEK
+  VO: So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have. Check the rule: has the price moved by at least {{el_min_price_cv}}, over at least {{el_min_periods}} periods? If not, you have a dime. Write it down. For the ones that have moved, plot them and fit the line: the log of units against the log of price. Read the slope and its range, not the slope alone. Work out your true margin per unit, after cost, fees and ads. Then pick one product, take one step no bigger than {{pm_step_cap}}, write down what you expect to happen before you take it, and measure what actually happens. That's Woolworth's test, done properly, in an afternoon.
+  VISUAL: formula-build listing the steps as terms, each landing as spoken; receipt: one demo product's line, its price movement, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data
+  CLIP: yes
+
+[27:40] THE HONEST LIMIT
+  VO: You can do that by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. A stockout that capped sales at a price that wasn't the reason. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Fees that move with the price. And a range on every estimate that has to become the right size of step for what's still unknown. Doing that honestly, across a whole catalogue, every month, is regression with honest errors and decisions under uncertainty: the applied mathematics actuaries use to price a risk before it happens. That mathematics takes years to learn properly. It's what I studied. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+  VISUAL: range-band on the demo catalogue's fits, every product's interval drawn at once, the band holding while the voice names what it takes, labelled Tarnhollow demo data; end card at "hubricon.com/learn".
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
+  CTA: The free Price Curve course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
+  CLIP: yes
+
+[28:51] THE RETURN
+  VO: {{w_day1}}, in nickels, on a Saturday in Lancaster. One price, held for {{w_ceiling_span}}, paid for the tallest building in the world. It never told Woolworth what his customers would have paid. Your prices can. Move one.
+  VISUAL: callback to the cold open's coin, the push resuming in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "A price you never move can't tell you anything."; end card.
+  DATA SOURCE: published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report
+  CLIP: no
+
+RE-HOOK AUDIT: 0:30, 1:05, 1:41, 2:13, 2:45, 3:24, 4:01, 4:36, 5:08, 5:41, 6:13, 6:56, 7:29, 8:03, 8:37, 9:15, 9:46, 10:19, 10:51, 11:30, 12:05, 12:35, 13:11, 13:46, 14:21, 14:53, 15:29, 16:00, 16:34, 17:07, 17:42, 18:15, 18:55, 19:33, 20:03, 20:39, 21:12, 21:45, 22:16, 22:50, 23:26, 23:59, 24:34, 25:08, 25:42, 26:15, 26:46, 27:20, 27:52, 28:28, 29:00 (a new figure, question, picture or turn at each; no gap over 40 s)
+DERIVED ASSETS: LinkedIn post: "A price you've never moved isn't safe. It's unmeasured." · X thread spine: the cost list under one price, the stocking that became one, the 1932 test in deflation, the products the fit refused · newsletter section: find your dimes in an afternoon · clips: the arithmetic of a nickel, the vats, why they moved, the products that refused

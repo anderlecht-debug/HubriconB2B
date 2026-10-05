@@ -1,0 +1,512 @@
+{
+ "p_corner_time": {
+  "value": "about 11 a.m.",
+  "label": "when Saunders ended Livermore's authority by telegram",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_corner_date": {
+  "value": "Tuesday, March 20, 1923",
+  "label": "the corner",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_called": {
+  "value": "42,000 shares",
+  "label": "the shares Saunders called for delivery (38,000 in New York, 4,000 in Chicago)",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_mar19": {
+  "value": "$72",
+  "label": "the Class A close on March 19, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_open": {
+  "value": "$75.50",
+  "label": "the open on March 20, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_peak": {
+  "value": "$124",
+  "label": "the high on March 20, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_close": {
+  "value": "$82",
+  "label": "the close on March 20, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_floor_quote": {
+  "value": "Fully one-third of the brokers on the floor were crowded about the Piggly Wiggly post.",
+  "label": "the New York Times, March 21, 1923, as the Chronicle quoted it",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_claimed": {
+  "value": "198,872",
+  "label": "the shares Saunders said he had bought (his claim; the Exchange could not verify it)",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_total_shares": {
+  "value": "200,000",
+  "label": "Class A shares outstanding",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922); https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_aug": {
+  "value": "August 12, 1923",
+  "label": "Saunders' statement and resignation as president of Piggly Wiggly Stores, Inc.",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-08-13_75_339/page/n0/ (St. Louis Post-Dispatch, August 13, 1923, Associated Press; page image); https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_born": {
+  "value": "1881",
+  "label": "Saunders born August 9, 1881, Amherst County, Virginia",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_palmyra_year": {
+  "value": "1896",
+  "label": "Saunders goes to work in a general store at Palmyra, Tennessee",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_idea_year": {
+  "value": "1915",
+  "label": "the year the self-service idea came to him",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_open_month": {
+  "value": "September 1916",
+  "label": "the first Piggly Wiggly opens (the company says September 6; Freeman says September 11)",
+  "source": "https://tennesseeencyclopedia.net/entries/clarence-saunders/; https://www.pigglywiggly.com/history/"
+ },
+ "p_address": {
+  "value": "79 Jefferson",
+  "label": "the first store's address, Memphis",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_stores_1916": {
+  "value": "9",
+  "label": "Piggly Wiggly stores in Memphis by the end of 1916 (Freeman; secondary)",
+  "source": "https://www.smithsonianmag.com/smart-news/bizarre-story-piggly-wiggly-first-self-service-grocery-store-180964708/ (quoting Freeman, Tennessee Historical Quarterly, 1992; secondary)"
+ },
+ "p_patent_no": {
+  "value": "1,242,872",
+  "label": "the self-serving store patent",
+  "source": "https://patents.google.com/patent/US1242872A/en (US patent 1,242,872, Self-serving store)"
+ },
+ "p_patent_date": {
+  "value": "October 9, 1917",
+  "label": "the patent granted",
+  "source": "https://patents.google.com/patent/US1242872A/en (US patent 1,242,872, Self-serving store)"
+ },
+ "p_staff": {
+  "value": "three or four",
+  "label": "employees in a standard store, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_capacity_quote": {
+  "value": "Over 100 customers can conveniently make their purchases at one time.",
+  "label": "the 1922 listing statement",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_court_year": {
+  "value": "1924",
+  "label": "the federal court's opinion in Piggly Wiggly Corp. v. Saunders",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_sale_date": {
+  "value": "September 9, 1918",
+  "label": "Saunders sells the business, the name and the patent to Piggly Wiggly Corporation",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_sale_cash": {
+  "value": "$550,000",
+  "label": "the cash part of the price",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_sale_shares": {
+  "value": "15,000 shares",
+  "label": "the stock part of the price",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_royalty": {
+  "value": "a fraction of 1%",
+  "label": "the licensees' royalty on gross sales, on top of a fee",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_stores_inc_year": {
+  "value": "1919",
+  "label": "Piggly Wiggly Stores, Inc. incorporated (November 18, 1919)",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_stores_1922": {
+  "value": "347",
+  "label": "stores operated by Piggly Wiggly Stores, Inc., March 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_staff_1922": {
+  "value": "about 2,500",
+  "label": "its employees, March 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_listing_date": {
+  "value": "May 3, 1922",
+  "label": "the listing application's date",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_new_shares": {
+  "value": "50,000",
+  "label": "new Class A shares offered to stockholders, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_new_price": {
+  "value": "$43",
+  "label": "their price",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_sales_1921": {
+  "value": "$30.2 million",
+  "label": "Piggly Wiggly Stores, Inc. gross sales, 1921",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_net_1921": {
+  "value": "$208,662",
+  "label": "its net profits, 1921",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_sales_1922": {
+  "value": "$31.5 million",
+  "label": "its gross sales, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_net_1922": {
+  "value": "$653,058",
+  "label": "its net profits, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_div_1922": {
+  "value": "$550,000",
+  "label": "its dividends, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_ad_stores": {
+  "value": "1,241",
+  "label": "Piggly Wiggly stores of every owner, as Saunders' advertisement put it, March 8, 1923",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_ad_states": {
+  "value": "41 states and Canada",
+  "label": "where they were, per the same advertisement",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_owned": {
+  "value": "659",
+  "label": "stores Piggly Wiggly Stores, Inc. owned and operated, per the same advertisement",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_raid_month": {
+  "value": "November 1922",
+  "label": "independent eastern licensees fail (Manhattan Piggly Wiggly Corp. in receivership)",
+  "source": "https://www.loc.gov/resource/sn83030214/1922-11-18/ed-1/?sp=7 (OCR); https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_low_1922": {
+  "value": "around $39",
+  "label": "the Class A price after the eastern failures",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_before_raid": {
+  "value": "above $50",
+  "label": "the price before them",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_stl_raised": {
+  "value": "a little more than $1,000,000",
+  "label": "raised in one day in November 1922",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-22_75_195/page/n0/ (St. Louis Post-Dispatch, March 22, 1923; page image)"
+ },
+ "p_stl_people": {
+  "value": "40 St. Louisans",
+  "label": "who put it up, to share in any profits",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-22_75_195/page/n0/ (St. Louis Post-Dispatch, March 22, 1923; page image)"
+ },
+ "p_livermore_date": {
+  "value": "December 1922",
+  "label": "Saunders hires Jesse Livermore (early December, in Livermore's own statement)",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_raised": {
+  "value": "about $10,000,000",
+  "label": "what Saunders raised in all for the fight",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-03-22_75_195/page/n0/ (St. Louis Post-Dispatch, March 22, 1923; page image)"
+ },
+ "p_corp_cash_before": {
+  "value": "$967,016",
+  "label": "Piggly Wiggly Corporation's cash, December 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_corp_cash_after": {
+  "value": "$22,724",
+  "label": "its cash, June 30, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_corp_stock_before": {
+  "value": "$1,223,372",
+  "label": "its holdings of Stores, Inc. Class A stock, December 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_corp_stock_after": {
+  "value": "$2,446,147",
+  "label": "the same holdings, June 30, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_offer_price": {
+  "value": "$55",
+  "label": "the price of the shares offered to the public, February and March 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image); https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_down": {
+  "value": "$25",
+  "label": "paid on subscription",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image); https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_notes": {
+  "value": "three notes of $10",
+  "label": "the rest of the price, at 6% interest",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image); https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_note_dates": {
+  "value": "June 1, September 1 and December 1, 1923",
+  "label": "when the buyers' notes fell due",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image); https://archive.org/details/per_st-louis-post-dispatch_1923-03-08_75_181/page/n3/ (St. Louis Post-Dispatch, March 8, 1923: Saunders' full-page advertisement; page image)"
+ },
+ "p_partners_quote": {
+  "value": "A Million People Buy From Piggly Wiggly Every Day",
+  "label": "Saunders' advertisement, Evening Star, March 20, 1923",
+  "source": "https://www.loc.gov/resource/sn83045462/1923-03-20/ed-1/?sp=19 (OCR)"
+ },
+ "p_two_markets": {
+  "value": "two markets at widely different prices",
+  "label": "the Exchange's objection to the public offering",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_jan_low": {
+  "value": "$55.25",
+  "label": "the Class A low in January 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-04-07_116_3015/page/n174/ (price range table; page image)"
+ },
+ "p_mar1": {
+  "value": "about $69",
+  "label": "the Class A price on March 1, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-04-07_116_3015/page/n174/ (price range table; page image)"
+ },
+ "p_mar12": {
+  "value": "$79.50",
+  "label": "the high on March 12, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_demand": {
+  "value": "$150",
+  "label": "what Saunders first demanded per share",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement); https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_demand_later": {
+  "value": "$250",
+  "label": "what he said he would demand after 3 p.m. on March 22",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement); https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_settle": {
+  "value": "$100",
+  "label": "the price he offered on Friday, March 23",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013 (Commercial & Financial Chronicle, March 24, 1923, reprinting the Exchange's resolutions and Livermore's statement)"
+ },
+ "p_delisted": {
+  "value": "Thursday, March 22",
+  "label": "the Exchange strikes the stock from the list",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_deadline": {
+  "value": "2:15 in the afternoon on Monday, March 26",
+  "label": "the new delivery deadline",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-24_116_3013/page/n59/ and /page/n60/ (checked against the page image)"
+ },
+ "p_clearing": {
+  "value": "11,200 shares",
+  "label": "the shares deliverable through the clearing house on March 21",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_left_sat": {
+  "value": "about 4,000 shares",
+  "label": "still undelivered at noon on Saturday, March 24",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_nyse_review": {
+  "value": "Mr. Saunders has received all of the stock at the prices he contracted for it, and is in exactly the same position in all respects as though the stock had been delivered to him on March 21.",
+  "label": "the Exchange's review, March 26, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_razor_quote": {
+  "value": "A razor to my throat, figuratively speaking, is why I suddenly without warning kicked the pegs from under Wall street.",
+  "label": "Saunders, Associated Press from Memphis, March 21–22, 1923",
+  "source": "https://www.loc.gov/resource/sn83045462/1923-03-22/ed-1/?sp=1 (Evening Star, March 22, 1923, Associated Press; OCR, read the page before locking picture)"
+ },
+ "p_assets_claimed": {
+  "value": "$11 million",
+  "label": "what Saunders said his assets were worth, August 1923 (his own figure)",
+  "source": "https://www.loc.gov/resource/sn83045293/1923-08-15/ed-1/?sp=10 (August 15, 1923; OCR, read the page before locking picture)"
+ },
+ "p_total_owed": {
+  "value": "about $5,000,000",
+  "label": "his obligations to the pool and the banks, as estimated",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-08-13_75_339/page/n0/ (St. Louis Post-Dispatch, August 13, 1923, Associated Press; page image)"
+ },
+ "p_pool_due": {
+  "value": "$2,500,000",
+  "label": "what the pool required him to pay",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-08-13_75_339/page/n0/ (St. Louis Post-Dispatch, August 13, 1923, Associated Press; page image)"
+ },
+ "p_pool_date": {
+  "value": "September 1, 1923",
+  "label": "the date it was due",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-08-13_75_339/page/n0/ (St. Louis Post-Dispatch, August 13, 1923, Associated Press; page image)"
+ },
+ "p_corp_notes": {
+  "value": "$965,000",
+  "label": "Piggly Wiggly Corporation's term notes",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_corp_notes_due": {
+  "value": "December 1, 1923",
+  "label": "when they fell due",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n120/ (Piggly Wiggly Corporation balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_cash_before": {
+  "value": "$841,064",
+  "label": "Piggly Wiggly Stores, Inc. cash, December 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_cash_after": {
+  "value": "$391,267",
+  "label": "its cash, June 30, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_merch_before": {
+  "value": "$3.44 million",
+  "label": "its merchandise, December 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_merch_after": {
+  "value": "$2.17 million",
+  "label": "its merchandise, June 30, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_surplus_before": {
+  "value": "$407,007",
+  "label": "its surplus, December 31, 1922",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_si_deficit_after": {
+  "value": "$477,975",
+  "label": "its deficit, June 30, 1923",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_july_loss": {
+  "value": "approximately $100,000",
+  "label": "what Saunders said the stores lost from operations in July 1923 (his figure, after he was out)",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-09-01_117_3036/page/n119/ (Piggly Wiggly Stores, Inc. balance sheet, June 30, 1923; page image)"
+ },
+ "p_half_quote": {
+  "value": "The $2,500,000, which the pool required that he pay before Sept. 1 was understood to total approximately half of his obligations.",
+  "label": "the Associated Press, August 1923",
+  "source": "https://archive.org/details/per_st-louis-post-dispatch_1923-08-13_75_339/page/n0/ (St. Louis Post-Dispatch, August 13, 1923, Associated Press; page image)"
+ },
+ "p_corp_resign": {
+  "value": "August 17, 1923",
+  "label": "Saunders resigns from Piggly Wiggly Corporation",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-08-25_117_3035"
+ },
+ "p_ford_date": {
+  "value": "September 21, 1923",
+  "label": "Saunders' testimony at the receivership hearing",
+  "source": "https://www.loc.gov/resource/sn83045462/1923-09-22/ed-1/?sp=13 (Evening Star, September 22, 1923; OCR, read the page before locking picture)"
+ },
+ "p_bankrupt": {
+  "value": "February 23, 1924",
+  "label": "Saunders' voluntary bankruptcy petition",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_palace_begun": {
+  "value": "1922",
+  "label": "the Pink Palace begun",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_palace_size": {
+  "value": "36,500 square feet",
+  "label": "the house's size",
+  "source": "https://tennesseeencyclopedia.net/entries/pink-palace-museum-memphis/"
+ },
+ "p_palace_donated": {
+  "value": "August 1926",
+  "label": "the house and 12 acres given to Memphis by the Garden Communities Corporation",
+  "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/80003870_text (National Register nomination, the Pink Palace)"
+ },
+ "p_palace_museum": {
+  "value": "1930",
+  "label": "the museum opens in the house (March 1930)",
+  "source": "https://tennesseeencyclopedia.net/entries/pink-palace-museum-memphis/"
+ },
+ "p_pw_1924": {
+  "value": "1,331",
+  "label": "Piggly Wiggly stores of every owner, March 1924 (the company's own pleading)",
+  "source": "https://static.case.law/f2d/1/cases/0572-01.json (Piggly Wiggly Corp. v. Saunders, 1 F.2d 572, 1924)"
+ },
+ "p_pw_1932": {
+  "value": "about 2,660",
+  "label": "Piggly Wiggly stores at the 1932 peak (secondary; no primary source found)",
+  "source": "https://en.wikipedia.org/wiki/Piggly_Wiggly"
+ },
+ "p_cs_stores": {
+  "value": "400",
+  "label": "Clarence Saunders stores, February 1929",
+  "source": "https://time.com/archive/6817798/business-finance-piggly-wiggly-man/ (Time, February 25, 1929)"
+ },
+ "p_cs_towns": {
+  "value": "225 towns and cities in 18 states",
+  "label": "where they were",
+  "source": "https://time.com/archive/6817798/business-finance-piggly-wiggly-man/ (Time, February 25, 1929)"
+ },
+ "p_died": {
+  "value": "1953",
+  "label": "Saunders dies in Memphis (October 14 or 15, 1953; sources differ)",
+  "source": "https://tennesseeencyclopedia.net/entries/clarence-saunders/"
+ },
+ "p_cs_year": {
+  "value": "1929",
+  "label": "the year Time counted the Clarence Saunders stores",
+  "source": "https://time.com/archive/6817798/business-finance-piggly-wiggly-man/ (Time, February 25, 1929)"
+ },
+ "p_mar31_1922": {
+  "value": "March 31, 1922",
+  "label": "the date of the listing statement's store count",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
+ },
+ "p_1921": {
+  "value": "1921",
+  "label": "year",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "p_1922": {
+  "value": "1922",
+  "label": "year",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
+ },
+ "cash_drop": {
+  "value": "$166,799",
+  "label": "how far the demo catalogue's cash falls from today to its trough",
+  "source": "computed from the cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01): cash on hand ($262,000) less the trough ($95,201)"
+ },
+ "cash_drop_months": {
+  "value": "more than 5 months",
+  "label": "that fall in months of the demo catalogue's fixed costs ($166,799 against $31,500 a month)",
+  "source": "computed from the cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01): cash on hand ($262,000) less the trough ($95,201)"
+ },
+ "p_mamma_quote": {
+  "value": "Wall Street got licked and then called for 'mamma,' the New York Stock Exchange, to help, and, of course, 'mamma' heard the cry of her petted child.",
+  "label": "Saunders, Associated Press from Memphis, March 23, 1923, as the Chronicle printed it",
+  "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ }
+}
