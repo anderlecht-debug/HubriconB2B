@@ -245,6 +245,11 @@ def cmd_visual_lock(a):
     print(f"locked {len(doc['files'])} fingerprints on {doc['locked_on']}; long films may render")
 
 
+def cmd_series_doc(a):
+    from . import series
+    print(series.write())
+
+
 def cmd_visual_trial(a):
     from . import trial
     _out(trial.run(workers=a.workers, force=a.force))
@@ -371,6 +376,7 @@ def main(argv=None) -> None:
     p.set_defaults(fn=cmd_timing)
     p = sub.add_parser("visual-lock", help="the founder's call, once: freeze the long films' look after the visual trial")
     p.add_argument("--note", default=""); p.set_defaults(fn=cmd_visual_lock)
+    sub.add_parser("series-doc", help="render every Greats of Commerce film into docs/content/series/greats-of-commerce-scripts.md").set_defaults(fn=cmd_series_doc)
     p = sub.add_parser("visual-trial", help="render the visual trial: one shot of every style (VISUAL_SPEC.md §12, phase 5)")
     p.add_argument("--workers", type=int, default=None); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_visual_trial)
     p = sub.add_parser("pick", help="record a shot's picture from its contact sheet (the visual-pick skill)")

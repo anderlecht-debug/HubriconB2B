@@ -170,11 +170,22 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
     clips = sum(1 for b in script["beats"] if b["CLIP"].lower().startswith("y"))
     if clips < 3:
         problems.append(f"{clips} CLIP markers; need at least three")
+    long_film = tier.upper() == "D"
+    if long_film:   # a long film's VISUAL is the shot plan's brief: it names VISUAL_SPEC.md §14 styles
+        from .shots import registry
+        styles = set(registry()["styles"])
     for b in script["beats"]:
         vis = b["VISUAL"].lower()
-        scene = scene_of(vis)
         if b["VO"] and not b["VISUAL"]:
             problems.append(f"beat {b['name']} has no VISUAL")
+        if long_film:
+            named = {w for w in re.findall(r"[a-z][a-z-]+[a-z]", vis) if w in styles}
+            if b["VISUAL"] and not named:
+                problems.append(f"beat {b['name']}: a long film's VISUAL names at least one style from VISUAL_SPEC.md §14")
+            if named & {"chart-build", "counterfactual", "range-band", "callback"} and not b["DATA SOURCE"]:
+                problems.append(f"beat {b['name']} draws a chart without DATA SOURCE")
+            continue
+        scene = scene_of(vis)
         if scene in CHART_SCENES:
             if not b["DATA SOURCE"]:
                 problems.append(f"beat {b['name']} draws {scene} without DATA SOURCE")
