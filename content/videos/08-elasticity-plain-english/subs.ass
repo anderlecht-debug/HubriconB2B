@@ -1,0 +1,81 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Inter Display SemiBold,44,&H00170E0A,&H00170E0A,&H00FFFFFF,&HFFFFFFFF,0,0,0,0,100,100,-0.6,0,1,2.5,0,2,140,140,104,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:08.17,Sub,,0,0,0,,-1.86. That's the median elasticity on\Nthis catalog: the ratio of how fast
+Dialogue: 0,0:00:08.17,0:00:12.79,Sub,,0,0,0,,units fall to how far the price rises.\NYou'd read it as a warning not to
+Dialogue: 0,0:00:12.79,0:00:18.24,Sub,,0,0,0,,touch the price. It's the number that\Ntells you where the price should sit.
+Dialogue: 0,0:00:18.94,0:00:23.60,Sub,,0,0,0,,Here's how most prices get set. Landed\Ncost, times a markup that gives a
+Dialogue: 0,0:00:23.60,0:00:28.47,Sub,,0,0,0,,gross margin you're comfortable with.\NA look at the competitors. Then a gut
+Dialogue: 0,0:00:28.47,0:00:34.12,Sub,,0,0,0,,check: would I pay that. If units hold\Nafter a change, the price was fine.
+Dialogue: 0,0:00:34.57,0:00:39.89,Sub,,0,0,0,,If units drop, it was too high, put it\Nback. It's a fair method. It's what
+Dialogue: 0,0:00:39.89,0:00:45.06,Sub,,0,0,0,,everyone does, and it isn't stupid,\Nbecause units are the thing you can
+Dialogue: 0,0:00:45.51,0:00:50.07,Sub,,0,0,0,,The thing you can't see is the line\Nthe units sit on, and the price you
+Dialogue: 0,0:00:50.07,0:00:56.10,Sub,,0,0,0,,is on that line, not on the markup.\NTake one product from the demo
+Dialogue: 0,0:00:56.97,0:01:04.46,Sub,,0,0,0,,TH-OVEMIT-22, from Tarnhollow, demo\Ndata, 24 products, about $3.5M a year.
+Dialogue: 0,0:01:04.46,0:01:08.65,Sub,,0,0,0,,It has 12 months of history where the\Nprice moved and the units moved with
+Dialogue: 0,0:01:08.65,0:01:16.66,Sub,,0,0,0,,it. Plot them. Price across, units up.\NThe points slope down: dearer, fewer.
+Dialogue: 0,0:01:17.12,0:01:21.60,Sub,,0,0,0,,Fit a line through them and read the\Nslope as a ratio, how fast units fall
+Dialogue: 0,0:01:21.60,0:01:26.68,Sub,,0,0,0,,for how far the price rises. On this\Nproduct the ratio is -2.20. That's the
+Dialogue: 0,0:01:26.68,0:01:32.07,Sub,,0,0,0,,whole of elasticity. A price rise of a\Ngiven size costs you units by that
+Dialogue: 0,0:01:32.07,0:01:37.03,Sub,,0,0,0,,multiple of it. It isn't a warning.\NIt's a measurement. And it comes with
+Dialogue: 0,0:01:37.03,0:01:44.86,Sub,,0,0,0,,range, -3.52 to -0.88, because 12\Nmonths of noisy demand can't pin it
+Dialogue: 0,0:01:44.86,0:01:46.78,Sub,,0,0,0,,tighter than that.
+Dialogue: 0,0:01:48.58,0:01:52.39,Sub,,0,0,0,,Now why the number tells you where the\Nprice should sit. Raise the price and
+Dialogue: 0,0:01:52.39,0:01:58.33,Sub,,0,0,0,,it pulls in both directions. Every\Nunit you still sell earns more. And
+Dialogue: 0,0:01:58.33,0:02:04.00,Sub,,0,0,0,,sell fewer units. Profit is what's\Nleft when those pull against each
+Dialogue: 0,0:02:04.00,0:02:09.95,Sub,,0,0,0,,so as the price climbs, profit climbs,\Nthen flattens, then falls. It's a
+Dialogue: 0,0:02:09.95,0:02:15.29,Sub,,0,0,0,,hill. Every product has one. The top\Nof the hill is the price you want, and
+Dialogue: 0,0:02:15.39,0:02:20.33,Sub,,0,0,0,,where the top sits depends on the\Nslope and the margin, and nothing
+Dialogue: 0,0:02:20.99,0:02:25.15,Sub,,0,0,0,,The slope is the elasticity. The\Nmargin is how much of each dollar you
+Dialogue: 0,0:02:25.15,0:02:30.25,Sub,,0,0,0,,at the edge, and it is not the gross\Nmargin. It's what's left after the
+Dialogue: 0,0:02:30.25,0:02:34.67,Sub,,0,0,0,,platform's cut and the ad it took to\Nsell the unit, because those are
+Dialogue: 0,0:02:34.67,0:02:41.43,Sub,,0,0,0,,charged per unit too. On this catalog\Nthe platform keeps 32.1% of revenue.
+Dialogue: 0,0:02:41.52,0:02:47.44,Sub,,0,0,0,,The margin after cost, fees and ads is\N32.3%, against a gross margin of
+Dialogue: 0,0:02:47.44,0:02:52.76,Sub,,0,0,0,,70.7%. Set the price off the gross\Nnumber and you've climbed the wrong
+Dialogue: 0,0:02:52.99,0:02:57.59,Sub,,0,0,0,,Here's the rule in words, before any\Nsymbol. The faster the units fall, the
+Dialogue: 0,0:02:57.59,0:03:02.50,Sub,,0,0,0,,closer the price should sit to your\Ntrue cost. The slower, the further
+Dialogue: 0,0:03:02.50,0:03:07.43,Sub,,0,0,0,,it. And now the symbol, as a\Nconvenience: the fraction of the price
+Dialogue: 0,0:03:07.43,0:03:12.73,Sub,,0,0,0,,above true unit cost should equal the\Ninverse of the elasticity. That's all
+Dialogue: 0,0:03:12.73,0:03:13.67,Sub,,0,0,0,,it is.
+Dialogue: 0,0:03:15.47,0:03:19.80,Sub,,0,0,0,,Here's the part a good operator gets\Nwrong even after the hill. The top
+Dialogue: 0,0:03:19.80,0:03:26.66,Sub,,0,0,0,,isn't a point. The elasticity came\Nwith a range, -3.52 to -0.88, so the
+Dialogue: 0,0:03:26.66,0:03:31.85,Sub,,0,0,0,,is a stretch of hill, and a price move\Nis a bet on where inside that stretch
+Dialogue: 0,0:03:32.02,0:03:36.35,Sub,,0,0,0,,the top really is. So the honest\Nquestion isn't what's the best price.
+Dialogue: 0,0:03:36.35,0:03:40.62,Sub,,0,0,0,,what's the best step, given what we\Ndon't know. Run that across the whole
+Dialogue: 0,0:03:40.62,0:03:44.16,Sub,,0,0,0,,catalog. 22 products have a usable\Nfit.
+Dialogue: 0,0:03:45.12,0:03:50.18,Sub,,0,0,0,,2 were refused, because their price\Nnever moved enough to draw a line; the
+Dialogue: 0,0:03:50.18,0:03:54.50,Sub,,0,0,0,,fit won't speak until the price has\Nmoved by 2% across 5 months, and on
+Dialogue: 0,0:03:54.50,0:03:59.54,Sub,,0,0,0,,those products nobody ever moved it.\NOf the fitted ones, 22 have a move
+Dialogue: 0,0:03:59.54,0:04:08.03,Sub,,0,0,0,,worth making. The best is\NTH-CASIRO-01: a 5.0% step to $37.84,
+Dialogue: 0,0:04:08.03,0:04:13.70,Sub,,0,0,0,,add $388 a month. The honest version\Nis somewhere between $20 and $909,
+Dialogue: 0,0:04:13.70,0:04:18.59,Sub,,0,0,0,,a 4% chance it loses money. Every step\Nis capped at 5%, because a small step
+Dialogue: 0,0:04:18.59,0:04:23.72,Sub,,0,0,0,,you can read is worth more than a big\Nstep you can't. Across every move the
+Dialogue: 0,0:04:23.72,0:04:29.27,Sub,,0,0,0,,catalog picks up about $1,701 a month\Nin expectation. That's the sense in
+Dialogue: 0,0:04:29.27,0:04:34.69,Sub,,0,0,0,,which your price is probably wrong.\NNot badly. Wrong by a step, on most
+Dialogue: 0,0:04:34.69,0:04:40.33,Sub,,0,0,0,,products, in a direction you can only\Nlearn by measuring the slope. This
+Dialogue: 0,0:04:40.33,0:04:45.35,Sub,,0,0,0,,week. First, pick your top products\Nand pull price and units by month, as
+Dialogue: 0,0:04:45.35,0:04:50.68,Sub,,0,0,0,,far back as you have. Next, plot them\Nand fit the line: log of units against
+Dialogue: 0,0:04:50.68,0:04:55.59,Sub,,0,0,0,,log of price. The slope is the\Nelasticity, and the spreadsheet gives
+Dialogue: 0,0:04:55.59,0:05:00.63,Sub,,0,0,0,,standard error beside it. If the price\Nnever moved, you have no line, and
+Dialogue: 0,0:05:00.63,0:05:06.73,Sub,,0,0,0,,the first job is to move it, in small\Nsteps, both ways, and wait 5 months.
+Dialogue: 0,0:05:06.90,0:05:11.65,Sub,,0,0,0,,Then compute your true unit margin,\Nafter the platform and the ads, not
+Dialogue: 0,0:05:11.65,0:05:16.16,Sub,,0,0,0,,gross one, and put the price where the\Nfraction you keep equals the inverse
+Dialogue: 0,0:05:16.16,0:05:22.24,Sub,,0,0,0,,of the slope. Last, take the step as a\Nstep, not a leap. Cap it, read the
+Dialogue: 0,0:05:22.24,0:05:28.52,Sub,,0,0,0,,result against the range, and go\Nagain. What you can do yourself is the
+Dialogue: 0,0:05:28.52,0:05:33.18,Sub,,0,0,0,,for your top products, and it's worth\Nan afternoon. What you can't do by
+Dialogue: 0,0:05:33.18,0:05:38.31,Sub,,0,0,0,,hand is keep it honest across 24\Nproducts every month, with errors that
+Dialogue: 0,0:05:38.31,0:05:43.23,Sub,,0,0,0,,don't assume the noise is tidy, and\Nturn each range into a step that's the
+Dialogue: 0,0:05:43.23,0:05:47.85,Sub,,0,0,0,,right size for what's unknown in it.\NThat part is a model. What you can do
+Dialogue: 0,0:05:47.85,0:05:53.81,Sub,,0,0,0,,today is stop treating units holding\Nas proof. Measure the slope. You can
+Dialogue: 0,0:05:53.81,0:05:58.41,Sub,,0,0,0,,build this yourself. If you're doing\Nreal volume and want it run with
+Dialogue: 0,0:05:58.64,0:06:01.44,Sub,,0,0,0,,this is what I do, and I only get paid\Nwhen it works.
