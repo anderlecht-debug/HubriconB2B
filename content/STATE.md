@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T08:55:55+00:00 · style locked: True
+Updated 2026-10-05T08:56:32+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,10 +14,11 @@ Updated 2026-10-05T08:55:55+00:00 · style locked: True
 
 ## Now
 
-- V01 · Why most business advice is useless: survivorship bias, with numbers · step approve_final
+- idle
 
 ## Awaiting your review
 
+- V01 · Why most business advice is useless: survivorship bias, with numbers · gate `approve_final` → see `content/REVIEW.md`
 - V09 · The price increase you're afraid of is probably free · gate `review` → see `content/REVIEW.md`
 - V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
 - V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`

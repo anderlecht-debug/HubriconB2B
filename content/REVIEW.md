@@ -1,6 +1,20 @@
 # Review inbox
 
-Updated 2026-10-05T08:55:55+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-05T08:56:32+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+
+## V01 · Why most business advice is useless: survivorship bias, with numbers — final gate
+
+- Master: `content/videos/01-survivorship-bias/media/master.mp4`
+- Thumbnail: `content/videos/01-survivorship-bias/thumbnail.png`
+- Description: `content/videos/01-survivorship-bias/description.md`
+- Shorts: `content/videos/01-survivorship-bias/shorts/`
+- Voice: library · publishable once approved: True
+- QA: {"pass": true, "duration_s": 275.3, "lufs": -16.5, "max_hold_s": 0.0, "subtitle_coverage": 1.0}
+
+```
+hubricon-content approve-final 01-survivorship-bias
+hubricon-content reject-final 01-survivorship-bias --note "what to change"
+```
 
 ## V09 · day 9 · tier B · pillar 3 — script gate
 
