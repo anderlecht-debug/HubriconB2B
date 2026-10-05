@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T05:46:56+00:00",
+ "updated_at": "2026-10-05T05:50:38+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -503,7 +503,7 @@
     "tts": "done",
     "timing": "done",
     "scenes": "done",
-    "assemble": "todo",
+    "assemble": "in_progress",
     "qa": "todo",
     "thumbnail": "todo",
     "describe": "todo",
