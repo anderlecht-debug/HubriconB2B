@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T09:46:03+00:00",
+ "updated_at": "2026-10-05T09:46:24+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -722,7 +722,7 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "in_progress",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": "library",
@@ -740,7 +740,7 @@
     "thumbnail": "done",
     "describe": "done",
     "shorts": "done",
-    "approve_final": "todo",
+    "approve_final": "awaiting",
     "upload": "todo"
    },
    "review_notes": [],
@@ -840,6 +840,16 @@
      "at": "2026-10-05T09:46:00+00:00",
      "step": "shorts",
      "note": "done"
+    },
+    {
+     "at": "2026-10-05T09:46:21+00:00",
+     "step": "approve_final",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-05T09:46:21+00:00",
+     "step": "approve_final",
+     "note": "parked for the founder (emailed)"
     }
    ]
   },

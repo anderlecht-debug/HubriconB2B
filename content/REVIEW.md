@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-05T09:46:03+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-05T09:46:24+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V01 · Why most business advice is useless: survivorship bias, with numbers — final gate
 
@@ -14,6 +14,20 @@ Updated 2026-10-05T09:46:03+00:00. Everything here is parked until you decide. N
 ```
 hubricon-content approve-final 01-survivorship-bias
 hubricon-content reject-final 01-survivorship-bias --note "what to change"
+```
+
+## V04 · Your A/B test told you nothing. Here's the sample size you needed — final gate
+
+- Master: `content/videos/04-ab-test-sample-size/media/master.mp4`
+- Thumbnail: `content/videos/04-ab-test-sample-size/thumbnail.png`
+- Description: `content/videos/04-ab-test-sample-size/description.md`
+- Shorts: `content/videos/04-ab-test-sample-size/shorts/`
+- Voice: library · publishable once approved: True
+- QA: {"pass": true, "duration_s": 361.7, "lufs": -16.5, "max_hold_s": 0.0, "subtitle_coverage": 1.0}
+
+```
+hubricon-content approve-final 04-ab-test-sample-size
+hubricon-content reject-final 04-ab-test-sample-size --note "what to change"
 ```
 
 ## V09 · day 9 · tier B · pillar 3 — script gate
