@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T11:33:58+00:00",
+ "updated_at": "2026-10-05T11:38:27+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -1142,8 +1142,8 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "in_progress",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the THUMBNAIL line of the approved script, since VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.",
    "requires_done": null,
    "voice": "library",
    "publishable": false,
@@ -1156,7 +1156,7 @@
     "timing": "done",
     "scenes": "done",
     "assemble": "done",
-    "qa": "todo",
+    "qa": "blocked",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
@@ -1240,6 +1240,11 @@
      "at": "2026-10-05T11:33:55+00:00",
      "step": "assemble",
      "note": "done"
+    },
+    {
+     "at": "2026-10-05T11:38:24+00:00",
+     "step": "qa",
+     "note": "blocked Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the T"
     }
    ]
   },

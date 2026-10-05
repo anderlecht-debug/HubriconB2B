@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T11:33:58+00:00 · style locked: True
+Updated 2026-10-05T11:38:27+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T11:33:58+00:00 · style locked: True
 
 ## Now
 
-- V08 · Elasticity in plain English, and why your price is probably wrong · step qa
+- idle
 
 ## Awaiting your review
 
@@ -47,6 +47,7 @@ Updated 2026-10-05T11:33:58+00:00 · style locked: True
 - V05 · Cash conversion cycle: the number that decides whether you survive: Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in ink.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
 - V07 · Contribution margin vs gross margin — the one that actually matters: Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.
+- V08 · Elasticity in plain English, and why your price is probably wrong: Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the THUMBNAIL line of the approved script, since VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
