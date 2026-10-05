@@ -42,7 +42,9 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         pick = frame_files[min(len(frame_files) - 1, max(1, len(frame_files) // 3))]
         fr = Image.open(pick).convert("RGB")
         fr = fr.resize((1280, int(1280 * fr.height / fr.width)))
-        crop = fr.crop((fr.width // 3, 0, fr.width, int(fr.height * 0.80)))   # clear of any burned subtitles
+        # below the heading and above the burned subtitles: a fragment that cuts
+        # through a word reads as broken type, so the crop takes the plot alone
+        crop = fr.crop((fr.width // 3, int(fr.height * 0.26), fr.width, int(fr.height * 0.80)))
         crop = crop.resize((int(crop.width * 0.72), int(crop.height * 0.72)))
         img.paste(crop, (1280 - crop.width - 24, (720 - crop.height) // 2))
         # the fragment fades into the paper under the number, never a box or a shadow
@@ -55,15 +57,24 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     size = 168 if len(value) <= 6 else 128 if len(value) <= 9 else 96
     baseline = 220 + size
     _tracked(draw, (64, baseline), value, _font(size), tokens.rgb("blue") if "$" in value else ink, stage["number_track_em"])
-    words, lines, cur = label.split(), [], ""
-    for w in words:
-        if len(cur) + len(w) + 1 > 30 and cur:
-            lines.append(cur)
-            cur = w
-        else:
-            cur = (cur + " " + w).strip()
-    if cur:
-        lines.append(cur)
+    def wrap(text: str) -> list[str]:
+        out, cur = [], ""
+        for w in text.split():
+            if len(cur) + len(w) + 1 > 30 and cur:
+                out.append(cur)
+                cur = w
+            else:
+                cur = (cur + " " + w).strip()
+        return out + ([cur] if cur else [])
+
+    # the longest leading clause that fits, as scenes.base.fit_clause cuts a chart
+    # caption: a label stopped mid-phrase by the line count loses the words that
+    # say what the figure is of
+    parts = label.split(", ")
+    for i in range(len(parts), 0, -1):
+        lines = wrap(", ".join(parts[:i]))
+        if len(lines) <= 3:
+            break
     y = baseline + 64
     for ln in lines[:3]:
         _tracked(draw, (66, y), ln, _font(40), ink, stage["number_sub_track_em"])
