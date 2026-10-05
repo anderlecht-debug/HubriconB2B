@@ -48,7 +48,7 @@ def _filter_log(p: Path, af: str | None = None, vf: str | None = None) -> str:
     else:
         cmd += ["-vn"]
     cmd += ["-f", "null", "-"]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    r = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=3600)
     return r.stderr
 
 

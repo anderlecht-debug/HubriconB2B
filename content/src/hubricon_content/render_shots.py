@@ -75,10 +75,15 @@ def stage_url(path: Path) -> str:
     return "/" + str(Path(path).resolve().relative_to(REPO.resolve()))
 
 
-def graded_still(file: str | Path, mono: bool | None = None) -> dict:
-    """The still with the world grade, cached by its source's sha256."""
+def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool = False) -> dict:
+    """The still with the world grade, cached by its source's sha256. A labelled placeholder
+    card (no picture exists yet) is shown as it is: it is not a picture to grade."""
     src = Path(file)
-    key = sha(src)[:20] + ("-mono" if mono else "")
+    if placeholder:
+        w, h = _size(src)
+        return {"url": stage_url(src), "w": w, "h": h, "sha256": sha(src)}
+    look = hashlib.sha256(grade.GRADE_JSON.read_bytes()).hexdigest()[:8]   # a new grade re-grades the still
+    key = sha(src)[:20] + f"-{look}" + ("-mono" if mono else "")
     out = GRADED / f"{key}.jpg"
     if not out.exists():
         grade.still(src, out, mono=mono)
@@ -182,7 +187,8 @@ class Job:
         """Grade the stills and record every source file's sha256 for the cache key."""
         a = self.shot.get("asset")
         if self.kind in ("still", "texture", "archive", "split") and isinstance(a, dict):
-            g = graded_still(a["file"], mono=True if self.kind in ("archive", "split") else None)
+            g = graded_still(a["file"], mono=True if self.kind in ("archive", "split") else None,
+                             placeholder=str(a.get("id", "")).startswith("placeholder:"))
             self.job["asset"] = {**{k: a.get(k) for k in ("credit", "place", "date", "title")}, **g}
             self.assets.append(g["sha256"])
         if self.kind == "stack" and isinstance(a, list):

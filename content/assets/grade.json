@@ -26,7 +26,8 @@
   "paper": "noise=alls=2:allf=t+u"
  },
  "mono": {
-  "grade": "eq=contrast=0.94:gamma=1.04"
+  "grade": "",
+  "note": "\u00a73.2: black-and-white archival skips the colour and grade stages: format=gray, the same normalize and the same grain"
  },
  "intermediate": {
   "codec": "h264_nvenc",

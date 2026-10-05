@@ -162,8 +162,10 @@ function stack(job) {
 
 function split(job) {
   const r = job.render, left = job.asset || {}, rightAt = job.on ?? r.right_at_s;
+  // the label is the year from the provenance, never the archive's whole date note (§14, W11)
+  const year = (String(left.date || "").match(/\b(1[5-9]\d\d|20\d\d)\b/) || [])[0] || "";
   return `<section class="scene paper split" style="${vars({ pw: r.panel_w, ph: r.panel_h, gut: r.gutter_px, lab: r.label_px })}"><div class="split-row">` +
-    `<figure class="split-panel in"><p class="split-label">${esc(left.date || "")}</p><img src="${esc(left.url)}" alt=""></figure>` +
+    `<figure class="split-panel in"><p class="split-label">${esc(year)}</p><img src="${esc(left.url)}" alt=""></figure>` +
     `<figure class="split-panel in" style="--at:${ms(rightAt)}"><p class="split-label">Today</p><div class="split-right" data-at="${rightAt}"></div></figure>` +
     `</div>${corner(job)}</section>`;
 }

@@ -421,6 +421,17 @@ def media(c: dict, a: dict, ctx: dict, hashes: dict | None = None) -> bool:
         _reject(c, f"mean luma {luma:.0f}: night or low-key, under {LUMA_NIGHT} (§6.1)")
     elif not lo <= luma <= hi:
         _reject(c, f"mean luma {luma:.0f}: outside {lo:.0f}–{hi:.0f}, the band the grade can reach (§3.2)")
+    elif c.get("preview_file"):
+        # The band is the first screen; the grade itself decides (2026-10-05: a catalogue cover at
+        # luma 172 passed the band and the grade refused it at render time). Archival paper kinds
+        # are graded mono, as the renderer grades them.
+        from .. import grade
+        mono = True if ctx.get("kind") in ("archive", "stack", "split") and arch else None
+        try:
+            g = grade.plan(Path(c["preview_file"]), image=c["kind"] != "video", mono=mono, crop=c["kind"] == "video", grain=False)
+            _check(c, "graded_luma", g["yavg"])
+        except grade.Rejected as e:
+            _reject(c, f"the grade cannot land it: {e} (§3.2)")
     if c["kind"] == "video":
         pv = a.get("preview") or {}
         if not c.get("fps") and pv.get("fps"):

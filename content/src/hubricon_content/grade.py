@@ -62,7 +62,8 @@ def measure(path: Path, chain: str = "", start: float | None = None, duration: f
     vf = ",".join(x for x in (chain, "fps=2", "scale=480:270:flags=bilinear", "format=yuv420p", "signalstats",
                               "metadata=print:file=-") if x)
     cmd += ["-vf", vf, "-an", "-f", "null", "-"]
-    out = subprocess.run(cmd, capture_output=True, text=True, timeout=600).stdout
+    # an archival file's own metadata (EXIF in Latin-1) is printed too; only the numbers matter
+    out = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=600).stdout
     y = [float(v) for v in re.findall(r"lavfi\.signalstats\.YAVG=([\d.]+)", out)]
     s = [float(v) for v in re.findall(r"lavfi\.signalstats\.SATAVG=([\d.]+)", out)]
     if not y:
@@ -101,7 +102,7 @@ def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | No
         parts = [head] if head else []
         parts.append("format=gray" if mono else "")
         parts.append(f"eq=brightness={b:.4f}:saturation={sat:.4f}" if not mono else f"eq=brightness={b:.4f}")
-        parts.append(base)
+        parts.append(base)   # empty for mono: §3.2 skips the grade stage
         return ",".join(p for p in parts if p)
 
     b = 0.0
@@ -111,8 +112,9 @@ def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | No
         if abs(miss) <= n["tolerance"] * 0.5:
             break
         b += miss / 255.0
-        if abs(b) > n["max_brightness_shift"]:
-            raise Rejected(f"needs a brightness shift of {b:+.2f}; more than ±{n['max_brightness_shift']} is not an honest grade")
+    # judged on the shift it converged to, not a step on the way there (rounding allowed)
+    if abs(b) > n["max_brightness_shift"] + 0.005:
+        raise Rejected(f"needs a brightness shift of {b:+.2f}; more than ±{n['max_brightness_shift']} is not an honest grade")
     final = measure(path, chain(b), start, duration, image)["yavg"]
     if abs(final - n["target_yavg"]) > n["tolerance"]:
         raise Rejected(f"lands at mean luma {final:.0f}, outside {n['target_yavg']} ± {n['tolerance']}")
