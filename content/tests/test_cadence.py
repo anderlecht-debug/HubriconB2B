@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from hubricon_content import qa
-from hubricon_content.scenes.base import FIGURE_HOLD_S, SHOT_MAX_S, SHOT_MIN_S, phrases, sentences
+from hubricon_content.scenes.base import FIGURE_HOLD_S, SHOT_MAX_S, SHOT_MIN_S, HubriconScene, phrases, sentences
 from hubricon_content.scenes.charts import Kinetic
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -85,6 +85,17 @@ def test_a_figure_the_segment_ends_under_is_not_cut_to():
 def test_a_figure_is_never_early():
     seg = seg_of("A sentence that opens the segment and holds.", reveals={"gap": {"t": 3.5, "value": "$1"}})
     assert all(s["t"] >= 3.5 for s, _ in plan(seg) if "figure" in s)
+
+
+# ── a landing is filed under the clip it happened in ──
+def test_a_chapter_card_does_not_file_its_landing_under_a_beats_number():
+    beat = {"index": 3, "position": 2}
+    card = {"index": None, "position": 3}
+    assert HubriconScene.position.fget(Stub(beat)) != HubriconScene.position.fget(Stub(card))
+
+
+def test_a_segment_rendered_before_position_existed_still_files_under_its_number():
+    assert HubriconScene.position.fget(Stub({"index": 4})) == 4
 
 
 # ── what the program check makes of a film's cutting ──

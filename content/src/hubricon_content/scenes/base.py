@@ -382,8 +382,19 @@ class HubriconScene(Scene):
         r = self.seg.get("reveals", {}).get(key)
         return None if not r else max(0.0, float(r["t"]) - float(self.seg["start"]))
 
+    @property
+    def position(self) -> int | None:
+        """Which clip of the timeline this scene is, and the key its landings are
+        filed under. A beat carries its own number and a chapter card carries none,
+        so a card falls back to its place in the timeline and the two numbering
+        schemes collide: on V01 the third beat and the first card were both 3, and
+        the card's render wiped that chart segment's six landings out of
+        events.json, which is where the sound design reads its ticks."""
+        p = self.seg.get("position")
+        return p if p is not None else self.seg.get("index")
+
     def landed(self, kind: str = "data"):
-        self.events.append({"t": round(float(self.seg["start"]) + self.clock, 3), "kind": kind, "segment": self.seg.get("index")})
+        self.events.append({"t": round(float(self.seg["start"]) + self.clock, 3), "kind": kind, "segment": self.position})
 
     # ── furniture: the stage's corner (film.css .corner), on every frame ──
     def label_text(self) -> str | None:
@@ -611,6 +622,6 @@ class HubriconScene(Scene):
                 self.wait(rest)
         ev = self.d / "events.json"
         existing = json.loads(ev.read_text(encoding="utf-8")) if ev.exists() else []
-        existing = [e for e in existing if e.get("segment") != self.seg.get("index")] + self.events
+        existing = [e for e in existing if e.get("segment") != self.position] + self.events
         ev.write_text(json.dumps(sorted(existing, key=lambda e: e["t"])) + "\n", encoding="utf-8")
         self._trace("finish")

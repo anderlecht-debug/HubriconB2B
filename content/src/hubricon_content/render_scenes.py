@@ -32,7 +32,11 @@ def render_segment(d: Path, seg: dict, index: int, vertical: bool = False, force
     target = out_dir / f"{name}.mp4"
     if target.exists() and not force:
         return target
-    ctx = {"dir": str(d), "segment": {**seg, "index": seg.get("index", index)}, "vertical": vertical, "tier": tier}
+    # `index` is the beat's own number and the chapter cards have none, so two
+    # segments can carry the same one; `position` is where the clip sits in the
+    # timeline, which is what a landing is filed under (see HubriconScene.position).
+    ctx = {"dir": str(d), "segment": {**seg, "index": seg.get("index", index), "position": index},
+           "vertical": vertical, "tier": tier}
     env = {**os.environ, "HC_CONTEXT": json.dumps(ctx), "PYTHONWARNINGS": "ignore"}
     media = d / ".manim"
     size = "1080,1920" if vertical else "1920,1080"
