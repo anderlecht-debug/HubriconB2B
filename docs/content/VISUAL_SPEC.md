@@ -618,7 +618,11 @@ Until phase 5 is approved, nothing long renders for publishing.
 5. **A licensed bed family** in `content/assets/music/` (already input 6 in `STATE.md`).
 
 Also decided on 2026-10-04: **the voice is an ElevenLabs Professional Voice Clone** of his own
-voice, trained on his recorded takes (his own takes run through `takes-to-vo` meanwhile); and
+voice, trained on his recorded takes (his own takes run through `takes-to-vo` meanwhile). *Amended the
+same evening: the first films are narrated by "Kevin - Career and Life Coach", a voice from
+ElevenLabs' library that the founder chose (`content/assets/voice.json`). It is never presented as his
+voice: the description says "Narrated by an AI voice from ElevenLabs' voice library; written and
+analysed by Hagen Simmons", and the synthetic-media flag is set;* and
 **long films play on the site as YouTube embeds** (privacy-enhanced, click to load), since a
 40-minute file is too large to self-host.
 

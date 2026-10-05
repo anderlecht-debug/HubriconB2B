@@ -38,7 +38,7 @@ def _service():
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
     if not u.get("publishable"):
-        return {"status": "blocked", "reason": "not publishable: needs the founder's voice (his own takes, or the ELEVENLABS_VOICE_ID clone), a passed QA, and approve-final"}
+        return {"status": "blocked", "reason": "not publishable: needs a publishable voice (his own takes, his clone, or the library voice he chose in content/assets/voice.json), a passed QA, and approve-final"}
     from .qa import PUBLISHABLE_VOICES
     if u.get("voice") not in PUBLISHABLE_VOICES:
         return {"status": "blocked", "reason": "placeholder narration never uploads: record the founder's own takes "

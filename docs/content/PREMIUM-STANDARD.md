@@ -85,4 +85,5 @@ not exist; the sample tables say demo data.
 5. Subtitles are light and small, never boxed or heavy-outlined.
 6. Sound: `mix.json` shows `sfx_source` and `bed_source` from ElevenLabs or a licensed bed,
    not procedural, before a final sign-off.
-7. Voice: `voice == founder`. Anything else fails the render critique by definition. *(Since 2026-10-04: the founder's own takes, `voice == own`, pass too; both are his voice. VISUAL_SPEC.md §7.2.)*
+7. Voice: `voice == founder`. Anything else fails the render critique by definition. *(Since 2026-10-04: the founder's own takes, `voice == own`, pass too; both are his voice. VISUAL_SPEC.md §7.2. And
+   `voice == library`, the library voice he chose in `content/assets/voice.json`, disclosed as an AI library voice.)*

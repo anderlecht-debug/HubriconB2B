@@ -13,6 +13,7 @@ from hubricon_engine.narrate import PLACEHOLDER
 
 from . import script as scriptmod
 from . import state
+from .qa import PUBLISHABLE_VOICES
 from .state import CONTENT_DIR
 
 REVIEW_MD = CONTENT_DIR / "REVIEW.md"
@@ -70,7 +71,7 @@ def final_block(u: dict) -> str:
            f"- Thumbnail: `content/videos/{slug}/thumbnail.png`",
            f"- Description: `content/videos/{slug}/description.md`",
            f"- Shorts: `content/videos/{slug}/shorts/`",
-           f"- Voice: {u.get('voice')} · publishable once approved: {u.get('voice') in ('own', 'founder')}",
+           f"- Voice: {u.get('voice')} · publishable once approved: {u.get('voice') in PUBLISHABLE_VOICES}",
            f"- QA: {json.dumps({k: v for k, v in qa.items() if k in ('pass', 'duration_s', 'lufs', 'max_hold_s', 'subtitle_coverage')})}", "",
            "```", f"hubricon-content approve-final {slug}", f"hubricon-content reject-final {slug} --note \"what to change\"", "```", ""]
     return "\n".join(out)

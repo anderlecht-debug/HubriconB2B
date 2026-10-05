@@ -342,7 +342,7 @@ def main(argv=None) -> None:
     p = sub.add_parser("voice-preview", help="hear a parked script's hook and first chapter in the configured voice"); p.add_argument("slug"); p.add_argument("--text", default=None); p.add_argument("--voice", default=None); p.set_defaults(fn=cmd_voice_preview)
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
-    p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own", "founder"]); p.set_defaults(fn=cmd_voice)
+    p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own", "founder", "library"]); p.set_defaults(fn=cmd_voice)
     p = sub.add_parser("takes-to-vo", help="the founder's own takes (record.mjs) as the unit's narration")
     p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_takes_to_vo)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)
