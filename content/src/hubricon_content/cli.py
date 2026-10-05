@@ -253,6 +253,17 @@ def cmd_shots_validate(a):
         sys.exit(1)
 
 
+def cmd_source(a):
+    from . import sourcing
+    q = _q(); u = _unit_for(q, a.slug)
+    result = sourcing.run(u, q, shot=a.shot)
+    for line in sourcing.summary(result):
+        print(line)
+    _out(result)
+    if result.get("status") in ("blocked", "failed"):
+        sys.exit(2)
+
+
 def cmd_template(a):
     from . import playbook_template
     p = playbook_template.build()
@@ -329,6 +340,9 @@ def main(argv=None) -> None:
     p = sub.add_parser("shots-validate", help="check shots.json against VISUAL_SPEC.md §4, §5, §7.4 and §14.8")
     p.add_argument("slug"); p.add_argument("--picked", action="store_true", help="also check every pick (after visual-pick)")
     p.set_defaults(fn=cmd_shots_validate)
+    p = sub.add_parser("source", help="candidates, filters and contact sheets for every world shot (VISUAL_SPEC.md §6)")
+    p.add_argument("slug"); p.add_argument("--shot", default=None, help="one shot, e.g. s012")
+    p.set_defaults(fn=cmd_source)
     for name, module in (("tts", "tts"), ("render-scenes", "render_scenes"), ("assemble", "assemble"),
                          ("qa", "qa"), ("thumbnail", "thumbnail"), ("describe", "describe"), ("shorts", "shorts"),
                          ("upload", "upload")):
