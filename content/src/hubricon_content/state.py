@@ -27,7 +27,7 @@ VIDEO_STEPS_D = ["facts", "script", "critique", "review", "tts", "timing", "shot
 # Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 3–4; the shot
 # plan landed 2026-10-04, sourcing 2026-10-05). A tier-D unit waits at the first of them, never
 # failing, until its phase lands.
-PENDING_D = {"pick", "render_shots"}
+PENDING_D: set[str] = set()   # all built by 2026-10-05; render_shots still waits for visual_locked
 # The keys the `source` step needs (VISUAL_SPEC.md §6.3); a unit blocked on one resumes when it is set.
 SOURCE_KEYS = ("PEXELS_API_KEY", "PIXABAY_API_KEY", "SMITHSONIAN_API_KEY", "CONTENT_CONTACT_EMAIL")
 GATES = {"review", "approve_final"}

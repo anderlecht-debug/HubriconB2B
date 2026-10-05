@@ -236,6 +236,17 @@ def cmd_timing(a):
     _out(result)
 
 
+def cmd_pick(a):
+    from . import pick
+    focus = [float(x) for x in a.focus.split(",")] if a.focus else None
+    if a.none:
+        _out(pick.none(a.slug, a.shot, a.reason))
+    elif a.texture_file:
+        _out(pick.texture(a.slug, a.shot, a.texture_file, a.job, a.model, a.prompt, a.seed, a.reason, focus=focus, motion=a.motion or "drift"))
+    else:
+        _out(pick.pick(a.slug, a.shot, a.numbers, focus=focus, motion=a.motion, start=a.start, reason=a.reason, then=a.then, now=a.now))
+
+
 def cmd_render_shots(a):
     from . import render_shots
     q = _q(); u = _unit_for(q, a.slug)
@@ -344,6 +355,13 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("--force", action="store_true")
     p.add_argument("--estimate", action="store_true", help="plan before a voice exists; never replaces timing.json")
     p.set_defaults(fn=cmd_timing)
+    p = sub.add_parser("pick", help="record a shot's picture from its contact sheet (the visual-pick skill)")
+    p.add_argument("slug"); p.add_argument("shot"); p.add_argument("numbers", nargs="*", type=int)
+    p.add_argument("--focus", default=None); p.add_argument("--motion", default=None); p.add_argument("--in", dest="start", type=float, default=None)
+    p.add_argument("--then", type=int, default=None); p.add_argument("--now", type=int, default=None)
+    p.add_argument("--none", action="store_true"); p.add_argument("--reason", default="")
+    p.add_argument("--texture-file", default=None); p.add_argument("--job"); p.add_argument("--model"); p.add_argument("--prompt"); p.add_argument("--seed")
+    p.set_defaults(fn=cmd_pick)
     p = sub.add_parser("render-shots", help="one clip per shot of a picked plan (VISUAL_SPEC.md §8.3)")
     p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.add_argument("--only", default="")
     p.add_argument("--workers", type=int, default=None); p.set_defaults(fn=cmd_render_shots)

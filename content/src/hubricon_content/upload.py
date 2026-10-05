@@ -76,6 +76,11 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     u["youtube_id"] = vid
     (d / "upload.json").write_text(json.dumps({"id": vid, "privacy": "unlisted", "synthetic": synthetic, "title": title,
                                                "captions": captions.exists()}, indent=1) + "\n", encoding="utf-8")
+    # Every picture this film used, so none returns within the next ten films (VISUAL_SPEC.md §6.7).
+    from .sources import usage as usage_ledger
+    ids = [a["id"] for sh in plan.get("shots", []) for a in (sh["asset"] if isinstance(sh.get("asset"), list) else [sh.get("asset")]) if a]
+    ids += [sh["params"]["right"]["id"] for sh in plan.get("shots", []) if (sh.get("params") or {}).get("right", {}).get("id")]
+    usage_ledger.record_film(slug, ids)
     # The handoff to the site (Part C): the main branch fills a /learn video slot from this.
     (d / "published.json").write_text(json.dumps({"youtube_id": vid, "title": title, "slug": slug, "unit": u.get("id"),
                                                   "src": f"yt-{str(u.get('id') or slug).lower()}"}, indent=1) + "\n", encoding="utf-8")
