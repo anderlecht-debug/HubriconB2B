@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T05:11:26+00:00 · style locked: False
+Updated 2026-10-05T05:13:25+00:00 · style locked: False
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T05:11:26+00:00 · style locked: False
 
 ## Now
 
-- V05 · Cash conversion cycle: the number that decides whether you survive · step timing
+- V07 · Contribution margin vs gross margin — the one that actually matters · step timing
 
 ## Awaiting your review
 
@@ -70,6 +70,6 @@ Updated 2026-10-05T05:11:26+00:00 · style locked: False
 
 - V01 · Why most business advice is useless: survivorship bias, with numbers
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
-- V07 · Contribution margin vs gross margin — the one that actually matters
+- V05 · Cash conversion cycle: the number that decides whether you survive
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
