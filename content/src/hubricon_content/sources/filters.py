@@ -97,8 +97,9 @@ def _words(c: dict) -> str:
 
 
 STOP = {"and", "the", "with", "of", "on", "in", "at", "a", "an", "for", "to", "from", "by", "into", "onto"}
-# Libraries whose search matches any one word of the query, so a result may share none of its nouns.
-ANY_WORD = {"pixabay"}
+# Libraries whose search matches any one word of the query, so a result may share none of its nouns:
+# their candidates must name at least half of them.
+ANY_WORD, ANY_WORD_MIN = {"pixabay"}, 0.5
 
 
 def _stem(w: str) -> str:
@@ -109,11 +110,15 @@ def _stem(w: str) -> str:
     return w[:-1] if w.endswith("s") and not w.endswith("ss") and len(w) > 3 else w
 
 
-def relevance(c: dict, query: str) -> float:
-    """The share of the query's subject words the record names (title, tags, description, page)."""
-    from . import plain
-    want = {_stem(w) for w in re.findall(r"[a-z]+", plain(query).lower()) if len(w) > 2 and w not in STOP}
-    have = {_stem(w) for w in re.findall(r"[a-z]+", (_words(c) + " " + str(c.get("url") or "")).lower())}
+def relevance(c: dict, query: str, titled: bool = False) -> float:
+    """The share of the query's nouns (its subject words, verbs of action dropped) that the
+    record names in its title, tags, description or page; with `titled`, in its title,
+    subjects and tags only (an archive's search also matches its long catalogue notes)."""
+    from . import nouns
+    want = {_stem(w) for w in re.findall(r"[a-z]+", nouns(query).lower()) if len(w) > 2 and w not in STOP}
+    text = (" ".join(str(c.get(k) or "") for k in ("title", "subject")) + " " + " ".join(c.get("tags") or [])
+            if titled else _words(c) + " " + str(c.get("url") or ""))
+    have = {_stem(w) for w in re.findall(r"[a-z]+", text.lower())}
     return round(len(want & have) / len(want), 2) if want else 0.0
 
 
@@ -142,11 +147,17 @@ def precheck(c: dict, ctx: dict, prior: dict | None = None) -> bool:
     if c.get("query"):
         rel = relevance(c, c["query"])
         _check(c, "relevance", rel)
-        if rel == 0 and c["source"] in ANY_WORD:
-            _reject(c, "its tags name none of the query's nouns (§6.1, the concrete noun)")
+        if rel < ANY_WORD_MIN and c["source"] in ANY_WORD:
+            _reject(c, "its tags name fewer than half of the query's nouns (§6.1, the concrete noun)")
+        if archival(c, ctx) and not relevance(c, c["query"], titled=True):
+            _reject(c, "its title and subjects name none of the query's nouns (§6.1, the concrete noun)")
     hits = sorted({x for x in ctx.get("cliches", []) if re.search(rf"\b{re.escape(x)}\b", words)})
     if hits:
-        _check(c, "cliche_words", hits)        # recorded for the pick's eye; a tag is not the picture
+        _check(c, "cliche_words", hits)
+        named = " ".join([str(c.get("title") or "")] + list(c.get("tags") or [])).lower()
+        shown = [x for x in hits if re.search(rf"\b{re.escape(x)}\b", named)]
+        if shown and c["source"] in ctx["stock"]:   # a stock clip's title and tags say what is in the picture
+            _reject(c, f"its title or tags name {shown[0]!r}, a banned cliché (§6.1)")
     name = ctx.get("specific")
     if name:
         named = name.lower() in words or name.lower() in str(c.get("url", "")).lower()
@@ -155,6 +166,8 @@ def precheck(c: dict, ctx: dict, prior: dict | None = None) -> bool:
             _reject(c, f"the sentence names {name!r}: only archival evidence may show it (§6.2)")
         elif not named:
             _reject(c, f"the record does not name {name!r} (§6.2)")
+    if ctx.get("kind") == "split" and c.get("side") == "then" and not c.get("date"):
+        _reject(c, "the then side of a then-and-now needs a date in its record (§14, W11)")
     if prior and c["id"] in prior:
         _check(c, "usage", prior[c["id"]])
         _reject(c, f"already used {prior[c['id']]} (§6.7)")

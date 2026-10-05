@@ -8,7 +8,7 @@ secret and stripped before the answer is cached.
 
 Pixabay's search matches any one tag, so a camera word ("close up") brings back
 every close-up on the site: the query goes without them, and the filters refuse
-a clip whose tags share no noun with the query (filters.relevance).
+a clip whose tags name fewer than half of the query's nouns (filters.relevance).
 
 Pixabay does not publish a clip's frame rate; the filters read it from the
 preview rendition (§6.4), and `fps_from` says so.

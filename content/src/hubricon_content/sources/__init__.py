@@ -67,10 +67,21 @@ def resolve(c: dict, net=None) -> dict:
     return c
 
 
+STOP_WORDS = {"a", "an", "the", "and", "or", "of", "on", "in", "at", "to", "for", "with", "by", "from", "into", "onto"}
+
+
 def plain(query: str) -> str:
-    """A query's subject words, for an archive's search (MEDIUM_WORDS dropped)."""
-    words = [w for w in re.findall(r"[\w'’-]+", query) if w.lower() not in MEDIUM_WORDS]
+    """A query's subject words, for a search that reads every word as required (an archive's)
+    or any one word as enough (Pixabay's): MEDIUM_WORDS and STOP_WORDS dropped."""
+    words = [w for w in re.findall(r"[\w'’-]+", query) if w.lower() not in MEDIUM_WORDS | STOP_WORDS]
     return " ".join(words) or query
+
+
+def nouns(query: str) -> str:
+    """A broader query for an archive that found nothing: the subject words without the
+    verbs of action ("bookkeeper writing in ledger" → "bookkeeper ledger")."""
+    words = [w for w in plain(query).split() if not re.search(r"ing$", w.lower())]
+    return " ".join(words) or plain(query)
 
 
 def text(value) -> str:

@@ -303,7 +303,10 @@ refused; (2) "24 and 25 only when nothing else exists" is read per shot: a 24/25
 is refused once three passing 30/60 fps clips name as much of the query, and otherwise stays with a
 note; (3) text in frame refuses stock only (in an archival photograph a sign is provenance), and
 without tesseract the check records "ocr: unavailable" for the pick's eye; (4) Pixabay's search
-matches any one tag, so a clip whose tags name none of the query's nouns is refused; (5) the
+matches any one tag, so a clip whose tags name fewer than half of the query's nouns is refused, and an
+archive searches its whole catalogue text, so an archival record whose title and subjects name none
+of them is refused, and an archive that finds nothing is asked once more by the nouns alone; a stock
+clip whose title or tags name a banned cliché is refused (an archival record's is noted); (5) the
 Internet Archive is read only in the Prelinger Archives and NARA's own uploads (`gov.archives.*`),
 never open uploads, and Commons refuses Flickr's "no known copyright restrictions" (the Library of
 Congress's own statement is accepted from the Library).*

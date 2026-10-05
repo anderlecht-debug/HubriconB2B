@@ -49,18 +49,30 @@ def test_nothing_that_names_amazon_and_nothing_generated():
     has(checked(cand(source="pixabay", ai_generated=True), ctx()), "generated or animated")
 
 
-def test_a_pixabay_clip_must_name_one_of_the_query_s_nouns():
+def test_a_stock_clip_whose_title_or_tags_name_a_cliche_is_refused():
+    has(checked(cand(title="coffee mugs between a laptop and a calendar", query="desk calendar"), ctx()), "'laptop', a banned cliché")
+    has(checked(cand(source="pixabay", title="notebook", tags=["notebook", "desk", "laptop"], query="notebook desk"), ctx()), "banned cliché")
+    old = checked(cand(source="loc", kind="image", title="Bank teller counting cash, 1939", width=3000, height=2200,
+                       query="bank teller photograph"), ctx(kind="still", style="still-push"))
+    assert old["passed_filters"] and old["checks"]["cliche_words"] == ["cash"]   # an archival record is noted, not refused
+
+
+def test_a_pixabay_clip_must_name_half_of_the_query_s_nouns():
     has(checked(cand(source="pixabay", title="lipstick, bride", tags=["lipstick"], query="cartons shelf close up"), ctx()),
-        "name none of the query's nouns")
+        "fewer than half of the query's nouns")
     c = checked(cand(source="pixabay", title="boxes", tags=["carton", "warehouse"], query="cartons shelf close up"), ctx())
     assert c["passed_filters"] and c["checks"]["relevance"] == 0.5
+    ship = cand(source="pixabay", title="container, cargo", tags=["cargo", "delivery", "loading"], query="delivery van loading parcels")
+    has(checked(ship, ctx()), "fewer than half")       # "loading" is a verb, and one noun of three is not enough
+    assert checked(cand(title="warehouse employee loading delivery van", query="delivery van loading parcels"), ctx())["passed_filters"]
 
 
 def test_a_named_subject_needs_archival_evidence_that_names_it():
     x = ctx(kind="still", style="still-push", specific="Woolworth")
     has(checked(cand(), x), "only archival evidence may show it")
     has(checked(cand(source="loc", kind="image", title="A dime store"), x), "does not name 'Woolworth'")
-    assert checked(cand(source="loc", kind="image", title="F. W. Woolworth store, 1915", width=3000, height=2200), x)["passed_filters"]
+    assert checked(cand(source="loc", kind="image", title="F. W. Woolworth store, 1915", width=3000, height=2200,
+                        query="Woolworth store photograph"), x)["passed_filters"]
 
 
 def test_an_asset_in_the_usage_window_is_refused():
@@ -163,7 +175,8 @@ def test_faces_refuse_stock_but_not_the_archival_portrait_of_the_named_subject(t
     assert not filters.media(stock, a, ctx())
     has(stock, "a face covers 3.0% of the frame")
     x = ctx(kind="still", style="still-push", specific="Woolworth")
-    portrait = cand(source="loc", kind="image", title="Frank W. Woolworth, portrait", width=2600, height=1800)
+    portrait = cand(source="loc", kind="image", title="Frank W. Woolworth, portrait", width=2600, height=1800,
+                    query="Frank Woolworth portrait photograph")
     filters.precheck(portrait, x)
     assert filters.media(portrait, a, x), portrait["rejected_because"]
     assert "§13.1" in portrait["checks"]["faces"]["exempt"]
@@ -207,3 +220,19 @@ def test_the_analysis_is_cached_beside_the_preview(tmp_path, monkeypatch):
     assert len(calls) == 1
     filters.analyse(p, "image", "a-different-file")          # a new preview under the same name is analysed again
     assert len(calls) == 2
+
+
+def test_a_then_and_now_needs_a_dated_then():
+    x = ctx(kind="split", style="split-then-now", length=6.0)
+    has(checked(cand(source="loc", kind="image", side="then", width=3000, height=2000), x), "needs a date in its record")
+    assert checked(cand(source="loc", kind="image", side="then", date="1908", width=3000, height=2000), x)["passed_filters"]
+
+
+def test_an_archival_record_must_be_about_the_query_s_nouns_not_mention_them():
+    x = ctx(kind="still", style="still-push", length=6.0)
+    clipping = cand(source="smithsonian", kind="image", title="Homemade Christmas Candies", width=3000, height=2200,
+                    description="a clipping kept between the pages of a household ledger", query="accountant reading ledger photograph")
+    has(checked(clipping, x), "title and subjects name none of the query's nouns")
+    ledger = cand(source="smithsonian", kind="image", title="Ledger page from an account book", width=3000, height=2200,
+                  query="accountant reading ledger photograph")
+    assert checked(ledger, x)["passed_filters"]
