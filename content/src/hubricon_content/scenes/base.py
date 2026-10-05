@@ -384,10 +384,11 @@ class HubriconScene(Scene):
         self.entering = []
         self.shot_mobs = []
         # What the drift moves, what it pivots on, how far it has moved and which way,
-        # and when the picture now on screen came up. The segment's own first frame is
-        # a cut, so the clock starts at zero.
+        # when the picture now on screen came up, and when something last landed on it.
+        # The segment's own first frame is a cut, so both clocks start at zero.
         self.stage_group, self.stage_about = None, None
         self._drift_f, self._drift_dir, self._shot_since = 1.0, 1, 0.0
+        self._last_land = 0.0
         self.furniture = self.corner()
 
     # ── clock ──
@@ -443,6 +444,7 @@ class HubriconScene(Scene):
 
     def landed(self, kind: str = "data"):
         self.events.append({"t": round(float(self.seg["start"]) + self.clock, 3), "kind": kind, "segment": self.position})
+        self._last_land = self.clock
 
     # ── furniture: the stage's corner (film.css .corner), on every frame ──
     def label_text(self) -> str | None:
@@ -649,6 +651,19 @@ class HubriconScene(Scene):
             self.add(m)
         self.landed("annotation")
 
+    def room_left(self) -> float:
+        """How much longer the picture now on screen may stay up, by §4's two rules
+        for it: a chart build runs to the build's clock from the cut, and a stretch
+        with nothing new landing is a shot, which never runs past fourteen seconds.
+
+        Both are measured from when they started, not from what is left of the wait:
+        reading the shot's maximum against the time still to fill let a chart that
+        was already four seconds old hold fourteen more, so V04's third chapter ran
+        thirty seconds on one picture and failed the cadence (its QA, 2026-10-05)."""
+        age = self.clock - self._shot_since
+        since_land = self.clock - self._last_land
+        return max(0.0, min(BUILD_CUT_S - age, SHOT_MAX_S - since_land))
+
     def hold_to(self, until: float):
         """Hold the stage until `until` seconds into the segment: drifting, never
         frozen (§3.4), and never one picture past the cadence (§4). A stretch longer
@@ -660,19 +675,21 @@ class HubriconScene(Scene):
             if self.stage_group is None:
                 self.wait(rest)
                 return
-            # what the picture now up may still hold: its own shot's maximum, and
-            # what is left of the build's clock, whichever runs out first
-            room = min(SHOT_MAX_S, max(0.0, BUILD_CUT_S - (self.clock - self._shot_since)))
+            room = self.room_left()
             if rest <= room or rest < SHOT_MIN_S:
                 self.drift(rest)
                 return
             # the chart holds what it may, keeping back a shot for the line and a shot
-            # for its own return, so the annotation at `until` lands on the chart
-            self.drift(min(room, max(0.0, rest - 2 * SHOT_MIN_S)))
-            card_s = min(SHOT_S, until - self.clock - SHOT_MIN_S)
+            # for its own return, so the annotation at `until` lands on the chart. Both
+            # lengths are settled before either plays: measuring the card against the
+            # clock after the drift left it a frame short of the minimum, and the cut
+            # it then skipped is what ran V04's chapters past the cadence.
+            pre_s = min(room, max(0.0, rest - 2 * SHOT_MIN_S))
+            card_s = min(SHOT_S, rest - pre_s - SHOT_MIN_S)
             if card_s < SHOT_MIN_S:
-                self.drift(max(0.0, until - self.clock))
+                self.drift(rest)       # no legal cut fits before the next landing
                 return
+            self.drift(pre_s)
             self.cut_away(card_s)
 
     # ── charts, in the site's chart grammar (assets/hubricon.css .chart) ──

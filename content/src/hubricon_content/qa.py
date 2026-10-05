@@ -44,6 +44,16 @@ SHOT_MIN_S, SHOT_MAX_S, BUILD_MAX_S, FROZEN_MAX_S = 3.0, 14.0, 30.0, 4.0
 # where motion scores high and the shot plan is validated against §4 in its own right.
 CUT_SCORE = {"D": 0.28}
 CUT_SCORE_PAPER = 0.025
+# How still a picture has to be to count as frozen, and the same lesson as the cut
+# score: the spec's n=0.003 (§10) is a noise floor for footage, and ink on paper is
+# almost all white. Measured on V04's clips 2026-10-05: a picture holding the drift
+# §3.4 asks for (the whole stage 1.000 → 1.015 over a shot) differs from where it
+# started by 0.0019 after four seconds, while a paper frame encoded static differs
+# from itself by 0.0000028. At 0.003 and 0.002 the drift was read as four frozen
+# runs of eight seconds each; 0.001 is the highest floor that clears it, so it is
+# the most freeze-sensitive setting that does not contradict the motion the spec
+# asks for, and it still catches a static frame by three hundred times over.
+FREEZE_NOISE_PAPER = 0.001
 
 
 def _ffprobe_duration(p: Path) -> float:
@@ -71,9 +81,16 @@ def lufs(p: Path) -> float | None:
     return float(m[-1]) if m else None
 
 
-def max_hold(p: Path, threshold_s: float = FROZEN_MAX_S) -> tuple[float, int]:
-    log = _filter_log(p, vf=f"freezedetect=n=0.002:d={threshold_s}")
+def max_hold(p: Path, threshold_s: float = FROZEN_MAX_S, noise: float = FREEZE_NOISE_PAPER) -> tuple[float, int]:
+    log = _filter_log(p, vf=f"freezedetect=n={noise}:d={threshold_s}")
     durs = [float(x) for x in re.findall(r"freeze_duration: ([\d.]+)", log)]
+    starts = [float(x) for x in re.findall(r"freeze_start: ([\d.]+)", log)]
+    if len(starts) > len(durs):
+        # A duration is logged when a freeze breaks, so a picture still frozen on the
+        # last frame reports a start and nothing else: a clip that freezes and stays
+        # frozen to its end read as no freeze at all (measured 2026-10-05 on a paper
+        # frame encoded static, which this check has to catch above all).
+        durs.append(max(0.0, _ffprobe_duration(p) - starts[-1]))
     return (max(durs) if durs else 0.0), len(durs)
 
 
