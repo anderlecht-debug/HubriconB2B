@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T11:24:35+00:00 · style locked: True
+Updated 2026-10-05T11:29:15+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T11:24:35+00:00 · style locked: True
 
 ## Now
 
-- idle
+- V08 · Elasticity in plain English, and why your price is probably wrong · step assemble
 
 ## Awaiting your review
 
@@ -72,8 +72,8 @@ Updated 2026-10-05T11:24:35+00:00 · style locked: True
 
 ## Next five
 
-- V08 · Elasticity in plain English, and why your price is probably wrong
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
 - V19 · How much cash should you actually hold?
 - V22 · Base rates: the question nobody asks before a big decision
 - V23 · When your data is just noise
+- V24 · Expected value: how to make a decision you can defend
