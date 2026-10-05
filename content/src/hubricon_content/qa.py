@@ -61,7 +61,7 @@ def _filter_log(p: Path, af: str | None = None, vf: str | None = None) -> str:
     else:
         cmd += ["-vn"]
     cmd += ["-f", "null", "-"]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    r = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=3600)
     return r.stderr
 
 
@@ -149,6 +149,9 @@ def transcript_match(slug: str, master: Path) -> float | None:
 
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
+    if str(u.get("tier", "")).upper() == "D":
+        from . import qa_d   # VISUAL_SPEC.md §10
+        return qa_d.run(u)
     slug = u["slug"]
     d = scriptmod.video_dir(slug)
     master = d / "media" / "master.mp4"

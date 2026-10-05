@@ -24,10 +24,12 @@ VIDEO_STEPS = ["facts", "script", "critique", "review", "tts", "timing", "scenes
 # pick between the timing and the render, one clip per shot, then the Manim charts.
 VIDEO_STEPS_D = ["facts", "script", "critique", "review", "tts", "timing", "shots", "source", "pick",
                  "render_shots", "scenes", "assemble", "qa", "thumbnail", "describe", "shorts", "approve_final", "upload"]
-# Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 2–4; the shot
-# plan landed 2026-10-04). A tier-D unit waits at the first of them, never failing, until its
-# phase lands.
-PENDING_D = {"source", "pick", "render_shots"}
+# Tier-D steps whose tooling is still being built (VISUAL_SPEC.md §12, phases 3–4; the shot
+# plan landed 2026-10-04, sourcing 2026-10-05). A tier-D unit waits at the first of them, never
+# failing, until its phase lands.
+PENDING_D: set[str] = set()   # all built by 2026-10-05; render_shots still waits for visual_locked
+# The keys the `source` step needs (VISUAL_SPEC.md §6.3); a unit blocked on one resumes when it is set.
+SOURCE_KEYS = ("PEXELS_API_KEY", "PIXABAY_API_KEY", "SMITHSONIAN_API_KEY", "CONTENT_CONTACT_EMAIL")
 GATES = {"review", "approve_final"}
 MAX_ATTEMPTS = 3
 MAX_AWAITING = 5
@@ -100,7 +102,8 @@ def refresh_capabilities(q: dict) -> None:
             ("elevenlabs_api_key" in reason and caps["elevenlabs_key"]) or
             ("elevenlabs_voice_id" in reason and caps["founder_voice_id"]) or
             ("client_secret.json" in reason and caps["youtube_client"]) or
-            ("youtube-token" in reason and caps["youtube_token"])
+            ("youtube-token" in reason and caps["youtube_token"]) or
+            any(k.lower() in reason and os.environ.get(k) for k in SOURCE_KEYS)
         )
         if freed:
             u["status"] = "todo"

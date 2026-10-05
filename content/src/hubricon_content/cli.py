@@ -236,6 +236,40 @@ def cmd_timing(a):
     _out(result)
 
 
+def cmd_visual_lock(a):
+    from . import visual_lock
+    q = _q()
+    doc = visual_lock.lock(q, a.note)
+    state.save(q)
+    _status_files(q)
+    print(f"locked {len(doc['files'])} fingerprints on {doc['locked_on']}; long films may render")
+
+
+def cmd_visual_trial(a):
+    from . import trial
+    _out(trial.run(workers=a.workers, force=a.force))
+
+
+def cmd_pick(a):
+    from . import pick
+    focus = [float(x) for x in a.focus.split(",")] if a.focus else None
+    if a.none:
+        _out(pick.none(a.slug, a.shot, a.reason))
+    elif a.texture_file:
+        _out(pick.texture(a.slug, a.shot, a.texture_file, a.job, a.model, a.prompt, a.seed, a.reason, focus=focus, motion=a.motion or "drift"))
+    else:
+        _out(pick.pick(a.slug, a.shot, a.numbers, focus=focus, motion=a.motion, start=a.start, reason=a.reason, then=a.then, now=a.now))
+
+
+def cmd_render_shots(a):
+    from . import render_shots
+    q = _q(); u = _unit_for(q, a.slug)
+    res = render_shots.render(u, q, force=a.force, only={x for x in a.only.split(",") if x} or None, workers=a.workers)
+    _out(res)
+    if res.get("status") != "ok":
+        sys.exit(2)
+
+
 def cmd_shots_fill(a):
     from . import shots
     q = _q(); u = _unit_for(q, a.slug)
@@ -251,6 +285,17 @@ def cmd_shots_validate(a):
     print(f"{len(problems)} problem(s){note}" if problems else f"clean{note}")
     if problems:
         sys.exit(1)
+
+
+def cmd_source(a):
+    from . import sourcing
+    q = _q(); u = _unit_for(q, a.slug)
+    result = sourcing.run(u, q, shot=a.shot)
+    for line in sourcing.summary(result):
+        print(line)
+    _out(result)
+    if result.get("status") in ("blocked", "failed"):
+        sys.exit(2)
 
 
 def cmd_template(a):
@@ -324,11 +369,28 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("--force", action="store_true")
     p.add_argument("--estimate", action="store_true", help="plan before a voice exists; never replaces timing.json")
     p.set_defaults(fn=cmd_timing)
+    p = sub.add_parser("visual-lock", help="the founder's call, once: freeze the long films' look after the visual trial")
+    p.add_argument("--note", default=""); p.set_defaults(fn=cmd_visual_lock)
+    p = sub.add_parser("visual-trial", help="render the visual trial: one shot of every style (VISUAL_SPEC.md §12, phase 5)")
+    p.add_argument("--workers", type=int, default=None); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_visual_trial)
+    p = sub.add_parser("pick", help="record a shot's picture from its contact sheet (the visual-pick skill)")
+    p.add_argument("slug"); p.add_argument("shot"); p.add_argument("numbers", nargs="*", type=int)
+    p.add_argument("--focus", default=None); p.add_argument("--motion", default=None); p.add_argument("--in", dest="start", type=float, default=None)
+    p.add_argument("--then", type=int, default=None); p.add_argument("--now", type=int, default=None)
+    p.add_argument("--none", action="store_true"); p.add_argument("--reason", default="")
+    p.add_argument("--texture-file", default=None); p.add_argument("--job"); p.add_argument("--model"); p.add_argument("--prompt"); p.add_argument("--seed")
+    p.set_defaults(fn=cmd_pick)
+    p = sub.add_parser("render-shots", help="one clip per shot of a picked plan (VISUAL_SPEC.md §8.3)")
+    p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.add_argument("--only", default="")
+    p.add_argument("--workers", type=int, default=None); p.set_defaults(fn=cmd_render_shots)
     p = sub.add_parser("shots-fill", help="snap shots.json to legal cuts and fill says, reveals and labels from the timing")
     p.add_argument("slug"); p.set_defaults(fn=cmd_shots_fill)
     p = sub.add_parser("shots-validate", help="check shots.json against VISUAL_SPEC.md §4, §5, §7.4 and §14.8")
     p.add_argument("slug"); p.add_argument("--picked", action="store_true", help="also check every pick (after visual-pick)")
     p.set_defaults(fn=cmd_shots_validate)
+    p = sub.add_parser("source", help="candidates, filters and contact sheets for every world shot (VISUAL_SPEC.md §6)")
+    p.add_argument("slug"); p.add_argument("--shot", default=None, help="one shot, e.g. s012")
+    p.set_defaults(fn=cmd_source)
     for name, module in (("tts", "tts"), ("render-scenes", "render_scenes"), ("assemble", "assemble"),
                          ("qa", "qa"), ("thumbnail", "thumbnail"), ("describe", "describe"), ("shorts", "shorts"),
                          ("upload", "upload")):

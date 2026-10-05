@@ -105,14 +105,32 @@ def test_a_tier_d_unit_runs_the_documentary_chain():
     assert script.WORDS["D"] == (3000, 7500) and qa.TIER_RANGE["D"] == (1200, 3000)
 
 
-def test_tier_d_waits_at_steps_still_being_built_and_never_fails_there():
+def test_tier_d_runs_its_chain_and_waits_for_the_look_before_rendering():
     q = _fresh()
     u = _tier_d(q)
     u["steps"]["tts"] = u["steps"]["timing"] = "done"
     assert state.next_item(q)["step"] == "shots"          # the shot plan is built
     state.mark(q, u["id"], "shots", "done")
-    nxt = state.next_item(q)
-    assert nxt.get("idle") and u["steps"]["source"] == "todo" and not u["attempts"]
+    assert state.next_item(q)["step"] == "source"         # and sourcing (§12, phase 2)
+    state.mark(q, u["id"], "source", "done")
+    assert state.next_item(q)["step"] == "pick"           # and the pick (phase 3)
+    state.mark(q, u["id"], "pick", "done")
+    nxt = state.next_item(q)                              # render_shots waits for the founder's look
+    assert nxt.get("idle") and u["steps"]["render_shots"] == "todo" and not u["attempts"]
+
+
+def test_a_unit_blocked_on_a_sourcing_key_resumes_when_the_key_is_set(monkeypatch):
+    q = _fresh()
+    u = _tier_d(q)
+    for s in ("tts", "timing", "shots"):
+        u["steps"][s] = "done"
+    monkeypatch.delenv("PIXABAY_API_KEY", raising=False)
+    state.mark(q, u["id"], "source", "blocked", "PIXABAY_API_KEY is not set (needed by s002) (VISUAL_SPEC.md §6.3)")
+    state.refresh_capabilities(q)
+    assert u["status"] == "blocked"
+    monkeypatch.setenv("PIXABAY_API_KEY", "set")
+    state.refresh_capabilities(q)
+    assert u["status"] == "todo" and u["steps"]["source"] == "todo"
 
 
 def test_no_long_film_renders_before_the_visual_trial_is_approved():

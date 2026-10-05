@@ -297,6 +297,20 @@ query string reused across shots.
 - duplicates: perceptual hash against this film's picks and the usage ledger (§6.7);
 - licence in the accept list of §6.3, with author, URL and licence text present.
 
+*Rulings, 2026-10-05, from building the filters: (1) archival film is held to the stills' 1.5×
+rule, so at least 1280×720 (1080p film scans barely exist), and its 16–24 fps is recorded, not
+refused; (2) "24 and 25 only when nothing else exists" is read per shot: a 24/25 (or 50) fps clip
+is refused once three passing 30/60 fps clips name as much of the query, and otherwise stays with a
+note; (3) text in frame refuses stock only (in an archival photograph a sign is provenance), and
+without tesseract the check records "ocr: unavailable" for the pick's eye; (4) Pixabay's search
+matches any one tag, so a clip whose tags name fewer than half of the query's nouns is refused, and an
+archive searches its whole catalogue text, so an archival record whose title and subjects name none
+of them is refused, and an archive that finds nothing is asked once more by the nouns alone; a stock
+clip whose title or tags name a banned cliché is refused (an archival record's is noted); (5) the
+Internet Archive is read only in the Prelinger Archives and NARA's own uploads (`gov.archives.*`),
+never open uploads, and Commons refuses Flickr's "no known copyright restrictions" (the Library of
+Congress's own statement is accepted from the Library).*
+
 ### 6.5 AI images
 
 - Atmosphere only: an abstract idea, a texture, a still life of objects. **Never the subject being

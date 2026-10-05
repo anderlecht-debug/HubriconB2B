@@ -283,6 +283,9 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         prev_text = next((t for t in reversed(texts[: i - 1]) if t), None)
         next_text = next((t for t in texts[i:] if t), None)
         words = _eleven(text, audio, prev_text, next_text) if name in ("founder", "library") else _placeholder(text, audio)
+        if name in ("founder", "library"):
+            from . import meter
+            meter.count(slug, "elevenlabs", "characters", len(text), f"vo-{i:02d}")
         meta.write_text(json.dumps({"beat": i, "name": b["name"], "text": text, "provider": name, "words": words},
                                    indent=None, ensure_ascii=False) + "\n", encoding="utf-8")
         if name in ("founder", "library"):   # keep every take; a consistent library is part of the series feel

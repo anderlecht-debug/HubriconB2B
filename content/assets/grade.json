@@ -1,0 +1,79 @@
+{
+ "source": "docs/content/VISUAL_SPEC.md \u00a73.2 (2026-10-04): one grade, one grain, over every world asset.",
+ "conform": {
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "still_max_width": 3840
+ },
+ "normalize": {
+  "target_yavg": 138,
+  "tolerance": 10,
+  "max_brightness_shift": 0.12,
+  "reject_below_yavg": 64,
+  "saturation_band": [
+   20,
+   42
+  ],
+  "saturation_scale_limits": [
+   0.6,
+   1.25
+  ]
+ },
+ "grade": "eq=saturation=0.78:contrast=0.94:brightness=0.03:gamma=1.04,colortemperature=temperature=6900:mix=0.6,huesaturation=saturation=-0.55:colors=b+c",
+ "grain": {
+  "world": "noise=alls=6:allf=t+u",
+  "paper": "noise=alls=2:allf=t+u"
+ },
+ "mono": {
+  "grade": "",
+  "note": "\u00a73.2: black-and-white archival skips the colour and grade stages: format=gray, the same normalize and the same grain"
+ },
+ "intermediate": {
+  "codec": "h264_nvenc",
+  "args": [
+   "-preset",
+   "p5",
+   "-rc",
+   "vbr",
+   "-cq",
+   "16",
+   "-b:v",
+   "0",
+   "-profile:v",
+   "high"
+  ],
+  "fallback": [
+   "-c:v",
+   "libx264",
+   "-preset",
+   "veryfast",
+   "-crf",
+   "12"
+  ]
+ },
+ "master": [
+  "-c:v",
+  "libx264",
+  "-preset",
+  "slow",
+  "-crf",
+  "16",
+  "-profile:v",
+  "high",
+  "-level",
+  "4.1"
+ ],
+ "color": [
+  "-pix_fmt",
+  "yuv420p",
+  "-color_range",
+  "tv",
+  "-colorspace",
+  "bt709",
+  "-color_primaries",
+  "bt709",
+  "-color_trc",
+  "bt709"
+ ]
+}
