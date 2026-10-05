@@ -80,6 +80,25 @@ TRIAL = [
     ("end", 6, "", {}),
 ]
 TRIAL_WORDS = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
+STOCK, ARCHIVAL = ["pexels", "pixabay"], ["loc", "smithsonian", "commons"]
+# What each sourced trial shot asks the libraries for: the concrete nouns of its words (§6.1).
+QUERIES = {
+    "footage-establish": (["warehouse loading dock trucks daylight wide"], STOCK),
+    "s003": (["container ship port cranes wide"], STOCK),
+    "s004": (["shipping container truck loading"], STOCK),
+    "s005": (["cardboard boxes conveyor belt close up"], STOCK),
+    "footage-insert": (["tape gun sealing cardboard box close up"], STOCK),
+    "footage-observe": (["warehouse conveyor belt boxes moving static"], STOCK),
+    "still-push": (["bank teller window interior"], ARCHIVAL),
+    "still-pan": (["library book stacks interior"], ARCHIVAL),
+    "still-reveal": (["general store shelves interior"], ARCHIVAL),
+    "archive-framed": (["mail order catalog"], ARCHIVAL),
+    "archive-stack": (["catalog cover"], ARCHIVAL),
+    "split-then-now": (["mail order warehouse", "warehouse shelves boxes"], ARCHIVAL + STOCK),
+    "match-bridge": (["concrete staircase steps building"], STOCK),
+    "breath": (["rain loading dock static"], STOCK),
+    "texture": (["paper ledger pages still life"], ["higgsfield"]),
+}
 
 
 def _assets() -> dict:
@@ -125,6 +144,9 @@ def build() -> tuple[dict, dict]:
                 "focus": extra.get("focus", [0.5, 0.5]), "motion": extra.get("motion") or {"still-push": "push", "still-reveal": "reveal",
                                                                                           "texture": "drift"}.get(style),
                 "intent": f"the trial's {style}"}
+        q = QUERIES.get(shot["id"]) or QUERIES.get(style)
+        if q:
+            shot["query"], shot["sources"], shot["fallback"] = q[0], q[1], "paper:kinetic"
         a = assets.get(shot["id"]) or assets.get(style)
         if a:
             shot["asset"] = a.get("asset")
@@ -142,9 +164,39 @@ def missing_assets(plan: dict) -> list[str]:
     return [s["style"] for s in plan["shots"] if s["kind"] in need and not s.get("asset")]
 
 
+def placeholder(style: str) -> dict:
+    """A labelled card where a picture belongs but none exists yet: better than a fake."""
+    from PIL import Image, ImageDraw, ImageFont
+    from . import tokens
+    out = CONTENT_DIR / ".cache" / "trial" / f"placeholder-{style}.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    img = Image.new("RGB", (2400, 1350), tokens.rgb("paper_2"))
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(str(tokens.font_file(600)), 72)
+    small = ImageFont.truetype(str(tokens.font_file(400)), 48)
+    draw.text((160, 560), f"No picture yet: {style}", font=font, fill=tokens.rgb("ink"))
+    note = "made by the runner through Higgsfield" if style == "texture" else "the pick has not chosen one"
+    draw.text((160, 680), note, font=small, fill=tokens.rgb("ink_3"))
+    img.save(out)
+    return {"id": f"placeholder:{style}", "file": str(out), "source": "placeholder"}
+
+
 def write() -> dict:
     DIR.mkdir(parents=True, exist_ok=True)
     plan, tm = build()
+    old = {}
+    if (DIR / "shots.json").exists():
+        old = {s["id"]: s for s in json.loads((DIR / "shots.json").read_text(encoding="utf-8"))["shots"]}
+    for s in plan["shots"]:
+        prev = old.get(s["id"])
+        if prev and prev.get("style") == s["style"] and prev.get("asset") and not str((prev["asset"] if isinstance(prev["asset"], dict) else {}).get("id", "")).startswith("placeholder:"):
+            for k in ("asset", "focus", "motion"):
+                if prev.get(k) is not None:
+                    s[k] = prev[k]
+            if (prev.get("params") or {}).get("right"):
+                s["params"]["right"] = prev["params"]["right"]
+        if s["kind"] == "texture" and not s.get("asset"):
+            s["asset"] = placeholder("texture")
     for name in ("facts.json", "run.json"):
         (DIR / name).write_text((SOURCE_UNIT / name).read_text(encoding="utf-8"), encoding="utf-8")
     (DIR / "shots.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
