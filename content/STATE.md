@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T08:56:32+00:00 · style locked: True
+Updated 2026-10-05T08:57:22+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T08:56:32+00:00 · style locked: True
 
 ## Now
 
-- idle
+- V04 · Your A/B test told you nothing. Here's the sample size you needed · step scenes
 
 ## Awaiting your review
 
@@ -69,8 +69,8 @@ Updated 2026-10-05T08:56:32+00:00 · style locked: True
 
 ## Next five
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V05 · Cash conversion cycle: the number that decides whether you survive
 - V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
+- V19 · How much cash should you actually hold?

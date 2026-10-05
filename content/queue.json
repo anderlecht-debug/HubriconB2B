@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T08:56:32+00:00",
+ "updated_at": "2026-10-05T08:57:22+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -722,7 +722,7 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
    "voice": "library",
@@ -733,7 +733,7 @@
     "critique": "done",
     "review": "approved",
     "tts": "done",
-    "timing": "todo",
+    "timing": "done",
     "scenes": "todo",
     "assemble": "todo",
     "qa": "todo",
@@ -804,6 +804,11 @@
     {
      "at": "2026-10-05T05:09:39+00:00",
      "step": "tts",
+     "note": "done"
+    },
+    {
+     "at": "2026-10-05T08:57:20+00:00",
+     "step": "timing",
      "note": "done"
     }
    ]
