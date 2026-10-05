@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T07:03:54+00:00",
+ "updated_at": "2026-10-05T07:38:33+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -504,7 +504,7 @@
     "timing": "done",
     "scenes": "done",
     "assemble": "done",
-    "qa": "in_progress",
+    "qa": "todo",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
@@ -513,7 +513,7 @@
    },
    "review_notes": [],
    "attempts": {
-    "qa": 1
+    "qa": 2
    },
    "log": [
     {
@@ -590,6 +590,11 @@
      "at": "2026-10-05T06:22:05+00:00",
      "step": "qa",
      "note": "failed The render critique fails by eye: nine shots of eighteen to fifty-five seconds with no cuts, subtitles overwriting the chart's x-axis, clipped and colliding stat captions, one blank segment, and a 'client-stated' label on demo figures."
+    },
+    {
+     "at": "2026-10-05T07:38:31+00:00",
+     "step": "qa",
+     "note": "failed The program check passes but the frames fail: the burned-in subtitle erases the chart's axis labels and the spread's annotations collide at the plot's top right"
     }
    ]
   },

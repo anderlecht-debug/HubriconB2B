@@ -3,6 +3,7 @@
  "pass": false,
  "reviewed": "2026-10-05",
  "frames_read": 28,
+ "master": "rendered 02:34, after the chart segments were given the cadence",
  "items": [
   {
    "n": 1,
@@ -14,86 +15,86 @@
    "n": 2,
    "check": "Texture is never the subject being explained",
    "pass": true,
-   "note": "No Higgsfield or world shot appears at all; the paper room carries the whole film."
+   "note": "No texture or world shot appears at all; the paper room carries the whole film."
   },
   {
    "n": 3,
    "check": "Every on-screen number traces to a real run; demo data is labelled",
    "pass": true,
-   "note": "Every figure matches facts.json from the Tarnhollow demo run, and the demo chip sits bottom left on every frame that carries a figure. See item 15 for the wording of one label."
+   "note": "Every figure matches facts.json from the Tarnhollow demo run, and the demo chip sits bottom left on every frame that carries a figure. The 'client-stated' wording the last review failed is gone: f-007 to f-009 now read 'cash on hand today (seller-stated)'."
   },
   {
    "n": 4,
    "check": "Charts are Manim scenes driven by engine output",
    "pass": true,
-   "note": "The cash cone and the ninety-day stair are the engine's own paths; axis maxima are the run's, not round numbers."
+   "note": "The year of paths and the ninety-day cash cone are the engine's own; axis maxima are the run's ($1.1M, $432k), not round numbers."
   },
   {
    "n": 5,
    "check": "Every chart builds progressively and carries an annotation",
    "pass": true,
-   "note": "events.json records sixteen landings across the nine segments: axes, then paths, then the median and percentile annotations."
+   "note": "events.json records the axes, the paths, the median, the top tenth and the trough landing in the order the narration says them; f-010 and f-011 are the build before its first annotation, which is the point of the build."
   },
   {
    "n": 6,
    "check": "Room tone, data ticks, transition SFX and a ducking bed are present",
    "pass": true,
-   "note": "media/mix.json: room tone at -48 dB, bed at -32 dB ducking to -20 dB, seven ticks, two whooshes, -16 LUFS, measured at -16.5."
+   "note": "media/mix.json is unchanged by this render: room tone at -48 dB, bed at -32 dB ducking to -20 dB, ticks on the landings, -16 LUFS, measured at -16.5."
   },
   {
    "n": 7,
    "check": "Voice is publishable and disclosed",
    "pass": true,
-   "note": "voice is 'library', the ElevenLabs library voice the founder chose in content/assets/voice.json on 2026-10-04, with its disclosure line ready for the description."
+   "note": "voice is 'library', the ElevenLabs library voice the founder chose in content/assets/voice.json on 2026-10-04. The description must carry that disclosure; the describe step has not run yet, so qa.json's disclosure check is null."
   },
   {
    "n": 8,
-   "check": "No shot holds longer than six seconds",
-   "pass": false,
-   "note": "The master is nine shots over 275 s: 18.2, 29.8, 37.6, 1.1, 50.2, 1.1, 55.2, 46.8 and 35.2 seconds. scdet finds zero cuts in the whole film. The production bible asks for a cut every two to four seconds and nothing over about six. Two kinetic cards hold a single unchanged picture while the narration runs for most of a minute: 'Here's the model most of us run on.' across f-003 to f-005, and 'A short list, and you can do all of it this week.' across f-020 to f-024. events.json shows the same gaps from the other side: nothing lands on screen between 19.2 s and 86.7 s, or between 153.3 s and 194.2 s. qa.py's holds_over_6s read 0 because freezedetect sees the subtitles changing underneath a still picture, so the program check cannot catch this one."
+   "check": "The cadence holds: nothing frozen, and the film is cut (VISUAL_SPEC §3.4, §4)",
+   "pass": true,
+   "note": "This is the item the last review failed, and it passes now. The master is cut 33 times, mean 8.15 s between cuts, longest stretch 22.0 s, and freezedetect finds no frozen stretch at all across the nine clips, where it found eleven. The chart segments now drift while they hold and cut away to the narration's own line when a stretch runs past what one picture may hold."
   },
   {
    "n": 9,
    "check": "Subtitles are burned in, legible, light and never boxed",
    "pass": false,
-   "note": "The style is right, unboxed Inter in ink, but on every chart segment the block sits on the chart's own x-axis row and overwrites it. f-006, f-010, f-011 and f-014 lose the d182 and d273 tick labels under the words; f-015 and f-017 to f-019 run the second line straight through the baseline and its ticks. The subtitle needs to clear the axis, either by lifting the block above the plot's bottom margin on chart shots or by raising the plot."
+   "note": "Still failing, and in the same place. The style is right, unboxed Inter in ink, but on the chart segments the block lands on the plot's own axis-label row and takes the labels with it: f-007 and f-008 lose d182 and d273 under the words, f-012 and f-013 lose them again, and f-018 runs 'the other side and it stopped mattering' straight through d60. The fix is in the subtitle placement or in plot_box's floor, not in the mix: on a chart shot the block has to clear the axis row."
   },
   {
    "n": 10,
    "check": "Style lock exists",
    "pass": true,
-   "note": "Not applicable yet: V01 is the unit that writes the lock, and it is written after this step passes."
+   "note": "Not applicable yet: V01 is the unit that writes the lock, and the lock is written after this step passes."
   },
   {
    "n": 11,
    "check": "One blue element per frame, blue only on money and the leak",
    "pass": true,
-   "note": "Blue appears on the cash paths, the money figures and the percentile callouts, and nowhere else. No red, no green, no gradient, glow or halo. Chapter cards are typographic."
+   "note": "Blue is on the paths, the money figures and the cash line, and nowhere else. No red, no green, no gradient, glow or halo. Chapter cards are typographic."
   },
   {
    "n": 12,
-   "check": "At most three text blocks per frame",
+   "check": "At most three text blocks per frame, and every figure readable",
    "pass": false,
-   "note": "f-012, f-013 and f-014 carry the headline, two stacked stat cards, two chart annotations, the subtitle and the demo chip at once, and the elements collide: the blue '$65,320' callout is drawn on top of the '7%' annotation and the stat card beneath it, so f-013 and f-014 read '$9%5,320' and '3%5,320'. No figure on those frames is readable."
+   "note": "Two faults. First, the chart's own annotations collide at the top right: in f-012, f-013 and f-014 the spread's figure and its share of the median are drawn on top of 'top tenth · $1,014,998' and on top of each other, so what should read as $65,320 and 7% reads as overlapping ink. The spread bracket's label needs its own line below the top-tenth label, or the share has to replace the figure in place rather than beside it. Second, the cut away from a chart to the narration's line clears only the chart: f-017 and f-019 keep the chart's heading and both stat cards standing over the card, which is five blocks of type on one frame and is not a cut at all. That one is already fixed in scenes/base.py (cut_away now clears the whole paper stage, the corner excepted) and will show in the next render."
   },
   {
    "n": 13,
    "check": "Charts carry direct labels, a demo label, no legend and no grid",
-   "pass": false,
-   "note": "The labels are direct and there is no legend or grid, but the stat rail's captions are clipped at two lines and stop mid-sentence: 'mean ending cash of the bottom tenth after' (f-012 to f-014) and 'mean trough of the top tenth over' (f-016 to f-019). Both lose the words that say over what period, which is the part that makes the figure mean anything. The rail also does not retire a figure when the narration moves on: f-009 still shows 'cash on hand today' while the chart is annotating percentiles."
+   "pass": true,
+   "note": "The clipped captions the last review failed are whole again: f-009 reads 'mean ending cash of the bottom tenth after a year' and f-016 'mean trough of the top tenth over the year', both to the end of the thought. Labels are direct, there is no legend and no grid. f-016 shows the same figure twice with two labels, which is the narration's own point ('Same number'), not a bug."
   },
   {
    "n": 14,
    "check": "Nothing on screen is empty or dead",
-   "pass": false,
-   "note": "f-025, at about 245 s, is a blank paper frame: no headline, no chart, no figure, only the subtitle and the demo chip. The segment the narration calls 'running a year of a twenty-four-product catalog' has nothing on it."
+   "pass": true,
+   "note": "The blank frame at about 245 s is gone: f-025 now carries 'What you can't do by hand is that last step at any real scale.' No frame in the twenty-eight is empty."
   },
   {
    "n": 15,
    "check": "Nothing on a client surface implies a client that does not exist",
-   "pass": false,
-   "note": "The stat card in f-007 to f-009 reads 'cash on hand today (client-stated)', from the label in facts.json. Hubricon has no clients, and the demo chip beside it says the figures are a demo fixture, so the word 'client' on screen is the one thing in the film that is not true. The label belongs in the demo's own vocabulary: 'stated by the seller in the demo fixture', or simply 'cash on hand today'. The same wording sits on monthly_fixed_costs."
+   "pass": true,
+   "note": "Fixed since the last review. The stat card reads 'cash on hand today (seller-stated)', the chip reads 'TARNHOLLOW DEMO DATA' on every frame that carries a figure, and no frame names or implies a client."
   }
  ],
- "notes": "The look is right and the honesty furniture is in place: paper ground, Inter, one blue and only on money, the demo chip on every frame that carries a figure, every number out of the engine's own run, and the sound layered as the bible asks. What fails is the cut and the layout. The film is nine very long shots with no cuts at all, so two kinetic cards sit unchanged for the better part of a minute each; the subtitle block lands on the chart's x-axis and takes the tick labels with it; the right-hand stat rail clips its captions mid-sentence, keeps stale figures and collides with the chart's own annotations until the figures are unreadable; one segment is blank. The fixes are upstream of assemble, in the scene renderer and the subtitle placement, not in the mix. The 'client-stated' label is the one honesty item and it is a one-line change in the facts labels."
+ "notes": "The cadence item passes for the first time: no frozen picture anywhere, thirty-three cuts, eight seconds between them on average and never more than twenty-two. Three of the last review's seven failures are closed as well (the clipped captions, the blank segment, and the 'client-stated' label). What is left is layout, and both items are in the same corner of the film, the chart segments: the burned-in subtitle sits on the plot's axis-label row and erases the day labels, and the spread's two annotations are drawn on top of the top-tenth label and on top of each other. One further fault belongs to this tick and is already fixed in the scene base: the cut away from a chart left the heading and the stat rail standing over the card. The next render carries that fix; the subtitle floor and the annotation layout are the two changes still to make before this step can pass."
 }

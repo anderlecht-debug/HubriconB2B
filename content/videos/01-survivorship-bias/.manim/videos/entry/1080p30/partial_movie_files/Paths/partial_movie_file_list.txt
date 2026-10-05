@@ -16,3 +16,7 @@ file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00014.mp4'
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00015.mp4'
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00016.mp4'
+file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00017.mp4'
+file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00018.mp4'
+file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00019.mp4'
+file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Paths/uncached_00020.mp4'

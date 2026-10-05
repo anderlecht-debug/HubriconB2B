@@ -97,7 +97,7 @@ class Kinetic(HubriconScene):
             self.wait_until(s["t"])
             mob = self.big_number(s["figure"], s["label"]) if "figure" in s else self.type_card(s["text"])
             until = shots[i + 1]["t"] if i + 1 < len(shots) else self.length
-            self.cut_to(mob, until, about=mob[0] if "figure" in s else None)
+            self.cut_to(mob, until)
         self.finish()
 
 
@@ -168,8 +168,9 @@ class Waterfall(HubriconScene):
             bars.add(bar)
             labels.add(lab, val)
         keys = {"rev_latest", "fees_latest", "cogs_latest", "ads_latest", "net_latest"}
+        group = self.stage(VGroup(ax, bars, labels), about=bars[-1])   # the net is the blue the drift turns on
         self.reveal_loop(skip=keys)
-        self.finish(VGroup(ax, bars, labels), about=bars[-1])
+        self.finish(group, about=bars[-1])
 
 
 class CashCone(HubriconScene):
@@ -217,6 +218,7 @@ class CashCone(HubriconScene):
                 self.landed("annotation")
                 group.add(ln, t)
 
+        self.stage(group, about=mid)   # the cone drifts about its median, and cuts away when §4 says
         self.reveal_loop({"min_p5": trough, "trough_p5": trough, "largest_wire": wire})
         self.finish(group, about=mid)
 
@@ -289,6 +291,7 @@ class Paths(HubriconScene):
             self.landed("annotation")
             group.add(t)
 
+        self.stage(group)   # the paths drift, and cut away when §4 says
         self.reveal_loop({"year_top_decile": survivors, "top_decile_terminal": survivors, "year_top_vs_median": survivors,
                           "year_terminal_p50": median, "terminal_p50": median,
                           "year_luck_spread": spread, "year_luck_spread_pct": spread})
@@ -341,6 +344,7 @@ class Elasticity(HubriconScene):
             self.landed("annotation")
             group.add(t)
 
+        self.stage(group, about=line)
         self.reveal_loop({"el_point": eps, "el_ci_low": ci, "el_ci_high": ci, "el_ci_width": ci})
         self.finish(group)
 
@@ -391,6 +395,7 @@ class Newsvendor(HubriconScene):
             self.landed("annotation")
             group.add(ln, t)
 
+        self.stage(group, about=l1)
         self.reveal_loop({"nv_fractile": star, "nv_low_fractile": star, "service_level_default": flat, "nv_fractile_median": star})
         self.finish(group, about=l1)
 
@@ -436,6 +441,7 @@ class SampleSize(HubriconScene):
                 group.add(ln, t)
             return h
 
+        self.stage(group, about=line)
         self.reveal_loop({"n_for_se_half": need(0.5), "n_for_se_quarter": need(0.25), "n_for_se_tenth": need(0.1)},
                          skip={"el_se", "el_periods"})
         self.finish(group)

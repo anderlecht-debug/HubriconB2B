@@ -80,6 +80,19 @@ STYLE = {
                   "reveal_rate_func": "smooth", "no_gradients_or_glows": True},
 }
 
+# The drift that replaces a frozen hold (§3.4): the stage grows 1.000 → 1.015 over a
+# shot, so the rate below is per second at the nominal shot length and a picture's
+# drift starts again at each cut. A held picture that runs long would otherwise swell,
+# so the drift turns around at the cap and comes back down: the picture is always
+# moving and never reads as a zoom.
+DRIFT_RATE = STYLE["chart"]["drift_scale"] ** (1 / SHOT_S)
+DRIFT_CAP = 1.03
+# §4: a chart build may hold up to thirty seconds before the picture has to change.
+# The scene's own clock stops short of that, so the cut lands on a sentence inside the
+# stretch rather than on the thirtieth second, and the measured interval between cuts
+# keeps a margin under the limit QA reads (V01's QA, 2026-10-05).
+BUILD_MAX_S, BUILD_CUT_S = 30.0, 20.0
+
 
 def cubic_bezier(x1: float, y1: float, x2: float, y2: float):
     """A CSS cubic-bezier() timing function as a Manim rate_func."""
@@ -340,7 +353,12 @@ class HubriconScene(Scene):
         self.callout_stack = VGroup()
         self.entering = []
         self.shot_mobs = []
-        self.corner()
+        # What the drift moves, what it pivots on, how far it has moved and which way,
+        # and when the picture now on screen came up. The segment's own first frame is
+        # a cut, so the clock starts at zero.
+        self.stage_group, self.stage_about = None, None
+        self._drift_f, self._drift_dir, self._shot_since = 1.0, 1, 0.0
+        self.furniture = self.corner()
 
     # ── clock ──
     def _trace(self, what: str):
@@ -492,20 +510,128 @@ class HubriconScene(Scene):
         g, _ = stack(lines, self.pad["side"], top, size, 1.04)
         return g
 
-    def cut_to(self, mob, until: float, about=None):
+    def cut_to(self, mob, until: float):
         """The next shot: what was on the stage is gone in one frame (a hard cut,
-        never a dissolve), the new picture is up, and it pushes slowly while it is
-        held so nothing on screen is ever frozen (§3.4)."""
+        never a dissolve), the new picture is up, and it drifts while it is held so
+        nothing on screen is ever frozen (§3.4)."""
         for old in list(self.shot_mobs):
             self.remove(old)
         self.shot_mobs = [mob]
         self.add(mob)
         self.landed("annotation")
-        rest = max(0.0, until - self.clock)
-        if rest > 0.05:
-            centre = (about or mob).get_center()
-            self.play(mob.animate.scale(STYLE["chart"]["drift_scale"], about_point=centre), run_time=rest,
-                      rate_func=linear)
+        self._drift_f, self._drift_dir, self._shot_since = 1.0, 1, self.clock
+        self.drift(max(0.0, until - self.clock), group=mob)
+
+    # ── the drift, and the hold that cuts rather than sit still (§3.4, §4) ──
+    def stage(self, group, about=None):
+        """What the drift moves and what a cut away comes back to: the picture this
+        scene drew, the corner's furniture excepted. `about` is the blue the drift is
+        centred on; without one it pivots on the stage's anchor."""
+        if group is not self.stage_group:
+            self._drift_f, self._drift_dir = 1.0, 1
+        self.stage_group, self.stage_about = group, about
+        return group
+
+    def anchor(self) -> np.ndarray:
+        """Where a drift pivots when the scene names no blue: the bottom left of the
+        live stage, where its grid starts. A picture scaled about its own centre
+        travels too little to read as motion, and a card drifting about itself is what
+        freezedetect called a frozen frame (V01's QA, 2026-10-05)."""
+        return at(self.pad["side"], self.Hpx - self.floor())
+
+    def _pivot(self, about, group) -> np.ndarray:
+        if about is None and group is self.stage_group:
+            about = self.stage_about
+        if about is None:
+            return self.anchor()
+        return about if isinstance(about, np.ndarray) else about.get_center()
+
+    def drift(self, seconds: float, group=None, about=None):
+        """Hold a picture by drifting it rather than freezing it (§3.4): 1.000 → 1.015
+        over a shot, centred on the blue, turning around at the cap so a long hold
+        never swells into a zoom."""
+        if seconds <= 0.05:
+            return
+        g = self.stage_group if group is None else group
+        if g is None:
+            self.wait(seconds)
+            return
+        own = g is self.stage_group
+        if own:
+            if self._drift_f >= DRIFT_CAP:
+                self._drift_dir = -1
+            elif self._drift_f <= 1.0:
+                self._drift_dir = 1
+        f = DRIFT_RATE ** (seconds * (self._drift_dir if own else 1))
+        if own:
+            self._drift_f *= f
+        self.play(g.animate.scale(f, about_point=self._pivot(about, g)), run_time=seconds, rate_func=linear)
+
+    def spoken_at(self, t: float) -> str | None:
+        """The narration's sentence being spoken `t` seconds into the segment, so a cut
+        away from the chart lands on the line the viewer is hearing."""
+        ps = phrases(self.seg.get("words") or [])
+        if not ps:
+            vo = (self.seg.get("vo") or "").strip()
+            return re.split(r"(?<=[.!?])\s", vo, maxsplit=1)[0] if vo else None
+        start = float(self.seg["start"])
+        said = [p for p in ps if p["start"] - start <= t + 0.25]
+        return (said[-1] if said else ps[0])["text"]
+
+    def cut_away(self, seconds: float):
+        """A hard cut from the chart to the sentence being spoken, and back to the
+        chart in the framing it was drawn in (§14.5 C3). The cadence will not hold one
+        picture over a long segment, and a chart with an annotation landing on it is
+        not a cut: the detector reads a change of picture, not a change inside one."""
+        g = self.stage_group
+        text = self.spoken_at(self.clock)
+        if g is None or not text:
+            self.drift(seconds)
+            return
+        card = self.type_card(text)
+        # the whole paper stage gives way, not only the chart: a card drawn under the
+        # chart's own heading, with its stat rail still standing, is not a cut, and it
+        # puts five blocks of type on one frame (V01's frames, 2026-10-05)
+        hidden = [m for m in self.mobjects if m is not self.furniture]
+        for m in hidden:
+            self.remove(m)
+        self.add(card)
+        self.landed("annotation")
+        self._shot_since = self.clock
+        self.drift(seconds, group=card)
+        self.remove(card)
+        if self._drift_f != 1.0:
+            g.scale(1 / self._drift_f, about_point=self._pivot(None, g))
+        self._drift_f, self._drift_dir, self._shot_since = 1.0, 1, self.clock
+        for m in hidden:
+            self.add(m)
+        self.landed("annotation")
+
+    def hold_to(self, until: float):
+        """Hold the stage until `until` seconds into the segment: drifting, never
+        frozen (§3.4), and never one picture past the cadence (§4). A stretch longer
+        than the chart's clock allows cuts away to the narration and comes back."""
+        while True:
+            rest = until - self.clock
+            if rest <= 0.05:
+                return
+            if self.stage_group is None:
+                self.wait(rest)
+                return
+            # what the picture now up may still hold: its own shot's maximum, and
+            # what is left of the build's clock, whichever runs out first
+            room = min(SHOT_MAX_S, max(0.0, BUILD_CUT_S - (self.clock - self._shot_since)))
+            if rest <= room or rest < SHOT_MIN_S:
+                self.drift(rest)
+                return
+            # the chart holds what it may, keeping back a shot for the line and a shot
+            # for its own return, so the annotation at `until` lands on the chart
+            self.drift(min(room, max(0.0, rest - 2 * SHOT_MIN_S)))
+            card_s = min(SHOT_S, until - self.clock - SHOT_MIN_S)
+            if card_s < SHOT_MIN_S:
+                self.drift(max(0.0, until - self.clock))
+                return
+            self.cut_away(card_s)
 
     # ── charts, in the site's chart grammar (assets/hubricon.css .chart) ──
     def plot_box(self) -> tuple[float, float, float, float]:
@@ -600,7 +726,7 @@ class HubriconScene(Scene):
             if key in skip:
                 continue
             t = max(0.0, float(r["t"]) - float(self.seg["start"]))
-            self.wait_until(t)
+            self.hold_to(t)
             fact = self.facts.get(key, {})
             if key in handlers:
                 for prev in self.callout_stack:   # the annotation takes the blue; earlier figures step back
@@ -610,16 +736,13 @@ class HubriconScene(Scene):
                 self.callout(fact.get("value", r.get("value", "")), fact.get("label", key))
 
     def finish(self, group=None, about=None):
-        """Hold the rest of the segment with the stage's drift (§3.4): what is on
-        screen grows 1.000 → 1.015, centred on the blue, so nothing is frozen."""
-        rest = self.length - self.clock
-        if rest > 0.05:
-            if group is not None:
-                centre = about.get_center() if about is not None else group.get_center()
-                self.play(group.animate.scale(STYLE["chart"]["drift_scale"], about_point=centre), run_time=rest,
-                          rate_func=linear)
-            else:
-                self.wait(rest)
+        """Hold the rest of the segment the way §3.4 and §4 say: the stage drifting,
+        centred on the blue, never frozen, and cutting away to the narration when the
+        tail runs past what one picture may hold, rather than sitting on the chart to
+        the end of the segment."""
+        if group is not None:
+            self.stage(group, about)
+        self.hold_to(self.length)
         ev = self.d / "events.json"
         existing = json.loads(ev.read_text(encoding="utf-8")) if ev.exists() else []
         existing = [e for e in existing if e.get("segment") != self.position] + self.events
