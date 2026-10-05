@@ -1,0 +1,91 @@
+{
+ "slug": "greats-02-the-dime",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "independent critic, two rounds: The viewer commits to the moral ('Find a price that works, and don't touch it') at THE QUESTION, restated at THE CATHEDRAL before the reveal; second round's leaks fixed: the 'it's a memory' line moved to the reveal, hook 3 ends on a question."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "independent critic, two rounds: The title promises what the ceiling never told them; WHAT THE DIME TAUGHT and the close deliver it. 'More than 50 years' (1880 to 1932, eastern stores) is qualified in the narration."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "independent critic, two rounds: Second round failed it on the minus-one rule and the standard error arriving without meaning; fixed: WHY A RAISE explains the slopes above and below minus one before the method, and THE HONEST RANGE says what the standard error and the multiplier are before the method uses them."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "1 CTA beat(s); one idea: A held price is unmeasured, and only movement reveals demand. Hook 2 now ends on the held price, and the soap-and-skimmer beat turns toward different best prices instead of a second task."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "independent critic, two rounds: 'A price you've never moved isn't a safe price. It's an unmeasured one' and 'waiting with the price held still adds nothing' are disputable; the film takes the price-stability objection on at WHEN THE PRICE IS THE BRAND."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "independent critic, two rounds: Every step the course teaches is in the method (units a day, exclusions, the 2% spread rule, the log fit and its range, the minus-one rule as the engine applies it, the best-price formula at the estimate and both ends, the 5% cap, the written prediction), plus lesson 7's watch-and-reverse while the step is live."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "independent critic, two rounds: Real limits (seasons, ads, reactive pricing, competitors, cannibalisation, thin history, sizing the step) and the soft close word for word, no product named; the film now ends on the close."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "27 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "independent critic, two rounds: Elasticity, contribution, the hill and testing in time apply to any seller; fees are described generically and the demo is labelled."
+  }
+ ]
+}

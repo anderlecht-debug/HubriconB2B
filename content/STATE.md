@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T11:38:49+00:00 · style locked: True
+Updated 2026-10-05T20:15:04+00:00 · style locked: True
 
 ## Capabilities
 
@@ -25,6 +25,9 @@ Updated 2026-10-05T11:38:49+00:00 · style locked: True
 - V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
 - V16 · The $60,000 wire you're guessing on · gate `review` → see `content/REVIEW.md`
 - V17 · Why 95% service level is wrong for most of your SKUs · gate `review` → see `content/REVIEW.md`
+- G01 · Greats of Commerce 1: the rate card that built Sears · gate `review` → see `content/REVIEW.md`
+- G02 · Greats of Commerce 2: the dime · gate `review` → see `content/REVIEW.md`
+- G03 · Greats of Commerce 3: the corner · gate `review` → see `content/REVIEW.md`
 
 ## Done
 

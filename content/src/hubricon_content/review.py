@@ -30,7 +30,7 @@ def script_block(u: dict) -> str:
     sc = scriptmod.parse((d / "script.md").read_text(encoding="utf-8"))
     h = sc["header"]
     secs = scriptmod.estimate_seconds(sc, facts)
-    out = [f"## {u['id']} · day {u.get('day')} · tier {u.get('tier')} · pillar {u.get('pillar')} — script gate", "",
+    out = [f"## {u['id']} · {('day ' + str(u['day'])) if u.get('day') else 'series'} · tier {u.get('tier')} · pillar {u.get('pillar')} — script gate", "",
            f"**Title:** {_render_with_keys(h.get('TITLE', ''), facts)}  ",
            f"**Thumbnail:** {_render_with_keys(h.get('THUMBNAIL', ''), facts)}  ",
            f"**Spiky claim:** {h.get('SPIKY CLAIM', '')}  ",

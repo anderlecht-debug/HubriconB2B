@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T11:38:49+00:00",
+ "updated_at": "2026-10-05T20:15:04+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -2204,6 +2204,201 @@
    "review_notes": [],
    "attempts": {},
    "log": []
+  },
+  {
+   "id": "G01",
+   "phase": 3,
+   "kind": "video",
+   "day": null,
+   "title": "Greats of Commerce 1: the rate card that built Sears",
+   "pillar": 1,
+   "tier": "D",
+   "slug": "greats-01-sears-parcel-post",
+   "models": [],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "shots": "todo",
+    "source": "todo",
+    "pick": "todo",
+    "render_shots": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-05T19:04:28+00:00",
+     "step": "facts",
+     "note": "done facts.json from the engine's demo run plus the film's sourced history.json"
+    },
+    {
+     "at": "2026-10-05T19:04:33+00:00",
+     "step": "script",
+     "note": "done drafted for the founder's review from the series research (docs/content/series/)"
+    },
+    {
+     "at": "2026-10-05T20:15:02+00:00",
+     "step": "critique",
+     "note": "done two rounds of independent critique; validator clean"
+    },
+    {
+     "at": "2026-10-05T20:15:02+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-05T20:15:03+00:00",
+     "step": "review",
+     "note": "parked for the founder (emailed)"
+    }
+   ]
+  },
+  {
+   "id": "G02",
+   "phase": 3,
+   "kind": "video",
+   "day": null,
+   "title": "Greats of Commerce 2: the dime",
+   "pillar": 3,
+   "tier": "D",
+   "slug": "greats-02-the-dime",
+   "models": [],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "shots": "todo",
+    "source": "todo",
+    "pick": "todo",
+    "render_shots": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-05T19:04:28+00:00",
+     "step": "facts",
+     "note": "done facts.json from the engine's demo run plus the film's sourced history.json"
+    },
+    {
+     "at": "2026-10-05T19:04:33+00:00",
+     "step": "script",
+     "note": "done drafted for the founder's review from the series research (docs/content/series/)"
+    },
+    {
+     "at": "2026-10-05T20:15:02+00:00",
+     "step": "critique",
+     "note": "done two rounds of independent critique; validator clean"
+    },
+    {
+     "at": "2026-10-05T20:15:03+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-05T20:15:03+00:00",
+     "step": "review",
+     "note": "parked for the founder (emailed)"
+    }
+   ]
+  },
+  {
+   "id": "G03",
+   "phase": 3,
+   "kind": "video",
+   "day": null,
+   "title": "Greats of Commerce 3: the corner",
+   "pillar": 2,
+   "tier": "D",
+   "slug": "greats-03-the-corner",
+   "models": [],
+   "status": "awaiting",
+   "blocked_on": null,
+   "requires_done": null,
+   "voice": null,
+   "publishable": false,
+   "steps": {
+    "facts": "done",
+    "script": "done",
+    "critique": "done",
+    "review": "awaiting",
+    "tts": "todo",
+    "timing": "todo",
+    "shots": "todo",
+    "source": "todo",
+    "pick": "todo",
+    "render_shots": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
+   },
+   "review_notes": [],
+   "attempts": {},
+   "log": [
+    {
+     "at": "2026-10-05T19:04:28+00:00",
+     "step": "facts",
+     "note": "done facts.json from the engine's demo run plus the film's sourced history.json"
+    },
+    {
+     "at": "2026-10-05T19:04:34+00:00",
+     "step": "script",
+     "note": "done drafted for the founder's review from the series research (docs/content/series/)"
+    },
+    {
+     "at": "2026-10-05T20:15:02+00:00",
+     "step": "critique",
+     "note": "done two rounds of independent critique; validator clean"
+    },
+    {
+     "at": "2026-10-05T20:15:03+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-05T20:15:04+00:00",
+     "step": "review",
+     "note": "parked for the founder (emailed)"
+    }
+   ]
   }
  ]
 }
