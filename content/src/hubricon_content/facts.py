@@ -240,6 +240,8 @@ def build_facts(run: dict, data: dict) -> Facts:
         f.put("fee_share_latest", _pct(w["fees"] / w["revenue"], 1), "Amazon fees as a share of revenue", S("MARGIN.DECOMP"))
         f.put("gross_pct_latest", _pct((w["revenue"] - w["cogs"]) / w["revenue"], 1), "gross margin (revenue less landed cost), latest month", S("MARGIN.DECOMP"))
         f.put("contribution_pct_latest", _pct(w["net"] / w["revenue"], 1), "contribution margin after fees, cost and ads, latest month", S("MARGIN.DECOMP"))
+        # the margin the Price Curve course prices on: what a sale keeps after landed cost and fees, before ads
+        f.put("contribution_pre_ads_pct", _pct((w["revenue"] - w["cogs"] - w["fees"]) / w["revenue"], 1), "contribution margin after landed cost and fees, before ads, latest month", S("MARGIN.DECOMP"))
         f.put("gross_vs_contribution_gap", _pct((w["revenue"] - w["cogs"]) / w["revenue"] - w["net"] / w["revenue"], 1), "points of margin between gross and contribution", S("MARGIN.DECOMP"))
     latest = chart_pack._latest_rows(run["margin"])[1]
     if latest:
@@ -283,15 +285,44 @@ def build_facts(run: dict, data: dict) -> Facts:
             f.put("largest_wire_sku", big["sku"], "the SKU behind the largest wire", S("cash horizon"))
             f.put("wires_total", _money(sum(x["amount"] for x in wires)), "all supplier wires inside the horizon", S("cash horizon"))
         f.put("payout_cycle", _days(c["details"]["payout_cycle_days"]), "the platform's payout cycle", S("cash horizon"))
+        f.put("cash_drop", _money(c["starting_cash"] - c["min_median"]), "how far cash falls from today to the median path's low point", S("cash horizon"))
+        fixed = float(c["monthly_fixed_costs"] or 0)
+        if fixed > 0:
+            f.put("cash_months", f"more than {int(c['starting_cash'] // fixed)} months", "cash on hand in months of fixed costs", S("cash horizon"))
+            f.put("cash_drop_months", f"more than {int((c['starting_cash'] - c['min_median']) // fixed)} months", "that fall in months of fixed costs", S("cash horizon"))
+            f.put("trough_months", f"under {int(c['min_median'] // fixed) + 1} months", "the low point in months of fixed costs", S("cash horizon"))
+        if wires:
+            today = [x for x in wires if int(x["day"]) == 0]
+            f.put("day0_wire_count", str(len(today)), "supplier wires that leave today", S("cash horizon"))
+            f.put("day0_wires_total", _money(sum(x["amount"] for x in today)), "what they come to", S("cash horizon"))
+            before = [x for x in wires if int(x["day"]) <= int(c["min_p5_day"])]
+            f.put("wires_to_trough", _money(sum(x["amount"] for x in before)), "supplier wires that leave on or before the low point's day", S("cash horizon"))
+        ladder = c["details"].get("ruin_ladder") or {}
+        if ladder.get("post_min_p5"):
+            lows = ladder["post_min_p5"]
+            f.put("end_p5", _money(lows[-1]), "fifth-percentile cash on the horizon's last day, across every simulated path", S("cash horizon"))
+            after = lows[int(c["min_p5_day"]) + 1:]
+            if after:
+                f.put("after_trough_p5", _money(min(after)), "fifth-percentile low point of cash after the trough's day, across every simulated path", S("cash horizon"))
+        if ladder.get("post_min_q") and ladder["post_min_q"][0]:
+            q0 = ladder["post_min_q"][0]
+            if max(q0) - min(q0) < 0.5:
+                f.put("trough_every_path", "every one", "how many simulated paths share the same low point (every quantile of the paths' minimum is equal)", S("cash horizon"))
+        reserve, transit = int(c["details"].get("payout_reserve_days") or 0), int(c["details"].get("payout_transit_days") or 0)
+        if reserve:
+            cycle = int(c["details"]["payout_cycle_days"])
+            f.put("sale_payable_days", _days(reserve), "days from a sale until the platform can pay it (delivery, then DD+7)", S("cash horizon"))
+            f.put("bank_transit_days", _days(transit), "days from a settlement to the bank", S("cash horizon"))
+            f.put("sale_to_cash_days", _days(reserve + cycle // 2 + transit), "days from a sale to cash in the bank, on average: payable, half a settlement cycle, the transfer", S("cash horizon"))
         f.put("demand_corr", _n(c["details"]["demand_correlation"].get("pairwise_corr") or 0, 2), "pairwise demand correlation across SKUs", S("cash horizon"))
         f.put("skus_in_cone", str(c["details"]["skus_modeled"]), "SKUs feeding the cash cone", S("cash horizon"))
     p = run.get("paths")
     if p:
         src = S("cash horizon paths")
         f.put("paths_sampled", _n(p["n"]), "paths drawn for the survivorship comparison", src)
-        f.put("terminal_p50", _money(p["terminal_p50"]), "median cash at the end of the horizon", src)
-        f.put("terminal_p90", _money(p["terminal_p90"]), "ninetieth-percentile cash at the end of the horizon", src)
-        f.put("terminal_p10", _money(p["terminal_p10"]), "tenth-percentile cash at the end of the horizon", src)
+        f.put("terminal_p50", _money(p["terminal_p50"]), "median cash at the end of the horizon, across the paths drawn for the fan", src)
+        f.put("terminal_p90", _money(p["terminal_p90"]), "ninetieth-percentile cash at the end of the horizon, across the paths drawn for the fan", src)
+        f.put("terminal_p10", _money(p["terminal_p10"]), "tenth-percentile cash at the end of the horizon, across the paths drawn for the fan", src)
         f.put("top_decile_terminal", _money(p["top_decile_mean_terminal"]), "mean ending cash of the top tenth of paths", src)
         f.put("top_decile_trough", _money(p["top_decile_mean_trough"]), "mean trough of the top tenth of paths", src)
         f.put("all_trough", _money(p["all_mean_trough"]), "mean trough across every path", src)
@@ -383,9 +414,17 @@ def build_facts(run: dict, data: dict) -> Facts:
             se = best.get("std_err")
             if se is not None:
                 f.put("el_se", f"{float(se):.2f}", "its HC3 robust standard error", src)
-                f.put("el_ci_low", f"{float(best['elasticity']) - 1.96 * float(se):.2f}", "lower bound of its ninety-five percent interval", src)
-                f.put("el_ci_high", f"{float(best['elasticity']) + 1.96 * float(se):.2f}", "upper bound of its ninety-five percent interval", src)
-                f.put("el_ci_width", f"{2 * 1.96 * float(se):.2f}", "width of that interval", src)
+                # the engine's own ninety-five percent interval (Student t on the fit's periods), the
+                # one its charts draw; a normal 1.96 would be narrower than the model is sure
+                ci = d.get("ci95") or [float(best["elasticity"]) - 1.96 * float(se), float(best["elasticity"]) + 1.96 * float(se)]
+                f.put("el_ci_low", f"{float(ci[0]):.2f}", "lower bound of its ninety-five percent interval", src)
+                f.put("el_ci_high", f"{float(ci[1]):.2f}", "upper bound of its ninety-five percent interval", src)
+                f.put("el_ci_width", f"{float(ci[1]) - float(ci[0]):.2f}", "width of that interval", src)
+                if float(ci[1]) >= 0:
+                    f.put("el_ci_crosses", "crosses zero", "its interval reaches no effect of price at all", src)
+            if d.get("epsilon_raw") is not None and d.get("shrinkage_weight") is not None:
+                f.put("el_raw", f"{float(d['epsilon_raw']):.2f}", "the slope through its own points alone, before pooling", src)
+                f.put("el_own_weight", _pct(float(d["shrinkage_weight"]), 0), "the weight its own points carry against the catalogue's common slope", src)
             f.put("el_periods", str(len(d.get("points") or [])), "periods the example fit used", src)
             f.put("el_r2", f"{float(best.get('r_squared') or 0):.2f}", "its R-squared", src)
             eps = [float(e["elasticity"]) for e in ok]
@@ -403,17 +442,23 @@ def build_facts(run: dict, data: dict) -> Facts:
         f.put("pm_count", str(len(moves)), "SKUs with an honest price move available", src)
         up = [m for m in moves if float(m["p_new"]) > float(m.get("p0") or m["p_new"] - 1)]
         best = max(moves, key=lambda m: float(m.get("expected_delta") or 0))
-        f.put("pm_sku", best["sku"], "the SKU with the largest expected gain from a price move", src)
+        f.put("pm_sku", best["sku"], "the SKU with the largest median gain from a price move", src)
         f.put("pm_new_price", _money2(best["p_new"]), "its recommended new price", src)
         f.put("pm_step", _pct(best["step_fraction"], 1), "the size of the step", src)
-        f.put("pm_delta", _money(best["expected_delta"]), "expected profit change per month", src)
+        f.put("pm_delta", _money(best["expected_delta"]), "median profit change per month across the simulated draws", src)
         rng_ = best.get("delta_range") or (None, None)
         if rng_[0] is not None:
             f.put("pm_delta_p5", _money(rng_[0]), "fifth percentile of that change", src)
             f.put("pm_delta_p95", _money(rng_[1]), "ninety-fifth percentile of that change", src)
         if best.get("p_loss") is not None:
-            f.put("pm_p_loss", _pct(best["p_loss"], 0), "probability the move loses money", src)
-        f.put("pm_total_delta", _money(sum(float(m.get("expected_delta") or 0) for m in moves)), "expected monthly profit across every recommended move", src)
+            f.put("pm_p_loss", _pct(best["p_loss"], 0), "share of the simulated draws in which the move loses money", src)
+        f.put("pm_band", "90%", "the share of draws between the fifth and ninety-fifth percentiles", src)
+        f.put("pm_total_delta", _money(sum(float(m.get("expected_delta") or 0) for m in moves)), "the sum of every recommended move's median monthly change", src)
+        f.put("pm_no_top", str(sum(1 for m in moves if m.get("destination") is None)), "SKUs whose range is too wide for the model to name a best price, only a direction", src)
+        if best.get("p_prices_optimal") is not None:
+            f.put("pm_p_optimal", _pct(float(best["p_prices_optimal"]), 0), "the model's probability that the catalogue is already priced at its optimum", src)
+        if best.get("direction_confidence") is not None:
+            f.put("pm_direction_conf", _pct(float(best["direction_confidence"]), 0), "the model's confidence in the direction of that step", src)
         f.put("pm_step_cap", _pct(pricing_engine.STEP_CAP), "the hard cap on any single price step", src)
 
     # advertising

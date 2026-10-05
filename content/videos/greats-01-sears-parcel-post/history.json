@@ -456,7 +456,7 @@
  },
  "cs_weight": {
   "value": "8.8 ounces",
-  "label": "the listing's shipping weight",
+  "label": "the item weight the listing's public page shows (a floor: the packed unit weighs more)",
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_edge": {
@@ -475,8 +475,8 @@
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_units": {
-  "value": "about 3,600 units a month",
-  "label": "the listing's estimated sales (estimate)",
+  "value": "an estimated 3,500 units a month",
+  "label": "the listing's sales, estimated from its public sales rank (a curve that can be wrong by half or more)",
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_leak_p10": {
@@ -576,7 +576,7 @@
  },
  "s_sewing_quote": {
   "value": "For heaven's sake, quit sending me sewing machines. Every time I go to the station I find another one there. You have shipped me five already.",
-  "label": "a customer's letter to Sears, about 1900 (Emmet & Jeuck, Catalogues and Counters, p. 116)",
+  "label": "a customer's letter to Sears in the 1890s, when orders often went out over and over again (Emmet & Jeuck, Catalogues and Counters, p. 116)",
   "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
  },
  "cs_aged_band": {
@@ -668,5 +668,70 @@
   "value": "about two years after the move",
   "label": "when company forms show the schedule system in wide use",
   "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "s_sewing_decade": {
+  "value": "the 1890s",
+  "label": "when the sewing-machine letter was written",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950)"
+ },
+ "s_doubt_quote": {
+  "value": "If in doubt as to what amount is required for any order you are perfectly safe in adding even more than you think necessary, for we will ship by the most economical method and will return you any amount that is left over.",
+  "label": "the 1917 catalogue's postage instruction",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134 (Sears, Roebuck and Co. catalogue, spring 1917, 'Rates for Parcel Post Shipments' page; read on the scan's text)"
+ },
+ "s_wrap_quote": {
+  "value": "Occasionally, according to the nature of the merchandise, we are obliged to give the actual weight. In such cases a few ounces extra in weight must be allowed for wrapping and packing, according to the nature of the goods.",
+  "label": "the 1917 catalogue on shipping weights",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134 (Sears, Roebuck and Co. catalogue, spring 1917, 'Rates for Parcel Post Shipments' page; read on the scan's text)"
+ },
+ "s_branch_quote": {
+  "value": "a mail-order house can establish a branch agency in the territory which the concern seeks to reach, and within a radial distance of 150 miles from the location of such agency the mail-order house gets exactly the same rate as the Government charges the local merchant",
+  "label": "the Joint Committee on the 1914 zones",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_freight_catalogue_quote": {
+  "value": "From points in the fourth or fifth zones, these catalogues are shipped by freight to some point within the State and distributed from that point by mail.",
+  "label": "a postmaster's testimony to the Joint Committee",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_one_firm_saving": {
+  "value": "approximately $1,000,000",
+  "label": "what the committee found one firm alone saved in postage a year when catalogues moved into parcel post",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_wood_quote": {
+  "value": "better to lose that business to one's self than to someone else",
+  "label": "Robert E. Wood on Sears opening stores that competed with its catalogue (Emmet & Jeuck, p. 341)",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950)"
+ },
+ "s_limit_1913_adj": {
+  "value": "11-pound",
+  "label": "the 1913 weight limit, as an adjective",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "cs_product": {
+  "value": "paint scratch remover",
+  "label": "the case study's listing",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_band_share": {
+  "value": "eight in ten",
+  "label": "the share of simulated years inside the band from the tenth to the ninetieth percentile",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_8oz": {
+  "value": "8 ounces",
+  "label": "the step edge below 12 ounces on the large standard card",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json"
+ },
+ "rc_fuel": {
+  "value": "3.5%",
+  "label": "Amazon's fuel and logistics surcharge on every fulfilment fee, from April 17, 2026",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.fuel_surcharge)"
+ },
+ "rc_dim_divisor": {
+  "value": "139",
+  "label": "the dimensional-weight divisor for a box over a cubic foot (cubic inches, giving pounds)",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.dim_divisor); the Fee Staircase course, lesson on billable weight"
  }
 }

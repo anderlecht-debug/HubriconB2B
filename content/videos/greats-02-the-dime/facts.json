@@ -74,6 +74,11 @@
   "label": "contribution margin after fees, cost and ads, latest month",
   "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "contribution_pre_ads_pct": {
+  "value": "38.5%",
+  "label": "contribution margin after landed cost and fees, before ads, latest month",
+  "source": "MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "gross_vs_contribution_gap": {
   "value": "38.4%",
   "label": "points of margin between gross and contribution",
@@ -160,7 +165,7 @@
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "min_p5": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the fifth-percentile low point of cash",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -170,22 +175,22 @@
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "min_median": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the median path's low point",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_p5": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "fifth percentile of each path's own trough",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_es": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "expected shortfall: the mean trough of the worst five percent of paths",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_median": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the median path's trough",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -219,6 +224,71 @@
   "label": "the platform's payout cycle",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "cash_drop": {
+  "value": "$176,758",
+  "label": "how far cash falls from today to the median path's low point",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cash_months": {
+  "value": "more than 8 months",
+  "label": "cash on hand in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cash_drop_months": {
+  "value": "more than 5 months",
+  "label": "that fall in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_months": {
+  "value": "under 3 months",
+  "label": "the low point in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "day0_wire_count": {
+  "value": "10",
+  "label": "supplier wires that leave today",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "day0_wires_total": {
+  "value": "$130,622",
+  "label": "what they come to",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "wires_to_trough": {
+  "value": "$154,750",
+  "label": "supplier wires that leave on or before the low point's day",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "end_p5": {
+  "value": "$323,149",
+  "label": "fifth-percentile cash on the horizon's last day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "after_trough_p5": {
+  "value": "$152,042",
+  "label": "fifth-percentile low point of cash after the trough's day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_every_path": {
+  "value": "every one",
+  "label": "how many simulated paths share the same low point (every quantile of the paths' minimum is equal)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "sale_payable_days": {
+  "value": "10 days",
+  "label": "days from a sale until the platform can pay it (delivery, then DD+7)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bank_transit_days": {
+  "value": "4 days",
+  "label": "days from a settlement to the bank",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "sale_to_cash_days": {
+  "value": "21 days",
+  "label": "days from a sale to cash in the bank, on average: payable, half a settlement cycle, the transfer",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "demand_corr": {
   "value": "0.48",
   "label": "pairwise demand correlation across SKUs",
@@ -236,17 +306,17 @@
  },
  "terminal_p50": {
   "value": "$340,454",
-  "label": "median cash at the end of the horizon",
+  "label": "median cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "terminal_p90": {
   "value": "$350,349",
-  "label": "ninetieth-percentile cash at the end of the horizon",
+  "label": "ninetieth-percentile cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "terminal_p10": {
   "value": "$329,953",
-  "label": "tenth-percentile cash at the end of the horizon",
+  "label": "tenth-percentile cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "top_decile_terminal": {
@@ -410,7 +480,7 @@
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "nv_bleed_month": {
-  "value": "$4,050",
+  "value": "$3,642",
   "label": "monthly inventory fee bleed",
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -485,7 +555,7 @@
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "nv_low_cu": {
-  "value": "$14.58",
+  "value": "$14.34",
   "label": "that SKU's cost of a stockout, per unit",
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -530,18 +600,33 @@
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_low": {
-  "value": "-5.47",
+  "value": "-5.85",
   "label": "lower bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_high": {
-  "value": "-0.00",
+  "value": "0.37",
   "label": "upper bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_width": {
-  "value": "5.47",
+  "value": "6.22",
   "label": "width of that interval",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_ci_crosses": {
+  "value": "crosses zero",
+  "label": "its interval reaches no effect of price at all",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_raw": {
+  "value": "-7.35",
+  "label": "the slope through its own points alone, before pooling",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_own_weight": {
+  "value": "17%",
+  "label": "the weight its own points carry against the catalogue's common slope",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_periods": {
@@ -591,7 +676,7 @@
  },
  "pm_sku": {
   "value": "TH-CHEKNI-08",
-  "label": "the SKU with the largest expected gain from a price move",
+  "label": "the SKU with the largest median gain from a price move",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_new_price": {
@@ -606,7 +691,7 @@
  },
  "pm_delta": {
   "value": "$16",
-  "label": "expected profit change per month",
+  "label": "median profit change per month across the simulated draws",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_delta_p5": {
@@ -621,12 +706,32 @@
  },
  "pm_p_loss": {
   "value": "1%",
-  "label": "probability the move loses money",
+  "label": "share of the simulated draws in which the move loses money",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_band": {
+  "value": "90%",
+  "label": "the share of draws between the fifth and ninety-fifth percentiles",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_total_delta": {
   "value": "$166",
-  "label": "expected monthly profit across every recommended move",
+  "label": "the sum of every recommended move's median monthly change",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_no_top": {
+  "value": "22",
+  "label": "SKUs whose range is too wide for the model to name a best price, only a direction",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_p_optimal": {
+  "value": "98%",
+  "label": "the model's probability that the catalogue is already priced at its optimum",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_direction_conf": {
+  "value": "99%",
+  "label": "the model's confidence in the direction of that step",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_step_cap": {
@@ -1066,12 +1171,12 @@
  },
  "w_stock_1879": {
   "value": "$410",
-  "label": "the Lancaster store's opening stock, much of it on credit",
+  "label": "the Lancaster store's opening stock of 'Yankee Notions', much of it on credit",
   "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
  },
  "w_clerks": {
   "value": "7",
-  "label": "clerks on the Lancaster opening day",
+  "label": "clerks on the Lancaster opening day, in Woolworth's letter to his father ('I had 7 clerks'); the company's centennial report says 'his seven bustling clerks'",
   "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html"
  },
  "w_wage": {
@@ -1211,7 +1316,7 @@
  },
  "w_scranton_date": {
   "value": "November 6, 1880",
-  "label": "the Scranton store opens, run by his brother Sum",
+  "label": "the Scranton store opens, run by his brother Sum; the company's centennial report dates the chain's birth to it",
   "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
  },
  "w_office_year": {
@@ -1583,5 +1688,65 @@
   "value": "November 1, 2001",
   "label": "the company renamed Foot Locker, Inc.",
   "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (footlocker2001)"
+ },
+ "w_circus": {
+  "value": "The circus had come to Lancaster, complete with its traditional parade down city streets.",
+  "label": "the scene on opening day, as the company's centennial report tells it (the parade, and Woolworth spending the morning worrying whether anyone would come)",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_people_quote": {
+  "value": "One of the first things I learned was that I could not expect people to come to me. I had to take my store to the people.",
+  "label": "Woolworth, The World's Work, April 1913",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_tried_quote": {
+  "value": "did not yield satisfactory sales and profits",
+  "label": "the company's centennial report on Woolworth's early experiment with 25-cent goods",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_redfronts": {
+  "value": "carmine red-fronts",
+  "label": "the identical store fronts, in the company's centennial report",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_vats_quote": {
+  "value": "You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe.",
+  "label": "a Woolworth buyer to an American toy maker during the war, as told to Printers' Ink, April 1919",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_woolco": {
+  "value": "Woolco",
+  "label": "the crochet cotton an American spinner made, coached by Woolworth's buyers, when the war shut out D.M.C.",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_reserve": {
+  "value": "a reserve set against inventory",
+  "label": "a charge in the 1918 accounts alongside the federal income tax",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1918)"
+ },
+ "w_china": {
+  "value": "mostly china and glassware",
+  "label": "the goods in the 1932 trial of a 20-cent line",
+  "source": "https://time.com/archive/6819377/business-finance-20/"
+ },
+ "w_trial_where": {
+  "value": "in some of their stores, in the West and the South",
+  "label": "where the 20-cent line was tried first, 1932",
+  "source": "https://time.com/archive/6819377/business-finance-20/; https://archive.org/details/per_textile-bulletin_southern-textile-bulletin_1932-03-10_42_2"
+ },
+ "w_rivals": {
+  "value": "competitors without a ten-cent limit",
+  "label": "one of the reasons given for the 1932 move",
+  "source": "https://time.com/archive/6819377/business-finance-20/; https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_lower_costs_quote": {
+  "value": "because of lower costs, our selling prices on many lines have been reduced",
+  "label": "the company's 1932 report to stockholders",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_combination_term": {
+  "value": "so-called combination items",
+  "label": "the 1932 report's words for goods sold in pieces under the limit",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
  }
 }

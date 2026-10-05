@@ -156,7 +156,7 @@
  },
  "p_new_price": {
   "value": "$43",
-  "label": "their price",
+  "label": "their price; the listing statement says the offer was oversubscribed",
   "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1922-06-17_114_2973 (the New York Stock Exchange listing statement, application dated May 3, 1922)"
  },
  "p_sales_1921": {
@@ -494,19 +494,14 @@
   "label": "year",
   "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-02-24_116_3009/page/n133/ (Commercial & Financial Chronicle, February 24, 1923; checked against the page image)"
  },
- "cash_drop": {
-  "value": "$166,799",
-  "label": "how far the demo catalogue's cash falls from today to its trough",
-  "source": "computed from the cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01): cash on hand ($262,000) less the trough ($95,201)"
- },
- "cash_drop_months": {
-  "value": "more than 5 months",
-  "label": "that fall in months of the demo catalogue's fixed costs ($166,799 against $31,500 a month)",
-  "source": "computed from the cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01): cash on hand ($262,000) less the trough ($95,201)"
- },
  "p_mamma_quote": {
   "value": "Wall Street got licked and then called for 'mamma,' the New York Stock Exchange, to help, and, of course, 'mamma' heard the cry of her petted child.",
   "label": "Saunders, Associated Press from Memphis, March 23, 1923, as the Chronicle printed it",
   "source": "https://archive.org/details/sim_commercial-and-financial-chronicle_1923-03-31_116_3014 (Commercial & Financial Chronicle, March 31, 1923: the Exchange's review)"
+ },
+ "p_tolbert": {
+  "value": "Beyond Piggly Wiggly",
+  "label": "Lisa Tolbert's history of self-service (University of Georgia Press, 2023), which calls Piggly Wiggly the most influential self-service store, 'neither the first nor the only'",
+  "source": "https://www.ugapress.org/9780820364414/beyond-piggly-wiggly/"
  }
 }

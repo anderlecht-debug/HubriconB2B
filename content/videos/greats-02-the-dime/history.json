@@ -11,12 +11,12 @@
  },
  "w_stock_1879": {
   "value": "$410",
-  "label": "the Lancaster store's opening stock, much of it on credit",
+  "label": "the Lancaster store's opening stock of 'Yankee Notions', much of it on credit",
   "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html; https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
  },
  "w_clerks": {
   "value": "7",
-  "label": "clerks on the Lancaster opening day",
+  "label": "clerks on the Lancaster opening day, in Woolworth's letter to his father ('I had 7 clerks'); the company's centennial report says 'his seven bustling clerks'",
   "source": "https://www.woolworthsmuseum.co.uk/1800sLancasterPA.html"
  },
  "w_wage": {
@@ -156,7 +156,7 @@
  },
  "w_scranton_date": {
   "value": "November 6, 1880",
-  "label": "the Scranton store opens, run by his brother Sum",
+  "label": "the Scranton store opens, run by his brother Sum; the company's centennial report dates the chain's birth to it",
   "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report)"
  },
  "w_office_year": {
@@ -528,5 +528,65 @@
   "value": "November 1, 2001",
   "label": "the company renamed Foot Locker, Inc.",
   "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (footlocker2001)"
+ },
+ "w_circus": {
+  "value": "The circus had come to Lancaster, complete with its traditional parade down city streets.",
+  "label": "the scene on opening day, as the company's centennial report tells it (the parade, and Woolworth spending the morning worrying whether anyone would come)",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_people_quote": {
+  "value": "One of the first things I learned was that I could not expect people to come to me. I had to take my store to the people.",
+  "label": "Woolworth, The World's Work, April 1913",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_tried_quote": {
+  "value": "did not yield satisfactory sales and profits",
+  "label": "the company's centennial report on Woolworth's early experiment with 25-cent goods",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_redfronts": {
+  "value": "carmine red-fronts",
+  "label": "the identical store fronts, in the company's centennial report",
+  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+ },
+ "w_vats_quote": {
+  "value": "You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe.",
+  "label": "a Woolworth buyer to an American toy maker during the war, as told to Printers' Ink, April 1919",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_woolco": {
+  "value": "Woolco",
+  "label": "the crochet cotton an American spinner made, coached by Woolworth's buyers, when the war shut out D.M.C.",
+  "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
+ },
+ "w_reserve": {
+  "value": "a reserve set against inventory",
+  "label": "a charge in the 1918 accounts alongside the federal income tax",
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1918)"
+ },
+ "w_china": {
+  "value": "mostly china and glassware",
+  "label": "the goods in the 1932 trial of a 20-cent line",
+  "source": "https://time.com/archive/6819377/business-finance-20/"
+ },
+ "w_trial_where": {
+  "value": "in some of their stores, in the West and the South",
+  "label": "where the 20-cent line was tried first, 1932",
+  "source": "https://time.com/archive/6819377/business-finance-20/; https://archive.org/details/per_textile-bulletin_southern-textile-bulletin_1932-03-10_42_2"
+ },
+ "w_rivals": {
+  "value": "competitors without a ten-cent limit",
+  "label": "one of the reasons given for the 1932 move",
+  "source": "https://time.com/archive/6819377/business-finance-20/; https://archive.org/details/sim_magazine-of-wall-street_1936-11-07_59_2"
+ },
+ "w_lower_costs_quote": {
+  "value": "because of lower costs, our selling prices on many lines have been reduced",
+  "label": "the company's 1932 report to stockholders",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
+ },
+ "w_combination_term": {
+  "value": "so-called combination items",
+  "label": "the 1932 report's words for goods sold in pieces under the limit",
+  "source": "https://archive.org/details/report1924fwwo (F. W. Woolworth Co. annual reports)"
  }
 }
