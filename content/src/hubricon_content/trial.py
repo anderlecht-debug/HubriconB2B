@@ -63,6 +63,7 @@ TRIAL = [
         "params": {"heading": "Products that want less than the flat default", "total": "{{nv_skus}}", "filled": "{{nv_skus_below_95}}",
                    "caption": "One dot per product in the demo catalogue."}}),
     ("chart-build", 12, "Revenue last month was {{rev_latest}}, and {{net_latest}} of it was true net profit.", {"on": "{{net_latest}}", "chart": {"scene": "waterfall"}}),
+    ("match-bridge", 5, "A staircase in a building, and then Amazon's fee staircase.", {"params": {"bridge": {"to": "s024", "shape": "steps"}}}),
     ("counterfactual", 10, "Less than an ounce past the edge, paid on every unit.", {"on": "edge,", "chart": {"scene": "staircase"},
         "params": {"heading": "Less than an ounce past the edge. Paid on every unit."}, "label": "proof"}),
     ("range-band", 10, "Ten thousand versions of the next ninety days, and the band holds eight in ten.", {"on": "band", "chart": {"scene": "cash_cone"}}),
@@ -75,7 +76,7 @@ TRIAL = [
     ("kinetic-thesis", 6, "The P&L has no calendar.", {}),
     ("quote", 7, "The P&L has no calendar.", {"params": {"text": "The P&L has no calendar.", "attribution": "From the V05 script, 2026"}}),
     ("breath", 2, "", {"room": "world", "kind": "footage"}),
-    ("callback", 8, "The same cone, now with the trough marked.", {"on": "trough", "params": {"callback": "s024"}, "chart": {"scene": "cash_cone"}}),
+    ("callback", 8, "The same cone, now with the trough marked.", {"on": "trough", "params": {"callback": "s025"}, "chart": {"scene": "cash_cone"}}),
     ("end", 6, "", {}),
 ]
 TRIAL_WORDS = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
