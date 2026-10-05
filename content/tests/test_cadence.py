@@ -98,6 +98,25 @@ def test_a_segment_rendered_before_position_existed_still_files_under_its_number
     assert HubriconScene.position.fget(Stub({"index": 4})) == 4
 
 
+# ── a hold has to carry the run of figures it leads into (§4) ──
+def test_a_run_of_figures_too_close_to_cut_between_is_carried_by_one_picture():
+    """V05's first chapter: two figures, a wide gap, then six about three seconds
+    apart. The hold that leads into the run has to know the run reaches 28.0, or it
+    spends the chart's whole build clock on the drift in front of it."""
+    ts = [3.2, 5.6, 19.7, 22.6, 25.1, 28.0, 34.8]
+    assert HubriconScene.cluster_end(None, ts, 2) == 28.0
+
+
+def test_a_hold_with_a_window_after_it_looks_no_further_than_itself():
+    ts = [3.2, 5.6, 19.7, 22.6]
+    assert HubriconScene.cluster_end(None, ts, 1) == 5.6
+
+
+def test_the_last_figure_looks_no_further_than_itself():
+    ts = [3.2, 5.6, 19.7]
+    assert HubriconScene.cluster_end(None, ts, 2) == 19.7
+
+
 # ── what the program check makes of a film's cutting ──
 def test_a_film_the_detector_finds_no_cuts_in_fails():
     assert not qa.cadence_holds({"cuts": 0, "mean_interval": None, "max_interval": None})
