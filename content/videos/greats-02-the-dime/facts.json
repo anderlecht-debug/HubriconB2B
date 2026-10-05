@@ -414,9 +414,9 @@
   "label": "SKUs simulated",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
- "inv_sims": {
-  "value": "0",
-  "label": "simulated lead times per SKU",
+ "inv_method": {
+  "value": "computed exactly",
+  "label": "how each SKU's stockout odds are found (exact: lognormal–Poisson mixture, trapezoid rule in z)",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "stockout_worst_sku": {

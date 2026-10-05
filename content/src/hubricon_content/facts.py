@@ -351,7 +351,13 @@ def build_facts(run: dict, data: dict) -> Facts:
     if inv:
         src = S("MONTE_CARLO.RUN")
         f.put("inv_skus", str(len(inv)), "SKUs simulated", src)
-        f.put("inv_sims", _n(inv[0]["simulations"]), "simulated lead times per SKU", src)
+        # main's engine computes the stockout odds exactly (a lognormal–Poisson mixture) and runs no
+        # simulation; a count of zero simulated lead times must never be spoken
+        if int(inv[0].get("simulations") or 0) > 0:
+            f.put("inv_sims", _n(inv[0]["simulations"]), "simulated lead times per SKU", src)
+        method = (inv[0].get("details") or {}).get("method")
+        if method:
+            f.put("inv_method", "computed exactly" if method.startswith("exact") else "simulated", f"how each SKU's stockout odds are found ({method})", src)
         worst = max(inv, key=lambda r: float(r["stockout_probability"] or 0))
         f.put("stockout_worst_sku", worst["sku"], "the SKU most likely to run out inside its lead time", src)
         f.put("stockout_worst_p", _pct(worst["stockout_probability"], 0), "its stockout probability", src)
