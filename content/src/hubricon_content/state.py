@@ -63,12 +63,21 @@ def log(u: dict, step: str, note: str) -> None:
 
 # ── capabilities ───────────────────────────────────────────────────────────
 
+def _founder_voice() -> str | None:
+    """The configured voice, only when it is the founder's own (tts.voice_is_own)."""
+    vid = os.environ.get("ELEVENLABS_VOICE_ID")
+    if not (vid and os.environ.get("ELEVENLABS_API_KEY")):
+        return None
+    from .tts import voice_is_own
+    return vid if voice_is_own(vid)[0] else None
+
+
 def capabilities() -> dict:
     """What the environment can do right now. Values only, never secrets."""
     secrets = CONTENT_DIR / ".secrets"
     return {
         "elevenlabs_key": bool(os.environ.get("ELEVENLABS_API_KEY")),
-        "founder_voice_id": os.environ.get("ELEVENLABS_VOICE_ID") or None,
+        "founder_voice_id": _founder_voice(),
         "youtube_token": (secrets / "youtube-token.json").exists(),
         "youtube_client": (secrets / "client_secret.json").exists(),
         "textures_cached": (CONTENT_DIR / "assets" / "textures" / "manifest.json").exists(),

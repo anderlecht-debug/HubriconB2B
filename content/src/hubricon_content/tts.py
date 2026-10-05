@@ -63,10 +63,60 @@ WHISPER_DEVICE = os.environ.get("CONTENT_WHISPER_DEVICE")   # unset: the GPU whe
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’.,-]+")
 
 
+VOICE_CHECK = CONTENT_DIR / ".cache" / "voice-check.json"
+VOICE_CHECK_HOURS = 24
+
+
+def voice_is_own(voice_id: str, key: str | None = None, fetch=None) -> tuple[bool, str]:
+    """Whether a voice belongs to this ElevenLabs account, and its name.
+
+    A voice added from ElevenLabs' public library is another person's voice
+    (`sharing.status` "copied", or an `original_voice_id` that is not its own).
+    Only the founder's own clone may narrate a film presented as his voice
+    (HUBRICON.md), so anything else, or a voice that cannot be checked, is
+    refused. The answer is cached for a day."""
+    import time
+    cache = {}
+    try:
+        cache = json.loads(VOICE_CHECK.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+    hit = cache.get(voice_id)
+    if hit and time.time() - hit.get("at", 0) < VOICE_CHECK_HOURS * 3600 and fetch is None:
+        return hit["own"], hit["name"]
+    key = key or os.environ.get("ELEVENLABS_API_KEY")
+    try:
+        if fetch is None:
+            req = urllib.request.Request(f"https://api.elevenlabs.io/v1/voices/{voice_id}", headers={"xi-api-key": key})
+            with urllib.request.urlopen(req, timeout=20) as res:
+                v = json.loads(res.read())
+        else:
+            v = fetch(voice_id)
+    except Exception as e:   # fail closed: an unchecked voice never narrates
+        return False, f"unchecked ({type(e).__name__})"
+    sharing = v.get("sharing") or {}
+    copied = sharing.get("status") == "copied" or (sharing.get("original_voice_id") not in (None, voice_id))
+    own, name = (not copied and v.get("category") in ("cloned", "professional")), str(v.get("name", ""))
+    if fetch is None:
+        cache[voice_id] = {"own": own, "name": name, "at": time.time()}
+        try:
+            VOICE_CHECK.parent.mkdir(parents=True, exist_ok=True)
+            VOICE_CHECK.write_text(json.dumps(cache), encoding="utf-8")
+        except OSError:
+            pass
+    return own, name
+
+
 def provider() -> tuple[str, str]:
     """(name, reason)."""
     if os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_VOICE_ID"):
-        return "founder", "ElevenLabs clone of the founder's voice"
+        own, name = voice_is_own(os.environ["ELEVENLABS_VOICE_ID"])
+        if own:
+            return "founder", "ElevenLabs clone of the founder's voice"
+        return "none", (f"ELEVENLABS_VOICE_ID is '{name}', which is not a voice this ElevenLabs account made: a voice "
+                        "copied from the public library is another person's. Only the founder's own clone narrates. "
+                        "Record per docs/content/VOICE-RECORDING.md, create the Professional Voice Clone, and put its ID "
+                        "in /home/lp9/Hubricon/HubriconB2B/.env.")
     if ALLOW_PLACEHOLDER and (KOKORO_DIR / "kokoro-v1.0.onnx").exists() and (KOKORO_DIR / "voices-v1.0.bin").exists():
         return "placeholder", "Kokoro offline placeholder; never ships"
     if os.environ.get("ELEVENLABS_API_KEY"):
