@@ -268,6 +268,13 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
     if timing.get("estimated"):
         return {"status": "blocked", "reason": "the timing is the 150-wpm estimate; render-shots needs the narration's own timing"}
     facts = scriptmod.load_facts(slug)
+    if slug != "visual-trial":   # a film renders on the look the founder approved, or not at all
+        from . import visual_lock
+        moved = visual_lock.drift()
+        if moved is None:
+            return {"status": "blocked", "reason": "the long films' look is not locked yet: the founder watches the visual trial, then `hubricon-content visual-lock`"}
+        if moved:
+            return {"status": "blocked", "reason": f"the look moved since the founder locked it: {', '.join(moved)}; re-run the trial and re-lock deliberately"}
     out_dir = d / "shots"
     out_dir.mkdir(exist_ok=True)
     workers = workers or max(1, min(4, (os.cpu_count() or 4) // 4))

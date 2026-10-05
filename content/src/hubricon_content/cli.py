@@ -236,6 +236,20 @@ def cmd_timing(a):
     _out(result)
 
 
+def cmd_visual_lock(a):
+    from . import visual_lock
+    q = _q()
+    doc = visual_lock.lock(q, a.note)
+    state.save(q)
+    _status_files(q)
+    print(f"locked {len(doc['files'])} fingerprints on {doc['locked_on']}; long films may render")
+
+
+def cmd_visual_trial(a):
+    from . import trial
+    _out(trial.run(workers=a.workers, force=a.force))
+
+
 def cmd_pick(a):
     from . import pick
     focus = [float(x) for x in a.focus.split(",")] if a.focus else None
@@ -355,6 +369,10 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("--force", action="store_true")
     p.add_argument("--estimate", action="store_true", help="plan before a voice exists; never replaces timing.json")
     p.set_defaults(fn=cmd_timing)
+    p = sub.add_parser("visual-lock", help="the founder's call, once: freeze the long films' look after the visual trial")
+    p.add_argument("--note", default=""); p.set_defaults(fn=cmd_visual_lock)
+    p = sub.add_parser("visual-trial", help="render the visual trial: one shot of every style (VISUAL_SPEC.md §12, phase 5)")
+    p.add_argument("--workers", type=int, default=None); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_visual_trial)
     p = sub.add_parser("pick", help="record a shot's picture from its contact sheet (the visual-pick skill)")
     p.add_argument("slug"); p.add_argument("shot"); p.add_argument("numbers", nargs="*", type=int)
     p.add_argument("--focus", default=None); p.add_argument("--motion", default=None); p.add_argument("--in", dest="start", type=float, default=None)

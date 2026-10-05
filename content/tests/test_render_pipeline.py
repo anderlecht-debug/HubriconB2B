@@ -84,3 +84,16 @@ def test_every_stage_kind_draws(tmp_path):
     js.write_text(script)
     out = subprocess.run(["node", str(js)], capture_output=True, text=True)
     assert out.returncode == 0 and out.stdout.startswith("ok"), out.stderr
+
+
+def test_a_film_renders_only_on_the_look_the_founder_locked(tmp_path, monkeypatch):
+    from hubricon_content import visual_lock
+    monkeypatch.setattr(visual_lock, "LOCK", tmp_path / "visual-lock.json")
+    assert visual_lock.drift() is None
+    q = {}
+    visual_lock.lock(q, "approved after the trial")
+    assert q["visual_locked"] and visual_lock.drift() == []
+    doc = __import__("json").loads((tmp_path / "visual-lock.json").read_text())
+    doc["files"]["content/assets/grade.json"] = "changed"
+    (tmp_path / "visual-lock.json").write_text(__import__("json").dumps(doc))
+    assert visual_lock.drift() == ["content/assets/grade.json"]
