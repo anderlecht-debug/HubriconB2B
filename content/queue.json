@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T08:25:05+00:00",
+ "updated_at": "2026-10-05T08:55:55+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -507,7 +507,7 @@
     "qa": "done",
     "thumbnail": "done",
     "describe": "done",
-    "shorts": "todo",
+    "shorts": "done",
     "approve_final": "todo",
     "upload": "todo"
    },
@@ -616,6 +616,11 @@
      "at": "2026-10-05T08:25:02+00:00",
      "step": "shorts",
      "note": "failed The four cuts are 9:16 and under forty-five seconds, but the scene is not re-laid at 9:16: the chart, the demo chip and the logo sit inside a 16:9 island in the middle of the tall frame, so the figures are unreadable on a phone and the paper above and below is dead"
+    },
+    {
+     "at": "2026-10-05T08:55:53+00:00",
+     "step": "shorts",
+     "note": "done"
     }
    ]
   },

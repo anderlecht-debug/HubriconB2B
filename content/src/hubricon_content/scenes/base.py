@@ -57,6 +57,13 @@ CHART_SCALE = 4 / 3
 
 # The right column's stat captions: how wide they wrap and how many lines they keep.
 CALLOUT_W, CALLOUT_LINES = 340, 4
+# A 9:16 cut has no right column to put them in, so a spoken figure takes a rail of
+# its own the width of the stage, between the heading and the plot: the value, then
+# at most two lines saying what it is, one figure at a time.
+VERT_CALLOUT_PX, VERT_CALLOUT_SUB_PX, VERT_CALLOUT_LINES = 88, 40, 2
+VERT_RAIL_PX = VERT_CALLOUT_PX + 12 + VERT_CALLOUT_LINES * 1.25 * VERT_CALLOUT_SUB_PX
+# How far the corner's row sits above the burned-in subtitles in a vertical cut.
+CORNER_GAP_PX = 24
 
 # The cadence (VISUAL_SPEC.md §4, which retires the bible's two-to-four seconds):
 # a shot runs seven to eleven seconds, never past fourteen, and never under three;
@@ -152,6 +159,15 @@ def px() -> float:
     return config.frame_height / config.pixel_height
 
 
+# The wide frame's units per pixel: the scale EM_PER_FONT_SIZE and advance() were
+# measured against. Pango rasterises a line at the nominal size manim asks for and
+# manim scales the result, so a frame with more pixels to the unit asks for a smaller
+# nominal size and hinting rounds every advance up: in the 9:16 cut a 40 px caption
+# came out eight per cent wide and ran off the stage, and the demo chip's border cut
+# its own last letters (2026-10-05).
+PX_REF = 8 / 1080
+
+
 def font_size(size_px: float) -> float:
     return size_px * px() / EM_PER_FONT_SIZE
 
@@ -215,8 +231,12 @@ def type_line(text: str, size_px: float, colour: str = INK, weight: int = 600, t
     """One line of Inter as the stage sets it: the Display cut, widened toward the
     text cut below 32 px as optical sizing does, letter-spacing included."""
     s = text.upper() if upper else text
-    m = Text(s, font=FONT, font_size=font_size(size_px), weight="SEMIBOLD" if weight >= 500 else "NORMAL",
-             color=colour, disable_ligatures=True)
+    # set at the wide frame's nominal size and scaled to this one, so the same line is
+    # the same number of px wide whatever the frame is (PX_REF)
+    m = Text(s, font=FONT, font_size=size_px * PX_REF / EM_PER_FONT_SIZE,
+             weight="SEMIBOLD" if weight >= 500 else "NORMAL", color=colour, disable_ligatures=True)
+    if px() != PX_REF:
+        m.scale(px() / PX_REF)
     m.hc_text, m.hc_size, m.hc_weight = s, size_px, weight
     if _opsz(size_px) < 1 and s.strip():
         wide = advance(s, size_px, weight) / _face(True, weight, size_px).getlength(s)
@@ -328,6 +348,11 @@ def ch(size_px: float, weight: int = 600) -> float:
     return advance("0", size_px, weight)
 
 
+def corner_row() -> float:
+    """The height of the corner's label box: line-height 1.6, its padding, a 1 px border."""
+    return S["label_px"] * 1.6 + 2 * S["label_pad_px"][0] + 2
+
+
 class HubriconScene(Scene):
     def setup(self):
         ctx = json.loads(os.environ["HC_CONTEXT"])
@@ -342,14 +367,19 @@ class HubriconScene(Scene):
         self.W = config.frame_width
         self.H = config.frame_height
         self.Wpx, self.Hpx = config.pixel_width, config.pixel_height
-        # The stage's padding (film.css .scene); the vertical cut keeps its bottom for the subtitles.
-        top, side, bottom = S["pad_px"]
-        self.pad = {"top": top, "side": side if not self.vertical else 96, "bottom": bottom if not self.vertical else 520,
-                    "chart_top": S["pad_top_chart_px"] if not self.vertical else 200}
         # Tier D burns nothing (VISUAL_SPEC.md §8.6); everything else burns a block
         # at the bottom, and the picture keeps out of it.
         self.sub_band = 0.0 if str(ctx.get("tier", "")).upper() == "D" else subtitles.band_px(self.vertical)
+        # The stage's padding (film.css .scene). The vertical cut keeps its bottom for
+        # the burned-in subtitles and for the corner, which rides above them rather
+        # than down where a phone's own UI covers it and the demo label goes unread.
+        top, side, bottom = S["pad_px"]
+        self.pad = {"top": top, "side": side if not self.vertical else 96,
+                    "bottom": bottom if not self.vertical else self.sub_band + 2 * CORNER_GAP_PX + corner_row(),
+                    "chart_top": S["pad_top_chart_px"] if not self.vertical else 200}
         self.chart_top = None
+        self.rail_top = None
+        self.callouts_visible = 1 if self.vertical else STYLE["restraint"]["callouts_visible"]
         self.callout_stack = VGroup()
         self.entering = []
         self.shot_mobs = []
@@ -425,16 +455,22 @@ class HubriconScene(Scene):
 
     def corner(self):
         side = self.pad["side"]
-        bottom = self.Hpx - S["corner_bottom_px"]
+        bottom = (self.Hpx - S["corner_bottom_px"] if not self.vertical
+                  else self.Hpx - self.sub_band - CORNER_GAP_PX)
         size, (pad_y, pad_x) = S["label_px"], S["label_pad_px"]
-        row = size * 1.6 + 2 * pad_y + 2   # the label box: line-height 1.6, its padding, a 1 px border
+        row = corner_row()
         mid = bottom - row / 2
         parts = VGroup()
         text = self.label_text()
         if text:
             lab = type_line(text, size, INK_3, 600, S["label_track_em"], upper=True)
             place(lab, side + 1 + pad_x, first_baseline(bottom - row + 1 + pad_y, size, 1.6))
-            w = advance(lab.hc_text, size, 600, S["label_track_em"]) + 2 * pad_x + 2
+            # The chip is drawn around the line that was drawn, not the line that was
+            # predicted: Pango sets a 28 px label wider in a 1080-wide frame than Pillow
+            # measures it, and the border cut through the last letters of the demo label
+            # in V01's vertical cuts (2026-10-05).
+            drawn = (lab.get_right()[0] - at(side + 1 + pad_x, 0)[0]) / px()
+            w = max(advance(lab.hc_text, size, 600, S["label_track_em"]), drawn) + 2 * pad_x + 2
             box = RoundedRectangle(width=w * px(), height=row * px(), corner_radius=6 * px(),
                                    stroke_color=RULE_2, stroke_width=stroke(1), fill_opacity=0)
             box.move_to(at(side + w / 2, mid))
@@ -471,6 +507,12 @@ class HubriconScene(Scene):
             cg, bottom = stack(cl, left, bottom + 24, S["caption_px"], 1.4)
             self.enter(cg)
         self.chart_top = bottom + 32
+        if self.vertical:
+            # the phone has no right column, so the rail for the spoken figures
+            # takes the band between the heading and the plot, and the plot starts
+            # below it whether a figure has landed yet or not: the chart never jumps
+            self.rail_top = self.chart_top
+            self.chart_top = self.rail_top + VERT_RAIL_PX + 32
         return self.chart_top
 
     def caption(self, text: str, size: int = 0):
@@ -688,16 +730,24 @@ class HubriconScene(Scene):
         return DashedLine(a, b, color=color, stroke_width=stroke(1.25 * CHART_SCALE), dash_length=5 * CHART_SCALE * px(),
                           dashed_ratio=5 / 9)
 
+    def _callout_type(self) -> tuple[float, float, float, int]:
+        """The size, the caption's size, the caption's measure and its line budget:
+        the chart's right column in a wide frame, the stage's full width in a tall one."""
+        if self.vertical:
+            return VERT_CALLOUT_PX, VERT_CALLOUT_SUB_PX, self.Wpx - 2 * self.pad["side"], VERT_CALLOUT_LINES
+        return 72, 36, CALLOUT_W, CALLOUT_LINES
+
     def callout(self, value: str, label: str, at_=None, color=None):
         """A number and what it is, stacked in the chart's right column; the
         default way an unhandled spoken figure gets on screen the moment it is said."""
-        val = type_line(value, 72, color or (BLUE if is_money(value) else INK), 600, S["heading_track_em"])
-        lab = block(fit_clause(label, 36, CALLOUT_W, CALLOUT_LINES), 36, CALLOUT_W, INK_3, 400)[:CALLOUT_LINES]
+        val_px, lab_px, measure, lines = self._callout_type()
+        val = type_line(value, val_px, color or (BLUE if is_money(value) else INK), 600, S["heading_track_em"])
+        lab = block(fit_clause(label, lab_px, measure, lines), lab_px, measure, INK_3, 400)[:lines]
         blk = VGroup(val, *lab)
         # one blue element per frame: the figure being spoken. Earlier ones step back to ink.
         for prev in self.callout_stack:
             prev[0].set_color(INK)
-        if len(self.callout_stack) >= STYLE["restraint"]["callouts_visible"]:
+        while len(self.callout_stack) >= self.callouts_visible:
             old = self.callout_stack[0]
             self.callout_stack.remove(old)
             self.play(FadeOut(old), run_time=0.25)
@@ -708,12 +758,17 @@ class HubriconScene(Scene):
         return blk
 
     def _lay_callouts(self):
-        _, top, right, _ = self.plot_box()
-        left, y = right + 48, top
+        val_px, lab_px, _, _ = self._callout_type()
+        if self.vertical:
+            left = self.pad["side"]
+            y = self.rail_top if self.rail_top is not None else self.pad["chart_top"]
+        else:
+            _, top, right, _ = self.plot_box()
+            left, y = right + 48, top
         for blk in self.callout_stack:
             val, *lab = blk
-            place(val, left, first_baseline(y, 72, 1.0))
-            _, bottom = stack(lab, left, y + 72 + 12, 36, 1.25)
+            place(val, left, first_baseline(y, val_px, 1.0))
+            _, bottom = stack(lab, left, y + val_px + 12, lab_px, 1.25)
             y = bottom + 40
 
     def reveal_loop(self, handlers: dict | None = None, skip: set | None = None):

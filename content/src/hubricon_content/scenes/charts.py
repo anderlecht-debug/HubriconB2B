@@ -262,8 +262,12 @@ class Paths(HubriconScene):
         def median(value, label):
             y = float(np.median(sample[:, -1]))
             ln = self.dashed(ax.c2p(0, y), ax.c2p(H, y), INK)
-            t = self.chart_text(f"median · {value}", INK, 600).next_to(ax.c2p(H * 0.02, y), UP, buff=10 * px(),
-                                                                       aligned_edge=LEFT)
+            # The top tenth's figure rides just above the right end of this same line.
+            # The wide frame has room for both on one row; the 9:16 plot is narrow
+            # enough that they run into each other, so the median hangs under its own
+            # line there, over the days the bundle is still low (V01's cuts, 2026-10-05).
+            t = self.chart_text(f"median · {value}", INK, 600)
+            t.next_to(ax.c2p(H * 0.02, y), DOWN if self.vertical else UP, buff=10 * px(), aligned_edge=LEFT)
             self.play(Create(ln), FadeIn(t), run_time=0.5)
             self.landed("annotation")
             group.add(ln, t)
