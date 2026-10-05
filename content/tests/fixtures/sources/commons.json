@@ -1,0 +1,308 @@
+{
+ "batchcomplete": true,
+ "query": {
+  "pages": [
+   {
+    "pageid": 4021086,
+    "ns": 6,
+    "title": "File:Alamogordo Public Library Teller Wall.jpg",
+    "index": 14,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 684422,
+      "width": 2272,
+      "height": 1704,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Alamogordo_Public_Library_Teller_Wall.jpg/960px-Alamogordo_Public_Library_Teller_Wall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 960,
+      "thumbheight": 720,
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Alamogordo_Public_Library_Teller_Wall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Alamogordo_Public_Library_Teller_Wall.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=4021086",
+      "extmetadata": {
+       "ObjectName": {
+        "value": "Alamogordo Public Library Teller Wall",
+        "source": "mediawiki-metadata"
+       },
+       "DateTimeOriginal": {
+        "value": "2008-05-09",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "MyName (<a href=\"//commons.wikimedia.org/wiki/User:AllenS\" title=\"User:AllenS\">AllenS</a>)",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 15523346,
+    "ns": 6,
+    "title": "File:Drive-thru bank teller window (224159570).jpg",
+    "index": 2,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1538202,
+      "width": 2304,
+      "height": 1728,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Drive-thru_bank_teller_window_%28224159570%29.jpg/960px-Drive-thru_bank_teller_window_%28224159570%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 960,
+      "thumbheight": 720,
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Drive-thru_bank_teller_window_%28224159570%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Drive-thru_bank_teller_window_(224159570).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=15523346",
+      "extmetadata": {
+       "ObjectName": {
+        "value": "Drive-thru bank teller window (224159570)",
+        "source": "mediawiki-metadata"
+       },
+       "DateTimeOriginal": {
+        "value": "2006-08-24 19:08",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<p><a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/f-r-a-n-k/224159570/\">drive-thru bank teller window</a>\n</p>\n<ul><li>Uploaded by <a href=\"//commons.wikimedia.org/w/index.php?title=User:LongLiveRock&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:LongLiveRock (page does not exist)\">LongLiveRock</a></li></ul>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/53938557@N00\">Frank Hebbert</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY 2.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution 2.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.0",
+        "source": "commons-desc-page"
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-2.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 38426312,
+    "ns": 6,
+    "title": "File:20150125 roubaix067.JPG",
+    "index": 35,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 2776541,
+      "width": 2592,
+      "height": 3872,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/20150125_roubaix067.JPG/960px-20150125_roubaix067.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 960,
+      "thumbheight": 1434,
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/20150125_roubaix067.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:20150125_roubaix067.JPG",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=38426312",
+      "extmetadata": {
+       "ObjectName": {
+        "value": "20150125 roubaix067",
+        "source": "mediawiki-metadata"
+       },
+       "DateTimeOriginal": {
+        "value": "2015-01-25 15:31:41",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Jeanhousen\" title=\"User:Jeanhousen\">Jean Housen</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 69291529,
+    "ns": 6,
+    "title": "File:Former exterior bank teller window, Liberty Federal Savings and Loan Association (1954), 401 N. Howard Street, Baltimore, MD 21201 (41150282415).jpg",
+    "index": 11,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1873498,
+      "width": 4032,
+      "height": 3024,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Former_exterior_bank_teller_window%2C_Liberty_Federal_Savings_and_Loan_Association_%281954%29%2C_401_N._Howard_Street%2C_Baltimore%2C_MD_21201_%2841150282415%29.jpg/960px-Former_exterior_bank_teller_window%2C_Liberty_Federal_Savings_and_Loan_Association_%281954%29%2C_401_N._Howard_Street%2C_Baltimore%2C_MD_21201_%2841150282415%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 960,
+      "thumbheight": 720,
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Former_exterior_bank_teller_window%2C_Liberty_Federal_Savings_and_Loan_Association_%281954%29%2C_401_N._Howard_Street%2C_Baltimore%2C_MD_21201_%2841150282415%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Former_exterior_bank_teller_window,_Liberty_Federal_Savings_and_Loan_Association_(1954),_401_N._Howard_Street,_Baltimore,_MD_21201_(41150282415).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=69291529",
+      "extmetadata": {
+       "ObjectName": {
+        "value": "Former exterior bank teller window, Liberty Federal Savings and Loan Association (1954), 401 N. Howard Street, Baltimore, MD 21201 (41150282415)",
+        "source": "mediawiki-metadata"
+       },
+       "DateTimeOriginal": {
+        "value": "2018-05-07 14:00",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/baltimoreheritage/41150282415/\">Former exterior bank teller window, Liberty Federal Savings and Loan Association (1954), 401 N. Howard Street, Baltimore, MD 21201</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/44034762@N04\">Baltimore Heritage</a> from Baltimore, MD, USA",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Zero, Public Domain Dedication",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "source": "commons-desc-page"
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 119734576,
+    "ns": 6,
+    "title": "File:(Bank Teller Window, Dallas, Texas).jpg",
+    "index": 1,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 534430,
+      "width": 1000,
+      "height": 643,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/%28Bank_Teller_Window%2C_Dallas%2C_Texas%29.jpg/960px-%28Bank_Teller_Window%2C_Dallas%2C_Texas%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 960,
+      "thumbheight": 617,
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/%28Bank_Teller_Window%2C_Dallas%2C_Texas%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:(Bank_Teller_Window,_Dallas,_Texas).jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=119734576",
+      "extmetadata": {
+       "ObjectName": {
+        "value": "(Bank Teller Window, Dallas, Texas)",
+        "source": "mediawiki-metadata"
+       },
+       "DateTimeOriginal": {
+        "value": "circa 1910<div style=\"display: none;\">date QS:P,+1910-00-00T00:00:00Z/9,P1480,Q5727902</div>",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.flickr.com/photos/smu_cul_digitalcollections/33800817756/\">https://www.flickr.com/photos/smu_cul_digitalcollections/33800817756/</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "SMU Libraries Digital Collections",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "No restrictions",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "No known copyright restrictions",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://www.flickr.com/commons/usage/",
+        "source": "commons-desc-page"
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   }
+  ]
+ }
+}

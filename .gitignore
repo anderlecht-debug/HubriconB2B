@@ -17,6 +17,8 @@ content/videos/*/media/
 content/videos/*/audio/
 content/videos/*/scenes/
 content/videos/*/frames/
+# sourcing: candidates, contact sheets and request counts are large and regenerable from the cache
+content/videos/*/sources/
 content/videos/*/shorts/
 content/videos/**/*.mp4
 content/videos/**/*.mov
