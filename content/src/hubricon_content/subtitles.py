@@ -15,6 +15,20 @@ MAX_LINES = 2
 SRT_CHARS = 42          # §8.6: at most 42 characters a line, two lines
 FONTS_DIR = tokens.FONTS
 
+# The burned-in block's own measures, so the picture can keep clear of it.
+SIZE_PX, SIZE_VERTICAL_PX = 44, 56
+MARGIN_V_PX, MARGIN_V_VERTICAL_PX = 104, 420
+LINE_HEIGHT = 1.25
+
+
+def band_px(vertical: bool = False) -> float:
+    """How much of the frame's bottom the burned subtitles can cover: the margin
+    plus two full lines. A chart's floor and its tick labels have to clear this,
+    or the words land on the picture's own numbers (PREMIUM-STANDARD)."""
+    size = SIZE_VERTICAL_PX if vertical else SIZE_PX
+    margin = MARGIN_V_VERTICAL_PX if vertical else MARGIN_V_PX
+    return margin + MAX_LINES * size * LINE_HEIGHT
+
 
 def ass_filter(path: Path) -> str:
     """The ffmpeg filter that burns `path`, with the repo's fonts and no system fallback."""
@@ -57,8 +71,8 @@ def write(slug: str, vertical: bool = False) -> Path:
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
     words = [w for s in timing["segments"] if s["kind"] == "beat" for w in s["words"]]
     w, h = (1080, 1920) if vertical else (1920, 1080)
-    size = 56 if vertical else 44
-    margin_v = 420 if vertical else 104
+    size = SIZE_VERTICAL_PX if vertical else SIZE_PX
+    margin_v = MARGIN_V_VERTICAL_PX if vertical else MARGIN_V_PX
     font = f"{tokens.family(display=True)} SemiBold"   # libass needs the face's own name; "bold" finds Inter Regular
     ink, paper, clear = tokens.ass("ink"), tokens.ass("paper"), tokens.ass("paper", 0.0)
     head = f"""[Script Info]

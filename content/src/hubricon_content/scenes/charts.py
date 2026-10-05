@@ -247,12 +247,27 @@ class Paths(HubriconScene):
             group.add(ln, t)
 
         def spread(value, label):
+            # The bracket is drawn once and its figure replaces itself: the gap and
+            # the gap as a share of the median are the same annotation said twice, and
+            # the label sits inside the plot, never in the right column where the
+            # callouts live.
             y1, y2 = np.quantile(sample[:, -1], 0.1), np.quantile(sample[:, -1], 0.9)
-            br = Line(ax.c2p(H * 0.985, y1), ax.c2p(H * 0.985, y2), color=INK, stroke_width=stroke(STYLE["chart"]["leak_px"]))
-            t = self.chart_text(value, BLUE if is_money(value) else INK, 600).next_to(br, RIGHT, buff=16 * px())
-            self.play(Create(br), FadeIn(t), run_time=0.5)
+            new, old = [], getattr(self, "_spread_text", None)
+            br = getattr(self, "_spread_bracket", None)
+            if br is None:
+                br = Line(ax.c2p(H * 0.985, y1), ax.c2p(H * 0.985, y2), color=INK,
+                          stroke_width=stroke(STYLE["chart"]["leak_px"]))
+                self._spread_bracket = br
+                new.append(br)
+                group.add(br)
+            t = self.chart_text(value, BLUE if is_money(value) else INK, 600).next_to(br, LEFT, buff=16 * px())
+            self._spread_text = t
+            anims = [Create(x) for x in new] + [FadeIn(t)] + ([FadeOut(old)] if old is not None else [])
+            self.play(*anims, run_time=0.5)
+            if old is not None:
+                group.remove(old)
             self.landed("annotation")
-            group.add(br, t)
+            group.add(t)
 
         self.reveal_loop({"year_top_decile": survivors, "top_decile_terminal": survivors, "year_top_vs_median": survivors,
                           "year_terminal_p50": median, "terminal_p50": median,

@@ -24,7 +24,7 @@ from PIL import ImageFont
 from manim import (DOWN, LEFT, ORIGIN, RIGHT, UP, Axes, Circle, DashedLine, FadeIn, FadeOut, Polygon, RoundedRectangle,
                    Scene, Text, VGroup, VMobject, config, linear, smooth)
 
-from .. import tokens
+from .. import subtitles, tokens
 
 try:
     tokens.register_fonts()
@@ -53,6 +53,9 @@ FLAT = set("ABDEFHIKLMNPRTXZhiklmnrxz1247")
 # The film stage draws the site's SVG charts 1200 wide in a 1600 px frame, so a
 # chart's px tokens (line weights, 30 px labels) land 4/3 larger on screen.
 CHART_SCALE = 4 / 3
+
+# The right column's stat captions: how wide they wrap and how many lines they keep.
+CALLOUT_W, CALLOUT_LINES = 340, 4
 
 STYLE = {
     "palette": T["colour"],
@@ -246,6 +249,17 @@ def block(text: str, size_px: float, max_px: float, colour: str = INK, weight: i
     return [type_line(ln, size_px, colour, weight, track_em) for ln in lines]
 
 
+def fit_clause(text: str, size_px: float, max_px: float, lines: int, weight: int = 400) -> str:
+    """The longest leading clause of `text` that wraps inside `lines`. A caption
+    cut by line count stops mid-sentence and loses the words that say what the
+    figure is of; cutting at a comma leaves a whole thought."""
+    parts = text.split(", ")
+    for i in range(len(parts), 1, -1):
+        if len(_greedy(", ".join(parts[:i]).split(), size_px, max_px, weight, 0.0)) <= lines:
+            return ", ".join(parts[:i])
+    return parts[0]
+
+
 def stack(lines: list[Text], left_px: float, top_px: float, size_px: float, line_height: float) -> tuple[VGroup, float]:
     """Lay wrapped lines down from top_px; returns the group and the block's bottom in px."""
     b = first_baseline(top_px, size_px, line_height)
@@ -277,6 +291,9 @@ class HubriconScene(Scene):
         top, side, bottom = S["pad_px"]
         self.pad = {"top": top, "side": side if not self.vertical else 96, "bottom": bottom if not self.vertical else 520,
                     "chart_top": S["pad_top_chart_px"] if not self.vertical else 200}
+        # Tier D burns nothing (VISUAL_SPEC.md §8.6); everything else burns a block
+        # at the bottom, and the picture keeps out of it.
+        self.sub_band = 0.0 if str(ctx.get("tier", "")).upper() == "D" else subtitles.band_px(self.vertical)
         self.chart_top = None
         self.callout_stack = VGroup()
         self.entering = []
@@ -403,11 +420,12 @@ class HubriconScene(Scene):
     # ── charts, in the site's chart grammar (assets/hubricon.css .chart) ──
     def plot_box(self) -> tuple[float, float, float, float]:
         """The plot area in px: below the heading, inside the stage, the right
-        column kept for the spoken figures."""
+        column kept for the spoken figures, the floor clear of the burned-in
+        subtitles so the words never land on the axis's own labels."""
         top = self.chart_top or self.pad["chart_top"] + 120
         left = self.pad["side"] + 170
         right = self.Wpx - self.pad["side"] - (380 if not self.vertical else 0)
-        bottom = self.Hpx - self.pad["bottom"] - 70
+        bottom = self.Hpx - max(self.pad["bottom"], self.sub_band) - 70
         return left, top, right, bottom
 
     def axes(self, x_range, y_range, x_len=None, y_len=None, room_px: float = 0):
@@ -458,7 +476,7 @@ class HubriconScene(Scene):
         """A number and what it is, stacked in the chart's right column; the
         default way an unhandled spoken figure gets on screen the moment it is said."""
         val = type_line(value, 72, color or (BLUE if is_money(value) else INK), 600, S["heading_track_em"])
-        lab = block(label, 36, 340, INK_3, 400)[:2]
+        lab = block(fit_clause(label, 36, CALLOUT_W, CALLOUT_LINES), 36, CALLOUT_W, INK_3, 400)[:CALLOUT_LINES]
         blk = VGroup(val, *lab)
         # one blue element per frame: the figure being spoken. Earlier ones step back to ink.
         for prev in self.callout_stack:

@@ -260,8 +260,10 @@ def build_facts(run: dict, data: dict) -> Facts:
     # cash cone
     c = run.get("cash")
     if c:
-        f.put("cash_on_hand", _money(c["starting_cash"]), "cash on hand today (client-stated)", S("cash horizon"))
-        f.put("monthly_fixed_costs", _money(c["monthly_fixed_costs"]), "monthly fixed costs (client-stated)", S("cash horizon"))
+        # "seller-stated", never "client-stated": the figure is an input the seller gives us
+        # rather than a model output, and Hubricon has no clients to put on a screen.
+        f.put("cash_on_hand", _money(c["starting_cash"]), "cash on hand today (seller-stated)", S("cash horizon"))
+        f.put("monthly_fixed_costs", _money(c["monthly_fixed_costs"]), "monthly fixed costs (seller-stated)", S("cash horizon"))
         f.put("horizon_days", _days(c["horizon_days"]), "the cash horizon", S("cash horizon"))
         f.put("n_paths", _n(c["n_paths"]), "simulated cash paths", S("cash horizon"))
         f.put("p_ruin", _pct(c["p_ruin"], 1), "probability the cash balance crosses zero inside the horizon", S("cash horizon"))

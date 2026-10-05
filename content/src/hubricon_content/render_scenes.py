@@ -24,14 +24,15 @@ def scene_for(seg: dict) -> str:
     return dict(SCENE_BY_KEYWORD).get(name, "Kinetic")
 
 
-def render_segment(d: Path, seg: dict, index: int, vertical: bool = False, force: bool = False) -> Path:
+def render_segment(d: Path, seg: dict, index: int, vertical: bool = False, force: bool = False,
+                   tier: str = "") -> Path:
     out_dir = d / "scenes"
     out_dir.mkdir(exist_ok=True)
     name = f"{'vert' if vertical else 'seg'}-{index:02d}"
     target = out_dir / f"{name}.mp4"
     if target.exists() and not force:
         return target
-    ctx = {"dir": str(d), "segment": {**seg, "index": seg.get("index", index)}, "vertical": vertical}
+    ctx = {"dir": str(d), "segment": {**seg, "index": seg.get("index", index)}, "vertical": vertical, "tier": tier}
     env = {**os.environ, "HC_CONTEXT": json.dumps(ctx), "PYTHONWARNINGS": "ignore"}
     media = d / ".manim"
     size = "1080,1920" if vertical else "1920,1080"
@@ -59,5 +60,5 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         (d / "events.json").unlink()
     done = []
     for k, seg in enumerate(timing["segments"]):
-        done.append(render_segment(d, seg, k, force=force).name)
+        done.append(render_segment(d, seg, k, force=force, tier=str(u.get("tier") or "")).name)
     return {"status": "ok", "segments": len(done), "scenes": sorted(set(scene_for(s) for s in timing["segments"]))}

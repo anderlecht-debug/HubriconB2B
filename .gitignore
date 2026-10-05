@@ -25,6 +25,8 @@ content/videos/**/*.mp3
 content/videos/**/*.m4a
 content/.manim/
 content/videos/*/.manim/
+# Manim's text cache when a script draws type outside a configured media dir
+/media/
 content/.cache/
 content/videos/00-smoke/
 # The case study's one listing names the brand. The repo is public and the page is anonymised,

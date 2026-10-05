@@ -131,12 +131,12 @@
  },
  "cash_on_hand": {
   "value": "$262,000",
-  "label": "cash on hand today (client-stated)",
+  "label": "cash on hand today (seller-stated)",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "monthly_fixed_costs": {
   "value": "$31,500",
-  "label": "monthly fixed costs (client-stated)",
+  "label": "monthly fixed costs (seller-stated)",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "horizon_days": {
@@ -893,6 +893,86 @@
   "value": "25%",
   "label": "the share a typical recovery service keeps",
   "source": "hubricon-capital-position-build-prompt.md §2 (stated assumption)"
+ },
+ "reason_codes_lost": {
+  "value": "M and N",
+  "label": "Inventory Ledger reason codes that mean lost in the warehouse",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "reason_codes_damaged": {
+  "value": "D and Q",
+  "label": "reason codes that mean damaged in the warehouse",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "reason_codes_carrier": {
+  "value": "H and K",
+  "label": "reason codes that mean damaged by the carrier",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "reason_codes_transit": {
+  "value": "6",
+  "label": "reason codes that mean lost in transit",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "reason_codes_found": {
+  "value": "5 and F",
+  "label": "reason codes that mean found again (they offset a loss)",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "reason_codes_customer": {
+  "value": "E",
+  "label": "reason codes that mean customer damage (not Amazon's liability)",
+  "source": "RECOVERY.EV reason-code map"
+ },
+ "auto_reimburse_since": {
+  "value": "1 November 2024",
+  "label": "when Amazon began auto-reimbursing most warehouse losses and customer-return claims",
+  "source": "RECOVERY.EV module note"
+ },
+ "dispositions_claimable": {
+  "value": "CARRIER_DAMAGED or DAMAGED",
+  "label": "return dispositions that are Amazon's liability",
+  "source": "RECOVERY.EV constants"
+ },
+ "dispositions_not_claimable": {
+  "value": "CUSTOMER_DAMAGED, DEFECTIVE, EXPIRED",
+  "label": "return dispositions that are not claimable",
+  "source": "RECOVERY.EV constants"
+ },
+ "rec_returns_sellable": {
+  "value": "48",
+  "label": "returns graded sellable (no claim)",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_returns_customer_or_defective": {
+  "value": "44",
+  "label": "returns graded customer damage or defective (no claim)",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_returns_already_reimbursed": {
+  "value": "6",
+  "label": "damaged returns Amazon already reimbursed",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_n_settled": {
+  "value": "5",
+  "label": "warehouse losses Amazon already settled, matched to their reimbursement",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_soonest_days": {
+  "value": "2 days",
+  "label": "days until the soonest deadline",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_soonest_type": {
+  "value": "carrier damaged",
+  "label": "the claim type closing soonest",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "rec_live_annual_rate": {
+  "value": "$14,291",
+  "label": "expected value of open claims, annualised at this quarter's rate",
+  "source": "RECOVERY.EV on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "anom_scanned": {
   "value": "364",
