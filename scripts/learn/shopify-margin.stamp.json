@@ -1,0 +1,9 @@
+{
+  "file": "learn/files/hubricon-shopify-margin.xlsx",
+  "file_sha256": "b212461bb328b30321e5f6d9fed1f3cb7e2a689fc1127c5f9b6f5224d949e461",
+  "sources_sha256": {
+    "engine/src/hubricon_engine/cold/priors.py": "c8762ef5b42da4558d6812e28ccd91fb50dbebd77ed627753c5273dd0feb48ab",
+    "ratecard.json": "1119e7ab66b2d67e4839a6532488766e8e7a521653a0646523d75c25e1658fab"
+  },
+  "verified_on": "2026-10-01"
+}

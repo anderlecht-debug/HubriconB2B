@@ -6,6 +6,12 @@
 <title>Terms of Service — Hubricon</title>
 <meta name="description" content="The terms behind Managed Profit: the call, the Proving Month, the flat fee, the Profit Record, the standing mandate, and the exit.">
 <link rel="canonical" href="https://www.hubricon.com/terms">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/terms">
+<meta property="og:title" content="Terms of Service — Hubricon">
+<meta property="og:description" content="The terms behind Managed Profit: the call, the Proving Month, the flat fee, the Profit Record, the standing mandate, and the exit.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +21,7 @@
 <style>
 /* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
 .wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
-.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
+.masthead { display: flex; justify-content: flex-start; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
 .masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
 h1 { font-size: var(--t-display-m); }
 h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
@@ -33,7 +37,6 @@ a { color: var(--ink); text-underline-offset: 3px; }
 table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
 th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
-footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
 @media (max-width: 640px) {
   .panel { padding: var(--s-4); }
   th, td { display: block; padding: var(--s-1) 0; border: 0; }
@@ -42,15 +45,70 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 </style>
 </head>
 <body>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="fly-big" href="/learn/shopify-margin">The Shopify Margin</a><a class="fly-big" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/shopify-margin#pound-line">Lesson 2: the pound line under every parcel</a><a class="fly-small" href="/learn/files/hubricon-shopify-margin.xlsx">The Shopify Margin spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/operators-math#ad-target">Lesson 2: your ad target is wrong</a><a class="fly-small" href="/learn/files/hubricon-operators-math.xlsx">The Operator&#39;s Math spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Terms</span>
   </div>
 
   <h1>Terms of Service</h1>
-  <p class="meta">Effective September 30, 2026 · Approved by Hagen Simmons, founder · <a href="/privacy">Privacy Policy</a></p>
+  <p class="meta">Effective October 1, 2026 · Approved by Hagen Simmons, founder · <a href="/privacy">Privacy Policy</a></p>
 
   <p class="lede">These terms cover Managed Profit and the call that comes before it. They are written in
   plain English on purpose. There is no second version in smaller type.</p>
@@ -84,7 +142,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   the arithmetic does not clear our fee at your size, we tell you so. Anything you show us is
   confidential under section 10, whether or not you take Managed Profit.</p>
 
-  <h2>3. Managed Profit and the Proving Month</h2>
+  <h2 id="proving-month">3. Managed Profit and the Proving Month</h2>
   <p>Managed Profit (the retainer) starts on the day you say yes after the call. The first thirty
   days are the Proving Month: free, and they include the full service: the plan, the corrections
   executed, a Profit Brief every two weeks with its recorded walkthrough and full report, the Profit Record. In that month we deliver
@@ -111,7 +169,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 <p><b>Before.</b> Every move is written down with the dollars we expect it to earn over its first thirty days, before it goes live.</p>
 <p><b>After.</b> It is measured on your own later exports, and every dollar is graded by how we know it:</p>
 <ul>
-  <li><b>Direct.</b> The platform's own record shows the money moved: Amazon paid a reimbursement on a claim we filed. Counted in full.</li>
+  <li><b>Direct.</b> The platform's own record shows the money moved, as when Amazon pays a reimbursement on a claim we filed. Counted in full.</li>
   <li><b>Isolated.</b> Measured on the exact line the move named, against that line's own level before the change: the change, times the volume you actually sold.</li>
   <li><b>Attributable.</b> Where demand moved too, measured against a stated counterfactual, from the same model that made the promise, at the least favourable end of its own range.</li>
   <li><b>Unmeasurable.</b> Where we cannot separate our move from everything else, nothing is counted, and the Record says so.</li>
@@ -128,7 +186,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 <p><b>Disputes are settled by inspection.</b> Every graded dollar carries its working: the grade, the window of your exports it was measured on, the evidence, and a note in plain words. If you question one, we open that record together. If it does not settle the question, the dollar comes off your Record.</p>
 <!-- /build:attribution -->
 
-  <h2>4. Invoicing and payment</h2>
+  <h2 id="invoicing">4. Invoicing and payment</h2>
   <p>Months are invoiced in arrears: a month is invoiced by email after it ends, once the check in
   section 3 has cleared it. Invoices are paid by ACH and are due seven days after they are sent. We keep no card on file, so nothing is charged automatically: each month
   is invoiced, and you pay it. If an invoice is more than fourteen days late we pause execution and
@@ -140,7 +198,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   $50 rolls into the next month. Reimbursements Amazon pays on its own initiative, on claims we did
   not file, are never counted.</p>
 
-  <h2>5. Cancelling</h2>
+  <h2 id="cancelling">5. Cancelling</h2>
   <p>Either of us can end Managed Profit by email, effective immediately, with no notice period and no
   fee. From the moment we receive your email we make no further changes in your account. The seat is
   yours to revoke.</p>
@@ -153,15 +211,21 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <h2>6. The seat and the standing mandate</h2>
   <p>On Amazon you grant us one Seller Central user with exactly four permissions: Business Reports
   (view), Fulfillment reports (view), Pricing (view and edit), and Advertising Campaign Manager (view
-  and edit). On Shopify you approve one collaborator account limited to Orders, Products, Analytics,
-  Reports, Marketing and Discounts; it has no access to Settings, Finances or payouts. On neither
-  platform do we hold banking or account-settings access. You may revoke either seat at any time, and
+  and edit). On Shopify you add one staff account with a role limited to Orders (view and export),
+  Products (view, view cost, edit price and export), Discounts (view, create and delete) and Analytics
+  reports; it has no access to Finance, payouts, Customers, Settings or apps. Shopify allows staff
+  accounts on its Grow, Advanced and Plus plans. If you advertise on Meta or Google, you also give us
+  partner access to your Meta ad account, to manage campaigns and view performance, and Standard access
+  to your Google Ads account, which Google lets see billing and which we do not use; both are used for
+  advertising changes only. On neither platform do we hold banking or account-settings access. You may revoke either seat at any time, and
   revoking it pauses the service until it is restored.</p>
   <p>At kickoff we agree your standing mandate: the bounds within which we act without asking. Unless
   we agree otherwise in writing, the mandate covers:</p>
   <ul>
-    <li>Price steps of up to five percent per SKU per two-week cycle, with your Buy Box share (on
-    Amazon) or conversion rate (on Shopify) watched while the step is live and a step reversed if it costs you the sale.</li>
+    <li>Price steps of up to five percent per SKU per two-week cycle, with your Buy Box share watched
+    while the step is live on Amazon, and on Shopify, which has no Buy Box, each step read on your own
+    orders, the units the product sells before and after it; a step is reversed if it costs you the
+    sale.</li>
     <li>Advertising corrections: negative-matching search terms that spend without converting, bid and
     budget changes, and pausing campaigns or targets that lose money.</li>
   </ul>
@@ -186,8 +250,8 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <p>We promise the method. Every recommendation carries an expected dollar impact. Every executed move
   is measured on the Profit Record, expected against realised, including the ones that go wrong. Our
   advice is never shaped by our own invoice, because the fee is flat.</p>
-  <p>We do not promise a result. Forecasts are probabilistic, markets move, and Amazon changes its fees
-  and rules without asking either of us. Past results, ours or anyone's, are not a guarantee.</p>
+  <p>We do not promise a result. Forecasts are probabilistic, markets move, and Amazon, Shopify and the carriers change their
+  fees and rules without asking either of us. Past results, ours or anyone's, are not a guarantee.</p>
 
   <h2>9. The price of the free month</h2>
   <p>Once your Profit Record shows proven value — a reimbursement Amazon paid on a claim we filed, or proven dollars well above what you have paid us — we will ask you for two things, once, on a private page. First, permission to publish your results in anonymised
@@ -201,7 +265,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   you are not yet invoiced. One credit per brand introduced, applied when that brand's first invoice is raised
   after its own thirtieth day, and never before.</p>
 
-  <h2>10. Confidentiality</h2>
+  <h2 id="confidentiality">10. Confidentiality</h2>
   <p>We keep your data, your numbers and your plans confidential, and we never use one client's data to
   advise another. You keep our methods, models and unpublished materials confidential. The Privacy
   Policy describes the providers who process data on our behalf. Anonymised publication under
@@ -250,9 +314,24 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <p>Hagen Simmons, founder · <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a><br>
   Hubricon · Dallas, Texas, United States</p>
 
-  <footer>
-    Hubricon · <a href="/">Home</a> · <a href="/learn">Learn</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/privacy">Privacy Policy</a>
-  </footer>
 </div>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
 </body>
 </html>

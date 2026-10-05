@@ -160,7 +160,7 @@
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "min_p5": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the fifth-percentile low point of cash",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -170,22 +170,22 @@
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "min_median": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the median path's low point",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_p5": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "fifth percentile of each path's own trough",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_es": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "expected shortfall: the mean trough of the worst five percent of paths",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "trough_median": {
-  "value": "$93,600",
+  "value": "$85,242",
   "label": "the median path's trough",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -219,6 +219,71 @@
   "label": "the platform's payout cycle",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "cash_drop": {
+  "value": "$176,758",
+  "label": "how far cash falls from today to the median path's low point",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cash_months": {
+  "value": "more than 8 months",
+  "label": "cash on hand in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "cash_drop_months": {
+  "value": "more than 5 months",
+  "label": "that fall in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_months": {
+  "value": "under 3 months",
+  "label": "the low point in months of fixed costs",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "day0_wire_count": {
+  "value": "10",
+  "label": "supplier wires that leave today",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "day0_wires_total": {
+  "value": "$130,622",
+  "label": "what they come to",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "wires_to_trough": {
+  "value": "$154,750",
+  "label": "supplier wires that leave on or before the low point's day",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "end_p5": {
+  "value": "$323,149",
+  "label": "fifth-percentile cash on the horizon's last day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "after_trough_p5": {
+  "value": "$152,042",
+  "label": "fifth-percentile low point of cash after the trough's day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "trough_every_path": {
+  "value": "every one",
+  "label": "how many simulated paths share the same low point (every quantile of the paths' minimum is equal)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "sale_payable_days": {
+  "value": "10 days",
+  "label": "days from a sale until the platform can pay it (delivery, then DD+7)",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "bank_transit_days": {
+  "value": "4 days",
+  "label": "days from a settlement to the bank",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "sale_to_cash_days": {
+  "value": "21 days",
+  "label": "days from a sale to cash in the bank, on average: payable, half a settlement cycle, the transfer",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "demand_corr": {
   "value": "0.48",
   "label": "pairwise demand correlation across SKUs",
@@ -236,17 +301,17 @@
  },
  "terminal_p50": {
   "value": "$340,454",
-  "label": "median cash at the end of the horizon",
+  "label": "median cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "terminal_p90": {
   "value": "$350,349",
-  "label": "ninetieth-percentile cash at the end of the horizon",
+  "label": "ninetieth-percentile cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "terminal_p10": {
   "value": "$329,953",
-  "label": "tenth-percentile cash at the end of the horizon",
+  "label": "tenth-percentile cash at the end of the horizon, across the paths drawn for the fan",
   "source": "cash horizon paths on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "top_decile_terminal": {
@@ -410,7 +475,7 @@
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "nv_bleed_month": {
-  "value": "$4,050",
+  "value": "$3,642",
   "label": "monthly inventory fee bleed",
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -485,7 +550,7 @@
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "nv_low_cu": {
-  "value": "$14.58",
+  "value": "$14.34",
   "label": "that SKU's cost of a stockout, per unit",
   "source": "NEWSVENDOR on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -530,18 +595,33 @@
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_low": {
-  "value": "-5.47",
+  "value": "-5.85",
   "label": "lower bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_high": {
-  "value": "-0.00",
+  "value": "0.37",
   "label": "upper bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_width": {
-  "value": "5.47",
+  "value": "6.22",
   "label": "width of that interval",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_ci_crosses": {
+  "value": "crosses zero",
+  "label": "its interval reaches no effect of price at all",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_raw": {
+  "value": "-7.35",
+  "label": "the slope through its own points alone, before pooling",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "el_own_weight": {
+  "value": "17%",
+  "label": "the weight its own points carry against the catalogue's common slope",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_periods": {
@@ -591,7 +671,7 @@
  },
  "pm_sku": {
   "value": "TH-CHEKNI-08",
-  "label": "the SKU with the largest expected gain from a price move",
+  "label": "the SKU with the largest median gain from a price move",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_new_price": {
@@ -606,7 +686,7 @@
  },
  "pm_delta": {
   "value": "$16",
-  "label": "expected profit change per month",
+  "label": "median profit change per month across the simulated draws",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_delta_p5": {
@@ -621,12 +701,32 @@
  },
  "pm_p_loss": {
   "value": "1%",
-  "label": "probability the move loses money",
+  "label": "share of the simulated draws in which the move loses money",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_band": {
+  "value": "90%",
+  "label": "the share of draws between the fifth and ninety-fifth percentiles",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_total_delta": {
   "value": "$166",
-  "label": "expected monthly profit across every recommended move",
+  "label": "the sum of every recommended move's median monthly change",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_no_top": {
+  "value": "22",
+  "label": "SKUs whose range is too wide for the model to name a best price, only a direction",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_p_optimal": {
+  "value": "98%",
+  "label": "the model's probability that the catalogue is already priced at its optimum",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_direction_conf": {
+  "value": "99%",
+  "label": "the model's confidence in the direction of that step",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_step_cap": {
@@ -1511,7 +1611,7 @@
  },
  "cs_weight": {
   "value": "8.8 ounces",
-  "label": "the listing's shipping weight",
+  "label": "the item weight the listing's public page shows (a floor: the packed unit weighs more)",
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_edge": {
@@ -1530,8 +1630,8 @@
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_units": {
-  "value": "about 3,600 units a month",
-  "label": "the listing's estimated sales (estimate)",
+  "value": "an estimated 3,500 units a month",
+  "label": "the listing's sales, estimated from its public sales rank (a curve that can be wrong by half or more)",
   "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
  },
  "cs_leak_p10": {
@@ -1631,7 +1731,7 @@
  },
  "s_sewing_quote": {
   "value": "For heaven's sake, quit sending me sewing machines. Every time I go to the station I find another one there. You have shipped me five already.",
-  "label": "a customer's letter to Sears, about 1900 (Emmet & Jeuck, Catalogues and Counters, p. 116)",
+  "label": "a customer's letter to Sears in the 1890s, when orders often went out over and over again (Emmet & Jeuck, Catalogues and Counters, p. 116)",
   "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
  },
  "cs_aged_band": {
@@ -1723,5 +1823,70 @@
   "value": "about two years after the move",
   "label": "when company forms show the schedule system in wide use",
   "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf"
+ },
+ "s_sewing_decade": {
+  "value": "the 1890s",
+  "label": "when the sewing-machine letter was written",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950)"
+ },
+ "s_doubt_quote": {
+  "value": "If in doubt as to what amount is required for any order you are perfectly safe in adding even more than you think necessary, for we will ship by the most economical method and will return you any amount that is left over.",
+  "label": "the 1917 catalogue's postage instruction",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134 (Sears, Roebuck and Co. catalogue, spring 1917, 'Rates for Parcel Post Shipments' page; read on the scan's text)"
+ },
+ "s_wrap_quote": {
+  "value": "Occasionally, according to the nature of the merchandise, we are obliged to give the actual weight. In such cases a few ounces extra in weight must be allowed for wrapping and packing, according to the nature of the goods.",
+  "label": "the 1917 catalogue on shipping weights",
+  "source": "https://archive.org/details/ElectricalGoodsCatalogue134 (Sears, Roebuck and Co. catalogue, spring 1917, 'Rates for Parcel Post Shipments' page; read on the scan's text)"
+ },
+ "s_branch_quote": {
+  "value": "a mail-order house can establish a branch agency in the territory which the concern seeks to reach, and within a radial distance of 150 miles from the location of such agency the mail-order house gets exactly the same rate as the Government charges the local merchant",
+  "label": "the Joint Committee on the 1914 zones",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_freight_catalogue_quote": {
+  "value": "From points in the fourth or fifth zones, these catalogues are shipped by freight to some point within the State and distributed from that point by mail.",
+  "label": "a postmaster's testimony to the Joint Committee",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_one_firm_saving": {
+  "value": "approximately $1,000,000",
+  "label": "what the committee found one firm alone saved in postage a year when catalogues moved into parcel post",
+  "source": "https://archive.org/details/parcelpostreport00unit (Joint Committee of Congress on parcel post, report of December 1, 1914, Senate Document 944; read on the scan's text)"
+ },
+ "s_wood_quote": {
+  "value": "better to lose that business to one's self than to someone else",
+  "label": "Robert E. Wood on Sears opening stores that competed with its catalogue (Emmet & Jeuck, p. 341)",
+  "source": "https://www.nber.org/system/files/chapters/c10234/c10234.pdf (Raff & Temin, quoting Emmet & Jeuck, Catalogues and Counters, 1950)"
+ },
+ "s_limit_1913_adj": {
+  "value": "11-pound",
+  "label": "the 1913 weight limit, as an adjective",
+  "source": "https://www.govinfo.gov/content/pkg/STATUTE-37/pdf/STATUTE-37-Pg539.pdf"
+ },
+ "cs_product": {
+  "value": "paint scratch remover",
+  "label": "the case study's listing",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "cs_band_share": {
+  "value": "eight in ten",
+  "label": "the share of simulated years inside the band from the tenth to the ninetieth percentile",
+  "source": "Hubricon's public-data case study (data/case-study.json; Modeled from public data · Not a client · Not a result), fees from Amazon's published 2026 US FBA fee card as recorded in ratecard.json on September 9, 2026"
+ },
+ "rc_8oz": {
+  "value": "8 ounces",
+  "label": "the step edge below 12 ounces on the large standard card",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json"
+ },
+ "rc_fuel": {
+  "value": "3.5%",
+  "label": "Amazon's fuel and logistics surcharge on every fulfilment fee, from April 17, 2026",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.fuel_surcharge)"
+ },
+ "rc_dim_divisor": {
+  "value": "139",
+  "label": "the dimensional-weight divisor for a box over a cubic foot (cubic inches, giving pounds)",
+  "source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.dim_divisor); the Fee Staircase course, lesson on billable weight"
  }
 }

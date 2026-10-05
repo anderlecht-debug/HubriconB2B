@@ -321,8 +321,107 @@ def test_at_the_exit_months_that_do_not_clear_come_back_and_months_that_did_stan
     assert [i["stripe_invoice_id"] for i in t["voids"]] == ["in_open"]
     assert [(i["stripe_invoice_id"], a) for i, a in t["refunds"]] == [("in_short", 6000.0)]
     assert t["voided"] == 6000.0 and t["refunded"] == 6000.0 and t["gap"] == 12000.0
-    letter = " ".join(b.get("p", "") + " ".join(b.get("ol", [])) for b in billing.exit_email_blocks(t, "https://x"))
-    assert "did not clear" in letter and "cleared" in letter
+    subject, blocks = billing.exit_letter(billing.facts_from_true_up(t, CLIENT), date(2026, 12, 20), None, (None, []))
+    letter = _text(blocks)
+    assert "did not clear, so it is refunded in full" in letter and "It cleared, so it stands" in letter
+    assert "$6,000 is void" in letter and "$6,000.00 is refunded" in letter
+    assert subject == "You've left Managed Profit: $6,000 voided, $6,000.00 refunded"
+
+
+# -- the exit letter -----------------------------------------------------------------------
+
+def _text(blocks) -> str:
+    return " ".join(b.get("p", "") + " ".join(b.get("ol", [])) + b.get("button", "") for b in blocks)
+
+
+def _exit_invoices():
+    """After the true-up wrote: month 1 cleared and paid, month 2 paid and refunded
+    at the exit, month 3's unpaid invoice voided, and a held draft for the month in
+    progress voided unsent."""
+    rows = [_row(1, 9000.0), _row(2, 7000.0, disputed=2000.0)]
+    invoices = [_inv("cleared", "paid", "2026-10-02"), _inv("short", "paid", "2026-11-02"),
+                {**_inv("open", "void", "2026-12-02"), "amount_paid": 0, "gate_note": billing.EXIT_VOID_NOTE},
+                {**_inv("draft", "void", "2026-12-20"), "amount_paid": 0, "gate_note": billing.EXIT_UNSENT_NOTE}]
+    invoices[1]["refunded_usd"] = 6000.0
+    return rows, invoices
+
+
+def test_the_exit_letter_reads_what_the_true_up_wrote_and_says_the_refund_was_issued_not_landed():
+    rows, invoices = _exit_invoices()
+    client = {**CLIENT, "exit_refund_usd": 6000.0}
+    f = billing.exit_facts(rows, _months(), invoices, client)
+    assert (f["voided"], f["refunded"], f["n_voids"], f["billed"]) == (6000.0, 6000.0, 1, True)
+    assert [how for _, _, how in f["judged"]] == ["stands", "refunded", "voided"]   # the unsent draft is not a month billed
+    subject, blocks = billing.exit_letter(f, date(2026, 12, 20), {"url": "https://s/x.zip",
+                                                                  "expires_at": date(2026, 12, 27)},
+                                          (None, []), issued_on=date(2026, 12, 21), refund_due=date(2026, 12, 27))
+    text = _text(blocks)
+    assert "You have left Managed Profit, as of December 20. Nothing more will be invoiced" in text
+    assert "We issued it on December 21, within the seven days the terms promise from your email." in text
+    assert "few business days to reach your account" in text
+    assert "lands in your bank" not in text and "in your bank within" not in text
+    assert {"button": "Download your full Profit Record", "url": "https://s/x.zip"} in blocks
+    assert "until December 27" in text
+    # A refund issued after the clock ran out says so, and apologises.
+    _, late = billing.exit_letter(f, date(2026, 12, 20), None, (None, []), issued_on=date(2026, 12, 29),
+                                  refund_due=date(2026, 12, 27))
+    assert "later than the seven days the terms promise from your email (December 27), and I am sorry" in _text(late)
+
+
+def test_a_client_who_leaves_in_the_proving_month_hears_that_nothing_is_owed():
+    f = billing.exit_facts([], _months(), [], {**CLIENT, "exit_refund_usd": 0})
+    subject, blocks = billing.exit_letter(f, date(2026, 8, 20), {"pending": True}, (None, []))
+    text = _text(blocks)
+    assert subject == "You've left Managed Profit: nothing more is invoiced"
+    assert "Nothing was ever charged, so there is nothing to true up and nothing is owed." in text
+    assert "it reaches this inbox within one working day" in text
+    assert "refund" not in text and "What to keep watching" not in text
+    # Recovery Only: no fee to true up, and an open share invoice stands as sent.
+    rec = {**_inv("r", "open", "2026-09-01"), "raw": {"metadata": {"hubricon_plan": "recovery"}}}
+    f = billing.exit_facts([], _months(), [rec], {**CLIENT, "exit_refund_usd": 0})
+    text = _text(billing.exit_letter(f, date(2026, 10, 2), None, (None, []), plan="recovery")[1])
+    assert "Recovery Only has no monthly fee" in text and "stands as sent" in text
+    assert "reply to this email and it reaches you within one working day" in text
+
+
+def _record_month(k, start, end, moves):
+    return {"client_id": "c1", "channel": "amazon", "month_index": k, "month_start": start, "month_end": end,
+            "attributed_usd": sum(m.get("usd") or 0 for m in moves), "disputed_usd": 0, "moves": moves}
+
+
+def test_what_to_keep_watching_is_each_leak_still_held_in_the_last_closed_month_in_measured_dollars():
+    directives = [
+        {"id": "fee", "kind": "fee_anomaly", "expected_impact_usd": 999.0,
+         "evidence": {"item_id": "MUG-12OZ", "metric": "fba_fee_per_unit", "baseline": 3.86, "current": 4.12}},
+        {"id": "price", "kind": "price_step", "expected_impact_usd": 999.0,
+         "evidence": {"sku": "TEA-50", "p0": 18.99, "p_new": 19.79}},
+        {"id": "terms", "kind": "ad_bleed_terms", "evidence": {"terms": [{"search_term": "x"}, {"search_term": "y"}]}},
+        {"id": "claim", "kind": "recovery_filing", "evidence": {}},
+        {"id": "stopped", "kind": "campaign_trim", "evidence": {"campaign_name": "Auto", "budget_after_negation": 40}},
+    ]
+    rows = [
+        _record_month(1, "2026-09-02", "2026-10-01", [{"directive_id": "stopped", "verdict": "measured", "usd": 500.0}]),
+        _record_month(2, "2026-10-02", "2026-11-01", [
+            {"directive_id": "fee", "verdict": "measured", "usd": 120.4},
+            {"directive_id": "price", "verdict": "measured", "usd": 310.0},
+            {"directive_id": "terms", "verdict": "not_yet", "usd": None},
+            {"directive_id": "claim", "verdict": "measured", "usd": 75.0},
+            {"directive_id": "stopped", "verdict": "measured", "usd": 0.0},
+        ]),
+    ]
+    when, lines = billing.watch_lines(rows, directives)
+    assert when == "Oct 2 – Nov 1, 2026"
+    assert lines == [
+        "If TEA-50 goes back to $18.99, the step to $19.79 is undone. Holding it measured $310 in Oct 2 – Nov 1, 2026.",
+        "If the FBA fee on MUG-12OZ goes back up to $4.12 a unit, the $0.26 a unit step returns. Holding it "
+        "measured $120 in Oct 2 – Nov 1, 2026.",
+    ]
+    assert not any("999" in line for line in lines)            # measured dollars only, never the promise
+    assert billing.watch_lines([], directives) == (None, [])
+    f = billing.exit_facts([], _months(), [], {**CLIENT})
+    text = _text(billing.exit_letter(f, date(2026, 11, 9), None, (when, lines))[1])
+    assert "What to keep watching. These leaks were still held shut in Oct 2 – Nov 1, 2026" in text
+    assert lines[0] in text
 
 
 def _inv(i, status, start, amount=6000):

@@ -59,7 +59,11 @@ def test_build_script_hits_all_beats_with_real_numbers():
     desk = script.split("## Before it goes live")[1].split("## The record")[0]
     assert "Old test." not in desk
     assert "$1,240" in script                                  # ledger close
-    assert "Approve or decline" in script
+    # true for both mandates: a standing move goes live unless declined, an explicit one waits
+    assert "Inside your standing mandate it goes live when the window on its email closes, unless you say no" in script
+    assert "72 hours" not in script, "a stored mandate can set its own window; the move's email names it"
+    assert "anything outside it waits for your yes" in script
+    assert "nothing moves without you" not in script
 
 
 def test_build_memo_is_a_numbered_letter_with_real_numbers():
@@ -149,23 +153,39 @@ def test_the_letter_and_the_video_close_on_the_three_record_numbers():
     The memo, the numbers slide and the spoken record beat all carry all three."""
     from hubricon_engine.briefing import build_beats, build_memo
 
+    # The one figure (value.proven_since_day_one), on the months basis.
+    proven = {"usd": 1240.0, "basis": "months", "label": "Proven on your Profit Record since day one", "moves": 2}
     memo = build_memo("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [],
-                      1240, 2, issue_number=5, ledger_found=2400, fees_billed=6000)
+                      999, 9, issue_number=5, ledger_found=2400, fees_billed=6000, proven=proven)
     close = memo.split("Your Profit Record to date:")[1]
-    assert "$1,240 proven across 2 moves" in close
+    assert "$1,240 proven since day one across 2 moves" in close
+    assert "$999" not in memo                                   # the old pair never leaks past the figure
     assert "$2,400 found and filed, not yet banked" in close and "$6,000 billed" in close
     assert "in our favor or against us" in close
 
-    beats = build_beats("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [], 1240, 2,
-                        ledger_found=2400, fees_billed=6000)
+    beats = build_beats("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [], 999, 9,
+                        ledger_found=2400, fees_billed=6000, proven=proven)
     numbers = dict(next(b for b in beats if b["heading"] == "The three numbers")["points"])
-    assert numbers["Proven on your Profit Record"] == "$1,240 across 2"
+    assert numbers["Proven on your Profit Record since day one"] == "$1,240 across 2"
     assert numbers["Found and filed, not yet banked"] == "$2,400"
     assert numbers["Billed to date"] == "$6,000"
     record = next(b for b in beats if b["heading"] == "The record")["speech"]
-    assert "$1,240 proven across 2 moves" in record and "$2,400 found and filed" in record
+    assert "$1,240 proven since day one across 2 moves" in record and "$2,400 found and filed" in record
     assert "$6,000 billed" in record
 
-    # Existing positional callers pass nothing for the two new numbers and get zeros.
+    # Before a month closes the figure is what it is, measured so far, and says when that changes.
+    early = {"usd": 1240.0, "basis": "measured", "label": "Measured so far · your first month closes November 1",
+             "moves": 2}
+    memo = build_memo("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [], 0, 0, issue_number=5,
+                      proven=early)
+    assert "$1,240 measured so far across 2 moves (your first month closes November 1)" in memo
+    assert "proven" not in memo.split("Your Profit Record to date:")[1]
+    beats = build_beats("Acme Goods", "Jane", period_deltas(MARGINS), [], [], [], 0, 0, proven=early)
+    numbers = dict(next(b for b in beats if b["heading"] == "The three numbers")["points"])
+    assert numbers["Measured so far · your first month closes November 1"] == "$1,240 across 2"
+    for b in beats:
+        assert "(" not in b["speech"]                           # spoken: no bracketed asides
+
+    # Existing positional callers (Issue 001) pass the old pair and get it read as measured so far.
     memo0 = build_memo("Acme", "", period_deltas(MARGINS[:2]), [], [], [], 0, 0, issue_number=1)
-    assert "$0 found and filed, not yet banked · $0 billed" in memo0
+    assert "Your Profit Record to date: $0 measured so far · $0 found and filed, not yet banked · $0 billed" in memo0

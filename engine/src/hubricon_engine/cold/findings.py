@@ -30,6 +30,7 @@ from datetime import date
 
 from .. import calibration
 from ..harvest import shopify as shopify_harvest
+from ..models import compare_at
 from . import priors
 from .snapshot import ProspectSnapshot, Item
 
@@ -518,24 +519,20 @@ def carrier_band_edge(item: Item, snap: ProspectSnapshot, today: date) -> Findin
 
 # -- permanent_discount ------------------------------------------------------------
 
-# Below this the "sale" is a rounding error on the price, not a policy.
-MIN_DISCOUNT_SHARE = 0.10
-# A catalogue this far marked down is not running a promotion, it is running a
-# price. One product on sale is marketing; two thirds of the shelf is a habit.
-CATALOGUE_DISCOUNT_SHARE = 0.5
-# What it takes to call the price settled rather than currently promoted: this
-# many observations of the same price, spanning at least this many days.
-STABLE_OBSERVATIONS = 3
-STABLE_DAYS = 14
+# The thresholds and the arithmetic live in models/compare_at.py, shared with
+# the client lane (models/shopify_findings.py), so a stranger's catalogue and a
+# client's own Products export are read by one definition of "below its own
+# compare-at" and one of "permanent". Re-exported here under the names this
+# module has always used.
+MIN_DISCOUNT_SHARE = compare_at.MIN_DISCOUNT_SHARE
+CATALOGUE_DISCOUNT_SHARE = compare_at.CATALOGUE_DISCOUNT_SHARE
+STABLE_OBSERVATIONS = compare_at.STABLE_OBSERVATIONS
+STABLE_DAYS = compare_at.STABLE_DAYS
 
 
 def _catalogue_discount_share(snap: ProspectSnapshot) -> float | None:
     """How much of the shelf is listed under its own anchor."""
-    priced = [i for i in snap.items if i.price]
-    if not priced:
-        return None
-    marked = [i for i in priced if i.discount_share]
-    return round(len(marked) / len(priced), 3)
+    return compare_at.catalogue_share((i.price, i.compare_at_price) for i in snap.items)
 
 
 def _price_is_settled(item: Item) -> tuple[bool, int, int]:
@@ -547,14 +544,7 @@ def _price_is_settled(item: Item) -> tuple[bool, int, int]:
     finding exists but is not confident enough to send, which is the correct
     behaviour rather than a gap.
     """
-    seen = [o for o in item.history if o.price is not None]
-    if len(seen) < STABLE_OBSERVATIONS:
-        return False, len(seen), 0
-    same = [o for o in seen if abs((o.price or 0) - (item.price or 0)) < 0.005]
-    if len(same) < STABLE_OBSERVATIONS:
-        return False, len(same), 0
-    span = (max(o.seen_on for o in same) - min(o.seen_on for o in same)).days
-    return span >= STABLE_DAYS, len(same), span
+    return compare_at.price_is_settled(item.price, ((o.seen_on, o.price) for o in item.history))
 
 
 def permanent_discount(item: Item, snap: ProspectSnapshot, today: date) -> Finding | None:
@@ -580,7 +570,7 @@ def permanent_discount(item: Item, snap: ProspectSnapshot, today: date) -> Findi
     catalogue = _catalogue_discount_share(snap)
     if not catalogue or catalogue < CATALOGUE_DISCOUNT_SHARE:
         return None
-    per_unit = round((item.compare_at_price or 0) - (item.price or 0), 2)
+    per_unit = compare_at.per_unit_gap(item.price, item.compare_at_price)
     if per_unit < MIN_PER_UNIT_USD:
         return None
     settled, readings, span = _price_is_settled(item)

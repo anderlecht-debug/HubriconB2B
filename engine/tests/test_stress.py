@@ -45,11 +45,13 @@ def test_each_stress_moves_the_right_number_the_right_way():
     cone, paths = _cone()
     st = stress.run(paths, cone)
     by = {r["name"]: r for r in st["scenarios"]}
-    # a fee rise costs that share of revenue paid through the last payout day
-    revenue_paid = float(np.median(paths["revenue"][:, : paths["payout_days"][-1] + 1].sum(axis=1)))
+    # a fee rise costs that share of the revenue the last transfer has paid: the
+    # sales made up to reserve + transit days before it lands (since 2026-10-01)
+    paid_through = paths["payout_days"][-1] + 1 - paths["payout_reserve_days"] - paths["payout_transit_days"]
+    revenue_paid = float(np.median(paths["revenue"][:, :paid_through].sum(axis=1)))
     assert by["fee_rise"]["end_cash_delta_p50"] == pytest.approx(-stress.FEE_SHOCK_PP * revenue_paid, rel=0.15)
-    # dearer clicks: ad spend up by the shock over the horizon
-    ads_paid = paths["ad_daily_total"] * (paths["payout_days"][-1] + 1)
+    # dearer clicks: ad spend up by the shock on every day of the horizon, charged as it is spent
+    ads_paid = paths["ad_daily_total"] * paths["days"]
     assert by["cpc_rise"]["end_cash_delta_p50"] == pytest.approx(-stress.CPC_SHOCK * ads_paid, rel=0.05)
     # the biggest SKU silenced for a month: more ruin, deeper trough
     assert by["top_sku_suppressed"]["sku"] == "BIG"

@@ -1,0 +1,1166 @@
+{
+ "fixture": "snapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,estimated-ais-181-210-days,estimated-ais-211-240-days,estimated-ais-241-270-days,estimated-ais-271-300-days,estimated-ais-301-330-days,estimated-ais-331-365-days,estimated-ais-365-plus-days,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,0,0,0,0,0,0,0,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,3.60,0,0,0,0,0,0,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,6.40,5.20,4.80,7.10,3.30,2.90,18.60,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,0,0,0,0,0,0,0,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+ "fixture_no_ais": "snapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+ "fixture_lilf": "snapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,estimated-ais-181-210-days,estimated-ais-211-240-days,estimated-ais-241-270-days,estimated-ais-271-300-days,estimated-ais-301-330-days,estimated-ais-331-365-days,estimated-ais-365-plus-days,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30,short-term-historical-days-of-supply,long-term-historical-days-of-supply,exempted-from-low-inventory-level-fee\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,0,0,0,0,0,0,0,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7,20,25,No\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,3.60,0,0,0,0,0,0,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2,10,30,No\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,6.40,5.20,4.80,7.10,3.30,2.90,18.60,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3,12,13,No\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,0,0,0,0,0,0,0,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7,5,6,Yes\n",
+ "fee_preview_tiers": "sku\tfnsku\tasin\tproduct-name\tproduct-group\tbrand\tfulfilled-by\tyour-price\tsales-price\tlongest-side\tmedian-side\tshortest-side\tlength-and-girth\tunit-of-dimension\titem-package-weight\tunit-of-weight\tproduct-size-tier\tcurrency\testimated-fee-total\testimated-referral-fee-per-unit\testimated-variable-closing-fee\testimated-order-handling-fee-per-order\testimated-pick-pack-fee-per-unit\testimated-weight-handling-fee-per-unit\texpected-fulfillment-fee-per-unit\nWIDGET-BLUE\tX001ABC1\tB0CHILD001\tWidget, Blue 2-Pack\tHome & Kitchen\tHubricon Fixture\tAmazon\t19.98\t19.98\t9\t6\t2\t25.00\tinches\t0.82\tpounds\tLarge standard\tUSD\t7.76\t3.00\t0.00\t0.00\t0.00\t0.00\t4.76\nWIDGET-RED\tX001ABC2\tB0CHILD002\tWidget, Red 2-Pack\tHome & Kitchen\tHubricon Fixture\tAmazon\t19.95\t19.95\t8\t5\t1.1\t20.20\tinches\t4.10\tpounds\tLarge standard\tUSD\t7.08\t2.99\t0.00\t0.00\t0.00\t0.00\t4.09\nGADGET-PRO\tX001ABC3\tB0CHILD003\tGadget Pro\tKitchen & Dining\tHubricon Fixture\tAmazon\t34.99\t34.99\t15\t12\t0.9\t40.80\tinches\t0.38\tpounds\tLarge standard\tUSD\t9.34\t5.25\t0.00\t0.00\t0.00\t0.00\t4.09\n",
+ "parsed": [
+  {
+   "sku": "WIDGET-BLUE",
+   "available": 412,
+   "inv_age_181_to_270": 0,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 310,
+   "item_volume": 0.0412,
+   "storage_volume": 16.97,
+   "estimated_aged_surcharge": 0.0,
+   "low_inventory_level_fee_applied": false,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "WIDGET-RED",
+   "available": 96,
+   "inv_age_181_to_270": 36,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 190,
+   "item_volume": 0.0412,
+   "storage_volume": 3.96,
+   "estimated_aged_surcharge": 3.6,
+   "low_inventory_level_fee_applied": true,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "GADGET-PRO",
+   "available": 240,
+   "inv_age_181_to_270": 80,
+   "inv_age_271_to_365": 60,
+   "inv_age_365_plus": 40,
+   "units_shipped_t30": 72,
+   "item_volume": 0.125,
+   "storage_volume": 30.0,
+   "estimated_aged_surcharge": 48.3,
+   "low_inventory_level_fee_applied": false,
+   "storage_type": "Standard-Size"
+  },
+  {
+   "sku": "X001ABC4",
+   "available": 8,
+   "inv_age_181_to_270": 0,
+   "inv_age_271_to_365": 0,
+   "inv_age_365_plus": 0,
+   "units_shipped_t30": 6,
+   "item_volume": 0.01,
+   "storage_volume": 0.08,
+   "estimated_aged_surcharge": 0.0,
+   "low_inventory_level_fee_applied": true,
+   "storage_type": "Standard-Size"
+  }
+ ],
+ "priced_amazon": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 3.6,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 119.7,
+   "low_inventory_fee_rate": 0.63,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 48.3,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 15 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 15 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 2 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 2 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  }
+ },
+ "priced_schedule": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "no aged units on file",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 1.48,
+   "basis": "schedule estimate (2026-01-15)",
+   "low_inventory_fee_month": 119.7,
+   "low_inventory_fee_rate": 0.63,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 87.25,
+   "basis": "schedule estimate (2026-01-15)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 15 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 15 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "no aged units on file",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 2 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 2 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  }
+ },
+ "priced_lilf": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 99.2,
+   "low_inventory_fee_rate": 0.32,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: Amazon's own 30- and 90-day historical days of supply; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 3.6,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: Amazon's own 30- and 90-day historical days of supply; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 48.3,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 15 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: Amazon's own 30- and 90-day historical days of supply; exempt: 15 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "Amazon's export marks this SKU exempt",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: Amazon's own 30- and 90-day historical days of supply; Amazon's export marks this SKU exempt; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  }
+ },
+ "priced_tiers": {
+  "WIDGET-BLUE": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "large_standard_3lb",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier from your export (large standard, up to 3 lb); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "WIDGET-RED": {
+   "aged_surcharge_month": 3.6,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 165.3,
+   "low_inventory_fee_rate": 0.87,
+   "fee_size_tier": "large_standard_20lb",
+   "low_inventory_fee_exempt": null,
+   "low_inventory_fee_basis": "size tier from your export (large standard, 3 to 20 lb); days of supply: on hand at the last 30 and 90 days' shipping pace; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "GADGET-PRO": {
+   "aged_surcharge_month": 48.3,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "large_standard_3lb",
+   "low_inventory_fee_exempt": "exempt: 15 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier from your export (large standard, up to 3 lb); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 15 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  },
+  "X001ABC4": {
+   "aged_surcharge_month": 0.0,
+   "basis": "Amazon's estimate (Inventory Age export)",
+   "low_inventory_fee_month": 0.0,
+   "low_inventory_fee_rate": 0.0,
+   "fee_size_tier": "small_standard",
+   "low_inventory_fee_exempt": "exempt: 2 units shipped in the past 7 days, under 20",
+   "low_inventory_fee_basis": "size tier assumed (small standard); days of supply: on hand at the last 30 and 90 days' shipping pace; exempt: 2 units shipped in the past 7 days, under 20; not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD"
+  }
+ },
+ "low_inventory_rate": [
+  {
+   "args": [
+    0,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    5,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    13.9,
+    "standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    14,
+    "standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    20.9,
+    "standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    21,
+    "standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    27.9,
+    "standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    28,
+    "standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "oversize"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    5,
+    "oversize"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    13.9,
+    "oversize"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    14,
+    "oversize"
+   ],
+   "want": 1.02
+  },
+  {
+   "args": [
+    20.9,
+    "oversize"
+   ],
+   "want": 1.02
+  },
+  {
+   "args": [
+    21,
+    "oversize"
+   ],
+   "want": 0.51
+  },
+  {
+   "args": [
+    27.9,
+    "oversize"
+   ],
+   "want": 0.51
+  },
+  {
+   "args": [
+    28,
+    "oversize"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "oversize"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "small_standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    5,
+    "small_standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    13.9,
+    "small_standard"
+   ],
+   "want": 0.89
+  },
+  {
+   "args": [
+    14,
+    "small_standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    20.9,
+    "small_standard"
+   ],
+   "want": 0.63
+  },
+  {
+   "args": [
+    21,
+    "small_standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    27.9,
+    "small_standard"
+   ],
+   "want": 0.32
+  },
+  {
+   "args": [
+    28,
+    "small_standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "small_standard"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "large_standard_3lb"
+   ],
+   "want": 0.97
+  },
+  {
+   "args": [
+    5,
+    "large_standard_3lb"
+   ],
+   "want": 0.97
+  },
+  {
+   "args": [
+    13.9,
+    "large_standard_3lb"
+   ],
+   "want": 0.97
+  },
+  {
+   "args": [
+    14,
+    "large_standard_3lb"
+   ],
+   "want": 0.7
+  },
+  {
+   "args": [
+    20.9,
+    "large_standard_3lb"
+   ],
+   "want": 0.7
+  },
+  {
+   "args": [
+    21,
+    "large_standard_3lb"
+   ],
+   "want": 0.36
+  },
+  {
+   "args": [
+    27.9,
+    "large_standard_3lb"
+   ],
+   "want": 0.36
+  },
+  {
+   "args": [
+    28,
+    "large_standard_3lb"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "large_standard_3lb"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "large_standard_20lb"
+   ],
+   "want": 1.11
+  },
+  {
+   "args": [
+    5,
+    "large_standard_20lb"
+   ],
+   "want": 1.11
+  },
+  {
+   "args": [
+    13.9,
+    "large_standard_20lb"
+   ],
+   "want": 1.11
+  },
+  {
+   "args": [
+    14,
+    "large_standard_20lb"
+   ],
+   "want": 0.87
+  },
+  {
+   "args": [
+    20.9,
+    "large_standard_20lb"
+   ],
+   "want": 0.87
+  },
+  {
+   "args": [
+    21,
+    "large_standard_20lb"
+   ],
+   "want": 0.47
+  },
+  {
+   "args": [
+    27.9,
+    "large_standard_20lb"
+   ],
+   "want": 0.47
+  },
+  {
+   "args": [
+    28,
+    "large_standard_20lb"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "large_standard_20lb"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "small_bulky"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    5,
+    "small_bulky"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    13.9,
+    "small_bulky"
+   ],
+   "want": 1.85
+  },
+  {
+   "args": [
+    14,
+    "small_bulky"
+   ],
+   "want": 1.02
+  },
+  {
+   "args": [
+    20.9,
+    "small_bulky"
+   ],
+   "want": 1.02
+  },
+  {
+   "args": [
+    21,
+    "small_bulky"
+   ],
+   "want": 0.51
+  },
+  {
+   "args": [
+    27.9,
+    "small_bulky"
+   ],
+   "want": 0.51
+  },
+  {
+   "args": [
+    28,
+    "small_bulky"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "small_bulky"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    "large_bulky"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    5,
+    "large_bulky"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    13.9,
+    "large_bulky"
+   ],
+   "want": 2.09
+  },
+  {
+   "args": [
+    14,
+    "large_bulky"
+   ],
+   "want": 1.15
+  },
+  {
+   "args": [
+    20.9,
+    "large_bulky"
+   ],
+   "want": 1.15
+  },
+  {
+   "args": [
+    21,
+    "large_bulky"
+   ],
+   "want": 0.57
+  },
+  {
+   "args": [
+    27.9,
+    "large_bulky"
+   ],
+   "want": 0.57
+  },
+  {
+   "args": [
+    28,
+    "large_bulky"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    "large_bulky"
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    0,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    5,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    13.9,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    14,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    20.9,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    21,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    27.9,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    28,
+    null
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    40,
+    null
+   ],
+   "want": 0.0
+  }
+ ],
+ "low_inventory_tier": [
+  {
+   "args": [
+    "Small standard",
+    null
+   ],
+   "want": [
+    "small_standard",
+    "size tier from your export (small standard)"
+   ]
+  },
+  {
+   "args": [
+    "Large standard",
+    0.82
+   ],
+   "want": [
+    "large_standard_3lb",
+    "size tier from your export (large standard, up to 3 lb)"
+   ]
+  },
+  {
+   "args": [
+    "Large standard",
+    3.0
+   ],
+   "want": [
+    "large_standard_3lb",
+    "size tier from your export (large standard, up to 3 lb)"
+   ]
+  },
+  {
+   "args": [
+    "Large standard",
+    3.01
+   ],
+   "want": [
+    "large_standard_20lb",
+    "size tier from your export (large standard, 3 to 20 lb)"
+   ]
+  },
+  {
+   "args": [
+    "Large standard",
+    null
+   ],
+   "want": [
+    "large_standard_3lb",
+    "size tier from your export (large standard); weight not on file, so the up-to-3 lb row"
+   ]
+  },
+  {
+   "args": [
+    "Large Standard-Size",
+    12.0
+   ],
+   "want": [
+    "large_standard_20lb",
+    "size tier from your export (large standard, 3 to 20 lb)"
+   ]
+  },
+  {
+   "args": [
+    "Small Bulky",
+    null
+   ],
+   "want": [
+    "small_bulky",
+    "size tier from your export (small bulky; bulky rates least certain)"
+   ]
+  },
+  {
+   "args": [
+    "Large bulky",
+    40.0
+   ],
+   "want": [
+    "large_bulky",
+    "size tier from your export (large bulky; bulky rates least certain)"
+   ]
+  },
+  {
+   "args": [
+    "Standard-Size",
+    null
+   ],
+   "want": [
+    "small_standard",
+    "size tier assumed (small standard)"
+   ]
+  },
+  {
+   "args": [
+    "",
+    null
+   ],
+   "want": [
+    "small_standard",
+    "size tier assumed (small standard)"
+   ]
+  },
+  {
+   "args": [
+    null,
+    null
+   ],
+   "want": [
+    "small_standard",
+    "size tier assumed (small standard)"
+   ]
+  },
+  {
+   "args": [
+    "Oversize",
+    null
+   ],
+   "want": [
+    "small_bulky",
+    "size tier assumed (small bulky; your export says oversize)"
+   ]
+  },
+  {
+   "args": [
+    "Small oversize",
+    null
+   ],
+   "want": [
+    "small_bulky",
+    "size tier assumed (small bulky; your export says oversize)"
+   ]
+  },
+  {
+   "args": [
+    "Extra-large 0 to 50 lb",
+    null
+   ],
+   "want": [
+    null,
+    "extra-large: no low-inventory rate in the schedule, not priced"
+   ]
+  },
+  {
+   "args": [
+    "Special oversize",
+    null
+   ],
+   "want": [
+    null,
+    "extra-large: no low-inventory rate in the schedule, not priced"
+   ]
+  },
+  {
+   "args": [
+    "Apparel",
+    null
+   ],
+   "want": [
+    "small_standard",
+    "size tier assumed (small standard; your export says Apparel)"
+   ]
+  }
+ ],
+ "aged_rate": [
+  {
+   "args": [
+    100
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    180
+   ],
+   "want": 0.0
+  },
+  {
+   "args": [
+    181
+   ],
+   "want": 0.5
+  },
+  {
+   "args": [
+    225
+   ],
+   "want": 1.0
+  },
+  {
+   "args": [
+    270
+   ],
+   "want": 1.5
+  },
+  {
+   "args": [
+    271
+   ],
+   "want": 5.45
+  },
+  {
+   "args": [
+    318
+   ],
+   "want": 5.7
+  },
+  {
+   "args": [
+    365
+   ],
+   "want": 5.9
+  },
+  {
+   "args": [
+    366
+   ],
+   "want": 6.9
+  },
+  {
+   "args": [
+    400
+   ],
+   "want": 6.9
+  }
+ ],
+ "clean_money": [
+  {
+   "args": [
+    "US$1,234.56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "$1,234.56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "1.234,56"
+   ],
+   "want": 1234.56
+  },
+  {
+   "args": [
+    "(12.34)"
+   ],
+   "want": -12.34
+  },
+  {
+   "args": [
+    "12,5"
+   ],
+   "want": 12.5
+  },
+  {
+   "args": [
+    "1,234"
+   ],
+   "want": 1234.0
+  },
+  {
+   "args": [
+    "n/a"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "--"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    ""
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "abc"
+   ],
+   "want": null
+  },
+  {
+   "args": [
+    "0.0412"
+   ],
+   "want": 0.0412
+  },
+  {
+   "args": [
+    "-3"
+   ],
+   "want": -3.0
+  }
+ ],
+ "preamble": {
+  "text": "Inventory report\nGenerated for: a, b, c\n\nsnapshot-date,sku,fnsku,asin,product-name,condition,available,pending-removal-quantity,inv-age-0-to-90-days,inv-age-91-to-180-days,inv-age-181-to-270-days,inv-age-271-to-365-days,inv-age-365-plus-days,units-shipped-t7,units-shipped-t30,units-shipped-t60,units-shipped-t90,sell-through,days-of-supply,estimated-excess-quantity,item-volume,storage-volume,estimated-storage-cost-next-month,estimated-ais-181-210-days,estimated-ais-211-240-days,estimated-ais-241-270-days,estimated-ais-271-300-days,estimated-ais-301-330-days,estimated-ais-331-365-days,estimated-ais-365-plus-days,recommended-action,low-inventory-level-fee-applied,your-price,sales-price,currency,healthy-inventory-level,storage-type,weeks-of-cover-t30\n2026-07-01,WIDGET-BLUE,X001ABC1,B0CHILD001,\"Widget, Blue 2-Pack\",New,412,0,300,112,0,0,0,72,310,590,880,0.85,40,0,0.0412,16.97,12.40,0,0,0,0,0,0,0,No action required,No,19.98,19.98,USD,380,Standard-Size,5.7\n2026-07-01,WIDGET-RED,X001ABC2,B0CHILD002,\"Widget, Red 2-Pack\",New,96,0,20,40,36,0,0,41,190,360,540,1.10,15,0,0.0412,3.96,2.90,3.60,0,0,0,0,0,0,No action required,Yes,19.95,19.95,USD,220,Standard-Size,2.2\n2026-07-01,GADGET-PRO,X001ABC3,B0CHILD003,Gadget Pro,New,240,10,0,60,80,60,40,15,72,140,210,0.30,100,95,0.1250,30.00,21.75,6.40,5.20,4.80,7.10,3.30,2.90,18.60,Create removal order,No,30.99,30.99,USD,90,Standard-Size,14.3\n2026-07-01,,X001ABC4,B0CHILD004,Gizmo Mini,New,8,0,8,0,0,0,0,2,6,11,18,0.75,40,0,0.0100,0.08,0.06,0,0,0,0,0,0,0,Increase inventory,Yes,9.99,9.99,USD,12,Standard-Size,5.7\n",
+  "headers": [
+   "snapshot-date",
+   "sku",
+   "fnsku",
+   "asin",
+   "product-name",
+   "condition",
+   "available",
+   "pending-removal-quantity",
+   "inv-age-0-to-90-days",
+   "inv-age-91-to-180-days",
+   "inv-age-181-to-270-days",
+   "inv-age-271-to-365-days",
+   "inv-age-365-plus-days",
+   "units-shipped-t7",
+   "units-shipped-t30",
+   "units-shipped-t60",
+   "units-shipped-t90",
+   "sell-through",
+   "days-of-supply",
+   "estimated-excess-quantity",
+   "item-volume",
+   "storage-volume",
+   "estimated-storage-cost-next-month",
+   "estimated-ais-181-210-days",
+   "estimated-ais-211-240-days",
+   "estimated-ais-241-270-days",
+   "estimated-ais-271-300-days",
+   "estimated-ais-301-330-days",
+   "estimated-ais-331-365-days",
+   "estimated-ais-365-plus-days",
+   "recommended-action",
+   "low-inventory-level-fee-applied",
+   "your-price",
+   "sales-price",
+   "currency",
+   "healthy-inventory-level",
+   "storage-type",
+   "weeks-of-cover-t30"
+  ]
+ },
+ "shopify_orders": {
+  "text": "Name,Email,Financial Status,Paid at,Fulfillment Status,Fulfilled at,Accepts Marketing,Currency,Subtotal,Shipping,Taxes,Total,Discount Code,Discount Amount,Shipping Method,Created at,Lineitem quantity,Lineitem name,Lineitem price,Lineitem compare at price,Lineitem sku,Lineitem requires shipping,Lineitem taxable,Lineitem fulfillment status,Billing Name,Notes,Cancelled at,Payment Method,Payment Reference,Refunded Amount,Vendor,Outstanding Balance,Id,Tags,Risk Level,Source,Lineitem discount,Tax 1 Name,Tax 1 Value\n#1001,a@b.co,paid,2026-07-10 09:12:44 -0400,fulfilled,2026-07-10 09:12:44 -0400,no,USD,20.00,5.00,0.00,25.00,,,Standard,2026-07-10 09:12:44 -0400,1,Widget - Blue,20.00,,WIDGET-BLUE,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5001.1,0.00,Acme,0.00,5001,,Low,web,0.00,,\n#1002,a@b.co,paid,2026-07-20 10:15:22 -0400,fulfilled,2026-07-20 10:15:22 -0400,no,USD,58.00,5.50,0.00,63.50,,,Standard,2026-07-20 10:15:22 -0400,2,Widget - Blue,20.00,,WIDGET-BLUE,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5002.1,0.00,Acme,0.00,5002,,Low,web,0.00,,\n#1002,,,,,,,,,,,,,,,,1,Widget - Red,20.00,,WIDGET-RED,true,true,fulfilled,,,,,,,,,,,,,2.00,,\n#1003,a@b.co,partially_refunded,2026-07-25 16:40:03 -0400,fulfilled,2026-07-25 16:40:03 -0400,no,USD,60.00,5.00,0.00,65.00,,,Standard,2026-07-25 16:40:03 -0400,3,Widget - Blue,20.00,,WIDGET-BLUE,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5003.1,20.00,Acme,0.00,5003,,Low,web,0.00,,\n#1004,a@b.co,refunded,2026-07-28 08:30:00 -0400,fulfilled,2026-07-28 08:30:00 -0400,no,USD,100.00,0.00,0.00,100.00,,,Standard,2026-07-28 08:30:00 -0400,5,Widget - Red,20.00,,WIDGET-RED,true,true,fulfilled,Pat Buyer,,2026-07-29 08:00:00 -0400,Shopify Payments,c5004.1,100.00,Acme,0.00,5004,,Low,web,0.00,,\n#1005,a@b.co,paid,2026-08-02 11:05:19 -0400,fulfilled,2026-08-02 11:05:19 -0400,no,USD,27.00,5.00,0.00,32.00,,,Standard,2026-08-02 11:05:19 -0400,1,Widget - Blue,22.00,,WIDGET-BLUE,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5005.1,0.00,Acme,0.00,5005,,Low,web,0.00,,\n#1005,,,,,,,,,,,,,,,,1,Gift Wrap,5.00,,,true,true,fulfilled,,,,,,,,,,,,,0.00,,\n#1006,a@b.co,partially_refunded,2026-08-15 19:22:41 -0400,fulfilled,2026-08-15 19:22:41 -0400,no,USD,58.00,0.00,0.00,58.00,,,Standard,2026-08-15 19:22:41 -0400,1,Widget - Blue,22.00,,WIDGET-BLUE,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5006.1,11.60,Acme,0.00,5006,,Low,web,0.00,,\n#1006,,,,,,,,,,,,,,,,2,Widget - Red,20.00,,WIDGET-RED,true,true,fulfilled,,,,,,,,,,,,,4.00,,\n#1007,a@b.co,pending,2026-08-20 07:45:00 -0400,fulfilled,2026-08-20 07:45:00 -0400,no,USD,20.00,5.00,0.00,25.00,,,Standard,2026-08-20 07:45:00 -0400,1,Widget - Red,20.00,,WIDGET-RED,true,true,fulfilled,Pat Buyer,,,Shopify Payments,c5007.1,0.00,Acme,0.00,5007,,Low,web,0.00,,\n",
+  "by_sku": {
+   "WIDGET-BLUE": {
+    "units": 8,
+    "sales": 139.6,
+    "fee": 5.22
+   },
+   "WIDGET-RED": {
+    "units": 3,
+    "sales": 46.8,
+    "fee": 1.64
+   },
+   "name:Gift Wrap": {
+    "units": 1,
+    "sales": 5.0,
+    "fee": 0.2
+   }
+  },
+  "payments": {
+   "rate": 0.029,
+   "fixed": 0.3
+  },
+  "drop_statuses": [
+   "pending",
+   "voided"
+  ]
+ },
+ "constants": {
+  "bucket_mid_age": {
+   "inv_age_181_to_270": 225,
+   "inv_age_271_to_365": 318,
+   "inv_age_365_plus": 400
+  },
+  "default_volume": {
+   "standard": 0.08,
+   "oversize": 1.2
+  },
+  "effective": "2026-01-15",
+  "low_inventory_fee": {
+   "small_standard": {
+    "lt14": 0.89,
+    "14to21": 0.63,
+    "21to28": 0.32
+   },
+   "large_standard_3lb": {
+    "lt14": 0.97,
+    "14to21": 0.7,
+    "21to28": 0.36
+   },
+   "large_standard_20lb": {
+    "lt14": 1.11,
+    "14to21": 0.87,
+    "21to28": 0.47
+   },
+   "small_bulky": {
+    "lt14": 1.85,
+    "14to21": 1.02,
+    "21to28": 0.51
+   },
+   "large_bulky": {
+    "lt14": 2.09,
+    "14to21": 1.15,
+    "21to28": 0.57
+   }
+  },
+  "low_inventory_assumed_tier": {
+   "standard": "small_standard",
+   "oversize": "small_bulky"
+  },
+  "low_inventory_min_units_t7": 20,
+  "lilf_unmodelled": "not applied, because no export shows them: the exemptions for a new Professional seller (365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished through AWD",
+  "synonyms": {
+   "short_term_dos": [
+    "shorttermhistoricaldaysofsupply",
+    "historicaldaysofsupply30days",
+    "historicaldaysofsupplyt30"
+   ],
+   "long_term_dos": [
+    "longtermhistoricaldaysofsupply",
+    "historicaldaysofsupply90days",
+    "historicaldaysofsupplyt90"
+   ],
+   "lilf_exempt": [
+    "exemptedfromlowinventorylevelfee",
+    "lowinventorylevelfeeexempt",
+    "lowinventorylevelfeeexemption"
+   ],
+   "product_group": [
+    "productgroup",
+    "category"
+   ],
+   "product_size_tier": [
+    "productsizetier",
+    "sizetier"
+   ],
+   "item_weight": [
+    "itempackageweight",
+    "itemweight",
+    "packageweight"
+   ],
+   "unit_of_weight": [
+    "unitofweight",
+    "weightunit"
+   ]
+  }
+ }
+}

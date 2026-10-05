@@ -19,7 +19,9 @@ const json = (p) => JSON.parse(read(p));
 const CASE = /public-data case study/i;
 // Site figures that are case-study estimates (scripts/build-pages.mjs), for boards that use them directly.
 const SITE_CASE = new Set(["leak_p10", "leak_p90", "units", "years", "months_total", "months_losing", "mc_p10", "mc_p50", "mc_p90", "sales_lo", "sales_hi", "weight", "who", "who_lower"]);
-const PAGES = ["index.html", "honesty.html", "terms.html", "learn/index.html", "learn/fee-staircase.html"];
+// The home page and the tab pages its sections moved to (HUBRICON_SPEC.md, amended 2026-10-01).
+const PAGES = ["index.html", "case-study.html", "how-it-works.html", "offer.html", "honesty.html", "terms.html",
+  "learn/index.html", "learn/fee-staircase.html"];
 
 const words = (text) => (String(text).toLowerCase().replace(/<[^>]+>/g, " ").match(/[a-z][a-z'’-]*[a-z]|[a-z]/g) || [])
   .map((w) => w.replace(/[’]/g, "'").replace(/'s$/, ""));

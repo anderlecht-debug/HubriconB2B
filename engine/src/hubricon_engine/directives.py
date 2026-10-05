@@ -341,7 +341,8 @@ def _inventory_directive(r: dict, margin_row: dict | None, today: date, econ_row
         text = (
             f"Wire {_money(float(wire_amount))} to your supplier by {by_text} — "
             f"{int(order_qty)} units of {r['sku']}. Sized to a {q:.0%} service level, "
-            f"the level your margin justifies (C_u ÷ (C_u + C_o), storage and the season priced in); "
+            f"the level your margin justifies (C_u ÷ (C_u + C_o), "
+            f"{'storage' if channels.has_fee_cliffs(channel) else 'the cost of capital'} and the season priced in); "
             f"lead time {r['lead_time_days']}d, current stockout risk {p:.0%}.{terms_note}"
         )
     elif unit_cost:
@@ -426,14 +427,15 @@ def _cannibalisation_directive(move: dict, fit: dict, margin_row: dict, sku: str
 
 
 def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None = None,
-                       cross: dict | None = None, risk_share: float | None = None) -> dict | None:
+                       cross: dict | None = None, risk_share: float | None = None,
+                       channel: str | None = "amazon") -> dict | None:
     move = price_move(margin_row, fit, fee_history=_fee_history(fit["item_id"], margins or []), cross=cross,
                       risk_share=risk_share)
     sku = fit["item_id"]
     if move and move.get("status") == "cannibalisation":
         return _cannibalisation_directive(move, fit, margin_row, sku)
     if move and move.get("status") == "near_unit_elastic":
-        return _near_unit_elastic_directive(move, fit, margin_row, sku)
+        return _near_unit_elastic_directive(move, fit, margin_row, sku, channel)
     if move:
         step = move["p_new"] - move["p0"]
         dest = f"; optimum ${move['destination']:.2f}" if move["destination"] else ""
@@ -471,7 +473,7 @@ def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None =
                 f"Move {sku} ${move['p0']:.2f} → ${move['p_new']:.2f} "
                 f"({'+' if step >= 0 else '−'}${abs(step):.2f}{dest}). "
                 f"Expected {sign}{_money(move['expected_delta'])}/period{rng}. "
-                f"Run as a tracked test — Buy Box watched while the step is live."
+                f"Run as a tracked test — {channels.watch_phrase(channel)}"
             ),
             evidence={
                 "sku": sku,
@@ -505,7 +507,7 @@ def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None =
             action_text=(
                 f"Price-test {sku} +3%: demand is price-insensitive (ε = {eps:.2f}), so volume "
                 f"loss should be smaller than the margin gain. Upload unit costs and the next "
-                f"move states the exact optimum. Buy Box watched while the step is live."
+                f"move states the exact optimum. {channels.watch_phrase(channel)}"
             ),
             evidence={
                 "sku": sku,
@@ -523,7 +525,8 @@ def _pricing_directive(fit: dict, margin_row: dict, margins: list[dict] | None =
     return None
 
 
-def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: str) -> dict:
+def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: str,
+                                 channel: str | None = "amazon") -> dict:
     """The fit cannot be separated from ε = −1, so there is no destination to
     quote — the optimum diverges at that point and any price we printed would be
     an artifact of where the estimate happened to land.
@@ -551,7 +554,7 @@ def _near_unit_elastic_directive(move: dict, fit: dict, margin_row: dict, sku: s
             f"point where a price move pays for itself (ε = {eps:.2f}{band}), and the optimum "
             f"is unbounded at that point — so there is no destination to quote and no dollar "
             f"figure we would stand behind. The step is sized to what the range allows; the "
-            f"next two periods narrow it. Buy Box watched while the step is live."
+            f"next two periods narrow it. {channels.watch_phrase(channel)}"
         ),
         evidence={
             "sku": sku,
@@ -634,10 +637,15 @@ def _baseline(margin_row: dict | None) -> dict:
             "baseline_period": str(margin_row.get("period_start"))}
 
 
-def _markdown_directive(row: dict, margin_row: dict | None, fit: dict | None) -> dict | None:
+def _markdown_directive(row: dict, margin_row: dict | None, fit: dict | None,
+                        channel: str | None = "amazon") -> dict | None:
     """Clear the excess at a lower price rather than dumping it or carrying it.
     Standing while the depth sits inside the 5% cap; deeper is the client's
-    call. Measured before landed cost — the dollars are cash proceeds."""
+    call. Measured before landed cost — the dollars are cash proceeds.
+
+    Only Amazon bills storage and the aged surcharge (channels.has_fee_cliffs;
+    models/markdown.py prices no marketplace carry on Shopify), so only an
+    Amazon markdown says they are priced in."""
     if row.get("decision") != "markdown" or row.get("delta_p50") is None:
         return None
     sku, depth = row["sku"], float(row["depth"])
@@ -655,7 +663,9 @@ def _markdown_directive(row: dict, margin_row: dict | None, fit: dict | None) ->
             f"It nets +{_money(gain['p50'])} against holding at today's price{rng}"
             + (f" and {'+' if (vs_liq.get('p50') or 0) >= 0 else '−'}{_money(vs_liq['p50'])} against liquidating"
                if vs_liq.get("p50") is not None else "")
-            + f", with storage and the aged surcharge priced in.{range_note} Buy Box watched while the markdown is live.")
+            + (", with storage and the aged surcharge priced in." if channels.has_fee_cliffs(channel) else
+               ", net of fees.")
+            + f"{range_note} {channels.watch_phrase(channel, 'markdown')}")
     draft = _draft(
         "pricing", "markdown", sku,
         score=25 + float(gain["p50"]) / 100,
@@ -680,7 +690,8 @@ def _markdown_directive(row: dict, margin_row: dict | None, fit: dict | None) ->
     return downside_guard(draft, margin_row)
 
 
-def _stretch_directive(row: dict, margin_row: dict | None, fit: dict | None) -> dict | None:
+def _stretch_directive(row: dict, margin_row: dict | None, fit: dict | None,
+                       channel: str | None = "amazon") -> dict | None:
     """A rise inside the cap so thin stock lasts until the replenishment lands.
     An ordinary price step to the Profit Record, with the reason on it."""
     st = row.get("stretch") or {}
@@ -693,7 +704,7 @@ def _stretch_directive(row: dict, margin_row: dict | None, fit: dict | None) -> 
             f"{float(st['p_stockout_before']):.0%} to {float(st['p_stockout_after']):.0%}, and the units sell at the higher "
             f"price rather than running out — about +{_money(gain['p50'])} over the window (90% range "
             f"{'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}). Back to "
-            f"${float(st['p0']):.2f} when the replenishment lands. Buy Box watched while the step is live.")
+            f"${float(st['p0']):.2f} when the replenishment lands. {channels.watch_phrase(channel)}")
     draft = _draft(
         "pricing", "price_step", (sku, "stretch"),
         score=22 + float(gain["p50"]) / 100,
@@ -751,8 +762,10 @@ def _liquidation_directives(inv_econ: dict | None, channel: str | None = "amazon
             action_text=(
                 f"Liquidate {int(r['excess_units'])} excess units of {r['sku']}: {program} returns about "
                 f"{_money(liquidate_value)} now, against {_money(hold_npv)} from holding and "
-                f"selling them down with storage and the aged surcharge priced in"
-                + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".") + considered
+                + ("selling them down with storage and the aged surcharge priced in"
+                   + (f" — the surcharge alone is {_money(aged)}/month." if aged else ".")
+                   if channels.has_fee_cliffs(channel) else "selling them down, net of fees.")
+                + considered
             ),
             evidence={
                 "sku": r["sku"],
@@ -945,8 +958,10 @@ def _anomaly_directives(anomaly_rows: list[dict] | None, channel: str | None = "
                 "advertising", "conversion_drift", subject, 15 + impact / 100, None,
                 (f"Sales per click on “{r['item_id']}” fell from ${b:.2f} to ${c:.2f} since {since} — about "
                  f"{_money(impact)} of attributed sales per 30 days at its own click volume. The clicks are landing on "
-                 f"a page that converts worse: price, Buy Box, reviews or the listing itself. The response curve is "
-                 f"refitted on the new regime."), ev))
+                 f"a page that converts worse: "
+                 + ("price, Buy Box, reviews or the listing itself." if channels.has_buy_box(channel)
+                    else "price, reviews or the product page itself.")
+                 + " The response curve is refitted on the new regime."), ev))
         elif m == "spend":
             # Banked (was None): the dollars are already computed, the action
             # is inside the standing mandate, and the proof is direct in the
@@ -1126,7 +1141,8 @@ EXPERIMENTS_PER_RUN = 3         # randomised price tests drafted per cycle, larg
 
 
 def _price_experiment_directive(fit: dict | None, margin_row: dict, sku: str, reason: str,
-                                client_id: str | None, today: date, fee_history=None) -> dict | None:
+                                client_id: str | None, today: date, fee_history=None,
+                                channel: str | None = "amazon") -> dict | None:
     """The instrument: a randomised six-block price test inside the 5% cap.
     Standing under the pricing mandate — every arm is a step the client already
     authorised — and worth no dollars in itself; the next fit uses its answer."""
@@ -1153,8 +1169,12 @@ def _price_experiment_directive(fit: dict | None, margin_row: dict, sku: str, re
                      f"{'+' if cost['p95'] >= 0 else '−'}{_money(cost['p95'])}).")
     else:
         cost_text = " No fit yet, so the arms are weighted equally and the cost of the test is not priced."
+    # On Shopify there is no Buy Box to watch, and the test's daily reading
+    # (models/daily.py) comes from Amazon's settlement rows, so a Shopify test
+    # promises no watch at all: only what is true of every test.
+    watch = f"{channels.watch_phrase(channel, 'test')} " if channels.has_buy_box(channel) else ""
     text = (f"Run a randomised price test on {sku}: six 7-day blocks from {start}, {seq} — every price inside "
-            f"the 5% cap. {why}{cost_text} Buy Box watched throughout; nothing is banked on the test itself.")
+            f"the 5% cap. {why}{cost_text} {watch}Nothing is banked on the test itself.")
     return _draft(
         "pricing", "price_experiment", (sku, start),
         score=16,
@@ -1234,6 +1254,83 @@ def _switchback_directive(incr: dict | None, ads: list[dict], avg_margin: float,
     )
 
 
+# -- the compare-at family (Shopify, 2026-10-01) -------------------------------------
+
+def _compare_at_directive(step: dict, row: dict) -> dict | None:
+    """One price step, re-drafted as a step back toward the SKU's own
+    compare-at. The move, its promise, its range, its mandate and its dedupe
+    key are the price step's own (pricing_engine.price_move sized it on the
+    SKU's fitted demand curve inside the standing step cap, and the downside
+    guard has already read it); what changes is the reason on the record and
+    the words: the list price the store set, the compare-at it lists above
+    it today, and how long the price has held. Kind stays `price_step`, so
+    measurement values it exactly as it values every price step.
+
+    None when the step would carry the list price past the compare-at: the
+    anchor is the ceiling of this family, never a waypoint."""
+    ev = step.get("evidence") or {}
+    frac = float(ev.get("step_fraction") or 0)
+    p0, p_new = ev.get("p0"), ev.get("p_new")
+    price, anchor = row.get("price"), row.get("compare_at")
+    if not (p0 and p_new and price and anchor) or frac <= 0:
+        return None
+    target = round(float(price) * (1.0 + frac), 2)
+    if target > float(anchor):
+        return None
+    sku = ev.get("sku") or row.get("sku")
+    lo, hi = (ev.get("delta_range") or (None, None))[:2]
+    rng = ""
+    if lo is not None and hi is not None:
+        rng = (f" (90% range {'+' if lo >= 0 else '−'}{_money(lo)} to {'+' if hi >= 0 else '−'}{_money(hi)}"
+               + ("; under a 1% chance it goes the other way" if ev.get("p_loss") is not None and ev["p_loss"] < 0.01
+                  else f"; a {float(ev['p_loss']):.0%} chance it goes the other way" if ev.get("p_loss") is not None
+                  else "") + ")")
+    expected = step.get("expected_impact_usd")
+    sign = "+" if (expected or 0) >= 0 else "−"
+    name = row.get("product_name") or sku
+    text = (f"Raise {name} ({sku}) {frac:.1%}, from ${float(price):,.2f} to ${target:,.2f}, back toward its own "
+            f"compare-at of ${float(anchor):,.2f}. It has sold at ${float(price):,.2f} for "
+            f"{int(row.get('months_at_price') or 0)} months and is listed today under that compare-at, so the "
+            f"discount reads as the price, not a promotion. "
+            + (f"Expected {sign}{_money(expected)}/period{rng}, from your own demand history. " if expected is not None
+               else "")
+            + "Run as a tracked test and measured on your own orders.")
+    out = copy.deepcopy(step)
+    out["action_text"] = text
+    out["evidence"] = {**out.get("evidence", {}), "reason": "compare_at", "list_price": float(price),
+                       "list_price_new": target, "compare_at": float(anchor),
+                       "compare_at_finding": {k: row.get(k) for k in (
+                           "discount_share", "per_unit", "months_at_price", "days_observed", "units_month",
+                           "usd_month_face_value", "snapshot_date")}}
+    out["score"] = float(step.get("score") or 0) + 1.0
+    return out
+
+
+def compare_at_directives(drafts: list[dict], shopify_findings: dict | None) -> list[dict]:
+    """The compare-at family: every price step that raises a SKU whose
+    discount is permanent (models/shopify_findings.compare_at_finding) is
+    re-drafted as a step back toward that SKU's compare-at. Nothing new is
+    priced and nothing is added: a SKU whose fitted curve says lower, or that
+    no curve can price yet, keeps the finding and gets no step (the finding
+    says so in the first read). Returns the drafts with those steps replaced."""
+    rows = {r["sku"]: r for r in ((shopify_findings or {}).get("compare_at") or {}).get("rows") or []
+            if r.get("settled")}
+    if not rows:
+        return drafts
+    out = []
+    for d in drafts:
+        ev = d.get("evidence") or {}
+        row = rows.get(ev.get("sku"))
+        if (row and d.get("kind") == "price_step" and not ev.get("reason")
+                and ev.get("status") not in ("near_unit_elastic", "cannibalisation")):
+            redrafted = _compare_at_directive(d, row)
+            if redrafted:
+                out.append(redrafted)
+                continue
+        out.append(d)
+    return out
+
+
 def cross_for(sku: str, cross_by_sku: dict, latest_by_sku: dict) -> dict | None:
     """The family's side of a move on `sku`: each sibling's baseline
     volume, contribution and the weight this SKU's price carries in the
@@ -1285,7 +1382,8 @@ def own_demand_multiplier(ev: dict, fit: dict | None = None) -> tuple[float, flo
 
 
 def plan_prices(elasticity: list[dict], margins: list[dict], cross_price: dict | None = None,
-                risk_share: float | None = None, downside_share: float | None = None) -> dict:
+                risk_share: float | None = None, downside_share: float | None = None,
+                channel: str | None = "amazon") -> dict:
     """The sweep's price instructions, computed once, and what they do to each
     SKU's demand.
 
@@ -1300,7 +1398,11 @@ def plan_prices(elasticity: list[dict], margins: list[dict], cross_price: dict |
     Added 2026-09-24. Reorders were sized on demand at today's price while
     the same sweep raised the price of most of the SKUs it reordered: on the
     Simons–Thorp–Griffin bench the steps cut those SKUs' demand 6–8%, and
-    the orders placed above the true optimum cost 14–19% more than it."""
+    the orders placed above the true optimum cost 14–19% more than it.
+
+    `channel` changes the words of the drafts (what is watched while a step
+    is live, channels.watch_phrase), never the plan; the plan records it so a
+    drafter on another channel can say its own."""
     share = DOWNSIDE_GUARD_SHARE if downside_share is None else float(downside_share)
     if risk_share is not None:
         share = float(risk_share)
@@ -1314,7 +1416,7 @@ def plan_prices(elasticity: list[dict], margins: list[dict], cross_price: dict |
         if not margin_row:
             continue
         d = _pricing_directive(fit, margin_row, margins, cross=cross_for(fit["item_id"], cross_by_sku, latest_by_sku),
-                               risk_share=risk_share)
+                               risk_share=risk_share, channel=channel)
         if d:
             drafts[fit["item_id"]] = downside_guard(d, margin_row, share)
             fits[fit["item_id"]] = fit
@@ -1356,8 +1458,16 @@ def plan_prices(elasticity: list[dict], margins: list[dict], cross_price: dict |
                             "own": round(m_own, 6), "cross": round(m_x, 6),
                             "p0": ev.get("p0") if sku in own else None,
                             "p_new": ev.get("p_new") if sku in own else None}
-    return {"drafts": drafts, "multipliers": multipliers,
+    return {"drafts": drafts, "multipliers": multipliers, "channel": (channel or "amazon").lower(),
             "basis": "the sweep's own price steps and its siblings', over each elasticity's posterior"}
+
+
+def _rewatch(text: str, src: str | None, dst: str | None) -> str:
+    """A draft's watch sentence said for another channel: a price plan
+    computed before the drafter knew the channel speaks Amazon by default."""
+    for what in ("step", "markdown"):
+        text = text.replace(channels.watch_phrase(src, what), channels.watch_phrase(dst, what))
+    return text
 
 
 def draft_directives(inventory, ads, elasticity, margins,
@@ -1378,7 +1488,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                      cash: dict | None = None,
                      book_out: dict | None = None,
                      ppc_spend_rows: list[dict] | None = None,
-                     price_plan: dict | None = None) -> list[dict]:
+                     price_plan: dict | None = None,
+                     shopify_findings: dict | None = None) -> list[dict]:
     """`channel` names the platform the run was computed on (channels.py):
     it changes the words, never the arithmetic.
 
@@ -1416,11 +1527,11 @@ def draft_directives(inventory, ads, elasticity, margins,
     fits_by_sku = {f["item_id"]: f for f in elasticity if f.get("level") == "sku"}
     md_skus: set[str] = set()
     for sku, row in md_rows.items():
-        d = _markdown_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
+        d = _markdown_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku), channel)
         if d:
             drafts.append(downside_guard(d, latest_by_sku.get(sku), downside_share))
             md_skus.add(sku)
-        st = _stretch_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku))
+        st = _stretch_directive(row, latest_by_sku.get(sku), fits_by_sku.get(sku), channel)
         if st:
             drafts.append(downside_guard(st, latest_by_sku.get(sku), downside_share))
             md_skus.add(sku)
@@ -1672,14 +1783,17 @@ def draft_directives(inventory, ads, elasticity, margins,
     # the sweep's price instructions, computed once: the same plan sized the
     # inventory orders on demand at the new prices (inventory_econ.run)
     if price_plan is None:
-        price_plan = plan_prices(elasticity, margins, cross_price, risk_share, downside_share)
+        price_plan = plan_prices(elasticity, margins, cross_price, risk_share, downside_share, channel=channel)
     planned = price_plan.get("drafts") or {}
+    plan_channel = price_plan.get("channel") or "amazon"
     for fit in elasticity:
         if fit.get("status") != "ok" or fit.get("level") != "sku" or fit["item_id"] in md_skus:
             continue
         d = planned.get(fit["item_id"])
         if d:
             d = copy.deepcopy(d)
+            if plan_channel != (channel or "amazon").lower():
+                d["action_text"] = _rewatch(d["action_text"], plan_channel, channel)
             if (d.get("evidence") or {}).get("status") == "near_unit_elastic":
                 near_unit.add(fit["item_id"])
             drafts.append(d)
@@ -1704,7 +1818,7 @@ def draft_directives(inventory, ads, elasticity, margins,
             candidates.append((float(margin_row.get("revenue") or 0), fit, margin_row, "near_unit_elastic"))
     for _, fit, margin_row, reason in sorted(candidates, key=lambda c: -c[0])[:EXPERIMENTS_PER_RUN]:
         d = _price_experiment_directive(fit, margin_row, fit["item_id"], reason, client_id, today,
-                                        _fee_history(fit["item_id"], margins or []))
+                                        _fee_history(fit["item_id"], margins or []), channel)
         if d:
             drafts.append(d)
 
@@ -1747,6 +1861,8 @@ def draft_directives(inventory, ads, elasticity, margins,
                     },
                 ))
 
+    # a Shopify run's permanent compare-at discounts (models/shopify_findings)
+    drafts = compare_at_directives(drafts, shopify_findings)
     drafts.sort(key=lambda d: d["score"], reverse=True)
     # the sweep as one book: the standing directives' joint shortfall against
     # the client's budget, and the sweep's cash moves together against the

@@ -55,7 +55,8 @@ SPEC = {
     "ais_365_plus": {"synonyms": ["estimatedais365plusdays"], "cleaner": clean_money},
     "recommended_action": {"synonyms": ["recommendedaction", "recommendedactions", "alert"], "cleaner": clean_str},
     "low_inventory_level_fee_applied": {
-        "synonyms": ["lowinventorylevelfeeapplied", "lowinventorylevelfee"],
+        # Amazon's Inventory Age column reads "low-Inventory-Level-fee-applied-in-current-week"
+        "synonyms": ["lowinventorylevelfeeapplied", "lowinventorylevelfeeappliedincurrentweek", "lowinventorylevelfee"],
         "cleaner": clean_bool,
     },
     "your_price": {"synonyms": ["yourprice", "price"], "cleaner": clean_money},

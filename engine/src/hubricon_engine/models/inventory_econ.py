@@ -21,8 +21,9 @@ weekly review period, simulated with the same rate-uncertain Poisson
 generator the stockout model uses, so the two can never disagree.
 
 Fee cliffs.  Three of Amazon's charges are step functions of inventory
-position and are computed explicitly: the low-inventory-level fee (days of
-supply < 28), the aged-inventory surcharge (units past 181 days, escalating
+position and are computed explicitly: the low-inventory-level fee (both the
+30- and 90-day days of supply under 28, priced by size tier since 2026-10-01;
+low_inventory_assessment), the aged-inventory surcharge (units past 181 days, escalating
 to $5.45+/cu ft after 270), and the Oct–Dec storage rate (roughly 3× the
 off-peak rate). The Inventory Age export carries Amazon's own estimates of
 the last two; when it is on file those numbers win and the schedule is
@@ -52,11 +53,13 @@ Amazon's schedule (decided 2026-09-04). The newsvendor still runs on both —
 lost margin against capital and obsolescence is not a marketplace fact.
 """
 
+import re
 from datetime import date
 
 import numpy as np
 
 from .. import channels
+from ..ingest.headers import clean_bool, clean_money
 from . import dependence
 from . import fee_schedule as fees
 from .common import num
@@ -86,10 +89,110 @@ def _latest_by_sku(rows: list[dict], key: str) -> dict[str, dict]:
     return {r["sku"]: r for r in rows if r[key] == latest}
 
 
+# The low-inventory-level fee's inputs an export may carry beyond the parsed
+# columns (inventory_health keeps every source column in `raw`): Amazon's own
+# 30- and 90-day historical days of supply, its exemption flag, and a size tier
+# and weight. Matched on normalized headers, as the ingest matches.
+SHORT_TERM_DOS = ("shorttermhistoricaldaysofsupply", "historicaldaysofsupply30days", "historicaldaysofsupplyt30")
+LONG_TERM_DOS = ("longtermhistoricaldaysofsupply", "historicaldaysofsupply90days", "historicaldaysofsupplyt90")
+LILF_EXEMPT = ("exemptedfromlowinventorylevelfee", "lowinventorylevelfeeexempt", "lowinventorylevelfeeexemption")
+SIZE_TIER = ("productsizetier", "sizetier")
+WEIGHT = ("itempackageweight", "itemweight", "packageweight")
+WEIGHT_UNIT = ("unitofweight", "weightunit")
+PRODUCT_GROUP = ("productgroup", "category")
+# pounds per unit of weight: lib/call.js's ounces-per-unit table over 16, so the
+# call and the engine split large standard at 3 lb on the same number
+LB_PER = {k: v / 16 for k, v in {"pounds": 16, "pound": 16, "lb": 16, "lbs": 16, "ounces": 1, "ounce": 1, "oz": 1,
+                                 "kilograms": 35.274, "kilogram": 35.274, "kg": 35.274, "grams": 0.035274,
+                                 "gram": 0.035274, "g": 0.035274}.items()}
+LILF_UNMODELLED = ("not applied, because no export shows them: the exemptions for a new Professional seller "
+                   "(365 days), an FBA New Selection parent (180 days) and a SKU at least 70% auto-replenished "
+                   "through AWD")
+
+
+def _export_field(h: dict, names: tuple[str, ...]):
+    """A column from the health row itself, else from its raw source row."""
+    for n in names:
+        if h.get(n) not in (None, ""):
+            return h[n]
+    raw = h.get("raw") or {}
+    if isinstance(raw, dict):
+        by_norm = {re.sub(r"[^a-z0-9]", "", str(k).lower()): v for k, v in raw.items()}
+        for n in names:
+            v = by_norm.get(n)
+            if v not in (None, "") and str(v).strip().lower() not in ("n/a", "na", "-", "--"):
+                return v
+    return None
+
+
+def _number(v) -> float | None:
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    return clean_money(str(v))
+
+
+def low_inventory_assessment(h: dict, on_hand: float, mean_rate: float, storage_class: str) -> dict:
+    """The low-inventory-level fee for one SKU, on the rule Amazon states.
+
+    Days of supply: Amazon's own 30- and 90-day historical figures when the
+    export carries them; else on-hand stock at the last 30 and 90 days'
+    shipping pace (today's stock standing in for the period's average); else
+    on-hand at the modelled rate for both. The higher of the two sets the band
+    and both must be under 28. Size tier: the export's own when it names one,
+    else assumed (fee_schedule.low_inventory_tier). Exemptions the export can
+    show are applied; the rest are named."""
+    dos_30, dos_90 = _number(_export_field(h, SHORT_TERM_DOS)), _number(_export_field(h, LONG_TERM_DOS))
+    if dos_30 is not None or dos_90 is not None:
+        source = "Amazon's own 30- and 90-day historical days of supply"
+    else:
+        t30, t90 = h.get("units_shipped_t30"), h.get("units_shipped_t90")
+        if t30 is not None or t90 is not None:
+            pace = lambda units, window: on_hand / (units / window) if units else float("inf")
+            dos_30 = pace(t30, 30) if t30 is not None else None
+            dos_90 = pace(t90, 90) if t90 is not None else None
+            source = ("on hand at the last 30 and 90 days' shipping pace" if t30 is not None and t90 is not None
+                      else f"on hand at the last {30 if t30 is not None else 90} days' shipping pace "
+                           f"(the {90 if t30 is not None else 30}-day history is not on file)")
+        else:
+            dos_30 = dos_90 = on_hand / mean_rate
+            source = "on hand at the modelled rate (no shipping history on file stands in for the 30 and 90 days)"
+    band = fees.low_inventory_band_days(dos_30, dos_90)
+
+    weight = _number(_export_field(h, WEIGHT))
+    if weight is not None:
+        unit = str(_export_field(h, WEIGHT_UNIT) or "pounds").strip().lower()
+        weight = weight * LB_PER.get(unit, 1.0)
+    tier, tier_basis = fees.low_inventory_tier(_export_field(h, SIZE_TIER) or h.get("storage_type") or storage_class,
+                                               weight)
+
+    exempt, notes = None, []
+    flag = _export_field(h, LILF_EXEMPT)
+    t7 = h.get("units_shipped_t7")
+    group = str(_export_field(h, PRODUCT_GROUP) or "")
+    if flag is not None and clean_bool(str(flag)) is True:
+        exempt = "Amazon's export marks this SKU exempt"
+    elif t7 is not None and int(t7) < fees.LOW_INVENTORY_MIN_UNITS_T7:
+        exempt = f"exempt: {int(t7)} units shipped in the past 7 days, under {fees.LOW_INVENTORY_MIN_UNITS_T7}"
+    elif "grocery" in group.lower():
+        exempt = "exempt: Grocery"
+    if t7 is None and exempt is None:
+        notes.append(f"the under-{fees.LOW_INVENTORY_MIN_UNITS_T7}-units-in-7-days exemption is unchecked "
+                     f"(no units-shipped-t7 on file)")
+    notes.append(LILF_UNMODELLED)
+    rate = 0.0 if exempt else fees.low_inventory_fee(band, tier)
+    basis = (f"{tier_basis}; days of supply: {source}; "
+             + (f"{exempt}; " if exempt else "")
+             + "; ".join(notes))
+    return {"rate": rate, "tier": tier, "tier_basis": tier_basis, "lt14": fees.low_inventory_fee(0.0, tier),
+            "dos_30": dos_30, "dos_90": dos_90, "band": band, "source": source, "exempt": exempt, "basis": basis}
+
+
 def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
                       cycle_days: float, month: int, size_tier: str = "standard",
                       fee_cliffs: bool = True, obsolescence_per_unit: float | None = None,
-                      obsolescence_basis: str | None = None) -> dict:
+                      obsolescence_basis: str | None = None, low_inventory_per_unit: float | None = None) -> dict:
     """q* and its two ingredients, itemised so the Desk can show the arithmetic.
 
     fee_cliffs=False drops the two Amazon-only terms — marketplace storage
@@ -99,7 +202,10 @@ def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
 
     `obsolescence_per_unit` replaces the flat OBSOLESCENCE_RATE with the
     expected write-off on a unit that outlives its SKU (see obsolescence_charge,
-    2026-09-23); None keeps the flat rate and says so in `c_o_parts`."""
+    2026-09-23); None keeps the flat rate and says so in `c_o_parts`.
+
+    `low_inventory_per_unit` is the SKU's own size tier's under-14-days rate
+    (low_inventory_assessment); None prices `size_tier`'s assumed row."""
     storage = fees.storage_rate(month, size_tier) * item_volume * cycle_days / 30 if fee_cliffs else 0.0
     capital = unit_cost * ANNUAL_CAPITAL_RATE * cycle_days / 365
     if obsolescence_per_unit is not None:
@@ -109,7 +215,8 @@ def critical_fractile(unit_margin: float, unit_cost: float, item_volume: float,
         obsolescence = unit_cost * OBSOLESCENCE_RATE
         basis = f"flat rate ({OBSOLESCENCE_RATE:.0%} of cost per cycle): survival curve unavailable"
     c_o = storage + capital + obsolescence
-    lilf = (fees.LOW_INVENTORY_FEE_PER_UNIT.get(size_tier, fees.LOW_INVENTORY_FEE_PER_UNIT["standard"])["lt14"]
+    # a unit short is sold when cover is thinnest: the under-14-days rate
+    lilf = ((low_inventory_per_unit if low_inventory_per_unit is not None else fees.low_inventory_fee(0.0, size_tier))
             if fee_cliffs else 0.0)
     c_u = max(0.0, unit_margin) + lilf
     q = c_u / (c_u + c_o) if (c_u + c_o) > 0 else FRACTILE_FLOOR
@@ -297,12 +404,20 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         }
 
         aged_units = sum(int(h.get(k) or 0) for k in BUCKET_MID_AGE)
+        lilf = low_inventory_assessment(h, on_hand, mean_rate, size_tier) if cliffs else None
         if cliffs:
-            # — low-inventory-level fee exposure (Amazon: on-hand supply, not inbound) —
-            dos = on_hand / mean_rate
-            lilf_rate = fees.low_inventory_fee(dos, size_tier)
-            row["low_inventory_fee_risk"] = lilf_rate > 0
-            row["low_inventory_fee_month"] = num(lilf_rate * mean_rate * 30)
+            # — low-inventory-level fee exposure (Amazon: on-hand supply, not
+            # inbound; both the 30- and 90-day supply under 28, by size tier) —
+            row["low_inventory_fee_risk"] = lilf["rate"] > 0
+            row["low_inventory_fee_month"] = num(lilf["rate"] * mean_rate * 30)
+            row["low_inventory_fee_rate"] = lilf["rate"]
+            row["low_inventory_fee_lt14"] = lilf["lt14"]
+            row["fee_size_tier"] = lilf["tier"]
+            row["fee_size_tier_basis"] = lilf["tier_basis"]
+            row["low_inventory_days_of_supply"] = {"t30": num(lilf["dos_30"], 1), "t90": num(lilf["dos_90"], 1),
+                                                   "band": num(lilf["band"], 1), "source": lilf["source"]}
+            row["low_inventory_fee_exempt"] = lilf["exempt"]
+            row["low_inventory_fee_basis"] = lilf["basis"]
             if h.get("low_inventory_level_fee_applied") is not None:
                 row["low_inventory_fee_applied_per_amazon"] = bool(h["low_inventory_level_fee_applied"])
 
@@ -355,17 +470,18 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
         # obsolescence from the catalogue's own survival curve, not a flat 2%
         age_periods = sum(1 for mm in (margin_rows or []) if mm.get("sku") == sku and float(mm.get("units") or 0) > 0)
         obs = obsolescence_charge(risk_out, age_periods, lead + REVIEW_PERIOD_DAYS, econ["unit_cost"], econ["price"])
+        lilf_unit = lilf["lt14"] if lilf else None     # this SKU's tier, at its under-14-days rate
         cf = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
-                               today.month, size_tier, fee_cliffs=cliffs,
+                               today.month, size_tier, fee_cliffs=cliffs, low_inventory_per_unit=lilf_unit,
                                obsolescence_per_unit=obs["per_unit"] if obs else None,
                                obsolescence_basis=obs["basis"] if obs else None)
         if obs:
             # the interval on q* from the survival curve's own uncertainty
             hi = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
-                                   today.month, size_tier, fee_cliffs=cliffs,
+                                   today.month, size_tier, fee_cliffs=cliffs, low_inventory_per_unit=lilf_unit,
                                    obsolescence_per_unit=obs["per_unit"] + 1.645 * obs["per_unit_se"])
             lo = critical_fractile(econ["unit_margin"], econ["unit_cost"], vol, lead + REVIEW_PERIOD_DAYS,
-                                   today.month, size_tier, fee_cliffs=cliffs,
+                                   today.month, size_tier, fee_cliffs=cliffs, low_inventory_per_unit=lilf_unit,
                                    obsolescence_per_unit=max(0.0, obs["per_unit"] - 1.645 * obs["per_unit_se"]))
             cf["q_band"] = [num(hi["q"], 4), num(lo["q"], 4)]
         order_rate, order_sd = mean_rate, std_rate
@@ -477,5 +593,10 @@ def run(data: dict, inventory_rows: list[dict], margin_rows: list[dict] | None =
             f"Liquidation recovers {LIQUIDATION_RECOVERY_OF_PRICE:.0%} of selling price; units on hand are valued "
             f"on cash contribution with landed cost sunk (corrected 2026-09-23)",
             f"Default unit volume {fees.DEFAULT_ITEM_VOLUME_CUFT['standard']} cu ft when no export states it",
+            *([f"Low-inventory-level fee by size tier (schedule {fees.EFFECTIVE}, re-read 2026-10-01): charged only "
+               f"when both the 30- and 90-day days of supply are under {fees.LOW_INVENTORY_DAYS_THRESHOLD}, the higher "
+               f"setting the band; a SKU whose export names no size tier is priced at the small-standard row (the "
+               f"lowest) and says so; bulky rates are the least certain; the storage utilization surcharge is not "
+               f"modelled"] if cliffs else []),
         ],
     }

@@ -19,6 +19,8 @@ before it goes live" became something the client can check, not take on trust.
 
 from datetime import datetime, timedelta, timezone
 
+from . import channels, lifecycle
+
 VETO_HOURS = 72             # closes before the next weekly sweep, and always
                             # leaves a full working day plus the weekend
 EXPLICIT_LAPSE_DAYS = 21    # an explicit-mandate directive nobody answered
@@ -144,13 +146,22 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
     """Promote the highest-value drafts, tell the client, then open the window.
 
     Order matters: the email goes out BEFORE veto_closes_at is set, and the
-    window is only opened for the directives the email actually reached."""
+    window is only opened for the directives the email actually reached.
+
+    And before any of it, the stage (lifecycle.py): a move notice goes only to
+    a client who has said yes. Anyone else's drafts stay drafts, unsealed and
+    unsent, so a prospect who sent files and then said no on the call is never
+    told a move "goes live unless you say no" under a mandate they never gave."""
     from .notify import directive_email_body, email_configured, send_email
 
-    mandate = load_mandate(db, client["id"])
     drafts = (db.table("directives").select("*")
               .eq("client_id", client["id"]).eq("channel", channel).eq("status", "draft")
               .execute().data)
+    stage = _stage(db, client)
+    if not lifecycle.may_send(stage, "moves"):
+        return {"issued": 0, "notified": False, "held": len(drafts), "ranking": None, "order": [],
+                "gated": stage}
+    mandate = load_mandate(db, client["id"])
     # A directive drafted as "standing" is only standing if THIS client's
     # mandate says that module is. Downgrading here means a client who narrowed
     # their mandate on the kickoff call is never auto-approved into something
@@ -211,7 +222,10 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
                                           seals=sealed.get("short") or {})
         notified = send_email(
             client["contact_email"],
-            veto_subject(chosen, closes),
+            # a client on both stores gets a notice per store each Monday; the
+            # subject says which (channels.store_name), a one-store client's
+            # reads as it always has
+            veto_subject(chosen, closes, store=channels.store_name(client.get("platform"), channel)),
             text, html=html,
         )
     out["notified"] = notified
@@ -226,6 +240,21 @@ def issue_drafts(db, client: dict, channel: str, portal_url: str,
         # Issued and visible in the desk, but nothing will ever auto-approve.
         db.table("directives").update({"veto_closes_at": None}).in_("id", ids).execute()
     return out
+
+
+def _stage(db, client: dict) -> str:
+    """The client's stage for the move gate, from their row as it is now: a
+    caller may hold a partial or stale row (resolve_client selects no
+    retainer_started_at; a sweep loads its roster before a `hubricon declined`).
+    Booked and called both hold moves, so the call time is never needed."""
+    row = client
+    try:
+        fresh = db.table("clients").select("*").eq("id", client["id"]).execute().data
+        if fresh:
+            row = {**client, **fresh[0]}
+    except Exception:
+        pass        # the row we were handed is the best there is
+    return lifecycle.stage(row, None)
 
 
 def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
@@ -244,29 +273,31 @@ def _seal_promises(db, client: dict, chosen: list[dict], now: datetime) -> dict:
 def _record_line(db, client: dict) -> str | None:
     """The Profit Record footer for the veto email. Never blocks the notice:
     the window only opens for people who were told, so a footer failure must
-    not turn into a missed email."""
+    not turn into a missed email. It carries the same proven-since-day-one
+    figure as every other client email (value.record_footer)."""
     try:
         from . import value
-        from .cli import _fetch_claims, _fetch_invoices   # lazy: cli imports the world
-        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-        return value.record_line(value.compute(client, directives, _fetch_claims(db, client["id"]),
-                                               _fetch_invoices(db, client["id"])))
+        return value.record_footer(db, client)
     except Exception:
         return None
 
 
-def veto_subject(chosen: list[dict], closes) -> str:
+def veto_subject(chosen: list[dict], closes, store: str | None = None) -> str:
     """The subject is the picture of the fortnight: how many moves, when they go
     live, and what they are expected to earn. Explicit-mandate moves never go
-    live on their own, so a batch of only those says what it waits for."""
+    live on their own, so a batch of only those says what it waits for.
+
+    `store` ('Amazon' or 'Shopify') names the store for a client who sells on
+    both (channels.store_name); None leaves the subject as it always was."""
     n = len(chosen)
-    noun = f"{n} move{'s' if n != 1 else ''}"
+    moves = f"move{'s' if n != 1 else ''}"
     total = sum(float(d.get("expected_impact_usd") or 0) for d in chosen)
     money = f" — ${total:,.0f} expected" if total > 0 else ""
     if all(d.get("mandate") != "standing" for d in chosen):
-        return f"{noun} waiting for your yes{money}"
+        return f"{n} {store + ' ' if store else ''}{moves} waiting for your yes{money}"
     when = closes.strftime("%A") if hasattr(closes, "strftime") else str(closes)
-    return f"{noun} in your account go live {when} unless you say no{money}"
+    place = f"your {channels.PLACE.get(store.lower(), 'account')}" if store else "your account"
+    return f"{n} {moves} in {place} go live {when} unless you say no{money}"
 
 
 EXECUTION_SLA_DAYS = 7      # welcome.html: "Weeks 1–2 — first moves go live"; terms §3: inside fourteen days. We hold ourselves to seven.

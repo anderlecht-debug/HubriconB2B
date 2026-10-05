@@ -1,4 +1,4 @@
-"""The harvest pipeline: crawl → enrich → push, plus status and the launchd install.
+"""The harvest pipeline: crawl → enrich → push, plus status and the schedule install.
 
 crawl   Best Sellers pages → product pages → seller profiles → harvest_sellers rows
 enrich  candidate rows → website → published contact → 'enriched' (or why not)
@@ -13,14 +13,13 @@ shopify  see shopify.py: US Shopify stores from their own public JSON, into the
         blocks it, so it runs whatever Amazon is doing to the crawl today.
 
 Crawl and enrich need a home connection (Amazon captchas datacenter ranges),
-so `hubricon harvest install` schedules them on the founder's Mac with
-launchd. Push only needs the Instantly key, so the operator does it too.
+so `hubricon harvest install` schedules them on the founder's machine (a
+systemd timer on the Linux desktop since 2026-10-03, launchd on a Mac). Push only needs the Instantly key, so the operator does it too.
 """
 
 from __future__ import annotations
 
 import os
-import plistlib
 import re
 import subprocess
 import sys
@@ -40,7 +39,7 @@ LIST_NAME = "Hubricon harvest (auto)"  # contains "hubricon" → the operator en
 # keeps two mailboxes' 40 sends a day fed. Depth 2 reads the grandchildren
 # of a category (e.g. Kitchen → Bakeware → Muffin Pans), which is where the
 # $3M–$20M private-label brands rank; page 1 of a top category is the giants.
-MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "250"))  # per run; launchd runs twice a day
+MAX_PRODUCTS = int(os.environ.get("HARVEST_MAX_PRODUCTS", "250"))  # per run; the schedule runs twice a day
 CATEGORIES_PER_RUN = int(os.environ.get("HARVEST_CATEGORIES_PER_RUN", "4"))
 SUBCATS_PER_CATEGORY = int(os.environ.get("HARVEST_SUBCATS", "6"))
 # Depth is the single biggest lever on lead quality. Measured over 1,834
@@ -991,30 +990,18 @@ RUN_HOURS = (6, 18)  # two gentle runs beat one long one: Amazon rate-limits by 
 
 def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv", hours: tuple[int, ...] = RUN_HOURS,
                   minute: int = 10) -> dict:
-    log_dir = Path.home() / "Library" / "Logs"
-    return {
-        "Label": "com.hubricon.harvest",
-        "ProgramArguments": [uv, "run", "hubricon", "harvest", "all"],
-        "WorkingDirectory": str(engine_dir),
-        "StartCalendarInterval": [{"Hour": h, "Minute": minute} for h in hours],
-        "StandardOutPath": str(log_dir / "hubricon-harvest.log"),
-        "StandardErrorPath": str(log_dir / "hubricon-harvest.err"),
-        "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-                                 "PYTHONUNBUFFERED": "1"},  # the log is readable while the run is going
-    }
+    """The Mac's launchd agent for the scheduled run (scheduling.launchd_plist)."""
+    from ..scheduling import launchd_plist as plist
+    return plist("com.hubricon.harvest", ["harvest", "all"], hours, minute, "hubricon-harvest", engine_dir, uv)
 
 
-def install_launchd(engine_dir: Path | None = None, hours: tuple[int, ...] = RUN_HOURS, minute: int = 10,
-                    runner=subprocess.run) -> str:
-    engine_dir = engine_dir or Path(__file__).resolve().parents[3]
-    uv = subprocess.run(["which", "uv"], capture_output=True, text=True).stdout.strip() or "/opt/homebrew/bin/uv"
-    plist_path = Path.home() / "Library" / "LaunchAgents" / "com.hubricon.harvest.plist"
-    plist_path.parent.mkdir(parents=True, exist_ok=True)
-    plist_path.write_bytes(plistlib.dumps(launchd_plist(engine_dir, uv, hours, minute)))
-    domain = f"gui/{os.getuid()}"
-    runner(["launchctl", "bootout", domain, str(plist_path)], capture_output=True)
-    res = runner(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
-    state = "loaded" if res.returncode == 0 else f"launchctl said: {(res.stderr or res.stdout).strip()}"
-    when = " and ".join(f"{h:02d}:{minute:02d}" for h in hours)
-    return (f"{plist_path}\n  runs `uv run hubricon harvest all` daily at {when} local "
-            f"(missed while asleep → runs at next wake); logs in ~/Library/Logs/hubricon-harvest.log\n  {state}")
+def install(hours: tuple[int, ...] = RUN_HOURS, minute: int = 10, runner=subprocess.run) -> str:
+    """Schedule `hubricon harvest all` on this machine: a systemd user timer on the
+    founder's Linux desktop, a launchd agent on a Mac (scheduling.install). While
+    the Amazon crawl is off (fetch.AMAZON_OFF) the scheduled run only says so."""
+    from ..scheduling import install as schedule
+    return schedule("hubricon-harvest", "Hubricon free lead harvest", ["harvest", "all"], hours, minute,
+                    runner=runner)
+
+
+install_launchd = install   # the old name, kept for anything that still calls it

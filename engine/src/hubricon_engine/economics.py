@@ -982,7 +982,7 @@ def render(v: dict, curve: list[dict], notes: list[str] = ()) -> str:
                    f"{fired:,} times, so at least {r['floor_minutes']:,} billed minutes [a]")
         out.append(f"  and a bill of at least {_usd(r['floor_usd'])} [a]: {price}")
     if r["local_seconds"]:
-        out.append(f"  by hand on the Mac: {r['local_seconds'] / 60:,.1f} minutes [m], not billed")
+        out.append(f"  by hand on the founder's machine: {r['local_seconds'] / 60:,.1f} minutes [m], not billed")
     out.append("")
 
     out.append(f"{'Third-party usage':<48}{'quantity [m]':>14}{'cost [a]':>12}")

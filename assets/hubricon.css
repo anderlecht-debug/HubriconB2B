@@ -45,6 +45,7 @@
   --t-display-s: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
   --t-display-m: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
   --t-display-l: clamp(2.375rem, 1.2rem + 4.6vw, 4.5rem);
+  --t-display-xl: clamp(2.75rem, 1rem + 6.2vw, 6rem);    /* the one or two lines a page is remembered by */
   --track-display: -0.032em;
   --track-label: 0.08em;
 
@@ -158,6 +159,11 @@ p { text-wrap: pretty; }
   color: var(--ink-3); vertical-align: 0.35em; margin-left: var(--s-1);
   white-space: nowrap;
 }
+.case-headline .est {                      /* beside a display figure it is the honesty label, not a footnote */
+  display: inline-block; vertical-align: 0.9em; margin-left: var(--s-3);
+  border: 1px solid var(--rule-2); border-radius: 6px; padding: 0 var(--s-2); line-height: 1.7;
+  font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase;
+}
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
@@ -201,6 +207,593 @@ p { text-wrap: pretty; }
 .fold .fold-body { padding-bottom: var(--s-6); color: var(--ink-2); font-size: var(--t-16); }
 .fold + .fold { border-top: 0; }
 
+/* A headline in two tones: the claim in ink, the turn after it a step quieter. */
+.tone { color: var(--ink-3); }
+
+.btn-lg { min-height: 60px; padding: 0 var(--s-6); font-size: var(--t-18); }
+
+/* A figure framed as an instrument: a header row that names it, the chart, a caption. */
+.exhibit { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+.exhibit-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s-2) var(--s-4);
+  padding: var(--s-3) var(--s-5); border-bottom: 1px solid var(--rule);
+  font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.exhibit-head .label-box { font-size: var(--t-12); }
+.exhibit-body { padding: var(--s-6) var(--s-6) var(--s-4); }
+.exhibit-cap { padding: 0 var(--s-6) var(--s-5); font-size: var(--t-14); line-height: 1.55; color: var(--ink-3); max-width: 80ch; }
+.exhibit-body h3 { margin-bottom: var(--s-2); }
+@media (max-width: 640px) {
+  .exhibit-body { padding: var(--s-4) var(--s-3) var(--s-3); }
+  .exhibit-head, .exhibit-cap { padding-inline: var(--s-4); }
+}
+
+/* A strip of numbers that are true today, each saying what it counts. */
+.numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-5); }
+.numbers > div { border-left: 2px solid var(--ink); padding: var(--s-1) 0 var(--s-1) var(--s-4); }
+.numbers dt { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.numbers dd { margin-top: var(--s-2); font-size: var(--t-14); line-height: 1.45; color: var(--ink-2); }
+@media (max-width: 900px) { .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-6); } }
+
+/* A card that goes somewhere. Never a shadow: a hairline, and the hairline darkens. */
+.go-card { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink-2); text-decoration: none; background: var(--paper); transition: border-color 0.2s ease; }
+.go-card:hover { border-color: var(--ink); }
+.go-card h3 { font-size: var(--t-20); }
+.go-card p { font-size: var(--t-16); }
+.go-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.go-to { margin-top: auto; padding-top: var(--s-2); font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
+.go-card:hover .go-to { text-decoration: underline; text-underline-offset: 3px; }
+.go-badge { display: inline-block; font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase;
+  color: var(--ink-2); border: 1px solid var(--rule-2); border-radius: 999px; padding: 2px var(--s-3); }
+
+/* ----------------------------------------------------------------- nav ---- */
+/* One bar on every public page (scripts/site-blocks.mjs): the mark, four tabs, two
+   that open a panel, and the call. Since 2026-10-01, on the founder's word ("we are
+   mimicking Apple's .com with the education tab"). The glass is on a pseudo-element
+   behind the bar's contents: a backdrop-filter on the bar itself would trap the phone
+   menu inside it, and nothing between the bar and a panel is positioned, so a panel
+   spans the whole window. */
+:root { --nav-h: 56px; --glass: rgb(255 255 255 / 0.9); --scrim: rgb(255 255 255 / 0.45); }
+html { scroll-padding-top: calc(var(--nav-h) + var(--s-4)); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.nav { position: sticky; top: 0; z-index: 50; }
+.nav::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid transparent; transition: border-color 0.3s ease, background-color 0.3s ease; }
+.nav.scrolled::before, .nav.open::before, .nav:has(.nav-group:hover)::before { border-bottom-color: var(--rule); }
+.nav.open::before, .nav:has(.nav-group:hover)::before, .nav:has(.nav-group:focus-within)::before { background: var(--paper); }
+.nav p { margin: 0; max-width: none; }
+.nav-in { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; height: var(--nav-h);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--s-4); }
+.nav-mark { justify-self: start; display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none;
+  font-weight: var(--strong); font-size: var(--t-18); letter-spacing: -0.02em; }
+.nav-mark svg { width: 24px; height: 24px; flex: none; }
+.nav-tabs { display: flex; align-items: stretch; height: var(--nav-h); }
+.nav-group { display: flex; }
+.nav-tab { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; font-size: var(--t-14); color: var(--ink-2);
+  text-decoration: none; white-space: nowrap; transition: color 0.2s ease; }
+.nav-tab:hover, .nav-group:hover > .nav-tab, .nav-group:focus-within > .nav-tab { color: var(--ink); }
+.nav-tab .chev { width: 9px; height: 6px; opacity: 0.55; transition: transform 0.35s var(--ease-out); }
+.nav-group:hover > .nav-tab .chev, .nav-group:focus-within > .nav-tab .chev { transform: rotate(180deg); }
+.nav-end { justify-self: end; display: flex; align-items: center; gap: var(--s-2); }
+.btn-nav { min-height: 40px; padding: 0 var(--s-4); font-size: var(--t-14); gap: var(--s-2); }
+
+.nav-fly { position: absolute; z-index: 2; left: 0; right: 0; top: 100%; background: var(--paper); border-bottom: 1px solid var(--rule);
+  visibility: hidden; opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.3s var(--ease-out), visibility 0s linear 0.3s; }
+.nav-group:hover > .nav-fly, .nav-group:focus-within > .nav-fly { visibility: visible; opacity: 1; transform: none;
+  transition: opacity 0.3s ease 0.08s, transform 0.45s var(--ease-out) 0.08s, visibility 0s linear 0.08s; }
+.nav.fly-off .nav-fly { visibility: hidden; opacity: 0; }
+.fly-in { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; padding: var(--s-6) 0 var(--s-8);
+  display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-7); }
+.fly-k, .sheet-k, .foot-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.fly-k { margin-bottom: var(--s-3); }
+.fly-big { display: block; padding: 3px 0; font-size: var(--t-24); font-weight: var(--strong); letter-spacing: -0.022em; line-height: 1.3; color: var(--ink); text-decoration: none; }
+.fly-small { display: block; padding: 5px 0; font-size: var(--t-14); font-weight: var(--strong); line-height: 1.4; color: var(--ink-2); text-decoration: none; }
+.fly-big:hover, .fly-small:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.fly-planned { display: block; padding: 5px 0; font-size: var(--t-14); line-height: 1.4; color: var(--ink-3); }
+.motion .nav-group:hover .fly-col, .motion .nav-group:focus-within .fly-col { animation: rise 0.5s var(--ease-out) both; }
+.motion .nav-group .fly-col:nth-child(2) { animation-delay: 0.05s; }
+.motion .nav-group .fly-col:nth-child(3) { animation-delay: 0.1s; }
+@keyframes rise { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+.nav-scrim { position: fixed; z-index: 0; inset: var(--nav-h) 0 0; background: var(--scrim);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); pointer-events: none;
+  opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+.nav:has(.nav-group:hover) .nav-scrim, .nav:has(.nav-group:focus-within) .nav-scrim { opacity: 1; visibility: visible; transition: opacity 0.35s ease 0.08s; }
+.nav.fly-off .nav-scrim { opacity: 0; visibility: hidden; }
+
+/* The phone menu: one button, a sheet of large links. Without scripts the button
+   never shows; every link is in the footer. */
+.nav-menu { display: none; width: 40px; height: 40px; margin-right: -10px; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: none; border: 0; cursor: pointer; color: var(--ink); }
+.nav-menu span { display: block; width: 18px; height: 1.5px; background: currentColor; transition: transform 0.35s var(--ease-out); }
+.nav.open .nav-menu span:first-child { transform: translateY(3.75px) rotate(45deg); }
+.nav.open .nav-menu span:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+.nav-sheet { position: fixed; z-index: 2; inset: var(--nav-h) 0 0; overflow-y: auto; overscroll-behavior: contain; background: var(--paper);
+  visibility: hidden; opacity: 0; transition: opacity 0.25s ease, visibility 0s linear 0.25s; }
+.nav.open .nav-sheet { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
+.sheet-in { width: min(640px, 100% - 2 * var(--gutter)); margin-inline: auto; padding: var(--s-5) 0 var(--s-9); display: grid; gap: var(--s-7); }
+.sheet-group { display: grid; gap: var(--s-1); }
+.sheet-k { margin-bottom: var(--s-2); }
+.sheet-big { display: block; padding: 4px 0; font-size: 1.75rem; font-weight: var(--strong); letter-spacing: -0.025em; line-height: 1.25; color: var(--ink); text-decoration: none; }
+.sheet-mid { display: block; padding: 6px 0; font-size: var(--t-18); font-weight: var(--strong); color: var(--ink); text-decoration: none; }
+.motion .nav.open .sheet-group { animation: rise 0.5s var(--ease-out) both; }
+.motion .nav.open .sheet-group:nth-child(2) { animation-delay: 0.06s; }
+.motion .nav.open .sheet-group:nth-child(3) { animation-delay: 0.12s; }
+body.nav-locked { overflow: hidden; }
+/* On a touch screen, every control in the bar is a thumb's size. */
+@media (pointer: coarse) { .btn-nav { min-height: 44px; } .nav-menu { width: 44px; height: 44px; } }
+
+@media (max-width: 1000px) {
+  .nav-in { grid-template-columns: minmax(0, 1fr) auto; }
+  .nav-tabs { display: none; }
+  .js .nav-menu { display: inline-flex; }
+}
+@media (max-width: 380px) {
+  .nav-mark span { display: none; }
+}
+
+/* -------------------------------------------------------------- footer ---- */
+.site-foot { padding-block: var(--s-9) var(--s-7); font-size: var(--t-14); color: var(--ink-3); border-top: 1px solid var(--rule); }
+.site-foot p { margin: 0; max-width: none; }
+.foot-wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); }
+.foot-mark { display: inline-flex; align-items: center; gap: var(--s-3); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-24); letter-spacing: -0.02em; }
+.foot-mark svg { width: 34px; height: 34px; }
+.foot-motto { margin-top: var(--s-4); font-size: var(--t-20); font-weight: var(--strong); letter-spacing: -0.018em; line-height: 1.2; color: var(--ink-2); }
+.foot-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-6); }
+.foot-col { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-2); }
+.foot-k { margin-bottom: var(--s-2); }
+.foot-col a { color: var(--ink-2); text-decoration: none; font-size: var(--t-14); line-height: 1.5; }
+.foot-col a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.foot-legal { grid-column: 1 / -1; padding-top: var(--s-6); border-top: 1px solid var(--rule); font-size: var(--t-12); line-height: 1.65; color: var(--ink-3); }
+@media (max-width: 900px) {
+  .foot-wrap { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
+  .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-7); }
+}
+
+/* -------------------------------------------------------- the library ---- */
+/* Courses as tiles, the way Acquisition.com shows its free training, in Hubricon's
+   look: a night cover drawn from the house visuals, then the facts. A live course is a
+   link; a planned one is labelled Planned and goes nowhere. */
+.lib { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
+.lib-planned { min-width: 0; }
+.tile { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden;
+  background: var(--paper); color: var(--ink-2); text-decoration: none; transition: border-color 0.25s ease; }
+a.tile:hover { border-color: var(--ink); }
+.tile-cover { position: relative; aspect-ratio: 16 / 9; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--s-2);
+  padding: var(--s-4) var(--s-5) var(--s-5); }
+.tile-cover .cover-art { width: 100%; height: 100%; }
+.cover-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.cover-title { font-size: var(--t-24); font-weight: var(--strong); letter-spacing: -0.022em; line-height: 1.15; color: var(--ink); }
+.tile-body { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5); flex: 1; }
+.tile-body h3 { font-size: var(--t-20); }
+.tile-body h3 a { color: inherit; text-decoration: none; }
+.tile-body p { font-size: var(--t-16); }
+.tile-detail { color: var(--ink-3); }
+.go-badges { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.tile-planned .cover-art { opacity: 0.55; }
+/* A planned tile's title is on its cover; the heading stays for screen readers. */
+.tile-planned .tile-body h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tile-feature { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.tile-feature .tile-cover { padding: var(--s-6); }
+@media (min-width: 901px) { .tile-feature .tile-cover { aspect-ratio: auto; min-height: 340px; } }
+.tile-feature .cover-title { display: none; }
+.tile-feature .tile-body { justify-content: center; padding: var(--s-7) var(--s-6); gap: var(--s-4); }
+.tile-feature .tile-body h3 { font-size: var(--t-display-s); }
+.tile-feature .tile-body p { font-size: var(--t-18); }
+.tile-feature .tile-body .tile-detail { font-size: var(--t-16); }
+/* Every other live course: the same shape, quieter, and opened from its own page. */
+.lib-live-list { display: grid; gap: var(--s-4); }
+.tile-wide { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.tile-wide .cover-title { display: none; }
+.tile-wide .tile-body { justify-content: center; padding: var(--s-6); gap: var(--s-3); }
+.tile-wide .tile-body h3 { font-size: var(--t-24); }
+.lib-k { margin-bottom: var(--s-5); font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.lib-k span { font-weight: var(--regular); letter-spacing: 0.02em; text-transform: none; font-size: var(--t-14); }
+.rail, .lib-grid { display: grid; gap: var(--s-4); }
+.rail { grid-template-columns: repeat(auto-fit, minmax(212px, 1fr)); }
+.rail .tile-cover { padding: var(--s-3) var(--s-4) var(--s-4); }
+.rail .cover-title { font-size: var(--t-18); min-height: 2.3em; display: flex; align-items: flex-end; }   /* two lines held for every title, so the row's pills line up */
+.rail .tile-body { padding: var(--s-4); }
+.rail .tile-body p { font-size: var(--t-14); }
+.lib-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--s-5); }
+.tile-more { margin-top: auto; padding-top: var(--s-2); font-size: var(--t-14); }
+.tile-more summary { cursor: pointer; font-weight: var(--strong); color: var(--ink); }
+.tile-more ol { margin: var(--s-3) 0 0; padding-left: var(--s-5); display: grid; gap: var(--s-1); color: var(--ink-2); }
+.cover-art .cv-line { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.cover-art .cv-dim { fill: none; stroke: var(--ink-3); stroke-width: 2; }
+.cover-art .cv-path { fill: none; stroke: var(--blue); stroke-width: 1.25; stroke-opacity: 0.45; }
+.cover-art .cv-guide { fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 4; }
+.cover-art .cv-grid, .cover-art .cv-zero { fill: none; stroke: var(--ink-4); stroke-width: 1; }
+.cover-art .cv-zero { stroke-dasharray: 2 4; }
+.cover-art .cv-leak { fill: none; stroke: var(--blue); stroke-width: 4; }
+.cover-art .cv-blue, .cover-art .cv-bluedot { fill: var(--blue); }
+.cover-art .cv-wash { fill: var(--blue); fill-opacity: 0.16; }
+.cover-art .cv-dot { fill: var(--ink); }
+.cover-art .cv-hollow { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+@media (min-width: 901px) { .tile-wide .tile-cover { aspect-ratio: auto; min-height: 240px; } }
+@media (max-width: 900px) {
+  .tile-feature, .tile-wide { grid-template-columns: minmax(0, 1fr); }
+  .tile-feature .tile-body { padding: var(--s-5); }
+}
+@media (max-width: 640px) {
+  /* On a phone the planned courses are a row you swipe. */
+  .rail { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter) var(--s-3); scroll-padding-inline: var(--gutter); scrollbar-width: none; }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail > * { scroll-snap-align: start; }
+  .tile-feature .cover-title { font-size: var(--t-24); }
+}
+
+/* The email that opens a course, on the featured card: one field, one plain button.
+   The button is the field's, not the page's: an outline at the input's height, so the
+   call stays the only solid ink button that books anything. */
+.join-tile { container-type: inline-size; display: grid; gap: var(--s-2); margin-top: var(--s-3); padding: var(--s-5); background: var(--paper-2); border-radius: var(--radius); }
+.join-tile label { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
+.join-tile label span { margin-left: var(--s-2); font-weight: var(--regular); color: var(--ink-3); }
+.join-row { display: flex; gap: var(--s-2); }
+.join-row input { flex: 1; min-width: 0; min-height: 50px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
+.join-row input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.join-row button { flex: none; min-height: 50px; padding: 0 var(--s-5); font: var(--strong) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper);
+  border: 1.5px solid var(--ink); border-radius: var(--radius); cursor: pointer; white-space: nowrap; transition: background-color 0.2s ease, color 0.2s ease; }
+.join-row button:hover { background: var(--ink); color: var(--paper); }
+.join-row button:disabled { opacity: 0.6; cursor: progress; }
+.join-tile p.join-fine { font-size: var(--t-12); line-height: 1.55; color: var(--ink-3); }
+.join-fine a { color: var(--ink-2); }
+.join-tile p.join-err { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
+.join-tile p.join-done { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+a.tile-cover { color: inherit; text-decoration: none; }
+article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
+/* The field and its button side by side when the card is wide enough, stacked when not. */
+@container (max-width: 430px) {
+  .join-row { flex-direction: column; }
+  .join-row button { width: 100%; }
+}
+
+/* ------------------------------------------------------------ video slots ---- */
+/* A slot is the space a video will fill. Until it exists, the slot says, in the future
+   tense, what will play there; the case-study film lists its beats as chapters. */
+.film { margin-top: var(--s-7); border-radius: var(--radius); overflow: hidden; }
+.slot-video { display: block; width: 100%; aspect-ratio: 16 / 9; background: var(--night); }
+.film-waiting { display: grid; gap: var(--s-5); padding: var(--s-6); }
+.film-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2) var(--s-4); font-size: var(--t-16); color: var(--ink-2); max-width: 70ch; }
+.film-beats { list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-4); }
+.film-beats li { display: grid; gap: var(--s-2); align-content: start; padding-top: var(--s-3); border-top: 1px solid var(--rule-2); font-size: var(--t-16); line-height: 1.35; color: var(--ink); }
+.film-beats span { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.lesson-video { margin: var(--s-5) 0; border-radius: var(--radius); overflow: hidden; }
+.lesson-video-waiting { margin: var(--s-4) 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
+.lesson-video-waiting .label { color: var(--ink-3); }
+@media (max-width: 760px) {
+  .film-waiting { padding: var(--s-5); }
+  .film-note { font-size: var(--t-14); }
+  .film-beats { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .film-beats li { grid-template-columns: var(--s-6) minmax(0, 1fr); align-items: baseline; padding-block: var(--s-3); font-size: var(--t-14); }
+}
+
+/* ---------------------------------------------------------- the results wall ---- */
+.wall-frames { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
+.frame { margin: 0; border-radius: var(--radius); min-width: 0; }
+.frame-reserved { aspect-ratio: 16 / 10; display: flex; flex-direction: column; justify-content: space-between; padding: var(--s-5);
+  border: 1px dashed var(--rule-2); }
+.frame-n { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.frame-said { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-5); border: 1px solid var(--rule); }
+.frame-said blockquote { margin: 0; font-size: var(--t-20); line-height: 1.45; color: var(--ink); }
+.frame-said figcaption { font-size: var(--t-14); color: var(--ink-2); }
+.frame-said figcaption span { display: block; margin-top: var(--s-1); font-size: var(--t-12); color: var(--ink-3); }
+.frame-media { margin: calc(-1 * var(--s-5)) calc(-1 * var(--s-5)) 0; }
+.wall-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-5); }
+.wall-results article { padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.wall-results .amt { display: block; margin: var(--s-2) 0; font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); color: var(--blue); }
+.wall-results p { font-size: var(--t-14); color: var(--ink-2); }
+@media (max-width: 900px) { .wall-results { grid-template-columns: minmax(0, 1fr); } }
+/* On a phone the empty frames stay a row of three, so zero reads at a glance, not over a screen. */
+@media (max-width: 640px) {
+  .wall-frames { gap: var(--s-2); }
+  .frame-reserved { aspect-ratio: 1; padding: var(--s-3); }
+  .wall-frames:has(.frame-said) { grid-template-columns: minmax(0, 1fr); }
+  .wall-frames:has(.frame-said) .frame-reserved { aspect-ratio: auto; min-height: 120px; }
+}
+
+/* -------------------------------------------------------------- receipts ---- */
+/* Every move gets a receipt: called before, measured after, and what it counts. */
+.rcpt { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+.rcpt th { text-align: left; padding: 0 var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule-2);
+  font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.rcpt td { padding: var(--s-3) var(--s-3) var(--s-3) 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); }
+.rcpt th:last-child, .rcpt td:last-child { padding-right: 0; }
+.rcpt .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Tabular only in the number columns: Inter's tabular feature widens a hyphen ("271 - day"). */
+.rcpt td:first-child, .rcpt td:nth-child(2) { font-variant-numeric: normal; }
+.rcpt-why { display: block; margin-top: 2px; font-size: var(--t-12); color: var(--ink-3); }
+.rcpt tfoot td { border-bottom: 0; font-weight: var(--strong); color: var(--ink); }
+@media (max-width: 640px) {
+  .rcpt thead { display: none; }
+  .rcpt tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--rule); }
+  .rcpt td { border: 0; padding: 0; }
+  .rcpt td:first-child { grid-column: 1 / -1; margin-bottom: var(--s-1); color: var(--ink); }
+  .rcpt .num { text-align: left; }
+  .rcpt td[data-k]::before { content: attr(data-k) ": "; color: var(--ink-3); }
+  .rcpt tfoot tr { border-bottom: 0; }
+  .rcpt tfoot td:first-child { display: none; }
+}
+
+/* ---------------------------------------------------------------- reveal ---- */
+/* A section's parts arrive once as they scroll in, then stay. The spec's rule for the
+   Monte Carlo holds for everything that moves: before it plays, it shows its finished
+   still frame, never a blank box. So nothing is hidden by default; /assets/site.js
+   puts an element back to its start (.armed) only while it is still below the screen,
+   and plays it (.in) as it arrives. What is already on screen, or what a visitor jumps
+   past, simply stays as it is. */
+.armed[data-reveal] { opacity: 0; transform: translateY(20px); transition: none; }
+[data-reveal].in { transition: opacity 0.8s var(--ease-out) var(--d, 0ms), transform 1s var(--ease-out) var(--d, 0ms); }
+.bar.armed[data-reveal] { opacity: 1; transform: none; }
+.bar-fill { transform-origin: left center; }
+.bar.armed .bar-fill { transform: scaleX(0); }
+.bar.in .bar-fill { transition: transform 1.6s var(--ease-out) 0.15s; }
+.bar.armed .bar-bill, .bar.armed + .bar-keys { opacity: 0; }
+.bar.in .bar-bill, .bar.in + .bar-keys { transition: opacity 0.6s ease 1.1s; }
+
+/* ---------------------------------------------------------- course pages ---- */
+/* /learn/<course>: three columns, the lesson list, the lesson, the standing invitation.
+   Shared by every course (body.course-page), so a second course looks like the first. */
+.course-page .course-wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; }
+
+.course-page .course { display: grid; grid-template-columns: 232px minmax(0, 1fr) 248px; gap: var(--s-7); align-items: start; padding-block: var(--s-6) var(--section); }
+
+/* left: the lessons */
+.course-page .toc { position: sticky; top: calc(var(--nav-h) + var(--s-5)); }
+.course-page .toc summary { display: none; }
+.course-page .toc ol { list-style: none; border-top: 1px solid var(--rule); }
+.course-page .toc li { border-bottom: 1px solid var(--rule); }
+.course-page .toc a { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--s-2); padding: var(--s-3) 0; text-decoration: none; color: var(--ink-2); font-size: var(--t-14); line-height: 1.4; }
+.course-page .toc a .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.course-page .toc a:hover { color: var(--ink); }
+.course-page .toc a[aria-current="true"] { color: var(--ink); font-weight: var(--strong); }
+.course-page .toc a[aria-current="true"] .n { color: var(--ink); }   /* navigation, not money: blue is for money and the leak */
+.course-page .toc a.seen::after { content: "✓"; color: var(--ink-4); }
+.course-page .toc .course-name { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); margin-bottom: var(--s-3); }
+.course-page .toc .tpl-link { display: block; margin-top: var(--s-5); font-size: var(--t-14); color: var(--ink-2); }
+.course-page .toc .tpl-link + .tpl-link { margin-top: var(--s-2); }
+
+/* centre */
+.course-page .lesson-col { min-width: 0; }
+.course-page .cover h1 { margin-top: var(--s-3); font-size: var(--t-display-m); max-width: 14ch; }
+.course-page .cover .lede { margin-top: var(--s-5); }
+.course-page .outcomes { margin-top: var(--s-6); list-style: none; display: grid; gap: var(--s-3); max-width: 60ch; }
+.course-page .outcomes li { padding-left: var(--s-5); position: relative; font-size: var(--t-16); }
+.course-page .outcomes li::before { content: ""; position: absolute; left: 0; top: 12px; width: 10px; height: 2px; background: var(--ink); }
+/* The cover's start: the course opens on a click, and the opt-in sits under it, quieter */
+.course-page .cover .audience { margin-top: var(--s-4); max-width: 60ch; font-size: var(--t-16); color: var(--ink-2); }
+.course-page .yours label .hint { font-weight: var(--regular); color: var(--ink-3); }
+.course-page .start { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); }
+.course-page .start-note { font-size: var(--t-14); color: var(--ink-3); }
+.course-page .start-note a { margin-left: var(--s-2); color: var(--ink-2); }
+.course-page .cover .join-tile { margin-top: var(--s-6); max-width: 560px; }
+/* The last lesson's "Keep it current" */
+.course-page .keep { margin-top: var(--s-8); max-width: 68ch; padding-top: var(--s-7); border-top: 1px solid var(--rule); }
+.course-page .keep h3 { font-size: var(--t-20); }
+.course-page .keep > p { margin-top: var(--s-3); font-size: var(--t-16); color: var(--ink-2); }
+.course-page .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.course-page .cover .contents { margin-top: var(--s-8); }
+.course-page .cover .contents h2 { font-size: var(--t-24); letter-spacing: -0.018em; }
+.course-page .cover .contents ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-2); font-size: var(--t-16); }
+.course-page .cover .contents b { font-weight: var(--strong); }
+
+.course-page .lesson-head h2 { margin-top: var(--s-3); font-size: var(--t-display-s); }
+.course-page .lesson-head .lede { margin-top: var(--s-4); max-width: 60ch; }
+.course-page .tpl { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-5); padding: var(--s-4) var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.course-page .tpl p { font-size: var(--t-14); color: var(--ink-2); }
+.course-page .tpl p b { display: block; font-size: var(--t-16); }
+.course-page .tpl a { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); white-space: nowrap; }
+
+.course-page .prose { margin-top: var(--s-7); max-width: 68ch; }
+.course-page .prose > * + * { margin-top: var(--s-4); }
+.course-page .prose h3 { margin-top: var(--s-7); }
+.course-page .prose p, .course-page .prose li { font-size: var(--t-18); }
+.course-page .prose ol, .course-page .prose ul { padding-left: var(--s-5); display: grid; gap: var(--s-3); }
+.course-page .prose .formula { padding: var(--s-4) var(--s-5); background: var(--paper-2); border-radius: var(--radius); font-size: var(--t-16); color: var(--ink); font-variant-numeric: tabular-nums; }
+.course-page .prose .formula + .formula { margin-top: var(--s-2); }
+.course-page .prose .source { font-size: var(--t-14); color: var(--ink-3); }
+.course-page .prose .figure { margin-top: var(--s-6); margin-bottom: var(--s-6); }
+.course-page .prose .figure .label-box { margin-bottom: var(--s-4); }
+.course-page .worked { padding: var(--s-5); border-left: 2px solid var(--ink); background: var(--paper-2); border-radius: 0 var(--radius) var(--radius) 0; }
+.course-page .worked > * + * { margin-top: var(--s-3); }
+.course-page .worked p, .course-page .worked li { font-size: var(--t-16); }
+
+/* A data table, on a course or on /case-study */
+.data { width: 100%; border-collapse: collapse; font-size: var(--t-16); }
+.data th[scope="row"] { white-space: nowrap; }
+.data th, .data td { text-align: left; padding: var(--s-3) var(--s-3) var(--s-3) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.data thead th { font-size: var(--t-14); color: var(--ink-3); font-weight: var(--strong); }
+.data td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.data.ranked th[scope="row"] { white-space: normal; min-width: 11em; }
+.data .sub { display: block; font-size: var(--t-14); font-weight: var(--regular); color: var(--ink-3); }
+.course-page .card-table { overflow-x: auto; margin-top: var(--s-5); }
+/* A table wider than a phone scrolls inside its own box; the page never scrolls sideways. */
+.table-scroll { overflow-x: auto; }
+.table-scroll:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 560px) { .table-scroll .data { font-size: var(--t-14); } }
+.course-page .card-table:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.course-page .card-table table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: var(--t-14); font-variant-numeric: tabular-nums; }
+.course-page .card-table caption { text-align: left; font-weight: var(--strong); color: var(--ink); font-size: var(--t-16); padding-bottom: var(--s-3); }
+.course-page .card-table th, .course-page .card-table td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.course-page .card-table thead th { color: var(--ink-3); font-weight: var(--strong); }
+.course-page .card-table thead tr:first-child th[colspan] { text-align: center; color: var(--ink); border-bottom: 1px solid var(--rule-2); }
+.course-page .card-table tbody th { text-align: left; color: var(--ink); font-weight: var(--strong); }
+.course-page .card-table td:nth-child(5), .course-page .card-table th[scope="col"]:nth-child(4) { border-left: 1px solid var(--rule-2); }
+.course-page .card-table tr.over th, .course-page .card-table tr.over td { color: var(--ink-3); }
+
+.course-page .do { margin-top: var(--s-8); padding: var(--s-6); background: var(--paper-2); border-radius: var(--radius); max-width: 68ch; }
+.course-page .do h3 { font-size: var(--t-20); }
+.course-page .do ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-3); font-size: var(--t-16); }
+.course-page .pager { margin-top: var(--s-7); padding-top: var(--s-5); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: var(--s-4); max-width: 68ch; }
+.course-page .pager a { text-decoration: none; color: var(--ink-2); font-size: var(--t-16); }
+.course-page .pager a b { display: block; color: var(--ink); }
+.course-page .pager a:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.course-page .pager .next { text-align: right; margin-left: auto; }
+
+/* right: the standing invitation, present and quiet */
+.course-page .invite { position: sticky; top: calc(var(--nav-h) + var(--s-5)); padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); }
+.course-page .invite p { margin-top: var(--s-3); font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
+.course-page .invite .btn { margin-top: var(--s-5); width: 100%; min-height: 44px; padding: 0 var(--s-4); font-size: var(--t-14); background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
+.course-page .invite .btn:hover { background: var(--paper-2); }
+
+/* States. Every lesson is open to anyone, no email asked. Without scripts the cover and every
+   lesson show in order, and the opt-in (which needs a script) does not. With them, the cover is
+   the start and one lesson shows at a time. */
+.js .course-page .lesson { display: none; }
+.js .course-page .lesson.current { display: block; }
+.js.reading .course-page .cover { display: none; }
+html:not(.js) .course-page .join-tile, html:not(.js) .course-page .keep { display: none; }
+html:not(.js) .course-page .lesson + .lesson { margin-top: var(--section); padding-top: var(--section); border-top: 1px solid var(--rule); }
+html:not(.js) .course-page .pager { display: none; }
+
+
+@media (max-width: 1140px) {
+  .course-page .course { grid-template-columns: 220px minmax(0, 1fr); }
+  .course-page .invite { position: static; grid-column: 2; max-width: 68ch; }
+}
+@media (max-width: 860px) {
+  .course-page .course { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding-top: 0; }
+  .course-page .invite { grid-column: 1; }
+  .course-page .toc { position: static; }
+  .course-page .toc summary { display: flex; justify-content: space-between; align-items: center; list-style: none; cursor: pointer; padding: var(--s-4) 0; font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .course-page .toc summary::-webkit-details-marker { display: none; }
+  .course-page .toc summary::after { content: ""; width: 9px; height: 9px; border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3); transform: translateY(-3px) rotate(45deg); }
+  .course-page .toc[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+  .course-page .toc .course-name { display: none; }
+  .course-page .toc ol { border-top: 0; }
+  .course-page .start .btn { width: 100%; white-space: normal; }
+  .course-page .prose p, .course-page .prose li { font-size: var(--t-16); }
+}
+
+/* Check yourself: two questions a lesson, the answer behind a click. Trying first is what makes it stay. */
+.course-page .check { margin-top: var(--s-7); max-width: 68ch; }
+.course-page .check h3 { font-size: var(--t-20); }
+.course-page .check ol { margin-top: var(--s-4); padding-left: var(--s-5); display: grid; gap: var(--s-4); font-size: var(--t-16); }
+.course-page .check li > p { color: var(--ink); }
+.course-page .check details { margin-top: var(--s-2); }
+.course-page .check summary { cursor: pointer; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-2); }
+.course-page .check details p { margin-top: var(--s-2); padding-left: var(--s-4); border-left: 2px solid var(--rule-2); color: var(--ink-2); }
+
+/* ---------------------------------------------------- a course on one page ---- */
+/* /learn/<course>-card: every rule and formula of a course in eight cells, to keep beside
+   Seller Central. On screen a grid; printed, one page (the bar, the footer and the buttons go). */
+.sheet-page .sheet-head { padding-block: var(--s-8) var(--s-6); }
+.sheet-page .sheet-head h1 { margin-top: var(--s-3); font-size: var(--t-display-s); max-width: 22ch; }
+.sheet-page .sheet-src { margin-top: var(--s-4); max-width: 70ch; font-size: var(--t-16); color: var(--ink-2); }
+.sheet-page .sheet-actions { margin-top: var(--s-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-6); font-size: var(--t-14); }
+.sheet-page .sheet-actions a { color: var(--ink-2); }
+.sheet-page .link-btn { font: var(--strong) var(--t-14) / 1.4 var(--font); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.sheet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid var(--ink); }
+.sheet-cell { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5) var(--s-5) var(--s-5) 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.sheet-cell:nth-child(even) { padding-left: var(--s-5); border-left: 1px solid var(--rule); }
+.sheet-cell h2 { font-size: var(--t-20); letter-spacing: -0.015em; display: flex; gap: var(--s-3); align-items: baseline; }
+.sheet-cell h2 .n { font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.sheet-cell p, .sheet-cell li { font-size: var(--t-14); line-height: 1.55; color: var(--ink-2); }
+.sheet-cell ul, .sheet-cell ol { padding-left: var(--s-5); display: grid; gap: var(--s-2); }
+.sheet-cell .sheet-f { color: var(--ink); font-weight: var(--strong); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sheet-cell .sheet-more { margin-top: auto; padding-top: var(--s-2); font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); text-decoration: none; }
+.sheet-cell .sheet-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.sheet-page .sheet-foot { padding-block: var(--s-6) var(--section); font-size: var(--t-14); color: var(--ink-3); }
+.sheet-page .sheet-foot a { color: var(--ink-2); }
+@media (max-width: 760px) {
+  .sheet { grid-template-columns: minmax(0, 1fr); }
+  .sheet-cell, .sheet-cell:nth-child(even) { padding: var(--s-5) 0; border-left: 0; }
+  .sheet-page .sheet-head { padding-top: var(--s-5); }
+}
+@media print {
+  @page { size: letter; margin: 0.45in; }
+  body.sheet-page > :not(main), .sheet-page .sheet-actions, .sheet-page .sheet-more { display: none !important; }
+  .sheet-page main.wrap { max-width: none; padding: 0; }
+  .sheet-page .sheet-head { padding: 0 0 6pt; }
+  .sheet-page .sheet-head h1 { font-size: 17pt; margin-top: 2pt; max-width: none; }
+  .sheet-page .sheet-src { margin-top: 3pt; font-size: 8pt; max-width: none; color: #333; }
+  .sheet-page .label { font-size: 7pt; }
+  .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); border-top-width: 1.5pt; }
+  .sheet-cell, .sheet-cell:nth-child(even) { padding: 5pt 7pt 6pt 0; gap: 3pt; break-inside: avoid; }
+  .sheet-cell:nth-child(even) { padding-left: 7pt; border-left: 1px solid var(--rule); }
+  .sheet-cell h2 { font-size: 10pt; }
+  .sheet-cell h2 .n { font-size: 8pt; }
+  .sheet-cell p, .sheet-cell li { font-size: 7.6pt; line-height: 1.38; color: #222; }
+  .sheet-cell ul, .sheet-cell ol { gap: 1.5pt; padding-left: 11pt; }
+  .sheet-page .sheet-foot { padding: 5pt 0 0; font-size: 7pt; color: #555; }
+}
+
+/* ------------------------------------------------- a course on your numbers ---- */
+/* The reader's own numbers, typed into a lesson and read back by the lessons after it.
+   Hidden without scripts: the lessons and the spreadsheet stand on their own. */
+/* hidden means hidden: a panel's own display must never show an empty box before it has something to say. */
+.course-page [hidden] { display: none !important; }
+.course-page .yours { margin-top: var(--s-7); padding: var(--s-6); border: 1px solid var(--ink); border-radius: var(--radius); display: grid; gap: var(--s-5); }
+.course-page .yours-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-2) var(--s-4); }
+.course-page .yours-head h3 { margin: 0; font-size: var(--t-24); }
+.course-page .yours-note { font-size: var(--t-14); color: var(--ink-3); }
+.course-page .yours label { display: grid; gap: var(--s-1); font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
+.course-page .yours input { min-height: 40px; padding: 0 var(--s-3); font: var(--regular) var(--t-16) / 1 var(--font); font-variant-numeric: tabular-nums; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule-2); border-radius: 6px; min-width: 0; width: 100%; }
+.course-page .yours input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.course-page .yours-sku { max-width: 360px; }
+.course-page .yours-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-4); }
+.course-page .yours-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-6); align-items: start; }
+.course-page .yours-table { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+.course-page .yours-table th { text-align: left; padding: 0 var(--s-2) var(--s-2) 0; color: var(--ink-3); font-weight: var(--strong); }
+.course-page .yours-table td { padding: 2px var(--s-2) 2px 0; }
+.course-page .yours-table tbody th { color: var(--ink-3); font-weight: var(--regular); font-variant-numeric: tabular-nums; }
+.course-page .yours-table input { min-height: 34px; }
+.course-page .yours-econ { display: grid; gap: var(--s-3); }
+.course-page .yours-status { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); }
+.course-page .yours-actions { display: flex; flex-wrap: wrap; gap: var(--s-5); }
+.course-page .link-btn { font: var(--strong) var(--t-14) / 1.4 var(--font); color: var(--ink); background: none; border: 0; padding: var(--s-1) 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.course-page .yours-out { margin-top: var(--s-6); padding: var(--s-5); border: 1px solid var(--ink); border-radius: var(--radius); display: grid; gap: var(--s-3); }
+.course-page .yours-out p { font-size: var(--t-16); }
+.course-page .yours-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.course-page .yours-warn { padding-left: var(--s-4); border-left: 2px solid var(--ink); color: var(--ink); }
+.course-page .yours-chart svg { width: 100%; height: auto; overflow: visible; }
+@media (max-width: 760px) { .course-page .yours-grid { grid-template-columns: minmax(0, 1fr); } .course-page .yours { padding: var(--s-4); } }
+
+.course-page .yours select { min-height: 40px; padding: 0 var(--s-3); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: 6px; width: 100%; }
+.course-page .yours-drop { position: relative; display: grid; gap: var(--s-2); padding: var(--s-5); border: 1px dashed var(--rule-2); border-radius: var(--radius); cursor: pointer; }
+.course-page .yours-drop:hover, .course-page .yours-drop.over { border-color: var(--ink); background: var(--paper-2); }
+.course-page .yours-drop.loaded { border-style: solid; border-color: var(--ink); }
+.course-page .yours-drop.bad { border-style: solid; }
+.course-page .yours-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.course-page .yours-drop b { font-size: var(--t-16); color: var(--ink); }
+.course-page .yours-drop-state { font-size: var(--t-14); font-weight: var(--regular); color: var(--ink-3); }
+.course-page .yours-facts { width: 100%; border-collapse: collapse; font-size: var(--t-16); }
+.course-page .yours-facts th { text-align: left; vertical-align: top; width: 34%; padding: var(--s-2) var(--s-4) var(--s-2) 0; border-bottom: 1px solid var(--rule); color: var(--ink); font-weight: var(--strong); }
+.course-page .yours-facts td { padding: var(--s-2) 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.course-page .yours-list { padding-left: var(--s-5); display: grid; gap: var(--s-2); font-size: var(--t-16); }
+.course-page .yours-out-inline { display: grid; gap: var(--s-4); }
+.course-page .yours-out-inline p { font-size: var(--t-16); }
+.course-page .yours-table-wide { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+.course-page .yours-table-wide th { text-align: left; padding: 0 var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule-2); color: var(--ink-3); }
+.course-page .yours-table-wide td { padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.course-page .yours-table-wide .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.course-page .yours-sub { display: block; font-size: var(--t-12); color: var(--ink-3); }
+@media (max-width: 640px) { .course-page .yours-facts th { width: 42%; } .course-page .yours-table-wide { font-size: var(--t-12); } }
+@media print { .course-page .memo h3 { font-size: 13pt; margin: 12pt 0 4pt; } }
+
+/* The pricing memo: never on screen; in print, the whole page once the reader has numbers. */
+.course-page .memo { display: none; }
+@media print {
+  body.course-page.has-memo > :not(.memo) { display: none !important; }
+  body.course-page.has-memo > .memo { display: block !important; color: #000; font-size: 11pt; }
+  .course-page .memo-head h2 { font-size: 20pt; margin: 4pt 0 8pt; }
+  .course-page .memo-k { font-size: 8pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; }
+  .course-page .memo-head p { font-size: 9pt; color: #333; }
+  .course-page .memo-table { width: 100%; border-collapse: collapse; margin: 10pt 0; font-size: 10pt; }
+  .course-page .memo-table th { text-align: left; width: 22%; padding: 5pt 8pt 5pt 0; border-bottom: 0.5pt solid #bbb; vertical-align: top; }
+  .course-page .memo-table td { padding: 5pt 0; border-bottom: 0.5pt solid #bbb; font-variant-numeric: tabular-nums; }
+  .course-page .memo-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .course-page .memo-charts svg { width: 100%; height: auto; }
+  .course-page .memo-foot { margin-top: 10pt; font-size: 8pt; color: #555; }
+  @page { margin: 14mm; }
+}
+
 /* -------------------------------------------------------------- charts ---- */
 .chart text { fill: var(--ink-3); font-family: var(--font); }
 .chart .ink { fill: var(--ink); }
@@ -215,10 +808,47 @@ p { text-wrap: pretty; }
 .chart .dot { fill: var(--ink); }
 .chart .dot-hollow { fill: var(--paper); stroke: var(--ink); stroke-width: var(--line-step); }
 .chart .tick { stroke: var(--ink-3); stroke-width: var(--line-hair); }
+/* The price curve: profit at the fitted elasticity is money, so it is the accent; the interval's ends are ink, dashed. */
+.chart .curve { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linejoin: round; }
+.chart .curve-alt { fill: none; stroke: var(--ink-3); stroke-width: 1.25px; stroke-dasharray: 5 4; }
+
+/* The aging strip: storage bands in greys that deepen with age; from day 271, the leak. */
+.strip .seg-0 { fill: var(--paper-2); }
+.strip .seg-1 { fill: var(--rule); }
+.strip .seg-2 { fill: var(--rule-2); }
+.strip .seg-3 { fill: var(--ink-4); }
+.strip .seg-leak { fill: var(--blue); }
+.strip .seg-text { fill: var(--ink); font-weight: var(--strong); }
+.strip .seg-text-leak { fill: var(--paper); font-weight: var(--strong); }
+.strip .strip-date { fill: var(--ink-3); }
 
 /* The Monte Carlo: ten thousand futures, drawn once, then still. */
 .mc .mc-path { fill: none; stroke: var(--blue); stroke-width: 1; stroke-opacity: var(--mc-path-rest); }
 .mc .mc-band { fill: var(--blue); fill-opacity: var(--mc-band); stroke: none; }
+/* Capital & Cash: the bank balance. Money is blue: the band and its bad edge; the median is ink. */
+.cash .cash-band { fill: var(--blue); fill-opacity: var(--mc-band); stroke: none; }
+.cash .cash-p5 { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linejoin: round; }
+.cash .cash-p50 { fill: none; stroke: var(--ink); stroke-width: var(--line-pct); stroke-linejoin: round; }
+.cash .cash-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
+.chart .dot-blue { fill: var(--blue); }
+/* a day of a campaign: there to be counted, not read one by one */
+.chart .dot-faint { fill: var(--ink-4); }
+/* The Operator's Math: an ad curve is a fit, not money, so it is ink; the break-even is the leak */
+.response .fit-line { fill: none; stroke: var(--ink-3); stroke-width: 2px; stroke-linejoin: round; }
+/* a label that sits over data keeps a ring of paper around its letters */
+.chart .halo { paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+/* The Shopify Margin: one order's money. Only what is kept is the money colour. */
+.order .seg { fill: var(--paper-2); stroke: var(--rule-2); stroke-width: 1; }
+.order .seg-kept { fill: var(--blue); stroke: var(--blue); }
+.order .seg-text { fill: var(--ink); font-variant-numeric: tabular-nums; }
+.order .seg-text-kept { fill: var(--paper); font-weight: var(--strong); font-variant-numeric: tabular-nums; }
+/* The readout a reader scrubs (assets/site.js): a hairline, a dot on each line, the figures in a quiet box */
+.chart.scrubbable { touch-action: pan-y; cursor: crosshair; }
+.chart .scrub-rule { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .scrub-dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.chart .scrub-box { fill: var(--paper); stroke: var(--rule-2); stroke-width: 1; }
+.chart .scrub-text { fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chart .scrub-text.scrub-head { fill: var(--ink); font-weight: var(--strong); }
 .mc .mc-pct { fill: none; stroke: var(--blue); stroke-width: var(--line-pct); stroke-linecap: round; }
 .mc .mc-pct.p50 { stroke: var(--ink); }
 .mc .mc-zero { stroke: var(--ink-3); stroke-width: var(--line-hair); stroke-dasharray: 2 4; }
@@ -227,11 +857,15 @@ p { text-wrap: pretty; }
 .mc--mood .mc-path { stroke-opacity: calc(var(--mc-path-rest) * 1.4); }
 .mc--mood .mc-pct { stroke-opacity: 0.7; stroke-width: 1.5px; }
 
-/* Motion. A tiny script in <head> adds .motion only when scripts run and the
-   visitor has not asked for less motion; without it every chart is its finished
-   still frame. A chart waits, drawn-out, until it is on screen, then plays once. */
-.motion [data-play]:not(.played):not(.playing) .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.motion [data-play]:not(.played):not(.playing) .fade { opacity: 0; }
+/* Motion. The switch at the top of the body adds .motion only when scripts run and the
+   visitor has not asked for less motion; without it every chart is its finished still
+   frame. With it, a chart is put back to its start (.armed) while it is still below the
+   screen and plays once as it arrives (.playing, then .played). One chart draws on load:
+   the hero's (data-play="load"), held at its start from the first paint so it never
+   flashes finished first; if the script never arrives the switch comes off at three
+   seconds and it is simply there. */
+[data-play].armed .draw, .motion [data-play="load"]:not(.played):not(.playing) .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+[data-play].armed .fade, .motion [data-play="load"]:not(.played):not(.playing) .fade { opacity: 0; }
 .playing .draw { stroke-dasharray: 1; animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both; }
 .playing .mc-path.draw {
   animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both,
@@ -250,6 +884,164 @@ p { text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Asked for less motion: a section dissolves in, it never slides (.calm, set by the switch) */
+.calm .armed[data-reveal] { opacity: 0; transform: none; transition: none; }
+.calm [data-reveal].in { transform: none !important; transition: opacity 0.6s ease var(--d, 0ms) !important; }
 @media print {
   .night { --paper: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #ccc; --blue: #0b5fff; }
+}
+
+/* ═══ The pages behind the tabs (since 2026-10-01, evening) ═══════════════════════════════
+   The home page is short and the rest of the business has a page under each tab
+   (HUBRICON_SPEC.md, "A short first page"). These sections moved off the home page with
+   their styles, so /case-study, /how-it-works and /offer draw them the same way. */
+.page-head { padding-block: var(--s-9) var(--s-6); }
+.page-head h1 { margin-top: var(--s-3); max-width: 20ch; }
+.page-head .lede { margin-top: var(--s-5); max-width: 62ch; }
+@media (max-width: 640px) { .page-head { padding-top: var(--s-6); } }
+
+.section-head { margin-bottom: var(--s-7); }
+.section-head h2 { margin-top: var(--s-3); max-width: 22ch; }
+.section-head .lede { margin-top: var(--s-5); }
+
+/* 2 · the problem, said once and large, and who is paid for what */
+#problem { padding-block: calc(var(--section) * 1.2); }
+#problem h2 { font-size: var(--t-display-xl); max-width: 15ch; }
+.problem-grid { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); }
+.problem-grid p { font-size: var(--t-20); line-height: 1.55; }
+.problem-grid b { color: var(--ink); }
+.creed { margin-top: var(--s-9); padding-top: var(--s-7); border-top: 1px solid var(--rule); display: grid; gap: var(--s-2); }
+.creed p { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.06; color: var(--ink-3); text-wrap: balance; }
+.creed p:last-child { color: var(--ink); }
+
+/* 3 · 4 · the figures */
+.exhibit + .exhibit, .figs { margin-top: var(--s-7); }
+.figs { display: grid; gap: var(--s-7); }
+.case-head { display: grid; gap: var(--s-4); justify-items: start; }
+.exhibit-body .figure-intro { font-size: var(--t-16); color: var(--ink-2); max-width: 64ch; margin-bottom: var(--s-5); }
+.case-who { font-size: var(--t-16); color: var(--ink-3); }
+.case-headline { font-size: var(--t-display-l); max-width: 19ch; }
+.case-head .lede { max-width: 58ch; }
+.selection { margin-top: var(--s-8); padding-left: var(--s-5); border-left: 2px solid var(--ink); font-size: var(--t-24); line-height: 1.45; color: var(--ink); max-width: 44ch; }
+#case-study .fold { margin-top: var(--s-7); }
+.fold-body ul { list-style: none; display: grid; gap: var(--s-3); max-width: 72ch; }
+.fold-body li { padding-left: var(--s-5); position: relative; }
+.fold-body li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; border-top: 1px solid var(--ink-3); }
+.bridge { margin-top: var(--s-5); font-size: var(--t-16); color: var(--ink-2); }
+.bridge a { color: var(--ink); font-weight: var(--strong); text-underline-offset: 3px; }
+
+/* 5 · three steps */
+.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); }
+.steps li { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-6) var(--s-5) var(--s-5); border-top: 2px solid var(--ink); background: var(--paper-2); border-radius: 0 0 var(--radius) var(--radius); }
+.step-n { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); color: var(--ink-4); line-height: 1; font-variant-numeric: tabular-nums; }
+.step-time { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.steps p { font-size: var(--t-16); }
+
+/* 6 · the offer, on its own */
+#offer { padding-block: calc(var(--section) * 1.2); }
+.offer-line { margin-top: var(--s-4); font-size: var(--t-display-xl); max-width: 14ch; }
+.offer-grid { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
+.offer-why { font-size: var(--t-20); line-height: 1.55; }
+.price { font-size: var(--t-display-s); font-weight: var(--strong); color: var(--ink); letter-spacing: var(--track-display); line-height: 1.1; }
+.price + p { margin-top: var(--s-3); font-size: var(--t-16); }
+.scope { list-style: none; margin-top: var(--s-6); }
+.scope li { padding: var(--s-3) 0; border-top: 1px solid var(--rule); font-size: var(--t-16); color: var(--ink-2); }
+.scope b { color: var(--ink); }
+.layers-head { margin-top: var(--s-9); font-size: var(--t-24); letter-spacing: -0.018em; }
+.layers { margin-top: var(--s-5); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+.layer { padding: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); display: flex; flex-direction: column; gap: var(--s-3); }
+.layer-n { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.layer h3 { font-size: var(--t-20); }
+.layer p { font-size: var(--t-16); }
+
+/* trust: where every promise is written down */
+.trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
+.trust-tile { padding: var(--s-6) var(--s-5) var(--s-5); background: var(--paper-2); border-color: var(--paper-2); }
+.trust-tile h3 { font-size: var(--t-24); margin-top: var(--s-2); }
+.trust-tile p { color: var(--ink-2); }
+
+/* 7 · the Profit Record, as the thing itself */
+.board-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); align-items: start; }
+.board-grid .lede { margin-top: var(--s-5); }
+.board { padding: var(--s-6) var(--s-6) var(--s-5); }
+.board-k { font-size: var(--t-14); color: var(--ink-3); }
+.board-big { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; margin-top: var(--s-2); font-variant-numeric: tabular-nums; }
+.board-line { margin-top: var(--s-5); font-size: var(--t-18); color: var(--ink-2); max-width: 40ch; }
+.bar { position: relative; margin-top: var(--s-6); height: 12px; border-radius: 3px; background: var(--rule); }
+.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--blue); }
+.bar-bill { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
+.bar-keys { position: relative; height: var(--s-5); margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
+.bar-keys span { position: absolute; top: 0; white-space: nowrap; }
+.bar-keys .k-bill { transform: translateX(-50%); }
+.bar-keys .k-measured { right: 0; }
+.receipts { margin-top: var(--s-6); }
+.receipts summary { font-size: var(--t-16); }
+
+/* a real client's result, published with their consent; hidden until one exists */
+.result-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-7); }
+.result-numbers div { border-top: 1px solid var(--ink); padding-top: var(--s-4); }
+.result-numbers b { display: block; font-size: var(--t-display-s); letter-spacing: var(--track-display); color: var(--blue); margin: var(--s-2) 0; }
+.result-numbers p, .result-numbers span { font-size: var(--t-14); color: var(--ink-3); }
+.result-quote { margin-top: var(--s-7); font-size: var(--t-24); line-height: 1.4; color: var(--ink); max-width: 46ch; }
+
+/* 8 · 9 */
+.who-grid, .faq-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
+.who-grid p { font-size: var(--t-18); }
+.who-grid .who-honest { color: var(--ink); }
+
+/* 10 · the close */
+.close { text-align: center; padding-block: calc(var(--section) * 1.3); }
+.close h2 { margin: 0 auto; font-size: var(--t-display-xl); max-width: 14ch; }
+.close .cta { justify-content: center; }
+.close-note { margin-top: var(--s-4); }
+.close + .site-foot { border-top-color: var(--rule); }
+
+@media (max-width: 1100px) {
+  .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .problem-grid, .offer-grid, .board-grid, .who-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .creed { margin-top: var(--s-8); padding-top: var(--s-7); }
+}
+@media (max-width: 640px) {
+  .board { padding: var(--s-5); }
+  .cta .btn { width: 100%; }
+  .cta { margin-top: var(--s-6); }
+  .layers, .trust-grid { grid-template-columns: minmax(0, 1fr); }
+  .layers { gap: 0; border-bottom: 1px solid var(--rule); }
+  .layer { display: grid; grid-template-columns: var(--s-6) minmax(0, 1fr); gap: var(--s-2) 0; padding: var(--s-5) 0; border: 0; border-top: 1px solid var(--rule); border-radius: 0; }
+  .layer-n { grid-row: span 2; line-height: 1.5; }
+  .trust-tile { padding: var(--s-5) var(--s-4) var(--s-4); gap: var(--s-2); }
+  .trust-tile p { font-size: var(--t-14); }
+  .result-numbers { grid-template-columns: minmax(0, 1fr); }
+  .selection { font-size: var(--t-20); }
+}
+
+
+/* Called before, happened after: the store study's calls, on the home page and on /case-study */
+.calls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); margin-top: var(--s-8); }
+.call { border-top: 2px solid var(--ink); padding-top: var(--s-5); display: grid; gap: var(--s-4); align-content: start; }
+.call-k { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); max-width: 30ch; }
+.call dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-4); }
+.call dt { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.call dd { margin: var(--s-2) 0 0; font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.call-note { font-size: var(--t-14); color: var(--ink-2); max-width: 38ch; }
+@media (max-width: 900px) { .calls { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); } }
+
+/* The home page's course strip: five covers in a row, each opening its course */
+.lib-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-7); }
+.strip-tile { display: grid; gap: var(--s-2); align-content: start; color: inherit; text-decoration: none; }
+.strip-tile .tile-cover { padding: var(--s-3) var(--s-4); border-radius: var(--radius); }
+.strip-tile .cover-k { font-size: var(--t-12); }
+.strip-t { margin-top: var(--s-2); font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); line-height: 1.25; }
+.strip-a { font-size: var(--t-14); color: var(--ink-3); }
+.strip-tile:hover .strip-t, .strip-tile:focus-visible .strip-t { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 1000px) { .lib-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* on a phone, one row that swipes inside its own box: the page itself never scrolls sideways */
+@media (max-width: 640px) {
+  .lib-strip { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 64%; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: var(--s-3); margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+  .strip-tile { scroll-snap-align: start; }
 }

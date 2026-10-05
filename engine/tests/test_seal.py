@@ -47,6 +47,8 @@ needs_node = pytest.mark.skipif(NODE is None, reason="node is not on PATH")
 
 CLIENT = {"id": "c0000001-0000-4000-8000-000000000001", "contact_email": "dana@acme.test",
           "contact_name": "Dana Reyes", "company_name": "Acme"}
+# Moves are issued only to a client who said yes (issue.issue_drafts' stage gate).
+YES = {**CLIENT, "retainer_started_at": "2026-09-01T00:00:00+00:00"}
 OTHER = {"id": "c0000002-0000-4000-8000-000000000002", "contact_email": "sam@other.test",
          "contact_name": "Sam", "company_name": "Other"}
 T = datetime(2026, 9, 28, 11, 4, 12, 123400, tzinfo=timezone.utc)
@@ -205,7 +207,7 @@ def test_the_promise_is_sealed_before_the_email_and_the_email_carries_it(monkeyp
     chain_at_send = []
     sent = []
     _mail(monkeypatch, sent, on_send=lambda: chain_at_send.append([dict(r) for r in db.rows(seal.TABLE)]))
-    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    res = issue.issue_drafts(db, YES, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True and res["seal"] == seal.SEALED
 
     # the chain already held both promises when the email was handed over
@@ -247,7 +249,7 @@ def test_without_the_table_the_notice_goes_out_unsealed_and_says_why(monkeypatch
     sent = []
     _mail(monkeypatch, sent)
     db = NoTable(directives=[_d(1)])
-    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    res = issue.issue_drafts(db, YES, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True and res["seal"] == seal.TABLE_MISSING
     assert seal.MIGRATION in res["seal_reason"]
     row = db.rows("directives")[0]
@@ -271,7 +273,7 @@ def test_a_seal_that_cannot_be_written_never_holds_the_email(monkeypatch):
     sent = []
     _mail(monkeypatch, sent)
     db = Refuses(directives=[_d(1)])
-    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    res = issue.issue_drafts(db, YES, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True and res["seal"] == seal.FAILED and "connection reset" in res["seal_reason"]
     assert db.rows("directives")[0]["veto_closes_at"]
     assert "seal" not in sent[0]["text"].lower()          # no seal printed that the Record does not hold
@@ -282,7 +284,7 @@ def test_a_move_whose_document_is_refused_is_named_and_the_rest_are_sealed(monke
     _mail(monkeypatch, sent)
     bad = _d(2, evidence={"sku": "SKU-2", "delta_p5": "a lot", "delta_p95": 3.0})
     db = FakeDB(directives=[_d(1), bad])
-    res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    res = issue.issue_drafts(db, YES, "amazon", "https://x/portal", send=True)
     assert res["seal"] == seal.PARTIAL and "d2" in res["seal_reason"]
     assert [r["directive_id"] for r in db.rows(seal.TABLE)] == ["d1"]
     assert "seal " in sent[0]["text"]
@@ -356,7 +358,7 @@ def test_a_consistent_rewrite_is_caught_only_by_a_witness(monkeypatch):
     sent = []
     _mail(monkeypatch, sent)
     db = FakeDB(directives=[_d(1), _d(2), _d(3)])
-    issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
+    issue.issue_drafts(db, YES, "amazon", "https://x/portal", send=True)
     rows = sorted(db.rows(seal.TABLE), key=lambda r: r["seq"])
     in_inbox = rows[1]["leaf"][:12]
     assert f"seal {in_inbox}" in sent[0]["text"]

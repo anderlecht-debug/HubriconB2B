@@ -80,3 +80,36 @@ def test_compute_reads_only_consenting_non_internal_clients():
                  {"id": "c3", "contact_email": "c@brand.com", "platform": "amazon"}],
     )
     assert [c["id"] for c in calibration.consented_clients(db)] == ["c1"]
+
+
+def test_a_client_who_left_or_said_no_calibrates_nothing_whatever_they_once_granted():
+    """The consent was given by a client, about the work we were doing for them:
+    from the day they leave (churned) or say no (declined) their data calibrates
+    nothing, the rule fleet.py keeps for the network's sources."""
+    db = FakeDB(
+        consents=[{"client_id": c, "kind": "calibration", "granted": True} for c in ("c1", "c2", "c3", "c4", "c5")],
+        clients=[{"id": "c1", "contact_email": "a@brand.com", "status": "active"},
+                 {"id": "c2", "contact_email": "b@brand.com", "status": "churned"},
+                 {"id": "c3", "contact_email": "c@brand.com", "status": "declined"},
+                 {"id": "c4", "contact_email": "d@brand.com", "status": "past_due"},
+                 {"id": "c5", "contact_email": "e@brand.com", "status": "pending"}],
+    )
+    # past_due is not a source either: "current" is fleet.SOURCE_STATUSES, one set for both network uses
+    assert sorted(c["id"] for c in calibration.consented_clients(db)) == ["c1", "c5"]
+    assert sorted(c["id"] for c in calibration.consented_clients(db, statuses=None)) == ["c1", "c2", "c3", "c4", "c5"]
+
+
+def test_calibration_and_the_fleet_read_the_same_current_clients():
+    """Two network uses, one definition of who is a source: the calibration gate's
+    default is exactly fleet.SOURCE_STATUSES, so the two can never disagree."""
+    from hubricon_engine import fleet
+    assert calibration.current_statuses() is fleet.SOURCE_STATUSES
+    statuses = ("pending", "active", "past_due", "churned", "declined")
+    db = FakeDB(
+        consents=[{"client_id": f"c{i}", "kind": k, "granted": True}
+                  for i in range(len(statuses)) for k in ("calibration", "network")],
+        clients=[{"id": f"c{i}", "contact_email": f"x{i}@brand.com", "status": s} for i, s in enumerate(statuses)],
+    )
+    calibrating = sorted(c["id"] for c in calibration.consented_clients(db))
+    assert calibrating == sorted(c["id"] for c in fleet.consenting_accounts(db))
+    assert calibrating == sorted(f"c{i}" for i, s in enumerate(statuses) if s in fleet.SOURCE_STATUSES)

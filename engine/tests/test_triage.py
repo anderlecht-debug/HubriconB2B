@@ -20,13 +20,16 @@ def test_the_facts_describe_the_mandate_and_the_referral_month_the_engine_actual
     that lapse after three weeks) and the referral month as referral.py pays
     it (at the referred founder's first standing invoice, not a calendar day)."""
     from hubricon_engine.issue import EXPLICIT_LAPSE_DAYS
-    mandate = next(line for line in triage.FACTS.splitlines() if line.startswith("- Ongoing execution"))
+    mandate = next(line for line in triage.FACTS.splitlines() if line.startswith("- After a yes"))
     assert ("bounded price steps capped at 5% per cycle and ad corrections inside limits they set on the "
-            "kickoff call; a bigger price step, a new campaign or a reorder waits for their written yes, "
+            "kickoff call) are emailed before they go live and go live after 72 hours unless they say no; "
+            "a bigger price step, a new campaign or a reorder waits for their written yes, "
             "and lapses after three weeks without one") in mandate
     assert "within limits they approve" not in mandate and EXPLICIT_LAPSE_DAYS == 21
+    # The referral month in terms §9's own words (since 2026-10-01): credited when
+    # the referred brand's first invoice is raised after its own thirtieth day.
     referral = next(line for line in triage.FACTS.splitlines() if line.startswith("- Referral"))
-    assert "when that founder's first invoice stands after their day 30" in referral
+    assert "when that brand's first invoice is raised after its own thirtieth day" in referral
     assert "stays past" not in referral
 
 
@@ -63,11 +66,28 @@ def test_plain_no_is_a_decline_but_no_problem_is_not():
 def test_interested_and_not_now_have_templates_with_the_right_links():
     assert classify_rules("Re:", "Interested. How does this work?") == "interested"
     d = draft_for("interested", "Priya Patel")
-    assert d.startswith("Great, Priya.") and CALENDLY_URL in d and "TEARDOWN" in d
+    assert d.startswith("Good, Priya.") and CALENDLY_URL in d and triage.LEARN_URL in d
+    # no platform known: the library's front door, not one store's course
+    assert d.endswith(f"{triage.LEARN_URL}\n\nHagen") and "fee-staircase" not in d and "price-curve" not in d
     assert classify_rules("Re:", "Not right now, circle back in Q1") == "not_now"
-    assert "90 days" in draft_for("not_now", None) and "Hi there" not in draft_for("not_now", None)
+    d = draft_for("not_now", None)
+    assert CALENDLY_URL in d and "Hi there" not in d
+    assert "90 days" not in d and "check back" not in d, "nothing schedules a follow-up, so nothing promises one"
     d = draft_for("wants_teardown", "Sam")
-    assert EXEC_EMAIL in d and "24 hours" in d
+    assert "Teardown is retired" in d and CALENDLY_URL in d and "24 hours" not in d
+
+
+def test_the_fact_sheet_offers_only_what_exists_today():
+    f = triage.FACTS
+    assert "$1M–$30M" in f and "$3M" not in f and "$20M" not in f
+    assert "/teardown" not in f and "reply TEARDOWN" not in f and "TEARDOWN" not in f
+    assert "Teardown are retired" in f
+    assert "No client results are published yet" in f
+    # Since 2026-10-01 every lesson and its spreadsheet are open; an email is optional.
+    assert "no email needed" in f and "One email opens" not in f
+    assert "within 24 hours" not in f
+    for v in triage.STATUS_AFTER.values():
+        assert v != "wants_teardown", "a TEARDOWN reply no longer opens a door that is closed"
 
 
 def test_questions_are_left_for_a_writer_when_claude_is_off(monkeypatch):
@@ -86,12 +106,12 @@ def test_triage_statuses(monkeypatch):
 def test_claude_verdict_is_guarded(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": "question", "reply": "Answer " * 200, "reason": ""})
+                        lambda s, b, n, p=None: {"category": "question", "reply": "Answer " * 200, "reason": ""})
     v = triage.triage("Re:", "Do you work with wholesale sellers?", "Sam")
     # an over-long model reply is discarded, so the message waits for review
     assert v["category"] == "question" and v["reply_status"] == "pending_review"
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": "question", "reply": "Short answer.\n\nHagen", "reason": ""})
+                        lambda s, b, n, p=None: {"category": "question", "reply": "Short answer.\n\nHagen", "reason": ""})
     v = triage.triage("Re:", "Do you work with wholesale sellers?", "Sam")
     assert v["reply_status"] == "approved" and v["by"] == "claude"
 
@@ -146,6 +166,51 @@ def test_claude_tier_names_the_workspace_and_reports_why_it_passed(monkeypatch):
 
     # when the model tier fails, triage() says why instead of failing silently
     monkeypatch.setattr(triage, "classify_claude",
-                        lambda s, b, n: {"category": None, "reply": None, "reason": "claude failed: 400"})
+                        lambda s, b, n, p=None: {"category": None, "reply": None, "reason": "claude failed: 400"})
     v = triage.triage("Re:", "How long does it take?", "Lee")
     assert v["reply_status"] == "pending_review" and v["reason"] == "claude failed: 400"
+
+
+def test_a_shopify_prospect_hears_shopify_words_and_is_sent_to_the_price_curve():
+    """Until 2026-10-01 every reply named only Amazon's leaks and sent everyone
+    to The Fee Staircase, an Amazon-only course, including the Shopify stores
+    the harvest found. The reply now follows the prospect's platform."""
+    shop = draft_for("interested", "Sam", "shopify")
+    assert "https://www.hubricon.com/learn/price-curve" in shop and "fee-staircase" not in shop
+    assert "compare-at" in shop and "USPS pound line" in shop and "Products export" in shop
+    for amazon_only in ("Seller Central", "low-inventory", "aged stock", "ACoS"):
+        assert amazon_only not in shop, amazon_only
+    amz = draft_for("interested", "Sam", "amazon")
+    assert "https://www.hubricon.com/learn/fee-staircase" in amz and "compare-at" not in amz
+    assert "aged stock, low-inventory fees, an ad target set wrong" in amz
+    # the retired-Teardown reply follows too, and still promises no clock
+    td = draft_for("wants_teardown", "Sam", "Shopify")
+    assert "Teardown is retired" in td and "price-curve" in td and "compare-at" in td and "24 hours" not in td
+    # unknown or both: the reply names both stores and the library
+    for p in (None, "both", "etsy"):
+        d = draft_for("interested", "Sam", p)
+        assert "compare-at" in d and "low-inventory" in d and d.endswith(f"{triage.LEARN_URL}\n\nHagen")
+    # triage passes it through
+    assert "price-curve" in triage.triage("Re:", "yes let's talk", "Sam", use_claude=False, platform="shopify")["draft"]
+
+
+def test_the_fact_sheet_names_the_shopify_leaks_and_both_courses():
+    f = triage.FACTS
+    assert "compare-at" in f and "USPS pound line" in f
+    assert "/learn/price-curve" in f and "/learn/fee-staircase" in f
+
+
+def test_the_prospects_platform_comes_from_the_harvest_then_the_calculator():
+    from fakedb import FakeDB
+    db = FakeDB(harvest_sellers=[{"email": "a@shop.co", "platform": "shopify"}],
+                tool_runs=[{"email": "b@x.co", "platform": "amazon", "created_at": "2026-09-01"},
+                           {"email": "b@x.co", "platform": "shopify", "created_at": "2026-09-10"}])
+    assert triage.prospect_platform(db, "A@Shop.co ") == "shopify"
+    assert triage.prospect_platform(db, "b@x.co") == "shopify", "the latest calculator run"
+    assert triage.prospect_platform(db, "nobody@x.co") is None
+    assert triage.prospect_platform(None, "a@shop.co") is None and triage.prospect_platform(db, "") is None
+
+    class Broken:
+        def table(self, name):
+            raise RuntimeError("no such table")
+    assert triage.prospect_platform(Broken(), "a@shop.co") is None, "a failed read is unknown, never a guess"

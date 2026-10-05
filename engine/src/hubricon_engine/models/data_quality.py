@@ -12,13 +12,18 @@ RECONCILIATION. Per calendar period, pairs of sources that measure the same
 quantity two ways:
 
   sales      SKU Economics `sales`  vs  settlement Order `product_sales`
+  sales      Shopify Orders `sales` before refunds  vs  Payouts `charge` amounts
   sales      SKU Economics `sales`  vs  Business Report `ordered_product_sales`
   units      SKU Economics `units_sold`  vs  inventory-ledger Shipments
   ad spend   daily campaign spend  vs  search-term spend, over the same window
 
 Each pair reports the relative gap |a − b| / max(a, b) and flags it above
 RECONCILE_TOLERANCE. A gap is a fact about the exports, not a verdict on
-which is right; the row names both figures.
+which is right; the row names both figures. The Shopify pair is one-sided
+(2026-10-01): a charge carries the buyer's shipping and tax, so only a
+shortfall of charges against product sales is flagged, and only in a period
+the Payouts export covers. Until then the check filtered on Amazon's 'Order'
+type, and a Shopify payout row, typed 'charge', never reached it.
 
 COVERAGE AND STALENESS. Per report type, the calendar months present between
 its first and last, the months missing, and the days since its latest period
@@ -71,6 +76,7 @@ from datetime import date
 
 import numpy as np
 
+from . import margin
 from .common import num, period_days
 
 RECONCILE_TOLERANCE = 0.05
@@ -113,16 +119,61 @@ def _sum_in(rows, start, end, date_key, value_key, where=None) -> float | None:
     return total if n else None
 
 
+def _gross_sales(row: dict) -> float:
+    """A Shopify sku_economics row's product sales before refunds: `sales` is
+    net of the refunds ingest allocated, and raw.refunds says how much."""
+    raw = row.get("raw") if isinstance(row.get("raw"), dict) else {}
+    return float(row.get("sales") or 0) + float(raw.get("refunds") or 0)
+
+
+def _shopify_charge_check(econ: list[dict], settle_rows: list[dict], payouts, start: str, end: str) -> dict | None:
+    """The Orders export against the Payouts export's charges for one period.
+
+    Not the Amazon pair's two-sided test. A Shopify charge is what the buyer
+    paid, shipping and sales tax included, so charges run ABOVE product sales
+    by design and that excess is never flagged. What is flagged is a
+    shortfall past the tolerance: product sales (before refunds, since a
+    refund is its own payout line) that no charge accounts for, which means a
+    month missing from one export, a window that does not reach, or orders
+    paid outside Shopify Payments (PayPal, gift cards) that the effective-fee
+    rate in models/margin.py is then applied to. Only periods the export
+    covers are compared (margin.payout_covers), so an export that starts on
+    the 20th is not read as a three-week shortfall."""
+    if not margin.payout_covers(payouts, start, end):
+        return None
+    charges = _sum_in(settle_rows, start, end, "txn_date", "product_sales",
+                      where=lambda r: (r.get("txn_type") or "").strip().lower() == "charge")
+    if charges is None:
+        return None
+    gross = sum(_gross_sales(r) for r in econ if str(r["period_start"]) == start)
+    if max(abs(gross), abs(charges)) <= 0:
+        return None
+    short = (gross - charges) / gross if gross > 0 and charges < gross else 0.0
+    return {"period_start": start, "period_end": end, "quantity": "sales", "a": "sku_economics",
+            "b": "settlement_transactions", "a_value": num(gross), "b_value": num(charges),
+            "relative_gap": num(abs(gross - charges) / max(abs(gross), abs(charges)), 4),
+            "flagged": bool(short > RECONCILE_TOLERANCE),
+            "basis": ("Shopify charges include shipping and tax, so they may exceed product sales; only a "
+                      f"shortfall over {RECONCILE_TOLERANCE:.0%} is flagged")}
+
+
 def reconcile(data: dict) -> list[dict]:
     econ = data.get("sku_economics") or []
+    settle_rows = data.get("settlement_transactions") or []
+    payouts = margin.payout_fee_terms(settle_rows)
     out = []
     for start, end in _periods(econ):
         if period_days(start, end) < MIN_PERIOD_DAYS_FOR_RECONCILE:
             continue
         econ_sales = sum(float(r.get("sales") or 0) for r in econ if str(r["period_start"]) == start)
         econ_units = sum(float(r.get("units_sold") or 0) for r in econ if str(r["period_start"]) == start)
-        settle = _sum_in(data.get("settlement_transactions") or [], start, end, "txn_date", "product_sales",
+        # Amazon's settlement 'Order' rows; a Shopify Payouts export has 'charge'
+        # rows instead and is checked by its own one-sided rule
+        settle = _sum_in(settle_rows, start, end, "txn_date", "product_sales",
                          where=lambda r: (r.get("txn_type") or "").strip().lower() == "order")
+        shopify = _shopify_charge_check(econ, settle_rows, payouts, start, end)
+        if shopify:
+            out.append(shopify)
         traffic = [r for r in (data.get("asin_traffic") or []) if str(r.get("period_start")) == start]
         traffic_sales = sum(float(r.get("ordered_product_sales") or 0) for r in traffic) if traffic else None
         shipped = _sum_in(data.get("inventory_ledger") or [], start, end, "event_date", "quantity",

@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
 <style>
-/* The welcome page: one page, the seat, the kickoff, what happens next.
+/* The page after the yes: your files, the seat, the kickoff, what happens next.
    Every value is a token from /assets/hubricon.css. */
 .wrap { width: min(760px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
 .masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
@@ -27,11 +27,12 @@ p { font-size: var(--t-16); }
 .promise { font-size: var(--t-20); line-height: 1.55; color: var(--ink-2); max-width: 58ch; margin: var(--s-5) 0 var(--s-6); }
 .promise b { color: var(--ink); }
 .panel { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-6); margin-bottom: var(--s-4); }
+.panel > p { margin-top: var(--s-3); max-width: 64ch; }
 .step-no { display: block; margin-bottom: var(--s-2); font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
 .email-line { display: flex; gap: var(--s-2); align-items: center; flex-wrap: wrap; margin: var(--s-4) 0 var(--s-1); }
 .email-box { font-size: var(--t-16); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: 8px; padding: var(--s-3) var(--s-4); user-select: all; }
-button.copy { font: var(--strong) var(--t-14) / 1 var(--font); min-height: 46px; padding: 0 var(--s-5); border: 0; border-radius: 8px; background: var(--ink); color: var(--paper); cursor: pointer; }
-button.copy:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+button.copy { font: var(--strong) var(--t-14) / 1 var(--font); min-height: 46px; padding: 0 var(--s-5); border: 1px solid var(--ink); border-radius: 8px; background: var(--paper); color: var(--ink); cursor: pointer; }
+button.copy:hover { background: var(--paper-2); }
 .path { display: inline-block; margin: var(--s-3) 0 var(--s-1); padding: var(--s-2) var(--s-3); border-radius: 8px; background: var(--paper); font-size: var(--t-14); color: var(--ink-2); }
 .perm { display: grid; gap: var(--s-2); margin: var(--s-4) 0 var(--s-2); padding: 0; list-style: none; }
 .perm li { position: relative; padding-left: var(--s-5); }
@@ -39,7 +40,7 @@ button.copy:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper))
 .perm li.no::before { content: "✕"; color: var(--ink-3); }
 .perm b { color: var(--ink); }
 .why, .fallback { font-size: var(--t-14); color: var(--ink-2); margin-top: var(--s-3); max-width: 62ch; }
-.why b { color: var(--ink); }
+.why b, .fallback b { color: var(--ink); }
 .calendly-mount { min-height: 660px; margin-top: var(--s-4); border-radius: 8px; overflow: hidden; }
 .cal-fallback { font-size: var(--t-14); margin-top: var(--s-2); }
 .timeline { display: grid; margin-top: var(--s-4); }
@@ -62,26 +63,42 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 
   <div class="masthead">
     <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
-    <span class="mono">Client onboarding · private</span>
+    <span class="mono">After your yes · private</span>
   </div>
 
-  <h1>You're in. And this page is all you need.</h1>
-  <p class="promise">Here's the deal. We run the math on your Amazon account or your Shopify store. We <b>make the profit moves for you</b>: prices and ads, inside your account; reorders and Amazon claims, sized and dated for one yes. You watch a short video every
-  two weeks and keep the margin. <b>Your first month is free — the Proving Month.</b> If we don't find you more than we
-  cost, you walk away owing nothing — and after that, a month is invoiced only if your Profit Record shows it cleared the fee.</p>
+  <h1>You said yes. Here is what happens now.</h1>
+  <p class="promise">Your <b>Proving Month</b> started the day you said yes, and it is free; the letter that
+  confirmed your yes gives its first and last day. We <b>make the profit moves in your account</b>: prices and
+  ads within the standing mandate you set at kickoff; reorders, and on Amazon reimbursement claims, prepared and
+  dated for your yes. After the Proving Month, a month is invoiced only if your Profit Record shows it cleared
+  the fee.</p>
 
   <div class="panel">
-    <span class="step-no">Step 1 · The only thing we ever need from you</span>
-    <h2>Add one seat. That's it.</h2>
-    <p style="margin-top:10px">This one seat lets our models read your numbers. It's also how
-    the fixes happen inside your account. No report exports. No monthly homework.</p>
+    <span class="step-no">Step 1 · Your files, once</span>
+    <h2>Send your exports on your upload page.</h2>
+    <p>The link is in the emails we have sent you. The page lists every file it asks for, what each one gives
+    the models, and where each file you sent stands: <b>Received</b>, <b>Read</b> or <b>Needs a fix</b>. If you
+    sent your exports before the call, look there first: there may be nothing left to do.</p>
+    <p class="why"><b>The one thing no platform knows: your costs.</b> The cost template is on the same page,
+    one row per SKU (unit cost, freight, lead time). Estimates are fine. Shopify's cost per item is a start, not
+    the landed cost.</p>
+    <p class="fallback">Lost the link? Reply to any email from us and we send a fresh one.</p>
+  </div>
+
+  <div class="panel">
+    <span class="step-no">Step 2 · One seat, for the moves</span>
+    <h2>Add one seat.</h2>
+    <p>Moves go live inside your own accounts, through access you grant with narrow permissions
+    (<a href="/terms">terms §6</a>). The seat is how a move you have not said no to goes live. It is
+    also how each later month's reports reach us after this first handoff: we download them through the seat
+    ourselves, by hand. No software of ours logs in to your account.</p>
     <div class="email-line">
       <span class="email-box" id="exec-email">hagen.simmons@hubricon.com</span>
       <button class="copy" id="copy-btn">Copy email</button>
     </div>
     <div id="seat-amazon">
       <span class="path">Amazon: Seller Central → Settings → User Permissions → Invite new user</span>
-      <p style="margin-top:12px">When the invite goes through, grant exactly these permissions and
+      <p style="margin-top: var(--s-3)">When the invite goes through, grant exactly these permissions and
       nothing else:</p>
       <ul class="perm">
         <li><b>Reports → Business Reports</b>: view</li>
@@ -92,53 +109,73 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
       </ul>
     </div>
     <div id="seat-shopify">
-      <p style="margin-top:18px"><b id="shopify-lead">On Shopify instead?</b> Reply to your welcome
-      email with your store URL (and your collaborator request code, if your store sets one under
-      Settings → Users → Security). We send a collaborator request from the same email above; you approve
-      it under Settings → Users → Collaborators and grant exactly these:</p>
+      <p style="margin-top: var(--s-4)"><b id="shopify-lead">On Shopify instead?</b> Add one staff account. Shopify
+      allows them on the Grow, Advanced and Plus plans. First make its role: Settings → Users → Roles → Add role,
+      name it Hubricon, and tick exactly these permissions:</p>
       <ul class="perm">
-        <li><span><b>Orders</b>, <b>Analytics</b>, <b>Reports</b>, <b>Marketing</b>: view</span></li>
-        <li><span><b>Products</b> and <b>Discounts</b>: edit (that is how a price step happens)</span></li>
-        <li class="no"><span><b>Settings, Finances and Payouts stay off.</b> A collaborator account never touches them.</span></li>
+        <li><b>Orders</b>: View, Export</li>
+        <li><b>Products</b>: View, View cost, Edit price, Export (Edit price is how a price step happens)</li>
+        <li><b>Discounts</b>: View, create, and delete</li>
+        <li><b>Analytics &amp; reports</b>: Reports</li>
+        <li class="no"><b>Everything else stays off.</b> Finance, Customers, Settings, apps and every other edit. Locked out by design.</li>
       </ul>
+      <span class="path">Shopify: Settings → Users → Add users → Admin user → the email above → assign the Hubricon role</span>
+      <p class="why">It takes one of your plan's user seats. Each later month we export your orders and products
+      through it ourselves, by hand. <b>Payouts sit under Finance, which this user cannot open</b>, so a payouts
+      export always comes from you, on your upload page. On Shopify's Basic plan Shopify allows no staff accounts:
+      reply and say so, and we settle the route with you. Until a seat exists nothing goes live in your store, and
+      your exports keep coming through your upload page.</p>
+      <h3 style="margin-top: var(--s-5)">Your ad accounts, separately.</h3>
+      <p style="margin-top: var(--s-2)">A Shopify user cannot reach Meta or Google, so if you advertise there, each
+      account gets its own access, for ad changes only. Skip any you do not run.</p>
+      <ul class="perm">
+        <li><b>Meta</b>: we send you our business portfolio ID. In Meta Business Suite → Settings → Users → Partners →
+        Add → Give a partner access to your assets, enter it, and give your ad account access to manage campaigns
+        and view performance. Not full control.</li>
+        <li><b>Google Ads</b>: Admin → Access and security → the plus button → the email above → Standard. It is the
+        narrowest access Google offers that can change a campaign; it can also see billing, which we do not use.</li>
+      </ul>
+      <p class="why">Each later month we export your Meta and Google reports through that access ourselves, by hand.</p>
     </div>
     <p class="why" id="seat-both">Selling on both? Grant both seats; the models read each channel on its own and the
     briefs say which one a number came from.</p>
-    <p class="why">Want it gone? One click on that same screen revokes the seat, any day you
-    choose. And the narrow scope is the whole point. You hand over the work without handing
-    over the keys.</p>
-    <p class="why"><b>One tiny homework, one time.</b> Neither Amazon nor Shopify
-    knows what you actually pay for your product (Shopify's cost per item is a start, not the landed cost). So your welcome email includes a simple cost
-    template (unit cost, freight, lead time) and a secure upload link. One row per SKU, five
-    minutes tops. Estimates are totally fine.</p>
-    <p class="fallback">Rather send files than grant a seat? No problem. Reply to your welcome
-    email and we'll set you up with a secure upload link. It works just as well. It's just
-    fifteen minutes of exporting we'd rather do for you.</p>
+    <p class="why">Want it gone? Removing it takes a minute on that same screen, any day you choose; the service
+    pauses until it is back. The narrow scope is the point: you hand over the work without handing over the
+    keys.</p>
+    <p class="fallback">Not ready to grant it yet? Then nothing goes live in your account. Your files still come
+    through the upload page, and your first full read and your plan do not wait for the seat.</p>
   </div>
 
   <div class="panel">
-    <span class="step-no">Step 2 · Put your kickoff on the calendar</span>
+    <span class="step-no">Step 3 · Put your kickoff on the calendar</span>
     <h2>Book the kickoff. See your plan.</h2>
-    <p style="margin-top:10px">Here's what happens once your seat goes live. The models run on
-    your files, your first full read is recorded, and your 90-day plan is drafted straight from it. On this
-    call, you see the plan: your quarterly targets, plus the three or four moves that get you
-    there. Then we set your standing yes: which moves we make without asking, and exactly
-    where your veto sits. And before anything starts, we go through how your Record counts a
-    dollar (<a href="/terms#how-a-dollar-counts">terms §3</a>), so the rules are agreed while
+    <p>Forty-five minutes. Your first full read is where it starts: on the call you see the 90-day plan drafted
+    from it, your quarterly targets and the three or four moves that get there. We set your standing mandate:
+    which moves we make without asking, and exactly where your veto sits. And before any move, we go through how
+    your Record counts a dollar (<a href="/terms#how-a-dollar-counts">terms §3</a>), so the rules are agreed while
     there is no number on it.</p>
     <div class="calendly-mount" id="cal-mount"></div>
     <p class="cal-fallback">Calendar not loading? <a id="cal-link" href="https://calendly.com/hubricon/new-meeting" rel="noopener">Book directly here.</a></p>
   </div>
 
   <div class="panel">
-    <span class="step-no">Step 3 · What happens next</span>
-    <h2>Here's exactly what happens next.</h2>
+    <span class="step-no">What happens next</span>
+    <h2>In order, and when.</h2>
     <div class="timeline">
-      <div class="t-step"><span class="when">First</span><span><b>Your first full read, on video.</b> Twenty thousand simulations per SKU. Every fee decomposed. Your demand curves, fitted. You'll see what your account is leaking, and what it's worth.</span></div>
-      <div class="t-step"><span class="when">Kickoff call</span><span><b>Your 90-day plan, presented.</b> Targets, the three or four moves, and your standing yes. Agreed on one call.</span></div>
-      <div class="t-step"><span class="when">Weeks 1–2</span><span><b>First moves go live</b> in your account. Pricing steps and ad trims, each with the expected dollars stated before we touch a thing.</span></div>
-      <div class="t-step"><span class="when">Every 2 weeks</span><span><b>One email, three days before anything goes live</b> — you hold the veto. Then a short Profit Brief every two weeks: what we found, what we moved, what it earned, plus your running Profit Record total. That's your entire time cost.</span></div>
-      <div class="t-step"><span class="when">Every month after</span><span><b>Each month decides itself.</b> About a week after a month ends, your Profit Record measures what it earned. More than $6,000, and that month is invoiced by email: ACH, net-7. Less, and the month is free, with nothing carried. No card on file. Month to month. Cancel any time, and we true up on the way out.</span></div>
+      <div class="t-step"><span class="when">Your files in</span><span><b>Your first full read</b>, Profit Brief No. 001:
+      every SKU's true net margin, your fees taken apart, your demand curves, a letter and a short video. It
+      publishes in Hubricon when your core files are in, or 24 hours after your last upload.</span></div>
+      <div class="t-step"><span class="when">Kickoff</span><span><b>Your 90-day plan and your standing mandate</b>,
+      agreed on one call.</span></div>
+      <div class="t-step"><span class="when">Mondays</span><span><b>Move notices</b> come from the weekly pass. Each
+      names the move and its expected dollars at least three days before it goes live. Reply no to any of them;
+      silence is a yes only inside your mandate. A week with nothing worth moving sends nothing.</span></div>
+      <div class="t-step"><span class="when">Every 2 weeks</span><span><b>A Profit Brief</b>: a short video and a
+      letter. What we found, what moved, what it earned, and your Profit Record's running total.</span></div>
+      <div class="t-step"><span class="when">Each month after</span><span><b>Each month decides itself.</b> About a
+      week after a month ends, your Profit Record measures what it earned. More than $6,000, and that month is
+      invoiced by email: ACH, net 7. Less, and the month is free, with nothing carried. No card on file. Month to
+      month. Cancel any time by one email, and we true up on the way out.</span></div>
     </div>
   </div>
 
@@ -146,7 +183,7 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
     <span class="label" style="display: block; margin-bottom: var(--s-3)">Answers you shouldn't have to ask for</span>
     <div class="faq">
       <div><h3>When do I actually pay?</h3>
-    <p>Never in month one. After that, only for a month that cleared the fee. When a month ends, your
+    <p>Never in the Proving Month. After that, only for a month that cleared the fee. When a month ends, your
     Profit Record measures what every move earned in it, on that month's own exports. More than $6,000,
     and that month's invoice arrives by email: ACH, net-7, $6,000 flat, no card on file, nothing renews
     on its own. $6,000 or less, and the month is free: no invoice, no credit, nothing carried. Cancel with
@@ -154,19 +191,23 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
     that does not clear comes back to your bank.</p></div>
       <div><h3>What can you change in my account, exactly?</h3>
         <p>Only what your standing yes allows (the terms call it the standing mandate). That means bounded
-        price steps, capped at 5% per cycle with your Buy Box (Amazon) or conversion rate (Shopify) watched
-        while the step is live, plus ad corrections. Anything bigger needs
-        your explicit yes first. And you hold a veto on everything.</p></div>
+        price steps, capped at 5% per SKU per two-week cycle, plus ad corrections. On Amazon your Buy Box is
+        watched while a step is live; on Shopify a step is read on your orders, the units it sells at the new
+        price in the exports that follow. Anything bigger needs your explicit yes first. And you can say no to
+        any move before it goes live.</p></div>
       <div><h3>What does the free month cost me, really?</h3>
-        <p>If we deliver, we'll ask you for two things, once, on a private page we send you when the
-        Profit Record has earned the asking: a short testimonial, and permission to publish your results with
-        the numbers anonymized. Each is a separate yes, and no is fine. That's the whole price. On that
-        page is also a link of your own — a founder you send gets the same free month, and when their first invoice stands after their own day 30, your next month is on us.</p></div>
+        <p>Once your Profit Record shows proven value, we ask you for two things, once, on a private page: a short
+        testimonial, and permission to publish your results with the numbers anonymized. Each is a separate yes,
+        and no is fine. That's the whole price. On that page is also a link of your own: a founder you send gets
+        the same free month, and if they stay past their own thirtieth day, one month of your fee is credited
+        against your next invoice (or a free month is added if you are not yet invoiced), applied when their first
+        invoice is raised after that day and never before (<a href="/terms">terms §9</a>).</p></div>
       <div><h3>How do I revoke access?</h3>
-        <p>Amazon: Settings → User Permissions → remove the user. Shopify: Settings → Users →
-        Collaborators → remove. One click, effective instantly. And
-        your data plus your full Profit Record export free, any time. Yes, including the day you
-        cancel.</p></div>
+        <p>Amazon: Settings → User Permissions → remove the user. Shopify: Settings → Users → the Hubricon
+        user → Actions → Remove. Meta: Settings → Users → Partners → remove us. Google Ads: Admin → Access and
+        security → remove the user. Effective at once. Without the store seat the service pauses until it is back;
+        without the ad access, only ad moves do. Your data and your full Profit Record export are yours, free, any
+        time, including the day you cancel.</p></div>
       <div><h3>Who do I talk to?</h3>
         <p>The founder. Always. Reply to any Hubricon email and it lands with the person who
         builds your models and answers for every brief. There is no support tier.</p></div>
@@ -175,13 +216,13 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 
   <footer>
     Hubricon · Managed Profit · www.hubricon.com · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a><br>
-    This page is your onboarding home. Bookmark it. Everything else lands in your inbox — one email
-    before anything goes live, a short video after, every two weeks.
+    This page is your home after the yes. Bookmark it. Everything else comes by email: a notice before any move
+    goes live, and a Profit Brief every two weeks.
   </footer>
 </div>
 
 <script>
-/* The onboarding email links here with ?p=shopify / ?p=both, so a client
+/* The letter after the yes links here with ?p=shopify / ?p=both, so a client
    reads the seat they actually have to grant instead of scrolling past the
    other platform's instructions. No parameter shows both, as it always did. */
 (function(){
@@ -205,8 +246,7 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
 
 /* Calendly inline, same loader pattern as the landing page.
    The kickoff is its own 45-minute Calendly event named "Kickoff"; Calendly kept its
-   auto-generated slug "new-meeting" when it was renamed. The 15-minute analyst-intro
-   was the wrong shape for presenting a 90-day plan. */
+   auto-generated slug "new-meeting" when it was renamed. */
 const KICKOFF_URL = "https://calendly.com/hubricon/new-meeting";
 document.getElementById("cal-link").href = KICKOFF_URL;
 (function(){

@@ -58,33 +58,51 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
                 health: dict | None = None, value: dict | None = None, recovery: dict | None = None,
                 forecast_rows: list[dict] | None = None, risk: dict | None = None,
                 anomaly_summary: dict | None = None, inv_econ: dict | None = None,
-                data_quality: dict | None = None) -> dict:
+                data_quality: dict | None = None, proven: dict | None = None) -> dict:
     """key -> {"value": formatted string, "label": what it is}. Only formatted
-    strings leave this function; the model never sees a raw float."""
+    strings leave this function; the model never sees a raw float.
+
+    The Record has one figure (value.proven_since_day_one, passed as `proven`)
+    and it is the only Profit Record total in the table: `proven` with its
+    words in `proven_basis`. A caller with only the old pair of numbers gets
+    them read as what they are, measured so far."""
+    from .value import MEASURED_LABEL, proven_words
+    if proven is None:
+        proven = {"usd": float(ledger_measured or 0), "basis": "measured", "label": MEASURED_LABEL,
+                  "moves": int(ledger_count or 0)}
+    words, aside = proven_words(proven)
     facts = {
         "company": {"value": company, "label": "client company name"},
         "first_name": {"value": first_name or "there", "label": "client first name"},
         "issue_number": {"value": f"{issue_number:03d}", "label": "this issue's number"},
-        "ledger_measured": {"value": _money(ledger_measured), "label": "proven to date on the Profit Record"},
-        "ledger_count": {"value": str(ledger_count), "label": "number of moves issued to date"},
+        "proven": {"value": _money(proven.get("usd")),
+                   "label": "the Profit Record's one figure to date (always followed by proven_basis)"},
+        "proven_basis": {"value": words + (f"; {aside}" if aside else ""),
+                         "label": "what the Profit Record figure is, verbatim, written right after {{proven}}"},
+        "ledger_count": {"value": str(int(proven.get("moves") or 0)),
+                         "label": "number of moves measured on the Profit Record to date"},
     }
-    # Split the ledger by how each dollar was proved, so a letter can say
+    # Split the figure by how each dollar was proved, so a letter can say
     # "confirmed by Amazon's own record" only where that is literally true.
     # validate() already rejects any number the fact table did not supply; this
     # makes the honest phrasings available rather than leaving the model to
-    # characterise a total it cannot see behind.
-    tiers = {}
-    for d in directives:
-        if d.get("measured_impact_usd") is None:
-            continue
-        tiers.setdefault(d.get("attribution") or "unrecorded", []).append(float(d["measured_impact_usd"]))
+    # characterise a total it cannot see behind. The split comes from the same
+    # basis as the figure; once a dispute has taken dollars off a month the
+    # per-move split no longer adds up to it, so none is offered.
+    tiers: dict[str, list[float]] = {}
+    if "by_attribution" in proven:
+        for tier, usd in (proven.get("by_attribution") or {}).items():
+            tiers[tier] = [float(usd)]
+    else:
+        for d in directives:
+            if d.get("measured_impact_usd") is None:
+                continue
+            tiers.setdefault(d.get("attribution") or "unrecorded", []).append(float(d["measured_impact_usd"]))
     for tier, label in (("direct", "measured from a counterparty's own record (Amazon confirmed it)"),
                         ("isolated", "measured on the exact line the move named"),
                         ("attributable", "measured against a stated counterfactual")):
         if tiers.get(tier):
             facts[f"measured_{tier}"] = {"value": _money(sum(tiers[tier])), "label": label}
-            facts[f"measured_{tier}_count"] = {"value": str(len(tiers[tier])),
-                                               "label": f"moves {label}"}
     if deltas:
         facts["net_latest"] = {"value": _money(deltas["latest"]["net"]), "label": "true net profit, latest period"}
         facts["revenue_latest"] = {"value": _money(deltas["latest"]["revenue"]), "label": "revenue, latest period"}
@@ -115,14 +133,19 @@ def build_facts(company: str, first_name: str, deltas: dict | None, directives: 
             facts[f"health_driver_{i}"] = {"value": d["label"].lower(), "label": f"health driver {i} name"}
             facts[f"health_driver_{i}_dollars"] = {"value": _money(d["dollars_at_stake"]), "label": f"dollars behind health driver {i}"}
     if value:
-        facts["value_total"] = {"value": _money(value["value_total"]), "label": "proven to date on the Profit Record (moves + recovered)"}
+        # `value` is the ledger (value.compute). Its own total is NOT offered: it
+        # is a second "proven" figure, and the letter has one ({{proven}}).
         basis = value.get("value_interval_basis") or {}
-        if float(basis.get("banded_share_of_measured") or 0) >= 0.5 and value.get("value_p5") is not None:
+        if (proven.get("basis") == "measured" and float(basis.get("banded_share_of_measured") or 0) >= 0.5
+                and value.get("value_p5") is not None):
             facts["value_range"] = {"value": f"{_money(value['value_p5'])} to {_money(value['value_p95'])}",
-                                    "label": "the range around the proven figure, from the measured moves' own distributions"}
-        facts["fees_paid"] = {"value": _money(value["fees_paid"]), "label": "fees invoiced to date"}
-        if value.get("roi_multiple") is not None:
-            facts["roi_multiple"] = {"value": f"{float(value['roi_multiple']):.1f}×", "label": "value delivered divided by fees paid"}
+                                    "label": "the range around the Profit Record figure, from the measured moves' own distributions"}
+        from .value import billed_to_date
+        billed = billed_to_date(value)
+        facts["fees_billed"] = {"value": _money(billed), "label": "billed to date (invoiced)"}
+        if billed > 0:
+            facts["roi_multiple"] = {"value": f"{float(proven.get('usd') or 0) / billed:.1f}×",
+                                     "label": "the Profit Record figure divided by what was billed"}
         facts["identified_unbanked"] = {"value": _money(value["identified_unbanked"]), "label": "found and filed, not yet measured or paid"}
     if recovery and recovery.get("status") == "ok":
         s = recovery["summary"]
@@ -211,7 +234,7 @@ LETTER_STRUCTURE = """A Profit Brief of five to seven short paragraphs:
 3. The one thing to understand this month — the critical alert if there is one, otherwise the largest opportunity (recovery claims, anomalies, inventory bleed, or the Health Score's top driver), with its dollars.
 4. One short paragraph per move waiting for the client's yes: the instruction verbatim, then its expected impact placeholder. After the last one, a single sentence on how the Profit Record measures them.
 5. The Health Score and grade, naming the drivers costing the most.
-6. The record: value delivered against fees paid, and what is identified but not yet banked.
+6. The record, in one sentence: '{{proven}} {{proven_basis}}' across the measured moves, against what was billed, and what is found and filed but not yet banked. That is the only Profit Record total; never name another.
 7. Sign-off."""
 
 

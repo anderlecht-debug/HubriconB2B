@@ -26,8 +26,10 @@ credit note on the invoice.
 
 **Trued up at the exit.** The day Managed Profit ends, every billed month is
 checked once more against its own number after disputes: unpaid invoices for
-months that no longer clear are voided, paid ones refunded. The month in progress
-when a client leaves is never invoiced.
+months that no longer clear are voided, paid ones refunded, the refund issued
+within seven days of the client's email. The month in progress when a client
+leaves is never invoiced. Every client who leaves gets one exit letter, billed or
+not: that they have left, the true-up, their export, and what to keep watching.
 
 **The recovery-only plan.** The smaller door: no retainer, a share of the
 reimbursements Amazon actually paid on claims we filed, invoiced at month end.
@@ -338,43 +340,238 @@ def exit_true_up(rows: list[dict], months: list[dict], invoices: list[dict], cli
             "gap": round(sum(still_billed(i) for i in voids) + sum(a for _, a in refunds), 2)}
 
 
-def exit_subject(t: dict) -> str:
-    if t["gap"] <= 0:
-        return "Trued up: every month you paid for cleared the fee"
-    parts = ([f"${t['voided']:,.0f} voided"] if t["voided"] else []) + \
-            ([f"${t['refunded']:,.2f} refunded to your bank"] if t["refunded"] else [])
-    return "Trued up: " + ", ".join(parts)
+def exit_refund_owed(rows: list[dict], invoices: list[dict], client: dict, today: date | None = None) -> float:
+    """What the true-up would refund if it ran now: the exit clock's dollars, for
+    the digest and `hubricon promises`."""
+    from . import monthly
+    return exit_true_up(rows, monthly.billing_months(client, today or date.today()), invoices, client)["refunded"]
 
 
-def exit_email_blocks(t: dict, portal_url: str) -> list[dict]:
-    lines = []
-    for inv, v in t["judged"]:
-        if v is None:
-            continue
-        lines.append(f"{month_label(v['month'])}: ${v['total']:,.0f} on your Record against the "
-                     f"${v['fee']:,.0f} fee — {'cleared' if v['clears'] else 'did not clear'}")
-    blocks = [{"p": "Managed Profit has ended, and as promised we checked every month we billed once more, each "
-                    "against its own number."}]
-    if lines:
-        blocks.append({"ol": lines})
-    if t["gap"] <= 0:
-        blocks.append({"p": "Every month you paid for cleared the fee, so nothing changes hands. The month that was "
-                            "in progress when you left is never invoiced."})
+# -- the exit letter ----------------------------------------------------------------------
+#
+# Every client who said yes and then left gets one letter, once, billed or not:
+# that they have left and nothing more is invoiced; the true-up, if anything was
+# ever billed; their export; and what to keep watching. Before 2026-10-01 a
+# client who left during the Proving Month heard nothing, and the letter's
+# "Download your full Profit Record" button opened the portal, which has no
+# download.
+
+EXIT_REFUND_DAYS = 7          # terms §5: "We issue that refund within seven days of your email."
+EXIT_VOID_NOTE = "voided at exit"             # an unpaid invoice the client had received, voided at the exit
+EXIT_UNSENT_NOTE = "voided unsent at exit"    # a held draft for the month in progress: never sent, never seen
+WATCH_MAX_LINES = 12
+# A reimbursement pays once; it is not a leak that holds, so it has nothing to watch.
+WATCH_SKIP_KINDS = {"recovery_filing"}
+
+
+def exit_facts(rows: list[dict], months: list[dict], invoices: list[dict], client: dict) -> dict:
+    """What the true-up did, read back from what it wrote: the unpaid invoices it
+    voided carry EXIT_VOID_NOTE and the refund is on the client row
+    (exit_refund_usd). A letter that could not go in the pass that moved the
+    money says exactly the same thing when it goes on a later one."""
+    mine = [i for i in invoices if not _is_recovery(i)]
+    voided = [i for i in mine if i.get("gate_note") == EXIT_VOID_NOTE]
+    judged = []
+    for inv in sorted((i for i in mine if i.get("status") in BILLED_STATUSES or i in voided), key=_inv_key):
+        m = invoice_month(inv, months)
+        v = month_verdict(rows, m, client) if m else None
+        how = ("voided" if inv in voided else "stands" if v and v["clears"]
+               else "refunded" if inv.get("status") == "paid" else "stands")
+        judged.append((inv, v, how))
+    v_usd = round(sum(float(i.get("amount_due") or 0) for i in voided), 2)
+    r_usd = round(float(client.get("exit_refund_usd") or 0), 2)
+    return {"judged": judged, "n_voids": len(voided), "voided": v_usd, "refunded": r_usd,
+            "gap": round(v_usd + r_usd, 2), "billed": bool(judged),
+            "open_cleared": any(how == "stands" and inv.get("status") == "open" for inv, _, how in judged),
+            "recovery_open": any(_is_recovery(i) and i.get("status") == "open" for i in invoices)}
+
+
+def facts_from_true_up(t: dict, client: dict) -> dict:
+    """The same shape as exit_facts, from a true-up not yet run: the dry run's preview."""
+    void_ids = {id(i) for i in t["voids"]}
+    refund_ids = {id(i) for i, _ in t["refunds"]}
+    judged = [(inv, v, "voided" if id(inv) in void_ids else "refunded" if id(inv) in refund_ids else "stands")
+              for inv, v in t["judged"]]
+    return {"judged": judged, "n_voids": len(t["voids"]), "voided": t["voided"], "refunded": t["refunded"],
+            "gap": t["gap"], "billed": bool(judged),
+            "open_cleared": any(how == "stands" and inv.get("status") == "open" for inv, _, how in judged),
+            "recovery_open": False}
+
+
+def _skus(ev: dict, n: int = 3) -> str:
+    skus = [str(s) for s in (ev.get("skus") or [])]
+    if not skus:
+        return ""
+    return ", ".join(skus[:n]) + (f" and {len(skus) - n} more" if len(skus) > n else "")
+
+
+def watch_line(d: dict, usd: float, when: str) -> str:
+    """One leak still held shut, worded as the condition that brings it back,
+    from the move's own stored evidence. The dollars are what the Record
+    measured that month for holding it: a fact, never a forecast."""
+    kind = d.get("kind") or ""
+    ev = d.get("evidence") or {}
+    held = f"Holding it measured ${usd:,.0f} in {when}."
+    item = ev.get("sku") or ev.get("item_id")
+    b, c = ev.get("baseline"), ev.get("current")
+    if kind == "fee_anomaly" and item and b is not None and c is not None and float(c) > float(b):
+        what = "FBA fee" if ev.get("metric") == "fba_fee_per_unit" else "fees"
+        return (f"If the {what} on {item} goes back up to ${float(c):.2f} a unit, the ${float(c) - float(b):.2f} "
+                f"a unit step returns. {held}")
+    if kind == "referral_anomaly" and item and b is not None and c is not None and float(c) > float(b):
+        return (f"If the referral fee on {item} goes back to {float(c):.1%}, the extra "
+                f"{(float(c) - float(b)) * 100:.1f} points return. {held}")
+    if kind == "price_step" and item and ev.get("p0") and ev.get("p_new"):
+        return f"If {item} goes back to ${float(ev['p0']):.2f}, the step to ${float(ev['p_new']):.2f} is undone. {held}"
+    if kind == "ad_bleed_terms":
+        n = len(ev.get("terms") or [])
+        return (f"If the {n or 'negative-matched'} search term{'' if n == 1 else 's'} that spent with no sales "
+                f"{'is' if n == 1 else 'are'} switched back on, that spend returns. {held}")
+    if kind == "campaign_trim" and ev.get("campaign_name"):
+        cap = ev.get("budget_after_negation") or ev.get("breakeven_used")
+        above = f" goes back above ${float(cap):,.0f} a day" if cap else "'s daily budget goes back up"
+        return f"If “{ev['campaign_name']}”{above}, the spend past its break-even returns. {held}"
+    if kind == "spend_step" and item and c is not None and b is not None:
+        return f"If daily spend on “{item}” steps back up from ${float(b):,.0f} to ${float(c):,.0f}, the step returns. {held}"
+    if kind == "branded_pause":
+        return f"If exact-match ads on your own brand terms go back on, that spend returns. {held}"
+    if kind == "low_inventory_fee" and _skus(ev):
+        return f"If {_skus(ev)} fall under 28 days of cover again, Amazon's low-inventory-level fee returns. {held}"
+    if kind == "aged_surcharge" and _skus(ev):
+        return (f"If units of {_skus(ev)} sit in Amazon's warehouses past 181 days again, the aged-inventory "
+                f"surcharge returns. {held}")
+    if kind == "peak_storage_premium" and _skus(ev):
+        return (f"If {_skus(ev)} carry the same stock into October to December, the peak storage premium "
+                f"returns. {held}")
+    if kind == "sku_exit" and item:
+        return f"If {item} is restocked on the old terms, the loss it was making returns. {held}"
+    if kind == "negative_margin_sku" and item:
+        return f"If {item}'s price, ad spend or costs go back to where they were, its loss per unit returns. {held}"
+    subject = item or ev.get("campaign_name") or _skus(ev) or "your account"
+    return f"If the change on {subject} is undone, what it held shut returns. {held}"
+
+
+def watch_lines(rows: list[dict], directives: list[dict], limit: int = WATCH_MAX_LINES) -> tuple[str | None, list[str]]:
+    """What to keep watching after leaving: one line per leak still held shut in
+    the latest month the Record closed (a leak that stopped holding measures
+    nothing that month, so it is not here), largest first. Read from rows
+    already stored, record_months and the moves themselves; measured dollars
+    only. Returns the month's label and the lines."""
+    if not rows:
+        return None, []
+    last = max(int(r["month_index"]) for r in rows)
+    latest = [r for r in rows if int(r["month_index"]) == last]
+    when = month_label({"start": date.fromisoformat(str(latest[0]["month_start"])[:10]),
+                        "end": date.fromisoformat(str(latest[0]["month_end"])[:10])})
+    by_id = {d.get("id"): d for d in directives or []}
+    held: dict[str, float] = {}
+    for r in latest:
+        moves = r.get("moves") or []
+        if isinstance(moves, str):
+            moves = json.loads(moves)
+        for mv in moves:
+            usd = float(mv.get("usd") or 0)
+            d = by_id.get(mv.get("directive_id"))
+            if mv.get("verdict") != "measured" or usd <= 0 or not d or d.get("kind") in WATCH_SKIP_KINDS:
+                continue
+            held[d["id"]] = held.get(d["id"], 0.0) + usd
+    ordered = sorted(held.items(), key=lambda kv: -kv[1])
+    lines = [watch_line(by_id[k], usd, when) for k, usd in ordered[:limit]]
+    if len(ordered) > limit:
+        lines.append(f"And {len(ordered) - limit} more, each on your Profit Record export.")
+    return when, lines
+
+
+def exit_subject(f: dict) -> str:
+    if not f["billed"]:
+        return "You've left Managed Profit: nothing more is invoiced"
+    if f["gap"] <= 0:
+        return "You've left Managed Profit: every month we invoiced cleared the fee"
+    parts = ([f"${f['voided']:,.0f} voided"] if f["voided"] else []) + \
+            ([f"${f['refunded']:,.2f} refunded"] if f["refunded"] else [])
+    return "You've left Managed Profit: " + ", ".join(parts)
+
+
+def exit_letter(f: dict, left_on: date, export: dict | None, watch: tuple[str | None, list[str]],
+                issued_on: date | None = None, refund_due: date | None = None,
+                plan: str | None = None) -> tuple[str, list[dict]]:
+    """The exit letter: (subject, blocks). `f` is exit_facts (or
+    facts_from_true_up for a preview). `export` is {"url", "expires_at"} for a
+    stored export, {"pending": True} when an export request was opened instead,
+    or None. `issued_on` is the day the refund was issued, `refund_due` the
+    exit clock's date (seven days from their email), when known."""
+    blocks = [{"p": f"You have left Managed Profit, as of {left_on:%B %-d}. Nothing more will be invoiced, the month "
+                    f"in progress included, and from that day we make no changes in your account. The seat we used "
+                    f"is yours to revoke whenever you like."}]
+    if not f["billed"]:
+        if plan == "recovery":
+            blocks.append({"p": "Recovery Only has no monthly fee, so there is nothing to true up."
+                                + (" The share invoice already sent, for reimbursements Amazon paid before you "
+                                   "left, stands as sent." if f.get("recovery_open") else "")})
+        else:
+            blocks.append({"p": "Nothing was ever charged, so there is nothing to true up and nothing is owed."})
     else:
-        done = []
-        if t["voided"]:
-            done.append(f"the unpaid invoice{'s' if len(t['voids']) > 1 else ''} worth ${t['voided']:,.0f} "
-                        f"{'are' if len(t['voids']) > 1 else 'is'} void, so there is nothing more to pay")
-        if t["refunded"]:
-            done.append(f"${t['refunded']:,.2f} is refunded to the bank account it came from; Stripe attaches "
-                        f"a credit note to the invoice, and ACH refunds take a few business days to land")
-        blocks.append({"p": "For the months that did not clear: " + "; and ".join(done) + "."})
-    blocks += [
-        {"button": "Download your full Profit Record", "url": portal_url},
-        {"p": "Your data and the full Record export stay free to request, any day. Thank you for the chance to "
-              "earn it. If any of these numbers looks wrong, reply and tell me."},
-    ]
-    return blocks
+        lines = []
+        for inv, v, how in f["judged"]:
+            if v is None:
+                continue
+            verdict = ("It did not clear, so its invoice is void." if how == "voided" else
+                       "It did not clear, so it is refunded in full." if how == "refunded" else
+                       "It cleared, so it stands." if v["clears"] else "It did not clear.")
+            lines.append(f"{month_label(v['month'])}: ${v['total']:,.0f} on your Record against the "
+                         f"${v['fee']:,.0f} fee. {verdict}")
+        blocks.append({"p": "As the terms promise, every month we invoiced was checked once more against its own "
+                            "number, after any dispute:"})
+        if lines:
+            blocks.append({"ol": lines})
+        if f["gap"] <= 0:
+            blocks.append({"p": "Every month we invoiced cleared the fee, so nothing changes hands"
+                                + (", and an invoice for a month that cleared stays due on its usual terms"
+                                   if f.get("open_cleared") else "") + "."})
+        if f["voided"]:
+            many = f["n_voids"] > 1
+            blocks.append({"p": f"The unpaid invoice{'s' if many else ''} worth ${f['voided']:,.0f} "
+                                f"{'are' if many else 'is'} void: there is nothing more to pay on "
+                                f"{'them' if many else 'it'}."})
+        if f["refunded"]:
+            when = ""
+            if issued_on:
+                when = f" We issued it on {issued_on:%B %-d}"
+                if refund_due:
+                    when += (f", within the seven days the terms promise from your email."
+                             if issued_on <= refund_due else
+                             f". That is later than the seven days the terms promise from your email "
+                             f"({refund_due:%B %-d}), and I am sorry it was late.")
+                else:
+                    when += "."
+            blocks.append({"p": f"${f['refunded']:,.2f} is refunded to the bank account it was paid from, with a "
+                                f"credit note on the invoice.{when} An ACH refund then takes a few business days to "
+                                f"reach your account."})
+    if export and export.get("url"):
+        blocks += [
+            {"p": "Everything we hold on you is in one file: the exports you sent, every table we computed from "
+                  "them, your whole Profit Record, and the seal file with the verifier that lets anyone check it."},
+            {"button": "Download your full Profit Record", "url": export["url"]},
+            {"p": f"The link works for seven days, until {export['expires_at']:%B %-d}, and anyone holding it can "
+                  f"download the file, so forward it with care. After that, reply any day and a fresh one is made, "
+                  f"free."},
+        ]
+    elif export and export.get("pending"):
+        blocks.append({"p": "Your full Profit Record export, with everything we hold on you, is on its way: it "
+                            "reaches this inbox within one working day."})
+    else:
+        blocks.append({"p": "Your full Profit Record export stays free, any day: reply to this email and it reaches "
+                            "you within one working day."})
+    when, lines = watch
+    if lines:
+        blocks += [
+            {"p": f"What to keep watching. These leaks were still held shut in {when}, the last month your Record "
+                  f"closed. Each line says what would bring one back, and what holding it measured that month:"},
+            {"ol": lines},
+        ]
+    blocks.append({"p": "Thank you for the chance to earn it. If any of these numbers looks wrong, reply and tell "
+                        "me."})
+    return exit_subject(f), blocks
 
 
 # -- the recovery-only plan --------------------------------------------------------------

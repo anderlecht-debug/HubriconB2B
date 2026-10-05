@@ -209,7 +209,7 @@ def test_the_page_labels_every_figure_and_draws_the_scale_curve():
     assert re.search(r"supabase\s+\$25\.00\s+placeholder", text)
     assert "GitHub runner minutes  31 billed [a]: 5 job runs recorded [m]" in text
     assert "only 5 of the 779 scheduled runs were recorded [m], so these minutes are a floor" in text
-    assert "by hand on the Mac: 0.8 minutes [m], not billed" in text
+    assert "by hand on the founder's machine: 0.8 minutes [m], not billed" in text
     assert re.search(r"elevenlabs characters\s+3,000\s+\$0\.60\s+3,000 of 1,000 included \(founder's figure\), "
                      r"past the quota", text)
     assert re.search(r"anthropic claude-fable-5-1 output_tokens\s+20,000\s+\$1\.00\s+placeholder rate", text)

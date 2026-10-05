@@ -61,6 +61,10 @@ class _Q:
         self.filters.append(lambda r: r.get(col) == val)
         return self
 
+    def neq(self, col, val):
+        self.filters.append(lambda r: r.get(col) != val)
+        return self
+
     def in_(self, col, vals):
         vals = list(vals)
         self.filters.append(lambda r: r.get(col) in vals)

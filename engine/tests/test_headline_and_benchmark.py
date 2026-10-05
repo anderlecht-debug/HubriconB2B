@@ -28,15 +28,21 @@ def test_the_headline_carries_a_band_when_most_of_the_dollars_have_one():
     assert ledger["value_total"] == 900.0
     assert ledger["value_p5"] == pytest.approx(150.0 + 200.0) and ledger["value_p95"] == pytest.approx(1600.0 + 200.0)
     assert ledger["value_interval_basis"]["banded_share_of_measured"] == pytest.approx(700 / 900, abs=1e-4)
-    line = value.record_line(ledger)
+    measured = value.proven_from(CLIENT, ledger, [], date(2026, 9, 1))
+    line = value.record_line(ledger, measured)
     assert "(range $350–$1,800)" in line
-    facts = narrate.build_facts("Acme", "Ann", None, [], [], 900.0, 3, 1, value=ledger)
+    facts = narrate.build_facts("Acme", "Ann", None, [], [], 900.0, 3, 1, value=ledger, proven=measured)
     assert facts["value_range"]["value"] == "$350 to $1,800"
+    # The band belongs to the measured figure: once a month has closed it is not printed.
+    months = value.proven_from(CLIENT, ledger, [{"month_index": 0, "month_end": "2026-08-31",
+                                                 "attributed_usd": 700.0, "moves": []}], date(2026, 9, 1))
+    assert "(range" not in value.record_line(ledger, months)
+    assert "value_range" not in narrate.build_facts("Acme", "Ann", None, [], [], 0, 0, 1, value=ledger, proven=months)
     # recoveries only: a point, and the basis says no dollar carried a band
     only = value.compute(CLIENT, [ds[2]], [], [], today=date(2026, 9, 1))
     assert only["value_p5"] == only["value_p95"] == only["value_total"]
     assert only["value_interval_basis"]["banded_share_of_measured"] == 0.0
-    assert "(range" not in value.record_line(only)
+    assert "(range" not in value.record_line(only, value.proven_from(CLIENT, only, [], date(2026, 9, 1)))
     assert "value_range" not in narrate.build_facts("Acme", "Ann", None, [], [], 200.0, 1, 1, value=only)
 
 

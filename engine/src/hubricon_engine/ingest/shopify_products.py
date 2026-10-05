@@ -10,9 +10,18 @@ line is not a variant.
 
 The export is the snapshot the store keeps: Variant Inventory Qty is
 on-hand at the moment of export, so the upload is snapshot-scoped and
-period_start is the snapshot date. Variant Grams rides along in raw for
-the day a shipping-rate table needs it. asin holds the product Handle,
-which bridges a Shopify SKU to its product page the way an ASIN does.
+period_start is the snapshot date. asin holds the product Handle, which
+bridges a Shopify SKU to its product page the way an ASIN does.
+
+THE VARIANT'S OWN NUMBERS (2026-10-01). Variant Price, Variant Compare At
+Price and Variant Grams are parsed and kept on every row this export writes,
+as raw["_variant"] = {price, compare_at_price, grams, handle, product_name,
+status, snapshot_date}: the two prices are what models/shopify_findings.py
+reads for "sells below its own compare-at" (the opener that booked the call,
+carried past the yes), and the grams for the parcel-weight observation. No
+column was added for them, so no migration: raw is the row's own record of
+what the export said. A variant that states neither a cost nor a quantity
+writes no row at all, so its compare-at is not kept either.
 
 Shopify prints Variant Inventory Qty only for a store with ONE location; a
 multi-location store exports the column blank and sends its stock through
@@ -46,11 +55,15 @@ SPEC = {
     "grams": {"synonyms": ["variantgrams"], "cleaner": clean_money},
     "inventory_qty": {"synonyms": ["variantinventoryqty", "variantinventoryquantity"], "cleaner": clean_int},
     "price": {"synonyms": ["variantprice"], "cleaner": clean_money},
+    "compare_at_price": {"synonyms": ["variantcompareatprice", "compareatprice"], "cleaner": clean_money},
     "cost": {"synonyms": ["costperitem", "variantcost", "cost"], "cleaner": clean_money},
     "image_src": {"synonyms": ["imagesrc"], "cleaner": clean_str},
     "status": {"synonyms": ["status"], "cleaner": clean_str},
 }
-PRODUCT_FIELDS = ("title", "vendor", "product_type")
+# Printed on a product's first line only, so forward-filled by Handle. Status
+# is the product's (active, draft, archived), not the variant's.
+PRODUCT_FIELDS = ("title", "vendor", "product_type", "status")
+VARIANT_KEY = "_variant"   # where raw keeps the parsed variant numbers
 DEFAULT_OPTION_VALUE = "Default Title"  # Shopify's placeholder on a single-variant product
 CHANNEL = "shopify"
 
@@ -81,6 +94,11 @@ def parse(df: pd.DataFrame, upload: dict):
         variants += 1
         name = product_name(product["title"],
                             (record["option1_value"], record["option2_value"], record["option3_value"]))
+        source = {**source, VARIANT_KEY: {
+            "price": record["price"], "compare_at_price": record["compare_at_price"], "grams": record["grams"],
+            "handle": handle, "product_name": name, "status": (product["status"] or "").lower() or None,
+            "snapshot_date": upload["period_start"],
+        }}
         if record["cost"] is not None:
             cogs_rows.append(
                 {

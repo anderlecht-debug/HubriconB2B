@@ -56,6 +56,17 @@
 .gate-note { font-size: var(--t-14); color: var(--ink-3); margin-top: var(--s-3); }
 .calendly-mount { min-height: 700px; margin-top: var(--s-5); }
 
+/* Before your call: what the call is and what to have ready, by where they sell. */
+.prep { display: grid; gap: var(--s-4); margin-top: var(--s-5); padding: var(--s-5); background: var(--paper); border-radius: var(--radius); }
+.prep-if { font-size: var(--t-14); color: var(--ink-3); }
+.prep h3 { font-size: var(--t-20); letter-spacing: -0.018em; }
+.prep p { font-size: var(--t-16); }
+.prep ol { list-style: none; counter-reset: prep; display: grid; gap: var(--s-3); border-top: 1px solid var(--rule); padding-top: var(--s-4); }
+.prep li { counter-increment: prep; position: relative; padding-left: var(--s-6); font-size: var(--t-16); }
+.prep li::before { content: counter(prep); position: absolute; left: 0; top: 0; font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.prep li b { display: block; }
+.prep .prep-private { font-size: var(--t-14); color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: var(--s-4); }
+
 .saying-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); margin-top: var(--s-7); }
 .saying-grid blockquote { border-top: 1px solid var(--ink); padding-top: var(--s-4); font-size: var(--t-18); color: var(--ink); }
 .saying-grid cite { display: block; margin-top: var(--s-4); font-style: normal; font-size: var(--t-14); color: var(--ink-3); }
@@ -95,7 +106,7 @@
     </div>
     <div class="details">
       <ul class="facts">
-        <li>We open your reports with you and price what public pages can't show: aged stock, low-inventory fees, an ad target set wrong.</li>
+        <li id="fact-reports">We open your own reports with you, Seller Central or Shopify, and price what public pages can't show.</li>
         <li>If the arithmetic won't clear our bill at your size, we tell you on the call.</li>
         <li>No card, no contract to sign on the call.</li>
       </ul>
@@ -131,6 +142,43 @@
   </div>
 </footer>
 
+<!-- What the call is and what to have ready, by the "Where you sell" answer. The page reads
+     this block and scripts/apply-page.test.mjs holds it to what /call can actually read, so a
+     Shopify-only seller is never promised an Amazon reading. -->
+<script type="application/json" id="prep-copy">
+{
+  "facts": {
+    "Amazon": "We open your Seller Central reports with you and price what public pages can't show: aged stock, low-inventory fees, an ad target set wrong.",
+    "Shopify": "We open your Shopify Products export with you and price what it shows: prices sitting under their own compare-at, and parcels just past a pound line.",
+    "Both": "We open your Seller Central reports and your Shopify Products export with you and price what public pages can't show, on both: aged stock, an ad target set wrong, prices under their own compare-at, parcels just past a pound line."
+  },
+  "call": {
+    "Amazon": "Twenty minutes: we open your own Seller Central reports together and price what public pages can't show, aged stock heading for day 271, the low-inventory fee, units just past a fee edge and ads spending past break-even, in your own dollars.",
+    "Shopify": "Twenty minutes: we open your Shopify Products export together and price what it shows, prices sitting under their own compare-at and parcels just past a USPS pound line, in your own dollars.",
+    "Both": "Twenty minutes: we open your Seller Central reports and your Shopify Products export together and price what public pages can't show, on both, in your own dollars."
+  },
+  "steps": {
+    "Amazon": [
+      { "do": "Request Fee Preview and Inventory Age in Seller Central now.", "how": "Amazon builds both on request, which can take a while, so ask today rather than on the call: Reports, Fulfillment, Fee Preview; and Reports, Fulfillment, Manage Inventory Health (Inventory Age). Download each as .txt or .csv." },
+      { "do": "Have your ads report ready.", "how": "Advertising, Reports, Sponsored Products: the campaign or search-term report, by day, as .csv." },
+      { "do": "Know two numbers.", "how": "Your landed cost as a % of price (unit cost, freight and packaging) and the ACoS you aim for. If you keep a cost per SKU, bring it as a CSV with a sku and a landed cost." }
+    ],
+    "Shopify": [
+      { "do": "Be signed in to Shopify admin on the computer you take the call from.", "how": "With permission to export products: Products, Export, All products, as CSV. We open it together." },
+      { "do": "Know your landed cost as a % of price.", "how": "Unit cost, freight and packaging. If Cost per item is filled in on your products it comes with the export, and a CSV with a sku and a landed cost works too." }
+    ],
+    "Both": [
+      { "do": "Request Fee Preview and Inventory Age in Seller Central now.", "how": "Amazon builds both on request, which can take a while, so ask today rather than on the call: Reports, Fulfillment, Fee Preview; and Reports, Fulfillment, Manage Inventory Health (Inventory Age). Download each as .txt or .csv." },
+      { "do": "Have your ads report ready.", "how": "Advertising, Reports, Sponsored Products: the campaign or search-term report, by day, as .csv." },
+      { "do": "Be signed in to Shopify admin on the computer you take the call from.", "how": "With permission to export products: Products, Export, All products, as CSV." },
+      { "do": "Know two numbers.", "how": "Your landed cost as a % of price (unit cost, freight and packaging) and the ACoS you aim for. If you keep a cost per SKU, bring it as a CSV with a sku and a landed cost." }
+    ]
+  },
+  "private": "Nothing is uploaded on the call; it is priced in your browser.",
+  "when": "The time and the link to join are in the email Calendly sends you.",
+  "returning": "If you picked a time on Calendly:"
+}
+</script>
 <script>
 "use strict";
 
@@ -161,7 +209,13 @@ const QUESTIONS = [
 ];
 
 /* The site refuses nobody. A brand under the $1M band, or on someone else's label,
-   is tagged fit:below and the call settles it. */
+   is tagged for the call to settle. The tag rides the booking's utm_content, which a
+   prospect can read in the address bar when the widget is blocked, so it travels as a
+   code, never a verdict on them:
+     fit:a7  in the band: their own brand, $1M a year or more   (was fit:core)
+     fit:q2  below it: under $1M, or wholesale or arbitrage     (was fit:below)
+   The founder and the inbox routine read the code on the Calendly booking. */
+const FIT_CODE = { core: "a7", below: "q2" };
 function fitTag(a) {
   if (a.rev === "Under $1M") return "below";
   if (a.model === "Wholesale / reseller" || a.model === "Arbitrage") return "below";
@@ -178,9 +232,20 @@ try {
 function refCode() {
   try { const r = sessionStorage.getItem("hubricon_ref") || ""; return REF_OK.test(r) ? r : ""; } catch (e) { return ""; }
 }
+/* The film, clip or post that first brought this visitor (assets/site.js keeps it 90 days as
+   localStorage "hubricon_src"), so the spec's gate out of phase 2, booked calls from published
+   content, is counted per piece (engine: referral.source_from_answers). A short code, nothing else. */
+const SRC_OK = /^[a-z0-9][a-z0-9._-]{0,47}$/;
+function sourceCode() {
+  try {
+    const kept = JSON.parse(localStorage.getItem("hubricon_src") || "null");
+    if (kept && SRC_OK.test(kept.code) && (Date.now() - Date.parse(kept.at)) / 864e5 <= 90) return kept.code;
+  } catch (e) {}
+  return "";
+}
 function bookingUrl(a) {
-  const ref = refCode();
-  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${fitTag(a)}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "");
+  const ref = refCode(), src = sourceCode();
+  const meta = `rev:${a.rev}|model:${a.model}|skus:${a.skus}|fit:${FIT_CODE[fitTag(a)]}|channel:${a.channel}` + (ref ? `|ref:${ref}` : "") + (src ? `|src:${src}` : "");
   return CALENDLY_AUDIT + "?utm_source=hubricon&utm_medium=gate&utm_content=" + encodeURIComponent(meta);
 }
 
@@ -201,6 +266,54 @@ function loadCalendly() {
   return calendlyReady;
 }
 
+/* -- Before your call ------------------------------------------------------------- */
+const PREP = JSON.parse(document.getElementById("prep-copy").textContent);
+const CHANNELS = ["Amazon", "Shopify", "Both"];
+const channelOf = (c) => (CHANNELS.includes(c) ? c : "Both");
+const BOOKED_KEY = "hubricon_booked";
+const BOOKED_DAYS = 14;
+function remember(channel) {
+  try { localStorage.setItem(BOOKED_KEY, JSON.stringify({ channel: channelOf(channel), at: Date.now() })); } catch (e) {}
+}
+function recall() {
+  try {
+    const b = JSON.parse(localStorage.getItem(BOOKED_KEY) || "null");
+    if (b && Date.now() - b.at < BOOKED_DAYS * 864e5) return b;
+    localStorage.removeItem(BOOKED_KEY);
+  } catch (e) {}
+  return null;
+}
+function prepPanel(channel, returning) {
+  const c = channelOf(channel);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const panel = el("div", "prep");
+  panel.id = "prep";
+  if (returning) panel.append(el("p", "prep-if", PREP.returning));
+  const h = el("h3", null, "Before your call.");
+  h.tabIndex = -1;
+  panel.append(h, el("p", null, PREP.call[c]));
+  const ol = el("ol");
+  for (const s of PREP.steps[c]) { const li = el("li"); li.append(el("b", null, s.do), document.createTextNode(s.how)); ol.append(li); }
+  panel.append(ol, el("p", "prep-private", `${PREP.private} ${PREP.when}`));
+  return panel;
+}
+let booked = "";
+function showPrep(channel) {
+  remember(channel);
+  document.getElementById("gate-step").textContent = "Booked";
+  document.getElementById("gate-title").textContent = "You're booked.";
+  document.getElementById("prep")?.remove();
+  const panel = prepPanel(channel, false);
+  const mount = document.querySelector(".calendly-mount");
+  if (mount) mount.before(panel); else document.getElementById("gate").append(panel);
+  panel.querySelector("h3").focus({ preventScroll: true });
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+// Back from Calendly (the widget was blocked, or they booked and came back): what to have ready,
+// said with an "if", because this page cannot see whether a time was picked.
+const back = recall();
+if (back) document.getElementById("gate-title").after(prepPanel(back.channel, true));
+
 const form = document.getElementById("gate-form");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 form.innerHTML = QUESTIONS.map((q) => `
@@ -215,8 +328,11 @@ form.innerHTML = QUESTIONS.map((q) => `
 const submit = form.querySelector("button[type=submit]");
 const answers = () => Object.fromEntries(QUESTIONS.map((q) => [q.key, form.elements[q.key].value]));
 let started = false;
+const factReports = document.getElementById("fact-reports");
 form.addEventListener("change", () => {
   if (!started) { started = true; track("gate_start", { h: headline }); }
+  const ch = form.elements.channel.value;
+  if (PREP.facts[ch]) factReports.textContent = PREP.facts[ch];
   submit.disabled = !QUESTIONS.every((q) => form.elements[q.key].value);
   loadCalendly();   // every completed form books, so fetch the widget on the first answer
 });
@@ -225,6 +341,7 @@ form.addEventListener("submit", async (ev) => {
   const a = answers();
   if (!QUESTIONS.every((q) => a[q.key])) return;
   track("gate_submit", { fit: fitTag(a), h: headline, ...a });
+  booked = a.channel;
   const url = bookingUrl(a);
   document.getElementById("gate-step").textContent = "Step 2 of 2";
   const title = document.getElementById("gate-title");
@@ -238,12 +355,16 @@ form.addEventListener("submit", async (ev) => {
     window.Calendly.initInlineWidget({ url: url + "&" + EMBED_THEME, parentElement: mount, resize: true });
     track("calendly_opened", { section: "apply" });
   } else {
+    remember(a.channel);   // so the page can say what to have ready if they come back
     location.href = url;   // the widget was blocked: go straight to Calendly
   }
 });
 
 window.addEventListener("message", (e) => {
-  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") track("calendly_scheduled", { h: headline });
+  if (e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled") {
+    track("calendly_scheduled", { h: headline });
+    showPrep(booked);
+  }
 });
 
 /* -- Real results and consented words, only once they exist --------------------- */

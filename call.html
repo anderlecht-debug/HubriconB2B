@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On the call — Hubricon</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Your own Seller Central reports and Shopify export, read in this browser. Nothing is uploaded.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<style>
+/* /call: the prospect's own reports, read in this browser, the leaks only they show.
+   Every value is a token from /assets/hubricon.css. */
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding-block: var(--s-5); }
+.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
+.wordmark svg { width: 26px; height: 26px; }
+
+.head { padding-block: var(--s-6) var(--s-7); display: grid; gap: var(--s-4); }
+.head h1 { font-size: var(--t-display-m); max-width: 18ch; }
+.head .lede { max-width: 58ch; }
+.private { display: inline-flex; gap: var(--s-2); align-items: center; font-size: var(--t-14); color: var(--ink-2); padding: var(--s-2) var(--s-3); border: 1px solid var(--rule-2); border-radius: 999px; width: fit-content; }
+.private::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+
+.inputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
+.drop { position: relative; display: grid; gap: var(--s-2); align-content: start; padding: var(--s-5); border: 1px dashed var(--rule-2); border-radius: var(--radius); cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease; }
+.drop:hover, .drop.over { border-color: var(--ink); background: var(--paper-2); }
+.drop:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.drop b { color: var(--ink); font-size: var(--t-16); }
+.drop .for { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.drop .where { font-size: var(--t-14); color: var(--ink-3); line-height: 1.45; }
+.drop .where a { position: relative; z-index: 1; color: var(--ink-2); }
+.drop .state { font-size: var(--t-14); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.drop.loaded { border-style: solid; border-color: var(--ink); }
+.drop.bad { border-style: solid; }
+.drop.bad .state { color: var(--ink); font-weight: var(--strong); }
+.also { grid-column: 1 / -1; margin-top: var(--s-2); padding-top: var(--s-4); border-top: 1px solid var(--rule); font-size: var(--t-14); color: var(--ink-3); }
+.also[hidden], .knob[hidden], .big[hidden] { display: none; }
+.knobs { margin-top: var(--s-4); display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-6); align-items: end; }
+.knob { display: grid; gap: var(--s-1); }
+.knob label { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); }
+.knob .hint { font-size: var(--t-12); color: var(--ink-3); }
+.knob .field { display: flex; align-items: center; gap: var(--s-2); }
+.knob input { width: 96px; min-height: 44px; padding: 0 var(--s-3); font: var(--regular) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); font-variant-numeric: tabular-nums; }
+
+.results { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
+.part { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
+.part[hidden] { display: none; }
+.results > *, .headline > *, .stat { min-width: 0; }
+.results[hidden] { display: none; }
+.headline { display: grid; gap: var(--s-3); padding-bottom: var(--s-6); border-bottom: 1px solid var(--rule); }
+.headline .big { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
+.headline .big .est { font-size: var(--t-14); }
+.headline p { max-width: 64ch; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+.stat { display: grid; gap: var(--s-1); align-content: start; padding: var(--s-4) 0; border-top: 2px solid var(--ink); }
+.stat .n { font-size: var(--t-24); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.stat .n.money { color: var(--blue); }
+.stat .k { font-size: var(--t-14); color: var(--ink-2); line-height: 1.4; }
+.stat .b { font-size: var(--t-12); color: var(--ink-3); }
+
+.leak h2 { font-size: var(--t-24); letter-spacing: -0.018em; }
+.leak .why { margin-top: var(--s-2); font-size: var(--t-16); color: var(--ink-2); max-width: 70ch; }
+.table-wrap { margin-top: var(--s-4); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+th, td { text-align: left; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { color: var(--ink-3); font-weight: var(--strong); white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.sku { color: var(--ink); font-weight: var(--strong); white-space: nowrap; }
+td.name { color: var(--ink-3); max-width: 28ch; }
+td .basis { display: block; font-size: var(--t-12); color: var(--ink-3); font-weight: var(--regular); }
+.empty { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
+
+.keep-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); }
+.keep { min-height: 44px; padding: 0 var(--s-5); font: var(--strong) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1.5px solid var(--ink); border-radius: var(--radius); cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
+.keep:hover { background: var(--ink); color: var(--paper); }
+.keep-bar span { font-size: var(--t-14); color: var(--ink-3); }
+.print-only { display: none; }
+.fine { margin-top: var(--s-8); padding-top: var(--s-5); border-top: 1px solid var(--rule); font-size: var(--t-14); color: var(--ink-3); max-width: 72ch; display: grid; gap: var(--s-2); }
+.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); margin-top: var(--section); font-size: var(--t-14); color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .inputs { grid-template-columns: minmax(0, 1fr); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* "Keep this reading": the same figures, with the same labels, on paper or as a PDF. Nothing
+   is generated or sent: the print dialog prints this page, with the drops and controls taken
+   away and a quiet mark, the date and what was read put in their place. */
+@media print {
+  @page { margin: 10mm 12mm; }
+  body, p, .headline p, .stat .k, .leak .why, td .basis { font-size: var(--t-12); line-height: 1.4; }
+  .top, .head, .reports, .keep-bar, .foot { display: none; }
+  .print-only { display: grid; }
+  .results, .part { margin-top: 0; gap: var(--s-4); }
+  .reading { gap: var(--s-1); padding-bottom: var(--s-3); border-bottom: 1px solid var(--ink); }
+  .reading .mark { display: inline-flex; align-items: center; gap: var(--s-2); font-weight: var(--strong); color: var(--ink-3); }
+  .reading .mark svg { width: 14px; height: 14px; }
+  .reading .what { font-size: var(--t-18); font-weight: var(--strong); color: var(--ink); }
+  .headline { gap: var(--s-1); padding-bottom: var(--s-3); }
+  .headline .big { font-size: var(--t-display-s); }
+  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); }
+  .stat { padding: var(--s-2) 0; border-top-width: 1px; }
+  .stat .n { font-size: var(--t-16); }
+  .stat .b { font-size: var(--t-12); }
+  .leak h2 { font-size: var(--t-14); }
+  td.name { max-width: none; }
+  .leak .why { font-size: var(--t-12); margin-top: var(--s-1); }
+  .table-wrap { overflow: visible; margin-top: var(--s-2); }
+  table { font-size: var(--t-12); line-height: 1.3; }
+  th, td { padding: 1px var(--s-2) 1px 0; }
+  .headline, .stat, tr { break-inside: avoid; }
+  .leak h2, .leak .why { break-after: avoid; }
+  .fine { margin-top: var(--s-4); padding-top: var(--s-3); font-size: var(--t-12); max-width: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="wrap top">
+  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+  <span class="label">On the call</span>
+</header>
+
+<main class="wrap">
+  <section class="head">
+    <h1>Your reports, priced while we talk.</h1>
+    <p class="lede" id="lede">Drop in your Seller Central reports, your Shopify exports, or both. This page reads them and prices the costs only your own data shows. On Amazon: aged stock heading for day 271, the low-inventory fee, units just past a fee edge, and ads spending past break-even. On Shopify: prices sitting under their own compare-at, and parcels just past a pound line. And for every Shopify variant, what it keeps after Shopify Payments and your cost, and the return on ad spend it needs to break even.</p>
+    <p class="private">Read in this browser. Nothing is uploaded; closing the tab forgets it.</p>
+  </section>
+
+  <section class="reports" aria-label="Your reports">
+    <div class="inputs">
+      <label class="drop" id="drop-inventory">
+        <input type="file" id="file-inventory" accept=".txt,.csv,.tsv,text/plain,text/csv" aria-describedby="where-inventory">
+        <span class="for">Amazon</span>
+        <b>Inventory Age</b>
+        <span class="where" id="where-inventory">Reports, Fulfillment, Manage Inventory Health. Download it as a .txt or .csv.</span>
+        <span class="state" id="state-inventory">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-fees">
+        <input type="file" id="file-fees" accept=".txt,.csv,.tsv,text/plain,text/csv" aria-describedby="where-fees">
+        <span class="for">Amazon</span>
+        <b>Fee Preview</b>
+        <span class="where" id="where-fees">Reports, Fulfillment, Fee Preview. Amazon's own measurement and fee for every SKU.</span>
+        <span class="state" id="state-fees">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-ads">
+        <input type="file" id="file-ads" accept=".txt,.csv,.tsv,text/plain,text/csv" aria-describedby="where-ads">
+        <span class="for">Amazon</span>
+        <b>Ad campaigns (optional)</b>
+        <span class="where" id="where-ads">Advertising, Reports, Sponsored Products, Campaign report by day, as .csv.</span>
+        <span class="state" id="state-ads">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-shopify">
+        <input type="file" id="file-shopify" accept=".csv,text/csv" aria-describedby="where-shopify">
+        <span class="for">Shopify</span>
+        <b>Products export</b>
+        <span class="where" id="where-shopify">Shopify admin, Products, Export, All products, as CSV. Price, compare-at, weight and Cost per item for every variant.</span>
+        <span class="state" id="state-shopify">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-orders">
+        <input type="file" id="file-orders" accept=".csv,text/csv" aria-describedby="where-orders">
+        <span class="for">Shopify</span>
+        <b>Orders export (optional)</b>
+        <span class="where" id="where-orders">Orders, Export, Orders by date, as CSV; Shopify emails it once a range is set, so export it before the call. It turns the per-unit figures into a month. Only order, date, status, refund, SKU, quantity, price and discount are read: no name, email or address.</span>
+        <span class="state" id="state-orders">Drop the file here, or tap to choose it.</span>
+      </label>
+      <label class="drop" id="drop-cost">
+        <input type="file" id="file-cost" accept=".csv,.txt,.tsv,text/csv,text/plain" aria-describedby="where-cost">
+        <span class="for">Either</span>
+        <b>Landed cost by SKU (optional)</b>
+        <span class="where" id="where-cost">Our <a href="/cogs-template.csv" download>cost template</a>, or any CSV with a sku and a landed cost. A SKU listed here is priced at its own cost.</span>
+        <span class="state" id="state-cost">Drop the file here, or tap to choose it.</span>
+      </label>
+    </div>
+    <div class="knobs">
+      <div class="knob">
+        <label for="cost">Landed cost</label>
+        <div class="field"><input id="cost" type="number" inputmode="decimal" min="0" max="95" step="1" placeholder="25"><span>% of price</span></div>
+        <span class="hint">Unit cost, freight and packaging. Break-even uses it for every SKU without its own cost (Cost per item on Shopify, or a row in your cost file).</span>
+      </div>
+      <div class="knob" id="knob-target">
+        <label for="target">Your target ACoS</label>
+        <div class="field"><input id="target" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="30"><span>%</span></div>
+        <span class="hint">The ad cost of sale you aim for.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="results" id="results" hidden aria-live="polite">
+    <div class="print-only reading" id="reading">
+      <span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon · hubricon.com</span>
+      <span class="what">A reading of your own reports</span>
+      <span id="reading-when"></span>
+      <span id="reading-files"></span>
+      <span id="reading-typed"></span>
+    </div>
+    <div class="keep-bar">
+      <button class="keep" type="button" id="keep">Keep this reading</button>
+      <span>Print it, or save it as a PDF from the print dialog: these figures and their labels, dated, without the controls. Nothing is sent anywhere.</span>
+    </div>
+
+    <div class="part" id="amazon" hidden>
+    <div class="headline">
+      <span class="label">In your reports, a month</span>
+      <span class="big" id="total"></span>
+      <p id="total-note"></p>
+    </div>
+    <div class="stats" id="tiles"></div>
+
+    <section class="leak" id="leak-aged" hidden>
+      <h2>Aged stock, and the 271-day line</h2>
+      <p class="why" id="why-aged"></p>
+      <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th class="num">Units 181+ days</th><th class="num">Surcharge now, a month</th><th class="num">More at the next snapshot</th><th>How we know</th></tr></thead><tbody id="rows-aged"></tbody></table></div>
+    </section>
+
+    <section class="leak" id="leak-low" hidden>
+      <h2>The low-inventory-level fee</h2>
+      <p class="why">Amazon charges this on each unit shipped while both your 30-day and 90-day days of supply sit under 28, at a rate set by the item's size tier. Size tier and supply come from your own reports where they carry them.</p>
+      <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th class="num">Days of supply</th><th class="num">Fee a unit</th><th class="num">A month</th><th>Amazon says it applies</th></tr></thead><tbody id="rows-low"></tbody></table></div>
+    </section>
+
+    <section class="leak" id="leak-edges" hidden>
+      <h2>Units just past a fee edge</h2>
+      <p class="why">From Amazon's own measurement of each unit, against its published 2026 card: a weight band, a price band, a size tier or a box, and what one step back would save on the units you actually shipped last month.</p>
+      <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th>The edge</th><th class="num">A unit</th><th class="num">Units, last 30 days</th><th class="num">A month</th></tr></thead><tbody id="rows-edges"></tbody></table></div>
+    </section>
+
+    <section class="leak" id="leak-ads" hidden>
+      <h2>Ads against break-even</h2>
+      <p class="why" id="why-ads"></p>
+      <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Amazon's fees</th><th class="num">Landed cost</th><th class="num">Break-even ACoS</th><th class="num">Left per $100 of ad sales, at your target</th></tr></thead><tbody id="rows-ads"></tbody></table></div>
+    </section>
+
+    </div>
+
+    <div class="part" id="shopify" hidden>
+      <div class="headline">
+        <span class="label" id="shop-label">In your Shopify export, a unit and a parcel</span>
+        <span class="big" id="shop-total" hidden></span>
+        <p id="shop-note"></p>
+      </div>
+      <div class="stats" id="shop-tiles"></div>
+
+      <section class="leak" id="leak-anchor">
+        <h2>Below their own compare-at</h2>
+        <p class="why" id="why-anchor"></p>
+        <div class="table-wrap"><table><thead id="head-anchor"><tr><th>SKU</th><th>Product</th><th class="num">Price</th><th class="num">Compare-at</th><th class="num">The gap, a unit</th><th class="num">Under it by</th></tr></thead><tbody id="rows-anchor"></tbody></table></div>
+      </section>
+
+      <section class="leak" id="leak-parcel">
+        <h2>Parcels just past a pound line</h2>
+        <p class="why" id="why-parcel"></p>
+        <div class="table-wrap"><table><thead id="head-parcel"><tr><th>SKU</th><th>Product</th><th class="num">Weight</th><th class="num">Over the line by</th><th>Bills at, not</th><th class="num">A parcel, nearest zone to farthest</th></tr></thead><tbody id="rows-parcel"></tbody></table></div>
+      </section>
+
+      <section class="leak" id="leak-keep">
+        <h2>What each variant keeps, and the ROAS that breaks even</h2>
+        <p class="why" id="why-keep"></p>
+        <div class="table-wrap"><table><thead id="head-keep"></thead><tbody id="rows-keep"></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="fine">
+      <p>Every figure here is arithmetic on your own reports and the published schedules (Amazon's fee card, USPS Ground Advantage's commercial rates, Shopify Payments' standard card rate), the same arithmetic Hubricon's engine runs. The aged-inventory surcharge is Amazon's own estimate wherever your report carries it. Anything marked estimate rests on the last 30 days holding, on the landed cost you typed, or, on Shopify, on Shopify Payments' standard 2.9% + 30¢ (your plan or processor may charge less or more), on a mix of zones only your orders show, and, where your Orders export is in, on its pace holding.</p>
+      <p>This is a reading of what your reports show today, not a result and not a promise.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">Hubricon · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></div>
+</footer>
+<script type="module" src="/assets/call.js"></script>
+</body>
+</html>

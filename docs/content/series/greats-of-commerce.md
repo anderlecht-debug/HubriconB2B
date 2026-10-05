@@ -204,7 +204,7 @@ full below; the rest are treatments, to be researched and written in the same wa
 
 | # | Title | The great | The mechanism | The modern leak | Pillar |
 |---|---|---|---|---|---|
-| 1 | **The Rate Card That Built Sears** | Sears, Roebuck; Rosenwald; the 1913 Parcel Post | A delivery price that climbs in steps by weight and distance | Fulfilment fees charged in weight steps: the staircase | 1 · the money you can't see |
+| 1 | **What One More Ounce Cost** | Sears, Roebuck; Rosenwald; the 1913 Parcel Post | A delivery price that climbs in steps by weight and distance | Fulfilment fees charged in weight steps: the staircase | 1 · the money you can't see |
 | 2 | **The Dime** | F. W. Woolworth | A fixed price point decided first, products made to fit it, and the ceiling that inflation broke | Price points and thresholds; pricing by elasticity, not habit | 3 · pricing |
 | 3 | **The Corner** | Clarence Saunders, Piggly Wiggly | A profitable business undone by cash with a date on it | The cash conversion cycle; the trough on day N | 2 · capital and cash |
 | 4 | **Money Back** | Aaron Montgomery Ward | Trust at a distance: the guarantee that made buying from strangers safe | Returns, reimbursements and the claims nobody files | 1 · the money you can't see |
@@ -233,13 +233,13 @@ Each pilot validates clean against the tier-D guard: no typed number, no banned 
 every hook's first sentence, a re-hook at least every 40 seconds, one close, and a data source on
 every chart.
 
-### Pilot 1 · The rate card that built Sears (pillar 1, about 30 minutes)
+### Pilot 1 · What one more ounce cost (pillar 1, about 32 minutes)
 
-`greats-01-sears-parcel-post` · 4,362 spoken words · 49 beats · 134 sourced history facts, plus the case study's and the demo engine's figures.
+`greats-01-sears-parcel-post` · 4,692 spoken words · 49 beats · 147 sourced history facts, plus the case study's and the demo engine's figures.
 
 | Act | Time | What happens |
 |---|---|---|
-| Cold open | 0:00–1:13 | Baby James Beagle mailed for 15 cents, a figure that is exactly the 1913 card's local rate for an 11-pound parcel. The question: what does one more ounce cost? |
+| Cold open | 0:00–1:13 | Baby James Beagle mailed for 15 cents, against regulations, a figure that is exactly the 1913 card's local rate for an 11-pound parcel. The question: what does one more ounce cost? The viewer is asked to guess (most guess a sliver), and the guess is paid off at the fraction. |
 | I · What a pound cost | 1:17–6:10 | Mail at $320 a ton against freight at $1.90; Rural Free Delivery brings the mailbox but not the parcel; the express lobby; Wilson at Gloucester; the catalogue telling farmers to split a freight minimum; Sears, Roebuck, Rosenwald. |
 | II · The machine before the card | 6:15–10:15 | The West Side plant and Doering's fifteen-minute schedule, which took years to bed in; the sewing machines shipped five times; the guarantee that refunded transport. |
 | III · The staircase / who paid for the ounce | 10:19–19:52 | The midnight cups; the Act's "fraction of a pound"; the flood of parcels; the catalogue's own postage cut from 24 cents to 10; the turn (customers paid the postage, so they could see the card); the farmer's pencil worked through; Bavaria, Kansas; the card that could redraw itself; the myth of "five times the orders" corrected against the audited accounts. |
@@ -250,9 +250,9 @@ Object: the parcel on a scale. Bridge: the 1913 rate table holds still while tod
 Myths corrected on screen: Sears invented the money-back guarantee; parcel post built the Sears
 machine; "five times as many orders"; the staged babies-in-mailbags photographs.
 
-### Pilot 2 · The dime (pillar 3, about 29 minutes)
+### Pilot 2 · The dime (pillar 3, about 29 minutes; title: "Woolworth's Kept Its Dime Ceiling for More Than 50 Years. Here's What It Never Told Them")
 
-`greats-02-the-dime` · 4,285 spoken words · 46 beats · 106 sourced history facts, plus the demo
+`greats-02-the-dime` · 4,233 spoken words · 44 beats · 118 sourced history facts, plus the demo
 engine's elasticity and price-move figures.
 
 | Act | Time | What happens |
@@ -261,17 +261,17 @@ engine's elasticity and price-move figures.
 | I · One price | 1:27–5:35 | The clerk; Moore's five-cent table (he ran it, he didn't invent it); Utica's failure and "take my store to the people"; the charm of one price; the 25-cent test he ran once and dropped; the chain. |
 | II · Price first | 5:38–11:17 | The arithmetic of a nickel: a gross at $7.20, and the margin that changes under every line; the one-price store as a portfolio; cash and the auditors; the ring redesigned to sell at a dime; "throw the toys in vats"; the price as the advertising; "Profit is what we are working for, not sales or glory"; the Cathedral of Commerce. |
 | III · The ceiling | 11:20–18:37 | Holding a dime through the war by shrinking the unit (one stocking for ten cents); net earnings from 9.43% to 5.46% of sales, with the tax and the reserve stated; the West's 15-cent ceiling (a different price in a different place is not a price test); profit per store halved; the 1932 test in some stores, in deflation, not inflation; the promise of January 1933, broken within three years. |
-| IV · Your dime | 18:41–27:41 | The price you set once and left; elasticity in plain English; why a raise that loses units can pay; the hill; the demo products the fit refused because their price never moved; the honest range; why waiting doesn't help; a 5% step with its range and its 4% chance of loss; when the price is the brand; test in time, not place; price first, cost second. |
-| V · The method and the honest limit | 27:41–29:20 | This week's steps; where it breaks; the soft close; the Price Curve course; "Your prices can. Move one." |
+| IV · Your dime | 18:26–26:20 | The price you set once and left; elasticity shown on log scales, then named, with the worked product's own slope (−7.35) pulled toward the catalogue's (−2.74); why a raise that loses units can pay, on the margin before ads; the hill, whose top the model will not mark for any demo product, only the direction uphill; the products the fit refused; the honest range, which crosses zero; why movement, not months, narrows it; the biggest recommended step ($16 a month at the middle of a 90% band, a 1% chance of loss); what a held price costs: small here, because the model puts 98% on the demo already being priced about right, and unknowable for the dimes; when the price is the brand; testing in time. |
+| V · The method and the honest limit | 26:20–29:20 | This week's steps, the course's whole method (units a day, the 2% rule, the log fit and its range, the minus-one rule, the best-price formula, a predicted step); where by hand breaks; the soft close; the Price Curve course; "Your prices can." |
 
 Object: the dime, pushed toward three times (its face, its edge at the turn, its date at the lesson),
 then a modern shelf label in the same framing. Bridge: every item in the store on a single vertical
 price line, while a modern catalogue's own price curves rise around it. Myths corrected on screen:
 Woolworth invented the nickel counter; nothing ever cost more than a dime; inflation broke the dime.
 
-### Pilot 3 · The corner (pillar 2, about 27 minutes)
+### Pilot 3 · The corner (pillar 2, about 28 minutes)
 
-`greats-03-the-corner` · 4,003 spoken words · 43 beats · 103 sourced history facts, plus the demo
+`greats-03-the-corner` · 4,027 spoken words · 42 beats · 101 sourced history facts, plus the demo
 engine's cash-horizon and risk figures.
 
 | Act | Time | What happens |
@@ -280,8 +280,8 @@ engine's cash-horizon and risk figures.
 | I · The turnstile | 1:43–4:59 | The grocer who knew the supply side; counter service; the 1916 opening (staff "politely refused to select merchandise"); the turnstile and the patent's "required to review the entire assortment"; not the first self-service store, the one that spread. |
 | II · The machine | 5:03–7:15 | The business, name and patent sold for $550,000 and stock; licensing for a royalty; the stores company listed in 1922 to retire its bank loans; profit up from $208,662 to $653,058; a grocery as a cash machine. |
 | III · The corner and the date | 7:19–18:31 | Short selling explained; the raid; $10 million raised, secured on the stock; the Corporation's cash ($967,016 to $22,724) turned into stock; the instalment plan and its due dates; corner day; the delisting, with both sides of the deadline dispute; the settlement at $100; the trap that closes on both sides; the calendar (September 1, $2.5 million); the stores shrinking; resignation, Detroit, bankruptcy; the Pink Palace (his creditors took it); Time's "cemetery at one end and a river at the other". |
-| IV · Your calendar | 18:34–25:48 | Profit is about a month, cash is about a day; the demo catalogue profitable and growing; the trough of $95,201 on day 13; the clocks of the cash cycle; the trough identical on all 10,000 paths because it falls before the next payout; Saunders' September in a modern catalogue (one dated payment breaks every path; the same payment later breaks none); why months-of-expenses rules miss it; the levers, each a date; correlated bad months. |
-| V · The method and the honest limit | 25:04–27:30 | This week's day-by-day calendar and "what single payment would break me?"; where by-hand breaks; the soft close; the Capital & Cash course; "Find your date." |
+| IV · Your calendar | 18:40–25:13 | Profit is about a month, cash is about a day; the demo catalogue, profitable and holding more than eight months of fixed costs: is it safe? (the viewer commits); the trough of $85,242, 13 days out, set by ten wires that leave today; the clocks of the cash cycle, with the course's 21 days from a sale to the bank; the same low point on every one of 10,000 paths, because it falls before the next payout; Saunders' September in a modern catalogue (one payment a little over the trough, due that day, breaks every path; the same payment on the last day comes out of a balance above $323,149 on all but the worst twentieth); why months-of-expenses rules miss it; the levers, each a date. |
+| V · The method and the honest limit | 25:13–28:00 | This week's day-by-day calendar and "what single payment would break me?"; where by-hand breaks; the soft close; the Capital & Cash course; "Find your date." |
 
 Object: the turnstile, pushed toward in the cold open, seen as a trap at the turn, and returned to
 at the end beside a modern calendar page in the same framing. Bridge: a single cash line across a

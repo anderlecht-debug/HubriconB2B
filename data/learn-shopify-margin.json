@@ -1,0 +1,181 @@
+{
+ "about": "The Shopify Margin's worked example: an invented Shopify product priced on USPS Ground Advantage's and Shopify Payments' published rates, as Hubricon's engine carries them (scripts/learn/shopify_margin.py).",
+ "example": {
+  "what": "an invented stoneware pour-over set",
+  "price": 42.0,
+  "compare_at": 56.0,
+  "packed_oz": 16.6,
+  "landed_cost": 11.8,
+  "packing": 1.4,
+  "plan": "basic",
+  "orders": 640,
+  "free_line": 50.0,
+  "share_over": 0.55,
+  "catalogue_below": 0.62
+ },
+ "cards": {
+  "usps_source": "USPS Ground Advantage Commercial prices, Notice 123, effective 2026-07-12 (pe.usps.com)",
+  "payments_source": "Shopify Payments online card rates by plan, United States (help.shopify.com), verified 2026-09-09",
+  "payments": {
+   "basic": [
+    0.029,
+    0.3
+   ],
+   "grow": [
+    0.027,
+    0.3
+   ],
+   "advanced": [
+    0.025,
+    0.3
+   ],
+   "plus": [
+    0.0225,
+    0.3
+   ]
+  },
+  "gateway_surcharge": {
+   "basic": 0.02,
+   "grow": 0.01,
+   "advanced": 0.005,
+   "plus": 0.002
+  },
+  "usps": {
+   "0": [
+    6.93,
+    6.94,
+    7.3,
+    7.46,
+    7.69,
+    7.86,
+    8.07,
+    8.4
+   ],
+   "16": [
+    7.61,
+    7.68,
+    8.0,
+    8.15,
+    8.74,
+    9.63,
+    9.98,
+    10.67
+   ],
+   "32": [
+    7.99,
+    8.08,
+    8.26,
+    8.51,
+    9.95,
+    11.58,
+    12.0,
+    12.87
+   ],
+   "48": [
+    8.64,
+    8.66,
+    9.14,
+    9.67,
+    11.57,
+    13.59,
+    14.36,
+    15.75
+   ]
+  }
+ },
+ "order": {
+  "fee": 1.518,
+  "label_now": [
+   7.99,
+   8.08,
+   8.26,
+   8.51,
+   9.95,
+   11.58,
+   12.0,
+   12.87
+  ],
+  "label_under": [
+   6.93,
+   6.94,
+   7.3,
+   7.46,
+   7.69,
+   7.86,
+   8.07,
+   8.4
+  ],
+  "billed": "2 lb",
+  "contribution": [
+   19.292,
+   19.202,
+   19.022,
+   18.772,
+   17.332,
+   15.702,
+   15.282,
+   14.412
+  ],
+  "contribution_under": [
+   20.352,
+   20.342,
+   19.982,
+   19.822,
+   19.592,
+   19.422,
+   19.212,
+   18.882
+  ],
+  "contribution_lo": 14.412,
+  "contribution_hi": 19.292,
+  "fixed_before_label": 27.282
+ },
+ "pound": {
+  "edge": 16,
+  "over_by": 0.6,
+  "step": [
+   0.96,
+   4.47
+  ],
+  "month_lo": 614.4,
+  "month_hi": 2860.8,
+  "trim_to": 15.9
+ },
+ "free": {
+  "orders_over": 352,
+  "subsidy_lo": 2812.48,
+  "subsidy_hi": 4530.24,
+  "label_lo": 7.99,
+  "label_hi": 12.87
+ },
+ "anchor": {
+  "per_unit": 14.0,
+  "share": 0.25,
+  "catalogue_share": 0.62,
+  "policy": true,
+  "shown_month": 8960.0,
+  "step5": 44.1
+ },
+ "ads": {
+  "roas_lo": 2.18,
+  "roas_hi": 2.91,
+  "cpa_lo": 14.41,
+  "cpa_hi": 19.29,
+  "roas_under_lo": 2.06,
+  "roas_under_hi": 2.22
+ },
+ "zones": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8
+ ],
+ "sources": {
+  "engine/src/hubricon_engine/cold/priors.py": "c8762ef5b42da4558d6812e28ccd91fb50dbebd77ed627753c5273dd0feb48ab",
+  "ratecard.json": "1119e7ab66b2d67e4839a6532488766e8e7a521653a0646523d75c25e1658fab"
+ }
+}

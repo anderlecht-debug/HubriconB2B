@@ -19,11 +19,11 @@ def connect() -> Client:
 
 def resolve_client(db: Client, ident: str) -> dict:
     """Accepts a client uuid, uuid prefix, or contact email."""
-    q = db.table("clients").select(
-        "id, company_name, contact_email, status, contact_name, brand_terms, goals, "
-        "cash_on_hand, cash_as_of, monthly_fixed_costs, monthly_fee_usd, free_months, created_at, "
-        "platform, shopify_domain"
-    )
+    # The whole row. A fixed column list left out stripe_*, retainer_started_at,
+    # plan and exit_*, so `hubricon cancel` never ended a Stripe subscription and
+    # printed "never billed", and `retainer --show`, `ledger` and `value` ran as if
+    # the client had never said yes (found 2026-10-01).
+    q = db.table("clients").select("*")
     if "@" in ident:
         rows = q.eq("contact_email", ident.lower()).execute().data
     else:

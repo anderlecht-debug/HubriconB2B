@@ -1,0 +1,10 @@
+{
+  "file": "learn/files/hubricon-price-curve.xlsx",
+  "file_sha256": "68356d6a4b8407cb8c01a285055df6e16fee1ec52a13db8cbc491dfb71afacbe",
+  "engine_sha256": {
+    "engine/src/hubricon_engine/models/elasticity.py": "b059dd73e84e2543736e4b8d68fac62270b781b2b092bdf9279f48c49673336d",
+    "engine/src/hubricon_engine/models/pricing_engine.py": "1ab85b441f00362fab303406a0a151e8d34875f1bb32a99d9f19bdd3cb4ec14b"
+  },
+  "verified_on": "2026-10-01",
+  "golden_cases": 80
+}
