@@ -52,6 +52,12 @@ def _cues(words: list[dict]) -> list[dict]:
         cur.append(w)
     if cur:
         cues.append({"start": cur_start, "end": cur[-1]["end"] + 0.15, "text": " ".join(x["word"] for x in cur)})
+    for a, b in zip(cues, cues[1:]):
+        # Never let the 0.15 s tail run into the next cue. libass moves an event up
+        # by the height of whatever it overlaps and then holds it there for the rest
+        # of its life, so a tenth of a second of overlap lands the whole block on the
+        # chart's axis labels. Events are half-open, so abutting exactly is enough.
+        a["end"] = min(a["end"], b["start"])
     for c in cues:
         if len(c["text"]) > MAX_CHARS:
             words_ = c["text"].split()

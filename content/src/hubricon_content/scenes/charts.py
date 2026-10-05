@@ -282,7 +282,14 @@ class Paths(HubriconScene):
                 self._spread_bracket = br
                 new.append(br)
                 group.add(br)
-            t = self.chart_text(value, BLUE if is_money(value) else INK, 600).next_to(br, LEFT, buff=16 * px())
+            t = self.chart_text(value, BLUE if is_money(value) else INK, 600)
+            # Its own line, hung under the lowest the bundle runs across the days the
+            # label itself covers, right-aligned to the bracket. Beside the bracket it
+            # landed on 'top tenth · ...' and on the dense end of the bundle, which is
+            # what V01's frames failed on (2026-10-05).
+            span = t.width / (ax.c2p(H, y1)[0] - ax.c2p(0, y1)[0]) * H
+            under = float(sample[:, max(0, int(H - span)):].min())
+            t.next_to(ax.c2p(H, under), DOWN, buff=20 * px()).align_to(br, RIGHT)
             self._spread_text = t
             anims = [Create(x) for x in new] + [FadeIn(t)] + ([FadeOut(old)] if old is not None else [])
             self.play(*anims, run_time=0.5)

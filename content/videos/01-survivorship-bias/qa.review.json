@@ -1,9 +1,9 @@
 {
  "slug": "01-survivorship-bias",
- "pass": false,
+ "pass": true,
  "reviewed": "2026-10-05",
  "frames_read": 28,
- "master": "rendered 02:34, after the chart segments were given the cadence",
+ "master": "rendered 03:12, every segment re-rendered on the current scene code",
  "items": [
   {
    "n": 1,
@@ -21,80 +21,80 @@
    "n": 3,
    "check": "Every on-screen number traces to a real run; demo data is labelled",
    "pass": true,
-   "note": "Every figure matches facts.json from the Tarnhollow demo run, and the demo chip sits bottom left on every frame that carries a figure. The 'client-stated' wording the last review failed is gone: f-007 to f-009 now read 'cash on hand today (seller-stated)'."
+   "note": "Every figure matches facts.json from the Tarnhollow demo run, and the 'TARNHOLLOW DEMO DATA' chip sits bottom left on every frame that carries a figure. The frames that carry no figure (f-020 to f-024) carry no chip, which is the rule read the right way round."
   },
   {
    "n": 4,
    "check": "Charts are Manim scenes driven by engine output",
    "pass": true,
-   "note": "The year of paths and the ninety-day cash cone are the engine's own; axis maxima are the run's ($1.1M, $432k), not round numbers."
+   "note": "The year of paths and the ninety-day cash cone are the engine's own; axis maxima are the run's ($1.1M, $432k), not round numbers, and the wire marks on the day axis are the run's own payment days."
   },
   {
    "n": 5,
    "check": "Every chart builds progressively and carries an annotation",
    "pass": true,
-   "note": "events.json records the axes, the paths, the median, the top tenth and the trough landing in the order the narration says them; f-010 and f-011 are the build before its first annotation, which is the point of the build."
+   "note": "events.json records the axes, the paths, the median, the top tenth, the spread and the trough landing in the order the narration says them. f-010 and f-011 are the build before its first annotation, which is the point of the build."
   },
   {
    "n": 6,
    "check": "Room tone, data ticks, transition SFX and a ducking bed are present",
    "pass": true,
-   "note": "media/mix.json is unchanged by this render: room tone at -48 dB, bed at -32 dB ducking to -20 dB, ticks on the landings, -16 LUFS, measured at -16.5."
+   "note": "media/mix.json: room tone at -48 dB, an ElevenLabs bed at -32 dB ducking to -20 dB, four data ticks and two transitions, target -16 LUFS, measured at -16.5. Bed and SFX are ElevenLabs sound-generation, so the sound is licensed."
   },
   {
    "n": 7,
    "check": "Voice is publishable and disclosed",
    "pass": true,
-   "note": "voice is 'library', the ElevenLabs library voice the founder chose in content/assets/voice.json on 2026-10-04. The description must carry that disclosure; the describe step has not run yet, so qa.json's disclosure check is null."
+   "note": "voice is 'library', the ElevenLabs library voice the founder chose in content/assets/voice.json on 2026-10-04. The description must carry that disclosure; the describe step has not run yet, so qa.json's disclosure check is still null."
   },
   {
    "n": 8,
    "check": "The cadence holds: nothing frozen, and the film is cut (VISUAL_SPEC §3.4, §4)",
    "pass": true,
-   "note": "This is the item the last review failed, and it passes now. The master is cut 33 times, mean 8.15 s between cuts, longest stretch 22.0 s, and freezedetect finds no frozen stretch at all across the nine clips, where it found eleven. The chart segments now drift while they hold and cut away to the narration's own line when a stretch runs past what one picture may hold."
+   "note": "Thirty-three cuts, mean 8.15 s between them, longest stretch 22.0 s, and freezedetect finds no frozen stretch at all across the nine clips."
   },
   {
    "n": 9,
    "check": "Subtitles are burned in, legible, light and never boxed",
-   "pass": false,
-   "note": "Still failing, and in the same place. The style is right, unboxed Inter in ink, but on the chart segments the block lands on the plot's own axis-label row and takes the labels with it: f-007 and f-008 lose d182 and d273 under the words, f-012 and f-013 lose them again, and f-018 runs 'the other side and it stopped mattering' straight through d60. Measured, for whoever takes it next: subs.ass is one style, alignment 2, MarginV 104, every cue two lines of 44 px, so subtitles.band_px's 214 px should be right and the chart's floor should clear it. It does on most frames (f-006, f-010, f-011 draw the block at about 910 and 954 of 1080, well under the labels at 812). On the frames that fail, the same two-line block is drawn about 96 px higher, at 814 and 860, which is where the labels are. Something is raising the block by a line on those cues, the way libass raises an event when a second one is on screen under it; the cause has to be found before the floor is lowered, because lowering it by two lines would cost the plot a quarter of its height for a fault that is not in the floor."
+   "pass": true,
+   "note": "This is the item the last two reviews failed, and the cause is found and fixed. The block was not being drawn low; libass was raising it. Every cue carried a 0.15 s tail that ran into the next cue's start, forty-six of fifty-five pairs overlapped, and libass moves an event up by the height of whatever it overlaps and then holds it at that height for the rest of its life. So most cues spent their whole life a block too high, on the plot's axis-label row. subtitles._cues now ends each cue exactly where the next one starts (ASS events are half-open, so abutting is enough), and measured over flat paper the block sits at 893-974 of 1080 on every cue, under the chart's floor at 866 and clear of the axis labels at 776-841. In the frames: f-007, f-008, f-012, f-013 and f-018 all read d0, d91, d182, d273, d364 and d0, d30, d60, d90 whole, under an unboxed two-line block of Inter in ink. Subtitle coverage is unchanged at 1.0."
   },
   {
    "n": 10,
    "check": "Style lock exists",
    "pass": true,
-   "note": "Not applicable yet: V01 is the unit that writes the lock, and the lock is written after this step passes."
+   "note": "Not applicable yet: V01 is the unit that writes the lock, and the lock is written once this step passes."
   },
   {
    "n": 11,
    "check": "One blue element per frame, blue only on money and the leak",
    "pass": true,
-   "note": "Blue is on the paths, the money figures and the cash line, and nowhere else. No red, no green, no gradient, glow or halo. Chapter cards are typographic."
+   "note": "Blue is on the paths, the money figures and the cash line, and nowhere else: every blue thing on screen is money, which is what VISUAL_SPEC §3 asks ('the only saturated blue on screen is money'). The share of the median, which is not money, is drawn in ink (f-013, f-014), and an older callout steps back to ink when a new figure takes the blue. No red, no green, no gradient, glow or halo. Chapter cards are typographic."
   },
   {
    "n": 12,
    "check": "At most three text blocks per frame, and every figure readable",
-   "pass": false,
-   "note": "Two faults. First, the chart's own annotations collide at the top right: in f-012, f-013 and f-014 the spread's figure and its share of the median are drawn on top of 'top tenth · $1,014,998' and on top of each other, so what should read as $65,320 and 7% reads as overlapping ink. The spread bracket's label needs its own line below the top-tenth label, or the share has to replace the figure in place rather than beside it. Second, the cut away from a chart to the narration's line clears only the chart: f-017 and f-019 keep the chart's heading and both stat cards standing over the card, which is five blocks of type on one frame and is not a cut at all. That one is already fixed in scenes/base.py (cut_away now clears the whole paper stage, the corner excepted) and will show in the next render."
+   "pass": true,
+   "note": "Both of the last review's faults are closed. The spread's label now hangs on its own line under the bracket and under everything the bundle reaches over the days the label itself covers, right-aligned to the bracket: f-012 reads '$65,320' and f-013 and f-014 read '7%' whole, clear of 'top tenth · $1,014,998' above them and clear of the paths behind them. And the cut away from a chart now clears the whole paper stage: f-017 and f-019 are the spoken line alone on paper, where they used to keep the chart's heading and both stat cards standing over the card. Every frame now reads as heading, chart (with its own direct labels) and at most two callouts."
   },
   {
    "n": 13,
    "check": "Charts carry direct labels, a demo label, no legend and no grid",
    "pass": true,
-   "note": "The clipped captions the last review failed are whole again: f-009 reads 'mean ending cash of the bottom tenth after a year' and f-016 'mean trough of the top tenth over the year', both to the end of the thought. Labels are direct, there is no legend and no grid. f-016 shows the same figure twice with two labels, which is the narration's own point ('Same number'), not a bug."
+   "note": "Captions are whole: f-009 reads 'mean ending cash of the bottom tenth after a year' and f-016 'mean trough of the top tenth over the year', both to the end of the thought. Labels are direct, there is no legend and no grid. f-016 shows the same figure twice with two labels, which is the narration's own point ('Same number'), not a bug."
   },
   {
    "n": 14,
    "check": "Nothing on screen is empty or dead",
    "pass": true,
-   "note": "The blank frame at about 245 s is gone: f-025 now carries 'What you can't do by hand is that last step at any real scale.' No frame in the twenty-eight is empty."
+   "note": "No frame in the twenty-eight is empty; the quietest, f-025, carries 'What you can't do by hand is that last step at any real scale.'"
   },
   {
    "n": 15,
    "check": "Nothing on a client surface implies a client that does not exist",
    "pass": true,
-   "note": "Fixed since the last review. The stat card reads 'cash on hand today (seller-stated)', the chip reads 'TARNHOLLOW DEMO DATA' on every frame that carries a figure, and no frame names or implies a client."
+   "note": "The stat card reads 'cash on hand today (seller-stated)', the chip reads 'TARNHOLLOW DEMO DATA' on every frame that carries a figure, and no frame names or implies a client."
   }
  ],
- "notes": "The cadence item passes for the first time: no frozen picture anywhere, thirty-three cuts, eight seconds between them on average and never more than twenty-two. Three of the last review's seven failures are closed as well (the clipped captions, the blank segment, and the 'client-stated' label). What is left is layout, and both items are in the same corner of the film, the chart segments: the burned-in subtitle sits on the plot's axis-label row and erases the day labels, and the spread's two annotations are drawn on top of the top-tenth label and on top of each other. One further fault belongs to this tick and is already fixed in the scene base: the cut away from a chart left the heading and the stat rail standing over the card. The next render carries that fix; the subtitle floor and the annotation layout are the two changes still to make before this step can pass."
+ "notes": "The render passes. The two faults the last review left were both layout, both in the chart segments, and both are closed. The subtitle fault was not a floor that sat too low: libass was raising the block by the height of the cue it overlapped and then holding it there, because every cue's 0.15 s tail ran into the next cue's start. Cues now abut exactly, and the block sits at 893-974 of 1080 on every one of them, well under the chart's floor. The spread's figure has its own line under the bracket instead of landing on the top-tenth label. One further fault found in this tick's own frames: the cut-away fix made in base.py last tick had never been rendered, so f-017 and f-019 still carried the chart's heading and stat rail over the card; every segment was re-rendered on the current scene code and both frames are now the line alone on paper. V01 is ready for the style lock."
 }

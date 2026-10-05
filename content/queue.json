@@ -1,7 +1,7 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T07:40:03+00:00",
- "style_locked": false,
+ "updated_at": "2026-10-05T08:16:17+00:00",
+ "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
   "founder_voice_id": "1fz2mW1imKTf5Ryjk5su",
@@ -504,7 +504,7 @@
     "timing": "done",
     "scenes": "done",
     "assemble": "done",
-    "qa": "in_progress",
+    "qa": "done",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
@@ -595,6 +595,11 @@
      "at": "2026-10-05T07:38:31+00:00",
      "step": "qa",
      "note": "failed The program check passes but the frames fail: the burned-in subtitle erases the chart's axis labels and the spread's annotations collide at the plot's top right"
+    },
+    {
+     "at": "2026-10-05T08:16:15+00:00",
+     "step": "qa",
+     "note": "done"
     }
    ]
   },
