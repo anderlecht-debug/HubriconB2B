@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T09:39:58+00:00 · style locked: True
+Updated 2026-10-05T09:40:40+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T09:39:58+00:00 · style locked: True
 
 ## Now
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed · step describe
+- V04 · Your A/B test told you nothing. Here's the sample size you needed · step shorts
 
 ## Awaiting your review
 
