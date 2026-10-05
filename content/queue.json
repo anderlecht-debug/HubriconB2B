@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T09:40:40+00:00",
+ "updated_at": "2026-10-05T09:46:03+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -739,7 +739,7 @@
     "qa": "done",
     "thumbnail": "done",
     "describe": "done",
-    "shorts": "todo",
+    "shorts": "done",
     "approve_final": "todo",
     "upload": "todo"
    },
@@ -834,6 +834,11 @@
     {
      "at": "2026-10-05T09:40:37+00:00",
      "step": "describe",
+     "note": "done"
+    },
+    {
+     "at": "2026-10-05T09:46:00+00:00",
+     "step": "shorts",
      "note": "done"
     }
    ]
