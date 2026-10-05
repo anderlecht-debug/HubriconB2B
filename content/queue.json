@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T05:07:55+00:00",
+ "updated_at": "2026-10-05T05:09:41+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
@@ -490,7 +490,7 @@
     "mc",
     "risk"
    ],
-   "status": "in_progress",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": "library",
@@ -659,17 +659,17 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
-   "voice": null,
+   "voice": "library",
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "todo",
+    "tts": "done",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -737,6 +737,11 @@
      "at": "2026-10-05T05:06:17+00:00",
      "step": "unblock",
      "note": "input arrived; unit returned to the queue"
+    },
+    {
+     "at": "2026-10-05T05:09:39+00:00",
+     "step": "tts",
+     "note": "done"
     }
    ]
   },
