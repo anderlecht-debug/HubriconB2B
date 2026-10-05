@@ -1,0 +1,108 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Inter Display SemiBold,44,&H00170E0A,&H00170E0A,&H00FFFFFF,&HFFFFFFFF,0,0,0,0,100,100,-0.6,0,1,2.5,0,2,140,140,104,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:07.37,Sub,,0,0,0,,70.7% gross margin. 32.3% after the\Nplatform and the ads. You'd say the
+Dialogue: 0,0:00:07.37,0:00:11.65,Sub,,0,0,0,,first number is your margin and the\Nrest is overhead. The gap between them
+Dialogue: 0,0:00:11.65,0:00:18.14,Sub,,0,0,0,,is 38.4% of revenue, and it's decided\Nproduct by product, not in overhead.
+Dialogue: 0,0:00:18.84,0:00:24.35,Sub,,0,0,0,,Here's the model. Revenue minus what\Nthe goods cost you is the margin.
+Dialogue: 0,0:00:24.64,0:00:28.33,Sub,,0,0,0,,That's the number on the product tab\Nof your own spreadsheet, it's the
+Dialogue: 0,0:00:28.33,0:00:32.68,Sub,,0,0,0,,number the supplier negotiation is\Nabout, and it's the number you'd quote
+Dialogue: 0,0:00:32.68,0:00:37.91,Sub,,0,0,0,,someone asked how good a product is.\NFees and ads are real, but they're the
+Dialogue: 0,0:00:37.91,0:00:43.20,Sub,,0,0,0,,cost of doing business, so they live\Nin overhead, below the line, spread
+Dialogue: 0,0:00:43.20,0:00:47.45,Sub,,0,0,0,,across everything. It's a fair model.\NIt's how the accounts are laid out,
+Dialogue: 0,0:00:47.51,0:00:51.59,Sub,,0,0,0,,and for a business with one product\Nit's even correct. The trouble starts
+Dialogue: 0,0:00:51.77,0:00:55.64,Sub,,0,0,0,,the moment there's more than one\Nproduct, because from then on the fees
+Dialogue: 0,0:00:55.64,0:01:01.99,Sub,,0,0,0,,the ads are not spread. They're\Ncharged. Here's the demo catalog on
+Dialogue: 0,0:01:02.07,0:01:08.64,Sub,,0,0,0,,Tarnhollow, demo data, 24 products,\Nabout $3.5M a year. Last month,
+Dialogue: 0,0:01:08.64,0:01:14.75,Sub,,0,0,0,,of sales. Landed cost of goods,\N$93,443. So the gross margin is 70.7%.
+Dialogue: 0,0:01:14.75,0:01:22.07,Sub,,0,0,0,,Healthy. Now watch the waterfall.\NPlatform fees: $102,395, which is
+Dialogue: 0,0:01:22.07,0:01:27.34,Sub,,0,0,0,,revenue. Ads, allocated to the\Nproducts that spent them: $19,930.
+Dialogue: 0,0:01:27.34,0:01:33.52,Sub,,0,0,0,,left is $102,864, and that's 32.3% of\Nrevenue. The gap between the margin
+Dialogue: 0,0:01:33.52,0:01:38.62,Sub,,0,0,0,,you quote and the margin you keep is\N38.4% points of revenue. And none of
+Dialogue: 0,0:01:38.62,0:01:42.81,Sub,,0,0,0,,is overhead. Every dollar of it was\Ncharged to a specific product on a
+Dialogue: 0,0:01:42.81,0:01:47.34,Sub,,0,0,0,,specific order, and the platform's own\Nreport says which.
+Dialogue: 0,0:01:49.14,0:01:53.56,Sub,,0,0,0,,Find it in your own reports. Start\Nwith the settlement report, the one
+Dialogue: 0,0:01:53.56,0:01:58.80,Sub,,0,0,0,,platform sends when it pays you. Every\Nfee is on it, by order, by product:
+Dialogue: 0,0:01:59.03,0:02:05.30,Sub,,0,0,0,,the referral fee, fulfilment, storage,\Nrefund administration, and the
+Dialogue: 0,0:02:05.30,0:02:09.80,Sub,,0,0,0,,advertising invoice if it's netted\Nfrom the payout. That is your fee
+Dialogue: 0,0:02:09.82,0:02:15.06,Sub,,0,0,0,,and it's per product, not per\Nbusiness. Next, the advertising
+Dialogue: 0,0:02:15.06,0:02:20.65,Sub,,0,0,0,,campaign and by product. Sponsored\Nspend belongs to the product that was
+Dialogue: 0,0:02:20.65,0:02:25.59,Sub,,0,0,0,,advertised. Where a campaign covers\Nseveral products, allocate its spend
+Dialogue: 0,0:02:25.59,0:02:29.51,Sub,,0,0,0,,the sales the campaign produced for\Neach of them, not by each product's
+Dialogue: 0,0:02:29.51,0:02:34.73,Sub,,0,0,0,,share of catalog revenue, because\Nrevenue share hands the bestseller's
+Dialogue: 0,0:02:34.73,0:02:42.08,Sub,,0,0,0,,bill to the products that never needed\Nads. On this catalog, $4,101 a month
+Dialogue: 0,0:02:42.08,0:02:47.02,Sub,,0,0,0,,goes to search terms with no\Nattributed sales at all. That's a cost
+Dialogue: 0,0:02:47.02,0:02:51.43,Sub,,0,0,0,,sale to carry it, and it lands on\Nwhichever product the campaign belongs
+Dialogue: 0,0:02:51.77,0:02:59.32,Sub,,0,0,0,,Then the landed cost sheet. Unit cost,\Ninbound freight, packaging, duty. Not
+Dialogue: 0,0:02:59.32,0:03:04.16,Sub,,0,0,0,,the invoice price; the price of the\Nunit sitting in the warehouse. Put
+Dialogue: 0,0:03:04.16,0:03:10.06,Sub,,0,0,0,,side by side, per product, and the\Nnumber falls out: price, less landed
+Dialogue: 0,0:03:10.06,0:03:16.62,Sub,,0,0,0,,cost, less the fees on that product,\Nless the ads on that product. Now it
+Dialogue: 0,0:03:16.62,0:03:20.76,Sub,,0,0,0,,has a name. That's contribution\Nmargin. It's what the product
+Dialogue: 0,0:03:20.76,0:03:28.66,Sub,,0,0,0,,toward everything that isn't a\Nproduct: salaries, rent, software,
+Dialogue: 0,0:03:28.66,0:03:32.81,Sub,,0,0,0,,margin stops before the platform.\NContribution margin stops where your
+Dialogue: 0,0:03:32.81,0:03:34.33,Sub,,0,0,0,,actually starts.
+Dialogue: 0,0:03:36.13,0:03:39.92,Sub,,0,0,0,,Now verify it on the product you're\Nproudest of. The bestseller here is
+Dialogue: 0,0:03:40.12,0:03:48.32,Sub,,0,0,0,,TH-CHEKNI-08. $33,634 of revenue last\Nmonth, 11% of the catalog. On gross
+Dialogue: 0,0:03:48.32,0:03:55.56,Sub,,0,0,0,,margin it looks like the whole\Nbusiness. On contribution it earns
+Dialogue: 0,0:03:55.56,0:04:01.11,Sub,,0,0,0,,margin of 42.6%, and by contribution\Nit ranks 1 in the catalog. So on this
+Dialogue: 0,0:04:01.11,0:04:06.09,Sub,,0,0,0,,catalog the bestseller survives the\Ntest. That's not the usual outcome,
+Dialogue: 0,0:04:06.09,0:04:09.96,Sub,,0,0,0,,the point is you cannot know until\Nyou've run it. The product at the
+Dialogue: 0,0:04:09.96,0:04:16.30,Sub,,0,0,0,,by contribution is TH-TRICOR-23, at\N23.4%. The count of products losing
+Dialogue: 0,0:04:16.30,0:04:21.39,Sub,,0,0,0,,money after ads this month, on this\Ncatalog, is 0. Had it been anything
+Dialogue: 0,0:04:21.39,0:04:26.57,Sub,,0,0,0,,else, gross margin would have hidden\Nit, because a product can carry a fine
+Dialogue: 0,0:04:26.57,0:04:31.38,Sub,,0,0,0,,gross margin and a negative\Ncontribution at the same time. All it
+Dialogue: 0,0:04:31.38,0:04:35.91,Sub,,0,0,0,,fee tier or an ad campaign that eats\Nthe difference, and neither of those
+Dialogue: 0,0:04:35.91,0:04:41.69,Sub,,0,0,0,,shows up in revenue minus cost of\Ngoods. The spread across the catalog
+Dialogue: 0,0:04:41.69,0:04:50.91,Sub,,0,0,0,,from 23.4% to 42.6%. Same catalog,\Nsame supplier, same gross margin
+Dialogue: 0,0:04:50.91,0:04:55.44,Sub,,0,0,0,,and the products sit that far apart\Nonce the platform and the ads are
+Dialogue: 0,0:04:55.46,0:05:00.65,Sub,,0,0,0,,charged to the product that incurred\Nthem. That ranking, by contribution,
+Dialogue: 0,0:05:00.65,0:05:05.45,Sub,,0,0,0,,the only ranking that should decide a\Nreorder, a price move or an ad budget.
+Dialogue: 0,0:05:06.15,0:05:11.01,Sub,,0,0,0,,What's the difference worth? Every\Ndecision that used the wrong margin.
+Dialogue: 0,0:05:11.25,0:05:16.02,Sub,,0,0,0,,Reorders first. A product with a high\Ngross margin and a thin contribution
+Dialogue: 0,0:05:16.19,0:05:21.23,Sub,,0,0,0,,gets restocked deep, and the cash sits\Non a shelf. The newsvendor on this
+Dialogue: 0,0:05:21.23,0:05:27.57,Sub,,0,0,0,,catalog finds $3,874 a month of fees\Non stock ordered past its economic
+Dialogue: 0,0:05:27.57,0:05:32.07,Sub,,0,0,0,,quantity. Ads next. The break-even\Nreturn on ad spend is set by
+Dialogue: 0,0:05:32.07,0:05:37.39,Sub,,0,0,0,,contribution, never by gross. On this\Ncatalog it's 2.61. The worst campaign,
+Dialogue: 0,0:05:37.39,0:05:43.74,Sub,,0,0,0,,Catalog, Auto, returns 0.97 on its\Nlast dollar, which is below break-even
+Dialogue: 0,0:05:43.74,0:05:49.50,Sub,,0,0,0,,contribution and looks perfectly\Nhealthy if you judge it at gross.
+Dialogue: 0,0:05:50.16,0:05:55.57,Sub,,0,0,0,,A price rise on a product with a fee\Ntier in the way can lift gross margin
+Dialogue: 0,0:05:55.57,0:06:00.83,Sub,,0,0,0,,and cut contribution in the same move,\Nand only the contribution waterfall
+Dialogue: 0,0:06:00.89,0:06:06.28,Sub,,0,0,0,,shows it. And concentration. There are\N24 products on the shelf, but by
+Dialogue: 0,0:06:06.28,0:06:11.60,Sub,,0,0,0,,where the money comes from the catalog\Nbehaves like 19.3, so the risk of the
+Dialogue: 0,0:06:11.60,0:06:16.67,Sub,,0,0,0,,business sits in fewer products than\Nthe shelf suggests. In short: the
+Dialogue: 0,0:06:16.67,0:06:23.06,Sub,,0,0,0,,margin you quote and the margin you\Nkeep are 38.4% of revenue apart on
+Dialogue: 0,0:06:23.06,0:06:28.50,Sub,,0,0,0,,catalog, and every reorder, bid and\Nprice set on the wrong one was set on
+Dialogue: 0,0:06:28.50,0:06:35.00,Sub,,0,0,0,,number that's wrong by that much. This\Nweek. First, build the waterfall for
+Dialogue: 0,0:06:35.00,0:06:40.87,Sub,,0,0,0,,your top products. Price, landed cost\Nfrom the cost sheet, fees from the
+Dialogue: 0,0:06:40.87,0:06:45.30,Sub,,0,0,0,,settlement report, ads from the\Ncampaign report allocated by
+Dialogue: 0,0:06:45.30,0:06:52.09,Sub,,0,0,0,,sales. One row per product, and the\Nlast column is contribution. Next,
+Dialogue: 0,0:06:52.09,0:06:55.98,Sub,,0,0,0,,by that column. Not by revenue, not by\Ngross.
+Dialogue: 0,0:06:56.78,0:07:00.94,Sub,,0,0,0,,Read the bottom of the list before the\Ntop, because the bottom is where the
+Dialogue: 0,0:07:00.94,0:07:07.63,Sub,,0,0,0,,decisions are. Then set your\Nbreak-even return on ad spend from
+Dialogue: 0,0:07:07.65,0:07:13.02,Sub,,0,0,0,,and hold every campaign to it,\Nstarting with the one that returns
+Dialogue: 0,0:07:13.02,0:07:18.68,Sub,,0,0,0,,its last dollar. Last, take gross\Nmargin off the dashboard. Keep it for
+Dialogue: 0,0:07:18.68,0:07:23.54,Sub,,0,0,0,,supplier conversation, where it\Nbelongs, and put contribution where
+Dialogue: 0,0:07:23.54,0:07:27.88,Sub,,0,0,0,,every morning. When a product looks\Nbetter on gross than on contribution,
+Dialogue: 0,0:07:28.12,0:07:32.52,Sub,,0,0,0,,that gap is the platform and the ads,\Nand it's per product, so it's yours to
+Dialogue: 0,0:07:32.52,0:07:38.36,Sub,,0,0,0,,fix per product. What you can do\Nyourself is the waterfall for your top
+Dialogue: 0,0:07:38.36,0:07:43.41,Sub,,0,0,0,,products, this week, from reports you\Nalready export. It's an afternoon, and
+Dialogue: 0,0:07:43.58,0:07:48.50,Sub,,0,0,0,,it changes what you reorder. What you\Ncan't do by hand is the allocation at
+Dialogue: 0,0:07:48.50,0:07:54.30,Sub,,0,0,0,,scale. 24 products, every fee line on\Nevery order, ads allocated by
+Dialogue: 0,0:07:54.39,0:07:59.51,Sub,,0,0,0,,attributed sales across campaigns that\Noverlap, every month, with the fee
+Dialogue: 0,0:07:59.51,0:08:05.09,Sub,,0,0,0,,tiers rechecked whenever a weight or a\Nprice moves. Done by hand it drifts
+Dialogue: 0,0:08:05.09,0:08:09.95,Sub,,0,0,0,,back to revenue share inside a few\Nmonths, and revenue share is gross
+Dialogue: 0,0:08:09.95,0:08:14.41,Sub,,0,0,0,,wearing a different name. That part is\Na model. What you can do today is
+Dialogue: 0,0:08:14.41,0:08:19.90,Sub,,0,0,0,,stop quoting gross margin as if it\Nwere yours. Rank by contribution, and
+Dialogue: 0,0:08:19.90,0:08:24.37,Sub,,0,0,0,,read the bottom of the list. You can\Nbuild this yourself. If you're doing
+Dialogue: 0,0:08:24.37,0:08:28.67,Sub,,0,0,0,,real volume and want it run with\Nrigor, this is what I do, and I only
+Dialogue: 0,0:08:28.67,0:08:30.01,Sub,,0,0,0,,paid when it works.
