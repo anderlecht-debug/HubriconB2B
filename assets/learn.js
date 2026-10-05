@@ -1,7 +1,8 @@
-// A /learn course page's behaviour. Every lesson is already in the HTML, in order; a
-// visitor without scripts reads them straight through. With scripts: one email opens
-// the course (POST /api/learn), then one lesson shows at a time, the list on the left
-// marks where you are and what you have read, and the charts draw once.
+// A /learn course page's behaviour. Every lesson is already in the HTML, in order, and open
+// to anyone: no email, no account (the founder's call, 2026-10-01). A visitor without scripts
+// reads them straight through. With scripts: the cover is the start, one lesson shows at a
+// time, the list on the left marks where you are and what you have read, the cover offers to
+// pick up where you left off, and the charts draw once. The optional email is /assets/site.js.
 "use strict";
 window.__hubriconMotion = true;
 
@@ -16,13 +17,13 @@ const store = {
   read() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } },
   write(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} },
 };
-const isIn = () => Boolean((store.read().courses || {})[COURSE]) || root.classList.contains("learn-in");
 
 const lessons = [...document.querySelectorAll(".lesson")];
 const links = [...document.querySelectorAll(".toc a[href^='#']")];
 const toc = document.getElementById("toc");
+const start = document.querySelector("[data-start]");
 
-/* -- One lesson at a time ---------------------------------------------------------- */
+/* -- What you have read, kept in this browser only ----------------------------------- */
 function seen() { return new Set(((store.read().seen || {})[COURSE]) || []); }
 function markSeen(id) {
   const s = store.read();
@@ -30,8 +31,23 @@ function markSeen(id) {
   const list = new Set(s.seen[COURSE] || []);
   list.add(id);
   s.seen[COURSE] = [...list];
+  s.last = { ...(s.last || {}), [COURSE]: id };
   store.write(s);
 }
+
+/* -- The cover's start: lesson 1, or where you left off ------------------------------- */
+function paintStart() {
+  if (!start) return;
+  const last = (store.read().last || {})[COURSE];
+  const i = lessons.findIndex((l) => l.id === last);
+  if (i < 0) return;
+  // Pick up at the lesson after the last one opened, or that one if it was the last.
+  const j = Math.min(i + 1, lessons.length - 1);
+  start.setAttribute("href", `#${lessons[j].id}`);
+  start.firstChild.textContent = `Continue with lesson ${j + 1} `;
+  start.setAttribute("aria-label", `Continue with lesson ${j + 1}: ${links[j].textContent.replace(/^\d+/, "").trim()}`);
+}
+
 function paintToc(current) {
   const done = seen();
   for (const a of links) {
@@ -42,94 +58,30 @@ function paintToc(current) {
   }
   const i = lessons.findIndex((l) => l.id === current);
   const summary = toc?.querySelector("summary");
-  if (summary && i >= 0) summary.textContent = `Lesson ${i + 1} of ${lessons.length}: ${links[i].textContent.replace(/^\d+/, "").trim()}`;
+  if (summary) summary.textContent = i >= 0 ? `Lesson ${i + 1} of ${lessons.length}: ${links[i].textContent.replace(/^\d+/, "").trim()}` : `Lessons (${lessons.length})`;
 }
+
+/* -- One view at a time: the cover, or one lesson ------------------------------------- */
 function show(id, { scroll = true } = {}) {
-  if (!isIn()) return;
-  const lesson = lessons.find((l) => l.id === id) || lessons[0];
+  const lesson = lessons.find((l) => l.id === id);
   for (const l of lessons) l.classList.toggle("current", l === lesson);
-  paintToc(lesson.id);
-  markSeen(lesson.id);
+  root.classList.toggle("reading", Boolean(lesson));
+  paintToc(lesson ? lesson.id : null);
+  if (lesson) {
+    markSeen(lesson.id);
+    track("lesson_view", { course: COURSE, lesson: lesson.id });
+  } else {
+    paintStart();
+  }
   if (matchMedia("(max-width: 860px)").matches && toc) toc.open = false;
   if (scroll) document.getElementById("main").scrollIntoView({ block: "start" });
-  track("lesson_view", { course: COURSE, lesson: lesson.id });
 }
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
-// Before the email, a lesson link brings the visitor to the form, not to a blank page.
-for (const a of links) {
-  a.addEventListener("click", (ev) => {
-    if (isIn()) return;
-    ev.preventDefault();
-    document.getElementById("email")?.focus();
-  });
-}
 
-/* -- The email that opens the course ----------------------------------------------- */
-const form = document.getElementById("join");
-const err = document.getElementById("join-err");
-function open(email) {
-  const s = store.read();
-  s.courses = { ...(s.courses || {}), [COURSE]: new Date().toISOString().slice(0, 10) };
-  store.write(s);
-  root.classList.add("learn-in");
-  if (toc) toc.open = !matchMedia("(max-width: 860px)").matches;
-  show(location.hash.slice(1) || lessons[0].id);
-  track("learn_registered", { course: COURSE, known: Boolean(email) });
-}
-form?.addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  err.hidden = true;
-  const email = form.email.value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-    err.textContent = "That doesn't look like an email address. Check it and try again.";
-    err.hidden = false;
-    form.email.focus();
-    return;
-  }
-  const button = form.querySelector("button");
-  button.disabled = true;
-  let res = null;
-  try {
-    const params = new URLSearchParams(location.search);
-    res = await fetch("/api/learn", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, course: COURSE, website: form.website.value, source: params.get("utm_source") || params.get("ref") || "" }),
-    });
-  } catch (e) { res = null; }
-  button.disabled = false;
-  // A bad address is the visitor's to fix. Anything else is ours: the course opens anyway.
-  if (res && res.status === 400) {
-    const body = await res.json().catch(() => ({}));
-    err.textContent = body.error || "That address was not accepted. Check it and try again.";
-    err.hidden = false;
-    return;
-  }
-  open(email);
-});
+if (toc) toc.open = !matchMedia("(max-width: 860px)").matches;
+show(location.hash.slice(1), { scroll: Boolean(location.hash) });
 
-if (isIn()) {
-  if (toc) toc.open = !matchMedia("(max-width: 860px)").matches;
-  show(location.hash.slice(1), { scroll: Boolean(location.hash) });
-}
 document.querySelectorAll("[data-template]").forEach((a) => a.addEventListener("click", () => track("template_download", { course: COURSE })));
 document.addEventListener("click", (ev) => { if (ev.target.closest?.("[data-cta]")) track("cta_click", { section: "learn", course: COURSE }); });
 
-/* -- The charts: drawn once when they come into view, then still -------------------- */
-const ms = (name, fallback) => {
-  const v = getComputedStyle(root).getPropertyValue(name).trim();
-  return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : fallback;
-};
-if (root.classList.contains("motion")) {
-  const total = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const fig = e.target;
-      io.unobserve(fig);
-      fig.classList.add("playing");
-      setTimeout(() => { fig.classList.add("played"); fig.classList.remove("playing"); }, total);
-    }
-  }, { threshold: 0.3 });
-  document.querySelectorAll("[data-play]").forEach((f) => io.observe(f));
-}
+// The charts draw once as they arrive: /assets/site.js, which every page with the bar loads.

@@ -23,10 +23,19 @@ model change.
   `brand`, or `none (why)`.
 - **One client's data never advises another** without the consent the terms name (§10).
 - **The home page meets the Hormozi standard:** one action ("Book your call →", to
-  `/apply`), under about 900 visible words, no proof that does not exist.
-  `scripts/build-pages.test.mjs` checks all three.
+  `/apply`, the only button), no proof that does not exist, and since 2026-10-01 evening (the
+  founder's call, recorded in `HUBRICON_SPEC.md`, "Amended by the founder") a short first page:
+  five bands (the promise, the proof, the offer, the library strip, the call), its own words
+  capped by the test. Every other section lives on the page under its tab: Proof is
+  `/case-study`, How it works is `/how-it-works`, The offer is `/offer`, Education is `/learn`,
+  Trust opens the pages that say it. No results wall and no Results tab until a client's dated
+  consent fills a frame. A planned course says Planned and links nowhere; an empty video slot
+  says what will play there; the course's optional email lives on `/learn` and the course
+  pages, never the home page; and nothing that moves is ever blank before it plays.
+  `scripts/build-pages.test.mjs` and `scripts/site-blocks.test.mjs` check all of it.
 - **No number is typed into the home page.** Figures and charts come from `data/` through
-  `node scripts/case-study.mjs` then `node scripts/build-pages.mjs`; the test fails a stale page.
+  `node scripts/case-study.mjs` (the Amazon listing) and `engine/scripts/store_case_study.py`
+  (the store study), then `node scripts/build-pages.mjs`; the test fails a stale page.
 - **One design system.** Every page reads `/assets/hubricon.css`. No page keeps a private
   palette. Blue is for money and the leak, nothing else.
 - **Model changes re-run the bench.** Any change to elasticity, pricing, forecast,
@@ -38,8 +47,8 @@ model change.
 ## Tests
 
 - Engine: `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 5 minutes).
-- Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page
-  and the public-data case study).
+- Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page,
+  the tab pages and both case studies).
 
 ## The content pipeline (worktree `HubriconB2B-content`, branch `content`)
 
@@ -79,9 +88,9 @@ Banned: "in today's video", "let's dive in", "game-changer", "secret", "hack", "
   leak, Inter). The house visuals are `/assets/charts.mjs`: the staircase, the Monte Carlo band,
   the aging cliff. A video scene draws them from the same code, never a redrawing of them.
 - No faces, avatars or synthetic humans anywhere. Higgsfield is for textures only.
-- Voice: the founder's own recorded voice first; his ElevenLabs clone only once it clears the
-  bar, and then the description carries, verbatim: "Narration is an AI clone of Hagen Simmons's
-  voice, used with his permission; the analysis is his."
+- Voice: the founder's own recorded voice, his ElevenLabs clone, or the ElevenLabs library voice
+  he chose ("Kevin", `content/assets/voice.json`). The description discloses which; `tts.py`
+  and `describe.py` hold the wording.
 - The Reimbursement Playbook draft is parked (it needs the seller's own reports, so it is not
   the public-data first course); its pages are in `archive/`.
 

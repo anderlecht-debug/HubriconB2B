@@ -12,12 +12,16 @@ the Ledger closes the gap in public.
 
 from datetime import date, timedelta
 
+from . import channels
+
 OPPORTUNITY_HAIRCUT = 0.7  # promise 70% of what the models identified
 
 INITIATIVE_DEFS = {
     "pricing": (
         "Reprice to the measured optimum",
-        "Move each SKU toward its profit-maximizing price in tracked, Buy-Box-watched steps.",
+        # what is watched while a step is live depends on the store, and is
+        # said by channels.watch_clause (pricing_thesis), never here
+        "Move each SKU toward its profit-maximizing price in tracked steps.",
     ),
     "advertising": (
         "Cut wasted ad spend",
@@ -39,6 +43,26 @@ INITIATIVE_DEFS = {
 MODULE_ORDER = ["recovery", "pricing", "advertising", "inventory", "margin"]
 
 
+def plan_channels(directives: list[dict], platform: str | None = None) -> tuple[str, ...]:
+    """The stores the plan's moves are in: the client's platform when it is
+    given, else the channels its moves carry (Amazon for a move older than
+    the second platform)."""
+    if platform:
+        return channels.channels_for(platform)
+    seen = {(d.get("channel") or "amazon").lower() for d in directives}
+    return tuple(c for c in channels.CHANNELS if c in seen) or ("amazon",)
+
+
+def pricing_thesis(chans: tuple[str, ...]) -> str:
+    """The pricing initiative's thesis, with what is watched on each store as
+    channels.py says it: the Buy Box on Amazon, the client's own orders on
+    Shopify, where there is no Buy Box."""
+    base = INITIATIVE_DEFS["pricing"][1].rstrip(".")
+    if len(chans) == 1:
+        return f"{base}; we {channels.watch_clause(chans[0])}."
+    return f"{base}: " + "; ".join(f"on {channels.label(c)} we {channels.watch_clause(c)}" for c in chans) + "."
+
+
 def next_quarter(today: date) -> tuple[str, date, date]:
     """The 90-day window starting now, labeled by the quarter it lands in."""
     q = (today.month - 1) // 3 + 1
@@ -57,8 +81,11 @@ def latest_period_totals(margins: list[dict]) -> dict | None:
 
 
 def propose_plan(margins: list[dict], directives: list[dict],
-                 today: date | None = None) -> dict | None:
-    """Baseline + targets + clustered initiatives. None without margin data."""
+                 today: date | None = None, platform: str | None = None) -> dict | None:
+    """Baseline + targets + clustered initiatives. None without margin data.
+
+    `platform` is the client's ('amazon', 'shopify', 'both'); without it the
+    stores are read off the moves themselves (plan_channels)."""
     baseline = latest_period_totals(margins)
     if baseline is None:
         return None
@@ -71,6 +98,8 @@ def propose_plan(margins: list[dict], directives: list[dict],
         if not steps:
             continue
         title, thesis = INITIATIVE_DEFS[module]
+        if module == "pricing":
+            thesis = pricing_thesis(plan_channels(directives, platform))
         expected = sum(float(d["expected_impact_usd"]) for d in steps
                        if d.get("expected_impact_usd") is not None)
         initiatives.append({

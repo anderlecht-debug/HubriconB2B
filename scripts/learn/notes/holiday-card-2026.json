@@ -1,0 +1,11 @@
+{
+  "id": "holiday-card-2026",
+  "kind": "fee-cards",
+  "subject": "Amazon's holiday fees start October 15",
+  "blocks": [
+    { "p": "From October 15 to January 14, Amazon charges its holiday fulfilment card. In the $10 to $50 column a unit pays {fill:fee-staircase:learn_peak_min} to {fill:fee-staircase:learn_peak_max} more, row for row, and the {fill:fee-staircase:surcharge} fuel and logistics surcharge comes on top." },
+    { "p": "Two things worth ten minutes before it starts. First, put your best seller into Your listing in lesson 3: it prices the unit on both cards and says what price keeps the same margin through January. Second, if any units are near 271 days old, lesson 7 prices the storage cliff, and storage itself is dearer from October to December." },
+    { "button": "Open lesson 3", "url": "https://www.hubricon.com/learn/fee-staircase#find-the-step" },
+    { "p": "Every fee in the course comes from Amazon's published 2026 schedules. If one looks wrong, reply and tell me." }
+  ]
+}

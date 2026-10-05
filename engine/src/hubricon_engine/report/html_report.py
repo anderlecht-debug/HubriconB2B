@@ -55,7 +55,14 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         db.table("directives").select("*").eq("client_id", client["id"])
         .neq("status", "draft").order("created_at", desc=True).execute().data
     )
-    ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in ledger)
+    # The one figure a client sees everywhere (value.proven_since_day_one), with
+    # its own label: never a fourth sum of measured_impact_usd. Unreadable, the
+    # report leaves it out rather than print a different number.
+    try:
+        from .. import value
+        proven = value.proven_since_day_one(db, client)
+    except Exception:
+        proven = None
     price_tests = (
         db.table("price_tests").select("*").eq("client_id", client["id"])
         .order("created_at", desc=True).execute().data
@@ -77,14 +84,25 @@ def generate(db, client: dict, run_id: str | None = None, out_dir: str | None = 
         today=date.today().isoformat(),
         actions=_top_actions(inventory, ads, elasticity, margins, channel),
         fee_label=channels.fee_label(channel),
+        fee_parts=channels.fee_parts(channel),
         platform_label=channels.label(channel),
+        # the store this report is about, named only for a client on both
+        store=channels.store_name(client.get("platform"), channel),
+        both_stores=len(channels.channels_for(client.get("platform"))) > 1,
+        store_labels=channels.LABEL,
+        # what is watched while a step is live, as channels.py says it; the
+        # Buy Box column only where a Buy Box exists (price_tests carry no
+        # channel, so a client who sells on Amazon at all keeps it)
+        watch_clause=channels.watch_clause(channel),
+        has_buy_box=channels.has_buy_box(channel),
+        buy_box_column="amazon" in channels.channels_for(client.get("platform")),
         totals=totals,
         latest_period=latest,
         inventory=sorted(inventory, key=lambda r: float(r["stockout_probability"] or 0), reverse=True),
         elasticity=elasticity,
         ads=ads,
         ledger=ledger,
-        ledger_measured=ledger_measured,
+        proven=proven,
         price_tests=price_tests,
         chart_stockout=charts.stockout_bars(inventory),
         chart_elasticity=charts.elasticity_scatter(elasticity),

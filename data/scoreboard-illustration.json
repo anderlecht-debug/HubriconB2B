@@ -1,0 +1,14 @@
+{
+  "about": "The home page's scoreboard: an illustration of one month on a client's Profit Record, a brand selling on Amazon and Shopify, labelled as one on the page, never a client's numbers. Each move is called before (expected) and measured after; scripts/site-blocks.mjs counts every dollar by the rules in scripts/blocks/attribution.html (never above the promise, nothing under $25, a miss stays at what it earned, a direct dollar counts what the platform paid), so the illustration cannot show a month the terms would not.",
+  "fee": 6000,
+  "proven_before_this_month": 39070,
+  "moves": [
+    { "move": "Amazon: reorder moved up three weeks, ahead of the 271-day surcharge", "grade": "isolated", "expected": 3100, "measured": 3260 },
+    { "move": "Amazon: case pack re-spec'd to land under a weight edge", "grade": "isolated", "expected": 2400, "measured": 2380 },
+    { "move": "Shopify: price raised 4% on a best seller its own sales said could carry it", "grade": "isolated", "expected": 1500, "measured": 1508 },
+    { "move": "Price raised 50 cents on one SKU", "grade": "isolated", "expected": 1200, "measured": 1340 },
+    { "move": "Google Ads stopped on search terms with no sales in sixty days", "grade": "attributable", "expected": 800, "measured": 610 },
+    { "move": "Amazon: claim filed for units lost in a fulfilment centre", "grade": "direct", "expected": 310, "measured": 350 },
+    { "move": "Coupon removed on a SKU that sold the same without it", "grade": "attributable", "expected": 90, "measured": 18 }
+  ]
+}

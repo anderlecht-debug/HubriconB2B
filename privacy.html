@@ -6,6 +6,12 @@
 <title>Privacy Policy — Hubricon</title>
 <meta name="description" content="What Hubricon collects, why, where it goes, and how to get it back or erased. Written to be read.">
 <link rel="canonical" href="https://www.hubricon.com/privacy">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/privacy">
+<meta property="og:title" content="Privacy Policy — Hubricon">
+<meta property="og:description" content="What Hubricon collects, why, where it goes, and how to get it back or erased. Written to be read.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +21,7 @@
 <style>
 /* The legal pages' layout: one readable column. Every value is a token from /assets/hubricon.css. */
 .wrap { width: min(720px, 100% - 2 * var(--gutter)); margin-inline: auto; padding-block: var(--s-5) var(--s-9); }
-.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
+.masthead { display: flex; justify-content: flex-start; align-items: center; gap: var(--s-4); padding-bottom: var(--s-5); margin-bottom: var(--s-7); border-bottom: 1px solid var(--rule); }
 .masthead .mono { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
 h1 { font-size: var(--t-display-m); }
 h2 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; margin: var(--s-7) 0 var(--s-3); }
@@ -33,7 +37,6 @@ a { color: var(--ink); text-underline-offset: 3px; }
 table { border-collapse: collapse; width: 100%; font-size: var(--t-14); margin: var(--s-2) 0 var(--s-4); }
 th, td { text-align: left; vertical-align: top; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); }
 th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
-footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top: var(--s-5); font-size: var(--t-14); color: var(--ink-3); }
 @media (max-width: 640px) {
   .panel { padding: var(--s-4); }
   th, td { display: block; padding: var(--s-1) 0; border: 0; }
@@ -42,15 +45,70 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
 </style>
 </head>
 <body>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="fly-big" href="/learn/shopify-margin">The Shopify Margin</a><a class="fly-big" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/shopify-margin#pound-line">Lesson 2: the pound line under every parcel</a><a class="fly-small" href="/learn/files/hubricon-shopify-margin.xlsx">The Shopify Margin spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/operators-math#ad-target">Lesson 2: your ad target is wrong</a><a class="fly-small" href="/learn/files/hubricon-operators-math.xlsx">The Operator&#39;s Math spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
 <div class="wrap">
 
   <div class="masthead">
-    <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
     <span class="mono">Legal · Privacy</span>
   </div>
 
   <h1>Privacy Policy</h1>
-  <p class="meta">Effective September 30, 2026 · <a href="/terms">Terms of Service</a></p>
+  <p class="meta">Effective October 1, 2026 · <a href="/terms">Terms of Service</a></p>
 
   <p class="lede">Hubricon is a founder-operated Managed Profit service for brands selling on Amazon and Shopify. This page says
   what we collect, why, who else touches it, and how to get it back or erased. It is written to be
@@ -91,16 +149,26 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   "Visiting the website". Calendly collects your name, email, a phone number for the
   call, and your answers to the booking questions, under <a href="https://calendly.com/privacy" rel="noopener">Calendly's privacy policy</a>.
   We receive that information by email and keep it in our mailbox.</p>
+  <p>On the call we may open your Seller Central reports, or your Shopify Products export, in a page on our
+  site, hubricon.com/call. It reads them inside your own browser: nothing is uploaded to us or kept, the page carries no analytics,
+  and closing the tab forgets them. What you show us on the call is confidential under section 10 of
+  the terms.</p>
 
   <h3 id="learn">Courses at hubricon.com/learn</h3>
-  <p>A course opens with your email address and nothing else. We keep that address, which course you
-  opened and when, the campaign tag in the link you arrived by if it carried one, and a salted hash of
-  your connection address (never the address itself), so that one connection cannot sign up hundreds of
-  addresses. We send one email with the course link and the spreadsheet, and after that only a short note
-  when a new course is out. Every email carries a one-click unsubscribe, and after it we send nothing more
-  about courses; the courses stay open to you. The course page remembers, in your own browser's storage,
-  that you opened it and which lessons you have read. That note never leaves your browser. Ask, and we
-  delete your address under section 6.</p>
+  <p>Every lesson and every spreadsheet is open: reading a course takes no email and no account. If you
+  choose to leave your email on a course, we keep that address, which course you left it on and when,
+  the campaign tag in the link you arrived by if it carried one, a salted hash of your connection
+  address (never the address itself), so that one connection cannot sign up hundreds of addresses, and
+  a record of what we told you would follow. We send one email with the course link and the
+  spreadsheet, and after that only a short note when a fee card the courses use changes or a new course
+  is out. Every email carries a one-click unsubscribe, and after it we send nothing more about courses;
+  the courses stay open to you. The course page remembers, in your own browser's storage, which lessons
+  you have read and the last one you opened, and any numbers you type into a course's own calculator,
+  so they are there when you come back.
+  A report you drop into a course (Fee Preview, Inventory Age) is read there and then, in your browser, and never uploaded or kept.
+  None of that leaves your browser,
+  and clearing the calculator or your browser's site data removes it. Ask, and we delete your address
+  under section 6.</p>
 
   <h3>Email</h3>
   <p>If you write to us, we keep the correspondence. If you received an email from us that you did not
@@ -113,25 +181,35 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   Manager (view and edit). Through that seat we download sales and traffic reports, SKU economics and
   fee reports, advertising reports, inventory, reimbursement and returns reports, and settlement data,
   and we make the pricing and advertising changes you have authorised.</p>
-  <p>On Shopify, you approve one collaborator account limited to Orders, Products, Analytics, Reports,
-  Marketing and Discounts. It has no access to Settings, Finances or payouts. Through it we read your
-  order, product, inventory and payout history and make the pricing and discount changes you have
-  authorised.</p>
+  <p>On Shopify, you add one staff account with a role limited to Orders (view and export), Products
+  (view, view cost, edit price and export), Discounts (view, create and delete) and Analytics reports:
+  a staff account with no access to Finance, payouts, Customers, Settings or apps. Through it we export
+  your orders and products and make the pricing and discount changes you have authorised; payout
+  exports come from you, by upload. If you advertise on Meta or Google, you also give us partner access
+  to your Meta ad account and Standard access to your Google Ads account, used for advertising changes
+  and their reports only. Google's Standard access can see billing; we do not use it.</p>
   <p>Neither seat can see banking, tax or account settings. On Amazon, the reports we pull describe your
   products, orders in aggregate, fees and campaigns, and contain no customer names, addresses or payment
   details.</p>
   <p><b>Shopify orders are the one exception, and we handle it deliberately.</b> A Shopify order record
   carries the customer's name, email and shipping address, because that is how the platform stores an
-  order. We do not want that data and we do not keep it. Our parser reads ten fields from an order —
-  order name, status, dates, refund total, SKU, quantity, price and discount — and writes a per-SKU,
-  per-month aggregate. No customer name, email, address, phone or payment detail is ever written to our
-  database. If you upload the orders CSV rather than granting a seat, you are welcome to delete the
-  customer columns first; the models never read them. The file you upload is stored as sent, in the
+  order. We keep none of it. Our parser reads eleven fields from an order: order name, email, financial
+  status, created and cancelled dates, refund total, and each line's SKU, name, quantity, price and
+  discount. It writes a per-SKU, per-month aggregate, and one row per order holding the order name,
+  date, units, revenue and a customer code: a SHA-256 hash of the lower-cased email joined to your
+  account's identifier, so the same customer has the same code within your account and a different one
+  in any other. We use it only to count repeat orders, which can raise what an advertisement can
+  afford. The code is a pseudonym, not anonymity: anyone holding both the email and your account
+  identifier could recompute it. The email address itself, and every customer name, address, phone
+  number and payment detail, is never written to our database. If you delete the email column,
+  everything else works, but repeat-customer value is not measured. The file you upload is stored as sent, in the
   encrypted bucket described below, and is deleted with the rest of your data when you ask.</p>
-  <p>You can revoke either seat in one click, any day.</p>
+  <p>You can revoke either seat any day: on Amazon in one click, on Shopify by removing the staff
+  account under Settings → Users. Meta and Google access is removed in each one's own settings.</p>
 
   <h3>Clients: files you upload</h3>
-  <p>If you would rather send files than grant a seat, you get a private upload link that expires after
+  <p>Your first exports come through a private upload link, as can any files you would rather send
+  than have us pull through the seat. The link opens only the upload page and expires after
   ninety days. Files go straight into an isolated, access-controlled storage bucket and are parsed into
   structured tables. Nothing is sent by email. The unit-cost template you fill in contains your cost,
   freight and lead time per SKU, and we treat it as confidential.</p>
@@ -185,7 +263,8 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   </table>
 
   <h2>5. Security</h2>
-  <p>Your store access is one named, permission-scoped user that you can revoke in one click.
+  <p>Your store access is one named, permission-scoped user that you can revoke any day: on Amazon in
+  one click, on Shopify by removing the staff account under Settings → Users.
   Raw data and model outputs live in a database with row-level security. Hubricon signs you in with a
   one-time link sent to your own address — we never set, see or store a password, so there is no
   password to steal, and row-level security scopes every read to your workspace alone. The engine's
@@ -214,8 +293,8 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <h2>8. Cookies</h2>
   <p>We set none of our own. Vercel's analytics uses no cookies. The embedded Calendly scheduler may
   set Calendly's own cookies when you use it. A course page at /learn keeps a small note in your
-  browser's storage (not a cookie) that you opened the course and which lessons you have read, so it
-  opens where you left off. It is never sent to us, and clearing your browser's site data removes it.</p>
+  browser's storage (not a cookie) of which lessons you have read and the last one you opened, so it
+  can offer to pick up where you left off. It is never sent to us, and clearing your browser's site data removes it.</p>
 
   <h2>9. Children</h2>
   <p>Hubricon is a business service and is not directed at anyone under eighteen.</p>
@@ -228,9 +307,24 @@ footer { margin-top: var(--s-8); border-top: 1px solid var(--rule); padding-top:
   <p>Hagen Simmons, founder · <a href="mailto:hagen.simmons@hubricon.com">hagen.simmons@hubricon.com</a><br>
   Hubricon · Dallas, Texas, United States</p>
 
-  <footer>
-    Hubricon · <a href="/">Home</a> · <a href="/learn">Learn</a> · <a href="/honesty">What is true today</a> · <a href="/your-data">Your data</a> · <a href="/terms">Terms of Service</a>
-  </footer>
 </div>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
 </body>
 </html>

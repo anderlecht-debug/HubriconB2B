@@ -16,6 +16,7 @@ whole point, and the direction that costs the engine credibility to admit.
 import numpy as np
 import pytest
 
+from hubricon_engine import channels
 from hubricon_engine.models import cashflow, dependence, inventory_sim, margin, risk
 
 
@@ -200,9 +201,13 @@ def _cash_case(payout_cycle_days, rho_zero, n_paths=8000):
     assert params
     correlation = ({"rho": 0.0, "pairwise_corr": 0.0, "basis": "test"} if rho_zero
                    else dependence.estimate_pairwise_corr(cashflow._rate_panel(margins)))
+    # a daily cycle is a Shopify store, with Shopify's own delays
+    channel = "shopify" if payout_cycle_days == 1 else "amazon"
     return cashflow.simulate(params, wires, 120000.0, 40000.0,
                              np.random.default_rng(11), n_paths=n_paths,
                              payout_cycle_days=payout_cycle_days,
+                             payout_reserve_days=channels.payout_reserve_days(channel),
+                             payout_transit_days=channels.payout_transit_days(channel),
                              correlation=correlation)
 
 

@@ -8,12 +8,15 @@ Internal names: issue = Profit Brief (client-facing), directive = move, ledger/v
 ## The loop
 
 ```
-Instantly campaign ──► reply ──► triage ──► TEARDOWN? ──► client + upload page
-      ▲                                   └► interested ──► Calendly ──► booking ──► client + welcome
-      │                                   └► question ──► answered from the fact sheet
-   lead lists + SuperSearch                                     │
-                                                                ▼
+content · the site ──► /apply ──► Calendly ──► booking ──► client (booked) + call prep email
+cold replies (paused) ──► triage ──► the call and the free course; a TEARDOWN reply provisions nothing
+                                                                │
+                                         the call ──► `hubricon retainer` (yes: agreed letter) · `hubricon declined` (no: silence)
+                                                                │
                                            uploads ──► models ──► Profit Brief No. 001 in Hubricon ──► "it's ready" email
+                                                                │                (moves go with it, for a client who said yes)
+                                                                ▼
+                                   Monday: weekly note drafted ──► `hubricon approve` ──► sent · month close ──► invoice or void
                                                                 │
                                                                 ▼
                                                  Stripe (paid) ──► renewed past the free month = PMF signal
@@ -23,15 +26,119 @@ Three components, each doing only what it is placed to do:
 
 | Component | Where it runs | Sees | Does |
 |---|---|---|---|
-| `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign, enrollment, reply sync + rule/Claude triage, sending replies, provisioning bookings and TEARDOWN requests, nudges, teardown runs, the daily digest |
+| `hubricon operator` | GitHub Actions, hourly (`.github/workflows/operator.yml`) | every secret | Instantly campaign (held paused unless `HUBRICON_COLD=on`), reply sync + rule/Claude triage, sending replies, provisioning bookings (the call prep), Recovery Only requests, nudges after the call, first reads, billing gates, exports, exit letters, the daily digest |
 | Cloud routine "Hubricon operator — inbox & triage" | claude.ai routines, every 2 h 8 am–6 pm Chicago | Gmail, Google Calendar, Supabase connectors | parses Calendly "New Event" emails into `bookings`; writes replies for anything still `pending_review` |
 | `hubricon sweep` | GitHub Actions, Mondays | secrets | the existing weekly ingest / models / alerts pass for active clients, once per channel a client sells on |
-| `hubricon harvest` | the founder's Mac, launchd, daily 06:10 | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
-| `hubricon teardown` | the founder's Mac, by hand | `.env` (Supabase, `POSTAL_ADDRESS`) | the cold engine: a priced finding on a harvested seller, a page at `/t/<token>`, and the email that links to it. Sends nothing; records what you sent |
+| `hubricon harvest` | the founder's machine (the Linux desktop since 2026-10-03; systemd timer, daily 06:10 and 18:10, not installed while the Amazon crawl is off) | `.env` (Supabase; Instantly key optional) | free leads: Best Sellers → product pages → seller profiles → brand sites; rows wait as `enriched` until the operator pushes them to the Instantly list. Every read is also appended to `harvest_product_observations`, which is the cold engine's price history |
+| `hubricon teardown` | the founder's machine, by hand (cold outreach is paused) | `.env` (Supabase, `POSTAL_ADDRESS`) | the cold engine: a priced finding on a harvested seller, a page at `/t/<token>`, and the email that links to it. Sends nothing; records what you sent |
 
 The routine never sends email. The operator never reads the inbox. Both talk
 through Supabase (`bookings`, `prospect_messages`, `funnel_events`,
 `operator_state`).
+
+## The journey, stage by stage (since 2026-10-01)
+
+Hagen's brief that day: at every rung from 1 to 11, find what the customer gets that costs us
+nothing at the margin, and build the machine behind it. The audit behind it found the machine had
+no idea whether anyone had said yes: every booking became a client, got "You're in" before the
+call, nudges off the booking date, and could get move notices the mandate approves after 72 hours.
+
+**The stages** (`engine/src/hubricon_engine/lifecycle.py`, read from rows that already exist):
+`booked` (call ahead) · `called` (call passed, no answer recorded) · `agreed` (`retainer_started_at`
+set) · `declined` · `churned`. Every automated client email asks `lifecycle.may_send(stage, kind)`.
+
+| Stage | What the machine may send, unasked | What the founder does |
+|---|---|---|
+| booked | the call prep (what the call is, what to request in Seller Central first, the upload link as an option); the first read if they sent files | take the call |
+| called | the first read; the upload link again 3 and 7 days after the call; Recovery Only 14 days after it (Amazon, once) | `hubricon retainer <client>` on a yes · `hubricon declined <client>` on a no |
+| agreed | the agreed letter (the Proving Month's first and last day as `monthly.billing_months` counts them, what happens next, dated); the first read with its moves; move notices; the weekly note and Briefs, once approved | `hubricon approve all --show` after the digest |
+| declined / churned | nothing; the exit letter and billing letters follow money, not a stage | — |
+
+**What runs where.**
+- *Booking.* The call prep is retried on later passes until it goes. A second booking from an
+  address that is already a client (a reschedule) is linked, and nothing is re-sent.
+- *Uploads.* `/intake` remembers every file (Received / Read / Needs a fix, with what to fix in
+  plain words, `lib/intake.js`) and shows the client's own status line: call, files, first read,
+  Proving Month dates and first move notices, only dates the code schedules. An upload wakes the
+  operator (`workflow_dispatch`) when `GITHUB_DISPATCH_TOKEN` and `GITHUB_DISPATCH_REPO` are set on
+  Vercel; the daily digest goes only from the scheduled 13:17 UTC run.
+- *The first read* (Issue 001) publishes when the core files are in (Amazon: business report and
+  SKU economics; Shopify: orders and products) or a day after the last upload, and names what is
+  missing. For a client who said yes, its moves go out in the same pass.
+- *Monday.* The sweep drafts a weekly note per agreed client: found, sealed and holding, watching
+  (quiet weeks included). From Brief No. 002 the daily issue job drafts and never sends. Nothing
+  reaches a client until `hubricon approve` (drafts over ten days old, or whose Record figure has
+  moved, are refused unless `--stale`). The digest lists what is waiting.
+- *One figure.* Every client surface that says "proven" uses `value.proven_since_day_one`: the
+  sum of `record_months` after disputes, or before the first month closes "Measured so far". Billing
+  letters carry no cumulative footer.
+- *The portal* shows the same figure, each month's real invoice state, leaks named in the client's
+  own SKU names and grouped (sealed and holding, called, missed), each move's seal, the Record head,
+  a heartbeat (last checked, next check), one quiet line for the freshest warning, a straight-line
+  forward line after a month closes (labelled not a forecast), one-click permission withdrawal, and
+  a one-page print whose footer carries the full Record head for /verify.
+- *Watching.* `alerts.py` flags stock in the 91–180-day bucket that its own sell-through will not
+  clear before day 181, with the surcharge that would start (an estimate from the bucket midpoint).
+- *Export.* An `access` request is fulfilled by the operator: the zip (`cli.build_export`, now
+  with `record_months`, `record_seals` and HOW-TO-VERIFY.txt) is stored at
+  `exports/<client>/<request>.zip` and a seven-day signed link goes to the contact email only. If
+  storage or email fails, the digest says `Run: hubricon export <client>`.
+- *Leaving.* `hubricon cancel [--emailed YYYY-MM-DD]` ends the subscription, marks the client
+  churned and opens an exit clock (`data_requests` kind 'exit', seven days); the next pass trues up
+  and sends the exit letter once, billed or not, with the export link and "what to keep watching"
+  (each leak still held shut in the last closed month, worded as a condition). The digest and
+  `hubricon promises` show each refund owed, OVERDUE past seven days.
+- *Links.* An upload link opens only `/intake` and a consent link only `/say` (`lib/token.js`);
+  rotating upload links spares consent links.
+- *Proof anyone can check.* `/verify` checks a Record export in the browser with the same core as
+  `scripts/verify-record.mjs` (test-enforced, byte for byte), shows the published head, and finds a
+  pasted head or seal in a verified export. It says what the Seal cannot prove yet.
+- *Prospects.* `triage.py`'s fact sheet offers only the call and the free course; a TEARDOWN reply
+  is answered with both and provisions nothing.
+
+**Waiting on the founder's go** (none is applied or set; each degrades safely without it):
+
+| Item | What it switches on |
+|---|---|
+| migration `20261001000003_journey_lifecycle.sql` | `declined`, the call-prep and agreed touches (until then the agreed letter waits and `declined` refuses) |
+| migration `20261001000004_notes_approved.sql` | the weekly note and the approval gate on Briefs (until then Briefs send as before and the digest warns APPROVAL GATE OFF) |
+| migration `20261001000005_exit_and_export.sql` | the exit clock and the private `exports` bucket (if the role cannot create it, make a private bucket `exports` in the dashboard) |
+| migration `20261001000006_portal_consents.sql` | the portal's call date and one-click withdrawal |
+| migration `20261001000007_token_purpose.sql` | single-purpose links (privacy §5 is true from here) |
+| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` in GitHub, then `npm run stripe:setup` | billing, refunds and the exit true-up (the operator prints PROMISE NOT KEPT until then) |
+| `RESEND_API_KEY` on Vercel | the /learn welcome email (the operator's emails run in GitHub, which has the key) |
+| `GITHUB_DISPATCH_TOKEN`, `GITHUB_DISPATCH_REPO` on Vercel | uploads wake the operator |
+| Calendly: the confirmation and 24-hour reminder text (below); name the kickoff event with "kickoff" | prep before the call; `lifecycle.call_at` never mistakes a kickoff for the call |
+| Supabase → Auth → Email Templates: paste `supabase/templates/magic-link.html` | the sign-in email on the design system |
+| the inbox routine's prompt: read `fit:q2` as below the band, `fit:a7` as in it | the fit tag survives the new codes |
+
+**Calendly's confirmation email** (subject `Your call with Hubricon, [Event Date] at [Event Time]`):
+
+> Hi [Invitee First Name],
+> Your call is booked: [Event Date], [Event Time] ([Time Zone]), twenty minutes, at [Location].
+> We open your own reports together and price, in your browser, what public pages can't show. If
+> the arithmetic won't clear our bill at your size, we say so on the call. No card, no contract to
+> sign on it.
+> **If you sell on Amazon:** 1. Request Fee Preview and Inventory Age in Seller Central today
+> (Reports, Fulfillment, Fee Preview; Reports, Fulfillment, Manage Inventory Health). Amazon builds
+> both on request, which can take a while. Download each as .txt or .csv. 2. Have your Sponsored
+> Products campaign or search-term report, by day, as .csv. 3. Know your landed cost as a % of price
+> and the ACoS you aim for; a CSV with a sku and a landed cost works too.
+> **If you sell on Shopify:** 1. Be signed in to Shopify admin on the computer you take the call
+> from, able to export Products (Products, Export, All products, CSV). 2. Know your landed cost as a
+> % of price.
+> Nothing is uploaded on the call; it is priced in your browser.
+> Another time: [Reschedule Link] · [Cancel Link]
+> Hagen, Hubricon
+
+**The 24-hour reminder** (subject `Tomorrow: your Hubricon call at [Event Time]`):
+
+> Hi [Invitee First Name], your call is tomorrow, [Event Date] at [Event Time], twenty minutes:
+> [Location]. Amazon: if you haven't yet, request Fee Preview and Inventory Age in Seller Central
+> now, so they have time to build, and have your campaign or search-term report, landed cost % and
+> target ACoS to hand. Shopify: be signed in to Shopify admin where you take the call, able to export
+> Products, and know your landed cost %. Nothing is uploaded on the call; it is priced in your
+> browser. Need another time? [Reschedule Link]
 
 ## The one-time setup (five minutes, once)
 
@@ -40,7 +147,7 @@ GitHub → repo → Settings → Environments → **Production** → add:
 | Secret | Why |
 |---|---|
 | `INSTANTLY_API_KEY` | Instantly → Settings → Integrations → API keys → v2 key with `all:all`. Outbound is OFF until this exists. Needs the Growth plan or above. |
-| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. It must be real, and it must match the one in `.env` on the Mac — the two write different messages. Change it and the live campaign's copy is re-pushed on the next pass; teardowns already drafted keep the address they were built with, so rebuild those. |
+| `POSTAL_ADDRESS` | A mailing address (PO box is fine). CAN-SPAM requires one in every cold email; the operator refuses to create the campaign without it. It must be real, and it must match the one in `.env` on the founder's machine — the two write different messages. Change it and the live campaign's copy is re-pushed on the next pass; teardowns already drafted keep the address they were built with, so rebuild those. |
 | `ANTHROPIC_API_KEY` | Optional. Lets the hourly run answer prospect questions itself instead of waiting up to 2 h for the routine. Same key as `.env`. |
 | `ANTHROPIC_WORKSPACE_ID` | Goes with the key above (`wrkspc_…`, shown beside the key in the Console; same value as `.env`). Identity-linked keys are refused without it, and the questions silently wait for the routine. |
 
@@ -74,11 +181,11 @@ platform. `engine/src/hubricon_engine/channels.py` is the single place the
 | What | Amazon | Shopify |
 |---|---|---|
 | Fee stack, in prose | referral, FBA fulfilment, storage | payment processing, shipping labels, apps, 3PL |
-| Payout cycle (the cash cone) | every 14 days | daily |
+| Payout timing (the cash cone) | payable 10 days after the sale (DD+7, 2-day delivery assumed), settled every 14 days, 4 days to the bank; the 14 days Amazon holds on day one counted; ads charged as spent | daily, 4 days from sale to bank |
 | Fee cliffs (low-inventory, aged surcharge, peak storage) | priced in | none; the newsvendor still runs |
 | Reimbursement recovery | the whole Amazon claims channel | not applicable — no warehouse loses units on your behalf |
 | Watched during a price step | Buy Box share | conversion rate |
-| The seat | a Seller Central user, four permissions | a collaborator account: Orders, Products, Analytics, Reports, Marketing, Discounts |
+| The seat | a Seller Central user, four permissions | a staff account (Grow, Advanced or Plus) with a role limited to Orders, Products, Discounts and Analytics reports; no Finance, so payouts come by upload; Meta partner and Google Ads Standard access granted separately |
 
 `margin_results.amazon_fees` keeps its column name on both channels — the
 column is older than the second platform. `channels.fee_label()` is what it
@@ -115,11 +222,14 @@ page's cards and signatures) are held together by
 
 **Customer data.** A Shopify orders export carries the customer's name, email
 and address, because that is how the platform stores an order. The parser
-reads ten fields from it — order name, status, dates, refund total, SKU,
-quantity, price, discount — and writes a per-SKU monthly aggregate. No
-customer name, email, address, phone or payment detail is ever written to the
-database. The privacy page says exactly this, and the upload card tells the
-client they may delete those columns first.
+reads eleven fields from it (order name, email, financial status, created and
+cancelled dates, refund total, and each line's SKU, name, quantity, price and
+discount) and writes a per-SKU monthly aggregate plus one row per order with a
+customer code: SHA-256 of the lower-cased email joined to the account's
+identifier, a pseudonym used only to count repeat orders. The email itself and
+every customer name, address, phone or payment detail is never written to the
+database. The privacy page says exactly this; deleting the email column costs
+only the repeat-customer measure.
 
 **Where the platform comes from.** The site's application gate asks "Where you
 sell" and rides the answer along on the Calendly booking; the operator reads
@@ -129,7 +239,7 @@ platform someone set by hand. A prospect the harvest found on a Shopify store
 is provisioned as Shopify when they reply TEARDOWN, so nobody is ever sent
 Seller Central instructions for a store they do not have.
 
-## The free lead harvest (runs on the Mac)
+## The free lead harvest (runs on the founder's machine; Amazon steps off since 2026-10-01)
 
 `hubricon harvest` builds the same rows the paid seller databases sell, from
 public pages: Amazon Best Sellers lists → product pages (brand, seller id,
@@ -139,11 +249,17 @@ site (published contact address, founder's name). GROWTH.md has the
 reasoning and the other free channels.
 
 It has to run from a home connection: Amazon answers datacenter ranges
-(GitHub Actions included) with a captcha. So, once, on the Mac:
+(GitHub Actions included) with a captcha. **Since 2026-10-01 the Amazon steps are off**:
+Amazon now answers automated reads with "Continued access by an unauthorized AI agent
+violates Amazon's Conditions of Use", so `harvest all`, `crawl`, `listings`, `profiles`
+and `requalify` print that and stop (harvest/fetch.py `AMAZON_OFF`); a licensed source
+wired into the harvest is what turns them back on. Since 2026-10-03 the founder's machine
+is a Linux desktop: `install` writes a systemd user timer there (scheduling.py; on a Mac
+it is still the launchd agent). Once a licensed source exists:
 
 ```
 cd engine
-uv run hubricon harvest install        # launchd: daily 06:10, `hubricon harvest all`
+uv run hubricon harvest install        # systemd user timer (launchd on a Mac): 06:10 and 18:10
 uv run hubricon harvest all --max-products 40   # first pass by hand, watch it work
 uv run hubricon harvest status
 ```
@@ -165,7 +281,7 @@ enrolls like any other Hubricon list). Skips are recorded with a reason:
 `skip_size` (a single listing bigger than the $20M ceiling), `no_website`,
 `no_email`. Leads without a found person are addressed "Hi <Brand> team".
 
-Pushing needs the Instantly key. If it is in the root `.env` the Mac pushes
+Pushing needs the Instantly key. If it is in the root `.env` the founder's machine pushes
 at the end of its run; if not, the hourly operator (which has it) pushes
 whatever is `enriched` on its next pass. Either way nothing is contacted
 twice: Instantly skips addresses already in the workspace, and the campaign
@@ -338,7 +454,7 @@ Parsed pages are cached in `~/.hubricon/harvest` for 30 days, so a re-run
 costs only what is new. If Amazon starts answering with captchas the run
 waits ten minutes once, then stops for the day; the digest says so.
 
-**Amazon pages go through the Mac's own Chrome** (since 2026-09-03). Amazon
+**Amazon pages went through the machine's own Chrome** (2026-09-03 to 2026-10-01, when the Amazon steps were switched off; on the Linux desktop it finds a system Chrome or Playwright's Chromium). Amazon
 fingerprints the client, not just the pace: a plain Python session drew a
 captcha on its second product page while the same pages loaded cleanly in
 headless Chrome from the same connection. The fetcher runs one headless
@@ -379,7 +495,7 @@ uv run hubricon source push --dry-run           # -> Instantly holding pen
 uv run hubricon source promote                  # -> harvest_sellers, for the teardown
 uv run hubricon source all                      # all of the above, one pass
 uv run hubricon source status
-uv run hubricon source install                  # launchd: 07:40 and 19:40
+uv run hubricon source install                  # systemd user timer (launchd on a Mac): 07:40 and 19:40
 ```
 
 ### Nothing here sends anything
@@ -636,7 +752,7 @@ produced a sendable teardown.
 
 This is cheaper than crawling in every sense. One store is three or four
 requests against a host that does not fight you, instead of a day of Best
-Sellers pages against one that does. Nothing needs the Mac to be awake on a
+Sellers pages against one that does. Nothing needs the founder's machine to be awake on a
 schedule, and nothing gets fingerprinted.
 
 ### The one command
@@ -664,7 +780,7 @@ Nothing here sends an email. `sent` records that you did, which is what makes
 the ninety-day and three-touch rules real — a hand-sent email nobody wrote down
 is a prospect the automated lane will mail again next week.
 
-`POSTAL_ADDRESS` has to be in `.env` on the Mac as well as in the GitHub
+`POSTAL_ADDRESS` has to be in `.env` on the founder's machine as well as in the GitHub
 environment. CAN-SPAM requires it in the message and the engine refuses to draft
 without one.
 
@@ -689,14 +805,14 @@ COLD_DRY_RUN=false hubricon teardown send   dispatch now, from this machine
 
 You do not have to run it. **The hourly operator dispatches every approved
 teardown on its own pass**, because it is the thing that holds
-`INSTANTLY_API_KEY` — your Mac does not. So the loop is: `add` the leads,
+`INSTANTLY_API_KEY` — the `.env` on your machine does not. So the loop is: `add` the leads,
 `review` them, `approve` the ones you want, and the next hourly pass sends them.
 
 `COLD_DRY_RUN: "false"` is set on that job in `operator.yml`, and it has to be:
 the flag defaults to on and is checked once per teardown, so without it the
 campaign is created, the mailboxes are synced, the caps are right, and every
 approved teardown is denied one at a time — a lane that looks healthy and sends
-nothing. It was exactly that for the first hours it existed. On the Mac the flag
+nothing. It was exactly that for the first hours it existed. On the founder's machine the flag
 is still on by default, which is why `teardown send` there needs it spelled out.
 
 Caps: `COLD_PER_MAILBOX_DAILY` (default 30) times the number of mailboxes past
@@ -909,8 +1025,12 @@ receipt a person can read, not a proof; the full leaf is in the export. **The
 next step is an external timestamp anchor**: stamp the global head with
 OpenTimestamps on each sweep, or have the Wayback Machine capture a GET
 endpoint serving `public_record_seal()`, and keep the proofs beside the head's
-sequence number. No network call is made for it today. Neither Hubricon (the
-portal) nor the public site shows seals or the head yet.
+sequence number. No network call is made for it today. Since 2026-10-01 the
+portal shows each move's seal ("Called {date} · seal {12}") and the Record head,
+its one-page print carries the full head, and hubricon.com/verify checks a Record
+export in any browser with the same core as `scripts/verify-record.mjs`
+(test-enforced, byte for byte), shows the published head from
+`public_record_seal()`, and finds a pasted head or seal in a verified export.
 
 ## The loop past paid: proof, the ask, the month, and what it teaches the cold engine
 
@@ -1093,13 +1213,13 @@ cards, same ask.
 **Where it sits in the funnel:**
 
 ```
-cold email / teardown page ─► TEARDOWN reply or booking ─► welcome + upload page
+booking ─► call prep (upload link optional) ─► the call
         │                                │
-        │                     day 3 nudge · day 7 files             (unchanged)
+        │                     after the call: day 3 nudge · day 7 files   (never before the call, never after a no)
         │                                │
-        │                     day 14, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
+        │                     14 days after the call, no exports, Amazon ─► DOWNSELL email, once (client_touches 'downsell')
         │
-   site gate: under $3M or not own brand ─► books anyway, tagged fit:below ─► call ─► Amazon: Hagen offers Recovery Only by hand (or the day-14 DOWNSELL) ─► reply ─► `hubricon downsell`
+   site gate: under $1M or not own brand ─► books anyway, tagged fit:q2 ─► call ─► Amazon: Hagen offers Recovery Only by hand (or the day-14 DOWNSELL) ─► reply ─► `hubricon downsell`
                                          │
    exports land ─► Issue 001 ─► day-30 gate ─┬─ clears ─► retainer ─► rolling gate on every invoice
                                              └─ short  ─► the letter names the smaller door ─► reply RECOVERY
@@ -1118,9 +1238,11 @@ uv run hubricon downsell <client> --retainer     # back onto the flat fee
 ```
 
 The site does not show the downsell anywhere. Since 2026-09-18 the application
-books every brand that answers its four questions; an Amazon seller under $3M or
-on someone else's brand arrives on the calendar tagged `fit:below` in the
-booking's `utm_content`, and Hagen offers Recovery Only by hand after the call.
+books every brand that answers its four questions; an Amazon seller under $1M or
+on someone else's brand arrives on the calendar tagged `fit:q2` in the
+booking's `utm_content` (`fit:a7` = in the band; codes since 2026-10-01, so a
+prospect never reads a verdict in a URL), and Hagen offers Recovery Only by hand
+after the call.
 
 ## Stripe, end to end (2026-09-25)
 
@@ -1389,8 +1511,8 @@ failing and its error was being swallowed, so `operator_state` held no
 
 That cannot recur. Every pass now writes `instantly.health` to `operator_state`
 with plain-English verdicts, and `hubricon doctor` reads it back. The founder's
-Mac has no `INSTANTLY_API_KEY` and no `gh` CLI, so the database is the only log
-that reaches both machines: run `doctor` locally and it reports what the cloud
+machine has no `INSTANTLY_API_KEY`, so the database is the log that reaches both
+(the Linux desktop does have the `gh` CLI, so `gh run view` works there too): run `doctor` locally and it reports what the cloud
 last saw, with the timestamp.
 
 If activation is not sticking, the answer is almost always in the Instantly
@@ -1457,8 +1579,9 @@ Arrives at 8:17 am Chicago from the operator. Sections:
 - **PMF scoreboard** — the numbers above.
 - **Instantly campaign** — sent / replies / bounces as Instantly reports them.
 - **Harvest** — sellers on file by status (candidate / enriched / pushed /
-  skipped). If it stops moving for two days the Mac job is not running:
-  `launchctl list | grep hubricon`, then `~/Library/Logs/hubricon-harvest.err`.
+  skipped). It does not move while the Amazon steps are off (since 2026-10-01). When a
+  scheduled job runs on the founder's Linux desktop: `systemctl --user list-timers | grep
+  hubricon`, then `journalctl --user -u hubricon-sourcing` (or `-u hubricon-harvest`).
 - **Replies waiting for a written answer** — the routine clears these within
   two hours; if a name sits there for a day, the routine is not running
   (check https://claude.ai/code/routines).
@@ -1501,7 +1624,7 @@ Actions → "Hourly operator" → Run workflow does the same in the cloud (tick
   re-contacts them automatically yet.
 - Nobody is turned away before the founder has talked to them. The site's
   application never declines; every non-test booking is provisioned and
-  welcomed. The routine's fit flag (`bookings.qualified` / `dq_reason`) is
+  sent the call prep (since 2026-10-01; until then it was sent "You're in"). The routine's fit flag (`bookings.qualified` / `dq_reason`) is
   informational and shows up in the digest as "sell on this call".
 
 ## The 60-second Teardown (`/teardown`)
@@ -1537,7 +1660,7 @@ everything the crawl has weighed in its category. Then the bridge: what a
 public page cannot show, and the full Teardown.
 
 Nothing is fetched from Amazon. Amazon soft-blocks datacenter fetches and the
-harvest reads pages from the Mac, so the page never tries; the numbers are on
+harvest read pages from the founder's own machine, so the page never tries; the numbers are on
 the listing under "Product information" and typing them is the sixty seconds.
 
 **One table, two languages.** `engine/.../cold/priors.py` stays the only place
@@ -1565,7 +1688,10 @@ aggregates only, from 30 listings up; `POST` records a run in `tool_runs`
 and creates (or advances) a `prospects` row at `wants_teardown`, source
 `tool`. That is the whole deep follow-up: the hourly operator already
 provisions every `wants_teardown` prospect and emails the private upload
-page, so a tool lead gets the full Teardown path with no new job.
+page, so a tool lead gets the full Teardown path with no new job. (Until
+2026-10-01. The Teardown is retired: a `wants_teardown` prospect is now moved
+to `interested`, answered with the call and the free course, and nothing is
+provisioned.)
 
 The result is reproducible from its URL — the inputs ride in the hash — so
 "copy a link" and "send me this" both work without storing anything a
@@ -1726,7 +1852,7 @@ Every price ships as a labelled placeholder, not a fact. Replace them with
 What it cannot tell you: minutes nobody logged; whether a booked call
 happened; the day a client left (not recorded, so the exit true-up stands in);
 anything outside the engine, such as the cloud routine on your claude.ai plan,
-the harvest on the Mac, or the site's own mail (the 60-second Teardown's copy
+the harvest on the founder's machine, or the site's own mail (the 60-second Teardown's copy
 from `api/quick.js` and the portal's sign-in links reach Resend without passing
 the engine, so the Resend line is the engine's share; add any of these as
 `fixed.*` if they should count); and a price. It only ever multiplies by the
@@ -1819,6 +1945,12 @@ only. What exists:
 | The hub, one card per course that exists | `learn/index.html` |
 | Course 1, **The Fee Staircase**: eight lessons, the five beats of the case study taught end to end | `learn/fee-staircase.html`, `assets/learn.js` |
 | Its spreadsheet (six sheets, ~80,000 formulas, values cached) | `learn/files/hubricon-fee-staircase.xlsx` |
+| Course 2, **The Price Curve** (2026-10-01): eight lessons, elasticity from one's own sales history to the best price, the break-even on a raise and a discount, steps of at most 5% | `learn/price-curve.html`, the shared course layout in `/assets/hubricon.css` ("course pages") |
+| Its spreadsheet (five sheets, values cached) and the figures the page prints | `learn/files/hubricon-price-curve.xlsx`, `data/learn-price-curve.json` |
+| Course 3, **Capital & Cash** (2026-10-01): seven lessons, the days a dollar is gone, the low point after a wire, the reorder point and order, the service level each margin pays for, hold against liquidate, the cash a bad month needs, and what a late wire costs | `learn/capital-and-cash.html`, figures in `data/learn-capital-cash.json`, spreadsheet `learn/files/hubricon-capital-and-cash.xlsx` |
+| Course 5, **The Operator's Math** (2026-10-01): five lessons for any operator: contribution margin before and after ads, the break-even ROAS your margin sets and the last ad dollar against the average, LTV to CAC on margin, payback, and the numbers that mislead, ranked; the reader's own Shopify Orders export counted in the browser | `learn/operators-math.html`, `assets/learn-operators-math.js`, `assets/cohorts.mjs`, figures in `data/learn-operators-math.json`, spreadsheet `learn/files/hubricon-operators-math.xlsx` |
+| Course 4, **The Shopify Margin** (2026-10-01): six lessons for Shopify sellers: an order's money by zone, the pound line, the free-shipping line, the compare-at (with the FTC's former-price rule, 16 CFR 233.1), break-even ROAS, and the Products export read in the browser by /call's own reading | `learn/shopify-margin.html`, `assets/learn-shopify-margin.js`, figures in `data/learn-shopify-margin.json`, spreadsheet `learn/files/hubricon-shopify-margin.xlsx` |
+| Each course on one page (2026-10-01): every rule and formula in eight cells, one printed Letter page, each cell linked to its lesson; figures are the course page's own fills | `learn/fee-staircase-card.html`, `learn/price-curve-card.html`, "a course on one page" in `/assets/hubricon.css` |
 | The sign-up and the unsubscribe | `api/learn.js`, `lib/learn.js`, table `learners` (`supabase/migrations/20261001000002_learners.sql`) |
 
 **Every figure is built, none typed.** The lessons' numbers are `data-fill` keys and the two
@@ -1837,16 +1969,101 @@ fails when `ratecard.json` or the file has moved since. When Amazon publishes a 
     uv run --no-project --with openpyxl python scripts/learn/verify_fee_staircase.py --publish
     node scripts/build-pages.mjs
 
+**The Price Curve is the engine's pricing in cells, and its figures are the engine's own.**
+`scripts/learn/price_curve.py` computes the worked example (an invented listing: invented
+history and costs, Amazon's fees from `cold/priors.py`) with `models/elasticity.py`'s `_fit`
+and `models/pricing_engine.py`'s `optimal_price`, `profit_delta` and `near_unit_elastic`, plus
+the same price test re-run 200 times, into `data/learn-price-curve.json`; it builds the
+spreadsheet as formulas, recalculates a copy in LibreOffice and holds it to 80 golden cases (40
+random histories through the fit, HC3 error, t-interval and the guard against −1; 40 catalogue
+rows through the best price, the step and the profit change) and the example's own sheets.
+`--publish` ships the file and `scripts/learn/price-curve.stamp.json`, which pins the hashes of
+the two engine modules; `scripts/learn/price-curve.test.mjs` fails when either module or the
+file moves. After any change to the elasticity or pricing models (which also re-runs the bench):
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/price_curve.py --publish
+    node scripts/build-pages.mjs
+
+**Capital & Cash is the engine's cash and inventory models, run on the course's examples.**
+`scripts/learn/capital_cash.py` runs the invented garlic press (The Price Curve's, same rate and
+costs) and an invented spatula set through `inventory_sim.run`, `cashflow.run` (10,000 paths),
+`inventory_econ.critical_fractile`, `demand_over_cycle` and `hold_vs_liquidate`, and writes
+`data/learn-capital-cash.json`; `capitalCashFigures` in `scripts/build-pages.mjs` fills the page
+and draws the cash path, the cash band and the late-wire curve. The spreadsheet carries the same
+arithmetic as formulas and is checked against the engine on golden cases (the reorder point,
+the order and the wire; the service level row by row; hold against liquidate month by month; the
+late-wire table). Where the engine counts lead-time demand exactly (a Poisson count on a lognormal
+rate), the sheet uses the lognormal alone and the check holds it within a few units; the lessons
+print the engine's figure. After any change to those models or to the payout and fee constants:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/capital_cash.py --publish
+    node scripts/build-pages.mjs
+
+`scripts/learn/capital-cash.test.mjs` fails when an engine module the figures came from has moved.
+
+**The Operator's Math is the engine's own models on an invented store.** `scripts/learn/operators_math.py`
+simulates a coffee roaster from stated parameters (its customers from a BG/NBD process, its ad curve
+from a saturating response) and reads it with `models/clv.py` (repeat orders, the lifetime multiplier,
+payback) and `models/ad_efficiency.py` (the last dollar, the break-even spend), on `cold/priors.py`'s
+label and payment cards. The page prints the simulation's truth beside the engine's estimate. The
+spreadsheet is checked on 54 golden cases, and `assets/cohorts.mjs` (the in-browser customer count)
+is held to the script's reference on a synthetic Orders export (`operators-math.golden.json`). When
+clv.py, ad_efficiency.py or priors.py move:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/operators_math.py --publish
+    node scripts/build-pages.mjs
+
+**The Shopify Margin is the engine's two Shopify cards.** `scripts/learn/shopify_margin.py`
+prices an invented product on `cold/priors.py`'s USPS Ground Advantage rows and Shopify Payments
+plan rates (the same cards `lib/fees.js` carries and `/call` reads, held to them by
+`lib/fees.golden.json`), writes `data/learn-shopify-margin.json`, and checks its six-sheet
+spreadsheet on 132 golden cases. When USPS or Shopify reprices, update `priors.py`, regenerate
+the rate card, then:
+
+    cd engine && uv run --with openpyxl python ../scripts/learn/shopify_margin.py --publish
+    node scripts/build-pages.mjs
+
 One known difference: on an exact half-cent LibreOffice and JavaScript round the fourth
 decimal differently ($5.0612 against $5.0611 on one peak fee). The verify tolerance is a
 hundredth of a cent; every figure agrees to the cent.
 
-**The gate.** The email opens the course in the browser (`localStorage`, key
-`hubricon.learn`) whatever the server says, except a 400 for a bad address: a fault of ours
-never locks a reader out. Without scripts every lesson shows in order. A new sign-up gets one
-email (the link and the spreadsheet, Resend, with RFC 8058 one-click unsubscribe headers); a
-repeat gets nothing. Notes "a new course is out" go only to addresses with no unsubscribed
-row. Privacy §1 "Courses" and §8 describe exactly this.
+**Every lesson asks before it tells (2026-10-01).** Each lesson in each live course ends with
+"Check yourself": two questions before its "Do this now", each answer behind a click, because
+trying to recall before reading is what makes a lesson stay (retrieval practice). The answers'
+figures are fills too: The Price Curve's exercise SKU ($20, landed cost $5, fixed fees $4,
+referral 15%) is priced in `priceCurveFigures` by `assets/price-curve.mjs`, the port the golden
+cases hold to the engine. `scripts/learn/learn.test.mjs` refuses a lesson without its two
+questions, a wide table that is not in its own scroll box, and a stylesheet where `hidden`
+loses to a panel's own display.
+
+**Open lessons, and the optional email (the founder's call, 2026-10-01).** Every lesson and
+spreadsheet is open: no email, no account. The cover's "Start lesson 1" opens it, one lesson
+shows at a time, and the cover offers to continue where the reader left off (`localStorage`,
+key `hubricon.learn`, this browser only). Without scripts every lesson shows in order. The
+email is the opt-in for a little extra, on the featured card, under each cover and at the end
+of each last lesson (`joinForm` in `scripts/site-blocks.mjs`, posted by `assets/site.js`). A
+new sign-up gets one email (the link and the spreadsheet, Resend, RFC 8058 one-click
+unsubscribe); a repeat gets nothing. The form says only what happened: "Sent" only when the
+server says the email went. Each sign-up records what it was told would follow
+(`funnel_events.payload.promise`, beside `learner`), and after that it gets only notes: when
+Amazon changes its fee cards, and when a new course opens. Privacy §1 "Courses" and §8
+describe exactly this.
+
+**Sending a note** (`scripts/learn/note.mjs`, dry run by default). A note is a JSON file in
+`scripts/learn/notes/`, named for its id, of kind `fee-cards` or `course`; its figures are
+`{fill:<course>:<key>}`, read from the built course page, so a note types no number the course
+computes (`scripts/learn/learn.test.mjs` holds every draft to that and to "never sells"). A
+`fee-cards` note goes only to sign-ups told fee-card notes would come; a `course` note to every
+address still subscribed; one per address; once per id.
+
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json                  # who, and the text
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json --test you@x.com # one copy to you
+    node scripts/learn/note.mjs scripts/learn/notes/holiday-card-2026.json --send           # on the founder's go
+
+When to write one: the week before Amazon's holiday card starts (October 15) and when the
+annual card is published, after `verify_fee_staircase.py --publish` has moved the course to
+it; and the day a new course goes live. `holiday-card-2026` is drafted and waits for the
+founder's go; on 2026-10-01 the list was empty.
 
 **Live since 2026-09-30** (c0d872c), the founder having read the lessons. Migrations
 `20261001000001_record_months`, `20261001000002_learners` and the held-back
@@ -1854,15 +2071,107 @@ row. Privacy §1 "Courses" and §8 describe exactly this.
 **Vercel still needs `RESEND_API_KEY` and `POSTAL_ADDRESS`** (Production): the GitHub
 operator has both, the site has neither, so a sign-up is kept and the course opens but no
 email goes (`funnel_events.payload.email_error = "RESEND_API_KEY not set"`). The key in
-`.env` is a send-only key and was proven against Resend's test inbox the same night. Once
-it is set, send the link to anyone who signed up meanwhile: `learners` rows with
-`email_sent_at` null.
+`.env` is a send-only key and was proven against Resend's test inbox the same night.
+**2026-10-01: the founder set both in Vercel**; they take effect on the next deploy. After it,
+`node scripts/learn/note.mjs --backfill` lists any sign-up the first email never reached
+(`--send` sends it, each told only what it was promised); on 2026-10-01 there were none.
 
 **Adding a course:** an entry in `COURSES` (`lib/learn.js`), its page on the fee-staircase
-pattern with `data-course`, a card in `learn/index.html`, its page in `PAGES` if it carries
-figures. `lib/learn.test.mjs` refuses a listed course whose page or template is missing, and
-`scripts/learn/learn.test.mjs` refuses a hub card for a course that is not listed.
+pattern with `data-course`, its page in `PAGES` if it carries figures, and in
+`data/library.json` its status changed from `planned` to `live` with a `path`. The hub, the
+home page's library, the Education tab and the footer all rebuild from that file
+(`node scripts/build-pages.mjs`). `lib/learn.test.mjs` refuses a listed course whose page or
+template is missing, and `scripts/learn/learn.test.mjs` and `scripts/site-blocks.test.mjs`
+refuse a link to a course that is not live.
+
+## The short home page and the tabs' pages (since 2026-10-01 evening)
+
+The founder's call: "a short first page, not a lot of scrolling … all the other information
+about the business on the tabs." `index.html` is five bands (hero, `#proof`, `#offer`,
+`#learn` as a strip of covers, `#book`); `scripts/build-pages.test.mjs` caps its own words
+(`HOME_WORDS_MAX`) and pins the order. Everything else has a page under a tab, generated once
+from the old home page's sections and maintained by hand since:
+
+| Tab | Page | What it holds |
+|---|---|---|
+| Proof | `case-study.html` | the store study (three calls, figures, the misses, method), then the problem, the staircase and the one-listing Amazon study; `requireAllFills` lives here |
+| How it works | `how-it-works.html` | the three steps, the Profit Record illustration (`#record`), who runs it, the FAQ and its JSON-LD |
+| The offer | `offer.html` | the creed, the offer, the four guarantee layers (`#guarantee`), the trust tiles (`#trust`) |
+| Education | `learn/index.html` | the library and the optional email |
+
+Links to the old home anchors (`/#case-study`, `/#faq`, `/#trust`, `/#results`, …) are sent to
+their new pages by `assets/home.js`; clicks, FAQ opens and the strip dates are tracked from
+`assets/site.js` on every page. `vercel.json` sends `/method` to `/how-it-works`, and must never
+redirect a path the build writes (a test checks).
+
+**The store study.** `cd engine && uv run --with openpyxl python scripts/store_case_study.py`
+downloads "Online Retail II" once into `~/.hubricon/uci` (CC BY 4.0; never committed), runs
+`models/clv.py` and `models/forecast.py` unmodified, and writes `data/store-study.json` with
+totals only. Then `node scripts/build-pages.mjs`. `scripts/store-study.test.mjs` pins the
+engine files' hashes, so a change to clv, forecast or seasonality fails until it is re-run.
+No Amazon page is read for it: Amazon answers automated reads with "Continued access by an
+unauthorized AI agent violates Amazon's Conditions of Use" (2026-10-01).
+
+## The library, the video slots and the results wall (since 2026-10-01)
+
+The founder's call on 2026-10-01: the home page gets Apple-style tabs with an Education tab,
+the free training the way Acquisition.com shows it, the trust "in their face", and "the
+empty space where we can just plug in the videos eventually". Everything shared lives in
+`scripts/site-blocks.mjs` and is baked into every public page by
+`node scripts/build-pages.mjs`: the nav, the footer, the library, the slots, the wall.
+
+| To do this | Edit | Then |
+|---|---|---|
+| Put a video in a slot | `data/library.json`: the slot's `src` (a path under `/media/` or a full `https://` URL) and, if you have one, `poster`. Slots: `films.case_study` (the home page's case-study film), each course's `trailer`, each live lesson's `video` | `node scripts/build-pages.mjs`, then the tests |
+| Plan a course | an entry with `"status": "planned"`, a cover (`staircase`, `waterfall`, `trough`, `curve`, `fan`, `bars`) and its lessons. It shows as Planned, links nowhere, names no date | the same |
+| Publish a client's words | `data/testimonials.json`: `client`, `quote` (verbatim), `consent_on` (the date of their written yes, terms §9), `record_month`, and `video` if they recorded one. The test refuses an entry without consent, a date or a month | the same |
+| Change the scoreboard illustration | `data/scoreboard-illustration.json`; every dollar is counted by the terms' rules in code, so it cannot show a month the terms would not | the same |
+
+**The course's email.** The featured course card on `/learn` (on the home page until it went short)
+carries the same email form as the course page: it posts `{email, course, website, source}`
+to `/api/learn`, marks the course opened in the visitor's browser (`hubricon.learn`, the
+course page's own key) and opens lesson 1. Same table (`learners`), same one email, same
+unsubscribe; a sign-up from the home page looks exactly like one from the course page. The
+welcome email says "You asked for this on hubricon.com", true from either.
+
+The results wall is off every page since 2026-10-01 evening (the founder: an empty wall "only
+hurts us"). Its block (`wall`), the testimonial guard and the `public_results()` code stay;
+when a client consents, put the `<!-- build:wall -->` block and a Results tab back; the
+site-blocks test allows them once `data/testimonials.json` holds a consented entry. `/media/` is served as is; keep a film under about 50 MB or host
+it elsewhere and use the `https://` form.
 
 An earlier draft, *The Reimbursement Playbook* (2026-09-18, content worktree, the retired
 look), is parked: it runs on the seller's own reports, so it is not the public-data first
 course the spec asks for. It is a candidate for a later course, rebuilt on the design system.
+
+## The call: `/call` (since 2026-10-01)
+
+`HUBRICON_SPEC.md` ("The funnel", "Customer experience"): on the call the prospect's exports
+are opened live and the warm-only cliffs priced in front of them, their own named dollars on
+the screen before they have paid a cent. `/call` does that, unlinked and not indexed.
+
+**On the call.** Send the link, or share your screen with it open. Ask for two reports, three if
+they run ads: Reports → Fulfillment → **Manage Inventory Health** (Inventory Age), Reports →
+Fulfillment → **Fee Preview**, and Advertising → Reports → Sponsored Products **Campaign** report
+by day. Type a landed cost (share of price) and their target ACoS. The page shows one number,
+then the aged-inventory surcharge (Amazon's own estimate where the report carries it), the
+cliff at the next snapshot, the low-inventory-level fee by size tier (from Fee Preview), charged only when both the 30- and 90-day supply are under 28, with the exemptions the report shows, units past a
+fee edge at their real units, and break-even ACoS per SKU against their target.
+
+**Nothing leaves their browser.** FileReader in, `/lib/call.js` arithmetic, no analytics script,
+the only request the public rate card. `scripts/call-page.test.mjs` holds that; privacy §1
+"Booking a call" says it.
+
+**The engine's arithmetic.** `/lib/call.js` ports the ingest's report reading and
+`inventory_econ.run`'s surcharge and low-inventory fee; `lib/call.test.mjs` holds it to
+`lib/call.golden.json`, which `engine/scripts/call_golden.py` writes by running the engine's
+own parser and model on its fixtures. Regenerate after any change to `ingest/readers.py`,
+`ingest/headers.py`, `ingest/inventory_health.py`, `models/fee_schedule.py` or
+`models/inventory_econ.py`:
+
+    cd engine && uv run python scripts/call_golden.py && cd .. && node --test lib/
+
+Two figures are the call's own and say so: the next-snapshot cliff (Amazon's 241–270 day
+estimate × (5.45 − 1.50) / 1.50, the learn spreadsheet's rule) and break-even ACoS from Amazon's
+own fee estimates in Fee Preview and the typed landed cost. The engine has no per-SKU
+break-even ACoS yet; its ad threshold is catalogue-wide (`ad_efficiency`, 1 / average margin).

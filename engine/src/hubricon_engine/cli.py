@@ -368,6 +368,15 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
             margin_rows = margin.run(data)
             avg_margin = margin.average_margin(margin_rows)
             _write_results(db, "margin_results", margin_rows, run_id, client["id"])
+            if channel == "shopify":
+                # the store's own files: the compare-at discount and the parcel
+                # band, each found, not proven (models/shopify_findings); the
+                # weekly drafting pass reads it (directives.compare_at_directives)
+                from .models import shopify_findings
+                try:
+                    _save_output(db, run_id, client["id"], "shopify_findings", shopify_findings.run(data))
+                except Exception as err:   # never a reason for the run to stop
+                    print(f"  shopify findings skipped: {err}")
         seasonal = None
         if "season" in wanted:
             seasonal = seasonality.indices(data)
@@ -637,6 +646,7 @@ def _run_models(db, client: dict, wanted: set[str], simulations: int, seed: int,
                 data["ppc_search_terms"], resolve_brand_terms(client),
                 value=value_out, health=health, claims=claims, recovery=rec, forecast_rows=forecast_rows,
                 inv_econ=inv_econ, risk=risk_out, anomaly_rows=anomaly_rows, today=today,
+                proven=valuemod.proven_since_day_one(db, client, value_out, today),
             )
             dbmod.chunked_upsert(db, "chart_packs",
                                  [{"run_id": run_id, "client_id": client["id"], "payload": pack}],
@@ -748,7 +758,7 @@ def _draft_for_run(db, client: dict, run_id: str, channel: str | None = None) ->
                               replenishment=outputs.get("replenishment"), cash_orders=outputs.get("cash_orders"),
                               assortment=outputs.get("assortment"),
                               risk_share=client.get("risk_budget_share"), cash=outputs.get("cash"),
-                              ppc_spend_rows=ppc_spend)
+                              ppc_spend_rows=ppc_spend, shopify_findings=outputs.get("shopify_findings"))
 
     # file each directive into the active plan's matching initiative
     initiative_by_module = {}
@@ -809,7 +819,8 @@ def _refresh_value(db, client: dict, run_id: str) -> dict:
     _save_output(db, run_id, client["id"], "value", v)
     packs = (db.table("chart_packs").select("payload").eq("run_id", run_id).limit(1).execute().data)
     if packs:
-        payload = {**packs[0]["payload"], "value": chart_pack.value_section(v)}
+        payload = {**packs[0]["payload"],
+                   "value": chart_pack.value_section(v, valuemod.proven_since_day_one(db, client, v))}
         dbmod.chunked_upsert(db, "chart_packs",
                              [{"run_id": run_id, "client_id": client["id"], "payload": payload}],
                              on_conflict="run_id")
@@ -982,11 +993,15 @@ def cmd_directives(args):
             print("not notified — window not opened: RESEND_API_KEY is not set, so the drafts stay drafts.")
         else:
             res = issue.issue_drafts(db, client, _run_channel(client, run), PORTAL_URL, send=True)
-            if res["issued"] and res["notified"]:
+            if res.get("gated"):
+                # lifecycle.may_send: a move notice goes only to a client who has said yes
+                state = (f"NOT issued — the client is '{res['gated']}', and moves go only to a client who has "
+                         f"said yes; {res['held']} draft(s) stay drafts, unsent and unsealed")
+            elif res["issued"] and res["notified"]:
                 state = "issued and notified (veto window open)"
             elif res["issued"]:
                 state = "issued but NOT notified — no veto window opened, so none of them can auto-approve"
-            if res["held"]:
+            if res["held"] and not res.get("gated"):
                 state += f"; {res['held']} draft(s) held for the next issue"
             if res.get("seal"):
                 state += f"; seal: {res['seal']}" + (f" ({res['seal_reason']})" if res.get("seal_reason") else "")
@@ -1014,8 +1029,29 @@ def cmd_ledger(args):
 
 
 def cmd_approve(args):
+    """`hubricon approve [client|all] [--show] [--stale] [--discard]`: send what
+    waits for the founder's yes, the Monday notes and Profit Brief No. 002 on
+    (approval.py). `--show` prints each in full first and, on a terminal, asks
+    before each one; without a terminal it only shows. `--directive` keeps the
+    older meaning: record a client's answer on an issued move."""
+    if getattr(args, "directive", None):
+        return _approve_directive(args)
+    from . import approval
+    db = dbmod.connect()
+    target = (args.client or "all").strip()
+    ids = None if target.lower() == "all" else [dbmod.resolve_client(db, target)["id"]]
+    ask = input if (args.show and sys.stdin.isatty()) else None
+    res = approval.approve(db, ids, show=args.show, stale=args.stale, discard_all=args.discard, ask=ask)
+    if res["gate"]:
+        print(f"\n{res['sent']} note(s) sent, {res['published']} brief(s) published ({res['emailed']} emailed), "
+              f"{len(res['refused'])} refused, {res['discarded']} discarded, {res['left']} left as drafts.")
+
+
+def _approve_directive(args):
     """Operator records the client's standing-mandate outcome for a directive:
     approved (default, veto window passed or explicit yes) or declined."""
+    if not args.client or args.client.strip().lower() == "all":
+        sys.exit("--directive needs the client it belongs to: hubricon approve <client> --directive <id>")
     db = dbmod.connect()
     client = dbmod.resolve_client(db, args.client)
     candidates = (db.table("directives").select("id, status, action_text")
@@ -1661,81 +1697,169 @@ def cmd_watch(args):
               else "No live price tests.")
 
 
-# Every table a client's export contains. Ordered so the zip reads like the
-# service does: what you sent us, what we computed, what we decided, what it
-# earned.
+# Every table a client's export contains, each read by its client_id and
+# nothing else. Ordered so the zip reads like the service does: what you sent
+# us, what we computed, what we decided, what it earned, what we billed and
+# wrote to you, and the Seal over all of it. record_months is what every invoice
+# was judged against; results, the verified dollars; record_seals, the chain's
+# rows (record-seal.json beside them is the same chain in the verifier's form).
 EXPORT_TABLES = (
     "uploads", "sku_economics", "asin_traffic", "ppc_search_terms", "ppc_spend",
     "inventory_levels", "settlement_transactions", "cogs_inputs",
-    "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health",
+    "fba_reimbursements", "fba_returns", "inventory_ledger", "inventory_health", "customer_orders",
     "margin_results", "elasticity_results", "inventory_sim_results", "ad_efficiency_results",
     "cash_horizon_results", "recovery_claims", "model_runs", "model_outputs", "chart_packs",
     "directives", "price_tests", "alerts", "briefings", "plans", "initiatives",
-    "invoices", "mandates", "consents",
+    "record_months", "results",
+    "invoices", "recovery_invoices", "mandates", "consents", "client_emails",
+    "record_seals", "weekly_notes",
 )
 
+# What a client's export may hold of a table that also keeps the founder's
+# drafts: a Profit Brief only once published (a row with no status predates the
+# approval gate and was published), a weekly note only once sent. Drafts and
+# discarded notes are the founder's working papers, not something we told them.
+EXPORT_ROW_FILTERS = {
+    "briefings": lambda r: (r.get("status") or "published") == "published",
+    "weekly_notes": lambda r: r.get("status") == "sent",
+}
+# Tables a migration may not have created yet (20261001000004): absent, the
+# export leaves them out without a line, rather than print a database error.
+EXPORT_OPTIONAL_TABLES = ("weekly_notes",)
 
-def cmd_export(args):
-    """Everything we hold on a client, as one zip.
+# Beside record-seal.json and verify-record.mjs in every export: how to run the
+# check, in words a client's accountant can follow, and what it does not prove.
+VERIFY_INSTRUCTIONS = """How to check your Profit Record yourself
 
-    "Your data and your ledger export free, any time" appears eleven times
-    across six surfaces — including Terms §11, Privacy §6 and the portal footer
-    — and until now there was no export command, endpoint or button anywhere.
-    Raw uploads included: the promise says "raw files, tables, results, this
-    ledger", not a summary."""
+Every move on your Profit Record is sealed. Before the email that announced a
+move was sent, its promise (what we would do, the dollars we expected, and a
+fingerprint of the evidence behind it) was hashed and chained onto your Record.
+When the move was measured, the result was chained after the promise it
+answers. record-seal.json holds every one of those entries, and
+verify-record.mjs recomputes all of them. It needs Node.js (version 18 or
+later) and nothing else: no account, no network, no Hubricon.
+
+1. Keep this export zipped, or unzip it; either works.
+2. In a terminal, in the folder that holds the files, run
+
+       node verify-record.mjs record-seal.json
+
+   or point it at the zip itself:
+
+       node verify-record.mjs <this export>.zip
+
+3. It prints "OK" when every entry matches its seal, the chain is unbroken and
+   every measurement answers its promise. Otherwise it prints "BROKEN" and
+   names the first entry that does not check out.
+
+Make the check stronger with something only you hold. Every email that
+announced a move printed its seal, the first twelve characters, beside the
+expected dollars. Give it any of them:
+
+       node verify-record.mjs record-seal.json --seal 3f9a1c0b2e7d
+
+Your inbox dated that seal, so a Record rewritten after that email cannot
+contain it.
+
+What this does not prove: whoever holds the database could rewrite the whole
+chain consistently, and the file alone cannot show that. The seals in your
+inbox, and any earlier export you kept, can: a rewritten Record no longer
+contains them.
+
+Exit codes: 0 intact (or nothing sealed yet), 1 broken, 2 the file could not
+be read.
+"""
+
+
+def _rows_to_csv(rows: list[dict]) -> str:
     import csv
+    import io
+
+    if not rows:
+        return ""
+    cols = sorted({k for r in rows for k in r})
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
+    w.writeheader()
+    for r in rows:
+        w.writerow({c: (json.dumps(r[c], default=str) if isinstance(r.get(c), (dict, list)) else r.get(c))
+                    for c in cols})
+    return buf.getvalue()
+
+
+def export_filename(client: dict, today: date | None = None) -> str:
+    name = client.get("company_name") or client.get("contact_email") or "client"
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "client"
+    return f"{slug}-hubricon-export-{(today or date.today()).isoformat()}.zip"
+
+
+def build_export(db, client_id: str, files: bool = True) -> bytes:
+    """Everything we hold on one client, as the bytes of one zip.
+
+    Pure in the sense that matters: it reads (only this client's rows, by
+    client_id), writes nothing, sends nothing. `hubricon export` writes the
+    bytes to disk; the operator stores them privately and emails a link
+    (operator.Pass.data_requests, terms §11: within one working day).
+
+    Raw uploads included: the promise says "raw files, tables, results and your
+    whole Profit Record", not a summary. MANIFEST.txt says what is in the zip,
+    and what could not be read, line by line."""
     import io
     import zipfile
     from pathlib import Path
 
-    db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    name = client["company_name"] or client["contact_email"]
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "client"
-    out = Path(args.out or f"{slug}-hubricon-export-{date.today().isoformat()}.zip")
+    from . import monthly, seal
 
-    def rows_to_csv(rows: list[dict]) -> str:
-        if not rows:
-            return ""
-        cols = sorted({k for r in rows for k in r})
-        buf = io.StringIO()
-        w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
-        w.writeheader()
-        for r in rows:
-            w.writerow({c: (json.dumps(r[c]) if isinstance(r.get(c), (dict, list)) else r.get(c))
-                        for c in cols})
-        return buf.getvalue()
-
+    client = (db.table("clients").select("*").eq("id", client_id).execute().data or [None])[0]
+    if client is None:
+        raise ValueError(f"no client {client_id}")
+    name = client.get("company_name") or client.get("contact_email")
     manifest = [f"Hubricon export — {name}", f"Generated {datetime.now(timezone.utc).isoformat()}", ""]
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for table in EXPORT_TABLES:
             try:
-                rows = dbmod.fetch_all(db, table, client["id"])
+                rows = dbmod.fetch_all(db, table, client_id)
             except Exception as err:
-                manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
+                if table not in EXPORT_OPTIONAL_TABLES:
+                    manifest.append(f"  {table}: unavailable ({str(err)[:80]})")
                 continue
+            keep = EXPORT_ROW_FILTERS.get(table)
+            if keep:
+                rows = [r for r in rows if keep(r)]
             if not rows:
                 manifest.append(f"  {table}: empty")
                 continue
-            z.writestr(f"tables/{table}.csv", rows_to_csv(rows))
+            z.writestr(f"tables/{table}.csv", _rows_to_csv(rows))
             manifest.append(f"  tables/{table}.csv — {len(rows)} row(s)")
 
-        # The ledger, as its own file, because it is the thing most often asked for.
-        directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-        ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
-                                  _fetch_invoices(db, client["id"]))
-        z.writestr("ledger.json", json.dumps(ledger, indent=2, default=str))
-        manifest.append(f"  ledger.json — ${float(ledger['value_total']):,.0f} measured against "
-                        f"${float(ledger['fees_paid']):,.0f} in fees [{ledger['fees_basis']}]")
+        # The Profit Record, as its own file, because it is the thing most often asked for.
+        directives = db.table("directives").select("*").eq("client_id", client_id).execute().data
+        record = valuemod.compute(client, directives, _fetch_claims(db, client_id), _fetch_invoices(db, client_id))
+        z.writestr("profit-record.json", json.dumps(record, indent=2, default=str))
+        try:
+            months = db.table("record_months").select("*").eq("client_id", client_id).execute().data or []
+        except Exception:
+            months = []
+        if months:
+            figure = (f"${sum(monthly.standing(r) for r in months):,.0f} proven on your Profit Record since "
+                      f"day one")
+        else:
+            figure = f"${float(record['value_total']):,.0f} measured so far"
+        manifest.append(f"  profit-record.json — {figure}, against ${float(record['fees_paid']):,.0f} in fees "
+                        f"[{record['fees_basis']}]")
 
-        # The Seal: every entry's canonical document, leaf and heads, and the
-        # verifier beside them, so anyone can check the Record offline.
-        from . import seal
-        manifest += seal.write_export(z, db, client["id"],
+        # The Seal: every entry's canonical document, leaf and heads, the
+        # verifier beside them, and how to run it, so anyone can check the
+        # Record offline.
+        manifest += seal.write_export(z, db, client_id,
                                       Path(__file__).resolve().parents[3] / "scripts" / "verify-record.mjs")
+        z.writestr("HOW-TO-VERIFY.txt", VERIFY_INSTRUCTIONS)
+        manifest.append("  HOW-TO-VERIFY.txt — how to check your Profit Record yourself, and what that proves")
 
-        if not args.no_files:
-            uploads = db.table("uploads").select("*").eq("client_id", client["id"]).execute().data
+        if files:
+            uploads = db.table("uploads").select("*").eq("client_id", client_id).execute().data
+            written = 0
             for u in uploads:
                 if not u.get("storage_path") or u["storage_path"] == "pending":
                     continue
@@ -1745,21 +1869,43 @@ def cmd_export(args):
                     manifest.append(f"  raw/{u.get('original_filename')}: unavailable ({str(err)[:60]})")
                     continue
                 z.writestr(f"raw/{u['id'][:8]}-{u.get('original_filename') or 'upload.csv'}", blob)
-            manifest.append(f"  raw/ — {len(uploads)} uploaded file(s) exactly as you sent them")
+                written += 1
+            manifest.append(f"  raw/ — {written} uploaded file(s) exactly as you sent them")
 
+        briefings = [b for b in db.table("briefings").select("*").eq("client_id", client_id).execute().data
+                     if EXPORT_ROW_FILTERS["briefings"](b)]
         for path_field, label in (("report_path", "reports"), ("video_path", "videos")):
-            for b in db.table("briefings").select("*").eq("client_id", client["id"]).execute().data:
+            for b in briefings:
                 target = b.get(path_field)
                 if not target:
                     continue
                 try:
                     z.writestr(f"{label}/{target.rsplit('/', 1)[-1]}", storage.download(db, target))
-                except Exception:
-                    pass
+                except Exception as err:
+                    manifest.append(f"  {label}/{target.rsplit('/', 1)[-1]}: unavailable ({str(err)[:60]})")
 
         z.writestr("MANIFEST.txt", "\n".join(manifest) + "\n")
-    print("\n".join(manifest))
-    print(f"\nWrote {out} ({out.stat().st_size / 1_000_000:.1f} MB). It is theirs, free, any time.")
+    return buf.getvalue()
+
+
+def cmd_export(args):
+    """Everything we hold on a client, as one zip, written here.
+
+    The client's own "Request your export" is fulfilled by the operator
+    (stored privately, a seven-day link emailed); this is the same zip by hand.
+    "Your data and your Profit Record export free, any time": terms §11,
+    privacy §6, the Hubricon footer."""
+    import io
+    import zipfile
+    from pathlib import Path
+
+    db = dbmod.connect()
+    client = dbmod.resolve_client(db, args.client)
+    out = Path(args.out or export_filename(client))
+    blob = build_export(db, client["id"], files=not args.no_files)
+    out.write_bytes(blob)
+    print(zipfile.ZipFile(io.BytesIO(blob)).read("MANIFEST.txt").decode().rstrip())
+    print(f"\nWrote {out} ({len(blob) / 1_000_000:.1f} MB). It is theirs, free, any time.")
 
 
 def cmd_seal(args):
@@ -1835,6 +1981,10 @@ def cmd_script(args):
     alerts = (db.table("alerts").select("*").eq("client_id", client["id"])
               .order("created_at", desc=True).limit(10).execute().data)
     ledger_measured = sum(float(d["measured_impact_usd"] or 0) for d in directives)
+    # The Record's one figure, as the issue itself reads it: the script and the
+    # letter draft never state a second "proven" number.
+    ledger = valuemod.load_ledger(db, client)
+    proven = valuemod.proven_since_day_one(db, client, ledger)
 
     first_name = (client.get("contact_name") or "").split(" ")[0]
     company = client["company_name"] or client["contact_email"]
@@ -1843,10 +1993,12 @@ def cmd_script(args):
         "client_id", client["id"]).execute().count or 0
 
     script = build_script(company, first_name, deltas, directives, alerts, elasticity,
-                          ledger_measured, len(directives))
+                          ledger_measured, len(directives), proven=proven)
     memo = build_memo(company, first_name, deltas, directives, alerts, elasticity,
                       ledger_measured, len(directives), issue_number=issue_count + 1,
-                      channel=_run_channel(client, run))
+                      channel=_run_channel(client, run),
+                      ledger_found=float(ledger.get("identified_unbanked") or 0),
+                      fees_billed=valuemod.billed_to_date(ledger), proven=proven)
 
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
@@ -1865,7 +2017,7 @@ def cmd_script(args):
         issue_number=issue_count + 1, health=outputs.get("health"), value=outputs.get("value"),
         recovery=outputs.get("recovery"), forecast_rows=(outputs.get("forecast") or {}).get("rows"),
         risk=outputs.get("risk"), anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
+        inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"), proven=proven,
     )
     if args.facts:
         print("\nFACTS the narrator may cite (every figure the engine computed):")
@@ -1931,11 +2083,26 @@ def _issue_due(db, client: dict, today: date) -> tuple[bool, str]:
 
 @meter.metered("issue")
 def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> dict | None:
-    """Publish the next issue from the latest run: letter, report, video, email.
+    """Draft the next issue from the latest run: letter, report, video, and the
+    email exactly as it will go.
+
+    From Profit Brief No. 002 on, nothing reaches the client until the founder
+    approves it (`hubricon approve`): HUBRICON_SPEC.md, "Customer experience"
+    4, has the system draft from the graded numbers and the founder approve,
+    never write from scratch. The draft is not in the portal (the briefings
+    policy shows members published rows only) and no email goes. Issue 001, the
+    first full read, is NOT held: the operator publishes it on its next pass
+    after the core files are in, or 24 hours after the last upload
+    (onboarding.first_read_ready), and it reaches this path only on
+    `hubricon issue --force` for a client with no issue yet, where it publishes
+    as it always has. Without migration 20261001000004 there is no draft state,
+    so every issue publishes and sends as before and the founder's digest says
+    the gate is off.
 
     The models are not re-run — Monday's sweep already did that — so this reads
     the newest succeeded run and re-cuts it as an issue."""
     from pathlib import Path
+    from . import approval, lifecycle
     from . import video as videomod
     from .briefing import build_beats, build_memo, period_deltas
     from .report.html_report import generate
@@ -1943,9 +2110,35 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
     run = _latest_run(db, client["id"], None, channel=channel, required=False)
     if not run:
         return None
-    issue_no = _next_issue_number(db, client["id"])
     company = client["company_name"] or client["contact_email"]
     first = (client.get("contact_name") or "").split(" ")[0]
+
+    # One draft per channel waits at a time. A fresh one keeps waiting; one ten
+    # days old, or whose Record figure has since moved, is re-drafted in place
+    # under its own number, so approving never sends last fortnight's facts.
+    drafts = approval.brief_drafts(db, client["id"])
+    redraft = None
+    if drafts:
+        mine = [b for b in drafts if ((b.get("facts") or {}).get("channel") or channel) == channel]
+        if mine:
+            waiting = mine[0]
+            moved = approval.record_moved((waiting.get("facts") or {}).get("proven"),
+                                          valuemod.proven_since_day_one(db, client))
+            if not approval.is_stale(waiting) and not moved:
+                print(f"  Profit Brief No. {int(waiting['issue_number']):03d} is waiting for your approval "
+                      f"(drafted {approval.age(waiting).days}d ago): hubricon approve {client['contact_email']} --show")
+                return None
+            redraft = waiting
+    issue_no = int(redraft["issue_number"]) if redraft else _next_issue_number(db, client["id"])
+    held = issue_no > 1 and drafts is not None
+    if issue_no > 1:
+        stage = lifecycle.stage_of(db, client)
+        if not lifecycle.may_send(stage, "brief"):
+            print(f"  no Profit Brief: {company} is '{stage}'; from No. 002 a Brief is for clients who said yes")
+            return None
+        if drafts is None:
+            print(f"  approval gate OFF (apply supabase/migrations/{approval.MIGRATION}): this Brief publishes "
+                  f"and sends unapproved, as before")
 
     margins = db.table("margin_results").select("*").eq("run_id", run["id"]).execute().data
     elasticity = db.table("elasticity_results").select("*").eq("run_id", run["id"]).execute().data
@@ -1953,27 +2146,31 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
                   .eq("channel", channel).order("created_at", desc=True).limit(40).execute().data)
     alerts = (db.table("alerts").select("*").eq("client_id", client["id"])
               .order("created_at", desc=True).limit(10).execute().data)
-    ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+    # The whole Record, every channel: the figure is the client's, not one platform's.
+    all_moves = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+    ledger = valuemod.compute(client, all_moves, _fetch_claims(db, client["id"]),
                               _fetch_invoices(db, client["id"]))
+    proven = valuemod.proven_since_day_one(db, client, ledger, today)
     deltas = period_deltas(margins)
 
     memo = build_memo(company, first, deltas, directives, alerts, elasticity,
                       float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
                       issue_number=issue_no, channel=channel,
                       ledger_found=float(ledger["identified_unbanked"] or 0),
-                      fees_billed=float(ledger["fees_billed"] or 0))
+                      fees_billed=valuemod.billed_to_date(ledger), proven=proven)
     if narrate.available():
         try:
             outputs = _load_outputs(db, run["id"])
             facts = narrate.build_facts(
                 company, first, deltas, directives, alerts,
                 float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
-                issue_number=issue_no, health=outputs.get("health"), value=outputs.get("value"),
+                issue_number=issue_no, health=outputs.get("health"), value=ledger,
                 recovery=outputs.get("recovery"),
                 forecast_rows=(outputs.get("forecast") or {}).get("rows"),
                 risk=outputs.get("risk"),
                 anomaly_summary=summarize_anomalies((outputs.get("anomaly") or {}).get("rows") or []),
-                inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"))
+                inv_econ=outputs.get("invecon"), data_quality=outputs.get("data_quality"),
+                proven=proven)
             result = narrate.narrate(facts)
             if result.get("text"):
                 memo = result["text"]
@@ -1981,10 +2178,13 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
             print(f"  narration skipped: {err}")
 
     report_path = None
+    # A held draft's files wait outside reports/{client}/, the one folder a
+    # client's sign-in can read, and move there on approval (approval.py).
+    folder = f"{approval.DRAFT_FOLDER if held else 'reports'}/{client['id']}"
     with tempfile.TemporaryDirectory() as tmp:
         try:
             local = generate(db, client, run["id"], out_dir=tmp)
-            report_path = f"reports/{client['id']}/issue-{issue_no:03d}.html"
+            report_path = f"{folder}/issue-{issue_no:03d}.html"
             db.storage.from_(storage.BUCKET).upload(
                 report_path, Path(local).read_bytes(),
                 {"content-type": "text/html", "upsert": "true"})
@@ -1998,20 +2198,50 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
         beats = build_beats(company, first, deltas, directives, alerts, elasticity,
                             float(ledger["measured"] or 0), int(ledger["measured_count"] or 0),
                             ledger_found=float(ledger["identified_unbanked"] or 0),
-                            fees_billed=float(ledger["fees_billed"] or 0))
+                            fees_billed=valuemod.billed_to_date(ledger), proven=proven)
         made = videomod.render(company, issue_no, beats, Path(tmp) / f"issue-{issue_no:03d}.mp4")
         if made:
-            video_path = f"reports/{client['id']}/issue-{issue_no:03d}.mp4"
+            video_path = f"{folder}/issue-{issue_no:03d}.mp4"
             db.storage.from_(storage.BUCKET).upload(
                 video_path, made.read_bytes(),
                 {"content-type": "video/mp4", "upsert": "true"})
 
-    headline = f"Profit Brief No. {issue_no:03d}"
+    # A client on both stores gets a Brief per store each fortnight: the
+    # headline, subject and email say which (channels.store_name). One store,
+    # no change.
+    store = channels.store_name(client.get("platform"), channel)
+    headline = f"Profit Brief No. {issue_no:03d}" + (f" · {store}" if store else "")
     if deltas and deltas.get("net_delta") is not None:
         headline += f" — net profit {'up' if deltas['net_delta'] >= 0 else 'down'} ${abs(deltas['net_delta']):,.0f}"
     row = {"client_id": client["id"], "run_id": run["id"], "memo": memo, "issue_number": issue_no,
            "report_path": report_path, "video_path": video_path, "title": "Profit Brief",
            "headline": headline, "tldr": (memo.split("\n\n")[2][:280] if memo.count("\n\n") > 2 else None)}
+    found = float(ledger["identified_unbanked"] or 0)
+    # The subject, the email and its footer all read the one figure the letter read.
+    subject = _issue_subject(issue_no, headline, proven, found, store=store)
+    blocks = _issue_email_blocks(issue_no, proven, found, bool(video_path), store=store)
+    record = valuemod.record_line(ledger, proven)
+    parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
+
+    if held:
+        draft = {**row, "status": "draft",
+                 "facts": {"channel": channel, "proven": proven, "subject": subject, "blocks": blocks,
+                           "record_line": record}}
+        try:
+            if redraft:
+                db.table("briefings").update({**draft, "created_at": _now()}).eq("id", redraft["id"]).execute()
+            else:
+                db.table("briefings").insert({**draft, "created_at": _now()}).execute()
+        except Exception as err:
+            print(f"  Profit Brief No. {issue_no:03d} not drafted: {err}")
+            return None
+        print(f"  Profit Brief No. {issue_no:03d} {'re-drafted' if redraft else 'drafted'} ({' + '.join(parts)}); "
+              f"nothing is sent until you approve it: hubricon approve {client['contact_email']} --show")
+        if not video_path:
+            print(f"  NOT KEPT YET: Profit Brief No. {issue_no:03d} has no video. Record one before you approve "
+                  f"it, or it goes without: hubricon brief {client['contact_email']} --video <loom url>")
+        return {"issue_number": issue_no, "video": bool(video_path), "emailed": False, "held": True}
+
     try:
         inserted = db.table("briefings").insert(row).execute().data[0]
     except Exception as err:
@@ -2020,21 +2250,17 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
 
     # The price of the free month is asked for here — on the first Issue after
     # the ledger has earned the asking, once, as one more paragraph in a
-    # letter the client already opens (referral.py).
+    # letter the client already opens (referral.py). A held Brief asks on approval.
     try:
         ask = referral.ask_if_due(db, client, ledger, _fetch_claims(db, client["id"]), send)
     except Exception as err:
         print(f"  consent ask skipped: {err}")
         ask = []
-    proven = float(ledger["value_total"] or 0)
-    found = float(ledger["identified_unbanked"] or 0)
-    sent = _send_client_email(db, client, "issue_ready", inserted["id"],
-                              _issue_subject(issue_no, headline, proven, found),
-                              _issue_email_blocks(issue_no, proven, found, bool(video_path)) + ask, send)
+    sent = _send_client_email(db, client, "issue_ready", inserted["id"], subject, blocks + ask, send,
+                              footer=record)
     if sent and ask:
         referral.mark_asked(db, client)
         print("  the consent and referral ask rode this issue")
-    parts = [p for p, on in (("letter", memo), ("report", report_path), ("video", video_path)) if on]
     print(f"  Profit Brief No. {issue_no:03d} published ({' + '.join(parts)})"
           + (" and emailed" if sent else ""))
     if not video_path:
@@ -2046,23 +2272,38 @@ def _publish_issue(db, client: dict, channel: str, send: bool, today: date) -> d
     return {"issue_number": issue_no, "video": bool(video_path), "emailed": sent}
 
 
-def _issue_subject(issue_no: int, headline: str, proven: float, found: float) -> str:
-    """The subject line is the Record, not the period's net profit: what has
-    been proven and what has been found since day one. The briefings row keeps
-    `headline` (net profit up/down) for the portal; the inbox gets the number
-    the invoice is judged on. Before the Record has anything on it, the subject
-    falls back to the headline's tail, or to plain 'is in Hubricon'."""
-    if proven + found > 0:
-        return f"Profit Brief No. {issue_no:03d} — ${proven:,.0f} proven, ${found:,.0f} found on your Record"
+def _usd(v: float) -> str:
+    return ("−" if v < 0 else "") + f"${abs(v):,.0f}"
+
+
+def _issue_subject(issue_no: int, headline: str, proven: dict, found: float, store: str | None = None) -> str:
+    """The subject line is the Record, not the period's net profit: the one
+    figure (value.proven_since_day_one) and what has been found. The briefings
+    row keeps `headline` (net profit up/down) for the portal. Before the Record
+    has anything on it, the subject falls back to the headline's tail, or to
+    plain 'is in Hubricon'.
+
+    `store` names the Brief's store for a client on both ('Profit Brief No. 004
+    · Shopify'); the Record's figure stays the whole Record's, every store."""
+    name = f"Profit Brief No. {issue_no:03d}" + (f" · {store}" if store else "")
+    usd = float(proven.get("usd") or 0)
+    if usd or found > 0:
+        words = "proven" if proven.get("basis") == "months" else "measured so far"
+        return f"{name} — {_usd(usd)} {words}, {_usd(found)} found on your Record"
     tail = headline.split("—")[-1].strip() if "—" in headline else ""
-    return (f"Profit Brief No. {issue_no:03d} — {tail}" if tail
-            else f"Profit Brief No. {issue_no:03d} is in Hubricon")
+    return f"{name} — {tail}" if tail else f"{name} is in Hubricon"
 
 
-def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: bool) -> list[dict]:
+def _issue_email_blocks(issue_no: int, proven: dict, found: float, has_video: bool,
+                        store: str | None = None) -> list[dict]:
+    usd = _usd(float(proven.get("usd") or 0))
+    if proven.get("basis") == "months":
+        figure = f"{usd} proven on your Record since day one"
+    else:
+        aside = valuemod.proven_words(proven)[1]
+        figure = f"{usd} measured on your Record so far" + (f" ({aside})" if aside else "")
     return [
-        {"p": f"Your Profit Brief is ready — ${proven:,.0f} proven on your Record since day one, "
-              f"${found:,.0f} found and filed."},
+        {"p": f"Your {store + ' ' if store else ''}Profit Brief is ready — {figure}, {_usd(found)} found and filed."},
         {"p": ("It's a short video, with the written letter and the full report "
                "underneath it." if has_video else
                "The written letter and the full report are both in Hubricon.")},
@@ -2072,19 +2313,38 @@ def _issue_email_blocks(issue_no: int, proven: float, found: float, has_video: b
     ]
 
 
-# Letters whose body already IS the three Profit Record numbers.
-# The billing letters carry the Record's numbers as their subject already.
-RECORD_FOOTER_EXEMPT = frozenset({"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"})
+# Billing letters carry no Profit Record footer. Each is about one month's own
+# number (or, at the exit, each billed month's), and a since-day-one figure
+# under it is a second number in the same letter: it moves with every other
+# month and every dispute, so it can differ from the figure the letter is
+# about, and the reader is left to reconcile them. No footer cannot disagree.
+# Any new billing kind is caught by its name as well as by this list.
+BILLING_LETTERS = frozenset({"billing_started", "month_cleared", "month_unbilled", "exit_true_up",
+                             "recovery_invoice", "referral_credit"})
+RECORD_FOOTER_EXEMPT = BILLING_LETTERS
+
+
+def _carries_record_footer(kind: str) -> bool:
+    return (kind not in RECORD_FOOTER_EXEMPT
+            and not kind.startswith(("month_", "billing_", "exit_", "guarantee_", "recovery_"))
+            and "invoice" not in kind and "refund" not in kind)
 
 
 @meter.metered("email", timed=False)
 def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
-                       blocks: list[dict], send: bool) -> bool:
+                       blocks: list[dict], send: bool, proven: dict | None = None,
+                       footer: str | None = None, rendered: tuple | None = None) -> bool:
     """Send a recurring client email exactly once.
 
     client_touches keys on (client_id, kind) and so can only fire a kind once
     per client for all time; recurring mail is logged in client_emails against
-    the thing it is about."""
+    the thing it is about.
+
+    Every non-billing letter closes on the Profit Record footer, made from the
+    one figure (value.proven_since_day_one): pass `proven` when the letter
+    states it too, or `footer` when the line was drafted with the letter and
+    approved with it. `rendered` is a letter already set, text and html, sent
+    exactly as it is (the approved Monday note carries its own footer)."""
     if not send or not email_configured() or not client.get("contact_email"):
         return False
     try:
@@ -2095,18 +2355,22 @@ def _send_client_email(db, client: dict, kind: str, ref_id: str, subject: str,
     except Exception:
         pass    # log table missing (migration not applied): better to send than to go silent
     from .notify import letter
-    if kind not in RECORD_FOOTER_EXEMPT:
-        # Every client email closes on the Profit Record — the same three
-        # numbers as the strip in Hubricon. The billing letters already carry
-        # them as their subject; the footer never blocks a send.
+    if rendered is None and _carries_record_footer(kind):
+        # The footer never blocks a send.
         try:
-            directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
-            ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
-                                      _fetch_invoices(db, client["id"]))
-            blocks = list(blocks) + [{"p": valuemod.record_line(ledger)}]
+            if footer is None:
+                directives = db.table("directives").select("*").eq("client_id", client["id"]).execute().data
+                ledger = valuemod.compute(client, directives, _fetch_claims(db, client["id"]),
+                                          _fetch_invoices(db, client["id"]))
+                footer = valuemod.record_footer(db, client, proven, ledger)
+            if footer:
+                blocks = list(blocks) + [{"p": footer}]
         except Exception as err:
             print(f"  Profit Record footer skipped ({err})")
-    text, html = letter(client.get("contact_name"), blocks)
+    if rendered is not None:
+        text, html = rendered
+    else:
+        text, html = letter(client.get("contact_name"), blocks)
     ok = send_email(client["contact_email"], subject, text, html=html,
                     sender=os.environ.get("EMAIL_FROM", "Hagen Simmons <hagen.simmons@hubricon.com>"),
                     reply_to=os.environ.get("EMAIL_REPLY_TO",
@@ -2130,7 +2394,7 @@ def cmd_issue(args):
     today = date.today()
     clients = ([dbmod.resolve_client(db, args.client)] if args.client
                else db.table("clients").select("*").in_("status", ["pending", "active"]).execute().data)
-    published = 0
+    published = held = 0
     for client in clients:
         name = client["company_name"] or client["contact_email"]
         if onboarding.is_internal(client["contact_email"], client.get("contact_name")) and not args.client:
@@ -2144,9 +2408,17 @@ def cmd_issue(args):
             print("  [dry] would publish the next issue")
             continue
         for channel in channels.channels_for(client.get("platform")):
-            if _publish_issue(db, client, channel, send=args.send, today=today):
+            res = _publish_issue(db, client, channel, send=args.send, today=today)
+            if not res:
+                continue
+            # From No. 002 a Brief is drafted and waits for `hubricon approve`:
+            # nothing reached the client, so it is not counted as published.
+            if res.get("held"):
+                held += 1
+            else:
                 published += 1
-    print(f"\n{published} issue(s) published.")
+    print(f"\n{published} issue(s) published."
+          + (f" {held} held for your approval: hubricon approve <client> --show" if held else ""))
 
 
 def cmd_brief(args):
@@ -2310,6 +2582,7 @@ def cmd_console(args):
         elasticity_rows=fits,
         inventory_rows=inventory,
         generated_on=date.today(),
+        channel=((run.get("params") or {}).get("channel") or client.get("platform") or "amazon"),
     )
     folder = REPO_ROOT / "reports" / (client["company_name"] or client["id"][:8]).lower().replace(" ", "-")
     folder.mkdir(parents=True, exist_ok=True)
@@ -2403,17 +2676,45 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
                                   recovery=outputs.get("recovery"),
                                   anomaly_rows=(outputs.get("anomaly") or {}).get("rows"),
                                   health=outputs.get("health"), previous_health=prev_health,
-                                  channel=channel), recent)
+                                  channel=channel, platform=client.get("platform"),
+                                  # every Inventory Age snapshot on file: the aged-cliff
+                                  # early warning compares the two latest (alerts.py)
+                                  inventory_health=(dbmod.fetch_all(db, "inventory_health", client["id"])
+                                                    if channels.has_fee_cliffs(channel) else None)),
+                         recent)
     out["alerts"] = len(fresh)
-    if not fresh:
+    # The alerts land in the portal now, unsent. The Monday note carries them
+    # under "Watching" once the founder approves it (HUBRICON_SPEC.md, "Customer
+    # experience" 4), and it is drafted on a quiet week too: a sealed leak must
+    # never go invisible (item 5). It replaces the old "This week's watch" email.
+    written = (db.table("alerts").insert([
+        {**a, "client_id": client["id"], "run_id": run_id, "emailed_at": None} for a in fresh
+    ]).execute().data or []) if fresh else []
+    for a in fresh:
+        print(f"  ALERT [{a['severity']}] {a['message'][:90]}")
+    from . import approval, lifecycle
+    try:
+        note = approval.draft_weekly_note(db, client, PORTAL_URL, fresh_alerts=written)
+    except Exception as err:   # the note never fails the sweep; the alerts are already in the portal
+        print(f"  weekly note not drafted: {err}")
+        note = {"status": "failed"}
+    out["note"] = note["status"]
+    if note["status"] in ("drafted", "redrafted"):
+        print(f"  weekly note {note['status']} for the week of {note['week_of']}; nothing is sent until you "
+              f"approve it: hubricon approve {client['contact_email']} --show")
+    elif note["status"] == "unavailable":
+        print(f"  weekly note: nowhere to hold it, {note['reason']}; the watch email goes as before")
+    if note["status"] != "unavailable" or not fresh:
         return out
 
+    # Without migration 20261001000004 there is nowhere to hold a note for
+    # approval, so the alerts go as they did before 2026-10-01, in the watch
+    # email, and only to a client whose stage allows an alert at all.
     emailed = False
-    if send_alerts and email_configured() and client.get("contact_email"):
+    if (send_alerts and email_configured() and client.get("contact_email")
+            and lifecycle.may_send(lifecycle.stage_of(db, client), "alerts")):
         try:
-            ledger = valuemod.compute(client, db.table("directives").select("*").eq("client_id", client["id"]).execute().data,
-                                      _fetch_claims(db, client["id"]), _fetch_invoices(db, client["id"]))
-            record = valuemod.record_line(ledger)
+            record = valuemod.record_footer(db, client)
         except Exception as err:
             print(f"  Profit Record footer skipped ({err})")
             record = None
@@ -2433,13 +2734,9 @@ def _sweep_channel(db, client: dict, channel: str, label: str, send_alerts: bool
                                     os.environ.get("EMAIL_FROM", "hagen.simmons@hubricon.com")),
         )
     out["emailed"] = emailed
-    db.table("alerts").insert([
-        {**a, "client_id": client["id"], "run_id": run_id,
-         "emailed_at": _now() if emailed else None}
-        for a in fresh
-    ]).execute()
-    for a in fresh:
-        print(f"  ALERT [{a['severity']}] {a['message'][:90]}")
+    ids = [r["id"] for r in written if r.get("id")]
+    if emailed and ids:
+        db.table("alerts").update({"emailed_at": _now()}).in_("id", ids).execute()
     return out
 
 
@@ -2554,35 +2851,126 @@ def cmd_platform(args):
     print(f"  next run reads: {', '.join(channels.label(c) for c in channels.channels_for(args.platform))}")
 
 
-def cmd_retainer(args):
-    """When the retainer actually started.
+def _full_client(db, ident: str) -> dict:
+    """The whole client row. resolve_client selects a fixed column list that
+    leaves out retainer_started_at, plan and the lifecycle columns."""
+    client = dbmod.resolve_client(db, ident)
+    rows = db.table("clients").select("*").eq("id", client["id"]).execute().data
+    return rows[0] if rows else client
 
-    terms.html §3: "the retainer starts on the day you say yes after the
-    Teardown." Nothing recorded that date, so the free-month clock ran from
-    provisioning — from the booking, before the Teardown existed. This is the
-    best evidence there is, and it outranks the date the Stripe webhook infers
-    from a first invoice."""
+
+def _print_proving_month(client: dict) -> None:
+    """The dates monthly.billing_months gives the gate, printed for the founder."""
+    pm = onboarding.proving_month(client)
+    if not pm:
+        return
+    print(f"  Proving Month: {pm['start'].isoformat()} to {pm['end'].isoformat()} (month 0, free)")
+    if pm["free_end"] != pm["end"]:
+        print(f"  free months ({pm['free_months']}) run to {pm['free_end'].isoformat()}")
+    first_billed = pm["free_end"] + timedelta(days=1)
+    from . import monthly
+    nxt = monthly.billing_months(client, first_billed)[-1]
+    print(f"  first month that can be invoiced: {nxt['start'].isoformat()} to {nxt['end'].isoformat()}, judged "
+          f"once its exports land, about {monthly.CLOSE_LAG_DAYS} days after it ends")
+
+
+def cmd_retainer(args):
+    """The client's yes: the day Managed Profit started, and the letter that says so.
+
+    terms.html §3: "Managed Profit (the retainer) starts on the day you say yes
+    after the call." This records that day (retainer_started_at, source
+    client_yes), which is what lifecycle.py reads as the yes, and it outranks
+    the date the Stripe webhook infers from a first invoice. The dates printed
+    and emailed are the ones the billing gate uses (monthly.billing_months:
+    calendar months from the day of the yes), never "plus thirty days".
+
+    Then the agreed letter (client_touches 'agreed'): the yes confirmed, the
+    Proving Month's first and last day, and what happens next with its real
+    timing. If this machine cannot send it, the operator's next pass does."""
+    from . import lifecycle, outbound
     db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
+    client = _full_client(db, args.client)
     name = client["company_name"] or client["contact_email"]
 
     if args.show:
         v = valuemod.engagement_start(client, date.today())
-        print(f"{name}: retainer clock runs from {v[0].isoformat()} ({v[1]})")
+        print(f"{name}: Managed Profit clock runs from {v[0].isoformat()} ({v[1]}); stage "
+              f"{lifecycle.stage_of(db, client)}")
         if not client.get("retainer_started_at"):
-            print("  no agreed start date on file — the ledger reports its fee basis as unknown "
+            print("  no yes on file — the Record reports its fee basis as unknown "
                   "and treats them as in their free month.")
+        _print_proving_month(client)
         return
 
     started = date.fromisoformat(args.started) if args.started else date.today()
-    db.table("clients").update({
+    patch = {
         "retainer_started_at": datetime.combine(started, datetime.min.time(), tzinfo=timezone.utc).isoformat(),
         "retainer_source": args.source,
-    }).eq("id", client["id"]).execute()
-    free = int(client.get("free_months") if client.get("free_months") is not None else 1)
-    print(f"{name}: retainer starts {started.isoformat()} ({args.source}).")
-    print(f"  free month{'s' if free != 1 else ''} run to "
-          f"{(started + timedelta(days=30 * free)).isoformat()}; the guarantee is checked then.")
+    }
+    if client.get("status") == "declined":
+        # A yes after a no: the yes is the later word.
+        patch.update({"status": "pending", "declined_at": None})
+        print(f"{name} was recorded as declined"
+              + (f" on {str(client['declined_at'])[:10]}" if client.get("declined_at") else "")
+              + "; this yes replaces it.")
+    db.table("clients").update(patch).eq("id", client["id"]).execute()
+    client = {**client, **patch}
+    try:
+        outbound.log_event(db, "client_agreed", client_id=client["id"],
+                           payload={"started": started.isoformat(), "source": args.source})
+    except Exception as err:
+        print(f"  funnel event not logged ({err})")
+    print(f"{name}: Managed Profit starts {started.isoformat()} ({args.source}).")
+    _print_proving_month(client)
+
+    sent, why = onboarding.deliver_agreed(db, client)
+    if sent:
+        print(f"  agreed letter sent to {client['contact_email']}" + ("." if why == "sent" else f": {why}."))
+    elif why.startswith("RESEND_API_KEY"):
+        print(f"  agreed letter not sent from this machine ({why}); the operator's next pass sends it.")
+    else:
+        print(f"  agreed letter not sent: {why}.")
+
+
+def cmd_declined(args):
+    """The prospect said no on the call (lifecycle stage 'declined').
+
+    From here the machine sends them nothing unasked: no nudges, no downsell,
+    no move notices, no briefs, no weekly notes (lifecycle.ALLOWED['declined']
+    is empty, and the sweep and the operator read only pending and active
+    clients). Their open upload links stop working; what they already sent is
+    kept as the privacy page says. Nothing is sent to tell them so: they said
+    no, and the reply to that is the founder's."""
+    from . import lifecycle, outbound
+    db = dbmod.connect()
+    client = _full_client(db, args.client)
+    name = client["company_name"] or client["contact_email"]
+    if client.get("status") == "declined":
+        print(f"{name} is already recorded as declined"
+              + (f" (on {str(client['declined_at'])[:10]})." if client.get("declined_at") else "."))
+        return
+    if client.get("retainer_started_at") or client.get("status") in ("active", "past_due", "churned"):
+        sys.exit(f"{name} said yes (stage {lifecycle.stage_of(db, client)}). Leaving after a yes is "
+                 f"`hubricon cancel {args.client}` (terms §5), not a no.")
+    err = onboarding.lifecycle_schema_error(db)
+    if err:
+        sys.exit(f"Cannot record the no: the database has no clients.declined_at ({err}).\n"
+                 f"Apply {onboarding.LIFECYCLE_MIGRATION} (it adds the 'declined' status and declined_at), "
+                 "then run this again. Until then move notices already wait for a yes, and the nudges after "
+                 "the call still go.")
+    try:
+        db.table("clients").update({"status": "declined", "declined_at": _now()}).eq("id", client["id"]).execute()
+    except Exception as e:
+        sys.exit(f"Cannot record the no: {e}\nApply {onboarding.LIFECYCLE_MIGRATION} (its status check allows "
+                 "'declined'), then run this again.")
+    try:
+        db.rpc("revoke_intake_tokens", {"p_client_id": client["id"]}).execute()
+        revoked = "their upload links no longer work"
+    except Exception as e:
+        revoked = f"their upload links could NOT be revoked ({e}); revoke them by hand"
+    outbound.log_event(db, "client_declined", client_id=client["id"], note=args.note,
+                       payload={"stage_before": lifecycle.stage_of(db, client)})
+    print(f"{name}: recorded as declined. Nothing more is sent to them unasked; {revoked}. Nothing was sent.")
 
 
 def cmd_downsell(args):
@@ -2640,12 +3028,24 @@ def cmd_cancel(args):
     and the veto queue stop. The exit true-up (held drafts voided unsent,
     anything billed beyond the Record voided or refunded, and the letter that
     says so) is the operator's next hourly pass, which holds the Stripe key and
-    the mail key; this prints what it will do."""
+    the mail key; this prints what it will do.
+
+    It also starts the exit clock (terms §5: a refund owed is issued within
+    seven days of the client's email): a data_request of kind 'exit', due seven
+    days from that email, which the digest and `hubricon promises` count and the
+    operator closes once the true-up is done and the exit letter has gone. The
+    letter goes to every client who said yes and then left, billed or not: that
+    they have left and nothing more is invoiced, the true-up, their export, and
+    what to keep watching."""
     import sys as _sys
     from . import billing, operator
     db = dbmod.connect()
-    client = dbmod.resolve_client(db, args.client)
-    name = client["company_name"] or client["contact_email"]
+    found = dbmod.resolve_client(db, args.client)
+    # resolve_client reads a dozen columns, and the Stripe ids, the yes and the
+    # true-up marker are not among them: read the whole row, or a live
+    # subscription looks like none and keeps raising invoices.
+    client = (db.table("clients").select("*").eq("id", found["id"]).execute().data or [found])[0]
+    name = client.get("company_name") or client["contact_email"]
     if client.get("stripe_subscription_id"):
         if not billing.stripe_configured():
             sys.exit(f"{name}'s subscription cannot be ended: STRIPE_SECRET_KEY is not set, and left running it "
@@ -2654,13 +3054,52 @@ def cmd_cancel(args):
         print(f"{name}: subscription {client['stripe_subscription_id']} ended in Stripe, no final invoice.")
     db.table("clients").update({"status": "churned"}).eq("id", client["id"]).execute()
     print(f"{name}: marked churned — no further changes are made in their account.")
-    if client.get("exit_trued_up_at") or not client.get("stripe_customer_id"):
-        print("  Nothing to true up: " + ("already done." if client.get("exit_trued_up_at") else "never billed."))
+
+    said_yes = bool(client.get("retainer_started_at")) or (client.get("plan") == "recovery") \
+        or client.get("status") in ("active", "past_due")
+    if not said_yes:
+        print("  They never said yes (no start date on file), so no exit letter goes and there is nothing to true "
+              "up. A no on the call is `hubricon declined`.")
         return
+
+    # The day their email arrived, when the founder gives it; otherwise now.
+    emailed = getattr(args, "emailed", None)
+    opened = (datetime.fromisoformat(str(emailed)).replace(tzinfo=timezone.utc) if emailed
+              else datetime.now(timezone.utc))
+    due = opened + timedelta(days=billing.EXIT_REFUND_DAYS)
+    try:
+        running = (db.table("data_requests").select("id, due_at").eq("client_id", client["id"])
+                   .eq("kind", "exit").is_("closed_at", "null").execute().data)
+        if running:
+            print(f"  The exit clock is already running: due {str(running[0]['due_at'])[:10]}.")
+        else:
+            db.table("data_requests").insert({
+                "client_id": client["id"], "requester_email": client.get("contact_email"), "kind": "exit",
+                "note": "Managed Profit ended by email (terms §5): true-up, refund issued within seven days, "
+                        "exit letter",
+                "opened_at": opened.isoformat(), "due_at": due.isoformat(),
+            }).execute()
+            print(f"  Exit clock started: any refund the true-up owes is issued by {due:%a %b %-d} "
+                  f"(terms §5, seven days from their email).")
+    except Exception as err:
+        print(f"  Exit clock NOT started ({str(err)[:80]}): apply "
+              f"supabase/migrations/20261001000005_exit_and_export.sql. Any refund is still due by {due:%a %b %-d}, "
+              f"and nothing counts it until then"
+              + (". The next operator pass still trues up and writes." if client.get("stripe_customer_id") else
+                 "; this client was never billed, so their exit letter waits for the migration."))
+
     preview = operator.Pass(db, send=False, dry=True)
     preview._exit_true_up({**client, "status": "churned"}, _sys.modules[__name__], billing)
     for line in preview.notes:
         print(f"  {line.replace('[dry] ', 'next operator pass: ')}")
+
+
+def _iso_day(s: str) -> str:
+    """argparse type for a calendar day: YYYY-MM-DD, said plainly when it is not."""
+    try:
+        return date.fromisoformat(s).isoformat()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{s!r} is not a day; use YYYY-MM-DD") from None
 
 
 def cmd_stripe_smoke(args):
@@ -2878,8 +3317,56 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
                                            "measured, so every invoice waits held and nobody is billed")
     add("Every closed month is measured once, on its own exports", "terms §3", months_ok, months_detail)
 
-    add("Free data + Profit Record export, any time", "terms §11, privacy §6, Hubricon", True,
-        "hubricon export <client>")
+    # terms §11: an export a client asks for is delivered within one working day.
+    # terms §5: a refund owed at the exit is issued within seven days of their
+    # email. Each is kept while no open request is past its date, whoever ends up
+    # fulfilling it; the detail says whether the machine can.
+    now_utc = datetime.now(timezone.utc)
+    try:
+        open_reqs = (db.table("data_requests").select("id, kind, due_at, opened_at, client_id")
+                     .is_("closed_at", "null").execute().data) or []
+        reqs_err = None
+    except Exception as err:
+        open_reqs, reqs_err = [], str(err)[:60]
+
+    def _late(r) -> bool:
+        return datetime.fromisoformat(str(r["due_at"]).replace("Z", "+00:00")) < now_utc
+
+    auto, auto_why = storage.exports_ready(db)
+    how = ("the operator builds each zip, stores it privately and emails the client a seven-day link" if auto
+           else f"{auto_why} — until then each request waits for `hubricon export <client>` by hand")
+    if reqs_err:
+        add("Your export within one working day", "terms §11, privacy §6, Hubricon", False,
+            f"data_requests unreadable: {reqs_err}")
+    else:
+        asked = [r for r in open_reqs if r.get("kind") == "access"]
+        late = [r for r in asked if _late(r)]
+        add("Your export within one working day", "terms §11, privacy §6, Hubricon", not late,
+            (f"{len(late)} export request(s) PAST the one working day; " if late
+             else f"{len(asked)} open, none late; " if asked else "no export waiting; ") + how)
+
+        exits = [r for r in open_reqs if r.get("kind") == "exit"]
+        lines, late_exits = [], 0
+        for r in exits:
+            c = next(iter(db.table("clients").select("*").eq("id", r.get("client_id")).execute().data or []), {})
+            who = c.get("company_name") or c.get("contact_email") or "a former client"
+            if c.get("exit_trued_up_at"):
+                lines.append(f"{who}: trued up; the exit letter still to go")     # the refund's clock is kept
+                continue
+            try:
+                owed = billing.exit_refund_owed(
+                    db.table("record_months").select("*").eq("client_id", c["id"]).execute().data or [],
+                    _fetch_invoices(db, c["id"]), c)
+            except Exception:
+                owed = None
+            what = (f"${owed:,.2f} to refund" if owed else "refund amount unreadable" if owed is None
+                    else "the true-up")
+            if _late(r):
+                late_exits += 1
+            lines.append(f"{who}: {what} {'was ' if _late(r) else ''}due {str(r['due_at'])[:10]}"
+                         + (" (PAST)" if _late(r) else ""))
+        add("A refund owed at the exit is issued within seven days of the email", "terms §5", not late_exits,
+            "; ".join(lines) if lines else "no client is waiting on an exit true-up")
     # The refund and the true-up write the columns of this migration, and the
     # operator's billing pass waits until they exist.
     try:
@@ -2902,10 +3389,13 @@ def promise_rows(db, one_client: str | None = None) -> list[tuple]:
         "the invoice amount is derived from paid claims we filed; nothing landed, no invoice")
 
     # -- the clocks ----------------------------------------------------------
+    # An exit's refund clock is terms §5, counted on its own row above; counted
+    # here too, one late refund would read as a late privacy request.
     try:
         overdue = [r for r in db.table("data_requests").select("kind, due_at")
                    .is_("closed_at", "null").execute().data
-                   if datetime.fromisoformat(str(r["due_at"])) < datetime.now(timezone.utc)]
+                   if r.get("kind") != "exit"
+                   and datetime.fromisoformat(str(r["due_at"])) < datetime.now(timezone.utc)]
         add("Deletion in 30d · DSAR in 7d · breach in 72h", "privacy §5–7", not overdue,
             "no open request is past its deadline" if not overdue
             else f"{len(overdue)} request(s) PAST the deadline the privacy policy states")
@@ -2975,7 +3465,7 @@ def cmd_promises(args):
 def cmd_doctor(args):
     """Why is or isn't the cold campaign sending. Read-only; never sends anything.
 
-    On the founder's Mac there is no INSTANTLY_API_KEY (it lives in the GitHub
+    On the founder's machine there is no INSTANTLY_API_KEY (it lives in the GitHub
     Actions Production environment) and no gh CLI, so a live check is usually
     impossible here. The hourly operator writes its findings to operator_state,
     and this command reads them back — the database is the shared log.
@@ -3448,14 +3938,15 @@ def cmd_teardown(args):
 def cmd_source(args):
     """Shopify lead sourcing: discovery, qualification, contact, and the two sinks.
 
-    Runs on the Mac, like the harvest. Nothing here sends an email: `push`
+    Runs on the founder's own machine (since 2026-10-03 the Linux desktop; `install`
+    adds a systemd user timer there). Nothing here sends an email: `push`
     writes to a holding-pen list the operator's enrolment cannot match, and
     `promote` lands rows at `candidate`, where the auto-push does not look.
     """
     from .sourcing import run as sourcing
 
     if args.action == "install":
-        print(sourcing.install_launchd())
+        print(sourcing.install())
         return
 
     db = dbmod.connect()
@@ -3519,11 +4010,19 @@ def _search_fetcher():
 
 
 def cmd_harvest(args):
-    """Free leads from public pages; runs on the founder's Mac (Amazon captchas datacenters)."""
+    """Free leads from public pages; runs on the founder's own machine, not GitHub (Amazon captchas datacenters)."""
     from .harvest import run as harvest
+    from .harvest.fetch import AMAZON_OFF
 
+    # The crawl read Amazon's pages; Amazon refuses that now (harvest/fetch.py AMAZON_OFF), and
+    # the leads it fed were for cold outreach, which is paused while content is the one channel
+    # (HUBRICON_SPEC.md). So the scheduled run and every Amazon step stop here, before anything
+    # is opened. A licensed source wired into the harvest is what turns them back on.
+    if args.action in ("all", "crawl", "listings", "profiles", "requalify"):
+        print(f"harvest {args.action}: off. {AMAZON_OFF}")
+        return
     if args.action == "install":
-        print(harvest.install_launchd())
+        print(harvest.install())
         return
     db = dbmod.connect()
     calibration.load(db)      # learned curves and ratios, when any exist
@@ -3641,10 +4140,16 @@ def main():
     p.add_argument("client")
     p.set_defaults(fn=cmd_ledger)
 
-    p = sub.add_parser("approve", help="record a standing-mandate outcome for an issued directive")
-    p.add_argument("client")
-    p.add_argument("--directive", required=True, help="directive id prefix")
-    p.add_argument("--decline", action="store_true", help="client vetoed it")
+    p = sub.add_parser("approve", help="send the Monday notes and Profit Briefs waiting for your yes "
+                                       "(or, with --directive, record a client's answer on an issued move)")
+    p.add_argument("client", nargs="?", default="all", help="a client, or all (default)")
+    p.add_argument("--show", action="store_true",
+                   help="print each draft in full first; on a terminal, ask before sending each one")
+    p.add_argument("--stale", action="store_true",
+                   help="send a draft older than ten days, or whose Record figure has moved, as drafted")
+    p.add_argument("--discard", action="store_true", help="discard the waiting drafts instead of sending them")
+    p.add_argument("--directive", help="directive id prefix: record the client's answer on an issued move")
+    p.add_argument("--decline", action="store_true", help="with --directive: the client vetoed it")
     p.set_defaults(fn=cmd_approve)
 
     p = sub.add_parser("measure", help="record the measured impact of a directive")
@@ -3669,13 +4174,18 @@ def main():
                    help="score what the ledger already banked instead of re-measuring")
     p.set_defaults(fn=cmd_replay)
 
-    p = sub.add_parser("retainer", help="record when the retainer started (the client's yes)")
+    p = sub.add_parser("retainer", help="record the client's yes: Managed Profit starts, the agreed letter goes")
     p.add_argument("client")
     p.add_argument("--started", help="YYYY-MM-DD (default: today)")
     p.add_argument("--source", default="client_yes",
                    choices=["client_yes", "first_invoice", "teardown_delivered", "manual"])
     p.add_argument("--show", action="store_true", help="print the clock without changing it")
     p.set_defaults(fn=cmd_retainer)
+
+    p = sub.add_parser("declined", help="record the prospect's no: nothing more is sent unasked, upload links revoked")
+    p.add_argument("client")
+    p.add_argument("--note", help="why, in a line (kept in funnel_events)")
+    p.set_defaults(fn=cmd_declined)
 
     p = sub.add_parser("downsell", help="the smaller door: recovery-only at a share of what Amazon pays back, or --retainer")
     p.add_argument("client")
@@ -3686,6 +4196,8 @@ def main():
     p = sub.add_parser("cancel", help="terms §5: end Managed Profit now — subscription ended, client churned, "
                                       "exit true-up on the next operator pass")
     p.add_argument("client")
+    p.add_argument("--emailed", type=_iso_day, metavar="YYYY-MM-DD",
+                   help="day the cancel email arrived; the refund clock runs seven days from it (default: today)")
     p.set_defaults(fn=cmd_cancel)
 
     p = sub.add_parser("dispute", help="take a disputed dollar the record cannot defend off a measured month; "

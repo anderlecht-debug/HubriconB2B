@@ -51,8 +51,12 @@ it owns the question; ours is *"show me the Record."*
 The offer headline stays the offer: *More profit than our bill every month, or you
 don't pay.* Since 2026-09-30 "Paid on proof" is a line in words only: the stamp and the
 seal that carried it are retired with the night system. The home page is judged by the
-Hormozi standard (one action, under ~900 visible words; 822 on 2026-09-30, counted by
-`scripts/build-pages.mjs`).
+Hormozi standard: one action, and no proof that does not exist. Since 2026-10-01 evening it is
+also short, the founder's call ("a short first page, not a lot of scrolling … the rest on the
+tabs"): five bands, its own words capped, and every other section on the page under its tab.
+The creed opens /offer, in three lines, the third in ink: *Your agency is paid on spend. Your software is paid to report. We're paid on
+proof.* The method names the Profit Record's section: *Called before. Measured after.* And
+the product is shown, not said: every move on the scoreboard illustration has its receipt.
 
 ## Positioning
 
@@ -144,9 +148,19 @@ at display size in a film takes proportional digits; tabular digits are for colu
 ### Space and layout
 
 One spacing scale (4, 8, 12, 16, 24, 32, 48, 64, 96, 128 px), one content width (1120 px),
-one radius (10 px). One idea per screen. No navigation on a funnel page: the wordmark,
-the content, one button. The button is ink, always reads **Book your call →**, and always
-goes to `/apply`.
+one radius (10 px). One idea per screen. The button is ink, always reads **Book your call →**,
+and always goes to `/apply`.
+
+**The bar (since 2026-10-01, the founder's call: "we are mimicking Apple's .com with the
+education tab").** Every public page opens with one bar: the mark, the tabs **Proof · How it
+works · The offer · Education · Trust**, each a page of its own (`/case-study`,
+`/how-it-works`, `/offer`, `/learn`, and Trust's panel), and the call. No Results tab until a
+client fills one (the founder, 2026-10-01 evening). Education and Trust open a
+panel the width of the window, Apple's way: large links in the first column, the rest
+quieter, the page behind it blurred. On a phone the tabs fold into one menu of large links.
+The glass is white over whatever scrolls under it; a hairline appears once the page moves.
+`/apply` keeps no bar: once someone is booking, nothing else is offered. The footer is the
+same on every page: the mark, *Paid on proof.*, four columns, the one legal line.
 
 ### The mark
 
@@ -183,11 +197,83 @@ band fills over 0.4 s. It never loops and never asks for attention again. Under
 `prefers-reduced-motion`, or when the page's script never arrives, the still frame is all
 there is.
 
+The same rule, since 2026-10-01, for everything else that moves (`/assets/site.js`): a
+section's parts rise into place once as they arrive (`data-reveal`, 20 px, under a second,
+staggered a beat apart); the true-today numbers and the scoreboard's total count up once to
+the figure the page already prints (`data-count`); the scoreboard's bar fills to the bill
+and past it; each course cover draws its line. Nothing loops and nothing moves again.
+
+**Nothing is ever blank for want of a scroll** (the spec's contract for the Monte Carlo:
+"before it fires, show the finished still frame"). Every chart, section and number is in the
+HTML as its finished still frame. The script puts one back to its start only while it is
+still below the screen, within a screen of arriving, and plays it as it arrives; what is
+on screen at load, or what a visitor jumps past, stays as it is. The hero's chart is the one
+that draws as the page opens (`data-play="load"`). `scripts/build-pages.test.mjs` fails any
+rule that hides content without that.
+
+### The pieces a page is built from (since 2026-10-01)
+
+In `/assets/hubricon.css`, so every page draws them the same way:
+
+- **The exhibit** (`.exhibit`, `-head`, `-body`, `-cap`): a chart framed as an instrument, with a
+  header row that numbers and names it ("Fig. 2 · Ten thousand years of this one listing") and
+  carries its label box. A hairline, never a shadow.
+- **The proof strip** (`.numbers`): four numbers that are true today, each saying what it counts.
+  Never a client count or a result until one exists.
+- **The go-card** (`.go-card`, `.go-k`, `.go-to`, `.go-badge`): a card that links somewhere. Only
+  the call is a button (`.btn`, `.btn-lg`); everything else that goes somewhere is a card or a link.
+- **Two-tone headlines** (`.tone`): the claim in ink, the turn after it a step quieter.
+- **The display-xl size** (`--t-display-xl`): the one or two lines a page is remembered by.
+
+The home page's hero carries the Monte Carlo as mood, wide and muted behind the headline, and the
+case study's third visual is the aging strip (`agingStripSVG`): one unit's clock from today,
+the day-271 band in the accent, the visitor's own calendar dates under the day marks.
+
+Built from data in `scripts/site-blocks.mjs` (since 2026-10-01):
+
+- **The course tile** (`.tile`, `.tile-cover`, `.tile-feature`): a night cover drawn from the
+  house visuals in miniature, then the facts. One cover per course, one motif each: the
+  staircase (fees), the waterfall with one bar in blue (the money you can't see), the cash
+  trough below zero in blue (capital and cash), the profit curve with its peak in blue
+  (pricing), the fan (decisions under uncertainty), the margin bars with the gap in blue (the
+  operator's math). A live course is a link; a planned one is labelled Planned and links nowhere.
+- **The video slot** (`.film`, `.lesson-video`): the space a video will fill. Empty, it says
+  what will play there, in the future tense, and names its chapters (the case-study film's
+  five beats, from `data/library.json`) rather than redrawing a chart the visitor has just
+  read; full, it plays.
+- **The results wall** (`.wall-frames`, `.frame`): a client's own words beside their Record,
+  with consent. Off every page since 2026-10-01 evening (the founder: a wall that reads zero
+  "only hurts us" for now); the piece is kept, and goes up with the first client who says yes.
+- **The call** (`.calls`, `.call`): a call the engine made and what happened after, side by
+  side in display type, the store study's three on the home page and on `/case-study`. A miss
+  is stated beside it, never left out.
+- **The course strip** (`.lib-strip`, `.strip-tile`): every live course as a small cover and a
+  title, the home page's education band; on a phone, one row that swipes inside its own box.
+- **The receipt** (`.rcpt`): a move, how we know, the dollars called before, measured after,
+  and what they count for under the rules.
+- **A hash** (`.hash`, on `/verify` and the printed Record): set in Inter with
+  `font-feature-settings: "zero"` and tabular numerals, in groups of eight; never a monospace face.
+- **The course's email field** (`.join-tile`): optional, since every lesson is open (the
+  founder's call, 2026-10-01). On /learn's featured course card under "Start lesson 1, no email
+  needed", under each course's start and at the end of its last lesson; never on the home page. One field marked
+  Optional, its own outline button ("Send it to me →"), one line of what follows and the privacy
+  link. It never moves the reader; it says what happened. The call is the only button on the
+  home page, which carries no form.
+
 ### Labels that never come off
 
 Every proof screen carries **Modeled from public data · Not a client · Not a result**.
 Every estimate says "estimate" beside it. Ranges, never points, rounded down. An
 illustration says it is one.
+
+### Email (since 2026-10-01)
+
+Every client email has one look, the site's in an inbox: set in Inter, -apple-system,
+'Segoe UI', Roboto, Helvetica, Arial, sans-serif; ink #0a0e17 on white, #3b4250 for what is
+secondary; one hairline #e4e7ec before the sign-off; the button in ink with the one 10px
+radius; 520px wide; Hagen's signature. No blue except on money. The values live in one place
+per language: `lib/tool_email.js` (EMAIL_*) and `engine/src/hubricon_engine/onboarding.py`
+(EMAIL_*).
 
 ## Retired 2026-09-30: the night system
 
@@ -195,9 +281,11 @@ From 2026-09-25 to 2026-09-30 the site ran on Night `#050A1F`, Signal amber `#FF
 receipt paper, Anton and IBM Plex Mono, with the stamp, the seal, the receipt and the
 low-key still life as its icons. The spec retired it for the funnel ("the Rockefeller
 reading a ledger feeling"). The old home page and /apply are in `archive/`; the full
-description is in this file's git history (`git show ea46b1b:BRAND.md`). /manifesto,
-/method, /portal, /results and /intake still wear it until they are rebuilt on the tokens,
-which is why the asset inventory below is kept.
+description is in this file's git history (`git show ea46b1b:BRAND.md`). Every served
+page is on the tokens now (/manifesto was the last, rebuilt 2026-10-01; /method and /results
+redirect). The assets below are kept for the archive and the content pipeline, and since
+2026-10-01 they are not deployed (`.vercelignore`: `brand`, and `hagen.jpg`, because the
+founder is off camera).
 
 ## The asset inventory
 

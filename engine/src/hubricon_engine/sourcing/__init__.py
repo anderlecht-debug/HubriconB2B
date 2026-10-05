@@ -51,7 +51,7 @@ Modules:
     contact.py    a named person, and the published/pattern distinction
     sheet.py      the Google Sheet (Apps Script webhook) and the CSV beside it
     push.py       the Instantly holding pen — and the four fences around it
-    run.py        the passes, the promotion into harvest_sellers, launchd
+    run.py        the passes, the promotion into harvest_sellers, the schedule (scheduling.py)
 
 **Nothing in this package sends an email.** `push.py` writes to a lead list
 that `outbound.enroll_from_lists` cannot match, promoted rows land at

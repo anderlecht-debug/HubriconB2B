@@ -188,7 +188,9 @@ def expedite(row: dict, terms: dict, rng: np.random.Generator, draws: int = EXPE
     d_air = _poisson_by_inversion(rates * float(air_lead) * lead_shock, u)
     short_sea = np.maximum(0.0, d_sea - position)
     short_air = np.maximum(0.0, d_air - position)
-    lilf = fees.LOW_INVENTORY_FEE_PER_UNIT.get(row.get("size_tier") or "standard", fees.LOW_INVENTORY_FEE_PER_UNIT["standard"])["lt14"] if cliffs else 0.0
+    # the SKU's own size tier at its under-14-days rate, as inventory_econ priced it
+    lilf = (float(row["low_inventory_fee_lt14"]) if row.get("low_inventory_fee_lt14") is not None
+            else fees.low_inventory_fee(0.0, row.get("size_tier") or "standard")) if cliffs else 0.0
     per_unit = float(row["unit_margin"]) + lilf
     premium = (float(air_freight) - sea_freight) * q
     net = (short_sea - short_air) * per_unit - premium

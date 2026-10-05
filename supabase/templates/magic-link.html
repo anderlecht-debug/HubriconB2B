@@ -1,21 +1,25 @@
 <!-- Supabase Auth email template: Magic Link
      Paste into: Dashboard → Authentication → Email Templates → Magic Link
-     Subject line: Your Hubricon sign-in link -->
-<div style="max-width:520px;margin:0 auto;padding:32px 24px;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;line-height:1.6">
-  <p style="font-size:15px;letter-spacing:0.08em;text-transform:uppercase;color:#8a8a8a;margin:0 0 28px">Hubricon</p>
-  <p style="font-size:16px;margin:0 0 20px">Here is your sign-in link for the Hubricon desk:</p>
+     Subject line: Your Hubricon sign-in link
+     Hubricon's email look: one sans (Inter, then the system's), ink on white, one hairline rule,
+     the button in ink. Colours are the tokens in /assets/hubricon.css, written out because an
+     email cannot read a stylesheet. -->
+<div style="max-width:520px;margin:0 auto;padding:32px 24px;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#3b4250;font-size:16px;line-height:1.6">
+  <p style="font-size:17px;font-weight:600;letter-spacing:-0.01em;color:#0a0e17;margin:0 0 28px">Hubricon</p>
+  <p style="font-size:16px;color:#0a0e17;margin:0 0 24px">Your link to sign in to Hubricon, where your Profit Record and your briefs are kept.</p>
   <p style="margin:0 0 24px">
     <a href="{{ .ConfirmationURL }}"
-       style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 24px;font-size:15px">
-      Open your desk
+       style="display:inline-block;background:#0a0e17;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-size:15px;font-weight:600">
+      Sign in to Hubricon
     </a>
   </p>
-  <p style="font-size:14px;color:#555;margin:0 0 20px">
+  <p style="font-size:14px;color:#636b7a;margin:0 0 24px">
     The link works once and expires in an hour. If the button doesn't open, copy this address into your browser:<br>
-    <a href="{{ .ConfirmationURL }}" style="color:#555;word-break:break-all">{{ .ConfirmationURL }}</a>
+    <a href="{{ .ConfirmationURL }}" style="color:#636b7a;word-break:break-all">{{ .ConfirmationURL }}</a>
   </p>
-  <p style="font-size:14px;color:#555;margin:0 0 28px">
-    If you didn't request this, you can ignore it — nobody gets in without a link sent to this address.
+  <hr style="border:0;border-top:1px solid #e4e7ec;margin:0 0 20px">
+  <p style="font-size:14px;color:#636b7a;margin:0 0 16px">
+    Didn't ask for it? Ignore this email. Nobody signs in without a link sent to this address.
   </p>
-  <p style="font-size:14px;margin:0">Hagen Simmons<br><span style="color:#8a8a8a">Hubricon</span></p>
+  <p style="font-size:14px;color:#3b4250;margin:0">Hagen Simmons &middot; Hubricon</p>
 </div>

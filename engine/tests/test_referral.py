@@ -127,3 +127,32 @@ def test_a_partner_referral_is_flagged_for_a_human_and_never_auto_paid():
     assert credit["partner_id"] == "pt1" and "by hand" in credit["how"]
     assert db.rows("funnel_events")[0]["kind"] == "partner_referral_paid"
     assert referral.credit_referrer(db, {"id": "c9"}) is None
+
+
+def test_the_content_that_earned_a_booking_is_read_from_its_answers():
+    from hubricon_engine import referral
+    raw = {"utm_content": "rev:$3M–$10M|model:Private label|skus:10–50 SKUs|fit:a7|channel:Amazon|ref:abcd1234|src:yt-f02"}
+    assert referral.source_from_answers(raw) == "yt-f02"
+    assert referral.source_from_answers({"src": "LI-V01"}) == "li-v01"
+    assert referral.source_from_answers({"utm_content": "rev:$1M–$3M|fit:a7"}) is None
+    assert referral.source_from_answers({"utm_content": "src:<script>"}) is None
+    assert referral.code_from_answers(raw) == "abcd1234", "the referral code still reads beside it"
+
+
+def test_the_digest_counts_booked_calls_by_source_and_says_when_there_is_none():
+    from datetime import datetime, timezone
+
+    from hubricon_engine import referral
+    now = datetime(2026, 10, 2, tzinfo=timezone.utc)
+    bookings = [
+        {"answers": {"utm_content": "fit:a7|src:yt-f02"}, "created_at": "2026-09-30T12:00:00+00:00"},
+        {"answers": {"utm_content": "fit:a7|src:yt-f02"}, "created_at": "2026-08-01T12:00:00+00:00"},
+        {"answers": {"utm_content": "fit:a7"}, "created_at": "2026-10-01T12:00:00+00:00"},
+        {"answers": {"utm_content": "fit:a7|src:li-v01"}, "created_at": "2026-10-01T12:00:00+00:00", "is_test": True},
+    ]
+    lines = referral.booked_by_source_lines(bookings, now=now)
+    assert lines[0].startswith("Booked calls by source")
+    assert any(l.split()[:3] == ["yt-f02", "1", "2"] for l in lines), lines
+    assert any(l.split()[:4] == ["no", "source", "1", "1"] for l in lines), lines
+    assert not any("li-v01" in l for l in lines), "a test booking is not counted"
+    assert referral.booked_by_source_lines([], now=now) == []

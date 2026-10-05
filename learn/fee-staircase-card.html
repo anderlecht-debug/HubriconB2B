@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fee Staircase on one page — Hubricon</title>
+<meta name="description" content="Every rule and formula of The Fee Staircase on one printable page: what sets Amazon's fulfilment fee, how to find the step, the four edges, the counterfactual and the 271-day cliff.">
+<link rel="canonical" href="https://www.hubricon.com/learn/fee-staircase-card">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.hubricon.com/learn/fee-staircase-card">
+<meta property="og:title" content="The Fee Staircase on one page — Hubricon">
+<meta property="og:description" content="Every rule and formula of The Fee Staircase on one printable page: what sets Amazon's fulfilment fee, how to find the step, the four edges, the counterfactual and the 271-day cliff.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+</head>
+<body class="sheet-page">
+
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="fly-big" href="/learn/shopify-margin">The Shopify Margin</a><a class="fly-big" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/shopify-margin#pound-line">Lesson 2: the pound line under every parcel</a><a class="fly-small" href="/learn/files/hubricon-shopify-margin.xlsx">The Shopify Margin spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/operators-math#ad-target">Lesson 2: your ad target is wrong</a><a class="fly-small" href="/learn/files/hubricon-operators-math.xlsx">The Operator&#39;s Math spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
+
+<main class="wrap">
+  <header class="sheet-head">
+    <span class="label">The Fee Staircase · the course on one page</span>
+    <h1>Amazon's fee staircase, on one page</h1>
+    <p class="sheet-src">The rules and formulas of all eight lessons. Fees are Amazon's published 2026 US schedules, as loaded in Hubricon's engine on <span data-fill="learn_rc_date">September 9, 2026</span>. Check Seller Central before you act on a figure.</p>
+    <p class="sheet-actions"><button type="button" class="link-btn" data-print>Print it (one page)</button><a href="/learn/fee-staircase">The full course</a><a href="/learn/files/hubricon-fee-staircase.xlsx" download>The spreadsheet (.xlsx)</a></p>
+  </header>
+  <div class="sheet">
+    <section class="sheet-cell" aria-labelledby="c1">
+      <h2 id="c1"><span class="n">1</span>What sets the fee</h2>
+      <ul>
+        <li><b>Tier.</b> Sides sorted longest first. Small standard: up to 15 × 12 × 0.75 in and 16 oz. Large standard: up to 18 × 14 × 8 in and 20 lb.</li>
+        <li><b>Weight band.</b> Small standard climbs in 2-oz steps to 16 oz; large standard in 4-oz steps to 3 lb, then <span data-fill="learn_over3">$0.08</span> for every 4 oz.</li>
+        <li><b>Price band.</b> Under $10, $10 to $50, over $50.</li>
+        <li><b>Season.</b> October 15 to January 14, the holiday card: <span data-fill="learn_peak_min">$0.20</span> to <span data-fill="learn_peak_max">$0.42</span> a unit more in the $10 to $50 column.</li>
+        <li><b>Surcharge.</b> <span data-fill="surcharge">3.5%</span> on every fulfilment fee since April 17, 2026.</li>
+      </ul>
+      <a class="sheet-more" href="/learn/fee-staircase#staircase">Lesson 1 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c2">
+      <h2 id="c2"><span class="n">2</span>Read a listing</h2>
+      <p>Five numbers: the Buy Box price, the item weight, the package (else product) dimensions, the top-level category and the sales rank.</p>
+      <p class="sheet-f">lb × 16 = oz · cm ÷ 2.54 = in · g ÷ 28.35 = oz</p>
+      <p>The page's weight and product dimensions are floors: a finding built on them understates the fee. For your own SKUs, Fee Preview has Amazon's measurements.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#read-the-listing">Lesson 2 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c3">
+      <h2 id="c3"><span class="n">3</span>Find the step</h2>
+      <ol>
+        <li>Sort the sides, longest first.</li>
+        <li>Billable weight: over a cubic foot (1,728 cu in), the greater of the unit's weight and L × W × H ÷ 139 lb; under it, the unit's weight.</li>
+        <li>Tier, from the sides and the billable weight.</li>
+        <li>Column, from the price.</li>
+        <li>Row: the first whose edge the billable weight does not exceed. The fee is that cell, plus the surcharge.</li>
+      </ol>
+      <a class="sheet-more" href="/learn/fee-staircase#find-the-step">Lesson 3 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c4">
+      <h2 id="c4"><span class="n">4</span>The four edges</h2>
+      <ul>
+        <li><b>Weight band:</b> within 2 oz past the edge below.</li>
+        <li><b>Price band:</b> at or above $10 or $50, where one cent under pays the cheaper column.</li>
+        <li><b>Tier:</b> exactly one side over small standard, by 35% or less, and 16 oz or less.</li>
+        <li><b>Box:</b> dimensional weight at least 1.3 × the real weight.</li>
+      </ul>
+      <p>Each counts only at 8 cents a unit or more (Hubricon's thresholds, not Amazon's). Edges overlap: never add them; the largest single edge is the finding.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#find-the-step">Lesson 3 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c5">
+      <h2 id="c5"><span class="n">5</span>The counterfactual</h2>
+      <p class="sheet-f">gap per unit = fee now − fee at the edge below, on both cards</p>
+      <p class="sheet-f">net a unit at one cent under = fee jump − (P − (E − $0.01)) × (1 − r)</p>
+      <p class="sheet-f">break-even price = (E − $0.01) + fee jump ÷ (1 − r)</p>
+      <p class="sheet-f">months to pay back = one-time cost ÷ (gap per unit × units a month)</p>
+      <p>P is the price, E the edge ($10 or $50), r the referral rate. The price move costs nothing to make, so it usually goes first.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#counterfactual">Lesson 4 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c6">
+      <h2 id="c6"><span class="n">6</span>Volume, as a range</h2>
+      <p class="sheet-f">units a month ≈ scale × 10^(<span data-fill="learn_uc_a">5.925</span> − <span data-fill="learn_uc_b">0.875</span> × log10(rank))</p>
+      <p>For a rank of <span data-fill="learn_uc_knee">1,000</span> or worse in a top-level category. Never a point: half to one and a half times in plain arithmetic. Your own units, from Business Reports, beat the curve.</p>
+      <p>Simulated (lesson 6): volume × e<sup>σz</sup> with σ = ln 2 ÷ 1.645, cost × (0.9 + 0.2 × a random number). Plan on P10; say the range, rounded down.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#volume">Lesson 5 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c7">
+      <h2 id="c7"><span class="n">7</span>The 271-day cliff</h2>
+      <p>The aged surcharge goes from <span data-fill="aged_rate_before">$1.50</span> to <span data-fill="aged_rate_after">$5.45</span> a cubic foot a month at day 271, from Amazon's snapshot on the 15th.</p>
+      <p class="sheet-f">days of cover = units on hand ÷ units sold a day</p>
+      <p>Above about 270 days of cover, some units cross before they sell. Before the 15th: sell the oldest through, remove them, or liquidate. Your ages: Reports, Fulfillment, Manage Inventory Health.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#the-cliff">Lesson 7 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+    <section class="sheet-cell" aria-labelledby="c8">
+      <h2 id="c8"><span class="n">8</span>Every SKU, in order</h2>
+      <ol>
+        <li>Sort by Rank: the low end of what each SKU's largest edge is worth a year.</li>
+        <li>Price edges first; they cost nothing. Then packaging, each against its quote.</li>
+        <li>Stop where a year at the low end is less than the change costs.</li>
+      </ol>
+      <p>"Amazon's fee minus this sheet's" above zero: weigh and measure a packed unit, and if Amazon is wrong, open a case. Run it every quarter, and the week Amazon publishes a new card.</p>
+      <a class="sheet-more" href="/learn/fee-staircase#every-sku">Lesson 8 <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+  </div>
+  <p class="sheet-foot">Free, from <a href="/learn/fee-staircase">The Fee Staircase</a> at hubricon.com/learn. Every lesson is open; no email needed.</p>
+</main>
+
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+<script type="module" src="/assets/site.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

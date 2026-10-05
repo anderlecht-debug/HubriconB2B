@@ -1,0 +1,10 @@
+{
+  "file": "learn/files/hubricon-operators-math.xlsx",
+  "file_sha256": "f741811aaadd852f73efbfe525b82a750fd1568d361861c89509197fa16c8974",
+  "sources_sha256": {
+    "engine/src/hubricon_engine/cold/priors.py": "c8762ef5b42da4558d6812e28ccd91fb50dbebd77ed627753c5273dd0feb48ab",
+    "engine/src/hubricon_engine/models/clv.py": "874c967f42c1a70d1af6a8f0af300b0f0b6267b32500e845b8c118668ab2f7a9",
+    "engine/src/hubricon_engine/models/ad_efficiency.py": "10a35fb16125786d219b7e419c55fd37cbb73f0072e53e53fb873616f08433a1"
+  },
+  "verified_on": "2026-10-01"
+}

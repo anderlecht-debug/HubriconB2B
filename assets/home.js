@@ -1,15 +1,15 @@
-// The home page's behaviour. Everything visible is already in the HTML; this file
-// only plays the charts once, counts clicks, and shows a real client's result
-// when one has been published with consent.
+// The home page's behaviour on top of /assets/site.js (the nav, the motion, clicks, the
+// footer's live line). Everything visible is already in the HTML; this file counts which
+// headline a visitor saw, keeps a referral code for /apply, sends a link to one of the old
+// home-page sections to the page it now lives on, and fills a real client's story only
+// from rows a client consented to publish. (The results wall's code stays for the day a
+// client fills one; no page carries the wall until then.)
 "use strict";
-window.__hubriconMotion = true;
+import { track, rpc, results } from "./site.js";
 
 const root = document.documentElement;
 const headline = root.getAttribute("data-headline") || "A";
 
-/* -- Vercel Web Analytics --------------------------------------------------- */
-window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-const track = (name, data) => { try { window.va("event", { name, data }); } catch (e) {} };
 try {
   if (!sessionStorage.getItem("hubricon_h_seen")) {
     sessionStorage.setItem("hubricon_h_seen", "1");
@@ -25,67 +25,52 @@ try {
   if (ref && REF_OK.test(ref)) sessionStorage.setItem("hubricon_ref", ref);
 } catch (e) {}
 
-document.addEventListener("click", (ev) => {
-  const a = ev.target.closest?.("[data-cta]");
-  if (a) track("cta_click", { section: a.dataset.cta || "", h: headline });
-});
-document.querySelectorAll("details[data-q]").forEach((d) => {
-  d.addEventListener("toggle", () => { if (d.open) track("faq_open", { q: d.dataset.q }); });
-});
-const method = document.querySelector("#case-study details");
-method?.addEventListener("toggle", () => { if (method.open) track("method_open", {}); });
-
-/* -- The charts: drawn once when they come into view, then still -------------- */
-const ms = (name, fallback) => {
-  const v = getComputedStyle(root).getPropertyValue(name).trim();
-  return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : fallback;
+/* A link to a section that used to be on the home page lands where it lives now
+   (HUBRICON_SPEC.md, "A short first page", 2026-10-01): shared links keep working. After
+   the referral code is kept, so a shared link loses nothing. */
+const MOVED = {
+  "#case-study": "/case-study", "#staircase": "/case-study#staircase", "#problem": "/case-study#problem",
+  "#how": "/how-it-works", "#scoreboard": "/how-it-works#record", "#who": "/how-it-works#who", "#faq": "/how-it-works#faq",
+  "#trust": "/offer#trust", "#results": "/honesty",
 };
-if (root.classList.contains("motion")) {
-  const total = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;   // draw, band, the paths settling
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const fig = e.target;
-      io.unobserve(fig);
-      fig.classList.add("playing");
-      setTimeout(() => { fig.classList.add("played"); fig.classList.remove("playing"); }, total);
-    }
-  }, { threshold: 0.3 });
-  document.querySelectorAll("[data-play]").forEach((f) => io.observe(f));
-}
+if (MOVED[location.hash]) location.replace(MOVED[location.hash]);
 
-/* -- The case-study film ------------------------------------------------------ */
-// TODO(video): the five-beat case-study film (HUBRICON_SPEC.md, "Education: landing
-// page vs the hub"). Set src and poster when it exists; until then nothing renders.
-const VIDEO = { src: "", poster: "" };
-if (VIDEO.src) {
-  const slot = document.getElementById("case-video");
-  const v = document.createElement("video");
-  Object.assign(v, { src: VIDEO.src, poster: VIDEO.poster, controls: true, preload: "none", playsInline: true });
-  v.addEventListener("play", () => track("video_play", {}), { once: true });
-  slot.append(v);
-  slot.hidden = false;
-}
-
-/* -- Real results, only once they exist ---------------------------------------- */
-// The two anon-callable functions in the schema; both re-check consent on every read.
-const PUBLISHABLE = "sb_publishable_byrEWlQDgM9fDW-2bwIA3w_XA0mrg5X";
-async function rpc(name) {
-  try {
-    const res = await fetch(`https://cgqvdnhgbfxikzdqqaws.supabase.co/rest/v1/rpc/${name}`, {
-      method: "POST", body: "{}",
-      headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${PUBLISHABLE}`, "content-type": "application/json" },
-    });
-    return res.ok ? await res.json() : null;
-  } catch (e) { return null; }
-}
-
-(async () => {
-  const pending = document.querySelector("[data-proof-pending]");
-  if (!pending) return;
-  const rows = await rpc("public_results");
-  if (Array.isArray(rows) && rows.length) pending.hidden = true;
-})();
+/* -- The results wall --------------------------------------------------------------- */
+// public_results() returns only rows a client consented to publish, re-checked on every
+// read: category and revenue band, rounded down, no brand named. At zero the wall reads
+// zero and keeps its reserved frames, which is the point of it.
+const HOW = {
+  direct: "confirmed by the platform's own record",
+  isolated: "measured on the exact line the move named",
+  attributable: "measured against a stated counterfactual",
+  recovered: "paid by Amazon on a claim we filed",
+  gate: "the Profit Record against the invoice",
+};
+const KIND = {
+  first_recovered: "First reimbursement recovered",
+  gate_cleared: "A month cleared the fee",
+  roi_3x: "Record above three times the fee",
+  roi_5x: "Record above five times the fee",
+  direct_measured: "A correction, measured",
+};
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const money = (v) => "$" + Math.floor(Number(v) || 0).toLocaleString("en-US");
+results.then((rows) => {
+  if (!Array.isArray(rows) || !rows.length) return;
+  const count = document.getElementById("wall-count");
+  if (count) count.textContent = String(rows.length);
+  const box = document.getElementById("wall-results");
+  if (!box) return;
+  box.replaceChildren(...rows.map((r) => {
+    const a = el("article");
+    a.append(el("span", "label", `${r.month || ""} · ${r.platform || "amazon"}`), el("span", "amt", money(r.amount_usd)),
+      el("p", null, `A ${r.industry || "private-label"} brand${r.revenue_band ? `, ${r.revenue_band}` : ""}. ${KIND[r.kind] || r.kind || ""}.`),
+      el("p", null, `How we know: ${HOW[r.how_we_know] || r.how_we_know || "graded on the Record"}.`));
+    return a;
+  }));
+  box.hidden = false;
+  track("results_shown", { n: rows.length });
+});
 
 /* One client's result, told in full, or nothing. public_case_study() returns a row only
    for a real client whose Proving Month closed, who wrote the before-state and the
@@ -95,7 +80,6 @@ async function rpc(name) {
   const cs = sect ? await rpc("public_case_study") : null;
   if (!cs || !cs.before || !cs.quote || !Array.isArray(cs.numbers) || !cs.numbers.length) return;
   const $ = (k) => sect.querySelector(`[data-result="${k}"]`);
-  const el = (tag, text) => { const x = document.createElement(tag); if (text != null) x.textContent = text; return x; };
   const usd = (v) => (v == null ? "—" : "$" + Math.round(Number(v)).toLocaleString("en-US"));
   const closed = cs.closed_on
     ? new Date(cs.closed_on + "T12:00:00Z").toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })
@@ -104,7 +88,7 @@ async function rpc(name) {
   $("before").textContent = cs.before;
   $("numbers").replaceChildren(...cs.numbers.map((x) => {
     const d = el("div");
-    d.append(el("span", x.label), el("b", usd(x.amount_usd)), el("p", x.method));
+    d.append(el("span", null, x.label), el("b", null, usd(x.amount_usd)), el("p", null, x.method));
     return d;
   }));
   $("quote").textContent = cs.quote;

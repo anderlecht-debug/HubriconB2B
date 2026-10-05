@@ -11,7 +11,7 @@ that vendor belongs in privacy.html's subprocessor table. `local` keeps the
 numbers in the building at the cost of a flatter voice.
 
     HUBRICON_TTS=elevenlabs   (default when ELEVENLABS_API_KEY is set)
-    HUBRICON_TTS=local        macOS `say` / `espeak-ng`, no vendor
+    HUBRICON_TTS=local        `espeak-ng` (Linux) or macOS `say`, no vendor
     HUBRICON_TTS=off          no audio; the issue still publishes its letter
 """
 

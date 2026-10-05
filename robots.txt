@@ -1,0 +1,8 @@
+# Hubricon. The public pages are listed in the sitemap; the client's own pages are not for crawling.
+User-agent: *
+Disallow: /portal
+Disallow: /intake
+Disallow: /welcome
+Disallow: /api/
+
+Sitemap: https://www.hubricon.com/sitemap.xml

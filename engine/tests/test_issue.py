@@ -28,6 +28,9 @@ class FakeTable:
         self._filters[("in", col)] = list(vals)
         return self
 
+    def order(self, *_a, **_k):
+        return self
+
     def execute(self):
         rows = [r for r in self.db.rows(self.name) if self._matches(r)]
         if self._patch is not None:
@@ -58,7 +61,9 @@ class FakeDB:
         return FakeTable(self, name)
 
 
-CLIENT = {"id": "c1", "contact_email": "dana@acme.test", "contact_name": "Dana Reyes"}
+# A client who said yes: since 2026-10-01 nobody else is sent a move (the stage gate below).
+CLIENT = {"id": "c1", "contact_email": "dana@acme.test", "contact_name": "Dana Reyes", "status": "pending",
+          "retainer_started_at": "2026-09-01T00:00:00+00:00"}
 
 
 def _d(i, **kw):
@@ -175,18 +180,19 @@ def test_the_veto_email_carries_the_record_line_and_a_footer_failure_never_block
     sent = []
     monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
     monkeypatch.setattr("hubricon_engine.notify.send_email", lambda to, subject, text, html=None, **k: sent.append(text) or True)
-    monkeypatch.setattr("hubricon_engine.cli._fetch_claims", lambda db, cid: [])
-    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", lambda db, cid: [])
     db = FakeDB([_d(1), _d(2, status="done", executed_at="2026-09-01T00:00:00Z", measured_impact_usd=None)])
     res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True
-    # d2 is made and unmeasured ($200 expected): found, not yet banked.
-    assert "Your Profit Record: $0 proven since day one · $200 found and filed, not yet banked · $0 billed to date." in sent[-1]
+    # d2 is made and unmeasured ($200 expected): found, not yet banked. The footer is
+    # value.record_footer, so it names the same since-day-one figure as every other
+    # client email: no record_months row yet, so the measured-so-far basis.
+    assert "Your Profit Record: $0 measured so far" in sent[-1]
+    assert "$200 found and filed, not yet banked · $0 billed to date." in sent[-1]
 
-    def boom(db, cid):
+    def boom(*_a, **_k):
         raise RuntimeError("invoices table missing")
 
-    monkeypatch.setattr("hubricon_engine.cli._fetch_invoices", boom)
+    monkeypatch.setattr("hubricon_engine.value.record_footer", boom)
     db = FakeDB([_d(3)])
     res = issue.issue_drafts(db, CLIENT, "amazon", "https://x/portal", send=True)
     assert res["notified"] is True and "Your Profit Record:" not in sent[-1]
@@ -272,3 +278,78 @@ def test_the_first_sweep_leads_with_what_can_be_seen_to_work_soonest():
     s = speed.summary([{"exports_landed_at": "2026-08-01T00:00:00+00:00", "first_issue_at": "2026-08-01T12:00:00+00:00",
                         "first_value_at": "2026-08-15T12:00:00+00:00"}])
     assert s["median_days_first_issue_to_first_value"] == 14.0
+
+
+def test_nobody_who_has_not_said_yes_is_sent_a_move(monkeypatch):
+    """A prospect who sent files before the call, or said no on it, used to get
+    "before it goes live" notices that the default mandate approves after 72
+    hours. Now their drafts stay drafts: nothing issued, sealed or sent, and
+    nothing that could ever auto-approve."""
+    sent = []
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda *a, **k: sent.append(a) or True)
+    sealed = []
+    monkeypatch.setattr(issue, "_seal_promises", lambda *a, **k: sealed.append(a) or {"status": "sealed"})
+    for who in ({"id": "c1", "contact_email": "p@x.test", "status": "pending"},                   # booked or called
+                {"id": "c1", "contact_email": "p@x.test", "status": "declined"},                  # said no
+                {"id": "c1", "contact_email": "p@x.test", "status": "churned",
+                 "retainer_started_at": "2026-09-01T00:00:00+00:00"}):                            # left
+        db = FakeDB([_d(1), _d(2)])
+        res = issue.issue_drafts(db, who, "amazon", "https://x/portal", send=True)
+        assert res["issued"] == 0 and res["notified"] is False and res["held"] == 2 and res["gated"]
+        assert db.writes == [] and all(d["status"] == "draft" for d in db.rows("directives"))
+    assert sent == [] and sealed == []
+
+
+def test_the_gate_reads_the_row_as_it_is_now_not_the_row_it_was_handed(monkeypatch):
+    """`hubricon directives` hands over resolve_client's partial row, which has
+    no retainer_started_at; a sweep may hold a row from before a `hubricon
+    declined`. The stage comes from the database when it can."""
+    from fakedb import FakeDB as Rows
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: False)
+    yes = Rows(clients=[{"id": "c1", "status": "pending", "retainer_started_at": "2026-09-01T00:00:00+00:00"}],
+               directives=[_d(1)])
+    assert issue.issue_drafts(yes, {"id": "c1", "contact_email": "d@x.test"}, "amazon", "https://x")["issued"] == 1
+    no = Rows(clients=[{"id": "c1", "status": "declined"}], directives=[_d(1)])
+    assert issue.issue_drafts(no, CLIENT, "amazon", "https://x")["gated"] == "declined"
+
+
+def test_issue_flag_for_a_client_who_has_not_said_yes_says_the_moves_wait_for_the_yes(monkeypatch, capsys):
+    """issue_drafts holds every draft of a client who has not said yes
+    (lifecycle.may_send). The command used to call that "held for the next
+    issue"; it says why they were held instead."""
+    from hubricon_engine import cli
+    monkeypatch.setattr("hubricon_engine.notify.email_configured", lambda: True)
+    monkeypatch.setattr("hubricon_engine.notify.send_email", lambda *a, **k: True)
+    monkeypatch.setattr(cli, "email_configured", lambda: True)
+    db = FakeDB([_d(1), _d(2)])
+    args = _directives_args(db, monkeypatch, issue_flag=True)
+    called = {**CLIENT, "retainer_started_at": None}
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: called)
+    cli.cmd_directives(args)
+    out = capsys.readouterr().out
+    assert "NOT issued" in out and "said yes" in out and "2 draft(s) stay drafts" in out
+    assert "held for the next issue" not in out
+    assert [d["status"] for d in db.rows("directives")] == ["draft", "draft"]
+
+
+def test_hubricon_issue_counts_a_held_draft_as_held_not_published(monkeypatch, capsys):
+    """From No. 002 a Brief waits for `hubricon approve`; the summary must not
+    call it published."""
+    from types import SimpleNamespace
+    from hubricon_engine import cli
+    db = FakeDB([])
+    monkeypatch.setattr(cli.dbmod, "connect", lambda: db)
+    monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, _ident: {**CLIENT, "company_name": "Acme",
+                                                                          "platform": "amazon"})
+    monkeypatch.setattr(cli, "_issue_due", lambda _db, _c, _t: (True, "due"))
+    results = iter([{"issue_number": 2, "held": True, "emailed": False}])
+    monkeypatch.setattr(cli, "_publish_issue", lambda *a, **k: next(results))
+    cli.cmd_issue(SimpleNamespace(client="dana@acme.test", force=False, dry_run=False, send=True))
+    out = capsys.readouterr().out
+    assert "0 issue(s) published. 1 held for your approval" in out
+
+    results = iter([{"issue_number": 1, "emailed": True}])
+    cli.cmd_issue(SimpleNamespace(client="dana@acme.test", force=False, dry_run=False, send=True))
+    out = capsys.readouterr().out
+    assert "1 issue(s) published." in out and "held for your approval" not in out

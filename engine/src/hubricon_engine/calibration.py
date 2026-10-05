@@ -112,18 +112,39 @@ def _row(key: str, value, n_clients: int, n_obs: int, method: str, note: str | N
             "computed_at": datetime.now(timezone.utc).isoformat()}
 
 
-def consented_clients(db, kind: str = "calibration", statuses: tuple[str, ...] | None = None) -> list[dict]:
-    """Only clients who said yes to this specific use, and never internal ones.
+# Whose consent still speaks: a current client's. A client who left (churned)
+# or said no on the call (declined) calibrates nothing from that day, whatever
+# they once granted: the consent was given by a client of ours, about the work
+# we were doing for them. "Current" is one set for both network uses,
+# fleet.SOURCE_STATUSES, so calibration and the fleet can never disagree on who
+# is a source.
+def current_statuses() -> tuple[str, ...]:
+    """fleet.SOURCE_STATUSES, read when asked for: fleet imports this module."""
+    from .fleet import SOURCE_STATUSES
+    return SOURCE_STATUSES
+
+
+_CURRENT = object()     # consented_clients' default: whatever current_statuses() says
+
+
+def consented_clients(db, kind: str = "calibration", statuses=_CURRENT) -> list[dict]:
+    """Only current clients who said yes to this specific use, and never internal ones.
 
     The one gate every consented aggregate reads through: `kind` names the
     use ('calibration' here; 'network' for fleet.py and `hubricon book`), and
-    `statuses`, when given, keeps only clients whose status is in it."""
+    `statuses` keeps only clients whose status is in it. The default is every
+    current client (fleet.SOURCE_STATUSES), so a reader that names no statuses
+    (`compute` below, the benchmark in models/benchmark.py) never reads a
+    client who has left. `statuses=None` reads every status; nothing in the
+    engine passes it."""
+    if statuses is _CURRENT:
+        statuses = current_statuses()
     granted = {k["client_id"] for k in db.table("consents").select("client_id").eq("kind", kind)
                .eq("granted", True).execute().data}
     if not granted:
         return []
     clients = db.table("clients").select("*").in_("id", sorted(granted)).execute().data
-    return [c for c in clients if (statuses is None or c.get("status") in statuses)
+    return [c for c in clients if (statuses is None or (c.get("status") or "pending") in statuses)
             and not onboarding.is_internal(c.get("contact_email"), c.get("contact_name"))]
 
 

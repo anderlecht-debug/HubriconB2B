@@ -13,15 +13,14 @@ deliberately — `harvest/run.py::push` selects `enriched` rows and pushes them
 into the auto-enrolled Instantly list, so a promoted row must not wear that
 status. It is fence 4 from `push.py`, enforced on the other side of the wall.
 
-Runs on the Mac, like the harvest, and for a smaller reason: nothing here is
-adversarial (Shopify is not Amazon), but the Mac is where the Chrome fallback
+Runs on the founder's machine, like the harvest, and for a smaller reason: nothing here is
+adversarial (Shopify is not Amazon), but that machine is where the Chrome fallback
 and the DNS resolver live and where a long pass can take its time.
 """
 
 from __future__ import annotations
 
 import os
-import plistlib
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -459,40 +458,26 @@ def status_text(db) -> str:
     return "\n".join(lines)
 
 
-# -- launchd -----------------------------------------------------------------------
+# -- scheduling --------------------------------------------------------------------
 
 def launchd_plist(engine_dir: Path, uv: str = "/opt/homebrew/bin/uv",
                   hours: tuple[int, ...] = RUN_HOURS, minute: int = 40) -> dict:
-    log_dir = Path.home() / "Library" / "Logs"
-    return {
-        "Label": "com.hubricon.sourcing",
-        "ProgramArguments": [uv, "run", "hubricon", "source", "all"],
-        "WorkingDirectory": str(engine_dir),
-        "StartCalendarInterval": [{"Hour": h, "Minute": minute} for h in hours],
-        "StandardOutPath": str(log_dir / "hubricon-sourcing.log"),
-        "StandardErrorPath": str(log_dir / "hubricon-sourcing.err"),
-        "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-                                 "PYTHONUNBUFFERED": "1"},
-    }
+    """The Mac's launchd agent (scheduling.launchd_plist)."""
+    from ..scheduling import launchd_plist as plist
+    return plist("com.hubricon.sourcing", ["source", "all"], hours, minute, "hubricon-sourcing", engine_dir, uv)
 
 
-def install_launchd(engine_dir: Path | None = None, hours: tuple[int, ...] = RUN_HOURS,
-                    minute: int = 40, runner=subprocess.run) -> str:
-    """Its own label and its own hours, half an hour off the harvest's so the
-    two are never competing for Chrome on the same machine."""
-    engine_dir = engine_dir or Path(__file__).resolve().parents[3]
-    uv = subprocess.run(["which", "uv"], capture_output=True, text=True).stdout.strip() \
-        or "/opt/homebrew/bin/uv"
-    plist_path = Path.home() / "Library" / "LaunchAgents" / "com.hubricon.sourcing.plist"
-    plist_path.parent.mkdir(parents=True, exist_ok=True)
-    plist_path.write_bytes(plistlib.dumps(launchd_plist(engine_dir, uv, hours, minute)))
-    domain = f"gui/{os.getuid()}"
-    runner(["launchctl", "bootout", domain, str(plist_path)], capture_output=True)
-    res = runner(["launchctl", "bootstrap", domain, str(plist_path)], capture_output=True, text=True)
-    state = "loaded" if res.returncode == 0 else f"launchctl said: {(res.stderr or res.stdout).strip()}"
-    when = " and ".join(f"{h:02d}:{minute:02d}" for h in hours)
-    return (f"{plist_path}\n  runs `uv run hubricon source all` daily at {when} local; "
-            f"logs in ~/Library/Logs/hubricon-sourcing.log\n  {state}")
+def install(hours: tuple[int, ...] = RUN_HOURS, minute: int = 40, runner=subprocess.run) -> str:
+    """Schedule `hubricon source all` on this machine: a systemd user timer on the
+    founder's Linux desktop, a launchd agent on a Mac (scheduling.install). Its own
+    name and its own hours, half an hour off the harvest's, so the two never
+    compete for Chrome on the same machine."""
+    from ..scheduling import install as schedule
+    return schedule("hubricon-sourcing", "Hubricon Shopify lead sourcing", ["source", "all"], hours, minute,
+                    runner=runner)
+
+
+install_launchd = install   # the old name, kept for anything that still calls it
 
 
 def calibrate(db, path: Path, log=print) -> str:

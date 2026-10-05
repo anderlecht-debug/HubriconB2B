@@ -1121,6 +1121,42 @@ the accounts that show a change are the ones noise pushed the same way).
 
 ---
 
+### Iteration 40 — when the money arrives, and what a short shelf costs
+
+**Objection** (2026-10-01, found by the session building the cash course). The cash
+horizon paid an Amazon sale on the next 14-day payout, so a sale on day 13 was cash
+on day 14. Amazon holds every sale until seven days after delivery (DD+7; the
+remaining North American accounts moved to it on March 12, 2026), settles every 14
+days, and the bank takes up to five business days more: the cone ran roughly 9 to
+12 days early for every Amazon client. And the low-inventory-level fee priced every
+standard unit at the small-standard row and oversize at a row Amazon no longer
+publishes, though the 2026 schedule has five tiers and charges only when both the
+30- and 90-day days of supply are under 28.
+
+**Change.** `channels.py` names, per channel, a reserve (Amazon: 2 assumed delivery
+days + 8, Amazon's own example putting availability on the eighth day after
+delivery) and a bank transit (Amazon 4 calendar days, three business days of
+"up to 5"; Shopify inside its 3–5 day figure). `cashflow.simulate` pays each
+transfer the net of sales made up to day L − transit − reserve, charges ad spend
+the day it is spent, and counts the 14 days of sales Amazon already holds on day
+one, drawn from the same demand model; the settlement phase is unknown, so the next
+transfer is assumed 14 days out (the longest wait) and the assumption sentence says
+so. `fee_schedule.py` carries the five rows (the bulky rows read from Amazon's page
+and not re-read: Seller Central needs a sign-in, and third-party guides disagree on
+whether bulky items are charged), the 30/90-day rule with the higher band, and the
+exemptions an export can show (fewer than 20 units in seven days, Amazon's own
+exempt flag, Grocery); the rest are named on every row. A tier no export names takes
+the lowest row of its kind, so an assumed tier never overstates the fee. /call
+prices the same schedule from the prospect's own Fee Preview and Inventory Age, held
+to the engine by its golden file. The storage utilization surcharge is not modelled
+and the schedule says so.
+
+**Bench.** Seeds 101/202/303: 10/10/10 before and after. Validation 404/505/606:
+8/9/10 before and after, the same misses (S2 on 404 and 505, T1 on 404). On the
+cash fixtures the trough day did not move (the held balance pays about what days
+1–14 used to); a sale now reaches the bank on day 28, not 14, and on day 90 twenty
+days of sales are still with Amazon.
+
 ## Outcome Alignment
 
 Mathematics that scores well and produces a directive a seller will not act on is

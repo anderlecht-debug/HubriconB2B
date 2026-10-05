@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check a Profit Record — Hubricon</title>
+<meta name="description" content="Drop in a Hubricon Profit Record export and recompute every seal in your own browser: intact, or the first entry that is not. What the Seal proves, and what it cannot yet.">
+<link rel="canonical" href="https://www.hubricon.com/verify">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.hubricon.com/verify">
+<meta property="og:title" content="Check a Profit Record — Hubricon">
+<meta property="og:description" content="Drop in a Hubricon Profit Record export and recompute every seal in your own browser: intact, or the first entry that is not. What the Seal proves, and what it cannot yet.">
+<meta property="og:image" content="https://www.hubricon.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<style>
+/* /verify: a Profit Record export, checked in the reader's own browser. Every value is a
+   token from /assets/hubricon.css; the bar and the footer are the site's own (scripts/site-blocks.mjs). */
+
+/* A hash is read in groups of eight, in the one face: Inter, with its slashed zero so 0 and o
+   never blur, and tabular digits so the groups line up. Never a second, fixed-width face. */
+.hash { font-family: var(--font); font-feature-settings: "zero"; font-variant-numeric: tabular-nums; color: var(--ink); overflow-wrap: anywhere; word-spacing: 0.1em; }
+
+.head { padding-block: var(--s-6) var(--s-7); display: grid; gap: var(--s-4); }
+.head h1 { font-size: var(--t-display-m); max-width: 16ch; }
+.head .lede { max-width: 60ch; }
+.private { display: inline-flex; gap: var(--s-2); align-items: center; font-size: var(--t-14); color: var(--ink-2); padding: var(--s-2) var(--s-3); border: 1px solid var(--rule-2); border-radius: 999px; width: fit-content; }
+.private::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+
+.drop { position: relative; display: grid; gap: var(--s-2); padding: var(--s-6); border: 1px dashed var(--rule-2); border-radius: var(--radius); cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease; }
+.drop:hover, .drop.over { border-color: var(--ink); background: var(--paper-2); }
+.drop:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.drop b { font-size: var(--t-18); }
+.drop span { font-size: var(--t-14); color: var(--ink-3); }
+.drop.loaded { border-style: solid; border-color: var(--ink); }
+.try { margin-top: var(--s-4); display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); align-items: baseline; font-size: var(--t-14); color: var(--ink-3); }
+.link { font: var(--strong) var(--t-14) / 1.4 var(--font); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.link[hidden] { display: none; }
+
+.result { margin-top: var(--s-8); display: grid; gap: var(--s-6); }
+.result[hidden] { display: none; }
+.verdict { display: grid; gap: var(--s-3); padding-bottom: var(--s-6); border-bottom: 1px solid var(--rule); }
+.verdict h2 { font-size: var(--t-display-s); }
+.verdict p { max-width: 68ch; }
+.agree { font-size: var(--t-14); color: var(--ink-3); }
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s-3) var(--s-5); font-size: var(--t-16); }
+.facts dt { color: var(--ink-3); font-size: var(--t-14); padding-top: 2px; }
+.facts dd { min-width: 0; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-14); }
+th, td { text-align: left; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { color: var(--ink-3); font-weight: var(--strong); white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.when { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.block { margin-top: var(--section); display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); padding-top: var(--s-7); border-top: 1px solid var(--rule); }
+.block h2 { font-size: var(--t-display-s); }
+.prose { font-size: var(--t-18); display: grid; gap: var(--s-4); align-content: start; }
+.prose ul { list-style: none; display: grid; gap: var(--s-3); }
+.prose li { padding-left: var(--s-5); position: relative; }
+.prose li::before { content: ""; position: absolute; left: 0; top: 0.8em; width: 10px; border-top: 1px solid var(--ink-3); }
+.find { display: flex; gap: var(--s-2); }
+.find input { flex: 1; min-width: 0; min-height: 50px; padding: 0 var(--s-4); font: var(--regular) var(--t-16) / 1 var(--font); font-feature-settings: "zero"; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); }
+.find input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.find button { flex: none; min-height: 50px; padding: 0 var(--s-5); font: var(--strong) var(--t-16) / 1 var(--font); color: var(--ink); background: var(--paper); border: 1.5px solid var(--ink); border-radius: var(--radius); cursor: pointer; }
+.find button:hover { background: var(--ink); color: var(--paper); }
+.found { font-size: var(--t-16); color: var(--ink-2); }
+.found b { color: var(--ink); }
+.note { font-size: var(--t-14); color: var(--ink-3); }
+.cmd { font-family: var(--font); font-size: var(--t-14); color: var(--ink); background: var(--paper-2); border-radius: var(--radius); padding: var(--s-3) var(--s-4); overflow-wrap: anywhere; }
+
+main.wrap { padding-bottom: var(--section); }
+
+@media (max-width: 900px) {
+  .block { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
+}
+@media (max-width: 640px) {
+  .facts { grid-template-columns: minmax(0, 1fr); gap: var(--s-1); }
+  .facts dd { margin-bottom: var(--s-3); }
+  .find { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="fly-big" href="/learn/shopify-margin">The Shopify Margin</a><a class="fly-big" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/shopify-margin#pound-line">Lesson 2: the pound line under every parcel</a><a class="fly-small" href="/learn/files/hubricon-shopify-margin.xlsx">The Shopify Margin spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/operators-math#ad-target">Lesson 2: your ad target is wrong</a><a class="fly-small" href="/learn/files/hubricon-operators-math.xlsx">The Operator&#39;s Math spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
+</header>
+<!-- /build:nav -->
+
+<main class="wrap" id="verify">
+  <section class="head">
+    <span class="label">The Seal</span>
+    <h1>Check a Profit Record yourself.</h1>
+    <p class="lede">Every promise on a Profit Record is sealed before the email that announces it is sent, and every measurement is chained after the promise it answers. Drop in a Record export and this page recomputes all of it: each entry against its seal, each link in the chain, each measurement against its promise. It says the Record is intact, or names the first entry that is not and the check that caught it.</p>
+    <p class="private">Read in this browser. Nothing is uploaded.</p>
+  </section>
+
+  <section aria-label="Your Record">
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".zip,.json,application/zip,application/json" aria-describedby="drop-where">
+      <b id="drop-title">Drop the Record export here, or tap to choose it.</b>
+      <span id="drop-where">The export .zip a client requests in Hubricon and receives by email, or the record-seal.json inside it.</span>
+    </label>
+    <p class="try">
+      <span>No Record of your own?</span>
+      <button class="link" type="button" id="try-sample">Try it on a sample Record (invented, not a client)</button>
+      <button class="link" type="button" id="tamper" hidden>Change one figure in the sample, then check again</button>
+    </p>
+  </section>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <div class="verdict">
+      <span class="label" id="sample-tag" hidden><span class="label-box">Sample Record · invented for this page · not a client · not a result</span></span>
+      <h2 id="verdict"></h2>
+      <p id="verdict-note"></p>
+      <p class="agree" id="agree"></p>
+    </div>
+    <dl class="facts" id="facts"></dl>
+    <div class="table-wrap" id="problems-wrap" hidden><table><thead><tr><th>Entry</th><th>The check</th><th>What it found</th></tr></thead><tbody id="problems"></tbody></table></div>
+    <div class="table-wrap" id="entries-wrap" hidden><table><thead><tr><th>Entry</th><th>Sealed</th><th>What</th><th class="num">Dollars</th><th>Seal</th></tr></thead><tbody id="entries"></tbody></table></div>
+  </section>
+
+  <section class="block" aria-labelledby="find-title">
+    <h2 id="find-title">A head from a printed page, a seal from an email.</h2>
+    <div class="prose">
+      <p>A printed page of a Profit Record carries the Record's head: 64 characters, in groups of eight. An email that announced a sealed move prints its seal beside the expected dollars: the first twelve. Paste either one here, after the export has checked out above, and this page says whether that exact entry is in the chain it just recomputed, and where.</p>
+      <form class="find" id="find" autocomplete="off">
+        <input id="hash" name="hash" aria-label="A head or a seal" inputmode="text" spellcheck="false" placeholder="e70027c2 7e914d6e … or a 12-character seal">
+        <button type="submit">Find it</button>
+      </form>
+      <p class="found" id="found" aria-live="polite"></p>
+      <p class="note">A hash on its own proves nothing. It means something only as a place in a chain you have just recomputed from the whole Record.</p>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="pub-title">
+    <h2 id="pub-title">Hubricon's published head.</h2>
+    <div class="prose">
+      <p>Every client's entries also sit in one chain across all clients. Its head, how many entries it covers and when the last was sealed are public; nothing in them names a client or a promise.</p>
+      <p class="found" id="pub">Reading the published head…</p>
+      <p class="found" id="pub-compare" hidden></p>
+      <details class="fold">
+        <summary>Read it without this page</summary>
+        <div class="fold-body">
+          <p>It is <b>public_record_seal()</b> on Hubricon's database, callable by anyone with the public key every page of this site uses:</p>
+          <p class="cmd" id="pub-cmd"></p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="limits-title">
+    <h2 id="limits-title">What the Seal proves, and what it cannot yet.</h2>
+    <div class="prose">
+      <p>An intact Record proves that each promise says today what it said when it was sealed, before its email went out; that the entries are in the order they were sealed, with nothing taken out; that every measurement answers the promise it claims to; and that the evidence in the export is the evidence each figure was sealed with.</p>
+      <p>Two things it cannot prove yet:</p>
+      <ul>
+        <li><b>There is no outside timestamp.</b> Nothing beyond Hubricon's own systems dates the head today. Having something outside Hubricon record the head as it moves is the next step, and it is not built.</li>
+        <li><b>Whoever owns the database could rewrite the table consistently</b>, recomputing every seal so that a rewritten Record checks out on its own. What a rewrite cannot reach is what already left: the seals in clients' inboxes, the heads on pages already printed, and the exports already downloaded. A rewritten Record disagrees with those, and this page says so when you paste one. That is evidence of a rewrite, not prevention of one.</li>
+      </ul>
+      <p>Without this page: the export carries the same checker as a file beside the Record, <b>verify-record.mjs</b>. With Node installed, <b>node verify-record.mjs</b> followed by the export's file name runs every check here, and needs nothing else. The checking code on this page is that file's, line for line.</p>
+    </div>
+  </section>
+</main>
+
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+  </div>
+</footer>
+<!-- /build:foot -->
+
+<!-- The sample Record: invented for this page (scripts/verify-record.test.mjs checks it verifies
+     and is labelled a sample everywhere it shows). Not a client, not a result. -->
+<script type="application/json" id="sample-record">{"sample":"Invented for hubricon.com/verify to show how a check reads. Not a client, not a result.","format":"hubricon-record-seal/1","client_id":"a1a1a1a1-0000-4000-8000-000000000001","generated_at":"2026-09-23T11:00:00.250000Z","algorithm":{"canonical":"RFC 8785 JSON Canonicalization Scheme, UTF-8","leaf":"sha256(canonical(document)), lowercase hex","head":"sha256(previous head || leaf) over the raw 32-byte digests; the first previous head is 64 zeros","chains":"one per client (seq, prev_head, head) and one across all clients (global_seq, global_prev_head, global_head); the global head is public"},"status":"sealed","entries":[{"seq":1,"global_seq":1,"entry":"called","entry_key":"called:d0000001-0000-4000-8000-000000000001","document":{"v":1,"entry":"called","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000001-0000-4000-8000-000000000001","channel":"amazon","module":"pricing","kind":"price_step","target":{"sku":"SKU-1"},"dedupe_key":"key0001","action_text":"Raise SKU-1 from $24.99 to $25.99 — a 4% step.","expected_usd":"412.37","band_usd":{"p5":"120.00","p95":"690.50"},"mandate":"standing","issued_at":"2026-08-24T11:01:00.250000Z","evidence_sha256":"cb7a9735e82bfb22f51304fe59afc2989b7e0c1eb1f1da48fe9433e7566ddf3c","sealed":"at_issue","sealed_at":"2026-08-24T11:01:00.250000Z"},"leaf":"55d822c9a9bca90e603d0a5f16fd94d28e20d126886fdb74c60eecac03a945a2","prev_head":"0000000000000000000000000000000000000000000000000000000000000000","head":"d1fa523b049382970fb0c73734c2be8f4d96f060541375de83a5b6b1b00b1109","global_prev_head":"0000000000000000000000000000000000000000000000000000000000000000","global_head":"d1fa523b049382970fb0c73734c2be8f4d96f060541375de83a5b6b1b00b1109"},{"seq":2,"global_seq":3,"entry":"called","entry_key":"called:d0000002-0000-4000-8000-000000000002","document":{"v":1,"entry":"called","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000002-0000-4000-8000-000000000002","channel":"amazon","module":"advertising","kind":"ad_bleed_terms","target":{"terms":[["SP — Kitchen","cheap tongs"],["SP — Kitchen","tongs ünd grill"]]},"dedupe_key":"key0002","action_text":"Negative-match 2 search terms that spent with zero attributed sales — $1,204 of pure bleed.","expected_usd":"1290.00","band_usd":{"p5":"1100.00","p95":"1480.00"},"mandate":"standing","issued_at":"2026-08-24T11:02:00.250000Z","evidence_sha256":"558666d2175e43db4573bbde279ecbaa0df0edc42559ad582caca3c3c0870ec4","sealed":"at_issue","sealed_at":"2026-08-24T11:03:00.250000Z"},"leaf":"6d3cab56138fd55bbf1d41232d99fbd274fbf61b2a3338c19e3356a989fa229b","prev_head":"d1fa523b049382970fb0c73734c2be8f4d96f060541375de83a5b6b1b00b1109","head":"d86eb6efa2375edba6a52606207133fd8d12a2cb11054e68f456a6c0605fe2fc","global_prev_head":"df4914d9b1126c1547e9303de6ac1d04da2cfe3759952eb5379bf55121641d53","global_head":"964e04055fd0f729d8848aee9e39166957967ac92b1534342610e15906a8a8dc"},{"seq":3,"global_seq":4,"entry":"called","entry_key":"called:d0000003-0000-4000-8000-000000000003","document":{"v":1,"entry":"called","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000003-0000-4000-8000-000000000003","channel":"amazon","module":"recovery","kind":"recovery_filing","target":{"claim_keys":["lost:FBA1","lost:FBA2","damaged:FBA9"]},"dedupe_key":"key0003","action_text":"Authorize us to file 3 reimbursement claims with Amazon — $310 at face value.","expected_usd":null,"band_usd":null,"mandate":"explicit","issued_at":"2026-08-24T11:03:00.250000Z","evidence_sha256":"cdea650b93abad9aae5b641e8e30bcdd870ec4978d7d458ca7f117cc9254749d","sealed":"at_issue","sealed_at":"2026-08-24T11:04:00.250000Z"},"leaf":"427bdff5aa9b02c04876a3c4baead8cbbe6d6754c4b2b4fbb8c60701937a8e03","prev_head":"d86eb6efa2375edba6a52606207133fd8d12a2cb11054e68f456a6c0605fe2fc","head":"1d7a9c8f3f7bc2bfc39c9c38c6bfb6db36c7a8e68dd2720db5ab603a387a44c3","global_prev_head":"964e04055fd0f729d8848aee9e39166957967ac92b1534342610e15906a8a8dc","global_head":"1fa1bb40f753b4df09c56850905ef006d4fa00e278c866023fd57aefa7450a22"},{"seq":4,"global_seq":6,"entry":"measured","entry_key":"measured:d0000001-0000-4000-8000-000000000001:2026-09-21T00:00:00.000000Z","document":{"v":1,"entry":"measured","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000001-0000-4000-8000-000000000001","called_leaf":"55d822c9a9bca90e603d0a5f16fd94d28e20d126886fdb74c60eecac03a945a2","supersedes":null,"measured_usd":"380.25","grade":"attributable","status":"done","measured_at":"2026-09-21T00:00:00.000000Z","after_sha256":"9111dd5329a357629785e26aec15955129946f5d79849868c9d0f3016fb83321","sealed":"at_measurement","sealed_at":"2026-09-21T11:00:00.250000Z"},"leaf":"5ae5ced28372b39490c263a48acac947e27647ec619ed4b7e497c2c94e12d485","prev_head":"1d7a9c8f3f7bc2bfc39c9c38c6bfb6db36c7a8e68dd2720db5ab603a387a44c3","head":"969193b30943d17495acf09b8cbd0a9e5563e79c47aeed3b0ae890c412ad22b0","global_prev_head":"f149ebd013bdb9dc934e0c182decd80ecc7b7f02fea8878cd91e3357d4f75a24","global_head":"ae43cf656cbf1d66f594a0c42e3f1b4b16d71f3fb708b6c7e07306239ffbed4b"},{"seq":5,"global_seq":7,"entry":"measured","entry_key":"measured:d0000001-0000-4000-8000-000000000001:2026-09-22T15:30:00.500000Z","document":{"v":1,"entry":"measured","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000001-0000-4000-8000-000000000001","called_leaf":"55d822c9a9bca90e603d0a5f16fd94d28e20d126886fdb74c60eecac03a945a2","supersedes":"5ae5ced28372b39490c263a48acac947e27647ec619ed4b7e497c2c94e12d485","measured_usd":"350.00","grade":"direct","status":"done","measured_at":"2026-09-22T15:30:00.500000Z","after_sha256":"9111dd5329a357629785e26aec15955129946f5d79849868c9d0f3016fb83321","sealed":"by_hand","sealed_at":"2026-09-22T11:00:00.250000Z"},"leaf":"6dcd7e4ae1560b7371af21f091ad2000aef9624bb60af3e2188328ff056ac8ad","prev_head":"969193b30943d17495acf09b8cbd0a9e5563e79c47aeed3b0ae890c412ad22b0","head":"093218a63ee503c5ac24c9f26511526143fbd696557cbf50017e06240afd946d","global_prev_head":"ae43cf656cbf1d66f594a0c42e3f1b4b16d71f3fb708b6c7e07306239ffbed4b","global_head":"685a158ecae4dcb666fe6e67558e8d898d0241f7a7b195f89c11c7f33fbbdb94"},{"seq":6,"global_seq":8,"entry":"measured","entry_key":"measured:d0000002-0000-4000-8000-000000000002:2026-09-21T00:00:00.000000Z","document":{"v":1,"entry":"measured","client_id":"a1a1a1a1-0000-4000-8000-000000000001","directive_id":"d0000002-0000-4000-8000-000000000002","called_leaf":"6d3cab56138fd55bbf1d41232d99fbd274fbf61b2a3338c19e3356a989fa229b","supersedes":null,"measured_usd":null,"grade":"unmeasurable","status":"closed","measured_at":"2026-09-21T00:00:00.000000Z","after_sha256":"4cec442adb10822d1abd367f4acb5db4f93f0d7e62cebbdac5c0e4f2306c28b6","sealed":"at_measurement","sealed_at":"2026-09-22T11:01:00.250000Z"},"leaf":"6a5043ae2755a66f2efc8cfc7be26a73c813ce7ed05a876a900fbb5cea317cb1","prev_head":"093218a63ee503c5ac24c9f26511526143fbd696557cbf50017e06240afd946d","head":"e70027c27e914d6ee5fccc5187682e4ec37b707d90e891f30475ab7d34a75c64","global_prev_head":"685a158ecae4dcb666fe6e67558e8d898d0241f7a7b195f89c11c7f33fbbdb94","global_head":"3fcc364cfff231331d95aa072e97d034f81fb4daf529aa38935c2eba94f839e9"}],"head":"e70027c27e914d6ee5fccc5187682e4ec37b707d90e891f30475ab7d34a75c64","evidence":{"d0000001-0000-4000-8000-000000000001":{"before":{"sku":"SKU-1","p0":24.99,"p_new":25.99,"elasticity":-1.73,"ci95":[-2.2,-1.1],"delta_p5":120.004,"delta_p50":412.37,"delta_p95":690.5,"p_loss":0.031,"mc_inputs":{"draws":4000,"seed":20260911},"score":14.1237},"after":{"measured_distribution":{"p5":101.5,"p50":380.25,"p95":702},"window":["2026-08-25","2026-09-20"]}},"d0000002-0000-4000-8000-000000000002":{"before":{"terms":[{"campaign_name":"SP — Kitchen","search_term":"cheap tongs","spend":704.2,"clicks":311},{"campaign_name":"SP — Kitchen","search_term":"tongs ünd grill","spend":500,"clicks":null}],"baseline_spend":1204.2,"horizon_days":30,"delta_p5":1100,"delta_p50":1290,"delta_p95":1480,"score":1204.2},"after":{"reason":"paused"}},"d0000003-0000-4000-8000-000000000003":{"before":{"claim_keys":["lost:FBA1","lost:FBA2","damaged:FBA9"],"face_value":310,"expected_value":248,"n_claims":3},"after":null}},"global":{"head":"f2c60efdd8949b7c54c65dca774f80895ee66e8733891c1c3a088c223efe7778","entries":9,"last_sealed_at":"2026-09-22T11:02:00.250000Z","from_seq":1,"leaves":["55d822c9a9bca90e603d0a5f16fd94d28e20d126886fdb74c60eecac03a945a2","4d82b4e79806705b563bd67aad597c8e91699b89a581a2d1ed9102235398aacf","6d3cab56138fd55bbf1d41232d99fbd274fbf61b2a3338c19e3356a989fa229b","427bdff5aa9b02c04876a3c4baead8cbbe6d6754c4b2b4fbb8c60701937a8e03","3d36334c70d0bd65bdf6f25dfaf49aa6222f1d1d33d753b0ffa24213224560fb","5ae5ced28372b39490c263a48acac947e27647ec619ed4b7e497c2c94e12d485","6dcd7e4ae1560b7371af21f091ad2000aef9624bb60af3e2188328ff056ac8ad","6a5043ae2755a66f2efc8cfc7be26a73c813ce7ed05a876a900fbb5cea317cb1","255fa1a2b3b81d4866ea6f1aa5544af3b4fbe233bd5d274d4e6049ce5d1abf8a"]}}</script>
+<script type="module" src="/assets/site.js"></script>
+<script type="module" src="/assets/verify.js"></script>
+</body>
+</html>

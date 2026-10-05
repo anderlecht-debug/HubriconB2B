@@ -247,7 +247,17 @@ function cleanShopifyInputs(raw) {
   };
 }
 
-export async function POST(request) {
+// The 60-second Teardown is retired (HUBRICON_SPEC.md, "The Teardown is killed";
+// /teardown redirects home and the page is archived). Nothing on the site posts
+// here any more, and the operator no longer provisions a `wants_teardown`
+// prospect, so the email this used to send ("your private upload page follows
+// within about an hour") would promise something that never comes. A POST is
+// refused; the run-keeping code stays below, unexported, in case it returns.
+export async function POST() {
+  return json({ error: "The 60-second Teardown is retired. Book a call at https://www.hubricon.com/apply" }, 410);
+}
+
+async function keepRun(request) {
   const bad = missingEnv();
   if (bad) return bad;
   const ip = clientIp(request.headers);

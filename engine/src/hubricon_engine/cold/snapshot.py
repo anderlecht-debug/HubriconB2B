@@ -123,11 +123,8 @@ class Item:
         None when there is no anchor, or the anchor is at or below the price —
         which is the ordinary state of a product that is not on sale.
         """
-        if not self.price or not self.compare_at_price:
-            return None
-        if self.compare_at_price <= self.price:
-            return None
-        return round((self.compare_at_price - self.price) / self.compare_at_price, 4)
+        from ..models.compare_at import discount_share
+        return discount_share(self.price, self.compare_at_price)
 
     @property
     def dim_weight_oz(self) -> float | None:

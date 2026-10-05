@@ -27,15 +27,23 @@
  * witness held by someone else is what makes that evident.
  *
  * Exit 0: intact (or nothing sealed yet). 1: broken — the first broken entry
- * is named. 2: the file could not be read. No dependencies: node:crypto,
- * node:zlib, node:fs. The same checks run in the engine as
- * `hubricon seal verify` (engine/src/hubricon_engine/seal.py).
+ * is named. 2: the file could not be read. No dependencies: node:fs and
+ * node:zlib for reading the file; everything else is the core below. The same
+ * checks run in the engine as `hubricon seal verify`
+ * (engine/src/hubricon_engine/seal.py).
+ *
+ * The core, between the two "core" lines, is plain JavaScript with no Node in
+ * it, and hubricon.com/verify (assets/verify.js) runs the same bytes in a
+ * browser; scripts/verify-record.test.mjs fails if the two copies differ.
+ * SHA-256 is computed here, in the core, so both run one implementation; the
+ * page then re-derives every leaf and link with the browser's own Web Crypto,
+ * and the tests hold this one to Node's and Python's.
  */
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { pathToFileURL } from "node:url";
 
+// ---- core: begin (assets/verify.js carries these lines byte for byte) ----
 export const FORMAT = "hubricon-record-seal/1";
 export const GENESIS = "0".repeat(64);
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -67,16 +75,70 @@ export function canonicalize(v) {
   throw new SealError(`${typeof v} has no canonical JSON form`);
 }
 
-export const sha256 = (data) => createHash("sha256").update(data).digest("hex");
-export const leafOf = (doc) => sha256(Buffer.from(canonicalize(doc), "utf8"));
-export const digest = (value) => sha256(Buffer.from(canonicalize(value), "utf8"));
+// SHA-256 (FIPS 180-4), in full: the first 32 bits of the fractional parts of
+// the cube roots of the first 64 primes, then of the square roots of the first 8.
+const K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+const H0 = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+/** SHA-256 of bytes, as 32 bytes. */
+export function sha256Bytes(msg) {
+  const n = msg.length;
+  const blocks = new Uint8Array((((n + 8) >> 6) + 1) << 6);
+  blocks.set(msg);
+  blocks[n] = 0x80;
+  const view = new DataView(blocks.buffer);
+  view.setUint32(blocks.length - 8, Math.floor(n / 0x20000000));   // the length in bits, high word
+  view.setUint32(blocks.length - 4, (n << 3) >>> 0);                // and low word
+  const h = H0.slice();
+  const w = new Uint32Array(64);
+  for (let at = 0; at < blocks.length; at += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(at + 4 * i);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, k] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (k + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      k = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    [a, b, c, d, e, f, g, k].forEach((x, i) => { h[i] = (h[i] + x) | 0; });
+  }
+  const out = new Uint8Array(32);
+  const ov = new DataView(out.buffer);
+  h.forEach((x, i) => ov.setUint32(4 * i, x >>> 0));
+  return out;
+}
+
+const UTF8 = new TextEncoder();
+export const toHex = (bytes) => Array.from(bytes, (x) => x.toString(16).padStart(2, "0")).join("");
+export const fromHex = (hex) => Uint8Array.from(hex.match(/../g) || [], (x) => parseInt(x, 16));
+/** sha256 of bytes, or of a string's UTF-8, as lowercase hex. */
+export const sha256 = (data) => toHex(sha256Bytes(typeof data === "string" ? UTF8.encode(data) : data));
+export const leafOf = (doc) => sha256(canonicalize(doc));
+export const digest = (value) => sha256(canonicalize(value));
 export const short = (leaf) => (leaf ? leaf.slice(0, 12) : null);
 
 export function link(prevHead, leaf) {
   if (typeof prevHead !== "string" || !HEX64.test(prevHead) || typeof leaf !== "string" || !HEX64.test(leaf)) {
     throw new SealError("a head or leaf is not a 64-character lowercase hex SHA-256");
   }
-  return sha256(Buffer.concat([Buffer.from(prevHead, "hex"), Buffer.from(leaf, "hex")]));
+  const both = new Uint8Array(64);
+  both.set(fromHex(prevHead), 0);
+  both.set(fromHex(leaf), 32);
+  return sha256(both);
 }
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -234,35 +296,87 @@ export function verifyBundle(b, witnesses = []) {
     global_head: isObject(g) ? g.head : null, first_broken_seq: seqs.length ? Math.min(...seqs) : null, problems };
 }
 
-/** One file out of a zip, stored or deflated — enough for the export Python's zipfile writes. */
-export function readZipEntry(buf, name) {
+/** A hash as people copy it: a printed head comes in groups of eight, maybe quoted. */
+export const cleanHash = (raw) => String(raw ?? "").replace(/[\s"'`‘’“”]/g, "").toLowerCase();
+
+/**
+ * Every place a hash from elsewhere sits in this Record: a head printed on a
+ * page of the Record (the client's chain, or the global one), a seal printed in
+ * an email (the first twelve hex of a promise's leaf), or a whole leaf. It says
+ * where the file carries the hash and nothing more; whether that means anything
+ * depends on the file having verified first, which is the caller's to say.
+ */
+export function locate(b, raw) {
+  const h = cleanHash(raw);
+  if (!/^[0-9a-f]+$/.test(h) || h.length < 8 || h.length > 64) return { hash: h, readable: false, hits: [] };
+  const entries = isObject(b) && Array.isArray(b.entries) ? b.entries.filter(isObject) : [];
+  const hits = [];
+  const add = (where, e, extra = {}) => hits.push({
+    where, seq: e ? e.seq : null, global_seq: e ? e.global_seq : null, entry: e?.document?.entry ?? null,
+    sealed_at: e?.document?.sealed_at ?? null, of: entries.length, ...extra,
+  });
+  const ours = new Set();
+  for (const e of entries) {
+    if (h.length === 64) {
+      if (e.head === h) add("head", e);
+      if (e.global_head === h) { add("global_head", e); ours.add(e.global_seq); }
+      if (e.leaf === h) add("leaf", e);
+    } else if (typeof e.leaf === "string" && e.leaf.startsWith(h) && e.document?.entry === "called") {
+      add("seal", e);
+    }
+  }
+  const g = isObject(b) ? b.global : null;
+  if (h.length === 64 && isObject(g) && Array.isArray(g.leaves) && isInt(g.from_seq) && entries.length) {
+    let chain = entries[0].global_prev_head;
+    try {
+      g.leaves.forEach((leaf, j) => {
+        chain = link(chain, leaf);
+        if (chain === h && !ours.has(g.from_seq + j)) add("global_chain", null, { global_seq: g.from_seq + j, of_global: g.entries });
+      });
+    } catch (err) { /* a malformed global section is verifyBundle's to report */ }
+  }
+  return { hash: h, readable: true, hits };
+}
+
+/** One file out of a zip, as { method, data }: stored (0) or deflated (8), still compressed. */
+export function zipEntry(bytes, name) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const u16 = (i) => view.getUint16(i, true);
+  const u32 = (i) => view.getUint32(i, true);
   let eocd = -1;
-  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 0xffff); i--) {
-    if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i--) {
+    if (u32(i) === 0x06054b50) { eocd = i; break; }
   }
   if (eocd < 0) throw new Error("not a zip file");
-  const count = buf.readUInt16LE(eocd + 10);
-  let p = buf.readUInt32LE(eocd + 16);
+  const count = u16(eocd + 10);
+  let p = u32(eocd + 16);
   if (p === 0xffffffff) throw new Error("a zip64 archive: unzip it and pass record-seal.json");
+  const names = new TextDecoder();
   for (let n = 0; n < count; n++) {
-    if (buf.readUInt32LE(p) !== 0x02014b50) throw new Error("the zip's central directory is damaged");
-    const method = buf.readUInt16LE(p + 10);
-    const size = buf.readUInt32LE(p + 20);
-    const nameLen = buf.readUInt16LE(p + 28);
-    const extraLen = buf.readUInt16LE(p + 30);
-    const commentLen = buf.readUInt16LE(p + 32);
-    const local = buf.readUInt32LE(p + 42);
-    if (buf.toString("utf8", p + 46, p + 46 + nameLen) === name) {
+    if (p + 46 > bytes.length || u32(p) !== 0x02014b50) throw new Error("the zip's central directory is damaged");
+    const method = u16(p + 10);
+    const size = u32(p + 20);
+    const nameLen = u16(p + 28);
+    const extraLen = u16(p + 30);
+    const commentLen = u16(p + 32);
+    const local = u32(p + 42);
+    if (names.decode(bytes.subarray(p + 46, p + 46 + nameLen)) === name) {
       if (size === 0xffffffff || local === 0xffffffff) throw new Error("a zip64 entry: unzip it and pass record-seal.json");
-      const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
-      const data = buf.subarray(start, start + size);
-      if (method === 0) return data;
-      if (method === 8) return inflateRawSync(data);
-      throw new Error(`${name} is compressed with method ${method}, which this script does not read`);
+      const start = local + 30 + u16(local + 26) + u16(local + 28);
+      if (method !== 0 && method !== 8) throw new Error(`${name} is compressed with method ${method}, which this script does not read`);
+      return { method, data: bytes.subarray(start, start + size) };
     }
     p += 46 + nameLen + extraLen + commentLen;
   }
   return null;
+}
+// ---- core: end ----
+
+/** One file out of a zip, stored or deflated — enough for the export Python's zipfile writes. */
+export function readZipEntry(buf, name) {
+  const hit = zipEntry(buf, name);
+  if (!hit) return null;
+  return hit.method === 0 ? Buffer.from(hit.data) : inflateRawSync(hit.data);
 }
 
 export function loadBundle(path) {

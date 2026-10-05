@@ -21,118 +21,64 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
 <link rel="stylesheet" href="/assets/hubricon.css">
-<script>
-/* Motion only when scripts run and the visitor hasn't asked for less of it. If the
-   page's module never arrives, the class comes off and every chart is its still frame. */
-(function (d) {
-  try {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
-    d.classList.add("motion");
-    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
-  } catch (e) {}
-})(document.documentElement);
-</script>
 <style>
-/* The home page's layout. Every value is a token from /assets/hubricon.css. */
-.top { display: flex; align-items: center; justify-content: space-between; padding-block: var(--s-5); }
-.wordmark { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-weight: var(--strong); font-size: var(--t-20); letter-spacing: -0.02em; }
-.wordmark svg { width: 26px; height: 26px; }
+/* The home page: five bands and no more (HUBRICON_SPEC.md, "A short first page", 2026-10-01).
+   Every value is a token from /assets/hubricon.css; the sections behind the tabs, the calls,
+   the course strip, the nav and the footer are shared and live there. */
+:root { --wide: 1200px; }
 
-.hero { padding-block: var(--s-8) var(--section); }
-.hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: center; }
-.hero h1 { max-width: 16ch; }
+/* 1 · the promise, with ten thousand years fanning out behind it */
+.hero { position: relative; overflow: hidden; padding-block: var(--s-8) var(--s-8); border-bottom: 1px solid var(--rule); }
+.hero-art { position: absolute; z-index: 0; right: calc(-1 * var(--s-5)); top: var(--s-7); width: min(54vw, 860px); pointer-events: none; }
+.hero-art .figure svg { width: 100%; height: auto; }
+.hero-in { position: relative; z-index: 1; }
+.hero h1 { margin-top: var(--s-4); font-size: clamp(2.75rem, 1rem + 5.4vw, 5.25rem); max-width: 15ch; }
+.hero .lede { margin-top: var(--s-5); font-size: var(--t-24); max-width: 36ch; color: var(--ink-2); }
+.hero .cta { margin-top: var(--s-6); }
+.hero-cap { margin-top: var(--s-4); font-size: var(--t-12); color: var(--ink-3); }
 .nowrap { white-space: nowrap; }
 @media (max-width: 400px) { .nowrap { white-space: normal; } }
-.hero .lede { margin-top: var(--s-5); }
-.hero-figure figcaption { text-align: right; margin-left: auto; }
 
-.section-head { margin-bottom: var(--s-7); }
-.section-head h2 { margin-top: var(--s-3); max-width: 20ch; }
-#problem h2 { max-width: 19ch; }
-#problem .lede { margin-top: var(--s-6); max-width: 58ch; }
+/* 2 · the proof: three calls, and what happened */
+#proof { padding-block: calc(var(--section) * 0.85); }
+#proof h2 { margin-top: var(--s-4); max-width: 20ch; }
+#proof .calls { margin-top: var(--s-7); }
+#proof .lede { margin-top: var(--s-5); max-width: 60ch; }
+.proof-go { margin-top: var(--s-7); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-6); }
+.proof-go .cta { margin-top: 0; }
+.more { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); text-underline-offset: 3px; }
 
-.case-who { margin-top: var(--s-6); font-size: var(--t-16); color: var(--ink-3); }
-.case-headline { margin-top: var(--s-3); max-width: 21ch; }
-#case-study > .wrap > .lede { margin-top: var(--s-5); max-width: 60ch; }
-.case-video { margin-top: var(--s-7); aspect-ratio: 16 / 9; background: var(--paper-2); border-radius: var(--radius); overflow: hidden; }
-.case-video video { width: 100%; height: 100%; object-fit: cover; }
-.case-figure { margin-top: var(--s-9); }
-.case-figure h3 { margin-bottom: var(--s-2); }
-.case-figure .figure-intro { font-size: var(--t-16); color: var(--ink-2); max-width: 60ch; margin-bottom: var(--s-6); }
-.selection { margin-top: var(--s-9); padding-top: var(--s-6); border-top: 1px solid var(--rule); font-size: var(--t-20); line-height: 1.5; color: var(--ink); max-width: 46ch; }
-#case-study .fold { margin-top: var(--s-7); }
-.fold-body ul { list-style: none; display: grid; gap: var(--s-3); max-width: 72ch; }
-.fold-body li { padding-left: var(--s-5); position: relative; }
-.fold-body li::before { content: ""; position: absolute; left: 0; top: 0.75em; width: 10px; border-top: 1px solid var(--ink-3); }
+/* 3 · the offer, said once */
+#offer { padding-block: calc(var(--section) * 0.85); }
+.offer-band { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
+.offer-band h2 { margin-top: var(--s-4); max-width: 16ch; }
+.offer-band .lede { margin-top: var(--s-5); max-width: 46ch; }
+.offer-band .honest { margin-top: var(--s-5); font-size: var(--t-16); color: var(--ink-2); max-width: 46ch; }
+.steps-mini { list-style: none; display: grid; gap: 0; }
+.steps-mini li { display: grid; grid-template-columns: var(--s-8) minmax(0, 1fr); gap: var(--s-1) 0; padding: var(--s-4) 0; border-top: 1px solid var(--rule-2); }
+.steps-mini li:last-child { border-bottom: 1px solid var(--rule-2); }
+.steps-mini .n { grid-row: span 2; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.steps-mini b { font-size: var(--t-18); color: var(--ink); }
+.steps-mini span:not(.n) { font-size: var(--t-14); color: var(--ink-3); }
+.offer-go { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-6); }
+.offer-go .cta { margin-top: 0; }
 
-.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-7); margin-top: var(--s-8); counter-reset: step; }
-.steps li { counter-increment: step; border-top: 1px solid var(--ink); padding-top: var(--s-5); }
-.steps li::before { content: counter(step); display: block; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); margin-bottom: var(--s-5); }
-.steps h3 { margin-bottom: var(--s-3); }
-.steps p { font-size: var(--t-16); }
-
-.offer-line { font-size: var(--t-display-m); max-width: 17ch; }
-.offer-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-8); align-items: end; }
-.offer-why { font-size: var(--t-18); }
-.scope-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); margin-top: var(--s-9); padding-top: var(--s-7); border-top: 1px solid var(--rule); }
-.price { font-size: var(--t-display-s); font-weight: var(--strong); color: var(--ink); letter-spacing: var(--track-display); line-height: 1.1; }
-.price + p { margin-top: var(--s-4); font-size: var(--t-16); }
-.scope { list-style: none; display: grid; gap: 0; }
-.scope li { padding: var(--s-4) 0; border-bottom: 1px solid var(--rule); font-size: var(--t-16); color: var(--ink-2); }
-.scope li:first-child { padding-top: 0; }
-.scope b { color: var(--ink); }
-
-.board-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); align-items: center; }
-.board-grid .lede { margin-top: var(--s-5); }
-.board { background: var(--paper-2); border-radius: var(--radius); padding: var(--s-7); }
-.board-k { margin-top: var(--s-6); font-size: var(--t-14); color: var(--ink-3); }
-.board-big { font-size: var(--t-display-l); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1; margin-top: var(--s-2); }
-.board-line { margin-top: var(--s-5); font-size: var(--t-18); color: var(--ink-2); max-width: 40ch; }
-.bar { position: relative; margin-top: var(--s-6); height: 12px; border-radius: 3px; background: var(--rule); }
-.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--blue); }
-.bar-bill { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); }
-.bar-keys { position: relative; height: var(--s-5); margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
-.bar-keys span { position: absolute; top: 0; white-space: nowrap; }
-.bar-keys .k-bill { transform: translateX(-50%); }
-.bar-keys .k-measured { right: 0; }
-
-.who-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
-.who-grid p { font-size: var(--t-18); }
-
-.faq-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-8); }
-
-.close { text-align: center; padding-block: var(--section) calc(var(--section) * 1.15); }
-.close h2 { margin-inline: auto; max-width: 16ch; }
-.close .cta { justify-content: center; }
-
-.foot { border-top: 1px solid var(--rule); padding-block: var(--s-7); font-size: var(--t-14); color: var(--ink-3); }
-.foot-in { display: grid; grid-template-columns: auto 1fr; gap: var(--s-4) var(--s-6); align-items: baseline; }
-.foot nav { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); justify-self: end; }
-.foot a { color: var(--ink-2); text-decoration: none; }
-.foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-.foot .legal { grid-column: 1 / -1; max-width: 80ch; }
-
-/* a real client's result, published with their consent; hidden until one exists */
-.result-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-top: var(--s-7); }
-.result-numbers div { border-top: 1px solid var(--ink); padding-top: var(--s-4); }
-.result-numbers b { display: block; font-size: var(--t-display-s); letter-spacing: var(--track-display); color: var(--blue); margin: var(--s-2) 0; }
-.result-numbers p, .result-numbers span { font-size: var(--t-14); color: var(--ink-3); }
-.result-quote { margin-top: var(--s-7); font-size: var(--t-24); line-height: 1.4; color: var(--ink); max-width: 46ch; }
+/* 4 · the library, as a strip */
+#learn { padding-block: calc(var(--section) * 0.85); }
+#book { padding-block: calc(var(--section) * 0.8); }
+#learn h2 { margin-top: var(--s-4); max-width: 22ch; }
+#learn .more { display: inline-block; margin-top: var(--s-6); }
 
 @media (max-width: 900px) {
-  .hero-grid, .offer-grid, .scope-grid, .board-grid, .who-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
-  .hero-figure figcaption { text-align: left; margin-left: 0; }
-  .steps { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); margin-top: var(--s-7); }
-  .scope-grid { margin-top: var(--s-8); }
+  .hero { display: flex; flex-direction: column; padding-top: var(--s-8); }
+  .hero-in { order: 1; }
+  .hero-art { order: 2; position: relative; top: auto; right: auto; width: auto; margin: var(--s-7) var(--gutter) 0; }
+  .offer-band { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
 }
 @media (max-width: 640px) {
-  .hero { padding-top: var(--s-5); }
-  .board { padding: var(--s-5); }
-  .btn { width: 100%; }
-  .cta { margin-top: var(--s-6); }
-  .result-numbers { grid-template-columns: minmax(0, 1fr); }
-  .foot-in { grid-template-columns: minmax(0, 1fr); }
-  .foot nav { justify-self: start; }
+  .hero { padding-top: var(--s-6); padding-bottom: var(--s-8); }
+  .hero .lede { font-size: var(--t-20); }
+  .proof-go, .offer-go { align-items: stretch; }
 }
 </style>
 <script type="application/ld+json">
@@ -147,121 +93,102 @@
   "areaServed": "US"
 }
 </script>
-<!-- build:faq-jsonld -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How do you know which dollars you made?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (Amazon paid it), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only in a month it is still there: every move is measured again each month."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What counts as profit?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, a claim Amazon paid. Misses stay on the Record at what they actually earned."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Why isn't this too good to be true?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Because the bill waits for the proof. Your first month is free. After that, each month is measured on its own, and an invoice goes out only for a month that cleared the fee. We can afford that only because we take on accounts where the math clears."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What happens in a month that underperforms?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Nothing you have to ask for. That month is free: no invoice, no credit, nothing carried into the next, and the work carries on. Leave any day with one email; any month you paid for that doesn't clear on its own number comes back to your bank."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What happens to my data?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. How we handle it."
-      }
-    }
-  ]
-}
-</script>
-<!-- /build:faq-jsonld -->
 </head>
 <body>
 
-<header class="wrap top">
-  <a class="wordmark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg>Hubricon</a>
+<!-- build:nav -->
+<header class="nav" data-nav>
+<script>
+(function (d) {
+  d.classList.add("js");
+  try {
+    if (!("IntersectionObserver" in window)) return;
+    // asked for less motion: sections dissolve in, nothing slides, draws or counts
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { d.classList.add("calm"); return; }
+    d.classList.add("motion");
+    setTimeout(function () { if (!window.__hubriconMotion) d.classList.remove("motion"); }, 3000);
+  } catch (e) {}
+})(document.documentElement);
+</script>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <nav class="nav-tabs" aria-label="Main">
+      <a class="nav-tab" href="/case-study">Proof</a>
+      <a class="nav-tab" href="/how-it-works">How it works</a>
+      <a class="nav-tab" href="/offer">The offer</a>
+      <div class="nav-group">
+        <a class="nav-tab" href="/learn" aria-controls="fly-education">Education<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-education">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Education</p><a class="fly-big" href="/learn">All courses</a><a class="fly-big" href="/learn/fee-staircase">The Fee Staircase</a><a class="fly-big" href="/learn/price-curve">The Price Curve</a><a class="fly-big" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="fly-big" href="/learn/shopify-margin">The Shopify Margin</a><a class="fly-big" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+            <div class="fly-col"><p class="fly-k">Planned</p><span class="fly-planned">The Money You Can&#39;t See</span><span class="fly-planned">Decisions Under Uncertainty</span></div>
+            <div class="fly-col"><p class="fly-k">Start tonight</p><a class="fly-small" href="/learn/fee-staircase#read-the-listing">Lesson 2: a number for any Amazon listing tonight</a><a class="fly-small" href="/learn/files/hubricon-fee-staircase.xlsx">The Fee Staircase spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/price-curve#the-raise">Lesson 5: whether your next raise pays</a><a class="fly-small" href="/learn/files/hubricon-price-curve.xlsx">The Price Curve spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/capital-and-cash#how-much-cash">Lesson 6: how much cash to hold</a><a class="fly-small" href="/learn/files/hubricon-capital-and-cash.xlsx">Capital &amp; Cash spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/shopify-margin#pound-line">Lesson 2: the pound line under every parcel</a><a class="fly-small" href="/learn/files/hubricon-shopify-margin.xlsx">The Shopify Margin spreadsheet (.xlsx)</a><a class="fly-small" href="/learn/operators-math#ad-target">Lesson 2: your ad target is wrong</a><a class="fly-small" href="/learn/files/hubricon-operators-math.xlsx">The Operator&#39;s Math spreadsheet (.xlsx)</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <a class="nav-tab" href="/offer#trust" aria-controls="fly-trust">Trust<svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+        <div class="nav-fly" id="fly-trust">
+          <div class="fly-in">
+            <div class="fly-col"><p class="fly-k">Trust</p><a class="fly-big" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="fly-big" href="/honesty">What is true today</a><a class="fly-big" href="/your-data">Your data</a></div>
+            <div class="fly-col"><p class="fly-k">In writing</p><a class="fly-small" href="/terms">The terms</a><a class="fly-small" href="/privacy">Privacy</a><a class="fly-small" href="/offer#guarantee">The guarantee</a></div>
+            <div class="fly-col"><p class="fly-k">The proof</p><a class="fly-small" href="/case-study">The case study</a><a class="fly-small" href="/verify">Check a Profit Record</a></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="nav-end">
+      <a class="btn btn-nav" href="/apply" data-cta="nav">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-sheet" id="nav-sheet">
+    <div class="sheet-in">
+      <div class="sheet-group"><a class="sheet-big" href="/case-study">Proof</a><a class="sheet-big" href="/how-it-works">How it works</a><a class="sheet-big" href="/offer">The offer</a></div>
+      <div class="sheet-group"><p class="sheet-k">Education</p><a class="sheet-mid" href="/learn">All courses</a><a class="sheet-mid" href="/learn/fee-staircase">The Fee Staircase</a><a class="sheet-mid" href="/learn/price-curve">The Price Curve</a><a class="sheet-mid" href="/learn/capital-and-cash">Capital &amp; Cash</a><a class="sheet-mid" href="/learn/shopify-margin">The Shopify Margin</a><a class="sheet-mid" href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="sheet-group"><p class="sheet-k">Trust</p><a class="sheet-mid" href="/terms#how-a-dollar-counts">How a dollar counts</a><a class="sheet-mid" href="/honesty">What is true today</a><a class="sheet-mid" href="/your-data">Your data</a><a class="sheet-mid" href="/terms">The terms</a><a class="sheet-mid" href="/verify">Check a Profit Record</a></div>
+    </div>
+  </div>
+  <div class="nav-scrim" aria-hidden="true"></div>
 </header>
+<!-- /build:nav -->
 
 <main>
 
-<!-- 1 · The promise -->
+<!-- 1 · The promise, with ten thousand years of one listing behind it -->
 <section class="hero" aria-labelledby="headline">
-  <div class="wrap hero-grid">
-    <div>
-      <h1 id="headline">More profit than our bill every month, <span class="nowrap">or you don't pay.</span></h1>
-      <script>
-      /* Three headlines, one per visitor, kept for the visit after. ?h=A|B|C forces one. */
-      (function () {
-        var H = {
-          A: "More profit than our bill every month, or you don't pay.",
-          B: "Always know exactly where your money is made and lost, or you don't pay.",
-          C: "Your Amazon P&L is an average. Your losses are hiding in the steps."
-        };
-        var v;
-        try { v = new URLSearchParams(location.search).get("h"); } catch (e) {}
-        if (!H[v]) { try { v = localStorage.getItem("hubricon_h"); } catch (e) {} }
-        if (!H[v]) { v = "ABC".charAt(Math.floor(Math.random() * 3)); }
-        try { localStorage.setItem("hubricon_h", v); } catch (e) {}
-        document.documentElement.setAttribute("data-headline", v);
-        if (v !== "A") document.getElementById("headline").textContent = H[v];
-      })();
-      </script>
-      <p class="lede">For Amazon and Shopify brands doing $1M to $30M a year.</p>
-      <div class="cta">
-        <a class="btn" href="/apply" data-cta="hero">Book your call <span class="arrow" aria-hidden="true">→</span></a>
-        <span class="cta-note">20 minutes. No card, ever.</span>
-      </div>
-    </div>
-    <figure class="figure hero-figure" data-play>
-      <div class="chart-wide"><!-- build:mc-mood-wide --><svg class="chart mc mc--mood" viewBox="0 0 560 440" role="img" aria-labelledby="mc-mood-w-t mc-mood-w-d" preserveAspectRatio="xMidYMid meet"><title id="mc-mood-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-mood-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><path class="mc-band fade" d="M8,432 L53.3,409.7 L98.7,387.9 L144,366 L189.3,343.9 L234.7,321.2 L280,298.6 L325.3,276.2 L370.7,253.6 L416,231.1 L461.3,208.6 L506.7,186.2 L552,163.6 L552,342 L506.7,349.6 L461.3,357.1 L416,364.7 L370.7,372.2 L325.3,379.8 L280,387.4 L234.7,394.9 L189.3,402.5 L144,410 L98.7,417.3 L53.3,424.6 L8,432Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M8,432 L53.3,427.4 L98.7,422.7 L144,418.2 L189.3,413.4 L234.7,408.8 L280,403.8 L325.3,398.8 L370.7,394.2 L416,389.6 L461.3,384.7 L506.7,379.8 L552,374.9"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M8,432 L53.3,426.4 L98.7,420.9 L144,414.9 L189.3,409.3 L234.7,403.5 L280,397.7 L325.3,391.6 L370.7,385.4 L416,379.3 L461.3,373.6 L506.7,368 L552,362.4"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M8,432 L53.3,425.5 L98.7,419.1 L144,412.6 L189.3,406 L234.7,399.8 L280,393.5 L325.3,386.7 L370.7,380.2 L416,374 L461.3,367.7 L506.7,361.3 L552,354.8"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M8,432 L53.3,425.3 L98.7,418.9 L144,411.9 L189.3,404.7 L234.7,397.5 L280,390.7 L325.3,383.9 L370.7,376.9 L416,370.3 L461.3,363.3 L506.7,356.2 L552,349.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M8,432 L53.3,425 L98.7,417.8 L144,411 L189.3,403.5 L234.7,395.8 L280,388.5 L325.3,380.9 L370.7,373.3 L416,365.9 L461.3,358.7 L506.7,351.6 L552,344.3"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M8,432 L53.3,424.2 L98.7,416.6 L144,408.6 L189.3,401.2 L234.7,393.7 L280,386 L325.3,378 L370.7,370.2 L416,362.2 L461.3,354.8 L506.7,347.4 L552,339.9"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M8,432 L53.3,424 L98.7,416.4 L144,409 L189.3,400.7 L234.7,392.4 L280,384.9 L325.3,376.5 L370.7,368.6 L416,360.5 L461.3,352.5 L506.7,344.3 L552,335.9"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M8,432 L53.3,423.7 L98.7,416.1 L144,407.8 L189.3,399.7 L234.7,391.1 L280,382.7 L325.3,374.3 L370.7,366 L416,357.4 L461.3,349.3 L506.7,340.8 L552,332.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M8,432 L53.3,423.1 L98.7,414.6 L144,406 L189.3,397.5 L234.7,388.7 L280,380.3 L325.3,371.8 L370.7,363.1 L416,354.8 L461.3,345.8 L506.7,336.8 L552,328.3"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M8,432 L53.3,423.3 L98.7,414.2 L144,405.1 L189.3,396.1 L234.7,387.4 L280,378.3 L325.3,369.2 L370.7,359.9 L416,351.4 L461.3,342.9 L506.7,333.8 L552,325"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M8,432 L53.3,423 L98.7,413.7 L144,405.2 L189.3,396 L234.7,386.6 L280,377 L325.3,367.6 L370.7,358.7 L416,349.4 L461.3,340.5 L506.7,330.8 L552,321.7"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M8,432 L53.3,423 L98.7,414 L144,404.2 L189.3,394.6 L234.7,385 L280,376 L325.3,366.7 L370.7,356.8 L416,347 L461.3,337.3 L506.7,327.7 L552,318.7"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M8,432 L53.3,422.8 L98.7,413.5 L144,403.5 L189.3,393.6 L234.7,384.2 L280,374.2 L325.3,363.8 L370.7,354.3 L416,344.8 L461.3,335.4 L506.7,325.4 L552,315.8"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M8,432 L53.3,422.4 L98.7,412.9 L144,403.2 L189.3,393.6 L234.7,383.4 L280,373 L325.3,362.6 L370.7,352.8 L416,342.8 L461.3,332.1 L506.7,321.9 L552,312.2"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M8,432 L53.3,422.3 L98.7,411.7 L144,402.2 L189.3,392.3 L234.7,381.9 L280,371.7 L325.3,361.5 L370.7,351 L416,340.1 L461.3,329.6 L506.7,318.9 L552,308.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M8,432 L53.3,421.8 L98.7,411.7 L144,400.9 L189.3,390.7 L234.7,379.7 L280,369.3 L325.3,358.2 L370.7,347.9 L416,336.8 L461.3,326.4 L506.7,316 L552,305.6"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M8,432 L53.3,421.8 L98.7,410.9 L144,400.2 L189.3,389 L234.7,377.7 L280,366.4 L325.3,356 L370.7,345.3 L416,334.5 L461.3,323.8 L506.7,312.8 L552,302.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M8,432 L53.3,421.5 L98.7,410.7 L144,399.6 L189.3,389 L234.7,377.6 L280,366.1 L325.3,354.6 L370.7,343.5 L416,333 L461.3,321.4 L506.7,309.9 L552,299.1"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M8,432 L53.3,421 L98.7,410.2 L144,399.2 L189.3,388.4 L234.7,376.7 L280,365.7 L325.3,354.2 L370.7,342.5 L416,330.6 L461.3,319 L506.7,307.2 L552,296.1"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M8,432 L53.3,420.8 L98.7,409.5 L144,398.2 L189.3,386.8 L234.7,375.6 L280,363.5 L325.3,351.4 L370.7,340.2 L416,328.4 L461.3,316.1 L506.7,305 L552,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M8,432 L53.3,420.3 L98.7,408.5 L144,396.9 L189.3,384.6 L234.7,372.6 L280,361.1 L325.3,349.5 L370.7,337.3 L416,324.8 L461.3,313.2 L506.7,301.2 L552,289.7"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M8,432 L53.3,419.6 L98.7,408.3 L144,396.5 L189.3,384.2 L234.7,372.6 L280,359.7 L325.3,347.5 L370.7,334.6 L416,322.3 L461.3,310.3 L506.7,298.4 L552,286.7"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M8,432 L53.3,420.2 L98.7,408.5 L144,396.2 L189.3,383.6 L234.7,370.9 L280,358.4 L325.3,345.6 L370.7,333.4 L416,321.2 L461.3,308.8 L506.7,296.1 L552,283.4"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M8,432 L53.3,419.3 L98.7,407.1 L144,395.5 L189.3,383.2 L234.7,370.3 L280,358 L325.3,344.6 L370.7,332 L416,319.8 L461.3,306.4 L506.7,293.2 L552,280.1"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M8,432 L53.3,419.2 L98.7,406.9 L144,394.4 L189.3,381.2 L234.7,368.4 L280,355.6 L325.3,342.6 L370.7,329.2 L416,316.5 L461.3,303 L506.7,289.4 L552,276.5"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M8,432 L53.3,418.7 L98.7,406.3 L144,392.7 L189.3,378.9 L234.7,365.9 L280,353.1 L325.3,340.1 L370.7,326.7 L416,313.6 L461.3,299.7 L506.7,286.2 L552,273.4"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M8,432 L53.3,418.5 L98.7,405.6 L144,392.2 L189.3,378.8 L234.7,365.3 L280,352.2 L325.3,339 L370.7,325.2 L416,310.9 L461.3,297.1 L506.7,283.3 L552,269.9"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M8,432 L53.3,417.6 L98.7,404.6 L144,391.6 L189.3,377.7 L234.7,363.9 L280,350.3 L325.3,336.7 L370.7,322.7 L416,309.2 L461.3,295 L506.7,280.6 L552,266.6"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M8,432 L53.3,417.7 L98.7,403.8 L144,389.2 L189.3,374.8 L234.7,360.9 L280,347.4 L325.3,333.7 L370.7,319.1 L416,305.6 L461.3,291.7 L506.7,277.3 L552,263.1"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M8,432 L53.3,418.3 L98.7,404.6 L144,390 L189.3,374.8 L234.7,360.6 L280,346.8 L325.3,332.3 L370.7,317.2 L416,302.7 L461.3,288.9 L506.7,274.9 L552,259.6"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M8,432 L53.3,417.8 L98.7,403.9 L144,388.8 L189.3,373.9 L234.7,358.9 L280,343.2 L325.3,327.9 L370.7,313.4 L416,298.4 L461.3,284 L506.7,269.4 L552,255.1"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M8,432 L53.3,417.6 L98.7,403 L144,388.6 L189.3,373.6 L234.7,358.5 L280,343.8 L325.3,328.9 L370.7,314.3 L416,299.4 L461.3,283.1 L506.7,267.5 L552,251.4"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M8,432 L53.3,416.2 L98.7,400.7 L144,385.4 L189.3,370.2 L234.7,355.3 L280,339.6 L325.3,323.8 L370.7,308.6 L416,293.7 L461.3,278.5 L506.7,263 L552,247.3"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M8,432 L53.3,416.8 L98.7,401.5 L144,385.2 L189.3,369.5 L234.7,353.3 L280,337.6 L325.3,321.2 L370.7,306.1 L416,290.6 L461.3,275.5 L506.7,260.1 L552,243.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M8,432 L53.3,416.6 L98.7,400.3 L144,384.9 L189.3,368.8 L234.7,352.6 L280,336.2 L325.3,320.2 L370.7,303.6 L416,287.5 L461.3,271.8 L506.7,254.8 L552,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M8,432 L53.3,415.2 L98.7,399.6 L144,383.3 L189.3,367.2 L234.7,350.3 L280,334.1 L325.3,317.4 L370.7,300.3 L416,284.6 L461.3,267.2 L506.7,251 L552,234.6"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M8,432 L53.3,414.4 L98.7,396.7 L144,380.3 L189.3,363.9 L234.7,347.2 L280,330.5 L325.3,313.5 L370.7,295.5 L416,279 L461.3,262.4 L506.7,245.5 L552,228.2"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M8,432 L53.3,414.6 L98.7,397.6 L144,379.8 L189.3,362.4 L234.7,345.4 L280,328 L325.3,310 L370.7,293.2 L416,274.6 L461.3,257.3 L506.7,239.5 L552,222"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M8,432 L53.3,413.2 L98.7,395.6 L144,377.4 L189.3,359.2 L234.7,341.3 L280,323.7 L325.3,305.7 L370.7,288.5 L416,269.3 L461.3,250.7 L506.7,233.2 L552,216"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M8,432 L53.3,414 L98.7,396.3 L144,378.2 L189.3,360.1 L234.7,341.9 L280,323 L325.3,303.7 L370.7,286 L416,267 L461.3,247.6 L506.7,229.3 L552,210.2"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M8,432 L53.3,413 L98.7,395.3 L144,376.1 L189.3,356.4 L234.7,338.3 L280,318.5 L325.3,298.6 L370.7,279 L416,258.9 L461.3,240.5 L506.7,221.9 L552,203.4"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M8,432 L53.3,412.2 L98.7,392.6 L144,374.1 L189.3,354.3 L234.7,334.2 L280,314 L325.3,294.4 L370.7,275.7 L416,255.7 L461.3,235.5 L506.7,215.1 L552,195.7"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M8,432 L53.3,410.8 L98.7,391.6 L144,372.5 L189.3,352.9 L234.7,331.7 L280,312 L325.3,290.8 L370.7,270.2 L416,250 L461.3,228.5 L506.7,209 L552,187.7"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M8,432 L53.3,411.1 L98.7,390.1 L144,368.4 L189.3,347 L234.7,326.6 L280,305.1 L325.3,282.7 L370.7,261.8 L416,241.6 L461.3,219.5 L506.7,198.2 L552,177.7"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M8,432 L53.3,411.1 L98.7,390 L144,367.2 L189.3,345.5 L234.7,322.4 L280,300.1 L325.3,277.1 L370.7,254.9 L416,233.7 L461.3,212.2 L506.7,191 L552,167.9"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M8,432 L53.3,408.4 L98.7,386.7 L144,365.3 L189.3,342.3 L234.7,320.3 L280,296.1 L325.3,273.6 L370.7,250.7 L416,227.1 L461.3,204.1 L506.7,180.1 L552,157.5"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M8,432 L53.3,407.8 L98.7,385.2 L144,361.6 L189.3,337.8 L234.7,311.7 L280,285.5 L325.3,260.4 L370.7,236.9 L416,213.3 L461.3,188.7 L506.7,165.2 L552,140.5"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M8,432 L53.3,405.7 L98.7,381.5 L144,356 L189.3,329.6 L234.7,302.7 L280,277.7 L325.3,250.9 L370.7,224.5 L416,198.6 L461.3,173.8 L506.7,148.4 L552,121.5"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M8,432 L53.3,404 L98.7,375.4 L144,348.8 L189.3,321.8 L234.7,292.1 L280,264 L325.3,234.1 L370.7,206.5 L416,176.5 L461.3,148.8 L506.7,118.2 L552,88.5"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M8,432 L53.3,397.4 L98.7,361.2 L144,327.7 L189.3,293.3 L234.7,256.9 L280,219.3 L325.3,184.4 L370.7,150.6 L416,113.5 L461.3,78.4 L506.7,43.8 L552,8"/><path class="mc-pct draw p10" pathLength="1" d="M8,432 L53.3,424.6 L98.7,417.3 L144,410 L189.3,402.5 L234.7,394.9 L280,387.4 L325.3,379.8 L370.7,372.2 L416,364.7 L461.3,357.1 L506.7,349.6 L552,342"/><path class="mc-pct draw p90" pathLength="1" d="M8,432 L53.3,409.7 L98.7,387.9 L144,366 L189.3,343.9 L234.7,321.2 L280,298.6 L325.3,276.2 L370.7,253.6 L416,231.1 L461.3,208.6 L506.7,186.2 L552,163.6"/><path class="mc-pct draw p50" pathLength="1" d="M8,432 L53.3,419 L98.7,406.3 L144,393.4 L189.3,380.5 L234.7,367.3 L280,354.1 L325.3,341 L370.7,327.8 L416,314.5 L461.3,301.3 L506.7,288.2 L552,275"/></svg><!-- /build:mc-mood-wide --></div>
+  <div class="hero-art" aria-hidden="true">
+    <figure class="figure" data-play="load">
+      <div class="chart-wide"><!-- build:mc-mood-hero --><svg class="chart mc mc--mood" viewBox="0 0 1000 560" role="img" aria-labelledby="mc-mood-h-t mc-mood-h-d" preserveAspectRatio="xMidYMid meet"><title id="mc-mood-h-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-mood-h-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><path class="mc-band fade" d="M12,548 L93.3,519.8 L174.7,492.2 L256,464.6 L337.3,436.7 L418.7,407.9 L500,379.3 L581.3,351.1 L662.7,322.5 L744,294.1 L825.3,265.6 L906.7,237.3 L988,208.7 L988,434.2 L906.7,443.8 L825.3,453.3 L744,462.9 L662.7,472.4 L581.3,482.1 L500,491.7 L418.7,501.1 L337.3,510.7 L256,520.1 L174.7,529.4 L93.3,538.7 L12,548Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M12,548 L93.3,542.2 L174.7,536.2 L256,530.6 L337.3,524.5 L418.7,518.6 L500,512.3 L581.3,506 L662.7,500.2 L744,494.4 L825.3,488.2 L906.7,482 L988,475.8"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M12,548 L93.3,540.9 L174.7,534 L256,526.4 L337.3,519.3 L418.7,512 L500,504.7 L581.3,496.9 L662.7,489.1 L744,481.3 L825.3,474.1 L906.7,467.1 L988,460"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M12,548 L93.3,539.8 L174.7,531.6 L256,523.5 L337.3,515.1 L418.7,507.3 L500,499.3 L581.3,490.8 L662.7,482.5 L744,474.7 L825.3,466.7 L906.7,458.6 L988,450.4"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M12,548 L93.3,539.6 L174.7,531.4 L256,522.6 L337.3,513.5 L418.7,504.4 L500,495.8 L581.3,487.2 L662.7,478.4 L744,470 L825.3,461.2 L906.7,452.2 L988,443.2"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M12,548 L93.3,539.1 L174.7,530.1 L256,521.4 L337.3,511.9 L418.7,502.2 L500,493 L581.3,483.4 L662.7,473.7 L744,464.5 L825.3,455.3 L906.7,446.4 L988,437.2"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M12,548 L93.3,538.1 L174.7,528.5 L256,518.4 L337.3,509 L418.7,499.6 L500,489.8 L581.3,479.8 L662.7,469.9 L744,459.8 L825.3,450.4 L906.7,441 L988,431.6"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M12,548 L93.3,537.9 L174.7,528.2 L256,519 L337.3,508.5 L418.7,498 L500,488.4 L581.3,477.9 L662.7,467.9 L744,457.7 L825.3,447.5 L906.7,437.1 L988,426.6"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M12,548 L93.3,537.5 L174.7,527.9 L256,517.4 L337.3,507.2 L418.7,496.4 L500,485.7 L581.3,475 L662.7,464.6 L744,453.7 L825.3,443.5 L906.7,432.7 L988,421.7"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M12,548 L93.3,536.8 L174.7,525.9 L256,515.1 L337.3,504.4 L418.7,493.3 L500,482.6 L581.3,471.9 L662.7,460.9 L744,450.3 L825.3,439.1 L906.7,427.7 L988,416.9"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M12,548 L93.3,537 L174.7,525.5 L256,514 L337.3,502.6 L418.7,491.6 L500,480.1 L581.3,468.6 L662.7,456.8 L744,446.1 L825.3,435.4 L906.7,423.9 L988,412.7"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M12,548 L93.3,536.6 L174.7,524.8 L256,514.1 L337.3,502.5 L418.7,490.6 L500,478.4 L581.3,466.5 L662.7,455.3 L744,443.6 L825.3,432.4 L906.7,420.1 L988,408.5"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M12,548 L93.3,536.7 L174.7,525.2 L256,512.9 L337.3,500.7 L418.7,488.6 L500,477.2 L581.3,465.5 L662.7,452.9 L744,440.6 L825.3,428.3 L906.7,416.2 L988,404.7"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M12,548 L93.3,536.3 L174.7,524.6 L256,512 L337.3,499.5 L418.7,487.6 L500,475 L581.3,461.8 L662.7,449.7 L744,437.8 L825.3,425.9 L906.7,413.3 L988,401.1"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M12,548 L93.3,535.9 L174.7,523.9 L256,511.6 L337.3,499.5 L418.7,486.5 L500,473.4 L581.3,460.3 L662.7,447.9 L744,435.2 L825.3,421.7 L906.7,408.9 L988,396.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M12,548 L93.3,535.8 L174.7,522.4 L256,510.3 L337.3,497.8 L418.7,484.6 L500,471.8 L581.3,458.8 L662.7,445.6 L744,431.9 L825.3,418.6 L906.7,405 L988,391.8"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M12,548 L93.3,535.1 L174.7,522.4 L256,508.6 L337.3,495.8 L418.7,481.9 L500,468.8 L581.3,454.7 L662.7,441.7 L744,427.7 L825.3,414.5 L906.7,401.4 L988,388.3"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M12,548 L93.3,535.1 L174.7,521.3 L256,507.8 L337.3,493.7 L418.7,479.4 L500,465.1 L581.3,451.9 L662.7,438.4 L744,424.8 L825.3,411.2 L906.7,397.3 L988,384"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M12,548 L93.3,534.7 L174.7,521.1 L256,507 L337.3,493.7 L418.7,479.3 L500,464.7 L581.3,450.1 L662.7,436.1 L744,422.8 L825.3,408.2 L906.7,393.6 L988,380"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M12,548 L93.3,534.1 L174.7,520.4 L256,506.5 L337.3,492.8 L418.7,478.1 L500,464.2 L581.3,449.7 L662.7,434.8 L744,419.8 L825.3,405.2 L906.7,390.3 L988,376.2"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M12,548 L93.3,533.8 L174.7,519.6 L256,505.3 L337.3,490.9 L418.7,476.8 L500,461.4 L581.3,446.1 L662.7,432 L744,417 L825.3,401.4 L906.7,387.5 L988,372.5"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M12,548 L93.3,533.2 L174.7,518.3 L256,503.7 L337.3,488.1 L418.7,472.9 L500,458.4 L581.3,443.7 L662.7,428.3 L744,412.4 L825.3,397.9 L906.7,382.6 L988,368.1"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M12,548 L93.3,532.3 L174.7,518.1 L256,503.2 L337.3,487.6 L418.7,473 L500,456.6 L581.3,441.1 L662.7,424.9 L744,409.3 L825.3,394.2 L906.7,379.1 L988,364.4"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M12,548 L93.3,533.1 L174.7,518.3 L256,502.7 L337.3,486.8 L418.7,470.7 L500,455 L581.3,438.8 L662.7,423.3 L744,408 L825.3,392.2 L906.7,376.2 L988,360.1"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M12,548 L93.3,531.9 L174.7,516.6 L256,501.9 L337.3,486.3 L418.7,470 L500,454.4 L581.3,437.5 L662.7,421.5 L744,406.2 L825.3,389.2 L906.7,372.5 L988,356"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M12,548 L93.3,531.8 L174.7,516.2 L256,500.5 L337.3,483.8 L418.7,467.6 L500,451.4 L581.3,435 L662.7,418.1 L744,402 L825.3,385 L906.7,367.7 L988,351.5"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M12,548 L93.3,531.2 L174.7,515.5 L256,498.4 L337.3,480.9 L418.7,464.4 L500,448.2 L581.3,431.8 L662.7,414.8 L744,398.3 L825.3,380.7 L906.7,363.7 L988,347.5"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M12,548 L93.3,531 L174.7,514.6 L256,497.6 L337.3,480.7 L418.7,463.7 L500,447.1 L581.3,430.5 L662.7,413 L744,394.9 L825.3,377.4 L906.7,360.1 L988,343.1"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M12,548 L93.3,529.8 L174.7,513.4 L256,496.9 L337.3,479.4 L418.7,461.9 L500,444.7 L581.3,427.5 L662.7,409.8 L744,392.7 L825.3,374.9 L906.7,356.6 L988,338.9"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M12,548 L93.3,529.9 L174.7,512.3 L256,493.9 L337.3,475.7 L418.7,458.2 L500,441.1 L581.3,423.7 L662.7,405.3 L744,388.3 L825.3,370.7 L906.7,352.4 L988,334.4"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M12,548 L93.3,530.7 L174.7,513.4 L256,494.9 L337.3,475.7 L418.7,457.7 L500,440.2 L581.3,422 L662.7,402.9 L744,384.6 L825.3,367.1 L906.7,349.4 L988,330.1"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M12,548 L93.3,530.1 L174.7,512.4 L256,493.3 L337.3,474.6 L418.7,455.6 L500,435.7 L581.3,416.4 L662.7,398.1 L744,379.1 L825.3,360.9 L906.7,342.5 L988,324.4"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M12,548 L93.3,529.8 L174.7,511.3 L256,493.2 L337.3,474.1 L418.7,455.1 L500,436.4 L581.3,417.6 L662.7,399.2 L744,380.3 L825.3,359.7 L906.7,340.1 L988,319.7"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M12,548 L93.3,528.1 L174.7,508.5 L256,489.1 L337.3,469.9 L418.7,451 L500,431.1 L581.3,411.2 L662.7,392 L744,373.2 L825.3,354 L906.7,334.3 L988,314.6"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M12,548 L93.3,528.8 L174.7,509.4 L256,488.9 L337.3,469 L418.7,448.5 L500,428.7 L581.3,407.9 L662.7,388.9 L744,369.3 L825.3,350.2 L906.7,330.7 L988,309.5"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M12,548 L93.3,528.5 L174.7,507.9 L256,488.5 L337.3,468.1 L418.7,447.6 L500,426.9 L581.3,406.7 L662.7,385.6 L744,365.4 L825.3,345.5 L906.7,324 L988,303.6"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M12,548 L93.3,526.7 L174.7,507 L256,486.5 L337.3,466.1 L418.7,444.7 L500,424.2 L581.3,403.2 L662.7,381.5 L744,361.7 L825.3,339.7 L906.7,319.2 L988,298.5"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M12,548 L93.3,525.7 L174.7,503.4 L256,482.7 L337.3,461.9 L418.7,440.8 L500,419.6 L581.3,398.2 L662.7,375.5 L744,354.6 L825.3,333.6 L906.7,312.2 L988,290.4"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M12,548 L93.3,526.1 L174.7,504.5 L256,482 L337.3,460 L418.7,438.5 L500,416.6 L581.3,393.8 L662.7,372.5 L744,349 L825.3,327.2 L906.7,304.7 L988,282.6"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M12,548 L93.3,524.2 L174.7,502 L256,479 L337.3,455.9 L418.7,433.3 L500,411 L581.3,388.3 L662.7,366.6 L744,342.4 L825.3,318.8 L906.7,296.7 L988,275"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M12,548 L93.3,525.3 L174.7,502.9 L256,480 L337.3,457.1 L418.7,434.2 L500,410.3 L581.3,385.9 L662.7,363.5 L744,339.4 L825.3,314.9 L906.7,291.7 L988,267.7"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M12,548 L93.3,524 L174.7,501.6 L256,477.4 L337.3,452.4 L418.7,429.5 L500,404.5 L581.3,379.4 L662.7,354.6 L744,329.2 L825.3,306 L906.7,282.4 L988,259"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M12,548 L93.3,523 L174.7,498.2 L256,474.8 L337.3,449.8 L418.7,424.4 L500,398.9 L581.3,374.1 L662.7,350.4 L744,325.1 L825.3,299.5 L906.7,273.8 L988,249.3"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M12,548 L93.3,521.1 L174.7,496.9 L256,472.8 L337.3,448 L418.7,421.3 L500,396.3 L581.3,369.5 L662.7,343.5 L744,318 L825.3,290.7 L906.7,266.1 L988,239.2"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M12,548 L93.3,521.6 L174.7,495 L256,467.6 L337.3,440.6 L418.7,414.8 L500,387.5 L581.3,359.2 L662.7,332.8 L744,307.3 L825.3,279.3 L906.7,252.4 L988,226.5"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M12,548 L93.3,521.6 L174.7,494.9 L256,466.1 L337.3,438.7 L418.7,409.5 L500,381.3 L581.3,352.2 L662.7,324.1 L744,297.3 L825.3,270.1 L906.7,243.4 L988,214.2"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M12,548 L93.3,518.2 L174.7,490.7 L256,463.7 L337.3,434.7 L418.7,406.8 L500,376.3 L581.3,347.8 L662.7,318.8 L744,289 L825.3,259.9 L906.7,229.6 L988,201"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M12,548 L93.3,517.4 L174.7,488.8 L256,459 L337.3,429 L418.7,395.9 L500,362.8 L581.3,331 L662.7,301.4 L744,271.6 L825.3,240.4 L906.7,210.7 L988,179.5"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M12,548 L93.3,514.8 L174.7,484.2 L256,451.9 L337.3,418.5 L418.7,384.6 L500,353 L581.3,319.1 L662.7,285.7 L744,253 L825.3,221.6 L906.7,189.5 L988,155.5"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M12,548 L93.3,512.6 L174.7,476.4 L256,442.9 L337.3,408.7 L418.7,371.2 L500,335.6 L581.3,297.8 L662.7,262.9 L744,225 L825.3,190 L906.7,151.3 L988,113.8"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M12,548 L93.3,504.2 L174.7,458.5 L256,416.1 L337.3,372.6 L418.7,326.7 L500,279.1 L581.3,235 L662.7,192.3 L744,145.3 L825.3,101 L906.7,57.3 L988,12"/><path class="mc-pct draw p10" pathLength="1" d="M12,548 L93.3,538.7 L174.7,529.4 L256,520.1 L337.3,510.7 L418.7,501.1 L500,491.7 L581.3,482.1 L662.7,472.4 L744,462.9 L825.3,453.3 L906.7,443.8 L988,434.2"/><path class="mc-pct draw p90" pathLength="1" d="M12,548 L93.3,519.8 L174.7,492.2 L256,464.6 L337.3,436.7 L418.7,407.9 L500,379.3 L581.3,351.1 L662.7,322.5 L744,294.1 L825.3,265.6 L906.7,237.3 L988,208.7"/><path class="mc-pct draw p50" pathLength="1" d="M12,548 L93.3,531.6 L174.7,515.5 L256,499.3 L337.3,482.9 L418.7,466.2 L500,449.5 L581.3,432.9 L662.7,416.3 L744,399.5 L825.3,382.8 L906.7,366.2 L988,349.6"/></svg><!-- /build:mc-mood-hero --></div>
       <div class="chart-narrow"><!-- build:mc-mood-narrow --><svg class="chart mc mc--mood" viewBox="0 0 360 200" role="img" aria-labelledby="mc-mood-n-t mc-mood-n-d" preserveAspectRatio="xMidYMid meet"><title id="mc-mood-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-mood-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><path class="mc-band fade" d="M6,194 L35,184.1 L64,174.4 L93,164.8 L122,154.9 L151,144.9 L180,134.8 L209,124.9 L238,114.9 L267,104.9 L296,94.9 L325,85 L354,75 L354,154.1 L325,157.5 L296,160.8 L267,164.2 L238,167.5 L209,170.9 L180,174.2 L151,177.6 L122,180.9 L93,184.2 L64,187.5 L35,190.7 L6,194Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M6,194 L35,192 L64,189.9 L93,187.9 L122,185.8 L151,183.7 L180,181.5 L209,179.3 L238,177.2 L267,175.2 L296,173 L325,170.9 L354,168.7"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M6,194 L35,191 L64,188.2 L93,185.1 L122,181.9 L151,178.7 L180,175.7 L209,172.7 L238,169.6 L267,166.6 L296,163.5 L325,160.4 L354,157.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M6,194 L35,190.5 L64,187.2 L93,183.6 L122,180.3 L151,177 L180,173.6 L209,170.1 L238,166.6 L267,163 L296,159.8 L325,156.5 L354,153.2"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M6,194 L35,190.1 L64,186.3 L93,182.5 L122,178.7 L151,174.8 L180,171.1 L209,167.3 L238,163.4 L267,159.7 L296,155.8 L325,151.8 L354,148"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M6,194 L35,190 L64,185.9 L93,182.1 L122,178.1 L151,173.9 L180,169.6 L209,165.4 L238,161.5 L267,157.4 L296,153.4 L325,149.1 L354,145.1"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M6,194 L35,189.7 L64,185.5 L93,181.2 L122,177 L151,172.4 L180,167.8 L209,163.3 L238,158.9 L267,154.4 L296,149.7 L325,145.2 L354,140.9"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M6,194 L35,189.5 L64,185 L93,180.2 L122,175.7 L151,170.8 L180,166.2 L209,161.3 L238,156.7 L267,151.8 L296,147.2 L325,142.6 L354,138"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M6,194 L35,189.1 L64,184.3 L93,179.4 L122,174.7 L151,169.5 L180,164.6 L209,159.5 L238,154.3 L267,149 L296,143.9 L325,138.7 L354,133.8"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M6,194 L35,188.5 L64,183.5 L93,178.3 L122,172.8 L151,167.7 L180,161.9 L209,156.5 L238,150.8 L267,145.3 L296,140.1 L325,134.8 L354,129.6"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M6,194 L35,188.4 L64,183 L93,177.8 L122,172.4 L151,166.6 L180,161.2 L209,155.2 L238,149.6 L267,144.3 L296,138.3 L325,132.5 L354,126.7"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M6,194 L35,188 L64,182.3 L93,176.3 L122,170.4 L151,164.4 L180,158.6 L209,152.8 L238,146.7 L267,140.3 L296,134.2 L325,128.1 L354,122.1"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M6,194 L35,187.7 L64,181.5 L93,175 L122,168.6 L151,162.5 L180,156.5 L209,150.4 L238,143.9 L267,138 L296,131.8 L325,125.4 L354,119.1"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M6,194 L35,187.6 L64,181.1 L93,174.8 L122,168.1 L151,161.4 L180,154.9 L209,148.3 L238,141.8 L267,135.2 L296,128 L325,121.1 L354,113.9"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M6,194 L35,187.2 L64,179.9 L93,173.1 L122,166 L151,158.8 L180,151.5 L209,144.4 L238,137.1 L267,129.9 L296,123 L325,115.4 L354,108.3"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M6,194 L35,186.2 L64,178.4 L93,171.1 L122,163.8 L151,156.4 L180,149 L209,141.5 L238,133.5 L267,126.2 L296,118.8 L325,111.3 L354,103.6"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M6,194 L35,186 L64,178.2 L93,170.2 L122,162.1 L151,154.1 L180,145.7 L209,137.1 L238,129.3 L267,120.8 L296,112.2 L325,104.1 L354,95.7"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M6,194 L35,185.2 L64,176.5 L93,168.3 L122,159.5 L151,150.6 L180,141.7 L209,133 L238,124.7 L267,115.8 L296,106.9 L325,97.8 L354,89.2"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M6,194 L35,184.7 L64,175.4 L93,165.3 L122,155.7 L151,145.4 L180,135.5 L209,125.3 L238,115.5 L267,106.1 L296,96.5 L325,87.2 L354,76.9"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M6,194 L35,183.3 L64,173.2 L93,162.8 L122,152.2 L151,140.7 L180,129.1 L209,117.9 L238,107.5 L267,97.1 L296,86.1 L325,75.7 L354,64.8"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M6,194 L35,178.6 L64,162.6 L93,147.7 L122,132.5 L151,116.4 L180,99.7 L209,84.2 L238,69.2 L267,52.8 L296,37.2 L325,21.9 L354,6"/><path class="mc-pct draw p10" pathLength="1" d="M6,194 L35,190.7 L64,187.5 L93,184.2 L122,180.9 L151,177.6 L180,174.2 L209,170.9 L238,167.5 L267,164.2 L296,160.8 L325,157.5 L354,154.1"/><path class="mc-pct draw p90" pathLength="1" d="M6,194 L35,184.1 L64,174.4 L93,164.8 L122,154.9 L151,144.9 L180,134.8 L209,124.9 L238,114.9 L267,104.9 L296,94.9 L325,85 L354,75"/><path class="mc-pct draw p50" pathLength="1" d="M6,194 L35,188.3 L64,182.6 L93,176.9 L122,171.2 L151,165.3 L180,159.5 L209,153.6 L238,147.8 L267,141.9 L296,136.1 L325,130.2 L354,124.4"/></svg><!-- /build:mc-mood-narrow --></div>
-      <figcaption>One real listing, <span data-fill="years">10,000</span> simulated years. Modeled from public data.</figcaption>
     </figure>
   </div>
-</section>
-
-<!-- 2 · The problem -->
-<section class="section night" id="problem">
-  <div class="wrap">
-    <h2>Your mental model is linear. Amazon's cost structure is a staircase.</h2>
-    <p class="lede">A P&amp;L is an average. A cliff only shows up as a counterfactual: what the same unit would cost an ounce lighter, or a cent cheaper. No report anyone sells contains one, so your tools, your agency and your bookkeeper all miss the same leak at once.</p>
-  </div>
-</section>
-
-<!-- 3 · The signature: the staircase -->
-<section class="section" id="staircase">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="label">Amazon's 2026 fulfilment fees</span>
-      <h2>Less than an ounce past the edge. Paid on every unit.</h2>
+  <div class="wrap hero-in">
+    <span class="label">Paid on proof</span>
+    <h1 id="headline">More profit than our bill every month, <span class="nowrap">or you don't pay.</span></h1>
+    <script>
+    /* Three headlines, one per visitor, kept for the visit after. ?h=A|B|C forces one. */
+    (function () {
+      var H = {
+        A: "More profit than our bill every month, or you don't pay.",
+        B: "Always know exactly where your money is made and lost, or you don't pay.",
+        C: "Your P&L is an average. Your losses are hiding in the steps."
+      };
+      var v;
+      try { v = new URLSearchParams(location.search).get("h"); } catch (e) {}
+      if (!H[v]) { try { v = localStorage.getItem("hubricon_h"); } catch (e) {} }
+      if (!H[v]) { v = "ABC".charAt(Math.floor(Math.random() * 3)); }
+      try { localStorage.setItem("hubricon_h", v); } catch (e) {}
+      document.documentElement.setAttribute("data-headline", v);
+      if (v !== "A") document.getElementById("headline").textContent = H[v];
+    })();
+    </script>
+    <p class="lede">For Amazon and Shopify brands doing $1M to $30M a year.</p>
+    <div class="cta">
+      <a class="btn btn-lg" href="/apply" data-cta="hero">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <span class="cta-note">20 minutes. No card, ever.</span>
     </div>
-    <figure class="figure" data-play>
-      <div class="chart-wide"><!-- build:stairs-wide --><svg class="chart stairs" viewBox="0 0 760 420" role="img" aria-labelledby="st-w-t st-w-d" preserveAspectRatio="xMidYMid meet"><title id="st-w-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-w-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="64" x2="736" y1="325.5" y2="325.5"/><text x="54" y="325.5" font-size="13" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="64" x2="736" y1="245.1" y2="245.1"/><text x="54" y="245.1" font-size="13" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="64" x2="736" y1="164.8" y2="164.8"/><text x="54" y="164.8" font-size="13" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="grid" x1="64" x2="736" y1="84.4" y2="84.4"/><text x="54" y="84.4" font-size="13" text-anchor="end" dominant-baseline="middle">$5.50</text><line class="axis" x1="64" x2="736" y1="372" y2="372"/><line class="tick" x1="64" x2="64" y1="372" y2="377"/><text x="64" y="395" font-size="13" text-anchor="middle">0</text><line class="tick" x1="198.4" x2="198.4" y1="372" y2="377"/><text x="198.4" y="395" font-size="13" text-anchor="middle">4</text><line class="tick" x1="332.8" x2="332.8" y1="372" y2="377"/><text x="332.8" y="395" font-size="13" text-anchor="middle">8</text><line class="tick" x1="467.2" x2="467.2" y1="372" y2="377"/><text x="467.2" y="395" font-size="13" text-anchor="middle">12</text><line class="tick" x1="601.6" x2="601.6" y1="372" y2="377"/><text x="601.6" y="395" font-size="13" text-anchor="middle">16</text><line class="tick" x1="736" x2="736" y1="372" y2="377"/><text x="736" y="395" font-size="13" text-anchor="middle">20 oz</text><path class="step-alt fade" style="--after:0ms" d="M64,308 H198.4 V268 H332.8 V223.1 H467.2 V154.9 H601.6 V80.1 H736"/><path class="step draw" pathLength="1" d="M64,347.9 H198.4 V311.3 H332.8 V269.7 H467.2 V203.2 H601.6 V130 H736"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="64" x2="86.1" y1="11.700000000000001" y2="11.700000000000001"/><text class="ink" x="94.1" y="11.700000000000001" font-size="12" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="64" x2="86.1" y1="32.5" y2="32.5"/><text x="94.1" y="32.5" font-size="12" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="332.8" x2="332.8" y1="311.3" y2="269.7"/><circle class="dot-hollow" cx="332.8" cy="311.3" r="5.5"/><circle class="dot" cx="360.3" cy="269.7" r="5.5"/><text class="leak-text" x="322.8" y="290.5" font-size="14" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="371.8" y="288.7" font-size="13">8.8 oz · this listing</text><text x="344.3" y="332.3" font-size="13">8.0 oz · one step down</text></g></svg><!-- /build:stairs-wide --></div>
-      <div class="chart-narrow"><!-- build:stairs-narrow --><svg class="chart stairs" viewBox="0 0 360 340" role="img" aria-labelledby="st-n-t st-n-d" preserveAspectRatio="xMidYMid meet"><title id="st-n-t">Amazon's fee staircase, with one listing just past an edge</title><desc id="st-n-d">Amazon's fulfilment fee climbs in steps as shipping weight crosses each band edge. This listing ships at 8.8 ounces, just past the 8-ounce edge, so every unit pays $0.26 more than it would one step down.</desc><line class="grid" x1="46" x2="352" y1="251.3" y2="251.3"/><text x="36" y="251.3" font-size="11" text-anchor="end" dominant-baseline="middle">$4.00</text><line class="grid" x1="46" x2="352" y1="167.2" y2="167.2"/><text x="36" y="167.2" font-size="11" text-anchor="end" dominant-baseline="middle">$4.50</text><line class="grid" x1="46" x2="352" y1="83.1" y2="83.1"/><text x="36" y="83.1" font-size="11" text-anchor="end" dominant-baseline="middle">$5.00</text><line class="axis" x1="46" x2="352" y1="300" y2="300"/><line class="tick" x1="46" x2="46" y1="300" y2="305"/><text x="46" y="321" font-size="11" text-anchor="middle">0</text><line class="tick" x1="122.5" x2="122.5" y1="300" y2="305"/><text x="122.5" y="321" font-size="11" text-anchor="middle">4</text><line class="tick" x1="199" x2="199" y1="300" y2="305"/><text x="199" y="321" font-size="11" text-anchor="middle">8</text><line class="tick" x1="275.5" x2="275.5" y1="300" y2="305"/><text x="275.5" y="321" font-size="11" text-anchor="middle">12</text><line class="tick" x1="352" x2="352" y1="300" y2="305"/><text x="352" y="321" font-size="11" text-anchor="middle">16 oz</text><path class="step-alt fade" style="--after:0ms" d="M46,233 H122.5 V191.2 H199 V144.2 H275.5 V72.8 H352"/><path class="step draw" pathLength="1" d="M46,274.8 H122.5 V236.5 H199 V192.9 H275.5 V123.3 H352"/><g class="fade" style="--after:0ms"><line class="key-solid" x1="46" x2="64.7" y1="9.9" y2="9.9"/><text class="ink" x="72.7" y="9.9" font-size="10" dominant-baseline="middle">Jan 15 – Oct 14</text><line class="step-alt" x1="46" x2="64.7" y1="27.5" y2="27.5"/><text x="72.7" y="27.5" font-size="10" dominant-baseline="middle">Oct 15 – Jan 14</text></g><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="199" x2="199" y1="236.5" y2="192.9"/><circle class="dot-hollow" cx="199" cy="236.5" r="4.5"/><circle class="dot" cx="214.6" cy="192.9" r="4.5"/><text class="leak-text" x="189" y="214.7" font-size="12" text-anchor="end" dominant-baseline="middle">+$0.26 a unit</text><text class="ink strong" x="225.1" y="209.9" font-size="11">8.8 oz · this listing</text><text x="209.5" y="255.5" font-size="11">8.0 oz · one step down</text></g></svg><!-- /build:stairs-narrow --></div>
-      <figcaption>Large standard size, priced $10 to $50, with Amazon's <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge. Solid: <span data-fill="card_np">Jan 15 to Oct 14, 2026</span>. Dashed: the holiday card, <span data-fill="card_peak">Oct 15 to Jan 14</span>. The dots are one real listing, modeled from public data.</figcaption>
-    </figure>
+    <p class="hero-cap">Behind this: one real listing, <span data-fill="years">10,000</span> simulated years. Modeled from public data.</p>
   </div>
 </section>
 
@@ -276,159 +203,153 @@
   </div>
 </section>
 
-<!-- 4 · Proof: the public-data case study -->
-<section class="section" id="case-study">
+<!-- 2 · The proof: the engine on a real store's own orders, called before and measured after -->
+<section class="section" id="proof">
   <div class="wrap">
-    <span class="label label-box">Modeled from public data · Not a client · Not a result</span>
-    <p class="case-who"><span data-fill="who">A car-care brand</span> · one listing · <span data-fill="category">Automotive</span></p>
-    <h2 class="case-headline"><span class="money"><span data-fill="leak_p10">$6,400</span> to <span data-fill="leak_p90">$19,200</span></span> a year, paid on one step of Amazon's fee staircase.<span class="est">estimate</span></h2>
-    <p class="lede">Its best-selling paint scratch remover lists an item weight of <span data-fill="weight">8.8</span> ounces. Above <span data-fill="edge">8</span>, every unit pays <span class="money" data-fill="step_np">$0.26</span> more to fulfil, <span data-fill="step_peak">$0.28</span> from October 15, on an estimated <span data-fill="units">3,600</span> units a month.</p>
-
-    <!-- TODO(video): the case study told as the five-beat film (HUBRICON_SPEC.md, "Education").
-         Set VIDEO in /assets/home.js when it exists; until then nothing renders here. -->
-    <div class="case-video" id="case-video" hidden></div>
-
-    <figure class="figure case-figure" data-play>
-      <h3>Ten thousand years of this one listing</h3>
-      <p class="figure-intro">Each faint line is one simulated year of profit. The band holds eight years in ten, the bad end included.</p>
-      <div class="chart-wide"><!-- build:mc-wide --><svg class="chart mc mc--full" viewBox="0 0 760 420" role="img" aria-labelledby="mc-w-t mc-w-d" preserveAspectRatio="xMidYMid meet"><title id="mc-w-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-w-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="64" x2="640" y1="376" y2="376"/><text x="54" y="376" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="640" y1="295" y2="295"/><text x="54" y="295" font-size="13" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="64" x2="640" y1="214" y2="214"/><text x="54" y="214" font-size="13" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="64" x2="640" y1="133.1" y2="133.1"/><text x="54" y="133.1" font-size="13" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="64" x2="640" y1="52.1" y2="52.1"/><text x="54" y="52.1" font-size="13" text-anchor="end" dominant-baseline="middle">$1M</text><text x="64" y="401" font-size="13" text-anchor="start">Today</text><text x="352" y="401" font-size="13" text-anchor="middle">6 months</text><text x="640" y="401" font-size="13" text-anchor="end">12 months</text><path class="mc-band fade" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2 L640,301.3 L592,307.6 L544,313.8 L496,320.1 L448,326.4 L400,332.7 L352,339 L304,345.2 L256,351.5 L208,357.7 L160,363.8 L112,369.9 L64,376Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M64,376 L112,372.2 L160,368.3 L208,364.6 L256,360.6 L304,356.7 L352,352.6 L400,348.4 L448,344.6 L496,340.8 L544,336.7 L592,332.7 L640,328.6"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M64,376 L112,371.3 L160,366.8 L208,361.8 L256,357.1 L304,352.4 L352,347.5 L400,342.4 L448,337.3 L496,332.2 L544,327.5 L592,322.9 L640,318.2"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M64,376 L112,370.6 L160,365.3 L208,359.9 L256,354.4 L304,349.3 L352,344 L400,338.4 L448,333 L496,327.9 L544,322.6 L592,317.3 L640,311.9"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M64,376 L112,370.5 L160,365.1 L208,359.3 L256,353.3 L304,347.4 L352,341.7 L400,336.1 L448,330.3 L496,324.8 L544,319 L592,313.1 L640,307.1"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M64,376 L112,370.2 L160,364.2 L208,358.5 L256,352.3 L304,346 L352,339.9 L400,333.6 L448,327.2 L496,321.1 L544,315.1 L592,309.3 L640,303.2"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M64,376 L112,369.5 L160,363.2 L208,356.6 L256,350.4 L304,344.2 L352,337.8 L400,331.2 L448,324.7 L496,318 L544,311.9 L592,305.7 L640,299.5"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M64,376 L112,369.3 L160,363 L208,356.9 L256,350 L304,343.2 L352,336.9 L400,329.9 L448,323.4 L496,316.7 L544,310 L592,303.2 L640,296.3"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M64,376 L112,369.1 L160,362.8 L208,355.9 L256,349.2 L304,342.1 L352,335.1 L400,328.1 L448,321.2 L496,314.1 L544,307.3 L592,300.3 L640,293.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M64,376 L112,368.6 L160,361.5 L208,354.4 L256,347.4 L304,340.1 L352,333.1 L400,326 L448,318.8 L496,311.9 L544,304.5 L592,297 L640,289.9"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M64,376 L112,368.8 L160,361.2 L208,353.7 L256,346.2 L304,339 L352,331.4 L400,323.8 L448,316.1 L496,309.1 L544,302 L592,294.5 L640,287.1"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M64,376 L112,368.5 L160,360.8 L208,353.7 L256,346.1 L304,338.3 L352,330.3 L400,322.5 L448,315.1 L496,307.5 L544,300.1 L592,292 L640,284.4"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M64,376 L112,368.6 L160,361 L208,353 L256,345 L304,337 L352,329.5 L400,321.8 L448,313.5 L496,305.5 L544,297.4 L592,289.4 L640,281.9"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M64,376 L112,368.3 L160,360.7 L208,352.3 L256,344.1 L304,336.3 L352,328 L400,319.4 L448,311.5 L496,303.6 L544,295.8 L592,287.5 L640,279.5"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M64,376 L112,368 L160,360.1 L208,352.1 L256,344.1 L304,335.6 L352,327 L400,318.4 L448,310.3 L496,301.9 L544,293 L592,284.6 L640,276.6"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M64,376 L112,368 L160,359.2 L208,351.3 L256,343 L304,334.4 L352,326 L400,317.5 L448,308.7 L496,299.7 L544,291 L592,282.1 L640,273.5"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M64,376 L112,367.5 L160,359.2 L208,350.1 L256,341.7 L304,332.6 L352,324 L400,314.7 L448,306.2 L496,297 L544,288.3 L592,279.7 L640,271.1"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M64,376 L112,367.5 L160,358.5 L208,349.6 L256,340.3 L304,330.9 L352,321.6 L400,312.9 L448,304 L496,295.1 L544,286.2 L592,277 L640,268.3"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M64,376 L112,367.3 L160,358.3 L208,349.1 L256,340.3 L304,330.9 L352,321.3 L400,311.7 L448,302.5 L496,293.8 L544,284.2 L592,274.6 L640,265.7"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M64,376 L112,366.8 L160,357.9 L208,348.7 L256,339.8 L304,330.1 L352,321 L400,311.4 L448,301.7 L496,291.8 L544,282.2 L592,272.4 L640,263.2"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M64,376 L112,366.7 L160,357.3 L208,348 L256,338.5 L304,329.2 L352,319.2 L400,309.1 L448,299.8 L496,290 L544,279.7 L592,270.6 L640,260.7"/><path class="mc-path draw" pathLength="1" style="--delay:20ms" d="M64,376 L112,366.3 L160,356.5 L208,346.9 L256,336.6 L304,326.7 L352,317.1 L400,307.5 L448,297.4 L496,287 L544,277.4 L592,267.4 L640,257.9"/><path class="mc-path draw" pathLength="1" style="--delay:73ms" d="M64,376 L112,365.7 L160,356.3 L208,346.5 L256,336.4 L304,326.7 L352,316 L400,305.8 L448,295.2 L496,284.9 L544,275 L592,265.1 L640,255.4"/><path class="mc-path draw" pathLength="1" style="--delay:126ms" d="M64,376 L112,366.2 L160,356.5 L208,346.3 L256,335.8 L304,325.3 L352,314.9 L400,304.3 L448,294.1 L496,284 L544,273.7 L592,263.2 L640,252.6"/><path class="mc-path draw" pathLength="1" style="--delay:179ms" d="M64,376 L112,365.4 L160,355.4 L208,345.7 L256,335.5 L304,324.8 L352,314.5 L400,303.4 L448,293 L496,282.9 L544,271.7 L592,260.8 L640,249.9"/><path class="mc-path draw" pathLength="1" style="--delay:232ms" d="M64,376 L112,365.4 L160,355.1 L208,344.8 L256,333.8 L304,323.2 L352,312.6 L400,301.8 L448,290.7 L496,280.1 L544,268.9 L592,257.6 L640,246.9"/><path class="mc-path draw" pathLength="1" style="--delay:25ms" d="M64,376 L112,364.9 L160,354.6 L208,343.4 L256,331.9 L304,321.1 L352,310.5 L400,299.7 L448,288.5 L496,277.7 L544,266.1 L592,255 L640,244.3"/><path class="mc-path draw" pathLength="1" style="--delay:78ms" d="M64,376 L112,364.8 L160,354.1 L208,342.9 L256,331.8 L304,320.7 L352,309.7 L400,298.8 L448,287.4 L496,275.4 L544,264 L592,252.6 L640,241.4"/><path class="mc-path draw" pathLength="1" style="--delay:131ms" d="M64,376 L112,364 L160,353.3 L208,342.5 L256,331 L304,319.5 L352,308.2 L400,296.9 L448,285.2 L496,274 L544,262.3 L592,250.3 L640,238.7"/><path class="mc-path draw" pathLength="1" style="--delay:184ms" d="M64,376 L112,364.1 L160,352.6 L208,340.4 L256,328.5 L304,317 L352,305.8 L400,294.4 L448,282.3 L496,271.1 L544,259.5 L592,247.6 L640,235.7"/><path class="mc-path draw" pathLength="1" style="--delay:237ms" d="M64,376 L112,364.6 L160,353.3 L208,341.1 L256,328.5 L304,316.7 L352,305.2 L400,293.2 L448,280.7 L496,268.7 L544,257.2 L592,245.6 L640,232.9"/><path class="mc-path draw" pathLength="1" style="--delay:30ms" d="M64,376 L112,364.2 L160,352.6 L208,340.1 L256,327.8 L304,315.3 L352,302.3 L400,289.6 L448,277.5 L496,265.1 L544,253.2 L592,241 L640,229.2"/><path class="mc-path draw" pathLength="1" style="--delay:83ms" d="M64,376 L112,364.1 L160,351.9 L208,340 L256,327.5 L304,315 L352,302.7 L400,290.4 L448,278.3 L496,265.9 L544,252.4 L592,239.4 L640,226.1"/><path class="mc-path draw" pathLength="1" style="--delay:136ms" d="M64,376 L112,362.9 L160,350 L208,337.3 L256,324.7 L304,312.3 L352,299.3 L400,286.1 L448,273.5 L496,261.2 L544,248.6 L592,235.7 L640,222.7"/><path class="mc-path draw" pathLength="1" style="--delay:189ms" d="M64,376 L112,363.4 L160,350.7 L208,337.2 L256,324.1 L304,310.7 L352,297.6 L400,284 L448,271.5 L496,258.6 L544,246.1 L592,233.3 L640,219.4"/><path class="mc-path draw" pathLength="1" style="--delay:242ms" d="M64,376 L112,363.2 L160,349.6 L208,336.9 L256,323.5 L304,310.1 L352,296.5 L400,283.2 L448,269.4 L496,256.1 L544,243 L592,228.9 L640,215.5"/><path class="mc-path draw" pathLength="1" style="--delay:35ms" d="M64,376 L112,362 L160,349.1 L208,335.6 L256,322.2 L304,308.2 L352,294.7 L400,280.9 L448,266.7 L496,253.6 L544,239.2 L592,225.7 L640,212.1"/><path class="mc-path draw" pathLength="1" style="--delay:88ms" d="M64,376 L112,361.4 L160,346.7 L208,333.1 L256,319.5 L304,305.6 L352,291.7 L400,277.6 L448,262.7 L496,249 L544,235.2 L592,221.1 L640,206.8"/><path class="mc-path draw" pathLength="1" style="--delay:141ms" d="M64,376 L112,361.6 L160,347.4 L208,332.7 L256,318.2 L304,304.1 L352,289.7 L400,274.8 L448,260.8 L496,245.3 L544,231 L592,216.2 L640,201.7"/><path class="mc-path draw" pathLength="1" style="--delay:194ms" d="M64,376 L112,360.4 L160,345.8 L208,330.7 L256,315.5 L304,300.7 L352,286 L400,271.1 L448,256.9 L496,241 L544,225.5 L592,210.9 L640,196.7"/><path class="mc-path draw" pathLength="1" style="--delay:247ms" d="M64,376 L112,361.1 L160,346.4 L208,331.4 L256,316.3 L304,301.2 L352,285.6 L400,269.5 L448,254.8 L496,239 L544,222.9 L592,207.7 L640,191.9"/><path class="mc-path draw" pathLength="1" style="--delay:40ms" d="M64,376 L112,360.3 L160,345.6 L208,329.6 L256,313.2 L304,298.2 L352,281.7 L400,265.3 L448,249 L496,232.3 L544,217.1 L592,201.6 L640,186.2"/><path class="mc-path draw" pathLength="1" style="--delay:93ms" d="M64,376 L112,359.6 L160,343.3 L208,327.9 L256,311.5 L304,294.8 L352,278.1 L400,261.8 L448,246.2 L496,229.6 L544,212.8 L592,195.9 L640,179.8"/><path class="mc-path draw" pathLength="1" style="--delay:146ms" d="M64,376 L112,358.4 L160,342.4 L208,326.6 L256,310.3 L304,292.8 L352,276.4 L400,258.8 L448,241.7 L496,224.9 L544,207 L592,190.9 L640,173.2"/><path class="mc-path draw" pathLength="1" style="--delay:199ms" d="M64,376 L112,358.7 L160,341.2 L208,323.2 L256,305.5 L304,288.5 L352,270.6 L400,252 L448,234.7 L496,217.9 L544,199.6 L592,181.9 L640,164.9"/><path class="mc-path draw" pathLength="1" style="--delay:252ms" d="M64,376 L112,358.7 L160,341.1 L208,322.2 L256,304.2 L304,285 L352,266.5 L400,247.4 L448,229 L496,211.4 L544,193.5 L592,176 L640,156.8"/><path class="mc-path draw" pathLength="1" style="--delay:45ms" d="M64,376 L112,356.4 L160,338.4 L208,320.6 L256,301.6 L304,283.3 L352,263.2 L400,244.5 L448,225.5 L496,205.9 L544,186.8 L592,166.9 L640,148.1"/><path class="mc-path draw" pathLength="1" style="--delay:98ms" d="M64,376 L112,355.9 L160,337.1 L208,317.6 L256,297.8 L304,276.1 L352,254.4 L400,233.5 L448,214 L496,194.5 L544,174 L592,154.5 L640,134"/><path class="mc-path draw" pathLength="1" style="--delay:151ms" d="M64,376 L112,354.2 L160,334.1 L208,312.9 L256,291 L304,268.7 L352,247.9 L400,225.7 L448,203.7 L496,182.3 L544,161.6 L592,140.6 L640,118.2"/><path class="mc-path draw" pathLength="1" style="--delay:204ms" d="M64,376 L112,352.8 L160,329 L208,307 L256,284.5 L304,259.9 L352,236.5 L400,211.7 L448,188.8 L496,163.9 L544,140.9 L592,115.5 L640,90.8"/><path class="mc-path draw" pathLength="1" style="--delay:257ms" d="M64,376 L112,347.2 L160,317.2 L208,289.4 L256,260.8 L304,230.6 L352,199.4 L400,170.5 L448,142.4 L496,111.6 L544,82.5 L592,53.8 L640,24"/><path class="mc-pct draw p10" pathLength="1" d="M64,376 L112,369.9 L160,363.8 L208,357.7 L256,351.5 L304,345.2 L352,339 L400,332.7 L448,326.4 L496,320.1 L544,313.8 L592,307.6 L640,301.3"/><path class="mc-pct draw p90" pathLength="1" d="M64,376 L112,357.5 L160,339.4 L208,321.2 L256,302.9 L304,284 L352,265.2 L400,246.7 L448,227.9 L496,209.2 L544,190.5 L592,171.9 L640,153.2"/><path class="mc-pct draw p50" pathLength="1" d="M64,376 L112,365.2 L160,354.6 L208,344 L256,333.2 L304,322.3 L352,311.3 L400,300.4 L448,289.5 L496,278.5 L544,267.5 L592,256.6 L640,245.7"/><g class="fade"><text x="654" y="146" font-size="12">P90</text><text class="mc-value p90" x="654" y="162.9" font-size="14">$687,000</text></g><g class="fade"><text x="654" y="238.5" font-size="12">Median</text><text class="mc-value p50" x="654" y="255.4" font-size="14">$402,000</text></g><g class="fade"><text x="654" y="294.1" font-size="12">P10</text><text class="mc-value p10" x="654" y="311" font-size="14">$230,000</text></g></svg><!-- /build:mc-wide --></div>
-      <div class="chart-narrow"><!-- build:mc-narrow --><svg class="chart mc mc--full" viewBox="0 0 360 320" role="img" aria-labelledby="mc-n-t mc-n-d" preserveAspectRatio="xMidYMid meet"><title id="mc-n-t">Ten thousand simulated years of one listing's profit</title><desc id="mc-n-d">Each faint line is one simulated year of one listing's cumulative profit, starting today. After 12 months, one year in ten ends below $230,000, the median year at $402,000, and one in ten above $687,000. Share of simulated months at a loss: 0.0%.</desc><line class="grid" x1="46" x2="286" y1="284" y2="284"/><text x="36" y="284" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="286" y1="222.3" y2="222.3"/><text x="36" y="222.3" font-size="11" text-anchor="end" dominant-baseline="middle">$250k</text><line class="grid" x1="46" x2="286" y1="160.7" y2="160.7"/><text x="36" y="160.7" font-size="11" text-anchor="end" dominant-baseline="middle">$500k</text><line class="grid" x1="46" x2="286" y1="99" y2="99"/><text x="36" y="99" font-size="11" text-anchor="end" dominant-baseline="middle">$750k</text><line class="grid" x1="46" x2="286" y1="37.4" y2="37.4"/><text x="36" y="37.4" font-size="11" text-anchor="end" dominant-baseline="middle">$1M</text><text x="46" y="307" font-size="11" text-anchor="start">Today</text><text x="166" y="307" font-size="11" text-anchor="middle">6 months</text><text x="286" y="307" font-size="11" text-anchor="end">12 months</text><path class="mc-band fade" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3 L286,227.1 L266,231.9 L246,236.7 L226,241.5 L206,246.2 L186,251 L166,255.8 L146,260.6 L126,265.4 L106,270.1 L86,274.7 L66,279.3 L46,284Z"/><path class="mc-path draw" pathLength="1" style="--delay:0ms" d="M46,284 L66,281.1 L86,278.1 L106,275.3 L126,272.3 L146,269.3 L166,266.2 L186,263 L206,260.1 L226,257.2 L246,254.1 L266,251 L286,247.9"/><path class="mc-path draw" pathLength="1" style="--delay:53ms" d="M46,284 L66,279.8 L86,275.7 L106,271.3 L126,266.7 L146,262.2 L166,257.9 L186,253.6 L206,249.2 L226,245 L246,240.6 L266,236.1 L286,231.6"/><path class="mc-path draw" pathLength="1" style="--delay:106ms" d="M46,284 L66,279 L86,274.2 L106,269.2 L126,264.5 L146,259.8 L166,254.9 L186,249.9 L206,244.9 L226,239.9 L246,235.2 L266,230.5 L286,225.8"/><path class="mc-path draw" pathLength="1" style="--delay:159ms" d="M46,284 L66,278.4 L86,273 L106,267.5 L126,262.2 L146,256.7 L166,251.3 L186,246 L206,240.4 L226,235.2 L246,229.5 L266,223.9 L286,218.4"/><path class="mc-path draw" pathLength="1" style="--delay:212ms" d="M46,284 L66,278.3 L86,272.4 L106,267 L126,261.3 L146,255.3 L166,249.2 L186,243.3 L206,237.7 L226,231.8 L246,226.2 L266,220 L286,214.3"/><path class="mc-path draw" pathLength="1" style="--delay:5ms" d="M46,284 L66,277.9 L86,271.9 L106,265.8 L126,259.7 L146,253.3 L166,246.7 L186,240.2 L206,234 L226,227.6 L246,220.8 L266,214.4 L286,208.3"/><path class="mc-path draw" pathLength="1" style="--delay:58ms" d="M46,284 L66,277.5 L86,271.2 L106,264.3 L126,257.9 L146,250.9 L166,244.4 L186,237.3 L206,230.8 L226,223.8 L246,217.2 L266,210.7 L286,204.1"/><path class="mc-path draw" pathLength="1" style="--delay:111ms" d="M46,284 L66,277 L86,270.2 L106,263.2 L126,256.4 L146,249 L166,242.1 L186,234.9 L206,227.4 L226,219.9 L246,212.6 L266,205.1 L286,198.1"/><path class="mc-path draw" pathLength="1" style="--delay:164ms" d="M46,284 L66,276.1 L86,269 L106,261.6 L126,253.8 L146,246.5 L166,238.3 L186,230.6 L206,222.4 L226,214.6 L246,207.1 L266,199.6 L286,192.2"/><path class="mc-path draw" pathLength="1" style="--delay:217ms" d="M46,284 L66,276 L86,268.3 L106,261 L126,253.2 L146,245 L166,237.2 L186,228.7 L206,220.8 L226,213.1 L246,204.6 L266,196.3 L286,188"/><path class="mc-path draw" pathLength="1" style="--delay:10ms" d="M46,284 L66,275.5 L86,267.3 L106,258.8 L126,250.4 L146,241.9 L166,233.5 L186,225.2 L206,216.5 L226,207.4 L246,198.7 L266,190 L286,181.5"/><path class="mc-path draw" pathLength="1" style="--delay:63ms" d="M46,284 L66,275 L86,266.2 L106,256.9 L126,247.8 L146,239.1 L166,230.5 L186,221.9 L206,212.6 L226,204.1 L246,195.3 L266,186.2 L286,177.2"/><path class="mc-path draw" pathLength="1" style="--delay:116ms" d="M46,284 L66,274.9 L86,265.7 L106,256.6 L126,247.1 L146,237.6 L166,228.2 L186,218.8 L206,209.6 L226,200.2 L246,189.9 L266,180 L286,169.9"/><path class="mc-path draw" pathLength="1" style="--delay:169ms" d="M46,284 L66,274.3 L86,263.9 L106,254.2 L126,244 L146,233.8 L166,223.5 L186,213.4 L206,202.8 L226,192.7 L246,182.7 L266,172 L286,161.8"/><path class="mc-path draw" pathLength="1" style="--delay:222ms" d="M46,284 L66,272.9 L86,261.7 L106,251.4 L126,240.9 L146,230.4 L166,219.8 L186,209.1 L206,197.7 L226,187.3 L246,176.8 L266,166.1 L286,155.2"/><path class="mc-path draw" pathLength="1" style="--delay:15ms" d="M46,284 L66,272.7 L86,261.5 L106,250 L126,238.5 L146,227.1 L166,215.1 L186,202.9 L206,191.7 L226,179.7 L246,167.4 L266,155.9 L286,143.8"/><path class="mc-path draw" pathLength="1" style="--delay:68ms" d="M46,284 L66,271.5 L86,259.1 L106,247.4 L126,234.9 L146,222.2 L166,209.4 L186,197 L206,185.2 L226,172.5 L246,159.8 L266,146.9 L286,134.6"/><path class="mc-path draw" pathLength="1" style="--delay:121ms" d="M46,284 L66,270.8 L86,257.4 L106,243 L126,229.3 L146,214.7 L166,200.7 L186,186.1 L206,172.1 L226,158.6 L246,145.1 L266,131.7 L286,117.1"/><path class="mc-path draw" pathLength="1" style="--delay:174ms" d="M46,284 L66,268.7 L86,254.4 L106,239.5 L126,224.5 L146,208 L166,191.4 L186,175.5 L206,160.7 L226,145.8 L246,130.2 L266,115.3 L286,99.8"/><path class="mc-path draw" pathLength="1" style="--delay:227ms" d="M46,284 L66,262.1 L86,239.2 L106,218.1 L126,196.3 L146,173.3 L166,149.5 L186,127.5 L206,106.1 L226,82.7 L246,60.5 L266,38.7 L286,16"/><path class="mc-pct draw p10" pathLength="1" d="M46,284 L66,279.3 L86,274.7 L106,270.1 L126,265.4 L146,260.6 L166,255.8 L186,251 L206,246.2 L226,241.5 L246,236.7 L266,231.9 L286,227.1"/><path class="mc-pct draw p90" pathLength="1" d="M46,284 L66,269.9 L86,256.1 L106,242.3 L126,228.3 L146,213.9 L166,199.7 L186,185.5 L206,171.2 L226,157 L246,142.8 L266,128.6 L286,114.3"/><path class="mc-pct draw p50" pathLength="1" d="M46,284 L66,275.8 L86,267.7 L106,259.6 L126,251.5 L146,243.1 L166,234.8 L186,226.5 L206,218.2 L226,209.7 L246,201.4 L266,193.1 L286,184.8"/><g class="fade"><text x="300" y="108.3" font-size="10">P90</text><text class="mc-value p90" x="300" y="122.6" font-size="12">$687k</text></g><g class="fade"><text x="300" y="178.7" font-size="10">Median</text><text class="mc-value p50" x="300" y="193" font-size="12">$402k</text></g><g class="fade"><text x="300" y="221" font-size="10">P10</text><text class="mc-value p10" x="300" y="235.3" font-size="12">$230k</text></g></svg><!-- /build:mc-narrow --></div>
-      <figcaption>Cumulative profit from today, before advertising, storage and returns. Months at a loss: <span data-fill="months_losing">0</span> of <span data-fill="months_total">120,000</span>. Those three costs are where months turn negative, and no public page shows them.</figcaption>
-    </figure>
-
-    <figure class="figure case-figure" data-play>
-      <h3>The cliff public pages can't see</h3>
-      <p class="figure-intro">At day 271, Amazon's aged-inventory surcharge goes from <span data-fill="aged_rate_before">$1.50</span> to <span data-fill="aged_rate_after">$5.45</span> a cubic foot.</p>
-      <div class="chart-wide"><!-- build:aging-wide --><svg class="chart aging" viewBox="0 0 760 300" role="img" aria-labelledby="ag-w-t ag-w-d" preserveAspectRatio="xMidYMid meet"><title id="ag-w-t">What 1,000 units cost to store, by age</title><desc id="ag-w-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="64" x2="736" y1="252" y2="252"/><text x="54" y="252" font-size="13" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="64" x2="736" y1="168.8" y2="168.8"/><text x="54" y="168.8" font-size="13" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="64" x2="736" y1="85.7" y2="85.7"/><text x="54" y="85.7" font-size="13" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="64" x2="64" y1="252" y2="257"/><text x="64" y="275" font-size="13" text-anchor="middle">Day 0</text><line class="tick" x1="368.1" x2="368.1" y1="252" y2="257"/><text x="368.1" y="275" font-size="13" text-anchor="middle">181</text><line class="tick" x1="519.3" x2="519.3" y1="252" y2="257"/><text x="519.3" y="275" font-size="13" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="678.9" x2="678.9" y1="252" y2="257"/><text x="678.9" y="275" font-size="13" text-anchor="middle">366</text><line class="axis" x1="64" x2="736" y1="252" y2="252"/><path class="step draw" pathLength="1" d="M64,231.3 H368.1 V218.1 H418.5 V204.8 H468.9 V191.5 H519.3 V86.8 H569.7 V80.1 H620.1 V74.8 H678.9 V48.3 H736"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="519.3" x2="519.3" y1="191.5" y2="86.8"/><text class="leak-text" x="507.3" y="82.8" font-size="14" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-wide --></div>
-      <div class="chart-narrow"><!-- build:aging-narrow --><svg class="chart aging" viewBox="0 0 360 260" role="img" aria-labelledby="ag-n-t ag-n-d" preserveAspectRatio="xMidYMid meet"><title id="ag-n-t">What 1,000 units cost to store, by age</title><desc id="ag-n-d">Monthly storage plus Amazon's aged-inventory surcharge on 1,000 units of this listing, by how long they have sat. At day 271 it steps from $73 to $199 a month.</desc><line class="grid" x1="46" x2="352" y1="220" y2="220"/><text x="36" y="220" font-size="11" text-anchor="end" dominant-baseline="middle">$0</text><line class="grid" x1="46" x2="352" y1="147.4" y2="147.4"/><text x="36" y="147.4" font-size="11" text-anchor="end" dominant-baseline="middle">$100</text><line class="grid" x1="46" x2="352" y1="74.8" y2="74.8"/><text x="36" y="74.8" font-size="11" text-anchor="end" dominant-baseline="middle">$200</text><line class="tick" x1="46" x2="46" y1="220" y2="225"/><text x="46" y="241" font-size="11" text-anchor="middle">Day 0</text><line class="tick" x1="184.5" x2="184.5" y1="220" y2="225"/><text x="184.5" y="241" font-size="11" text-anchor="middle">181</text><line class="tick" x1="253.3" x2="253.3" y1="220" y2="225"/><text x="253.3" y="241" font-size="11" text-anchor="middle" class="ink strong">271</text><line class="tick" x1="326" x2="326" y1="220" y2="225"/><text x="326" y="241" font-size="11" text-anchor="middle">366</text><line class="axis" x1="46" x2="352" y1="220" y2="220"/><path class="step draw" pathLength="1" d="M46,201.9 H184.5 V190.4 H207.4 V178.8 H230.4 V167.2 H253.3 V75.8 H276.3 V70 H299.2 V65.4 H326 V42.2 H352"/><g class="fade" style="--after:calc(var(--mc-draw-ms) * .7)"><line class="leak" x1="253.3" x2="253.3" y1="167.2" y2="75.8"/><text class="leak-text" x="241.3" y="71.8" font-size="12" text-anchor="end">$73 → $199 a month</text></g></svg><!-- /build:aging-narrow --></div>
-      <figcaption>Storage plus surcharge on 1,000 of these units, by age, Jan–Sep rates. How close your stock sits to day 271 is in your inventory-age report. That's what the call is for.</figcaption>
-    </figure>
-
-    <p class="selection">We picked this listing because it had a finding. Of <span data-fill="brands_modeled">1,856</span> Amazon brands we've modeled from public pages, <span data-fill="brands_silent">1,473</span> showed nothing worth fixing. We say so.</p>
-
-    <details class="fold">
-      <summary>Method, assumptions, and what public data can't see</summary>
-      <div class="fold-body">
-        <ul>
-          <li>Read from the listing's public page on <span data-fill="captured_on">September 3, 2026</span>: price band, item weight, dimensions (large standard size) and sales rank (<span data-fill="rank_band">top 100 in Automotive</span>). Priced on <span data-fill="priced_on">September 30, 2026</span>.</li>
-          <li>Fees: Amazon's published 2026 US fulfilment schedules, <span data-fill="card_np_full">January 15 to October 14</span> and <span data-fill="card_peak_full">October 15 to January 14</span>, plus the <span data-fill="surcharge">3.5%</span> fuel and logistics surcharge; a <span data-fill="referral">12%</span> referral fee.</li>
-          <li>The item weight is a floor. Amazon bills the packed weight, so the unit sits at least this far past the edge.</li>
-          <li>Volume: about <span data-fill="units">3,600</span> units a month from the public sales rank, a curve that can be wrong by half or double; simulated that wide. This one listing: an estimated <span data-fill="sales_lo">$0.5M</span> to <span data-fill="sales_hi">$1.6M</span> a year in sales.</li>
-          <li>Landed cost: assumed at <span data-fill="landed">25%</span> of price, drifting 10% either way each month. No public page shows it.</li>
-          <li>Simulation: <span data-fill="years">10,000</span> years of twelve months from October 2026, each month on the card in force. Year-end profit: P10 <span data-fill="mc_p10">$230,000</span>, median <span data-fill="mc_p50">$402,000</span>, P90 <span data-fill="mc_p90">$687,000</span>.</li>
-          <li>Storage and aged-inventory rates: Amazon's schedule effective <span data-fill="storage_effective">January 15, 2026</span>.</li>
-          <li>What public data can't see: advertising, returns, the real landed cost, the packed weight, and how long each unit has sat.</li>
-        </ul>
+    <div data-reveal>
+      <span class="label label-box">Modeled on published data · Not a client · Not a result</span>
+      <h2>We gave our engine a real store's orders. <span class="tone">Then we opened what happened next.</span></h2>
+      <p class="lede">A real online retailer, about <span data-fill="store_sales">£9.8M</span> a year, published every order it took for anyone to study. Every call below was made using only the orders before it.</p>
+    </div>
+    <div class="calls">
+      <div class="call" data-reveal>
+        <p class="call-k">Repeat orders from its customers, the next <span data-fill="store_weeks">26</span> weeks</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_called">7,671</dd></div><div><dt>Happened</dt><dd data-fill="store_happened">7,865</dd></div></dl>
+        <p class="call-note"><span data-fill="store_off">2.5%</span> <span data-fill="store_more_less">more</span> than called. The engine chose its own cut-off, by a rule written before this study.</p>
       </div>
-    </details>
-
-    <div class="cta">
-      <a class="btn" href="/apply" data-cta="case-study">Book your call <span class="arrow" aria-hidden="true">→</span></a>
+      <div class="call" data-reveal style="--d: 120ms">
+        <p class="call-k">Regular customers it named as slipping away</p>
+        <dl><div><dt>Named</dt><dd data-fill="store_named">498</dd></div><div><dt>Never came back</dt><dd data-fill="store_named_gone">274</dd></div></dl>
+        <p class="call-note">They had spent <span class="money" data-fill="store_lost_spend">£318,525</span> the year before. Of the regulars it didn't name, <span data-fill="store_steady_back_share">80%</span> came back.</p>
+      </div>
+      <div class="call" data-reveal style="--d: 240ms">
+        <p class="call-k">Peak-season units of its <span data-fill="store_top_n">200</span> best sellers, called a month ahead</p>
+        <dl><div><dt>Called</dt><dd data-fill="store_q_called">542,981</dd></div><div><dt>Sold</dt><dd data-fill="store_q_happened">538,415</dd></div></dl>
+        <p class="call-note">September to November. <span data-fill="store_q_off">0.8%</span> apart over the quarter; a single month missed by up to <span data-fill="store_worst">13.9%</span>.</p>
+      </div>
+    </div>
+    <div class="proof-go" data-reveal>
+      <div class="cta"><a class="btn btn-lg" href="/apply" data-cta="proof">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+      <a class="more" href="/case-study">Every call, how it was made, and where it missed →</a>
     </div>
   </div>
 </section>
 
-<!-- 5 · How it works -->
-<section class="section" id="how">
-  <div class="wrap">
-    <h2 class="measure">About ninety minutes of your time. Then we run it.</h2>
-    <ol class="steps">
-      <li><h3>Book the call.</h3><p>Twenty minutes. We open your reports with you and price what public pages can't show: aged stock, low-inventory fees, an ad target set wrong.</p></li>
-      <li><h3>Hand over your exports, once.</h3><p>One scoped seat or a folder of reports. Banking, payouts and settings stay out of reach.</p></li>
-      <li><h3>We move. The Record measures.</h3><p>Every move is written down with its expected dollars before it goes live, then measured on your own reports, every week.</p></li>
-    </ol>
-  </div>
-</section>
-
-<!-- 6 · The offer and the risk reversal -->
+<!-- 3 · The offer, said once -->
 <section class="section night" id="offer">
-  <div class="wrap">
-    <div class="offer-grid">
-      <h2 class="offer-line">More profit than our bill every month, or you don't pay.</h2>
-      <p class="offer-why"><b>Why we can say it.</b> Every month is measured on its own exports before any invoice exists. A month that clears the fee is billed. One that doesn't is free: no credit, nothing carried. So we only take on accounts where the arithmetic clears the bill, and if yours doesn't, we tell you on the call.</p>
+  <div class="wrap offer-band">
+    <div data-reveal>
+      <span class="label">The offer</span>
+      <h2>$6,000 a month, billed only in a month that clears it.</h2>
+      <p class="lede">Your first month is free. After that, each month is measured on your own reports before any invoice exists. A month that doesn't clear the fee costs nothing.</p>
+      <p class="honest">Most brands we model show nothing worth fixing: <span data-fill="brands_silent">1,473</span> of <span data-fill="brands_modeled">1,856</span>. We say so on the call, and we don't take that work.</p>
     </div>
-    <div class="scope-grid">
-      <div>
-        <p class="price">$6,000 a month, flat.</p>
-        <p>Never a percentage of ad spend. Month to month. Your first month is free.</p>
+    <div data-reveal style="--d: 120ms">
+      <ol class="steps-mini">
+        <li><span class="n">01</span><b>Book the call.</b><span>20 minutes. We open your own reports with you.</span></li>
+        <li><span class="n">02</span><b>Hand over your exports.</b><span>Once. One scoped seat, or a folder of reports.</span></li>
+        <li><span class="n">03</span><b>We move. The Record measures.</b><span>Every week, every dollar called before it goes live.</span></li>
+      </ol>
+      <div class="offer-go">
+        <div class="cta"><a class="btn btn-lg" href="/apply" data-cta="offer">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+        <a class="more" href="/offer">The guarantee, in four layers →</a>
       </div>
-      <ul class="scope">
-        <li><b>Every SKU modeled, every week:</b> true margin, demand, stockout odds.</li>
-        <li><b>Every leak found and sealed:</b> prices, ad bleed, reorders, fee cliffs, Amazon claims.</li>
-        <li><b>Every dollar graded</b> on your own reports, misses included.</li>
-        <li><b>Inventory timed</b> against the fee cliffs.</li>
-        <li><b>The guarantee</b> around all of it.</li>
-      </ul>
     </div>
   </div>
 </section>
 
-<!-- 7 · The scoreboard -->
-<section class="section" id="scoreboard">
-  <div class="wrap board-grid">
-    <div>
-      <h2>What you'll see every month.</h2>
-      <p class="lede">One number, one sentence, one bar. Every move behind it is one click down, each with how we know.</p>
-    </div>
-    <figure class="board" aria-label="Illustration of the monthly scoreboard, not a client's numbers">
-      <span class="label">Illustration · not a client's numbers</span>
-      <p class="board-k">Proven since day one</p>
-      <p class="board-big money">$48,210</p>
-      <p class="board-line">This month your Record measured <b class="money">$9,140</b>. Our bill was <b>$6,000</b>. You're up <b class="money">$3,140</b>.</p>
-      <div class="bar" role="img" aria-label="Measured $9,140 against a $6,000 bill"><span class="bar-fill" style="width: 100%"></span><span class="bar-bill" style="left: 65.6%"></span></div>
-      <div class="bar-keys"><span class="k-bill" style="left: 65.6%">Our bill</span><span class="k-measured">Measured</span></div>
-    </figure>
-  </div>
-</section>
-
-<!-- 8 · Who runs it -->
-<section class="section" id="who">
-  <div class="wrap who-grid">
-    <h2>Who runs it.</h2>
-    <div class="stack">
-      <p>Hubricon is founder-operated. An applied mathematician builds the models and answers for every move. There's no photo here: the math has no age.</p>
-      <p>One operator means a limited number of accounts at once.</p>
-      <p>Everything we hold of yours, and your whole Record, exports free within one working day. Any day, including the day you leave.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 9 · The skeptic's questions -->
-<section class="section" id="faq">
-  <div class="wrap faq-grid">
-    <h2>Questions worth asking.</h2>
-    <div>
-      <details class="fold" data-q="attribution"><summary>How do you know which dollars you made?</summary>
-        <div class="fold-body"><p>Every move is written down with its expected dollars before it goes live. Afterwards each dollar is graded on your own reports: direct (Amazon paid it), isolated (on the exact line the move named), attributable (against a stated counterfactual), or unmeasurable, which banks nothing. A dollar counts once, never above what we promised, and only in a month it is still there: every move is measured again each month.</p></div></details>
-      <details class="fold" data-q="profit"><summary>What counts as profit?</summary>
-        <div class="fold-body"><p>Money that reaches your payout because of a move: a fee you stopped paying, ad spend that stopped burning, a price that keeps more per unit, a claim Amazon paid. Misses stay on the Record at what they actually earned.</p></div></details>
-      <details class="fold" data-q="too-good"><summary>Why isn't this too good to be true?</summary>
-        <div class="fold-body"><p>Because the bill waits for the proof. Your first month is free. After that, each month is measured on its own, and an invoice goes out only for a month that cleared the fee. We can afford that only because we take on accounts where the math clears.</p></div></details>
-      <details class="fold" data-q="bad-month"><summary>What happens in a month that underperforms?</summary>
-        <div class="fold-body"><p>Nothing you have to ask for. That month is free: no invoice, no credit, nothing carried into the next, and the work carries on. Leave any day with one email; any month you paid for that doesn't clear on its own number comes back to your bank.</p></div></details>
-      <details class="fold" data-q="data"><summary>What happens to my data?</summary>
-        <div class="fold-body"><p>We ask only for the reports the work needs, through one scoped seat or an upload. Never sold, never shared with another client. Export it any day; ask and it's deleted within thirty days. <a href="/your-data">How we handle it.</a></p></div></details>
-    </div>
-  </div>
-</section>
-
-<!-- 10 · The close -->
-<section class="section close" id="book">
+<!-- 4 · Education: the free library, as a strip -->
+<section class="section" id="learn">
   <div class="wrap">
-    <h2>More profit than our bill every month, or you don't pay.</h2>
-    <div class="cta"><a class="btn" href="/apply" data-cta="close">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+    <div data-reveal>
+      <span class="label">Education</span>
+      <h2>The method, given away. <span class="tone">Every lesson open, no email asked.</span></h2>
+    </div>
+<!-- build:library-strip -->
+<div class="lib-strip">
+  <a class="strip-tile" href="/learn/fee-staircase" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 1</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 152 H84 V128 H148 V100 H212 V66 H276 V34 H300"/>
+      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M148 128 V100"/>
+      <circle class="cv-hollow fade" style="--after:1100ms" cx="140" cy="128" r="5"/>
+      <circle class="cv-dot fade" style="--after:1100ms" cx="156" cy="100" r="5"/></svg></span>
+    <span class="strip-t">The Fee Staircase</span>
+    <span class="strip-a">For Amazon sellers · 8 lessons</span>
+  </a>
+  <a class="strip-tile" href="/learn/price-curve" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 2</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M24 156 C 90 30, 210 30, 296 156"/>
+      <path class="cv-guide draw" pathLength="1" style="--delay:1000ms" d="M96 75 H152"/>
+      <circle class="cv-hollow fade" style="--after:900ms" cx="96" cy="75" r="5"/>
+      <circle class="cv-bluedot fade" style="--after:1200ms" cx="152" cy="62" r="6"/></svg></span>
+    <span class="strip-t">The Price Curve</span>
+    <span class="strip-a">Amazon and Shopify · 8 lessons</span>
+  </a>
+  <a class="strip-tile" href="/learn/capital-and-cash" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 3</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <defs><clipPath id="cv-strip-capital-and-cash-below"><rect x="0" y="96" width="320" height="84"/></clipPath></defs>
+      <path class="cv-zero" d="M20 96 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/>
+      <g clip-path="url(#cv-strip-capital-and-cash-below)"><path class="cv-leak draw" pathLength="1" style="--delay:0ms" d="M20 64 C 70 64, 92 150, 150 150 S 240 66, 300 38"/></g></svg></span>
+    <span class="strip-t">Capital &amp; Cash</span>
+    <span class="strip-a">Amazon and Shopify · 7 lessons</span>
+  </a>
+  <a class="strip-tile" href="/learn/shopify-margin" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 4</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:0ms" d="M20 126 H156 V64 H300"/>
+      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M156 126 V64"/>
+      <circle class="cv-hollow fade" style="--after:1100ms" cx="146" cy="126" r="5"/>
+      <circle class="cv-dot fade" style="--after:1100ms" cx="168" cy="64" r="5"/>
+      <path class="cv-guide" d="M156 160 V132"/></svg></span>
+    <span class="strip-t">The Shopify Margin</span>
+    <span class="strip-a">For Shopify sellers · 6 lessons</span>
+  </a>
+  <a class="strip-tile" href="/learn/operators-math" data-play>
+    <span class="tile-cover night"><span class="cover-k">Course 5</span><svg class="cover-art" viewBox="0 0 320 180" aria-hidden="true">
+      <path class="cv-dim draw" pathLength="1" style="--delay:0ms" d="M24 44 H296 V76 H24 Z"/>
+      <path class="cv-line draw" pathLength="1" style="--delay:300ms" d="M24 108 H196 V140 H24 Z"/>
+      <path class="cv-leak draw" pathLength="1" style="--delay:900ms" d="M196 124 H296"/>
+      <path class="cv-guide" d="M296 76 V140"/></svg></span>
+    <span class="strip-t">The Operator&#39;s Math</span>
+    <span class="strip-a">Amazon and Shopify · 5 lessons</span>
+  </a>
+</div>
+<!-- /build:library-strip -->
+    <a class="more" href="/learn">All courses →</a>
+  </div>
+</section>
+
+<!-- 5 · The close -->
+<section class="section close night" id="book">
+  <div class="wrap">
+    <h2 data-reveal>More profit than our bill every month, or you don't pay.</h2>
+    <div class="cta" data-reveal style="--d: 200ms"><a class="btn btn-lg" href="/apply" data-cta="close">Book your call <span class="arrow" aria-hidden="true">→</span></a></div>
+    <p class="cta-note close-note">20 minutes. No card, ever.</p>
   </div>
 </section>
 
 </main>
 
-<footer class="foot">
-  <div class="wrap foot-in">
-    <span>Hubricon</span>
-    <nav aria-label="Footer"><a href="/learn">Learn</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></nav>
-    <p class="legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
+<!-- build:foot -->
+<footer class="site-foot night">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <a class="foot-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+      <p class="foot-motto">Paid on proof.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col"><p class="foot-k">The work</p><a href="/case-study">Proof</a><a href="/how-it-works">How it works</a><a href="/offer">The offer</a><a href="/manifesto">The manifesto</a></div>
+      <div class="foot-col"><p class="foot-k">Education</p><a href="/learn">All courses</a><a href="/learn/fee-staircase">The Fee Staircase</a><a href="/learn/price-curve">The Price Curve</a><a href="/learn/capital-and-cash">Capital &amp; Cash</a><a href="/learn/shopify-margin">The Shopify Margin</a><a href="/learn/operators-math">The Operator&#39;s Math</a></div>
+      <div class="foot-col"><p class="foot-k">Trust</p><a href="/terms#how-a-dollar-counts">How a dollar counts</a><a href="/honesty">What is true today</a><a href="/your-data">Your data</a><a href="/verify">Check a Profit Record</a></div>
+      <div class="foot-col"><p class="foot-k">Legal</p><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <p class="foot-legal"><span data-proof-pending>No client results are published yet; the first appears when a client agrees to publish theirs. </span>Case-study figures are estimates modeled from public pages and Amazon's published fee schedules. The scoreboard is an illustration. © 2026 Hubricon</p>
   </div>
 </footer>
+<!-- /build:foot -->
 
 <script type="module" src="/assets/home.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>

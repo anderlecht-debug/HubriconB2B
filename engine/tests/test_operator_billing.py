@@ -90,15 +90,24 @@ def test_recovery_only_never_enters_the_day_30_machinery(monkeypatch):
     assert db.rows("clients")[0].get("billing_decision") is None
 
 
+def _calls(old, *ids):
+    """Each client's application call, held fifteen days ago: since 2026-10-01
+    the nudges and the downsell count from the call, not the booking."""
+    return [{"id": f"b-{i}", "client_id": i, "event_type": "Margin audit", "starts_at": old, "created_at": old,
+             "welcome_sent_at": None} for i in ids]
+
+
 def test_the_downsell_email_goes_once_at_day_14_to_an_amazon_seller_only(monkeypatch):
     sent = []
-    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind, **k: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_agreed_letters", lambda self: None)
     old = (date.today() - timedelta(days=15)).isoformat() + "T00:00:00Z"
     db = FakeDB(
         clients=[{"id": "a", "contact_email": "a@x.com", "status": "pending", "platform": "amazon", "created_at": old},
                  {"id": "s", "contact_email": "s@y.com", "status": "pending", "platform": "shopify", "created_at": old},
                  {"id": "r", "contact_email": "r@z.com", "status": "pending", "platform": "amazon", "plan": "recovery",
                   "created_at": old}],
+        bookings=_calls(old, "a", "s", "r"),
         uploads=[],
         client_touches=[{"client_id": "a", "kind": "welcome", "sent_at": old},
                         {"client_id": "a", "kind": "nudge", "sent_at": old},
@@ -122,12 +131,14 @@ def test_the_downsell_email_names_the_share_and_asks_for_the_word():
     assert "smaller door" in spec["subject"].lower()
 
 
-def test_a_founder_who_chose_recovery_on_the_site_gets_none_of_the_teardown_nudges(monkeypatch):
+def test_a_founder_who_chose_recovery_on_the_site_gets_none_of_the_export_nudges(monkeypatch):
     sent = []
-    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_reonboard", lambda self, c, kind, **k: sent.append((c["id"], kind)))
+    monkeypatch.setattr(operator.Pass, "_agreed_letters", lambda self: None)
     old = (date.today() - timedelta(days=15)).isoformat() + "T00:00:00Z"
     db = FakeDB(
         clients=[{"id": "g", "contact_email": "g@x.com", "status": "pending", "platform": "amazon", "created_at": old}],
+        bookings=_calls(old, "g"),
         uploads=[],
         client_touches=[{"client_id": "g", "kind": "recovery_welcome", "sent_at": old}],
     )
@@ -154,20 +165,41 @@ def test_every_client_email_closes_on_the_record_line_except_the_billing_letters
     monkeypatch.setattr(cli, "send_email", lambda to, subject, text, html=None, **k: sent.append((subject, text, html)) or True)
     made = {"id": "d1", "client_id": "c1", "status": "approved", "executed_at": "2026-09-01T00:00:00Z",
             "measured_impact_usd": None, "expected_impact_usd": 2400.0}
+    months = [{"client_id": "c1", "channel": "amazon", "month_index": 0, "month_start": "2026-08-02",
+               "month_end": "2026-09-01", "free": True, "attributed_usd": 4100.0, "disputed_usd": 0.0,
+               "fee_usd": 6000.0, "clears": False, "moves": []}]
     db = FakeDB(clients=[_client()], directives=_measured(1, 5415.0) + [made], recovery_claims=[],
-                invoices=[_inv(1, "paid", "2026-09-01")], client_emails=[])
+                invoices=[_inv(1, "paid", "2026-09-01")], client_emails=[], record_months=months)
     client = dict(db.rows("clients")[0])
-    line = ("Your Profit Record: $5,415 proven since day one · $2,400 found and filed, not yet banked · "
-            "$6,000 billed to date · 0.9× proven ÷ billed.")
+    # The footer's figure is the closed months (value.proven_since_day_one), not the
+    # $5,415 the moves measured on their own windows: the portal shows the months.
+    line = ("Your Profit Record: $4,100 proven since day one · $2,400 found and filed, not yet banked · "
+            "$6,000 billed to date · 0.7× proven ÷ billed.")
 
     assert cli._send_client_email(db, client, "issue_ready", "b1", "Profit Brief No. 002", [{"p": "It is ready."}], True)
     subject, text, html = sent[-1]
     assert line in text and line in html and text.index("It is ready.") < text.index(line)
+    assert "$5,415" not in text
 
-    for kind in ("guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"):
+    # Before a month has closed the same footer says what it is: measured so far.
+    db.store["record_months"] = []
+    assert cli._send_client_email(db, client, "issue_ready", "b1b", "Profit Brief No. 002", [{"p": "Ready."}], True)
+    assert ("Your Profit Record: $5,415 measured so far, your first month closed September 1 · $2,400 found "
+            "and filed, not yet banked · $6,000 billed to date · 0.9× measured ÷ billed.") in sent[-1][1]
+    db.store["record_months"] = months
+
+    # Billing letters carry no cumulative footer: each is about one month's number.
+    for kind in ("billing_started", "month_cleared", "month_unbilled", "exit_true_up", "recovery_invoice",
+                 "referral_credit", "month_refunded_later"):
         assert cli._send_client_email(db, client, kind, f"ref-{kind}", "verdict", [{"p": "The arithmetic."}], True)
-        assert "Your Profit Record:" not in sent[-1][1]
-    assert cli.RECORD_FOOTER_EXEMPT == {"guarantee_cleared", "guarantee_short", "month_waived", "exit_true_up"}
+        assert "Your Profit Record:" not in sent[-1][1], kind
+    assert cli.RECORD_FOOTER_EXEMPT == {"billing_started", "month_cleared", "month_unbilled", "exit_true_up",
+                                        "recovery_invoice", "referral_credit"}
+    # The stale kinds the old list named no longer exist anywhere in the machine.
+    import pathlib
+    src = "".join(p.read_text() for p in pathlib.Path(cli.__file__).parent.rglob("*.py"))
+    for gone in ("guarantee_cleared", "guarantee_short", "month_waived"):
+        assert gone not in src, gone
 
     # A footer failure never blocks the letter.
     monkeypatch.setattr(cli, "_fetch_claims", lambda db, cid: (_ for _ in ()).throw(RuntimeError("claims table missing")))
@@ -175,27 +207,59 @@ def test_every_client_email_closes_on_the_record_line_except_the_billing_letters
     assert "Still ready." in sent[-1][1] and "Your Profit Record:" not in sent[-1][1]
 
 
+def test_a_month_letter_never_carries_a_figure_that_disagrees_with_its_month(monkeypatch):
+    """The gate's letters state one month's number. A since-day-one figure under
+    it would be a second number moving with every other month and dispute; the
+    letter goes without, so the only dollar figure in it is the month's own."""
+    import re
+    sent = []
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setattr(cli, "send_email", lambda to, subject, text, html=None, **k: sent.append((subject, text)) or True)
+    month = {"index": 1, "start": date(2026, 9, 2), "end": date(2026, 10, 1), "free": False}
+    rows = [{"client_id": "c1", "channel": "amazon", "month_index": 0, "month_start": "2026-08-02",
+             "month_end": "2026-09-01", "attributed_usd": 3000.0, "disputed_usd": 0.0, "moves": []},
+            {"client_id": "c1", "channel": "amazon", "month_index": 1, "month_start": "2026-09-02",
+             "month_end": "2026-10-01", "attributed_usd": 8200.0, "disputed_usd": 500.0, "moves": []}]
+    db = FakeDB(clients=[_client()], directives=[], recovery_claims=[], invoices=[], client_emails=[],
+                record_months=rows)
+    client = dict(db.rows("clients")[0])
+    v = billing.month_verdict(rows, month, client)
+    assert v["total"] == 7700.0 and v["clears"]
+    assert cli._send_client_email(db, client, "month_cleared", "in_9", f"${v['total']:,.0f} on your Record",
+                                  billing.cleared_month_email_blocks(v, "https://x/portal"), True)
+    figures = set(re.findall(r"\$\d[\d,]*\d|\$\d", sent[-1][1]))
+    assert figures <= {"$7,700", "$6,000", "$1,700"}, figures       # the month, the fee, the margin; nothing since day one
+    assert "$10,700" not in sent[-1][1]                             # the since-day-one figure is not in it
+
+
 def test_the_issue_email_leads_with_the_record_not_the_periods_net_profit():
     """The briefings row keeps the net-profit headline for the portal; the
-    inbox gets the numbers the invoice is judged on. 'Net profit down $300'
-    is a period proxy — the Record is proven and found since day one."""
+    inbox gets the Record's one figure (value.proven_since_day_one), named
+    for its basis, and what is found."""
     headline = "Profit Brief No. 007 — net profit down $300"
-    subject = cli._issue_subject(7, headline, 13870, 2400)
+    months = {"usd": 13870.0, "basis": "months", "label": value.PROVEN_LABEL}
+    subject = cli._issue_subject(7, headline, months, 2400)
     assert subject == "Profit Brief No. 007 — $13,870 proven, $2,400 found on your Record"
-    assert "proven" in subject and "net profit" not in subject
+    assert "net profit" not in subject
+    early = {"usd": 5415.0, "basis": "measured", "label": "Measured so far · your first month closes November 1"}
+    assert cli._issue_subject(7, headline, early, 2400) == \
+        "Profit Brief No. 007 — $5,415 measured so far, $2,400 found on your Record"
     # Found alone is enough to lead with the Record; an empty Record falls back as before.
-    assert cli._issue_subject(7, headline, 0, 2400) == "Profit Brief No. 007 — $0 proven, $2,400 found on your Record"
-    assert cli._issue_subject(7, headline, 0, 0) == "Profit Brief No. 007 — net profit down $300"
-    assert cli._issue_subject(7, "Profit Brief No. 007", 0, 0) == "Profit Brief No. 007 is in Hubricon"
+    zero = {"usd": 0.0, "basis": "measured", "label": value.MEASURED_LABEL}
+    assert cli._issue_subject(7, headline, zero, 2400) == \
+        "Profit Brief No. 007 — $0 measured so far, $2,400 found on your Record"
+    assert cli._issue_subject(7, headline, zero, 0) == "Profit Brief No. 007 — net profit down $300"
+    assert cli._issue_subject(7, "Profit Brief No. 007", zero, 0) == "Profit Brief No. 007 is in Hubricon"
 
-    blocks = cli._issue_email_blocks(7, 13870, 2400, has_video=True)
+    blocks = cli._issue_email_blocks(7, months, 2400, has_video=True)
     assert blocks[0] == {"p": "Your Profit Brief is ready — $13,870 proven on your Record since day one, "
                               "$2,400 found and filed."}
     body = " ".join(b.get("p", "") for b in blocks)
     assert "net profit" not in body and "short video" in body
     assert "Before it goes live" in body                     # the veto section is named as the portal names it
-    assert cli._issue_email_blocks(7, 0, 0, has_video=False)[0]["p"] == \
-        "Your Profit Brief is ready — $0 proven on your Record since day one, $0 found and filed."
+    assert cli._issue_email_blocks(7, early, 0, has_video=False)[0]["p"] == \
+        ("Your Profit Brief is ready — $5,415 measured on your Record so far (your first month closes "
+         "November 1), $0 found and filed.")
 
 
 # -- the legal clocks in the digest ----------------------------------------------------
@@ -454,12 +518,15 @@ def test_the_exit_true_up_checks_every_billed_month_and_runs_once(monkeypatch):
                           _bill(3, "draft", 3)],
                 record_months=[_month_row(1, 9000.0), _month_row(2, 7000.0, disputed=1500.0)],
                 directives=[], recovery_claims=[], client_emails=[], funnel_events=[])
-    operator.Pass(db, send=False, dry=False).billing()
+    monkeypatch.setattr(operator, "email_configured", lambda: True)
+    operator.Pass(db, send=True, dry=False).billing()
     assert "invoices/in_3/void" in calls and "credit_notes" in calls
     assert db.rows("clients")[0]["exit_trued_up_at"]
     assert [k for k, _ in letters] == ["exit_true_up"]
+    # The held draft was for the month in progress: voided, and marked as never sent.
+    assert {r["id"]: r.get("gate_note") for r in db.rows("invoices")}["i3"] == billing.EXIT_UNSENT_NOTE
     n = len(calls)
-    operator.Pass(db, send=False, dry=False).billing()
+    operator.Pass(db, send=True, dry=False).billing()
     assert len(calls) == n
 
 

@@ -27,13 +27,8 @@
       "permanent": false
     },
     {
-      "source": "/how-it-works",
-      "destination": "/",
-      "permanent": false
-    },
-    {
       "source": "/method",
-      "destination": "/",
+      "destination": "/how-it-works",
       "permanent": false
     },
     {
