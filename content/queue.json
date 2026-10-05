@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T11:18:55+00:00",
+ "updated_at": "2026-10-05T11:24:35+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -1023,8 +1023,8 @@
    "models": [
     "margin"
    ],
-   "status": "in_progress",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.",
    "requires_done": null,
    "voice": "library",
    "publishable": false,
@@ -1037,7 +1037,7 @@
     "timing": "done",
     "scenes": "done",
     "assemble": "done",
-    "qa": "todo",
+    "qa": "blocked",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
@@ -1121,6 +1121,11 @@
      "at": "2026-10-05T11:18:52+00:00",
      "step": "assemble",
      "note": "done"
+    },
+    {
+     "at": "2026-10-05T11:24:32+00:00",
+     "step": "qa",
+     "note": "blocked Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film"
     }
    ]
   },
