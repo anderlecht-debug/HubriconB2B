@@ -664,10 +664,32 @@ class HubriconScene(Scene):
         since_land = self.clock - self._last_land
         return max(0.0, min(BUILD_CUT_S - age, SHOT_MAX_S - since_land))
 
-    def hold_to(self, until: float):
+    def cluster_end(self, ts: list[float], i: int) -> float:
+        """The last moment the picture coming out of a hold at `ts[i]` still has to be
+        legal: figures landing closer together than a card and a return leave no window
+        for a cut, so whatever picture carries the first of them carries the whole run.
+
+        V05's first chapter is why the look-ahead exists. The chart spent its entire
+        build clock on the drift up to a run of six figures three seconds apart, and
+        then no legal cut fitted between any of them, so one picture held thirty-six
+        seconds and failed the cadence (its QA, 2026-10-05). Reading the gap in front
+        of a hold is not enough; the run behind it has to be read too."""
+        for j in range(i + 1, len(ts)):
+            if ts[j] - ts[j - 1] >= 2 * SHOT_MIN_S:
+                return ts[j - 1]
+        return ts[-1] if ts else 0.0
+
+    def hold_to(self, until: float, survive_to: float | None = None):
         """Hold the stage until `until` seconds into the segment: drifting, never
         frozen (§3.4), and never one picture past the cadence (§4). A stretch longer
-        than the chart's clock allows cuts away to the narration and comes back."""
+        than the chart's clock allows cuts away to the narration and comes back.
+
+        `survive_to` is the moment the picture this hold leaves on screen must still be
+        legal at — the end of a run of landings the cadence cannot cut inside. The hold
+        takes its cut while a window for one exists rather than spending the build clock
+        on the drift in front of the run. A run longer than the build clock with no
+        window in it is the one case nothing here can rescue: the figures have to land
+        when they are spoken, so the picture carries them and the measurement says so."""
         while True:
             rest = until - self.clock
             if rest <= 0.05:
@@ -676,7 +698,8 @@ class HubriconScene(Scene):
                 self.wait(rest)
                 return
             room = self.room_left()
-            if rest <= room or rest < SHOT_MIN_S:
+            need = max(rest, (survive_to if survive_to is not None else until) - self.clock)
+            if need <= room or rest < SHOT_MIN_S:
                 self.drift(rest)
                 return
             # the chart holds what it may, keeping back a shot for the line and a shot
@@ -794,15 +817,17 @@ class HubriconScene(Scene):
 
     def reveal_loop(self, handlers: dict | None = None, skip: set | None = None):
         """Walk the spoken figures in time order; a handler draws the special
-        ones, everything else becomes a callout."""
+        ones, everything else becomes a callout. Each hold is told where the run of
+        figures it leads into ends, so the chart cuts before a dense run rather than
+        inside it, where no cut fits (see `cluster_end`)."""
         handlers = handlers or {}
         skip = skip or set()
         reveals = sorted(self.seg.get("reveals", {}).items(), key=lambda kv: kv[1]["t"])
-        for key, r in reveals:
-            if key in skip:
-                continue
-            t = max(0.0, float(r["t"]) - float(self.seg["start"]))
-            self.hold_to(t)
+        reveals = [(k, r) for k, r in reveals if k not in skip]
+        ts = [max(0.0, float(r["t"]) - float(self.seg["start"])) for _, r in reveals]
+        for i, (key, r) in enumerate(reveals):
+            t = ts[i]
+            self.hold_to(t, survive_to=self.cluster_end(ts, i))
             fact = self.facts.get(key, {})
             if key in handlers:
                 for prev in self.callout_stack:   # the annotation takes the blue; earlier figures step back

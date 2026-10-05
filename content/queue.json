@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T10:30:02+00:00",
+ "updated_at": "2026-10-05T10:57:24+00:00",
  "style_locked": true,
  "capabilities": {
   "elevenlabs_key": true,
@@ -867,8 +867,8 @@
     "inventory_sim",
     "margin"
    ],
-   "status": "in_progress",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in ink.",
    "requires_done": null,
    "voice": "library",
    "publishable": false,
@@ -881,7 +881,7 @@
     "timing": "done",
     "scenes": "done",
     "assemble": "done",
-    "qa": "todo",
+    "qa": "blocked",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
@@ -965,6 +965,11 @@
      "at": "2026-10-05T10:30:00+00:00",
      "step": "assemble",
      "note": "done"
+    },
+    {
+     "at": "2026-10-05T10:57:21+00:00",
+     "step": "qa",
+     "note": "blocked Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in"
     }
    ]
   },

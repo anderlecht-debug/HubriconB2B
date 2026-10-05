@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-05T10:30:02+00:00 · style locked: True
+Updated 2026-10-05T10:57:24+00:00 · style locked: True
 
 ## Capabilities
 
@@ -14,7 +14,7 @@ Updated 2026-10-05T10:30:02+00:00 · style locked: True
 
 ## Now
 
-- V05 · Cash conversion cycle: the number that decides whether you survive · step qa
+- idle
 
 ## Awaiting your review
 
@@ -44,6 +44,7 @@ Updated 2026-10-05T10:30:02+00:00 · style locked: True
 - F02 · The store study's film: a real store's orders, called before and measured after: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice store-study-film own (so the description says it is his own voice).
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
+- V05 · Cash conversion cycle: the number that decides whether you survive: Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in ink.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
