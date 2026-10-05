@@ -259,6 +259,11 @@
   "label": "supplier wires that leave on or before the low point's day",
   "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "end_p50": {
+  "value": "$336,443",
+  "label": "median cash on the horizon's last day, across every simulated path",
+  "source": "cash horizon on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "end_p5": {
   "value": "$323,149",
   "label": "fifth-percentile cash on the horizon's last day, across every simulated path",
@@ -414,9 +419,9 @@
   "label": "SKUs simulated",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
- "inv_sims": {
-  "value": "0",
-  "label": "simulated lead times per SKU",
+ "inv_method": {
+  "value": "computed exactly",
+  "label": "how each SKU's stockout odds are found (exact: lognormal–Poisson mixture, trapezoid rule in z)",
   "source": "MONTE_CARLO.RUN on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "stockout_worst_sku": {
@@ -1391,12 +1396,12 @@
  },
  "w_ring_dozen": {
   "value": "more than 450 dozen",
-  "label": "the ring maker's yearly sales before",
+  "label": "the ring maker's sales so far that year, before the buyer's offer",
   "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919)"
  },
  "w_ring_order": {
   "value": "5,000 gross",
-  "label": "the order Woolworth's buyer offered",
+  "label": "what Woolworth's buyer offered to take over the next year",
   "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/chainstorestheir00haywiala (Hayward & White, Chain Stores, 1922)"
  },
  "w_ring_units": {
@@ -1551,7 +1556,7 @@
  },
  "w_west_limit": {
   "value": "15 cents",
-  "label": "the ceiling west of the Rockies and in Canada",
+  "label": "the ceiling in some districts west of the Rockies and in Canada",
   "source": "https://archive.org/details/sim_marketing-communications-1888_1919-04-17_107_3 (Printers' Ink, April 17, 1919); https://archive.org/details/sim_marketing-communications-1888_1917-05-31_99_9"
  },
  "w_west_points": {
@@ -1692,7 +1697,7 @@
  "w_circus": {
   "value": "The circus had come to Lancaster, complete with its traditional parade down city streets.",
   "label": "the scene on opening day, as the company's centennial report tells it (the parade, and Woolworth spending the morning worrying whether anyone would come)",
-  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text)"
  },
  "w_people_quote": {
   "value": "One of the first things I learned was that I could not expect people to come to me. I had to take my store to the people.",
@@ -1702,12 +1707,12 @@
  "w_tried_quote": {
   "value": "did not yield satisfactory sales and profits",
   "label": "the company's centennial report on Woolworth's early experiment with 25-cent goods",
-  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text)"
  },
  "w_redfronts": {
   "value": "carmine red-fronts",
   "label": "the identical store fronts, in the company's centennial report",
-  "source": "https://archive.org/details/sim_worlds-work_1913-04_25_6 (The World's Work, April 1913, 'Mr. F. W. Woolworth's Story')"
+  "source": "https://archive.org/details/woolworthvenatorfootlockerannualreports (woolworth1979, the company's centennial report; read on the scan's text)"
  },
  "w_vats_quote": {
   "value": "You can't afford to use brushes. Throw the toys in vats. Dip them. Then you can leave off this little red stripe and this little yellow stripe.",

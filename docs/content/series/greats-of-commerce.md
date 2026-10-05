@@ -67,7 +67,7 @@ five devices, all true:
 4. **The depth, shown and not claimed.** Act IV and V show the actual models working: the cash cone
    of ten thousand paths, the elasticity curve with its confidence band, the fee staircase for every
    SKU. Then one true sentence about where that comes from: *"This is applied mathematics: the same
-   tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every month, for every SKU."*
+   tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every SKU."*
    Never a claim of years, clients or results that does not exist (HUBRICON.md).
 5. **The honest limit.** What the viewer can do by hand (the top five SKUs, this week, worth doing),
    where it breaks (every SKU, every two weeks, with enough data to know the answer is not noise),
@@ -155,7 +155,7 @@ makes a film feel authored.
   two seconds of no voice, the bed rising. This is the film's emotional peak.
 - **Act IV:** the classroom. Chart builds up to thirty seconds with something new every eight; the
   counterfactual; the range band. Calm, exact, generous.
-- **Act V:** the return. The callback to the object, the thesis line, the end card.
+- **Act V:** the return, then the close. The callback to the object and the thesis line come first; the honest limit and the spec's soft close are the film's last words, over the end card (HUBRICON_SPEC.md: every piece ends on the soft close).
 
 ### 4.5 Sound is half the picture
 
@@ -261,8 +261,8 @@ engine's elasticity and price-move figures.
 | I · One price | 1:27–5:35 | The clerk; Moore's five-cent table (he ran it, he didn't invent it); Utica's failure and "take my store to the people"; the charm of one price; the 25-cent test he ran once and dropped; the chain. |
 | II · Price first | 5:38–11:17 | The arithmetic of a nickel: a gross at $7.20, and the margin that changes under every line; the one-price store as a portfolio; cash and the auditors; the ring redesigned to sell at a dime; "throw the toys in vats"; the price as the advertising; "Profit is what we are working for, not sales or glory"; the Cathedral of Commerce. |
 | III · The ceiling | 11:20–18:37 | Holding a dime through the war by shrinking the unit (one stocking for ten cents); net earnings from 9.43% to 5.46% of sales, with the tax and the reserve stated; the West's 15-cent ceiling (a different price in a different place is not a price test); profit per store halved; the 1932 test in some stores, in deflation, not inflation; the promise of January 1933, broken within three years. |
-| IV · Your dime | 18:26–26:20 | The price you set once and left; elasticity shown on log scales, then named, with the worked product's own slope (−7.35) pulled toward the catalogue's (−2.74); why a raise that loses units can pay, on the margin before ads; the hill, whose top the model will not mark for any demo product, only the direction uphill; the products the fit refused; the honest range, which crosses zero; why movement, not months, narrows it; the biggest recommended step ($16 a month at the middle of a 90% band, a 1% chance of loss); what a held price costs: small here, because the model puts 98% on the demo already being priced about right, and unknowable for the dimes; when the price is the brand; testing in time. |
-| V · The method and the honest limit | 26:20–29:20 | This week's steps, the course's whole method (units a day, the 2% rule, the log fit and its range, the minus-one rule, the best-price formula, a predicted step); where by hand breaks; the soft close; the Price Curve course; "Your prices can." |
+| IV · Your dime | 18:26–26:20 | The price you set once and left; elasticity shown on log scales, then named, with the worked product's own slope (−7.35) pulled toward the catalogue's (−2.74); why a raise that loses units can pay (how many you can afford to lose is the margin, how many you will lose is the slope), and what minus one means; the hill, whose top the model will not mark for any demo product; the products the fit refused; the honest range, which crosses zero; why movement, not months, narrows it; how to step when you can't see the top (work it out at the estimate and both ends of the range; agree, step; disagree, step small); what a held price costs: a number nobody can know until it moves; when the price is the brand; testing in time. The engine's direction confidence and its 'already priced right' probability are not spoken: they rest on a cost-basis mismatch in the markup-implied elasticity (see the commit of this revision). |
+| V · The method and the honest limit | 26:20–29:20 | This week's steps, the course's whole method (units a day, the 2% rule, the log fit and its range, the minus-one rule, the best-price formula, a predicted step, watch and reverse); the return to Lancaster ("Your prices can."); where by hand breaks; the soft close; the Price Curve course. |
 
 Object: the dime, pushed toward three times (its face, its edge at the turn, its date at the lesson),
 then a modern shelf label in the same framing. Bridge: every item in the store on a single vertical
