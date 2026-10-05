@@ -1,10 +1,10 @@
 {
  "version": 1,
- "updated_at": "2026-10-04T17:28:58+00:00",
+ "updated_at": "2026-10-05T05:07:55+00:00",
  "style_locked": false,
  "capabilities": {
   "elevenlabs_key": true,
-  "founder_voice_id": null,
+  "founder_voice_id": "1fz2mW1imKTf5Ryjk5su",
   "youtube_token": false,
   "youtube_client": false,
   "textures_cached": false,
@@ -490,17 +490,17 @@
     "mc",
     "risk"
    ],
-   "status": "blocked",
-   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
+   "status": "in_progress",
+   "blocked_on": null,
    "requires_done": null,
-   "voice": null,
+   "voice": "library",
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "blocked",
+    "tts": "done",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -509,7 +509,7 @@
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "blocked"
+    "upload": "todo"
    },
    "review_notes": [],
    "attempts": {},
@@ -558,6 +558,16 @@
      "at": "2026-10-02T16:09:58+00:00",
      "step": "tts",
      "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 01-survivorship-bias opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
+    },
+    {
+     "at": "2026-10-05T05:06:17+00:00",
+     "step": "unblock",
+     "note": "input arrived; unit returned to the queue"
+    },
+    {
+     "at": "2026-10-05T05:07:52+00:00",
+     "step": "tts",
+     "note": "done"
     }
    ]
   },
@@ -649,8 +659,8 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "blocked",
-   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 04-ab-test-sample-size opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -659,7 +669,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "blocked",
+    "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -668,7 +678,7 @@
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "blocked"
+    "upload": "todo"
    },
    "review_notes": [],
    "attempts": {},
@@ -722,6 +732,11 @@
      "at": "2026-10-02T16:10:15+00:00",
      "step": "tts",
      "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 04-ab-test-sample-size opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
+    },
+    {
+     "at": "2026-10-05T05:06:17+00:00",
+     "step": "unblock",
+     "note": "input arrived; unit returned to the queue"
     }
    ]
   },
@@ -739,8 +754,8 @@
     "inventory_sim",
     "margin"
    ],
-   "status": "blocked",
-   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 05-cash-conversion-cycle opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -749,7 +764,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "blocked",
+    "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -758,7 +773,7 @@
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "blocked"
+    "upload": "todo"
    },
    "review_notes": [],
    "attempts": {},
@@ -812,6 +827,11 @@
      "at": "2026-10-02T16:10:28+00:00",
      "step": "tts",
      "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 05-cash-conversion-cycle opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
+    },
+    {
+     "at": "2026-10-05T05:06:17+00:00",
+     "step": "unblock",
+     "note": "input arrived; unit returned to the queue"
     }
    ]
   },
@@ -865,8 +885,8 @@
    "models": [
     "margin"
    ],
-   "status": "blocked",
-   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 07-contribution-vs-gross-margin opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -875,7 +895,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "blocked",
+    "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -884,7 +904,7 @@
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "blocked"
+    "upload": "todo"
    },
    "review_notes": [],
    "attempts": {},
@@ -938,6 +958,11 @@
      "at": "2026-10-02T16:10:40+00:00",
      "step": "tts",
      "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 07-contribution-vs-gross-margin opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
+    },
+    {
+     "at": "2026-10-05T05:06:17+00:00",
+     "step": "unblock",
+     "note": "input arrived; unit returned to the queue"
     }
    ]
   },
@@ -954,8 +979,8 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "blocked",
-   "blocked_on": "The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 08-elasticity-plain-english opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -964,7 +989,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "blocked",
+    "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -973,7 +998,7 @@
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "blocked"
+    "upload": "todo"
    },
    "review_notes": [],
    "attempts": {},
@@ -1027,6 +1052,11 @@
      "at": "2026-10-02T16:10:52+00:00",
      "step": "tts",
      "note": "blocked The founder's voice: record his own takes per docs/content/VOICE-RECORDING.md (node content/film/record.mjs 08-elasticity-plain-english opens the teleprompter on the approved script), or run hubricon-content voice-clone --name \"Hagen Simmons\" <wav files> and set ELEVENLABS_VOICE_ID in .env. Until then there is no narration to align, so timing and the Manim scenes cannot start."
+    },
+    {
+     "at": "2026-10-05T05:06:17+00:00",
+     "step": "unblock",
+     "note": "input arrived; unit returned to the queue"
     }
    ]
   },
