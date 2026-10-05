@@ -255,9 +255,16 @@ class Net:
 
     def head_bytes(self, source: str, url: str, n: int = 65536) -> bytes:
         """The first `n` bytes of a file (a TIFF's header, for its size), by a range request."""
-        r = self._send(source, url, headers={"Range": f"bytes=0-{n - 1}"}, limiter_key=f"{source}:files")
+        r = self._send(source, url, headers={"Range": f"bytes=0-{n - 1}"}, stream=True, limiter_key=f"{source}:files")
         self._count(source, "requests")
-        return r.content[:n]
+        buf = b""
+        for chunk in (r.iter_content(1 << 14) if hasattr(r, "iter_content") else [r.content]):
+            buf += chunk
+            if len(buf) >= n:                 # a server that ignores the range is not read to the end
+                break
+        if hasattr(r, "close"):
+            r.close()
+        return buf[:n]
 
     def download(self, source: str, url: str, dest: Path) -> Path:
         """Fetch a file once into content/.cache/assets/ (download, never hotlink)."""

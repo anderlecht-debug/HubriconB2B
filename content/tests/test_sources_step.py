@@ -73,6 +73,7 @@ def film(tmp_path, monkeypatch):
         ("loc", "bank teller window photograph"): [image("loc", 1, "i1.jpg"), image("loc", 2, "i2.jpg")],
         ("commons", "bank teller window photograph"): [image("commons", 1, "i3.jpg")],
         ("pexels", "night port"): [video("pexels", 9, "dark2.mp4")],
+        ("loc", "teller ledger"): [image("loc", 7, "i1.jpg"), image("loc", 8, "i2.jpg"), image("loc", 9, "i3.jpg")],
     }
 
     def search(source, query, kind="video", n=40, *, net=None):
@@ -109,7 +110,8 @@ def test_the_source_step_sources_a_plan(film):
         assert isinstance(c["checks"], dict) and isinstance(c["passed_filters"], bool)
     refused = {c["id"]: c["rejected_because"][0] for c in rec["candidates"] if not c["passed_filters"]}
     assert "night or low-key" in refused["pexels:2"] and "no continuous take" in refused["pexels:3"]
-    assert sorted(c["sheet_index"] for c in rec["candidates"]) == list(range(len(rec["candidates"])))
+    shown = [(i, c) for i, c in enumerate(rec["candidates"]) if "sheet_index" in c]
+    assert shown and all(c["sheet_index"] == i for i, c in shown)              # the label is the place in <shot>.json
     assert (d / "sources" / "s001.jpg").exists() and (d / "sources" / "s002.jpg").exists()
     assert rec["filters"]["ocr"] == filters.OCR_UNAVAILABLE
 
@@ -206,3 +208,34 @@ def test_the_contact_sheet_labels_and_marks_refusals(tmp_path):
     from PIL import Image
     im = Image.open(out)
     assert im.width >= 3 * 960 and im.height > 300
+
+
+def test_an_archive_that_finds_nothing_is_asked_once_more_by_the_nouns(film):
+    p = json.loads((film["dir"] / "shots.json").read_text())
+    extra = dict(p["shots"][1], id="s006", start=27.0, end=33.0, query=["teller counting ledger photograph"], sources=["loc"])
+    p["shots"].append(extra)
+    (film["dir"] / "shots.json").write_text(json.dumps(p))
+    res = run(film, shot="s006")
+    assert res["ok"] == ["s006"] and res["requests_this_run"]["loc"] == 2
+    rec = json.loads((film["dir"] / "sources" / "s006.json").read_text())
+    assert rec["searches"][0]["results"] == 0
+    assert rec["searches"][1]["query"] == "teller ledger" and rec["searches"][1]["broadened_from"] == "teller counting ledger photograph"
+    assert sources.nouns("bookkeeper writing in ledger photograph") == "bookkeeper ledger"
+
+
+def test_a_shot_checks_its_own_pool_before_it_falls_back(film, monkeypatch):
+    monkeypatch.setattr(sourcing, "PROBE_CAP", 1)             # one preview per query round
+    res = run(film, shot="s001")
+    assert res["ok"] == ["s001"]                              # the third pass came from the pool, with no request
+    rec = json.loads((film["dir"] / "sources" / "s001.json").read_text())
+    assert sum(1 for c in rec["candidates"] if c["passed_filters"]) == 3
+    assert sum(res["requests_this_run"].values()) == 4
+
+
+def test_a_fallback_reason_names_its_causes():
+    def c(why):
+        return {"rejected_because": [why]}
+    assert sourcing._cause(c("1536×1206: an archival still is at least 1,600 px on its long edge (§6.4)")) == "resolution"
+    assert sourcing._cause(c("5.0 s long; the shot needs 6.0 s, its length plus one (§6.4)")) == "too short"
+    assert sourcing._cause(c("its tags name fewer than half of the query's nouns (§6.1)")) == "too few of the query's nouns"
+    assert sourcing._cause(c("mean luma 48: night or low-key, under 64 (§6.1)")) == "luma"

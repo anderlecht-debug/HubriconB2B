@@ -51,11 +51,16 @@ PREAMBLE = ("Photographic still life, overcast north light, cool neutral palette
 VARIANTS = ("", ", seen close, one object in sharp focus", ", a wider arrangement with open space around it",
             ", seen from directly above")
 # The first words of a refusal, folded to a short cause for a fallback's reason.
-CAUSES = [("face", "faces"), ("luma", "luma"), ("night", "luma"), ("continuous take", "cuts"), ("s long", "too short"),
-          ("at least", "resolution"), ("enlarged", "resolution"), ("fps", "frame rate"), ("duplicate", "duplicates"),
-          ("licence", "licence"), ("Amazon", "Amazon in the record"), ("generated", "generated"),
-          ("does not name", "does not name the subject"), ("already used", "used before"), ("provenance", "provenance"),
-          ("preview", "preview failed"), ("record could not", "record unreadable"), ("words of text", "text")]
+CAUSES = [("a face covers", "faces"), ("mean luma", "luma"), ("continuous take", "cuts"), ("the shot needs", "too short"),
+          ("px on its", "resolution"), ("footage is at least", "resolution"), ("film is at least", "resolution"),
+          ("needs a source at least", "resolution"), ("enlarged", "resolution"), ("size is not in the record", "resolution"),
+          ("fps", "frame rate"), ("a duplicate of", "duplicates"), ("licence not on", "licence"), ("names Amazon", "Amazon in the record"),
+          ("generated or animated", "generated"), ("half of the query's nouns", "too few of the query's nouns"),
+          ("name none of the query's nouns", "the record is about something else"), ("banned cliché", "cliché"),
+          ("does not name", "does not name the subject"), ("only archival evidence", "stock for a named subject"),
+          ("already used", "used before"), ("provenance lacks", "provenance"), ("needs a date", "undated"),
+          ("preview could not", "preview failed"), ("record could not", "record unreadable"), ("words of text", "text")]
+MAX_PROBES = 30                     # previews read per side of a shot before it falls back
 
 
 def _rel(p) -> str:
@@ -156,7 +161,7 @@ def _source_side(shot, side, libs, kinds, ctx, net, prior, hashes, seen, log) ->
     """One pool of candidates for one side of a shot: (examined, reserve, why it fell short)."""
     pool: dict[str, dict] = {}
     queries = [q for q in shot.get("query") or [] if str(q).strip()]
-    note = None
+    note, probes = None, 0
     if not libs:
         return [], [], "the plan names no library this step reads for it"
     if not queries:
@@ -178,14 +183,29 @@ def _source_side(shot, side, libs, kinds, ctx, net, prior, hashes, seen, log) ->
                     continue
                 log.append({"source": src, "query": query, "kind": kind, "results": len(found),
                             "sent": net.session.get(src, {}).get("requests", 0) > before, "side": side})
+                broad = sources.nouns(query)
+                if not found and src in ctx["archival"] and broad != sources.plain(query):
+                    try:                   # an archive reads every word as required: once more, by the nouns
+                        found = sources.search(src, broad, kind, PER_PAGE, net=net)
+                    except sources.SourceError as e:
+                        found = []
+                        log.append({"source": src, "query": broad, "kind": kind, "error": str(e)})
+                    log.append({"source": src, "query": broad, "broadened_from": query, "kind": kind,
+                                "results": len(found), "side": side})
                 for c in found:
                     if c["id"] not in pool:
                         c["query"], c["side"] = query, side
                         pool[c["id"]] = c
-        _examine(pool, ctx, net, prior, hashes, seen, libs)
+        probes += _examine(pool, ctx, net, prior, hashes, seen, libs)
         filters.fps_rule(list(pool.values()), ctx, NEED)
         if sum(1 for c in pool.values() if c.get("passed_filters")) >= ENOUGH:
             break
+    while sum(1 for c in pool.values() if c.get("passed_filters")) < NEED and probes < MAX_PROBES:
+        more = _examine(pool, ctx, net, prior, hashes, seen, libs)    # the pool is cached: no request
+        if not more:
+            break
+        probes += more
+        filters.fps_rule(list(pool.values()), ctx, NEED)
     examined = [c for c in pool.values() if "passed_filters" in c]
     reserve = [c for c in pool.values() if "passed_filters" not in c]
     passed = sum(1 for c in examined if c["passed_filters"])
@@ -226,19 +246,19 @@ def source_shot(shot: dict, net, reg: dict, prior: dict, hashes: dict, seen: set
         examined, spare, why = _source_side(shot, side, libs, kinds, ctx, net, prior, hashes, seen, log)
         order = sorted(examined, key=lambda c: (not c["passed_filters"], not c.get("probed")))
         on_sheet = [c for c in order if c.get("probed")][:SHEET]
-        for c in order:
-            c["sheet_index"] = len(candidates)
+        shown = {c["id"] for c in on_sheet}
+        for c in order:                    # sheet_index is the candidate's place in <shot>.json
+            if c["id"] in shown:
+                c["sheet_index"] = len(candidates)
+            else:
+                c.pop("sheet_index", None)
             candidates.append(c)
-        for c in on_sheet:
-            seen.add(c["id"])
+        seen |= shown
         title = {"then": "Then: archival, with a dated record", "now": "Now: present-day footage"}.get(side)
         sections.append((title, on_sheet))
         reserve += spare
         if why:
             short.append(f"{side}: {why}" if side else why)
-    for c in candidates:
-        if not c.get("probed"):
-            c.pop("sheet_index", None)
     passed = sum(1 for c in candidates if c["passed_filters"])
     record.update({"status": "fallback" if short else "ok", "reason": "; ".join(short) or None,
                    "passed": passed, "checked": len(candidates), "searches": log,
