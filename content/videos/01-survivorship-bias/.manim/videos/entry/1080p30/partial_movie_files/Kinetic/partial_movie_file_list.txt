@@ -4,5 +4,3 @@ file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Kinetic/uncached_00002.mp4'
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Kinetic/uncached_00003.mp4'
 file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Kinetic/uncached_00004.mp4'
-file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Kinetic/uncached_00005.mp4'
-file 'file:/home/lp9/Hubricon/HubriconB2B-content/content/videos/01-survivorship-bias/.manim/videos/entry/1080p30/partial_movie_files/Kinetic/uncached_00006.mp4'
