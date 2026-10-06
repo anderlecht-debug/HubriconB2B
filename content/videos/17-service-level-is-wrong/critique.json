@@ -1,91 +1,91 @@
 {
-  "slug": "17-service-level-is-wrong",
-  "pass": true,
-  "validator_problems": [],
-  "items": [
-    {
-      "n": 1,
-      "question": "Does the viewer commit to a wrong answer before hearing the right one?",
-      "pass": true,
-      "note": "The 0:15 beat states the model the software itself hands the operator, defends the default as sensible and says plainly that changing it per product sounds like fiddling. The viewer commits to a high flat setting meaning he is covered before anything contradicts it at 0:50."
-    },
-    {
-      "n": 2,
-      "question": "Is there a concrete number in the first sentence?",
-      "pass": true,
-      "note": "first sentence carries a {{key}} figure"
-    },
-    {
-      "n": 3,
-      "question": "Is the title's promise fully delivered?",
-      "pass": true,
-      "note": "The title promises that the default is wrong for most products and the script proves it in both directions on the same shelf, with the spread of justified levels against the flat line and the count of products sitting below it. The title's figure is the run's own default as a placeholder, not a typed number."
-    },
-    {
-      "n": 4,
-      "question": "Does any notation appear before its intuition?",
-      "pass": true,
-      "note": "What the setting promises is explained before it is contrasted with fill rate, and the ratio behind a product's own level is given as a comparison of two costs before any division is written. Correlation is shown as a late container and a soft season before the measured figure is named."
-    },
-    {
-      "n": 5,
-      "question": "Is there exactly one idea, and exactly one CTA?",
-      "pass": true,
-      "note": "1 CTA beat(s); one idea is judged by the skill"
-    },
-    {
-      "n": 6,
-      "question": "Does the CTA match the awareness stage in \u00a78?",
-      "pass": true,
-      "note": "CTA matches \u00a78 for this pillar"
-    },
-    {
-      "n": 7,
-      "question": "Is there one claim a competent operator could dispute?",
-      "pass": true,
-      "note": "The default service level is a convention rather than a calculation, it is wrong in both directions at once, and a per-product promise answers a question the operator did not ask. All three are disputable, and the verify beat shows the measurement behind them."
-    },
-    {
-      "n": 8,
-      "question": "Is there any gap over 40 seconds without a re-hook?",
-      "pass": true,
-      "note": "no gap over 40 s"
-    },
-    {
-      "n": 9,
-      "question": "Does every number name its model run?",
-      "pass": true,
-      "note": "every chart beat names its run; every key exists"
-    },
-    {
-      "n": 10,
-      "question": "Is any step of the method withheld?",
-      "pass": true,
-      "note": "Nothing is withheld. The ratio that sets a product's level is stated outright here and worked through on a named product in the purchase-order episode, which is free and on the same page, so this script stays on one idea without hiding the derivation. The catalogue-level check and the group exposure list are both given in full."
-    },
-    {
-      "n": 11,
-      "question": "Does the close state a real limitation rather than pitch?",
-      "pass": true,
-      "note": "The close names a limit the afternoon cannot reach: the number the operator most wants, how often enough products are out at once to break a month, is exactly the one that needs every product simulated together with its correlations, slipping lead times and suppliers that slip as a group. It still tells him the afternoon beats the setting he has now."
-    },
-    {
-      "n": 12,
-      "question": "Any banned phrase present?",
-      "pass": true,
-      "note": "none"
-    },
-    {
-      "n": 13,
-      "question": "Are CLIP markers placed, with at least three usable?",
-      "pass": true,
-      "note": "5 CLIP markers"
-    },
-    {
-      "n": 14,
-      "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1\u20132 exempt)",
-      "pass": true,
-      "note": "exempt (pillar 1\u20132)"
-    }
-  ]
+ "slug": "17-service-level-is-wrong",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The 0:15 beat states the model the software itself hands the operator, defends the default as sensible and says plainly that changing it per product sounds like fiddling. The viewer commits to a high flat setting meaning he is covered before anything contradicts it at 0:50."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "The title promises that the default is wrong for most products and the script proves it in both directions on the same shelf, with the spread of justified levels against the flat line and the count of products sitting below it. The title's figure is the run's own default as a placeholder, not a typed number."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "What the setting promises is explained before it is contrasted with fill rate, and the ratio behind a product's own level is given as a comparison of two costs before any division is written. Correlation is shown as a late container and a soft season before the measured figure is named, and the difference between an exact computation and a drawn one is put in plain words — counts, a spread, swept rather than drawn — with no notation at all."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "1 CTA beat(s); one idea is judged by the skill"
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "The default service level is a convention rather than a calculation, it is wrong in both directions at once, and a per-product promise answers a question the operator did not ask. All three are disputable, and the verify beat shows the measurement behind them."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "Every chart beat names its run and every key exists in facts.json. Re-judged after the 2026-10-06 correction: the draws-per-product key is gone, the verify beat carries {{inv_method}} from the facts file for the per-product odds, and the drawing is claimed only for the shelf read together, which is the part the engine really draws."
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "Nothing is withheld. The ratio that sets a product's level is stated outright here and worked through on a named product in the purchase-order episode, which is free and on the same page, so this script stays on one idea without hiding the derivation. The catalogue-level check and the group exposure list are both given in full."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close names a limit the afternoon cannot reach: the number the operator most wants, how often enough products are out at once to break a month, is exactly the one that needs the whole shelf drawn together with its correlations intact, slipping lead times and suppliers that slip as a group, each product's own odds computed exactly underneath. It still tells him the afternoon beats the setting he has now."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "5 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "exempt (pillar 1–2)"
+  }
+ ]
 }

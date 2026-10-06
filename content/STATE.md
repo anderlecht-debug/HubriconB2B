@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:25:42+00:00 · style locked: True
+Updated 2026-10-06T07:26:35+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:25:42+00:00 · style locked: True
 
 ## Now
 
-- V17 · Why 95% service level is wrong for most of your SKUs · step critique
+- V17 · Why {{service_level_default}} service level is wrong for most of your SKUs · step review
 
 ## Awaiting your review
 
