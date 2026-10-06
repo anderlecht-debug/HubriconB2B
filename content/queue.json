@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:04:14+00:00",
+ "updated_at": "2026-10-06T07:04:27+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -2401,8 +2401,8 @@
    "tier": "D",
    "slug": "greats-02-the-dime",
    "models": [],
-   "status": "todo",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "the founder's own takes: read the script at the teleprompter, node content/film/record.mjs greats-02-the-dime (docs/content/VOICE-RECORDING.md)",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -2411,7 +2411,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "todo",
+    "tts": "blocked",
     "timing": "todo",
     "shots": "todo",
     "source": "todo",
@@ -2458,6 +2458,11 @@
      "at": "2026-10-06T05:37:57+00:00",
      "step": "review",
      "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\")"
+    },
+    {
+     "at": "2026-10-06T07:04:25+00:00",
+     "step": "tts",
+     "note": "blocked the founder's own takes: read the script at the teleprompter, node content/film/record.mjs greats-02-the-dime (docs/content/VOICE-RECORDING.md)"
     }
    ]
   },

@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:04:14+00:00 · style locked: True
+Updated 2026-10-06T07:04:27+00:00 · style locked: True
 
 ## Capabilities
 
@@ -47,6 +47,7 @@ Updated 2026-10-06T07:04:14+00:00 · style locked: True
 - V26 · The reimbursement windows closing on you right now: Needs the founder's raw Seller Central screen recording. Script and shot list pre-written from recovery.run. Protected Playbook feeder.
 - V27 · Shopify's quiet margin killer: the shipping subsidy: Needs real Shopify orders and payouts exports on screen.
 - G01 · Greats of Commerce 1: the rate card that built Sears: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs greats-01-sears-parcel-post (docs/content/VOICE-RECORDING.md)
+- G02 · Greats of Commerce 2: the dime: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs greats-02-the-dime (docs/content/VOICE-RECORDING.md)
 
 ### Inputs the pipeline needs from you
 
@@ -63,8 +64,8 @@ Updated 2026-10-06T07:04:14+00:00 · style locked: True
 
 ## Next five
 
-- G02 · Greats of Commerce 2: the dime
 - G03 · Greats of Commerce 3: the corner
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V05 · Cash conversion cycle: the number that decides whether you survive
 - V07 · Contribution margin vs gross margin — the one that actually matters
+- V08 · Elasticity in plain English, and why your price is probably wrong
