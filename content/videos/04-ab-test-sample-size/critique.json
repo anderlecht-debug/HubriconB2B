@@ -31,7 +31,7 @@
    "n": 5,
    "question": "Is there exactly one idea, and exactly one CTA?",
    "pass": true,
-   "note": "One idea: a short price test cannot know whether the price change worked, because the answer is a range and the range is wide. Chapter 2's false-discovery turn is the same idea across a catalog. One CTA, subscribe."
+   "note": "One idea: a few weeks of price history cannot tell you what a price move did, because the honest answer is wide and narrows slowly. The closing beat's hold verdict is that same idea arriving at a decision, not a second one. One CTA, in the honest limit."
   },
   {
    "n": 6,
@@ -55,13 +55,13 @@
    "n": 9,
    "question": "Does every number name its model run?",
    "pass": true,
-   "note": "every chart beat names its run; every key exists"
+   "note": "Every chart beat names its run and every key exists in facts.json. Re-judged after the 2026-10-06 redraft: the closing beat's figures ({{el_no_top}}, {{el_skus_fit}}, {{el_p_optimal}}, {{el_skus_insufficient}}) carry a DATA SOURCE naming ELASTICITY.FIT and PRICE.OPTIMUM on Tarnhollow demo data, and the dropped pm_* step figures appear nowhere."
   },
   {
    "n": 10,
    "question": "Is any step of the method withheld?",
    "pass": true,
-   "note": "The whole method is given: write down the range, move the price on purpose inside {{pm_step_cap}} over enough months, decide on the range not the point, keep a control product as the noise floor, and fit the log-log slope with its standard error in a spreadsheet. The robust errors and the null calibration are described as what the model does rather than as a procedure, which is the honest limit's job under §7, not a withheld step."
+   "note": "The whole method is given: write down the range, move the price on purpose inside {{pm_step_cap}} over enough months, price on the range rather than the point, take the verdict the range gives even when it is hold, keep a control product as the noise floor, and fit the log-log slope with its standard error in a spreadsheet. The robust errors and the null calibration are described as what the model does rather than as a procedure, which is the honest limit's job under §7, not a withheld step."
   },
   {
    "n": 11,
@@ -87,6 +87,5 @@
    "pass": true,
    "note": "Universal for anyone who runs a price or A/B test: the width of the answer, how slowly it narrows, and false winners across many tests. The example catalog is Amazon-shaped but nothing in the argument is. Weakness to note: the 'let them be wrong' beat wants a real price-test dashboard screenshot, which the founder has to supply."
   }
- ],
- "judged_by": "critique skill, unattended tick 2026-09-18"
+ ]
 }
