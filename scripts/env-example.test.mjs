@@ -46,10 +46,10 @@ function readNames() {
   return names;
 }
 
-// Read on the content branch (HubriconB2B-content), which loads this same .env.
+// Read on the content branch (HubriconB2B-content), which loads this same .env. No ElevenLabs:
+// every film is narrated in the founder's own recorded voice (his call, 2026-10-06).
 const CONTENT = ["PEXELS_API_KEY", "PIXABAY_API_KEY", "SMITHSONIAN_API_KEY", "CONTENT_CONTACT_EMAIL",
-  "CONTENT_REVIEW_EMAIL", "ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID", "ELEVENLABS_MODEL",
-  "ELEVENLABS_STABILITY", "ELEVENLABS_SIMILARITY", "ELEVENLABS_STYLE", "CONTENT_WHISPER_MODEL", "CONTENT_WHISPER_DEVICE"];
+  "CONTENT_REVIEW_EMAIL", "CONTENT_WHISPER_MODEL", "CONTENT_WHISPER_DEVICE"];
 
 // The keys the founder was asked for on 2026-10-03/04, used by Claude to finish the setup.
 const SETUP = ["STRIPE_SECRET_KEY", "VERCEL_TOKEN", "SUPABASE_ACCESS_TOKEN", "GITHUB_DISPATCH_TOKEN",
