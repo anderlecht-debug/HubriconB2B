@@ -1141,9 +1141,9 @@ transfer the net of sales made up to day L − transit − reserve, charges ad s
 the day it is spent, and counts the 14 days of sales Amazon already holds on day
 one, drawn from the same demand model; the settlement phase is unknown, so the next
 transfer is assumed 14 days out (the longest wait) and the assumption sentence says
-so. `fee_schedule.py` carries the five rows (the bulky rows read from Amazon's page
-and not re-read: Seller Central needs a sign-in, and third-party guides disagree on
-whether bulky items are charged), the 30/90-day rule with the higher band, and the
+so. `fee_schedule.py` carries the five rows (the bulky rows read from Amazon's page;
+corroborated 2026-10-04 by three third-party 2026 guides, two giving the rows and all
+three that bulky items are charged; Amazon's own page not re-read), the 30/90-day rule with the higher band, and the
 exemptions an export can show (fewer than 20 units in seven days, Amazon's own
 exempt flag, Grocery); the rest are named on every row. A tier no export names takes
 the lowest row of its kind, so an assumed tier never overstates the fee. /call

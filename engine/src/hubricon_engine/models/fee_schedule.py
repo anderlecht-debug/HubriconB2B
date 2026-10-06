@@ -44,9 +44,14 @@ AGED_SURCHARGE_MIN_PER_UNIT_365_PLUS = 0.15   # whichever is greater, 365+ tier
 # 2.09/1.14/0.72).
 #   The standard rows are Amazon's, corroborated on 2026-10-01 by a research
 #   pass over Amazon's fee page and two third-party guides. The bulky rows are
-#   from Amazon's page as that pass read it, NOT re-read here (Seller Central
-#   needs a sign-in), and third-party guides disagree on whether bulky items are
-#   charged at all: treat a bulky figure as the least certain number here.
+#   from Amazon's page as that pass read it, corroborated 2026-10-04 by three
+#   third-party 2026 guides (SellerMagnet, FBA Tactics, PrepVia), two giving the
+#   rows and all three that bulky items are charged from January 15, 2026;
+#   Amazon's own page not re-read (Seller Central needs a sign-in, and Amazon
+#   refuses automated reads). Open: one guide says extra-large items are outside
+#   the fee, and an extra-large item also reads "oversize" in Inventory Age, so
+#   LOW_INVENTORY_ASSUMED_TIER may overstate it; confirm on Amazon's page or a
+#   client's Fee Preview before changing anything.
 #   The rule: the fee applies only when BOTH the 30-day and the 90-day
 #   historical days of supply are under 28; the higher of the two sets the
 #   band; it is measured per FNSKU. Exempt: fewer than 20 units shipped in the
