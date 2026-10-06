@@ -114,11 +114,18 @@ def guarded(eps: float, se: float, ci: tuple[float, float]) -> bool:
     return bool(near_unit_elastic(eps, se, list(ci)))
 
 
-def direction(eps: float, p0: float, best: float | None, guard: bool) -> str:
-    """The sheet's rule: toward the best price; up where there is none to walk to."""
+def direction(eps: float, p0: float, best: float | None, guard: bool, at_estimate: float | None = None) -> str:
+    """The sheet's rule: toward the best price; up where demand is inelastic. Too close to −1 to
+    name a price, the engine forces no direction (pricing_engine.price_move); the sheet says up only
+    when the estimate's own best price (the formula at the estimate, `at_estimate`) is above today's,
+    and hold when it is below: the estimate says down while the range cannot rule out far up."""
     if best is not None:
         return "up" if best > p0 else ("down" if best < p0 else "hold")
-    return "up" if (eps >= -1 or guard) else "hold"
+    if eps >= -1:
+        return "up"
+    if guard:
+        return "up" if (at_estimate is not None and at_estimate > p0) else "hold"
+    return "hold"
 
 
 def step_price(p0: float, best: float | None, way: str) -> float:
@@ -155,7 +162,7 @@ def figures() -> dict:
     q0 = int(round(units_at_p0 / days * 30))
     m0 = p0 * (1 - f) - c - fixed
     best = None if guard else optimal_price(eps, c, f, fixed)
-    way = direction(eps, p0, best, guard)
+    way = direction(eps, p0, best, guard, optimal_price(eps, c, f, fixed))
     p1 = step_price(p0, best, way)
     month_now = float(profit(eps, p0, q0, c, f, p0, fixed))
     step_delta = float(profit_delta(eps, p0, q0, c, f, p1, fixed))
@@ -181,7 +188,7 @@ def figures() -> dict:
         g = guarded(case["elasticity"], case["std_err"], (lo, hi))
         b = None if g else optimal_price(case["elasticity"], c, f, fixed)
         return {**case, "ci": [lo, hi], "guard": g, "best": b,
-                "direction": direction(case["elasticity"], p0, b, g),
+                "direction": direction(case["elasticity"], p0, b, g, optimal_price(case["elasticity"], c, f, fixed)),
                 "pole_factor": case["elasticity"] / (1 + case["elasticity"]) if case["elasticity"] != -1 else None}
 
     # The same price test, run again on fresh noise: what one SKU's history can and cannot tell.
@@ -192,7 +199,7 @@ def figures() -> dict:
         g = guarded(rf["elasticity"], rf["std_err"], tuple(rf["details"]["ci95"]))
         b = None if g else optimal_price(rf["elasticity"], c, f, fixed)
         runs.append({"se": rf["std_err"], "eps": rf["elasticity"], "guard": g,
-                     "way": direction(rf["elasticity"], p0, b, g)})
+                     "way": direction(rf["elasticity"], p0, b, g, optimal_price(rf["elasticity"], c, f, fixed))})
     ses = sorted(r["se"] for r in runs)
     pick = lambda q: ses[int(q * (len(ses) - 1))]  # noqa: E731
     runs_summary = {"runs": len(runs), "true_elasticity": EXAMPLE["true_elasticity"],
@@ -334,8 +341,8 @@ def price_sheet(ws, fig: dict) -> None:
         (18, "Profit a month today", "=B5*B17", USD),
         (19, "Near −1?", f"=IF(B14<>\"Read\",\"\",IF(OR(AND(B12<=-1,B13>=-1),ABS(1+B10)<{POLE_GUARD_SIGMAS}*B11,AND(B10<-1,B11/ABS(B10*(1+B10))>{POLE_OPTIMUM_LOG_SD})),\"yes\",\"no\"))", None),
         (20, "Best price", "=IF(AND(B14=\"Read\",B19=\"no\",B10<-1,B16>0,B7<1),B16/(1-B7)*B10/(1+B10),\"none\")", USD),
-        (21, "Why there is none", "=IF(ISNUMBER(B20),\"\",IF(B14<>\"Read\",\"The fit is not read yet: see Your history.\",IF(B10>=-1,\"Demand this inelastic has no best price: profit rises with the price. Walk up and measure.\",\"Too close to −1: the direction is up, the distance is unknown.\")))", None),
-        (22, "Direction", "=IF(ISNUMBER(B20),IF(B20>B4,\"up\",IF(B20<B4,\"down\",\"hold\")),IF(B14<>\"Read\",\"hold\",IF(OR(B10>=-1,B19=\"yes\"),\"up\",\"hold\")))", None),
+        (21, "Why there is none", "=IF(ISNUMBER(B20),\"\",IF(B14<>\"Read\",\"The fit is not read yet: see Your history.\",IF(B10>=-1,\"Demand this inelastic has no best price: profit rises with the price. Walk up and measure.\",\"Too close to −1 to name a price: \"&IF(AND(B16>0,B7<1,B10<-1),IF(B16/(1-B7)*B10/(1+B10)>B4,\"the estimate puts it above today's, so the direction is up; the distance is unknown.\",\"the estimate puts it below today's while the range reaches −1: hold, the data cannot say which way.\"),\"hold.\"))))", None),
+        (22, "Direction", "=IF(ISNUMBER(B20),IF(B20>B4,\"up\",IF(B20<B4,\"down\",\"hold\")),IF(B14<>\"Read\",\"hold\",IF(B10>=-1,\"up\",IF(AND(B19=\"yes\",B16>0,B7<1),IF(B16/(1-B7)*B10/(1+B10)>B4,\"up\",\"hold\"),\"hold\"))))", None),
         (23, "Next price (one step, at most 5%)", f"=ROUND(IF(B22=\"up\",B4*(1+MIN({STEP_CAP},IF(ISNUMBER(B20),B20/B4-1,{STEP_CAP}))),IF(B22=\"down\",B4*(1-MIN({STEP_CAP},1-B20/B4)),B4)),2)", USD),
         (24, "Profit a month at the next price", "=B5*(B23/B4)^B10*(B23*(1-B7)-B16)", USD),
         (25, "Change a month", "=B24-B18", SIGNED_USD),
@@ -402,7 +409,7 @@ def catalogue_sheet(ws, rows: list[dict] | None = None) -> None:
         put(ws, f"K{r}", f"=IF({ok},B{r}*(1-E{r})-D{r}-F{r},\"\")", fmt=USD)
         put(ws, f"L{r}", f"=IF({ok},IF(OR(AND(I{r}<=-1,J{r}>=-1),ABS(1+G{r})<{POLE_GUARD_SIGMAS}*H{r},AND(G{r}<-1,H{r}/ABS(G{r}*(1+G{r}))>{POLE_OPTIMUM_LOG_SD})),\"yes\",\"no\"),\"\")")
         put(ws, f"M{r}", f"=IF({ok},IF(AND(L{r}=\"no\",G{r}<-1,D{r}+F{r}>0,E{r}<1),(D{r}+F{r})/(1-E{r})*G{r}/(1+G{r}),\"none\"),\"\")", fmt=USD)
-        put(ws, f"N{r}", f"=IF({ok},IF(ISNUMBER(M{r}),IF(M{r}>B{r},\"up\",IF(M{r}<B{r},\"down\",\"hold\")),IF(OR(G{r}>=-1,L{r}=\"yes\"),\"up\",\"hold\")),\"\")")
+        put(ws, f"N{r}", f"=IF({ok},IF(ISNUMBER(M{r}),IF(M{r}>B{r},\"up\",IF(M{r}<B{r},\"down\",\"hold\")),IF(G{r}>=-1,\"up\",IF(AND(L{r}=\"yes\",D{r}+F{r}>0,E{r}<1),IF((D{r}+F{r})/(1-E{r})*G{r}/(1+G{r})>B{r},\"up\",\"hold\"),\"hold\"))),\"\")")
         put(ws, f"O{r}", f"=IF({ok},ROUND(IF(N{r}=\"up\",B{r}*(1+MIN({STEP_CAP},IF(ISNUMBER(M{r}),M{r}/B{r}-1,{STEP_CAP}))),IF(N{r}=\"down\",B{r}*(1-MIN({STEP_CAP},1-M{r}/B{r})),B{r})),2),\"\")", fmt=USD)
         put(ws, f"P{r}", f"=IF({ok},C{r}*(O{r}/B{r})^G{r}*(O{r}*(1-E{r})-D{r}-F{r})-C{r}*K{r},\"\")", fmt=SIGNED_USD)
         put(ws, f"Q{r}", f"=IF(ISNUMBER(P{r}),RANK(P{r},$P$5:$P${4 + CATALOGUE_ROWS}),\"\")", fmt="0")
@@ -546,7 +553,7 @@ def verify(fig: dict, cases: int = 40) -> int:
             r = 5 + i
             g = guarded(row["eps"], row["se"], (row["lo"], row["hi"]))
             best = None if g else optimal_price(row["eps"], row["cost"], row["referral"], row["fixed"])
-            way = direction(row["eps"], row["price"], best, g)
+            way = direction(row["eps"], row["price"], best, g, optimal_price(row["eps"], row["cost"], row["referral"], row["fixed"]))
             p1 = step_price(row["price"], best, way)
             delta = float(profit_delta(row["eps"], row["price"], row["units"], row["cost"], row["referral"], p1, row["fixed"]))
             checks = [("guard", cat[f"L{r}"].value == "yes", g), ("direction", cat[f"N{r}"].value, way),
@@ -619,7 +626,7 @@ def golden(cases: int = 60) -> dict:
         row = random_catalogue_row(rng, i)
         g = guarded(row["eps"], row["se"], (row["lo"], row["hi"]))
         best = None if g else optimal_price(row["eps"], row["cost"], row["referral"], row["fixed"])
-        way = direction(row["eps"], row["price"], best, g)
+        way = direction(row["eps"], row["price"], best, g, optimal_price(row["eps"], row["cost"], row["referral"], row["fixed"]))
         nxt = step_price(row["price"], best, way)
         out["rows"].append({"row": row, "want": {
             "guard": g, "best": best, "way": way, "next": nxt,

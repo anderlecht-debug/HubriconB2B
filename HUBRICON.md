@@ -453,8 +453,9 @@ was an expectation; the site prints the measured figure.
 Amazon's DD+7 reserve, its 14-day settlement and the bank transfer, and counts what Amazon
 already holds on day one. The low-inventory-level fee is priced by size tier, on Amazon's
 30/90-day rule, where a report names the tier (Fee Preview on /call); otherwise at the lowest
-row of its kind, labelled assumed. The bulky rows are the least certain figures in the
-schedule (read from Amazon's page, not re-read). The storage utilization surcharge is not
+row of its kind, labelled assumed. The bulky rows were read from Amazon's page and
+corroborated 2026-10-04 by three third-party 2026 guides, two giving the rows and all three
+that bulky items are charged; Amazon's own page not re-read. The storage utilization surcharge is not
 modelled.
 
 **Not true, and never to be implied:** there are **zero paying customers and zero

@@ -48,7 +48,7 @@ test("the best price, the guard, the step and its worth are the engine's", () =>
     const best = g ? null : pc.bestPrice(row.eps, row.cost, row.referral, row.fixed);
     if (want.best === null) assert.equal(best, null, `row ${i}: no best price`);
     else assert.ok(near(best, want.best, 1e-9), `row ${i}: best ${best} vs ${want.best}`);
-    const way = pc.direction(row.eps, row.price, best, g);
+    const way = pc.direction(row.eps, row.price, best, g, pc.bestPrice(row.eps, row.cost, row.referral, row.fixed));
     assert.equal(way, want.way, `row ${i}: direction`);
     const next = pc.stepPrice(row.price, best, way);
     assert.ok(Math.abs(next - want.next) < 0.005, `row ${i}: next ${next} vs ${want.next}`);

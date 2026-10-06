@@ -1139,7 +1139,10 @@ exports are the only ground truth those guesses will get.
 
 terms.html §10 says we never use one client's data to advise another, so:
 **nothing is read from a client who has not granted the separate
-`calibration` consent** on the /say page, and what is written is an aggregate
+`calibration` consent** on the /say page, and only while they are a current
+client: pending, active or past due (a failed payment does not end the
+relationship; under terms §5 only an email from either side does), never after
+the work ends. What is written is an aggregate
 — a slope, a rate, a ratio — with the number of clients and observations on
 the row. Below the floor (two accounts, thirty observations; one account for a
 referral rate, which only verifies a published card) the row says
@@ -1873,8 +1876,9 @@ around when, how big on the typical SKU, how many accounts stand behind it, and
 whether their own exports show it yet.
 
 **Consent.** Only clients who ticked the separate `network` box on their private
-/say page (and have not unticked it), who are current and who are not internal are
-read as sources. What leaves an account is an event — fee type, direction,
+/say page (and have not unticked it), who are current (pending, active, or past due:
+a failed payment does not end the relationship, terms §5) and who are not internal are
+read as sources. The same current clients receive the alerts. What leaves an account is an event — fee type, direction,
 approximate date, size as a ratio — never a figure, a name, a SKU or an ASIN.
 
 **Who is told** is one constant, `fleet.RECIPIENT_POLICY`: `every_client` (the
