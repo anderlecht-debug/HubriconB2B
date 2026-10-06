@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:16:20+00:00",
+ "updated_at": "2026-10-06T07:20:01+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -1365,7 +1365,7 @@
    "phase": 3,
    "kind": "video",
    "day": 9,
-   "title": "The price increase you're afraid of is probably free",
+   "title": "How to tell whether a price increase would pay, and why the honest answer can be hold",
    "pillar": 3,
    "tier": "B",
    "slug": "09-price-increase-probably-free",
@@ -1373,14 +1373,14 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "todo",
+    "script": "done",
     "critique": "todo",
     "review": "todo",
     "tts": "todo",
@@ -1434,6 +1434,11 @@
      "at": "2026-10-06T06:30:49+00:00",
      "step": "review",
      "note": "rejected: The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the rang"
+    },
+    {
+     "at": "2026-10-06T07:19:59+00:00",
+     "step": "script",
+     "note": "done reframed as how to tell whether a raise would pay; the premise the engine contradicts is gone and the verdict is hold"
     }
    ]
   },

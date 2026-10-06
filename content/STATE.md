@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:16:20+00:00 · style locked: True
+Updated 2026-10-06T07:20:01+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:16:20+00:00 · style locked: True
 
 ## Now
 
-- idle
+- V09 · How to tell whether a price increase would pay, and why the honest answer can be hold · step critique
 
 ## Awaiting your review
 
@@ -70,8 +70,8 @@ Updated 2026-10-06T07:16:20+00:00 · style locked: True
 
 ## Next five
 
-- V09 · The price increase you're afraid of is probably free
 - V16 · The $60,000 wire you're guessing on
 - V17 · Why 95% service level is wrong for most of your SKUs
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
 - V19 · How much cash should you actually hold?
+- V22 · Base rates: the question nobody asks before a big decision
