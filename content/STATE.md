@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:04:50+00:00 · style locked: True
+Updated 2026-10-06T07:05:10+00:00 · style locked: True
 
 ## Capabilities
 
@@ -39,6 +39,7 @@ Updated 2026-10-06T07:04:50+00:00 · style locked: True
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
 - V05 · Cash conversion cycle: the number that decides whether you survive: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 05-cash-conversion-cycle (docs/content/VOICE-RECORDING.md)
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
+- V07 · Contribution margin vs gross margin — the one that actually matters: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 07-contribution-vs-gross-margin (docs/content/VOICE-RECORDING.md)
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
@@ -67,7 +68,7 @@ Updated 2026-10-06T07:04:50+00:00 · style locked: True
 ## Next five
 
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
-- V07 · Contribution margin vs gross margin — the one that actually matters
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
 - V11 · Discounting: the math of what you just gave away
+- V15 · You don't have a revenue problem. You have a cash trough

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:04:50+00:00",
+ "updated_at": "2026-10-06T07:05:10+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -1069,8 +1069,8 @@
    "models": [
     "margin"
    ],
-   "status": "todo",
-   "blocked_on": null,
+   "status": "blocked",
+   "blocked_on": "the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 07-contribution-vs-gross-margin (docs/content/VOICE-RECORDING.md)",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -1079,7 +1079,7 @@
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "todo",
+    "tts": "blocked",
     "timing": "todo",
     "scenes": "todo",
     "assemble": "todo",
@@ -1177,6 +1177,11 @@
      "at": "2026-10-06T05:35:42+00:00",
      "step": "tts",
      "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
+    },
+    {
+     "at": "2026-10-06T07:05:08+00:00",
+     "step": "tts",
+     "note": "blocked the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 07-contribution-vs-gross-margin (docs/content/VOICE-RECORDING.md)"
     }
    ]
   },
