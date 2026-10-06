@@ -92,10 +92,16 @@ export const profit = (eps, p0, q0, unitCost, feeRate, p, fixedFee = 0) => q0 * 
 export const profitDelta = (eps, p0, q0, unitCost, feeRate, p, fixedFee = 0) =>
   profit(eps, p0, q0, unitCost, feeRate, p, fixedFee) - profit(eps, p0, q0, unitCost, feeRate, p0, fixedFee);
 
-/** The course's rule: toward the best price; up where there is none to walk to (inelastic, or near −1). */
-export function direction(eps, p0, best, guard) {
+/**
+ * The course's rule: toward the best price; up where demand is inelastic. Too close to −1 to name a
+ * price, up only when the estimate's own best price (atEstimate, the formula at the estimate) is
+ * above today's, else hold: the engine forces no direction there (pricing_engine.price_move).
+ */
+export function direction(eps, p0, best, guard, atEstimate = null) {
   if (best != null) return best > p0 ? "up" : best < p0 ? "down" : "hold";
-  return eps >= -1 || guard ? "up" : "hold";
+  if (eps >= -1) return "up";
+  if (guard) return atEstimate != null && atEstimate > p0 ? "up" : "hold";
+  return "hold";
 }
 
 /** One step toward the best price, never more than STEP_CAP, to the cent. */
@@ -131,8 +137,9 @@ export function read(points, econ) {
   const { price: p0, units: q0, cost, referral, fixed = 0, discount = 0.2 } = econ;
   const ready = p0 > 0 && q0 > 0 && cost >= 0 && referral >= 0 && referral < 1;
   if (!ready) return { fit: f, guard };
-  const best = guard ? null : bestPrice(f.elasticity, cost, referral, fixed);
-  const way = direction(f.elasticity, p0, best, guard);
+  const atEstimate = bestPrice(f.elasticity, cost, referral, fixed);
+  const best = guard ? null : atEstimate;
+  const way = direction(f.elasticity, p0, best, guard, atEstimate);
   const next = stepPrice(p0, best, way);
   const pd = p0 * (1 - discount);
   return {

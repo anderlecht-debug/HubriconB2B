@@ -127,7 +127,7 @@ function paint(r, e, name, points) {
   const oddLine = odd.length ? `<p class="yours-warn">${odd.length === 1 ? "One period sits" : `${odd.length} periods sit`} far off the curve (${odd.map(([i]) => `period ${f.used[i].row}`).join(", ")}). A stockout, an event deal or a listing change? If so, leave ${odd.length === 1 ? "it" : "them"} out: lesson 2.</p>` : "";
   show("fit", `<p class="yours-k">On your numbers · ${esc(name)}</p>
     <p>Elasticity <b>${e2(f.elasticity)}</b>, standard error ${f.stdErr.toFixed(2)}, 95% interval <b>${e2(f.ci[0])} to ${e2(f.ci[1])}</b>, on ${f.n} periods. The line explains ${f.rSquared.toFixed(2)} of the variation.</p>
-    <p>${r.guard ? "<b>Too close to −1 to name a price.</b> The direction is up; lesson 7 is how to learn the distance." : "<b>Clear of −1:</b> the interval can name a best price."}</p>
+    <p>${r.guard ? `<b>Too close to −1 to name a price.</b> ${r.way === "up" ? "The estimate puts the best price above today's, so the direction is up; lesson 7 is how to learn the distance." : r.way === "hold" ? "The estimate puts the best price below today's while the range reaches −1, so the data cannot say which way: hold." : "Add your price and costs below to see which way the estimate points."}` : "<b>Clear of −1:</b> the interval can name a best price."}</p>
     ${oddLine}<div class="yours-chart">${fitChart}</div>`);
 
   if (r.best === undefined) { ["best", "raise", "discount", "next", "memo"].forEach((k) => show(k, `<p class="yours-k">On your numbers</p><p>Add today's price, units a month, landed cost and fees above to read this lesson on your SKU.</p>`)); return; }
@@ -135,7 +135,7 @@ function paint(r, e, name, points) {
   const curve = { p0: e.price, q0: e.units, cost: e.cost, fee: e.referral, fixed: e.fixed, eps: f.elasticity, lo: f.ci[0], hi: f.ci[1],
     best: r.best, step: r.next, range: [e.price * 0.76, e.price * 1.4] };
   const profitChart = profitSVG(curve, { id: "yp", w: 680, h: 360, m: { t: 40, r: 132, b: 46, l: 64 }, font: 13 });
-  const why = r.best != null ? "" : r.guard ? "Too close to −1: the direction is up, the distance unknown." : f.elasticity >= -1 ? "Inelastic: profit rises with the price, so there is no peak to find. Walk up, and measure." : "No best price at these costs.";
+  const why = r.best != null ? "" : r.guard ? (r.way === "up" ? "Too close to −1: the estimate points up, the distance unknown." : "Too close to −1, and the estimate points below today's price: hold, the data cannot say which way.") : f.elasticity >= -1 ? "Inelastic: profit rises with the price, so there is no peak to find. Walk up, and measure." : "No best price at these costs.";
   const edge = r.edge ? `<p class="yours-warn">The move crosses $10 or $50, where Amazon's fulfilment fee itself changes. Price both sides with The Fee Staircase before you take it.</p>` : "";
   show("best", `<p class="yours-k">On your numbers · ${esc(name)}</p>
     <p>${r.best != null ? `Best price <b class="money">${money(r.best)}</b>, ${signedPct(r.best / e.price - 1)} from today's ${money(e.price)}. At it, profit changes ${dollars(r.bestDelta)} a month on ${dollars(r.profitNow).replace("+", "")}.` : `<b>No best price.</b> ${why}`}</p>
