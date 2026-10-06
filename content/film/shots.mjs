@@ -106,7 +106,9 @@ function timeline(job) {
   const r = job.render, events = (job.params?.events || []).filter((e) => typeof e === "object");
   const n = events.length;
   const items = events.map((e, i) => {
-    const x = e.pos ?? (n === 1 ? 0.5 : 0.06 + (0.88 * i) / (n - 1)), low = i % 2 === 1 && n > 3;
+    // the plan's position on a 0.06–0.94 track, inset so an event's full-width label clears the frame's edge
+    const raw = e.pos ?? (n === 1 ? 0.5 : 0.06 + (0.88 * i) / (n - 1)), low = i % 2 === 1 && n > 3;
+    const x = 0.12 + 0.76 * Math.min(1, Math.max(0, (raw - 0.06) / 0.88));
     return `<div class="tl-event${low ? " tl-low" : ""} in" style="--at:${ms(e.at ?? 0.4 + i * 0.8)};--x:${(x * 100).toFixed(2)}%">` +
       `<p class="tl-date">${esc(e.date)}</p><i class="tl-tick"></i><p class="tl-label${money(e.label) ? " money" : ""}">${esc(e.label)}</p></div>`;
   }).join("");

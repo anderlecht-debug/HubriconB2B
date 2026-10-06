@@ -43,6 +43,23 @@ its **Failure looks like** lines: they are your rejection list.
    `hubricon-content pick <slug> <shot> --none --reason "<why>"` (archival → stock → texture →
    `paper:kinetic`, in the order the plan allows).
 
+## What the first Greats film taught (2026-10-06)
+
+- **Re-query with a Commons category first.** `category: <exact Commons category>` lists that
+  category's files (Sears, Roebuck and Company; Sears catalogs; Rural Free Delivery; the HABS
+  surveys of the Sears plant): far more exact than a keyword search, and the category is kept as the
+  record's subject, so the name check reads it. Look the category up before you write it.
+- **Short stock queries.** "weighing scale", "digital scale", "package scale" find clips; a sentence
+  ("parcel placed on postal scale close up") finds almost none. Expect animals for "scale": refuse them.
+- **Be decisive.** A strong period photograph that honestly fits the sentence beats a re-query.
+- **A shot with nothing is absorbed, not carded.** Before `--none`, let the shot before or after run
+  longer (within its style's seconds; never a picture over a spoken figure), or split the time
+  between them at a legal cut. Only when neither can does the shot become a `kinetic-thesis`, and
+  then its line is written (the sentence's thought in twelve words or fewer, any figure as its
+  `{{key}}`), never the sentence's first words cut off.
+- **A record's date is not always the photograph's.** Commons often gives the upload date; set the
+  asset's `date` from the description ("c. 1910–1915") wherever the frame prints it (archive, split).
+
 ## Textures (AI images)
 
 For a `texture` shot, generate four candidates with Higgsfield's `generate_image` tool, each prompt

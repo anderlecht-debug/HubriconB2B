@@ -46,6 +46,7 @@ STYLE_ZOOM = {"still-reveal": 1.35}                                             
 PAPER_BOX = {"archive": (1180, 760), "stack": (1180, 760), "split": (880, 620)}        # W5, W6, W11
 LUMA_TARGET, LUMA_TOL, MAX_SHIFT = 138, 10, 0.12
 LUMA_BAND = (LUMA_TARGET - LUMA_TOL - MAX_SHIFT * 255, LUMA_TARGET + LUMA_TOL + MAX_SHIFT * 255)
+GRADE_WINDOW_S = 20.0                                                                   # the grade check reads at most this much of a preview
 LUMA_NIGHT = 64                                                                        # 0.25 of full scale (§6.1)
 FACE_MAX, FACE_SCORE = 0.01, 0.8
 SAMPLE_EVERY = 2.0
@@ -160,7 +161,7 @@ def precheck(c: dict, ctx: dict, prior: dict | None = None) -> bool:
             _reject(c, f"its title or tags name {shown[0]!r}, a banned cliché (§6.1)")
     name = ctx.get("specific")
     if name:
-        named = name.lower() in words or name.lower() in str(c.get("url", "")).lower()
+        named = shotmod.names(name, words) or name.lower() in str(c.get("url", "")).lower()
         _check(c, "names_specific", named)
         if not archival(c, ctx):
             _reject(c, f"the sentence names {name!r}: only archival evidence may show it (§6.2)")
@@ -428,7 +429,10 @@ def media(c: dict, a: dict, ctx: dict, hashes: dict | None = None) -> bool:
         from .. import grade
         mono = True if ctx.get("kind") in ("archive", "stack", "split") and arch else None
         try:
-            g = grade.plan(Path(c["preview_file"]), image=c["kind"] != "video", mono=mono, crop=c["kind"] == "video", grain=False)
+            # footage is judged on its opening (a shot takes its window from there), not its whole length
+            window = max(8.0, min(GRADE_WINDOW_S, ctx["length"] + 2.0)) if c["kind"] == "video" else None
+            g = grade.plan(Path(c["preview_file"]), image=c["kind"] != "video", mono=mono, crop=c["kind"] == "video",
+                           grain=False, duration=window)
             _check(c, "graded_luma", g["yavg"])
         except grade.Rejected as e:
             _reject(c, f"the grade cannot land it: {e} (§3.2)")

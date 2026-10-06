@@ -96,7 +96,7 @@ def test_stills_long_edge_style_floor_and_upscale():
     x = ctx(kind="still", style="still-push", length=6.0)
     has(checked(cand(source="loc", kind="image", width=1536, height=1218), x), "at least 1,600 px")
     has(checked(cand(source="loc", kind="image", width=1800, height=1200), x), "still-push needs a source at least 2,000 px")
-    has(checked(cand(source="loc", kind="image", width=1200, height=2000), x), "would be enlarged 1.73×")
+    has(checked(cand(source="loc", kind="image", width=1200, height=2000), x), "would be enlarged 1.79×")
     has(checked(cand(source="commons", kind="image", width=2400, height=1800), ctx(kind="still", style="still-reveal")),
         "still-reveal needs a source at least 2,600 px on its width")
     assert checked(cand(source="loc", kind="image", width=3000, height=2200), x)["passed_filters"]
@@ -236,3 +236,13 @@ def test_an_archival_record_must_be_about_the_query_s_nouns_not_mention_them():
     ledger = cand(source="smithsonian", kind="image", title="Ledger page from an account book", width=3000, height=2200,
                   query="accountant reading ledger photograph")
     assert checked(ledger, x)["passed_filters"]
+
+
+def test_a_catalogue_s_way_of_writing_a_name_still_names_it():
+    from hubricon_content.shots import names
+    assert names("Robert E. Wood", "WOOD, ROBERT E. Portrait, 1937")
+    assert names("Robert E. Wood", "R.E. Wood, President of Sears")
+    assert names("Robert E. Wood", "R. E. Wood at his desk")
+    assert not names("Robert E. Wood", "Grant Wood, painter")
+    assert names("Sears, Roebuck and Company", "Mail order plant of Sears, Roebuck and Company")
+    assert not names("Adams Express Company", "Adams County courthouse; express train")

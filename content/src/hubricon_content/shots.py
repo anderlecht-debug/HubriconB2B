@@ -46,6 +46,23 @@ def registry() -> dict:
     return json.loads(STYLES_JSON.read_text(encoding="utf-8"))
 
 
+def names(name: str, text: str) -> bool:
+    """Whether a record names `name` (§6.2): the phrase itself; every word of it in any order, as a
+    catalogue writes a person ("WOOD, ROBERT E."); or the given names as initials before the
+    surname ("R.E. Wood", "R. E. Wood"). A company's name still needs every one of its words."""
+    t = str(text).lower()
+    if not name or name.lower() in t:
+        return bool(name)
+    toks = re.findall(r"[a-z0-9]+", name.lower())
+    if toks and set(toks) <= set(re.findall(r"[a-z0-9]+", t)):
+        return True
+    if len(toks) >= 2:
+        *given, last = toks
+        initials = r"\.?\s*".join(re.escape(g[0]) for g in given)
+        return re.search(rf"\b{initials}\.?\s*{re.escape(last)}\b", t) is not None
+    return False
+
+
 def _norm(w: str) -> str:
     return re.sub(r"[^a-z0-9$%]", "", w.lower())
 
@@ -311,7 +328,7 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
         if picked and sourced:
             assets = s.get("asset") if isinstance(s.get("asset"), list) else [s.get("asset") or {}]
             text = " ".join(str(a.get(k, "")) for a in assets for k in ("title", "description", "url", "credit", "subject"))
-            if name.lower() not in text.lower():
+            if not names(name, text):
                 p(f"{s['id']}: the picked asset's provenance does not name {name!r}")
 
     # ── 5. world shots query concrete nouns, never a cliché; 6. no asset twice ──

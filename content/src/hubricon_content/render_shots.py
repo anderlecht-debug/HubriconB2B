@@ -43,6 +43,15 @@ END = {"headline": "More profit than our bill every month, or you don't pay.", "
 PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
 
 
+def display_date(value) -> str | None:
+    """A record's date as a caption shows it: a full timestamp ("1905-09-01", "1906-01-01 00:00")
+    as its year; anything written for people ("c. 1902", "1912–13") as written."""
+    if not value:
+        return value
+    m = re.fullmatch(r"\s*(1[5-9]\d\d|20\d\d)-\d\d-\d\d([ T].*)?\s*", str(value))
+    return m.group(1) if m else str(value)
+
+
 def frames_of(shot: dict) -> int:
     return round(float(shot["end"]) * FPS) - round(float(shot["start"]) * FPS)
 
@@ -189,13 +198,13 @@ class Job:
         if self.kind in ("still", "texture", "archive", "split") and isinstance(a, dict):
             g = graded_still(a["file"], mono=True if self.kind in ("archive", "split") else None,
                              placeholder=str(a.get("id", "")).startswith("placeholder:"))
-            self.job["asset"] = {**{k: a.get(k) for k in ("credit", "place", "date", "title")}, **g}
+            self.job["asset"] = {**{k: a.get(k) for k in ("credit", "place", "title")}, "date": display_date(a.get("date")), **g}
             self.assets.append(g["sha256"])
         if self.kind == "stack" and isinstance(a, list):
             self.job["assets"] = []
             for x in a:
                 g = graded_still(x["file"], mono=True)
-                self.job["assets"].append({**{k: x.get(k) for k in ("credit", "place", "date", "at")}, **g})
+                self.job["assets"].append({**{k: x.get(k) for k in ("credit", "place", "at")}, "date": display_date(x.get("date")), **g})
                 self.assets.append(g["sha256"])
         if self.kind == "footage" and isinstance(a, dict):
             self.assets.append(sha(Path(a["file"])))
@@ -225,7 +234,9 @@ def _manim(job: Job, out: Path):
     from .render_scenes import ENTRY
     s = job.shot
     seg = {"start": float(s["start"]), "end": float(s["start"]) + job.seconds, "index": int(re.sub(r"\D", "", s["id"]) or 0),
-           "reveals": {r["key"]: {"t": float(s["start"]) + r["t"], "value": r["value"]} for r in job.job["reveals"]},
+           # a callout is a figure: a spoken label ("demo data", the demo's name) is not drawn as one
+           "reveals": {r["key"]: {"t": float(s["start"]) + r["t"], "value": r["value"]} for r in job.job["reveals"]
+                       if re.search(r"\d", str(r.get("value", "")))},
            "vo": s.get("says", ""), "proof": s.get("label") == "proof", "kind": "beat",
            "title": (job.job["params"] or {}).get("heading", "")}
     with tempfile.TemporaryDirectory(prefix="hubricon-manim-") as tmp:

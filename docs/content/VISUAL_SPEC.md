@@ -539,6 +539,17 @@ to Inter (§3.1).
 - **The gap.** After a big reveal or at a chapter's end, 1.5–2 s with no voice: the bed comes up and
   the picture holds a moving shot. Taken from the script's own paragraph breaks, never invented.
 
+**2026-10-06, on the founder's instruction for the first Greats film ("really make sure that the
+cinematography and the flow will create that wow factor at volume").** The score of a long film is
+read from its shot plan (`audio.score_events`): a tick on every figure as it lands; a low hit
+(−24 dB) under each hero figure (`number-land`, `number-pair`, `counterfactual`, `callback`,
+`range-band`, `unit-grid`); a soft whoosh (−32 dB) where the picture changes room; a short riser
+(−30 dB) into each chapter card, where the bed also comes up 8 dB; and the bed drops out for the
+first words of each `kinetic-thesis`. The bed family is built from the one licensed cue (a different
+passage and key per chapter, crossfading over 2.5 s at the card) until more cues exist. A long
+film's bed is levelled by its average, not its peaks, and ducked 10 dB under the voice: levelled by
+peak and ducked 20 dB, the first draft's bed measured 35 dB under the voice, which is no music.
+
 ---
 
 ## 10. QA, by program and by eye
