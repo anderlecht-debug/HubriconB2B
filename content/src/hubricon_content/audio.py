@@ -137,6 +137,32 @@ def _sub(rng) -> np.ndarray:
     return x / (np.abs(x).max() + 1e-9)
 
 
+FOLEY_DB = -30.0          # a page or print landing on the desk
+SUBDROP_DB = -24.0        # under a chapter card
+FOLEY_LEAD = 0.1          # sound leads picture by three frames (a J-cut), so the cut is heard first
+PAPER_KINDS = {"document", "table", "receipt", "archive", "stack", "split"}
+
+
+def _paper(rng) -> np.ndarray:
+    """A sheet or print sliding onto the desk: a short band of air, 0.35 s, its body around 1–4 kHz."""
+    n = int(SR * 0.35)
+    t = np.arange(n) / SR
+    noise = rng.normal(0, 1, n)
+    body = _smooth(noise, 6) - _smooth(noise, 48)              # a crude band-pass: no low rumble, no hiss
+    env = (1 - np.exp(-t * 60)) * np.exp(-t * 9)
+    x = body * env
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def _subdrop(rng) -> np.ndarray:
+    """A low fall under a chapter card: a sine from 80 to 35 Hz over 0.9 s."""
+    n = int(SR * 0.9)
+    t = np.arange(n) / SR
+    f = 35 + 45 * np.exp(-t * 4)
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 3.2) * (1 - np.exp(-t * 80))
+    return x / (np.abs(x).max() + 1e-9)
+
+
 def _riser(rng, seconds: float = 1.8) -> np.ndarray:
     """Air that brightens and grows into a cut: noise through a one-pole low-pass opening 250 Hz → 5 kHz."""
     n = int(SR * seconds)
@@ -197,7 +223,8 @@ def score_events(plan: dict, timing: dict) -> dict:
         if a.get("room") != b.get("room") and not near_card(float(b["start"])):
             rooms.append(float(b["start"]))
     return {"ticks": ticks, "subs": subs, "rooms": rooms, "drops": drops,
-            "risers": [a for a, _ in cards], "cards": cards}
+            "risers": [a for a, _ in cards], "cards": cards,
+            "paper": [float(s["start"]) for s in shots if s.get("kind") in PAPER_KINDS and s.get("room") == "paper"]}
 
 
 def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
@@ -292,12 +319,15 @@ def mix(slug: str) -> Path:
                 ramp[-r:] = np.linspace(_db(CARD_SWELL_DB), 1, r)
             lift[i0:i1] = ramp[: max(0, min(n, i1) - i0)]
         for t in score["drops"]:         # silence under the thesis line's first words, then back
-            i0, i1 = int(max(0.0, t - 0.6) * SR), int((t + 0.2) * SR)
+            i0, i1 = int(max(0.0, t - 0.35) * SR), int((t + 0.05) * SR)   # 0.4 s: a breath, not a hole
             back = int(1.5 * SR)
             lift[i0:i1] = 0.0
             lift[i1:i1 + back] = np.linspace(0, 1, len(lift[i1:i1 + back]))
         bed_gain = bed_gain * lift
-    room = _room(total, rng)[:n] * _db(ROOM_TONE_DB)
+    room = _room(total, rng)[:n]
+    if score:   # a long film's room tone is levelled by its body, like the bed: the floor never falls to silence
+        room = room / (np.sqrt(np.mean(room ** 2)) + 1e-9)
+    room = room * _db(ROOM_TONE_DB)
 
     fx = np.zeros(n)
     tick_file, whoosh_file = ASSETS / "sfx" / "tick.mp3", ASSETS / "sfx" / "whoosh.mp3"
@@ -323,6 +353,11 @@ def mix(slug: str) -> Path:
             _place(fx, whoosh, max(0.0, t - 0.15), _db(ROOM_WHOOSH_DB))
         for t in score["risers"]:
             _place(fx, riser, max(0.0, t - len(riser) / SR), _db(RISER_DB))
+        paper, sub_drop = _paper(rng), _subdrop(rng)
+        for t in score["paper"]:
+            _place(fx, paper, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB))
+        for t in score["risers"]:
+            _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
     amb, amb_subjects = _ambience(d, n)
     out = vo + bed * bed_gain + room + fx + amb

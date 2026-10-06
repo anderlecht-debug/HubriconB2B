@@ -25,11 +25,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from . import footage, grade, shots, tokens
+from . import footage, grade, shots, sourcelabel, tokens
 from . import script as scriptmod
 from .state import CONTENT_DIR
 
-VERSION = "2026-10-05.1"
+VERSION = "2026-10-05.1" + ("+v3" if os.environ.get("FILM_LOOK") == "v3" else "")
 FPS = 30
 REPO = CONTENT_DIR.parent
 RENDER_MJS = CONTENT_DIR / "film" / "render.mjs"
@@ -37,6 +37,9 @@ GRADED = CONTENT_DIR / ".cache" / "graded"
 MANIM_SCENES = {"waterfall": "Waterfall", "cash_cone": "CashCone", "paths": "Paths", "elasticity": "Elasticity",
                 "newsvendor": "Newsvendor", "sample_size": "SampleSize"}
 STAGE_CHARTS = {"staircase", "montecarlo", "aging"}
+# The v3 look (FILM_LOOK=v3, the founder's call of 2026-10-06) draws every chart on the stage,
+# the engine's too, from the same figures: the waterfall from this film's own run.json.
+LOOK = "v3" if os.environ.get("FILM_LOOK") == "v3" else "paper"
 # The end card's words are the site's own (the style reel's end scene, content/film/scenes.mjs).
 END = {"headline": "More profit than our bill every month, or you don't pay.", "primary": "Book your call",
        "secondary": "or learn the method, free, at hubricon.com/learn"}
@@ -144,8 +147,20 @@ class Job:
             "params": fill(src.get("params") or {}, values), "focus": shot.get("focus") or src.get("focus"),
             "motion": shot.get("motion") or src.get("motion"), "overlay": fill(shot.get("overlay") or {}, values),
             "chart": src.get("chart"),
+            # every spoken word under the shot, with its start in seconds from the shot's first
+            # frame, so a stage can land a word, a stroke or a figure on the exact syllable
+            "words": [{"w": w["word"], "t": round(float(w["start"]) - start, 3)}
+                      for w in shots.words_in(words, start, float(shot["end"]))],
+            # the figures' sources as a viewer reads them (sourcelabel.py); none where the
+            # proof or demo label already says what the figure is
+            "source_label": sourcelabel.label([r["key"] for r in reveals], facts),
         }
         self.assets: list[str] = []
+        if LOOK == "v3" and self.kind == "chart":
+            run = d / "run.json"
+            scene = (self.job.get("chart") or {}).get("scene")
+            if run.exists() and scene:
+                self.job["chart_data"] = json.loads(run.read_text(encoding="utf-8")).get(scene)
         self._defaults(shot, timing, facts, words, start)
 
     def _defaults(self, shot, timing, facts, words, start):
@@ -173,8 +188,11 @@ class Job:
                 inside = shots.words_in(words, float(shot["start"]), float(shot["end"]))
                 p.setdefault("at", [0.0, round(inside[first]["start"] - start, 3) if len(inside) > first else 0.9])
         if self.kind == "chapter":
-            card = next((c for c in timing["segments"] if c["kind"] == "card" and abs(float(c["start"]) - start) < 0.05), None)
+            cards = [c for c in timing["segments"] if c["kind"] == "card"]
+            card = next((c for c in cards if abs(float(c["start"]) - start) < 0.05), None)
             p.setdefault("title", (card or {}).get("title", ""))
+            if card is not None:
+                p.setdefault("index", cards.index(card) + 1)   # "Chapter IV": the card's place in the film
         if self.kind == "end":
             for k, v in END.items():
                 p.setdefault(k, v)
@@ -185,6 +203,8 @@ class Job:
             return "footage"
         if self.kind == "chart":
             scene = (self.job.get("chart") or {}).get("scene")
+            if LOOK == "v3":
+                return "stage"
             if scene in MANIM_SCENES:
                 return "manim"
             if scene in STAGE_CHARTS:
@@ -214,8 +234,11 @@ class Job:
                 self.assets.append(sha(Path(right["file"])))
 
     def key(self) -> str:
-        look = "".join((CONTENT_DIR / p).read_text(encoding="utf-8") for p in
-                       ("assets/tokens.json", "assets/grade.json", "film/styles.json", "film/shots.css", "film/shots.mjs"))
+        files = ["assets/tokens.json", "assets/grade.json", "film/styles.json", "film/shots.css", "film/shots.mjs"]
+        if LOOK == "v3":   # every file the v3 stage draws with, so an edited kind re-renders its clips
+            files += sorted(str(p.relative_to(CONTENT_DIR)) for p in (CONTENT_DIR / "film" / "v3").rglob("*")
+                            if p.suffix in (".css", ".mjs", ".js", ".html"))
+        look = "".join((CONTENT_DIR / p).read_text(encoding="utf-8") for p in files)
         blob = json.dumps({"job": self.job, "assets": self.assets, "renderer": self.renderer, "room": self.room,
                            "asset": self.shot.get("asset"), "version": VERSION}, sort_keys=True, default=str)
         return hashlib.sha256((blob + look).encode()).hexdigest()

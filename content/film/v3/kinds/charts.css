@@ -1,0 +1,146 @@
+/* v3 charts: data as light on the dark desk (docs/content/FILM_LOOK_V3.md; round 2, ROUND2.md).
+   Ivory light for lines and type, one blue per frame on the leak or the money the line lands on.
+   Sizes come from base.css's tokens. No CSS filter sits on anything that changes every frame (R4):
+   a glow is a wider translucent stroke under the line, or a text-shadow. Every entrance is keyed to
+   --at (seconds from the shot's first frame) and, where it has one, --d. */
+
+.ch-cam { position: absolute; inset: 0; transform-origin: var(--cam-origin, 160px 486px); transform-style: preserve-3d; }
+.ch-push { position: absolute; inset: 0; transform-origin: 0 0; }
+.ch-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.ch-layer { position: absolute; inset: 0; }
+.ch text { font-family: var(--sans); font-variant-numeric: tabular-nums; }
+
+/* ---- heading and caption: Fraunces at the size it is set, Inter for the caption */
+.ch-head { position: absolute; left: var(--grid-x); top: 100px; max-width: 1600px; }
+.ch-kicker { margin: 0 0 18px; font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.78); }
+.ch-title { margin: 0; font: var(--heading-font); font-optical-sizing: auto; letter-spacing: -0.01em; word-spacing: 0.06em; color: var(--light); text-wrap: balance; }
+.ch-cap { margin: 16px 0 0; font: 400 var(--fs-body)/1.25 var(--sans); color: var(--light-2); }
+
+/* ---- rules, ticks and axis names */
+.ch-grid { fill: none; stroke: rgb(242 238 230 / 0.08); stroke-width: 1.5; }
+.ch-edge { fill: none; stroke: rgb(242 238 230 / 0.08); stroke-width: 1.5; stroke-dasharray: 2 9; }
+.ch-axis { fill: none; stroke: rgb(242 238 230 / 0.42); stroke-width: 2; }
+.ch-tick { font-size: var(--fs-label); font-weight: 500; fill: rgb(242 238 230 / 0.72); }
+.ch-axisname { font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase; fill: rgb(242 238 230 / 0.72); }
+.ch-tick.ch-hot { animation: ch-in 0.6s var(--ease-out) calc(var(--at, 0) * 1s) both, ch-hot 0.4s ease calc(var(--hot, 0) * 1s) forwards; }
+@keyframes ch-hot { to { fill: var(--light); } }
+
+/* ---- lines of light: a crisp core over a wide faint halo, both drawn on */
+.ch-line { fill: none; stroke: var(--light); stroke-width: 4; stroke-linecap: square; }
+.ch-halo { fill: none; stroke: rgb(255 238 210 / 0.13); stroke-width: 14; stroke-linecap: square; }
+.ch-leak { fill: none; stroke: var(--blue); stroke-width: 6; stroke-linecap: square; }
+.ch-leak-halo { fill: none; stroke: rgb(47 116 255 / 0.28); stroke-width: 22; stroke-linecap: round; }
+.ch-ghost { fill: none; stroke: rgb(242 238 230 / 0.5); stroke-width: 2.5; stroke-dasharray: 11 9; }
+.ch-ghost-leak { fill: none; stroke: rgb(47 116 255 / 0.9); stroke-width: 3.5; stroke-dasharray: 11 9; }
+.ch-thread { fill: none; stroke: rgb(242 238 230 / 0.38); stroke-width: 2; }
+.ch-bracket { fill: none; stroke: var(--blue); stroke-width: 3; }
+.ch-conn { fill: none; stroke: rgb(242 238 230 / 0.3); stroke-width: 2; }
+.ch-pct { fill: none; stroke: rgb(242 238 230 / 0.6); stroke-width: 2.5; }
+.ch-pct-halo { fill: none; stroke: rgb(242 238 230 / 0.07); stroke-width: 10; }
+.ch-median { fill: none; stroke: var(--blue); stroke-width: 4.5; stroke-linecap: round; }
+.ch-median-halo { fill: none; stroke: rgb(47 116 255 / 0.25); stroke-width: 18; stroke-linecap: round; }
+
+/* ---- dots */
+.ch-dot { fill: var(--light); stroke: rgb(255 240 214 / 0.25); stroke-width: 8; paint-order: stroke; }
+.ch-dot-hollow { fill: #141210; stroke: var(--light); stroke-width: 3.5; }
+.ch-end-dot { fill: var(--blue); stroke: rgb(47 116 255 / 0.3); stroke-width: 10; paint-order: stroke; }
+.ch-ripple { fill: none; stroke: var(--light); stroke-width: 2; transform-box: fill-box; transform-origin: center;
+  animation: ch-ripple 1.2s cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
+
+/* ---- type on the plot: figures in Inter 500, labels in caps at 28 px */
+.ch-lab { position: absolute; white-space: nowrap; color: var(--light); }
+.ch-lab i, .ch-eyebrow { font: 500 var(--fs-label)/1 var(--sans); font-style: normal; letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.78); }
+.ch-fig { display: inline-block; font-family: var(--hero-face); font-weight: var(--hero-weight); font-variant-numeric: tabular-nums; line-height: 0.9;
+  --track: var(--hero-track-l); letter-spacing: var(--track); word-spacing: 0.06em; color: var(--light); }
+.ch-fig.money { color: var(--blue); text-shadow: 0 0 10px rgb(49 117 255 / 0.27), 0 0 36px rgb(49 117 255 / 0.13); }
+.ch-fig-l { font-size: var(--fs-display-l); }
+.ch-fig-m { font-size: var(--fs-display-m); }
+.ch-fig-s2 { font-size: var(--fs-display-s); }
+.ch-fig-s { font-size: var(--fs-body); --track: -0.01em; }
+.ch-unit-t { display: inline-block; font-family: var(--sans); font-style: italic; font-weight: 400; color: rgb(242 238 230 / 0.7); margin-left: 14px; }
+.ch-row { display: flex; align-items: baseline; }
+.ch-arrow { display: inline-block; margin: 0 22px; font: 300 56px/1 var(--sans); color: rgb(242 238 230 / 0.7); }
+.ch-ledger { position: absolute; display: flex; flex-direction: column; gap: 46px; }
+.ch-row--2, .ch-row--3 { margin-top: 4px; }
+.ch-row--3 { display: flex; flex-direction: column; gap: 12px; }
+.ch-dotlab { display: flex; flex-direction: column; gap: 10px; }
+.ch-dotlab--r { align-items: flex-end; }
+.ch-name { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.78); }
+.ch-name--ghost { color: rgb(242 238 230 / 0.55); }
+.ch-barname { font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase; fill: rgb(242 238 230 / 0.72); }
+.ch-barname--leak { fill: var(--blue); }
+.ch-endlab { display: flex; flex-direction: column; gap: 10px; }
+.ch-fallsays { max-width: 1360px; white-space: normal; font: 400 var(--fs-display-s)/1.15 var(--serif); font-optical-sizing: auto; letter-spacing: -0.01em; color: var(--light); text-wrap: balance; }
+
+/* ---- the Monte Carlo: threads, monthly points, the band, the blue median */
+.ch-threads path { fill: none; stroke: rgb(242 238 230 / 0.07); stroke-width: 1.2; }
+.ch-threads.ch-wipe { animation-timing-function: linear; }
+.ch-month circle { fill: rgb(242 238 230 / 0.42); }
+.ch-pop-col { animation: ch-col 0.32s var(--ease-out) calc(var(--at, 0) * 1s) both; }
+@keyframes ch-col { from { opacity: 0; } 40% { opacity: 1; } to { opacity: 0.75; } }
+.ch-band { fill: rgb(242 238 230 / 0.10); }
+
+/* ---- bars and columns: a 2 px edge of light over a flat 6% fill */
+.ch-bar-fill, .ch-col-fill { fill: rgb(242 238 230 / 0.06); }
+.ch-bar-edge, .ch-col-top { fill: none; stroke: rgb(242 238 230 / 0.9); stroke-width: 2; }
+.ch-bar--leak .ch-bar-fill, .ch-col--leak .ch-col-fill { fill: rgb(47 116 255 / 0.06); }
+.ch-bar--leak .ch-bar-edge, .ch-col--leak .ch-col-top { stroke: var(--blue); }
+.ch-play-line { fill: none; stroke: rgb(242 238 230 / 0.55); stroke-width: 2; stroke-dasharray: 4 8; }
+.ch-play-dot { fill: var(--light); }
+
+/* ---- light on the desk (gradients, never filters) */
+.ch-spill { position: absolute; pointer-events: none; background: radial-gradient(ellipse 50% 40% at 50% 32%, rgb(255 236 206 / 0.075), rgb(255 236 206 / 0.025) 55%, transparent 100%);
+  animation: ch-fade calc(var(--d, 1.2) * 1s) ease calc(var(--at, 0) * 1s) both; }
+.ch-bloom { position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(47 116 255 / 0.22), rgb(47 116 255 / 0.08) 48%, transparent 100%);
+  animation: ch-bloom calc(var(--d, 1.4) * 1s) cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
+.ch-bloom--hard { animation-name: ch-bloom-hard; }
+.ch-bloom--soft { opacity: 0.7; }
+.ch-flare { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(255 246 228 / 0.9), rgb(255 236 200 / 0.28) 45%, transparent);
+  animation: ch-flare 0.8s ease-out calc(var(--at, 0) * 1s) both; }
+
+/* ---- entrances */
+.ch-draw { stroke-dasharray: 1 1.1; stroke-dashoffset: 1.02; animation: ch-draw calc(var(--d, 0.8) * 1s) cubic-bezier(0.45, 0, 0.25, 1) calc(var(--at, 0) * 1s) both; }
+.ch-riser.ch-draw { animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+.ch-in { animation: ch-in 0.6s var(--ease-out) calc(var(--at, 0) * 1s) both; }
+.ch-fade { animation: ch-fade 0.8s ease calc(var(--at, 0) * 1s) both; }
+.ch-pop { transform-box: fill-box; transform-origin: center; animation: ch-pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--at, 0) * 1s) both; }
+.ch-drop { transform-box: fill-box; transform-origin: center; animation: ch-drop 0.7s linear calc(var(--at, 0) * 1s) both; }
+.ch-wipe { animation: ch-wipe calc(var(--d, 1.4) * 1s) cubic-bezier(0.45, 0, 0.25, 1) calc(var(--at, 0) * 1s) both; }
+.ch-wipe-up { animation: ch-wipe-up calc(var(--d, 0.5) * 1s) cubic-bezier(0.3, 0, 0.1, 1) calc(var(--at, 0) * 1s) both; }
+/* a bar draws up from its base: 500 ms, the critique's curve; a following bar starts 70 ms later */
+.ch-grow { transform-box: fill-box; transform-origin: 50% 100%; animation: ch-grow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--at, 0) * 1s) both; }
+/* a figure lands on its word (S3): blur, scale and tracking settle from 0.15 s before the onset */
+.ch-land { animation: ch-land 0.35s cubic-bezier(0.16, 1, 0.3, 1) calc((var(--at, 0) - 0.15) * 1s) both; }
+.ch-land.money { animation: ch-land 0.35s cubic-bezier(0.16, 1, 0.3, 1) calc((var(--at, 0) - 0.15) * 1s) both,
+  ch-glow 0.6s linear calc(var(--at, 0) * 1s) both; }
+
+@keyframes ch-draw { from { stroke-dashoffset: 1.02; } to { stroke-dashoffset: 0; } }
+@keyframes ch-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes ch-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ch-out { to { opacity: 0; } }
+@keyframes ch-pop { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+@keyframes ch-drop {
+  0% { opacity: 0; transform: translateY(-90px) scale(0.85); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  45% { opacity: 1; transform: translateY(0) scale(1.16, 0.84); animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); }
+  65% { transform: translateY(-6px) scale(0.97, 1.03); animation-timing-function: cubic-bezier(0.5, 0, 0.7, 0.4); }
+  82%, 100% { opacity: 1; transform: none; } }
+@keyframes ch-ripple { 0% { opacity: 0; transform: scale(1); } 6% { opacity: 0.8; } 100% { opacity: 0; transform: scale(4.2); } }
+@keyframes ch-wipe { from { clip-path: inset(-40px 100% -40px -40px); } to { clip-path: inset(-40px -40px -40px -40px); } }
+@keyframes ch-wipe-up { from { clip-path: inset(100% -40px -40px -40px); } to { clip-path: inset(-40px -40px -40px -40px); } }
+@keyframes ch-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ch-land {
+  0% { opacity: 0; filter: blur(10px); transform: scale(1.06); letter-spacing: calc(var(--track, 0em) + 0.04em); }
+  35% { opacity: 1; }
+  100% { opacity: 1; filter: blur(0px); transform: scale(1); letter-spacing: var(--track, 0em); } }
+@keyframes ch-glow {
+  0% { text-shadow: 0 0 10px rgb(49 117 255 / 0), 0 0 36px rgb(49 117 255 / 0); }
+  25% { text-shadow: 0 0 10px rgb(49 117 255 / 0.45), 0 0 36px rgb(49 117 255 / 0.22); }
+  100% { text-shadow: 0 0 10px rgb(49 117 255 / 0.27), 0 0 36px rgb(49 117 255 / 0.13); } }
+@keyframes ch-bloom { 0% { opacity: 0; transform: scale(0.5); } 30% { opacity: 1; transform: scale(1); } 100% { opacity: 0.6; transform: scale(1.06); } }
+@keyframes ch-bloom-hard { 0% { opacity: 0; transform: scale(0.3); } 7% { opacity: 1; transform: scale(1.12); } 100% { opacity: 0.5; transform: scale(1); } }
+@keyframes ch-flare { 0% { opacity: 0; transform: scale(0.3); } 25% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(0.8); } }
+/* a rack of focus: the far plane softens and dims while the near one holds, then comes back */
+@keyframes ch-rack { 0% { opacity: 1; filter: blur(0px); } 14% { opacity: 0.42; filter: blur(2px); } 80% { opacity: 0.42; filter: blur(2px); } 100% { opacity: 1; filter: blur(0px); } }
+@keyframes ch-young-fill { 0% { fill: rgb(242 238 230 / 0.06); } 30% { fill: rgb(242 238 230 / 0.2); } 100% { fill: rgb(242 238 230 / 0.12); } }

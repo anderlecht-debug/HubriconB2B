@@ -11,7 +11,7 @@ def _plan():
         {"id": "s2", "room": "world", "style": "still-push", "start": 5.0, "end": 12.0, "reveals": []},
         {"id": "s3", "room": "paper", "style": "chapter", "start": 12.0, "end": 14.5, "reveals": []},
         {"id": "s4", "room": "paper", "style": "kinetic-thesis", "start": 14.5, "end": 20.0, "reveals": []},
-        {"id": "s5", "room": "paper", "style": "doc-highlight", "start": 20.0, "end": 30.0,
+        {"id": "s5", "room": "paper", "style": "doc-highlight", "kind": "document", "start": 20.0, "end": 30.0,
          "reveals": [{"key": "b", "t": 22.0}, {"key": "c", "t": 22.1}]},
     ]}
 
@@ -28,6 +28,7 @@ def test_score_follows_the_plan():
     assert ev["rooms"] == [5.0]                          # paper → world; the card cut keeps its own whoosh
     assert ev["drops"] == [14.5]                         # the bed drops under the thesis line
     assert ev["risers"] == [12.0]
+    assert ev["paper"] == [20.0]                         # a document lands with a paper sound
 
 
 def test_family_crossfades_without_gaps():

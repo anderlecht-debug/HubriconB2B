@@ -13,13 +13,19 @@
 // Needs Chrome or Chromium (CHROME_BIN, else Playwright's) and ffmpeg on PATH.
 import { createServer } from "node:http";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
-import { readFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { extname, join, dirname } from "node:path";
 import { tmpdir, homedir } from "node:os";
 import { figures } from "../../scripts/build-pages.mjs";
 import { sceneHTML, STYLE_REEL } from "./scenes.mjs";
 import { write as writeTokens } from "./tokens.mjs";
-import { shotHTML } from "./shots.mjs";
+// The look a long film renders in: FILM_LOOK=v3 is the dark archive (content/film/v3/), the
+// founder's call of 2026-10-06; anything else is the paper look the visual trial locked.
+export const LOOK = process.env.FILM_LOOK === "v3" ? "v3" : "paper";
+const { shotHTML } = await import(LOOK === "v3" ? "./v3/shots.mjs" : "./shots.mjs");
+export const STAGE = LOOK === "v3" ? "content/film/v3/stage.html" : "content/film/stage.html";
+// Each frame: every CSS animation to its time, then the page's own clock (count-ups, type, light).
+export const seekJS = (ms) => `document.getAnimations().forEach((a) => { a.currentTime = ${ms}; }); window.__seek && window.__seek(${ms / 1000});`;
 
 const ROOT = new URL("../../", import.meta.url).pathname;
 const FPS = 30, W = 1920, H = 1080, BREATH = 0.45;
@@ -51,13 +57,21 @@ export function serve() {
 }
 
 export async function cdp(chrome) {
-  const port = 9400 + Math.floor(Math.random() * 400);
+  // Port 0: Chrome picks a free port and writes it to DevToolsActivePort in its own profile, so
+  // parallel renders can never drive each other's browser (a random port once collided).
   const prof = mkdtempSync(join(tmpdir(), "hubricon-film-"));
-  const proc = spawn(chrome, ["--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--force-color-profile=srgb",
-    `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, "about:blank"], { stdio: "ignore" });
-  let ws;
+  // FILM_CHROME_GPU=1 renders on the GPU (filters, 3D and blending are the slow part on a CPU).
+  const gpu = process.env.FILM_CHROME_FLAGS ? process.env.FILM_CHROME_FLAGS.split(" ")
+    : process.env.FILM_CHROME_GPU === "1"
+    ? ["--ignore-gpu-blocklist", "--enable-gpu-rasterization", "--use-angle=vulkan", "--enable-features=Vulkan,UseSkiaRenderer", "--disable-vulkan-surface"]
+    : ["--disable-gpu"];
+  const proc = spawn(chrome, ["--headless=new", "--no-sandbox", ...gpu, "--hide-scrollbars", "--force-color-profile=srgb",
+    "--remote-debugging-port=0", `--user-data-dir=${prof}`, "about:blank"], { stdio: "ignore" });
+  let ws, port;
   for (let i = 0; i < 60 && !ws; i++) {
     try {
+      if (!port) port = Number(readFileSync(join(prof, "DevToolsActivePort"), "utf8").split("\n")[0]) || undefined;
+      if (!port) throw new Error("not yet");
       const page = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === "page");
       if (page) ws = new WebSocket(page.webSocketDebuggerUrl);
     } catch {}
@@ -72,7 +86,9 @@ export async function cdp(chrome) {
     if (m.result?.exceptionDetails) throw new Error(m.result.exceptionDetails.exception?.description || "page error");
     return m.result?.result?.value;
   };
-  return { send, evaluate, close: () => { try { ws.close(); } catch {} proc.kill("SIGKILL"); } };
+  // The profile goes with the browser: a render left one in /tmp every time (136 of them, 2.2 GB).
+  return { send, evaluate, close: () => { try { ws.close(); } catch {} proc.kill("SIGKILL");
+    setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); } catch {} }, 300); } };
 }
 
 const seconds = (wav) => Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", wav]).toString().trim());
@@ -122,12 +138,12 @@ export async function render(board, out, { audio = null, stills = null } = {}) {
       let last = null;
       for (let i = 0; i < moving; i++) {
         await page.evaluate(`document.getAnimations().forEach((a) => { a.currentTime = ${(i * 1000) / FPS}; })`);
-        const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 94 });
+        const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 94, optimizeForSpeed: true });
         last = Buffer.from(shot.result.data, "base64");
         await write(last);
       }
       if (!last) {
-        const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 94 });
+        const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 94, optimizeForSpeed: true });
         last = Buffer.from(shot.result.data, "base64");
         await write(last);
       }
@@ -188,7 +204,7 @@ export async function renderShots(jobs, { workers = 4 } = {}) {
       await page.send("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: 1, mobile: false });
       await page.send("Page.enable");
       await page.send("Runtime.enable");
-      await page.send("Page.navigate", { url: `http://127.0.0.1:${srv.address().port}/content/film/stage.html` });
+      await page.send("Page.navigate", { url: `http://127.0.0.1:${srv.address().port}/${STAGE}` });
       await page.evaluate("new Promise((r) => { const ok = () => document.fonts.ready.then(r); document.readyState === 'complete' ? ok() : addEventListener('load', ok); })");
       while (queue.length) {
         const job = queue.shift();
@@ -215,6 +231,7 @@ async function renderShot(page, job, built) {
     await Promise.all([...stage.querySelectorAll("img")].map((i) => i.decode().catch(() => null)));
     stage.querySelectorAll("[data-play]").forEach((f) => f.classList.add("playing"));
     document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 0; });
+    window.__seek && window.__seek(0);
     const r = stage.querySelector(".split-right")?.getBoundingClientRect();
     return { rect: r ? { x: r.x, y: r.y, w: r.width, h: r.height } : null,
              broken: [...stage.querySelectorAll("img")].filter((i) => !i.naturalWidth).map((i) => i.getAttribute("src")) };
@@ -227,14 +244,14 @@ async function renderShot(page, job, built) {
   const write = (buf) => new Promise((r) => (ff.stdin.write(buf) ? r() : ff.stdin.once("drain", r)));
   const done = new Promise((r, j) => ff.on("close", (c) => (c === 0 ? r() : j(new Error(`ffmpeg exited ${c} on ${job.id}`)))));
   for (let i = 0; i < job.frames; i++) {
-    await page.evaluate(`document.getAnimations().forEach((a) => { a.currentTime = ${(i * 1000) / FPS}; })`);
-    const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 95 });
+    await page.evaluate(seekJS((i * 1000) / FPS));
+    const shot = await page.send("Page.captureScreenshot", { format: "jpeg", quality: 95, optimizeForSpeed: true });
     await write(Buffer.from(shot.result.data, "base64"));
   }
   ff.stdin.end();
   await done;
   if (job.still) {
-    await page.evaluate(`document.getAnimations().forEach((a) => { a.currentTime = ${(job.still_at ?? job.seconds / 2) * 1000}; })`);
+    await page.evaluate(seekJS((job.still_at ?? job.seconds / 2) * 1000));
     const png = await page.send("Page.captureScreenshot", { format: "png" });
     writeFileSync(job.still, Buffer.from(png.result.data, "base64"));
   }
