@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:05:37+00:00 · style locked: True
+Updated 2026-10-06T07:08:34+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:05:37+00:00 · style locked: True
 
 ## Now
 
-- idle
+- V04 · Your A/B test told you nothing. Here's the sample size you needed · step critique
 
 ## Awaiting your review
 
@@ -69,8 +69,8 @@ Updated 2026-10-06T07:05:37+00:00 · style locked: True
 
 ## Next five
 
-- V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
 - V16 · The $60,000 wire you're guessing on
 - V17 · Why 95% service level is wrong for most of your SKUs
+- V18 · Inventory is not an asset. It's a bet, and here's how to price it
