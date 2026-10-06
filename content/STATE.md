@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:21:17+00:00 · style locked: True
+Updated 2026-10-06T07:23:44+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:21:17+00:00 · style locked: True
 
 ## Now
 
-- idle
+- V16 · The {{largest_wire}} wire you're guessing on · step critique
 
 ## Awaiting your review
 
@@ -71,8 +71,8 @@ Updated 2026-10-06T07:21:17+00:00 · style locked: True
 
 ## Next five
 
-- V16 · The $60,000 wire you're guessing on
 - V17 · Why 95% service level is wrong for most of your SKUs
 - V18 · Inventory is not an asset. It's a bet, and here's how to price it
 - V19 · How much cash should you actually hold?
 - V22 · Base rates: the question nobody asks before a big decision
+- V23 · When your data is just noise
