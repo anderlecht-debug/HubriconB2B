@@ -62,9 +62,9 @@ under everything. A tick that sounds like a fingertip on a desk, not a beep. A b
 rather than heard, ducked under speech, sparse piano and low strings, no melody. No synthesised
 drone ships.
 
-**Voice.** Only the founder's clone renders. Instant clone for the first videos; the
-professional clone before the series is public. No stock voice is ever heard by a viewer,
-and the placeholder exists only to prove the machinery. Disclose the clone in every description.
+**Voice.** Only the founder's own recorded voice ships (his call, 2026-10-06: no ElevenLabs, no
+clone). No stock or AI voice is ever heard by a viewer, and the offline placeholder exists only to
+prove the machinery. Every description says "Narrated by Hagen Simmons, in his own voice."
 
 **Pace.** State the figure, hold it, move on. A premium explainer is not slow, but it is never
 in a hurry: no jump-cut chatter, no fast zooms, no on-screen text racing the narration.
@@ -83,7 +83,8 @@ not exist; the sample tables say demo data.
 3. At most three text blocks per frame; captions small and dim.
 4. Charts have direct labels and a demo label, and no legend or grid.
 5. Subtitles are light and small, never boxed or heavy-outlined.
-6. Sound: `mix.json` shows `sfx_source` and `bed_source` from ElevenLabs or a licensed bed,
-   not procedural, before a final sign-off.
-7. Voice: `voice == founder`. Anything else fails the render critique by definition. *(Since 2026-10-04: the founder's own takes, `voice == own`, pass too; both are his voice. VISUAL_SPEC.md §7.2. And
-   `voice == library`, the library voice he chose in `content/assets/voice.json`, disclosed as an AI library voice.)*
+6. Sound: `mix.json` shows `sfx_source` and `bed_source` from the sound library (made during the
+   paid ElevenLabs subscription, or Freesound CC0 / Pixabay) or a licensed bed, not procedural,
+   before a final sign-off.
+7. Voice: `voice == own`, the founder's own recorded takes. Anything else fails the render critique
+   by definition. *(2026-10-06: the clone and the library voice are retired; VISUAL_SPEC.md §13.1.)*

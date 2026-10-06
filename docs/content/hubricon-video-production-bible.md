@@ -80,19 +80,20 @@ Required layers on every video:
 
 ---
 
-## 5 · Narration with ElevenLabs
+## 5 · Narration in the founder's own voice
 
-**Voice:** a clone of the founder's own voice, not a stock preset. Train it on 3+ minutes of clean
-audio — one microphone, quiet room, no processing, no EQ, no noise reduction. Garbage training
-audio cannot be fixed by settings.
+**Voice:** the founder reads every film himself, in his own recorded voice (his call, 2026-10-06:
+no ElevenLabs, no clone, no stock or AI voice). One microphone, a quiet room, no processing, no EQ,
+no noise reduction; the teleprompter and the setup are in `docs/content/VOICE-RECORDING.md`. Bad
+audio cannot be fixed by the mix.
 
-**Disclose it.** One line in each description: the narration is a clone of the founder's voice,
-the analysis is his. Cheap to say, disproportionately expensive to be caught not saying.
+**Say whose voice it is.** One line in each description: "Narrated by Hagen Simmons, in his own
+voice." YouTube's synthetic-media flag is set only when a film shows an AI image.
 
 **The script controls the read more than the settings do.** Write for the mouth:
 - Short sentences. Fragments are fine.
 - Contractions always.
-- Ellipses and line breaks to place pauses; the model reads punctuation as timing.
+- Commas and line breaks to place pauses; he reads punctuation as timing.
 - First person, conversational, curious. Not announcer voice, not corporate.
 - State the thesis in the first fifteen seconds, then evidence.
 - 700–900 words ≈ 5 minutes.
@@ -142,7 +143,7 @@ Produce one explainer end to end. Then **freeze** and reuse across all subsequen
 - Type: Fraunces for chapter cards and headlines; one grotesque for data labels and annotations.
 - Intro card, outro card, chapter-card layout, lower-third layout.
 - Chart treatment: axis weight, grid opacity, annotation style, build timing.
-- Narration pacing and the ElevenLabs settings used.
+- Narration pacing and the microphone setup used.
 - Music bed family and the SFX set.
 - **Save the Higgsfield preset or reference set** so texture generation is reproducible.
 
@@ -157,9 +158,9 @@ compounds into an audience.
 |---|---|
 | Chart animation | Manim, driven by engine output |
 | Edit and composite | DaVinci Resolve (free; Fusion covers the motion graphics) |
-| Voice | ElevenLabs, founder voice clone |
+| Voice | The founder's own recorded voice (`record.mjs`, aligned on faster-whisper) |
 | Textures, backgrounds, abstract stills | Higgsfield |
-| Music and SFX | Epidemic Sound or Artlist; Freesound for one-shots |
+| Music and SFX | The library on file (made during the paid ElevenLabs subscription); new sounds from Freesound (CC0) or Pixabay |
 | Screen capture | OBS at 60fps, then retime |
 | Subtitles | Resolve's built-in transcription, manually corrected |
 
@@ -210,8 +211,8 @@ Reuse this structure for every explainer.
 4. Charts are Manim scenes driven by engine output, not hand-rebuilt.
 5. Every chart builds progressively and carries an annotation.
 6. Room tone, data ticks, transition SFX and a ducking music bed are present on every video.
-7. Narration is the founder's voice clone, disclosed in the description and in YouTube's
-   synthetic-media setting.
+7. Narration is the founder's own recorded voice, said so in the description; the synthetic-media
+   setting is on only when the film shows an AI image.
 8. Shots are cut to `VISUAL_SPEC.md` §4, whatever the tier: 7–11 s, never past 14 (a chart build
    up to 30 s with something new landing at least every 8 s), never under 3, a spoken figure held
    3 s before the cut, and nothing on screen frozen longer than 4 s. (This replaces the six-second

@@ -19,8 +19,8 @@ store's numbers, and teaches the math completely.*
 
 **Format.** Tier D: 30 to 40 minutes, VISUAL_SPEC.md's `history` mode (archival 20–35% of the
 runtime, engine charts 15–25%). The scripts are Hagen's: drafted for his review, and nothing renders
-before he approves each one. Narrated by the voice he chose
-(`content/assets/voice.json`, disclosed as an AI library voice in every description); off camera.
+before he approves each one. Narrated by Hagen in his own recorded voice (his call,
+2026-10-06), off camera.
 
 **Who it is for.** The founder doing one to forty million a year on Amazon, Shopify or both, forty
 tabs open, wondering whether he can afford the next purchase order. And, because history travels, the

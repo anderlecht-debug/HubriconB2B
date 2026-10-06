@@ -10,6 +10,8 @@ navy / amber / Fraunces system carries through.
 
 ---
 
+> **Superseded on voice (2026-10-06):** every video is narrated in the founder's own recorded voice; no ElevenLabs, no clone (VISUAL_SPEC.md §13.1, `docs/content/VOICE-RECORDING.md`). The clone and ElevenLabs lines below are history.
+
 ## 0 · Why this exists
 
 Three jobs, and every decision on the page should serve all three:

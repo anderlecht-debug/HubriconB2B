@@ -153,7 +153,7 @@ def cmd_reject_final(a):
 
 
 def cmd_voice(a):
-    """Which voice a unit carries: "own" once the founder's recorded takes are rendered in, "founder" for the clone."""
+    """Mark a unit's narration as the founder's own recorded voice (tts.takes_to_vo does it too)."""
     q = _q(); u = _unit_for(q, a.slug)
     u["voice"] = a.voice
     u["publishable"] = False   # set again only by approve-final
@@ -327,27 +327,9 @@ def cmd_style_lock(a):
     print(p)
 
 
-def cmd_voice_clone(a):
-    from . import tts
-    from pathlib import Path as P
-    files = [P(f) for f in a.files]
-    missing = [str(f) for f in files if not f.exists()]
-    if missing:
-        raise SystemExit("missing: " + ", ".join(missing))
-    vid = tts.voice_clone(a.name, files, a.description or "")
-    print(f"voice id: {vid}")
-    print(f"add to /home/lp9/Hubricon/HubriconB2B/.env:  ELEVENLABS_VOICE_ID={vid}")
-    print("then listen:  hubricon-content voice-preview 01-survivorship-bias")
-
-
-def cmd_voice_preview(a):
-    from . import tts
-    if not os.environ.get("ELEVENLABS_API_KEY"):
-        raise SystemExit("ELEVENLABS_API_KEY is not set")
-    if not (a.voice or os.environ.get("ELEVENLABS_VOICE_ID")):
-        raise SystemExit("no voice: set ELEVENLABS_VOICE_ID (run voice-clone first) or pass --voice <id>")
-    out = tts.voice_preview(a.slug, text=a.text, voice=a.voice)
-    print(out)
+def cmd_ambience_add(a):
+    from . import sfx
+    _out(sfx.ambience_add(a.file, a.subject, a.source, a.url, a.author or ""))
 
 
 def cmd_youtube_auth(a):
@@ -406,11 +388,12 @@ def main(argv=None) -> None:
     sub.add_parser("embed-lessons").set_defaults(fn=cmd_embed_lessons)
     p = sub.add_parser("style-lock"); p.add_argument("slug"); p.set_defaults(fn=cmd_style_lock)
     sub.add_parser("youtube-auth").set_defaults(fn=cmd_youtube_auth)
-    p = sub.add_parser("voice-clone", help="instant clone from the founder's own recordings"); p.add_argument("--name", required=True); p.add_argument("--description", default=""); p.add_argument("files", nargs="+"); p.set_defaults(fn=cmd_voice_clone)
-    p = sub.add_parser("voice-preview", help="hear a parked script's hook and first chapter in the configured voice"); p.add_argument("slug"); p.add_argument("--text", default=None); p.add_argument("--voice", default=None); p.set_defaults(fn=cmd_voice_preview)
+    p = sub.add_parser("ambience-add", help="file a free ambience clip: Freesound (CC0 only) or Pixabay, with its page and licence")
+    p.add_argument("file"); p.add_argument("--subject", required=True); p.add_argument("--source", required=True, choices=["freesound", "pixabay"])
+    p.add_argument("--url", required=True); p.add_argument("--author", default=""); p.set_defaults(fn=cmd_ambience_add)
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
-    p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own", "founder", "library"]); p.set_defaults(fn=cmd_voice)
+    p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own"]); p.set_defaults(fn=cmd_voice)
     p = sub.add_parser("takes-to-vo", help="the founder's own takes (record.mjs) as the unit's narration")
     p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_takes_to_vo)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)

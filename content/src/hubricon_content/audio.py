@@ -4,12 +4,13 @@ Five layers, all built in numpy from the timeline and rendered once through
 ffmpeg for the loudness pass: narration with a light compressor and a tiny
 room; room tone under everything; a soft tick where each data point lands; a
 low whoosh on chapter cuts; and a music bed ducked under the voice. The tick,
-whoosh and bed are synthesised here until a licensed bed or ElevenLabs sound
-effects exist, and the style lock records which was used.
+whoosh and bed come from the sound library (sfx.py: made with ElevenLabs during
+the paid subscription, licensed for commercial use; new sounds only from Freesound
+CC0 or Pixabay); a missing one is synthesised here, and the style lock records
+which was used.
 """
 
 import json
-import re
 import subprocess
 from pathlib import Path
 
@@ -109,14 +110,9 @@ def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
         if s.get("room") != "world" or s.get("kind") != "footage" or not s.get("query"):
             continue
         subject = (s.get("params") or {}).get("ambience") or sfx.subject_of(s["query"][0])
-        name = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")[:60] or "room"
-        new = not (sfx.AMBIENCE / f"{name}.mp3").exists()
         f = sfx.ambience(subject)
         if f is None:
             continue
-        if new:
-            from . import meter
-            meter.count(d.name, "elevenlabs", "sound_seconds", 20, subject)
         clip = _decode(f).astype(np.float64)
         peak = np.abs(clip).max()
         if peak <= 0:
@@ -185,7 +181,7 @@ def mix(slug: str) -> Path:
         peak = np.abs(clip).max()
         if peak > 0:
             clip /= peak
-    sfx_source = "elevenlabs sound-generation" if tick_file.exists() and whoosh_file.exists() else "procedural (provisional)"
+    sfx_source = "sound library (ElevenLabs, paid-subscription licence)" if tick_file.exists() and whoosh_file.exists() else "procedural (provisional)"
     for e in events:
         if e.get("kind") == "data":
             _place(fx, tick, float(e["t"]), _db(TICK_DB))

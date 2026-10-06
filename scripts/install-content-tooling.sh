@@ -16,7 +16,7 @@ cp assets/fonts/*.ttf "$HOME/.local/share/fonts/"
 fc-cache -f >/dev/null 2>&1 || true
 .venv/bin/python - <<'PY'
 import importlib
-for m in ("manim", "elevenlabs", "googleapiclient", "openpyxl", "hubricon_engine"):
+for m in ("manim", "faster_whisper", "googleapiclient", "openpyxl", "hubricon_engine"):
     try:
         importlib.import_module(m); print(f"ok   {m}")
     except Exception as e:

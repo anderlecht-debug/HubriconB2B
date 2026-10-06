@@ -15,7 +15,7 @@ a crash is safe.
 | script | invoke the `script-draft` skill | `script.md` | `hubricon-content script-validate <slug>` prints no problems |
 | critique | invoke `critique script <slug>` | `critique.json` | `"pass": true`; otherwise revise via `script-draft` (reads the notes) |
 | review | `hubricon-content review <slug>` | `REVIEW.md` block, notification | the command reports `awaiting`; STOP. Do not proceed to tts. The founder runs `approve`/`reject`. |
-| tts | `hubricon-content tts <slug>` | `audio/vo-NN.*`, `alignment/*.json`, `voice` recorded | exit 0. If it reports `blocked`, mark blocked with its message (key or clone missing). Placeholder voice sets `publishable: false`. |
+| tts | `hubricon-content tts <slug>` | `audio/vo-NN.wav`, `alignment/*.json`, `voice` = `own` | exit 0. It uses the founder's takes from `record.mjs`; if it reports `blocked` (his reading not in yet), mark blocked with its message, and the unit returns by itself when the takes arrive. Placeholder voice (opt-in) sets `publishable: false`. |
 | timing | `hubricon-content timing <slug>` | `timing.json` | every beat has bounds; every `{{key}}` has a reveal time |
 | scenes | `hubricon-content render-scenes <slug>` | `scenes/*.mp4`, `events.json` | exit 0; requires `style_locked` unless the unit is V01 |
 | assemble | `hubricon-content assemble <slug>` | `media/master.mp4` | exit 0 |
@@ -33,7 +33,7 @@ any tier-D step in a session. Between `timing` and `assemble` the chain is (§7.
 
 | step | command | produces | passes when |
 |---|---|---|---|
-| tts | `hubricon-content tts <slug>` (the clone) **or** `hubricon-content takes-to-vo <slug>` (the founder's own takes from `record.mjs`) | `audio/vo-NN.*`, `alignment/vo-NN.json` | both voices end in the same files, so everything after is one path |
+| tts | `hubricon-content tts <slug>` (the founder's own takes from `record.mjs`, through `takes-to-vo`) | `audio/vo-NN.wav`, `alignment/vo-NN.json` | blocked until every beat has his take; returns by itself when they arrive |
 | timing | `hubricon-content timing <slug>` | `timing.json` with `cutpoints` | as above |
 | shots | invoke the `shot-plan` skill | `shots.json` | `hubricon-content shots-validate <slug>` prints no problems |
 | source | `hubricon-content source <slug>` (`--shot sNNN` for one) | `sources/<shot>.jpg` and `<shot>.json`, `sources/textures.json`, `content/.cache/…` | exit 0; every world shot has three candidates after the filters, or `source_status: fallback` with its reason; texture shots `awaiting_textures`. A missing key exits 2 naming it: mark the step `blocked` with that line |

@@ -357,7 +357,7 @@ keep their current steps); every command is idempotent, as now.
 
 | step | command | produces | passes when |
 |---|---|---|---|
-| tts | `hubricon-content tts <slug>` (clone) **or** the founder's takes from `record.mjs`, aligned with `tts.align` (faster-whisper) | `audio/beat-NN.*`, `alignment/beat-NN.json` | as today. Both voices end in the same two files, so everything after is one path |
+| tts | `hubricon-content tts <slug>`: the founder's takes from `record.mjs`, aligned with `tts.align` (faster-whisper) | `audio/beat-NN.*`, `alignment/beat-NN.json` | as today. Both voices end in the same two files, so everything after is one path |
 | timing | `hubricon-content timing <slug>` | `timing.json` | as today, plus `cutpoints`: every legal cut (sentence ends and pauses ≥ 120 ms) with its time |
 | shots | invoke the `shot-plan` skill | `shots.json` | `hubricon-content shots-validate <slug>` prints no problems |
 | source | `hubricon-content source <slug>` | `sources/<shot>.jpg` contact sheets, `content/.cache/assets/…` | exit 0; every world shot has at least three candidates after §6.4, or is marked for its fallback tier |
@@ -529,8 +529,11 @@ to Inter (§3.1).
 −26 dB, whooshes −22 dB, −16 LUFS integrated). Three additions:
 
 - **World ambience.** Under each footage shot, a short ambience matched to its subject (a port, a
-  warehouse, a street) from ElevenLabs sound effects, at −40 dB, with a 0.4 s crossfade at the cuts.
-  One ambience per subject, cached and reused within the film so it is consistent.
+  warehouse, a street) from the sound library, at −40 dB, with a 0.4 s crossfade at the cuts. The
+  clips on file were made with ElevenLabs during the paid subscription and stay licensed; nothing new
+  is generated (2026-10-06, §13.1). A new clip comes from Freesound (CC0 only) or Pixabay, filed with
+  its page and licence (`hubricon-content ambience-add`); a subject with no clip plays room tone alone.
+  One ambience per subject, reused within the film so it is consistent.
 - **A bed family.** Three or four cues from the same family (sparse piano and low strings, no melody,
   PREMIUM-STANDARD), one per chapter, crossfading under the chapter card.
 - **The gap.** After a big reveal or at a chapter's end, 1.5–2 s with no voice: the bed comes up and
@@ -631,27 +634,31 @@ Until phase 5 is approved, nothing long renders for publishing.
 4. **Captions burned into long-form?** Default off (§8.6).
 5. **A licensed bed family** in `content/assets/music/` (already input 6 in `STATE.md`).
 
-Also decided on 2026-10-04: **the voice is an ElevenLabs Professional Voice Clone** of his own
-voice, trained on his recorded takes (his own takes run through `takes-to-vo` meanwhile). *Amended the
-same evening: the first films are narrated by "Kevin - Career and Life Coach", a voice from
-ElevenLabs' library that the founder chose (`content/assets/voice.json`). It is never presented as his
-voice: the description says "Narrated by an AI voice from ElevenLabs' voice library; written and
-analysed by Hagen Simmons", and the synthetic-media flag is set;* and
-**long films play on the site as YouTube embeds** (privacy-enhanced, click to load), since a
-40-minute file is too large to self-host.
+Also decided on 2026-10-04: **long films play on the site as YouTube embeds** (privacy-enhanced,
+click to load), since a 40-minute file is too large to self-host.
+
+**The voice, decided 2026-10-06 (the founder's call, superseding the clone of 2026-10-04 and the
+library voice "Kevin" chosen that evening): every film is narrated in his own recorded voice. No
+ElevenLabs, no clone.** He reads each approved script at the teleprompter (`content/film/record.mjs`);
+`takes-to-vo` makes the takes the narration, timed on faster-whisper on this PC
+(`docs/content/VOICE-RECORDING.md`). The description says "Narrated by Hagen Simmons, in his own
+voice." YouTube's synthetic-media flag is set only when a film shows an AI image. The tick, whoosh,
+bed and ambience already on file were made during the paid ElevenLabs subscription and stay licensed
+for commercial use; any new sound is Freesound CC0 or Pixabay, with its licence in the manifest.
+Nothing in the pipeline calls api.elevenlabs.io or needs an ElevenLabs key.
 
 ### 13.2 The real bottleneck for one a day
 
-The picture runs unattended. The voice does not: in his own voice, a 40-minute film is 40 minutes of
-reading every day, plus retakes. The clone, trained on those same takes, is what makes one a day
-possible; the sequence in `HUBRICON_SPEC.md` (his voice first, the clone alongside, switch when it is
-indistinguishable) stands.
+The picture runs unattended. The voice does not, by the founder's choice: a 30-minute film is
+about 30 minutes of reading, roughly an hour at the microphone with retakes. One a day is an hour a
+day; three films recorded on a Saturday cover half a week. The pipeline waits on his takes and picks
+each film up again the moment they are in.
 
 ### 13.3 Time per 40-minute film, unattended
 
 | Step | Rough time |
 |---|---|
-| Narration (clone, per paragraph) | 10–20 min |
+| Narration (his takes, aligned on faster-whisper) | 5–10 min, after his reading |
 | Shot plan | 15–25 min |
 | Sourcing (rate-limited) | 45–90 min |
 | Pick | 20–40 min |
@@ -662,10 +669,9 @@ About four to five hours. While film N renders, film N+1 sources, so one a day f
 
 ### 13.4 Running cost
 
-- ElevenLabs: a 40-minute film is about 6,000 words, about 33,000 characters, so about a million
-  characters a month at one a day. Check the plan's monthly character allowance before scaling.
-  `hubricon_engine/meter.py` counts ElevenLabs characters for the engine's own voice; have the
-  content `tts.py` call it too, and add image-provider credits and API request counts.
+- Narration and sound: nothing. He reads the films himself, and the sound library is on file
+  (new clips are Freesound CC0 or Pixabay). The content meter counts image-provider credits and API
+  request counts.
 - Pexels, Pixabay, the Library of Congress, Smithsonian and Commons cost nothing within their limits.
 
 ---

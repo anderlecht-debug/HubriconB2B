@@ -1,6 +1,6 @@
-"""YouTube, unlisted, with the synthetic-media disclosure set. Self-gated: it
-refuses anything not marked publishable, which requires the founder's voice,
-a passed QA, and the final sign-off."""
+"""YouTube, unlisted. Self-gated: it refuses anything not marked publishable, which
+requires the founder's own recorded voice, a passed QA, and the final sign-off. The
+synthetic-media flag is set only when the film shows an AI image."""
 
 import json
 from pathlib import Path
@@ -38,11 +38,11 @@ def _service():
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
     if not u.get("publishable"):
-        return {"status": "blocked", "reason": "not publishable: needs a publishable voice (his own takes, his clone, or the library voice he chose in content/assets/voice.json), a passed QA, and approve-final"}
+        return {"status": "blocked", "reason": "not publishable: needs the founder's own recorded takes as its narration, a passed QA, and approve-final"}
     from .qa import PUBLISHABLE_VOICES
     if u.get("voice") not in PUBLISHABLE_VOICES:
         return {"status": "blocked", "reason": "placeholder narration never uploads: record the founder's own takes "
-                                               "(`hubricon-content voice <slug> own`) or set ELEVENLABS_VOICE_ID and re-run tts"}
+                                               f"(`node content/film/record.mjs {u['slug']}`) and re-run tts"}
     if not TOKEN.exists():
         return {"status": "blocked", "reason": f"YouTube not authorised: put client_secret.json in {SECRETS} and run `hubricon-content youtube-auth` (youtube-token.json)"}
     slug = u["slug"]
@@ -52,9 +52,10 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     title = desc.splitlines()[0].strip()[:100]
     from googleapiclient.http import MediaFileUpload
     yt = _service()
-    # Synthetic media: any voice that is not the founder's own reading, or any AI image on screen.
+    # Synthetic media: the narration is always his own voice, so the flag is set only when an
+    # AI image (a Higgsfield texture) is on screen.
     plan = json.loads((d / "shots.json").read_text(encoding="utf-8")) if (d / "shots.json").exists() else {}
-    synthetic = u.get("voice") != "own" or any(s.get("kind") == "texture" for s in plan.get("shots", []))
+    synthetic = any(s.get("kind") == "texture" for s in plan.get("shots", []))
     body = {"snippet": {"title": title, "description": desc[:4900], "categoryId": "27",
                         "tags": ["amazon fba", "ecommerce", "unit economics", "hubricon"]},
             "status": {"privacyStatus": "unlisted", "selfDeclaredMadeForKids": False, "containsSyntheticMedia": synthetic}}

@@ -10,25 +10,16 @@ from pathlib import Path
 from . import subtitles
 from . import script as scriptmod
 
-DISCLOSURE = "Narration is an AI clone of Hagen Simmons's voice, used with his permission; the analysis is his."
-# The founder records the films himself first (HUBRICON_SPEC.md: "record in my own voice now"; the
-# clone comes later). A unit's "voice" says which: "own" is his recorded takes (content/film/
-# record.mjs), "founder" is the ElevenLabs clone of his voice (tts.py), anything else a placeholder
-# that never publishes. The description says which it is, and never claims a clone that isn't one.
+# Every film is narrated in the founder's own recorded voice (the founder's call, 2026-10-06: no
+# ElevenLabs, no clone). A unit's "voice" is "own" once his takes are its narration (tts.takes_to_vo);
+# anything else is the offline placeholder, which never publishes. The description says which.
 OWN_VOICE = "Narrated by Hagen Simmons, in his own voice."
-# "library": an ElevenLabs library voice the founder chose (content/assets/voice.json, 2026-10-04).
-# It is never presented as his voice; the description says what it is.
-LIBRARY_VOICE = "Narrated by an AI voice from ElevenLabs' voice library; written and analysed by Hagen Simmons."
-PUBLISHABLE_VOICES = ("own", "founder", "library")
+PUBLISHABLE_VOICES = ("own",)
 
 
 def disclosure_for(voice: str | None) -> str:
     if voice == "own":
         return OWN_VOICE
-    if voice == "founder":
-        return DISCLOSURE
-    if voice == "library":
-        return LIBRARY_VOICE
     return "Narration is a placeholder voice. This cut is not for publishing."
 TIER_RANGE = {"A": (270, 460), "B": (450, 900), "D": (1200, 3000)}   # D: VISUAL_SPEC.md §7.1
 # The cadence, from VISUAL_SPEC.md §4 (its §0 retires the bible's two-to-four seconds
