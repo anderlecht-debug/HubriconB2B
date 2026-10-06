@@ -1,15 +1,13 @@
 {
  "version": 1,
- "updated_at": "2026-10-05T20:15:04+00:00",
+ "updated_at": "2026-10-06T05:35:42+00:00",
  "style_locked": true,
  "capabilities": {
-  "elevenlabs_key": true,
-  "founder_voice_id": "1fz2mW1imKTf5Ryjk5su",
   "youtube_token": false,
   "youtube_client": false,
   "textures_cached": false,
-  "music_bed": "elevenlabs",
-  "sfx": "elevenlabs"
+  "music_bed": "on file",
+  "sfx": "on file"
  },
  "units": [
   {
@@ -26,7 +24,7 @@
     "ratecard"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice october-15 own (so the description says it is his own voice).",
+   "blocked_on": "the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs october-15` (docs/content/VOICE-RECORDING.md)",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -73,6 +71,11 @@
      "at": "2026-10-01T04:59:09+00:00",
      "step": "tts",
      "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films."
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "waiting on the founder's own takes (2026-10-06)"
     }
    ]
   },
@@ -90,7 +93,7 @@
     "ratecard"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice case-study-film own (so the description says it is his own voice).",
+   "blocked_on": "the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs case-study-film` (docs/content/VOICE-RECORDING.md)",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -137,6 +140,11 @@
      "at": "2026-10-01T04:59:09+00:00",
      "step": "tts",
      "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films."
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "waiting on the founder's own takes (2026-10-06)"
     }
    ]
   },
@@ -153,7 +161,7 @@
     "store_study"
    ],
    "status": "blocked",
-   "blocked_on": "The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice store-study-film own (so the description says it is his own voice).",
+   "blocked_on": "the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs store-study-film` (docs/content/VOICE-RECORDING.md)",
    "requires_done": null,
    "voice": null,
    "publishable": false,
@@ -200,6 +208,11 @@
      "at": "2026-10-02T16:08:52+00:00",
      "step": "tts",
      "note": "blocked The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assem"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "waiting on the founder's own takes (2026-10-06)"
     }
    ]
   },
@@ -490,32 +503,29 @@
     "mc",
     "risk"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
-   "voice": "library",
+   "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "done",
-    "timing": "done",
-    "scenes": "done",
-    "assemble": "done",
-    "qa": "done",
-    "thumbnail": "done",
-    "describe": "done",
-    "shorts": "done",
-    "approve_final": "awaiting",
-    "upload": "todo"
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
    },
    "review_notes": [],
-   "attempts": {
-    "qa": 2,
-    "shorts": 1
-   },
+   "attempts": {},
    "log": [
     {
      "at": "2026-09-18T23:18:48+00:00",
@@ -631,6 +641,11 @@
      "at": "2026-10-05T08:56:30+00:00",
      "step": "approve_final",
      "note": "parked for the founder (emailed)"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
     }
    ]
   },
@@ -722,26 +737,26 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
-   "voice": "library",
+   "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "done",
-    "timing": "done",
-    "scenes": "done",
-    "assemble": "done",
-    "qa": "done",
-    "thumbnail": "done",
-    "describe": "done",
-    "shorts": "done",
-    "approve_final": "awaiting",
-    "upload": "todo"
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
+    "thumbnail": "todo",
+    "describe": "todo",
+    "shorts": "todo",
+    "approve_final": "todo",
+    "upload": "blocked"
    },
    "review_notes": [],
    "attempts": {},
@@ -850,6 +865,11 @@
      "at": "2026-10-05T09:46:21+00:00",
      "step": "approve_final",
      "note": "parked for the founder (emailed)"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
     }
    ]
   },
@@ -867,26 +887,26 @@
     "inventory_sim",
     "margin"
    ],
-   "status": "blocked",
-   "blocked_on": "Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in ink.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
-   "voice": "library",
+   "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "done",
-    "timing": "done",
-    "scenes": "done",
-    "assemble": "done",
-    "qa": "blocked",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "todo"
+    "upload": "blocked"
    },
    "review_notes": [],
    "attempts": {},
@@ -970,6 +990,11 @@
      "at": "2026-10-05T10:57:21+00:00",
      "step": "qa",
      "note": "blocked Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
     }
    ]
   },
@@ -1023,26 +1048,26 @@
    "models": [
     "margin"
    ],
-   "status": "blocked",
-   "blocked_on": "Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
-   "voice": "library",
+   "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "done",
-    "timing": "done",
-    "scenes": "done",
-    "assemble": "done",
-    "qa": "blocked",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "todo"
+    "upload": "blocked"
    },
    "review_notes": [],
    "attempts": {},
@@ -1126,6 +1151,11 @@
      "at": "2026-10-05T11:24:32+00:00",
      "step": "qa",
      "note": "blocked Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
     }
    ]
   },
@@ -1142,26 +1172,26 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "blocked",
-   "blocked_on": "Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the THUMBNAIL line of the approved script, since VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.",
+   "status": "todo",
+   "blocked_on": null,
    "requires_done": null,
-   "voice": "library",
+   "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
     "script": "done",
     "critique": "done",
     "review": "approved",
-    "tts": "done",
-    "timing": "done",
-    "scenes": "done",
-    "assemble": "done",
-    "qa": "blocked",
+    "tts": "todo",
+    "timing": "todo",
+    "scenes": "todo",
+    "assemble": "todo",
+    "qa": "todo",
     "thumbnail": "todo",
     "describe": "todo",
     "shorts": "todo",
     "approve_final": "todo",
-    "upload": "todo"
+    "upload": "blocked"
    },
    "review_notes": [],
    "attempts": {},
@@ -1245,6 +1275,11 @@
      "at": "2026-10-05T11:38:24+00:00",
      "step": "qa",
      "note": "blocked Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the T"
+    },
+    {
+     "at": "2026-10-06T05:35:42+00:00",
+     "step": "tts",
+     "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
     }
    ]
   },

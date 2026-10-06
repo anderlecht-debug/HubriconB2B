@@ -1,16 +1,14 @@
 # Content pipeline — state
 
-Updated 2026-10-05T20:15:04+00:00 · style locked: True
+Updated 2026-10-06T05:35:42+00:00 · style locked: True
 
 ## Capabilities
 
-- elevenlabs_key: True
-- founder_voice_id: 1fz2mW1imKTf5Ryjk5su
 - youtube_token: False
 - youtube_client: False
 - textures_cached: False
-- music_bed: elevenlabs
-- sfx: elevenlabs
+- music_bed: on file
+- sfx: on file
 
 ## Now
 
@@ -18,8 +16,6 @@ Updated 2026-10-05T20:15:04+00:00 · style locked: True
 
 ## Awaiting your review
 
-- V01 · Why most business advice is useless: survivorship bias, with numbers · gate `approve_final` → see `content/REVIEW.md`
-- V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `approve_final` → see `content/REVIEW.md`
 - V09 · The price increase you're afraid of is probably free · gate `review` → see `content/REVIEW.md`
 - V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
 - V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
@@ -42,15 +38,12 @@ Updated 2026-10-05T20:15:04+00:00 · style locked: True
 
 ## Blocked on founder input
 
-- T01 · October 15: what Amazon's holiday fees cost one listing, to the cent: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs october-15, then node content/film/render.mjs content/videos/october-15/board.json content/videos/october-15/media/master.mp4 --audio content/videos/october-15/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice october-15 own (so the description says it is his own voice).
-- F01 · The case-study film: one listing, a fraction of an ounce past an edge: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs case-study-film, then node content/film/render.mjs content/videos/case-study-film/board.json content/videos/case-study-film/media/master.mp4 --audio content/videos/case-study-film/takes, then node content/film/check.mjs on both. The Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice case-study-film own (so the description says it is his own voice).
-- F02 · The store study's film: a real store's orders, called before and measured after: The founder's own takes first (HUBRICON_SPEC.md): node content/film/record.mjs store-study-film, then node content/film/render.mjs content/videos/store-study-film/board.json content/videos/store-study-film/media/master.mp4 --audio content/videos/store-study-film/takes, then node content/film/check.mjs on both. The storyboard is built and checks clean; the Manim steps (timing, scenes, assemble) do not apply to the films, then hubricon-content voice store-study-film own (so the description says it is his own voice).
+- T01 · October 15: what Amazon's holiday fees cost one listing, to the cent: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs october-15` (docs/content/VOICE-RECORDING.md)
+- F01 · The case-study film: one listing, a fraction of an ounce past an edge: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs case-study-film` (docs/content/VOICE-RECORDING.md)
+- F02 · The store study's film: a real store's orders, called before and measured after: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs store-study-film` (docs/content/VOICE-RECORDING.md)
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
-- V05 · Cash conversion cycle: the number that decides whether you survive: Founder must re-approve two corrections to the approved script (then V05 re-runs from tts): drop the word 'day' before {{min_p5_day}} and {{largest_wire_day}}, whose values already read '13 days' and '0 days', so the narration stops saying 'on day 13 days'; and drop the colour from 'as a red tick' and from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires red and the wire ticks render in ink.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
-- V07 · Contribution margin vs gross margin — the one that actually matters: Founder must re-approve two corrections to the approved script (then V07 re-runs from tts): on line 28 drop the word 'points' after {{gross_vs_contribution_gap}}, whose value already reads '38.4%', so the narration stops saying '38.4% points of revenue' and matches the hook's '38.4% of revenue'; and drop 'in amber' from the THUMBNAIL line, because VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.
-- V08 · Elasticity in plain English, and why your price is probably wrong: Two things, in this order. Build work on this branch: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM, drawing the profit hill under the demand line, the lower hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2, because the film argues the hill and never draws it. Then the founder's input: take 'in amber' out of the THUMBNAIL line of the approved script, since VISUAL_SPEC 3.1 retires amber and the film carries no amber pixel.
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
@@ -65,10 +58,9 @@ Updated 2026-10-05T20:15:04+00:00 · style locked: True
 1. Watch the style reel (`content/videos/style-reel/style-reel.mp4`, 36 s, silent: the site's own charts and type on a film stage). If the look is right, freeze it: `node content/film/lock.mjs`. Every film after reuses it.
 2. Read F01 (the home page's case-study film) and T01 (October 15) in `content/REVIEW.md`; `hubricon-content approve <slug>` or `reject <slug> --note "..."`. T01 is dated: it is only worth publishing before the holiday card ends.
 3. Your voice, your own recording first (HUBRICON_SPEC.md): `node content/film/record.mjs <slug>` opens a teleprompter at http://127.0.0.1:8790; read each beat, keep the take. Then `node content/film/render.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4 --audio content/videos/<slug>/takes` and `node content/film/check.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4`.
-4. The clone, in parallel, from those same recordings: `hubricon-content voice-clone --name "Hagen Simmons" <wav files>` and `ELEVENLABS_VOICE_ID` in `.env`. Switch over only when it is indistinguishable.
-5. YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.
-6. A licensed music bed in `content/assets/music/` if the series is to have one (the films render without).
-7. Seller Central screenshots or screen recordings for the parked pieces that need them (V02, V03, V06, V10, V13, V20, V26).
+4. YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.
+5. A licensed music bed in `content/assets/music/` if the series is to have one (the films render without).
+6. Seller Central screenshots or screen recordings for the parked pieces that need them (V02, V03, V06, V10, V13, V20, V26).
 
 ## Stuck (three failures; needs a look)
 
@@ -76,8 +68,8 @@ Updated 2026-10-05T20:15:04+00:00 · style locked: True
 
 ## Next five
 
-- V18 · Inventory is not an asset. It's a bet, and here's how to price it
-- V19 · How much cash should you actually hold?
-- V22 · Base rates: the question nobody asks before a big decision
-- V23 · When your data is just noise
-- V24 · Expected value: how to make a decision you can defend
+- V01 · Why most business advice is useless: survivorship bias, with numbers
+- V04 · Your A/B test told you nothing. Here's the sample size you needed
+- V05 · Cash conversion cycle: the number that decides whether you survive
+- V07 · Contribution margin vs gross margin — the one that actually matters
+- V08 · Elasticity in plain English, and why your price is probably wrong
