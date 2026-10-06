@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:20:01+00:00",
+ "updated_at": "2026-10-06T07:21:04+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -1381,7 +1381,7 @@
    "steps": {
     "facts": "done",
     "script": "done",
-    "critique": "todo",
+    "critique": "done",
     "review": "todo",
     "tts": "todo",
     "timing": "todo",
@@ -1439,6 +1439,11 @@
      "at": "2026-10-06T07:19:59+00:00",
      "step": "script",
      "note": "done reframed as how to tell whether a raise would pay; the premise the engine contradicts is gone and the verdict is hold"
+    },
+    {
+     "at": "2026-10-06T07:21:01+00:00",
+     "step": "critique",
+     "note": "done fourteen items re-judged against the reframe; pass"
     }
    ]
   },

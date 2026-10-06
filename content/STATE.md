@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:20:01+00:00 · style locked: True
+Updated 2026-10-06T07:21:04+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:20:01+00:00 · style locked: True
 
 ## Now
 
-- V09 · How to tell whether a price increase would pay, and why the honest answer can be hold · step critique
+- V09 · How to tell whether a price increase would pay, and why the honest answer can be hold · step review
 
 ## Awaiting your review
 
