@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:05:10+00:00 · style locked: True
+Updated 2026-10-06T07:05:25+00:00 · style locked: True
 
 ## Capabilities
 
@@ -41,6 +41,7 @@ Updated 2026-10-06T07:05:10+00:00 · style locked: True
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
 - V07 · Contribution margin vs gross margin — the one that actually matters: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 07-contribution-vs-gross-margin (docs/content/VOICE-RECORDING.md)
 - V10 · What a 12% return rate actually costs you: Needs the real FBA returns report on screen.
+- V11 · Discounting: the math of what you just gave away: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 11-discounting-math (docs/content/VOICE-RECORDING.md)
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
 - V14 · LTV/CAC is lying to you: No engine model for LTV or CAC; needs a model or real figures.
@@ -70,5 +71,5 @@ Updated 2026-10-06T07:05:10+00:00 · style locked: True
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
-- V11 · Discounting: the math of what you just gave away
 - V15 · You don't have a revenue problem. You have a cash trough
+- V16 · The $60,000 wire you're guessing on
