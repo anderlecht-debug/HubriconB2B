@@ -157,8 +157,11 @@ FRESH_DAYS = 21
 MATCH_DAYS = 2 * WINDOW_DAYS
 BAND_BOOTSTRAP = 2000
 BAND_SEED = 20260925
-# Sources are current clients only: a former client's data informs nobody.
-SOURCE_STATUSES = ("pending", "active")
+# Sources are current clients only: a former client's data informs nobody. A
+# client whose payment failed (past_due) is still current: under terms §5 only an
+# email from either side ends the relationship, and §4 pauses execution only once
+# an invoice is fourteen days late (the founder's call, 2026-10-06).
+SOURCE_STATUSES = ("pending", "active", "past_due")
 
 # THE FOUNDER'S CALL. Who is told about a declared change:
 #   "every_client"       every current client on the platform who pays that fee.
@@ -169,7 +172,7 @@ SOURCE_STATUSES = ("pending", "active")
 # gets the alert.
 RECIPIENT_POLICY = "every_client"
 RECIPIENT_POLICIES = ("every_client", "contributors_only")
-RECIPIENT_STATUSES = ("pending", "active")
+RECIPIENT_STATUSES = ("pending", "active", "past_due")   # a past-due client still hears about their own fees
 
 # The fee types the network scans: rates measured from the platform's own
 # records. Not scanned, each for a reason the module docstring gives: Shopify's

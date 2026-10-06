@@ -117,7 +117,8 @@ def _row(key: str, value, n_clients: int, n_obs: int, method: str, note: str | N
 # they once granted: the consent was given by a client of ours, about the work
 # we were doing for them. "Current" is one set for both network uses,
 # fleet.SOURCE_STATUSES, so calibration and the fleet can never disagree on who
-# is a source.
+# is a source. A past-due client stays current until the relationship ends under
+# terms §5: a bank declining a debit says nothing about the data (2026-10-06).
 def current_statuses() -> tuple[str, ...]:
     """fleet.SOURCE_STATUSES, read when asked for: fleet imports this module."""
     from .fleet import SOURCE_STATUSES
