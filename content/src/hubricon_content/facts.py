@@ -439,15 +439,25 @@ def build_facts(run: dict, data: dict) -> Facts:
             f.put("el_median", f"{float(np.median(eps)):.2f}", "median elasticity across fitted SKUs", src)
             f.put("el_inelastic_count", str(sum(1 for x in eps if -1 < x < 0)), "SKUs that are price-inelastic (a raise adds profit)", src)
             f.put("el_elastic_count", str(sum(1 for x in eps if x <= -1)), "SKUs that are price-elastic", src)
+            # the engine's own pole guard: fits too close to −1 (or too wide) for any best price to be named
+            no_top = sum(1 for e in ok if pricing_engine.near_unit_elastic(float(e["elasticity"]), e.get("std_err"),
+                                                                           (e.get("details") or {}).get("ci95"), fitted=True))
+            f.put("el_no_top", str(no_top), "fitted SKUs whose range is too wide for the engine to name a best price", src)
             # sample size, derived from the fit's own standard error (SE scales with 1/sqrt(n))
             if best.get("std_err") and d.get("points"):
                 n0 = len(d["points"]); se0 = float(best["std_err"])
                 for target, key in ((0.5, "n_for_se_half"), (0.25, "n_for_se_quarter"), (0.1, "n_for_se_tenth")):
                     f.put(key, _n(n0 * (se0 / target) ** 2), f"periods needed to shrink that error to {target:g}", "derived from ELASTICITY.FIT standard error, " + DEMO_LABEL)
+    # the catalogue-level answer to "are these prices already optimal?" (MATH_SCORECARD iteration 41: read
+    # only since the prior costs a unit as the margin and the step do); written whether or not a move exists
+    p_opt = next(((e.get("details") or {}).get("p_prices_optimal") for e in ok if (e.get("details") or {}).get("p_prices_optimal") is not None), None) if el else None
+    if p_opt is not None:
+        f.put("el_p_optimal", _pct(float(p_opt), 0), "the model's probability that the catalogue's prices are already about optimal", S("ELASTICITY.FIT"))
     moves = run.get("price_moves") or []
+    f.put("pm_step_cap", _pct(pricing_engine.STEP_CAP), "the hard cap on any single price step", S("PRICE.OPTIMUM"))
+    f.put("pm_count", str(len(moves)), "SKUs with a price step the model recommends", S("PRICE.OPTIMUM"))
     if moves:
         src = S("PRICE.OPTIMUM")
-        f.put("pm_count", str(len(moves)), "SKUs with an honest price move available", src)
         up = [m for m in moves if float(m["p_new"]) > float(m.get("p0") or m["p_new"] - 1)]
         best = max(moves, key=lambda m: float(m.get("expected_delta") or 0))
         f.put("pm_sku", best["sku"], "the SKU with the largest median gain from a price move", src)
@@ -467,7 +477,6 @@ def build_facts(run: dict, data: dict) -> Facts:
             f.put("pm_p_optimal", _pct(float(best["p_prices_optimal"]), 0), "the model's probability that the catalogue is already priced at its optimum", src)
         if best.get("direction_confidence") is not None:
             f.put("pm_direction_conf", _pct(float(best["direction_confidence"]), 0), "the model's confidence in the direction of that step", src)
-        f.put("pm_step_cap", _pct(pricing_engine.STEP_CAP), "the hard cap on any single price step", src)
 
     # advertising
     ads = run.get("ads") or []

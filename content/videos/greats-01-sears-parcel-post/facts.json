@@ -595,22 +595,22 @@
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_point": {
-  "value": "-2.74",
+  "value": "-2.76",
   "label": "its elasticity point estimate",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_se": {
-  "value": "1.40",
+  "value": "1.39",
   "label": "its HC3 robust standard error",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_low": {
-  "value": "-5.85",
+  "value": "-5.87",
   "label": "lower bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_ci_high": {
-  "value": "0.37",
+  "value": "0.35",
   "label": "upper bound of its ninety-five percent interval",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -645,7 +645,7 @@
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "el_median": {
-  "value": "-1.81",
+  "value": "-1.82",
   "label": "median elasticity across fitted SKUs",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
@@ -659,6 +659,11 @@
   "label": "SKUs that are price-elastic",
   "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
+ "el_no_top": {
+  "value": "22",
+  "label": "fitted SKUs whose range is too wide for the engine to name a best price",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
  "n_for_se_half": {
   "value": "93",
   "label": "periods needed to shrink that error to 0.5",
@@ -670,78 +675,23 @@
   "source": "derived from ELASTICITY.FIT standard error, Tarnhollow demo data"
  },
  "n_for_se_tenth": {
-  "value": "2,337",
+  "value": "2,335",
   "label": "periods needed to shrink that error to 0.1",
   "source": "derived from ELASTICITY.FIT standard error, Tarnhollow demo data"
  },
- "pm_count": {
-  "value": "22",
-  "label": "SKUs with an honest price move available",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_sku": {
-  "value": "TH-CHEKNI-08",
-  "label": "the SKU with the largest median gain from a price move",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_new_price": {
-  "value": "$59.94",
-  "label": "its recommended new price",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_step": {
-  "value": "3.0%",
-  "label": "the size of the step",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_delta": {
-  "value": "$16",
-  "label": "median profit change per month across the simulated draws",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_delta_p5": {
-  "value": "$9",
-  "label": "fifth percentile of that change",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_delta_p95": {
-  "value": "$28",
-  "label": "ninety-fifth percentile of that change",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_p_loss": {
-  "value": "1%",
-  "label": "share of the simulated draws in which the move loses money",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_band": {
-  "value": "90%",
-  "label": "the share of draws between the fifth and ninety-fifth percentiles",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_total_delta": {
-  "value": "$166",
-  "label": "the sum of every recommended move's median monthly change",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_no_top": {
-  "value": "22",
-  "label": "SKUs whose range is too wide for the model to name a best price, only a direction",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_p_optimal": {
-  "value": "98%",
-  "label": "the model's probability that the catalogue is already priced at its optimum",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
- },
- "pm_direction_conf": {
-  "value": "99%",
-  "label": "the model's confidence in the direction of that step",
-  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ "el_p_optimal": {
+  "value": "97%",
+  "label": "the model's probability that the catalogue's prices are already about optimal",
+  "source": "ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "pm_step_cap": {
   "value": "5%",
   "label": "the hard cap on any single price step",
+  "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
+ },
+ "pm_count": {
+  "value": "0",
+  "label": "SKUs with a price step the model recommends",
   "source": "PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01)"
  },
  "ad_campaigns": {
