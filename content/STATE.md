@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T06:30:49+00:00 · style locked: True
+Updated 2026-10-06T07:03:32+00:00 · style locked: True
 
 ## Capabilities
 
@@ -34,6 +34,7 @@ Updated 2026-10-06T06:30:49+00:00 · style locked: True
 - T01 · October 15: what Amazon's holiday fees cost one listing, to the cent: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs october-15` (docs/content/VOICE-RECORDING.md)
 - F01 · The case-study film: one listing, a fraction of an ounce past an edge: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs case-study-film` (docs/content/VOICE-RECORDING.md)
 - F02 · The store study's film: a real store's orders, called before and measured after: the founder's own takes: read the script at the teleprompter, `node content/film/record.mjs store-study-film` (docs/content/VOICE-RECORDING.md)
+- V01 · Why most business advice is useless: survivorship bias, with numbers: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 01-survivorship-bias (docs/content/VOICE-RECORDING.md)
 - V02 · The $48,000 Amazon owes you and will never mention: Needs the founder's raw Seller Central screen recording (doctrine §10). The script and shot list are pre-written from recovery.run on demo data so only the recording remains. Protected Playbook feeder.
 - V03 · Your bestseller might be your worst product. Here's how to check: Needs real SKU economics screenshots from Seller Central (doctrine §10). Engine-only variant on demo data is possible if the founder prefers; ask before promoting.
 - V06 · Your FBA fee is not your FBA fee: Needs real fee preview and settlement screenshots from Seller Central.
@@ -61,8 +62,8 @@ Updated 2026-10-06T06:30:49+00:00 · style locked: True
 
 ## Next five
 
-- V01 · Why most business advice is useless: survivorship bias, with numbers
 - G01 · Greats of Commerce 1: the rate card that built Sears
 - G02 · Greats of Commerce 2: the dime
 - G03 · Greats of Commerce 3: the corner
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
+- V05 · Cash conversion cycle: the number that decides whether you survive
