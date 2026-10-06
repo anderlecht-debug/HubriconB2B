@@ -19,7 +19,7 @@
    "n": 3,
    "question": "Is the title's promise fully delivered?",
    "pass": true,
-   "note": "'In plain English': the ratio is read off a plotted line, named after it is shown, and the pricing rule is given in words before its symbol. 'Probably wrong': {{pm_count}} of {{n_skus}} products carry an honest move, the price set off gross margin climbs the wrong hill, and the move is wrong by a capped step rather than badly. Note for the founder: the direction of the best move is never spoken, because facts.json carries the new price and the step but not the old price."
+   "note": "'In plain English': the ratio is read off a plotted line, named after it is shown, and the pricing rule is given in words before its symbol. The new title's promise — that units holding is not proof the price is right — is delivered three times: the hill puts the right price on the slope and the true unit margin, neither of which units holding reveals; the range is too wide to name a top for {{el_no_top}} of the {{el_skus_fit}} products that could be fit; and the close asks him to stop treating units holding as proof. Note for the founder: the title changed from 'why your price is probably wrong', which the corrected engine contradicts ({{el_p_optimal}} on the prices already being about right)."
   },
   {
    "n": 4,
@@ -31,7 +31,7 @@
    "n": 5,
    "question": "Is there exactly one idea, and exactly one CTA?",
    "pass": true,
-   "note": "One idea: the price you want is the top of a hill set by the slope and the true margin, and the top is a stretch, not a point. One CTA, the course page."
+   "note": "One idea: the price you want sits on a hill whose top is fixed by the demand slope and the true unit margin, and that slope is measured with a width. The hold verdict in chapter two is where that one idea lands, not a second idea. One CTA, in the honest limit."
   },
   {
    "n": 6,
@@ -43,7 +43,7 @@
    "n": 7,
    "question": "Is there one claim a competent operator could dispute?",
    "pass": true,
-   "note": "'Almost nobody's price sits on top of the profit hill' and 'a small step you can read is worth more than a big step you can't' are both disputable and specific."
+   "note": "'Almost nobody can say where the top of their profit hill is, and the honest measurement usually refuses to name it' is disputable and specific, and so is the line that a measurement willing to say it cannot see the top is the one to trust when it says climb. A competent operator can argue that a refusal is a useless answer."
   },
   {
    "n": 8,
@@ -55,19 +55,19 @@
    "n": 9,
    "question": "Does every number name its model run?",
    "pass": true,
-   "note": "every chart beat names its run; every key exists"
+   "note": "Every chart beat names its run and every key exists in facts.json. Re-judged after the 2026-10-06 redraft: chapter two's DATA SOURCE names ELASTICITY.FIT and PRICE.OPTIMUM with {{pm_count}} recommended steps, and the dropped pm_* step figures appear nowhere in the script or the hooks."
   },
   {
    "n": 10,
    "question": "Is any step of the method withheld?",
    "pass": true,
-   "note": "The method is complete: pull price and units by month, fit log units on log price with its standard error, move the price on purpose when it never moved and wait {{el_min_periods}} months, compute the true unit margin after fees and ads, set the kept fraction to the inverse of the slope, and step under the {{pm_step_cap}} cap while reading each result against its range. Robust errors and sizing the step to the uncertainty are left to the model in the honest limit, as §7 allows."
+   "note": "The method is complete: pull price and units by month, fit log units on log price with its standard error, move the price on purpose when it never moved and wait {{el_min_periods}} months, compute the true unit margin after fees and ads, set the kept fraction to the inverse of the slope, and — when the range is too wide to name a top — work the rule at the estimate alone and move only if it lands above today's price, under the {{pm_step_cap}} cap, reading each result against its range. That is the same guard the Price Curve course was corrected to on 2026-10-06. Robust errors and sizing the step to the uncertainty are left to the model in the honest limit, as §7 allows."
   },
   {
    "n": 11,
    "question": "Does the close state a real limitation rather than pitch?",
    "pass": true,
-   "note": "The close says what the viewer can do (the line for the top products), where it breaks ({{n_skus}} products monthly, errors that don't assume tidy noise, steps sized to the range, ranges dropped by hand inside a season), and that the gap is a model. No service is named, as pillar 3 requires, and the CTA is the course page."
+   "note": "The close says what the viewer can do (the line for the top products), where it breaks ({{n_skus}} products every month, errors that don't assume the noise is tidy, and turning each range into a step the right size for what's unknown in it), and that the gap is a model. No service is named, as pillar 3 requires, and the CTA is the course page."
   },
   {
    "n": 12,
@@ -87,6 +87,5 @@
    "pass": true,
    "note": "Elasticity, the hill, the wrong margin and the stretch at the top apply to any product business; 'the platform's cut' reads as any channel's fees. Weakness to note for the scenes step: the profit hill is not one of the listed Manim scenes, so the elasticity scene needs a hill variant driven by the same fit and the margin decomposition."
   }
- ],
- "judged_by": "critique skill, unattended tick 2026-09-18"
+ ]
 }

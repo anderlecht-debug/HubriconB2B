@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:15:06+00:00 · style locked: True
+Updated 2026-10-06T07:16:05+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:15:06+00:00 · style locked: True
 
 ## Now
 
-- V08 · Elasticity in plain English, and why "units are holding" is not proof your price is right · step critique
+- V08 · Elasticity in plain English, and why "units are holding" is not proof your price is right · step review
 
 ## Awaiting your review
 
