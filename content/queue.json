@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:09:43+00:00",
+ "updated_at": "2026-10-06T07:10:06+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -742,7 +742,7 @@
     "price_tests",
     "null_calibration"
    ],
-   "status": "in_progress",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -751,7 +751,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "todo",
+    "review": "awaiting",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -896,6 +896,16 @@
      "at": "2026-10-06T07:09:41+00:00",
      "step": "critique",
      "note": "done fourteen items re-judged against the redraft; pass"
+    },
+    {
+     "at": "2026-10-06T07:09:54+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-06T07:09:54+00:00",
+     "step": "review",
+     "note": "parked for the founder (emailed)"
     }
    ]
   },
