@@ -504,7 +504,7 @@ Every figure in the narration, with its source. History first, then the engine's
 
 ## Woolworth's Kept Its Dime Ceiling for more than 50 years ⟨w_ceiling_span⟩. Here's What It Never Told Them
 
-`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,361 spoken words · about 29 min
+`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,406 spoken words · about 29 min
 
 **Spiky claim.** A price you've never moved isn't a safe price. It's an unmeasured one, and the most famous price in American retail stayed unmeasured for decades.  
 **Misconception.** A price that's working should be left alone. Moving it is a gamble, and holding it is the safe choice.  
@@ -708,7 +708,7 @@ Now your business. You have a dime. Probably several. A price you set once, for 
 
 **[18:38] THE NUMBER YOU'RE MISSING**
 
-Here's what a price that has moved can tell you. Take one product from the demo catalogue we use for teaching: TH-OVEMIT-22 ⟨el_sku⟩, from Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Its price moved across 12 ⟨el_periods⟩ periods of history, and its units moved with it. Plot them on a scale where every step is the same percentage, price across and units a day up, and fit a line. Through this product's own points alone, the line reads -7.35 ⟨el_raw⟩: steep, from very little movement. So the model doesn't trust it alone. It gives the product's own points 17% ⟨el_own_weight⟩ of the weight, lets the rest of the catalogue carry the rest, and lands at -2.74 ⟨el_point⟩. A rise of a given size in the price costs this product about that multiple of it in units. That number has a name: price elasticity.
+Here's what a price that has moved can tell you. Take one product from the demo catalogue we use for teaching: TH-OVEMIT-22 ⟨el_sku⟩, from Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year. Its price moved across 12 ⟨el_periods⟩ periods of history, and its units moved with it. Plot them on a scale where every step is the same percentage, price across and units a day up, and fit a line. Through this product's own points alone, the line reads -7.35 ⟨el_raw⟩: steep, from very little movement. So the model doesn't trust it alone. It gives the product's own points 17% ⟨el_own_weight⟩ of the weight, lets the rest of the catalogue carry the rest, and lands at -2.76 ⟨el_point⟩. A rise of a given size in the price costs this product about that multiple of it in units. That number has a name: price elasticity.
 
 > *Picture.* chart-build of the demo product's history on log scales, the points landing period by period, drawn from the fit's own points with units divided by days, then the steep line through them, then the line pulled toward the catalogue's as "the rest of the catalogue" is spoken, the slope labelled, Tarnhollow demo data on the figure.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
@@ -722,7 +722,7 @@ Here's why it matters more than it looks. When you raise a price, the extra land
 
 **[20:53] THE HILL**
 
-Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for every one of the 22 ⟨pm_no_top⟩ products the model would move, the range on the slope is too wide to mark the top. The honest thing it can say is how far it can't see. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to see any of it.
+Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for 22 ⟨el_no_top⟩ of the 22 ⟨el_skus_fit⟩ products it measured, the range on the slope is too wide for the model to mark the top. The honest thing it can say is how far it can't see. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to see any of it.
 
 > *Picture.* chart-build of profit hills for the demo products, each drawn as a band whose top smears across the axis while the price axis marked where each band's top could be, labelled Tarnhollow demo data; then a single vertical line at one price cutting through all of them.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM  
@@ -735,7 +735,7 @@ Here is Woolworth's dime inside a modern catalogue. Across the demo's 24 ⟨n_sk
 
 **[22:26] THE HONEST RANGE**
 
-And even the products that can be measured come with a range, not a point. That -2.74 ⟨el_point⟩ has an honest interval around it, from -5.85 ⟨el_ci_low⟩ to 0.37 ⟨el_ci_high⟩. It crosses zero ⟨el_ci_crosses⟩. At one end, this product is very sensitive to price. At the other, the estimate can't rule out that price doesn't matter at all. The range comes from the standard error, which is how far another run of periods like these could move the slope, times a multiplier that grows as the periods get fewer. A tool that hands you a single number without the range is telling you something it doesn't know.
+And even the products that can be measured come with a range, not a point. That -2.76 ⟨el_point⟩ has an honest interval around it, from -5.87 ⟨el_ci_low⟩ to 0.35 ⟨el_ci_high⟩. It crosses zero ⟨el_ci_crosses⟩. At one end, this product is very sensitive to price. At the other, the estimate can't rule out that price doesn't matter at all. The range comes from the standard error, which is how far another run of periods like these could move the slope, times a multiplier that grows as the periods get fewer. A tool that hands you a single number without the range is telling you something it doesn't know.
 
 > *Picture.* range-band on the demo product's fit, the band opening from the line to the full interval as "range" is spoken, the ends labelled, the zero line marked where the band crosses it, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
@@ -744,51 +744,51 @@ And even the products that can be measured come with a range, not a point. That 
 
 So why not wait for a better number? Because waiting with the price held still adds nothing at all. That's the dime. And even with the price moving, certainty is slow. To shrink the error on this one estimate to a tight band from its own history would take far more periods than any business will ever have. And the fastest way to narrow it isn't more months. It's more movement: the wider your price has ranged, the tighter the slope. A dime that never moves never narrows at all. So the honest move isn't to wait for certainty. It's to decide under uncertainty, in steps small enough that a wrong one is cheap, and to measure every step.
 
-> *Picture.* number-pair: 12 ⟨el_periods⟩ periods held against 2,337 ⟨n_for_se_tenth⟩, the long one running off the edge of the paper; range-band narrowing as the price's spread widens, not as the months pass, labelled Tarnhollow demo data.  
+> *Picture.* the 12 ⟨el_periods⟩ periods drawn as a short row of ticks, a second row running off the edge of the paper with no figure on it; range-band narrowing as the price's spread widens, not as the months pass, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT  
 
 **[23:56] THE STEP**
 
-So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at 5% ⟨pm_step_cap⟩, so that a wrong step costs little and a right one shows up in the data. It won't name a destination for any of these products. That's an honest answer. A small step you can measure beats a confident number you can't.
+So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at 5% ⟨pm_step_cap⟩, so that a wrong step costs little and a right one shows up in the data. A small step you can measure beats a confident number you can't. And sometimes the right step is none at all.
 
 > *Picture.* counterfactual on the demo product's profit band: the top worked out at the estimate and at both ends of the range, three marks on the price axis, the current price as the hollow dot and a small step as the solid dot, the step's size in blue, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, PRICE.OPTIMUM  
 
-**[24:36] WHAT A HELD PRICE COSTS**
+**[24:34] WHEN THE ANSWER IS HOLD**
 
-So what does a held price cost? On the products that have moved, the model can at least draw a range. On the 2 ⟨el_skus_insufficient⟩ dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
+Because here's what the model says about this whole catalogue. Weighing every product's history together, it puts 97% ⟨el_p_optimal⟩ on these prices already being about right, and it recommends no price step at all. That's an answer, and a useful one. A model that can say hold is a model you can believe when it says move. But notice what made the answer possible: every product it judged had moved its price. About the 2 ⟨el_skus_insufficient⟩ dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
 
-> *Picture.* range-band of every fitted demo product's interval drawn side by side, then the 2 ⟨el_skus_insufficient⟩ refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.  
-> *Data.* demo: Tarnhollow demo data, PRICE.OPTIMUM  
+> *Picture.* range-band of every fitted demo product's interval drawn side by side, each with today's price marked inside its band, a single word, "hold", landing in ink; then the 2 ⟨el_skus_insufficient⟩ refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.  
+> *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM (0 ⟨pm_count⟩ recommended steps)  
 
-**[24:58] WHEN THE PRICE IS THE BRAND**
+**[25:16] WHEN THE PRICE IS THE BRAND**
 
 And sometimes the price is the brand, the way the dime was. A product sold as a gift under a round number. A line that's always the cheapest, or always the premium one. That's a real asset, and Printers' Ink was right about it: a price can be an advertising idea. But treat it like one. An advertising idea has a cost, and you'd measure any other advertising. Know what holding the line costs you in margin each month, the same way you'd know what a campaign costs, and decide on purpose whether it's worth it. Woolworth's successors held theirs until it stopped them selling what their customers wanted. You can know long before that.
 
 > *Picture.* doc-highlight on the Printers' Ink sentence, the same page as the advertising beat; formula-build: the margin a held price gives up each month, set beside a campaign's monthly spend, as terms only, no figures.  
 
-**[25:44] A TEST, THEN ANOTHER TEST**
+**[26:02] A TEST, THEN ANOTHER TEST**
 
 Now go back to 1932 ⟨w_1932⟩, because the company finally did it right: a test, then a rollout. But remember the West. Comparing places tells you about the places as much as the prices, unless the places are picked at random and some are left alone. Most online sellers can't do that: one listing, one price. So the test open to you is in time. A small step, measured against what you wrote down before you took it. Then the next step. Not a test and a promise. A test, then another test.
 
 > *Picture.* split-then-now: the 1932 ⟨w_1932⟩ trial stores on a map of the West and South, then a single demo product's price stepping over time with its predicted and measured units drawn together, labelled Tarnhollow demo data; timeline of steps, each landing as spoken.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[26:22] WHAT YOU CAN DO THIS WEEK**
+**[26:40] WHAT YOU CAN DO THIS WEEK**
 
 So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached 2% ⟨el_min_price_cv⟩ of their average, over at least 5 ⟨el_min_periods⟩ periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the estimate itself sits near minus one, the direction is up. If it's clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope. Work that out at the estimate and at both ends of the range. Where they agree, step that way; where they disagree, step small. Either way, by no more than 5% ⟨pm_step_cap⟩. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
 
 > *Picture.* formula-build listing the steps as terms, each landing as spoken, the best-price formula built term by term; receipt: one demo product's line, its price spread, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[28:09] THE RETURN**
+**[28:27] THE RETURN**
 
 $127.65 ⟨w_day1⟩, in nickels, on a Saturday in Lancaster. A ceiling held for more than 50 years ⟨w_ceiling_span⟩. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
 
 > *Picture.* still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".  
 > *Data.* published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report  
 
-**[28:26] THE HONEST LIMIT**
+**[28:44] THE HONEST LIMIT**
 
 You can do this week's steps by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. Prices you changed because demand moved, which tilt the line. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Products with too little history, which have to borrow strength from the rest of the catalogue, the way this one did. And a range on every estimate that has to become the right size of step for what's still unknown. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
 
@@ -925,21 +925,22 @@ Every figure in the narration, with its source. History first, then the engine's
 | `demo_brand` | Tarnhollow | the demo brand's name | demo catalogue |
 | `demo_label` | demo data | the label every demo figure carries | demo catalogue |
 | `el_ci_crosses` | crosses zero | its interval reaches no effect of price at all | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `el_ci_high` | 0.37 | upper bound of its ninety-five percent interval | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `el_ci_low` | -5.85 | lower bound of its ninety-five percent interval | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `el_ci_high` | 0.35 | upper bound of its ninety-five percent interval | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `el_ci_low` | -5.87 | lower bound of its ninety-five percent interval | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_min_periods` | 5 | periods the fit needs before it will speak | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_min_price_cv` | 2% | price movement the fit needs before it will speak | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `el_no_top` | 22 | fitted SKUs whose range is too wide for the engine to name a best price | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_own_weight` | 17% | the weight its own points carry against the catalogue's common slope | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `el_p_optimal` | 97% | the model's probability that the catalogue's prices are already about optimal | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_periods` | 12 | periods the example fit used | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `el_point` | -2.74 | its elasticity point estimate | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `el_point` | -2.76 | its elasticity point estimate | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_raw` | -7.35 | the slope through its own points alone, before pooling | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_sku` | TH-OVEMIT-22 | the worked elasticity example SKU | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_skus_fit` | 22 | SKUs with a usable elasticity fit | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `el_skus_insufficient` | 2 | SKUs the fit refused (too few periods or no price movement) | ELASTICITY.FIT on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `gross_pct_latest` | 70.7% | gross margin (revenue less landed cost), latest month | MARGIN.DECOMP on Tarnhollow demo data (seed 42, as of 2026-09-01) |
-| `n_for_se_tenth` | 2,337 | periods needed to shrink that error to 0.1 | derived from ELASTICITY.FIT standard error, Tarnhollow demo data |
 | `n_skus` | 24 | SKUs in the demo catalogue | demo catalogue |
-| `pm_no_top` | 22 | SKUs whose range is too wide for the model to name a best price, only a direction | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
+| `pm_count` | 0 | SKUs with a price step the model recommends | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 | `pm_step_cap` | 5% | the hard cap on any single price step | PRICE.OPTIMUM on Tarnhollow demo data (seed 42, as of 2026-09-01) |
 
 ---

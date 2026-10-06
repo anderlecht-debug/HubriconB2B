@@ -1157,6 +1157,31 @@ cash fixtures the trough day did not move (the held balance pays about what days
 1–14 used to); a sale now reaches the bank on day 28, not 14, and on day 90 twenty
 days of sales are still with Amazon.
 
+### Iteration 41 — the markup the prior reads was costed on a thinner unit
+
+**Objection** (2026-10-06, found by an adversarial reader of the pricing film). The
+"are these prices already optimal?" model (iteration 38, MATH_METHODS.md §2 point 3)
+prices each SKU at x = −k/(k − 1), k = p(1 − f)/(c + F), and the methods say c is the
+landed unit cost. `markup_implied_elasticity` costed the unit as unit cost plus inbound
+freight only; the margin and the price step cost it with packaging and other per-unit
+costs too. So in the model's own already-optimal world, every SKU's optimum sat above
+today's price. On the content demo catalogue (seed 42, 24 SKUs): all 22 optima 2.6–4.6%
+above today's price, p_prices_optimal 0.98, 22 up-steps each about 99% sure of its
+direction with about a 1% chance of loss, while at their own estimates 6 of the 22 had
+their tops below today's price.
+
+**Change.** `markup_implied_elasticity` costs the unit with `margin.landed_unit_cost`,
+the function the margin and the step use. `tests/test_markup_cost_basis.py`: packaging
+and other per-unit costs move the implied elasticity, and at the implied elasticity
+today's price is exactly `pricing_engine.optimal_price`.
+
+**Bench.** Seeds 101/202/303: 10/10/10 before and after; validation 404/505/606: 8/9/10
+before and after, every line of the report identical. The bench's worlds carry no
+packaging or other per-unit cost, so they cannot see this; the demo can. On the demo
+after the change: p_prices_optimal 0.97, and no SKU gets a price step (each step's
+expected gain is not positive once the already-optimal world agrees with the profit
+function). The 22 confident up-steps were the cost mismatch, not evidence. Suite 1,424.
+
 ## Outcome Alignment
 
 Mathematics that scores well and produces a directive a seller will not act on is

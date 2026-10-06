@@ -336,11 +336,16 @@ MARKUP_EPS_FLOOR = -8.0
 
 def markup_implied_elasticity(data: dict) -> dict[str, float]:
     """{sku: −k/(k − 1)} from each SKU's latest period, where the landed cost
-    is on file and the markup clears MARKUP_K_FLOOR."""
-    cost = {}
-    for c in data.get("cogs_inputs") or []:
-        if c.get("sku") and c.get("unit_cost_usd") is not None:
-            cost[c["sku"]] = float(c["unit_cost_usd"]) + float(c.get("inbound_freight_per_unit_usd") or 0.0)
+    is on file and the markup clears MARKUP_K_FLOOR.
+
+    The unit is costed exactly as the margin and the price step cost it
+    (margin.landed_unit_cost: unit cost, inbound freight, packaging and other
+    per-unit costs, plus fulfilment where the platform charged none). Costing it
+    on the unit and its freight alone priced every "already optimal" SKU a few
+    percent below the optimum the step's own profit function finds, so the
+    prices-optimal world still voted for a raise (2026-10-06)."""
+    from .margin import landed_unit_cost
+    cogs = {c["sku"]: c for c in data.get("cogs_inputs") or [] if c.get("sku") and c.get("unit_cost_usd") is not None}
     latest = {}
     for r in data.get("sku_economics") or []:
         if r.get("sku") and r.get("units_sold") and float(r["units_sold"]) > 0:
@@ -348,7 +353,7 @@ def markup_implied_elasticity(data: dict) -> dict[str, float]:
                 latest[r["sku"]] = r
     out = {}
     for sku, r in latest.items():
-        if sku not in cost:
+        if sku not in cogs:
             continue
         units, sales = float(r["units_sold"]), float(r.get("sales") or 0)
         if sales <= 0:
@@ -356,7 +361,7 @@ def markup_implied_elasticity(data: dict) -> dict[str, float]:
         price = sales / units
         prop = -(float(r.get("referral_fees") or 0) + float(r.get("other_fees") or 0)) / sales
         fixed = -(float(r.get("fba_fulfillment_fees") or 0) + float(r.get("storage_fees") or 0)) / units
-        denom = cost[sku] + max(fixed, 0.0)
+        denom = float(landed_unit_cost(cogs[sku], r) or 0.0) + max(fixed, 0.0)
         if denom <= 0:
             continue
         k = price * (1.0 - min(max(prop, 0.0), 0.9)) / denom

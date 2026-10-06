@@ -54,7 +54,7 @@ def render(slug: str) -> str:
         if b["VISUAL"] and b["VISUAL"] != "chapter":
             out.append(f"> *Picture.* {r(b['VISUAL'])}  ")
         if b["DATA SOURCE"]:
-            out.append(f"> *Data.* {b['DATA SOURCE']}  ")
+            out.append(f"> *Data.* {r(b['DATA SOURCE'])}  ")
         if b["CTA"]:
             out.append(f"> *Close.* {r(b['CTA'])}  ")
         out.append("")

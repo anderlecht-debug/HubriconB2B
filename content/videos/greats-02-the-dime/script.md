@@ -183,7 +183,7 @@ SCRIPT
   CLIP: no
 
 [20:53] THE HILL
-  VO: Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for every one of the {{pm_no_top}} products the model would move, the range on the slope is too wide to mark the top. The honest thing it can say is how far it can't see. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to see any of it.
+  VO: Now picture profit as the price sweeps upward. Every unit you still sell earns more. You sell fewer units. They pull against each other, so for most products profit climbs, flattens, then falls. It's a hill. Its top sits where the slope and the margin put it, but only as sharply as the slope is known. In this demo, for {{el_no_top}} of the {{el_skus_fit}} products it measured, the range on the slope is too wide for the model to mark the top. The honest thing it can say is how far it can't see. Woolworth's ceiling set every product in his stores at the same point on the price axis, whatever its hill looked like. From one price that never moved, there was no way to see any of it.
   VISUAL: chart-build of profit hills for the demo products, each drawn as a band whose top smears across the axis while the price axis marked where each band's top could be, labelled Tarnhollow demo data; then a single vertical line at one price cutting through all of them.
   DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM
   CLIP: yes
@@ -201,51 +201,51 @@ SCRIPT
 
 [23:08] WAITING DOESN'T HELP
   VO: So why not wait for a better number? Because waiting with the price held still adds nothing at all. That's the dime. And even with the price moving, certainty is slow. To shrink the error on this one estimate to a tight band from its own history would take far more periods than any business will ever have. And the fastest way to narrow it isn't more months. It's more movement: the wider your price has ranged, the tighter the slope. A dime that never moves never narrows at all. So the honest move isn't to wait for certainty. It's to decide under uncertainty, in steps small enough that a wrong one is cheap, and to measure every step.
-  VISUAL: number-pair: {{el_periods}} periods held against {{n_for_se_tenth}}, the long one running off the edge of the paper; range-band narrowing as the price's spread widens, not as the months pass, labelled Tarnhollow demo data.
+  VISUAL: the {{el_periods}} periods drawn as a short row of ticks, a second row running off the edge of the paper with no figure on it; range-band narrowing as the price's spread widens, not as the months pass, labelled Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
   CLIP: yes
 
 [23:56] THE STEP
-  VO: So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at {{pm_step_cap}}, so that a wrong step costs little and a right one shows up in the data. It won't name a destination for any of these products. That's an honest answer. A small step you can measure beats a confident number you can't.
+  VO: So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at {{pm_step_cap}}, so that a wrong step costs little and a right one shows up in the data. A small step you can measure beats a confident number you can't. And sometimes the right step is none at all.
   VISUAL: counterfactual on the demo product's profit band: the top worked out at the estimate and at both ends of the range, three marks on the price axis, the current price as the hollow dot and a small step as the solid dot, the step's size in blue, Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data, PRICE.OPTIMUM
   CLIP: yes
 
-[24:36] WHAT A HELD PRICE COSTS
-  VO: So what does a held price cost? On the products that have moved, the model can at least draw a range. On the {{el_skus_insufficient}} dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
-  VISUAL: range-band of every fitted demo product's interval drawn side by side, then the {{el_skus_insufficient}} refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.
-  DATA SOURCE: demo: Tarnhollow demo data, PRICE.OPTIMUM
+[24:34] WHEN THE ANSWER IS HOLD
+  VO: Because here's what the model says about this whole catalogue. Weighing every product's history together, it puts {{el_p_optimal}} on these prices already being about right, and it recommends no price step at all. That's an answer, and a useful one. A model that can say hold is a model you can believe when it says move. But notice what made the answer possible: every product it judged had moved its price. About the {{el_skus_insufficient}} dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
+  VISUAL: range-band of every fitted demo product's interval drawn side by side, each with today's price marked inside its band, a single word, "hold", landing in ink; then the {{el_skus_insufficient}} refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.
+  DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM ({{pm_count}} recommended steps)
   CLIP: yes
 
-[24:58] WHEN THE PRICE IS THE BRAND
+[25:16] WHEN THE PRICE IS THE BRAND
   VO: And sometimes the price is the brand, the way the dime was. A product sold as a gift under a round number. A line that's always the cheapest, or always the premium one. That's a real asset, and Printers' Ink was right about it: a price can be an advertising idea. But treat it like one. An advertising idea has a cost, and you'd measure any other advertising. Know what holding the line costs you in margin each month, the same way you'd know what a campaign costs, and decide on purpose whether it's worth it. Woolworth's successors held theirs until it stopped them selling what their customers wanted. You can know long before that.
   VISUAL: doc-highlight on the Printers' Ink sentence, the same page as the advertising beat; formula-build: the margin a held price gives up each month, set beside a campaign's monthly spend, as terms only, no figures.
   CLIP: no
 
-[25:44] A TEST, THEN ANOTHER TEST
+[26:02] A TEST, THEN ANOTHER TEST
   VO: Now go back to {{w_1932}}, because the company finally did it right: a test, then a rollout. But remember the West. Comparing places tells you about the places as much as the prices, unless the places are picked at random and some are left alone. Most online sellers can't do that: one listing, one price. So the test open to you is in time. A small step, measured against what you wrote down before you took it. Then the next step. Not a test and a promise. A test, then another test.
   VISUAL: split-then-now: the {{w_1932}} trial stores on a map of the West and South, then a single demo product's price stepping over time with its predicted and measured units drawn together, labelled Tarnhollow demo data; timeline of steps, each landing as spoken.
   DATA SOURCE: demo: Tarnhollow demo data
   CLIP: yes
 
-[26:22] WHAT YOU CAN DO THIS WEEK
+[26:40] WHAT YOU CAN DO THIS WEEK
   VO: So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached {{el_min_price_cv}} of their average, over at least {{el_min_periods}} periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the estimate itself sits near minus one, the direction is up. If it's clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope. Work that out at the estimate and at both ends of the range. Where they agree, step that way; where they disagree, step small. Either way, by no more than {{pm_step_cap}}. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
   VISUAL: formula-build listing the steps as terms, each landing as spoken, the best-price formula built term by term; receipt: one demo product's line, its price spread, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data
   CLIP: yes
 
-[28:09] THE RETURN
+[28:27] THE RETURN
   VO: {{w_day1}}, in nickels, on a Saturday in Lancaster. A ceiling held for {{w_ceiling_span}}. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
   VISUAL: still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".
   DATA SOURCE: published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report
   CLIP: no
 
-[28:26] THE HONEST LIMIT
+[28:44] THE HONEST LIMIT
   VO: You can do this week's steps by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. Prices you changed because demand moved, which tilt the line. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Products with too little history, which have to borrow strength from the rest of the catalogue, the way this one did. And a range on every estimate that has to become the right size of step for what's still unknown. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   VISUAL: range-band on the demo catalogue's fits, every product's interval drawn at once, the band holding while the voice names what it takes, labelled Tarnhollow demo data; end card at "hubricon.com/learn".
   DATA SOURCE: demo: Tarnhollow demo data, ELASTICITY.FIT
   CTA: The free Price Curve course at hubricon.com/learn. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
   CLIP: yes
 
-RE-HOOK AUDIT: 0:31, 1:02, 1:37, 2:08, 2:39, 3:10, 3:42, 4:17, 4:48, 5:23, 5:59, 6:30, 7:08, 7:38, 8:08, 8:38, 9:17, 9:59, 10:32, 11:03, 11:34, 12:07, 12:38, 13:11, 13:41, 14:13, 14:43, 15:16, 15:51, 16:24, 16:59, 17:30, 18:01, 18:35, 19:11, 19:43, 20:13, 20:47, 21:25, 21:56, 22:32, 23:07, 23:40, 24:12, 24:44, 25:18, 25:50, 26:23, 26:57, 27:29, 28:08, 28:39, 29:12 (a new figure, question, picture or turn at each; no gap over 40 s)
+RE-HOOK AUDIT: 0:31, 1:02, 1:37, 2:08, 2:39, 3:10, 3:42, 4:17, 4:48, 5:23, 5:59, 6:30, 7:08, 7:38, 8:08, 8:38, 9:17, 9:59, 10:32, 11:03, 11:34, 12:07, 12:38, 13:11, 13:41, 14:13, 14:43, 15:16, 15:51, 16:24, 16:59, 17:30, 18:01, 18:35, 19:11, 19:43, 20:13, 20:47, 21:25, 21:56, 22:32, 23:07, 23:40, 24:12, 24:47, 25:20, 25:54, 26:27, 27:03, 27:42, 28:15, 28:50, 29:26 (a new figure, question, picture or turn at each; no gap over 40 s)
 DERIVED ASSETS: LinkedIn post: "A price you've never moved isn't safe. It's unmeasured." · X thread spine: the cost list under one price, the stocking that became one, the 1932 test in deflation, the products the fit refused · newsletter section: find your dimes in an afternoon · clips: the arithmetic of a nickel, the vats, why they moved, the products that refused
