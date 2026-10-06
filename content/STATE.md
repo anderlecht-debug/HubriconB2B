@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:26:35+00:00 · style locked: True
+Updated 2026-10-06T07:26:50+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:26:35+00:00 · style locked: True
 
 ## Now
 
-- V17 · Why {{service_level_default}} service level is wrong for most of your SKUs · step review
+- idle
 
 ## Awaiting your review
 
@@ -20,6 +20,7 @@ Updated 2026-10-06T07:26:35+00:00 · style locked: True
 - V08 · Elasticity in plain English, and why "units are holding" is not proof your price is right · gate `review` → see `content/REVIEW.md`
 - V09 · How to tell whether a price increase would pay, and why the honest answer can be hold · gate `review` → see `content/REVIEW.md`
 - V16 · The {{largest_wire}} wire you're guessing on · gate `review` → see `content/REVIEW.md`
+- V17 · Why {{service_level_default}} service level is wrong for most of your SKUs · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
