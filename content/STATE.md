@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:05:25+00:00 · style locked: True
+Updated 2026-10-06T07:05:37+00:00 · style locked: True
 
 ## Capabilities
 
@@ -45,6 +45,7 @@ Updated 2026-10-06T07:05:25+00:00 · style locked: True
 - V12 · Does $19.99 actually work? Charm pricing, tested: No engine model and no data for charm-price tests; producing it would require invented figures.
 - V13 · Ad spend with zero attributed sales: find it in 20 minutes: Needs the real Campaign Manager search-term report on screen.
 - V14 · LTV/CAC is lying to you: No engine model for LTV or CAC; needs a model or real figures.
+- V15 · You don't have a revenue problem. You have a cash trough: the founder's own takes: read the script at the teleprompter, node content/film/record.mjs 15-cash-trough (docs/content/VOICE-RECORDING.md)
 - V20 · Storage fees: the cost that compounds while you sleep: Needs the real inventory health and storage fee reports on screen.
 - V21 · Payback period: the only growth metric that can't be faked: No engine model for payback period; needs a model or real figures.
 - V26 · The reimbursement windows closing on you right now: Needs the founder's raw Seller Central screen recording. Script and shot list pre-written from recovery.run. Protected Playbook feeder.
@@ -71,5 +72,5 @@ Updated 2026-10-06T07:05:25+00:00 · style locked: True
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
 - V08 · Elasticity in plain English, and why your price is probably wrong
 - V09 · The price increase you're afraid of is probably free
-- V15 · You don't have a revenue problem. You have a cash trough
 - V16 · The $60,000 wire you're guessing on
+- V17 · Why 95% service level is wrong for most of your SKUs
