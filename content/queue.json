@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:24:28+00:00",
+ "updated_at": "2026-10-06T07:24:43+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -1765,7 +1765,7 @@
     "inventory_sim",
     "inventory_econ"
    ],
-   "status": "in_progress",
+   "status": "awaiting",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -1774,7 +1774,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "todo",
+    "review": "awaiting",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1836,6 +1836,16 @@
      "at": "2026-10-06T07:24:25+00:00",
      "step": "critique",
      "note": "done fourteen items re-judged after the method correction; pass"
+    },
+    {
+     "at": "2026-10-06T07:24:39+00:00",
+     "step": "review",
+     "note": "awaiting"
+    },
+    {
+     "at": "2026-10-06T07:24:40+00:00",
+     "step": "review",
+     "note": "parked for the founder (emailed)"
     }
    ]
   },
