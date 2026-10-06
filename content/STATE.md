@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:16:05+00:00 · style locked: True
+Updated 2026-10-06T07:16:20+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,11 +12,12 @@ Updated 2026-10-06T07:16:05+00:00 · style locked: True
 
 ## Now
 
-- V08 · Elasticity in plain English, and why "units are holding" is not proof your price is right · step review
+- idle
 
 ## Awaiting your review
 
 - V04 · Your A/B test told you nothing. Here's the sample size you needed · gate `review` → see `content/REVIEW.md`
+- V08 · Elasticity in plain English, and why "units are holding" is not proof your price is right · gate `review` → see `content/REVIEW.md`
 
 ## Done
 
