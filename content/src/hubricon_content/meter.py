@@ -1,10 +1,10 @@
 """What one film cost to make (VISUAL_SPEC.md §13.4), counted where it is spent.
 
 A film is made on the founder's machine, so its meter is a ledger beside it,
-content/videos/<slug>/meter.json, not the engine's database meter: ElevenLabs
-characters sent for narration, sound effects generated, API requests by
-source (sourcing writes sources/requests.json), Higgsfield credits the
-texture step reports. Quantities only; a price is a separate question. Never
+content/videos/<slug>/meter.json, not the engine's database meter: API
+requests by source (sourcing writes sources/requests.json) and the Higgsfield
+credits the texture step reports. Narration and sound cost nothing to make: the
+founder reads the films himself and the sound library is on file. Quantities only; a price is a separate question. Never
 fatal: a failed write is dropped, and the work never waits on it.
 """
 

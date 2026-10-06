@@ -65,29 +65,28 @@ def log(u: dict, step: str, note: str) -> None:
 
 # ── capabilities ───────────────────────────────────────────────────────────
 
-def _founder_voice() -> str | None:
-    """The configured narration voice when it may narrate: the founder's own clone, or the
-    library voice he chose in content/assets/voice.json (tts.provider decides)."""
-    vid = os.environ.get("ELEVENLABS_VOICE_ID")
-    if not (vid and os.environ.get("ELEVENLABS_API_KEY")):
-        return None
-    from .tts import provider
-    return vid if provider()[0] in ("founder", "library") else None
-
-
 def capabilities() -> dict:
     """What the environment can do right now. Values only, never secrets."""
     secrets = CONTENT_DIR / ".secrets"
     return {
-        "elevenlabs_key": bool(os.environ.get("ELEVENLABS_API_KEY")),
-        "founder_voice_id": _founder_voice(),
         "youtube_token": (secrets / "youtube-token.json").exists(),
         "youtube_client": (secrets / "client_secret.json").exists(),
         "textures_cached": (CONTENT_DIR / "assets" / "textures" / "manifest.json").exists(),
+        # the tick, the whoosh and the bed were made with ElevenLabs during the paid subscription and
+        # stay licensed for commercial use; nothing new is generated (the founder's call, 2026-10-06)
         "music_bed": ("licensed" if any((CONTENT_DIR / "assets" / "music").glob("*.wav"))
-                      else "elevenlabs" if (CONTENT_DIR / "assets" / "music" / "bed-elevenlabs.mp3").exists() else "procedural"),
-        "sfx": "elevenlabs" if (CONTENT_DIR / "assets" / "sfx" / "tick.mp3").exists() else "procedural",
+                      else "on file" if (CONTENT_DIR / "assets" / "music" / "bed-elevenlabs.mp3").exists() else "procedural"),
+        "sfx": "on file" if (CONTENT_DIR / "assets" / "sfx" / "tick.mp3").exists() else "procedural",
     }
+
+
+def _takes_in(slug: str) -> bool:
+    """Every beat of the unit has the founder's take (content/film/record.mjs)."""
+    try:
+        from .tts import missing_takes
+        return not missing_takes(slug)
+    except (OSError, ValueError, KeyError, SystemExit):
+        return False
 
 
 def refresh_capabilities(q: dict) -> None:
@@ -99,8 +98,7 @@ def refresh_capabilities(q: dict) -> None:
             continue
         reason = (u.get("blocked_on") or "").lower()
         freed = (
-            ("elevenlabs_api_key" in reason and caps["elevenlabs_key"]) or
-            ("elevenlabs_voice_id" in reason and caps["founder_voice_id"]) or
+            ("record.mjs" in reason and u.get("slug") and _takes_in(u["slug"])) or
             ("client_secret.json" in reason and caps["youtube_client"]) or
             ("youtube-token" in reason and caps["youtube_token"]) or
             any(k.lower() in reason and os.environ.get(k) for k in SOURCE_KEYS)
@@ -177,7 +175,7 @@ def seed() -> dict:
     cal = json.loads(CALENDAR.read_text(encoding="utf-8"))
     units = [
         _checklist_unit("P0-tooling", 0, "setup", "Tooling, docs, skills, state, runner, timer", [
-            "content venv on Python 3.13 with manim, elevenlabs, google client and the engine importable",
+            "content venv on Python 3.13 with manim, faster-whisper, google client and the engine importable",
             "Inter and Inter Display in content/assets/fonts (VISUAL_SPEC.md §3.1)",
             "docs/content holds the six governing documents; CLAUDE.md, .claude/settings.json, skills, runner, systemd units written",
             "queue.json seeded; STATE.md and REVIEW.md render",
@@ -356,7 +354,6 @@ FOUNDER_INPUTS = [
     "Watch the style reel (`content/videos/style-reel/style-reel.mp4`, 36 s, silent: the site's own charts and type on a film stage). If the look is right, freeze it: `node content/film/lock.mjs`. Every film after reuses it.",
     "Read F01 (the home page's case-study film) and T01 (October 15) in `content/REVIEW.md`; `hubricon-content approve <slug>` or `reject <slug> --note \"...\"`. T01 is dated: it is only worth publishing before the holiday card ends.",
     "Your voice, your own recording first (HUBRICON_SPEC.md): `node content/film/record.mjs <slug>` opens a teleprompter at http://127.0.0.1:8790; read each beat, keep the take. Then `node content/film/render.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4 --audio content/videos/<slug>/takes` and `node content/film/check.mjs content/videos/<slug>/board.json content/videos/<slug>/media/master.mp4`.",
-    "The clone, in parallel, from those same recordings: `hubricon-content voice-clone --name \"Hagen Simmons\" <wav files>` and `ELEVENLABS_VOICE_ID` in `.env`. Switch over only when it is indistinguishable.",
     "YouTube: a Google Cloud OAuth client JSON at `content/.secrets/client_secret.json`, then one interactive `hubricon-content youtube-auth` in a browser.",
     "A licensed music bed in `content/assets/music/` if the series is to have one (the films render without).",
     "Seller Central screenshots or screen recordings for the parked pieces that need them (V02, V03, V06, V10, V13, V20, V26).",

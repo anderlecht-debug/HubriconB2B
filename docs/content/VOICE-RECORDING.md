@@ -1,65 +1,57 @@
-# Recording your voice for the clone
+# Recording the films in your own voice
 
-The narration is the one thing on screen that has to be you. A clone made from bad audio
-sounds like a bad clone; a clone made from five minutes of you reading calmly in a quiet room
-sounds like you on a good day. Nothing else in the pipeline can compensate for the input.
+Every film is narrated by you, in your own recorded voice (your call, 2026-10-06: no ElevenLabs,
+no clone). The description of every film says so: "Narrated by Hagen Simmons, in his own voice."
+Nothing on the voice side needs a paid service: the teleprompter records you, and faster-whisper,
+running on this PC, matches your reading to the script's words so the pictures land on them.
 
-## Two clones, in order
+## The time it takes
 
-**Now: Instant Voice Clone.** Available on the current Starter tier. Give it 3 to 5 minutes and
-it is good enough for the first videos and for judging the whole chain with your own voice.
-
-**Before publishing the series: Professional Voice Clone.** Needs the Creator tier ($22/month at
-the time of writing, which also raises the monthly character allowance to 100,000) and 30 minutes
-or more of clean recording; ElevenLabs recommends up to 3 hours and trains for a few hours. This
-is the one that is hard to tell from you. Record the 30 minutes over two or three sittings with
-the same setup; the pipeline keeps working on the instant clone until you swap the voice id.
+A film is read at about 150 words a minute, so a 30-minute film is about 30 minutes of reading and
+roughly an hour at the microphone once retakes are counted. Retakes are cheap: you re-record one beat,
+never the whole film. Three films on a Saturday covers half a week of one a day.
 
 ## The setup
 
 - One microphone, the same one every time, 15 to 20 cm from your mouth, slightly off-axis so
   plosives don't pop. A USB condenser or a decent dynamic is fine; a laptop mic is not.
-- A quiet room with soft surfaces. A closet with clothes beats a kitchen. Fans, fridges and
+- A quiet room with soft surfaces. A closet full of clothes beats a kitchen. Fans, fridges and
   HVAC off. Phone on silent and out of the room.
-- Record WAV, 48 kHz, 24-bit, mono. No noise reduction, no EQ, no compression, no normalising.
-  ElevenLabs wants the raw signal; processing removes what the model learns from.
-- Leave two seconds of room silence at the start of every take. Do not trim it.
+- No noise reduction, no EQ, no compression, no normalising. The teleprompter already turns off the
+  browser's echo cancellation, noise suppression and automatic gain, records at 256 kbps, and keeps
+  each beat as a 48 kHz mono WAV; the mix does the rest (−16 LUFS, a light compressor, room tone).
+- Leave a second of silence before you start each beat. Do not trim it.
 
-## What to read
+## Reading a film
 
-Read as you would explain it to one founder across a table, not as a broadcaster. Slightly
-slower than conversation, full stops honoured, no performance. The material below is what the
-clone will be asked to say, so read that:
+A script can be read only once you have approved it (`hubricon-content approve <slug>`); the
+teleprompter refuses to keep takes for one that isn't.
 
-1. Two or three of the parked scripts in `content/REVIEW.md`, straight through. That is 10 to 15
-   minutes of exactly the register we need: numbers, short sentences, one idea at a time.
-2. A page of `HUBRICON.md`, so the clone has the product vocabulary.
-3. For the professional clone, add a lesson or two from `content/learn/lessons/` and keep going
-   until the total passes 30 minutes.
+    cd /home/lp9/Hubricon/HubriconB2B-content
+    node content/film/record.mjs <slug>
 
-Numbers matter. Read "$65,320" as "sixty-five thousand, three hundred and twenty dollars" and
-percentages as "seven percent". Consistency here is what makes the clone read figures well.
+Open the address it prints. It shows one beat at a time with its figures filled in; read it, listen
+back, keep it or take it again. Each kept beat lands in `content/videos/<slug>/takes/b<N>.wav`.
+When every beat has a take, the next runner tick turns them into the film's narration
+(`hubricon-content tts <slug>`, which calls `takes-to-vo`): the takes are copied, never altered,
+and timed word by word. A unit waiting on your reading goes back to work on its own once the
+takes are in.
 
-## Making the clone
+## How to read
 
-Put the files in one folder, then:
+As you would explain it to one founder across a table, not as a broadcaster. Slightly slower than
+conversation, full stops honoured, no performance. Read figures in full and the same way every time:
+"$65,320" as "sixty-five thousand, three hundred and twenty dollars", percentages as "seven percent",
+and dates as they are written. The subtitles show the script's own words whatever the transcriber
+hears, but a figure read differently from the screen is a mistake a viewer will notice.
 
-    cd /home/lp9/Hubricon/HubriconB2B-content/content
-    .venv/bin/hubricon-content voice-clone --name "Hagen Simmons" /path/to/take-*.wav
+## Sound around your voice
 
-It prints a voice id. Add `ELEVENLABS_VOICE_ID=<id>` to `/home/lp9/Hubricon/HubriconB2B/.env`.
-Then listen before anything renders:
+The tick, the whoosh, the music bed and the world ambience already on file were made with ElevenLabs
+during your paid subscription, which licenses them for commercial use for good; they stay. Any new
+sound comes from Freesound under its CC0 licence or from Pixabay, filed with its page and licence:
 
-    .venv/bin/hubricon-content voice-preview 01-survivorship-bias
+    .venv/bin/hubricon-content ambience-add <file> --subject "container port cranes" \
+        --source freesound --url https://freesound.org/people/<who>/sounds/<id>/ --author <who>
 
-That writes `content/voice-previews/<slug>-founder.mp3`: the hook and the first chapter in your
-clone with the pipeline's exact settings. If it sounds off, adjust `ELEVENLABS_STABILITY`
-(lower is more expressive, higher is steadier; 0.40 to 0.55 is the range for narration) and
-`ELEVENLABS_STYLE` (keep under 0.15) in `.env` and preview again. The settings you settle on are
-frozen into the style lock with the first video.
-
-## Budget
-
-A five-minute video is roughly 4,500 characters; a Desk video is about 8,500. The Starter tier's
-40,000 characters a month covers roughly six videos with no retakes. The full calendar at one
-video a day needs the Pro tier (500,000 characters) or a slower cadence.
+A subject with no clip on file plays room tone alone.

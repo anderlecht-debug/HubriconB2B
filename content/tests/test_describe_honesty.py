@@ -5,14 +5,10 @@ from pathlib import Path
 from hubricon_content import describe, qa
 
 
-def test_the_disclosure_matches_the_voice_and_never_claims_a_clone_that_is_not_one():
+def test_the_disclosure_says_whose_voice_it_is():
     assert qa.disclosure_for("own") == "Narrated by Hagen Simmons, in his own voice."
-    assert "AI clone" in qa.disclosure_for("founder")
-    assert "not for publishing" in qa.disclosure_for(None)
-    assert "AI clone" not in qa.disclosure_for("own")
-    assert set(qa.PUBLISHABLE_VOICES) == {"own", "founder", "library"}
-    # the library voice the founder chose is never passed off as his
-    assert "Hagen Simmons's voice" not in qa.disclosure_for("library") and "AI voice" in qa.disclosure_for("library")
+    assert "not for publishing" in qa.disclosure_for(None) and "not for publishing" in qa.disclosure_for("placeholder")
+    assert qa.PUBLISHABLE_VOICES == ("own",)
 
 
 def test_the_data_line_names_the_films_own_source_with_its_label():

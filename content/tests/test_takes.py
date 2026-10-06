@@ -1,5 +1,5 @@
-"""The founder's own takes become the unit's narration through the same files the
-clone writes (VISUAL_SPEC.md §7.2), so everything after `tts` is one path."""
+"""The founder's own takes become the unit's narration (VISUAL_SPEC.md §7.2), so
+everything after `tts` is one path."""
 
 import json
 
@@ -33,8 +33,8 @@ def test_every_take_becomes_vo_and_alignment_in_the_script_words(tmp_path, monke
     _take(d / "takes" / "b1.wav")
     _take(d / "takes" / "b3.wav")
     (d / "audio").mkdir()
-    (d / "audio" / "vo-01.mp3").write_bytes(b"clone")   # an earlier clone read steps aside
-    u = {"slug": "s", "voice": "founder", "publishable": True}
+    (d / "audio" / "vo-01.mp3").write_bytes(b"earlier")   # an earlier read of the beat steps aside
+    u = {"slug": "s", "voice": None, "publishable": True}
     res = tts.takes_to_vo(u, {})
     assert res == {"status": "ok", "voice": "own", "beats": 2}
     assert sorted(p.name for p in (d / "audio").iterdir()) == ["vo-01.wav", "vo-03.wav"]

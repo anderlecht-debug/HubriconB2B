@@ -190,7 +190,7 @@ worst product" is spiky. "Margins matter" is not.
 **Compress (Naval).** Cut every sentence that survives its own deletion. Then cut the adverbs.
 
 **Write for the mouth.** Short sentences. Fragments are fine. Contractions always. Ellipses and
-line breaks place the pauses, because ElevenLabs reads punctuation as timing. First person,
+line breaks place the pauses, because the reader takes punctuation as timing. First person,
 curious, conversational. Never announcer voice.
 
 **Every number on screen is spoken, and spoken at the moment it appears.** Never before, never

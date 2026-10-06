@@ -3,17 +3,23 @@
   "text": "a single very short, soft, dry wooden click, like a fingertip tapping a desk once; close-miked, no reverb, no tail",
   "duration_seconds": 0.5,
   "prompt_influence": 0.7,
-  "source": "elevenlabs sound-generation"
+  "source": "elevenlabs sound-generation",
+  "made_on": "2026-10-04",
+  "licence": "ElevenLabs, generated during a paid subscription: licensed for commercial use"
  },
  "whoosh": {
   "text": "a low, brief, airy cinematic whoosh for a chapter cut; restrained, felt more than heard, no cartoon sweep",
   "duration_seconds": 0.9,
   "prompt_influence": 0.6,
-  "source": "elevenlabs sound-generation"
+  "source": "elevenlabs sound-generation",
+  "made_on": "2026-10-04",
+  "licence": "ElevenLabs, generated during a paid subscription: licensed for commercial use"
  },
  "bed": {
   "prompt": "Sparse, restrained ambient underscore for a serious financial documentary: a soft felt piano playing slow single notes, a low sustained cello drone, wide reverb, no drums, no melody hook, no build, 62 bpm, minor key, calm and expensive. Seamlessly loopable.",
   "music_length_ms": 120000,
-  "source": "elevenlabs music"
+  "source": "elevenlabs music",
+  "made_on": "2026-10-04",
+  "licence": "ElevenLabs, generated during a paid subscription: licensed for commercial use"
  }
 }

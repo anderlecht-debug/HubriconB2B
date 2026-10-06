@@ -1,37 +1,24 @@
 """Narration, one beat at a time, with word timing.
 
-Two providers. The founder's ElevenLabs clone is the only voice that may ship;
-it returns character alignment with the audio, so subtitles and reveal times
-need no transcription. The placeholder is Kokoro, an offline open-weights voice
-whose output is aligned by faster-whisper; it exists so the whole chain can be
-proven and reviewed before the clone exists, and a unit narrated by it is never
-publishable.
+Every film is narrated in the founder's own recorded voice (the founder's call,
+2026-10-06: no ElevenLabs, no clone). He reads each beat at the teleprompter
+(`content/film/record.mjs`), which keeps one take per beat as takes/b<N>.wav;
+`takes_to_vo` copies them to audio/vo-NN.wav and times the script's own words on
+faster-whisper, run on this PC, so subtitles and reveals follow his reading.
+
+The only other voice is Kokoro, an offline open-weights placeholder aligned the
+same way. It exists so the chain can be proven before his takes exist, renders
+only when asked for (CONTENT_ALLOW_PLACEHOLDER=1), and never publishes.
 """
 
-import base64
 import json
 import os
 import re
-import subprocess
-import urllib.request
 from pathlib import Path
 
 from . import script as scriptmod
 from .state import CONTENT_DIR
 
-ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
-ELEVEN_FORMAT = "mp3_44100_128"
-
-
-def eleven_settings() -> dict:
-    """Narration settings: steady, not flat. Stability under 0.40 wanders; over
-    0.55 flattens into a read. Style stays low so the clone never performs."""
-    f = lambda k, d: float(os.environ.get(k, d))
-    return {"stability": f("ELEVENLABS_STABILITY", 0.45), "similarity_boost": f("ELEVENLABS_SIMILARITY", 0.85),
-            "style": f("ELEVENLABS_STYLE", 0.08), "use_speaker_boost": True}
-
-
-ELEVEN_SETTINGS = eleven_settings()
 # The placeholder voice exists to prove the chain, not to be heard. It renders only
 # when asked for explicitly, so a founder never reviews a video in a voice that
 # is not his.
@@ -63,114 +50,30 @@ WHISPER_DEVICE = os.environ.get("CONTENT_WHISPER_DEVICE")   # unset: the GPU whe
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’.,-]+")
 
 
-VOICE_CHECK = CONTENT_DIR / ".cache" / "voice-check.json"
-# A library voice the founder chose by name (content/assets/voice.json). It narrates
-# as itself, never as his voice: the description says what it is (qa.disclosure_for).
-CHOSEN_VOICE = CONTENT_DIR / "assets" / "voice.json"
+def _beat_texts(slug: str) -> tuple[list[str], list[dict]]:
+    d = scriptmod.video_dir(slug)
+    facts = scriptmod.load_facts(slug)
+    sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
+    return [speakable(b["VO"]) for b in sc["beats"]], sc["beats"]
 
 
-def chosen_voice() -> dict:
-    try:
-        return json.loads(CHOSEN_VOICE.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-VOICE_CHECK_HOURS = 24
+def missing_takes(slug: str) -> list[str]:
+    """The beats the founder has not read yet (takes/b<N>.wav), in order."""
+    d = scriptmod.video_dir(slug)
+    texts, _ = _beat_texts(slug)
+    return [f"b{i}" for i, t in enumerate(texts, start=1) if t and not (d / "takes" / f"b{i}.wav").exists()]
 
 
-def voice_is_own(voice_id: str, key: str | None = None, fetch=None) -> tuple[bool, str]:
-    """Whether a voice belongs to this ElevenLabs account, and its name.
-
-    A voice added from ElevenLabs' public library is another person's voice
-    (`sharing.status` "copied", or an `original_voice_id` that is not its own).
-    Only the founder's own clone may narrate a film presented as his voice
-    (HUBRICON.md), so anything else, or a voice that cannot be checked, is
-    refused. The answer is cached for a day."""
-    import time
-    cache = {}
-    try:
-        cache = json.loads(VOICE_CHECK.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        pass
-    hit = cache.get(voice_id)
-    if hit and time.time() - hit.get("at", 0) < VOICE_CHECK_HOURS * 3600 and fetch is None:
-        return hit["own"], hit["name"]
-    key = key or os.environ.get("ELEVENLABS_API_KEY")
-    try:
-        if fetch is None:
-            req = urllib.request.Request(f"https://api.elevenlabs.io/v1/voices/{voice_id}", headers={"xi-api-key": key})
-            with urllib.request.urlopen(req, timeout=20) as res:
-                v = json.loads(res.read())
-        else:
-            v = fetch(voice_id)
-    except Exception as e:   # fail closed: an unchecked voice never narrates
-        return False, f"unchecked ({type(e).__name__})"
-    sharing = v.get("sharing") or {}
-    copied = sharing.get("status") == "copied" or (sharing.get("original_voice_id") not in (None, voice_id))
-    own, name = (not copied and v.get("category") in ("cloned", "professional")), str(v.get("name", ""))
-    if fetch is None:
-        cache[voice_id] = {"own": own, "name": name, "at": time.time()}
-        try:
-            VOICE_CHECK.parent.mkdir(parents=True, exist_ok=True)
-            VOICE_CHECK.write_text(json.dumps(cache), encoding="utf-8")
-        except OSError:
-            pass
-    return own, name
-
-
-def provider() -> tuple[str, str]:
-    """(name, reason)."""
-    if os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_VOICE_ID"):
-        vid = os.environ["ELEVENLABS_VOICE_ID"]
-        own, name = voice_is_own(vid)
-        if own:
-            return "founder", "ElevenLabs clone of the founder's voice"
-        chosen = chosen_voice()
-        if chosen.get("kind") == "library" and chosen.get("voice_id") == vid:
-            return "library", f"ElevenLabs library voice '{chosen.get('name')}', chosen by the founder on {chosen.get('on')}"
-        return "none", (f"ELEVENLABS_VOICE_ID is '{name}', which this ElevenLabs account did not make and the founder has "
-                        "not chosen in content/assets/voice.json. A library voice narrates only once it is recorded there "
-                        "(and is disclosed as one); the founder's own clone needs no entry.")
+def provider(slug: str | None = None) -> tuple[str, str]:
+    """(name, reason): "own" when every beat has his take, "placeholder" when the offline
+    proof voice is asked for, else "none" with what to record."""
+    if slug and not missing_takes(slug):
+        return "own", "the founder's own recorded takes"
     if ALLOW_PLACEHOLDER and (KOKORO_DIR / "kokoro-v1.0.onnx").exists() and (KOKORO_DIR / "voices-v1.0.bin").exists():
         return "placeholder", "Kokoro offline placeholder; never ships"
-    if os.environ.get("ELEVENLABS_API_KEY"):
-        return "none", ("The founder's voice clone is not configured. Record per docs/content/VOICE-RECORDING.md, run "
-                        "`hubricon-content voice-clone --name \"Hagen Simmons\" <wav files>`, and set ELEVENLABS_VOICE_ID in "
-                        "/home/lp9/Hubricon/HubriconB2B/.env. Nothing renders in another voice unless CONTENT_ALLOW_PLACEHOLDER=1.")
-    return "none", "Narration needs ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID in /home/lp9/Hubricon/HubriconB2B/.env (the founder's clone)."
-
-
-def _eleven(text: str, out_mp3: Path, previous_text: str | None = None, next_text: str | None = None,
-            voice: str | None = None) -> list[dict]:
-    """One paragraph, with character timing. previous_text/next_text carry the
-    surrounding narration so prosody stays continuous across paragraphs even
-    though each is generated on its own (and can be re-rolled alone)."""
-    key = os.environ["ELEVENLABS_API_KEY"]
-    voice = voice or os.environ["ELEVENLABS_VOICE_ID"]
-    body = {"text": text, "model_id": ELEVEN_MODEL, "voice_settings": eleven_settings()}
-    if previous_text:
-        body["previous_text"] = previous_text[-600:]
-    if next_text:
-        body["next_text"] = next_text[:600]
-    req = urllib.request.Request(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format={ELEVEN_FORMAT}",
-        data=json.dumps(body).encode(), headers={"xi-api-key": key, "content-type": "application/json"})
-    with urllib.request.urlopen(req, timeout=180) as res:
-        payload = json.loads(res.read())
-    out_mp3.write_bytes(base64.b64decode(payload["audio_base64"]))
-    al = payload["alignment"]
-    chars, starts, ends = al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"]
-    words, cur, t0, t1 = [], "", None, None
-    for ch, s, e in zip(chars, starts, ends):
-        if ch.isspace():
-            if cur:
-                words.append({"word": cur, "start": t0, "end": t1}); cur, t0 = "", None
-            continue
-        if not cur:
-            t0 = s
-        cur += ch; t1 = e
-    if cur:
-        words.append({"word": cur, "start": t0, "end": t1})
-    return words
+    what = f"`node content/film/record.mjs {slug}`" if slug else "`node content/film/record.mjs <slug>`"
+    return "none", (f"the founder's own takes: read the script at the teleprompter, {what} "
+                    "(docs/content/VOICE-RECORDING.md)")
 
 
 _kokoro = None
@@ -260,47 +163,37 @@ def speakable(text: str) -> str:
 
 
 def run(u: dict, q: dict, force: bool = False) -> dict:
-    name, why = provider()
+    """The narration step: the founder's takes when every beat is read, else the
+    opt-in placeholder, else blocked on his reading."""
+    slug = u["slug"]
+    name, why = provider(slug)
+    if name == "own":
+        return takes_to_vo(u, q, force=force)
     if name == "none":
         return {"status": "blocked", "reason": why}
-    slug = u["slug"]
     d = scriptmod.video_dir(slug)
-    facts = scriptmod.load_facts(slug)
-    sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
+    texts, beats = _beat_texts(slug)
     (d / "audio").mkdir(exist_ok=True)
     (d / "alignment").mkdir(exist_ok=True)
     done = []
-    texts = [speakable(b["VO"]) for b in sc["beats"]]
-    for i, b in enumerate(sc["beats"], start=1):
+    for i, b in enumerate(beats, start=1):
         text = texts[i - 1]
         if not text:
             continue
-        ext = "mp3" if name in ("founder", "library") else "wav"
-        audio = d / "audio" / f"vo-{i:02d}.{ext}"
-        meta = d / "alignment" / f"vo-{i:02d}.json"
+        audio, meta = d / "audio" / f"vo-{i:02d}.wav", d / "alignment" / f"vo-{i:02d}.json"
         if audio.exists() and meta.exists() and not force:
             done.append(i); continue
-        prev_text = next((t for t in reversed(texts[: i - 1]) if t), None)
-        next_text = next((t for t in texts[i:] if t), None)
-        words = _eleven(text, audio, prev_text, next_text) if name in ("founder", "library") else _placeholder(text, audio)
-        if name in ("founder", "library"):
-            from . import meter
-            meter.count(slug, "elevenlabs", "characters", len(text), f"vo-{i:02d}")
+        words = _placeholder(text, audio)
         meta.write_text(json.dumps({"beat": i, "name": b["name"], "text": text, "provider": name, "words": words},
                                    indent=None, ensure_ascii=False) + "\n", encoding="utf-8")
-        if name in ("founder", "library"):   # keep every take; a consistent library is part of the series feel
-            takes = d / "audio" / "takes"; takes.mkdir(exist_ok=True)
-            n = len(list(takes.glob(f"vo-{i:02d}-*.mp3"))) + 1
-            (takes / f"vo-{i:02d}-{n:02d}.mp3").write_bytes(audio.read_bytes())
         done.append(i)
     u["voice"] = name
-    if name not in ("founder", "library"):
-        u["publishable"] = False
+    u["publishable"] = False
     return {"status": "ok", "voice": name, "beats": len(done), "why": why}
 
 
 def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
-    """The founder's own reading, into the same files the clone writes.
+    """The founder's own reading, as the film's narration.
 
     `record.mjs` keeps one take per beat as takes/b<N>.wav; each becomes
     audio/vo-NN.wav with alignment/vo-NN.json (the script's own words on
@@ -324,7 +217,7 @@ def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
         meta = d / "alignment" / f"vo-{i:02d}.json"
         if audio.exists() and meta.exists() and not force and json.loads(meta.read_text(encoding="utf-8")).get("provider") == "own":
             continue
-        for other in (d / "audio").glob(f"vo-{i:02d}.*"):   # a clone read of this beat steps aside; its copy is in audio/takes
+        for other in (d / "audio").glob(f"vo-{i:02d}.*"):   # an earlier read of this beat (placeholder, or mp3) steps aside
             if other.suffix != ".wav":
                 other.unlink()
         shutil.copyfile(take, audio)
@@ -334,50 +227,3 @@ def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
     u["voice"] = "own"
     u["publishable"] = False   # set again only by approve-final
     return {"status": "ok", "voice": "own", "beats": len(wanted)}
-
-
-# ── the founder's voice: clone and preview ─────────────────────────────────
-
-def voice_clone(name: str, files: list[Path], description: str = "") -> str:
-    """Instant Voice Clone from the founder's own recordings. Returns the voice id.
-    Run only by the founder, on his own audio (docs/content/VOICE-RECORDING.md)."""
-    import mimetypes, uuid
-    key = os.environ.get("ELEVENLABS_API_KEY")
-    if not key:
-        raise SystemExit("ELEVENLABS_API_KEY is not set")
-    boundary = f"----hubricon{uuid.uuid4().hex}"
-    parts = []
-    def field(k, v):
-        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode())
-    field("name", name)
-    field("description", description or "Hubricon founder narration clone, used with permission")
-    field("labels", json.dumps({"use_case": "narration", "owner": "founder"}))
-    field("remove_background_noise", "false")
-    for f in files:
-        f = Path(f)
-        ctype = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
-        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{f.name}\"\r\nContent-Type: {ctype}\r\n\r\n".encode() + f.read_bytes() + b"\r\n")
-    parts.append(f"--{boundary}--\r\n".encode())
-    req = urllib.request.Request("https://api.elevenlabs.io/v1/voices/add", data=b"".join(parts),
-                                 headers={"xi-api-key": key, "content-type": f"multipart/form-data; boundary={boundary}"})
-    with urllib.request.urlopen(req, timeout=600) as res:
-        return json.loads(res.read())["voice_id"]
-
-
-def voice_preview(slug: str, text: str | None = None, voice: str | None = None) -> Path:
-    """The hook and the first chapter of a parked script in the configured voice,
-    so the founder hears the clone with the pipeline's exact settings before
-    anything renders."""
-    from . import script as scriptmod
-    out_dir = CONTENT_DIR / "voice-previews"
-    out_dir.mkdir(exist_ok=True)
-    if text is None:
-        d = scriptmod.video_dir(slug)
-        facts = scriptmod.load_facts(slug)
-        sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
-        chapter = next((b for b in sc["beats"] if b["name"].upper().startswith("CHAPTER")), sc["beats"][min(2, len(sc["beats"]) - 1)])
-        text = speakable(sc["hooks"].get(1, "")) + " " + speakable(chapter["VO"])
-    label = "founder" if (voice or os.environ.get("ELEVENLABS_VOICE_ID")) else "unset"
-    out = out_dir / f"{slug}-{label}.mp3"
-    _eleven(text[:4000], out, voice=voice)
-    return out

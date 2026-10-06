@@ -1,82 +1,41 @@
-"""Sound assets from ElevenLabs, generated once and cached with their prompts.
+"""Sound assets: a fixed library, each file with its licence in a manifest.
 
-The synthesised drone and the sine tick were the cheapest tell in a first
-render. With a key on file, the tick, the whoosh and a restrained bed come from
-ElevenLabs' sound-effects and music endpoints; each is generated once, written
-under content/assets with a manifest, and reused by every video so the series
-sounds like one series. A failed call leaves the procedural fallback in place
-and says so.
+The tick, the whoosh, the music bed and the world ambience on file were made with
+ElevenLabs during the founder's paid subscription, which licenses them for
+commercial use for good; they stay. Nothing new is generated (the founder's call,
+2026-10-06: no ElevenLabs). A new sound comes from Freesound under its CC0 licence
+or from Pixabay under the Pixabay Content License, added with `hubricon-content
+ambience-add`, which records where it came from and refuses any other licence. A
+missing tick or whoosh falls back to the procedural one (audio.py), and a subject
+with no ambience on file plays room tone alone.
 """
 
 import json
-import os
 import re
-import urllib.error
-import urllib.request
+import shutil
+from datetime import date
 from pathlib import Path
 
 from .state import CONTENT_DIR
 
 SFX = CONTENT_DIR / "assets" / "sfx"
 MUSIC = CONTENT_DIR / "assets" / "music"
-SFX_SPECS = {
-    "tick": {"text": "a single very short, soft, dry wooden click, like a fingertip tapping a desk once; close-miked, no reverb, no tail",
-             "duration_seconds": 0.5, "prompt_influence": 0.7},
-    "whoosh": {"text": "a low, brief, airy cinematic whoosh for a chapter cut; restrained, felt more than heard, no cartoon sweep",
-               "duration_seconds": 0.9, "prompt_influence": 0.6},
-}
-BED_PROMPT = ("Sparse, restrained ambient underscore for a serious financial documentary: a soft felt piano playing slow "
-              "single notes, a low sustained cello drone, wide reverb, no drums, no melody hook, no build, 62 bpm, "
-              "minor key, calm and expensive. Seamlessly loopable.")
-BED_MS = 120000
-
-
-def _post(url: str, body: dict, timeout: int = 300) -> bytes:
-    key = os.environ.get("ELEVENLABS_API_KEY")
-    if not key:
-        raise RuntimeError("ELEVENLABS_API_KEY is not set")
-    req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                 headers={"xi-api-key": key, "content-type": "application/json", "accept": "audio/mpeg"})
-    with urllib.request.urlopen(req, timeout=timeout) as res:
-        return res.read()
+AMBIENCE = SFX / "ambience"
+# The licences a sound may carry. ElevenLabs only for files made during the paid subscription,
+# which ended new generation on 2026-10-06; ambience-add accepts the free ones alone.
+PAID_ELEVENLABS = "ElevenLabs, generated during a paid subscription: licensed for commercial use"
+FREE_LICENCES = {"cc0": "Creative Commons CC0 (Freesound)", "pixabay": "Pixabay Content License"}
+_STRIP = re.compile(r"\b(daylight|wide|close|up|static|medium|detail|slow|aerial|shot|footage|4k|hd|overcast)\b", re.I)
 
 
 def ensure(force: bool = False) -> dict:
-    """Generate whatever is missing. Returns {name: path|None, notes}."""
-    SFX.mkdir(parents=True, exist_ok=True); MUSIC.mkdir(parents=True, exist_ok=True)
-    out, notes = {}, []
-    manifest_p = SFX / "manifest.json"
-    manifest = json.loads(manifest_p.read_text(encoding="utf-8")) if manifest_p.exists() else {}
-    for name, spec in SFX_SPECS.items():
-        p = SFX / f"{name}.mp3"
-        if p.exists() and not force:
-            out[name] = p; continue
-        try:
-            p.write_bytes(_post("https://api.elevenlabs.io/v1/sound-generation", spec))
-            manifest[name] = {**spec, "source": "elevenlabs sound-generation"}
-            out[name] = p
-        except (urllib.error.HTTPError, urllib.error.URLError, RuntimeError, TimeoutError) as err:
-            detail = err.read().decode(errors="replace")[:200] if hasattr(err, "read") else str(err)
-            notes.append(f"{name}: {detail}"); out[name] = None
+    """The tick, the whoosh and the bed on file. Nothing is generated: a missing one is None
+    and audio.py uses its procedural stand-in."""
+    out = {name: (SFX / f"{name}.mp3") if (SFX / f"{name}.mp3").exists() else None for name in ("tick", "whoosh")}
     bed = MUSIC / "bed-elevenlabs.mp3"
-    if bed.exists() and not force:
-        out["bed"] = bed
-    else:
-        try:
-            bed.write_bytes(_post("https://api.elevenlabs.io/v1/music", {"prompt": BED_PROMPT, "music_length_ms": BED_MS}, timeout=600))
-            manifest["bed"] = {"prompt": BED_PROMPT, "music_length_ms": BED_MS, "source": "elevenlabs music"}
-            out["bed"] = bed
-        except (urllib.error.HTTPError, urllib.error.URLError, RuntimeError, TimeoutError) as err:
-            detail = err.read().decode(errors="replace")[:300] if hasattr(err, "read") else str(err)
-            notes.append(f"bed: {detail}"); out["bed"] = None
-    manifest_p.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
-    out["notes"] = notes
+    out["bed"] = bed if bed.exists() else None
+    out["notes"] = [f"{k}: not on file; the procedural stand-in plays" for k, v in out.items() if v is None]
     return out
-
-
-# ── world ambience (VISUAL_SPEC.md §9): one per subject, cached, under its footage ──
-AMBIENCE = SFX / "ambience"
-_STRIP = re.compile(r"\b(daylight|wide|close|up|static|medium|detail|slow|aerial|shot|footage|4k|hd|overcast)\b", re.I)
 
 
 def subject_of(query: str) -> str:
@@ -85,22 +44,56 @@ def subject_of(query: str) -> str:
     return " ".join(words[:4]).lower() or "room"
 
 
+def _name(subject: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")[:60] or "room"
+
+
+def _manifest() -> dict:
+    p = AMBIENCE / "manifest.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def _licensed(entry: dict) -> bool:
+    return entry.get("licence") in (PAID_ELEVENLABS, *FREE_LICENCES.values())
+
+
 def ambience(subject: str) -> Path | None:
-    """A 20-second bed of a place's own sound (a port, a warehouse), generated once per subject.
-    None when ElevenLabs cannot make it; the film then has room tone alone there."""
+    """The library's bed of a place's own sound (a port, a warehouse) for this subject: the clip
+    filed under its name, else the licensed clip whose subject shares the most words with it (at
+    least two). None when nothing on file fits; the film then has room tone alone there."""
+    entries = _manifest()
+    name = _name(subject)
+    if name in entries and _licensed(entries[name]) and (AMBIENCE / f"{name}.mp3").exists():
+        return AMBIENCE / f"{name}.mp3"
+    want = set(subject.lower().split())
+    best, best_n = None, 1
+    for k, e in entries.items():
+        f = AMBIENCE / e.get("file", f"{k}.mp3")
+        n = len(want & set(str(e.get("subject", k.replace("-", " "))).lower().split()))
+        if n > best_n and _licensed(e) and f.exists():
+            best, best_n = f, n
+    return best
+
+
+def ambience_add(file: str, subject: str, source: str, url: str, author: str = "") -> dict:
+    """File a free clip in the ambience library: `source` is "freesound" (CC0 only) or
+    "pixabay" (Pixabay Content License). The licence, the page it came from and its author
+    go in the manifest beside it."""
+    src = source.lower()
+    licence = FREE_LICENCES["cc0"] if src == "freesound" else FREE_LICENCES["pixabay"] if src == "pixabay" else None
+    if licence is None:
+        raise SystemExit("a new sound comes from Freesound (CC0 only) or Pixabay; nothing else is accepted")
+    if not url.startswith(("https://freesound.org/", "https://pixabay.com/")):
+        raise SystemExit("give the clip's page on freesound.org or pixabay.com, so its licence can be checked")
+    f = Path(file)
+    if not f.exists():
+        raise SystemExit(f"{f} does not exist")
     AMBIENCE.mkdir(parents=True, exist_ok=True)
-    name = re.sub(r"[^a-z0-9]+", "-", subject.lower()).strip("-")[:60] or "room"
-    p = AMBIENCE / f"{name}.mp3"
-    if p.exists():
-        return p
-    spec = {"text": f"{subject} ambience: the steady sound of the place, distant activity, no voices, no music, no sudden sounds; "
-                    "seamless, even level throughout", "duration_seconds": 20, "prompt_influence": 0.5}
-    try:
-        p.write_bytes(_post("https://api.elevenlabs.io/v1/sound-generation", spec))
-    except (urllib.error.HTTPError, urllib.error.URLError, RuntimeError, TimeoutError):
-        return None
-    manifest_p = AMBIENCE / "manifest.json"
-    manifest = json.loads(manifest_p.read_text(encoding="utf-8")) if manifest_p.exists() else {}
-    manifest[name] = {**spec, "subject": subject, "source": "elevenlabs sound-generation"}
-    manifest_p.write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
-    return p
+    name = _name(subject)
+    dest = AMBIENCE / f"{name}{f.suffix.lower()}"
+    shutil.copyfile(f, dest)
+    entries = _manifest()
+    entries[name] = {"subject": subject, "file": dest.name, "source": src, "url": url, "author": author,
+                     "licence": licence, "added": date.today().isoformat()}
+    (AMBIENCE / "manifest.json").write_text(json.dumps(entries, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"status": "ok", "name": name, "file": str(dest), "licence": licence}

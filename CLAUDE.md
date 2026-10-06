@@ -88,9 +88,10 @@ Banned: "in today's video", "let's dive in", "game-changer", "secret", "hack", "
   leak, Inter). The house visuals are `/assets/charts.mjs`: the staircase, the Monte Carlo band,
   the aging cliff. A video scene draws them from the same code, never a redrawing of them.
 - No faces, avatars or synthetic humans anywhere. Higgsfield is for textures only.
-- Voice: the founder's own recorded voice, his ElevenLabs clone, or the ElevenLabs library voice
-  he chose ("Kevin", `content/assets/voice.json`). The description discloses which; `tts.py`
-  and `describe.py` hold the wording.
+- Voice: the founder's own recorded voice, and only that (his call, 2026-10-06: no ElevenLabs,
+  no clone). He reads each approved script at `content/film/record.mjs`; `takes-to-vo` makes the
+  takes the narration. The description says "Narrated by Hagen Simmons, in his own voice." Nothing
+  in the pipeline calls ElevenLabs; new sound is Freesound CC0 or Pixabay, with its licence.
 - The Reimbursement Playbook draft is parked (it needs the seller's own reports, so it is not
   the public-data first course); its pages are in `archive/`.
 
