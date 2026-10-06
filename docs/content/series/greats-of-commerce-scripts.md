@@ -504,7 +504,7 @@ Every figure in the narration, with its source. History first, then the engine's
 
 ## Woolworth's Kept Its Dime Ceiling for more than 50 years ⟨w_ceiling_span⟩. Here's What It Never Told Them
 
-`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,406 spoken words · about 29 min
+`content/videos/greats-02-the-dime/` · pillar 3 · tier D · 4,434 spoken words · about 29 min
 
 **Spiky claim.** A price you've never moved isn't a safe price. It's an unmeasured one, and the most famous price in American retail stayed unmeasured for decades.  
 **Misconception.** A price that's working should be left alone. Moving it is a gamble, and holding it is the safe choice.  
@@ -749,46 +749,46 @@ So why not wait for a better number? Because waiting with the price held still a
 
 **[23:56] THE STEP**
 
-So how do you step when you can't see the top? Work it out at the estimate, and again at both ends of its range. Where they all agree on a direction, step that way. Where they disagree, step small and measure. And never by much: the demo's model caps any single move at 5% ⟨pm_step_cap⟩, so that a wrong step costs little and a right one shows up in the data. A small step you can measure beats a confident number you can't. And sometimes the right step is none at all.
+So how do you step when you can't see the top? Work the formula at the estimate alone. If that puts the best price above today's, step up: near minus one the top runs off to the right, and the estimate agrees. If it puts it below today's while the range still reaches minus one, hold: the estimate says down, and the range can't rule out far up. And never by much: the demo's model caps any single move at 5% ⟨pm_step_cap⟩, so that a wrong step costs little and a right one shows up in the data. A small step you can measure beats a confident number you can't. And sometimes the right step is none at all.
 
-> *Picture.* counterfactual on the demo product's profit band: the top worked out at the estimate and at both ends of the range, three marks on the price axis, the current price as the hollow dot and a small step as the solid dot, the step's size in blue, Tarnhollow demo data.  
+> *Picture.* counterfactual on the demo product's profit band: the top worked out at the estimate alone, one mark on the price axis beside today's price, the current price as the hollow dot and a small step up as the solid dot, the step's size in blue, Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, PRICE.OPTIMUM  
 
-**[24:34] WHEN THE ANSWER IS HOLD**
+**[24:44] WHEN THE ANSWER IS HOLD**
 
 Because here's what the model says about this whole catalogue. Weighing every product's history together, it puts 97% ⟨el_p_optimal⟩ on these prices already being about right, and it recommends no price step at all. That's an answer, and a useful one. A model that can say hold is a model you can believe when it says move. But notice what made the answer possible: every product it judged had moved its price. About the 2 ⟨el_skus_insufficient⟩ dimes, it can't say anything at all. That's the real cost of a dime. Not a number on a report. A number nobody can know until the price moves.
 
 > *Picture.* range-band of every fitted demo product's interval drawn side by side, each with today's price marked inside its band, a single word, "hold", landing in ink; then the 2 ⟨el_skus_insufficient⟩ refused products at the end as empty outlines with no band at all, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data, ELASTICITY.FIT and PRICE.OPTIMUM (0 ⟨pm_count⟩ recommended steps)  
 
-**[25:16] WHEN THE PRICE IS THE BRAND**
+**[25:26] WHEN THE PRICE IS THE BRAND**
 
 And sometimes the price is the brand, the way the dime was. A product sold as a gift under a round number. A line that's always the cheapest, or always the premium one. That's a real asset, and Printers' Ink was right about it: a price can be an advertising idea. But treat it like one. An advertising idea has a cost, and you'd measure any other advertising. Know what holding the line costs you in margin each month, the same way you'd know what a campaign costs, and decide on purpose whether it's worth it. Woolworth's successors held theirs until it stopped them selling what their customers wanted. You can know long before that.
 
 > *Picture.* doc-highlight on the Printers' Ink sentence, the same page as the advertising beat; formula-build: the margin a held price gives up each month, set beside a campaign's monthly spend, as terms only, no figures.  
 
-**[26:02] A TEST, THEN ANOTHER TEST**
+**[26:13] A TEST, THEN ANOTHER TEST**
 
 Now go back to 1932 ⟨w_1932⟩, because the company finally did it right: a test, then a rollout. But remember the West. Comparing places tells you about the places as much as the prices, unless the places are picked at random and some are left alone. Most online sellers can't do that: one listing, one price. So the test open to you is in time. A small step, measured against what you wrote down before you took it. Then the next step. Not a test and a promise. A test, then another test.
 
 > *Picture.* split-then-now: the 1932 ⟨w_1932⟩ trial stores on a map of the West and South, then a single demo product's price stepping over time with its predicted and measured units drawn together, labelled Tarnhollow demo data; timeline of steps, each landing as spoken.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[26:40] WHAT YOU CAN DO THIS WEEK**
+**[26:50] WHAT YOU CAN DO THIS WEEK**
 
-So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached 2% ⟨el_min_price_cv⟩ of their average, over at least 5 ⟨el_min_periods⟩ periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the estimate itself sits near minus one, the direction is up. If it's clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope. Work that out at the estimate and at both ends of the range. Where they agree, step that way; where they disagree, step small. Either way, by no more than 5% ⟨pm_step_cap⟩. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
+So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached 2% ⟨el_min_price_cv⟩ of their average, over at least 5 ⟨el_min_periods⟩ periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the slope is shallower than minus one, the direction is up. If the range is clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope: step toward it. If the range reaches minus one, work that formula at the estimate alone: above today's price, step up; below it, hold. Either way, by no more than 5% ⟨pm_step_cap⟩. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
 
 > *Picture.* formula-build listing the steps as terms, each landing as spoken, the best-price formula built term by term; receipt: one demo product's line, its price spread, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.  
 > *Data.* demo: Tarnhollow demo data  
 
-**[28:27] THE RETURN**
+**[28:38] THE RETURN**
 
 $127.65 ⟨w_day1⟩, in nickels, on a Saturday in Lancaster. A ceiling held for more than 50 years ⟨w_ceiling_span⟩. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
 
 > *Picture.* still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".  
 > *Data.* published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report  
 
-**[28:44] THE HONEST LIMIT**
+**[28:55] THE HONEST LIMIT**
 
 You can do this week's steps by hand for a few products, and it's worth doing. Where it breaks is everything that makes demand messy. Seasons. Your own ads switching on and off. Prices you changed because demand moved, which tilt the line. A competitor's sale the same week. Products that take sales from each other, so a raise on one sells more of another. Products with too little history, which have to borrow strength from the rest of the catalogue, the way this one did. And a range on every estimate that has to become the right size of step for what's still unknown. This is applied mathematics: the same tools actuaries use to price risk. It's what I studied, and it's what Hubricon is built to run, every week, for every product. The whole method, with the spreadsheet, is free at hubricon.com/learn, in the Price Curve course. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.
 
