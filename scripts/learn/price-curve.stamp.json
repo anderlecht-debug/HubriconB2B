@@ -1,6 +1,6 @@
 {
   "file": "learn/files/hubricon-price-curve.xlsx",
-  "file_sha256": "bb79488f076030caf8c13fc5489545317649c876cdc25304a38ed9b0f9bbbf2c",
+  "file_sha256": "8a6796198e4a0b55c3cb330317ae12bdc0a4d30584575738ad8050c20210f672",
   "engine_sha256": {
     "engine/src/hubricon_engine/models/elasticity.py": "a5bc81e51052529233ec63cc95c27b997815dfb1559309c93e6d2a38b7fc78c3",
     "engine/src/hubricon_engine/models/pricing_engine.py": "1ab85b441f00362fab303406a0a151e8d34875f1bb32a99d9f19bdd3cb4ec14b"

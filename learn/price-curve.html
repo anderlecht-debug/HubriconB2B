@@ -315,17 +315,17 @@
         <div class="yours-out" data-yours="fit" hidden></div>
 
         <h3>What one history can and cannot tell you</h3>
-        <p>Hubricon's engine ran this exact price test <span data-fill="learn_pc_runs">200</span> times on a listing whose true elasticity is <span data-fill="learn_pc_true">−1.6</span>, each time with fresh noise. The median standard error was <span data-fill="learn_pc_se50">0.28</span>; one run in ten came out under <span data-fill="learn_pc_se10">0.18</span> and one in ten over <span data-fill="learn_pc_se90">0.45</span>. In <span data-fill="learn_pc_guard_share">50%</span> of the runs the interval sat too close to −1 to name a price at all. In <span data-fill="learn_pc_up_share">96%</span> of them, the direction came out right: up.</p>
+        <p>Hubricon's engine ran this exact price test <span data-fill="learn_pc_runs">200</span> times on a listing whose true elasticity is <span data-fill="learn_pc_true">−1.6</span>, each time with fresh noise. The median standard error was <span data-fill="learn_pc_se50">0.28</span>; one run in ten came out under <span data-fill="learn_pc_se10">0.18</span> and one in ten over <span data-fill="learn_pc_se90">0.45</span>. In <span data-fill="learn_pc_guard_share">50%</span> of the runs the interval sat too close to −1 to name a price at all. In <span data-fill="learn_pc_up_share">95%</span> of them, the direction came out right: up.</p>
         <p>That is the shape of pricing one SKU from its own history. The direction is usually knowable long before the distance is.</p>
 
         <h3>Too close to −1</h3>
         <p>Lesson 4's formula multiplies by elasticity ÷ (1 + elasticity), and that factor runs away near −1: at <span data-fill="learn_pc_np_eps">−1.15</span> it is already <span data-fill="learn_pc_np_factor">7.7</span>. An interval from <span data-fill="learn_pc_np_lo">−1.66</span> to <span data-fill="learn_pc_np_hi">−0.64</span> covers best prices from a few percent above today's to no limit at all. A price printed to the cent there would be a guess with a decimal point on it.</p>
-        <p>So the sheet, like the engine, names no best price when the interval includes −1, when the estimate sits within two standard errors of −1, or when one standard error would move the best price by more than <span data-fill="learn_pc_pole_log_sd">50%</span>. It still names the direction, and near −1 the direction is up.</p>
+        <p>So the sheet, like the engine, names no best price when the interval includes −1, when the estimate sits within two standard errors of −1, or when one standard error would move the best price by more than <span data-fill="learn_pc_pole_log_sd">50%</span>. Then it works the formula at the estimate alone. If that puts the best price above today's, the direction is up: near −1 the top runs off to the right, and the estimate agrees. If it puts the best price below today's, the estimate says down while the range cannot rule out far up, so the sheet says hold. The engine forces no direction there either.</p>
       </div>
       <div class="check">
         <h3>Check yourself</h3>
         <ol>
-          <li><p>A fit reads −1.4, with a 95% interval from −2.3 to −0.5. Can it name a best price?</p><details><summary>The answer</summary><p>No. The interval includes −1, where the best price runs away to no limit. It names the direction instead: up.</p></details></li>
+          <li><p>A fit reads −1.4, with a 95% interval from −2.3 to −0.5. Can it name a best price?</p><details><summary>The answer</summary><p>No. The interval includes −1, where the best price runs away to no limit. It works the formula at −1.4 instead: if that best price is above today's, the direction is up; if it is below, hold.</p></details></li>
           <li><p>Two fits have the same standard error, one on 5 periods and one on 12. Why is the first one's interval wider?</p><details><summary>The answer</summary><p>With 5 periods there are 3 degrees of freedom, and the 95% multiplier is <span data-fill="learn_pc_t3">3.18</span>; with 12 it is <span data-fill="learn_pc_t">2.23</span>. Fewer periods, less certainty, a wider interval.</p></details></li>
         </ol>
       </div>
@@ -554,7 +554,7 @@
         </ol>
 
         <h3>Where to start</h3>
-        <p>At the top of the ranking. Then the SKUs marked "Too close to −1": their direction is up, and a 5% step is the cheapest way to learn the distance.</p>
+        <p>At the top of the ranking. Then the SKUs marked "Too close to −1" whose direction reads up: a 5% step is the cheapest way to learn the distance. Those that read hold, leave until more history says which way.</p>
 
         <h3>Where to stop</h3>
         <p>At SKUs without five periods or with a price that never moved. They are not wrong; they are unread. Moving them on purpose, one 5% step at a time, is how they get a reading.</p>
@@ -565,7 +565,7 @@
       <div class="check">
         <h3>Check yourself</h3>
         <ol>
-          <li><p>One SKU is at the top of the ranking; another is marked "Too close to −1". Which do you move first?</p><details><summary>The answer</summary><p>The one at the top of the ranking. Then the one near −1: its direction is up, and a 5% step is the cheapest way to learn the distance.</p></details></li>
+          <li><p>One SKU is at the top of the ranking; another is marked "Too close to −1". Which do you move first?</p><details><summary>The answer</summary><p>The one at the top of the ranking. Then the one near −1, if its direction reads up: a 5% step is the cheapest way to learn the distance. If it reads hold, it waits for more history.</p></details></li>
           <li><p>A SKU has three periods of history. What do you do with it?</p><details><summary>The answer</summary><p>It is unread, not wrong: no fit, so no best price. Move its price on purpose, one 5% step at a time, until it has five periods and a price that moved.</p></details></li>
         </ol>
       </div>

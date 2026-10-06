@@ -691,7 +691,7 @@
   "engine/src/hubricon_engine/models/inventory_econ.py": "3d35a9edeb2d58431c60df1ea119edd21844ee76a5e9f31e403cf4868050895d",
   "engine/src/hubricon_engine/models/cashflow.py": "91d9afcf585a62b5ed0cc0b80187f44521681e3a56a934e815fd95f2bef0eec8",
   "engine/src/hubricon_engine/models/markdown.py": "f7a162860275fcf0d3b9d3dbe783c63e0b31a7840547aa413994663e734f9c27",
-  "engine/src/hubricon_engine/models/fee_schedule.py": "680ba6d3064424980c19ef8ced6a1468b3ce2fa489cea3f4d6e9c412fd8afa70",
+  "engine/src/hubricon_engine/models/fee_schedule.py": "04d526890741bf7f1a22ae5b90a9e705474c8e03e132cad41d592dc58e49d642",
   "engine/src/hubricon_engine/channels.py": "a2f8c45e1ffedb120825573ff0472fa1097b19bb36a5c7a17a350580a2e6bb8f"
  }
 }

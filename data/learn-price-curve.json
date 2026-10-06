@@ -192,7 +192,7 @@
   "se_p50": 0.2767,
   "se_p90": 0.4476,
   "guard_share": 0.495,
-  "up_share": 0.955,
+  "up_share": 0.95,
   "true_direction": "up"
  },
  "near_pole": {

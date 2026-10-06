@@ -5859,9 +5859,9 @@
    "want": {
     "guard": true,
     "best": null,
-    "way": "up",
-    "next": 79.53,
-    "delta": -1647.4637672566168,
+    "way": "hold",
+    "next": 75.74,
+    "delta": 0.0,
     "profit": 38953.62099999999,
     "crosses": false
    }
@@ -6848,9 +6848,9 @@
    "want": {
     "guard": true,
     "best": null,
-    "way": "up",
-    "next": 77.14,
-    "delta": -1215.857782746596,
+    "way": "hold",
+    "next": 73.47,
+    "delta": 0.0,
     "profit": 21860.7152,
     "crosses": false
    }
@@ -7009,9 +7009,9 @@
    "want": {
     "guard": true,
     "best": null,
-    "way": "up",
-    "next": 71.5,
-    "delta": -1706.899663006261,
+    "way": "hold",
+    "next": 68.1,
+    "delta": 0.0,
     "profit": 106180.24799999998,
     "crosses": false
    }

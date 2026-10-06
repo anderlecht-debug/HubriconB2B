@@ -94,8 +94,8 @@ def test_a_client_who_left_or_said_no_calibrates_nothing_whatever_they_once_gran
                  {"id": "c4", "contact_email": "d@brand.com", "status": "past_due"},
                  {"id": "c5", "contact_email": "e@brand.com", "status": "pending"}],
     )
-    # past_due is not a source either: "current" is fleet.SOURCE_STATUSES, one set for both network uses
-    assert sorted(c["id"] for c in calibration.consented_clients(db)) == ["c1", "c5"]
+    # past_due is still a current client (terms §5: only an email ends it); churned and declined are not
+    assert sorted(c["id"] for c in calibration.consented_clients(db)) == ["c1", "c4", "c5"]
     assert sorted(c["id"] for c in calibration.consented_clients(db, statuses=None)) == ["c1", "c2", "c3", "c4", "c5"]
 
 
@@ -113,3 +113,18 @@ def test_calibration_and_the_fleet_read_the_same_current_clients():
     calibrating = sorted(c["id"] for c in calibration.consented_clients(db))
     assert calibrating == sorted(c["id"] for c in fleet.consenting_accounts(db))
     assert calibrating == sorted(f"c{i}" for i, s in enumerate(statuses) if s in fleet.SOURCE_STATUSES)
+
+
+def test_a_past_due_client_still_sources_and_still_hears_about_its_fees():
+    """A failed ACH debit does not end the relationship (terms §5), so a past-due client keeps
+    calibrating, keeps sourcing the network and keeps receiving fee-change alerts; a churned
+    one does none of the three (the founder's call, 2026-10-06)."""
+    from hubricon_engine import fleet
+    assert "past_due" in fleet.SOURCE_STATUSES and "past_due" in fleet.RECIPIENT_STATUSES
+    assert "churned" not in fleet.SOURCE_STATUSES and "churned" not in fleet.RECIPIENT_STATUSES
+    db = FakeDB(
+        consents=[{"client_id": c, "kind": "calibration", "granted": True} for c in ("late", "gone")],
+        clients=[{"id": "late", "contact_email": "l@brand.com", "status": "past_due"},
+                 {"id": "gone", "contact_email": "g@brand.com", "status": "churned"}],
+    )
+    assert [c["id"] for c in calibration.consented_clients(db)] == ["late"]
