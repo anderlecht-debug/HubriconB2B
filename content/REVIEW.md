@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-06T07:26:50+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-06T10:43:58+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V04 · day 4 · tier A · pillar 4 — script gate
 
@@ -9,7 +9,7 @@ Updated 2026-10-06T07:26:50+00:00. Everything here is parked until you decide. N
 **Spiky claim:** Nearly every price test an operator has ever called a win was noise, and the ones that were real could not be told apart from the outside.  
 **Misconception:** I changed the price, sales went up for a few weeks, so the price change worked.  
 **CTA:** The free course at hubricon.com/learn, where the method is written out in full  
-**Estimated runtime:** about 6 min 19 s · **voice:** placeholder until the clone exists
+**Estimated runtime:** about 6 min 19 s · **voice:** none yet: waiting on your own takes at the teleprompter
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -72,7 +72,7 @@ Edit `content/videos/04-ab-test-sample-size/script.md` first if you prefer; it i
 **Spiky claim:** Almost nobody can say where the top of their profit hill is, and the honest measurement of it, run on a year of history, usually refuses to name the top at all — which makes every price set on gut a guess with no error bar on it.  
 **Misconception:** If units are holding, the price is right. Elasticity is a warning not to raise prices.  
 **CTA:** The free course at hubricon.com/learn, where the method is written out in full  
-**Estimated runtime:** about 6 min 20 s · **voice:** placeholder until the clone exists
+**Estimated runtime:** about 6 min 20 s · **voice:** none yet: waiting on your own takes at the teleprompter
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -135,7 +135,7 @@ Edit `content/videos/08-elasticity-plain-english/script.md` first if you prefer;
 **Spiky claim:** A price you have never moved is not a safe price, it is an unmeasured one. Waiting for a tighter elasticity pays a known cost to avoid an unknown one, and the band never gets tight enough to justify the wait.  
 **Misconception:** If I raise my price the Buy Box goes, conversion drops and the rank slides, and the ads I buy to get it back cost more than the raise made. The price works. Leave it alone.  
 **CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
-**Estimated runtime:** about 12 min 06 s · **voice:** placeholder until the clone exists
+**Estimated runtime:** about 12 min 06 s · **voice:** none yet: waiting on your own takes at the teleprompter
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -202,7 +202,7 @@ Edit `content/videos/09-price-increase-probably-free/script.md` first if you pre
 **Spiky claim:** A flat service level is a decision about your money that you never made. Every product has its own right answer, it is set by that product's own costs, and on this catalogue the answers run far enough apart that the flat number is wrong for almost all of them.  
 **Misconception:** I order to a cover number and keep a safety margin on top. More cover is safer, and the number I use works well enough across the catalogue.  
 **CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
-**Estimated runtime:** about 10 min 26 s · **voice:** placeholder until the clone exists
+**Estimated runtime:** about 10 min 26 s · **voice:** none yet: waiting on your own takes at the teleprompter
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
@@ -269,7 +269,7 @@ Edit `content/videos/16-the-wire-you-guess-on/script.md` first if you prefer; it
 **Spiky claim:** The default service level is a convention, not a calculation, and it is wrong in both directions at once on the same shelf. Worse, it promises something other than what you think it promises, and it makes a per-product promise about a risk that arrives catalogue-wide.  
 **Misconception:** I run a high service level across the catalogue, so I'm covered almost all of the time and the occasional stockout is bad luck rather than a setting.  
 **CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
-**Estimated runtime:** about 9 min 43 s · **voice:** placeholder until the clone exists
+**Estimated runtime:** about 9 min 43 s · **voice:** none yet: waiting on your own takes at the teleprompter
 
 ### Hooks (the first is the one that ships unless you say otherwise)
 
