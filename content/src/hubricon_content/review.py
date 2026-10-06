@@ -36,7 +36,7 @@ def script_block(u: dict) -> str:
            f"**Spiky claim:** {h.get('SPIKY CLAIM', '')}  ",
            f"**Misconception:** {h.get('MISCONCEPTION', '')}  ",
            f"**CTA:** {_render_with_keys(h.get('CTA', ''), facts)}  ",
-           f"**Estimated runtime:** about {secs // 60} min {secs % 60:02d} s · **voice:** {u.get('voice') or 'placeholder until the clone exists'}", "",
+           f"**Estimated runtime:** about {secs // 60} min {secs % 60:02d} s · **voice:** {u.get('voice') or 'none yet: waiting on your own takes at the teleprompter'}", "",
            "### Hooks (the first is the one that ships unless you say otherwise)", ""]
     for i in sorted(sc["hooks"]):
         out.append(f"{i}. {_render_with_keys(sc['hooks'][i], facts)}")
