@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T07:24:43+00:00",
+ "updated_at": "2026-10-06T07:25:42+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -1862,14 +1862,14 @@
     "inventory_econ",
     "inventory_sim"
    ],
-   "status": "todo",
+   "status": "in_progress",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "todo",
+    "script": "done",
     "critique": "todo",
     "review": "todo",
     "tts": "todo",
@@ -1923,6 +1923,11 @@
      "at": "2026-10-06T06:30:49+00:00",
      "step": "review",
      "note": "rejected: The current engine finds each SKU's stockout odds exactly (a lognormal–Poisson mixture; fact inv_method, 'computed exactly') and runs no simulated lead times, so {{inv_sims}} is gone. Say how the odds are found, without a simulation count; every other figure in the script still stands. The founder approved the topic."
+    },
+    {
+     "at": "2026-10-06T07:25:37+00:00",
+     "step": "script",
+     "note": "done the draws-per-product figure is gone; the per-product odds are described as computed exactly, the shelf as drawn"
     }
    ]
   },
