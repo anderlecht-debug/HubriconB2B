@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T07:23:44+00:00 · style locked: True
+Updated 2026-10-06T07:24:28+00:00 · style locked: True
 
 ## Capabilities
 
@@ -12,7 +12,7 @@ Updated 2026-10-06T07:23:44+00:00 · style locked: True
 
 ## Now
 
-- V16 · The {{largest_wire}} wire you're guessing on · step critique
+- V16 · The {{largest_wire}} wire you're guessing on · step review
 
 ## Awaiting your review
 

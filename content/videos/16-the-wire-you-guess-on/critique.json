@@ -1,91 +1,91 @@
 {
-  "slug": "16-the-wire-you-guess-on",
-  "pass": true,
-  "validator_problems": [],
-  "items": [
-    {
-      "n": 1,
-      "question": "Does the viewer commit to a wrong answer before hearing the right one?",
-      "pass": true,
-      "note": "The 0:15 beat lays out the cover rule as the viewer actually runs it, defends why a single rule is applied across the catalogue, and grants that more cover feels conservative. What is missing is named as an assumption rather than an error, and the correction only arrives at 0:50."
-    },
-    {
-      "n": 2,
-      "question": "Is there a concrete number in the first sentence?",
-      "pass": true,
-      "note": "first sentence carries a {{key}} figure"
-    },
-    {
-      "n": 3,
-      "question": "Is the title's promise fully delivered?",
-      "pass": true,
-      "note": "The title promises a wire being guessed on, and the script delivers the guess, the arithmetic that replaces it and the figure the wire actually is. The title's figure is the run's own largest wire as a placeholder, so the promise cannot drift from the data; the calendar's invented figure was dropped for exactly that reason."
-    },
-    {
-      "n": 4,
-      "question": "Does any notation appear before its intuition?",
-      "pass": true,
-      "note": "Both costs are worked on a named product before any ratio appears, the ratio is shown as a comparison of their sizes before it is written as a division, and the term critical fractile is given only after the viewer has derived the fraction. The reorder point is built from the fractile rather than introduced alongside it."
-    },
-    {
-      "n": 5,
-      "question": "Is there exactly one idea, and exactly one CTA?",
-      "pass": true,
-      "note": "1 CTA beat(s); one idea is judged by the skill"
-    },
-    {
-      "n": 6,
-      "question": "Does the CTA match the awareness stage in \u00a78?",
-      "pass": true,
-      "note": "CTA matches \u00a78 for this pillar"
-    },
-    {
-      "n": 7,
-      "question": "Is there one claim a competent operator could dispute?",
-      "pass": true,
-      "note": "A flat service level is a decision about the operator's money that he never made, and the same rule is wrong in opposite directions on the same shelf. Both are disputable, and the verify beat shows the spread that makes them arguable."
-    },
-    {
-      "n": 8,
-      "question": "Is there any gap over 40 seconds without a re-hook?",
-      "pass": true,
-      "note": "no gap over 40 s"
-    },
-    {
-      "n": 9,
-      "question": "Does every number name its model run?",
-      "pass": true,
-      "note": "every chart beat names its run; every key exists"
-    },
-    {
-      "n": 10,
-      "question": "Is any step of the method withheld?",
-      "pass": true,
-      "note": "Nothing is held back: which figures to write down, how to estimate the cost of being short including rank and the advertising to recover it, how to cost a cycle of holding, the ratio, the conversion to a reorder point, and the check of the wire date against the cash trough before sending it."
-    },
-    {
-      "n": 11,
-      "question": "Does the close state a real limitation rather than pitch?",
-      "pass": true,
-      "note": "The close names the limits honestly: slipping lead times that move every reorder point, demand that moves across the shelf together, fee bands that change with a weight, and the need to re-run the whole catalogue whenever an order lands. It says a hand-built version is a spreadsheet that was right once, and still tells the viewer the afternoon is worth it."
-    },
-    {
-      "n": 12,
-      "question": "Any banned phrase present?",
-      "pass": true,
-      "note": "none"
-    },
-    {
-      "n": 13,
-      "question": "Are CLIP markers placed, with at least three usable?",
-      "pass": true,
-      "note": "5 CLIP markers"
-    },
-    {
-      "n": 14,
-      "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1\u20132 exempt)",
-      "pass": true,
-      "note": "exempt (pillar 1\u20132)"
-    }
-  ]
+ "slug": "16-the-wire-you-guess-on",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The 0:15 beat lays out the cover rule as the viewer actually runs it, defends why a single rule is applied across the catalogue, and grants that more cover feels conservative. What is missing is named as an assumption rather than an error, and the correction only arrives at 0:50."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "The title promises a wire being guessed on, and the script delivers the guess, the arithmetic that replaces it and the figure the wire actually is. The title's figure is the run's own largest wire as a placeholder, so the promise cannot drift from the data; the calendar's invented figure was dropped for exactly that reason."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "Both costs are worked on a named product before any ratio appears, the ratio is shown as a comparison of their sizes before it is written as a division, and the term critical fractile is given only after the viewer has derived the fraction. The reorder point is built from the fractile rather than introduced alongside it."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "1 CTA beat(s); one idea is judged by the skill"
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "A flat service level is a decision about the operator's money that he never made, and the same rule is wrong in opposite directions on the same shelf. Both are disputable, and the verify beat shows the spread that makes them arguable."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "Every chart beat names its run and every key exists in facts.json. Re-judged after the 2026-10-06 correction: the draws-per-product key is gone from the script, and both places that describe the method now carry {{inv_method}} from the facts file rather than a count of draws the engine does not make."
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "Nothing is held back: which figures to write down, how to estimate the cost of being short including rank and the advertising to recover it, how to cost a cycle of holding, the ratio, the conversion to a reorder point, and the check of the wire date against the cash trough before sending it."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close names the limits honestly: slipping lead times that move every reorder point, demand that moves across the shelf together, fee bands that change with a weight, and the need to re-run the whole catalogue whenever an order lands. It says a hand-built version is a spreadsheet that was right once, and still tells the viewer the afternoon is worth it. The one claim it now makes for the model is the right one: the per-product odds are computed exactly, so the answer does not move when a seed does."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "5 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "exempt (pillar 1–2)"
+  }
+ ]
 }
