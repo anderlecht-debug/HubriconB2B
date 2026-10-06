@@ -1,6 +1,6 @@
 # Content pipeline — state
 
-Updated 2026-10-06T05:35:42+00:00 · style locked: True
+Updated 2026-10-06T06:30:49+00:00 · style locked: True
 
 ## Capabilities
 
@@ -16,14 +16,7 @@ Updated 2026-10-06T05:35:42+00:00 · style locked: True
 
 ## Awaiting your review
 
-- V09 · The price increase you're afraid of is probably free · gate `review` → see `content/REVIEW.md`
-- V11 · Discounting: the math of what you just gave away · gate `review` → see `content/REVIEW.md`
-- V15 · You don't have a revenue problem. You have a cash trough · gate `review` → see `content/REVIEW.md`
-- V16 · The $60,000 wire you're guessing on · gate `review` → see `content/REVIEW.md`
-- V17 · Why 95% service level is wrong for most of your SKUs · gate `review` → see `content/REVIEW.md`
-- G01 · Greats of Commerce 1: the rate card that built Sears · gate `review` → see `content/REVIEW.md`
-- G02 · Greats of Commerce 2: the dime · gate `review` → see `content/REVIEW.md`
-- G03 · Greats of Commerce 3: the corner · gate `review` → see `content/REVIEW.md`
+- nothing waiting
 
 ## Done
 
@@ -69,7 +62,7 @@ Updated 2026-10-06T05:35:42+00:00 · style locked: True
 ## Next five
 
 - V01 · Why most business advice is useless: survivorship bias, with numbers
+- G01 · Greats of Commerce 1: the rate card that built Sears
+- G02 · Greats of Commerce 2: the dime
+- G03 · Greats of Commerce 3: the corner
 - V04 · Your A/B test told you nothing. Here's the sample size you needed
-- V05 · Cash conversion cycle: the number that decides whether you survive
-- V07 · Contribution margin vs gross margin — the one that actually matters
-- V08 · Elasticity in plain English, and why your price is probably wrong

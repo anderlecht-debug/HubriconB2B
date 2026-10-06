@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated_at": "2026-10-06T05:35:42+00:00",
+ "updated_at": "2026-10-06T06:30:49+00:00",
  "style_locked": true,
  "capabilities": {
   "youtube_token": false,
@@ -744,9 +744,9 @@
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "done",
-    "critique": "done",
-    "review": "approved",
+    "script": "todo",
+    "critique": "todo",
+    "review": "todo",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -758,7 +758,13 @@
     "approve_final": "todo",
     "upload": "blocked"
    },
-   "review_notes": [],
+   "review_notes": [
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "gate": "review",
+     "note": "The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the range too wide to mark a top for {{el_no_top}} of {{el_skus_fit}} products, the verdict hold, a verdict it can give only for prices that moved. Never speak a step's gain, loss odds or direction confidence. The founder approved the topic; this is a correction, not a rejection of it."
+    }
+   ],
    "attempts": {},
    "log": [
     {
@@ -870,6 +876,11 @@
      "at": "2026-10-06T05:35:42+00:00",
      "step": "tts",
      "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "script",
+     "note": "back to the script: the price-move figures it quotes no longer exist on the corrected engine"
     }
    ]
   },
@@ -1179,9 +1190,9 @@
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "done",
-    "critique": "done",
-    "review": "approved",
+    "script": "todo",
+    "critique": "todo",
+    "review": "todo",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1193,7 +1204,13 @@
     "approve_final": "todo",
     "upload": "blocked"
    },
-   "review_notes": [],
+   "review_notes": [
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "gate": "review",
+     "note": "The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the range too wide to mark a top for {{el_no_top}} of {{el_skus_fit}} products, the verdict hold, a verdict it can give only for prices that moved. Never speak a step's gain, loss odds or direction confidence. The founder approved the topic; this is a correction, not a rejection of it."
+    }
+   ],
    "attempts": {},
    "log": [
     {
@@ -1280,6 +1297,11 @@
      "at": "2026-10-06T05:35:42+00:00",
      "step": "tts",
      "note": "back to narration: every film is in the founder's own voice (2026-10-06); the Kevin read steps aside when his takes land"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "script",
+     "note": "back to the script: the price-move figures it quotes no longer exist on the corrected engine"
     }
    ]
   },
@@ -1296,16 +1318,16 @@
     "elasticity",
     "pricing_engine"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "done",
-    "critique": "done",
-    "review": "awaiting",
+    "script": "todo",
+    "critique": "todo",
+    "review": "todo",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1317,8 +1339,16 @@
     "approve_final": "todo",
     "upload": "blocked"
    },
-   "review_notes": [],
-   "attempts": {},
+   "review_notes": [
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "gate": "review",
+     "note": "The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the range too wide to mark a top for {{el_no_top}} of {{el_skus_fit}} products, the verdict hold, a verdict it can give only for prices that moved. Never speak a step's gain, loss odds or direction confidence. The founder approved the topic; this is a correction, not a rejection of it. This one's premise ('the price increase you're afraid of is probably free') is contradicted on the demo: reframe it as how to tell whether a raise would pay, and why the honest answer can be hold."
+    }
+   ],
+   "attempts": {
+    "review": 1
+   },
    "log": [
     {
      "at": "2026-10-02T16:11:12+00:00",
@@ -1344,6 +1374,11 @@
      "at": "2026-10-02T16:16:45+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "review",
+     "note": "rejected: The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the rang"
     }
    ]
   },
@@ -1399,7 +1434,7 @@
     "margin",
     "elasticity"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -1408,7 +1443,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
+    "review": "approved",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1447,6 +1482,11 @@
      "at": "2026-10-02T16:20:12+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "review",
+     "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\"), on facts rebuilt on the current engine"
     }
    ]
   },
@@ -1570,7 +1610,7 @@
     "cashflow",
     "mc"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -1579,7 +1619,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
+    "review": "approved",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1618,6 +1658,11 @@
      "at": "2026-10-02T16:22:17+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "review",
+     "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\"), on facts rebuilt on the current engine"
     }
    ]
   },
@@ -1635,16 +1680,16 @@
     "inventory_sim",
     "inventory_econ"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "done",
-    "critique": "done",
-    "review": "awaiting",
+    "script": "todo",
+    "critique": "todo",
+    "review": "todo",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1656,8 +1701,16 @@
     "approve_final": "todo",
     "upload": "blocked"
    },
-   "review_notes": [],
-   "attempts": {},
+   "review_notes": [
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "gate": "review",
+     "note": "The current engine finds each SKU's stockout odds exactly (a lognormal–Poisson mixture; fact inv_method, 'computed exactly') and runs no simulated lead times, so {{inv_sims}} is gone. Say how the odds are found, without a simulation count; every other figure in the script still stands. The founder approved the topic."
+    }
+   ],
+   "attempts": {
+    "review": 1
+   },
    "log": [
     {
      "at": "2026-10-02T16:22:34+00:00",
@@ -1683,6 +1736,11 @@
      "at": "2026-10-02T16:24:47+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "review",
+     "note": "rejected: The current engine finds each SKU's stockout odds exactly (a lognormal–Poisson mixture; fact inv_method, 'computed exactly') and runs no simulated lead times, so {{inv_sims}} is gone. Say how the odds are found, without a simulation count; every other figure in the script still stands. The founder approved the topic."
     }
    ]
   },
@@ -1699,16 +1757,16 @@
     "inventory_econ",
     "inventory_sim"
    ],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
    "publishable": false,
    "steps": {
     "facts": "done",
-    "script": "done",
-    "critique": "done",
-    "review": "awaiting",
+    "script": "todo",
+    "critique": "todo",
+    "review": "todo",
     "tts": "todo",
     "timing": "todo",
     "scenes": "todo",
@@ -1720,8 +1778,16 @@
     "approve_final": "todo",
     "upload": "blocked"
    },
-   "review_notes": [],
-   "attempts": {},
+   "review_notes": [
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "gate": "review",
+     "note": "The current engine finds each SKU's stockout odds exactly (a lognormal–Poisson mixture; fact inv_method, 'computed exactly') and runs no simulated lead times, so {{inv_sims}} is gone. Say how the odds are found, without a simulation count; every other figure in the script still stands. The founder approved the topic."
+    }
+   ],
+   "attempts": {
+    "review": 1
+   },
    "log": [
     {
      "at": "2026-10-02T16:25:15+00:00",
@@ -1747,6 +1813,11 @@
      "at": "2026-10-02T16:27:15+00:00",
      "step": "review",
      "note": "parked for the founder"
+    },
+    {
+     "at": "2026-10-06T06:30:49+00:00",
+     "step": "review",
+     "note": "rejected: The current engine finds each SKU's stockout odds exactly (a lognormal–Poisson mixture; fact inv_method, 'computed exactly') and runs no simulated lead times, so {{inv_sims}} is gone. Say how the odds are found, without a simulation count; every other figure in the script still stands. The founder approved the topic."
     }
    ]
   },
@@ -2250,7 +2321,7 @@
    "tier": "D",
    "slug": "greats-01-sears-parcel-post",
    "models": [],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -2259,7 +2330,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
+    "review": "approved",
     "tts": "todo",
     "timing": "todo",
     "shots": "todo",
@@ -2302,6 +2373,11 @@
      "at": "2026-10-05T20:15:03+00:00",
      "step": "review",
      "note": "parked for the founder (emailed)"
+    },
+    {
+     "at": "2026-10-06T05:37:57+00:00",
+     "step": "review",
+     "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\")"
     }
    ]
   },
@@ -2315,7 +2391,7 @@
    "tier": "D",
    "slug": "greats-02-the-dime",
    "models": [],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -2324,7 +2400,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
+    "review": "approved",
     "tts": "todo",
     "timing": "todo",
     "shots": "todo",
@@ -2367,6 +2443,11 @@
      "at": "2026-10-05T20:15:03+00:00",
      "step": "review",
      "note": "parked for the founder (emailed)"
+    },
+    {
+     "at": "2026-10-06T05:37:57+00:00",
+     "step": "review",
+     "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\")"
     }
    ]
   },
@@ -2380,7 +2461,7 @@
    "tier": "D",
    "slug": "greats-03-the-corner",
    "models": [],
-   "status": "awaiting",
+   "status": "todo",
    "blocked_on": null,
    "requires_done": null,
    "voice": null,
@@ -2389,7 +2470,7 @@
     "facts": "done",
     "script": "done",
     "critique": "done",
-    "review": "awaiting",
+    "review": "approved",
     "tts": "todo",
     "timing": "todo",
     "shots": "todo",
@@ -2432,8 +2513,14 @@
      "at": "2026-10-05T20:15:04+00:00",
      "step": "review",
      "note": "parked for the founder (emailed)"
+    },
+    {
+     "at": "2026-10-06T05:37:57+00:00",
+     "step": "review",
+     "note": "approved by the founder approved by the founder 2026-10-06 (\"I approve everything\")"
     }
    ]
   }
- ]
+ ],
+ "visual_locked": true
 }

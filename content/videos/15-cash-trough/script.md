@@ -9,13 +9,13 @@ MISCONCEPTION:    Revenue is up, the month closed profitable and the balance is 
 RUNTIME:          5–6 min
 
 HOOKS (three, pick one)
-1. {{terminal_p50}}. That's where the cash on this demo catalogue lands after {{horizon_days}}, up from {{cash_on_hand}}. On the way there it passes through {{min_median}}. Nothing on the profit and loss shows you that, and it's the number that ends businesses.
+1. {{end_p50}}. That's where the cash on this demo catalogue lands after {{horizon_days}}, up from {{cash_on_hand}}. On the way there it passes through {{min_median}}. Nothing on the profit and loss shows you that, and it's the number that ends businesses.
 2. {{min_p5_day}}. That's how far into the horizon this catalogue reaches its lowest cash, at {{min_median}}, inside a stretch that closes profitable. The balance you watch is the one at the end. The one that can kill you is the bottom.
 3. {{wires_total}} leaves this catalogue in supplier wires over {{horizon_days}}, across {{wire_count}} of them, while the platform pays on a {{payout_cycle}} lag. That gap has a shape. The shape has a bottom, and you can find it before you reach it.
 
 SCRIPT
 [0:00] HOOK
-  VO: {{terminal_p50}}. That's where the cash on this demo catalogue lands after {{horizon_days}}, up from {{cash_on_hand}}. On the way there it passes through {{min_median}}. Nothing on the profit and loss shows you that, and the low point is the number that ends businesses.
+  VO: {{end_p50}}. That's where the cash on this demo catalogue lands after {{horizon_days}}, up from {{cash_on_hand}}. On the way there it passes through {{min_median}}. Nothing on the profit and loss shows you that, and the low point is the number that ends businesses.
   VISUAL: kinetic: the ending balance lands, then the low point lands beneath it, the distance between them held
   CLIP: yes
 
@@ -25,7 +25,7 @@ SCRIPT
   CLIP: no
 
 [0:45] THE CRACK
-  VO: This is the demo catalogue. {{demo_brand}}, {{demo_label}}, {{n_skus}} products. It starts with {{cash_on_hand}} and carries {{monthly_fixed_costs}} of fixed costs a month. Over {{horizon_days}} it ends at {{terminal_p50}}, so it grew, and every monthly statement in that window is healthy. Now the part the statements can't show. The lowest the balance gets on the way is {{min_median}}, and it gets there on {{min_p5_day}}. That bottom is not a bad month. It sits inside the good ones.
+  VO: This is the demo catalogue. {{demo_brand}}, {{demo_label}}, {{n_skus}} products. It starts with {{cash_on_hand}} and carries {{monthly_fixed_costs}} of fixed costs a month. Over {{horizon_days}} it ends at {{end_p50}}, so it grew, and every monthly statement in that window is healthy. Now the part the statements can't show. The lowest the balance gets on the way is {{min_median}}, and it gets there on {{min_p5_day}}. That bottom is not a bad month. It sits inside the good ones.
   VISUAL: cash_cone: the balance over the horizon, the ending point marked, then the low point marked far beneath it
   DATA SOURCE: cash horizon on Tarnhollow demo data
   CLIP: yes
