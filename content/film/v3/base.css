@@ -47,6 +47,18 @@
   /* Shadows agree with the one key light, upper left: contact, then key, down-right. */
   --shadow-paper: 1px 2px 2px rgb(0 0 0 / 0.6), 10px 16px 24px rgb(0 0 0 / 0.45);
   --shadow-print: 1px 2px 2px rgb(0 0 0 / 0.6), 18px 28px 40px rgb(0 0 0 / 0.45);
+  /* Asked for by the kinds in round 2. */
+  --print: #eee9de;             /* photographic paper, a print's border */
+  --graphite: #8d8a84;          /* a pencil stroke (the formula's sum rule) */
+  --light-hot: #fffaf0;         /* the bright point at a drawing line's end */
+  --light-rgb: 242 238 230;     /* channels, for rgb(var(--light-rgb) / a) */
+  --glow-ivory-rgb: 255 240 214;
+  --blue-rgb: 47 116 255;
+  --key-rgb: 255 228 190;       /* the key light's colour */
+  --paper-rgb: 235 227 208;
+  --fs-url: 56px;               /* an address on the end card */
+  --fs-figure-s: 72px;          /* figures in bars, ledgers and steps, between body and hero */
+  --fs-figure-m: 120px;
 }
 h1, h2, h3, p { font-optical-sizing: auto; }
 html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
@@ -58,7 +70,7 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
    under the objects; the vignette sits over everything, so the frame always has depth. */
 .v3 { position: absolute; inset: 0; }
 .v3 > .key { position: absolute; inset: -10%; pointer-events: none;
-  background: radial-gradient(ellipse 62% 58% at var(--key-x, 38%) var(--key-y, 34%), rgb(255 228 190 / 0.22), rgb(255 228 190 / 0.07) 48%, transparent 72%); }
+  background: radial-gradient(ellipse 62% 58% at var(--key-x, 38%) var(--key-y, 34%), rgb(var(--key-rgb) / 0.22), rgb(var(--key-rgb) / 0.07) 48%, transparent 72%); }
 .v3 > .vignette { position: absolute; inset: 0; pointer-events: none; z-index: 50;
   background: radial-gradient(ellipse 78% 74% at 50% 46%, transparent 62%, rgb(0 0 0 / 0.5) 100%); }
 .v3 > .grade { position: absolute; inset: 0; pointer-events: none; z-index: 51; mix-blend-mode: soft-light;
@@ -69,11 +81,13 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
 /* One camera for every desk shot (the motion critique of 2026-10-06): a push of 1% of scale a second
    and a drift of 8 px a second, at constant speed through the cut (no ease-out: an easing stop is
    what makes every cut visible). A kind's own moves ride on top of it, on inner layers. */
-.cam > .rig { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--cam-origin, 50% 45%);
+.cam > .rig { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--cam-origin, var(--grid-x) 45%);
   animation: cam var(--cam-dur, var(--dur, 10s)) linear 0s both; }
 @keyframes cam {
   from { transform: var(--cam-from, scale(1) translateX(0px)); }
-  to { transform: var(--cam-to, scale(calc(1 + var(--dur-n, 10) * 0.01)) translateX(calc(var(--dur-n, 10) * var(--cam-drift, -8px)))); }
+  /* 1% a second, capped at 6% however long the shot, about the left grid line (x = 160), so left-aligned text never
+     leaves title-safe; a kind adds its own lateral move (--cam-drift, or an inner layer) toward its next focal point */
+  to { transform: var(--cam-to, scale(calc(1 + min(var(--dur-n, 10) * 0.01, 0.06))) translateX(max(calc(var(--dur-n, 10) * var(--cam-drift, 0px)), -60px))); }
 }
 
 /* The label slot (HUBRICON.md: the honesty labels are never optional on a proof or demo figure).
@@ -85,6 +99,7 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
 .labels::before { content: ""; width: 32px; height: 2px; background: rgb(242 238 230 / 0.45); margin-bottom: 10px; }
 .labels .source { font: 400 var(--fs-label)/36px var(--sans); color: rgb(242 238 230 / 0.72); }
 .labels .honesty { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.9); }
+.labels p { margin: 0; }
 .labels .nowrap { white-space: nowrap; }
 
 /* Shared entrances. --at is seconds from the shot's first frame (the plan's own times). */

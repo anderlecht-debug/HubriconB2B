@@ -228,7 +228,9 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
             p(f"{s['id']}: {L:.1f} s is over the {ceiling:g} s ceiling for a {s.get('kind')}")
         if s.get("kind") in ("chart", "timeline") and L > cad["max_s"]:
             landings = sorted([float(s["start"]), float(s["end"])] + [float(r["t"]) for r in s.get("reveals", [])]
-                              + [float(t) for t in s.get("params", {}).get("builds", [])]
+                              # builds are seconds from the shot's start (a plan before 2026-10-06 wrote film seconds)
+                              + [float(t) if float(t) >= float(s["start"]) else float(s["start"]) + float(t)
+                                 for t in s.get("params", {}).get("builds", [])]
                               + ([resolve_on(s, words)] if resolve_on(s, words) is not None else []))
             if max(b - a for a, b in zip(landings, landings[1:])) > cad["chart_landing_every_s"] + TOL:
                 p(f"{s['id']}: a long chart needs something new every {cad['chart_landing_every_s']:g} s (reveals or params.builds)")

@@ -26,7 +26,12 @@ function photoSource(job) {
   const a = list[0] || {};
   const year = (String(a.date || "").match(/\b(1[5-9]\d\d|20\d\d)\b/) || [])[0];
   const where = [a.place, year].filter(Boolean).join(" · ");
-  const who = a.credit && !/^https?:/.test(a.credit) ? a.credit : null;
+  // the archive or the photographer, never the site that hosts the scan ("Wikimedia Commons")
+  const host = /^(wikimedia commons|commons|pexels|pixabay|internet archive)$/i;
+  const clean = (x) => String(x || "").replace(/\s+/g, " ").trim();
+  const author = clean(a.author);
+  const who = author && !/^https?:|unknown/i.test(author) && author.length <= 80 && !host.test(author) ? author
+    : a.credit && !/^https?:/.test(a.credit) && !host.test(clean(a.credit)) ? clean(a.credit) : null;
   return [where, who].filter(Boolean).join(" — ") || null;
 }
 

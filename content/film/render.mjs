@@ -232,8 +232,9 @@ async function renderShot(page, job, built) {
     stage.querySelectorAll("[data-play]").forEach((f) => f.classList.add("playing"));
     document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 0; });
     window.__seek && window.__seek(0);
-    const r = stage.querySelector(".split-right")?.getBoundingClientRect();
-    return { rect: r ? { x: r.x, y: r.y, w: r.width, h: r.height } : null,
+    const sr = stage.querySelector(".split-right"), r = sr?.getBoundingClientRect();
+    return { rect: r ? { x: r.x, y: r.y, w: r.width, h: r.height, at: sr.dataset.at ? +sr.dataset.at : null,
+                         rot: sr.dataset.rot ? +sr.dataset.rot : 0, grade: sr.dataset.grade || "" } : null,
              broken: [...stage.querySelectorAll("img")].filter((i) => !i.naturalWidth).map((i) => i.getAttribute("src")) };
   })()`);
   if (info.broken.length) throw new Error(`${job.id}: images did not load: ${info.broken.join(", ")}`);

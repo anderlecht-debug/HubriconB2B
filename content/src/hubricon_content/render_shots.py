@@ -40,6 +40,9 @@ STAGE_CHARTS = {"staircase", "montecarlo", "aging"}
 # The v3 look (FILM_LOOK=v3, the founder's call of 2026-10-06) draws every chart on the stage,
 # the engine's too, from the same figures: the waterfall from this film's own run.json.
 LOOK = "v3" if os.environ.get("FILM_LOOK") == "v3" else "paper"
+V3_FAMILY = {"document": "documents", "table": "documents", "quote": "documents", "receipt": "documents",
+             "still": "photos", "texture": "photos", "archive": "photos", "stack": "photos", "split": "photos",
+             "footage": "photos", "chart": "charts"}   # everything else is type
 # The end card's words are the site's own (the style reel's end scene, content/film/scenes.mjs).
 END = {"headline": "More profit than our bill every month, or you don't pay.", "primary": "Book your call",
        "secondary": "or learn the method, free, at hubricon.com/learn"}
@@ -144,7 +147,12 @@ class Job:
             "render": reg["styles"].get(self.style, {}).get("render", {}), "drift_to": reg["drift"]["to"],
             "on": None if on_abs is None else round(on_abs - start, 3), "reveals": reveals, "says": shot.get("says", ""),
             "label": shot.get("label"), "demo_label": f"{brand} demo data" if brand else "demo data",
-            "params": fill(src.get("params") or {}, values), "focus": shot.get("focus") or src.get("focus"),
+            # a callback draws the earlier shot again, and its own params override it (a gap, a line
+            # the return should not repeat, set to null); `callback` itself is not drawn
+            "params": fill({**(src.get("params") or {}),
+                            **({k: v for k, v in (shot.get("params") or {}).items() if k != "callback"} if src is not shot else {})},
+                           values),
+            "focus": shot.get("focus") or src.get("focus"),
             "motion": shot.get("motion") or src.get("motion"), "overlay": fill(shot.get("overlay") or {}, values),
             "chart": src.get("chart"),
             # every spoken word under the shot, with its start in seconds from the shot's first
@@ -153,7 +161,9 @@ class Job:
                       for w in shots.words_in(words, start, float(shot["end"]))],
             # the figures' sources as a viewer reads them (sourcelabel.py); none where the
             # proof or demo label already says what the figure is
-            "source_label": sourcelabel.label([r["key"] for r in reveals], facts),
+            # (a shot carrying the proof or demo label shows no other source: an incidental year's
+            # source beside a case-study chart misleads more than it tells)
+            "source_label": None if shot.get("label") in ("proof", "demo") else sourcelabel.label([r["key"] for r in reveals], facts),
         }
         self.assets: list[str] = []
         if LOOK == "v3" and self.kind == "chart":
@@ -232,12 +242,16 @@ class Job:
             right = (self.shot.get("params") or {}).get("right") or {}
             if right.get("file"):
                 self.assets.append(sha(Path(right["file"])))
+                if LOOK == "v3":   # the print's face while it drops: the footage's first frame, graded as it will play
+                    self.job.setdefault("params", {}).setdefault("right", {})["poster"] = stage_url(split_poster(right))
 
     def key(self) -> str:
         files = ["assets/tokens.json", "assets/grade.json", "film/styles.json", "film/shots.css", "film/shots.mjs"]
-        if LOOK == "v3":   # every file the v3 stage draws with, so an edited kind re-renders its clips
-            files += sorted(str(p.relative_to(CONTENT_DIR)) for p in (CONTENT_DIR / "film" / "v3").rglob("*")
-                            if p.suffix in (".css", ".mjs", ".js", ".html"))
+        if LOOK == "v3":   # the shared stage, and only this shot's own kind module, so editing one kind re-renders its clips alone
+            v3 = CONTENT_DIR / "film" / "v3"
+            family = V3_FAMILY.get(self.kind, "type")
+            files += sorted(str(p.relative_to(CONTENT_DIR)) for p in v3.glob("*") if p.suffix in (".css", ".mjs", ".js", ".html"))
+            files += [f"film/v3/kinds/{family}.mjs", f"film/v3/kinds/{family}.css"]
         look = "".join((CONTENT_DIR / p).read_text(encoding="utf-8") for p in files)
         blob = json.dumps({"job": self.job, "assets": self.assets, "renderer": self.renderer, "room": self.room,
                            "asset": self.shot.get("asset"), "version": VERSION}, sort_keys=True, default=str)
@@ -275,17 +289,45 @@ def _manim(job: Job, out: Path):
                         "-frames:v", str(job.frames), "-r", str(FPS), "-an", *grade.encode_args(), str(out)], check=True, timeout=1800)
 
 
+NOW_GRADE = "eq=saturation=0.65,colortemperature=temperature=5400:mix=0.5"   # = photos.mjs NOW_GRADE
+
+
+def split_poster(right: dict) -> Path:
+    """The then-and-now's "now" frame at its in point, with the world grade and the stage's NOW_GRADE,
+    cached by the footage's sha256 and in point."""
+    src = Path(right["file"])
+    start = float(right.get("in", 0.0))
+    out = GRADED / f"poster-{sha(src)[:16]}-{start:.2f}.jpg"
+    if not out.exists():
+        g = grade.plan(src, focus=right.get("focus", (0.5, 0.5)), start=start, duration=1.0, strict=False, grain=False)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{start:.3f}", "-i", str(src), "-frames:v", "1",
+                        "-vf", f"{g['filter']},{NOW_GRADE}", "-q:v", "2", str(out)], check=True, timeout=300)
+    return out
+
+
 def _split_composite(job: Job, stage_clip: Path, rect: dict, out: Path):
-    """Then and now (W11): the present-day footage plays inside the stage's right panel."""
+    """Then and now (W11): the present-day footage plays inside the stage's right panel. The v3
+    stage declares its contract on `.split-right`: `at` (the landing frame the footage starts on),
+    `rot` (degrees clockwise about the rect's centre, so it sits square in its tilted print) and
+    `grade` (an ffmpeg chain after the world grade); the paper stage gives none of them."""
     right = job.shot["params"]["right"]
-    at = float(job.shot.get("params", {}).get("right_at", job.job["on"] if job.job["on"] is not None else job.job["render"]["right_at_s"]))
-    n = max(1, job.frames - round(at * FPS))
+    at = rect.get("at")
+    if at is None:
+        at = float(job.shot.get("params", {}).get("right_at", job.job["on"] if job.job["on"] is not None else job.job["render"]["right_at_s"]))
+    n = max(1, job.frames - round(float(at) * FPS))
     with tempfile.TemporaryDirectory(prefix="hubricon-split-") as tmp:
         clip = Path(tmp) / "right.mp4"
         footage.render(Path(right["file"]), clip, n, start=float(right.get("in", 0.0)), focus=right.get("focus", (0.5, 0.5)))
-        w, h, x, y = (round(rect[k]) for k in ("w", "h", "x", "y"))
-        fc = (f"[1:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setpts=PTS+{at:.3f}/TB[r];"
-              f"[0:v][r]overlay={x}:{y}:eof_action=pass:repeatlast=0,format=yuv420p")
+        w, h = round(rect["w"]), round(rect["h"])
+        cx, cy = rect["x"] + rect["w"] / 2, rect["y"] + rect["h"] / 2
+        rot = float(rect.get("rot") or 0.0)
+        chain = [f"scale={w}:{h}:force_original_aspect_ratio=increase", f"crop={w}:{h}"] + ([rect["grade"]] if rect.get("grade") else [])
+        if rot:
+            r = f"{rot}*PI/180"
+            chain += ["format=rgba", f"rotate={r}:c=none:ow=rotw({r}):oh=roth({r})"]
+        fc = (f"[1:v]fps={FPS},{','.join(chain)},setpts=PTS-STARTPTS+{float(at):.3f}/TB[r];"
+              f"[0:v][r]overlay=x={cx:.1f}-overlay_w/2:y={cy:.1f}-overlay_h/2:eof_action=pass:repeatlast=0,format=yuv420p")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(stage_clip), "-i", str(clip), "-filter_complex", fc,
                         "-frames:v", str(job.frames), "-an", *grade.encode_args(), str(out)], check=True, timeout=1800)
 
