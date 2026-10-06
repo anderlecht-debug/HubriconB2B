@@ -121,7 +121,9 @@ def spoken(script: dict) -> str:
 
 
 def word_count(text: str, facts: dict) -> int:
-    return len(re.findall(r"[A-Za-z0-9$%'’.,-]+", render_facts(text, facts) if facts else text))
+    # an unknown key stays a placeholder here, so the number guard can name it instead of a crash
+    filled = PLACEHOLDER.sub(lambda m: str(facts[m.group(1)]["value"]) if m.group(1) in facts else m.group(0), text) if facts else text
+    return len(re.findall(r"[A-Za-z0-9$%'’.,-]+", filled))
 
 
 def _banned(text: str) -> list[str]:
