@@ -87,3 +87,9 @@ def test_chart_needs_demo_data_source():
 def test_render_substitutes_values():
     r = sm.render(sm.parse(_pad(GOOD, 10)), FACTS)
     assert "$65,320" in r["hooks"][1] and "{{" not in r["beats"][0]["VO"]
+
+
+def test_a_key_the_facts_no_longer_have_is_named_not_a_crash():
+    gone = GOOD.replace("{{n}} paths", "{{pm_sku}} paths")
+    problems = sm.validate(sm.parse(gone), FACTS, "A", 4, CTA)
+    assert any("unknown placeholder {{pm_sku}}" in p for p in problems)
