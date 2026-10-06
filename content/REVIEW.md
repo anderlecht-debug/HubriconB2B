@@ -1,6 +1,6 @@
 # Review inbox
 
-Updated 2026-10-06T07:21:04+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
+Updated 2026-10-06T07:21:17+00:00. Everything here is parked until you decide. Nothing renders before a script is approved; nothing uploads before the final sign-off.
 
 ## V04 · day 4 · tier A · pillar 4 — script gate
 
@@ -127,3 +127,70 @@ hubricon-content approve 08-elasticity-plain-english
 hubricon-content reject  08-elasticity-plain-english --note "what to change"
 ```
 Edit `content/videos/08-elasticity-plain-english/script.md` first if you prefer; it is re-validated on approve.
+
+## V09 · day 9 · tier B · pillar 3 — script gate
+
+**Title:** How to tell whether a price increase would pay, and why the honest answer can be hold  
+**Thumbnail:** 6.22 ⟨el_ci_width⟩ in ink beside the elasticity fit fragment, the band wide, the point marked inside it  
+**Spiky claim:** A price you have never moved is not a safe price, it is an unmeasured one. Waiting for a tighter elasticity pays a known cost to avoid an unknown one, and the band never gets tight enough to justify the wait.  
+**Misconception:** If I raise my price the Buy Box goes, conversion drops and the rank slides, and the ads I buy to get it back cost more than the raise made. The price works. Leave it alone.  
+**CTA:** The free course at hubricon.com/learn, where the method and the worksheet are written out in full  
+**Estimated runtime:** about 12 min 06 s · **voice:** placeholder until the clone exists
+
+### Hooks (the first is the one that ships unless you say otherwise)
+
+1. 22 ⟨el_no_top⟩ of 22 ⟨el_skus_fit⟩. That's how many products in this demo catalogue the model refuses to name a best price for, with 12 ⟨n_periods⟩ periods of history each. You'd call that a failure. It's the honest answer, and it still tells you what to do this week.
+2. -2.76 ⟨el_point⟩. That's the measured demand elasticity of one product in this demo catalogue, read off its own price history. You'd call a product that sensitive untouchable. Raise its price and the units do fall. The profit doesn't.
+3. -5.87 ⟨el_ci_low⟩ to 0.35 ⟨el_ci_high⟩. That's the honest range around one product's elasticity, and the width is the point. You'd wait for a tighter number before touching a price. It never gets tighter. The decision gets made on the width.
+
+### Script
+
+**[0:00] HOOK**  
+22 ⟨el_no_top⟩ of 22 ⟨el_skus_fit⟩. That's how many products in this demo catalogue the model refuses to name a best price for, with 12 ⟨n_periods⟩ periods of history each. You'd call that a failure. It's the honest answer, and it still tells you what to do this week.  
+
+**[0:20] LET THEM BE WRONG**  
+Here's the model you're working from, and it isn't a stupid one. Price is the lever you can't quietly pull back. Raise it and the Buy Box goes, conversion drops, the rank slides, and the ads you buy to get the rank back cost more than the raise ever made. So the price that's working stays where it is. You've had that thought standing over the price field with the cursor in it, and then you closed the tab and went to do something safer. Everything in that model is true except the size of it. Demand is sensitive. Rank is real. What's missing is a measurement of how sensitive, taken on your own listing instead of assumed, and set against what the raise is actually worth. Without that, a price is a feeling that has sat still long enough to look like a decision.  
+
+**[1:20] THE CRACK**  
+This is the demo catalogue on screen. Tarnhollow ⟨demo_brand⟩, demo data ⟨demo_label⟩, 24 ⟨n_skus⟩ products, about $3.5M ⟨annual_revenue_m⟩ a year, 12 ⟨n_periods⟩ monthly periods of price and units. Take one product, TH-OVEMIT-22 ⟨el_sku⟩. Plot its units against its price for every period it has, and the slope of that line has a name: elasticity. Here it's -2.76 ⟨el_point⟩. Units move more than price moves, in the opposite direction. That is a sensitive product, and your intuition was right about the direction and about the size. Now hold on to it, because the next step doesn't follow from it. Raise the price on a product like that and you do lose units. You also keep more on every unit that still sells, and a chunk of what the platform charges you is fixed per unit, so it doesn't rise when the price does. Whether the raise wins is a race between those, and the race is settled by your margin, not by how frightened you are. On this catalogue the margin that decides it, after the platform and the ads are paid, is 32.3% ⟨contribution_pct_latest⟩.  
+
+**[2:30] CHAPTER 1 — FIND IT**  
+Here's the whole method, with nothing held back. Export a pair of columns per product from your own order reports: the price it actually sold at in each period, and the units it sold. Not the list price. The realised price, after promotions, because that's the price the customer saw. Monthly periods are fine, weekly is better if your volume carries it. Then plot units against price with both axes on a log scale. On a log scale, a response that's proportional comes out as a straight line, and the slope of that line is the elasticity: the proportional change in units for a proportional change in price. Fit the line by least squares. That's the estimate. The notation comes after the picture, and the picture is the whole idea. A handful of things make that estimate lie, and all of them are fixable. First, not enough price movement. If the price never moved, the slope is reading noise and will say so confidently. The fit here refuses to speak unless a product has at least 5 ⟨el_min_periods⟩ periods and at least 2% ⟨el_min_price_cv⟩ of movement in its own price. On this catalogue it refused 2 ⟨el_skus_insufficient⟩ of 24 ⟨n_skus⟩ products on that rule and fitted 22 ⟨el_skus_fit⟩. Second, confounding. A price cut that ran alongside a promotion. A stockout that cut units for a reason that had nothing to do with price. A competitor's move. The season. Drop the stockout periods, flag the promotion periods, and if you have the periods to spare, put the season in as a control. Then the error on the slope itself. Ordinary least squares assumes the spread around the line is even, and demand data never is, because the busy months are noisier than the quiet ones. Use a robust standard error. The one used here is the heteroskedasticity-consistent variant, which sounds worse than it is: it's a single option in every stats package, including the free ones. Do that and each product hands you a slope and an error bar. On this catalogue the middle of the fitted products sits at -1.82 ⟨el_median⟩, and 20 ⟨el_elastic_count⟩ of them come out sensitive enough that units move more than price.  
+
+**[4:55] CHAPTER 2 — VERIFY IT**  
+Now the part that decides whether you act on any of it. The slope for TH-OVEMIT-22 ⟨el_sku⟩ is -2.76 ⟨el_point⟩, and its robust error is 1.39 ⟨el_se⟩. Put those together and the honest interval runs from -5.87 ⟨el_ci_low⟩ to 0.35 ⟨el_ci_high⟩: a width of 6.22 ⟨el_ci_width⟩, on 12 ⟨el_periods⟩ periods. The fit's R-squared is 0.53 ⟨el_r2⟩, which is the share of the movement in units that price explains, leaving the rest to the season, the competitor and the weather. Read what that interval contains. At one end, demand barely notices a raise. At the other, it's savage. Both ends are consistent with the data you have. Anyone handing you a single elasticity for your catalogue, with no band on it, either hasn't done this fit or has done it and thrown the error away. The natural reaction is to wait for a tighter number, so price the wait. The error shrinks with the square root of the periods you have, which makes precision expensive fast. To halve this error you'd need 93 ⟨n_for_se_half⟩ periods. To get it to a narrow band, 374 ⟨n_for_se_quarter⟩. To make it precise, 2,335 ⟨n_for_se_tenth⟩. That's longer than most catalogues have existed, and your demand curve will have moved underneath you long before you get there. So waiting isn't the safe option. It's the option that pays a known cost to avoid an unknown one. What you do instead is ask a smaller question: at every value the interval allows, is a capped step one you can live with? You never needed the exact elasticity. You needed that. And the answer comes back yes on some catalogues and no on this one, which is the next thing on screen.  
+
+**[6:45] WHAT IT'S WORTH**  
+So run every value in that band through the profit arithmetic, not the middle one. Hold the fees and the landed cost where they are, sweep the elasticity across the whole interval, and what comes back is a range of outcomes instead of a single answer. What decides it is your margin on the next unit, which on this catalogue is 32.3% ⟨contribution_pct_latest⟩ after the platform and the ads, and where the top of the profit hill sits, which the slope fixes. And here is the thing nobody tells you about that top. The rule for it divides by how far the slope sits from the place where a rise exactly pays for the units it costs. Near that place the top runs off to no limit. So a wide interval doesn't hand you a blurry best price. It hands you one that might be a step above today's, or past the end of the data you have. Which is what happens here. For 22 ⟨el_no_top⟩ of the 22 ⟨el_skus_fit⟩ products it could fit, the interval is too wide for the model to mark a top at all. So it falls back to the rule it can defend: work the arithmetic at the estimate alone, and call for a step only if that lands above today's price, never more than 5% ⟨pm_step_cap⟩ at once. The cap isn't timidity. A big step walks off the edge of the price range you have data for, and a model asked to extrapolate past its own data will answer you confidently and be wrong. On this catalogue it calls for no step on any product, and weighing every history together it puts 97% ⟨el_p_optimal⟩ on these prices already being about right. Hold is the answer here, and hold is a real answer: a model that will say it is one you can believe when it says raise. What it is not is permission to leave a price alone forever. Notice what earned the verdict. Every product it judged had moved its price. The 2 ⟨el_skus_insufficient⟩ that never moved get no verdict at all. Not safe, not wrong. Unread.  
+
+**[9:05] WHAT TO DO**  
+This week, in order. First, pull price and units by period for your top products and plot them. Inside an hour you'll know which products have enough price movement to say anything and which have sat at the same price so long they can't. Second, fit the slope on the ones that qualify, with a robust error, and write down the interval rather than the point. Write down only the point and you'll start believing it. Next, work the pricing arithmetic at your estimate and see where it puts the best price. Above today's, the direction is up, and the product with the thickest margin goes first, by a step inside the cap. Below today's, hold: your own estimate says down while the band can't rule out far up, and the move to make is no move. When you do step, change nothing else that week. No new ad budget, no coupon, no new creative, or you'll have confounded your own measurement in the first week of running it. Hold it long enough to read: a full period at minimum, longer if your volume is thin. Watch units, not revenue, because revenue moves the moment the price does and tells you nothing about demand. Then re-fit with the new period in. The move you made is the cleanest price variation your data has ever had, so it tightens the estimate more than a year of sitting still would. And record what you expected beside what happened, written down before you look. A prediction you write after the fact isn't one.  
+
+**[10:50] THE HONEST LIMIT**  
+What you can do yourself is everything up to here, and it's worth doing. One product, one afternoon, a log plot, a robust error, and a step you capped on purpose. That's a better pricing process than most catalogues this size have ever had. Where it breaks is repetition and scale. 24 ⟨n_skus⟩ products, re-fitted every period, each with its own interval, each candidate move checked against the fees on that product and the cash it ties up, with stockout and promotion periods excluded automatically and the season controlled for, and then the whole thing run again next month, because an elasticity measured a year ago describes a market that no longer exists. Done by hand it drifts into a spreadsheet nobody updates, and a stale elasticity is more dangerous than no elasticity, because you'll act on it. And there's a limit no amount of work removes. The band stays wide. 2,335 ⟨n_for_se_tenth⟩ periods is what precision would cost, and nobody has that. The answer was never a tighter number. It's a process that sizes every step to survive the band it actually has. You can build this yourself. If you're doing real volume and want it run with rigor, this is what I do, and I only get paid when it works.  
+*CTA:* The method is written out in full, with the worksheet, free at hubricon.com/learn.  
+
+### Shot list
+
+| at | scene | data source |
+|---|---|---|
+| 0:00 | kinetic: the count lands, then the phrase "refuses to name a best price" under it |  |
+| 0:20 | screenshot: the price field on a listing nobody has touched in months, the cursor sitting in it (a real screenshot replaces this beat when the founder supplies one) |  |
+| 1:20 | elasticity: the scatter for the worked product building point by point, then the fitted slope landing through it | ELASTICITY.FIT on Tarnhollow demo data |
+| 2:30 | elasticity: the log scatter, the fitted slope, then the band around it widening as periods are taken away | ELASTICITY.FIT on Tarnhollow demo data |
+| 4:55 | sample_size: the error bar shrinking as periods accumulate, marked where it halves, where it narrows and where it goes precise | ELASTICITY.FIT on Tarnhollow demo data |
+| 6:45 | elasticity: the profit hill drawn under the demand line, its top smearing into a stretch across the price axis as the band widens; then kinetic: the catalogue's counts, the word "hold" landing in ink, and the refused products as empty outlines with no band at all | ELASTICITY.FIT on Tarnhollow demo data; PRICE.OPTIMUM on Tarnhollow demo data ({{pm_count}} recommended steps); MARGIN.DECOMP on Tarnhollow demo data |
+| 9:05 | kinetic: the steps landing one at a time, then chapter_card: expected beside actual, written before the result |  |
+| 10:50 | kinetic: the closing line, held |  |
+
+### Your earlier notes
+
+- The engine was corrected on 2026-10-06 (MATH_SCORECARD iteration 41: the already-optimal prior now costs a unit as the margin and the step do). On the demo it recommends no price step at all and puts {{el_p_optimal}} on the prices already being about right; the pm_* figures this script quotes (step, gain, its range, loss odds) no longer exist. Redraft on what the model says now: the range too wide to mark a top for {{el_no_top}} of {{el_skus_fit}} products, the verdict hold, a verdict it can give only for prices that moved. Never speak a step's gain, loss odds or direction confidence. The founder approved the topic; this is a correction, not a rejection of it. This one's premise ('the price increase you're afraid of is probably free') is contradicted on the demo: reframe it as how to tell whether a raise would pay, and why the honest answer can be hold.
+
+### Decide
+
+```
+hubricon-content approve 09-price-increase-probably-free
+hubricon-content reject  09-price-increase-probably-free --note "what to change"
+```
+Edit `content/videos/09-price-increase-probably-free/script.md` first if you prefer; it is re-validated on approve.
