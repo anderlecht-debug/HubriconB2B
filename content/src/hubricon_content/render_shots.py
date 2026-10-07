@@ -211,6 +211,31 @@ def footage_frame(file: Path, t: float) -> Path:
     return out
 
 
+SHRINK_EDGE, SHRINK_BYTES = 4800, 80_000_000
+
+
+def workable(src: Path) -> Path:
+    """The file a still is graded from. A master scan too large to grade safely is reduced once, cached,
+    to SHRINK_EDGE px on its long edge (still more than a 4K frame needs). A Library of Congress TIFF of
+    700 MB and 14,000 px made ffmpeg grow to 11 GB, and with four render workers the machine ran out of
+    memory (2026-10-07). The provenance and the checksum stay the original's."""
+    try:
+        from PIL import Image
+        Image.MAX_IMAGE_PIXELS = None
+        with Image.open(src) as im:
+            if max(im.size) <= SHRINK_EDGE and src.stat().st_size < SHRINK_BYTES:
+                return src
+            out = GRADED / "shrunk" / f"{sha(src)[:20]}-{SHRINK_EDGE}.jpg"
+            if not out.exists():
+                out.parent.mkdir(parents=True, exist_ok=True)
+                small = im.convert("RGB")
+                small.thumbnail((SHRINK_EDGE, SHRINK_EDGE), Image.LANCZOS)
+                small.save(out, quality=95)
+            return out
+    except Exception:   # noqa: BLE001: a file PIL can't open is graded as it was
+        return src
+
+
 def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool = False,
                  paper: bool = False, cut: bool = False) -> dict:
     """The still with the world grade, cached by its source's sha256. A labelled placeholder
@@ -225,7 +250,7 @@ def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool =
     key = sha(src)[:20] + f"-{look}" + ("-mono" if mono else "") + ("-paper" if paper else "") + ("-cut" if cut else "")
     out = GRADED / f"{key}.jpg"
     if not out.exists():
-        grade.still(src, out, mono=mono, refuse=not paper, frame=not cut)
+        grade.still(workable(src), out, mono=mono, refuse=not paper, frame=not cut)
     w, h = _size(out)
     # the picture's own ground (photos.mjs lays a museum object on black or on a seamless on the desk itself)
     return {"url": stage_url(out), "w": w, "h": h, "sha256": sha(src), "ground": grade.ground_of(out)}

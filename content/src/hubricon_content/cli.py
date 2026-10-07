@@ -351,6 +351,11 @@ def cmd_plan_apply(a):
     _out(plan_skeleton.apply(a.slug, json.loads(Path(a.decisions).read_text(encoding="utf-8"))))
 
 
+def cmd_resolve_gaps(a):
+    from . import line
+    _out(line.resolve_gaps(a.slug))
+
+
 def cmd_film_cost(a):
     from . import meter
     _out(meter.summary(a.slug))
@@ -476,6 +481,8 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.set_defaults(fn=cmd_plan_skeleton)
     p = sub.add_parser("plan-apply", help="merge the model's per-shot decisions into the drafted plan")
     p.add_argument("slug"); p.add_argument("decisions"); p.set_defaults(fn=cmd_plan_apply)
+    p = sub.add_parser("resolve-gaps", help="picture shots with no picture: a neighbour holds longer, else the film's own words")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_resolve_gaps)
     p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
     p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
     p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")

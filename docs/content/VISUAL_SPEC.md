@@ -272,6 +272,8 @@ honesty rule applied to pictures.
 All keys live in `.env` (add them to `.env.example`). A missing key marks the `source` step
 `blocked` with the key's exact name. Never substitute a source the shot plan did not allow.
 
+> **Amended 2026-10-07 by the founder:** records marked "No known restrictions" or "No restrictions" (the Library of Congress and the Flickr Commons statement on most historic photography) are accepted, credited on screen and in the description like any other picture; a takedown request is honoured by swapping the shot. A statement that says copied images "may be restricted" (HABS) is still refused.
+
 | Tier | Source | Access | Limits and rules | Accept |
 |---|---|---|---|---|
 | Stock footage | **Pexels** | `GET https://api.pexels.com/v1/videos/search`, key `PEXELS_API_KEY` | 200 requests an hour, 20,000 a month by default; a prominent link to Pexels and credit to the creator when possible | Pexels licence |
