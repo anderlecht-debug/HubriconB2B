@@ -8,8 +8,8 @@
  "steps": {
   "plan": {
    "model": "claude-sonnet-5-5",
-   "tokens": 450000,
-   "note": "the shot plan: one pass, shots.json out, shots-validate gates it"
+   "tokens": 700000,
+   "note": "the shot plan: one session reads plan-brief.md, writes shots.json in a few large writes, fills and validates; output dominates (~250 shots)"
   },
   "pick": {
    "model": "claude-sonnet-5-5",
@@ -29,7 +29,8 @@
   "script": {
    "model": "claude-opus-5-5",
    "tokens": 400000,
-   "note": "a script draft for the founder's review"
+   "note": "a script draft for the founder's review",
+   "effort": "high"
   }
  },
  "runner": {
@@ -37,6 +38,7 @@
   "tick": 400000,
   "day": 1500000,
   "week": 6000000,
-  "note": "the unattended content runner (scripts/content-tick.sh): each 30-minute tick is one capped session; a tick past the day's or the week's cap does not start"
+  "note": "the unattended content runner (scripts/content-tick.sh): each 30-minute tick is one capped session; a tick past the day's or the week's cap does not start",
+  "effort": "medium"
  }
 }
