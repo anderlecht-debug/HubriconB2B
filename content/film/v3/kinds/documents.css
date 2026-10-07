@@ -133,13 +133,16 @@
 .dc-desk.dl-two i { display: none; }
 @keyframes dc-desk { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: none; } }
 
-/* A flag on the lamp: where a tight frame puts paper under the label slot, the pool of light ends
-   above the frame's foot, evenly across its width, so the source line stays legible. A blob over
-   one corner read as a smudge on the page. */
+/* A flag on the lamp: where a frame must put paper under the label slot, the pool of light ends
+   at the slot, evenly across the frame's width: the paper under the source line falls to the
+   desk's dark, so the label reads on dark, never on paper (--flag-h: the slot's height from the
+   frame's foot, set per shot), and the light returns over the next 130 px. A blob over one corner
+   read as a smudge on the page; a soft falloff left the label printed over paper. */
 .dc-flag { position: absolute; inset: 0; z-index: 49; pointer-events: none; opacity: 0;
-  background: linear-gradient(to top, color-mix(in srgb, var(--ground) 82%, transparent) 0,
-      color-mix(in srgb, var(--ground) 64%, transparent) 110px, color-mix(in srgb, var(--ground) 30%, transparent) 210px,
-      color-mix(in srgb, var(--ground) 8%, transparent) 290px, transparent 340px); }
+  background: linear-gradient(to top, color-mix(in srgb, var(--ground) 97%, transparent) 0,
+      color-mix(in srgb, var(--ground) 96%, transparent) var(--flag-h, 230px),
+      color-mix(in srgb, var(--ground) 52%, transparent) calc(var(--flag-h, 230px) + 48px),
+      color-mix(in srgb, var(--ground) 14%, transparent) calc(var(--flag-h, 230px) + 100px), transparent calc(var(--flag-h, 230px) + 130px)); }
 
 /* ── tables: a typeset rate table (period) or a laser-printed card (modern) ─────────────── */
 .tb { position: absolute; inset: 0; color: var(--dc-ink); font-kerning: none; }
@@ -182,8 +185,10 @@
 /* A hanging open quotation mark in the margin; the words land on their own spoken onsets. */
 .qt-mark { position: absolute; left: -0.48em; top: 0; color: rgb(242 238 230 / 0.4); animation: qt-w 0.25s var(--ease-out) calc(var(--at) * 1s) both; }
 .qt-w { display: inline-block; animation: qt-w 0.25s var(--ease-out) calc(var(--at) * 1s) both; }
-/* Before its word, a word is a ghost of light (present from the cut, never readable early). */
-@keyframes qt-w { from { opacity: 0.16; filter: blur(8px); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
+/* Before its word, a word is a faint haze of light: present from the cut, never readable early,
+   at 1080p or on a phone (8% light under a blur of at least 14 px: a ghost at 16% under 8 px still
+   read "You have shipped me five already" seven seconds early). */
+@keyframes qt-w { from { opacity: 0.08; filter: blur(max(14px, 0.16em)); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
 .qt-by { display: flex; align-items: center; gap: 22px; margin: 0 0 48px; max-width: 1240px; min-height: 38px;
   font: 500 var(--fs-label)/1.4 var(--sans); letter-spacing: 0.10em; color: var(--light-2); }
 .qt-by i:not(.qt-rule) { font-style: italic; }
