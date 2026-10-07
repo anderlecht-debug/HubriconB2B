@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { serve, cdp, chromeBin, STAGE, seekJS } from "../render.mjs";
-import { figures } from "../../../scripts/build-pages.mjs";
+import { filmFigures } from "./built.mjs";
 import { shotHTML } from "./shots.mjs";
 
 const ROOT = new URL("../../../", import.meta.url).pathname;
@@ -15,7 +15,7 @@ const arg = (k) => (rest.includes(k) ? rest[rest.indexOf(k) + 1] : null);
 const only = arg("--only")?.split(",");
 const css = arg("--css") || "";
 const jobs = JSON.parse(readFileSync(jobsPath, "utf8")).filter((j) => !only || only.includes(j.id));
-const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+const built = filmFigures();
 const srv = await serve();
 const page = await cdp(chromeBin());
 try {

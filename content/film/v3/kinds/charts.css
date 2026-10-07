@@ -183,3 +183,7 @@
 .ch-cat--near { animation: ch-drop 0.7s linear calc(var(--at, 0) * 1s) both, ch-turn 0.45s ease calc(var(--turn, 99) * 1s) both; }
 @keyframes ch-turn { from { fill: rgb(var(--light-rgb) / 0.78); stroke: rgb(var(--glow-ivory-rgb) / 0.16); }
   to { fill: var(--blue); stroke: rgb(var(--blue-rgb) / 0.32); } }
+/* the dot that crosses the seams on "touch", and each seam as it is crossed */
+.ch-dot--trav { stroke: rgb(var(--glow-ivory-rgb) / 0.4); stroke-width: 12; }
+.ch-seam-hot { fill: none; stroke: var(--light); stroke-width: 2.5; }
+.ch-land-dot { animation: ch-fade 0.12s linear calc(var(--at, 0) * 1s) both; }

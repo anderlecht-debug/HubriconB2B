@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { serve, cdp, chromeBin, STAGE, seekJS } from "../render.mjs";
-import { figures } from "../../../scripts/build-pages.mjs";
+import { filmFigures } from "./built.mjs";
 import { shotHTML } from "./shots.mjs";
 
 const ROOT = new URL("../../../", import.meta.url).pathname;
@@ -12,7 +12,7 @@ const json = (p) => JSON.parse(readFileSync(join(ROOT, p), "utf8"));
 const [jobsPath, ...rest] = process.argv.slice(2);
 const only = rest.includes("--only") ? rest[rest.indexOf("--only") + 1].split(",") : null;
 const jobs = JSON.parse(readFileSync(jobsPath, "utf8")).filter((j) => !only || only.includes(j.id));
-const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+const built = filmFigures();
 const SAFE = { x0: 140, x1: 1780, y0: 70, y1: 1010 };   // title-safe, with a 20 px tolerance
 const srv = await serve();
 const page = await cdp(chromeBin());

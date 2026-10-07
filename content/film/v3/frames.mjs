@@ -6,7 +6,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { serve, cdp, chromeBin, STAGE, seekJS } from "../render.mjs";
-import { figures } from "../../../scripts/build-pages.mjs";
+import { filmFigures } from "./built.mjs";
 import { shotHTML } from "./shots.mjs";
 
 const ROOT = new URL("../../../", import.meta.url).pathname;
@@ -16,7 +16,7 @@ const only = rest.includes("--only") ? rest[rest.indexOf("--only") + 1].split(",
 const video = rest.includes("--video");
 const jobs = JSON.parse(readFileSync(jobsPath, "utf8")).filter((j) => !only || only.includes(j.id));
 mkdirSync(outDir, { recursive: true });
-const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+const built = filmFigures();
 const srv = await serve();
 const page = await cdp(chromeBin());
 try {

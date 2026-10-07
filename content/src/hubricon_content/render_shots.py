@@ -116,6 +116,49 @@ def said_numbers(spoken) -> list[str]:
     return out
 
 
+_MONTHS = ("january february march april may june july august september october november december").split()
+
+
+def said_phrases(spoken) -> list[str]:
+    """What the voice has said, as figures in context, lower-case and in digits: every number with the
+    word after it ("15 cents", "50 miles", "1,000 units" → "1000 units"), every date whole ("february 2
+    1925", "july 12 2026", "january 1913"), and a year said on its own ("in 1925" → "1925"). A figure
+    is known in a later shot only as the same phrase: "15" said as "15 cents" does not make "January 15"
+    known, and "2026" said in "July 12, 2026" does not make "January 15, 2026" known."""
+    toks = []
+    for raw in spoken:
+        w = str(raw).lower().strip(".,;:!?\"'’()")
+        for part in w.replace("-", " ").split():
+            n = said_numbers([part])
+            toks.append(n[0] if n and part not in _MONTHS else part.replace("$", ""))
+    out: list[str] = []
+    add = lambda x: out.append(x) if x not in out else None
+    isnum = lambda t: bool(re.fullmatch(r"\d+(?:\.\d+)?", t))
+    i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t in _MONTHS:
+            parts = [t]
+            if i + 1 < len(toks) and isnum(toks[i + 1]) and float(toks[i + 1]) <= 31:
+                parts.append(toks[i + 1])
+                if i + 2 < len(toks) and re.fullmatch(r"1[5-9]\d\d|20\d\d", toks[i + 2]):
+                    parts.append(toks[i + 2])
+            elif i + 1 < len(toks) and re.fullmatch(r"1[5-9]\d\d|20\d\d", toks[i + 1]):
+                parts.append(toks[i + 1])
+            if len(parts) > 1:
+                add(" ".join(parts))
+                i += len(parts)
+                continue
+        if isnum(t):
+            prev = toks[i - 1] if i else ""
+            if re.fullmatch(r"1[5-9]\d\d|20\d\d", t) and prev not in _MONTHS:
+                add(t)                                            # a year said on its own
+            if i + 1 < len(toks) and not isnum(toks[i + 1]):
+                add(f"{t} {toks[i + 1]}")
+        i += 1
+    return out
+
+
 def frames_of(shot: dict) -> int:
     return round(float(shot["end"]) * FPS) - round(float(shot["start"]) * FPS)
 
@@ -252,6 +295,7 @@ class Job:
         # (numbers under 13 are too common to be the same figure again: "eight in ten" is not the 8 ounces)
         self.job["said_before"] = [n for n in said_numbers(w["word"] for w in words if float(w["start"]) < start - 0.05)
                                    if "." in n or float(n) >= 13]
+        self.job["said_phrases"] = said_phrases(w["word"] for w in words if float(w["start"]) < start - 0.05)
         # a callback carries its source as it ended, so a cut straight from it continues its layout
         self.src = src
         if src is not shot:

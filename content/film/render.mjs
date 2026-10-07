@@ -16,7 +16,7 @@ import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { readFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { extname, join, dirname } from "node:path";
 import { tmpdir, homedir } from "node:os";
-import { figures } from "../../scripts/build-pages.mjs";
+import { filmFigures } from "./v3/built.mjs";
 import { sceneHTML, STYLE_REEL } from "./scenes.mjs";
 import { write as writeTokens } from "./tokens.mjs";
 // The look a long film renders in: FILM_LOOK=v3 is the dark archive (content/film/v3/), the
@@ -95,7 +95,7 @@ const seconds = (wav) => Number(execFileSync("ffprobe", ["-v", "error", "-show_e
 
 export async function render(board, out, { audio = null, stills = null } = {}) {
   writeTokens();   // the films' tokens follow the site's CSS (VISUAL_SPEC.md §3.1)
-  const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+  const built = filmFigures();
   // A film's own facts (content/film/facts.mjs) fill its placeholders alongside the site's figures.
   const facts = board.facts ? Object.fromEntries(Object.entries(json(board.facts)).map(([k, v]) => [k, v.value])) : {};
   const scenes = board.scenes.map((s) => {
@@ -195,7 +195,7 @@ export async function render(board, out, { audio = null, stills = null } = {}) {
  */
 export async function renderShots(jobs, { workers = 4 } = {}) {
   writeTokens();
-  const built = figures(json("ratecard.json"), json("data/montecarlo.json"), json("data/case-study.json"));
+  const built = filmFigures();
   const srv = await serve();
   const queue = [...jobs], results = {};
   const worker = async () => {

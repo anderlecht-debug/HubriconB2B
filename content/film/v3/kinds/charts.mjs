@@ -836,13 +836,14 @@ function waterfall(job, built, C, uid) {
  * it. Always the two the stage is given: weight (built.charts.stairs, the listing's dot at its weight
  * and its riser blue, the leak) and storage age (built.charts.aging, the listing's own storage cost
  * by age; no dot, since its stock's age is not public). Price band and size tier join them when the
- * stage is given them (built.charts.price / .size, from scripts/build-pages.mjs figures()), each with
+ * stage is given them (built.charts.price / .size, from film/v3/built.mjs filmFigures()), each with
  * the listing on its band or tier. Each panel is drawn to its own scale from the published card, its
  * y-axis marked as starting above zero, and carries no fee figure (the voice gives none here): only
  * its name, the unit it steps in, and rulers ("8 oz", "$10", "$50") or figures the film has said.
  * Panels land on the words that name them ("dollars", "inches", "days", "pounds"), else on the plan's
- * builds in order; weight, the staircase the film has already drawn, stands at the cut. On "touch"
- * the panels close up until their edges meet and the listing lights on each.
+ * builds in order; weight, the staircase the film has already drawn, stands at the cut. On "touch" one
+ * product crosses the edges: the listing's dot hops over each seam onto the next staircase, where the
+ * listing sits on it, and last onto the storage staircase at its first day, where every unit starts.
  * params.builds: the panels after weight, in order; then "touch" (the last build, when there are more
  * builds than panels to land).
  */
@@ -892,18 +893,33 @@ function staircases(job, built, C, uid) {
   panels[0].t = DONE;
   panels[0].again = cue(job, panels[0].re, 0.2);
 
-  // ---- layout: the panels open with a gap, and close up on "touch"
-  const N = panels.length, gOpen = N > 2 ? 64 : 140, gShut = 14;
-  const w = (1520 - (N - 1) * gOpen) / N;
-  const left0 = 160, leftShut = 960 - (N * w + (N - 1) * gShut) / 2;
+  // ---- layout: the panels side by side across the grid, a narrow seam between each pair where they touch
+  const N = panels.length, gap = N > 2 ? 28 : 60;
+  const w = (1520 - (N - 1) * gap) / N;
   const P = { t: 400, b: floorOf(job) + 14 };
-  let html = "", css = "";
-  const shutPct = (k) => r1((clamp(k, 0, S) / S) * 100);
-  panels.forEach((q, i) => {
-    const bx = leftShut + i * (w + gShut), dx = left0 + i * (w + gOpen) - bx;
-    const L = labeller();
+  const frame = panels.map((q, i) => {
     const lo = Math.min(...q.treads.map(([, , f]) => f)), hi = Math.max(...q.treads.map(([, , f]) => f));
-    const X = lin(q.x[0], q.x[1], 30, w - 24), Y = lin(lo - (hi - lo) * 0.18, hi, P.b, P.t);
+    return { bx: 160 + i * (w + gap), X: lin(q.x[0], q.x[1], 30, w - 24), Y: lin(lo - (hi - lo) * 0.18, hi, P.b, P.t) };
+  });
+
+  // ---- "touch": one product crosses the edges. The listing's dot leaves its weight staircase and hops
+  // across each seam onto the next staircase where the listing sits on it (its price band, its size
+  // tier), and last onto the storage staircase at its first day, where every unit starts; each panel's
+  // dot is left where it lands. Without "touch", each panel's dot lands as its panel does.
+  const stops = [];
+  panels.forEach((q, i) => {
+    const F = frame[i];
+    if (q.dot) stops.push({ i, x: F.bx + F.X(q.dot.x), y: F.Y(q.dot.y) });
+    else if (q.key === "age") stops.push({ i, x: F.bx + F.X(q.x[0]) + 16, y: F.Y(q.treads[0][2]), arrive: true });
+  });
+  const travel = touchT != null && stops.length > 1 && stops[0].i === 0;
+  const hop = travel ? clamp((S - 0.25 - touchT) / (stops.length - 1), 0.22, 0.42) : 0;
+  stops.forEach((st, k) => { st.t = travel ? touchT + k * hop : null; });
+
+  let html = "", css = "", svg = "";
+  panels.forEach((q, i) => {
+    const { bx, X, Y } = frame[i];
+    const L = labeller();
     const t = q.t, drawT = t === DONE ? DONE : t;
     let g = "";
     // the axes: the baseline, the y-axis with its break (it starts above zero), the name and its unit
@@ -911,7 +927,6 @@ function staircases(job, built, C, uid) {
     g += `<path class="ch-axis ch-draw" pathLength="1" style="${at(-1.2, 0.8)}" d="M14,${P.b} H${r1(w - 10)}"/>`;
     g += `<path class="ch-axis ch-draw" pathLength="1" style="${at(-1.2, 0.8)}" d="M14,${P.b} V${P.t - 20}"/>`;
     g += `<path class="ch-break ch-fade" style="${at(-0.8)}" d="M6,${P.b - 26} L22,${P.b - 34} M6,${P.b - 16} L22,${P.b - 24}"/>`;
-    html += ""; // (labels below)
     // the staircase, tread by tread, with its risers
     let d = "", prev = null;
     q.treads.forEach(([a, b, f]) => { const y = r1(Y(f)); d += prev == null ? `M${r1(X(a))},${y}` : ` V${y}`; d += ` H${r1(X(b))}`; prev = y; });
@@ -931,34 +946,48 @@ function staircases(job, built, C, uid) {
       g += `<path class="ch-dtick ch-fade" style="${at(lt)}" d="M${r1(X(x))},${P.b} V${P.b + 10}"/>`;
       html += L.label(X(x), P.b + 22, `<i>${esc(txt)}</i>`, { cls: "ch-in", t: lt, a: "c", v: "t" });
     });
-    // the listing on this staircase: on "touch" on every panel at once, else as its panel lands
+    // the listing on this staircase: where the travelling dot lands, or as its panel lands
     if (q.dot) {
-      const dT = touchT != null ? (q.key === "weight" && t === DONE ? DONE : touchT) : t === DONE ? DONE : t + 0.6;
+      const st = stops.find((x) => x.i === i);
+      const dT = i === 0 && t === DONE ? DONE : travel && st ? st.t : t === DONE ? DONE : t + 0.6;
       const cx = r1(X(q.dot.x)), cy = r1(Y(q.dot.y));
-      if (dT > 0) g += `<circle class="ch-ripple" cx="${cx}" cy="${cy}" r="10" style="${at(dT + 0.3)}"/>`;
-      if (touchT != null && q.key === "weight" && t === DONE) g += `<circle class="ch-ripple" cx="${cx}" cy="${cy}" r="10" style="${at(touchT + 0.3)}"/>`;
-      g += `<circle class="ch-dot ch-drop" cx="${cx}" cy="${cy}" r="10" style="${at(dT)}"/>`;
+      if (dT > 0) g += `<circle class="ch-ripple" cx="${cx}" cy="${cy}" r="10" style="${at(dT + 0.05)}"/>`;
+      g += `<circle class="ch-dot ${travel && i > 0 ? "ch-land-dot" : "ch-drop"}" cx="${cx}" cy="${cy}" r="10" style="${at(dT)}"/>`;
     }
     if (q.again != null && q.again > 0) g += `<g class="ch-flash" style="${at(q.again)}"><path class="ch-halo-hot" d="${d}"/></g>`;
     // the panel's name and the unit it steps in, top left
     html += L.label(14, P.t - 96, `<i class="ch-pname">${esc(q.name)}</i><i class="ch-psub">${esc(q.sub)}</i>`, { cls: "ch-plab ch-in", t: -0.8, v: "t" });
-    const slide = touchT != null ? `animation:chk-${uid}-${i} ${s3(S)}s linear 0s both` : `translate:${r1(dx)}px 0`;
-    if (touchT != null) css += `@keyframes chk-${uid}-${i}{0%,${shutPct(touchT)}%{translate:${r1(dx)}px 0;animation-timing-function:cubic-bezier(.5,0,.2,1)}${shutPct(touchT + 0.7)}%,100%{translate:0 0}}`;
-    html = `<div class="ch-panel" style="left:${r1(bx)}px;width:${r1(w)}px;${slide}"><svg class="ch-svg" viewBox="0 0 ${r1(w)} 1080" width="${r1(w)}" height="1080" aria-hidden="true">${g}</svg>${html}</div>`;
-    panels[i].html = html;
+    q.html = `<div class="ch-panel" style="left:${r1(bx)}px;width:${r1(w)}px"><svg class="ch-svg" viewBox="0 0 ${r1(w)} 1080" width="${r1(w)}" height="1080" aria-hidden="true">${g}</svg>${html}</div>`;
     html = "";
   });
-  // the seams where they meet, lit as they touch
-  let seams = "";
-  if (touchT != null) for (let i = 1; i < N; i++) {
-    const x = leftShut + i * (w + gShut) - gShut / 2;
-    seams += `<path class="ch-seam ch-wipe-up" style="${at(touchT + 0.55, 0.5)}" d="M${r1(x)},${P.t - 30} V${P.b}"/>`;
+  // the seams where the panels meet, standing from the cut; each lights as the dot crosses it
+  for (let i = 1; i < N; i++) {
+    const x = 160 + i * (w + gap) - gap / 2;
+    svg += `<path class="ch-seam ch-fade" style="${at(-0.8)}" d="M${r1(x)},${P.t - 30} V${P.b}"/>`;
+    const k = stops.findIndex((st) => st.i >= i);
+    if (travel && k > 0) svg += `<path class="ch-seam-hot ch-flash" style="${at(stops[k - 1].t + hop * 0.45)}" d="M${r1(x)},${P.t - 30} V${P.b}"/>`;
+  }
+  // the travelling dot: an arc over each seam, from one staircase to the next; on the storage staircase it
+  // stays at the first day, where every unit starts
+  if (travel) {
+    const pc = (t) => r1((clamp(t, 0, S) / S) * 100);
+    let kf = `0%,${pc(stops[0].t)}%{transform:translate(${r1(stops[0].x)}px,${r1(stops[0].y)}px);opacity:1;animation-timing-function:cubic-bezier(.3,0,.7,1)}`;
+    for (let k = 1; k < stops.length; k++) {
+      const a = stops[k - 1], b = stops[k], mid = (a.t + b.t) / 2, apex = Math.max(P.t - 8, Math.min(a.y, b.y) - 70);   // under the panels' names
+      kf += `${pc(mid)}%{transform:translate(${r1((a.x + b.x) / 2)}px,${r1(apex)}px);animation-timing-function:cubic-bezier(.3,0,.7,1)}`;
+      kf += `${pc(b.t)}%{transform:translate(${r1(b.x)}px,${r1(b.y)}px);animation-timing-function:cubic-bezier(.3,0,.7,1)}`;
+    }
+    kf += `100%{transform:translate(${r1(stops[stops.length - 1].x)}px,${r1(stops[stops.length - 1].y)}px)}`;
+    css += `@keyframes chv-${uid}{${kf}}.ch-trav-${uid}{animation:chv-${uid} ${s3(S)}s linear 0s both, ch-fade .15s linear ${s3(stops[0].t)}s both}`;
+    svg += `<g class="ch-trav-${uid}"><circle class="ch-dot ch-dot--trav" cx="0" cy="0" r="11"/></g>`;
+    const last = stops[stops.length - 1];
+    if (last.arrive) svg += `<circle class="ch-ripple" cx="${r1(last.x)}" cy="${r1(last.y)}" r="11" style="${at(last.t + 0.05)}"/>`;
   }
   const under = spill(160, 1680, P.b);
   css += camera(uid, S, [{ t: 0, s: 1 }, { t: S, ...pin({ x: 960, y: P.b }, 1.015) }], []);
   const p = job.params || {};
   const head = heading(job, { title: p.heading, caption: p.caption });
-  return stage({ uid, S, css, under, svg: seams, html: panels.map((q) => q.html).join(""), head });
+  return stage({ uid, S, css, under, svg, html: panels.map((q) => q.html).join(""), head });
 }
 
 // ---------------------------------------------------------------- every product on the staircase (an illustration)
