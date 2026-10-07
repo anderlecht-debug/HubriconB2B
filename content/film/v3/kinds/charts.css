@@ -95,6 +95,10 @@
 .ch-bar-fill, .ch-col-fill { fill: rgb(242 238 230 / 0.06); }
 .ch-bar-edge, .ch-col-top { fill: none; stroke: rgb(242 238 230 / 0.9); stroke-width: 2; }
 .ch-bar--leak .ch-bar-fill, .ch-col--leak .ch-col-fill { fill: rgb(47 116 255 / 0.06); }
+/* the waterfall's bars read as objects on the desk (round 4: "dark grey, nearly invisible"): a lit fill and a
+   fine outline, the fees bar's fill in the leak's blue */
+.ch-bar .ch-bar-fill { fill: rgb(var(--light-rgb) / 0.16); stroke: rgb(var(--light-rgb) / 0.32); stroke-width: 1.5; }
+.ch-bar.ch-bar--leak .ch-bar-fill { fill: rgb(var(--blue-rgb) / 0.3); stroke: rgb(var(--blue-rgb) / 0.6); }
 .ch-bar--leak .ch-bar-edge, .ch-col--leak .ch-col-top { stroke: var(--blue); }
 .ch-play-line { fill: none; stroke: rgb(242 238 230 / 0.55); stroke-width: 2; stroke-dasharray: 4 8; }
 .ch-play-dot { fill: var(--light); }
@@ -162,3 +166,20 @@
 @keyframes ch-rack { 0% { opacity: 1; } 14% { opacity: 0.38; } 80% { opacity: 0.38; } 100% { opacity: 1; } }
 @keyframes ch-recede { to { opacity: 0.45; } }
 @keyframes ch-young-fill { 0% { fill: rgb(242 238 230 / 0.06); } 30% { fill: rgb(242 238 230 / 0.2); } 100% { fill: rgb(242 238 230 / 0.12); } }
+
+/* ---- the staircases side by side: panels, their names, the y-axis break, the seams where they touch */
+.ch-panel { position: absolute; top: 0; height: 1080px; }
+.ch-plab { display: flex; flex-direction: column; gap: 8px; }
+.ch-plab .ch-pname { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: var(--light); }
+.ch-plab .ch-psub { font: italic 400 var(--fs-label)/1 var(--sans); letter-spacing: 0; text-transform: none; color: rgb(var(--light-rgb) / 0.7); }
+.ch-break { fill: none; stroke: rgb(var(--light-rgb) / 0.5); stroke-width: 2; }
+.ch-seam { fill: none; stroke: rgb(var(--light-rgb) / 0.35); stroke-width: 2; }
+.ch-flash { animation: ch-flash 1.2s ease calc(var(--at, 0) * 1s) both; }
+@keyframes ch-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- every product on the staircase (an illustration): invented products as quiet ivory dots; the ones just
+   past an edge turn the leak's blue on their word */
+.ch-cat { fill: rgb(var(--light-rgb) / 0.78); stroke: rgb(var(--glow-ivory-rgb) / 0.16); stroke-width: 6; paint-order: stroke; }
+.ch-cat--near { animation: ch-drop 0.7s linear calc(var(--at, 0) * 1s) both, ch-turn 0.45s ease calc(var(--turn, 99) * 1s) both; }
+@keyframes ch-turn { from { fill: rgb(var(--light-rgb) / 0.78); stroke: rgb(var(--glow-ivory-rgb) / 0.16); }
+  to { fill: var(--blue); stroke: rgb(var(--blue-rgb) / 0.32); } }

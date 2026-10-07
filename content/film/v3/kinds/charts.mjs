@@ -554,7 +554,7 @@ function montecarlo(job, built, C, uid) {
   // ---- time: the months run first; the middle on "number", the ends on "slow" / "strong", the band on "range"
   const six = nB >= 6, b = (i) => build(six ? i + 1 : i);
   const variant = on != null && on >= 0.45 * S ? "truck" : "push";
-  const runA = six ? Math.min(build(0) - 0.9, -0.3) : variant === "truck" ? -0.3 : -1.1;   // the run is under way at the cut
+  const runA = six ? Math.min(build(0) - 1.7, -0.9) : variant === "truck" ? -0.3 : -1.1;   // the run is under way at the cut
   const named = b(1) ?? cue(job, /^number|^median|^middle/, 0.6);
   const runB = clamp(b(0) ?? Math.min((on ?? S * 0.5) - 1.0, (named ?? Infinity) - 0.15), runA + 1.4, runA + 3.2);
   const step = (runB - runA) / n;
@@ -708,14 +708,16 @@ function aging(job, built, C, uid) {
     `100%{transform:translateX(${r1(X(ag.cliff) - P.l)}px)}`;
   svg += `<g class="ch-play ch-play-${uid}" style="${at(-0.4)};--off:${s3(cliffT + 0.4)}"><path class="ch-play-line" d="M${P.l},${P.b} V${P.t - 20}"/><circle class="ch-play-dot" cx="${P.l}" cy="${P.b}" r="6"/></g>`;
 
-  // the ledger, above the young stock: the surcharge before and after the cliff, on their words (fixed
-  // over the plot's camera, so it reads still while the bands move under it)
+  // the callout, above the young stock: the surcharge before and after the cliff, on their words. It rides
+  // with the plot, set between the top two rows of the fee scale and well clear of its column, so no tick
+  // ever shares its line ("$200" beside "surcharge" read as "$200 surcharge"), whatever the camera does.
   if (before || after) {
-    const lx = P.l + 120, ly = P.t + 16;
-    L.keep(lx - 14, ly - 10, 700, 150);
-    if (surT != null) over += L.label(lx, ly, `<i>surcharge</i>`, { cls: "ch-eyebrow ch-in", t: surT, v: "t", w: 190, h: 30 });
+    const top = Y(yt[yt.length - 1]), next = Y(yt[yt.length - 2] ?? 0);
+    const lx = P.l + 120, ly = top + 26;
+    if (next - top < 150) console.warn(`${job.id}: the surcharge callout has no clear row between the fee ticks`);
+    if (surT != null) html += L.label(lx, ly, `<i>surcharge</i>`, { cls: "ch-eyebrow ch-in", t: surT, v: "t", w: 190, h: 30 });
     // "$1.50 a cubic foot → $5.45"; with only the rate after the cliff spoken, "$5.45 a cubic foot"
-    over += L.label(lx, ly + 44, (before ? fig(before.value, before.at, { cls: "ch-fig-s2" }) + unit("a cubic foot", 72, cuT) : "") +
+    html += L.label(lx, ly + 42, (before ? fig(before.value, before.at, { cls: "ch-fig-s2" }) + unit("a cubic foot", 72, cuT) : "") +
       (after ? `${before ? `<span class="ch-arrow ch-in" style="${at(after.at - 0.1)}">→</span>` : ""}${fig(after.value, after.at, { money: true, cls: "ch-fig-s2" })}` +
         (before ? "" : unit("a cubic foot", 72, Math.max(cuT, after.at + 0.3))) : ""),
       { cls: "ch-row", v: "t", w: 640, h: 80 });
@@ -827,6 +829,200 @@ function waterfall(job, built, C, uid) {
   return stage({ uid, S, css, under, svg, html, head });
 }
 
+// ---------------------------------------------------------------- the staircases, side by side
+
+/**
+ * The case study's staircases side by side (small multiples): one listing, on every card that prices
+ * it. Always the two the stage is given: weight (built.charts.stairs, the listing's dot at its weight
+ * and its riser blue, the leak) and storage age (built.charts.aging, the listing's own storage cost
+ * by age; no dot, since its stock's age is not public). Price band and size tier join them when the
+ * stage is given them (built.charts.price / .size, from scripts/build-pages.mjs figures()), each with
+ * the listing on its band or tier. Each panel is drawn to its own scale from the published card, its
+ * y-axis marked as starting above zero, and carries no fee figure (the voice gives none here): only
+ * its name, the unit it steps in, and rulers ("8 oz", "$10", "$50") or figures the film has said.
+ * Panels land on the words that name them ("dollars", "inches", "days", "pounds"), else on the plan's
+ * builds in order; weight, the staircase the film has already drawn, stands at the cut. On "touch"
+ * the panels close up until their edges meet and the listing lights on each.
+ * params.builds: the panels after weight, in order; then "touch" (the last build, when there are more
+ * builds than panels to land).
+ */
+function staircases(job, built, C, uid) {
+  const { S, build, n } = C;
+  const { stairs: st, aging: ag, price: pr, size: sz } = built.charts;
+  const xMax = 16;
+  const tr = st.treads.filter(([e]) => e <= xMax);
+  // ---- the panels' data, each as treads [x0, x1, y] on its own x scale, the listing's place, its marks
+  const panels = [];
+  {
+    let x0 = 0;
+    const treads = tr.map(([e, f]) => { const t = [x0, e, f]; x0 = e; return t; });
+    const ei = tr.findIndex(([e]) => e === st.edge.oz);
+    panels.push({ key: "weight", name: "Weight", sub: "in ounces", re: /^pound|^ounce|^weight/, x: [0, xMax], treads,
+      dot: { x: st.listing.oz, y: st.listing.fee }, leak: ei, ticks: [[st.edge.oz, `${st.edge.oz} oz`]] });
+  }
+  if (pr && Array.isArray(pr.fees) && pr.fees.length === 3 && pr.fees.every(Number.isFinite)) {
+    const [a, b] = pr.edges;
+    panels.push({ key: "price", name: "Price", sub: "in dollars", re: /^dollar|^price/, x: [0, 3], treads: pr.fees.map((f, i) => [i, i + 1, f]),
+      dot: pr.band != null ? { x: pr.band + 0.5, y: pr.fees[pr.band] } : null, ticks: [[1, `$${a}`], [2, `$${b}`]] });
+  }
+  if (sz && Array.isArray(sz.tiers) && sz.tiers.length >= 2 && sz.tiers.every(([, f]) => Number.isFinite(f))) {
+    const ti = sz.tiers.findIndex(([t]) => t === sz.tier);
+    panels.push({ key: "size", name: "Size", sub: "in inches", re: /^inch|^size|^box/, x: [0, sz.tiers.length], treads: sz.tiers.map(([, f], i) => [i, i + 1, f]),
+      dot: ti >= 0 ? { x: ti + 0.5, y: sz.tiers[ti][1] } : null,
+      words: sz.tiers.map(([t], i) => [i + 0.5, String(t).replace(/_.*/, "")]) });
+  }
+  {
+    const xEnd = 400;
+    const treads = ag.bands.map((b) => [b.from, Math.min(b.to == null ? xEnd : b.to + 1, xEnd), b.value]);
+    const ci = ag.bands.findIndex((b) => b.from === ag.cliff);
+    const day = String(ag.cliff), said = saidAt(job, day);
+    panels.push({ key: "age", name: "Storage", sub: "in days", re: /^day|^age|^storage/, x: [0, xEnd], treads, dot: null, cliff: ci > 0 ? ci : null,
+      ticks: said != null ? [[ag.cliff, `day ${day}`, said]] : [] });
+  }
+
+  // ---- time: weight stands at the cut; the others on their words or the builds; then touch
+  const later = panels.slice(1);
+  const touchT = cue(job, /^touch/) ?? (n > later.length ? build(n - 1) : null);
+  const used = new Set();
+  later.forEach((q, i) => {
+    const w = cue(job, q.re, 0.2);
+    q.t = w != null && !used.has(w) ? w : build(i) ?? spread(later.length, 0.4, Math.max(0.5, (touchT ?? S - 1.2) - 1.2))[i];
+    used.add(q.t);
+  });
+  panels[0].t = DONE;
+  panels[0].again = cue(job, panels[0].re, 0.2);
+
+  // ---- layout: the panels open with a gap, and close up on "touch"
+  const N = panels.length, gOpen = N > 2 ? 64 : 140, gShut = 14;
+  const w = (1520 - (N - 1) * gOpen) / N;
+  const left0 = 160, leftShut = 960 - (N * w + (N - 1) * gShut) / 2;
+  const P = { t: 400, b: floorOf(job) + 14 };
+  let html = "", css = "";
+  const shutPct = (k) => r1((clamp(k, 0, S) / S) * 100);
+  panels.forEach((q, i) => {
+    const bx = leftShut + i * (w + gShut), dx = left0 + i * (w + gOpen) - bx;
+    const L = labeller();
+    const lo = Math.min(...q.treads.map(([, , f]) => f)), hi = Math.max(...q.treads.map(([, , f]) => f));
+    const X = lin(q.x[0], q.x[1], 30, w - 24), Y = lin(lo - (hi - lo) * 0.18, hi, P.b, P.t);
+    const t = q.t, drawT = t === DONE ? DONE : t;
+    let g = "";
+    // the axes: the baseline, the y-axis with its break (it starts above zero), the name and its unit
+    // (every panel's frame and name stand at the cut, so the frame is whole from frame 0; its staircase draws on its word)
+    g += `<path class="ch-axis ch-draw" pathLength="1" style="${at(-1.2, 0.8)}" d="M14,${P.b} H${r1(w - 10)}"/>`;
+    g += `<path class="ch-axis ch-draw" pathLength="1" style="${at(-1.2, 0.8)}" d="M14,${P.b} V${P.t - 20}"/>`;
+    g += `<path class="ch-break ch-fade" style="${at(-0.8)}" d="M6,${P.b - 26} L22,${P.b - 34} M6,${P.b - 16} L22,${P.b - 24}"/>`;
+    html += ""; // (labels below)
+    // the staircase, tread by tread, with its risers
+    let d = "", prev = null;
+    q.treads.forEach(([a, b, f]) => { const y = r1(Y(f)); d += prev == null ? `M${r1(X(a))},${y}` : ` V${y}`; d += ` H${r1(X(b))}`; prev = y; });
+    g += light(d, drawT, 0.9);
+    // its leak (weight: the listing's riser, blue) or its cliff (storage: hot ivory)
+    if (q.leak != null && q.leak >= 0 && q.leak + 1 < q.treads.length) {
+      const [, e, f0] = q.treads[q.leak], f1 = q.treads[q.leak + 1][2];
+      g += light(`M${r1(X(e))},${r1(Y(f0))} V${r1(Y(f1))}`, t === DONE ? DONE : t + 0.5, 0.35, { cls: "ch-leak", halo: "ch-leak-halo" });
+    }
+    if (q.cliff != null) {
+      const [a, , f1] = q.treads[q.cliff], f0 = q.treads[q.cliff - 1][2];
+      g += light(`M${r1(X(a))},${r1(Y(f0))} V${r1(Y(f1))}`, t === DONE ? DONE : t + 0.6, 0.3, { cls: "ch-line-hot", halo: "ch-halo-hot" });
+    }
+    // rulers and said figures under the axis; words for categories
+    const labs = [...(q.ticks || []).map(([x, txt, said]) => [x, txt, Math.max(t === DONE ? DONE : t + 0.4, said ?? -9)]), ...(q.words || []).map(([x, txt]) => [x, txt, t === DONE ? DONE : t + 0.4])];
+    labs.forEach(([x, txt, lt]) => {
+      g += `<path class="ch-dtick ch-fade" style="${at(lt)}" d="M${r1(X(x))},${P.b} V${P.b + 10}"/>`;
+      html += L.label(X(x), P.b + 22, `<i>${esc(txt)}</i>`, { cls: "ch-in", t: lt, a: "c", v: "t" });
+    });
+    // the listing on this staircase: on "touch" on every panel at once, else as its panel lands
+    if (q.dot) {
+      const dT = touchT != null ? (q.key === "weight" && t === DONE ? DONE : touchT) : t === DONE ? DONE : t + 0.6;
+      const cx = r1(X(q.dot.x)), cy = r1(Y(q.dot.y));
+      if (dT > 0) g += `<circle class="ch-ripple" cx="${cx}" cy="${cy}" r="10" style="${at(dT + 0.3)}"/>`;
+      if (touchT != null && q.key === "weight" && t === DONE) g += `<circle class="ch-ripple" cx="${cx}" cy="${cy}" r="10" style="${at(touchT + 0.3)}"/>`;
+      g += `<circle class="ch-dot ch-drop" cx="${cx}" cy="${cy}" r="10" style="${at(dT)}"/>`;
+    }
+    if (q.again != null && q.again > 0) g += `<g class="ch-flash" style="${at(q.again)}"><path class="ch-halo-hot" d="${d}"/></g>`;
+    // the panel's name and the unit it steps in, top left
+    html += L.label(14, P.t - 96, `<i class="ch-pname">${esc(q.name)}</i><i class="ch-psub">${esc(q.sub)}</i>`, { cls: "ch-plab ch-in", t: -0.8, v: "t" });
+    const slide = touchT != null ? `animation:chk-${uid}-${i} ${s3(S)}s linear 0s both` : `translate:${r1(dx)}px 0`;
+    if (touchT != null) css += `@keyframes chk-${uid}-${i}{0%,${shutPct(touchT)}%{translate:${r1(dx)}px 0;animation-timing-function:cubic-bezier(.5,0,.2,1)}${shutPct(touchT + 0.7)}%,100%{translate:0 0}}`;
+    html = `<div class="ch-panel" style="left:${r1(bx)}px;width:${r1(w)}px;${slide}"><svg class="ch-svg" viewBox="0 0 ${r1(w)} 1080" width="${r1(w)}" height="1080" aria-hidden="true">${g}</svg>${html}</div>`;
+    panels[i].html = html;
+    html = "";
+  });
+  // the seams where they meet, lit as they touch
+  let seams = "";
+  if (touchT != null) for (let i = 1; i < N; i++) {
+    const x = leftShut + i * (w + gShut) - gShut / 2;
+    seams += `<path class="ch-seam ch-wipe-up" style="${at(touchT + 0.55, 0.5)}" d="M${r1(x)},${P.t - 30} V${P.b}"/>`;
+  }
+  const under = spill(160, 1680, P.b);
+  css += camera(uid, S, [{ t: 0, s: 1 }, { t: S, ...pin({ x: 960, y: P.b }, 1.015) }], []);
+  const p = job.params || {};
+  const head = heading(job, { title: p.heading, caption: p.caption });
+  return stage({ uid, S, css, under, svg: seams, html: panels.map((q) => q.html).join(""), head });
+}
+
+// ---------------------------------------------------------------- every product on the staircase (an illustration)
+
+/**
+ * Every product on the staircase: an illustration, not data. The demo catalogue carries no weights
+ * (demo.py: a size tier and cubic feet per SKU, a flat fee per tier), so no catalogue can be placed on
+ * a weight card honestly; this draws the method instead. The staircase's language with no scale:
+ * treads of light across the frame, the axes named only ("Weight", "Fee"), and a field of invented
+ * products, each a dot on the tread its weight falls on, dropping in left to right; then the ones just
+ * past an edge turn blue (the leak) and their risers light. No count and no figure anywhere. The
+ * scene sets its own caption, "Illustration: invented products. No figures.", unless the plan's
+ * caption already says it is an illustration; the plan's label must be null (it is not demo data).
+ * params.builds, in order: the treads drawn, the products begin to land, the last lands, the near-edge ones turn blue.
+ */
+function catalogue(job, built, C, uid) {
+  const { S, build } = C;
+  const P = { l: 250, r: 1600, t: 390, b: floorOf(job) - 10 };
+  const levels = [0, 0.15, 0.29, 0.45, 0.6, 0.8];                 // six treads, rising (unscaled)
+  const n = levels.length, tw = (P.r - P.l) / n;
+  const yOf = (k) => P.b - 40 - levels[k] * (P.b - P.t - 70);
+  const treadT = build(0) ?? 0.3, dropA = build(1) ?? S * 0.35, dropB = build(2) ?? S * 0.62, blueT = build(3) ?? S * 0.8;
+  const drawA = -0.9, drawB = Math.max(drawA + 1.2, Math.min(treadT + 0.6, dropA - 0.2));
+  // the invented products: a fixed spread of weights (a seeded sequence, the same every render), never two
+  // dots on top of each other; "just past an edge" is the first fifth of a tread
+  let seed = 20261007;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const xs = [];
+  for (let k = 0; k < 400 && xs.length < 38; k++) {
+    const x = P.l + 14 + rnd() * (P.r - P.l - 28);
+    if (xs.every((q) => Math.abs(q - x) > 26)) xs.push(x);
+  }
+  xs.sort((a, b) => a - b);
+  const prods = xs.map((x) => {
+    const k = Math.min(n - 1, Math.floor((x - P.l) / tw)), into = (x - P.l - k * tw) / tw;
+    return { x, k, y: yOf(k), near: k > 0 && into < 0.2 };
+  });
+  // ---- the staircase and its axes
+  let svg = "", under = "", html = "";
+  svg += `<path class="ch-axis ch-draw" pathLength="1" style="${at(-1.2, 0.8)}" d="M${P.l},${P.t - 30} V${P.b} H${P.r + 30}"/>`;
+  svg += `<path class="ch-axis ch-fade" style="${at(-0.8)}" d="M${P.r + 18},${P.b - 7} L${P.r + 30},${P.b} L${P.r + 18},${P.b + 7} M${P.l - 7},${P.t - 18} L${P.l},${P.t - 30} L${P.l + 7},${P.t - 18}"/>`;
+  svg += `<text class="ch-axisname ch-in" x="${P.r + 30}" y="${P.b + 44}" text-anchor="end" style="${at(-0.8)}">Weight</text>`;
+  svg += `<text class="ch-axisname ch-in" x="${P.l - 24}" y="${P.t - 14}" text-anchor="end" style="${at(-0.8)}">Fee</text>`;
+  let d = "";
+  levels.forEach((_, k) => { const y = r1(yOf(k)); d += k ? ` V${y}` : `M${P.l},${y}`; d += ` H${r1(P.l + (k + 1) * tw)}`; });
+  svg += light(d, drawA, drawB - drawA);
+  // the risers just behind the near-edge products light blue as they turn
+  const hot = [...new Set(prods.filter((q) => q.near).map((q) => q.k))];
+  hot.forEach((k, i) => {
+    const x = r1(P.l + k * tw);
+    svg += light(`M${x},${r1(yOf(k - 1))} V${r1(yOf(k))}`, blueT - 0.1 + i * 0.04, 0.3, { cls: "ch-leak", halo: "ch-leak-halo" });
+    under += bloom(P.l + k * tw, (yOf(k - 1) + yOf(k)) / 2, 150, blueT + i * 0.04, 1.4);
+  });
+  // ---- the products: each drops onto its tread, left to right; the near-edge ones turn blue
+  prods.forEach((q) => {
+    const t = dropA + ((q.x - P.l) / (P.r - P.l)) * (dropB - dropA);
+    svg += `<circle class="ch-cat${q.near ? " ch-cat--near" : ""} ch-drop" cx="${r1(q.x)}" cy="${r1(q.y - 11)}" r="9" style="${at(t)}${q.near ? `;--turn:${s3(blueT)}` : ""}"/>`;
+  });
+  const css = camera(uid, S, [{ t: 0, s: 1 }, { t: S, ...pin({ x: 925, y: 600 }, 1.035) }], []);
+  const p = job.params || {};
+  const caption = p.caption && /illustration/i.test(p.caption) ? p.caption : "Illustration: invented products. No figures.";
+  return stage({ uid, S, css, under, svg, html, head: heading(job, { title: p.heading, caption }) });
+}
+
 // ---------------------------------------------------------------- the riser that moves (a schematic)
 
 /**
@@ -919,7 +1115,7 @@ function fallback(job, built, C, uid) {
 
 // ---------------------------------------------------------------- entry
 
-const SCENES = { staircase, montecarlo, aging, waterfall, riser_shift: riserShift };
+const SCENES = { staircase, staircases, catalogue, montecarlo, aging, waterfall, riser_shift: riserShift };
 
 /** One chart shot as HTML on the v3 stage. */
 export function chart(job, built) {
