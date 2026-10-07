@@ -45,7 +45,7 @@
   background: radial-gradient(ellipse 82% 78% at 50% 47%, transparent 56%, rgb(0 0 0 / 0.20) 78%, rgb(0 0 0 / 0.46) 100%); }
 /* Behind the label slot over a picture: a soft fall of darkness, only where the type sits. */
 .ph-scrim { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 44% 30% at 14% 90%, color-mix(in srgb, var(--ground) 62%, transparent), color-mix(in srgb, var(--ground) 28%, transparent) 48%, transparent 100%); }
+  background: linear-gradient(to top, color-mix(in srgb, var(--ground) 62%, transparent) 0, color-mix(in srgb, var(--ground) 30%, transparent) 150px, transparent 300px); }
 
 /* The print dive (ROUND2 §8): the picture as a print on the desk, the camera pushing through its
    border to full bleed, or surfacing back out to it. */

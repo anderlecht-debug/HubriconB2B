@@ -98,10 +98,12 @@ function labelBox(job) {
 const hits = (r, b) => b && r.x0 < b.x1 && r.x1 > b.x0 && r.y0 < b.y1 && r.y1 > b.y0;
 /** The desk's dark under the label slot while a print lies beneath it, sized to the label itself
     (a two-line credit over a white page needs more than a corner's shadow), from `at` to `out`. */
+// An even fall of the light across the frame's foot, rising just above the label, never a dark
+// ellipse behind it: a blob over a bright picture or a white page reads as a smudge on it.
 const scrimBg = (lab, k = 1) => {
-  const cx = (160 + lab.x1) / 2, cy = (lab.y0 + lab.y1) / 2 + 12, rx = (lab.x1 - 160) / 2 + 240, ry = (lab.y1 - lab.y0) / 2 + 120;
-  return `background:radial-gradient(ellipse ${px(rx)} ${px(ry)} at ${px(cx)} ${px(cy)}, ` +
-    `color-mix(in srgb, var(--ground) ${f(88 * k, 1)}%, transparent), color-mix(in srgb, var(--ground) ${f(70 * k, 1)}%, transparent) 45%, transparent 100%)`;
+  const h = H - lab.y0 + 90;
+  return `background:linear-gradient(to top, color-mix(in srgb, var(--ground) ${f(80 * k, 1)}%, transparent) 0, ` +
+    `color-mix(in srgb, var(--ground) ${f(62 * k, 1)}%, transparent) ${px(h * 0.42)}, color-mix(in srgb, var(--ground) ${f(24 * k, 1)}%, transparent) ${px(h * 0.78)}, transparent ${px(h)})`;
 };
 const labScrim = (lab, at, out) => `<div class="ph-labscrim" style="--at:${f(at)}s;--out:${f(out)}s;${scrimBg(lab)}"></div>`;
 
