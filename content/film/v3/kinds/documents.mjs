@@ -525,7 +525,7 @@ function shoot(job, M, P, css, extra = {}) {
 
 // ── the paper ──────────────────────────────────────────────────────────────────────────────
 /** Foxing: a few faint age spots, placed by the shot's own seed (period stock only). */
-function foxing(key, n = 5) {
+function foxing(key, n = 3) {
   const r = rng(key + ":fox"), out = [];
   for (let i = 0; i < n; i++) {
     const x = n1(r() * 100), y = n1(r() * 100), s = Math.round(18 + r() * 80), a = n2(0.05 + r() * 0.07);
@@ -549,27 +549,15 @@ function tornEdge(key, W, H) {
   for (let yy = H - 30; yy >= 0; yy -= 40) pts.push([2 + j(0.8), yy]);
   return `polygon(${pts.map(([a, b]) => `${n1(clamp(a, 0, W))}px ${n1(clamp(b, 0, H))}px`).join(",")})`;
 }
-/** A period sheet's edge: straight, but never ruled; the corners a touch worn. */
-function sheetEdge(key, W, H) {
-  const r = rng(key + ":sheet"), pts = [], j = () => (r() - 0.5) * 1.6, c = 3;
-  for (let x = c; x <= W - c; x += 46) pts.push([x, 0.6 + j()]);
-  pts.push([W - c, 0.4], [W - 0.3, c]);
-  for (let y = c; y <= H - c; y += 46) pts.push([W - 0.6 + j(), y]);
-  pts.push([W - 0.4, H - c], [W - c, H - 0.3]);
-  for (let x = W - c; x >= c; x -= 46) pts.push([x, H - 0.6 + j()]);
-  pts.push([c, H - 0.4], [0.3, H - c]);
-  for (let y = H - c; y >= c; y -= 46) pts.push([0.6 + j(), y]);
-  pts.push([0.4, c]);
-  return `polygon(${pts.map(([x, y]) => `${n1(clamp(x, 0, W))}px ${n1(clamp(y, 0, H))}px`).join(",")})`;
-}
-
 /** The object on the desk: the back sheet (its own shadow, a degree askew), the page (its contact
  *  and key shadows from one pre-blurred layer, no filters), and on it the type and the strokes. */
 function pageHTML({ obj, W, H, inner: body, key, slide }) {
   const r = rng(key + ":under");
   const rot = n2((r() < 0.5 ? -1 : 1) * (0.6 + r() * 0.6)), ux = Math.round(10 + r() * 10), uy = Math.round(8 + r() * 10);
   const modern = obj === "laser";
-  const clip = obj === "clip" ? `clip-path:${tornEdge(key, W, H)};` : modern ? "" : `clip-path:${sheetEdge(key, W, H)};`;
+  // only a cut clipping has a ragged edge; a sheet's cut edge is straight (and a clip-path on a page
+  // the camera moves costs a repaint of its whole area every frame)
+  const clip = obj === "clip" ? `clip-path:${tornEdge(key, W, H)};` : "";
   const bg = modern ? "" : `background-image:${foxing(key)},var(--dc-age),url(/content/assets/film/paper.jpg);`;
   const under = obj === "clip" ? "" : obj === "book" ? `<div class="dc-edges"></div>`
     : `<div class="dc-under" style="transform:translate(${ux}px, ${uy}px) rotate(${rot}deg)"></div>`;
