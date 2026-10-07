@@ -249,7 +249,18 @@ class Job:
             self.job["prev_print"] = bool(((prev.get("params") or {}).get("print") or {}).get("asset"))
         # every number the voice has said before this shot, as digits, whatever the fact files say:
         # a figure said in an earlier shot ("1925" in e37) may stand whole in a later one (e40)
-        self.job["said_before"] = said_numbers(w["word"] for w in words if float(w["start"]) < start - 0.05)
+        # (numbers under 13 are too common to be the same figure again: "eight in ten" is not the 8 ounces)
+        self.job["said_before"] = [n for n in said_numbers(w["word"] for w in words if float(w["start"]) < start - 0.05)
+                                   if "." in n or float(n) >= 13]
+        # a callback carries its source as it ended, so a cut straight from it continues its layout
+        self.src = src
+        if src is not shot:
+            i = plan["shots"].index(shot)
+            self.job["callback"] = {"of": src["id"],
+                                    "adjacent": i > 0 and plan["shots"][i - 1]["id"] == src["id"],
+                                    "params": fill({k: v for k, v in (src.get("params") or {}).items() if k != "print"}, values),
+                                    "seconds": frames_of(src) / FPS,
+                                    "has_print": bool((src.get("params") or {}).get("print"))}
         self.assets: list[str] = []
         if LOOK == "v3" and self.kind == "chart":
             run = d / "run.json"
@@ -327,6 +338,9 @@ class Job:
         # a companion print beside a figure: the picture the sentence is about, on the desk to
         # the right of the type (v3), graded as the archive grades its prints
         comp = (self.shot.get("params") or {}).get("print") or {}
+        cb = self.job.get("callback") or {}
+        if not comp and cb.get("adjacent") and cb.get("has_print"):   # the source's print stays on the desk across the cut
+            comp = {**((self.src.get("params") or {}).get("print") or {}), "at": None}
         if LOOK == "v3" and isinstance(comp.get("asset"), dict) and comp["asset"].get("file"):
             ca = comp["asset"]
             year = re.search(r"\b(1[5-9]\d\d|20\d\d)\b", str(ca.get("date") or ""))

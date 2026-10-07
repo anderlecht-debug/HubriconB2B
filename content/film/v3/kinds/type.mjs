@@ -227,10 +227,16 @@ const subToks = (w) => String(w ?? "").toLowerCase().replace(/[’‘]/g, "'").s
   .map((t) => t.replace(/^[^a-z0-9$]+|[^a-z0-9%]+$/g, "").replace(/^\$/, "").replace(/\$/g, "").replace(/,(?=\d{3})/g, ""))
   .map((t) => (/^[a-z]{4,}s$/.test(t) ? t.slice(0, -1) : t)).filter(Boolean);
 const figTok = (t) => /\d/.test(t) || (SPELLED.test(t) && t !== "one");
+const NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
+  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  hundred: 100, thousand: 1000, million: 1000000 };
+/** A figure token's digits as job.said_before writes them ("$1.90" → "1.90", "1,000" → "1000", "eleven" → "11"). */
+const digitsOf = (t) => (/\d/.test(t) ? t.replace(/[^\d.]/g, "").replace(/\.$/, "") : NUMW[t] != null ? String(NUMW[t]) : null);
 function bindCtx(job) {
   const known = Object.values(job.known || {}).map((v) => words(v).flatMap(subToks)).filter((v) => v.some(figTok));
   const spoken = (job.words || []).map((x) => ({ t: x.t, k: subToks(x.w) }));
-  CTX = { spoken, known };
+  // every number the voice said anywhere before this shot's first frame is known (render_shots: job.said_before)
+  CTX = { spoken, known, said: new Set((job.said_before || []).map(String)) };
 }
 /** Per word of `text`: null (no figure, or a known one), the first onset of its figure in the shot, or Infinity (never said). */
 function gates(text) {
@@ -243,7 +249,7 @@ function gates(text) {
   const UNIT = /^(?:ounce|pound|cent|dollar|mile|year|month|week|day|ton|inch|foot|feet|percent|unit|zone)$/;
   toks.forEach((t, j) => {
     const one = t === "one" && [toks[j + 1], toks[j + 2]].some((x) => UNIT.test(x || ""));
-    if ((!figTok(t) && !one) || covered[j]) return;
+    if ((!figTok(t) && !one) || covered[j] || CTX.said?.has(digitsOf(t))) return;
     const hit = CTX.spoken.find((x) => x.k.includes(t));
     const g = hit ? hit.t : Infinity, i = at[j];
     out[i] = out[i] == null ? g : Math.max(out[i], g);
@@ -255,6 +261,8 @@ function gated(text, times, whole = true) {
   const ws = words(text), g = gates(text);
   const fin = g.filter((x) => x != null);
   if (!fin.length) return ws.map((_, i) => times[i] ?? times[times.length - 1] ?? 0);
+  // "all": a heading holds whole until its last figure is said (never a heading with holes)
+  if (whole === "all") { const last = Math.max(...fin); return ws.map((_, i) => Math.max(times[i] ?? times[times.length - 1] ?? 0, last)); }
   if (whole && fin.some((x) => x === Infinity)) return ws.map(() => Infinity);
   const first = Math.min(...fin);
   let hold = whole ? first : -Infinity;
@@ -295,15 +303,19 @@ function breakK(ws, k, w) {
  * `push` is a kind's own extra push on top (the hook's), counted in the same box.
  */
 function stage(job, open = false, push = 1) {
-  const dur = job.seconds || 6, s = (1 + Math.min(0.01 * dur, 0.06)) * push, cy = open ? 540 : 470;
+  // a callback cut straight from its source (job.callback.adjacent) keeps the source's box and the camera's
+  // final scale, so the cut never re-lays the drawing at a new scale; the kind then moves the camera
+  const cb = job.callback?.adjacent ? job.callback : null;
+  const dur = job.seconds || 6, bdur = cb?.seconds || dur, s = (1 + Math.min(0.01 * bdur, 0.06)) * push, cy = open ? 540 : 470;
+  const narrow = !!(job.print?.url || cb?.has_print);
   // a line's box runs above its capitals (the font's ascent): keep 30 px of the safe band for it;
   // a companion print (photos.COMPANION) takes the desk right of x = 1040, 60 px of air before it
-  const w = Math.floor((job.print?.url ? 1040 - 60 - 160 : 1600) / s);
+  const w = Math.floor((narrow ? 1040 - 60 - 160 : 1600) / s);
   let h = Math.floor(((open ? 900 : 760) - 60) / s);
   const top = Math.round(cy - h / 2);
   // the label slot grows upward with its lines (a print's caption wraps at 820 px): the box ends 28 px above it
   if (!open) h = Math.min(h, Math.floor((slotTop(job) - 60 - cy) / s + cy - top));
-  return { dur, s, w, h, top, ox: 160, oy: cy, narrow: !!job.print?.url };
+  return { dur, s, w, h, top, ox: 160, oy: cy, narrow, hold: cb ? r3(1 + Math.min(0.01 * bdur, 0.06)) : null };
 }
 /** Where the label slot's first line starts (base.css .labels: bottom 120, 36 px lines, a 12 px rule). */
 function slotTop(job) {
@@ -320,7 +332,8 @@ function slotTop(job) {
   return 1080 - 120 - h;
 }
 function cam(B, inner, extra = "") {
-  return `<div class="cam" style="--cam-origin:${B.ox}px ${B.oy}px"><div class="rig"><div class="ty" style="--bx-top:${B.top}px;--bx-w:${B.w}px;--bx-h:${B.h}px">` +
+  const hold = B.hold ? `;--cam-from:scale(${B.hold});--cam-to:scale(${B.hold})` : "";
+  return `<div class="cam" style="--cam-origin:${B.ox}px ${B.oy}px${hold}"><div class="rig"><div class="ty" style="--bx-top:${B.top}px;--bx-w:${B.w}px;--bx-h:${B.h}px">` +
     `${extra ? `<div class="ty-push" style="${extra}">${inner}</div>` : inner}</div></div></div>`;
 }
 
@@ -342,7 +355,7 @@ function landAt(t, known = false) {
  * `set` stands words due at the cut fully formed (a label, a heading's furniture).
  */
 function wordSpans(text, times, o = {}) {
-  const gt = o.free ? words(text).map((_, i) => times[i] ?? times[times.length - 1] ?? 0) : gated(text, times, !o.perWord);
+  const gt = o.free ? words(text).map((_, i) => times[i] ?? times[times.length - 1] ?? 0) : gated(text, times, o.all ? "all" : !o.perWord);
   return words(text).map((w, i) => {
     const t = gt[i], fig = isFigWord(w);
     if (t === Infinity) return `<span class="ty-w never">${T(w)}</span>`;
@@ -391,10 +404,11 @@ function figLine(text, px, o = {}) {
   const gate = (s, t) => { if (known) return t; const g = gates(s).filter((x) => x != null); return g.length ? Math.max(t, ...g) : t; };
   if (time && MONTH.test(str)) {
     // a date: its month and day together on the month's word; its year on its own
-    const m = str.match(/^(.*?\d{1,2},?)(\s+)(\d{4})$/), w = serifW(str, px) - 0.012 * px * str.length;
+    const w = serifW(str, px) - 0.012 * px * str.length;
     const part = (s, t) => { if (t === Infinity) return `<span class="ty-fd ty-date ty-land never">${T(s)}</span>`; const { cls, style } = landAt(t, known); return `<span class="ty-fd ty-date ${cls}" style="${style};--ls:-0.012em">${T(s)}</span>`; };
-    if (!m) return { html: part(str, times[0]), w };
-    return { html: `${part(m[1], times[0])}<span class="ty-sp"></span>${part(m[3], known && times[0] <= 0.4 ? times[0] : gate(m[3], Math.max(times[0], times[times.length - 1])))}`, w };
+    // the month on its word; the day and the year each on their own (a figure said before stands with the month)
+    const t0 = times[0];
+    return { html: words(str).map((wd) => part(wd, known && t0 <= 0.4 ? t0 : /\d/.test(wd) ? gate(wd, t0) : t0)).join(`<span class="ty-sp"></span>`), w };
   }
   const toks = tokens(str);
   const up = Math.max(0.3 * px, unitMin), nums = toks.filter((t) => t.n);
@@ -443,7 +457,7 @@ const pulses = (bs, k, cls = "pulse", after = -1) => bs.filter((b) => b.k === k 
  */
 export function number(job) {
   bindCtx(job);
-  const B = stage(job), p = job.params || {}, spoken = job.words || [], known = knownOf(job), narrow = B.narrow;
+  const P = 1.04, B = stage(job, false, P), p = job.params || {}, spoken = job.words || [], known = knownOf(job), narrow = B.narrow;
   const value = String(p.value ?? job.reveals?.[0]?.value ?? "").trim();
   const on = job.on ?? job.reveals?.[0]?.t ?? 0.4;
   const time = timeish(value), money = isMoney(value), isK = known(value);
@@ -456,7 +470,7 @@ export function number(job) {
   const maxw = narrow ? B.w - 20 : Math.round(B.w * 0.84), top = narrow ? 300 : 340;
   let f, figHTML, fw, fpx;
   if (/\d/.test(fig)) {
-    const o = { times: timesOf(fig), blue: money, time, known: isK, unitsAtCut: !time };
+    const o = { times: timesOf(fig), blue: money, time, known: isK, unitsAtCut: !time && !(t0 > 0.5 && p.sub) };
     f = fitFig(fig, maxw, top, 200, o);
     const lastW = toks[toks.length - 1]?.w;
     if ((f.w > maxw || (f.px < 280 && lastW && words(lastW).length >= 2)) && toks.length > 1 && lastW && !MONTH.test(fig)) {
@@ -490,10 +504,18 @@ export function number(job) {
   // the rule draws with its figure (never a placeholder before it)
   const ruleAt = t0 + 0.1;
   const lineH = /\d/.test(fig) ? fpx * 0.84 : fpx * 1.0;
+  // while a late figure waits, its words (the tail, the sub) stand large in the middle of the frame and
+  // settle under it as it lands; then the camera leans in to the figure
+  const capW = narrow ? B.w : Math.min(1300, B.w), ruleGap = fpx * 0.1 + 24;
+  const capH = (tail ? 44 + 72 * 1.05 * Math.ceil(serifW(tail, 72) / capW) : 0) + (p.sub ? 40 + subPx * 1.25 * Math.ceil(serifW(p.sub, subPx, true) / capW) : 0);
+  const ssc = 1.35, settle = (tail || p.sub) && t0 > 0.5;
+  const sdy = -(lineH + ruleGap) / 2 - (capH * (ssc - 1)) / 2;
+  const cap = (tail ? `<p class="ty-n-tail">${wordSpans(tail, words(tail).map(() => -1), { set: true })}</p>` : "") + (subFirst ? "" : sub);
+  const push = `--push-to:${P};--push-at:${r3(Math.max(0, t0 - 0.1))};--push-d:1.6s;--push-origin:${narrow ? 160 : 960}px ${B.oy}px`;
   return cam(B, `<div class="ty-box ty-n${narrow ? "" : " centre"}">${subFirst ? sub : ""}` +
     `<div class="ty-n-fig${time ? " time" : ""}" style="font-size:${px0(fpx)};line-height:${r3(lineH / fpx)}">${bloom(fw * 1.4, fpx * 1.9, t0, money)}${figHTML}${pulses(bs, 0, money ? "pulse-blue" : "pulse")}</div>` +
     `<div class="ty-rule" style="--fw:${px0(fw)};width:${px0(narrow ? B.w : fw + 80)};margin-top:${px0(fpx * 0.1 + 22)};--at:${r3(ruleAt)}"><i></i>${bs.map((b) => `<b style="--at:${r3(b.t)}"></b>`).join("")}</div>` +
-    (tail ? `<p class="ty-n-tail">${wordSpans(tail, words(tail).map(() => -1), { set: true })}</p>` : "") + (subFirst ? "" : sub) + est + `</div>`);
+    (cap ? `<div class="ty-n-cap${settle ? " settle" : ""}" style="--sdy:${r3(sdy)}px;--ssc:${ssc};--sat:${r3(t0 - 0.55)}">${cap}</div>` : "") + est + `</div>`, push);
 }
 
 /* ---------- pair ---------- */
@@ -509,7 +531,7 @@ export function pair(job) {
   const same = kl === kr && kl !== "time";
   const blueR = kr === "money", blueL = kl === "money" && !blueR;
   const kL = known(L.value), kR = known(R.value);
-  const unitsOf = (v) => { const t = tokens(v), z = t[t.length - 1]; return z?.w && /^\s/.test(z.w) && t.length > 1 && !MONTH.test(v) ? z.w.trim() : ""; };
+  const unitsOf = (v) => { const t = tokens(v), z = t[t.length - 1]; return z?.w && /^\s/.test(z.w) && t.length > 1 && t.filter((x) => x.n).length === 1 && !MONTH.test(v) ? z.w.trim() : ""; };
   const strip = (v, u) => (u ? String(v).slice(0, String(v).lastIndexOf(u)).trimEnd() : String(v));
   const lineOf = (c, u, px, t, blue, quiet, k) => figLine(strip(c.value, u), px, { times: figTimes(strip(c.value, u), spoken, t), blue, quiet, known: k });
   // both figures as large as the box allows, with at least 240 px of line between them; long
@@ -528,9 +550,10 @@ export function pair(job) {
   if (F.px < 190) { const G = fit(true); if ((G.lu || G.ru) && G.px > F.px + 24) F = G; }
   const gapT = p.gap ? p.gap_at ?? saidAt(p.gap, spoken, rAt + 1.2) ?? rAt + 0.7 : 0;
   // a label stands formed at the cut (the plan's `label_at` lands it on its words; a figure in it waits)
-  const labT = (c, t) => c.label_at ?? (hasFig(c.label) ? saidAt(c.label, spoken, t) ?? t : -0.4);
+  // a label stands formed at the cut; one that carries a figure still to be said waits for it (the gate)
+  const labT = () => -0.4;
   const bs = beats([lAt, rAt, p.gap ? gapT : null, L.label_at, R.label_at], spoken, B.dur, 1);
-  const q = p.question ? `<p class="ty-head">${wordSpans(p.question, p.question_at ? headTimes(p.question, spoken, p.question_at[0] ?? 0) : words(p.question).map(() => 0), { perWord: true })}</p>` : "";
+  const q = p.question ? `<p class="ty-head">${wordSpans(p.question, words(p.question).map(() => -1), { all: true, set: true })}</p>` : "";
   const push = p.push_at != null ? `--push-to:1.05;--push-at:${r3(p.push_at)};--push-d:${r3(Math.max(1, B.dur - p.push_at))}s;--push-origin:160px ${B.oy}px` : "";
   if (!F.ok) {
     // too wide side by side (a companion print's narrow box): one over the other, a short drop between
@@ -591,7 +614,7 @@ function hook(job, B) {
   }
   return cam(B, `<div class="ty-box ty-hook${B.narrow ? "" : " centre"}${glide}"><div class="ty-p-fig hero" style="font-size:${px}px">${bloom(f.w * 1.3, px * 1.6, mAt, isMoney(M.value))}${f.html}${pulses(bs, 0, "pulse-blue", mAt)}</div>` +
     (when ? `<p class="ty-hook-when" style="font-size:${px0(px * 0.4)}">${(() => { const gt = gated(when, wt); return words(when).map((w, i) => `<span class="${timeish(w) ? "ty-fd" : "ty-hw"} ty-w${gt[i] === Infinity ? " never" : ""}" style="--at:${r3(Math.min(gt[i], 999))}">${T(w)}</span>`).join(" "); })()}</p>` : "") +
-    `${p.gap ? `<p class="ty-hook-gap">${gapT <= 0 ? wordSpans(p.gap, words(p.gap).map(() => -1), { set: true }) : wordSpans(p.gap, sayFrom(p.gap, spoken, gapT))}</p>` : ""}</div>`);
+    `${p.gap ? `<p class="ty-hook-gap" style="margin-top:${when ? 44 : Math.round(44 + px * 0.16)}px">${gapT <= 0 ? wordSpans(p.gap, words(p.gap).map(() => -1), { set: true }) : wordSpans(p.gap, sayFrom(p.gap, spoken, gapT))}</p>` : ""}</div>`);
 }
 
 /* ---------- grid ---------- */
@@ -625,7 +648,7 @@ export function grid(job) {
   const left = `<div class="ty-g-count" style="width:${leftW}px"><div class="ty-g-fig" style="font-size:300px">${bloom(f.w * 1.5, 520, on, money)}${f.html}${of}${pulses(bs, 0, money ? "pulse-blue" : "pulse", on)}</div>` +
     `${caption ? `<p class="ty-g-cap">${speak(caption, spoken, capT, capT)}</p>` : ""}</div>`;
   const right = `<div class="ty-g-dots${money ? " money" : ""}" style="grid-template-columns:repeat(${cols}, ${px0(pitch)});--dot:${px0(dot)};--pitch:${px0(pitch)}">${dots}</div>`;
-  const head = p.heading ? `<p class="ty-head">${wordSpans(p.heading, words(p.heading).map(() => 0), { perWord: true })}</p>` : "";
+  const head = p.heading ? `<p class="ty-head">${wordSpans(p.heading, words(p.heading).map(() => -1), { all: true, set: true })}</p>` : "";
   return cam(B, `<div class="ty-box ty-g">${head}<div class="ty-g-row">${left}${right}</div></div>`);
 }
 
@@ -757,7 +780,8 @@ export function formula(job) {
   let k = 0;
   const tt = terms.map((t) => {
     const ws = words(t.text), own = raw.slice(k, k + ws.length); k += ws.length;
-    if (recut && t.at != null) return sayFrom(t.text, spoken, t.at);
+    // a recut plan's term lands on its own `at` (its anchor word); its words follow their onsets only when said there
+    if (recut && t.at != null) { const st = sayFrom(t.text, spoken, t.at); return st[0] > t.at + 1 ? ws.map((_, j) => t.at + j * 0.08) : st; }
     const f = own.find((x) => x != null);
     return f != null ? onsets(ws, spoken.filter((x) => x.t >= f - 0.01), f, 0.08) : null;
   });
@@ -800,8 +824,12 @@ export function formula(job) {
   if (!layout) { layout = n > 1 ? "align" : "row"; px = 44; } else px += 4;
   const gp = gapOf(px);
   // the first operator stands at the cut with the first term; every other one lands on its word (no blanks, no skeleton)
+  // when each term can first be read (its words on their onsets, a figure in it on its own)
+  const landT = (i) => (i === 0 ? -1 : lone(i) ? tt[i][0] - 0.1 : Math.min(...gated(terms[i].text, tt[i])));
+  // the first operator stands with the first term; every other one lands with the term after it, never before
   const opHTML = (i) => {
-    const o = ops[i] ?? "+", st = i === 0 ? "--at:-0.6;--lit:-1" : `--at:${r3(opAt(i) - 0.05)};--lit:${r3(opAt(i) - 0.1)}`;
+    const ot = Math.max(opAt(i), landT(i + 1)) - 0.05;
+    const o = ops[i] ?? "+", st = i === 0 ? "--at:-0.6;--lit:-1" : ot === Infinity ? "--at:9999;--lit:9999" : `--at:${r3(ot)};--lit:${r3(ot - 0.05)}`;
     return SYMBOL[o] ? `<span class="ty-f-op sym" style="${st}"><svg viewBox="0 0 100 100">${SYMBOL[o]}</svg></span>`
       : `<span class="ty-f-op word" style="${st}">${T(o)}</span>`;
   };
@@ -847,12 +875,40 @@ export function formula(job) {
     blockW = W[layout](px);
   }
   const lastT = Math.max(...tt.map((x) => x[x.length - 1]));
-  const capT = p.caption ? p.caption_at ?? Math.max(lastT + 0.6, saidAt(p.caption, spoken, lastT + 1) ?? lastT + 0.8) : 0;
+  const firstLate0 = gated(terms[0].text, words(terms[0].text).map(() => -1)).some((t) => t > 0.4);
+  const lastRow = layout === "row" ? -1 : Math.max(...terms.map((_, i) => landT(i)).filter(Number.isFinite));
+  const capRaw = p.caption ? p.caption_at ?? Math.max(lastT + 0.6, saidAt(p.caption, spoken, lastT + 1) ?? lastT + 0.8) : 0;
+  // a caption the voice says before the sum is complete heads the block from the cut; otherwise it closes it
+  const capTop = !!p.caption && layout !== "row" && !firstLate0 && capRaw < lastRow;
+  const capT = p.caption ? (capTop ? -1 : Math.max(capRaw, layout !== "row" && !firstLate0 ? lastRow + 0.3 : -1)) : 0;
   const firstLate = gated(terms[0].text, words(terms[0].text).map(() => -1)).some((t) => t > 0.4);
-  const capTimes = firstLate && p.caption ? words(p.caption).map(() => -1) : sayFrom(p.caption || "", spoken, capT);
-  const cap = p.caption ? `<p class="ty-f-cap" style="margin-top:${px0(0.6 * px)};font-size:${capPx}px;max-width:${px0(Math.max(blockW, Math.min(maxw, 1100)))}">${wordSpans(p.caption, capTimes, { set: firstLate })}</p>` : "";
+  const capTimes = (firstLate || capTop) && p.caption ? words(p.caption).map(() => -1) : sayFrom(p.caption || "", spoken, capT);
+  const cap = p.caption ? `<p class="ty-f-cap${capTop ? " top" : ""}" style="margin-${capTop ? "bottom" : "top"}:${px0(0.6 * px)};font-size:${capPx}px;max-width:${px0(Math.max(blockW, Math.min(maxw, 1100)))}">${wordSpans(p.caption, capTimes, { set: firstLate || capTop })}</p>` : "";
   const centre = !narrow && blockW < maxw * 0.9;
-  return cam(B, `<div class="ty-box ty-f-box${centre ? " centre" : ""}"><div class="ty-f ${layout}" style="font-size:${px}px;--gap:${px0(gp)}">${body}${cap}</div></div>`);
+  // a stacked sum builds from the middle of the frame: the rows already there stay centred, and the
+  // block slides up half a row as each new row lands (no top-third block over an empty frame)
+  let slide = "", kfs = "";
+  if (layout !== "row" && !firstLate) {
+    const rowsN = layout === "align" ? n - 1 : n;
+    const hs = [], ts = [];
+    for (let k = 0; k < rowsN; k++) {
+      const ti = layout === "align" ? k + 1 : k, res = isRes(ti) && n > 2;
+      hs.push((k ? (res ? 0.62 : 0.34) * px : 0) + px * 1.1 * (res ? resK(ti) : 1));
+      ts.push(k === 0 ? -1 : landT(ti));
+    }
+    const capH = p.caption ? 0.6 * px + Math.ceil(serifW(p.caption, capPx, true) / Math.max(400, Math.max(blockW, Math.min(maxw, 1100)))) * capPx * 1.25 : 0;
+    const H = hs.reduce((a, b) => a + b, 0) + capH;
+    const vis = (t) => { let v = capTop ? capH : 0, k = 0; for (; k < rowsN && ts[k] <= t; k++) v += hs[k]; return v + (!capTop && k === rowsN && p.caption && capT <= t ? capH : 0); };
+    const marks = [...new Set([...ts.filter((t) => t > 0 && t < B.dur), ...(p.caption && !capTop && capT > 0 && capT < B.dur ? [capT] : [])])].sort((a, b) => a - b);
+    const id = `ty-fc-${String(job.id).replace(/[^\w-]/g, "")}`, pc = (t) => r3(clamp((t / B.dur) * 100, 0, 100));
+    let prev = r3((H - vis(0)) / 2);
+    kfs = `0% { transform: translateY(${prev}px); }`;
+    marks.forEach((t) => { const next = r3((H - vis(t + 0.01)) / 2); kfs += ` ${pc(Math.max(0, t - 0.1))}% { transform: translateY(${prev}px); animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1); } ${pc(Math.min(B.dur, t + 0.6))}% { transform: translateY(${next}px); }`; prev = next; });
+    kfs += ` 100% { transform: translateY(${prev}px); }`;
+    slide = `;animation:${id} ${r3(B.dur)}s linear both`;
+    kfs = `<style>@keyframes ${id} { ${kfs} }</style>`;
+  }
+  return kfs + cam(B, `<div class="ty-box ty-f-box${centre ? " centre" : ""}"><div class="ty-f ${layout}" style="font-size:${px}px;--gap:${px0(gp)}${slide}">${capTop ? cap : ""}${body}${capTop ? "" : cap}</div></div>`);
 }
 
 /* ---------- timeline: real dates on a line; any other list drawn as what it is ---------- */
@@ -885,6 +941,9 @@ export function timeline(job) {
   // the plan's `layout` decides; without it the stage infers the honest form from the events
   const FORMS = { dates: "line", line: "line", bars: "bars", share: "shares", shares: "shares", ledger: "ledger", step: "step" };
   const form = FORMS[p.layout] || timelineForm(evs, job);
+  // a share cut straight from its bars (d21 → d22): the bars stand as they ended, and the part lights inside its whole
+  const cb = job.callback?.adjacent ? job.callback : null;
+  if (cb && FORMS[cb.params?.layout] === "bars" && form === "shares" && Array.isArray(cb.params.events)) return bars(job, cb.params.events.filter((e) => e && typeof e === "object"), evs);
   return { line, bars, shares, step, ledger }[form](job, evs);
 }
 
@@ -896,7 +955,8 @@ function sides(e, spoken) {
   const nameT = e.name_at ?? (name ? saidAt(name, spoken, figT) ?? figT : figT);
   return { fig, name, figT, nameT: e.name_at ?? Math.min(nameT, figT) };
 }
-const head = (p, spoken) => (p.heading ? `<p class="ty-head">${wordSpans(p.heading, p.heading_at != null ? headTimes(p.heading, spoken, p.heading_at) : words(p.heading).map(() => 0), { perWord: true })}</p>` : "");
+// a heading stands whole at the cut; one that carries a figure still to be said waits, whole, for it
+const head = (p, spoken) => (p.heading ? `<p class="ty-head">${wordSpans(p.heading, words(p.heading).map(() => -1), { all: true, set: true })}</p>` : "");
 /** The event the line lands on (`on`) for a step: a price that is the difference of two neighbours. */
 function stepKey(evs, job) {
   const fig = (e) => (figureLed(e.label) ? e.label : figureLed(e.date) ? e.date : null);
@@ -1037,10 +1097,12 @@ function line(job, evs) {
  * the camera leans toward the row. The rows spread over the box's height (values to 150 px, bars to
  * 72 px thick); the name sits over its bar, so it never reads as the label of the value above it.
  */
-function bars(job, evs) {
+function bars(job, evs, cont = null) {
   const P = 1.05, B = stage(job, false, P), p = job.params || {}, spoken = job.words || [], known = knownOf(job), narrow = B.narrow;
   const rows = evs.map((e) => ({ e, ...sides(e, spoken) }));
   rows.forEach((r) => { r.v = amount(r.fig); r.k = known(r.fig); r.set = r.k && r.figT <= 0.4; });
+  // continuing from the source's bars: every row stands as the source left it
+  if (cont) rows.forEach((r) => { r.k = true; r.set = true; r.figT = -1; r.nameT = -1; });
   const n = rows.length, max = Math.max(...rows.map((r) => r.v));
   const keyI = job.on == null ? -1 : rows.findIndex((r) => Math.abs(r.figT - job.on) < 0.3);
   const hH = headH(p.heading, B.w), avail = B.h - hH - 8;
@@ -1069,18 +1131,49 @@ function bars(job, evs) {
     return `<div class="ty-b-row" style="height:${pitch}px">` +
       `<div class="ty-b-val${blue && keyI < 0 ? " fades" : ""}" style="width:${axis - 44}px;top:${Math.round(barTop + thick / 2)}px;font-size:${valPx}px;--until:${r3(until)}">` +
       `<span class="ty-b-pop" style="--pop:${pop};--at:${r3(at)}">${fl[i].html}</span></div>` +
-      `<p class="ty-b-name${nameLines > 1 ? " wrap" : ""}" style="left:${axis + 16}px;top:${barTop - nameH - 10}px;font-size:${namePx}px;max-width:${nameRoom}px">${labelSpans(r.name || "", spoken, r.e.name_at ?? -0.4)}</p>` +
+      `<p class="ty-b-name${nameLines > 1 ? " wrap" : ""}" style="left:${axis + 16}px;top:${barTop - nameH - 10}px;font-size:${namePx}px;max-width:${nameRoom}px">${labelSpans(r.name || "", spoken, -0.4)}</p>` +
+      // an empty lane the full width of the scale: the row's place, not its value
+      `<i class="ty-b-lane" style="left:${axis + 2}px;top:${barTop}px;width:${r3(barMax)}px;height:${thick}px"></i>` +
       `<i class="ty-b-tick" style="left:${axis + 2}px;top:${barTop}px;height:${thick}px"></i>` +
-      `<div class="ty-b-bar" style="left:${axis + 2}px;top:${barTop}px;width:${r3(len)}px;height:${thick}px;--at:${r3(at)}"><i></i>` +
-      `${bs.filter((b) => b.k === i && b.t > r.figT + 0.5).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div></div>`;
+      `<div class="ty-b-bar" style="left:${axis + 2}px;top:${barTop}px;width:${r3(len)}px;height:${thick}px;--at:${r3(at)}"><i></i></div></div>`;
   }).join("");
   // the camera leans toward each row as its figure lands (a push of 5% over the shot, in steps)
   const blockH = hH + n * pitch, blockTop = B.top + (B.h - blockH) / 2 + hH;
-  const order = rows.map((r, i) => ({ t: r.set ? null : r.figT, y: blockTop + i * pitch + barTop + thick / 2 })).filter((x) => x.t != null && x.t < B.dur - 0.3).sort((a, b) => a.t - b.t);
+  let order = rows.map((r, i) => ({ t: r.set ? null : r.figT, y: blockTop + i * pitch + barTop + thick / 2 })).filter((x) => x.t != null && x.t < B.dur - 0.3).sort((a, b) => a.t - b.t);
   const id = `ty-rp-${String(job.id).replace(/[^\w-]/g, "")}`, pc = (t) => r3(clamp((t / B.dur) * 100, 0, 100));
   let kf = `0% { transform: none; }`, prev = "none";
+  // the part inside its whole (a share cut from these bars): lit to scale, its figure beside the whole's bar
+  let partHTML = "";
+  if (cont) {
+    const cs = cont.map((e) => ({ e, ...sides(e, spoken) })).filter((q) => q.fig);
+    const whole = cs.reduce((a, q) => (amount(q.fig) > amount(a.fig) ? q : a), cs[0]);
+    const wi = rows.findIndex((r) => Math.abs(r.v - amount(whole?.fig)) < 0.5);
+    const part = cs.find((q) => q !== whole);
+    if (whole && part && wi >= 0) {
+      const wl = Math.max(3, (rows[wi].v / max) * barMax), pl = Math.max(3, (amount(part.fig) / amount(whole.fig)) * wl);
+      const pt = part.figT, left = axis + 2 + wl + 32, room = B.w - left - 24;
+      // the part's figure and its name on one line beside the whole's bar, as large as the room allows
+      let ppx = Math.round(valPx * 0.8), npx, f;
+      for (;; ppx -= 4) {
+        npx = Math.round(Math.max(30, ppx * 0.42));
+        f = figLine(part.fig, ppx, { times: figTimes(part.fig, spoken, pt), unitMin: LABEL, known: known(part.fig) });
+        if (f.w + 22 + serifW(part.name || "", npx, true) * 1.08 <= room || ppx <= 44) break;
+      }
+      const rowTop = wi * pitch;
+      partHTML = `<div class="ty-b-part" style="left:${axis + 2}px;top:${rowTop + barTop}px;width:${r3(pl)}px;height:${thick}px;--at:${r3(pt - 0.1)}"></div>` +
+        `<div class="ty-b-plab" style="left:${r3(left)}px;top:${r3(rowTop + barTop + thick / 2)}px">` +
+        `<div class="ty-b-pval" style="font-size:${ppx}px">${f.html}</div>` +
+        `<p class="ty-b-pname" style="font-size:${npx}px">${wordSpans(part.name || "", sayFrom(part.name || "", spoken, Math.max(0, pt - 0.3)))}</p></div>`;
+      // the source ended leaning on its last row; from there the camera leans to the whole the part is in
+      const all = rows.map((r, i) => blockTop + i * pitch + barTop + thick / 2);
+      const endY = all[all.length - 1];
+      prev = `translateY(${r3(-(endY - B.oy) * 0.05)}px) scale(${P})`;
+      kf = `0% { transform: ${prev}; }`;
+      order = [{ t: pt, y: all[wi], keep: true }];
+    }
+  }
   order.forEach((x, k) => {
-    const sc = 1 + ((P - 1) * (k + 1)) / order.length, dy = -(x.y - B.oy) * 0.05;
+    const sc = x.keep ? P : 1 + ((P - 1) * (k + 1)) / order.length, dy = -(x.y - B.oy) * (x.keep ? 0.08 : 0.05);
     const next = `translateY(${r3(dy)}px) scale(${r3(sc)})`;
     kf += ` ${pc(Math.max(0, x.t - 0.1))}% { transform: ${prev}; animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1); } ${pc(Math.min(B.dur, x.t + 1.1))}% { transform: ${next}; }`;
     prev = next;
@@ -1088,7 +1181,7 @@ function bars(job, evs) {
   kf += ` 100% { transform: ${prev}; }`;
   const push = order.length ? `animation:${id} ${r3(B.dur)}s linear both;transform-origin:160px ${B.oy}px` : "";
   return (order.length ? `<style>@keyframes ${id} { ${kf} }</style>` : "") +
-    cam(B, `<div class="ty-box ty-b">${head(p, spoken)}<div class="ty-b-rows" style="--axis:${axis}px;height:${n * pitch}px">${html}</div></div>`, push);
+    cam(B, `<div class="ty-box ty-b">${head(p, spoken)}<div class="ty-b-rows" style="--axis:${axis}px;height:${n * pitch}px">${html}${partHTML}</div></div>`, push);
 }
 
 /**
@@ -1132,7 +1225,7 @@ function shares(job, evs) {
   const segs = parts.map((q, i) => {
     const L = lab(q), lx = Math.max(0, Math.min(q.x, W - L.f.w));
     const at = known(q.fig) && q.figT <= 0.4 ? -1 : q.figT - 0.1;
-    return `<div class="ty-s-seg" style="left:${r3(q.x)}px;width:${r3(q.w)}px;--at:${r3(at)}"><i></i>${bs.filter((b) => b.k === i && b.t > q.figT + 0.5).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div>` +
+    return `<div class="ty-s-seg" style="left:${r3(q.x)}px;width:${r3(q.w)}px;--at:${r3(at)}"><i></i></div>` +
       `<div class="ty-s-lab${whole ? " under" : ""}" style="left:${r3(lx)}px">${L.html}</div>`;
   }).join("");
   const barH = narrow ? 56 : 72;
@@ -1232,7 +1325,7 @@ function stepMoney(job, evs, key) {
       geo.set(r, { x, w: colW });
       const f = figLine(r.fig, valPx, { times: [r.figT], quiet: true, unitMin: LABEL, known: r.k });
       const at = r.set ? -1 : r.figT - 0.1;
-      const nT = r.e.name_at ?? -0.4;
+      const nT = -0.4;
       const html = `<div class="ty-c-col${r.k ? " known" : ""}" style="left:${x}px;width:${colW}px;height:${r3(h)}px;top:${r3(baseY - h)}px;--at:${r3(at)}"><i></i>` +
         `${hi ? `<b class="ty-c-riser" style="height:${r3(h - riser)}px;--at:${r3(keySet ? -1 : keyT - 0.15)}"></b>${pulses(bs, 0, "pulse-riser", keySet ? -1 : keyT)}` : ""}` +
         `<div class="ty-c-val" style="font-size:${valPx}px">${f.html}</div></div>` +
@@ -1255,12 +1348,15 @@ function stepMoney(job, evs, key) {
   const figMid = heroTop + heroNameH + heroPx * 0.45;
   const lead = `<i class="ty-c-lead" style="left:${gh.x + gh.w + 14}px;width:${Math.max(20, rx - gh.x - gh.w - 34)}px;top:${r3(yr)}px;--rise:${r3(figMid - yr)}px;--at:${r3(keySet ? -1 : keyT - 0.1)}"></i>`;
   const hero = `<div class="ty-c-hero" style="left:${rx}px;width:${rw}px;top:${heroTop}px;gap:${heroGap(heroPx)}px">` +
-    `${heroName ? `<p class="ty-c-name" style="font-size:${heroNamePx}px">${K ? labelSpans(heroName, spoken, K.set ? -0.4 : Math.max(0.41, K.nameT)) : wordSpans(heroName, [keyT])}</p>` : ""}` +
+    `${heroName ? `<p class="ty-c-name" style="font-size:${heroNamePx}px">${K ? labelSpans(heroName, spoken, -0.4) : wordSpans(heroName, [keyT])}</p>` : ""}` +
     `${K ? `<div class="ty-c-fig" style="font-size:${heroPx}px">${bloom(hf.w * 1.4, heroPx * 1.8, keyT, true)}${hf.html}${pulses(bs, 0, "pulse-blue", keySet ? -1 : keyT)}</div>` : ""}</div>`;
   const ctxHTML = items.length ? `<div class="ty-c-ctx" style="left:${ctxAt === "panel" ? rx : 0}px;top:${ctxAt === "panel" ? B.h - pack(rw) : hH}px;width:${ctxAt === "panel" ? rw : B.w}px">` +
-    items.map((it) => `<div class="ty-c-row" style="width:${Math.ceil(it.w)}px"><p class="ty-c-rname">${labelSpans(it.name, spoken, it.r.e.name_at ?? -0.4)}</p><div class="ty-c-rval" style="font-size:${firstCol > 3 ? 72 : 52}px">${it.f.html}</div></div>`).join("") + `</div>` : "";
+    items.map((it) => `<div class="ty-c-row" style="width:${Math.ceil(it.w)}px"><p class="ty-c-rname">${labelSpans(it.name, spoken, -0.4)}</p><div class="ty-c-rval" style="font-size:${firstCol > 3 ? 72 : 52}px">${it.f.html}</div></div>`).join("") + `</div>` : "";
+  // the ground: faint rules at quarter heights and an empty slot for every column, there from the cut
+  const ground = [0.25, 0.5, 0.75, 1].map((f) => `<i class="ty-c-rule" style="top:${r3(baseY - f * H)}px;width:${colsW + 30}px"></i>`).join("") +
+    [...geo.values()].map((g) => `<i class="ty-c-slot" style="left:${g.x}px;width:${g.w}px;top:${r3(baseY - H)}px;height:${r3(H)}px"></i>`).join("");
   return cam(B, `<div class="ty-box ty-c">${head(p, spoken)}<div class="ty-c-cols" style="height:${B.h}px">${ctxHTML}` +
-    `<i class="ty-c-base" style="top:${baseY}px;width:${colsW + 30}px"></i>${cols}${level}${lead}${hero}</div></div>`);
+    `${ground}<i class="ty-c-base" style="top:${baseY}px;width:${colsW + 30}px"></i>${cols}${level}${lead}${hero}</div></div>`);
 }
 
 const OZ = 1 / 16;
@@ -1419,7 +1515,9 @@ function stepWeight(job, evs) {
     return `<div class="ty-sw-lab ${c.al}${dm}" style="left:${Math.round(r.x0)}px;top:${Math.round(r.y0)}px;width:${Math.ceil(c.w) + 2}px;${dim.slice(1)}">` +
       `<p class="ty-sw-ph" style="font-size:${fp}px">${ph}</p>${v.cap ? `<p class="ty-sw-cap" style="font-size:${cp}px">${wordSpans(v.cap, v.ct)}</p>` : ""}</div>`;
   }).join("");
-  return cam(B, `<div class="ty-box ty-sw">${head(p, spoken)}<div class="ty-sw-area" style="height:${B.h}px">${svg}${subSvg}${dots}${labs}</div></div>`);
+  // cut straight from its source, the staircase stands as it was and the camera leans in to the first riser
+  const lean = job.callback?.adjacent && lo < 1 && hi > 1 ? `--push-to:1.05;--push-at:0.15;--push-d:${r3(Math.max(1, B.dur - 0.15))}s;--push-origin:${r3(160 + X(1))}px ${r3(B.top + (Y(1) + Y(2)) / 2)}px` : "";
+  return cam(B, `<div class="ty-box ty-sw">${head(p, spoken)}<div class="ty-sw-area" style="height:${B.h}px">${svg}${subSvg}${dots}${labs}</div></div>`, lean);
 }
 
 /**
@@ -1459,15 +1557,8 @@ function ledger(job, evs) {
   const bs = beats([...rows.flatMap((r) => [r.figT, r.nameT]), ...(q ? [q.at] : [])], spoken, B.dur, rows.length);
   const face = (r) => (r.e.face === "period" ? " period" : r.e.face === "typed" ? " typed" : "");
   // a name lands whole at its row's time; words said near its figure (and any figure in it) on their onsets
-  const nameSpans = (name, r) => {
-    const rowT = r.e.name_at ?? Math.min(r.nameT, r.figT);
-    const ws = words(name);
-    if (!ws.length) return "";
-    const near = phraseTimes(name, spoken.filter((x) => Math.abs(x.t - r.figT) <= 1.5), r.figT)?.raw || [];
-    const later = phraseTimes(name, spoken.filter((x) => x.t >= rowT - 0.05), rowT)?.raw || [];
-    const ts = ws.map((w, i) => Math.max(rowT, isFigWord(w) ? later[i] ?? near[i] ?? rowT : near[i] ?? rowT));
-    return rowT <= 0.4 && ts.every((t) => t <= 0.4) ? wordSpans(name, [-1], { set: true, known: true }) : wordSpans(name, ts);
-  };
+  // a row's name stands at the cut (a figure in it waits for its word: the gate)
+  const nameSpans = (name) => labelSpans(name, spoken, -0.4);
   const rule = (i) => `<i class="ty-l-rule" style="--at:${r3(-0.6 + i * 0.05)}"></i>`;
   let html;
   if (dates) {
@@ -1478,10 +1569,10 @@ function ledger(job, evs) {
     html = rows.map((r, i) => {
       const glints = bs.filter((b) => b.k === i && b.t > Math.max(r.figT ?? 0, r.nameT ?? 0) + 0.5).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("");
       const top = r.fig ? figLine(r.fig, dpx, { times: figTimes(r.fig, spoken, r.figT), known: r.k, time: kindOf(r.fig) === "time" }).html
-        : wordSpans(String(r.e.date ?? ""), sayFrom(String(r.e.date ?? ""), spoken, r.e.name_at ?? r.e.at ?? 0.4));
+        : labelSpans(String(r.e.date ?? ""), spoken, -0.4);
       const name = r.fig ? r.name || "" : String(r.e.label ?? "");
       return `<div class="ty-l-entry dated" style="min-height:${Math.round(Math.min(per, dpx * 1.1 + lpx * 2.6 + 40))}px">${glints}<div class="ty-l-date" style="font-size:${dpx}px">${top}</div>` +
-        `<p class="ty-l-dlab${face(r)}" style="font-size:${lpx}px">${r.fig ? nameSpans(name, r) : wordSpans(name, sayFrom(name, spoken, r.e.name_at ?? r.e.at ?? 0.4))}</p>${rule(i)}</div>`;
+        `<p class="ty-l-dlab${face(r)}" style="font-size:${lpx}px">${r.fig ? nameSpans(name, r) : labelSpans(name, spoken, -0.4)}</p>${rule(i)}</div>`;
     }).join("");
   } else {
     // a name keeps to the box (a print narrows it): its face measured as set (typewriter ~0.6 em a character), then wrapped
@@ -1494,8 +1585,8 @@ function ledger(job, evs) {
       const glints = bs.filter((b) => b.k === i && b.t > Math.max(r.figT ?? 0, r.nameT ?? 0) + 0.5).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("");
       if (r.section) {
         const a = String(r.e.date ?? ""), b = String(r.e.label ?? "");
-        const at = r.e.name_at ?? saidAt(a, spoken, r.e.at) ?? r.e.at ?? 0.4, bt = saidAt(b, spoken, Math.max(at, r.e.at ?? at)) ?? (at <= 0.4 ? at : at + 0.4);
-        const part = (x, t) => (t <= 0.4 && !hasFig(x) ? wordSpans(x, [-1], { set: true }) : wordSpans(x, sayFrom(x, spoken, t)));
+        const at = -0.4, bt = -0.4;
+        const part = (x, t) => labelSpans(x, spoken, t);
         return `<div class="ty-l-sec" style="height:${Math.round(pitch * 0.7)}px">${glints}<span class="ty-l-sa">${part(a, at)}</span>` +
           `<span class="ty-l-sb" style="font-size:${Math.round(clamp((W - labelW(a.toUpperCase(), LABEL) - 40) / Math.max(1e-6, serifW(b, 1, true)), 28, Math.max(BODY, namePx * 0.85)))}px">${part(b, bt)}</span>${rule(i)}</div>`;
       }
@@ -1507,7 +1598,7 @@ function ledger(job, evs) {
       const bar = money ? `<i class="ty-l-bar${i === keyI ? " key" : ""}" style="width:${r3((amount(r.fig) / vmax) * W)}px;--at:${r3(vAt)}"></i>` : "";
       return stacked
         ? `<div class="ty-l-entry" style="min-height:${pitch}px">${glints}${name}<div class="ty-l-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)};font-size:${valPx}px">${f.html}</div>${rule(i)}</div>`
-        : `<div class="ty-l-row${money ? " barred" : ""}" style="height:${pitch}px">${glints}${name}<i class="ty-l-lead" style="--at:${r3(Math.max(-0.4, Math.min(r.e.name_at ?? r.nameT, r.figT)))}"></i>` +
+        : `<div class="ty-l-row${money ? " barred" : ""}" style="height:${pitch}px">${glints}${name}<i class="ty-l-lead" style="--at:-0.4"></i>` +
           `<div class="ty-l-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)};font-size:${valPx}px">${f.html}</div>${bar}${rule(i)}</div>`;
     }).join("");
   }
