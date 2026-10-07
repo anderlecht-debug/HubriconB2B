@@ -380,8 +380,10 @@ def mix(slug: str) -> Path:
     raw = d / "media" / "mix-raw.wav"
     sf.write(str(raw), out.astype(np.float32), SR)
     final = d / "media" / "mix.wav"
+    # the ceiling sits 0.5 dB under the spec's -1.5 dBTP: the AAC encode adds about 0.3 dB of
+    # inter-sample peak (G01's draft measured -1.2 from a -1.5 mix)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-af",
-                    "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", str(SR), str(final)], check=True, timeout=600)
+                    "loudnorm=I=-16:TP=-2.0:LRA=11", "-ar", str(SR), str(final)], check=True, timeout=600)
     (d / "media" / "mix.json").write_text(json.dumps({
         "sample_rate": SR, "room_tone_db": ROOM_TONE_DB, "bed_db": BED_DB, "bed_duck_db": BED_DUCK_DB,
         "tick_db": TICK_DB, "whoosh_db": WHOOSH_DB, "bed_source": bed_source, "sfx_source": sfx_source,
