@@ -4,14 +4,14 @@
    a glow is a wider translucent stroke under the line, or a text-shadow. Every entrance is keyed to
    --at (seconds from the shot's first frame) and, where it has one, --d. */
 
-.ch-cam { position: absolute; inset: 0; transform-origin: var(--cam-origin, 160px 486px); transform-style: preserve-3d; }
+.ch-cam { position: absolute; inset: 0; transform-style: preserve-3d; }
 .ch-push { position: absolute; inset: 0; transform-origin: 0 0; }
 .ch-svg { position: absolute; left: 0; top: 0; overflow: visible; }
 .ch-layer { position: absolute; inset: 0; }
 .ch text { font-family: var(--sans); font-variant-numeric: tabular-nums; }
 
 /* ---- heading and caption: Fraunces at the size it is set, Inter for the caption */
-.ch-head { position: absolute; left: var(--grid-x); top: 100px; max-width: 1600px; }
+.ch-head { position: absolute; left: var(--grid-x); top: 112px; max-width: 1560px; }
 .ch-kicker { margin: 0 0 18px; font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.78); }
 .ch-title { margin: 0; font: var(--heading-font); font-optical-sizing: auto; letter-spacing: -0.01em; word-spacing: 0.06em; color: var(--light); text-wrap: balance; }
 .ch-cap { margin: 16px 0 0; font: 400 var(--fs-body)/1.25 var(--sans); color: var(--light-2); }
@@ -33,6 +33,7 @@
 .ch-ghost { fill: none; stroke: rgb(242 238 230 / 0.5); stroke-width: 2.5; stroke-dasharray: 11 9; }
 .ch-ghost-leak { fill: none; stroke: rgb(47 116 255 / 0.9); stroke-width: 3.5; stroke-dasharray: 11 9; }
 .ch-thread { fill: none; stroke: rgb(242 238 230 / 0.38); stroke-width: 2; }
+.ch-move { fill: none; stroke: rgb(242 238 230 / 0.7); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .ch-bracket { fill: none; stroke: var(--blue); stroke-width: 3; }
 .ch-conn { fill: none; stroke: rgb(242 238 230 / 0.3); stroke-width: 2; }
 .ch-pct { fill: none; stroke: rgb(242 238 230 / 0.6); stroke-width: 2.5; }
@@ -42,7 +43,7 @@
 
 /* ---- dots */
 .ch-dot { fill: var(--light); stroke: rgb(255 240 214 / 0.25); stroke-width: 8; paint-order: stroke; }
-.ch-dot-hollow { fill: #141210; stroke: var(--light); stroke-width: 3.5; }
+.ch-dot-hollow { fill: var(--ground); stroke: var(--light); stroke-width: 3.5; }
 .ch-end-dot { fill: var(--blue); stroke: rgb(47 116 255 / 0.3); stroke-width: 10; paint-order: stroke; }
 .ch-ripple { fill: none; stroke: var(--light); stroke-width: 2; transform-box: fill-box; transform-origin: center;
   animation: ch-ripple 1.2s cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
@@ -142,5 +143,6 @@
 @keyframes ch-bloom-hard { 0% { opacity: 0; transform: scale(0.3); } 7% { opacity: 1; transform: scale(1.12); } 100% { opacity: 0.5; transform: scale(1); } }
 @keyframes ch-flare { 0% { opacity: 0; transform: scale(0.3); } 25% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(0.8); } }
 /* a rack of focus: the far plane softens and dims while the near one holds, then comes back */
-@keyframes ch-rack { 0% { opacity: 1; filter: blur(0px); } 14% { opacity: 0.42; filter: blur(2px); } 80% { opacity: 0.42; filter: blur(2px); } 100% { opacity: 1; filter: blur(0px); } }
+@keyframes ch-rack { 0% { opacity: 1; } 14% { opacity: 0.38; } 80% { opacity: 0.38; } 100% { opacity: 1; } }
+@keyframes ch-recede { to { opacity: 0.45; } }
 @keyframes ch-young-fill { 0% { fill: rgb(242 238 230 / 0.06); } 30% { fill: rgb(242 238 230 / 0.2); } 100% { fill: rgb(242 238 230 / 0.12); } }

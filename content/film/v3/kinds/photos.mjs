@@ -201,9 +201,10 @@ function beats(job, from = 3.0) {
   const out = [], T = job.seconds;
   let t = from;
   while (t < T - 1.2) {
-    const w = wordAfter(job, t, t + 1.2) ?? t;
+    const w = wordAfter(job, t, t + 1.2);
+    if (w == null) { t += 0.6; continue; }                 // land on words only, never between them
     out.push(w);
-    t = w + 3.3;
+    t = w + 2.6;
   }
   return out;
 }
@@ -231,20 +232,35 @@ export function archive(job) {
   // The detail beats: on a spoken word every ~3.5 s, the camera moves into the print toward its
   // focus, arriving with weight; the shared camera keeps its constant push underneath.
   const ox = px0 + b + fx * iw, oy = py0 + b + fy * ih;
-  const bs = T > 5.6 ? beats(job) : [];
-  const steps = [1.12, 1.22, 1.3];
+  const bs = T > 4.2 ? beats(job) : [];
+  // In, deeper, then back out to the whole print to resolve before the cut.
+  const steps = [1.12, 1.24, 1.04];
+  const tilt = (i) => 4 - 1.1 * i;
   const inner = [[0, `transform:rotateX(4deg) rotateZ(0deg) scale(1)`, GLIDE]];
+  let cur = 1.006;
   bs.forEach((t, i) => {
-    inner.push([t, `transform:rotateX(${f(4 - 1.2 * i - 0.4)}deg) rotateZ(0deg) scale(${f(i ? steps[i - 1] : 1.005, 3)})`, SETTLE]);
-    inner.push([Math.min(T, t + 1.3), `transform:rotateX(${f(2.8 - 1.2 * i)}deg) rotateZ(0deg) scale(${f(steps[i] ?? 1.4)})`, GLIDE]);
+    inner.push([t, `transform:rotateX(${f(tilt(i) - 0.3)}deg) rotateZ(0deg) scale(${f(cur, 4)})`, SETTLE]);
+    cur = steps[i] ?? cur;
+    inner.push([Math.min(T, t + 1.3), `transform:rotateX(${f(tilt(i + 1))}deg) rotateZ(0deg) scale(${f(cur, 4)})`, GLIDE]);
+    cur += 0.006;
   });
-  inner.push([T, `transform:rotateX(${f(bs.length ? 1.2 : 2.6)}deg) rotateZ(0deg) scale(${f((bs.length ? steps[bs.length - 1] : 1) + 0.008)})`]);
-  const scrim = bs.length && lab ? `<div class="ph-labscrim" style="--at:${f(bs[0])}s"></div>` : "";
+  inner.push([T, `transform:rotateX(${f(tilt(bs.length) - 0.4)}deg) rotateZ(0deg) scale(${f(cur + 0.004, 4)})`]);
+  // The beats grow the print from its top edge (it never rises out of title-safe) and from as far
+  // right as keeps its lower-left edge clear of the label slot: the left edge may not pass the
+  // label's right edge, measured in the inner layer's own coordinates when the beat lands.
+  let bx = ox;
+  if (lab && bs.length && TOP + ho * sEnd * Math.max(...steps) > lab.y0) {
+    for (const [i, t] of bs.entries()) {
+      const sb = steps[i] ?? 1, lin = cx + (lab.x1 + 24 - cx - 8 * t) / camScale(t);
+      if (sb > 1) bx = Math.min(bx, (px0 * sb - lin) / (sb - 1));
+    }
+    bx = Math.max(px0, bx);
+  }
   return `<style>${keyframes(`ph-in-${id}`, timed(inner, T))}</style>` +
     `<div class="cam" style="perspective-origin:${px(cx)} ${px(TOP)}"><div class="rig" style="--cam-origin:${px(cx)} ${px(TOP)};--cam-drift:8px">` +
-    `<div class="ph-inner" style="transform-origin:${px(ox)} ${px(oy)};animation:ph-in-${id} ${f(T)}s linear both">` +
+    `<div class="ph-inner" style="transform-origin:${px(bx)} ${px(TOP)};animation:ph-in-${id} ${f(T)}s linear both">` +
     `<div class="ph-place" style="left:${px(px0)};top:${px(py0)};--rot:${deg(e.rot)}">` +
-    print(job, a, iw, ih, b, "ph-landing", landVars(e, -0.4, 1.15)) + `</div></div></div></div>${scrim}`;
+    print(job, a, iw, ih, b, "ph-landing", landVars(e, -0.4, 1.15)) + `</div></div></div></div>`;
 }
 
 /** A sheet of stamps (or any wide sheet of small things): no border of ours, the scan is the
@@ -273,23 +289,25 @@ function sheet(job, a, tr, ar) {
   const whole = "transform:translate(0px,0px) scale(1)";
   const b1 = wordAfter(job, 2.6, 3.8) ?? Math.min(3.0, T * 0.3);
   const named = wordMatch(job, /^(stamps?|sheet|issue[sd]?)\b/i);
-  const pullAt = Math.max(b1 + 2.4, (named ?? T * 0.78) - 1.9);
-  const back = named && named > pullAt + 0.6 ? named : pullAt + 1.9;
+  // The pull back starts on the word that turns the sentence ("After") and lands on the word
+  // that names the sheet ("stamp"), in and out like a dolly, never arriving early.
+  const turn = wordMatch(job, /^(after|then|today|now)\b/i);
+  const pullAt = Math.max(b1 + 2.4, turn ?? (named ?? T * 0.78) - 1.9);
+  const back = named && named > pullAt + 0.8 ? named : pullAt + 1.9;
   const stops = [[0, at(0.14, 0.19, M * 1.04), GLIDE], [b1, at(0.30, 0.2, M), SETTLE], [b1 + 1.4, at(0.15, 0.5, M), GLIDE],
-    [pullAt, at(0.42, 0.52, M * 0.98), SETTLE], [back, whole, GLIDE], [T, "transform:translate(0px,0px) scale(1.012)"]];
-  // The rack: soft at the cut and sharp by 0.5 s; soft again through the move down a row; deep
-  // focus once the whole sheet is in view.
-  const rack = [[0, "opacity:0.5", "ease-out"], [0.55, "opacity:1", "linear"], [b1 + 0.1, "opacity:1", "ease-in-out"],
-    [b1 + 0.6, "opacity:0.35", "ease-in-out"], [b1 + 1.3, "opacity:1", "linear"], [T, "opacity:1"]];
-  const soft = [[0, "visibility:visible"], [Math.min(T - 0.05, back + 0.2), "visibility:hidden"], [T, "visibility:hidden"]];
-  const img = (cls) => `<img class="${cls}" src="${esc(a.url)}" style="${viewBox(tr)}" alt="">`;
-  const sharpFrom = 0.4;
-  return `<style>${keyframes(`ph-sh-${id}`, timed(stops, T))}${keyframes(`ph-rk-${id}`, timed(rack, T))}${keyframes(`ph-sf-${id}`, timed(soft, T))}</style>` +
+    [pullAt, at(0.42, 0.52, M * 0.98), DIVE], [back, whole, GLIDE], [T, "transform:translate(0px,0px) scale(1.012)"]];
+  // The rack: a soft face over the sharp one at the cut, gone by 0.55 s (it exists only then: a
+  // 7 px blur on the sheet costs ~70 ms a frame). The sharp face never animates. The sheet casts
+  // its shadow only once it is seen whole on the desk again.
+  const rack = [[0, "opacity:0.55;visibility:visible", "ease-out"], [0.55, "opacity:0;visibility:visible", "step-end"], [0.6, "opacity:0;visibility:hidden"], [T, "opacity:0;visibility:hidden"]];
+  const shade = [[0, "box-shadow:0 0 0 rgb(0 0 0 / 0), 0 0 0 rgb(0 0 0 / 0)"], [Math.max(0.1, back - 1.2), "box-shadow:0 0 0 rgb(0 0 0 / 0), 0 0 0 rgb(0 0 0 / 0)", "ease-out"],
+    [back, "box-shadow:var(--shadow-print)"], [T, "box-shadow:var(--shadow-print)"]];
+  const img = `<img src="${esc(a.url)}" style="${viewBox(tr)}" alt="">`;
+  return `<style>${keyframes(`ph-sh-${id}`, timed(stops, T))}${keyframes(`ph-rk-${id}`, timed(rack, T))}${keyframes(`ph-sd-${id}`, timed(shade, T))}</style>` +
     `<div class="cam"><div class="rig" style="--cam-origin:${px(sx + sw / 2)} ${px(TOP)}">` +
     `<div class="ph-sheetcam" style="animation:ph-sh-${id} ${f(T)}s linear both">` +
-    `<div class="ph-sheet ph-landing" style="left:${px(sx)};top:${px(sy)};width:${px(sw)};height:${px(sh)};${landVars({ lx: 0, ly: 40, lr: 0 }, -0.4, 0.9, 60)}">` +
-    `<div class="ph-sheet-soft" style="animation:ph-sf-${id} ${f(T)}s step-end both">${img("")}</div>` +
-    `<div class="ph-sheet-sharp" style="animation:ph-rk-${id} ${f(T)}s linear both">${img("")}</div><i class="ph-sheen"></i></div>` +
+    `<div class="ph-sheet" style="left:${px(sx)};top:${px(sy)};width:${px(sw)};height:${px(sh)};animation:ph-sd-${id} ${f(T)}s linear both">` +
+    `${img}<div class="ph-sheet-soft" style="animation:ph-rk-${id} ${f(T)}s linear both">${img}</div><i class="ph-sheen"></i></div>` +
     `</div></div></div>` + (lab ? `<div class="ph-labscrim" style="--at:${f(-1)}s;--out:${f(back - 0.6)}s"></div>` : "");
 }
 
@@ -348,10 +366,14 @@ export function stack(job) {
     if (fp === p) {
       // On the word, the print the voice settles on comes up off the pile to the frame's centre,
       // three quarters of the frame tall, and straightens; its shadow falls longer and softer.
-      const sOn = camScale(on), s = clamp((0.74 * H) / (p.h * sOn), 1.05, 1.6);
-      const tx = W / 2 + 10 - p.cx - (pcx - W / 2 - 40) * 0, ty = H * 0.47 - p.cy;
+      const sOn = camScale(on), s = clamp((0.72 * H) / (p.h * sOn), 1.05, 1.6);
+      // Its centre goes a little left of the frame's, so the dimmed pile still shows beside it;
+      // the camera's state on the word (origin, push, drift) is allowed for.
+      const vw = p.w * s * sOn, vh = p.h * s * sOn, want = [W / 2 - 70, H * 0.455];
+      if (lab && want[1] + vh / 2 > lab.y0) want[0] = Math.max(want[0], lab.x1 + 28 + vw / 2);
+      const cam = [pcx + (want[0] - pcx) / sOn + 8 * on, pcy + (want[1] - pcy) / sOn];
       css.push(`@keyframes ph-lift-${id}{from{transform:translate(0px,0px) scale(1) rotate(${deg(p.rot)});z-index:${p.i + 1}}` +
-        `1%{z-index:40}to{transform:translate(${px(tx / sOn)},${px(ty / sOn)}) scale(${f(s, 4)}) rotate(${deg(-0.8)});z-index:40}}`);
+        `1%{z-index:40}to{transform:translate(${px(cam[0] - p.cx)},${px(cam[1] - p.cy)}) scale(${f(s, 4)}) rotate(${deg(-0.8)});z-index:40}}`);
       anim = `animation:ph-lift-${id} 1.1s ${SETTLE} ${f(on)}s both`;
       cls = " ph-focus";
     } else if (fp) {

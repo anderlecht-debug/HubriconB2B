@@ -1,121 +1,103 @@
-/* v3 documents (FILM_LOOK_V3.md): sources as aged pages on the dark desk, tables as printed rate
-   tables, quotations as light. Geometry and times come from documents.mjs as custom properties;
-   this file is the look: the paper, the ink, the highlighter, the light and the shadow. */
+/* v3 documents (FILM_LOOK_V3.md; round 2, ROUND2.md): sources as pages on the desk, tables as
+   typeset rate tables, quotations as light. Geometry and times come from documents.mjs (custom
+   properties and per-shot keyframes); this file is the look. Every colour is a base.css token, a
+   mix of tokens (color-mix), or a token's own values with an alpha (blue 47 116 255, marker 241
+   194 75, light 242 238 230). No filter on anything large or moving. */
 
-/* ── the camera ─────────────────────────────────────────────────────────────────────────── */
-/* The rig creeps the whole shot about the focus (linear: never still, never lurching). */
-.v3-document .cam > .rig, .v3-table .cam > .rig, .v3-receipt .cam > .rig {
-  transform-origin: var(--fx) var(--fy); animation-timing-function: linear; }
-/* The drift: the camera still settling into the establishing frame while the page is read whole;
-   it dies away into the push, so the two moves hand over without a hitch. */
-.dc-drift { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--fx) var(--fy);
-  animation: dc-drift var(--drift-dur) cubic-bezier(0.22, 0.3, 0.3, 1) 0s both; }
-@keyframes dc-drift { from { transform: var(--drift-from); } to { transform: none; } }
-/* The push: from the establishing frame to the line, landing as the highlighter does (a shot
-   whose narration reads figures off the page first runs a keyframed path instead, --path). */
-.dc-push { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--fx) var(--fy);
-  animation: dc-push var(--push-dur) cubic-bezier(0.5, 0, 0.12, 1) var(--push-at) both; }
-@keyframes dc-push { from { transform: var(--p0); } to { transform: var(--p1); } }
+/* The paper's pigments, mixed from the tokens: the yellowing of age and the brown of foxing, burn
+   and gutter (the amber of the marker, deepened with ink), and the book's other leaves. */
+.dc { --age: color-mix(in srgb, var(--marker) 45%, var(--paper-ink-2)); --sepia: color-mix(in srgb, var(--marker) 30%, var(--paper-ink)); }
 
-/* ── the page ───────────────────────────────────────────────────────────────────────────── */
-/* Tilted about the target line, so the line stays where the camera aims; the tilt eases as the
-   camera cranes over the page. The shadow is the key light's: long, soft, down and right. */
-.dc-sheet { position: absolute; left: var(--x0); top: var(--y0); width: var(--sw); height: var(--sh);
-  transform-origin: var(--cx) var(--cy); animation: dc-tilt var(--tilt-dur) cubic-bezier(0.45, 0, 0.15, 1) var(--tilt-at) both;
-  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.6)) drop-shadow(16px 26px 20px rgb(0 0 0 / 0.5)) drop-shadow(52px 84px 70px rgb(0 0 0 / 0.62)); }
+/* ── the camera: one path through waypoints on base.css's constant rig ──────────────────── */
+.dc-push { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 0; animation: var(--cam-path); }
+
+/* ── the stack on the desk: back sheet, then the page (which may slide on), tilted together ── */
+.dc-stack { position: absolute; left: 0; top: 0; transform-origin: var(--cx) var(--cy);
+  animation: dc-tilt var(--tilt-dur) cubic-bezier(0.45, 0, 0.2, 1) var(--tilt-at) both; }
 @keyframes dc-tilt { from { transform: var(--t0); } to { transform: var(--t1); } }
+.dc-slide { position: absolute; inset: 0; }
+.dc-slid { animation: dc-slide 1.3s var(--ease-out) -0.4s both; }
+@keyframes dc-slide { from { transform: translate(300px, 64px) rotate(3.5deg); } to { transform: none; } }
+/* The key light is upper left: a contact shadow and a long soft key shadow, down and right,
+   drawn once (box-shadow on a still layer), never a filter on the moving page. */
+.dc-shadow { position: absolute; inset: 0; box-shadow: var(--shadow-paper), 30px 50px 70px color-mix(in srgb, var(--ground) 30%, transparent); }
+.dc-o-clip .dc-shadow { inset: 0 2px 20px 2px; }
+/* The back sheet: the same stock a shade darker (×0.88), its own contact shadow, a degree askew. */
+.dc-under { position: absolute; inset: 0; transform-origin: 30% 20%; box-shadow: var(--shadow-paper);
+  background: linear-gradient(color-mix(in srgb, var(--ground) 12%, transparent), color-mix(in srgb, var(--ground) 12%, transparent)), var(--paper) url("/content/assets/film/paper.jpg") center / cover; }
+.dc-o-laser .dc-under { background: linear-gradient(color-mix(in srgb, var(--ground) 12%, transparent), color-mix(in srgb, var(--ground) 12%, transparent)), var(--light); }
+/* A bound page: the book's other leaves at its foot and fore-edge. */
+.dc-edges { position: absolute; inset: 0;
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--paper) 90%, var(--ground)), 4px 6px 0 color-mix(in srgb, var(--paper) 74%, var(--ground)), 6px 8px 0 color-mix(in srgb, var(--paper) 88%, var(--ground)), 8px 11px 0 color-mix(in srgb, var(--paper) 70%, var(--ground)),
+    10px 13px 0 color-mix(in srgb, var(--paper) 84%, var(--ground)), 12px 16px 0 color-mix(in srgb, var(--ground) 25%, transparent), var(--shadow-paper); }
 
+/* ── the paper ──────────────────────────────────────────────────────────────────────────── */
 .dc-paper { position: absolute; inset: 0; isolation: isolate; overflow: hidden;
   background-color: var(--paper); background-size: cover; background-position: center; background-repeat: no-repeat;
-  box-shadow: inset 0 0 150px rgb(112 74 26 / 0.24), inset 0 0 22px rgb(96 64 22 / 0.26), inset 2px 2px 0 rgb(255 250 236 / 0.5); }
-/* The page's own ageing, by object: a loose sheet keeps its fold, a bound page its gutter. */
-.dc-o-sheet { --dc-age: linear-gradient(rgb(226 204 160 / 0.16), rgb(226 204 160 / 0.16)), linear-gradient(180deg, transparent 35%, rgb(60 40 14 / 0.05) 38.2%, rgb(255 250 236 / 0.13) 38.7%, transparent 42%); }
-.dc-o-book { --dc-age: linear-gradient(rgb(226 204 160 / 0.18), rgb(226 204 160 / 0.18)), linear-gradient(90deg, rgb(64 44 18 / 0.36) 0, rgb(64 44 18 / 0.13) 2.2%, transparent 6.5%, transparent 97%, rgb(64 44 18 / 0.1) 100%); }
-.dc-o-typed { --dc-age: linear-gradient(rgb(250 248 241 / 0.2), rgb(250 248 241 / 0.2)), linear-gradient(180deg, transparent 30%, rgb(60 40 14 / 0.05) 33.2%, rgb(255 252 244 / 0.12) 33.7%, transparent 37%); }
-.dc-o-clip { --dc-age: linear-gradient(rgb(190 158 98 / 0.26), rgb(176 140 80 / 0.3)); }
+  box-shadow: inset 0 0 150px color-mix(in srgb, var(--sepia) 22%, transparent), inset 0 0 20px color-mix(in srgb, var(--sepia) 24%, transparent), inset 2px 2px 0 rgb(242 238 230 / 0.5); }
+/* Period stock ages by object: a loose sheet keeps its fold, a bound page its gutter, newsprint yellows. */
+.dc-o-sheet { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 12%, transparent), color-mix(in srgb, var(--age) 12%, transparent)), linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--sepia) 5%, transparent) 38.2%, rgb(242 238 230 / 0.13) 38.7%, transparent 42%); }
+.dc-o-book { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 14%, transparent), color-mix(in srgb, var(--age) 14%, transparent)), linear-gradient(90deg, color-mix(in srgb, var(--sepia) 34%, transparent) 0, color-mix(in srgb, var(--sepia) 12%, transparent) 2.2%, transparent 6.5%, transparent 97%, color-mix(in srgb, var(--sepia) 10%, transparent) 100%); }
+.dc-o-clip { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 26%, transparent), color-mix(in srgb, var(--age) 30%, transparent)); }
+/* Modern stock: clean laser paper, crisp edges, no foxing, no fibre. */
+.dc-o-laser .dc-paper { background: var(--light); box-shadow: inset 1px 1px 0 rgb(242 238 230 / 0.7), inset -1px -1px 0 color-mix(in srgb, var(--ground) 6%, transparent); }
+/* The stock's grain (period only): the paper multiplied by itself at another scale. */
+.dc-fibre { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0.45;
+  background: url("/content/assets/film/paper.jpg") 37% 61% / 170% auto no-repeat; }
+.dc-o-clip .dc-fibre { opacity: 0.65; }
 /* The key light on the page: brighter where it falls, warm, dying toward the far corner. */
 .dc-light { position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background: radial-gradient(120% 95% at 10% 4%, rgb(255 243 220 / 0.16), transparent 58%),
-              linear-gradient(152deg, transparent 42%, rgb(26 17 6 / 0.26) 100%); }
-/* The stock's grain, deepened: the paper multiplied by itself at another scale. */
-.dc-fibre { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0.5;
-  background: url("/content/assets/film/paper.jpg") 37% 61% / 170% auto no-repeat; }
-.dc-o-clip .dc-fibre { opacity: 0.7; }
-/* A steel pin through a clipping's head, catching the key light; its shadow falls down-right. */
-.dc-pin { position: absolute; left: 50%; top: 20px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #f4f1ea 0, #b9b5ad 18%, #6d6a64 48%, #2a2826 78%, #1a1918 100%);
-  box-shadow: 7px 10px 9px rgb(0 0 0 / 0.55), 1px 2px 2px rgb(0 0 0 / 0.5); }
-/* The key light's pool on the desk around the page: the desk reads, so the page's shadow does.
-   It sits far behind the page in depth (scaled back up), so the tilted sheet can never be
-   depth-sorted behind it. */
-.dc-pool { position: absolute; left: calc(var(--x0) - 0.6 * var(--sw)); top: calc(var(--y0) - 0.7 * var(--sh));
-  width: calc(2.2 * var(--sw)); height: calc(2.4 * var(--sh)); pointer-events: none;
-  transform: translateZ(-1400px) scale(1.78); transform-origin: var(--fx) var(--fy);
-  background: radial-gradient(closest-side at 44% 42%, rgb(255 226 182 / 0.12), rgb(255 226 182 / 0.045) 55%, transparent 100%); }
-/* What lies under the page: another sheet, or the bound pages' edges. */
-.dc-under { position: absolute; inset: 0; background: #8f8572 url("/content/assets/film/paper.jpg") center / cover;
-  filter: brightness(0.6) sepia(0.2); transform: translate(16px, 10px) rotate(1.4deg); transform-origin: 30% 20%; }
-.dc-o-book .dc-under { transform: none; filter: none; background: transparent;
-  box-shadow: 3px 2px 0 #c9bea4, 5px 4px 0 #9d927b, 8px 6px 0 #c2b69b, 10px 8px 0 #8d836d, 13px 10px 0 #b5aa90; }
-.dc-o-clip .dc-under { display: none; }
+  background: radial-gradient(120% 95% at 10% 4%, rgb(242 238 230 / 0.14), transparent 58%),
+              linear-gradient(152deg, transparent 45%, color-mix(in srgb, var(--ground) 20%, transparent) 100%); }
+.dc-o-laser .dc-light { background: radial-gradient(120% 95% at 10% 4%, rgb(242 238 230 / 0.12), transparent 60%),
+              linear-gradient(152deg, transparent 50%, color-mix(in srgb, var(--ground) 12%, transparent) 100%); }
 
 /* ── the ink ────────────────────────────────────────────────────────────────────────────── */
 .dc-text { position: absolute; color: var(--paper-ink); font-kerning: none; }
 .dc-text.dc-period { font-family: var(--period); font-weight: 400; }
-.dc-text.dc-typed { font-family: var(--typed); color: #27231e; }
-.dc-row { position: absolute; left: 0; right: 0; white-space: nowrap; text-shadow: 0 0 0.7px rgb(29 26 21 / 0.5); }
-.dc-head { text-align: center; font-weight: 700; letter-spacing: 0.08em; }
+.dc-text.dc-inter { font-family: var(--sans); font-weight: 400; }
+.dc-row { position: absolute; left: 0; right: 0; white-space: nowrap; }
+.dc-period .dc-head { text-align: center; font-weight: 700; letter-spacing: 0.08em; }
+.dc-inter .dc-head { font-weight: 600; }
 .dc-sub { text-align: center; font-style: italic; }
-.dc-text.dc-typed .dc-head { text-align: left; font-weight: 400; letter-spacing: 0.03em;
-  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
-.dc-o-clip .dc-text { text-shadow: 0 0 0.9px rgb(29 26 21 / 0.55); }
-.dc-colrule { position: absolute; right: 22px; top: 34px; bottom: 40px; width: 1.5px; background: rgb(29 26 21 / 0.55); }
 
-/* ── the highlighter ────────────────────────────────────────────────────────────────────── */
-/* A felt nib's stroke, laid under the ink and multiplied into the paper so fibre and ink show
-   through: chisel ends, wandering edges (documents.mjs draws the outline), denser where the ink
-   pools at the edges and the ends, faint streaks along the stroke. It swipes on the spoken word. */
-.dc-hl { position: relative; }
-.mk { --ink: 241 194 75; position: absolute; z-index: -1; display: block; mix-blend-mode: multiply;
-  transform: rotate(var(--rot, 0deg)); clip-path: inset(-30% 100% -30% 0);
-  animation: mk-swipe calc(var(--d) * 1s) cubic-bezier(0.32, 0.04, 0.4, 1) calc(var(--at) * 1s) both; }
-.dc-hl > .mk { left: -0.17em; right: -0.17em; top: 0.13em; bottom: 0.02em; }
+/* A figure is not readable before it is spoken: it waits under blur, then lands (S3). */
+.fig { display: inline-block; animation: fig-land 0.35s var(--ease-out) calc((var(--ft) - 0.15) * 1s) both; }
+@keyframes fig-land { from { filter: blur(10px); opacity: 0.5; transform: scale(1.06); letter-spacing: 0.04em; } to { filter: none; opacity: 1; transform: none; letter-spacing: 0; } }
+/* The money figure the line lands on turns blue, and blooms (the only blue in the frame). */
+.fig-money { animation: fig-land 0.35s var(--ease-out) calc((var(--ft) - 0.15) * 1s) both, fig-blue 0.75s ease-out calc((var(--ft) - 0.02) * 1s) both; }
+@keyframes fig-blue { 0% { color: var(--paper-ink); text-shadow: none; } 22% { color: var(--blue); text-shadow: 0 0 10px rgb(47 116 255 / 0.5); }
+  100% { color: var(--blue); text-shadow: 0 0 8px rgb(47 116 255 / 0.3); } }
+
+/* ── the highlighter: amber, a felt nib's stroke multiplied into the paper ─────────────────── */
+.mk { --ink: 241 194 75; position: absolute; display: block; mix-blend-mode: multiply; transform: rotate(var(--rot, 0deg)); }
 .mk b { position: absolute; inset: 0; opacity: 0.86;
   background:
-    repeating-linear-gradient(180deg, transparent 0 3px, rgb(255 255 255 / 0.13) 3px 4px, transparent 4px 7px),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgb(242 238 230 / 0.13) 3px 4px, transparent 4px 7px),
     linear-gradient(180deg, rgb(var(--ink) / 0.35), transparent 20%, transparent 80%, rgb(var(--ink) / 0.3)),
     linear-gradient(90deg, rgb(var(--ink)), rgb(var(--ink) / 0.8) 1.2%, rgb(var(--ink) / 0.74) 50%, rgb(var(--ink) / 0.82) 98.4%, rgb(var(--ink))); }
-.mk-money { --ink: 58 120 255; }
-.mk-money b { opacity: 0.6; }
-@keyframes mk-swipe { from { clip-path: inset(-30% 100% -30% 0); } to { clip-path: inset(-30% 0 -30% 0); } }
 
-/* The rest of the page settles back as the camera arrives: dimmer, and out of the lens's focus. */
-.dc-dim { animation: dc-dim 1.2s var(--ease-in-out) var(--dim-at) both; }
-@keyframes dc-dim { from { opacity: 1; filter: blur(0); } to { opacity: 0.6; filter: blur(var(--blur, 1px)); } }
+/* ── the desk label: the film's own words about the page, never on the paper ──────────── */
+.dc-desk { position: absolute; margin: 0; white-space: nowrap; font-family: var(--sans); font-weight: 500; line-height: 1.3;
+  letter-spacing: 0.12em; color: rgb(242 238 230 / 0.7); animation: dc-desk 0.7s var(--ease-out) calc(var(--at) * 1s) both; }
+.dc-desk .dl-dim { color: rgb(242 238 230 / 0.46); }
+.dc-desk i { display: inline-block; width: 1.4em; text-align: center; font-style: normal; color: rgb(242 238 230 / 0.4); }
+.dc-desk i::before { content: "·"; }
+.dc-desk.dl-two span { display: block; }
+.dc-desk.dl-two i { display: none; }
+@keyframes dc-desk { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: none; } }
 
-/* The key light narrowing onto the line (screen space, centred where the camera put the line). */
-.dc-spot { position: absolute; inset: 0; z-index: 48; pointer-events: none;
-  background: radial-gradient(ellipse var(--srx) var(--sry) at var(--fx) var(--fy), transparent 0, rgb(6 5 4 / 0.04) 25%,
-    rgb(6 5 4 / 0.14) 45%, rgb(6 5 4 / 0.3) 65%, rgb(6 5 4 / 0.46) 82%, rgb(6 5 4 / 0.6) 100%);
-  animation: fade 1.8s var(--ease-in-out) var(--spot-at) both; }
+/* A flag on the lamp: where a tight frame puts paper under the label slot, the light is cut off
+   the frame's lower left so the source line stays legible. */
+.dc-flag { position: absolute; inset: 0; z-index: 49; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 820px 230px at 600px 920px, color-mix(in srgb, var(--ground) 86%, transparent),
+      color-mix(in srgb, var(--ground) 66%, transparent) 55%, transparent 100%),
+    linear-gradient(14deg, color-mix(in srgb, var(--ground) 62%, transparent) 0%, transparent 34%); }
 
-/* ── the source caption: small, in the light, under the frame's own shadow ─────────────── */
-.dc-floor { position: absolute; left: 0; bottom: 0; width: 1560px; height: 440px; z-index: 49; pointer-events: none;
-  background: radial-gradient(72% 92% at 10% 100%, rgb(8 7 6 / 0.8), rgb(8 7 6 / 0.46) 45%, transparent 78%); }
-.dc-cap { position: absolute; z-index: 55; text-shadow: 0 1px 14px rgb(0 0 0 / 0.7); left: var(--safe-x); bottom: 92px; margin: 0; max-width: 1040px;
-  display: flex; align-items: flex-start; gap: 20px; font: 500 26px/1.38 var(--sans); letter-spacing: 0.01em; color: var(--light-2);
-  animation: dc-cap 1.1s var(--ease-out) calc(var(--at) * 1s) both; }
-.dc-cap i { flex: 0 0 44px; height: 1.5px; margin-top: 18px; background: var(--light-3); }
-.dc-cap-up { bottom: 124px; }
-@keyframes dc-cap { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
-
-/* ── tables: a printed rate table or ledger ─────────────────────────────────────────────── */
+/* ── tables: a typeset rate table (period) or a laser-printed card (modern) ─────────────── */
 .tb { position: absolute; inset: 0; color: var(--paper-ink); font-kerning: none; }
 .tb-period { font-family: var(--period); }
-.tb-typed { font-family: var(--typed); color: #27231e; }
-.tb-heading { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; font-weight: 700; letter-spacing: 0.09em; text-shadow: 0 0 0.7px rgb(29 26 21 / 0.5); }
-.tb-typed .tb-heading { font-weight: 400; letter-spacing: 0.04em; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
-.tb-orn { position: absolute; left: 50%; width: 110px; margin-left: -55px; height: 1px; background: currentColor; opacity: 0.55; }
+.tb-modern { font-family: var(--sans); font-variant-numeric: tabular-nums; }
 .tb-rule { position: absolute; height: 1.5px; background: currentColor; opacity: 0.8; }
 .tb-double { height: 3px; }
 .tb-double::after { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 1px; background: currentColor; }
@@ -123,29 +105,40 @@
 .tb-foot::after { top: 4px; height: 3px; }
 .tb-hair { height: 1px; opacity: 0.22; }
 .tb-vrule { position: absolute; width: 1px; background: currentColor; opacity: 0.42; }
-.tb-row { position: absolute; left: 0; right: 0; white-space: nowrap; text-shadow: 0 0 0.7px rgb(29 26 21 / 0.5); }
+.tb-modern .tb-double { height: 2px; opacity: 0.85; }
+.tb-modern .tb-double::after, .tb-modern .tb-foot::after { display: none; }
+.tb-modern .tb-hair { opacity: 0.16; }
+.tb-modern .tb-vrule { opacity: 0.18; }
+.tb-row { position: absolute; left: 0; right: 0; white-space: nowrap; }
 .tb-cell { position: absolute; top: 0; box-sizing: border-box; padding: 0 26px; }
 .tb-num { text-align: right; font-variant-numeric: tabular-nums; }
-.tb-cols .tb-cell { padding-top: 14px; text-align: center; text-transform: uppercase; letter-spacing: 0.14em; font-size: 25px; }
-.tb-typed .tb-cols .tb-cell { letter-spacing: 0.1em; font-size: 26px; }
+.tb-cols .tb-cell { padding-top: 15px; text-align: center; font-size: 28px; letter-spacing: 0.12em; }
+.tb-modern .tb-cols .tb-cell { font-weight: 600; letter-spacing: 0.06em; opacity: 0.74; }
 .tb-lead { position: absolute; opacity: 0.75;
   background: radial-gradient(circle, currentColor 0 1.7px, transparent 2.3px) 0 calc(100% - 0.42em) / 0.5em 6px repeat-x; }
+/* The lamp narrowing onto rows or columns as the voice names them: the rest of the card dims. */
+.tb-light { position: absolute; z-index: 2; pointer-events: none; border-radius: 4px;
+  box-shadow: 0 0 36px 2400px color-mix(in srgb, var(--ground) 24%, transparent); }
 .tb-write { position: absolute; left: 26px; right: 26px; border-bottom: 1.5px solid currentColor; opacity: 0.32; }
 
 /* ── quotes: words that matter, as light on the dark ───────────────────────────────────── */
 .v3-quote { --key-x: 30%; --key-y: 44%; }
 .qt-cam { perspective: 1600px; }
-.qt-cam > .rig { animation-timing-function: linear; }
-.qt { position: absolute; left: 300px; top: 50%; width: 1300px; transform: translateY(-54%); }
-.qt-text { margin: 0; font: italic 400 var(--qs)/1.06 var(--quote); letter-spacing: -0.012em; color: var(--light); text-wrap: balance;
-  text-shadow: 0 0 36px rgb(255 236 210 / 0.14); }
-/* Each word lands as it is spoken: up out of the dark, in focus within half a second. */
-.qt-w { display: inline-block; animation: qt-w 0.62s cubic-bezier(0.16, 0.8, 0.3, 1) calc(var(--at) * 1s) both; }
-@keyframes qt-w { from { opacity: 0; transform: translateY(0.14em); filter: blur(7px); } 40% { opacity: 1; } to { opacity: 1; transform: none; filter: blur(0); } }
-.qt-by { display: flex; align-items: center; gap: 22px; margin: 0 0 52px; max-width: 1240px; min-height: 38px; font: 600 26px/1.45 var(--sans);
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--light-2); }
-.qt-by span { animation: qt-by 1.2s var(--ease-out) calc((var(--at) + 0.35) * 1s) both; }
+.qt { position: absolute; left: 290px; top: 50%; width: 1360px; transform: translateY(-54%); }
+.qt-text { position: relative; margin: 0; font: italic 400 var(--qs)/1.08 var(--quote); letter-spacing: -0.01em; word-spacing: 0.04em;
+  color: var(--light); text-wrap: balance; text-shadow: var(--glow-ivory); }
+/* A hanging open quotation mark in the margin; the words land on their own spoken onsets. */
+.qt-mark { position: absolute; left: -0.48em; top: 0; color: rgb(242 238 230 / 0.4); animation: qt-w 0.25s var(--ease-out) calc(var(--at) * 1s) both; }
+.qt-w { display: inline-block; animation: qt-w 0.25s var(--ease-out) calc(var(--at) * 1s) both; }
+/* Before its word, a word is a ghost of light (present from the cut, never readable early). */
+@keyframes qt-w { from { opacity: 0.16; filter: blur(8px); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
+.qt-by { display: flex; align-items: center; gap: 22px; margin: 0 0 48px; max-width: 1240px; min-height: 38px;
+  font: 500 var(--fs-label)/1.4 var(--sans); letter-spacing: 0.10em; color: var(--light-2); }
+.qt-by i:not(.qt-rule) { font-style: italic; }
+.qt-by span { animation: dc-desk 0.7s var(--ease-out) calc(var(--at) * 1s) both; }
 .qt-rule { flex: 0 0 72px; height: 1.5px; background: var(--light-3); transform-origin: left center;
-  animation: qt-rule 1.1s var(--ease-out) calc(var(--at) * 1s) both; }
+  animation: qt-rule 0.7s var(--ease-out) calc(var(--at) * 1s) both; }
 @keyframes qt-rule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes qt-by { from { opacity: 0; transform: translateX(-12px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* A table's value is typed on as it is spoken (clock.js data-type-at); the money one then turns blue. */
+.tw.fig-blue { animation: fig-blue 0.75s ease-out calc((var(--ft) + 0.3) * 1s) both; }

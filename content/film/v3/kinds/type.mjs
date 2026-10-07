@@ -115,9 +115,9 @@ function align(toks, spoken) {
 function onsets(toks, spoken, t0 = 0, gap = 0.1) {
   const raw = align(toks, spoken || []), out = [];
   for (let i = 0; i < raw.length; i++) {
-    const next = raw.slice(i + 1).find((t) => t != null);
+    const nextI = raw.findIndex((t, j) => j > i && t != null), next = nextI < 0 ? null : raw[nextI];
     let v = raw[i] ?? (i ? out[i - 1] + gap : t0);
-    if (raw[i] == null && next != null) v = Math.min(v, next - 0.04);
+    if (raw[i] == null && next != null) v = i && out[i - 1] != null && out[i - 1] < next - 0.04 ? Math.min(v, next - 0.04) : next - 0.04 * (nextI - i);
     if (i && v < out[i - 1]) v = out[i - 1] + 0.02;
     out.push(v);
   }
@@ -132,25 +132,72 @@ function spokenAt(text, spoken, near) {
   }
   return near ?? 0.4;
 }
-/** When a phrase starts being spoken, near the plan's time: its first spoken word in a window. */
-function phraseAt(text, spoken, near, before = 4, after = 2) {
-  const win = (spoken || []).filter((x) => near == null || (x.t >= near - before && x.t <= near + after));
-  const t = align(words(text), win).find((x) => x != null);
-  return t ?? near;
+/**
+ * Where a short phrase is said: of every place the narration says one of its words, the window that
+ * matches it best, discounted by its distance from the plan's time. Each word's onset, or null.
+ */
+function phraseTimes(text, spoken, near, lam = 0.8) {
+  const toks = words(text), keys = toks.map(norm), n = toks.length;
+  let best = null;
+  (spoken || []).forEach((x, j) => {
+    const k = norm(x.w);
+    if (!k || STOP.has(k) || !keys.includes(k)) return;
+    const raw = align(toks, spoken.slice(Math.max(0, j - n - 1), j + n + 2));
+    // said means every number in it is said, and at least a third of its weight
+    const got = raw.reduce((a, t, i) => a + (t == null ? 0 : weight(keys[i])), 0), all = keys.reduce((a, k) => a + (k ? weight(k) : 0), 0);
+    if (keys.some((k, i) => /\d/.test(k) && raw[i] == null) || got < 0.35 * all) return;
+    const score = raw.reduce((a, t, i) => a + (t == null ? 0 : weight(keys[i])), 0) - (near == null ? 0 : lam * Math.max(0, Math.abs(x.t - near) - 0.5));
+    if (!best || score > best.score) best = { score, raw };
+  });
+  if (!best || best.score <= 0) return null;
+  const out = [];
+  out.raw = best.raw;
+  for (let i = 0; i < n; i++) {
+    const nextI = best.raw.findIndex((t, j) => j >= i && t != null);
+    let v = best.raw[i] ?? (nextI > i && (i === 0 || out[i - 1] == null || out[i - 1] >= best.raw[nextI] - 0.04) ? best.raw[nextI] - 0.04 * (nextI - i) : out[i - 1] + 0.08);
+    if (i && v < out[i - 1]) v = out[i - 1] + 0.02;
+    out.push(v);
+  }
+  return out;
+}
+/** A phrase's onsets: where it is said, else from `t0` with a gentle stagger. */
+const sayTimes = (text, spoken, near, t0) => phraseTimes(text, spoken, near) ?? words(text).map((_, i) => (t0 ?? near ?? 0) + i * 0.07);
+/** When a phrase starts being said near the plan's time (or `near` when it is not said). */
+const phraseAt = (text, spoken, near) => phraseTimes(text, spoken, near)?.[0] ?? near;
+const saidAt = (text, spoken, near) => phraseTimes(text, spoken, near)?.[0] ?? null;
+/** A phrase said from `t0` on: its words on their onsets and never before `t0` (from `t0`, staggered, when it is not said). */
+const sayFrom = (text, spoken, t0) => (phraseTimes(text, (spoken || []).filter((x) => x.t >= t0 - 0.05), t0, 0.12) ?? words(text).map((_, i) => t0 + i * 0.07)).map((t) => Math.max(t, t0));
+/** When a phrase is first said at or after `t0` (null when it is not). */
+const saidAfter = (text, spoken, t0) => phraseTimes(text, (spoken || []).filter((x) => x.t >= t0 - 0.05), t0, 0.12)?.[0] ?? null;
+/** A heading is set at the cut (a title, not narration); only a figure in it waits for its word. */
+const headWords = (text, spoken) => words(text).map((w) => (/\d/.test(w) ? (spoken || []).find((x) => norm(x.w) === norm(w))?.t ?? 0 : 0));
+/** A heading's words: those the narration says on their onsets, the rest there from `t0` (a heading is set before it is read). */
+function headTimes(text, spoken, t0 = 0) {
+  const ts = phraseTimes(text, (spoken || []).filter((x) => x.t >= t0 - 0.05), t0 + 1);
+  if (!ts) return words(text).map((_, i) => t0 + i * 0.04);
+  const first = ts.raw.findIndex((t) => t != null);
+  return ts.map((t, i) => (i < first ? t0 + i * 0.04 : Math.max(t, t0)));
+}
+/** Each number in a figure on its own word: the first at `t0`, a range's second when it is said. */
+function figTimes(text, spoken, t0) {
+  const nums = tokens(text).filter((t) => t.n);
+  return nums.map((t, i) => (i ? Math.max(t0 + 0.2, spokenAt(t.n, (spoken || []).filter((x) => x.t > t0), t0 + 0.6)) : t0));
 }
 
 /* ---------- the stage box and the camera ---------- */
 
 /**
  * The box a shot lays out in, and the camera origin that keeps it in title-safe. The shared camera
- * (base.css) pushes 1% of scale a second and drifts 8 px a second; anchoring its origin at
- * x = 160 − 800·s keeps the left grid line still while the push grows the frame to the right,
- * so a box of 1600/s × 760/s at x = 160 ends the shot exactly filling title-safe (y 90–850).
+ * (base.css) pushes 1% of scale a second, capped at 6%, with no sideways drift. Anchored on the
+ * left grid line (x = 160) and the box's middle, a box of 1600/s × 760/s at x = 160 ends the shot
+ * exactly filling title-safe (y 90–850, above the label slot). `open` kinds (no label) use 90–990.
+ * `push` is a kind's own extra push on top (the hook's), counted in the same box.
  */
-function stage(job) {
-  const dur = job.seconds || 6, s = 1 + 0.01 * dur;
-  const w = Math.floor(1600 / s), h = Math.floor(760 / s);
-  return { dur, s, w, h, top: Math.round(470 - h / 2), ox: Math.round(160 - 800 * s), oy: 470 };
+function stage(job, open = false, push = 1) {
+  const dur = job.seconds || 6, s = (1 + Math.min(0.01 * dur, 0.06)) * push, cy = open ? 540 : 470;
+  // a line's box runs above its capitals (the font's ascent): keep 30 px of the safe band for it
+  const w = Math.floor(1600 / s), h = Math.floor(((open ? 900 : 760) - 60) / s);
+  return { dur, s, w, h, top: Math.round(cy - h / 2), ox: 160, oy: cy };
 }
 function cam(B, inner, extra = "") {
   return `<div class="cam" style="--cam-origin:${B.ox}px ${B.oy}px"><div class="rig"><div class="ty" style="--bx-top:${B.top}px;--bx-w:${B.w}px;--bx-h:${B.h}px">` +
@@ -169,11 +216,11 @@ function wordSpans(text, times, pre = false) {
   return words(text).map((w, i) => {
     const t = times[i] ?? times[times.length - 1] ?? 0;
     const cut = t <= 0.4;
-    return `<span class="ty-w${cut ? " cut" : pre ? " pre" : ""}" style="--at:${r3(cut ? 0 : t)}">${T(w)}</span>`;
+    return `<span class="ty-w${cut ? " cut" : pre ? " pre" : ""}" style="--at:${r3(cut ? -0.12 : t)}">${T(w)}</span>`;
   }).join(" ");
 }
 /** A line of words timed from the narration, or from `t0` with a gentle stagger when not spoken. */
-const speak = (text, spoken, t0, near) => wordSpans(text, onsets(words(text), near == null ? spoken : (spoken || []).filter((x) => x.t >= near - 4 && x.t <= near + 6), t0, 0.07));
+const speak = (text, spoken, t0, near) => wordSpans(text, sayTimes(text, spoken, near ?? t0, t0));
 /** Elements that enter at a time: the shared rise, but an element due by 0.4 s is already arriving at frame 0. */
 const enter = (t) => `--at:${r3(t <= 0.4 ? -0.4 : t)}`;
 
@@ -222,7 +269,7 @@ function figLine(text, px, o = {}) {
     const sl = /^\s/.test(raw), sr = /\s$/.test(raw);
     const at = times[Math.min(Math.max(0, k - (k && k === nums.length ? 1 : 0)), times.length - 1)];
     w += serifW(txt, up, true) + ((sl ? 0.28 : 0) + (sr ? 0.28 : 0)) * up;
-    html += `<span class="ty-u${sl ? " sl" : ""}${sr ? " sr" : ""}" style="font-size:${px0(up)}"><span class="ty-w${at <= 0.4 ? " cut" : ""}" style="--at:${r3(at <= 0.4 ? 0 : at + 0.05)}">${T(txt)}</span></span>`;
+    html += `<span class="ty-u${sl ? " sl" : ""}${sr ? " sr" : ""}" style="font-size:${px0(up)}"><span class="ty-w${at <= 0.4 ? " cut" : ""}" style="--at:${r3(at <= 0.4 ? -0.12 : at + 0.05)}">${T(txt)}</span></span>`;
   });
   return { html, w };
 }
@@ -262,7 +309,7 @@ export function number(job) {
   // the context line comes first when the figure is spoken late, else it follows on its words
   const subFirst = on > 1.0;
   const sub = p.sub ? `<p class="ty-n-sub">${subFirst ? wordSpans(p.sub, words(p.sub).map(() => 0)) : speak(p.sub, spoken.filter((x) => x.t > on + 0.3), on + 0.55)}</p>` : "";
-  const tailT = tail ? phraseAt(tail, spoken, on + 0.5, 0.2, 3) ?? on + 0.4 : 0;
+  const tailT = tail ? phraseAt(tail, spoken, on + 0.5) ?? on + 0.4 : 0;
   const bs = beats([on, ...times, tail ? tailT : null], spoken, B.dur, 1);
   const est = p.estimate ? `<p class="ty-est" style="${enter(on + 0.8)}">Estimate</p>` : "";
   return cam(B, `<div class="ty-box ty-n">` +
@@ -274,11 +321,11 @@ export function number(job) {
 /* ---------- pair ---------- */
 
 export function pair(job) {
-  const B = stage(job), p = job.params || {}, L = p.left || {}, R = p.right || {}, spoken = job.words || [];
+  const B = stage(job, false, job.params?.push_at != null ? 1.05 : 1), p = job.params || {}, L = p.left || {}, R = p.right || {}, spoken = job.words || [];
   const lAt = L.at ?? 0.3, rAt = Math.max(R.at ?? lAt + 1.2, lAt + 0.4);
   const kl = kindOf(L.value), kr = kindOf(R.value);
-  // money and the moment it is from: the money is the hero, the time sits under it, small
-  if ((kl === "money") !== (kr === "money") && (kl === "time" || kr === "time")) return hook(job, B);
+  // a price and the moment it is from are not a comparison: stacked, the money the hero
+  if (p.layout === "stacked" || ((kl === "money") !== (kr === "money") && (kl === "time" || kr === "time"))) return hook(job, B);
   const same = kl === kr && kl !== "time";
   const blueR = kr === "money", blueL = kl === "money" && !blueR;
   const unitsOf = (v) => { const t = tokens(v), z = t[t.length - 1]; return z?.w && /^\s/.test(z.w) && t.length > 1 ? z.w.trim() : ""; };
@@ -289,8 +336,8 @@ export function pair(job) {
     const lu = below ? unitsOf(L.value) : "", ru = below ? unitsOf(R.value) : "";
     let px = 260, lf, rf;
     for (;; px -= 4) {
-      lf = figLine(strip(L.value, lu), px, { times: [lAt], blue: blueL, quiet: kl === "money" && !blueL });
-      rf = figLine(strip(R.value, ru), px, { times: [rAt], blue: blueR });
+      lf = figLine(strip(L.value, lu), px, { times: figTimes(strip(L.value, lu), spoken, lAt), blue: blueL, quiet: kl === "money" && !blueL });
+      rf = figLine(strip(R.value, ru), px, { times: figTimes(strip(R.value, ru), spoken, rAt), blue: blueR });
       if (lf.w + rf.w + 240 <= B.w || px <= 120) break;
     }
     return { px, lf, rf, lu, ru };
@@ -299,34 +346,41 @@ export function pair(job) {
   if (F.px < 190) { const G = fit(true); if ((G.lu || G.ru) && G.px > F.px + 24) F = G; }
   const { px, lf, rf } = F;
   const linkW = B.w - lf.w - rf.w, d = 0.7, drawFrom = Math.max(lAt + 0.4, rAt - d - 0.05);
-  const gapT = p.gap ? phraseAt(p.gap, spoken, rAt + 1.2, 1, 4) ?? rAt + 0.7 : 0;
+  const gapT = p.gap ? p.gap_at ?? saidAt(p.gap, spoken, rAt + 1.2) ?? rAt + 0.7 : 0;
   const gapIn = p.gap && serifW(p.gap, BODY, true) <= linkW - 90;
-  const bs = beats([lAt, rAt, p.gap ? gapT : null], spoken, B.dur, 1);
+  // a label lands on its own words (the plan's `label_at`), else with its figure, else at the cut
+  const labT = (c, t) => c.label_at ?? saidAt(c.label, spoken, t) ?? Math.max(0, Math.min(t - 0.3, 0.2));
+  const bs = beats([lAt, rAt, p.gap ? gapT : null, L.label_at, R.label_at], spoken, B.dur, 1);
   const col = (c, t, f, unit, side, blue) => `<div class="ty-p-col ${side}" style="--next:${r3(rAt)}">` +
-    `<p class="ty-label">${speak(c.label, spoken, Math.max(0, Math.min(t - 0.3, 0.2)), Math.min(t, 1))}</p>` +
+    `<p class="ty-label">${wordSpans(c.label, sayFrom(c.label, spoken, labT(c, t)))}</p>` +
     `<div class="ty-p-fig" style="font-size:${px0(px)}">${bloom(f.w * 1.4, px * 1.8, t, blue)}${f.html}` +
-    `${unit ? `<span class="ty-p-unit" style="font-size:${px0(Math.max(LABEL, px * 0.3))}">${wordSpans(unit, [t + 0.1])}</span>` : ""}` +
+    `${unit ? `<span class="ty-p-unit" style="font-size:${px0(Math.max(LABEL, px * 0.3))}">${wordSpans(unit, sayFrom(unit, spoken, t + 0.1))}</span>` : ""}` +
     `${side === "r" ? pulses(bs, 0, blue ? "pulse-blue" : "pulse") : ""}</div></div>`;
   const link = `<div class="ty-p-link${same ? " arrow" : ""}" style="--lift:${px0(px * 0.42)};--at:${r3(drawFrom)};--d:${r3(rAt - drawFrom)}s">` +
     `<i class="ty-p-line"></i><i class="ty-p-head"></i>${same ? "<b></b>" : "<u></u>"}${bs.map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}` +
-    `${gapIn ? `<p class="ty-p-gap in">${speak(p.gap, spoken, gapT, gapT)}</p>` : ""}</div>`;
-  const q = p.question ? `<p class="ty-head">${wordSpans(p.question, words(p.question).map(() => 0))}</p>` : "";
-  const g = p.gap && !gapIn ? `<p class="ty-p-gap">${speak(p.gap, spoken, gapT, gapT)}</p>` : "";
+    `${gapIn ? `<p class="ty-p-gap in">${wordSpans(p.gap, sayFrom(p.gap, spoken, gapT))}</p>` : ""}</div>`;
+  const q = p.question ? `<p class="ty-head">${wordSpans(p.question, p.question_at ? headTimes(p.question, spoken, p.question_at[0] ?? 0) : headWords(p.question, spoken))}</p>` : "";
+  const g = p.gap && !gapIn ? `<p class="ty-p-gap">${wordSpans(p.gap, sayFrom(p.gap, spoken, gapT))}</p>` : "";
+  // `push_at`: from that word the camera leans in toward the figure the line lands on
+  const push = p.push_at != null ? `--push-to:1.05;--push-at:${r3(p.push_at)};--push-d:${r3(Math.max(1, B.dur - p.push_at))}s;--push-origin:160px ${B.oy}px` : "";
   return cam(B, `<div class="ty-box ty-p">${q}<div class="ty-p-row${F.lu || F.ru ? " units" : ""}">` +
-    `${col(L, lAt, lf, F.lu, "l", blueL)}${link}${col(R, rAt, rf, F.ru, "r", blueR)}</div>${g}</div>`);
+    `${col(L, lAt, lf, F.lu, "l", blueL)}${link}${col(R, rAt, rf, F.ru, "r", blueR)}</div>${g}</div>`, push);
 }
 
-/** The hook (a01): the money lands at frame 0 as the hero; the moment it is from lands under it, small. */
+/** The hook (a01): the money lands at frame 0 as the hero; the moment it is from under it, small; then the gap's words. */
 function hook(job, B) {
   const p = job.params || {}, spoken = job.words || [], L = p.left || {}, R = p.right || {};
-  const [M, W] = isMoney(L.value) ? [L, R] : [R, L];
+  const [M, W] = isMoney(L.value) ? [L, R] : isMoney(R.value) ? [R, L] : [L, R];
   const mAt = M.at ?? 0.3, wAt = W.at ?? mAt + 1;
-  const px = 400;
-  const f = figLine(M.value, px, { times: [mAt], blue: true, ls: -0.04 });
-  const wt = onsets(words(W.value), spoken.filter((x) => x.t >= wAt - 0.1), wAt);
-  const extra = `--push-to:${r3(1.1 / B.s)};--dur-n:${B.dur}`;   // the hook pushes to 1.10 over the shot
-  return cam(B, `<div class="ty-box ty-hook"><div class="ty-p-fig hero" style="font-size:${px}px">${bloom(f.w * 1.3, px * 1.6, mAt, true)}${f.html}</div>` +
-    `<p class="ty-hook-when" style="font-size:${px0(px * 0.4)}">${words(W.value).map((w, i) => `<span class="${timeish(w) ? "ty-fd" : "ty-hw"} ty-w" style="--at:${r3(wt[i])}">${T(w)}</span>`).join(" ")}</p></div>`, extra);
+  // the hero as large as the box allows with its two lines under it (the shared push is the camera)
+  const px = clamp(Math.floor((B.h - (p.gap ? 150 : 40)) / (0.82 + 0.4 * 1.3 + 0.17)), 220, 360);
+  const f = figLine(M.value, px, { times: figTimes(M.value, spoken, mAt), blue: isMoney(M.value), ls: -0.04 });
+  const wt = sayFrom(W.value, spoken, wAt);
+  const gapT = p.gap ? p.gap_at ?? saidAt(p.gap, spoken, wAt + 1) ?? wAt + 1 : 0;
+  const bs = beats([mAt, ...wt, ...(p.gap ? sayFrom(p.gap, spoken, gapT) : [])], spoken, B.dur, 1);
+  return cam(B, `<div class="ty-box ty-hook"><div class="ty-p-fig hero" style="font-size:${px}px">${bloom(f.w * 1.3, px * 1.6, mAt, isMoney(M.value))}${f.html}${pulses(bs, 0, "pulse-blue")}</div>` +
+    `<p class="ty-hook-when" style="font-size:${px0(px * 0.4)}">${words(W.value).map((w, i) => `<span class="${timeish(w) ? "ty-fd" : "ty-hw"} ty-w" style="--at:${r3(wt[i])}">${T(w)}</span>`).join(" ")}</p>` +
+    `${p.gap ? `<p class="ty-hook-gap">${wordSpans(p.gap, sayFrom(p.gap, spoken, gapT))}</p>` : ""}</div>`);
 }
 
 /* ---------- grid ---------- */
@@ -355,11 +409,10 @@ export function grid(job) {
   const caption = per > 1 ? `${p.caption || ""} One dot is ten.`.trim() : p.caption;
   const capT = on + fill + 0.3;
   const bs = beats([on, on + fill, caption ? capT : null], spoken, B.dur, 1);
-  const left = `<div class="ty-g-count" style="width:${leftW}px"><div class="ty-g-fig" style="font-size:300px">${bloom(f.w * 1.5, 520, on, money)}${f.html}${of}</div>` +
+  const left = `<div class="ty-g-count" style="width:${leftW}px"><div class="ty-g-fig" style="font-size:300px">${bloom(f.w * 1.5, 520, on, money)}${f.html}${of}${pulses(bs, 0, money ? "pulse-blue" : "pulse")}</div>` +
     `${caption ? `<p class="ty-g-cap">${speak(caption, spoken, capT, capT)}</p>` : ""}</div>`;
-  const right = `<div class="ty-g-dots${money ? " money" : ""}" style="grid-template-columns:repeat(${cols}, ${px0(pitch)});--dot:${px0(dot)};--pitch:${px0(pitch)}">${dots}` +
-    `${bs.map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div>`;
-  const head = p.heading ? `<p class="ty-head">${wordSpans(p.heading, words(p.heading).map(() => 0))}</p>` : "";
+  const right = `<div class="ty-g-dots${money ? " money" : ""}" style="grid-template-columns:repeat(${cols}, ${px0(pitch)});--dot:${px0(dot)};--pitch:${px0(pitch)}">${dots}</div>`;
+  const head = p.heading ? `<p class="ty-head">${wordSpans(p.heading, headWords(p.heading, spoken))}</p>` : "";
   return cam(B, `<div class="ty-box ty-g">${head}<div class="ty-g-row">${left}${right}</div></div>`);
 }
 
@@ -378,7 +431,7 @@ function breakLine(text, w, maxw) {
 }
 
 export function kinetic(job) {
-  const B = stage(job), p = job.params || {}, spoken = job.words || [];
+  const B = stage(job, true), p = job.params || {}, spoken = job.words || [];
   const lines = (p.lines?.length ? p.lines : [job.says]).map((l) => String(l ?? "").trim()).filter(Boolean);
   const italic = (i) => i > 0 && /[.!?:]$/.test(lines[i - 1]);
   // every word on its spoken onset (a line the narration does not say lands on the plan's time)
@@ -448,19 +501,22 @@ export function formula(job) {
   const ops = (p.ops || []).map((o) => String(o ?? "").trim());
   const n = terms.length;
   if (!n) return cam(B, "");
-  const result = n > 1 && (ops[n - 2] === "=" || /^[a-z]+$/i.test(ops[n - 2] || ""));
+  const result = n > 1 && (ops[n - 2] === "=" || /^(?:is|are|was|costs?|equals?|gives?|makes?|comes? to)$/i.test(ops[n - 2] || ""));
   const isRes = (i) => result && i === n - 1;
   const lone = (i) => isRes(i) && /^[?…]$/.test(String(terms[i].text).trim());
-  // every term on its spoken words (the plan's times only where the narration does not say it)
-  const all = terms.flatMap((t) => words(t.text)), raw = align(all, spoken);
+  // a recut plan carries its own times (`ops_at`, `pencil_at`, `caption_at`, each term's `at`, all
+  // from the word onsets); otherwise every term is found in the narration
+  const recut = Array.isArray(p.ops_at) || p.pencil_at != null || p.caption_at != null;
+  const all = terms.flatMap((t) => words(t.text)), raw = recut ? [] : align(all, spoken);
   let k = 0;
-  const tt = terms.map((t, i) => {
+  const tt = terms.map((t) => {
     const ws = words(t.text), own = raw.slice(k, k + ws.length); k += ws.length;
+    if (recut && t.at != null) return sayFrom(t.text, spoken, t.at);
     const f = own.find((x) => x != null);
     return f != null ? onsets(ws, spoken.filter((x) => x.t >= f - 0.01), f, 0.08) : null;
   });
-  // an operator lands on its spoken word between its terms, else just before its right-hand term
   const opT = ops.map((o, i) => {
+    if (p.ops_at?.[i] != null) return p.ops_at[i];
     const a = tt[i]?.[0] ?? terms[i].at ?? 0.4, said = SYMBOL[o] ? SAID[o] || [] : [norm(o)];
     const hit = spoken.find((x) => x.t > a && said.includes(norm(x.w)) && x.t < (tt[i + 1]?.[0] ?? Infinity) + 0.6);
     return hit ? hit.t : null;
@@ -471,7 +527,7 @@ export function formula(job) {
     const t0 = opT[i - 1] != null ? opT[i - 1] + 0.35 : t.at ?? 0.4 + i * 0.9;
     tt[i] = words(t.text).map((_, j) => t0 + j * 0.08);
   });
-  for (let i = 1; i < n; i++) if (tt[i][0] < tt[i - 1][0]) tt[i] = tt[i].map((t) => t + (tt[i - 1][0] - tt[i][0]) + 0.2);
+  if (!recut) for (let i = 1; i < n; i++) if (tt[i][0] < tt[i - 1][0]) tt[i] = tt[i].map((t) => t + (tt[i - 1][0] - tt[i][0]) + 0.2);
   const opAt = (i) => opT[i] ?? Math.max(tt[i][tt[i].length - 1] + 0.1, tt[i + 1][0] - 0.3);
   const tw = (i, px) => (lone(i) ? serifW(String(terms[i].text), px * 1.7, true) : termW(terms[i].text, px, isRes(i)));
   const ow = (o, px) => (SYMBOL[o] ? px * 0.62 : serifW(o, px * 0.62, true));
@@ -479,7 +535,8 @@ export function formula(job) {
   const rowW = (px) => terms.reduce((a, _, i) => a + tw(i, px) + (i < n - 1 ? ow(ops[i] ?? "+", px) + 2 * gapOf(px) : 0), 0);
   const restW = (px) => Math.max(...terms.slice(1).map((_, j) => ow(ops[j] ?? "+", px) + 2 * gapOf(px) + tw(j + 1, px)));
   const alignW = (px) => tw(0, px) + restW(px);
-  const ledgerW = (px) => px * 1.2 + Math.max(...terms.map((_, i) => tw(i, px)));
+  const gutOf = (px) => Math.max(px * 1.2, ...ops.map((o) => ow(o, px) + gapOf(px)));
+  const ledgerW = (px) => gutOf(px) + Math.max(...terms.map((_, i) => tw(i, px)));
   let layout = null, px;
   for (px = DISPLAY[0]; px >= 96 && !layout; px -= 4) if (rowW(px) <= maxw) layout = "row";
   if (!layout && n > 1) for (px = DISPLAY[1]; px >= 72 && !layout; px -= 4) if (alignW(px) <= maxw) layout = "align";
@@ -490,28 +547,31 @@ export function formula(job) {
   const opHTML = (i) => {
     const o = ops[i] ?? "+", st = `--at:-0.4;--lit:${r3(opAt(i))}`;
     return SYMBOL[o] ? `<span class="ty-f-op sym" style="${st}"><svg viewBox="0 0 100 100">${SYMBOL[o]}</svg></span>`
-      : `<span class="ty-f-op word" style="${st}"><span class="ty-w" style="--at:${r3(opAt(i))}">${T(o)}</span></span>`;
+      : `<span class="ty-f-op word" style="${st}">${T(o)}</span>`;
   };
+  // the sum's rule (and an unanswered "?") is graphite pencil, drawn on the word the plan gives
+  const sumT = p.pencil_at ?? (result ? opAt(n - 2) - 0.1 : 0);
   const term = (i) => {
     const t0 = tt[i][0];
-    const body = lone(i)
-      ? `<span class="ty-f-q ty-land" style="--at:${r3(t0 - 0.1)};--d:0.45s">${T(terms[i].text)}</span>`
-      : words(terms[i].text).map((wd, j) => {
-        const t = tt[i][j], inner = /^[×÷=+−→]$/.test(wd) ? `<span class="ty-f-in">${esc(wd)}</span>` : /\d/.test(wd) && !isYear(wd) ? `<span class="ty-fn${isMoney(wd) ? " money" : ""}">${esc(wd)}</span>` : T(wd);
-        return `<span class="ty-w${t <= 0.4 ? " cut" : ""}" style="--at:${r3(t <= 0.4 ? 0 : t)}">${inner}</span>`;
-      }).join(" ");
+    const pencilQ = lone(i) && p.pencil_at != null && t0 < p.pencil_at;
+    const body = pencilQ
+      ? `<span class="ty-f-q pencil" style="--draw:-0.4;--drawd:${r3(Math.max(0.4, t0 + 0.4))}s;--ink:${r3(p.pencil_at)}">${T(terms[i].text)}</span>`
+      : lone(i)
+        ? `<span class="ty-f-q ty-land" style="--at:${r3(t0 - 0.1)};--d:0.45s">${T(terms[i].text)}</span>`
+        : words(terms[i].text).map((wd, j) => {
+          const t = tt[i][j], inner = /^[×÷=+−→]$/.test(wd) ? `<span class="ty-f-in">${esc(wd)}</span>` : /\d/.test(wd) && !isYear(wd) ? `<span class="ty-fn${isMoney(wd) ? " money" : ""}">${esc(wd)}</span>` : T(wd);
+          return `<span class="ty-w${t <= 0.4 ? " cut" : " pre"}" style="--at:${r3(t <= 0.4 ? -0.12 : t)}">${inner}</span>`;
+        }).join(" ");
     return `<span class="ty-f-term${isRes(i) ? " res" : ""}${lone(i) ? " lone" : ""}" style="--at:${r3(t0)};--slot:${r3(-0.4 + i * 0.08)}">` +
-      `${isRes(i) ? bloom(tw(i, px) * 1.4, px * 2, t0, false) : ""}<span class="ty-f-text">${body}</span><i class="ty-f-slot"></i></span>`;
+      `${isRes(i) ? bloom(tw(i, px) * 1.4, px * 2, pencilQ ? p.pencil_at : t0, false) : ""}<span class="ty-f-text">${body}</span>${pencilQ ? "" : `<i class="ty-f-slot"></i>`}</span>`;
   };
-  // the sum's rule is drawn as a pencil stroke on the word that says it
-  const sumT = result ? opAt(n - 2) - 0.1 : 0;
   let body;
   if (layout === "row") {
     body = `<div class="ty-f-row">${terms.map((_, i) => term(i) + (i < n - 1 ? opHTML(i) : "")).join("")}</div>`;
   } else {
     const col = layout === "align" ? Math.round(tw(0, px) + 6) : 0;
-    const sumW = restW(px) + (layout === "ledger" ? px * 1.2 - 2 * gp : 0);
-    const lhs = (inner) => (layout === "align" ? `<span class="ty-f-lhs" style="width:${col}px">${inner}</span>` : `<span class="ty-f-gut">${inner}</span>`);
+    const gut = gutOf(px), sumW = restW(px) + (layout === "ledger" ? gut - 2 * gp : 0);
+    const lhs = (inner) => (layout === "align" ? `<span class="ty-f-lhs" style="width:${col}px">${inner}</span>` : `<span class="ty-f-gut" style="width:${px0(gut)}">${inner}</span>`);
     const rows = layout === "align" ? [`<div class="ty-f-line">${lhs(term(0))}${opHTML(0)}${term(1)}</div>`] : [`<div class="ty-f-line">${lhs("")}${term(0)}</div>`];
     for (let i = layout === "align" ? 1 : 0; i < n - 1; i++) {
       const sum = isRes(i + 1) && n > 2;
@@ -520,9 +580,9 @@ export function formula(job) {
     }
     body = rows.join("");
   }
-  const lastT = tt[n - 1][tt[n - 1].length - 1];
-  const capT = p.caption ? Math.max(lastT + 0.6, phraseAt(p.caption, spoken.filter((x) => x.t > lastT), null) ?? lastT + 0.8) : 0;
-  const cap = p.caption ? `<p class="ty-f-cap">${speak(p.caption, spoken.filter((x) => x.t >= capT - 0.01), capT)}</p>` : "";
+  const lastT = Math.max(...tt.map((x) => x[x.length - 1]));
+  const capT = p.caption ? p.caption_at ?? Math.max(lastT + 0.6, saidAt(p.caption, spoken, lastT + 1) ?? lastT + 0.8) : 0;
+  const cap = p.caption ? `<p class="ty-f-cap">${wordSpans(p.caption, sayFrom(p.caption, spoken, capT))}</p>` : "";
   return cam(B, `<div class="ty-box ty-f ${layout}" style="font-size:${px}px;--gap:${px0(gp)}">${body}${cap}</div>`);
 }
 
@@ -552,113 +612,185 @@ export function timeline(job) {
   const p = job.params || {};
   const evs = (p.events || []).filter((e) => e && typeof e === "object");
   if (!evs.length) return cam(stage(job), "");
-  const form = timelineForm(evs, job);
+  // the plan's `layout` decides; without it the stage infers the honest form from the events
+  const FORMS = { dates: "line", line: "line", bars: "bars", share: "shares", shares: "shares", ledger: "ledger", step: "step" };
+  let form = FORMS[p.layout] || timelineForm(evs, job);
+  if (form === "step" && stepKey(evs, job) < 0) form = "ledger";
   return { line, bars, shares, step, ledger }[form](job, evs);
 }
 
-/** The event's figure side and words side, and when each is spoken. */
+/** The event's figure side and words side, and when each is said (`name_at` and `at` from the plan win). */
 function sides(e, spoken) {
   const figSide = figureLed(e.label) ? "label" : figureLed(e.date) ? "date" : null;
   const fig = figSide ? e[figSide] : null, name = figSide === "label" ? e.date : figSide === "date" ? e.label : null;
   const figT = fig ? spokenAt(fig, spoken, e.at) : e.at ?? 0.4;
-  const nameT = name ? phraseAt(name, spoken, figT, 4, 0.5) ?? figT : figT;
-  return { fig, name, figT, nameT: Math.min(nameT, figT) };
+  const nameT = e.name_at ?? (name ? saidAt(name, spoken, figT) ?? figT : figT);
+  return { fig, name, figT, nameT: e.name_at ?? Math.min(nameT, figT) };
 }
-const head = (p) => (p.heading ? `<p class="ty-head">${wordSpans(p.heading, words(p.heading).map(() => 0))}</p>` : "");
+const head = (p, spoken) => (p.heading ? `<p class="ty-head">${wordSpans(p.heading, p.heading_at != null ? headTimes(p.heading, spoken, p.heading_at) : headWords(p.heading, spoken))}</p>` : "");
+/** The event the line lands on (`on`) for a step: a price that is the difference of two neighbours. */
+function stepKey(evs, job) {
+  const fig = (e) => (figureLed(e.label) ? e.label : figureLed(e.date) ? e.date : null);
+  const v = evs.map((e) => (fig(e) && isMoney(fig(e)) ? amount(fig(e)) : NaN));
+  const cands = evs.map((_, i) => i).filter((i) => Number.isFinite(v[i]) && evs.some((_, j) => j + 1 < evs.length && j !== i && j + 1 !== i && Math.abs(v[j + 1] - v[j] - v[i]) < 0.006));
+  if (!cands.length) return -1;
+  if (job.on == null) return cands[cands.length - 1];
+  return cands.reduce((b, i) => (Math.abs((evs[i].at ?? 0) - job.on) < Math.abs((evs[b].at ?? 0) - job.on) ? i : b));
+}
 
-/** Real dates: a line drawn across the dark, a tick landing on each spoken date. */
+/**
+ * Real dates: a line drawn across the dark, a tick landing on each spoken date at its true position.
+ * The line stays still (the shared camera pushes); where labels would collide, each takes the first
+ * free tier, alternately above and below the line, on a stem from its tick.
+ */
 function line(job, evs) {
-  const B = stage(job), p = job.params || {}, spoken = job.words || [], n = evs.length, VIS = B.w;
-  const big = n === 1 ? 1.5 : n === 2 ? 1.2 : 1;
+  const B = stage(job), p = job.params || {}, spoken = job.words || [], n = evs.length, W = B.w;
+  const big0 = n === 1 ? 1.4 : n === 2 ? 1.15 : 1;
+  // a date the narration does not say here is the setting: the first one is there from the cut
   const ev = evs.map((e, i) => {
-    const t = phraseAt(e.date, spoken, e.at, 1, 1.5) ?? e.at ?? 0.5 + i * 0.9;
-    return { e, i, pos: e.pos ?? (n === 1 ? 0.06 : 0.06 + (0.88 * i) / (n - 1)), t };
+    const said = saidAt(e.date, spoken, e.at);
+    const t = said ?? (i === 0 ? 0 : e.at ?? 0.5 + i * 0.9);
+    return { e, i, pos: e.pos ?? (n === 1 ? 0.06 : 0.06 + (0.88 * i) / (n - 1)), t, said };
   });
   ev.forEach((v, i) => { v.land = Math.max(v.t, i ? ev[i - 1].land + 0.35 : 0); });
+  // the labels' size: as large as lets every tier fit the box (down to 70%)
+  const room = B.h - (p.heading ? 150 : 0);
+  let levels, blockH, pitch, stem0, above, below;
+  for (const fit of [1, 0.9, 0.8, 0.7]) {
+  const big = big0 * fit;
+  ev.forEach((v) => { v.tier = null; });
   ev.forEach((v) => {
-    const dpx = Math.round(72 * big), lpx = Math.round(BODY * Math.min(big, 1.2));
-    const lab = String(v.e.label ?? ""), labFig = figureLed(lab);
-    const lt = labFig ? spokenAt(lab, spoken, v.land) : phraseAt(lab, spoken, v.land, 0.2, 3) ?? v.land + 0.15;
+    const date = String(v.e.date ?? ""), lab = String(v.e.label ?? ""), labFig = figureLed(lab);
+    v.dpx = Math.round((timeish(date) && date.length <= 18 ? 64 : 52) * big);
+    v.lpx = Math.round(BODY * Math.min(big, 1.15));
+    const lt = v.e.name_at ?? (labFig ? spokenAt(lab, spoken, v.land) : saidAfter(lab, spoken, v.land) ?? v.land + 0.15);
     v.lt = Math.max(v.land, lt);
-    v.dateHTML = `<p class="ty-t-date" style="font-size:${dpx}px">${wordSpans(v.e.date, onsets(words(v.e.date), spoken.filter((x) => x.t >= v.land - 0.05), v.land))}</p>`;
-    v.labelHTML = labFig ? `<div class="ty-t-fig" style="font-size:${Math.round(84 * big)}px">${figLine(lab, Math.round(84 * big), { times: [v.lt], unitMin: LABEL }).html}</div>`
-      : `<p class="ty-t-label" style="font-size:${lpx}px">${wordSpans(lab, onsets(words(lab), spoken.filter((x) => x.t >= v.lt - 0.05), v.lt))}</p>`;
-    v.bw = Math.max(serifW(v.e.date, dpx), labFig ? figLine(lab, Math.round(84 * big)).w : labelW(lab, lpx, 0)) + 80;
+    v.dateHTML = `<p class="ty-t-date" style="font-size:${v.dpx}px">${wordSpans(date, v.said != null ? sayTimes(date, spoken, v.land, v.land) : words(date).map(() => v.land), v.i === 0 && v.land <= 1.5)}</p>`;
+    v.labelHTML = labFig ? `<div class="ty-t-fig" style="font-size:${Math.round(76 * big)}px">${figLine(lab, Math.round(76 * big), { times: [v.lt], unitMin: LABEL }).html}</div>`
+      : `<p class="ty-t-label" style="font-size:${v.lpx}px">${wordSpans(lab, sayFrom(lab, spoken, v.lt))}</p>`;
+    v.bw = Math.max(serifW(date, v.dpx), labFig ? figLine(lab, Math.round(76 * big)).w : labelW(lab, v.lpx, 0)) + 40;
+    v.bh = v.dpx * 1.1 + (labFig ? 76 * big : v.lpx * 1.2) + 12;
+    v.x = Math.round(v.pos * W);
   });
-  let W = VIS;
-  for (let i = 0; i + 1 < n; i++) W = Math.max(W, ev[i].bw / Math.max(0.04, ev[i + 1].pos - ev[i].pos));
-  ev.forEach((v) => { v.x = Math.round(v.pos * W); v.r = v.x + v.bw; });
-  const lastV = ev[n - 1];
-  if (n > 1 && lastV.r > W && lastV.x - lastV.bw + 60 >= ev[n - 2].r) { lastV.rt = true; lastV.r = lastV.x + 16; }
-  const end = Math.max(...ev.map((v) => v.r)), lineEnd = Math.max(W, end + 100), camEnd = Math.max(0, end - VIS + 10);
-  let c = 0;
-  ev.forEach((v) => { c = Math.max(c, Math.min(camEnd, v.r - VIS + 10)); v.cam = c; });
+  // tiers: up 0, down 0, up 1, down 1 ... placed from the right, each on the first tier where its
+  // label touches no other label, its stem crosses no nearer label, and no farther stem crosses it
+  ev.forEach((v) => {
+    let l = v.x, r = v.x + v.bw;
+    if (r > W) { l = Math.max(0, v.x - v.bw + 16); r = l + v.bw; v.rt = v.x - v.bw + 16 >= 0; if (!v.rt) { l = W - v.bw; r = W; } }
+    v.l = l; v.r = r;
+  });
+  const placed = [];
+  [...ev].reverse().forEach((v) => {
+    for (let k = 0; k < 10; k++) {
+      const side = k % 2, lvl = Math.floor(k / 2);
+      const ok = placed.every((u) => {
+        if (u.tier % 2 !== side) return true;
+        const ul = Math.floor(u.tier / 2);
+        if (ul === lvl) return v.r + 24 <= u.l || v.l >= u.r + 24;
+        if (ul < lvl) return !(v.x >= u.l - 12 && v.x <= u.r + 12);   // my stem through its label
+        return !(u.x >= v.l - 12 && u.x <= v.r + 12);                 // its stem through my label
+      });
+      if (ok) { v.tier = k; placed.push(v); break; }
+    }
+    if (v.tier == null) { v.tier = 0; placed.push(v); }
+  });
+  levels = Math.max(...ev.map((v) => Math.floor(v.tier / 2))) + 1; blockH = Math.max(...ev.map((v) => v.bh));
+  pitch = blockH + 30; stem0 = 44;
+  const ups = levels, downs = ev.some((v) => v.tier % 2) ? Math.max(...ev.filter((v) => v.tier % 2).map((v) => Math.floor(v.tier / 2))) + 1 : 0;
+  above = stem0 + (ups - 1) * pitch + blockH + 8; below = downs ? stem0 + (downs - 1) * pitch + blockH + 8 : 0;
+  if (above + below <= room) break;
+  }
   const segs = ev.map((v, i) => {
     const x0 = i ? ev[i - 1].x : 0, s = Math.max(-0.4, i ? Math.max(ev[i - 1].land + 0.2, v.land - 0.8) : Math.min(-0.4, v.land - 0.8));
-    return { x0, x1: v.x, s, d: Math.max(0.3, v.land - s), dc: v.cam - (i ? ev[i - 1].cam : 0) };
+    return { x0, x1: v.x, s, d: Math.max(0.3, v.land - s) };
   });
-  // after the last date, the line reads back to the first on the narration's next words
+  const lastV = ev[n - 1], lineEnd = W;
+  // after the last date, light runs back along the line to the first, on the narration's next words
   const bs = beats(ev.flatMap((v) => [v.land, v.lt]), spoken, B.dur, 1);
   const back = n > 1 ? bs.map((b) => `<i class="ty-t-back" style="left:${ev[0].x}px;width:${lastV.x - ev[0].x}px;--at:${r3(b.t)}"></i>`).join("")
     : bs.map((b) => `<i class="ty-t-head again" style="left:${ev[0].x}px;--w:${Math.round(lineEnd - ev[0].x)}px;--at:${r3(b.t)};--d:1.6s"></i>`).join("");
   const lineHTML = segs.map((g) => `<i class="ty-t-seg" style="left:${g.x0}px;width:${g.x1 - g.x0}px;--at:${r3(g.s)};--d:${r3(g.d)}s"></i>` +
     `<i class="ty-t-head" style="left:${g.x0}px;--w:${g.x1 - g.x0}px;--at:${r3(g.s)};--d:${r3(g.d)}s"></i>`).join("") +
-    `<i class="ty-t-seg tail" style="left:${lastV.x}px;width:${lineEnd - lastV.x}px;--at:${r3(lastV.land + 0.2)};--d:${r3(Math.min(0.8, B.dur))}s"></i>`;
-  const events = ev.map((v, i) => `<div class="ty-t-ev split${v.rt ? " rt" : ""}" style="left:${v.x}px;--at:${r3(v.land <= 0.4 ? -0.3 : v.land)};--next:${r3(ev[i + 1]?.land ?? 999)};` +
-    `${bs.length && i === 0 ? `--back:${r3(bs[0].t + 0.9)}` : "--back:999"}"><i class="ty-t-tick"></i><i class="ty-t-node"></i><i class="ty-t-ring"></i>` +
-    `<div class="ty-t-up">${v.dateHTML}</div><div class="ty-t-down">${v.labelHTML}</div></div>`).join("");
-  let track = `<div class="ty-t-track" style="width:${lineEnd}px"><i class="ty-t-ghost" style="width:${lineEnd}px"></i>${lineHTML}${back}${events}</div>`;
-  segs.slice().reverse().forEach((g) => { if (g.dc > 0.5) track = `<div class="ty-t-pan" style="--dx:${-Math.round(g.dc)}px;--at:${r3(g.s)};--d:${r3(g.d)}s">${track}</div>`; });
-  return cam(B, `<div class="ty-box ty-t">${head(p)}<div class="ty-t-view">${track}</div></div>`);
+    `<i class="ty-t-seg tail" style="left:${lastV.x}px;width:${lineEnd - lastV.x}px;--at:${r3(lastV.land + 0.2)};--d:0.8s"></i>`;
+  const events = ev.map((v, i) => {
+    const k = Math.floor(v.tier / 2), up = v.tier % 2 === 0, stem = stem0 + k * pitch;
+    const pos = up ? `bottom:${stem + 8}px` : `top:${stem + 8}px`;
+    const anchor = v.rt ? "right:-2px;text-align:right" : `left:${Math.round(v.l - v.x - 2)}px`;
+    return `<div class="ty-t-ev" style="left:${v.x}px;--at:${r3(v.land <= 0.4 ? -0.3 : v.land)};--next:${r3(ev[i + 1]?.land ?? 999)};${bs.length && i === 0 ? `--back:${r3(bs[0].t + 0.9)}` : "--back:999"}">` +
+      `<i class="ty-t-stem ${up ? "up" : "down"}" style="height:${stem}px"></i><i class="ty-t-node"></i><i class="ty-t-ring"></i>` +
+      `<div class="ty-t-blk" style="${pos};${anchor}">${v.dateHTML}${v.labelHTML}</div></div>`;
+  }).join("");
+  return cam(B, `<div class="ty-box ty-t">${head(p, spoken)}<div class="ty-t-area" style="height:${Math.round(above + below)}px">` +
+    `<div class="ty-t-track" style="top:${Math.round(above)}px;width:${lineEnd}px"><i class="ty-t-ghost" style="width:${lineEnd}px"></i>${lineHTML}${back}${events}</div></div></div>`);
 }
 
-/** Comparable amounts (the same unit): bars to scale, drawn as light from one axis, each growing as it is spoken. */
+/** Comparable amounts (one unit): bars to scale from one axis, each growing as it is said; `reveal_scale_at` pulls back to the whole. */
 function bars(job, evs) {
   const B = stage(job), p = job.params || {}, spoken = job.words || [];
   const rows = evs.map((e) => ({ e, ...sides(e, spoken) }));
   rows.forEach((r) => { r.v = amount(r.fig); });
   const max = Math.max(...rows.map((r) => r.v));
   const keyI = job.on == null ? -1 : rows.findIndex((r) => Math.abs(r.figT - job.on) < 0.3);
-  const namePx = 48, valPx = 72;
-  const nameW = Math.max(...rows.map((r) => serifW(r.name || "", namePx))) + 40;
-  const valW = Math.max(...rows.map((r) => figLine(r.fig, valPx).w)) + 40;
-  const barMax = Math.max(200, B.w - nameW - valW);
-  const pitch = clamp((B.h - 150) / rows.length, 110, 170);
-  const bs = beats(rows.flatMap((r) => [r.nameT, r.figT]), spoken, B.dur, rows.length);
-  // one blue: the figure the line lands on, else the newest spoken amount until the next lands
+  const namePx = 44, valPx = 80;
+  const leftW = Math.max(...rows.map((r) => Math.max(serifW(r.name || "", namePx), figLine(r.fig, valPx).w))) + 60;
+  const barMax = Math.max(240, B.w - leftW - 20);
+  const pitch = clamp((B.h - (p.heading ? 140 : 0)) / rows.length, 120, 190);
+  // before the reveal the bars are drawn zoomed in, together: the largest runs out of the frame
+  const vs = rows.map((r) => r.v).sort((a, b) => b - a);
+  const k = p.reveal_scale_at != null && vs.length > 1 ? clamp(0.45 / (vs[1] / vs[0]), 1, 8) : 1;
+  const bs = beats([...rows.flatMap((r) => [r.nameT, r.figT]), p.reveal_scale_at], spoken, B.dur, rows.length);
   const html = rows.map((r, i) => {
     const blue = isMoney(r.fig) && (keyI >= 0 ? i === keyI : true);
     const until = keyI >= 0 ? 999 : rows[i + 1]?.figT ?? 999;
-    const w = Math.max(3, (r.v / max) * barMax);
-    const f = figLine(r.fig, valPx, { times: [r.figT], blue, unitMin: LABEL });
+    const f = figLine(r.fig, valPx, { times: figTimes(r.fig, spoken, r.figT), blue, unitMin: LABEL });
     return `<div class="ty-b-row" style="height:${Math.round(pitch)}px">` +
-      `<p class="ty-b-name" style="width:${Math.round(nameW)}px">${wordSpans(r.name || "", onsets(words(r.name || ""), spoken.filter((x) => x.t >= r.nameT - 0.05), r.nameT))}</p>` +
-      `<div class="ty-b-bar" style="width:${r3(w)}px;--at:${r3(r.figT - 0.1)}"><i></i>${bs.filter((b) => b.k === i).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div>` +
-      `<div class="ty-b-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)}">${f.html}</div></div>`;
+      `<div class="ty-b-left" style="width:${Math.round(leftW)}px"><p class="ty-b-name">${wordSpans(r.name || "", sayFrom(r.name || "", spoken, r.nameT))}</p>` +
+      `<div class="ty-b-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)}">${f.html}</div></div>` +
+      `<div class="ty-b-bar" style="width:${r3(Math.max(4, (r.v / max) * barMax))}px;--at:${r3(r.figT - 0.1)}"><i></i>${bs.filter((b) => b.k === i).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div></div>`;
   }).join("");
-  return cam(B, `<div class="ty-box ty-b">${head(p)}<div class="ty-b-rows" style="--axis:${Math.round(nameW)}px">${html}</div></div>`);
+  const scale = k > 1 ? `--k:${r3(k)};--reveal:${r3(p.reveal_scale_at)}` : "--k:1;--reveal:999";
+  return cam(B, `<div class="ty-box ty-b">${head(p, spoken)}<div class="ty-b-rows" style="--axis:${Math.round(leftW)}px;${scale}">${html}</div></div>`);
 }
 
-/** A share of a whole: one 100% bar, split as each share is spoken (the rest left unfilled). */
+/**
+ * A share of a whole: one bar for the whole, split as each part is said. Percentages split a 100%
+ * bar (the rest left unfilled); counts make the largest the whole and the others its parts, to scale.
+ */
 function shares(job, evs) {
   const B = stage(job), p = job.params || {}, spoken = job.words || [];
-  const parts = [], context = [];
-  evs.forEach((e) => { const s = sides(e, spoken); (s.fig && /%/.test(s.fig) ? parts : context).push({ e, ...s }); });
-  const W = Math.min(B.w, 1400);
+  const all = evs.map((e) => ({ e, ...sides(e, spoken) }));
+  const pct = all.filter((q) => q.fig && /%/.test(q.fig));
+  let parts, context, whole = null;
+  if (pct.length) { parts = pct; context = all.filter((q) => !pct.includes(q)); }
+  else {
+    const figs = all.filter((q) => q.fig);
+    whole = figs.reduce((a, q) => (amount(q.fig) > amount(a.fig) ? q : a), figs[0]);
+    parts = figs.filter((q) => q !== whole); context = all.filter((q) => !q.fig);
+  }
+  const W = Math.min(B.w, 1400), total = whole ? amount(whole.fig) : 100;
   let x = 0;
-  parts.forEach((q) => { q.v = amount(q.fig); q.x = x; q.w = (q.v / 100) * W; x += q.w; });
-  const trackT = parts.length ? Math.max(0.5, parts[0].nameT - 2.2) : 0.5;
+  parts.forEach((q) => { q.v = amount(q.fig); q.x = x; q.w = (q.v / total) * W; x += q.w; });
+  const firstT = Math.min(...[...parts, ...(whole ? [whole] : [])].map((q) => Math.min(q.figT, q.nameT)));
+  const trackT = whole ? whole.figT - 0.1 : Math.max(-0.4, firstT - 2.2);
   const bs = beats([...context.flatMap((c) => [c.figT, c.nameT]), trackT, ...parts.flatMap((q) => [q.figT, q.nameT])], spoken, B.dur, parts.length);
-  const ctx = context.map((c) => `<p class="ty-s-ctx"><span class="ty-fd">${wordSpans(c.e.date, onsets(words(c.e.date), spoken, phraseAt(c.e.date, spoken, c.e.at, 1, 1) ?? c.e.at))}</span>` +
-    ` <span class="ty-s-ctx-l">${wordSpans(c.e.label, onsets(words(c.e.label), spoken.filter((x) => x.t >= (c.e.at ?? 0)), phraseAt(c.e.label, spoken, c.e.at, 0, 4) ?? (c.e.at ?? 0) + 1))}</span></p>`).join("");
-  const segs = parts.map((q, i) => {
-    const labelRight = q.w < 240;
-    const f = figLine(q.fig, 120, { times: [q.figT], unitMin: LABEL });
-    return `<div class="ty-s-seg" style="left:${r3(q.x)}px;width:${r3(q.w)}px;--at:${r3(q.figT - 0.1)}"><i></i>${bs.filter((b) => b.k === i).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div>` +
-      `<div class="ty-s-lab${labelRight ? " side" : ""}" style="left:${r3(labelRight ? q.x + q.w + 28 : q.x)}px"><div class="ty-s-fig">${f.html}</div>` +
-      `<p class="ty-s-name">${wordSpans(q.name || "", onsets(words(q.name || ""), spoken.filter((x) => x.t >= q.figT), q.figT + 0.3))}</p></div>`;
+  const ctx = context.map((c) => {
+    const t = saidAt(c.e.date, spoken, c.e.at) ?? c.e.at ?? 0.4, lt = c.e.name_at ?? saidAt(c.e.label, spoken, t + 1) ?? t + 1;
+    return `<p class="ty-s-ctx"><span class="ty-fd">${wordSpans(c.e.date, sayFrom(c.e.date, spoken, t), t <= 1.5)}</span>` +
+      ` <span class="ty-s-ctx-l">${wordSpans(c.e.label, sayFrom(c.e.label, spoken, lt))}</span></p>`;
   }).join("");
-  return cam(B, `<div class="ty-box ty-s">${head(p)}${ctx}<div class="ty-s-bar" style="width:${Math.round(W)}px;--at:${r3(trackT)}"><i class="ty-s-track"></i>${segs}</div></div>`);
+  const figPx = whole ? 88 : 120;
+  const lab = (q, below) => {
+    const f = figLine(q.fig, figPx, { times: figTimes(q.fig, spoken, q.figT), unitMin: LABEL });
+    return { f, html: `<div class="ty-s-fig" style="font-size:${figPx}px">${f.html}</div><p class="ty-s-name">${wordSpans(q.name || "", sayFrom(q.name || "", spoken, Math.min(q.nameT, q.figT + 0.3)))}</p>` };
+  };
+  // the whole's figure sits over the bar at its left; with a whole, each part's figure sits under its segment
+  const top = whole ? `<div class="ty-s-lab" style="left:0">${lab(whole).html}</div>` : "";
+  const segs = parts.map((q, i) => {
+    const L = lab(q), lx = Math.max(0, Math.min(q.x, W - L.f.w));
+    return `<div class="ty-s-seg" style="left:${r3(q.x)}px;width:${r3(q.w)}px;--at:${r3(q.figT - 0.1)}"><i></i>${bs.filter((b) => b.k === i).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("")}</div>` +
+      `<div class="ty-s-lab${whole ? " under" : ""}" style="left:${r3(lx)}px">${L.html}</div>`;
+  }).join("");
+  return cam(B, `<div class="ty-box ty-s">${head(p, spoken)}${ctx}<div class="ty-s-bar${whole ? " whole" : ""}" style="width:${Math.round(W)}px;--at:${r3(trackT)}"><i class="ty-s-track"></i>${top}${segs}</div></div>`);
 }
 
 /** A price step: the prices on either side of the edge as columns to scale, the jump between them the hero. */
@@ -666,18 +798,21 @@ function step(job, evs) {
   const B = stage(job), p = job.params || {}, spoken = job.words || [];
   const rows = evs.map((e, i) => ({ e, i, ...sides(e, spoken) }));
   rows.forEach((r) => { r.v = r.fig && isMoney(r.fig) ? amount(r.fig) : NaN; });
-  const key = rows.findIndex((r) => Math.abs((r.e.at ?? -9) - job.on) < 0.25);
+  const key = stepKey(evs, job);
   const pairs = [];
   for (let i = 0; i + 1 < rows.length; i++) {
     if (i === key || i + 1 === key || rows[i].used) continue;
     if (Number.isFinite(rows[i].v) && Number.isFinite(rows[i + 1].v) && rows[i + 1].v > rows[i].v) { pairs.push([rows[i], rows[i + 1]]); rows[i].used = rows[i + 1].used = true; }
   }
   const stepPair = pairs.find(([a, b]) => Math.abs(b.v - a.v - rows[key].v) < 0.006);
+  const context = rows.filter((r) => !r.used && r.i !== key);
   const max = Math.max(...pairs.flat().map((r) => r.v));
-  const colW = 160, gapIn = 26, gapOut = 96, labPx = LABEL;
+  const colW = 160, gapIn = 26, gapOut = 96;
   const colsW = pairs.length * (2 * colW + gapIn) + (pairs.length - 1) * gapOut;
-  const baseY = B.h - 120, H = Math.max(200, baseY - 230);
-  const bs = beats(rows.flatMap((r) => [r.figT]), spoken, B.dur, 1);
+  // the heading, then (when there is any) a strip of the card's context, then the columns
+  const topY = (p.heading ? 110 : 0) + (context.length ? 130 : 0);
+  const baseY = B.h - 124, H = Math.max(160, baseY - topY - 70);   // three label lines under the base stay inside the box
+  const bs = beats(rows.map((r) => r.figT), spoken, B.dur, 1);
   let x = 0;
   const cols = pairs.map(([a, b]) => {
     const out = [a, b].map((r, j) => {
@@ -687,62 +822,79 @@ function step(job, evs) {
       const html = `<div class="ty-c-col" style="left:${x}px;width:${colW}px;height:${r3(h)}px;top:${r3(baseY - h)}px;--at:${r3(r.figT - 0.1)}"><i></i>` +
         `${isStep ? `<b class="ty-c-riser" style="height:${r3(h - riser)}px;--at:${r3(rows[key].figT - 0.15)}"></b>${pulses(bs, 0, "pulse-riser")}` : ""}` +
         `<div class="ty-c-val">${f.html}</div></div>` +
-        `<p class="ty-c-lab" style="left:${x}px;width:${colW + 20}px;top:${baseY + 16}px">${wordSpans(r.name || "", onsets(words(r.name || ""), spoken.filter((q) => q.t >= r.nameT - 0.05), r.nameT))}</p>`;
+        `<p class="ty-c-lab" style="left:${x}px;width:${colW + 20}px;top:${baseY + 16}px">${wordSpans(r.name || "", sayFrom(r.name || "", spoken, r.nameT))}</p>`;
       x += colW + (j ? 0 : gapIn);
       return html;
     }).join("");
     x += gapOut;
     return out;
   }).join("");
-  // the right column: everything that is not a column, in the order it is spoken; the jump is the hero
-  const rx = colsW + 100, rw = B.w - rx;
-  const others = rows.filter((r) => !r.used);
-  const heroPx = clamp(Math.floor(rw / (figW(String(rows[key].fig).replace(/[^\d$.,%]/g, ""), 1, -0.04) + 0.2)), 140, 220);
-  const right = others.map((r) => {
-    if (r.i === key) {
-      const f = figLine(r.fig, heroPx, { times: [r.figT], blue: true, unitMin: LABEL });
-      return `<div class="ty-c-hero"><p class="ty-c-name">${wordSpans(r.name || "", onsets(words(r.name || ""), spoken.filter((q) => q.t >= r.nameT - 0.05), r.nameT))}</p>` +
-        `<div class="ty-c-fig" style="font-size:${heroPx}px">${bloom(f.w * 1.4, heroPx * 1.8, r.figT, true)}${f.html}${pulses(bs, 0, "pulse-blue")}</div></div>`;
-    }
-    const t = r.fig ? r.figT : phraseAt(r.e.date, spoken, r.e.at, 1, 1.5) ?? r.e.at;
-    const val = r.fig ? figLine(r.fig, 56, { times: [r.figT], quiet: isMoney(r.fig), unitMin: LABEL }).html
-      : `<span class="ty-fd">${wordSpans(r.e.date, onsets(words(r.e.date), spoken.filter((q) => q.t >= t - 0.05), t))}</span>`;
-    const nm = r.fig ? r.name : r.e.label;
-    const nt = r.fig ? r.nameT : phraseAt(nm, spoken, t, 2, 1.5) ?? t;
-    return `<div class="ty-c-row"><p class="ty-c-rname">${wordSpans(nm || "", onsets(words(nm || ""), spoken.filter((q) => q.t >= nt - 0.05), nt))}</p><div class="ty-c-rval">${val}</div></div>`;
-  }).join("");
-  return cam(B, `<div class="ty-box ty-c">${head(p)}<div class="ty-c-cols" style="height:${B.h}px"><i class="ty-c-base" style="top:${baseY}px;width:${colsW + 30}px"></i>${cols}` +
-    `<div class="ty-c-right" style="left:${rx}px;width:${rw}px;top:${Math.round(baseY - H - 40)}px;height:${Math.round(H + 40)}px">${right}</div></div></div>`);
+  const strip = context.length ? `<div class="ty-c-strip" style="top:${p.heading ? 110 : 0}px">${context.map((r) => {
+    const t = r.fig ? r.figT : saidAt(r.e.date, spoken, r.e.at) ?? r.e.at ?? 0.4;
+    const val = r.fig ? figLine(r.fig, 56, { times: figTimes(r.fig, spoken, r.figT), quiet: isMoney(r.fig), unitMin: LABEL }).html
+      : `<span class="ty-fd">${wordSpans(r.e.date, sayFrom(r.e.date, spoken, t))}</span>`;
+    const nm = r.fig ? r.name : r.e.label, nt = r.fig ? r.nameT : r.e.name_at ?? saidAt(nm, spoken, t) ?? t;
+    return `<div class="ty-c-row"><p class="ty-c-rname">${wordSpans(nm || "", sayFrom(nm || "", spoken, Math.min(nt, t)))}</p><div class="ty-c-rval">${val}</div></div>`;
+  }).join("")}</div>` : "";
+  // the hero: the jump, to the right of its columns
+  const r = rows[key], rx = colsW + 110, rw = B.w - rx;
+  const heroPx = clamp(Math.min(Math.floor(rw / (figW(String(r.fig).replace(/[^\d$.,%]/g, ""), 1, -0.04) + 0.2)), Math.floor((H - 70) / 0.92)), 110, 240);
+  const f = figLine(r.fig, heroPx, { times: [r.figT], blue: true, unitMin: LABEL });
+  const hero = `<div class="ty-c-hero" style="left:${rx}px;width:${rw}px;top:${Math.round(baseY - H)}px;height:${Math.round(H)}px">` +
+    `<p class="ty-c-name">${wordSpans(r.name || "", sayFrom(r.name || "", spoken, r.nameT))}</p>` +
+    `<div class="ty-c-fig" style="font-size:${heroPx}px">${bloom(f.w * 1.4, heroPx * 1.8, r.figT, true)}${f.html}${pulses(bs, 0, "pulse-blue")}</div></div>`;
+  return cam(B, `<div class="ty-box ty-c">${head(p, spoken)}<div class="ty-c-cols" style="height:${B.h}px">${strip}` +
+    `<i class="ty-c-base" style="top:${baseY}px;width:${colsW + 30}px"></i>${cols}${hero}</div></div>`);
 }
 
-/** Anything else: a typeset ledger, rows aligned, figures right-aligned; a row with no figure of the list's kind heads a section. */
+/**
+ * Anything else: a typeset ledger. Rows aligned, figures right-aligned; in a list of three or more,
+ * a row without a figure of the list's kind heads a section. Long names (sources) stack over their
+ * figure, set in the plan's `face` (period print, typewriter). A verbatim `words` quote closes it,
+ * word by word on its onsets, its key words brightest.
+ */
 function ledger(job, evs) {
   const B = stage(job), p = job.params || {}, spoken = job.words || [];
   const rows = evs.map((e) => ({ e, ...sides(e, spoken) }));
+  rows.forEach((r) => { if (!r.fig && timeish(r.e.label)) { r.fig = r.e.label; r.name = r.e.date; r.figT = saidAt(r.fig, spoken, r.e.at) ?? r.e.at ?? 0.4; r.nameT = r.e.name_at ?? r.figT; } });
   const kinds = rows.filter((r) => r.fig).map((r) => kindOf(r.fig));
-  const main = kinds.sort((a, b) => kinds.filter((x) => x === b).length - kinds.filter((x) => x === a).length)[0];
-  rows.forEach((r) => { r.section = !r.fig || kindOf(r.fig) !== main; });
-  const keyI = job.on == null ? -1 : rows.findIndex((r) => Math.abs(r.figT - job.on) < 0.3);
-  const valPx = 64, namePx = 48;
-  const W = Math.min(B.w, 1180);
-  const pitch = clamp((B.h - 140) / rows.length, 70, 110);
-  const bs = beats(rows.flatMap((r) => [r.figT, r.nameT]), spoken, B.dur, rows.length);
+  const main = kinds.slice().sort((a, b) => kinds.filter((x) => x === b).length - kinds.filter((x) => x === a).length)[0];
+  rows.forEach((r) => { r.section = !r.fig || (rows.length >= 3 && kindOf(r.fig) !== main); });
+  const keyI = job.on == null ? -1 : rows.findIndex((r) => !r.section && Math.abs(r.figT - job.on) < 0.3);
+  const W = Math.min(B.w, 1240), namePx = 48;
+  const stacked = rows.some((r) => !r.section && serifW(r.name || "", namePx) > W * 0.5);
+  const valPx = stacked ? 112 : 64;
+  const q = p.words?.text ? p.words : null;
+  const qPx = 52, qLines = q ? Math.ceil(serifW(q.text, qPx, true) / W) : 0;
+  const pitch = clamp((B.h - (p.heading ? 140 : 0) - (q ? qLines * qPx * 1.3 + 70 : 0)) / rows.length, 64, stacked ? 230 : 110);
+  const bs = beats([...rows.flatMap((r) => [r.figT, r.nameT]), ...(q ? [q.at] : [])], spoken, B.dur, rows.length);
+  const face = (r) => (r.e.face === "period" ? " period" : r.e.face === "typed" ? " typed" : "");
   const html = rows.map((r, i) => {
-    const when = r.fig ? r.figT : phraseAt(r.e.date, spoken, r.e.at, 1, 1.5) ?? r.e.at ?? 0.4;
     const glints = bs.filter((b) => b.k === i).map((b) => `<s style="--at:${r3(b.t)}"></s>`).join("");
     if (r.section) {
       const a = String(r.e.date ?? ""), b = String(r.e.label ?? "");
-      const bt = phraseAt(b, spoken, when, 0, 3) ?? when + 0.4;
-      return `<div class="ty-l-sec" style="height:${Math.round(pitch * 0.85)}px">${glints}<span class="ty-l-sa">${wordSpans(a, onsets(words(a), spoken.filter((x) => x.t >= when - 0.05), when))}</span>` +
-        `<span class="ty-l-sb">${wordSpans(b, onsets(words(b), spoken.filter((x) => x.t >= bt - 0.05), bt))}</span></div>`;
+      const at = r.e.name_at ?? saidAt(a, spoken, r.e.at) ?? r.e.at ?? 0.4, bt = saidAt(b, spoken, Math.max(at, r.e.at ?? at)) ?? at + 0.4;
+      return `<div class="ty-l-sec" style="height:${Math.round(pitch * 0.85)}px">${glints}<span class="ty-l-sa">${wordSpans(a, sayFrom(a, spoken, at))}</span>` +
+        `<span class="ty-l-sb">${wordSpans(b, sayFrom(b, spoken, bt))}</span></div>`;
     }
     const blue = isMoney(r.fig) && (keyI >= 0 ? i === keyI : true);
-    const until = keyI >= 0 ? 999 : rows.slice(i + 1).find((q) => !q.section && isMoney(q.fig))?.figT ?? 999;
-    const f = figLine(r.fig, valPx, { times: [r.figT], blue, unitMin: LABEL });
-    return `<div class="ty-l-row" style="height:${Math.round(pitch)}px">${glints}<p class="ty-l-name" style="font-size:${namePx}px">${wordSpans(r.name || "", onsets(words(r.name || ""), spoken.filter((x) => x.t >= r.nameT - 0.05), r.nameT))}</p>` +
-      `<i class="ty-l-lead" style="--at:${r3(Math.min(r.nameT, r.figT))}"></i><div class="ty-l-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)}">${f.html}</div></div>`;
+    const until = keyI >= 0 ? 999 : rows.slice(i + 1).find((x) => !x.section && isMoney(x.fig))?.figT ?? 999;
+    const f = figLine(r.fig, valPx, { times: figTimes(r.fig, spoken, r.figT), blue, unitMin: LABEL });
+    const name = `<p class="ty-l-name${face(r)}" style="font-size:${stacked ? 40 : namePx}px">${wordSpans(r.name || "", sayFrom(r.name || "", spoken, r.nameT))}</p>`;
+    return stacked
+      ? `<div class="ty-l-entry" style="min-height:${Math.round(pitch)}px">${glints}${name}<div class="ty-l-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)};font-size:${valPx}px">${f.html}</div></div>`
+      : `<div class="ty-l-row" style="height:${Math.round(pitch)}px">${glints}${name}<i class="ty-l-lead" style="--at:${r3(Math.min(r.nameT, r.figT))}"></i>` +
+        `<div class="ty-l-val${blue && keyI < 0 ? " fades" : ""}" style="--until:${r3(until)}">${f.html}</div></div>`;
   }).join("");
-  return cam(B, `<div class="ty-box ty-l">${head(p)}<div class="ty-l-rows" style="width:${W}px">${html}</div></div>`);
+  let quote = "";
+  if (q) {
+    const ts = sayFrom(q.text, spoken, q.at ?? 0.4);
+    const keys = (q.key || []).map((k) => words(k).map(norm));
+    const ws = words(q.text), bright = ws.map(() => false);
+    keys.forEach((kw) => { for (let i = 0; i + kw.length <= ws.length; i++) if (kw.every((x, j) => norm(ws[i + j]) === x)) kw.forEach((_, j) => { bright[i + j] = true; }); });
+    quote = `<p class="ty-l-quote" style="font-size:${qPx}px">${ws.map((w, i) => `<span class="ty-w${bright[i] ? " key" : ""}" style="--at:${r3(ts[i])}">${T(w)}</span>`).join(" ")}</p>`;
+  }
+  return cam(B, `<div class="ty-box ty-l">${head(p, spoken)}<div class="ty-l-rows${stacked ? " stacked" : ""}" style="width:${W}px">${html}</div>${quote}</div>`);
 }
 
 /* ---------- chapter ---------- */
@@ -756,7 +908,7 @@ function fitTitle(text, sizes, width, italic = false) {
 }
 
 export function chapter(job) {
-  const B = stage(job), p = job.params || {}, title = String(p.title || "");
+  const B = stage(job, true), p = job.params || {}, title = String(p.title || "");
   const num = roman(p.index ?? p.number ?? 0);
   const { px, lines } = fitTitle(title, [DISPLAY[0], DISPLAY[1]], Math.min(B.w, 1400));
   // the title is complete well before the card's end: word by word from the first frame
@@ -769,7 +921,7 @@ export function chapter(job) {
 /* ---------- end ---------- */
 
 export function end(job) {
-  const B = stage(job), p = job.params || {}, spoken = job.words || [];
+  const B = stage(job, true), p = job.params || {}, spoken = job.words || [];
   const full = String(p.headline || "");
   // the address sets on its own line, in Inter; the headline keeps the rest of its words
   const url = (full.match(/\b[a-z0-9-]+\.(?:com|org|net|io)(?:\/[\w\-/]*)?/i) || [])[0] || "";
