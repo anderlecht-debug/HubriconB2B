@@ -44,7 +44,7 @@ V3_FAMILY = {"document": "documents", "table": "documents", "quote": "documents"
              "still": "photos", "texture": "photos", "archive": "photos", "stack": "photos", "split": "photos",
              "footage": "photos", "chart": "charts"}   # everything else is type
 # The end card's words are the site's own (the style reel's end scene, content/film/scenes.mjs).
-END = {"headline": "More profit than our bill every month, or you don't pay.", "primary": "Book your call",
+END = {"headline": "More profit than our bill every month, or you don't pay.", "primary": "Book your call", "primary_url": "hubricon.com/apply",
        "secondary": "or learn the method, free, at hubricon.com/learn"}
 PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
 

@@ -34,6 +34,8 @@
 /* a spoken word lands on its onset: blur 8 → 0, 6 px → 0, 0.25 s, from nothing */
 .ty-w { display: inline-block; animation: ty-word 0.25s var(--ease-out) calc(var(--at, 0) * 1s) both; }
 .ty-w.cut { --o0: 0.4; }
+/* a figure the voice never says here, and never said: never drawn */
+.ty .never { opacity: 0 !important; animation: none !important; }
 @keyframes ty-word { from { opacity: var(--o0, 0); filter: blur(var(--bw, 8px)); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
 /* a word that starts an element at the cut (chapter, end): already arriving on the first frame */
 .ty-cw { display: inline-block; animation: ty-cw 0.55s var(--ease-out) calc(var(--at, 0) * 1s) both; }
@@ -132,6 +134,9 @@
 /* ---- the hook: the money at frame 0, the moment under it --------------------------------------- */
 .ty-hook { justify-content: center; padding-bottom: 40px; }
 .ty-hook.centre { align-items: center; text-align: center; }
+/* the print lifts off: the block glides to the frame's centre and grows a little (0.8 s) */
+.ty-hook.glide { transform-origin: 0 50%; animation: ty-glide 0.8s var(--ease-in-out) calc(var(--gat) * 1s) both; }
+@keyframes ty-glide { from { transform: none; } to { transform: translate(var(--gdx), 10px) scale(var(--gs)); } }
 .ty-p-fig.hero { line-height: 0.82; }
 .ty-hook-when { margin-top: 0.3em; line-height: 1; color: var(--light-2); letter-spacing: -0.02em; word-spacing: 0.06em; }
 .ty-hook-when .ty-hw { font-style: italic; }
@@ -191,7 +196,7 @@
 @keyframes ty-slot { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes ty-out { to { opacity: 0; } }
 .ty-f-op { display: inline-block; margin: 0 var(--gap); color: var(--light); flex: none; animation: ty-op-lit 0.4s ease calc(var(--lit) * 1s) both; }
-@keyframes ty-op-lit { from { opacity: 0.6; } to { opacity: 1; } }
+@keyframes ty-op-lit { from { opacity: 0; } to { opacity: 1; } }
 .ty-f-op.sym { width: 0.62em; height: 0.62em; align-self: center; margin-top: 0.08em; }
 .ty-f-op.sym svg { display: block; width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
 .ty-f-op.sym path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.5s var(--ease-in-out) calc(var(--at) * 1s) both; }
@@ -264,18 +269,19 @@
   transform-origin: 50% 0; animation: ty-axis 0.6s var(--ease-out) -0.6s both; }
 @keyframes ty-axis { from { transform: scaleY(0); } to { transform: none; } }
 .ty-b-row { position: relative; }
-.ty-b-name { position: absolute; top: 0; margin: 0; line-height: 1.1; color: var(--light-2); white-space: nowrap; }
+.ty-b-name { position: absolute; margin: 0; line-height: 1.1; color: var(--light-2); white-space: nowrap; }
 .ty-b-name.wrap { white-space: normal; text-wrap: balance; }
 .ty-b-val { position: absolute; left: 0; transform: translateY(-50%); text-align: right; white-space: nowrap; line-height: 0.9; }
 .ty-b-val .ty-fn { letter-spacing: var(--hero-track-l); }
-.ty-b-bar { position: absolute; transform-origin: 0 50%;
-  animation: ty-reveal 1.6s var(--ease-in-out) calc(var(--reveal, 999) * 1s) both; }
-@keyframes ty-reveal { from { transform: scaleX(var(--k, 1)); } to { transform: none; } }
+/* the landing value settles from a larger size into its place by the axis */
+.ty-b-pop { display: inline-block; transform-origin: 100% 60%; animation: ty-pop 0.9s var(--ease-out) calc(var(--at) * 1s) both; }
+@keyframes ty-pop { from { transform: scale(var(--pop, 1)); } to { transform: none; } }
+/* before its figure is said, a row has a hairline tick on the axis: no length that could be read as a value */
+.ty-b-tick { position: absolute; width: 3px; background: rgb(242 238 230 / 0.5); animation: ty-fade 0.4s ease -0.6s both; }
+.ty-b-bar { position: absolute; }
 .ty-b-bar > i { position: absolute; inset: 0; border-radius: 0 3px 3px 0;
   background: linear-gradient(90deg, rgb(242 238 230 / 0.55), rgb(242 238 230 / 0.92)); box-shadow: 0 0 24px rgb(255 240 214 / 0.16);
-  transform-origin: 0 50%; animation: ty-stub 0.5s var(--ease-out) -0.6s both, ty-grow-from 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
-@keyframes ty-stub { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(var(--s0, 0)); } }
-@keyframes ty-grow-from { from { transform: scaleX(var(--s0, 0)); } to { transform: none; } }
+  transform-origin: 0 50%; animation: ty-grow 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
 @keyframes ty-grow { from { transform: scaleX(0); } to { transform: none; } }
 .ty-b-bar > s { position: absolute; inset: -6px 0; text-decoration: none; opacity: 0; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgb(255 240 214 / 0.9) 50%, transparent) 0 0 / 40px 100% no-repeat;
@@ -287,6 +293,9 @@
 .ty-s { align-items: stretch; }
 .ty-s-ctx { display: flex; align-items: baseline; gap: 28px; }
 .ty-s-ctx .ty-fd { line-height: 1.05; }
+.ty-s-ctx { flex-wrap: wrap; row-gap: 8px; }
+.ty-s-ctx-m { line-height: 1; white-space: nowrap; }
+.ty-s-ctx-m .ty-fn { letter-spacing: -0.02em; }
 .ty-s-ctx-l { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2); }
 .ty-s-bar { position: relative; flex: none; }
 .ty-s-lab.under { bottom: auto; top: calc(100% + 26px); }
@@ -385,7 +394,7 @@
 .ty-l-val.fades .money { animation: ty-land var(--d, 0.35s) var(--ease-out) calc(var(--at, 0) * 1s) both, ty-bloom-glow 0.6s linear calc(var(--at, 0) * 1s + 0.25s) both, ty-quiet 0.6s ease calc(var(--until) * 1s) both; }
 .ty-l-sec { gap: 24px; align-items: baseline; padding-top: 18px; }
 .ty-l-sa { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light); }
-.ty-l-sb { font-size: var(--fs-body); font-style: italic; color: var(--light-2); }
+.ty-l-sb { font-size: var(--fs-body); font-style: italic; color: var(--light-2); white-space: nowrap; }
 /* a beat: a row is read again, a hairline of light passing under it */
 /* the page is ruled before its entries: a hairline under every row from the cut */
 .ty-l-rule { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgb(242 238 230 / 0.1); transform-origin: 0 50%;
@@ -426,3 +435,7 @@
   font: 600 40px/1 var(--sans); letter-spacing: -0.005em; color: var(--ground); background: var(--light);
   box-shadow: 0 0 60px rgb(var(--light-rgb, 242 238 230) / 0.16); animation: ty-cw 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
 .ty-e-cta b { font-weight: 500; }
+.ty-e-act { display: flex; align-items: center; gap: 28px; margin-top: 48px; }
+.ty-e-act .ty-e-cta { margin-top: 0; }
+.ty-e-addr { margin: 0; font: 500 36px/1 var(--sans); letter-spacing: -0.005em; color: rgb(242 238 230 / 0.78);
+  animation: ty-cw 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
