@@ -64,3 +64,45 @@ test("a panorama companion print is a crop of itself, never a thin strip", () =>
   const b = printBox(html);
   assert.ok(b.w / b.h <= 1.75 && b.h >= 400, `print ${b.w}×${b.h}`);
 });
+
+test("a museum object on black lies on the desk itself: no print, its ground lightened away, large", () => {
+  const job = { id: "e18", kind: "archive", seconds: 4.1, words: [], params: {},
+    asset: { url: "x.jpg", w: 1941, h: 1770, date: "c. 1914", credit: "Smithsonian Institution, National Postal Museum",
+      title: "Parcel post rate indicator", ground: { luma: 0, sd: 0, box: [0.21, 0.365, 0.79, 0.628] } } };
+  const html = archive(job);
+  assert.doesNotMatch(html, /ph-print/);
+  assert.match(html, /ph-ob-lighten/);
+  const w = num(html, /class="ph-ob-img[^"]*" src="x.jpg" style="left:[\d.-]+px;top:[\d.-]+px;width:([\d.]+)px/);
+  assert.ok(w * 0.58 >= 0.6 * 1920 || w * (1770 / 1941) * 0.263 >= 0.5 * 1080, `object ${Math.round(w * 0.58)} px wide`);
+  // a photograph of a scene on a dark ground stays a print; `treat: "print"` keeps one too
+  assert.match(archive({ ...job, asset: { ...job.asset, title: "Photograph of a carrier", credit: "Wikimedia Commons", ground: { luma: 35, sd: 8, box: [0.3, 0.1, 0.7, 0.6] } } }), /ph-print/);
+  assert.match(archive({ ...job, params: { treat: "print" } }), /ph-print/);
+});
+
+test("a white seamless object is darkened into the lamp's pool; an unspoken figure on it is soft", () => {
+  const html = companion({ id: "d11b", seconds: 8, print: { url: "x.jpg", w: 2000, h: 2872, credit: "Smithsonian Institution, National Postal Museum",
+    title: "Triner postal scale", ground: { luma: 237, sd: 6, box: [0.06, 0.11, 0.9, 0.95] }, at: 3.5, soft: [[0.3, 0.3, 0.5, 0.4]] } });
+  assert.match(html, /ph-ob-darken/);
+  assert.match(html, /ph-ob-lit/);
+  assert.match(html, /class="ph-ob-soft"/);
+  assert.match(html, /ph-ob-in 0\.7s cubic-bezier\([^)]*\) 3\.25s/);   // lands on its word
+});
+
+test("a print ends pushed into its focus, and a catalogue page is lit only on its line", () => {
+  const job = { id: "e05", kind: "archive", seconds: 3.9, prev_kind: "archive", params: { band: [0.735, 0.775] }, focus: [0.4, 0.74],
+    words: [["And", 0.22], ["next", 0.42], ["every", 0.82], ["item", 1.08], ["catalogue,", 1.76], ["shipping", 2.9], ["weight.", 3.24]].map(([w, t]) => ({ w, t })),
+    asset: { url: "x.jpg", w: 869, h: 720, date: "1917", title: "Electrical goods, catalogue 134: an item" } };
+  const html = archive(job);
+  const last = [...html.matchAll(/scale\(([\d.]+)\)/g)].map((m) => +m[1]).at(-1);
+  assert.ok(last >= 1.8, `ends at ${last}`);
+  assert.match(html, /class="ph-lamp-soft"/);
+  assert.match(html, /class="ph-lamp" style="--b0:/);
+});
+
+test("a label never prints over a lit map; the trim may isolate one panel of a collage", () => {
+  const map = still({ id: "d05b", kind: "still", seconds: 4.5, words: [], params: { enter: "dive", exit: "surface" },
+    asset: { url: "x.jpg", w: 2846, h: 1876, date: "1913", title: "Official Parcel Post map", credit: "Smithsonian Institution, National Postal Museum" } });
+  assert.match(map, /ph-scrim" style="background:linear-gradient\(to top, color-mix\(in srgb, var\(--ground\) 96%/);
+  const c11 = still({ id: "c11", kind: "still", seconds: 5.8, words: [], params: { trim: [0.08, 0.38, 0.43, 0] }, asset: { url: "x.jpg", w: 2164, h: 1302 } });
+  assert.match(c11, /object-view-box:inset\(8% 38% 43% 0%\)/);
+});

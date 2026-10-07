@@ -136,3 +136,44 @@
   animation: fade 0.5s ease var(--in, 0s) both, ph-out 0.4s ease var(--out, 99s) forwards; }
 /* Over a photograph the caption is set as VISUAL_SPEC §3.3 sets it: full ivory, a 1 px shadow. */
 .ph-wlab .labels .source { color: var(--light); text-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.35); }
+
+/* ── an object on the desk (photos.mjs objectLayers): no print, its ground dissolved into the desk ── */
+.ph-ob { position: absolute; inset: 0; pointer-events: none; }
+.ph-ob img { position: absolute; display: block; max-width: none; }
+/* The lamp's pool where the object lies (--px/--py its centre, --rx/--ry its reach). */
+.ph-ob-pool { background: radial-gradient(var(--rx) var(--ry) at var(--px) var(--py), rgb(var(--key-rgb) / 0.17) 0, rgb(var(--key-rgb) / 0.08) 45%, transparent 100%); }
+/* Under a white seamless the pool is the lamp's light on the desk, warm and falling off softly:
+   bright enough that the object reads, never a white disc. */
+.ph-ob-pool.ph-ob-lit { background: radial-gradient(var(--rx) var(--ry) at var(--px) var(--py),
+  rgb(var(--key-rgb) / 0.66) 0, rgb(var(--key-rgb) / 0.6) 30%, rgb(var(--key-rgb) / 0.44) 50%, rgb(var(--key-rgb) / 0.24) 68%,
+  rgb(var(--key-rgb) / 0.09) 84%, rgb(var(--key-rgb) / 0.02) 94%, transparent 100%); }
+/* A contact shadow under a lit object, down and to the right of the key light. */
+.ph-ob-shade { background: radial-gradient(var(--srx) var(--sry) at var(--sx) var(--sy), rgb(0 0 0 / 0.62) 0, rgb(0 0 0 / 0.3) 55%, transparent 100%); }
+/* A black ground is lightened onto the desk (only what is brighter than the desk shows, the object
+   exactly as photographed); a white seamless is darkened into the pool (only what is darker than the
+   lamp's light shows, so the seamless takes the pool's colour and keeps its own shadow). */
+.ph-ob-lighten, .ph-ob-darken { -webkit-mask-image: radial-gradient(var(--rx, 60%) var(--ry, 60%) at var(--px, 50%) var(--py, 50%), rgb(0 0 0) 72%, transparent 100%);
+  mask-image: radial-gradient(var(--rx, 60%) var(--ry, 60%) at var(--px, 50%) var(--py, 50%), rgb(0 0 0) 72%, transparent 100%); }
+.ph-ob-lighten { mix-blend-mode: lighten; }
+.ph-ob-darken { mix-blend-mode: darken; }
+/* An unspoken figure on the object: out of focus (a static filter on a still image, never animated). */
+.ph-ob-soft { position: absolute; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, rgb(0 0 0) 22px, rgb(0 0 0) calc(100% - 22px), transparent 100%), linear-gradient(to bottom, transparent 0, rgb(0 0 0) 22px, rgb(0 0 0) calc(100% - 22px), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, rgb(0 0 0) 22px, rgb(0 0 0) calc(100% - 22px), transparent 100%), linear-gradient(to bottom, transparent 0, rgb(0 0 0) 22px, rgb(0 0 0) calc(100% - 22px), transparent 100%);
+  mask-composite: intersect; }
+.ph-ob-soft img { filter: blur(16px); }
+.ph-ob-soft img.ph-tone { filter: grayscale(1) sepia(0.13) brightness(1.01) blur(16px); }
+@keyframes ph-ob-in { from { opacity: 0; } to { opacity: 1; } }
+/* A still that is an object lies on the desk under a key light centred on it. */
+.ph-ob-key { background: radial-gradient(ellipse 58% 62% at 50% 44%, rgb(var(--key-rgb) / 0.2), rgb(var(--key-rgb) / 0.06) 50%, transparent 74%); }
+/* The lamp narrowed to one line of a printed page: the rest of the sheet out of focus (a static
+   blur on a still image, measured free) and under the desk's dark (--b0/--b1 the band, as a share
+   of the print's height), soft-edged, from the first frame. */
+.ph-print img.ph-lamp-soft { filter: grayscale(1) sepia(0.13) blur(14px); }
+.ph-lamp { position: absolute; inset: 0; pointer-events: none; border-radius: 1.5px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--ground) 80%, transparent) 0,
+    color-mix(in srgb, var(--ground) 80%, transparent) calc(var(--b0) - 1%), transparent var(--b0),
+    transparent var(--b1), color-mix(in srgb, var(--ground) 80%, transparent) calc(var(--b1) + 1%),
+    color-mix(in srgb, var(--ground) 80%, transparent) 100%); }
+@keyframes ph-ob-out { to { opacity: 0; } }

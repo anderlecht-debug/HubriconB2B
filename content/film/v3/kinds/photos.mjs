@@ -29,11 +29,16 @@ const archival = (a) => /-mono\./.test(a?.url || "") || (+yearOf(a?.date) > 0 &&
 
 /** A scan's own edges to crop away, [top, right, bottom, left] as fractions: the asset's `trim`
     (or the shot's `params.trim`) when the plan or the grade measured one, else a hair off every
-    edge of an archival scan, where scanners leave a line. */
+    edge of an archival scan, where scanners leave a line. Up to 0.45 an edge, so a plan can isolate
+    one panel of a collage (c11's chute), and never so much that less than a tenth is left. */
 function trimOf(job, a) {
   const t = a?.trim ?? job.params?.trim ?? (archival(a) ? 0.006 : 0);
-  const v = Array.isArray(t) ? t : [t, t, t, t];
-  return [0, 1, 2, 3].map((i) => clamp(+v[i] || 0, 0, 0.3));
+  const v = (Array.isArray(t) ? t : [t, t, t, t]).map((x) => clamp(+x || 0, 0, 0.45));
+  for (const [i, j] of [[0, 2], [1, 3]]) {
+    const over = v[i] + v[j] - 0.9;
+    if (over > 0) { v[i] -= over / 2; v[j] -= over / 2; }
+  }
+  return v;
 }
 const aspect = (a, tr = [0, 0, 0, 0]) => (a?.w && a?.h ? (a.w * (1 - tr[1] - tr[3])) / (a.h * (1 - tr[0] - tr[2])) : 1.4);
 const viewBox = (tr) => (tr.some((x) => x > 0) ? `object-view-box:inset(${tr.map((x) => `${f(x * 100, 2)}%`).join(" ")});` : "");
@@ -106,6 +111,20 @@ const scrimBg = (lab, k = 1) => {
     `color-mix(in srgb, var(--ground) ${f(62 * k, 1)}%, transparent) ${px(h * 0.42)}, color-mix(in srgb, var(--ground) ${f(24 * k, 1)}%, transparent) ${px(h * 0.78)}, transparent ${px(h)})`;
 };
 const labScrim = (lab, at, out) => `<div class="ph-labscrim" style="--at:${f(at)}s;--out:${f(out)}s;${scrimBg(lab)}"></div>`;
+/** The flag (the documents' rule): where a lit picture must lie under the label slot, the lamp's
+    light ends above the label. The desk's dark at 96% under it, returning over 80 px above it, so
+    the label never prints over a lit picture (d05b's map title, e18's white border). */
+// (its edge is a long soft falloff, a flag's shadow, never a bar's edge across the picture)
+const flagBg = (lab) => {
+  const h = H - lab.y0 + 10, g = (k) => `color-mix(in srgb, var(--ground) ${k}%, transparent)`;
+  return `background:linear-gradient(to top, ${g(96)} 0, ${g(96)} ${px(h)}, ${g(82)} ${px(h + 26)}, ${g(56)} ${px(h + 66)}, ` +
+    `${g(28)} ${px(h + 116)}, ${g(9)} ${px(h + 168)}, transparent ${px(h + 220)})`;
+};
+const labFlag = (lab, at, out) => `<div class="ph-labscrim ph-flag" style="--at:${f(at)}s;--out:${f(out)}s;${flagBg(lab)}"></div>`;
+/** Paper rather than a photograph (a map, a catalogue, a letter): its own printed words would fight a
+    label. A postcard or a guidebook's photographic plate is a picture, and keeps the soft foot of the frame. */
+const PAPER = /\b(map|catalog(ue)?|letter|poster|advertisement|chart|table|document|certificate|form|ledger|receipt)\b/i;
+const isPaper = (job, a) => job.params?.paper ?? PAPER.test(a?.title || "");
 
 // ── the world room ──────────────────────────────────────────────────────────────────────
 
@@ -141,7 +160,7 @@ function worldCaption(job) {
     the desk share a single caption component. It arrives once the picture fills the frame and leaves
     before it surfaces, about four seconds, like a lower third; a modern photograph keeps its date on
     screen the whole time it fills the frame; "Illustration" stays on anything generated (BRAND). */
-function worldLabels(job, enter, t1) {
+function worldLabels(job, enter, t1, paper = false) {
   const c = worldCaption(job);
   if (!c.text && !c.illustration) return "";
   const hold = c.modern || c.illustration;
@@ -152,7 +171,8 @@ function worldLabels(job, enter, t1) {
   // the scrim is sized to the caption itself: a long credit over a bright photograph stays readable
   const w = Math.min(1150, c.text.length * 13.2), rows = Math.max(1, Math.ceil(c.text.length * 13.2 / 1150)) + (c.illustration ? 1 : 0);
   const lab = { x1: 160 + w + 36, y0: H - 120 - (22 + rows * 36) - 26, y1: H - 96 };
-  return `<div class="ph-wlab" style="--in:${f(t0)}s;--out:${f(leave)}s"><div class="ph-scrim" style="${scrimBg(lab)}"></div><div class="labels">` +
+  // over paper (a map's title, a page's lines) the light ends above the label: the flag, not a scrim
+  return `<div class="ph-wlab" style="--in:${f(t0)}s;--out:${f(leave)}s"><div class="ph-scrim" style="${paper ? flagBg(lab) : scrimBg(lab)}"></div><div class="labels">` +
     `${c.text ? `<p class="source">${esc(c.text)}</p>` : ""}${c.illustration ? `<p class="honesty">Illustration</p>` : ""}</div></div>`;
 }
 
@@ -183,6 +203,8 @@ const FACE = "transform:perspective(2400px) translateX(0%) rotateY(0deg) rotateX
 
 export function still(job) {
   const a = job.asset || {}, T = Math.max(0.1, job.seconds), id = safeId(job.id), p = job.params || {};
+  const ob = objectOf(a, p.treat, p.box);
+  if (ob) return objectStill(job, a, ob);
   const [fx, fy] = job.focus || [0.5, 0.5], film = archival(a), tr = trimOf(job, a);
   const dive = p.enter === "dive", surface = p.exit === "surface";
   const D0 = dive ? Math.min(0.7, T * 0.2) : 0, D1 = dive ? D0 + Math.min(0.85, T * 0.2) : 0;   // print, then through the border
@@ -225,7 +247,86 @@ export function still(job) {
   const dustIn = dive ? D1 - 0.2 : -1, dustOut = surface ? S0 : T + 1;
   const dust = film ? `<div class="ph-dust" style="--in:${f(dustIn)}s;--out:${f(dustOut)}s"></div>` : "";
   return `<section class="ph-world${dive || surface ? " ph-on-desk" : ""}" style="--dur:${f(T)}s">` +
-    `<style>${css.join("")}</style>${picture}${dust}<div class="ph-vig"></div>${worldLabels(job, dive ? [D0 + 0.15, D1 + 0.3] : [0.3, 0.45], surface ? S0 - 0.1 : T)}</section>`;
+    `<style>${css.join("")}</style>${picture}${dust}<div class="ph-vig"></div>${worldLabels(job, dive ? [D0 + 0.15, D1 + 0.3] : [0.3, 0.45], surface ? S0 - 0.1 : T, isPaper(job, a))}</section>`;
+}
+
+// ── objects on the desk ─────────────────────────────────────────────────────────────────
+
+/** A museum object photographed on a plain ground: it is laid on the desk as the object itself, not
+    as a photograph of it. render_shots measures each picture's `ground` on the graded file (the luma
+    and spread of its outer ring, and the box the object fills). Chosen automatically for a black
+    ground (luma ≤ 20: e18's rate indicator, a09's letter scale) and for a white seamless (≥ 205)
+    under a museum's record of an object (d11b's and g31's Triner scales), never for a photograph of
+    a scene; `treat: "object"` forces it and `treat: "print"` keeps the print. */
+function objectOf(a, treat, box) {
+  if (!a?.url || treat === "print" || treat === "sheet") return null;
+  const g = a.ground || {}, museum = /smithsonian|museum/i.test(a.credit || "") && !/^photograph/i.test(a.title || "");
+  // `params.box` frames a part of the object instead of all of it (e18's knob end)
+  const B = Array.isArray(box) && box.length === 4 ? box : g.box;
+  if (treat === "object") return { box: B || [0.15, 0.15, 0.85, 0.85], dark: (g.luma ?? 0) < 128 };
+  if (!B) return null;
+  if (g.luma <= 20 && g.sd <= 8) return { box: B, dark: true };
+  if (g.luma >= 205 && g.sd <= 16 && museum) return { box: B, dark: false };
+  return null;
+}
+
+/** The object under the lamp. Its ground dissolves into the desk: a black ground is lightened onto
+    it (only what is brighter than the desk shows), a white seamless is darkened into a pool of the
+    lamp's light (it takes the pool's colour, and the seamless's own shading stays as the object's
+    shadow). A lit
+    object on black gets a contact shadow, down and to the right of the key light. A slow push about
+    its centre. Blend modes need the desk as their backdrop, so these layers sit outside every
+    transformed wrapper, each carrying the same push. `fit` is the box the object fills (its own box,
+    not the photograph's), `soft` the picture's regions drawn out of focus (an unspoken figure on
+    the object, `params.soft`: [[x0, y0, x1, y1], …] of the picture), `land` when it arrives. */
+function objectLayers(job, a, o, { fit, T, lab, push = Math.min(0.012 * T, 0.07), land = null, z = "", soft = [] }) {
+  const id = safeId(job.id), [bx0, by0, bx1, by1] = o.box;
+  const ow = (bx1 - bx0) * a.w, oh = (by1 - by0) * a.h, sP = 1 + push;
+  // as large as the box allows, and never past 1.8 screen pixels to a source pixel
+  let k = Math.min((fit.y1 - fit.y0) / oh, (fit.x1 - fit.x0) / ow, 1.8) / sP;
+  let X = (fit.x0 + fit.x1) / 2, Y = (fit.y0 + fit.y1) / 2;
+  // clear of the label slot for the whole push: lifted first, then made smaller
+  const rect = () => ({ x0: X - (ow * k * sP) / 2, x1: X + (ow * k * sP) / 2, y0: Y - (oh * k * sP) / 2, y1: Y + (oh * k * sP) / 2 });
+  for (let i = 0; i < 80 && lab && hits(rect(), lab); i++) {
+    if (rect().y0 > fit.y0 + 6) Y -= 6; else k *= 0.97;
+  }
+  const iw = a.w * k, ih = a.h * k, left = X - ((bx0 + bx1) / 2) * iw, top = Y - ((by0 + by1) / 2) * ih;
+  const vw = ow * k, vh = oh * k;
+  const anim = `animation:ph-ob-${id} ${f(T)}s linear both`;
+  const at = land == null ? "" : `;opacity:0;animation:ph-ob-${id} ${f(T)}s linear both, ph-ob-in 0.7s ${SETTLE} ${f(land)}s forwards`;
+  const css = `@keyframes ph-ob-${id}{from{transform:scale(1)}to{transform:scale(${f(sP, 4)})}}`;
+  // the lamp's light on the desk where the object lies: a soft pool, brighter under a white seamless
+  const rx = vw * (o.dark ? 1.0 : 0.82) + 90, ry = vh * (o.dark ? 1.0 : 0.82) + 90;
+  const reach = `;--px:${px(X)};--py:${px(Y)};--rx:${px(rx)};--ry:${px(ry)}`;
+  const layer = (cls, inner, extra = "") => `<div class="ph-ob ${cls}" style="transform-origin:${px(X)} ${px(Y)};${anim}${at}${z}${reach}${extra}">${inner}</div>`;
+  const pool = layer("ph-ob-pool" + (o.dark ? "" : " ph-ob-lit"), "");
+  const shadow = o.dark ? layer("ph-ob-shade", "", `;--sx:${px(X + vw * 0.03)};--sy:${px(Y + vh * 0.5 - Math.max(4, vh * 0.02))};--srx:${px(vw * 0.5)};--sry:${px(Math.max(12, vh * 0.07))}`) : "";
+  const img = `<img class="ph-ob-img${archival(a) ? " ph-tone" : ""}" src="${esc(a.url)}" style="left:${px(left)};top:${px(top)};width:${px(iw)};height:${px(ih)}" alt="">`;
+  // an unspoken figure on the object (a rate in a window) is out of focus, a blur of 14 px or more
+  const softs = (soft || []).map(([x0, y0, x1, y1]) => {
+    const l = left + x0 * iw, t = top + y0 * ih, w = (x1 - x0) * iw, h = (y1 - y0) * ih, pad = 22;   // the feather (photos.css) is outside the region
+    return `<div class="ph-ob-soft" style="left:${px(l - pad)};top:${px(t - pad)};width:${px(w + 2 * pad)};height:${px(h + 2 * pad)}">` +
+      `<img src="${esc(a.url)}" class="${archival(a) ? "ph-tone" : ""}" style="left:${px(pad - x0 * iw)};top:${px(pad - y0 * ih)};width:${px(iw)};height:${px(ih)}" alt=""></div>`;
+  }).join("");
+  // the photograph itself ends before its own edges (a seamless is never quite white at its rim),
+  // inside the pool: no rectangle of it is ever seen on the desk
+  const fe = Math.max(24, 0.07 * Math.min(iw, ih)), R = `rgb(0 0 0)`;
+  const edge = (dir, a0, a1) => `linear-gradient(${dir}, transparent ${px(a0)}, ${R} ${px(a0 + fe)}, ${R} ${px(a1 - fe)}, transparent ${px(a1)})`;
+  const masks = `radial-gradient(${px(rx)} ${px(ry)} at ${px(X)} ${px(Y)}, ${R} 72%, transparent 100%), ${edge("to right", left, left + iw)}, ${edge("to bottom", top, top + ih)}`;
+  const object = layer(o.dark ? "ph-ob-lighten" : "ph-ob-darken", img + softs,
+    `;-webkit-mask-image:${masks};mask-image:${masks};-webkit-mask-composite:source-in, source-in;mask-composite:intersect`);
+  return { css, html: pool + shadow + object, box: rect() };
+}
+
+/** A world still that is a museum object (g31): the object on the desk under the lamp, its caption
+    in the label slot, the vignette over it. */
+function objectStill(job, a, o) {
+  const T = Math.max(0.1, job.seconds), cap = worldCaption(job);
+  const rows = Math.max(1, Math.ceil((cap.text.length * 13.2) / 1150));
+  const lab = cap.text ? { x0: 120, x1: 160 + Math.min(1150, cap.text.length * 13.2) + 36, y0: H - 120 - (22 + rows * 36) - 26, y1: H - 96 } : null;
+  const L = objectLayers(job, a, o, { fit: { x0: 330, x1: 1650, y0: 118, y1: 930 }, T, lab, soft: job.params?.soft });
+  return `<section class="ph-world ph-on-desk" style="--dur:${f(T)}s"><style>${L.css}</style><div class="ph-desklight ph-ob-key"></div>` +
+    `${L.html}<div class="ph-vig"></div>${worldLabels(job, [0.3, 0.45], T)}</section>`;
 }
 
 // ── prints on the desk ──────────────────────────────────────────────────────────────────
@@ -273,6 +374,16 @@ export function companion(job) {
   if (!a?.url) return "";
   let tr = trimOf(job, a), ar = aspect(a, tr);
   const C = COMPANION, b = 26, T = job.seconds || 6;
+  const ob = objectOf(a, a.treat, a.box);
+  if (ob) {
+    // a museum object beside the figure: the object itself on the desk, landing on its word, gone
+    // (faded) by `out`; its own layers carry the push, above the type's desk, under the label
+    const land = a.at == null ? null : Math.max(0, +a.at - 0.25);
+    const outAt = a.out == null ? null : clamp(+a.out, 0.5, T);
+    const fade = outAt == null ? "" : `;animation:ph-ob-${safeId(job.id)} ${f(T)}s linear both${land == null ? "" : `, ph-ob-in 0.7s ${SETTLE} ${f(land)}s forwards`}, ph-ob-out 0.45s ease ${f(outAt - 0.45)}s forwards`;
+    const L = objectLayers(job, a, ob, { fit: { x0: C.x0 + 10, x1: C.x1 - 10, y0: C.y0 + 30, y1: C.y1 - 40 }, T, land, z: ";z-index:5" + fade, soft: a.soft });
+    return `<style>${L.css}</style>${L.html}`;
+  }
   // A panorama in a 720 px box is a strip (a06's 2.8:1 plate, 250 px tall): it is printed as a
   // crop of itself, no wider than 1.7:1, about its focus. Framing, never retouching.
   if (ar > 1.7) {
@@ -349,6 +460,12 @@ function layPrint(ar, T, lab, b = 30) {
     printed page, which always opens whole. */
 export function archive(job) {
   const a = job.asset || {}, tr = trimOf(job, a), ar = aspect(a, tr), p = job.params || {};
+  const ob = objectOf(a, p.treat, p.box);
+  if (ob) {
+    // the object about three quarters of the frame tall, centred a little right, clear of the label
+    const L = objectLayers(job, a, ob, { fit: { x0: 300, x1: 1680, y0: 112, y1: 930 }, T: job.seconds, lab: labelBox(job), soft: p.soft });
+    return `<style>${L.css}</style>${L.html}`;
+  }
   if (p.treat === "sheet" || (p.treat == null && ar >= 1.75)) return sheet(job, a, tr, ar);
   const T = job.seconds, id = safeId(job.id), [fx, fy] = job.focus || [0.5, 0.45], lab = labelBox(job);
   const { ho, wo, cx, b } = layPrint(ar, T, lab);
@@ -356,7 +473,7 @@ export function archive(job) {
   const portrait = ar < 0.92;
   // A printed page (a catalogue's rate table, a guidebook page) is not opened in close: its small
   // print would read sharp, figures the voice never says among it. The plan may still ask for it.
-  const page = /\bpage \d+|\bcatalog(ue)?\b/i.test(a.title || "");
+  const page = /\bpage \d+|\bcatalog(ue)?\b/i.test(a.title || ""), catalogue = /\bcatalog(ue)?\b/i.test(a.title || "");
   const opening = p.opening === "tight" || p.opening === "whole" ? p.opening
     : !page && (portrait || DESK.has(job.prev_kind) || job.prev_print) ? "tight" : "whole";
   const e = entry(job.id, 0, 1100 / wo);
@@ -380,18 +497,25 @@ export function archive(job) {
     const last = states.at(-1);
     states.push([T, last[1] + 0.012, 0, 0]);
   } else {
-    // In on each beat, deeper, then back out to the whole print to resolve before the cut.
-    const steps = [1.12, 1.24, 1.04];
-    const bs = T > 4.2 ? beats(job) : [];
-    states.push([0, 1, 0, 0, GLIDE]);
-    let cur = 1.006;
-    bs.forEach((t, i) => {
-      states.push([t, cur, 0, 0, SETTLE]);
-      cur = steps[i] ?? cur;
-      states.push([Math.min(T, t + 1.3), cur, 0, 0, GLIDE]);
-      cur += 0.006;
-    });
-    states.push([T, cur + 0.004, 0, 0]);
+    // Set down whole, then into its focus on the spoken words: the print ends tight on what the
+    // sentence is about (e05's weight line, e04b's zones), the focus drawn toward the frame's
+    // middle, so the next shot always cuts from a close-up (e04b → e05 alternate). A long shot
+    // steps in twice. A page goes in deeper than a photograph, never past 2.2 screen px a source px.
+    const srcW = (a.w || iw) * (1 - tr[1] - tr[3]);
+    const sF = clamp(Math.min(page ? 2.0 : 1.4, (2.2 * srcW) / iw), 1.12, 2.2);
+    const fxS = (W * 0.5 - ox) * 0.92, fyS = (H * 0.46 - oy) * 0.92;
+    const words = (job.words || []).filter(content).map((w) => +w.t);
+    // leave on the first word after the print has settled (any word), arrive on the last content word
+    const t1 = (job.words || []).map((w) => +w.t).find((t) => t >= Math.max(0.6, T * 0.2)) ?? T * 0.25;
+    // arrive on the last content word that leaves time to settle, at least 1.2 s after leaving
+    const t2 = Math.min(T - 0.25, Math.max(t1 + 1.2, [...words].reverse().find((t) => t <= T - 0.3) ?? T - 0.4));
+    states.push([0, 1, 0, 0, GLIDE], [t1, 1.004, 0, 0, SWING]);
+    const mid = T > 5.4 ? words.find((t) => t >= t1 + 1.6 && t <= t2 - 1.4) : null;
+    if (mid != null) {
+      const m = 1 + (sF - 1) * 0.5;
+      states.push([t1 + 1.2, m, fxS * 0.5, fyS * 0.5, GLIDE], [mid, m * 1.006, fxS * 0.5, fyS * 0.5, SWING]);
+    }
+    states.push([t2, sF, fxS, fyS, GLIDE], [T, sF * 1.008, fxS, fyS]);
   }
   const css = timed(states.map(([t, s, x, y, ease], k) =>
     [t, `transform:translate(${px(x)},${px(y)}) rotateX(${f(tilt(k / 2))}deg) scale(${f(s, 4)})`, ease]), T);
@@ -402,22 +526,43 @@ export function archive(job) {
     const r = { x0: at(px0, cx, ox) + x * k + d, x1: at(px0 + wo, cx, ox) + x * k + d, y0: TOP + (oy + (py0 - oy) * s + y - TOP) * k, y1: TOP + (oy + (py0 + ho - oy) * s + y - TOP) * k };
     return hits(r, lab);
   };
+  // (sampled along the path every tenth of a second, so the flag is dark before the print arrives)
   let scrim = "";
   if (lab) {
-    const i = states.findIndex(covers);
+    const at = (t) => {
+      const k = states.findIndex((st) => st[0] >= t);
+      if (k <= 0) return states[Math.max(0, k)];
+      const [t0, s0, x0, y0] = states[k - 1], [t1s, s1, x1, y1] = states[k], u = (t - t0) / Math.max(1e-3, t1s - t0);
+      return [t, s0 + (s1 - s0) * u, x0 + (x1 - x0) * u, y0 + (y1 - y0) * u];
+    };
+    const ts = Array.from({ length: Math.ceil(T * 10) + 1 }, (_, i) => Math.min(T, i / 10));
+    const i = ts.findIndex((t) => covers(at(t)));
     if (i >= 0) {
-      const j = states.findIndex((s, k) => k > i && !covers(s));
-      const on = i === 0 ? -1 : states[i - 1][0] + 0.2, off = j < 0 ? 99 : (states[j - 1][0] + states[j][0]) / 2;
-      scrim = labScrim(lab, on, off);
+      const j = ts.findIndex((t, k) => k > i && !covers(at(t)));
+      scrim = labFlag(lab, i === 0 ? -1 : ts[i] - 0.7, j < 0 ? 99 : ts[j] - 0.2);
     }
   }
   // a tight opening is already lying on the desk at the cut; a whole one is set down on it
   const land = opening === "tight" ? landVars(e, -3, 0.2) : landVars(e, -0.4, 1.15);
+  // A printed page with figures the voice never says (a catalogue's specs, a rate table): the lamp
+  // narrows to the line in focus (`params.band`: [y0, y1] of the picture, else the focus ± 2.2%).
+  // The rest of the page is out of focus (a 14 px blur, the documents' rule) and under the desk's
+  // dark, so no other line reads, even pushed in to 2x; the page itself still shows as a page.
+  const band = Array.isArray(p.band) ? p.band : catalogue ? [fy - 0.022, fy + 0.022] : null;
+  let veil = "";
+  if (band) {
+    const [b0, b1] = band.map((y) => clamp(y, 0, 1));
+    const onPrint = (y) => f(((b + y * ih) / (ih + 2 * b)) * 100, 2);
+    const cut = (u, v) => `linear-gradient(to bottom, rgb(0 0 0) 0, rgb(0 0 0) calc(${u} - 0.8%), transparent ${u}, transparent ${v}, rgb(0 0 0) calc(${v} + 0.8%), rgb(0 0 0) 100%)`;
+    const m = cut(`${f(b0 * 100, 2)}%`, `${f(b1 * 100, 2)}%`);
+    veil = `<img class="ph-lamp-soft" src="${esc(a.url)}" style="left:${px(b)};top:${px(b)};width:${px(iw)};height:${px(ih)};${viewBox(tr)}-webkit-mask-image:${m};mask-image:${m}" alt="">` +
+      `<i class="ph-lamp" style="--b0:${onPrint(b0)}%;--b1:${onPrint(b1)}%"></i>`;
+  }
   return `<style>${keyframes(`ph-in-${id}`, css)}</style>` +
     `<div class="cam" style="perspective-origin:${px(cx)} ${px(TOP)}"><div class="rig" style="--cam-origin:${px(cx)} ${px(TOP)};--cam-drift:8px">` +
     `<div class="ph-inner" style="transform-origin:${px(ox)} ${px(oy)};animation:ph-in-${id} ${f(T)}s linear both">` +
     `<div class="ph-place" style="left:${px(px0)};top:${px(py0)};--rot:${deg(e.rot)}">` +
-    print(job, a, iw, ih, b, "ph-landing", land) + `</div></div></div></div>` + scrim;
+    print(job, a, iw, ih, b, "ph-landing", land, veil) + `</div></div></div></div>` + scrim;
 }
 
 /** A sheet of stamps (or any wide sheet of small things): no border of ours, the scan is the

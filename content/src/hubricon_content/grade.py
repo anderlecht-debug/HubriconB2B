@@ -189,6 +189,30 @@ def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | No
             "yavg": round(final, 1), "mono": mono, **({"clamped": True} if clamped else {})}
 
 
+def ground_of(path) -> dict:
+    """A picture's own ground, measured on the graded file the stage shows: the mean luma and its
+    spread over the outer 5% ring, and, when that ring is one plain tone (a museum object shot on
+    black or on a seamless), the box the object fills, as fractions [x0, y0, x1, y1]. photos.mjs lays
+    such an object on the desk without a print's border (the "object" treatment)."""
+    import numpy as np
+    from PIL import Image
+    im = Image.open(path).convert("L")
+    im.thumbnail((480, 480))
+    a = np.asarray(im, dtype=np.float32)
+    h, w = a.shape
+    r = max(2, round(0.05 * min(h, w)))
+    ring = np.concatenate([a[:r].ravel(), a[-r:].ravel(), a[:, :r].ravel(), a[:, -r:].ravel()])
+    g, sd = float(ring.mean()), float(ring.std())
+    out = {"luma": round(g, 1), "sd": round(sd, 1), "box": None}
+    if sd > 16 or 40 <= g <= 200:
+        return out
+    m = np.abs(a - g) > max(28.0, 4 * sd)                       # what differs from the ground
+    rows, cols = np.where(m.mean(1) > 0.015)[0], np.where(m.mean(0) > 0.015)[0]
+    if len(rows) and len(cols):
+        out["box"] = [round(float(cols[0]) / w, 4), round(float(rows[0]) / h, 4), round(float(cols[-1] + 1) / w, 4), round(float(rows[-1] + 1) / h, 4)]
+    return out
+
+
 def still(src: Path, out: Path, mono: bool | None = None, refuse: bool = True, frame: bool = True) -> dict:
     """A graded still for the film stage: colour and grain from the grade, kept at
     up to 3840 px wide so the stage's moves (to 1.35 on a pull-back) stay sharp.

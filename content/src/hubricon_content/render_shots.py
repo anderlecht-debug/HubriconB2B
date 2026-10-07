@@ -169,7 +169,8 @@ def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool =
     if not out.exists():
         grade.still(src, out, mono=mono, refuse=not paper, frame=not cut)
     w, h = _size(out)
-    return {"url": stage_url(out), "w": w, "h": h, "sha256": sha(src)}
+    # the picture's own ground (photos.mjs lays a museum object on black or on a seamless on the desk itself)
+    return {"url": stage_url(out), "w": w, "h": h, "sha256": sha(src), "ground": grade.ground_of(out)}
 
 
 def _size(path: Path) -> tuple[int, int]:
@@ -333,7 +334,9 @@ class Job:
                              paper=True, cut=cut_from_page(ca))
             self.job["print"] = {**{k: ca.get(k) for k in ("credit", "place", "title", "author", "trim")},
                                  "date": display_date(ca.get("date")), "at": comp.get("at"), "out": comp.get("out"),
-                                 "caption": comp.get("caption"), "focus": comp.get("focus"), **g}
+                                 "caption": comp.get("caption"), "focus": comp.get("focus"),
+                                 # photos.mjs: "object" or "print", the object's box, and its regions drawn out of focus
+                                 "treat": comp.get("treat"), "box": comp.get("box"), "soft": comp.get("soft"), **g}
             self.job["params"].pop("print", None)
             self.assets.append(g["sha256"])
         if self.kind == "split":
