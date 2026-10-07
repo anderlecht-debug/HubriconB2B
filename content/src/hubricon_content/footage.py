@@ -35,7 +35,7 @@ def render(src: Path, out: Path, frames: int, start: float = 0.0, focus=(0.5, 0.
     need = frames / fps * (SLOW if slow else 1.0)
     if info["duration"] and start + need > info["duration"] + 0.05:
         raise grade.Rejected(f"the take is {info['duration'] - start:.1f} s from its in point; the shot needs {need:.1f} s")
-    g = grade.plan(src, focus=focus, start=start, duration=need)
+    g = grade.plan(src, focus=focus, start=start, duration=need, strict=False)
     speed = f"setpts=PTS/{SLOW}," if slow else ""
     # a clone of the last frame covers a rounding shortfall of a frame or two, never more
     vf = f"{speed}{g['filter']},tpad=stop_mode=clone:stop_duration=0.2"

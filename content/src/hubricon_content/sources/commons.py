@@ -21,15 +21,31 @@ META = ("LicenseShortName|License|UsageTerms|LicenseUrl|Artist|Credit|ImageDescr
         "ObjectName|NonFree|Restrictions|Copyrighted|AttributionRequired")
 
 
+CATEGORY = re.compile(r"^\s*category:\s*(.+?)\s*$", re.I)
+
+
 def search(query: str, kind: str = "image", n: int = 40, *, net=None) -> list[dict]:
+    """A full-text search, or, for a query written `category: <name>`, the files of that Commons
+    category: curated by Commons' editors, so far more exact for a named subject than the words
+    of a file title. The category is kept as the record's subject, where the filters read it."""
     net = net or netmod.default()
-    params = {"action": "query", "format": "json", "formatversion": 2, "generator": "search",
-              "gsrsearch": f"{plain(query)} filetype:bitmap", "gsrnamespace": 6, "gsrlimit": max(1, min(int(n), 50)),
+    params = {"action": "query", "format": "json", "formatversion": 2,
               "prop": "imageinfo", "iiprop": "url|size|mime|extmetadata", "iiurlwidth": 960,
               "iiextmetadatafilter": META, "iiextmetadatalanguage": "en"}
+    cat = CATEGORY.match(query)
+    if cat:
+        params.update({"generator": "categorymembers", "gcmtitle": f"Category:{cat.group(1)}", "gcmtype": "file",
+                       "gcmlimit": max(1, min(int(n), 50))})
+    else:
+        params.update({"generator": "search", "gsrsearch": f"{plain(query)} filetype:bitmap", "gsrnamespace": 6,
+                       "gsrlimit": max(1, min(int(n), 50))})
     body = net.get_json(NAME, API, params)
     pages = sorted((body.get("query") or {}).get("pages") or [], key=lambda p: p.get("index", 0))
-    return [c for i, p in enumerate(pages) if (c := _candidate(p, i))]
+    found = [c for i, p in enumerate(pages) if (c := _candidate(p, i))]
+    if cat:
+        for c in found:
+            c["subject"] = f"Commons category: {cat.group(1)}"
+    return found
 
 
 def licence_of(meta: dict) -> str | None:

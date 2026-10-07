@@ -15,10 +15,14 @@ TREES = [CONTENT / "src", CONTENT / "film"]
 SUFFIXES = {".py", ".mjs", ".js", ".css", ".html"}
 
 
+V3 = CONTENT / "film" / "v3"   # the long films' look since the founder's call of 2026-10-06 (FILM_LOOK_V3.md)
+
+
 def _files():
+    """The paper look's code. v3 keeps its own rules, below."""
     for tree in TREES:
         for p in tree.rglob("*"):
-            if p.suffix in SUFFIXES and ".venv" not in p.parts and "__pycache__" not in p.parts:
+            if p.suffix in SUFFIXES and ".venv" not in p.parts and "__pycache__" not in p.parts and V3 not in p.parents:
                 yield p
 
 
@@ -64,3 +68,11 @@ def test_subtitles_and_thumbnail_read_the_tokens():
 def test_tokens_json_is_current_with_the_site_css_and_the_stage():
     res = subprocess.run(["node", str(CONTENT / "film" / "tokens.mjs"), "--check"], capture_output=True, text=True)
     assert res.returncode == 0, res.stdout + res.stderr
+
+
+def test_v3_keeps_one_palette_in_its_base():
+    """v3 ("the archive at night") has its own palette, defined once in film/v3/base.css; every kind
+    draws with its tokens (var(--…)) and types no colour of its own."""
+    hits = [f"{p.relative_to(CONTENT)}:{n}" for p in V3.rglob("*") if p.suffix in SUFFIXES and p.name != "base.css"
+            for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1) if re.search(r"#[0-9a-fA-F]{6}\b", line)]
+    assert hits == [], f"v3 colours outside film/v3/base.css: {hits}"

@@ -18,6 +18,7 @@ import numpy as np
 import soundfile as sf
 
 from . import script as scriptmod
+from . import shots as shots_mod
 from .state import CONTENT_DIR
 
 SR = 48000
@@ -38,6 +39,15 @@ def _decode(path: Path) -> np.ndarray:
     res = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"],
                          capture_output=True, timeout=300, check=True)
     return np.frombuffer(res.stdout, dtype=np.float32)
+
+
+def _smooth(x: np.ndarray, k: int) -> np.ndarray:
+    """np.convolve(x, ones(k)/k, "same") by running sums: O(n), not O(n·k), so a 30-minute film
+    mixes in seconds rather than hours."""
+    k = max(1, int(k))
+    c = np.concatenate([[0.0], np.cumsum(x, dtype=np.float64)])
+    i = np.arange(len(x)) + (k - 1) // 2 + 1
+    return (c[np.clip(i, 0, len(x))] - c[np.clip(i - k, 0, len(x))]) / k
 
 
 def _tick(rng) -> np.ndarray:
@@ -66,14 +76,14 @@ def _bed(seconds: float, rng) -> np.ndarray:
     tone = (np.sin(2 * np.pi * f0 * t) + 0.5 * np.sin(2 * np.pi * f0 * 1.498 * t + 0.3) +
             0.35 * np.sin(2 * np.pi * f0 * 2.01 * t) + 0.2 * np.sin(2 * np.pi * f0 * 3.0 * t))
     lfo = 0.65 + 0.35 * np.sin(2 * np.pi * t / 23.0)
-    air = np.convolve(rng.normal(0, 1, n), np.ones(400) / 400, mode="same") * 0.15
+    air = _smooth(rng.normal(0, 1, n), 400) * 0.15
     return (tone * lfo + air) / 2.2
 
 
 def _room(seconds: float, rng) -> np.ndarray:
     n = int(SR * seconds)
     brown = np.cumsum(rng.normal(0, 1, n))
-    brown -= np.convolve(brown, np.ones(2000) / 2000, mode="same")
+    brown -= _smooth(brown, 2000)
     return brown / (np.abs(brown).max() + 1e-9)
 
 
@@ -82,7 +92,8 @@ def _reverb(x: np.ndarray, rng) -> np.ndarray:
     ir = rng.normal(0, 1, n) * np.exp(-np.arange(n) / (SR * 0.03))
     ir[0] = 1.0
     ir /= np.abs(ir).sum() / 1.15
-    wet = np.convolve(x, ir, mode="full")[: len(x)]
+    from scipy.signal import oaconvolve
+    wet = oaconvolve(x, ir, mode="full")[: len(x)]
     return 0.88 * x + 0.12 * wet
 
 
@@ -96,6 +107,125 @@ def _place(track: np.ndarray, clip: np.ndarray, at: float, gain: float) -> None:
 AMBIENCE_DB = -40.0       # VISUAL_SPEC.md §9, under footage; an observational hold up to -36
 AMBIENCE_OBSERVE_DB = -36.0
 AMBIENCE_FADE = 0.4
+
+# A long film's score (VISUAL_SPEC.md §9, with the 2026-10-06 additions): the shot plan, not
+# events.json, says where each figure lands, where the picture changes room and where a
+# thesis line stands alone.
+SUB_DB = -24.0            # a low hit under a hero figure, felt more than heard
+ROOM_WHOOSH_DB = -32.0    # where the picture moves between paper and the world
+RISER_DB = -30.0          # a short rise into each chapter card
+CARD_SWELL_DB = 8.0       # the bed comes up while the card holds (no voice there)
+# A long film's bed is levelled by its average (RMS), not its peaks: a sparse piano cue's peaks sit
+# some 15–20 dB above its body, so peak-levelled at −32 dB and ducked −20 it measured 35 dB under the
+# voice, which is no music at all (G01 draft, 2026-10-06). Levelled by RMS and ducked 10 dB, it sits
+# about 25 dB under the voice and comes up to −24 dB under a chapter card: felt, never in the way.
+BED_DUCK_DB_D = -10.0
+HERO = {"number-land", "number-pair", "counterfactual", "callback", "range-band", "unit-grid"}
+# The bed family (§9): one licensed cue, a different passage and key per chapter, so a
+# 30-minute film never hears the same two minutes looped.
+FAMILY = [(0.0, 1.0), (0.37, 0.944), (0.71, 0.891), (0.18, 0.944), (0.55, 1.0), (0.86, 0.891)]
+FAMILY_XFADE = 2.5
+
+
+def _sub(rng) -> np.ndarray:
+    """A short low hit: a sine falling from 62 to 38 Hz, with a soft transient."""
+    n = int(SR * 0.75)
+    t = np.arange(n) / SR
+    f = 38 + 24 * np.exp(-t * 7)
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 5.5)
+    click = np.convolve(rng.normal(0, 1, n), np.ones(60) / 60, mode="same") * np.exp(-t * 60) * 0.25
+    x = body + click
+    return x / (np.abs(x).max() + 1e-9)
+
+
+FOLEY_DB = -30.0          # a page or print landing on the desk
+SUBDROP_DB = -24.0        # under a chapter card
+FOLEY_LEAD = 0.1          # sound leads picture by three frames (a J-cut), so the cut is heard first
+PAPER_KINDS = {"document", "table", "receipt", "archive", "stack", "split"}
+
+
+def _paper(rng) -> np.ndarray:
+    """A sheet or print sliding onto the desk: a short band of air, 0.35 s, its body around 1–4 kHz."""
+    n = int(SR * 0.35)
+    t = np.arange(n) / SR
+    noise = rng.normal(0, 1, n)
+    body = _smooth(noise, 6) - _smooth(noise, 48)              # a crude band-pass: no low rumble, no hiss
+    env = (1 - np.exp(-t * 60)) * np.exp(-t * 9)
+    x = body * env
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def _subdrop(rng) -> np.ndarray:
+    """A low fall under a chapter card: a sine from 80 to 35 Hz over 0.9 s."""
+    n = int(SR * 0.9)
+    t = np.arange(n) / SR
+    f = 35 + 45 * np.exp(-t * 4)
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 3.2) * (1 - np.exp(-t * 80))
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def _riser(rng, seconds: float = 1.8) -> np.ndarray:
+    """Air that brightens and grows into a cut: noise through a one-pole low-pass opening 250 Hz → 5 kHz."""
+    n = int(SR * seconds)
+    noise = rng.normal(0, 1, n)
+    cut = 250 * (20 ** (np.arange(n) / n))
+    a = np.exp(-2 * np.pi * cut / SR)
+    out, y = np.empty(n), 0.0
+    for i in range(n):
+        y = a[i] * y + (1 - a[i]) * noise[i]
+        out[i] = y
+    env = (np.arange(n) / n) ** 2.2
+    x = out * env
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def _family(bed: np.ndarray, n: int, bounds: list[float]) -> np.ndarray:
+    """The bed as a family of cues, one per chapter, crossfading over FAMILY_XFADE at each boundary."""
+    out = np.zeros(n)
+    k = int(FAMILY_XFADE * SR)
+    edges = [0.0] + [b for b in bounds if 0 < b * SR < n] + [n / SR]
+    for i, (a, b) in enumerate(zip(edges, edges[1:])):
+        offset, ratio = FAMILY[i % len(FAMILY)]
+        # a lower key by resampling (slower and darker, as a family member should be)
+        src = np.interp(np.arange(0, len(bed), ratio), np.arange(len(bed)), bed)
+        src = np.roll(src, -int(offset * len(src)))
+        i0, i1 = max(0, int(a * SR) - k // 2), min(n, int(b * SR) + k // 2)
+        cue = np.tile(src, int(np.ceil((i1 - i0) / len(src))) + 1)[: i1 - i0]
+        fade = np.ones(i1 - i0)
+        if i0 > 0:
+            fade[:k] = np.linspace(0, 1, k)
+        if i1 < n:
+            fade[-k:] = np.linspace(1, 0, k)
+        out[i0:i1] += cue * fade
+    return out
+
+
+def score_events(plan: dict, timing: dict) -> dict:
+    """Where a long film's score acts, from its shot plan: a tick on every figure as it lands, a
+    low hit under each hero figure, a soft whoosh where the room changes (not at chapter cards,
+    which keep their own), a riser into each card, and the bed's drop before each thesis line."""
+    shots = plan.get("shots", [])
+    cards = [(float(c["start"]), float(c["end"])) for c in timing["segments"] if c["kind"] == "card"]
+    ticks, subs, rooms, drops = [], [], [], []
+    for s in shots:
+        if s.get("room") == "paper":
+            for r in s.get("reveals", []):
+                t = float(r["t"])
+                if not ticks or t - ticks[-1] > 0.25:
+                    ticks.append(t)
+            if s.get("style") in HERO and s.get("reveals"):
+                on = str(s.get("on") or "")
+                hit = next((float(r["t"]) for r in s["reveals"] if f"{{{{{r['key']}}}}}" == on), float(s["reveals"][-1]["t"]))
+                subs.append(hit)
+        if s.get("style") == "kinetic-thesis":
+            drops.append(float(s["start"]))
+    near_card = lambda t: any(abs(t - a) < 0.5 or abs(t - b) < 0.5 for a, b in cards)
+    for a, b in zip(shots, shots[1:]):
+        if a.get("room") != b.get("room") and not near_card(float(b["start"])):
+            rooms.append(float(b["start"]))
+    return {"ticks": ticks, "subs": subs, "rooms": rooms, "drops": drops,
+            "risers": [a for a, _ in cards], "cards": cards,
+            "paper": [float(s["start"]) for s in shots if s.get("kind") in PAPER_KINDS and s.get("room") == "paper"]}
 
 
 def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
@@ -134,7 +264,10 @@ def mix(slug: str) -> Path:
     d = scriptmod.video_dir(slug)
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
     events = json.loads((d / "events.json").read_text(encoding="utf-8")) if (d / "events.json").exists() else []
-    total = timing["duration"] + 0.5
+    plan_p = d / "shots.json"
+    plan = json.loads(plan_p.read_text(encoding="utf-8")) if plan_p.exists() else None
+    tail = shots_mod.end_tail(plan) if plan else 0.0
+    total = timing["duration"] + tail + 0.5
     n = int(total * SR)
     rng = np.random.default_rng(7)
     (d / "media").mkdir(exist_ok=True)
@@ -157,8 +290,8 @@ def mix(slug: str) -> Path:
 
     # envelope of the voice, for ducking
     win = int(SR * 0.05)
-    env = np.convolve(np.abs(vo), np.ones(win) / win, mode="same")
-    speaking = np.convolve((env > 0.01).astype(float), np.ones(int(SR * 0.35)) / int(SR * 0.35), mode="same")
+    env = _smooth(np.abs(vo), win)
+    speaking = _smooth((env > 0.01).astype(float), int(SR * 0.35))
     speaking = np.clip(speaking * 1.5, 0, 1)
 
     bed_file = next(iter(sorted(list(ASSETS.glob("music/*.wav")) + list(ASSETS.glob("music/*.mp3")))), None)
@@ -169,9 +302,40 @@ def mix(slug: str) -> Path:
     else:
         bed = _bed(total, rng)[:n]
         bed_source = "procedural drone (provisional)"
-    bed = bed / (np.abs(bed).max() + 1e-9)
-    bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB)))
-    room = _room(total, rng)[:n] * _db(ROOM_TONE_DB)
+    score = score_events(plan, timing) if plan else None
+    if score:
+        bed = _family(bed, n, [float(c["at"]) for c in timing["chapters"]])
+        bed_source += f" · a family of {len(timing['chapters']) + 1} cues"
+    if score:
+        bed = bed / (np.sqrt(np.mean(bed ** 2)) + 1e-9)
+        bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB_D)))
+    else:
+        bed = bed / (np.abs(bed).max() + 1e-9)
+        bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB)))
+    if score:
+        lift = np.ones(n)
+        for a, b in score["cards"]:      # the card holds with no voice: the bed comes up
+            i0, i1, r = int(a * SR), int(b * SR), int(0.4 * SR)
+            ramp = np.ones(max(0, i1 - i0)) * _db(CARD_SWELL_DB)
+            if len(ramp) > 2 * r:
+                ramp[:r] = np.linspace(1, _db(CARD_SWELL_DB), r)
+                ramp[-r:] = np.linspace(_db(CARD_SWELL_DB), 1, r)
+            lift[i0:i1] = ramp[: max(0, min(n, i1) - i0)]
+        for t in score["drops"]:         # silence under the thesis line's first words, then back
+            i0, i1 = int(max(0.0, t - 0.35) * SR), int((t + 0.05) * SR)   # 0.4 s: a breath, not a hole
+            back = int(1.5 * SR)
+            lift[i0:i1] = 0.0
+            lift[i1:i1 + back] = np.linspace(0, 1, len(lift[i1:i1 + back]))
+        if tail:   # the end card holds with no voice: the bed comes up, then fades out to the film's last frame
+            i0, r = int(float(timing["duration"]) * SR), int(0.6 * SR)
+            hold = np.ones(max(0, n - i0)) * _db(CARD_SWELL_DB)
+            hold[: min(r, len(hold))] = np.linspace(1, _db(CARD_SWELL_DB), len(hold[:r]))
+            lift[i0:] = hold
+        bed_gain = bed_gain * lift
+    room = _room(total, rng)[:n]
+    if score:   # a long film's room tone is levelled by its body, like the bed: the floor never falls to silence
+        room = room / (np.sqrt(np.mean(room ** 2)) + 1e-9)
+    room = room * _db(ROOM_TONE_DB)
 
     fx = np.zeros(n)
     tick_file, whoosh_file = ASSETS / "sfx" / "tick.mp3", ASSETS / "sfx" / "whoosh.mp3"
@@ -187,20 +351,45 @@ def mix(slug: str) -> Path:
             _place(fx, tick, float(e["t"]), _db(TICK_DB))
     for ch in timing["chapters"]:
         _place(fx, whoosh, max(0.0, float(ch["at"]) - 0.08), _db(WHOOSH_DB))
+    if score:
+        sub, riser = _sub(rng), _riser(rng)
+        for t in score["ticks"]:
+            _place(fx, tick, t, _db(TICK_DB))
+        for t in score["subs"]:
+            _place(fx, sub, max(0.0, t - 0.02), _db(SUB_DB))
+        for t in score["rooms"]:
+            _place(fx, whoosh, max(0.0, t - 0.15), _db(ROOM_WHOOSH_DB))
+        for t in score["risers"]:
+            _place(fx, riser, max(0.0, t - len(riser) / SR), _db(RISER_DB))
+        paper, sub_drop = _paper(rng), _subdrop(rng)
+        for t in score["paper"]:
+            _place(fx, paper, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB))
+        for t in score["risers"]:
+            _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
     amb, amb_subjects = _ambience(d, n)
     out = vo + bed * bed_gain + room + fx + amb
+    if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
+        f = int(min(2.5, tail) * SR)
+        end = int((float(timing["duration"]) + tail) * SR)
+        out[end - f:end] *= np.linspace(1, 0, f) ** 1.5
+        out[end:] = 0.0
     peak = np.abs(out).max()
     if peak > 0.98:
         out = out / peak * 0.98
     raw = d / "media" / "mix-raw.wav"
     sf.write(str(raw), out.astype(np.float32), SR)
     final = d / "media" / "mix.wav"
+    # the ceiling sits 0.5 dB under the spec's -1.5 dBTP: the AAC encode adds about 0.3 dB of
+    # inter-sample peak (G01's draft measured -1.2 from a -1.5 mix)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-af",
-                    "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", str(SR), str(final)], check=True, timeout=600)
+                    "loudnorm=I=-16:TP=-2.0:LRA=11", "-ar", str(SR), str(final)], check=True, timeout=600)
     (d / "media" / "mix.json").write_text(json.dumps({
         "sample_rate": SR, "room_tone_db": ROOM_TONE_DB, "bed_db": BED_DB, "bed_duck_db": BED_DUCK_DB,
         "tick_db": TICK_DB, "whoosh_db": WHOOSH_DB, "bed_source": bed_source, "sfx_source": sfx_source,
         "ticks": sum(1 for e in events if e.get("kind") == "data"),
-        "whooshes": len(timing["chapters"]), "target_lufs": -16, "ambience": amb_subjects}, indent=1) + "\n", encoding="utf-8")
+        "whooshes": len(timing["chapters"]), "target_lufs": -16, "ambience": amb_subjects,
+        **({"score": {k: len(v) for k, v in score.items() if k != "cards"}, "sub_db": SUB_DB, "room_whoosh_db": ROOM_WHOOSH_DB,
+            "riser_db": RISER_DB, "card_swell_db": CARD_SWELL_DB, "bed_levelled_by": "rms",
+            "bed_duck_db_long_film": BED_DUCK_DB_D} if score else {})}, indent=1) + "\n", encoding="utf-8")
     return final

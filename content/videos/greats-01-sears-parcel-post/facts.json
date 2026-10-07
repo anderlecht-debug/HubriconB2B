@@ -1562,7 +1562,7 @@
  "rc_peak_from": {
   "value": "October 15",
   "label": "the peak card's start",
-  "source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json on September 9, 2026"
+  "source": "Amazon's published US FBA fee card, 2026 holiday peak schedule (effective October 15, 2026, through January 14, 2027), as recorded in ratecard.json on September 9, 2026"
  },
  "cs_who": {
   "value": "a car-care brand",

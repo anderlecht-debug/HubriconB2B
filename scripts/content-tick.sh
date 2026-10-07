@@ -69,9 +69,14 @@ if [ "${CONTENT_DRY_RUN:-0}" = "1" ]; then
         --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
         --max-turns 2 --output-format json --no-session-persistence --strict-mcp-config 2>&1); RC=$?
 else
-  OUT=$(timeout 55m "$CLAUDE" -p "Read CLAUDE.md, then follow .claude/skills/content-next/SKILL.md exactly. Stop starting new steps after 40 minutes of work." \
-        --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
-        --max-turns 300 --output-format json --no-session-persistence 2>&1); RC=$?
+  # Every tick runs under the runner's token caps (content/film/budgets.json "runner", the
+  # founder's call of 2026-10-07): Sonnet, a cap per tick, per day and per week, the session
+  # stopped the moment one is spent; a tick past the day's or the week's cap does not start.
+  # It prints the session's result object, so the checks below read it as before.
+  OUT=$(cd "$WT/content" && CLAUDE_BIN="$CLAUDE" timeout 55m .venv/bin/python -m hubricon_content.cli ai-tick \
+        --prompt "Read CLAUDE.md, then follow .claude/skills/content-next/SKILL.md exactly. Stop starting new steps after 40 minutes of work." \
+        -- --settings "$WT/scripts/content-runner.settings.json" --permission-mode acceptEdits \
+        --max-turns 300 --no-session-persistence 2>&1); RC=$?
 fi
 SECS=$(( $(date +%s) - START ))
 { printf '%s tick rc=%s secs=%s dry=%s\n' "$(date -Is)" "$RC" "$SECS" "${CONTENT_DRY_RUN:-0}"

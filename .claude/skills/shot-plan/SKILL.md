@@ -55,6 +55,20 @@ the validator holds you to are in `content/film/styles.json`.
    the plan (move a cut, change a style, move a figure to paper) and fill again. Stop when it prints
    `clean`.
 
+## What the first Greats film taught (2026-10-06)
+
+- **Picture first.** Aim for at least 45% of the runtime led by a picture (footage, a still, a framed
+  photograph, a stack, a split). A sentence with no figure is a chance for the world: never leave
+  more than about 45 s of paper in a row when one of its sentences carries no figure.
+- **`specific` is for a name the sentence says.** Tag a shot only when the voice names that
+  particular company, person, place or event ("Sears", "Batavia, Ohio", "the Joint Committee").
+  A generic noun ("a country post office", "an express wagon", "a farmer") is not specific: query
+  it from the archival libraries without the tag, or the record filter refuses every good photograph
+  that does not repeat the word.
+- **Archival queries are file titles.** Write the words a Wikimedia Commons or LOC file title would
+  carry ("Rural free delivery wagon", "Sears Roebuck plant Chicago 1906", "farmer plowing horses"),
+  not the sentence.
+
 ## The picker (VISUAL_SPEC.md §14.2)
 
 | The sentence… | First choice | Second choice | Never |

@@ -126,3 +126,12 @@ def test_a_missing_key_is_named_exactly(monkeypatch):
     assert sources.missing_keys("loc") == ["CONTENT_CONTACT_EMAIL"]
     with pytest.raises(KeyError):
         sources.adapter("amazon")
+
+
+def test_a_commons_category_query_lists_the_category_and_keeps_it_as_subject(tmp_path, monkeypatch):
+    found, net = _search(tmp_path, monkeypatch, "commons", {"commons.wikimedia.org": fx.fixture("commons")},
+                         query="category: Sears, Roebuck and Company")
+    params = net.http.calls[0]["params"]
+    assert params["generator"] == "categorymembers" and params["gcmtitle"] == "Category:Sears, Roebuck and Company"
+    assert all(c["subject"] == "Commons category: Sears, Roebuck and Company" for c in found)
+    assert sources.plain("category: Sears Roebuck") == "Sears Roebuck"      # other libraries never see the word

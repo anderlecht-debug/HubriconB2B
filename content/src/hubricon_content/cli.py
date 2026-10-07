@@ -292,6 +292,54 @@ def cmd_shots_validate(a):
         sys.exit(1)
 
 
+def cmd_film_qa(a):
+    from . import film_qa
+    res = film_qa.run(a.slug, check_media=not a.no_media)
+    for p_ in res["list"]:
+        where = f"{p_.get('shot', '')} {p_['t']}s " if p_.get("t") is not None else (f"{p_['shot']} " if p_.get("shot") else "")
+        print(f"- [{p_['check']}] {where}{p_['msg']}")
+    for adv in res["advisory"]:
+        print(f"  (advisory) {adv}")
+    print(f"{res['problems']} problem(s) {json.dumps(res['by_check'])}" if res["problems"] else "clean")
+    if res["problems"]:
+        sys.exit(1)
+
+
+def cmd_ai_step(a):
+    from . import ai_step
+    prompt = Path(a.prompt_file).read_text(encoding="utf-8") if a.prompt_file else a.prompt
+    if not prompt:
+        sys.exit("ai-step needs --prompt or --prompt-file")
+    res = ai_step.run(a.slug, a.step, prompt, model=a.model, budget=a.budget)
+    _out({k: v for k, v in res.items() if k != "result"})
+    if res["status"] not in ("ok",):
+        sys.exit(2)
+
+
+def cmd_ai_tick(a):
+    from . import ai_step
+    extra = tuple(x for x in (a.claude_args or []) if x != "--")
+    print(json.dumps(ai_step.tick(a.prompt, model=a.model, extra=extra), ensure_ascii=False))
+
+
+def cmd_film_cost(a):
+    from . import meter
+    _out(meter.summary(a.slug))
+
+
+def cmd_draft(a):
+    from . import draft
+    res = draft.draft(a.slug, remix=a.remix)
+    _out(res)
+    if res["status"] != "ok":
+        sys.exit(2)
+
+
+def cmd_review_sheets(a):
+    from . import draft
+    _out(draft.review_sheets(a.slug))
+
+
 def cmd_source(a):
     from . import sourcing
     q = _q(); u = _unit_for(q, a.slug)
@@ -376,6 +424,24 @@ def main(argv=None) -> None:
     p = sub.add_parser("shots-validate", help="check shots.json against VISUAL_SPEC.md §4, §5, §7.4 and §14.8")
     p.add_argument("slug"); p.add_argument("--picked", action="store_true", help="also check every pick (after visual-pick)")
     p.set_defaults(fn=cmd_shots_validate)
+    p = sub.add_parser("film-qa", help="every check of a long film with no AI: plan, clips, stage, draft (FILM_LINE.md)")
+    p.add_argument("slug"); p.add_argument("--no-media", action="store_true", help="skip the draft's length, loudness and frames")
+    p.set_defaults(fn=cmd_film_qa)
+    p = sub.add_parser("ai-step", help="one AI step of a film under its hard token budget, counted in the film's meter")
+    p.add_argument("slug"); p.add_argument("step", help="plan | pick | fix | review | script (content/film/budgets.json)")
+    p.add_argument("--prompt", default=None); p.add_argument("--prompt-file", default=None)
+    p.add_argument("--model", default=None); p.add_argument("--budget", type=int, default=None)
+    p.set_defaults(fn=cmd_ai_step)
+    p = sub.add_parser("ai-tick", help="one unattended runner session under the runner's tick, day and week caps")
+    p.add_argument("--prompt", required=True); p.add_argument("--model", default=None)
+    p.add_argument("claude_args", nargs=argparse.REMAINDER, help="after --: arguments passed to claude")
+    p.set_defaults(fn=cmd_ai_tick)
+    p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
+    p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")
+    p.add_argument("slug"); p.add_argument("--remix", action="store_true"); p.set_defaults(fn=cmd_draft)
+    p = sub.add_parser("review-sheets", help="three frames of every shot with its words, six shots a sheet (qa/sheets/)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_review_sheets)
     p = sub.add_parser("source", help="candidates, filters and contact sheets for every world shot (VISUAL_SPEC.md §6)")
     p.add_argument("slug"); p.add_argument("--shot", default=None, help="one shot, e.g. s012")
     p.set_defaults(fn=cmd_source)

@@ -1,0 +1,123 @@
+/* v3, "the archive at night" (the founder's call, 2026-10-06: no white stage, no logo bug).
+   The paper room is a dark desk under one warm key light. Documents and photographs are
+   physical objects on it; data is light. Every kind file (kinds/*.css) builds on these tokens. */
+:root {
+  --ground: #0e0d0c;            /* the desk, warm black */
+  --light: #f2eee6;             /* text as light on the dark */
+  --light-2: #b9b3a9;           /* secondary */
+  --light-3: #77726a;           /* tertiary, rules */
+  --paper: #ebe3d0;             /* aged ivory */
+  --paper-ink: #1d1a15;         /* ink on paper */
+  --paper-ink-2: #5b5448;       /* faded ink */
+  --marker: #f1c24b;            /* a highlighter's amber, for the line that matters */
+  --blue: #2f74ff;              /* money and the leak, nothing else (the brand's blue, lifted for a dark ground) */
+  --blue-deep: #0b5fff;
+  --blue-glow: rgb(47 116 255 / 0.55);
+  --serif: "Fraunces", "Instrument Serif", Georgia, serif;
+  --quote: "Instrument Serif", "Fraunces", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --period: "Old Standard", "Fraunces", Georgia, serif;
+  --typed: "Special Elite", "Courier New", monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --safe-x: 160px;              /* title-safe: nothing that must be read sits outside it */
+  --safe-y: 90px;
+  /* One type scale and grid for every family (the critique of 2026-10-06). Left text starts
+     at x = 160; nothing that must be read sits below baseline 966; axes stop at 160 and 1760. */
+  --grid-x: 160px;
+  --grid-right: 1760px;
+  --baseline-max: 966px;
+  --fs-label: 28px;             /* Inter 500 caps, +0.10em: eyebrows, units, axis names */
+  --fs-body: 40px;              /* never under 36 */
+  --fs-heading: 64px;           /* Fraunces 400, a frame's heading */
+  --fs-display-l: 120px;        /* a statement of up to 8 words */
+  --fs-display-m: 96px;         /* up to 25 words */
+  --fs-display-s: 72px;         /* longer */
+  --fs-hero: 260px;             /* a hero figure: 220–320 */
+  /* Hero figures: one face, one weight, one glow, in every family. */
+  --hero-face: "Inter", system-ui, sans-serif;
+  --hero-weight: 500;
+  --hero-track-xl: -0.04em;     /* 200 px and up */
+  --hero-track-l: -0.02em;      /* 80–200 px */
+  --glow-blue: 0 0 10px rgb(49 117 255 / 0.45), 0 0 36px rgb(49 117 255 / 0.22);
+  --glow-ivory: 0 0 12px rgb(255 240 214 / 0.18);
+  --unit-scale: 0.3;            /* a unit beside its figure: 0.3 of its size, italic, ivory 70%, never blue */
+  /* Fraunces at the size it is set (never a display optical size above the pixel size). */
+  --heading-font: 400 var(--fs-heading)/1.1 var(--serif);
+  /* Shadows agree with the one key light, upper left: contact, then key, down-right. */
+  --shadow-paper: 1px 2px 2px rgb(0 0 0 / 0.6), 10px 16px 24px rgb(0 0 0 / 0.45);
+  --shadow-print: 1px 2px 2px rgb(0 0 0 / 0.6), 18px 28px 40px rgb(0 0 0 / 0.45);
+  /* Asked for by the kinds in round 2. */
+  --print: #eee9de;             /* photographic paper, a print's border */
+  --graphite: #8d8a84;          /* a pencil stroke (the formula's sum rule) */
+  --light-hot: #fffaf0;         /* the bright point at a drawing line's end */
+  --light-rgb: 242 238 230;     /* channels, for rgb(var(--light-rgb) / a) */
+  --glow-ivory-rgb: 255 240 214;
+  --blue-rgb: 47 116 255;
+  --key-rgb: 255 228 190;       /* the key light's colour */
+  --paper-rgb: 235 227 208;
+  --fs-url: 56px;               /* an address on the end card */
+  --fs-figure-s: 72px;          /* figures in bars, ledgers and steps, between body and hero */
+  --fs-figure-m: 120px;
+}
+h1, h2, h3, p { font-optical-sizing: auto; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto; -webkit-font-smoothing: antialiased; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden;
+  background: var(--ground) url("/content/assets/film/desk.jpg") center / cover no-repeat; }
+
+/* One key light, upper left, and the falloff to black at the frame's edge. The light sits
+   under the objects; the vignette sits over everything, so the frame always has depth. */
+.v3 { position: absolute; inset: 0; }
+.v3 > .key { position: absolute; inset: -10%; pointer-events: none;
+  background: radial-gradient(ellipse 62% 58% at var(--key-x, 38%) var(--key-y, 34%), rgb(var(--key-rgb) / 0.22), rgb(var(--key-rgb) / 0.07) 48%, transparent 72%); }
+.v3 > .vignette { position: absolute; inset: 0; pointer-events: none; z-index: 50;
+  background: radial-gradient(ellipse 78% 74% at 50% 46%, transparent 62%, rgb(0 0 0 / 0.5) 100%); }
+.v3 > .grade { position: absolute; inset: 0; pointer-events: none; z-index: 51; mix-blend-mode: soft-light;
+  background: linear-gradient(180deg, rgb(255 214 160 / 0.06), rgb(20 40 90 / 0.08)); }
+
+/* The camera: every paper shot sits in a slow 3D move (kinds set --cam-from / --cam-to). */
+.cam { position: absolute; inset: 0; perspective: 1800px; perspective-origin: 50% 45%; }
+/* One camera for every desk shot (the motion critique of 2026-10-06): a push of 1% of scale a second
+   and a drift of 8 px a second, at constant speed through the cut (no ease-out: an easing stop is
+   what makes every cut visible). A kind's own moves ride on top of it, on inner layers. */
+.cam > .rig { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--cam-origin, var(--grid-x) 45%);
+  animation: cam var(--cam-dur, var(--dur, 10s)) linear 0s both; }
+@keyframes cam {
+  from { transform: var(--cam-from, scale(1) translateX(0px)); }
+  /* 1% a second, capped at 6% however long the shot, about the left grid line (x = 160), so left-aligned text never
+     leaves title-safe; a kind adds its own lateral move (--cam-drift, or an inner layer) toward its next focal point */
+  to { transform: var(--cam-to, scale(calc(1 + min(var(--dur-n, 10) * 0.01, 0.06))) translateX(max(calc(var(--dur-n, 10) * var(--cam-drift, 0px)), -60px))); }
+}
+
+/* The label slot (HUBRICON.md: the honesty labels are never optional on a proof or demo figure).
+   One component for every family: a short ivory rule, the source line, then the honesty label,
+   at x = 160 with the last baseline at 960 (above YouTube's scrub bar and captions). Never blue.
+   No logo bug: the brand speaks at the chapter cards and the end. */
+.labels { position: absolute; left: var(--grid-x); bottom: 120px; max-width: 1150px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px; text-wrap: balance; }
+.labels::before { content: ""; width: 32px; height: 2px; background: rgb(242 238 230 / 0.45); margin-bottom: 10px; }
+.labels .source { font: 400 var(--fs-label)/36px var(--sans); color: rgb(242 238 230 / 0.72); }
+.labels .honesty { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.9); }
+.labels p { margin: 0; }
+.labels.with-print { max-width: 820px; }
+/* A source line naming a figure waits for the figure's word; a companion print's line leaves with it. */
+.labels .lab-wait { animation: lab-in 0.5s var(--ease-out) calc(var(--at) * 1s) both; }
+.labels .lab-leave { animation: lab-out 0.45s cubic-bezier(0.55, 0, 0.75, 0.2) calc(var(--at) * 1s) both; }
+@keyframes lab-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lab-out { to { opacity: 0; } }
+.labels .nowrap { white-space: nowrap; }
+
+/* Shared entrances. --at is seconds from the shot's first frame (the plan's own times). */
+.rise { animation: rise 900ms var(--ease-out) calc(var(--at, 0) * 1s) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(26px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.fade { animation: fade 700ms ease calc(var(--at, 0) * 1s) both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.money { color: var(--blue); text-shadow: var(--glow-blue); }
+
+/* The outgoing picture held under an incoming type shot (shots.mjs): the previous shot's last frame,
+   dimmed, still drifting, fading to the desk once the first figure has landed (a J-cut for the eye). */
+.v3-backdrop { position: absolute; inset: -3%; z-index: 0; background-size: cover; background-repeat: no-repeat; opacity: 0.24;
+  animation: bd-drift var(--dur) linear both, bd-out 1s var(--ease-in-out) var(--bd-out) both; }
+@keyframes bd-drift { from { transform: scale(1.06); } to { transform: scale(1.1); } }
+@keyframes bd-out { to { opacity: 0; } }

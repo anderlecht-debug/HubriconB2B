@@ -67,7 +67,7 @@ def resolve(c: dict, net=None) -> dict:
     return c
 
 
-STOP_WORDS = {"a", "an", "the", "and", "or", "of", "on", "in", "at", "to", "for", "with", "by", "from", "into", "onto"}
+STOP_WORDS = {"category", "a", "an", "the", "and", "or", "of", "on", "in", "at", "to", "for", "with", "by", "from", "into", "onto"}
 
 
 def plain(query: str) -> str:
