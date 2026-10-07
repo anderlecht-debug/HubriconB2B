@@ -196,6 +196,21 @@ def cut_from_page(a: dict) -> bool:
     return bool(re.search(r"#[pn]\d+", str(a.get("id", ""))))
 
 
+# type kinds that open over the outgoing picture, and the kinds whose picture can be held (render_shots.backdrop)
+BACKDROP_KINDS = {"number", "pair", "formula", "kinetic", "timeline", "grid"}
+BACKDROP_FROM = {"still", "texture", "archive", "stack", "split", "footage"}
+
+
+def footage_frame(file: Path, t: float) -> Path:
+    """One frame of a footage source, cached by the file and the second."""
+    out = GRADED / "frames" / f"{sha(Path(file))[:16]}-{t:.2f}.jpg"
+    if not out.exists():
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{max(0.0, t):.2f}", "-i", str(file), "-frames:v", "1", "-q:v", "2", str(out)],
+                       check=True, timeout=120)
+    return out
+
+
 def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool = False,
                  paper: bool = False, cut: bool = False) -> dict:
     """The still with the world grade, cached by its source's sha256. A labelled placeholder
@@ -298,6 +313,8 @@ class Job:
         self.job["said_phrases"] = said_phrases(w["word"] for w in words if float(w["start"]) < start - 0.05)
         # a callback carries its source as it ended, so a cut straight from it continues its layout
         self.src = src
+        i = plan["shots"].index(shot)
+        self.prev = plan["shots"][i - 1] if i else None
         if src is not shot:
             i = plan["shots"].index(shot)
             self.job["callback"] = {"of": src["id"],
@@ -403,6 +420,30 @@ class Job:
                 self.assets.append(sha(Path(right["file"])))
                 if LOOK == "v3":   # the print's face while it drops: the footage's first frame, graded as it will play
                     self.job.setdefault("params", {}).setdefault("right", {})["poster"] = stage_url(split_poster(right))
+        self.backdrop()
+
+    def backdrop(self) -> None:
+        """The outgoing picture held under the type as it lands (a J-cut for the eye): the previous
+        shot's last frame, graded as it played, so a type shot never opens on an empty desk. A
+        nicety: a picture that can't be had leaves the desk as it was."""
+        prev = getattr(self, "prev", None) or {}
+        if LOOK != "v3" or self.kind not in BACKDROP_KINDS or self.job.get("print") or prev.get("kind") not in BACKDROP_FROM:
+            return
+        pa = prev.get("asset")
+        pa = pa[-1] if isinstance(pa, list) and pa else pa
+        if not isinstance(pa, dict) or not pa.get("file"):
+            return
+        try:
+            src = Path(pa["file"])
+            if prev["kind"] == "footage":
+                t = float(pa.get("in") or 0) + float(prev["end"]) - float(prev["start"]) - 0.1
+                src = footage_frame(src, t)
+            paper = prev["kind"] in ("archive", "split", "stack")
+            g = graded_still(src, mono=True if paper else None, paper=paper)
+        except Exception:   # noqa: BLE001
+            return
+        self.job["backdrop"] = {"url": g["url"], "focus": prev.get("focus") or [0.5, 0.5]}
+        self.assets.append(g["sha256"])
 
     def key(self) -> str:
         files = ["assets/tokens.json", "assets/grade.json", "film/styles.json", "film/shots.css", "film/shots.mjs"]

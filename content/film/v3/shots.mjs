@@ -114,6 +114,12 @@ export function shotHTML(job, built) {
   const inner = draw(job, built);
   if (WORLD.has(job.kind)) return inner;          // a world picture is its own frame
   const comp = COMPANION_KINDS.has(job.kind) ? photos.companion(job) : "";
-  return `<section class="v3 v3-${esc(job.kind)}" style="--dur:${job.seconds}s;--dur-n:${job.seconds}"><div class="key"></div>${comp}${inner}` +
+  // the outgoing picture held under the type as it lands (render_shots.backdrop), fading to the desk
+  // once the first figure is down: the cut never lands on an empty desk
+  const bd = job.backdrop?.url && !comp ? job.backdrop : null;
+  const firstLand = Math.min(...(job.reveals || []).map((r) => +r.t).filter((t) => t >= 0), job.on ?? 9, 9);
+  const bdOut = Math.max(0.8, Math.min(2.5, (firstLand < 9 ? firstLand : 0.9) + 0.4));
+  const back = bd ? `<div class="v3-backdrop" style="background-image:url('${esc(bd.url)}');background-position:${(100 * bd.focus[0]).toFixed(1)}% ${(100 * bd.focus[1]).toFixed(1)}%;--bd-out:${bdOut.toFixed(2)}s"></div>` : "";
+  return `<section class="v3 v3-${esc(job.kind)}" style="--dur:${job.seconds}s;--dur-n:${job.seconds}"><div class="key"></div>${back}${comp}${inner}` +
     `<div class="grade"></div><div class="vignette"></div>${labels(job)}</section>`;
 }

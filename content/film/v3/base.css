@@ -114,3 +114,10 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
 .fade { animation: fade 700ms ease calc(var(--at, 0) * 1s) both; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .money { color: var(--blue); text-shadow: var(--glow-blue); }
+
+/* The outgoing picture held under an incoming type shot (shots.mjs): the previous shot's last frame,
+   dimmed, still drifting, fading to the desk once the first figure has landed (a J-cut for the eye). */
+.v3-backdrop { position: absolute; inset: -3%; z-index: 0; background-size: cover; background-repeat: no-repeat; opacity: 0.24;
+  animation: bd-drift var(--dur) linear both, bd-out 1s var(--ease-in-out) var(--bd-out) both; }
+@keyframes bd-drift { from { transform: scale(1.06); } to { transform: scale(1.1); } }
+@keyframes bd-out { to { opacity: 0; } }

@@ -5,7 +5,7 @@
 //   early-figure  a figure readable before the voice says it (digits or a spelled number), unless the
 //                 film said it before (job.said_before / said_phrases), or it is known (job.known);
 //                 axis rulers and the label slot (citations) are exempt, as decided on G01
-//   bare-opening  the shot's first frame is an empty desk: almost no lit area and at most one line
+//   bare-opening  the shot's first frame is an empty desk: almost no lit area, no held picture, and at most one line
 //   label-on-lit  the label slot sits over a lit picture or page (it must read on dark)
 //   under-print   a line of text runs under a companion print
 //   title-safe    a line outside title-safe; overlap: two landed lines on top of each other
@@ -66,7 +66,8 @@ const TEXT_JS = `(() => {
     .map((b) => ({ x0: b.left, y0: b.top, x1: b.right, y1: b.bottom }));
   const lab = [...document.querySelectorAll(".labels p")].filter((p) => +getComputedStyle(p).opacity > 0.5)
     .map((p) => p.getBoundingClientRect()).filter((b) => b.width > 4);
-  return { text: out, prints: pr, label: lab.length ? { x0: Math.min(...lab.map((b) => b.left)), y0: Math.min(...lab.map((b) => b.top)),
+  const held = [...document.querySelectorAll(".v3-backdrop")].some((b) => +getComputedStyle(b).opacity > 0.1);
+  return { text: out, prints: pr, held, label: lab.length ? { x0: Math.min(...lab.map((b) => b.left)), y0: Math.min(...lab.map((b) => b.top)),
     x1: Math.max(...lab.map((b) => b.right)), y1: Math.max(...lab.map((b) => b.bottom)) } : null };
 })()`;
 
@@ -100,7 +101,7 @@ try {
     const moments = [0.1]; for (let t = STEP; t < T - 0.05; t += STEP) moments.push(t); moments.push(Math.max(0, T - 0.05));
     for (const t of moments) {
       await page.evaluate(seekJS(t * 1000));
-      const { text, prints, label } = await page.evaluate(TEXT_JS);
+      const { text, prints, held, label } = await page.evaluate(TEXT_JS);
       const now = said(t);
       for (const b of text) {
         if (b.label || b.ruler) continue;
@@ -129,7 +130,7 @@ try {
       if (t === 0.1) {
         const f = await luma({ x: 0, y: 0, width: 1920, height: 1080 }, true);
         const lines = new Set(text.filter((b) => !b.label).map((b) => b.y0 >> 4)).size;
-        if (f.lit < 0.03 && lines <= 1) report(job, t, "bare-opening", `opens on an empty desk (${(100 * f.lit).toFixed(1)}% lit, ${lines} line)`);
+        if (f.lit < 0.03 && lines <= 1 && !held) report(job, t, "bare-opening", `opens on an empty desk (${(100 * f.lit).toFixed(1)}% lit, ${lines} line)`);
       }
       if (label && (t === 0.1 || [0.5, 0.95].some((f) => Math.abs(t - f * T) < STEP / 2))) {
         const g = await luma({ x: Math.max(0, label.x0 - 8), y: Math.max(0, label.y0 - 6), width: Math.min(1900, label.x1 - label.x0 + 16), height: label.y1 - label.y0 + 12 }, true);
