@@ -83,6 +83,9 @@ def build(slug: str) -> Path:
     for k in said:
         f = facts.get(k, {})
         lines.append(f"- `{{{{{k}}}}}` = {f.get('value', '')}: {f.get('label', '')}")
+    plan_p = d / "shots.json"
+    if plan_p.exists():
+        return _with_shots(d, slug, lines, json.loads(plan_p.read_text(encoding="utf-8")), timing, spoken)
     lines += ["", "## The beats, sentence by sentence", "",
               "Each sentence: `[start] text` then its figures `{{key}}@t`, then `cut:` the legal cut at its end (if any).", ""]
     for seg in timing["segments"]:
@@ -100,6 +103,47 @@ def build(slug: str) -> Path:
             text = " ".join(w["word"] for w in sent)
             lines.append(f"- [{a:.2f}] {text}" + (f"  {' '.join(figs)}" if figs else "") + (f"  cut: {near[0]:.2f}" if near else ""))
         lines.append("")
+    out = d / "plan-brief.md"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out
+
+
+DECISIONS = """\
+## What you return
+
+The shots below were drafted by code: their cuts are legal and fixed, a figure stays on screen 3 s,
+and each says what is spoken under it. Decide each shot. Write ONE file,
+`content/videos/{slug}/decisions.json`, in a single write:
+
+    {{"mode": "history", "shots": {{"s001": {{"kind": …, "style": …, "on": …, "params": {{…}}, "query": ["…"], "sources": ["…"],
+      "fallback": "…", "specific": "…", "intent": "…"}}, "s002": {{…}}, …}}}}
+
+- Give only the fields you set; a field you leave keeps the draft's value.
+- Keep `intent` to eight words or fewer.
+- A paper shot (it holds a figure) stays paper: choose its kind, style and params (values as `{{{{key}}}}`, never typed).
+  Give it `params.print` with a `want` ({{"query": "…", "sources": ["smithsonian", "commons"]}}) when a true picture
+  fits the sentence.
+- A world shot: choose still, footage or archive, with `query` (the sentence's concrete nouns), `sources` and
+  `fallback`, and `specific` when the sentence names a real company, person, place or event.
+- Follow each beat's VISUAL brief where it names a picture.
+- Do not run commands and do not read other files. Reply with the number of shots decided.
+"""
+
+
+def _with_shots(d, slug, lines, plan, timing, spoken):
+    from . import shots as shotmod
+    words = shotmod.spoken(timing)
+    lines += ["", DECISIONS.format(slug=slug), "## The shots, drafted by code", ""]
+    beat = None
+    for s in plan["shots"]:
+        if s.get("beat") != beat:
+            beat = s.get("beat")
+            v = s.get("visual") or ""
+            lines.append(f"### Beat {beat}" + (f". VISUAL: {v}" if v else ""))
+        said = " ".join(w["word"] for w in shotmod.words_in(words, s["start"], s["end"]))
+        figs = [f"{{{{{k}}}}}@{t:.2f}" for t, ks in spoken.items() if s["start"] - 0.05 <= t < s["end"] for k in ks]
+        lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] {s['room']} {s['kind']}/{s['style']}"
+                     + (f" {' '.join(figs)}" if figs else "") + f" | {said}")
     out = d / "plan-brief.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out

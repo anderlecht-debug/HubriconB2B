@@ -57,3 +57,19 @@ def test_the_runner_stops_starting_ticks_once_its_day_is_spent(tmp_path, monkeyp
     (tmp_path / "runner-meter.json").write_text(json.dumps(rows))
     second = ai_step.tick("go", claude=fake_claude(tmp_path, 100, 2))
     assert second.get("skipped") is True and "budget spent" in second["result"]
+
+
+def test_a_long_reply_is_stopped_while_it_is_written(tmp_path, monkeypatch):
+    """A reply reports its tokens only at its end: the guard counts its streamed output instead."""
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    p = tmp_path / "claude"
+    p.write_text(f"""#!{sys.executable}
+import json, time
+for i in range(400):
+    print(json.dumps({{"type": "stream_event", "event": {{"type": "content_block_delta", "delta": {{"thinking": "x" * 700}}}}}}), flush=True)
+    time.sleep(0.005)
+print(json.dumps({{"type": "assistant", "message": {{"id": "m0", "usage": {{"output_tokens": 80000}}}}}}), flush=True)
+""")
+    p.chmod(p.stat().st_mode | stat.S_IEXEC)
+    res = ai_step.run("f", "review", "think", budget=20000, claude=str(p))
+    assert res["status"] == "stopped at budget"
