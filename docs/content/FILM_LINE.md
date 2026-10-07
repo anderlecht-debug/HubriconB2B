@@ -27,7 +27,9 @@ That makes the floor about 0.4M tokens a film. G01 spent one to two orders of ma
 2. **Checks are code, not eyes.** `hubricon-content film-qa <slug>` runs every check the G01 critics ran by eye. It reads the plan, the clips and the stage (`content/film/v3/qa.mjs`): figures before their words, bare openings, labels over lit pictures, text under prints, title-safe and overlaps. It also reads the draft: length, loudness, true peak, black and freezes. It costs no tokens. Run it until it is clean.
 3. **Every AI step runs under a hard budget.** Use `hubricon-content ai-step <slug> <step> --prompt-file …`. It counts tokens live, weighted to cost, and stops the run the moment its budget is spent. A film stops starting AI steps once its own total is spent. Budgets and models live in `content/film/budgets.json`: Sonnet for plan, pick, fix and review, and Opus only for a script draft.
 4. **One pass per AI step.** There is no multi-agent critique of a film. The validator and film-qa are the critics. A fix pass reads film-qa's punch list, not the film.
-5. **The meter is read, not guessed.** `hubricon-content film-cost <slug>` gives a film's tokens by step against budget.
+5. **Few, whole sessions, never many short ones.** Every `claude` session first loads its system prompt, tools and instructions: measured on 2026-10-07 at about 43k tokens before a word of work, which is about 53k cost-weighted. One planning session plans the whole film. A fix pass takes the whole punch list at once.
+6. **The unattended runner is capped too.** `scripts/content-tick.sh` runs each 30-minute tick through `ai-tick`: Sonnet, a cap per tick, per day and per week (`budgets.json` "runner"), and a tick past a cap does not start. Its ledger is `content/.cache/runner-meter.json`.
+7. **The meter is read, not guessed.** `hubricon-content film-cost <slug>` gives a film's tokens by step against budget.
 
 ## The line, in order
 

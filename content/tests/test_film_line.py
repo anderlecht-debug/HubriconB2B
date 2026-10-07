@@ -44,3 +44,16 @@ def test_a_film_past_its_total_starts_no_more_steps(tmp_path, monkeypatch):
     meter.count("f", "claude", "weighted tokens", ai_step.budgets()["film"], step="plan")
     res = ai_step.run("f", "fix", "go", claude=fake_claude(tmp_path, 1, 1))
     assert res["status"] == "refused"
+
+
+def test_the_runner_stops_starting_ticks_once_its_day_is_spent(tmp_path, monkeypatch):
+    monkeypatch.setattr(ai_step, "LEDGER", tmp_path / "runner-meter.json")
+    cfg = ai_step.budgets()["runner"]
+    first = ai_step.tick("go", claude=fake_claude(tmp_path, 100, 2))
+    assert first.get("result") == "done" and first["weighted_tokens"] == 2 * 2500
+    from datetime import datetime, timezone
+    rows = json.loads((tmp_path / "runner-meter.json").read_text())
+    rows.append({"at": datetime.now(timezone.utc).isoformat(), "weighted": cfg["day"]})
+    (tmp_path / "runner-meter.json").write_text(json.dumps(rows))
+    second = ai_step.tick("go", claude=fake_claude(tmp_path, 100, 2))
+    assert second.get("skipped") is True and "budget spent" in second["result"]

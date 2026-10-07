@@ -316,6 +316,12 @@ def cmd_ai_step(a):
         sys.exit(2)
 
 
+def cmd_ai_tick(a):
+    from . import ai_step
+    extra = tuple(x for x in (a.claude_args or []) if x != "--")
+    print(json.dumps(ai_step.tick(a.prompt, model=a.model, extra=extra), ensure_ascii=False))
+
+
 def cmd_film_cost(a):
     from . import meter
     _out(meter.summary(a.slug))
@@ -426,6 +432,10 @@ def main(argv=None) -> None:
     p.add_argument("--prompt", default=None); p.add_argument("--prompt-file", default=None)
     p.add_argument("--model", default=None); p.add_argument("--budget", type=int, default=None)
     p.set_defaults(fn=cmd_ai_step)
+    p = sub.add_parser("ai-tick", help="one unattended runner session under the runner's tick, day and week caps")
+    p.add_argument("--prompt", required=True); p.add_argument("--model", default=None)
+    p.add_argument("claude_args", nargs=argparse.REMAINDER, help="after --: arguments passed to claude")
+    p.set_defaults(fn=cmd_ai_tick)
     p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
     p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
     p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")
