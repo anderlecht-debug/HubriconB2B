@@ -40,3 +40,8 @@ content/videos/visual-trial/qa/first-minute.jpg
 # The case study's one listing names the brand. The repo is public and the page is anonymised,
 # so the input stays on the machine that builds the page (HUBRICON.md, the public-data case study).
 scripts/case-study/listing.json
+
+# film-qa working files (FILM_LINE.md): regenerated on every run
+content/videos/*/qa/jobs.json
+content/videos/*/qa/sheets/
+content/videos/*/qa/film-qa.txt

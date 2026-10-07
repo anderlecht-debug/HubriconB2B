@@ -1,0 +1,12 @@
+{
+ "note": "Hard caps on the AI steps of one film (docs/content/FILM_LINE.md). Tokens are cost-weighted: input x1, cache write x1.25, cache read x0.1, output x5. A step is stopped the moment it spends its budget; a film stops starting AI steps once its total is spent.",
+ "film": 1500000,
+ "default": {"model": "claude-sonnet-5-5", "tokens": 200000},
+ "steps": {
+  "plan": {"model": "claude-sonnet-5-5", "tokens": 450000, "note": "the shot plan: one pass, shots.json out, shots-validate gates it"},
+  "pick": {"model": "claude-sonnet-5-5", "tokens": 300000, "note": "only the picture shots the filters could not rank"},
+  "fix": {"model": "claude-sonnet-5-5", "tokens": 200000, "note": "plan edits for film-qa's punch list, one pass"},
+  "review": {"model": "claude-sonnet-5-5", "tokens": 200000, "note": "one look at the review sheets once film-qa is clean"},
+  "script": {"model": "claude-opus-5-5", "tokens": 400000, "note": "a script draft for the founder's review"}
+ }
+}
