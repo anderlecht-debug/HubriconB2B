@@ -84,6 +84,38 @@ def display_date(value) -> str | None:
     return f"c. {text}" if circa else text
 
 
+_ONES = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen "
+                                      "fourteen fifteen sixteen seventeen eighteen nineteen".split())}
+_TENS = {w: 10 * i for i, w in enumerate("_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()) if w != "_"}
+_SCALE = {"hundred": 100, "thousand": 1000, "million": 1_000_000}
+
+
+def said_numbers(spoken) -> list[str]:
+    """The numbers in a run of spoken words, as digit strings ("1,000" → "1000", "seventy-two" → "72",
+    "eleven" → "11", "$1.90" → "1.90"), each once, in the order first said."""
+    out: list[str] = []
+    run = None
+
+    def add(x):
+        if x is not None and str(x) not in out:
+            out.append(str(x))
+    for raw in spoken:
+        w = str(raw).lower().strip(".,;:!?\"'’()")
+        for d in re.findall(r"\d[\d,]*(?:\.\d+)?", w):
+            add(d.replace(",", "").rstrip("."))
+        parts = w.replace("-", " ").split()
+        if parts and all(p in _ONES or p in _TENS or p in _SCALE for p in parts):
+            for p in parts:
+                if p in _SCALE:
+                    run = (run or 1) * _SCALE[p]
+                else:
+                    run = (run or 0) + _ONES.get(p, _TENS.get(p, 0))
+            add(run)
+        else:
+            run = None
+    return out
+
+
 def frames_of(shot: dict) -> int:
     return round(float(shot["end"]) * FPS) - round(float(shot["start"]) * FPS)
 
@@ -214,6 +246,9 @@ class Job:
             prev = plan["shots"][i - 1] if i else {}
             self.job["prev_kind"] = prev.get("kind")
             self.job["prev_print"] = bool(((prev.get("params") or {}).get("print") or {}).get("asset"))
+        # every number the voice has said before this shot, as digits, whatever the fact files say:
+        # a figure said in an earlier shot ("1925" in e37) may stand whole in a later one (e40)
+        self.job["said_before"] = said_numbers(w["word"] for w in words if float(w["start"]) < start - 0.05)
         self.assets: list[str] = []
         if LOOK == "v3" and self.kind == "chart":
             run = d / "run.json"

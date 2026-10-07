@@ -26,3 +26,10 @@ def test_a_repository_file_is_never_a_source_and_a_document_is_named_once():
     facts = {"a": {"source": "Amazon's published US FBA fee card, 2026 non-peak schedule (effective January 15, 2026), as recorded in ratecard.json"},
              "b": {"source": "Amazon's US FBA fee card, 2026, as recorded in ratecard.json (fba.fuel_surcharge)"}}
     assert sl.label(["a", "b"], facts) == "Amazon's published US FBA fee card, 2026 non-peak schedule"
+
+
+def test_a_bare_year_does_not_source_the_figures_beside_it():
+    facts = {"y": {"value": "1917", "source": "https://archive.org/details/ElectricalGoodsCatalogue134"},
+             "s": {"value": "$350 million", "source": "https://archive.org/details/searsannualreports"}}
+    assert sl.label(["y", "s"], facts) == "Sears, Roebuck and Co., annual reports"
+    assert sl.label(["y"], facts) == "Sears, Roebuck and Co. catalogue, spring 1917"

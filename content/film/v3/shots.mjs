@@ -63,17 +63,21 @@ export function cleanSource(text) {
     .replace(/\s+([,;])/g, "$1").replace(/[,;\s]+$/, "").trim() || null;
 }
 
-/** When a source line may appear: a line that names a figure this shot says ("report of December 1,
-    1914") waits for that figure's word, like the figure itself; any other source stands at the cut. */
+/** When a line naming numbers may appear: each number in it (two digits or more) that the film has
+    not said before this shot (`job.said_before`) waits for its first word here; a number this shot
+    never says holds nothing up (a citation's own date, an archive's number). Reveal values count too. */
+const digits = (x) => String(x).replace(/,/g, "").replace(/\.$/, "");
 function sourceAt(job, text) {
-  const t = String(text || "");
+  const t = String(text || ""), before = new Set((job.said_before || []).map(digits));
   let at = 0;
+  for (const n of (t.match(/\d[\d,]*(?:\.\d+)?/g) || []).map(digits)) {
+    if (n.length < 2 || before.has(n)) continue;
+    const w = (job.words || []).find((x) => digits(String(x.w ?? x.word ?? "").replace(/[^\d.,]/g, "")) === n);
+    if (w) at = Math.max(at, +w.t);
+  }
   for (const r of job.reveals || []) {
     const v = String(r.value ?? "").trim();
-    if (!v || r.t == null) continue;
-    const nums = v.match(/\d[\d,.]*\d|\d/g) || [];
-    const hit = t.includes(v) || nums.some((n) => n.length >= 2 && new RegExp(`(^|[^\\d])${n.replace(/[.,]/g, "\\$&")}(?![\\d])`).test(t));
-    if (hit) at = Math.max(at, +r.t);
+    if (v && r.t != null && t.includes(v) && !(job.known || {})[r.key]) at = Math.max(at, +r.t);
   }
   return at;
 }
@@ -91,7 +95,13 @@ export function labels(job) {
   if (!honest && !source && !comp) return "";
   const wait = source ? sourceAt(job, source) : 0;
   const srcP = source ? `<p class="source${wait > 0.4 ? " lab-wait" : ""}"${wait > 0.4 ? ` style="--at:${(wait - 0.1).toFixed(2)}"` : ""}>${esc(source)}</p>` : "";
-  const compP = comp ? `<p class="source${P.out != null ? " lab-leave" : ""}"${P.out != null ? ` style="--at:${(Math.max(0, +P.out - 0.45)).toFixed(2)}"` : ""}>${esc(comp)}</p>` : "";
+  // the print's own line arrives with the print (and with any number in it), and leaves with it
+  const compAt = comp ? Math.max(+P.at > 0.4 ? +P.at - 0.25 : 0, sourceAt(job, comp)) : 0;
+  const compCls = [compAt > 0.4 ? "lab-wait" : "", P.out != null ? "lab-leave" : ""].filter(Boolean).join(" ");
+  const compStyle = P.out != null && compAt > 0.4
+    ? ` style="--at:${compAt.toFixed(2)};animation:lab-in 0.5s var(--ease-out) ${compAt.toFixed(2)}s both, lab-out 0.45s cubic-bezier(0.55, 0, 0.75, 0.2) ${Math.max(0, +P.out - 0.45).toFixed(2)}s forwards"`
+    : P.out != null ? ` style="--at:${Math.max(0, +P.out - 0.45).toFixed(2)}"` : compAt > 0.4 ? ` style="--at:${compAt.toFixed(2)}"` : "";
+  const compP = comp ? `<p class="source${compCls ? ` ${compCls}` : ""}"${compStyle}>${esc(comp)}</p>` : "";
   // the honesty label is never delayed and never leaves: it is on every frame of a proof or demo figure
   return `<div class="labels${comp ? " with-print" : ""}">${srcP}${compP}${honest ? `<p class="honesty">${esc(honest)}</p>` : ""}</div>`;
 }

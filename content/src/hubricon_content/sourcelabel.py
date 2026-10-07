@@ -79,6 +79,11 @@ def label(keys: list[str], facts: dict, limit: int = 2) -> str | None:
     """The shot's source line: the distinct sources of the figures it shows, at most `limit`; a
     document named twice is named once, by its more specific name."""
     names: list[str] = []
+    # a bare year says when, not how much: its source is named only when it is the shot's one figure
+    # (a sales chart's "1917" must not credit the 1917 catalogue for the sales)
+    year = lambda k: bool(re.fullmatch(r"\s*(1[5-9]\d\d|20\d\d)\s*", str(facts.get(k, {}).get("value", ""))))
+    if any(not year(k) for k in keys):
+        keys = [k for k in keys if not year(k)]
     for k in keys:
         n = one(facts.get(k, {}).get("source", ""))
         if not n:
