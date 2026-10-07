@@ -60,7 +60,7 @@ export function cleanSource(text) {
     .replace(/\s*\([^()]*\.(?:json|xlsx|csv)[^()]*\)/gi, "")
     .replace(/\s*[\w./-]+\.(?:json|xlsx|csv)\b/gi, "")
     .replace(/\s*\((?:[a-z_]+\.)+[a-z_]+\)/g, "")
-    .replace(/\s+([,;·])/g, "$1").replace(/[,;\s]+$/, "").trim() || null;
+    .replace(/\s+([,;])/g, "$1").replace(/[,;\s]+$/, "").trim() || null;
 }
 
 /** When a source line may appear: a line that names a figure this shot says ("report of December 1,
