@@ -134,15 +134,16 @@
 @keyframes dc-desk { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: none; } }
 
 /* A flag on the lamp: where a frame must put paper under the label slot, the pool of light ends
-   at the slot, evenly across the frame's width: the paper under the source line falls to the
-   desk's dark, so the label reads on dark, never on paper (--flag-h: the slot's height from the
-   frame's foot, set per shot), and the light returns over the next 130 px. A blob over one corner
-   read as a smudge on the page; a soft falloff left the label printed over paper. */
+   at the slot, evenly across the frame's width, so the label reads on dark, never on paper. A
+   reading frame keeps every line of type above the slot (documents.mjs), so this flag darkens the
+   sheet's blank foot and the light returns over 80 px; a tight frame, whose out-of-focus lines run
+   down to the slot, gets a second flag whose light returns over 160 px, a falloff across them and
+   never a bar through them (--flag-h: the dark's height; --flag-f: the return). */
 .dc-flag { position: absolute; inset: 0; z-index: 49; pointer-events: none; opacity: 0;
   background: linear-gradient(to top, color-mix(in srgb, var(--ground) 97%, transparent) 0,
       color-mix(in srgb, var(--ground) 96%, transparent) var(--flag-h, 230px),
-      color-mix(in srgb, var(--ground) 52%, transparent) calc(var(--flag-h, 230px) + 48px),
-      color-mix(in srgb, var(--ground) 14%, transparent) calc(var(--flag-h, 230px) + 100px), transparent calc(var(--flag-h, 230px) + 130px)); }
+      color-mix(in srgb, var(--ground) 55%, transparent) calc(var(--flag-h, 230px) + 0.36 * var(--flag-f, 80px)),
+      color-mix(in srgb, var(--ground) 16%, transparent) calc(var(--flag-h, 230px) + 0.72 * var(--flag-f, 80px)), transparent calc(var(--flag-h, 230px) + var(--flag-f, 80px))); }
 
 /* ── tables: a typeset rate table (period) or a laser-printed card (modern) ─────────────── */
 .tb { position: absolute; inset: 0; color: var(--dc-ink); font-kerning: none; }

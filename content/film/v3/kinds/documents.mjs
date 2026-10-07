@@ -337,15 +337,23 @@ function camera(job, G, css) {
   const ST = clamp(((G.read ?? 0.865) * 1920) / W, 0.95, G.maxS ?? 1.5);
   // a reading frame on a line at cy: the page's foot above the label slot if it can be. A line
   // near the top of a tall page settles smaller so the whole sheet stands above the slot when
-  // that keeps the type legible (≥ 40 px, ≥ 72% of the reading scale); a sheet too tall for that
-  // keeps its reading scale, its foot runs under the slot, and the flag puts the label on dark.
-  // The line read is never lower than 180 px above the slot (clear of the flag's falloff).
-  const minS = (G.minS ?? 0.9), LOW = Math.min(700, BAND.y0 - 180);
+  // that keeps the type legible (≥ 40 px, ≥ 72% of the reading scale). Failing that, the TYPE
+  // stands above the slot (its last line ends 92 px over it, above the flag's falloff) and only
+  // the sheet's blank foot runs under the label, where the flag darkens paper with no line on it.
+  // A sheet whose type cannot stand clear even so keeps its reading scale (the flag's edge then
+  // falls between two lines, below). The line read is never lower than 180 px above the slot.
+  const minS = (G.minS ?? 0.9), LOW = Math.min(700, BAND.y0 - 180), CLEAR = BAND.y0 - 92;
+  const TT = G.rows?.length ? Math.min(...G.rows.map((r) => r[0])) : null, TB = G.rows?.length ? Math.max(...G.rows.map((r) => r[1])) : null;
   const read = (cy) => {
     const S = ST, qy = FOOT - S * (H - cy);
     if (qy >= 300) return { S, y: Math.min(qy, LOW) };
-    const fit = (FOOT - 100) / H;
-    if (fit < S && fit >= Math.max(G.fitS ?? minS, 0.72 * S)) return { S: fit, y: Math.min(FOOT - fit * (H - cy), LOW), fit: true };
+    const fit = (FOOT - 100) / H, floor = Math.max(G.fitS ?? minS, 0.72 * S);
+    if (fit < S && fit >= floor) return { S: fit, y: Math.min(FOOT - fit * (H - cy), LOW), fit: true };
+    if (TB != null) {
+      let s2 = S, y = CLEAR - s2 * (TB - cy);
+      if (y - s2 * (cy - TT) < 100) { s2 = Math.min(S, (CLEAR - 100) / (TB - TT)); y = CLEAR - s2 * (TB - cy); }
+      if (s2 >= Math.max(G.typeS ?? floor, 0.66 * S)) return { S: s2, y: Math.min(y, LOW), fit: true };   // (type ≥ 38 px)
+    }
     return { S, y: clamp(110 + S * cy, 300, Math.min(640, LOW)) };
   };
   const rT = read(P.y);
@@ -353,7 +361,8 @@ function camera(job, G, css) {
   const poses = [];
   const at = (t, q, tc = t, tight = false) => poses.push({ P: q.P, S: q.S, Q: { ...q.Q }, t, tc, tight, fit: !!q.fit });
   const hold = (t) => { if (t > poses.at(-1).t + 0.02) poses.push({ ...poses.at(-1), t, hold: true }); };   // shares Q
-  const drift = (q, tc) => at(end, { P: q.P, S: q.S * 1.03, Q: { x: q.Q.x - 14, y: q.Q.y + 4 } }, tc, q.tight);
+  // (a frame fitted so its type clears the label slot drifts without growing: its type has no room to)
+  const drift = (q, tc) => at(end, { P: q.P, S: q.S * (q.fit ? 1 : 1.03), Q: { x: q.Q.x - 14, y: q.Q.y + (q.fit ? -6 : 4) }, fit: q.fit }, tc, q.tight);
   let tiltA = -0.6, tiltB = sec * 0.5, O = { x: 960, y: 500 }, move = G.move;
   if (G.visits?.length) {
     // the editors' waypoints: a spline through them, each reached 0.1 s before its word
@@ -420,13 +429,23 @@ function camera(job, G, css) {
   // its own frame counts: lifting a pose because the move INTO it passes the slot (from a covering
   // pose) threw f18's last line to the top and its heading out of frame. Between two poses the foot
   // moves monotonically (scale and translate share one easing), so the poses decide.
+  // What must clear the slot is the type (its last line ends above CLEAR, where the flag's falloff
+  // begins); the sheet is lifted clear too as far as its line may rise, and past that its blank
+  // foot may pass under the label on dark.
+  const typeBox = TB != null ? { x: 0, y: TT, w: W, h: TB - TT } : page;
+  const typeOver = (q) => (q.x0 < BAND.x1 && q.x1 > BAND.x0 ? q.y1 + 12 - (TB != null ? CLEAR : BAND.y0 - 20) : 0);
+  // (the rig keeps pushing through a hold, so the type is checked at the hold's end too; the line
+  // may rise to 260, or further while the type's head stays in title-safe)
   for (let pass = 0; pass < 3; pass++) for (let i = 0; i < poses.length; i++) {
     const p = poses[i];
     if (p.fixed) continue;                                       // a match cut's pose is where it is aimed
-    const q = onScreen(page, p, O, Math.max(p.t, 0));
-    if (!covers(q)) continue;
-    const room = p.Q.y - (p.tight ? 300 : 260);                 // how far the line may rise
-    p.Q.y -= clamp(q.y1 + 20 - BAND.y0, 0, Math.max(0, room));
+    const ts = [Math.max(p.t, 0), ...(poses[i + 1]?.hold ? [Math.max(poses[i + 1].t, 0)] : [])];
+    const qp = onScreen(page, p, O, ts[0]);
+    const over = Math.max(...ts.map((t) => typeOver(onScreen(typeBox, p, O, t))), covers(qp) ? qp.y1 + 20 - BAND.y0 : 0);
+    if (over <= 0) continue;
+    const head = TT != null && !p.tight ? p.Q.y - (100 + p.S * Math.max(0, p.P.y - TT)) : -Infinity;
+    const room = Math.max(p.Q.y - (p.tight ? 300 : 260), head);   // how far the line may rise
+    p.Q.y -= clamp(over, 0, Math.max(0, room));
   }
   const t0 = poses[0].t, dur = end - t0, name = `dcam-${id}`;
   const kf = poses.map((p, i) => {
@@ -449,38 +468,57 @@ function camera(job, G, css) {
     for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3 * (1 - m) ** 2 * m * 0.45 + 3 * (1 - m) * m * m * 0.2 + m ** 3; if (x < u) lo = m; else hi = m; }
     const m = (lo + hi) / 2; return 3 * (1 - m) * m * m + m ** 3;
   };
-  const footAt = (t) => {
+  // the sheet's transform at any time t (each segment eased as its keyframe is, the rig on top)
+  const matAt = (t) => {
+    const { k } = rigAt(t);
+    if (poses.length < 2) return { ...mats[0], k };
     let i = poses.findIndex((p) => p.t > t);
     if (i < 0) i = poses.length - 1; if (i === 0) i = 1;
-    if (poses.length < 2) { const m = mats[0], { k } = rigAt(t); return { x0: O.x + k * (m.tx - O.x), x1: O.x + k * (m.tx + m.s * W - O.x), y1: O.y + k * (m.ty + m.s * H - O.y) }; }
     const a = poses[i - 1], b = poses[i], u = clamp((t - a.t) / Math.max(0.001, b.t - a.t), 0, 1), e = b.hold ? u : bez(u);
-    const A = mats[i - 1], B = mats[i], sc = A.s + (B.s - A.s) * e, tx = A.tx + (B.tx - A.tx) * e, ty = A.ty + (B.ty - A.ty) * e, { k } = rigAt(t);
-    return { x0: O.x + k * (tx - O.x), x1: O.x + k * (tx + sc * W - O.x), y1: O.y + k * (ty + sc * H - O.y) };
+    const A = mats[i - 1], B = mats[i];
+    return { s: A.s + (B.s - A.s) * e, tx: A.tx + (B.tx - A.tx) * e, ty: A.ty + (B.ty - A.ty) * e, k };
   };
-  const spans = [];
+  const footAt = (t) => { const m = matAt(t); return { x0: O.x + m.k * (m.tx - O.x), x1: O.x + m.k * (m.tx + m.s * W - O.x), y1: O.y + m.k * (m.ty + m.s * H - O.y) }; };
+  // The flag: where the sheet's foot reaches the slot, the paper under the label falls to the
+  // desk's dark (the label reads on dark, never on paper). Two flags share the job: where no line
+  // of type lies within 84 px over the slot (a reading frame keeps its type above CLEAR), the light
+  // returns over 80 px and darkens only blank paper; where type does run down to the slot (a tight
+  // frame, the line read far above it, the rest out of focus), the light returns over 160 px, a
+  // falloff across those soft lines rather than a bar through them. Each follows the sheet's path
+  // (sampled every 0.1 s), up 0.3 s before it is needed and down 0.3 s after.
+  const HD = BAND.y0 + 4;
+  // (a line's letters: ascender to descender, about 1.04 em about the line's middle)
+  const glyphs = (G.rows || []).map(([a, b, size]) => { const h = Math.min(b - a, 1.04 * (size || 0.72 * (b - a))); return [(a + b) / 2 - h / 2, (a + b) / 2 + h / 2]; });
+  const typeNear = (t) => { const m = matAt(t), Y = (y) => O.y + m.k * (m.ty + m.s * y - O.y); return glyphs.some(([a, b]) => Y(b) > HD - 84 && Y(a) < HD + 4); };
+  const hard = [], soft = [];
+  const add = (sp, t) => { if (sp.length && t - sp.at(-1)[1] <= 0.75) sp.at(-1)[1] = t; else sp.push([t, t]); };
   for (let t = t0; t <= t0 + dur + 0.001; t += 0.1) {
     if (!covers(footAt(t))) continue;
-    if (spans.length && t - spans.at(-1)[1] <= 0.75) spans.at(-1)[1] = t; else spans.push([t, t]);
+    add(typeNear(t) || typeNear(t - 0.3) || typeNear(t + 0.3) ? soft : hard, t);   // (its ramps too)
   }
-  const flag = spans.length > 0;
-  if (flag) {
-    const tE = t0 + dur, f = (t) => Math.max(0, ...spans.map(([a, b]) => (t >= a && t <= b ? 1 : t < a ? clamp(1 - (a - t) / 0.3, 0, 1) : clamp(1 - (t - b) / 0.3, 0, 1))));
-    const ts = [...new Set([t0, tE, ...spans.flatMap(([a, b]) => [a - 0.3, a, b, b + 0.3])].map((t) => n2(clamp(t, t0, tE))))].sort((x, y) => x - y);
-    css.push(`@keyframes dflag-${id} { ${ts.map((t) => `${n2(clamp((100 * (t - t0)) / dur, 0, 100))}% { opacity: ${n2(f(t))}; }`).join(" ")} }`);
+  const flags = [];
+  for (const [sp, F, nm] of [[hard, 80, "dflag"], [soft, 160, "dflags"]]) {
+    if (!sp.length) continue;
+    const tE = t0 + dur, f = (t) => Math.max(0, ...sp.map(([a, b]) => (t >= a && t <= b ? 1 : t < a ? clamp(1 - (a - t) / 0.3, 0, 1) : clamp(1 - (t - b) / 0.3, 0, 1))));
+    const ts = [...new Set([t0, tE, ...sp.flatMap(([a, b]) => [a - 0.3, a, b, b + 0.3])].map((t) => n2(clamp(t, t0, tE))))].sort((x, y) => x - y);
+    css.push(`@keyframes ${nm}-${id} { ${ts.map((t) => `${n2(clamp((100 * (t - t0)) / dur, 0, 100))}% { opacity: ${n2(f(t))}; }`).join(" ")} }`);
+    flags.push({ anim: `${nm}-${id} ${n2(dur)}s linear ${n2(t0)}s both`, F });
   }
+  const flag = flags.length > 0;
   return {
-    poses, ST, SE, O, flag, flagH: Math.round(1080 - BAND.y0 + 6), move: move + (G.track && move === "push" ? "+track" : ""),
+    poses, ST, SE, O, flag, flags, flagH: Math.round(1080 - HD), move: move + (G.track && move === "push" ? "+track" : ""),
     vars: {
       "--cam-origin": `${n1(O.x)}px ${n1(O.y)}px`, "--cx": `${n1(P.x)}px`, "--cy": `${n1(P.y)}px`,
       "--cam-path": `${name} ${n2(dur)}s linear ${n2(t0)}s both`,
-      "--flag": flag ? `dflag-${id} ${n2(dur)}s linear ${n2(t0)}s both` : "none",
+      "--flag": flag ? flags[0].anim : "none",
       "--t0": tilt[0], "--t1": tilt[1], "--tilt-at": `${n2(Math.max(-0.6, tiltA))}s`, "--tilt-dur": `${n2(Math.max(0.6, tiltB - tiltA))}s`,
     },
   };
 }
 
 /** Depth of field that follows the camera: per row, keyframes of blur and opacity at each pose,
- *  by the row's distance in lines from the row the camera is on (a far pose sees deeper focus). */
+ *  by the row's distance in lines from the row the camera is on (a far pose sees deeper focus,
+ *  never none: a page seen whole still has its focal line). */
 function depthOfField(css, cam, rowsY, lh, name, focus, pins = []) {
   const t0 = cam.poses[0].t, t1 = cam.poses.at(-1).t, dur = t1 - t0;
   const BL = [0, 1.5, 3, 5], OP = [1, 0.93, 0.86, 0.8];
@@ -496,7 +534,7 @@ function depthOfField(css, cam, rowsY, lh, name, focus, pins = []) {
     // a pinned row (an address, a phrase once swiped) stays in the focus band from its pin on
     const pin = pins[ri] ?? Infinity;
     const at = (f) => {
-      const d = Math.min(3, Math.round(Math.abs(y - f.y) / lh)), depth = clamp((scaleAt(f.t) / cam.ST) ** 2, 0.2, 1.1);
+      const d = Math.min(3, Math.round(Math.abs(y - f.y) / lh)), depth = clamp((scaleAt(f.t) / cam.ST) ** 1.6, 0.3, 1.1);
       return f.t >= pin - 0.001 ? { t: f.t, b: 0, o: 1 } : { t: f.t, b: n1(BL[d] * depth), o: n2(1 - (1 - OP[d]) * Math.min(1, depth)) };
     };
     const pts = sched.slice();
@@ -626,7 +664,11 @@ function plan(job, M, css) {
  *  the half second before it is reached (a mark without a camera move still pulls focus to it). */
 function focusPlan(cam, P, M) {
   const page = M.toks.filter((t) => !t.label), top = Math.min(...page.map((t) => t.y + t.h / 2));
-  const out = [{ t: cam.poses[0].t, y: Math.max(top, cam.poses[0].P.y) }];
+  // from the first frame the lens favours the first line the voice will read (not the page's
+  // middle), so a page seen whole already has a focal line and the rack that follows is a choice
+  const first = P.visits.find((v) => !M.toks[v.rg[0]].label);
+  const y0 = first ? (() => { const b = boxOf(M.toks, first.rg[0], first.rg[1]); return b.y + b.h / 2; })() : Math.max(top, cam.poses[0].P.y);
+  const out = [{ t: cam.poses[0].t, y: y0 }];
   for (const v of P.visits) {
     const b = boxOf(M.toks, v.rg[0], v.rg[1]), y = M.toks[v.rg[0]].label ? top : b.y + b.h / 2;
     const t = Math.max(out.at(-1).t + 0.05, v.arrive - 0.45);
@@ -678,7 +720,7 @@ function shoot(job, M, P, css, extra = {}) {
     // a table enters whole (a card cut off at the frame's foot, its heading alone above it, reads as
     // an accident); a page may open tight on an early first word
     const opening = p.opening || (M.kind !== "table" && vis[0].arrive <= 0.4 ? "tight" : "page");
-    return camera(job, { W: M.W, H: M.H, P: Pt, maxS: M.maxS, minS: M.minS, frac: M.frac, read: M.read, rz: M.rz, fitS: M.fitS, hasLabel: new Set(M.toks.filter((t) => t.label).map((t) => t.y)).size, visits: vis, opening, endPush: extra.endPush }, css);
+    return camera(job, { W: M.W, H: M.H, P: Pt, maxS: M.maxS, minS: M.minS, frac: M.frac, read: M.read, rz: M.rz, fitS: M.fitS, typeS: M.typeS, rows: M.rows, hasLabel: new Set(M.toks.filter((t) => t.label).map((t) => t.y)).size, visits: vis, opening, endPush: extra.endPush }, css);
   }
   // no plan: the line's own move (pull out from it, track along it, slide a page on, or push)
   const start = main?.at ?? (job.on || 1), end = main?.end ?? start + 1;
@@ -691,7 +733,7 @@ function shoot(job, M, P, css, extra = {}) {
   } : null;
   const h = [...String(job.id)].reduce((s, c) => s + c.charCodeAt(0), 0);
   const move = start < 1.9 ? "pull" : track ? "push" : M.obj === "clip" || h % 2 ? "slide" : "push";
-  return camera(job, { W: M.W, H: M.H, P: Pt, maxS: M.maxS, minS: M.minS, frac: M.frac, read: M.read, rz: M.rz, fitS: M.fitS, hasLabel: new Set(M.toks.filter((t) => t.label).map((t) => t.y)).size, strokeStart: start, strokeEnd: end, track, move, endPush: extra.endPush }, css);
+  return camera(job, { W: M.W, H: M.H, P: Pt, maxS: M.maxS, minS: M.minS, frac: M.frac, read: M.read, rz: M.rz, fitS: M.fitS, typeS: M.typeS, rows: M.rows, hasLabel: new Set(M.toks.filter((t) => t.label).map((t) => t.y)).size, strokeStart: start, strokeEnd: end, track, move, endPush: extra.endPush }, css);
 }
 
 // ── the paper ──────────────────────────────────────────────────────────────────────────────
@@ -780,7 +822,7 @@ function labelFade(job, cam, ltoks, css) {
 
 function frame(cam, page, label, css) {
   return `<style>${css.join("\n")}</style><div class="cam dc" data-move="${cam.move}" style="${style(cam.vars)}"><div class="rig"><div class="dc-push">` +
-    `${label}${page}</div></div></div>${cam.flag ? `<div class="dc-flag" style="animation:${cam.vars["--flag"]};--flag-h:${cam.flagH}px"></div>` : ""}`;
+    `${label}${page}</div></div></div>${(cam.flags || []).map((f) => `<div class="dc-flag" style="animation:${f.anim};--flag-h:${cam.flagH}px;--flag-f:${f.F}px"></div>`).join("")}`;
 }
 const typesetNote = (src, house) => !house && !/^(typeset|redrawn) from/i.test(String(src).trim());
 
@@ -949,7 +991,8 @@ export function document(job) {
   if (!tIdx.length) return "";
   const brk = (i) => i > 0 && (!!toks[i].label !== !!toks[i - 1].label || toks[i].seg !== toks[i - 1].seg || (toks[i].label && toks[i].line !== toks[i - 1].line));
   const M = { W, H, obj, kind: "doc", toks, target: tIdx, brk, frac, read: rd, rz: dress === "card" ? -1.4 : 0,
-    colCX: S.padX + S.m / 2 + FIG / 2, textX: S.padX, m: S.m, maxS: obj === "clip" ? 1.45 : list ? 1.5 : 1.45, minS: 44 / S.b, fitS: 44 / S.b };   // a page read at under 44 px stays pushed in, its foot under the dark flag (e08 kept moving)
+    colCX: S.padX + S.m / 2 + FIG / 2, textX: S.padX, m: S.m, maxS: obj === "clip" ? 1.45 : list ? 1.5 : 1.45, minS: 44 / S.b, fitS: 44 / S.b, typeS: 38 / S.b,   // a page read at under 44 px stays pushed in, its foot under the dark flag (e08 kept moving)
+    rows: rows.map((r) => [S.padT + r.y, S.padT + r.y + r.h, r.head ? r.hb : S.b]) };
   const css = [], id = uid(job);
   const P = plan(job, M, css);
   const cam = shoot(job, M, P, css);
@@ -1092,7 +1135,9 @@ function tableHTML(job, kind, opt = {}) {
   const cellKey = (t) => (t.label ? `L${t.line}` : t.head ? `h${t.j}` : `${t.i}:${t.j}`);
   const brk = (n) => n > 0 && cellKey(toks[n]) !== cellKey(toks[n - 1]);
   const M = { W, H, obj: period ? "sheet" : "laser", kind: "table", toks, target: tIdx, groups, brk, frac, read: rd, rz: dress === "card" ? -1.4 : 0,
-    cell: C >= 0 ? C : null, colCX: tx + tableW / 2, maxS: 1.5, minS: 44 / f, fitS: 40 / f };
+    cell: C >= 0 ? C : null, colCX: tx + tableW / 2, maxS: 1.5, minS: 44 / f, fitS: 40 / f, typeS: 38 / f,
+    rows: [...(heads ? Array.from({ length: Math.max(1, ...headLines.map((l) => l.length)) }, (_, k) => [headY + 15 + k * clh, headY + 15 + (k + 1) * clh, cf]) : []),
+      ...rows.flatMap((_, i) => Array.from({ length: Math.max(1, ...bodyLines[i].map((l) => l.length)) }, (_, k) => [rowY[i] + padY + k * lh, rowY[i] + padY + (k + 1) * lh, f]))] };
   const css = [], id = uid(job);
   const P = plan(job, M, css);
   // a value is typed on as it is spoken, the whole cell together (never a unit before its figure);
