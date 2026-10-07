@@ -26,7 +26,7 @@ TOL = 1 / 30 + 1e-3            # one frame
 REVEAL_TOL = 0.05
 USAGE_WINDOW = 10              # an asset is not used again within the next ten films (§6.7)
 # Licences an asset may carry (§6.3): the source's own licence, or a public-domain mark.
-LICENCES = {"pexels", "pixabay", "no known restrictions", "cc0", "public domain", "cc by", "higgsfield"}
+LICENCES = {"pexels", "pixabay", "no known restrictions", "no restrictions", "cc0", "public domain", "cc by", "higgsfield"}   # "no restrictions": the founder's call, 2026-10-07
 MOTIONS = {"still-push": {"push", "pull"}, "still-pan": {"pan-left", "pan-right", "pan-up", "pan-down"},
            "still-reveal": {"reveal"}, "still-depth": {"depth"}, "texture": {"push", "drift"}}
 OPENERS = {"chapter", "document", "number", "pair", "table", "quote"}   # a change of texture (§4)

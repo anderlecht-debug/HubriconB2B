@@ -123,8 +123,10 @@ and each says what is spoken under it. Decide each shot. Write ONE file,
 - A paper shot (it holds a figure) stays paper: choose its kind, style and params (values as `{{{{key}}}}`, never typed).
   Give it `params.print` with a `want` ({{"query": "…", "sources": ["smithsonian", "commons"]}}) when a true picture
   fits the sentence.
-- A world shot: choose still, footage or archive, with `query` (the sentence's concrete nouns), `sources` and
-  `fallback`, and `specific` when the sentence names a real company, person, place or event.
+- A world shot: choose still, footage or archive, with `query`, `sources` and `fallback`, and `specific` when
+  the sentence names a real company, person, place or event. A query is two to four words: the name, if any,
+  and one or two concrete nouns ("Woolworth store", "dime counter"), never a description: archive titles
+  are short, and a long query matches none of them (G02: 422 rejections).
 - Follow each beat's VISUAL brief where it names a picture.
 - Do not run commands and do not read other files. Reply with the number of shots decided.
 """

@@ -112,3 +112,45 @@ def auto_prints(slug: str) -> dict:
         done.append(s["id"])
     (d / "shots.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     return {"status": "ok", "prints": len(done), "dropped": dropped}
+
+
+MERGE_MAX, MERGE_MAX_OPEN = 14.0, 8.0   # a held picture or card, at most (the style ceiling; the first minute is quicker)
+
+
+def resolve_gaps(slug: str) -> dict:
+    """Picture shots that found no picture, for no tokens. A neighbour takes the time: a held still or
+    a type shot beside it, up to MERGE_MAX. Footage is never stretched past its clip. Only a shot no
+    neighbour can take becomes the film's own words on a typed card."""
+    d = scriptmod.video_dir(slug)
+    plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
+    sh = plan["shots"]
+    absorbed, carded = [], []
+    i = 0
+    while i < len(sh):
+        s = sh[i]
+        if s.get("kind") not in PICTURE or s.get("asset"):
+            i += 1
+            continue
+        L = float(s["end"]) - float(s["start"])
+        prev = sh[i - 1] if i else None
+        nxt = sh[i + 1] if i + 1 < len(sh) else None
+        can = lambda o: o and o.get("kind") not in ("chapter", "footage", "end") and (o.get("asset") or o.get("kind") not in PICTURE) \
+            and float(o["end"]) - float(o["start"]) + L <= (MERGE_MAX_OPEN if float(s["start"]) < 60 else MERGE_MAX)
+        if can(prev):
+            prev["end"] = s["end"]
+            absorbed.append(s["id"]); sh.pop(i)
+            continue
+        if can(nxt):
+            nxt["start"] = s["start"]
+            absorbed.append(s["id"]); sh.pop(i)
+            continue
+        said = [w.strip(".,;:!?\"'’”()") for w in (s.get("says") or "").split()]
+        s.update({"kind": "document", "style": "doc-highlight", "room": "paper", "on": max(said, key=len) if said else None,
+                  "params": {"lines": [s.get("says") or ""], "line": 1, "source": "As this film states it"},
+                  "intent": "the film's own words, no picture found"})
+        for k in ("query", "sources", "fallback", "specific", "focus", "motion"):
+            s.pop(k, None)
+        carded.append(s["id"])
+        i += 1
+    (d / "shots.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"status": "ok", "absorbed": absorbed, "carded": carded, "shots": len(sh)}

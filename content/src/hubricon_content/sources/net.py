@@ -254,7 +254,17 @@ class Net:
         return body
 
     def head_bytes(self, source: str, url: str, n: int = 65536) -> bytes:
-        """The first `n` bytes of a file (a TIFF's header, for its size), by a range request."""
+        """The first `n` bytes of a file (a TIFF's header, for its size), by a range request. A
+        connection that drops is tried again; one that keeps dropping gives no bytes, so that one
+        candidate goes unmeasured and a long sourcing run doesn't stop (G02, 2026-10-07)."""
+        for attempt in range(3):
+            try:
+                return self._head_bytes(source, url, n)
+            except _TRANSIENT:
+                self.sleep(1.5 * (attempt + 1))
+        return b""
+
+    def _head_bytes(self, source: str, url: str, n: int) -> bytes:
         r = self._send(source, url, headers={"Range": f"bytes=0-{n - 1}"}, stream=True, limiter_key=f"{source}:files")
         self._count(source, "requests")
         buf = b""
@@ -267,7 +277,17 @@ class Net:
         return buf[:n]
 
     def download(self, source: str, url: str, dest: Path) -> Path:
-        """Fetch a file once into content/.cache/assets/ (download, never hotlink)."""
+        """Fetch a file once into content/.cache/assets/ (download, never hotlink). A connection
+        that drops mid-file is tried again, twice."""
+        for attempt in range(3):
+            try:
+                return self._download(source, url, dest)
+            except _TRANSIENT:
+                if attempt == 2:
+                    raise
+                self.sleep(1.5 * (attempt + 1))
+
+    def _download(self, source: str, url: str, dest: Path) -> Path:
         dest = Path(dest)
         if dest.exists() and dest.stat().st_size > 0:
             return dest
@@ -288,6 +308,13 @@ class Net:
         self._count(source, "downloads")
         self._count(source, "bytes", size)
         return dest
+
+
+try:   # a connection that breaks mid-transfer is worth trying again; anything else is not
+    from requests.exceptions import ChunkedEncodingError, ConnectionError as _ConnError
+    _TRANSIENT: tuple = (ChunkedEncodingError, _ConnError)
+except ImportError:   # pragma: no cover
+    _TRANSIENT = (ConnectionError,)
 
 
 def _retry_after(r, default: float) -> float:
