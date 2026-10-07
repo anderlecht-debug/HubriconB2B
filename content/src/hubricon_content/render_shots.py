@@ -50,12 +50,38 @@ PLACEHOLDER = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
 
 
 def display_date(value) -> str | None:
-    """A record's date as a caption shows it: a full timestamp ("1905-09-01", "1906-01-01 00:00")
-    as its year; anything written for people ("c. 1902", "1912–13") as written."""
+    """A record's date as a label may print it, or None when the record does not say when the
+    picture was made. Only a year ("1914"), a short range ("1912–1926") or a circa year ("c. 1900")
+    is printed: a "?" or "ca." makes it circa; "after 1920" stays "after 1920"; a full timestamp
+    gives its year, unless it is a camera's or an upload's stamp from this century on a scan
+    ("2010-04-21 17:20"); a survey's own date ("Documentation compiled after 1933"), a catalogue
+    note mixing the picture's guess with the scan's publication, or a guess wider than 25 years
+    ("1865?-1920?") prints nothing, never one of its years as if it were known."""
     if not value:
-        return value
-    m = re.fullmatch(r"\s*(1[5-9]\d\d|20\d\d)-\d\d-\d\d([ T].*)?\s*", str(value))
-    return m.group(1) if m else str(value)
+        return None
+    v = str(value).split(" date QS:")[0].strip()        # Wikidata's machine form after the words
+    if not v or v.lower() in ("none", "n.d.", "nd", "undated", "unknown", "date unknown"):
+        return None
+    if re.search(r"documentation compiled|digiti[sz]ed|scanned|upload|published \d", v, re.I):
+        return None
+    m = re.fullmatch(r"(1[5-9]\d\d|20\d\d)-\d\d-\d\d([ T]\d\d:\d\d.*)?", v)
+    if m:
+        return None if m.group(2) and int(m.group(1)) >= 2000 else m.group(1)
+    # "1912–13" is 1912–1913; "1840-01-01" is a day, not a range
+    v = re.sub(r"\b(1[5-9])(\d\d)\s*[–-]\s*(\d\d)\b(?![\d-])",
+               lambda m: f"{m[1]}{m[2]}–{m[1]}{m[3]}" if int(m[3]) > int(m[2]) else m[0], v)
+    edge = re.search(r"\b(after|before|since)\s+(1[5-9]\d\d|20\d\d)\b", v, re.I)
+    if edge:
+        return f"{edge.group(1).lower()} {edge.group(2)}"
+    years = [int(y) for y in re.findall(r"(?<!\d)(1[5-9]\d\d|20\d\d)(?!\d)", v)]
+    if not years:
+        return None
+    lo, hi = min(years), max(years)
+    if hi - lo > 25:
+        return None
+    circa = bool(re.search(r"\?|\b(c\.|ca\.?|circa|about|approx\w*)(?=\s|\d)", v, re.I))
+    text = str(lo) if lo == hi else f"{lo}–{hi}"
+    return f"c. {text}" if circa else text
 
 
 def frames_of(shot: dict) -> int:
@@ -135,6 +161,8 @@ class Job:
             src, self.kind, self.style = prev, prev.get("kind"), prev.get("style")
         values = {k: v.get("value", "") for k, v in facts.items()}
         start, self.frames = float(shot["start"]), frames_of(shot)
+        if plan["shots"] and shot is plan["shots"][-1]:   # the end card holds past the last word
+            self.frames += round(shots.end_tail(plan, reg) * FPS)
         self.seconds = self.frames / FPS
         words = shots.spoken(timing)
         on_abs = shots.resolve_on(shot, words)
@@ -163,8 +191,16 @@ class Job:
             # proof or demo label already says what the figure is
             # (a shot carrying the proof or demo label shows no other source: an incidental year's
             # source beside a case-study chart misleads more than it tells)
-            "source_label": None if shot.get("label") in ("proof", "demo") else sourcelabel.label([r["key"] for r in reveals], facts),
+            # (a callback, or a page or ledger returning to figures said before, shows keys it does not
+            # reveal: their sources are named too, after the ones it reveals)
+            "source_label": None if shot.get("label") in ("proof", "demo") else sourcelabel.label(
+                list(dict.fromkeys([r["key"] for r in reveals] + PLACEHOLDER.findall(json.dumps(
+                    {**(src.get("params") or {}), **(shot.get("params") or {})}, ensure_ascii=False)))), facts),
         }
+        # the figures the voice has already said before this shot's first frame: a kind may draw
+        # them sharp from frame 0 (a table or a ledger returning to a value), never one still to come
+        self.job["known"] = {r["key"]: values.get(r["key"], "") for r in shots.spoken_reveals(timing)
+                             if float(r["t"]) < start - 0.05 and r["key"] in values}
         self.assets: list[str] = []
         if LOOK == "v3" and self.kind == "chart":
             run = d / "run.json"
@@ -246,7 +282,7 @@ class Job:
             year = re.search(r"\b(1[5-9]\d\d|20\d\d)\b", str(ca.get("date") or ""))
             g = graded_still(ca["file"], mono=True if year and int(year.group(1)) < 1970 else None)
             self.job["print"] = {**{k: ca.get(k) for k in ("credit", "place", "title", "author", "trim")},
-                                 "date": display_date(ca.get("date")), "at": comp.get("at"),
+                                 "date": display_date(ca.get("date")), "at": comp.get("at"), "out": comp.get("out"),
                                  "caption": comp.get("caption"), "focus": comp.get("focus"), **g}
             self.job["params"].pop("print", None)
             self.assets.append(g["sha256"])

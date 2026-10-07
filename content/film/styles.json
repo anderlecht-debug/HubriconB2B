@@ -1,5 +1,5 @@
 {
- "source": "docs/content/VISUAL_SPEC.md \u00a74, \u00a75, \u00a714 (2026-10-04). The plan contract for shots.json: room, kind, screen-time group, length and the `on` rule of every style. each style's `render` holds the numbers its recipe uses (\u00a714); the style lock fingerprints this file.",
+ "source": "docs/content/VISUAL_SPEC.md §4, §5, §14 (2026-10-04). The plan contract for shots.json: room, kind, screen-time group, length and the `on` rule of every style. each style's `render` holds the numbers its recipe uses (§14); the style lock fingerprints this file.",
  "fps": 30,
  "kinds": {
   "world": [
@@ -252,7 +252,7 @@
     14
    ],
    "on": "none",
-   "deferred": "built after the visual trial (\u00a712): it needs segmentation",
+   "deferred": "built after the visual trial (§12): it needs segmentation",
    "per_chapter": 1,
    "render": {
     "bg_to": 1.04,
@@ -730,7 +730,9 @@
     10
    ],
    "on": "none",
-   "render": {}
+   "render": {},
+   "tail_s": 4.0,
+   "tail_note": "the end card holds this long after the last word, the bed up under it and fading out; the film runs the narration plus the tail"
   },
   "match-bridge": {
    "code": "C1",
@@ -810,6 +812,29 @@
    "on": "required",
    "needs_callback": true,
    "render": {}
+  },
+  "bars-recall": {
+   "code": "P11r",
+   "room": "paper",
+   "kinds": [
+    "timeline"
+   ],
+   "group": "numbers",
+   "on": "optional",
+   "render": {
+    "axis_px": 2,
+    "tick_w_px": 2,
+    "tick_h_px": 60,
+    "date_px": 56,
+    "label_px": 44,
+    "max_label_words": 4,
+    "track_px_per_s": 120
+   },
+   "seconds": [
+    3,
+    8
+   ],
+   "note": "figures the voice said earlier in the film, drawn again to scale in a beat: no new figure lands, so it reads in 3 s"
   }
  },
  "easing": {

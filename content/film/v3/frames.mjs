@@ -1,6 +1,6 @@
 // Style frames for the v3 look: render chosen moments of resolved jobs as PNGs, or a short
 // motion test as MP4, without touching a film's clips.
-//   FILM_LOOK=v3 node content/film/v3/frames.mjs <jobs.json> <outdir> [--video] [--only id,id]
+//   FILM_LOOK=v3 node content/film/v3/frames.mjs <jobs.json> <outdir> [--video] [--jpeg] [--only id,id]
 // A job's `stills` (seconds) set the moments; --video writes <id>.mp4 at 30 fps instead.
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
@@ -48,8 +48,10 @@ try {
     } else {
       for (const t of job.stills || [job.seconds / 2]) {
         await page.evaluate(seekJS(t * 1000));
-        const png = await page.send("Page.captureScreenshot", { format: "png" });
-        const out = join(outDir, `${job.id}-${String(t.toFixed(2)).padStart(5, "0")}.png`);
+        // --jpeg: a review frame at a tenth of a PNG's size (the scratch disk is shared, in memory)
+        const jpeg = rest.includes("--jpeg");
+        const png = await page.send("Page.captureScreenshot", jpeg ? { format: "jpeg", quality: 88 } : { format: "png" });
+        const out = join(outDir, `${job.id}-${String(t.toFixed(2)).padStart(5, "0")}.${jpeg ? "jpg" : "png"}`);
         writeFileSync(out, Buffer.from(png.result.data, "base64"));
         console.log(out);
       }

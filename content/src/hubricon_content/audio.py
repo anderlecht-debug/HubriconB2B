@@ -18,6 +18,7 @@ import numpy as np
 import soundfile as sf
 
 from . import script as scriptmod
+from . import shots as shots_mod
 from .state import CONTENT_DIR
 
 SR = 48000
@@ -263,7 +264,10 @@ def mix(slug: str) -> Path:
     d = scriptmod.video_dir(slug)
     timing = json.loads((d / "timing.json").read_text(encoding="utf-8"))
     events = json.loads((d / "events.json").read_text(encoding="utf-8")) if (d / "events.json").exists() else []
-    total = timing["duration"] + 0.5
+    plan_p = d / "shots.json"
+    plan = json.loads(plan_p.read_text(encoding="utf-8")) if plan_p.exists() else None
+    tail = shots_mod.end_tail(plan) if plan else 0.0
+    total = timing["duration"] + tail + 0.5
     n = int(total * SR)
     rng = np.random.default_rng(7)
     (d / "media").mkdir(exist_ok=True)
@@ -298,8 +302,7 @@ def mix(slug: str) -> Path:
     else:
         bed = _bed(total, rng)[:n]
         bed_source = "procedural drone (provisional)"
-    plan_p = d / "shots.json"
-    score = score_events(json.loads(plan_p.read_text(encoding="utf-8")), timing) if plan_p.exists() else None
+    score = score_events(plan, timing) if plan else None
     if score:
         bed = _family(bed, n, [float(c["at"]) for c in timing["chapters"]])
         bed_source += f" · a family of {len(timing['chapters']) + 1} cues"
@@ -323,6 +326,11 @@ def mix(slug: str) -> Path:
             back = int(1.5 * SR)
             lift[i0:i1] = 0.0
             lift[i1:i1 + back] = np.linspace(0, 1, len(lift[i1:i1 + back]))
+        if tail:   # the end card holds with no voice: the bed comes up, then fades out to the film's last frame
+            i0, r = int(float(timing["duration"]) * SR), int(0.6 * SR)
+            hold = np.ones(max(0, n - i0)) * _db(CARD_SWELL_DB)
+            hold[: min(r, len(hold))] = np.linspace(1, _db(CARD_SWELL_DB), len(hold[:r]))
+            lift[i0:] = hold
         bed_gain = bed_gain * lift
     room = _room(total, rng)[:n]
     if score:   # a long film's room tone is levelled by its body, like the bed: the floor never falls to silence
@@ -361,6 +369,11 @@ def mix(slug: str) -> Path:
 
     amb, amb_subjects = _ambience(d, n)
     out = vo + bed * bed_gain + room + fx + amb
+    if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
+        f = int(min(2.5, tail) * SR)
+        end = int((float(timing["duration"]) + tail) * SR)
+        out[end - f:end] *= np.linspace(1, 0, f) ** 1.5
+        out[end:] = 0.0
     peak = np.abs(out).max()
     if peak > 0.98:
         out = out / peak * 0.98

@@ -46,6 +46,15 @@ def registry() -> dict:
     return json.loads(STYLES_JSON.read_text(encoding="utf-8"))
 
 
+def end_tail(plan: dict, reg: dict | None = None) -> float:
+    """Seconds the end card holds after the narration's last word (styles.json end.tail_s), when the
+    film ends on one; the film then runs the narration plus this tail."""
+    last = (plan.get("shots") or [{}])[-1]
+    if last.get("kind") != "end":
+        return 0.0
+    return float(((reg or registry())["styles"].get("end") or {}).get("tail_s", 0.0))
+
+
 def names(name: str, text: str) -> bool:
     """Whether a record names `name` (§6.2): the phrase itself; every word of it in any order, as a
     catalogue writes a person ("WOOD, ROBERT E."); or the given names as initials before the
@@ -235,8 +244,17 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
             if max(b - a for a, b in zip(landings, landings[1:])) > cad["chart_landing_every_s"] + TOL:
                 p(f"{s['id']}: a long chart needs something new every {cad['chart_landing_every_s']:g} s (reveals or params.builds)")
         for r in s.get("reveals", []):
-            if float(s["end"]) - float(r["t"]) < cad["hold_after_number_s"] - TOL:
-                p(f"{s['id']}: {{{{{r['key']}}}}} is on screen {float(s['end']) - float(r['t']):.1f} s; hold a number {cad['hold_after_number_s']:g} s")
+            held = float(s["end"]) - float(r["t"])
+            # a figure still on paper in the shots that follow keeps being held across the cut
+            k = shots.index(s) + 1
+            while held < cad["hold_after_number_s"] - TOL and k < len(shots) and shots[k].get("room") == "paper" \
+                    and "{{" + r["key"] + "}}" in json.dumps(shots[k].get("params") or {}).replace(" ", ""):
+                held += length[shots[k]["id"]]
+                k += 1
+            if held < cad["hold_after_number_s"] - TOL:
+                p(f"{s['id']}: {{{{{r['key']}}}}} is on screen {held:.1f} s; hold a number {cad['hold_after_number_s']:g} s")
+        if s.get("style") == "bars-recall" and s.get("reveals"):
+            p(f"{s['id']}: a recall draws figures already said; {', '.join(r['key'] for r in s['reveals'])} lands here")
         if float(s["start"]) >= cad["open_s"] and s.get("room") == "world" and s.get("kind") == "footage" \
                 and L < 6 - TOL and s.get("style") not in ("footage-insert", "footage-process", "breath"):
             p(f"{s['id']}: after the first minute only inserts and process shots are footage under 6 s")

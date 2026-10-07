@@ -35,6 +35,7 @@ PUBLISHERS = {
     "www.sil.si.edu": "Smithsonian Libraries", "postalmuseum.si.edu": "Smithsonian National Postal Museum",
     "www.baltimoresun.com": "The Baltimore Sun",
 }
+FILE = re.compile(r"[\w./-]+\.(?:json|xlsx|csv|py|mjs|js|md)", re.I)
 COVERED = re.compile(r"demo data|demo catalogue|public-data case study|Tarnhollow|\.RUN|\.EV|\.FIT|MARGIN\.|NEWSVENDOR|"
                      r"SPEND\.|ANOMALY\.|PRICE\.|cash horizon|health score|forecast ladder|policy constants|reason-code|module note",
                      re.I)
@@ -52,16 +53,39 @@ def one(source: str) -> str | None:
             return TITLES[key]
         host = urlparse("https://" + key).netloc
         return PUBLISHERS.get(host, host.removeprefix("www."))
-    # a written source ("Amazon's published US FBA fee card, 2026 non-peak schedule (…), as recorded in …")
-    s = re.split(r",\s*as recorded|\s\(", s)[0]
-    return s.strip(" ,;")
+    # a written source ("Amazon's published US FBA fee card, 2026 non-peak schedule (…), as recorded in …");
+    # a repository file ("ratecard.json (carrier.near_edge_oz); the Fee Staircase course") is where we
+    # keep a figure, not a source a viewer can read: the next part that names a document stands
+    for part in s.split(";"):
+        name = re.split(r",\s*as recorded|\s\(", part.strip())[0].strip(" ,;")
+        if name and not FILE.fullmatch(name):
+            return name[0].upper() + name[1:]
+    return None
+
+
+def _core(name: str) -> str:
+    return re.sub(r"\b(published|the)\b|['’]s\b|[^a-z0-9 ]", "", name.lower()).split()
+
+
+def _same(a: str, b: str) -> bool:
+    """One document named twice ("Amazon's US FBA fee card, 2026" inside "Amazon's published US FBA
+    fee card, 2026 non-peak schedule")."""
+    x, y = _core(a), _core(b)
+    short, long_ = (x, y) if len(x) <= len(y) else (y, x)
+    return bool(short) and all(w in long_ for w in short)
 
 
 def label(keys: list[str], facts: dict, limit: int = 2) -> str | None:
-    """The shot's source line: the distinct sources of the figures it reveals, at most `limit`."""
+    """The shot's source line: the distinct sources of the figures it shows, at most `limit`; a
+    document named twice is named once, by its more specific name."""
     names: list[str] = []
     for k in keys:
         n = one(facts.get(k, {}).get("source", ""))
-        if n and n not in names:
+        if not n:
+            continue
+        twin = next((i for i, m in enumerate(names) if _same(m, n)), None)
+        if twin is None:
             names.append(n)
+        elif len(n) > len(names[twin]):
+            names[twin] = n
     return " · ".join(names[:limit]) or None

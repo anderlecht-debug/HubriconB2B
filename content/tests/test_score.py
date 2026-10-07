@@ -38,3 +38,11 @@ def test_family_crossfades_without_gaps():
     for t in (7.9, 8.0, 8.1, 14.0):                      # no hole at a chapter boundary
         i = int(t * audio.SR)
         assert np.abs(out[i - 2000:i + 2000]).max() > 0.2
+
+
+def test_the_end_card_holds_past_the_last_word():
+    from hubricon_content import shots as shotmod
+    tail = shotmod.registry()["styles"]["end"]["tail_s"]
+    assert tail >= 3.0
+    assert shotmod.end_tail({"shots": [{"kind": "number"}, {"kind": "end"}]}) == tail
+    assert shotmod.end_tail({"shots": [{"kind": "end"}, {"kind": "number"}]}) == 0.0

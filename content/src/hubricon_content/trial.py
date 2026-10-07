@@ -70,6 +70,8 @@ TRIAL = [
     ("timeline", 10, "Wire, then lead time, then shelf, then payout.", {"params": {"heading": "Four clocks in a row",
         "events": [{"date": "Day 0", "label": "the wire", "at": 0.3}, {"date": "{{lead_time_typical}}", "label": "the goods land", "at": 1.2},
                    {"date": "", "label": "the shelf", "at": 2.0}, {"date": "{{payout_cycle}}", "label": "the payout", "at": 2.8}]}}),
+    ("bars-recall", 4, "The wire and the payout, side by side.", {"params": {"layout": "bars",
+        "events": [{"date": "the wire", "label": "{{lead_time_typical}}", "at": 0.0}, {"date": "the payout", "label": "{{payout_cycle}}", "at": 0.0}]}}),
     ("formula-build", 8, "Wire, plus lead time, plus shelf, plus payout, is the cycle.", {"params": {"terms": [
         {"text": "wire", "at": 0.1}, {"text": "lead time", "at": 0.8}, {"text": "shelf", "at": 1.6}, {"text": "payout", "at": 2.2},
         {"text": "the cycle", "at": 3.0}], "ops": ["+", "+", "+", "="], "caption": "The days between a dollar leaving and coming back."}}),

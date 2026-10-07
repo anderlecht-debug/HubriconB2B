@@ -24,7 +24,10 @@ const COMPANION_KINDS = new Set(["number", "pair", "formula", "kinetic", "timeli
 
 /** A record's year as a label prints it; a circa date stays circa ("c. 1900"), never rounded to a fact. */
 function yearOf(date) {
-  const d = String(date || ""), y = (d.match(/\b(1[5-9]\d\d|20\d\d)\b/) || [])[0];
+  const d = String(date || "").trim();
+  // render_shots.display_date has already reduced the record to what may be printed
+  if (/^(?:(?:c\.|after|before|since) )?(?:1[5-9]\d\d|20\d\d)(?:–(?:1[5-9]\d\d|20\d\d))?$/.test(d)) return d;
+  const y = (d.match(/\b(1[5-9]\d\d|20\d\d)\b/) || [])[0];
   return y && /\b(c\.|ca\.|circa|about)\s*(?=1[5-9]\d\d|20\d\d)/i.test(d) ? `c. ${y}` : y;
 }
 /** Who made or holds a photograph, as the label names them: the archive or the photographer, never the host. */
@@ -33,7 +36,9 @@ function whoOf(a) {
   // "Smithsonian Institution, National Postal Museum" is the museum's own "Smithsonian National Postal Museum"
   const clean = (x) => String(x || "").replace(/\s+/g, " ").trim().replace(/^Smithsonian Institution, (?:the )?/i, "Smithsonian ");
   const author = clean(a.author);
-  return author && !/^https?:|unknown/i.test(author) && author.length <= 80 && !host.test(author) ? author
+  // a catalogue's noise is not a name ("API record", "metadata", "see source")
+  const noise = /\b(api|record|metadata|see (?:source|file)|original uploader|own work|anonymous)\b/i;
+  return author && !/^https?:|unknown/i.test(author) && !noise.test(author) && author.length <= 80 && !host.test(author) ? author
     : a.credit && !/^https?:/.test(a.credit) && !host.test(clean(a.credit)) ? clean(a.credit) : null;
 }
 /** A photograph's provenance as the label reads it: place · year, then the archive. */
