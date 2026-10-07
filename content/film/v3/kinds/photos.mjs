@@ -209,6 +209,30 @@ function beats(job, from = 3.0) {
   return out;
 }
 
+/** The box a companion print fills: the desk to the right of a figure (type kinds narrow their
+    own box to the left of it, shots.mjs draws it). */
+export const COMPANION = { x0: 1040, x1: 1760, y0: 100, y1: 980 };
+
+/** A companion print beside a figure: the photograph the sentence is about, landing on the desk on
+    its word, with a slower push of its own than the type's camera, so the two read at two depths. */
+export function companion(job) {
+  const a = job.print;
+  if (!a?.url) return "";
+  const tr = trimOf(job, a), ar = aspect(a, tr), C = COMPANION, b = 26, T = job.seconds || 6;
+  let ih = C.y1 - C.y0 - 2 * b, iw = ih * ar;
+  if (iw + 2 * b > C.x1 - C.x0) { iw = C.x1 - C.x0 - 2 * b; ih = iw / ar; }
+  const wo = iw + 2 * b, ho = ih + 2 * b, cx = (C.x0 + C.x1) / 2, cy = (C.y0 + C.y1) / 2;
+  const [fx, fy] = a.focus || [0.5, 0.42];
+  const e = entry(job.id, 7, 1100 / wo);
+  const at = a.at == null ? -0.4 : Math.max(-0.4, +a.at - 0.25);   // arriving on its word, never early
+  const id = safeId(job.id);
+  const ox = cx - wo / 2 + b + fx * iw, oy = cy - ho / 2 + b + fy * ih;
+  return `<style>@keyframes ph-comp-${id} { from { transform: scale(1); } to { transform: scale(${f(1 + Math.min(0.008 * T, 0.05), 4)}); } }</style>` +
+    `<div class="ph-comp" style="transform-origin:${px(ox)} ${px(oy)};animation:ph-comp-${id} ${f(T)}s linear both">` +
+    `<div class="ph-place" style="left:${px(cx - wo / 2)};top:${px(cy - ho / 2)};--rot:${deg(e.rot * 0.6)}">` +
+    print(job, a, iw, ih, b, "ph-landing", landVars(e, at, 1.15)) + `</div></div>`;
+}
+
 export function archive(job) {
   const a = job.asset || {}, tr = trimOf(job, a), ar = aspect(a, tr);
   if (job.params?.treat === "sheet" || (job.params?.treat == null && ar >= 1.75)) return sheet(job, a, tr, ar);

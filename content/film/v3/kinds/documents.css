@@ -87,12 +87,13 @@
 .dc-desk.dl-two i { display: none; }
 @keyframes dc-desk { from { opacity: 0; transform: translateY(0.3em); } to { opacity: 1; transform: none; } }
 
-/* A flag on the lamp: where a tight frame puts paper under the label slot, the light is cut off
-   the frame's lower left so the source line stays legible. */
+/* A flag on the lamp: where a tight frame puts paper under the label slot, the pool of light ends
+   above the frame's foot, evenly across its width, so the source line stays legible. A blob over
+   one corner read as a smudge on the page. */
 .dc-flag { position: absolute; inset: 0; z-index: 49; pointer-events: none; opacity: 0;
-  background: radial-gradient(ellipse 820px 230px at 600px 920px, color-mix(in srgb, var(--ground) 86%, transparent),
-      color-mix(in srgb, var(--ground) 66%, transparent) 55%, transparent 100%),
-    linear-gradient(14deg, color-mix(in srgb, var(--ground) 62%, transparent) 0%, transparent 34%); }
+  background: linear-gradient(to top, color-mix(in srgb, var(--ground) 82%, transparent) 0,
+      color-mix(in srgb, var(--ground) 64%, transparent) 110px, color-mix(in srgb, var(--ground) 30%, transparent) 210px,
+      color-mix(in srgb, var(--ground) 8%, transparent) 290px, transparent 340px); }
 
 /* ── tables: a typeset rate table (period) or a laser-printed card (modern) ─────────────── */
 .tb { position: absolute; inset: 0; color: var(--paper-ink); font-kerning: none; }

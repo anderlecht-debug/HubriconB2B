@@ -127,3 +127,6 @@
 .ph-now-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* The compositing contract's marker: the footage's unrotated box, never drawn. */
 .split-right { position: absolute; visibility: hidden; pointer-events: none; }
+
+/* A companion print beside a figure (shots.mjs): its own layer, under the grade and the label. */
+.ph-comp { position: absolute; inset: 0; z-index: 5; pointer-events: none; }

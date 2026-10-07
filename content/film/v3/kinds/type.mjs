@@ -195,8 +195,9 @@ function figTimes(text, spoken, t0) {
  */
 function stage(job, open = false, push = 1) {
   const dur = job.seconds || 6, s = (1 + Math.min(0.01 * dur, 0.06)) * push, cy = open ? 540 : 470;
-  // a line's box runs above its capitals (the font's ascent): keep 30 px of the safe band for it
-  const w = Math.floor(1600 / s), h = Math.floor(((open ? 900 : 760) - 60) / s);
+  // a line's box runs above its capitals (the font's ascent): keep 30 px of the safe band for it;
+  // a companion print (photos.COMPANION) takes the desk right of x = 1040, 60 px of air before it
+  const w = Math.floor((job.print?.url ? 1040 - 60 - 160 : 1600) / s), h = Math.floor(((open ? 900 : 760) - 60) / s);
   return { dur, s, w, h, top: Math.round(cy - h / 2), ox: 160, oy: cy };
 }
 function cam(B, inner, extra = "") {

@@ -100,6 +100,7 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
 .labels .source { font: 400 var(--fs-label)/36px var(--sans); color: rgb(242 238 230 / 0.72); }
 .labels .honesty { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.9); }
 .labels p { margin: 0; }
+.labels.with-print { max-width: 820px; }
 .labels .nowrap { white-space: nowrap; }
 
 /* Shared entrances. --at is seconds from the shot's first frame (the plan's own times). */

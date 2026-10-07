@@ -238,6 +238,18 @@ class Job:
                 self.assets.append(g["sha256"])
         if self.kind == "footage" and isinstance(a, dict):
             self.assets.append(sha(Path(a["file"])))
+        # a companion print beside a figure: the picture the sentence is about, on the desk to
+        # the right of the type (v3), graded as the archive grades its prints
+        comp = (self.shot.get("params") or {}).get("print") or {}
+        if LOOK == "v3" and isinstance(comp.get("asset"), dict) and comp["asset"].get("file"):
+            ca = comp["asset"]
+            year = re.search(r"\b(1[5-9]\d\d|20\d\d)\b", str(ca.get("date") or ""))
+            g = graded_still(ca["file"], mono=True if year and int(year.group(1)) < 1970 else None)
+            self.job["print"] = {**{k: ca.get(k) for k in ("credit", "place", "title", "author", "trim")},
+                                 "date": display_date(ca.get("date")), "at": comp.get("at"),
+                                 "caption": comp.get("caption"), "focus": comp.get("focus"), **g}
+            self.job["params"].pop("print", None)
+            self.assets.append(g["sha256"])
         if self.kind == "split":
             right = (self.shot.get("params") or {}).get("right") or {}
             if right.get("file"):
@@ -252,7 +264,9 @@ class Job:
             family = V3_FAMILY.get(self.kind, "type")
             files += sorted(str(p.relative_to(CONTENT_DIR)) for p in v3.glob("*") if p.suffix in (".css", ".mjs", ".js", ".html"))
             files += [f"film/v3/kinds/{family}.mjs", f"film/v3/kinds/{family}.css"]
-        look = "".join((CONTENT_DIR / p).read_text(encoding="utf-8") for p in files)
+            if self.job.get("print") and family != "photos":   # a companion print is drawn by the photos kind
+                files += ["film/v3/kinds/photos.mjs", "film/v3/kinds/photos.css"]
+        look ="".join((CONTENT_DIR / p).read_text(encoding="utf-8") for p in files)
         blob = json.dumps({"job": self.job, "assets": self.assets, "renderer": self.renderer, "room": self.room,
                            "asset": self.shot.get("asset"), "version": VERSION}, sort_keys=True, default=str)
         return hashlib.sha256((blob + look).encode()).hexdigest()
