@@ -15,6 +15,8 @@
 .ch-kicker { margin: 0 0 18px; font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.10em; text-transform: uppercase; color: rgb(242 238 230 / 0.78); }
 .ch-title { margin: 0; font: var(--heading-font); font-optical-sizing: auto; letter-spacing: -0.01em; word-spacing: 0.06em; color: var(--light); text-wrap: balance; }
 .ch-cap { margin: 16px 0 0; font: 400 var(--fs-body)/1.25 var(--sans); color: var(--light-2); }
+/* a figure in a heading or caption lands on its word (round 3): its own span, so the rest is set from the cut */
+.ch-hfig { display: inline-block; }
 
 /* ---- rules, ticks and axis names */
 .ch-grid { fill: none; stroke: rgb(242 238 230 / 0.08); stroke-width: 1.5; }
@@ -38,13 +40,20 @@
 .ch-conn { fill: none; stroke: rgb(242 238 230 / 0.3); stroke-width: 2; }
 .ch-pct { fill: none; stroke: rgb(242 238 230 / 0.6); stroke-width: 2.5; }
 .ch-pct-halo { fill: none; stroke: rgb(242 238 230 / 0.07); stroke-width: 10; }
-.ch-median { fill: none; stroke: var(--blue); stroke-width: 4.5; stroke-linecap: round; }
-.ch-median-halo { fill: none; stroke: rgb(47 116 255 / 0.25); stroke-width: 18; stroke-linecap: round; }
+/* the middle year: the brightest line, ivory (no money is named on the Monte Carlo, so nothing on it is blue) */
+.ch-median { fill: none; stroke: var(--light); stroke-width: 4.5; stroke-linecap: round; }
+.ch-median-halo { fill: none; stroke: rgb(var(--glow-ivory-rgb) / 0.16); stroke-width: 18; stroke-linecap: round; }
+.ch-brace { fill: none; stroke: rgb(var(--light-rgb) / 0.7); stroke-width: 2.5; }
+/* the edge's riser lit as the voice names "a line": hot ivory, before the leak's blue */
+.ch-line-hot { fill: none; stroke: var(--light-hot); stroke-width: 5; stroke-linecap: square; }
+.ch-halo-hot { fill: none; stroke: rgb(var(--glow-ivory-rgb) / 0.3); stroke-width: 22; stroke-linecap: round; }
 
 /* ---- dots */
 .ch-dot { fill: var(--light); stroke: rgb(255 240 214 / 0.25); stroke-width: 8; paint-order: stroke; }
 .ch-dot-hollow { fill: var(--ground); stroke: var(--light); stroke-width: 3.5; }
-.ch-end-dot { fill: var(--blue); stroke: rgb(47 116 255 / 0.3); stroke-width: 10; paint-order: stroke; }
+.ch-end-dot { fill: var(--light); stroke: rgb(var(--glow-ivory-rgb) / 0.3); stroke-width: 10; paint-order: stroke; }
+/* a product mid-tread (an illustration on the staircase, no figure): ivory, quieter than the listing's dot */
+.ch-mark { fill: rgb(var(--light-rgb) / 0.72); stroke: rgb(var(--glow-ivory-rgb) / 0.18); stroke-width: 7; paint-order: stroke; }
 .ch-ripple { fill: none; stroke: var(--light); stroke-width: 2; transform-box: fill-box; transform-origin: center;
   animation: ch-ripple 1.2s cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
 
@@ -71,6 +80,7 @@
 .ch-barname { font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase; fill: rgb(242 238 230 / 0.72); }
 .ch-barname--leak { fill: var(--blue); }
 .ch-endlab { display: flex; flex-direction: column; gap: 10px; }
+.ch-endlab--band i { color: var(--light); }
 .ch-fallsays { max-width: 1360px; white-space: normal; font: 400 var(--fs-display-s)/1.15 var(--serif); font-optical-sizing: auto; letter-spacing: -0.01em; color: var(--light); text-wrap: balance; }
 
 /* ---- the Monte Carlo: threads, monthly points, the band, the blue median */
@@ -88,6 +98,8 @@
 .ch-bar--leak .ch-bar-edge, .ch-col--leak .ch-col-top { stroke: var(--blue); }
 .ch-play-line { fill: none; stroke: rgb(242 238 230 / 0.55); stroke-width: 2; stroke-dasharray: 4 8; }
 .ch-play-dot { fill: var(--light); }
+/* a day tick's mark on the age axis; its number only as the voice gives it */
+.ch-dtick { fill: none; stroke: rgb(var(--light-rgb) / 0.42); stroke-width: 2; }
 
 /* ---- light on the desk (gradients, never filters) */
 .ch-spill { position: absolute; pointer-events: none; background: radial-gradient(ellipse 50% 40% at 50% 32%, rgb(255 236 206 / 0.075), rgb(255 236 206 / 0.025) 55%, transparent 100%);
@@ -97,6 +109,10 @@
   animation: ch-bloom calc(var(--d, 1.4) * 1s) cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
 .ch-bloom--hard { animation-name: ch-bloom-hard; }
 .ch-bloom--soft { opacity: 0.7; }
+/* ivory light on the desk where the middle year ends */
+.ch-glow-soft { position: absolute; width: 400px; height: 400px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(var(--key-rgb) / 0.12), rgb(var(--key-rgb) / 0.04) 50%, transparent 100%);
+  animation: ch-bloom calc(var(--d, 1.4) * 1s) cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--at, 0) * 1s) both; }
 .ch-flare { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(closest-side, rgb(255 246 228 / 0.9), rgb(255 236 200 / 0.28) 45%, transparent);
   animation: ch-flare 0.8s ease-out calc(var(--at, 0) * 1s) both; }

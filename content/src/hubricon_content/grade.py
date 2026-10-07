@@ -63,8 +63,10 @@ def measure(path: Path, chain: str = "", start: float | None = None, duration: f
     # frames that are measured, not on thirty a second that are thrown away (a footage preview
     # took minutes of 1080p grading per candidate); the chain's own frame rate is dropped here.
     chain = re.sub(r"(^|,)fps=[\d.]+(?=,|$)", "", chain).strip(",")
-    vf = ",".join(x for x in ("fps=2", chain, "scale=480:270:flags=bilinear", "format=yuv420p", "signalstats",
-                              "metadata=print:file=-") if x)
+    # (a TIFF's own tags ride on its frame as metadata; printing a scanner's strip-offset list
+    # crashes ffmpeg's metadata filter (b01's LOC TIFF), so the frame's metadata is dropped first)
+    vf = ",".join(x for x in ("fps=2", chain, "scale=480:270:flags=bilinear", "format=yuv420p", "metadata=mode=delete",
+                              "signalstats", "metadata=print:file=-") if x)
     cmd += ["-vf", vf, "-an", "-f", "null", "-"]
     # an archival file's own metadata (EXIF in Latin-1) is printed too; only the numbers matter
     out = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=600).stdout
@@ -129,16 +131,23 @@ def trim(path: Path) -> str:
 
 def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | None = None,
          duration: float | None = None, mono: bool | None = None, room: str = "world", crop: bool = True,
-         grain: bool = True, strict: bool = True) -> dict:
+         grain: bool = True, strict: bool = True, refuse: bool = True, frame: bool = True) -> dict:
     """The exact filter chain for one asset, after measuring it; raises Rejected
     when it cannot reach the look. Returns {"filter", "brightness", "saturation",
-    "yavg", "mono"}; "yavg" is the measured result of the whole chain."""
+    "yavg", "mono"}; "yavg" is the measured result of the whole chain.
+    `refuse=False` is a print on the desk (an archive, a stack, a then, a companion print): it sits
+    inside a white border on the dark desk, so it is never refused for its exposure, and one far
+    from the world's (a museum object on black or on a white seamless) keeps the exposure it was
+    printed with instead of being pushed toward the world's mean. `frame=False` is a plate we cut
+    from a page ourselves: it is already framed, and the border trim would read a text page's white
+    interlines as a mount and crop its first and last lines."""
     g, n = spec(), spec()["normalize"]
     mono = is_mono(path, image) if mono is None else mono
-    head = ",".join(x for x in ((trim(path) if image else ""), conform(focus) if crop else "") if x)
+    head = ",".join(x for x in ((trim(path) if image and frame else ""), conform(focus) if crop else "") if x)
     base = g["mono"]["grade"] if mono else g["grade"]
     raw = measure(path, head, start, duration, image)
-    if raw["yavg"] < n["reject_below_yavg"]:
+    keep = not refuse and not (n["reject_below_yavg"] <= raw["yavg"] <= 255 - n["reject_below_yavg"])
+    if refuse and raw["yavg"] < n["reject_below_yavg"]:
         raise Rejected(f"mean luma {raw['yavg']:.0f} is night or low-key; the world is high-key (§6.1)")
     sat = 1.0
     if not mono and raw["satavg"] > 0:
@@ -157,7 +166,7 @@ def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | No
         return ",".join(p for p in parts if p)
 
     b = 0.0
-    for _ in range(3):   # the grade is close to linear in brightness; two corrections land it
+    for _ in range(0 if keep else 3):   # the grade is close to linear in brightness; two corrections land it
         got = measure(path, chain(b), start, duration, image)["yavg"]
         miss = n["target_yavg"] - got
         if abs(miss) <= n["tolerance"] * 0.5:
@@ -180,13 +189,13 @@ def plan(path: Path, *, image: bool = False, focus=(0.5, 0.5), start: float | No
             "yavg": round(final, 1), "mono": mono, **({"clamped": True} if clamped else {})}
 
 
-def still(src: Path, out: Path, mono: bool | None = None) -> dict:
+def still(src: Path, out: Path, mono: bool | None = None, refuse: bool = True, frame: bool = True) -> dict:
     """A graded still for the film stage: colour and grain from the grade, kept at
     up to 3840 px wide so the stage's moves (to 1.35 on a pull-back) stay sharp.
     The stage crops and moves it; this only gives it the look. Its grain is added
     per frame when the shot is encoded, so it moves like film grain does."""
     w = spec()["conform"]["still_max_width"]
-    p = plan(src, image=True, mono=mono, crop=False, grain=False, strict=False)
+    p = plan(src, image=True, mono=mono, crop=False, grain=False, strict=False, refuse=refuse, frame=frame)
     vf = f"scale='min({w},iw)':-2:flags=lanczos,{p['filter']}"
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-vf", vf, "-frames:v", "1", "-q:v", "2", str(out)],

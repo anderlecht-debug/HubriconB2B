@@ -130,3 +130,9 @@
 
 /* A companion print beside a figure (shots.mjs): its own layer, under the grade and the label. */
 .ph-comp { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+@keyframes ph-comp-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translate(90px, -36px) rotate(1.4deg); } }
+/* A world picture's caption: in once the picture fills the frame, out before it surfaces. */
+.ph-wlab { position: absolute; inset: 0; pointer-events: none; z-index: 60; opacity: 0;
+  animation: fade 0.5s ease var(--in, 0s) both, ph-out 0.4s ease var(--out, 99s) forwards; }
+/* Over a photograph the caption is set as VISUAL_SPEC §3.3 sets it: full ivory, a 1 px shadow. */
+.ph-wlab .labels .source { color: var(--light); text-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.35); }

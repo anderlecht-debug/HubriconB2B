@@ -71,36 +71,87 @@ function wordAfter(job, t, until = Infinity) {
 /** The onset of the first word matching `re`. */
 const wordMatch = (job, re) => (job.words || []).find((x) => re.test(String(x.w ?? x.word ?? "")))?.t ?? null;
 
-/** The base camera's state at time t (base.css: +1% scale a second, `--cam-drift` px a second). */
-const camScale = (t) => 1 + 0.01 * t;
+/** The shared camera's scale at time t of a shot T seconds long (base.css @keyframes cam): one linear
+    move over the whole shot to 1 + min(1% × T, 6%), so a long shot pushes more slowly, never further.
+    Its drift is linear too: `--cam-drift` × T in all, applied inside the scale. */
+const camScale = (t, T) => 1 + Math.min(0.01 * T, 0.06) * clamp(t / Math.max(T, 0.1), 0, 1);
+const camDrift = (t, T, perSecond) => perSecond * T * clamp(t / Math.max(T, 0.1), 0, 1) * camScale(t, T);
 
 /** Where the shared label slot will sit (shots.mjs `labels`), measured from its own text, so
-    prints keep out of it. Inter at 28 px: about 14.6 px a character; tracked caps about 17.5. */
+    prints keep out of it. Inter at 28 px: about 13.2 px a character (measured on c24b's 82-character
+    credit: 1025 px); tracked caps about 17.5. A line longer than the slot wraps, balanced. */
 function labelBox(job) {
   const html = labels(job);
   if (!html) return null;
   const lines = [...html.matchAll(/<p class="(\w+)">([^<]*)<\/p>/g)];
-  const wide = Math.max(0, ...lines.map(([, cls, t]) => t.replace(/&\w+;/g, "x").length * (cls === "honesty" ? 17.5 : 14.6)));
-  const h = 22 + lines.length * 36 + (lines.length - 1) * 8;
-  return { x0: 120, x1: 160 + Math.min(1150, wide) + 36, y0: H - 120 - h - 26, y1: H - 96 };
+  const max = /with-print/.test(html) ? 820 : 1150;
+  let rows = 0, wide = 0;
+  for (const [, cls, t] of lines) {
+    const w = t.replace(/&\w+;/g, "x").length * (cls === "honesty" ? 17.5 : 13.2);
+    const n = Math.max(1, Math.ceil(w / max));
+    rows += n;
+    wide = Math.max(wide, Math.min(max, (w / n) * (n > 1 ? 1.08 : 1)));
+  }
+  const h = 22 + rows * 36 + (lines.length - 1) * 8;
+  return { x0: 120, x1: 160 + wide + 36, y0: H - 120 - h - 26, y1: H - 96 };
 }
 const hits = (r, b) => b && r.x0 < b.x1 && r.x1 > b.x0 && r.y0 < b.y1 && r.y1 > b.y0;
+/** The desk's dark under the label slot while a print lies beneath it, sized to the label itself
+    (a two-line credit over a white page needs more than a corner's shadow), from `at` to `out`. */
+const scrimBg = (lab, k = 1) => {
+  const cx = (160 + lab.x1) / 2, cy = (lab.y0 + lab.y1) / 2 + 12, rx = (lab.x1 - 160) / 2 + 240, ry = (lab.y1 - lab.y0) / 2 + 120;
+  return `background:radial-gradient(ellipse ${px(rx)} ${px(ry)} at ${px(cx)} ${px(cy)}, ` +
+    `color-mix(in srgb, var(--ground) ${f(88 * k, 1)}%, transparent), color-mix(in srgb, var(--ground) ${f(70 * k, 1)}%, transparent) 45%, transparent 100%)`;
+};
+const labScrim = (lab, at, out) => `<div class="ph-labscrim" style="--at:${f(at)}s;--out:${f(out)}s;${scrimBg(lab)}"></div>`;
 
 // ── the world room ──────────────────────────────────────────────────────────────────────
 
 const HOSTS = /^(wikimedia commons|wikipedia|flickr|pexels|pixabay|unsplash|internet archive|openverse)$/i;
+/** A picture made after the war is outside this archive's period: it says when it was taken, for as
+    long as it fills the frame, so a modern photograph of an old depot never stands in for the past. */
+const MODERN = 1946;
 
-/** What may sit over a world picture (VISUAL_SPEC §3.3), set in the one label slot so the world
-    and the desk share a single caption component: place · year — credit (never a host), and
-    "Illustration" on anything generated (BRAND: an illustration says it is one). */
-function worldLabels(job) {
-  const o = job.overlay || {};
-  const credit = o.credit && !HOSTS.test(String(o.credit).trim()) && !/^https?:/.test(o.credit) ? o.credit : null;
-  const where = [o.place, o.date].filter(Boolean).join(" · ");
-  const source = [where, credit].filter(Boolean).join(" — ");
-  if (!source && !o.illustration) return "";
-  return `<div class="ph-scrim"></div><div class="labels">${source ? `<p class="source">${esc(source)}</p>` : ""}` +
-    `${o.illustration ? `<p class="honesty">Illustration</p>` : ""}</div>`;
+/** What a world picture's caption may say, from its record only (the plan's `overlay` first, then the
+    asset render_shots resolved): its date as the record gives it (render_shots' display_date, "c."
+    kept), else a circa year the record's own title states ("Advertising Postcard, circa 1920"),
+    never a year guessed; the place when it is more than a country; the institution that holds it
+    (never a host, an uploader or a URL); and the plan's own `caption` ("A posed photograph"). */
+function worldCaption(job) {
+  const o = job.overlay || {}, a = job.asset || {};
+  const clean = (x) => String(x || "").replace(/\s+/g, " ").trim().replace(/^Smithsonian Institution, (?:the )?/i, "Smithsonian ");
+  let date = o.date ?? a.date ?? null;
+  if (!date) {
+    const m = String(a.title || "").match(/\b(?:circa|ca\.|c\.)\s*(1[5-9]\d\d|20\d\d)\b/i);
+    if (m) date = `c. ${m[1]}`;
+  }
+  const year = +(String(date || "").match(/\b(1[5-9]\d\d|20\d\d)\b/) || [])[1] || 0;
+  const modern = year >= MODERN;
+  const place = o.place ?? (a.place && !/^(united states( of america)?|usa|u\.s\.a?\.?)$/i.test(a.place.trim()) ? a.place : null);
+  const raw = o.credit ?? a.credit;
+  const credit = raw && !HOSTS.test(clean(raw)) && !/^https?:/.test(raw) && clean(raw).length <= 90 ? clean(raw) : null;
+  const when = date ? (modern ? `Photographed ${/^c\./.test(date) ? "" : "in "}${date}` : String(date)) : null;
+  const head = o.caption ? [o.caption, when].filter(Boolean).join(", ") : [place, when].filter(Boolean).join(" · ");
+  return { text: [head, credit].filter(Boolean).join(" — "), modern, dated: !!date, illustration: !!o.illustration };
+}
+
+/** The caption over a world picture (VISUAL_SPEC §3.3, W1), in the one label slot so the world and
+    the desk share a single caption component. It arrives once the picture fills the frame and leaves
+    before it surfaces, about four seconds, like a lower third; a modern photograph keeps its date on
+    screen the whole time it fills the frame; "Illustration" stays on anything generated (BRAND). */
+function worldLabels(job, enter, t1) {
+  const c = worldCaption(job);
+  if (!c.text && !c.illustration) return "";
+  const hold = c.modern || c.illustration;
+  const t0 = hold ? enter[0] : enter[1];                  // a modern date is said while the dive is still going
+  const out = hold ? t1 : Math.min(t1, t0 + 4.0);
+  if (!hold && out - t0 < 1.5) return "";                // too short to read: the description credits it
+  const leave = out >= job.seconds - 0.01 ? 99 : out - 0.4;   // held to the cut, never faded before it
+  // the scrim is sized to the caption itself: a long credit over a bright photograph stays readable
+  const w = Math.min(1150, c.text.length * 13.2), rows = Math.max(1, Math.ceil(c.text.length * 13.2 / 1150)) + (c.illustration ? 1 : 0);
+  const lab = { x1: 160 + w + 36, y0: H - 120 - (22 + rows * 36) - 26, y1: H - 96 };
+  return `<div class="ph-wlab" style="--in:${f(t0)}s;--out:${f(leave)}s"><div class="ph-scrim" style="${scrimBg(lab)}"></div><div class="labels">` +
+    `${c.text ? `<p class="source">${esc(c.text)}</p>` : ""}${c.illustration ? `<p class="honesty">Illustration</p>` : ""}</div></div>`;
 }
 
 /** The still's own move as timed stops between t0 and t1: scale and a breath of 3D toward the
@@ -172,7 +223,7 @@ export function still(job) {
   const dustIn = dive ? D1 - 0.2 : -1, dustOut = surface ? S0 : T + 1;
   const dust = film ? `<div class="ph-dust" style="--in:${f(dustIn)}s;--out:${f(dustOut)}s"></div>` : "";
   return `<section class="ph-world${dive || surface ? " ph-on-desk" : ""}" style="--dur:${f(T)}s">` +
-    `<style>${css.join("")}</style>${picture}${dust}<div class="ph-vig"></div>${worldLabels(job)}</section>`;
+    `<style>${css.join("")}</style>${picture}${dust}<div class="ph-vig"></div>${worldLabels(job, dive ? [D0 + 0.15, D1 + 0.3] : [0.3, 0.45], surface ? S0 - 0.1 : T)}</section>`;
 }
 
 // ── prints on the desk ──────────────────────────────────────────────────────────────────
@@ -216,9 +267,19 @@ export const COMPANION = { x0: 1040, x1: 1760, y0: 100, y1: 980 };
 /** A companion print beside a figure: the photograph the sentence is about, landing on the desk on
     its word, with a slower push of its own than the type's camera, so the two read at two depths. */
 export function companion(job) {
-  const a = job.print;
+  let a = job.print;
   if (!a?.url) return "";
-  const tr = trimOf(job, a), ar = aspect(a, tr), C = COMPANION, b = 26, T = job.seconds || 6;
+  let tr = trimOf(job, a), ar = aspect(a, tr);
+  const C = COMPANION, b = 26, T = job.seconds || 6;
+  // A panorama in a 720 px box is a strip (a06's 2.8:1 plate, 250 px tall): it is printed as a
+  // crop of itself, no wider than 1.7:1, about its focus. Framing, never retouching.
+  if (ar > 1.7) {
+    const keep = 1.7 / ar, fx0 = (a.focus || [0.5])[0], vis = 1 - tr[1] - tr[3];
+    const l = clamp(fx0 - keep / 2, 0, 1 - keep);
+    tr = [tr[0], tr[1] + (1 - keep - l) * vis, tr[2], tr[3] + l * vis];
+    a = { ...a, trim: tr, focus: [(fx0 - l) / keep, (a.focus || [0.5, 0.42])[1]] };
+    ar = aspect(a, tr);
+  }
   let ih = C.y1 - C.y0 - 2 * b, iw = ih * ar;
   if (iw + 2 * b > C.x1 - C.x0) { iw = C.x1 - C.x0 - 2 * b; ih = iw / ar; }
   const wo = iw + 2 * b, ho = ih + 2 * b, cx = (C.x0 + C.x1) / 2, cy = (C.y0 + C.y1) / 2;
@@ -227,64 +288,134 @@ export function companion(job) {
   const at = a.at == null ? -0.4 : Math.max(-0.4, +a.at - 0.25);   // arriving on its word, never early
   const id = safeId(job.id);
   const ox = cx - wo / 2 + b + fx * iw, oy = cy - ho / 2 + b + fy * ih;
+  // `out`: the print is lifted off the desk, gone by then (a sentence it must not seem to illustrate)
+  const out = a.out == null ? null : clamp(+a.out, 0.5, T);
+  const lift = out == null ? "" : `;animation:ph-comp-out 0.45s cubic-bezier(0.55, 0, 0.75, 0.2) ${f(out - 0.45)}s both`;
   return `<style>@keyframes ph-comp-${id} { from { transform: scale(1); } to { transform: scale(${f(1 + Math.min(0.008 * T, 0.05), 4)}); } }</style>` +
     `<div class="ph-comp" style="transform-origin:${px(ox)} ${px(oy)};animation:ph-comp-${id} ${f(T)}s linear both">` +
+    `<div class="ph-comp-lift" style="position:absolute;inset:0${lift}">` +
     `<div class="ph-place" style="left:${px(cx - wo / 2)};top:${px(cy - ho / 2)};--rot:${deg(e.rot * 0.6)}">` +
-    print(job, a, iw, ih, b, "ph-landing", landVars(e, at, 1.15)) + `</div></div>`;
+    print(job, a, iw, ih, b, "ph-landing", landVars(e, at, 1.15)) + `</div></div></div>`;
 }
 
-export function archive(job) {
-  const a = job.asset || {}, tr = trimOf(job, a), ar = aspect(a, tr);
-  if (job.params?.treat === "sheet" || (job.params?.treat == null && ar >= 1.75)) return sheet(job, a, tr, ar);
-  const T = job.seconds, id = safeId(job.id), [fx, fy] = job.focus || [0.5, 0.5];
-  const sEnd = camScale(T), drift = 8 * T, TOP = 98, lab = labelBox(job);
-  // As tall as the frame allows: the top stays inside title-safe (the camera's origin is the
-  // print's top edge, so its push grows the print down and out), the bottom stays in frame, and
-  // the print keeps clear of the label slot at the lower left for the whole shot.
-  let b = 30, ho = Math.min(0.82 * H, (1010 - TOP) / sEnd), wo, cx;
-  for (let i = 0; i < 40; i++) {
-    const ih = ho - 2 * b; wo = ih * ar + 2 * b;
-    cx = Math.max(W / 2 + 30, lab ? lab.x1 + 24 + wo / 2 : 0);
-    const right = cx + (wo / 2) * sEnd + drift + 12, low = TOP + ho * sEnd;
-    const clear = !lab || low < lab.y0 || cx - wo / 2 >= lab.x1 + 24;
-    if (right <= 1800 && clear) break;
-    ho -= 12;
-  }
-  const ih = ho - 2 * b, iw = ih * ar;
-  const px0 = cx - wo / 2, py0 = TOP;
-  const e = entry(job.id, 0, 1100 / wo);
-  // The detail beats: on a spoken word every ~3.5 s, the camera moves into the print toward its
-  // focus, arriving with weight; the shared camera keeps its constant push underneath.
-  const ox = px0 + b + fx * iw, oy = py0 + b + fy * ih;
-  const bs = T > 4.2 ? beats(job) : [];
-  // In, deeper, then back out to the whole print to resolve before the cut.
-  const steps = [1.12, 1.24, 1.04];
-  const tilt = (i) => 4 - 1.1 * i;
-  const inner = [[0, `transform:rotateX(4deg) rotateZ(0deg) scale(1)`, GLIDE]];
-  let cur = 1.006;
-  bs.forEach((t, i) => {
-    inner.push([t, `transform:rotateX(${f(tilt(i) - 0.3)}deg) rotateZ(0deg) scale(${f(cur, 4)})`, SETTLE]);
-    cur = steps[i] ?? cur;
-    inner.push([Math.min(T, t + 1.3), `transform:rotateX(${f(tilt(i + 1))}deg) rotateZ(0deg) scale(${f(cur, 4)})`, GLIDE]);
-    cur += 0.006;
-  });
-  inner.push([T, `transform:rotateX(${f(tilt(bs.length) - 0.4)}deg) rotateZ(0deg) scale(${f(cur + 0.004, 4)})`]);
-  // The beats grow the print from its top edge (it never rises out of title-safe) and from as far
-  // right as keeps its lower-left edge clear of the label slot: the left edge may not pass the
-  // label's right edge, measured in the inner layer's own coordinates when the beat lands.
-  let bx = ox;
-  if (lab && bs.length && TOP + ho * sEnd * Math.max(...steps) > lab.y0) {
-    for (const [i, t] of bs.entries()) {
-      const sb = steps[i] ?? 1, lin = cx + (lab.x1 + 24 - cx - 8 * t) / camScale(t);
-      if (sb > 1) bx = Math.min(bx, (px0 * sb - lin) / (sb - 1));
+// The desk's frame for a print: the top stays inside title-safe, the bottom inside the frame at
+// the end of the shared push, the sides inside 120…1800 (a print is a picture, not type).
+const TOP = 98, BOT = 1010, XL = 120, XR = 1800;
+/** Kinds that leave a page or a print on the desk: a print cut after one opens at a second scale. */
+const DESK = new Set(["document", "table", "receipt", "quote", "archive", "stack", "split"]);
+
+/** Where a print lies for the whole shot: the largest print that fits, centred a little right of
+    the frame's middle (the key light is upper left, the label slot lower left); if at the end of
+    the shared push it would reach down into the label slot, it is first lowered to clear it, and
+    moved right of the label instead only when lowering would leave it under 60% of the frame, or
+    when moving gains a third of its area without leaving the middle (a portrait print beside a long
+    credit). A long credit never shrinks a print to a corner (c24b). */
+function layPrint(ar, T, lab, b = 30) {
+  const sEnd = camScale(T, T), drift = camDrift(T, T, 8), hMax = Math.min(0.84 * H, (BOT - TOP) / sEnd);
+  const wOf = (ho) => (ho - 2 * b) * ar + 2 * b;
+  // its footprint over the shot: the rig grows it about its top centre and drifts it right
+  const foot = (ho, cx) => {
+    const wo = wOf(ho);
+    return { x0: Math.min(cx - wo / 2, cx - (wo / 2) * sEnd + drift), x1: cx + (wo / 2) * sEnd + drift, y0: TOP, y1: TOP + ho * sEnd };
+  };
+  const fits = (ho, cx) => { const r = foot(ho, cx); return r.x1 + 12 <= XR && r.x0 >= XL; };
+  const C = W / 2 + 30;
+  let hA = hMax;
+  while (hA > 240 && !fits(hA, C)) hA -= 4;
+  const clash = !!lab && hits(foot(hA, C), lab);
+  if (clash) hA = Math.min(hA, (lab.y0 - 18 - TOP) / sEnd);
+  let hB = 0, cB = C;
+  if (clash) {
+    for (hB = hMax; hB > 240; hB -= 4) {
+      cB = Math.max(C, lab.x1 + 24 + wOf(hB) / 2);
+      if (fits(hB, cB)) break;
     }
-    bx = Math.max(px0, bx);
   }
-  return `<style>${keyframes(`ph-in-${id}`, timed(inner, T))}</style>` +
+  // right of the label only when lowering would leave the print under 60% of the frame, or when it
+  // gains a third of its area for a modest move (a print far off to the right empties the middle)
+  const area = (h) => h * wOf(h);
+  const right = clash && hB > hA && (hA < 0.6 * H || (cB - C < 300 && area(hB) > 1.3 * area(hA)));
+  const ho = right ? hB : hA, cx = right ? cB : C;
+  return { ho, wo: wOf(ho), cx, b, sEnd };
+}
+
+/** A print on the desk (archive-framed). Two openings, so consecutive desk shots never cut at one
+    scale: `whole` lands the print and moves into its detail on spoken words; `tight` opens close on
+    its focus (a portrait print, or a print cut after a page or another print) and pulls back to the
+    whole print on a word, then keeps the shared push. `params.opening` chooses; else the shot
+    before it does (`job.prev_kind`, `job.prev_print`) and a portrait print opens tight, except a
+    printed page, which always opens whole. */
+export function archive(job) {
+  const a = job.asset || {}, tr = trimOf(job, a), ar = aspect(a, tr), p = job.params || {};
+  if (p.treat === "sheet" || (p.treat == null && ar >= 1.75)) return sheet(job, a, tr, ar);
+  const T = job.seconds, id = safeId(job.id), [fx, fy] = job.focus || [0.5, 0.45], lab = labelBox(job);
+  const { ho, wo, cx, b } = layPrint(ar, T, lab);
+  const ih = ho - 2 * b, iw = ih * ar, px0 = cx - wo / 2, py0 = TOP;
+  const portrait = ar < 0.92;
+  // A printed page (a catalogue's rate table, a guidebook page) is not opened in close: its small
+  // print would read sharp, figures the voice never says among it. The plan may still ask for it.
+  const page = /\bpage \d+|\bcatalog(ue)?\b/i.test(a.title || "");
+  const opening = p.opening === "tight" || p.opening === "whole" ? p.opening
+    : !page && (portrait || DESK.has(job.prev_kind) || job.prev_print) ? "tight" : "whole";
+  const e = entry(job.id, 0, 1100 / wo);
+  // The camera's moves ride on an inner layer about the print's focus; the shared camera keeps its
+  // constant push underneath. A state is [seconds, scale, x, y], x/y a shift of the whole print.
+  const ox = px0 + b + fx * iw, oy = py0 + b + fy * ih;
+  const states = [];
+  const tilt = (k) => clamp(4 - 1.1 * k, 1.2, 4);
+  if (opening === "tight") {
+    // Close enough that the print fills the frame's height or more, never past 1.7 screen pixels to
+    // a source pixel; the focus drawn toward the frame's middle, so the close-up is composed.
+    const srcW = (a.w || iw) * (1 - tr[1] - tr[3]);
+    const s0 = clamp(Math.min(portrait ? 1180 / wo : 1.34, (1.7 * srcW) / iw), 1.18, 1.95);
+    const sx = (W * 0.5 - ox) * 0.85, sy = (H * 0.47 - oy) * 0.85;
+    const tp = T < 3 ? T * 0.34 : wordAfter(job, Math.max(1.0, T * 0.34), T * 0.62) ?? T * 0.42;
+    const pd = clamp(T - tp - 0.7, 0.8, 1.5);
+    states.push([0, s0, sx, sy, "linear"], [tp, s0 * 1.012, sx * 1.01, sy * 1.01, SWING], [tp + pd, 1, 0, 0, GLIDE]);
+    // a long shot moves in once more, on a word, after the whole print has been seen
+    const more = T - (tp + pd) > 3.6 ? wordAfter(job, tp + pd + 1.6, T - 1.6) : null;
+    if (more != null) states.push([more, 1.006, 0, 0, SETTLE], [more + 1.3, 1.1, 0, 0, GLIDE]);
+    const last = states.at(-1);
+    states.push([T, last[1] + 0.012, 0, 0]);
+  } else {
+    // In on each beat, deeper, then back out to the whole print to resolve before the cut.
+    const steps = [1.12, 1.24, 1.04];
+    const bs = T > 4.2 ? beats(job) : [];
+    states.push([0, 1, 0, 0, GLIDE]);
+    let cur = 1.006;
+    bs.forEach((t, i) => {
+      states.push([t, cur, 0, 0, SETTLE]);
+      cur = steps[i] ?? cur;
+      states.push([Math.min(T, t + 1.3), cur, 0, 0, GLIDE]);
+      cur += 0.006;
+    });
+    states.push([T, cur + 0.004, 0, 0]);
+  }
+  const css = timed(states.map(([t, s, x, y, ease], k) =>
+    [t, `transform:translate(${px(x)},${px(y)}) rotateX(${f(tilt(k / 2))}deg) scale(${f(s, 4)})`, ease]), T);
+  // Where the label slot is covered by the print (in close, or deep in a beat), a soft fall of the
+  // desk's dark sits under the label until the print has left it.
+  const covers = ([t, s, x, y]) => {
+    const k = camScale(t, T), d = camDrift(t, T, 8), at = (u, c, o) => c + ((o + (u - o) * s) - c) * k;
+    const r = { x0: at(px0, cx, ox) + x * k + d, x1: at(px0 + wo, cx, ox) + x * k + d, y0: TOP + (oy + (py0 - oy) * s + y - TOP) * k, y1: TOP + (oy + (py0 + ho - oy) * s + y - TOP) * k };
+    return hits(r, lab);
+  };
+  let scrim = "";
+  if (lab) {
+    const i = states.findIndex(covers);
+    if (i >= 0) {
+      const j = states.findIndex((s, k) => k > i && !covers(s));
+      const on = i === 0 ? -1 : states[i - 1][0] + 0.2, off = j < 0 ? 99 : (states[j - 1][0] + states[j][0]) / 2;
+      scrim = labScrim(lab, on, off);
+    }
+  }
+  // a tight opening is already lying on the desk at the cut; a whole one is set down on it
+  const land = opening === "tight" ? landVars(e, -3, 0.2) : landVars(e, -0.4, 1.15);
+  return `<style>${keyframes(`ph-in-${id}`, css)}</style>` +
     `<div class="cam" style="perspective-origin:${px(cx)} ${px(TOP)}"><div class="rig" style="--cam-origin:${px(cx)} ${px(TOP)};--cam-drift:8px">` +
-    `<div class="ph-inner" style="transform-origin:${px(bx)} ${px(TOP)};animation:ph-in-${id} ${f(T)}s linear both">` +
+    `<div class="ph-inner" style="transform-origin:${px(ox)} ${px(oy)};animation:ph-in-${id} ${f(T)}s linear both">` +
     `<div class="ph-place" style="left:${px(px0)};top:${px(py0)};--rot:${deg(e.rot)}">` +
-    print(job, a, iw, ih, b, "ph-landing", landVars(e, -0.4, 1.15)) + `</div></div></div></div>`;
+    print(job, a, iw, ih, b, "ph-landing", land) + `</div></div></div></div>` + scrim;
 }
 
 /** A sheet of stamps (or any wide sheet of small things): no border of ours, the scan is the
@@ -293,7 +424,7 @@ export function archive(job) {
     sheet on the word that names it, landing every ~3.5 s. Depth of field is opacity between a
     sharp face and a soft one, never a filter on something moving. */
 function sheet(job, a, tr, ar) {
-  const T = job.seconds, id = safeId(job.id), sEnd = camScale(T), lab = labelBox(job);
+  const T = job.seconds, id = safeId(job.id), sEnd = camScale(T, T), lab = labelBox(job);
   const TOP = 104;
   // At rest the whole sheet sits above the label slot for the whole shot.
   const ho = Math.min((Math.min(lab ? lab.y0 - 18 : 1000, 1000) - TOP) / sEnd, 0.78 * H);
@@ -332,7 +463,7 @@ function sheet(job, a, tr, ar) {
     `<div class="ph-sheetcam" style="animation:ph-sh-${id} ${f(T)}s linear both">` +
     `<div class="ph-sheet" style="left:${px(sx)};top:${px(sy)};width:${px(sw)};height:${px(sh)};animation:ph-sd-${id} ${f(T)}s linear both">` +
     `${img}<div class="ph-sheet-soft" style="animation:ph-rk-${id} ${f(T)}s linear both">${img}</div><i class="ph-sheen"></i></div>` +
-    `</div></div></div>` + (lab ? `<div class="ph-labscrim" style="--at:${f(-1)}s;--out:${f(back - 0.6)}s"></div>` : "");
+    `</div></div></div>` + (lab ? labScrim(lab, -1, back - 0.6) : "");
 }
 
 export function stack(job) {
@@ -351,7 +482,8 @@ export function stack(job) {
   });
   // A pile: equal heights; each print offset 120–200 px from the one beneath, tilted −6° and +4°
   // in turn, so every print below still shows; the top one casts its shadow over them.
-  const b = 22, ih = n <= 3 ? 620 : 590, trs = list.map((a) => trimOf(job, a));
+  // as large as a pile can be and still show every print beneath the top one
+  const b = 22, ih = n <= 3 ? 700 : 640, trs = list.map((a) => trimOf(job, a));
   const prints = list.map((a, i) => {
     const r = rand(job.id, 10 + i), ar = aspect(a, trs[i]);
     return { a, i, w: ih * ar + 2 * b, h: ih + 2 * b, at: times[i], rot: (i % 2 ? 4 : -6) + (r - 0.5) * 1.6,
@@ -368,6 +500,7 @@ export function stack(job) {
   shift(W / 2 + 40 - (u.x0 + u.x1) / 2, H * 0.47 - (u.y0 + u.y1) / 2);
   u = all();
   if (u.y0 < 100) shift(0, 100 - u.y0);
+  else if (u.y1 > 1000) shift(0, Math.max(100 - u.y0, 1000 - u.y1));
   for (let k = 0; k < 30 && prints.some((p) => hits(box(p), lab)); k++) shift(14, -6);
   u = all();
   const pcx = (u.x0 + u.x1) / 2, pcy = (u.y0 + u.y1) / 2;
@@ -390,12 +523,12 @@ export function stack(job) {
     if (fp === p) {
       // On the word, the print the voice settles on comes up off the pile to the frame's centre,
       // three quarters of the frame tall, and straightens; its shadow falls longer and softer.
-      const sOn = camScale(on), s = clamp((0.72 * H) / (p.h * sOn), 1.05, 1.6);
+      const sOn = camScale(on, T), s = clamp((0.72 * H) / (p.h * sOn), 1.05, 1.6);
       // Its centre goes a little left of the frame's, so the dimmed pile still shows beside it;
-      // the camera's state on the word (origin, push, drift) is allowed for.
+      // the camera's state on the word (its origin and push; the pile has no drift) is allowed for.
       const vw = p.w * s * sOn, vh = p.h * s * sOn, want = [W / 2 - 70, H * 0.455];
       if (lab && want[1] + vh / 2 > lab.y0) want[0] = Math.max(want[0], lab.x1 + 28 + vw / 2);
-      const cam = [pcx + (want[0] - pcx) / sOn + 8 * on, pcy + (want[1] - pcy) / sOn];
+      const cam = [pcx + (want[0] - pcx) / sOn, pcy + (want[1] - pcy) / sOn];   // the pile's camera has no drift
       css.push(`@keyframes ph-lift-${id}{from{transform:translate(0px,0px) scale(1) rotate(${deg(p.rot)});z-index:${p.i + 1}}` +
         `1%{z-index:40}to{transform:translate(${px(cam[0] - p.cx)},${px(cam[1] - p.cy)}) scale(${f(s, 4)}) rotate(${deg(-0.8)});z-index:40}}`);
       anim = `animation:ph-lift-${id} 1.1s ${SETTLE} ${f(on)}s both`;
@@ -423,25 +556,40 @@ export function split(job) {
   // names the present ("descendants", "today", "now"), else `on`, else the style's moment.
   const said = wordMatch(job, /^(descendants?|today|now|nowadays)\b/i);
   const landAt = +(job.params?.right_at ?? said ?? job.on ?? job.render?.right_at_s ?? 1.2);
-  const year = yearOf(a.date);
-  // Two prints of one size: the then on the desk inside the shared camera; the now upright on
-  // the frame, outside the camera, so the footage composited into it stays registered.
-  const ih = 500, iw = Math.min(720, ih * ar), b = 24, G = 96;
-  const total = 2 * (iw + 2 * b) + G, x0 = (W - total) / 2, top = 236;
-  const nowX = x0 + iw + 2 * b + G, nowY = top, ROT = 1.5;
+  // the then's date as its record gives it ("c. 1914" stays circa), else its year
+  const when = a.date && String(a.date).length <= 12 ? String(a.date) : yearOf(a.date) || "Then";
+  // Two prints of one size, as large as the frame takes side by side (x 150…1790, a 64 px gutter),
+  // centred on the frame's optical middle. The then lies on the desk inside the shared camera, its
+  // push growing it away from the now; the now is upright on the frame, outside the camera, so the
+  // footage composited into it stays registered. The captions sit above, outside the camera.
+  const b = 24, G = 64, X0 = 150, X1 = 1790;
+  let iw = (X1 - X0 - G) / 2 - 2 * b, ih = iw / ar;
+  if (ih > 600) { ih = 600; iw = ih * ar; }
+  const pw = iw + 2 * b, ph = ih + 2 * b, x0 = (W - (2 * pw + G)) / 2, top = H * 0.47 - ph / 2;
+  const nowX = x0 + pw + G, nowY = top, ROT = 1.5;
   const e = entry(job.id);
   const thenRot = -0.8 - Math.abs(e.rot) * 0.5;
+  // Before the now arrives the then print lies alone in the frame's middle; as the now drops it is
+  // slid aside to make room for it (a frame is never half empty while the voice is still on then).
+  const slide = landAt > 0.9 ? W / 2 - (x0 + pw / 2) : 0;
+  const s0 = Math.max(0.2, landAt - 0.75), s1 = landAt + 0.05;
+  const css = slide ? keyframes(`ph-sl-${id}`, timed([[0, `transform:translateX(${px(slide)})`, "linear"], [s0, `transform:translateX(${px(slide)})`, SETTLE],
+    [s1, "transform:translateX(0px)"], [T, "transform:translateX(0px)"]], T)) : "";
+  const sl = slide ? `animation:ph-sl-${id} ${f(T)}s linear both;` : "";
   // The then print's exposure eases down on the word that turns to the present, a beat that
   // hands the frame to today.
   const handoff = wordMatch(job, /^(now|today|right)\b/i);
   const dimThen = handoff && handoff > landAt + 1.5 ? `<i class="ph-dimmer ph-dimmer-soft" style="--at:${f(handoff)}s"></i>` : "";
   const poster = right.poster ? `<img src="${esc(right.poster)}" alt="">` : "";
-  return `<div class="cam"><div class="rig" style="--cam-origin:${px(x0 + iw / 2 + b)} ${px(top)}">` +
-    `<div class="ph-cap" style="left:${px(x0 + b)};top:${px(top - 100)};--at:-0.4s"><p>${esc(year)}</p></div>` +
+  const capY = Math.max(96, top - 92);
+  // the camera's push on the then is held to 1.5%, so the two prints stay one size (VISUAL_SPEC W11)
+  return `<style>${css}</style><div class="cam"><div class="rig" style="--cam-origin:${px(x0 + pw)} ${px(top)};--cam-to:scale(1.015) translateX(-10px)">` +
+    `<div class="ph-inner" style="${sl}">` +
     `<div class="ph-place" style="left:${px(x0)};top:${px(top)};--rot:${deg(thenRot)}">` +
-    print(job, a, iw, ih, b, "ph-landing", landVars({ lx: -140, ly: 60, lr: -4 }, -0.4, 1.1), dimThen) + `</div></div></div>` +
-    `<div class="ph-cap" style="left:${px(nowX + b)};top:${px(top - 100)};--at:${f(landAt - 0.1)}s"><p>Today</p></div>` +
-    `<div class="ph-now" style="left:${px(nowX)};top:${px(nowY)};width:${px(iw + 2 * b)};height:${px(ih + 2 * b)};--rot:${deg(ROT)};--at:${f(landAt - 0.5)}s">` +
+    print(job, a, iw, ih, b, "ph-landing", landVars({ lx: -140, ly: 60, lr: -4 }, -0.4, 1.1), dimThen) + `</div></div></div></div>` +
+    `<div class="ph-inner" style="${sl}"><div class="ph-cap" style="left:${px(x0 + b)};top:${px(capY)};--at:-0.4s"><p>${esc(when)}</p></div></div>` +
+    `<div class="ph-cap" style="left:${px(nowX + b)};top:${px(capY)};--at:${f(landAt - 0.1)}s"><p>Today</p></div>` +
+    `<div class="ph-now" style="left:${px(nowX)};top:${px(nowY)};width:${px(pw)};height:${px(ph)};--rot:${deg(ROT)};--at:${f(landAt - 0.5)}s">` +
     `<div class="ph-now-face" style="left:${px(b)};top:${px(b)};width:${px(iw)};height:${px(ih)}">${poster}</div><i class="ph-sheen"></i></div>` +
     // The compositing contract (render_shots.py): the footage's unrotated box, its start, its
     // rotation about the box's centre (clockwise, degrees) and its grade.

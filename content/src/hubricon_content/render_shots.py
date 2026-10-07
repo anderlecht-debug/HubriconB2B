@@ -116,18 +116,26 @@ def stage_url(path: Path) -> str:
     return "/" + str(Path(path).resolve().relative_to(REPO.resolve()))
 
 
-def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool = False) -> dict:
+def cut_from_page(a: dict) -> bool:
+    """A plate we cut from a book's page ourselves ("archive:visittosearsroeb00sear#n31-c24b"): already framed."""
+    return bool(re.search(r"#[pn]\d+", str(a.get("id", ""))))
+
+
+def graded_still(file: str | Path, mono: bool | None = None, placeholder: bool = False,
+                 paper: bool = False, cut: bool = False) -> dict:
     """The still with the world grade, cached by its source's sha256. A labelled placeholder
-    card (no picture exists yet) is shown as it is: it is not a picture to grade."""
+    card (no picture exists yet) is shown as it is: it is not a picture to grade. `paper`: a print
+    on the desk, never refused for its exposure (grade.plan's refuse=False); `cut`: a plate cut from
+    a page, given no border trim (grade.plan's frame=False)."""
     src = Path(file)
     if placeholder:
         w, h = _size(src)
         return {"url": stage_url(src), "w": w, "h": h, "sha256": sha(src)}
     look = hashlib.sha256(grade.GRADE_JSON.read_bytes()).hexdigest()[:8]   # a new grade re-grades the still
-    key = sha(src)[:20] + f"-{look}" + ("-mono" if mono else "")
+    key = sha(src)[:20] + f"-{look}" + ("-mono" if mono else "") + ("-paper" if paper else "") + ("-cut" if cut else "")
     out = GRADED / f"{key}.jpg"
     if not out.exists():
-        grade.still(src, out, mono=mono)
+        grade.still(src, out, mono=mono, refuse=not paper, frame=not cut)
     w, h = _size(out)
     return {"url": stage_url(out), "w": w, "h": h, "sha256": sha(src)}
 
@@ -201,6 +209,11 @@ class Job:
         # them sharp from frame 0 (a table or a ledger returning to a value), never one still to come
         self.job["known"] = {r["key"]: values.get(r["key"], "") for r in shots.spoken_reveals(timing)
                              if float(r["t"]) < start - 0.05 and r["key"] in values}
+        if self.kind == "archive":   # a print cut after a page or another print opens at a second scale (photos.mjs)
+            i = plan["shots"].index(shot)
+            prev = plan["shots"][i - 1] if i else {}
+            self.job["prev_kind"] = prev.get("kind")
+            self.job["prev_print"] = bool(((prev.get("params") or {}).get("print") or {}).get("asset"))
         self.assets: list[str] = []
         if LOOK == "v3" and self.kind == "chart":
             run = d / "run.json"
@@ -263,13 +276,14 @@ class Job:
         a = self.shot.get("asset")
         if self.kind in ("still", "texture", "archive", "split") and isinstance(a, dict):
             g = graded_still(a["file"], mono=True if self.kind in ("archive", "split") else None,
-                             placeholder=str(a.get("id", "")).startswith("placeholder:"))
+                             placeholder=str(a.get("id", "")).startswith("placeholder:"),
+                             paper=self.kind in ("archive", "split"), cut=cut_from_page(a))
             self.job["asset"] = {**{k: a.get(k) for k in ("credit", "place", "title")}, "date": display_date(a.get("date")), **g}
             self.assets.append(g["sha256"])
         if self.kind == "stack" and isinstance(a, list):
             self.job["assets"] = []
             for x in a:
-                g = graded_still(x["file"], mono=True)
+                g = graded_still(x["file"], mono=True, paper=True, cut=cut_from_page(x))
                 self.job["assets"].append({**{k: x.get(k) for k in ("credit", "place", "at")}, "date": display_date(x.get("date")), **g})
                 self.assets.append(g["sha256"])
         if self.kind == "footage" and isinstance(a, dict):
@@ -280,7 +294,8 @@ class Job:
         if LOOK == "v3" and isinstance(comp.get("asset"), dict) and comp["asset"].get("file"):
             ca = comp["asset"]
             year = re.search(r"\b(1[5-9]\d\d|20\d\d)\b", str(ca.get("date") or ""))
-            g = graded_still(ca["file"], mono=True if year and int(year.group(1)) < 1970 else None)
+            g = graded_still(ca["file"], mono=True if year and int(year.group(1)) < 1970 else None,
+                             paper=True, cut=cut_from_page(ca))
             self.job["print"] = {**{k: ca.get(k) for k in ("credit", "place", "title", "author", "trim")},
                                  "date": display_date(ca.get("date")), "at": comp.get("at"), "out": comp.get("out"),
                                  "caption": comp.get("caption"), "focus": comp.get("focus"), **g}

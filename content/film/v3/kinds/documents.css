@@ -6,7 +6,7 @@
 
 /* The paper's pigments, mixed from the tokens: the yellowing of age and the brown of foxing, burn
    and gutter (the amber of the marker, deepened with ink), and the book's other leaves. */
-.dc { --age: color-mix(in srgb, var(--marker) 45%, var(--paper-ink-2)); --sepia: color-mix(in srgb, var(--marker) 30%, var(--paper-ink)); }
+.dc { --age: color-mix(in srgb, var(--marker) 45%, var(--paper-ink-2)); --sepia: color-mix(in srgb, var(--marker) 30%, var(--paper-ink)); --dc-ink: var(--paper-ink); }
 
 /* ── the camera: one path through waypoints on base.css's constant rig ──────────────────── */
 .dc-push { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 0; animation: var(--cam-path); }
@@ -39,8 +39,12 @@
 .dc-o-sheet { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 12%, transparent), color-mix(in srgb, var(--age) 12%, transparent)), linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--sepia) 5%, transparent) 38.2%, rgb(242 238 230 / 0.13) 38.7%, transparent 42%); }
 .dc-o-book { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 14%, transparent), color-mix(in srgb, var(--age) 14%, transparent)), linear-gradient(90deg, color-mix(in srgb, var(--sepia) 34%, transparent) 0, color-mix(in srgb, var(--sepia) 12%, transparent) 2.2%, transparent 6.5%, transparent 97%, color-mix(in srgb, var(--sepia) 10%, transparent) 100%); }
 .dc-o-clip { --dc-age: linear-gradient(color-mix(in srgb, var(--age) 26%, transparent), color-mix(in srgb, var(--age) 30%, transparent)); }
-/* Modern stock: clean laser paper, crisp edges, no foxing, no fibre. */
-.dc-o-laser .dc-paper { background: var(--light); box-shadow: inset 1px 1px 0 rgb(242 238 230 / 0.7), inset -1px -1px 0 color-mix(in srgb, var(--ground) 6%, transparent); }
+/* Modern stock: laser paper, crisp edges, no foxing. Never the flat white of a slide: warm
+   off-white (about rgb 238 231 216: the paper token lifted toward the light), so under the key light it
+   never clips, with the faint tooth of real stock. Each modern source has its own dress below. */
+.dc-o-laser { --dc-stock: color-mix(in srgb, var(--paper) 62%, var(--light)); }
+.dc-o-laser .dc-paper { background: var(--dc-stock); box-shadow: inset 1px 1px 0 rgb(242 238 230 / 0.5), inset -1px -1px 0 color-mix(in srgb, var(--ground) 8%, transparent); }
+.dc-o-laser .dc-fibre { opacity: 0.16; background-size: 240% auto; }
 /* The stock's grain (period only): the paper multiplied by itself at another scale. */
 .dc-fibre { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0.45;
   background: url("/content/assets/film/paper.jpg") 37% 61% / 170% auto no-repeat; }
@@ -49,11 +53,48 @@
 .dc-light { position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background: radial-gradient(120% 95% at 10% 4%, rgb(242 238 230 / 0.14), transparent 58%),
               linear-gradient(152deg, transparent 45%, color-mix(in srgb, var(--ground) 20%, transparent) 100%); }
-.dc-o-laser .dc-light { background: radial-gradient(120% 95% at 10% 4%, rgb(242 238 230 / 0.12), transparent 60%),
-              linear-gradient(152deg, transparent 50%, color-mix(in srgb, var(--ground) 12%, transparent) 100%); }
+.dc-o-laser .dc-light { background: radial-gradient(120% 95% at 10% 4%, rgb(242 238 230 / 0.07), transparent 60%),
+              linear-gradient(152deg, transparent 38%, color-mix(in srgb, var(--ground) 17%, transparent) 100%); }
+
+/* ── the modern dresses: what the source is, as an object (never a word added) ─────────── */
+/* A typed index card: heavier card stock, ruled on the type's baselines, a double head rule. */
+.dc-d-index { --dc-stock: color-mix(in srgb, var(--paper) 82%, var(--light)); --dc-ink: color-mix(in srgb, var(--paper-ink) 84%, var(--paper-ink-2)); }
+.dc-ruled { position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--rule-p) - 1.5px),
+    color-mix(in srgb, var(--paper-ink-2) 20%, transparent) calc(var(--rule-p) - 1.5px) var(--rule-p)); }
+.dc-headrule { position: absolute; left: 0; right: 0; height: 4px; pointer-events: none;
+  border-top: 2px solid color-mix(in srgb, var(--paper-ink-2) 42%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--paper-ink-2) 30%, transparent); }
+.dc-text.dc-typed { font-family: var(--typed); font-weight: 400; }
+.dc-typed .dc-head { font-weight: 400; letter-spacing: 0.02em; }
+/* A sheet from a ruled pad (a worksheet): ruled at the rows' pitch, a margin, the perforation it
+   was torn along, and its printed type a pencil grey. */
+.dc-d-pad { --dc-stock: color-mix(in srgb, var(--paper) 70%, var(--light)); --dc-ink: color-mix(in srgb, var(--graphite) 34%, var(--paper-ink)); }
+.dc-d-pad .tb { color: var(--dc-ink); }
+.dc-margin { position: absolute; top: 0; bottom: 0; width: 5px; pointer-events: none;
+  border-left: 1px solid color-mix(in srgb, var(--paper-ink-2) 30%, transparent); border-right: 1px solid color-mix(in srgb, var(--paper-ink-2) 30%, transparent); }
+.dc-perf { position: absolute; left: 0; right: 0; top: 0; height: 34px; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ground) 60%, transparent) 0 2.6px, transparent 3.2px) 6px 21px / 17px 8px repeat-x,
+    linear-gradient(to bottom, color-mix(in srgb, var(--paper-ink-2) 12%, transparent), transparent 18px); }
+/* A ledger page (a P&L, a settlement report, laid out by the house): ruled lines and a figures
+   column at the right that stays empty, as the layout has no figures. */
+.dc-d-ledger { --dc-stock: color-mix(in srgb, var(--paper) 66%, var(--light)); }
+.dc-figcol { position: absolute; pointer-events: none; background: color-mix(in srgb, var(--paper-ink-2) 4%, transparent);
+  border-left: 3px double color-mix(in srgb, var(--paper-ink-2) 44%, transparent); border-right: 3px double color-mix(in srgb, var(--paper-ink-2) 44%, transparent); }
+/* A printout or a print: a printer's head rule (and a web page's foot rule). */
+.dc-printrule { position: absolute; height: 0; pointer-events: none; border-top: 2px solid color-mix(in srgb, var(--paper-ink) 52%, transparent); }
+.dc-printrule.dc-foot { border-top-width: 1px; opacity: 0.6; }
+/* A fee card's extract: a laser print clipped to its sheet, a degree and a half askew, its far
+   corner lifting off the desk toward the lamp. */
+.dc-pclip { position: absolute; top: -40px; width: 44px; height: 148px; z-index: 4; pointer-events: none; box-sizing: border-box;
+  border: 5px solid color-mix(in srgb, var(--light) 64%, var(--light-3)); border-radius: 22px;
+  box-shadow: 3px 5px 4px rgb(0 0 0 / 0.32), inset 1px 1px 0 rgb(242 238 230 / 0.6); }
+.dc-pclip b { position: absolute; left: 7px; right: 7px; top: 22px; bottom: 26px; border: 5px solid color-mix(in srgb, var(--light) 56%, var(--light-3)); border-radius: 14px; }
+.dc-d-card .dc-paper::after { content: ""; position: absolute; right: 0; bottom: 0; width: 34%; height: 46%; z-index: 3; pointer-events: none;
+  background: linear-gradient(315deg, color-mix(in srgb, var(--light) 16%, transparent) 0, transparent 6%, color-mix(in srgb, var(--ground) 7%, transparent) 14%, transparent 34%); }
+.dc-d-card .dc-shadow { box-shadow: var(--shadow-paper), 34px 58px 74px color-mix(in srgb, var(--ground) 34%, transparent); }
 
 /* ── the ink ────────────────────────────────────────────────────────────────────────────── */
-.dc-text { position: absolute; color: var(--paper-ink); font-kerning: none; }
+.dc-text { position: absolute; color: var(--dc-ink); font-kerning: none; }
 .dc-text.dc-period { font-family: var(--period); font-weight: 400; }
 .dc-text.dc-inter { font-family: var(--sans); font-weight: 400; }
 .dc-row { position: absolute; left: 0; right: 0; white-space: nowrap; }
@@ -61,11 +102,16 @@
 .dc-inter .dc-head { font-weight: 600; }
 .dc-sub { text-align: center; font-style: italic; }
 
-/* A figure is not readable before it is spoken: it waits under blur, then lands (S3). */
+/* A figure is not readable before it is spoken: it waits under a blur too deep to read at any
+   camera scale (a third of its em), then lands whole on its word (S3). One the voice has said
+   before the shot stands sharp from the cut; one it never says in the shot never lands. */
 .fig { display: inline-block; animation: fig-land 0.35s var(--ease-out) calc((var(--ft) - 0.15) * 1s) both; }
-@keyframes fig-land { from { filter: blur(10px); opacity: 0.5; transform: scale(1.06); letter-spacing: 0.04em; } to { filter: none; opacity: 1; transform: none; letter-spacing: 0; } }
+@keyframes fig-land { from { filter: blur(0.3em); opacity: 0.42; transform: scale(1.06); letter-spacing: 0.04em; } to { filter: none; opacity: 1; transform: none; letter-spacing: 0; } }
+.fig-said { animation: none; }
+.fig-soft { animation: none; filter: blur(0.3em); opacity: 0.42; letter-spacing: 0.04em; }
 /* The money figure the line lands on turns blue, and blooms (the only blue in the frame). */
-.fig-money { animation: fig-land 0.35s var(--ease-out) calc((var(--ft) - 0.15) * 1s) both, fig-blue 0.75s ease-out calc((var(--ft) - 0.02) * 1s) both; }
+.fig-money { animation: fig-land 0.35s var(--ease-out) calc((var(--ft) - 0.15) * 1s) both, fig-blue 0.75s ease-out calc((var(--fb, var(--ft)) - 0.02) * 1s) both; }
+.fig-money.fig-said { animation: fig-blue 0.75s ease-out calc((var(--fb, var(--ft)) - 0.02) * 1s) both; }
 @keyframes fig-blue { 0% { color: var(--paper-ink); text-shadow: none; } 22% { color: var(--blue); text-shadow: 0 0 10px rgb(47 116 255 / 0.5); }
   100% { color: var(--blue); text-shadow: 0 0 8px rgb(47 116 255 / 0.3); } }
 
@@ -96,7 +142,11 @@
       color-mix(in srgb, var(--ground) 8%, transparent) 290px, transparent 340px); }
 
 /* ── tables: a typeset rate table (period) or a laser-printed card (modern) ─────────────── */
-.tb { position: absolute; inset: 0; color: var(--paper-ink); font-kerning: none; }
+.tb { position: absolute; inset: 0; color: var(--dc-ink); font-kerning: none; }
+.tb.tb-typed { font-family: var(--typed); }
+/* An empty cell in a printed table is the printer's dash, never a hole. */
+.tb-nil { position: absolute; left: 32px; width: 0.8em; height: 2px; background: currentColor; opacity: 0.4; }
+.tb-nil-r { left: auto; right: 32px; }
 .tb-period { font-family: var(--period); }
 .tb-modern { font-family: var(--sans); font-variant-numeric: tabular-nums; }
 .tb-rule { position: absolute; height: 1.5px; background: currentColor; opacity: 0.8; }
@@ -113,8 +163,9 @@
 .tb-row { position: absolute; left: 0; right: 0; white-space: nowrap; }
 .tb-cell { position: absolute; top: 0; box-sizing: border-box; padding: 0 26px; }
 .tb-num { text-align: right; font-variant-numeric: tabular-nums; }
-.tb-cols .tb-cell { padding-top: 15px; text-align: center; font-size: 28px; letter-spacing: 0.12em; }
+.tb-cols .tb-cell { padding-top: 15px; text-align: center; font-size: inherit; letter-spacing: 0.12em; }
 .tb-modern .tb-cols .tb-cell { font-weight: 600; letter-spacing: 0.06em; opacity: 0.74; }
+.tb-typed .tb-cols .tb-cell { font-weight: 400; opacity: 0.8; }
 .tb-lead { position: absolute; opacity: 0.75;
   background: radial-gradient(circle, currentColor 0 1.7px, transparent 2.3px) 0 calc(100% - 0.42em) / 0.5em 6px repeat-x; }
 /* The lamp narrowing onto rows or columns as the voice names them: the rest of the card dims. */
@@ -125,7 +176,7 @@
 /* ── quotes: words that matter, as light on the dark ───────────────────────────────────── */
 .v3-quote { --key-x: 30%; --key-y: 44%; }
 .qt-cam { perspective: 1600px; }
-.qt { position: absolute; left: 290px; top: 50%; width: 1360px; transform: translateY(-54%); }
+.qt { position: absolute; left: 310px; top: 50%; width: 1300px; transform: translateY(-54%); }
 .qt-text { position: relative; margin: 0; font: italic 400 var(--qs)/1.08 var(--quote); letter-spacing: -0.01em; word-spacing: 0.04em;
   color: var(--light); text-wrap: balance; text-shadow: var(--glow-ivory); }
 /* A hanging open quotation mark in the margin; the words land on their own spoken onsets. */
