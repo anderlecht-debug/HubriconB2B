@@ -29,6 +29,9 @@ WEIGHTS = {"input_tokens": 1.0, "cache_creation_input_tokens": 1.25, "cache_read
 BUDGETS = CONTENT_DIR / "film" / "budgets.json"
 LEDGER = CONTENT_DIR / ".cache" / "runner-meter.json"
 CLAUDE = os.environ.get("CLAUDE_BIN", "/home/lp9/.local/bin/claude")
+# a film step may run the content CLI and edit the film's files, as the runner may, and nothing more
+STEP_ARGS = ("--settings", str(CONTENT_DIR.parent / "scripts" / "content-runner.settings.json"),
+             "--permission-mode", "acceptEdits", "--max-turns", "120", "--no-session-persistence", "--strict-mcp-config")
 
 
 def budgets() -> dict:

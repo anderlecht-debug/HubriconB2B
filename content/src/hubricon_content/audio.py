@@ -19,6 +19,7 @@ import soundfile as sf
 
 from . import script as scriptmod
 from . import shots as shots_mod
+from . import sound
 from .state import CONTENT_DIR
 
 SR = 48000
@@ -107,6 +108,7 @@ def _place(track: np.ndarray, clip: np.ndarray, at: float, gain: float) -> None:
 AMBIENCE_DB = -40.0       # VISUAL_SPEC.md §9, under footage; an observational hold up to -36
 AMBIENCE_OBSERVE_DB = -36.0
 AMBIENCE_FADE = 0.4
+AMBIENCE_LEAD, AMBIENCE_TAIL = 0.5, 0.35   # the J-cut and the L-cut: a place is heard before it is seen
 
 # A long film's score (VISUAL_SPEC.md §9, with the 2026-10-06 additions): the shot plan, not
 # events.json, says where each figure lands, where the picture changes room and where a
@@ -248,14 +250,14 @@ def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
         if peak <= 0:
             continue
         a, b = float(s["start"]), float(s["end"])
-        length = int((b - a + AMBIENCE_FADE) * SR)
+        length = int((b - a + AMBIENCE_LEAD + AMBIENCE_TAIL) * SR)
         clip = np.tile(clip / peak, int(np.ceil(length / len(clip))))[:length]
         fade = np.ones(length)
-        k = int(AMBIENCE_FADE * SR)
-        fade[:k] = np.linspace(0, 1, k)
-        fade[-k:] = np.linspace(1, 0, k)
+        ki, ko = int(AMBIENCE_LEAD * SR), int(AMBIENCE_TAIL * SR)
+        fade[:ki] = np.linspace(0, 1, ki)
+        fade[-ko:] = np.linspace(1, 0, ko)
         gain = _db(AMBIENCE_OBSERVE_DB if s.get("style") == "footage-observe" else AMBIENCE_DB)
-        _place(track, clip * fade, max(0.0, a - AMBIENCE_FADE / 2), gain)
+        _place(track, clip * fade, max(0.0, a - AMBIENCE_LEAD), gain)
         used.append(subject)
     return track, sorted(set(used))
 
@@ -278,12 +280,14 @@ def mix(slug: str) -> Path:
             continue
         clip = _decode(d / seg["audio"]).astype(np.float64)
         _place(vo, clip, seg["vo_start"], 1.0)
-    vo = _reverb(vo, rng)
-    # compress the narration lightly before it goes to the loudness pass
+    vo = sound.breath_gate(vo, [w for seg in timing["segments"] if seg["kind"] == "beat" for w in seg.get("words", [])])
+    if not (d / "takes").exists():      # the placeholder is dry; a real voice keeps its own room, none added
+        vo = _reverb(vo, rng)
+    # the voice chain (sound.VOICE_CHAIN) before the loudness pass
     vo_path = d / "media" / "vo.wav"
     sf.write(str(vo_path), vo.astype(np.float32), SR)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(vo_path), "-af",
-                    "acompressor=threshold=-18dB:ratio=2.5:attack=8:release=120:makeup=3,highpass=f=70",
+                    sound.VOICE_CHAIN,
                     "-ar", str(SR), str(d / "media" / "vo-proc.wav")], check=True, timeout=600)
     vo = _decode(d / "media" / "vo-proc.wav").astype(np.float64)
     vo = np.pad(vo, (0, max(0, n - len(vo))))[:n]
@@ -304,11 +308,16 @@ def mix(slug: str) -> Path:
         bed_source = "procedural drone (provisional)"
     score = score_events(plan, timing) if plan else None
     if score:
+        th = sound.thin({"tick": score["ticks"], "sub": score["subs"], "room": score["rooms"], "paper": score["paper"],
+                         "riser": score["risers"]})
+        score.update({"ticks": th["tick"], "subs": th["sub"], "rooms": th["room"], "paper": th["paper"]})
+    if score:
         bed = _family(bed, n, [float(c["at"]) for c in timing["chapters"]])
         bed_source += f" · a family of {len(timing['chapters']) + 1} cues"
     if score:
         bed = bed / (np.sqrt(np.mean(bed ** 2)) + 1e-9)
-        bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB_D)))
+        bed = sound.carve(bed, speaking)          # under speech: the voice's band cut hard, the rest a little
+        bed_gain = _db(BED_DB) * np.ones(n)
     else:
         bed = bed / (np.abs(bed).max() + 1e-9)
         bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB)))
@@ -331,7 +340,7 @@ def mix(slug: str) -> Path:
             hold = np.ones(max(0, n - i0)) * _db(CARD_SWELL_DB)
             hold[: min(r, len(hold))] = np.linspace(1, _db(CARD_SWELL_DB), len(hold[:r]))
             lift[i0:] = hold
-        bed_gain = bed_gain * lift
+        bed_gain = bed_gain * lift * sound.predips(n, score["subs"])
     room = _room(total, rng)[:n]
     if score:   # a long film's room tone is levelled by its body, like the bed: the floor never falls to silence
         room = room / (np.sqrt(np.mean(room ** 2)) + 1e-9)
@@ -354,7 +363,8 @@ def mix(slug: str) -> Path:
     if score:
         sub, riser = _sub(rng), _riser(rng)
         for t in score["ticks"]:
-            _place(fx, tick, t, _db(TICK_DB))
+            c, g = sound.vary(tick, rng)
+            _place(fx, c, t, _db(TICK_DB) * g)
         for t in score["subs"]:
             _place(fx, sub, max(0.0, t - 0.02), _db(SUB_DB))
         for t in score["rooms"]:
@@ -363,12 +373,15 @@ def mix(slug: str) -> Path:
             _place(fx, riser, max(0.0, t - len(riser) / SR), _db(RISER_DB))
         paper, sub_drop = _paper(rng), _subdrop(rng)
         for t in score["paper"]:
-            _place(fx, paper, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB))
+            c, g = sound.vary(paper, rng)
+            _place(fx, c, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB) * g)
         for t in score["risers"]:
             _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
     amb, amb_subjects = _ambience(d, n)
     out = vo + bed * bed_gain + room + fx + amb
+    measured = sound.metrics(vo, bed * bed_gain + amb, {k: score[k] for k in ("ticks", "subs", "rooms", "paper", "risers")},
+                             speaking, float(timing["duration"])) if score else {}
     if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
         f = int(min(2.5, tail) * SR)
         end = int((float(timing["duration"]) + tail) * SR)
@@ -391,5 +404,6 @@ def mix(slug: str) -> Path:
         "whooshes": len(timing["chapters"]), "target_lufs": -16, "ambience": amb_subjects,
         **({"score": {k: len(v) for k, v in score.items() if k != "cards"}, "sub_db": SUB_DB, "room_whoosh_db": ROOM_WHOOSH_DB,
             "riser_db": RISER_DB, "card_swell_db": CARD_SWELL_DB, "bed_levelled_by": "rms",
-            "bed_duck_db_long_film": BED_DUCK_DB_D} if score else {})}, indent=1) + "\n", encoding="utf-8")
+            "bed_duck_db_long_film": BED_DUCK_DB_D, "carve_db": [sound.CARVE_MID_DB, sound.CARVE_REST_DB],
+            "measured": measured} if score else {})}, indent=1) + "\n", encoding="utf-8")
     return final

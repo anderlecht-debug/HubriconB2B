@@ -310,7 +310,8 @@ def cmd_ai_step(a):
     prompt = Path(a.prompt_file).read_text(encoding="utf-8") if a.prompt_file else a.prompt
     if not prompt:
         sys.exit("ai-step needs --prompt or --prompt-file")
-    res = ai_step.run(a.slug, a.step, prompt, model=a.model, budget=a.budget)
+    extra = tuple(x for x in (a.claude_args or []) if x != "--") or ai_step.STEP_ARGS
+    res = ai_step.run(a.slug, a.step, prompt, model=a.model, budget=a.budget, extra=extra)
     _out({k: v for k, v in res.items() if k != "result"})
     if res["status"] not in ("ok",):
         sys.exit(2)
@@ -320,6 +321,22 @@ def cmd_ai_tick(a):
     from . import ai_step
     extra = tuple(x for x in (a.claude_args or []) if x != "--")
     print(json.dumps(ai_step.tick(a.prompt, model=a.model, extra=extra), ensure_ascii=False))
+
+
+def cmd_plan_brief(a):
+    from . import plan_brief
+    out = plan_brief.build(a.slug)
+    _out({"status": "ok", "brief": str(out), "words": len(out.read_text(encoding="utf-8").split())})
+
+
+def cmd_auto_pick(a):
+    from . import line
+    _out(line.auto_pick(a.slug))
+
+
+def cmd_auto_prints(a):
+    from . import line
+    _out(line.auto_prints(a.slug))
 
 
 def cmd_film_cost(a):
@@ -431,11 +448,18 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("step", help="plan | pick | fix | review | script (content/film/budgets.json)")
     p.add_argument("--prompt", default=None); p.add_argument("--prompt-file", default=None)
     p.add_argument("--model", default=None); p.add_argument("--budget", type=int, default=None)
+    p.add_argument("--claude-args", nargs=argparse.REMAINDER, default=None, help="last: arguments passed to claude")
     p.set_defaults(fn=cmd_ai_step)
     p = sub.add_parser("ai-tick", help="one unattended runner session under the runner's tick, day and week caps")
     p.add_argument("--prompt", required=True); p.add_argument("--model", default=None)
     p.add_argument("claude_args", nargs=argparse.REMAINDER, help="after --: arguments passed to claude")
     p.set_defaults(fn=cmd_ai_tick)
+    p = sub.add_parser("plan-brief", help="the one compact file a planning session reads (FILM_LINE.md)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_plan_brief)
+    p = sub.add_parser("auto-pick", help="every picture shot takes its best passed candidate, by code (FILM_LINE.md)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_auto_pick)
+    p = sub.add_parser("auto-prints", help="every companion print the plan asks for, found and filtered by code")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_auto_prints)
     p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
     p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
     p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")

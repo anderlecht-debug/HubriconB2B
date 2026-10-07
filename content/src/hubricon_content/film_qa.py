@@ -25,6 +25,8 @@ from .state import CONTENT_DIR
 
 ADVISORY = re.compile(r"of the runtime|at most$")
 LUFS, TRUE_PEAK = (-17.0, -15.0), -1.5
+# the mix's own numbers (sound.metrics, docs/content/SOUND_DESIGN.md)
+SOUND = {"voice_over_music_db": 15.0, "effects_per_minute": (2.0, 14.0), "longest_undesigned_s": 60.0, "lra": (2.0, 12.0)}
 
 
 def _ffprobe_seconds(p: Path) -> float:
@@ -72,6 +74,18 @@ def media(d: Path, plan: dict, timing: dict) -> list[dict]:
         out.append({"check": "loudness", "msg": f"{i.group(1)} LUFS integrated; the spec is {LUFS[0]} to {LUFS[1]}"})
     if tp and float(tp.group(1)) > TRUE_PEAK:
         out.append({"check": "true-peak", "msg": f"true peak {tp.group(1)} dBTP; the spec is at most {TRUE_PEAK}"})
+    lra = re.search(r"LRA:\s+([\d.]+) LU", summary)
+    if lra and not (SOUND["lra"][0] <= float(lra.group(1)) <= SOUND["lra"][1]):
+        out.append({"check": "sound", "msg": f"loudness range {lra.group(1)} LU; a documentary breathes within {SOUND['lra'][0]}–{SOUND['lra'][1]}"})
+    mj = d / "media" / "mix.json"
+    meas = (json.loads(mj.read_text(encoding="utf-8")).get("measured") or {}) if mj.exists() else {}
+    if meas.get("voice_over_music_db") is not None and meas["voice_over_music_db"] < SOUND["voice_over_music_db"]:
+        out.append({"check": "sound", "msg": f"the voice sits {meas['voice_over_music_db']} dB over the music under speech; at least {SOUND['voice_over_music_db']}"})
+    epm = meas.get("effects_per_minute")
+    if epm is not None and not (SOUND["effects_per_minute"][0] <= epm <= SOUND["effects_per_minute"][1]):
+        out.append({"check": "sound", "msg": f"{epm} designed effects a minute; {SOUND['effects_per_minute'][0]}–{SOUND['effects_per_minute'][1]} keeps attention without fatigue"})
+    if meas.get("longest_undesigned_s", 0) > SOUND["longest_undesigned_s"]:
+        out.append({"check": "sound", "msg": f"{meas['longest_undesigned_s']} s with nothing designed under the voice; at most {SOUND['longest_undesigned_s']}"})
     log = subprocess.run(["ffmpeg", "-nostats", "-i", str(m), "-an", "-vf",
                           "fps=10,scale=320:-2,blackdetect=d=0.5:pix_th=0.06,freezedetect=n=0.003:d=4", "-f", "null", "-"],
                          capture_output=True, text=True).stderr

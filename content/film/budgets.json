@@ -8,8 +8,8 @@
  "steps": {
   "plan": {
    "model": "claude-sonnet-5-5",
-   "tokens": 450000,
-   "note": "the shot plan: one pass, shots.json out, shots-validate gates it"
+   "tokens": 700000,
+   "note": "the shot plan: one session reads plan-brief.md, writes shots.json in a few large writes, fills and validates; output dominates (~250 shots)"
   },
   "pick": {
    "model": "claude-sonnet-5-5",
