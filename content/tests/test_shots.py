@@ -299,3 +299,10 @@ def test_figures_spoken_close_together_may_hold_past_eight_seconds_in_the_first_
     seq = [("number-land", 10, {"reveal": "leak", "at": 2})] + fx.SEQUENCE[1:]   # held well before the cut
     plan, tm = fx.build(seq)
     has(problems(plan, tm), "inside the first minute")
+
+
+
+def test_a_source_line_never_names_a_repository_file():
+    plan, tm = fx.fresh()
+    plan["shots"][2].setdefault("params", {})["source"] = "Typeset from the fee card, as recorded in ratecard.json"
+    has(problems(plan, tm), "names a repository file")

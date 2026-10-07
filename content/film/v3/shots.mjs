@@ -52,18 +52,48 @@ function photoSource(job) {
 
 /** The one label slot every paper shot shares: the source line, then the honesty label (never
  * optional on a proof or demo figure). Kinds draw no captions of their own. */
+/** A typed source as a viewer reads it: never the repository file we keep a figure in
+    ("…, as recorded in ratecard.json on September 9, 2026", "(data/case-study.json)"). */
+export function cleanSource(text) {
+  return String(text || "")
+    .replace(/,?\s*as recorded in [\w./-]+\.(?:json|xlsx|csv)(?: on (?:[A-Z][a-z]+ \d{1,2}, \d{4}|[^,·;()]+))?/gi, "")
+    .replace(/\s*\([^()]*\.(?:json|xlsx|csv)[^()]*\)/gi, "")
+    .replace(/\s*[\w./-]+\.(?:json|xlsx|csv)\b/gi, "")
+    .replace(/\s*\((?:[a-z_]+\.)+[a-z_]+\)/g, "")
+    .replace(/\s+([,;·])/g, "$1").replace(/[,;\s]+$/, "").trim() || null;
+}
+
+/** When a source line may appear: a line that names a figure this shot says ("report of December 1,
+    1914") waits for that figure's word, like the figure itself; any other source stands at the cut. */
+function sourceAt(job, text) {
+  const t = String(text || "");
+  let at = 0;
+  for (const r of job.reveals || []) {
+    const v = String(r.value ?? "").trim();
+    if (!v || r.t == null) continue;
+    const nums = v.match(/\d[\d,.]*\d|\d/g) || [];
+    const hit = t.includes(v) || nums.some((n) => n.length >= 2 && new RegExp(`(^|[^\\d])${n.replace(/[.,]/g, "\\$&")}(?![\\d])`).test(t));
+    if (hit) at = Math.max(at, +r.t);
+  }
+  return at;
+}
+
 export function labels(job) {
   const honest = job.label === "proof" ? PROOF : job.label === "demo" ? job.demo_label : null;
-  const source = ["document", "table", "receipt"].includes(job.kind) ? job.params?.source
+  const source = cleanSource(["document", "table", "receipt"].includes(job.kind) ? job.params?.source
     : ["archive", "split", "stack"].includes(job.kind) ? photoSource(job)
     : ["quote", "kinetic", "chapter", "end"].includes(job.kind) ? null
-    : job.source_label;
-  // a companion print says what it is ("A posed photograph") and where it is from, on its own line
+    : job.source_label);
+  // a companion print says what it is ("A posed photograph") and where it is from, on its own line,
+  // and leaves the desk with the print (`out`)
   const P = job.print || {};
   const comp = P.url ? [[P.caption, yearOf(P.date)].filter(Boolean).join(", "), whoOf(P)].filter(Boolean).join(" · ") : null;
   if (!honest && !source && !comp) return "";
-  return `<div class="labels${comp ? " with-print" : ""}">${source ? `<p class="source">${esc(source)}</p>` : ""}` +
-    `${comp ? `<p class="source">${esc(comp)}</p>` : ""}${honest ? `<p class="honesty">${esc(honest)}</p>` : ""}</div>`;
+  const wait = source ? sourceAt(job, source) : 0;
+  const srcP = source ? `<p class="source${wait > 0.4 ? " lab-wait" : ""}"${wait > 0.4 ? ` style="--at:${(wait - 0.1).toFixed(2)}"` : ""}>${esc(source)}</p>` : "";
+  const compP = comp ? `<p class="source${P.out != null ? " lab-leave" : ""}"${P.out != null ? ` style="--at:${(Math.max(0, +P.out - 0.45)).toFixed(2)}"` : ""}>${esc(comp)}</p>` : "";
+  // the honesty label is never delayed and never leaves: it is on every frame of a proof or demo figure
+  return `<div class="labels${comp ? " with-print" : ""}">${srcP}${compP}${honest ? `<p class="honesty">${esc(honest)}</p>` : ""}</div>`;
 }
 /** @deprecated kept for kinds written before the label slot; draws the same slot. */
 export const honesty = labels;

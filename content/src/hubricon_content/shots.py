@@ -253,6 +253,9 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
                 k += 1
             if held < cad["hold_after_number_s"] - TOL:
                 p(f"{s['id']}: {{{{{r['key']}}}}} is on screen {held:.1f} s; hold a number {cad['hold_after_number_s']:g} s")
+        src = str((s.get("params") or {}).get("source") or "")
+        if re.search(r"[\w./-]+\.(json|xlsx|csv|py|mjs)\b", src):
+            p(f"{s['id']}: its source line names a repository file ({src[:60]}…); name the public source")
         if s.get("style") == "bars-recall" and s.get("reveals"):
             p(f"{s['id']}: a recall draws figures already said; {', '.join(r['key'] for r in s['reveals'])} lands here")
         if float(s["start"]) >= cad["open_s"] and s.get("room") == "world" and s.get("kind") == "footage" \
