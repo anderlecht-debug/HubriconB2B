@@ -272,6 +272,7 @@ def _balanced(text: str) -> list[str]:
 
 
 NOT_DRAWN = {"qa.mjs", "layout_qa.mjs", "profile.mjs"}   # film/v3 tools that check or time the stage
+STAGE_BATCH = 12      # stage clips rendered, checked and recorded together
 
 
 class Job:
@@ -599,9 +600,19 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
             skipped.append(s["id"])
             continue
         (stage if job.renderer == "stage" else others).append((job, clip, side, k))
-    if stage:
+    def finish(job, clip, side, k):
+        if not _clip_ok(clip, job.frames):
+            raise RuntimeError(f"{clip.name}: not {job.frames} frames")
+        side.write_text(json.dumps({"key": k, "frames": job.frames, "renderer": job.renderer, "version": VERSION}) + "\n")
+        done.append(job.shot["id"])
+
+    # the stage renders in batches, each recorded the moment it finishes: an interrupted run keeps every
+    # finished batch (2026-10-07: the sidecars were written only after the whole film, so a reboot an hour
+    # in threw the hour away, twice)
+    for b in range(0, len(stage), STAGE_BATCH):
+        part = stage[b:b + STAGE_BATCH]
         jobs = []
-        for job, clip, side, k in stage:
+        for job, clip, side, k in part:
             target = clip.with_suffix(".stage.mp4") if job.kind == "split" else clip
             jobs.append({**job.job, "out": str(target), "vf": _grain(job.room), "encode": grade.encode_args()})
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
@@ -615,22 +626,19 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
         if res.returncode != 0:
             raise RuntimeError(f"the stage failed:\n{res.stderr[-2000:]}")
         rects = json.loads(res.stdout.strip().splitlines()[-1])
-        for job, clip, side, k in stage:
+        for job, clip, side, k in part:
             if job.kind == "split":
                 tmp = clip.with_suffix(".stage.mp4")
                 _split_composite(job, tmp, rects[job.shot["id"]]["rect"], clip)
                 tmp.unlink()
-            others.append((job, clip, side, k))   # verified below with the rest
+            finish(job, clip, side, k)
     for job, clip, side, k in others:
         if job.renderer == "footage":
             a = job.shot["asset"]
             footage.render(Path(a["file"]), clip, job.frames, start=float(a.get("in", 0.0)), focus=job.job["focus"] or (0.5, 0.5))
         elif job.renderer == "manim":
             _manim(job, clip)
-        if not _clip_ok(clip, job.frames):
-            raise RuntimeError(f"{clip.name}: not {job.frames} frames")
-        side.write_text(json.dumps({"key": k, "frames": job.frames, "renderer": job.renderer, "version": VERSION}) + "\n")
-        done.append(job.shot["id"])
+        finish(job, clip, side, k)
     return {"status": "ok", "rendered": len(done), "cached": len(skipped), "workers": workers}
 
 
