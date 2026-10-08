@@ -73,3 +73,22 @@ print(json.dumps({{"type": "assistant", "message": {{"id": "m0", "usage": {{"out
     p.chmod(p.stat().st_mode | stat.S_IEXEC)
     res = ai_step.run("f", "review", "think", budget=20000, claude=str(p))
     assert res["status"] == "stopped at budget"
+
+
+def test_autofix_restores_a_landing_word_the_validator_asks_for(tmp_path, monkeypatch):
+    from hubricon_content import line, shots
+    from . import shotplan_fixture as fx
+    plan, tm = fx.fresh()
+    reg = shots.registry()["styles"]
+    s = next(x for x in plan["shots"] if reg.get(x.get("style"), {}).get("on") == "required" and x.get("says"))
+    s["on"] = None
+    (tmp_path / "shots.json").write_text(json.dumps(plan))
+    (tmp_path / "timing.json").write_text(json.dumps(tm))
+    (tmp_path / "facts.json").write_text("{}")
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    monkeypatch.setattr(scriptmod, "load_facts", lambda slug: {})
+    before = [p for p in shots.validate(plan, tm, {}) if p.startswith(s["id"]) and "set `on`" in p]
+    assert before
+    assert s["id"] in line.autofix("f")["fixed"]
+    after = json.loads((tmp_path / "shots.json").read_text())
+    assert next(x for x in after["shots"] if x["id"] == s["id"])["on"]

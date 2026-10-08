@@ -356,6 +356,16 @@ def cmd_resolve_gaps(a):
     _out(line.resolve_gaps(a.slug))
 
 
+def cmd_film_line(a):
+    from . import line
+    res = line.run_line(a.slug, start=a.start, until=a.until, placeholder=a.placeholder)
+    for l in res["log"]:
+        print(f"- {l}")
+    print(res["status"] if res["status"] == "ok" else f"stopped at {res['at']}: {res['reason']}")
+    if res["status"] != "ok":
+        sys.exit(2)
+
+
 def cmd_film_cost(a):
     from . import meter
     _out(meter.summary(a.slug))
@@ -483,6 +493,10 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("decisions"); p.set_defaults(fn=cmd_plan_apply)
     p = sub.add_parser("resolve-gaps", help="picture shots with no picture: a neighbour holds longer, else the film's own words")
     p.add_argument("slug"); p.set_defaults(fn=cmd_resolve_gaps)
+    p = sub.add_parser("film-line", help="a film's whole line, step by step, resumable (FILM_LINE.md)")
+    p.add_argument("slug"); p.add_argument("--from", dest="start", default=None, choices=None)
+    p.add_argument("--until", default=None); p.add_argument("--placeholder", action="store_true", help="the offline placeholder voice when no takes exist")
+    p.set_defaults(fn=cmd_film_line)
     p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
     p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
     p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")
