@@ -3,6 +3,7 @@ requires the founder's own recorded voice, a passed QA, and the final sign-off. 
 synthetic-media flag is set only when the film shows an AI image."""
 
 import json
+from datetime import date
 from pathlib import Path
 
 from . import script as scriptmod
@@ -11,7 +12,9 @@ from .state import CONTENT_DIR
 SECRETS = CONTENT_DIR / ".secrets"
 CLIENT_SECRET = SECRETS / "client_secret.json"
 TOKEN = SECRETS / "youtube-token.json"
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube"]
+# upload, manage, and read each video's audience retention (retention.py): one sign-in for all three
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube",
+          "https://www.googleapis.com/auth/yt-analytics.readonly"]
 
 
 def authorize() -> str:
@@ -84,5 +87,6 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
     usage_ledger.record_film(slug, ids)
     # The handoff to the site (Part C): the main branch fills a /learn video slot from this.
     (d / "published.json").write_text(json.dumps({"youtube_id": vid, "title": title, "slug": slug, "unit": u.get("id"),
-                                                  "src": f"yt-{str(u.get('id') or slug).lower()}"}, indent=1) + "\n", encoding="utf-8")
+                                                  "src": f"yt-{str(u.get('id') or slug).lower()}",
+                                                  "published_at": date.today().isoformat()}, indent=1) + "\n", encoding="utf-8")
     return {"status": "ok", "youtube_id": vid, "privacy": "unlisted"}

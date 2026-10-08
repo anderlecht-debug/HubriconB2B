@@ -25,6 +25,24 @@ This file sits beside SOUND_DESIGN.md.
 the voiced span only (`content/film/pace.mjs`). A take outside 120–200 says so, and what to do. The pause
 before a key figure needs the alignment, so it is checked later, in film-qa.
 
+## What viewers do (built, waiting on the YouTube sign-in)
+
+`hubricon-content retention <slug>` reads a published film's audience-retention curve from YouTube
+Analytics (100 points). It writes `qa/retention.md`:
+
+- the share still watching at 30 s;
+- the film against videos of its length (0.5 is typical);
+- the steepest drops past the open: each beyond 2.5 times the film's usual loss, with its time, its shot
+  and style, its beat and the words said there;
+- the moments viewers watched again.
+
+`retention-patterns` ranks every style by the loss per minute while it is on screen, against its own
+film's pace, across all published films. It turns into rules what viewers did, which is what the critic
+rounds guessed at.
+
+It needs the one-time `youtube-auth`, which now asks for read-only analytics with the upload scopes.
+YouTube reports retention once a video has views.
+
 ## What the three pilots showed (2026-10-07)
 
 The checks were calibrated on G01–G03, the capability proofs:
@@ -37,8 +55,5 @@ The checks were calibrated on G01–G03, the capability proofs:
 
 ## Next, when worth it
 
-- **Retention from YouTube.** The real signal: each video's audience-retention curve, mapped onto its
-  beats and shots, so a dip names the sentence and the picture it happened on. Needs the Google Cloud
-  OAuth setup and public uploads.
 - **A worksheet per film.** The TRY beat's steps, with the same demo numbers, as a one-page sheet on the
   matching /learn lesson (a site change, for the founder's go).
