@@ -92,3 +92,29 @@ def test_autofix_restores_a_landing_word_the_validator_asks_for(tmp_path, monkey
     assert s["id"] in line.autofix("f")["fixed"]
     after = json.loads((tmp_path / "shots.json").read_text())
     assert next(x for x in after["shots"] if x["id"] == s["id"])["on"]
+
+
+def test_a_reply_step_sends_its_prompt_on_stdin_with_no_tools_and_no_session_load(tmp_path, monkeypatch):
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    monkeypatch.setattr(ai_step, "REPLY_DIR", tmp_path / "reply")
+    p = tmp_path / "claude"
+    p.write_text(f"""#!{sys.executable}
+import json, sys, os
+prompt = sys.stdin.read()
+args = sys.argv[1:]
+out = {{"args": args, "prompt_chars": len(prompt), "cwd": os.getcwd()}}
+print(json.dumps({{"type": "assistant", "message": {{"id": "m0", "usage": {{"input_tokens": 700, "output_tokens": 10}}}}}}), flush=True)
+print(json.dumps({{"type": "result", "result": "```json\\n" + json.dumps({{"shots": {{"s001": {{"kind": "still"}}}}, "seen": out}}) + "\\n```", "is_error": False}}), flush=True)
+""")
+    p.chmod(p.stat().st_mode | stat.S_IEXEC)
+    brief = "x" * 200_000                                  # past Linux's 128 KB cap on one argument
+    res = ai_step.reply("f", "plan", "Answer with JSON.", brief, claude=str(p))
+    dec = ai_step.json_reply(res["result"])
+    assert res["status"] == "ok" and dec["shots"] == {"s001": {"kind": "still"}}
+    seen = dec["seen"]
+    assert seen["prompt_chars"] == 200_000 and brief not in seen["args"]
+    a = seen["args"]
+    assert a[a.index("--tools") + 1] == "" and a[a.index("--system-prompt") + 1] == "Answer with JSON."
+    assert "--max-turns" in a and seen["cwd"] == str(tmp_path / "reply")    # outside the repo: no CLAUDE.md, no memory
+    assert res["weighted_tokens"] == 750
+    assert ai_step.json_reply("no object here") is None and ai_step.json_reply("{broken") is None

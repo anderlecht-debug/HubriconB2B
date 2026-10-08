@@ -225,6 +225,8 @@ def _clean(slug: str) -> list[str]:
     return [p for p in shotmod.validate(plan, timing, scriptmod.load_facts(slug)) if not re.search(r"of the runtime|at most$", p)]
 
 
+PLAN_SYSTEM = ("You plan the shots of a documentary film for Hubricon. You answer with exactly one JSON object, "
+               "as the brief's section 'What you return' describes, and nothing before or after it.")
 STEPS = ["voice", "skeleton", "decide", "fill", "source", "pictures", "render", "qa", "draft", "cost"]
 
 
@@ -268,13 +270,16 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
             plan_brief.build(slug)
             done(step, f"{len(plan['shots'])} shots drafted")
         elif step == "decide":
-            r = ai_step.run(slug, "plan", f"Read content/videos/{slug}/plan-brief.md and do exactly what its section 'What you return' "
-                            f"says: decide every shot listed and write content/videos/{slug}/decisions.json in one write. "
-                            "Reply with the number of shots decided.", extra=ai_step.STEP_ARGS)
-            if not (d / "decisions.json").exists():
-                return stop(step, f"no decisions written ({r.get('status')}: {r.get('reason') or ''})")
-            plan_skeleton.apply(slug, json.loads((d / "decisions.json").read_text(encoding="utf-8")))
-            done(step, f"{r.get('weighted_tokens')} weighted tokens")
+            # one reply, no tools: the brief holds everything, the answer is the decisions (ai_step.reply)
+            r = ai_step.reply(slug, "plan", PLAN_SYSTEM, (d / "plan-brief.md").read_text(encoding="utf-8"))
+            dec = ai_step.json_reply(r.get("result"))
+            if not dec or not isinstance(dec.get("shots"), dict):
+                (d / "decisions.raw.txt").write_text(r.get("result") or "", encoding="utf-8")
+                return stop(step, f"no decisions in the reply ({r.get('status')}, {r.get('weighted_tokens')} weighted tokens; "
+                                  "the reply is in decisions.raw.txt)")
+            (d / "decisions.json").write_text(json.dumps(dec, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            plan_skeleton.apply(slug, dec)
+            done(step, f"{len(dec['shots'])} shots decided, {r.get('weighted_tokens')} weighted tokens")
         elif step == "fill":
             _cli("shots-fill", slug)
             for _ in range(3):

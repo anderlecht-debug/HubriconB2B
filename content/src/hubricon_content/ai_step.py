@@ -42,10 +42,17 @@ def weigh(usage: dict) -> float:
     return sum(w * float(usage.get(k) or 0) for k, w in WEIGHTS.items())
 
 
-def stream(cmd: list[str], budget: int, cwd: str | Path) -> dict:
-    """Run `claude -p … --output-format stream-json --verbose`, stopping it the moment it spends its budget."""
+def stream(cmd: list[str], budget: int, cwd: str | Path, stdin: str | None = None) -> dict:
+    """Run `claude -p … --output-format stream-json --verbose`, stopping it the moment it spends its budget.
+    `stdin` carries a prompt too long for one argument (Linux caps one at 128 KB)."""
     t0 = time.time()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, cwd=str(cwd))
+    # a reply is the whole answer: room for a 50-minute film's decisions (about 25k tokens) in one message
+    env = {**os.environ, "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"} if stdin is not None else None
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, cwd=str(cwd),
+                            stdin=subprocess.PIPE if stdin is not None else subprocess.DEVNULL, env=env)
+    if stdin is not None:
+        proc.stdin.write(stdin)
+        proc.stdin.close()
     per_msg: dict[str, dict] = {}       # one API message streams as several events: count it once
     result, stopped, chars = None, False, 0
     for line in proc.stdout:
@@ -84,15 +91,41 @@ def stream(cmd: list[str], budget: int, cwd: str | Path) -> dict:
             "seconds": round(time.time() - t0, 1)}
 
 
-def _cmd(claude: str | None, prompt: str, model: str, extra, effort: str = "low") -> list[str]:
+def _cmd(claude: str | None, prompt: str | None, model: str, extra, effort: str = "low") -> list[str]:
     # effort sets how much the model thinks before it answers: a film step makes many small judgments,
-    # not one deep one, so it runs low unless budgets.json says otherwise
-    return [claude or CLAUDE, "-p", prompt, "--output-format", "stream-json", "--verbose", "--include-partial-messages",
+    # not one deep one, so it runs low unless budgets.json says otherwise. No prompt: it comes on stdin.
+    return [claude or CLAUDE, "-p", *([prompt] if prompt is not None else []), "--output-format", "stream-json", "--verbose", "--include-partial-messages",
             "--model", model, "--effort", effort, *extra]
 
 
-def run(slug: str, step: str, prompt: str, *, model: str | None = None, budget: int | None = None,
-        cwd: str | Path | None = None, claude: str | None = None, extra: tuple = ()) -> dict:
+# A step that only turns text into an answer needs none of a coding session: no tools, no Claude Code
+# system prompt, no CLAUDE.md or memory (the cwd sits outside the repo). Measured 2026-10-07: 657 input
+# tokens of fixed load, against about 43,000 for a default session. Same subscription, same models.
+REPLY_DIR = Path.home() / ".cache" / "hubricon-reply"
+REPLY_ARGS = ("--tools", "", "--disable-slash-commands", "--strict-mcp-config", "--no-session-persistence", "--max-turns", "1")
+
+
+def reply(slug: str, step: str, system: str, prompt: str, *, model: str | None = None, budget: int | None = None,
+          claude: str | None = None) -> dict:
+    """One AI step answered in a single reply (no tools, no session load), under its budget, counted in the
+    film's meter. The prompt goes in on stdin; the answer comes back as `result`."""
+    REPLY_DIR.mkdir(parents=True, exist_ok=True)
+    return run(slug, step, None, model=model, budget=budget, cwd=REPLY_DIR, claude=claude,
+               extra=("--system-prompt", system, *REPLY_ARGS), stdin=prompt)
+
+
+def json_reply(text: str | None) -> dict | None:
+    """The one JSON object a reply holds, fenced or not; None when there is none."""
+    if not text or "{" not in text:
+        return None
+    try:
+        return json.loads(text[text.index("{"):text.rindex("}") + 1])
+    except ValueError:
+        return None
+
+
+def run(slug: str, step: str, prompt: str | None, *, model: str | None = None, budget: int | None = None,
+        cwd: str | Path | None = None, claude: str | None = None, extra: tuple = (), stdin: str | None = None) -> dict:
     """One AI step of a film, under its budget, counted in the film's meter."""
     b = budgets()
     cfg = b["steps"].get(step, b["default"])
@@ -101,7 +134,7 @@ def run(slug: str, step: str, prompt: str, *, model: str | None = None, budget: 
     if spent >= b["film"]:
         return {"status": "refused", "step": step, "reason": f"the film has spent {spent:,} of its {b['film']:,} weighted tokens"}
     budget = min(budget, b["film"] - spent)
-    r = stream(_cmd(claude, prompt, model, extra, cfg.get("effort", "low")), budget, cwd or CONTENT_DIR.parent)
+    r = stream(_cmd(claude, prompt, model, extra, cfg.get("effort", "low")), budget, cwd or CONTENT_DIR.parent, stdin)
     cost = (r["result"] or {}).get("total_cost_usd")
     meter.count(slug, "claude", "weighted tokens", r["weighted"], step=step, model=model, budget=budget, stopped=r["stopped"],
                 usage=r["usage"], seconds=r["seconds"], **({"cost_usd": cost} if cost is not None else {}))

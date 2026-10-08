@@ -8,8 +8,8 @@
  "steps": {
   "plan": {
    "model": "claude-sonnet-5-5",
-   "tokens": 700000,
-   "note": "the shot plan: one session reads plan-brief.md, writes shots.json in a few large writes, fills and validates; output dominates (~250 shots)"
+   "tokens": 400000,
+   "note": "the decide step: one reply (no tools, no session load) to plan-brief.md with every shot's decisions; G02's 252 shots measured 163k (2026-10-07)"
   },
   "pick": {
    "model": "claude-sonnet-5-5",

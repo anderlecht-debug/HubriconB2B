@@ -66,11 +66,13 @@ def build(slug: str) -> Path:
     spoken = {}
     for r in shots.spoken_reveals(timing):
         spoken.setdefault(round(float(r["t"]), 2), []).append(r["key"])
-    lines = [f"# Plan brief: {slug}", "",
-             f"Narration {float(timing['duration']):.1f} s. Write `videos/{slug}/shots.json` as "
-             '`{"slug": …, "mode": "history"|"explainer", "fps": 30, "shots": [...]}`, then run '
-             f"`content/.venv/bin/hubricon-content shots-fill {slug}` and `… shots-validate {slug}` and fix "
-             "until it prints clean. Screen-mix shares are advisory. Do not read any other file: everything is here.", ""]
+    plan_p = d / "shots.json"
+    task = ("Everything you need is here." if plan_p.exists() else
+            f"Write `videos/{slug}/shots.json` as "
+            '`{"slug": …, "mode": "history"|"explainer", "fps": 30, "shots": [...]}`, then run '
+            f"`content/.venv/bin/hubricon-content shots-fill {slug}` and `… shots-validate {slug}` and fix "
+            "until it prints clean. Screen-mix shares are advisory. Do not read any other file: everything is here.")
+    lines = [f"# Plan brief: {slug}", "", f"Narration {float(timing['duration']):.1f} s. {task}", ""]
     skill = SKILL.read_text(encoding="utf-8") if SKILL.exists() else ""
     skill = re.sub(r"^---.*?---\s*", "", skill, flags=re.S)
     lines += ["## The rules (the shot-plan skill)", "", skill.strip(), "", PARAMS, "## Styles (name: kinds · room · seconds)", ""]
@@ -83,7 +85,6 @@ def build(slug: str) -> Path:
     for k in said:
         f = facts.get(k, {})
         lines.append(f"- `{{{{{k}}}}}` = {f.get('value', '')}: {f.get('label', '')}")
-    plan_p = d / "shots.json"
     if plan_p.exists():
         return _with_shots(d, slug, lines, json.loads(plan_p.read_text(encoding="utf-8")), timing, spoken)
     lines += ["", "## The beats, sentence by sentence", "",
@@ -112,8 +113,8 @@ DECISIONS = """\
 ## What you return
 
 The shots below were drafted by code: their cuts are legal and fixed, a figure stays on screen 3 s,
-and each says what is spoken under it. Decide each shot. Write ONE file,
-`content/videos/{slug}/decisions.json`, in a single write:
+and each says what is spoken under it. Decide each shot. Reply with ONE JSON object and nothing else
+(no prose, no code fence):
 
     {{"mode": "history", "shots": {{"s001": {{"kind": …, "style": …, "on": …, "params": {{…}}, "query": ["…"], "sources": ["…"],
       "fallback": "…", "specific": "…", "intent": "…"}}, "s002": {{…}}, …}}}}
@@ -128,7 +129,7 @@ and each says what is spoken under it. Decide each shot. Write ONE file,
   and one or two concrete nouns ("Woolworth store", "dime counter"), never a description: archive titles
   are short, and a long query matches none of them (G02: 422 rejections).
 - Follow each beat's VISUAL brief where it names a picture.
-- Do not run commands and do not read other files. Reply with the number of shots decided.
+- Every shot listed gets an entry. Nothing before or after the object.
 """
 
 
