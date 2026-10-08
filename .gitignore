@@ -45,3 +45,4 @@ scripts/case-study/listing.json
 content/videos/*/qa/jobs.json
 content/videos/*/qa/sheets/
 content/videos/*/qa/film-qa.txt
+content/videos/*/qa/*.log
