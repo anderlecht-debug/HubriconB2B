@@ -43,3 +43,17 @@ def test_no_two_instances_of_a_sound_are_identical():
     a, ga = sound.vary(clip, rng)
     b, gb = sound.vary(clip, rng)
     assert len(a) != len(b) or ga != gb
+
+
+def test_the_stereo_field_folds_back_to_the_mono_mix():
+    rng = np.random.default_rng(3)
+    mid = rng.normal(0, 0.1, SR).astype(np.float32)
+    side = sound.widen(mid, sound.WIDTH_BED)
+    left, right = mid + side, mid - side
+    assert np.allclose((left + right) / 2, mid, atol=1e-6)        # mono: exactly the mono mix
+    assert np.corrcoef(left, right)[0, 1] < 0.95                    # stereo: wider than mono
+
+
+def test_the_side_level_is_measured_under_the_centre():
+    mid = np.ones(1000, dtype=np.float32)
+    assert sound.side_under_mid_db(mid, mid * 0.1) == 20.0

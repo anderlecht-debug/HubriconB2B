@@ -72,6 +72,22 @@ def test_loc_resolve_reads_the_master_tiff_size_from_its_header(tmp_path, monkey
     assert loc.tiff_size(head) == (2400, 1900) and loc.tiff_size(b"not a tiff") is None
 
 
+
+def test_a_loc_master_larger_than_the_grade_comes_through_iiif_at_grade_size(tmp_path, monkeypatch):
+    import struct
+    head = b"II*\x00" + struct.pack("<I", 8) + struct.pack("<H", 2) + \
+        struct.pack("<HHII", 256, 3, 1, 11608) + struct.pack("<HHII", 257, 4, 1, 8708) + b"\x00" * 64
+    item = fx.fixture("loc_item")
+    iiif = "https://tile.loc.gov/image-services/iiif/service:pnp:cph:3a20000:3a24000:3a24600:3a24604"
+    item["resources"][0]["files"][0].append({"mimetype": "image/jpeg", "width": 800, "height": 600, "url": f"{iiif}/full/pct:6.25/0/default.jpg"})
+    routes = {"tile.loc.gov/storage-services/master": fx.Response(content=head, status=206),
+              "www.loc.gov/item/": item, "www.loc.gov/photos": fx.fixture("loc")}
+    found, net = _search(tmp_path, monkeypatch, "loc", routes, query="bank teller")
+    c = next(c for c in found if c["id"] == "loc:2011660924")
+    sources.resolve(c, net)
+    assert c["file_url"] == f"{iiif}/full/!4800,4800/0/default.jpg"        # about 2 MB, not a 300 MB TIFF
+    assert (c["width"], c["height"]) == (4800, 3601)
+
 def test_smithsonian_is_cc0_only_and_keeps_its_key_out(tmp_path, monkeypatch):
     found, net = _search(tmp_path, monkeypatch, "smithsonian", {"api.si.edu": fx.fixture("smithsonian")}, query="ledger photograph")
     assert net.http.calls[0]["params"]["q"].startswith("ledger AND online_media_type:Images")

@@ -39,16 +39,14 @@ def _decode(path: Path) -> np.ndarray:
     """Any audio → float32 mono at SR, via ffmpeg."""
     res = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"],
                          capture_output=True, timeout=300, check=True)
-    return np.frombuffer(res.stdout, dtype=np.float32)
+    return np.frombuffer(res.stdout, dtype=np.float32).copy()   # writable
 
 
 def _smooth(x: np.ndarray, k: int) -> np.ndarray:
-    """np.convolve(x, ones(k)/k, "same") by running sums: O(n), not O(n·k), so a 30-minute film
-    mixes in seconds rather than hours."""
-    k = max(1, int(k))
-    c = np.concatenate([[0.0], np.cumsum(x, dtype=np.float64)])
-    i = np.arange(len(x)) + (k - 1) // 2 + 1
-    return (c[np.clip(i, 0, len(x))] - c[np.clip(i - k, 0, len(x))]) / k
+    """np.convolve(x, ones(k)/k, "same") by a running sum (O(n), accumulated in double), returned as
+    float32: a 30-minute film mixes in seconds, without index arrays the size of the film."""
+    from scipy.ndimage import uniform_filter1d
+    return uniform_filter1d(np.asarray(x, dtype=np.float32), size=max(1, int(k)), mode="constant", output=np.float32)
 
 
 def _tick(rng) -> np.ndarray:
@@ -78,14 +76,15 @@ def _bed(seconds: float, rng) -> np.ndarray:
             0.35 * np.sin(2 * np.pi * f0 * 2.01 * t) + 0.2 * np.sin(2 * np.pi * f0 * 3.0 * t))
     lfo = 0.65 + 0.35 * np.sin(2 * np.pi * t / 23.0)
     air = _smooth(rng.normal(0, 1, n), 400) * 0.15
-    return (tone * lfo + air) / 2.2
+    return ((tone * lfo + air) / 2.2).astype(np.float32)
 
 
 def _room(seconds: float, rng) -> np.ndarray:
     n = int(SR * seconds)
-    brown = np.cumsum(rng.normal(0, 1, n))
+    brown = np.cumsum(rng.standard_normal(n, dtype=np.float32), dtype=np.float64)
     brown -= _smooth(brown, 2000)
-    return brown / (np.abs(brown).max() + 1e-9)
+    brown /= np.abs(brown).max() + 1e-9
+    return brown.astype(np.float32)
 
 
 def _reverb(x: np.ndarray, rng) -> np.ndarray:
@@ -94,8 +93,8 @@ def _reverb(x: np.ndarray, rng) -> np.ndarray:
     ir[0] = 1.0
     ir /= np.abs(ir).sum() / 1.15
     from scipy.signal import oaconvolve
-    wet = oaconvolve(x, ir, mode="full")[: len(x)]
-    return 0.88 * x + 0.12 * wet
+    wet = oaconvolve(x, ir.astype(np.float32), mode="full")[: len(x)]
+    return (0.88 * x + 0.12 * wet).astype(np.float32)
 
 
 def _place(track: np.ndarray, clip: np.ndarray, at: float, gain: float) -> None:
@@ -182,18 +181,19 @@ def _riser(rng, seconds: float = 1.8) -> np.ndarray:
 
 
 def _family(bed: np.ndarray, n: int, bounds: list[float]) -> np.ndarray:
-    """The bed as a family of cues, one per chapter, crossfading over FAMILY_XFADE at each boundary."""
-    out = np.zeros(n)
+    """The bed as a family of cues, one per chapter, crossfading over FAMILY_XFADE at each boundary.
+    `bed` is the cue itself (minutes), not the cue tiled to the film's length."""
+    out = np.zeros(n, dtype=np.float32)
     k = int(FAMILY_XFADE * SR)
     edges = [0.0] + [b for b in bounds if 0 < b * SR < n] + [n / SR]
     for i, (a, b) in enumerate(zip(edges, edges[1:])):
         offset, ratio = FAMILY[i % len(FAMILY)]
         # a lower key by resampling (slower and darker, as a family member should be)
-        src = np.interp(np.arange(0, len(bed), ratio), np.arange(len(bed)), bed)
+        src = np.interp(np.arange(0, len(bed), ratio), np.arange(len(bed)), bed).astype(np.float32)
         src = np.roll(src, -int(offset * len(src)))
         i0, i1 = max(0, int(a * SR) - k // 2), min(n, int(b * SR) + k // 2)
         cue = np.tile(src, int(np.ceil((i1 - i0) / len(src))) + 1)[: i1 - i0]
-        fade = np.ones(i1 - i0)
+        fade = np.ones(i1 - i0, dtype=np.float32)
         if i0 > 0:
             fade[:k] = np.linspace(0, 1, k)
         if i1 < n:
@@ -232,7 +232,7 @@ def score_events(plan: dict, timing: dict) -> dict:
 
 def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
     """Each footage shot's own place sound, faded in and out over 0.4 s at its cuts."""
-    track = np.zeros(n)
+    track = np.zeros(n, dtype=np.float32)
     plan_p = d / "shots.json"
     if not plan_p.exists():
         return track, []
@@ -245,7 +245,7 @@ def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
         f = sfx.ambience(subject)
         if f is None:
             continue
-        clip = _decode(f).astype(np.float64)
+        clip = _decode(f)
         peak = np.abs(clip).max()
         if peak <= 0:
             continue
@@ -274,11 +274,11 @@ def mix(slug: str) -> Path:
     rng = np.random.default_rng(7)
     (d / "media").mkdir(exist_ok=True)
 
-    vo = np.zeros(n, dtype=np.float64)
+    vo = np.zeros(n, dtype=np.float32)   # float32 throughout: 24 bits is 144 dB of range, and half the memory
     for seg in timing["segments"]:
         if seg["kind"] != "beat":
             continue
-        clip = _decode(d / seg["audio"]).astype(np.float64)
+        clip = _decode(d / seg["audio"])
         _place(vo, clip, seg["vo_start"], 1.0)
     vo = sound.breath_gate(vo, [w for seg in timing["segments"] if seg["kind"] == "beat" for w in seg.get("words", [])])
     if not (d / "takes").exists():      # the placeholder is dry; a real voice keeps its own room, none added
@@ -289,22 +289,23 @@ def mix(slug: str) -> Path:
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(vo_path), "-af",
                     sound.VOICE_CHAIN,
                     "-ar", str(SR), str(d / "media" / "vo-proc.wav")], check=True, timeout=600)
-    vo = _decode(d / "media" / "vo-proc.wav").astype(np.float64)
+    vo = _decode(d / "media" / "vo-proc.wav")
     vo = np.pad(vo, (0, max(0, n - len(vo))))[:n]
 
     # envelope of the voice, for ducking
     win = int(SR * 0.05)
     env = _smooth(np.abs(vo), win)
-    speaking = _smooth((env > 0.01).astype(float), int(SR * 0.35))
+    speaking = _smooth(env > 0.01, int(SR * 0.35))
+    del env
     speaking = np.clip(speaking * 1.5, 0, 1)
 
     bed_file = next(iter(sorted(list(ASSETS.glob("music/*.wav")) + list(ASSETS.glob("music/*.mp3")))), None)
     if bed_file:
-        bed = _decode(bed_file).astype(np.float64)
-        bed = np.tile(bed, int(np.ceil(n / max(1, len(bed)))))[:n]
+        cue = _decode(bed_file)
+        bed = np.tile(cue, int(np.ceil(n / max(1, len(cue)))))[:n]
         bed_source = bed_file.name
     else:
-        bed = _bed(total, rng)[:n]
+        bed = cue = _bed(total, rng)[:n]
         bed_source = "procedural drone (provisional)"
     score = score_events(plan, timing) if plan else None
     if score:
@@ -312,17 +313,18 @@ def mix(slug: str) -> Path:
                          "riser": score["risers"]})
         score.update({"ticks": th["tick"], "subs": th["sub"], "rooms": th["room"], "paper": th["paper"]})
     if score:
-        bed = _family(bed, n, [float(c["at"]) for c in timing["chapters"]])
+        del bed
+        bed = _family(cue, n, [float(c["at"]) for c in timing["chapters"]])
         bed_source += f" · a family of {len(timing['chapters']) + 1} cues"
     if score:
         bed = bed / (np.sqrt(np.mean(bed ** 2)) + 1e-9)
         bed = sound.carve(bed, speaking)          # under speech: the voice's band cut hard, the rest a little
-        bed_gain = _db(BED_DB) * np.ones(n)
+        bed_gain = np.full(n, _db(BED_DB), dtype=np.float32)
     else:
         bed = bed / (np.abs(bed).max() + 1e-9)
         bed_gain = _db(BED_DB) * (1 - speaking * (1 - _db(BED_DUCK_DB)))
     if score:
-        lift = np.ones(n)
+        lift = np.ones(n, dtype=np.float32)
         for a, b in score["cards"]:      # the card holds with no voice: the bed comes up
             i0, i1, r = int(a * SR), int(b * SR), int(0.4 * SR)
             ramp = np.ones(max(0, i1 - i0)) * _db(CARD_SWELL_DB)
@@ -340,16 +342,19 @@ def mix(slug: str) -> Path:
             hold = np.ones(max(0, n - i0)) * _db(CARD_SWELL_DB)
             hold[: min(r, len(hold))] = np.linspace(1, _db(CARD_SWELL_DB), len(hold[:r]))
             lift[i0:] = hold
-        bed_gain = bed_gain * lift * sound.predips(n, score["subs"])
+        bed_gain *= lift
+        del lift
+        bed_gain *= sound.predips(n, score["subs"])
     room = _room(total, rng)[:n]
     if score:   # a long film's room tone is levelled by its body, like the bed: the floor never falls to silence
         room = room / (np.sqrt(np.mean(room ** 2)) + 1e-9)
-    room = room * _db(ROOM_TONE_DB)
+    room *= np.float32(_db(ROOM_TONE_DB))
 
-    fx = np.zeros(n)
+    fx = np.zeros(n, dtype=np.float32)
+    fx_side = np.zeros(n, dtype=np.float32)   # panned effects (sound.py: mid/side)
     tick_file, whoosh_file = ASSETS / "sfx" / "tick.mp3", ASSETS / "sfx" / "whoosh.mp3"
-    tick = _decode(tick_file).astype(np.float64) if tick_file.exists() else _tick(rng)
-    whoosh = _decode(whoosh_file).astype(np.float64) if whoosh_file.exists() else _whoosh(rng)
+    tick = _decode(tick_file) if tick_file.exists() else _tick(rng)
+    whoosh = _decode(whoosh_file) if whoosh_file.exists() else _whoosh(rng)
     for clip in (tick, whoosh):
         peak = np.abs(clip).max()
         if peak > 0:
@@ -362,9 +367,10 @@ def mix(slug: str) -> Path:
         _place(fx, whoosh, max(0.0, float(ch["at"]) - 0.08), _db(WHOOSH_DB))
     if score:
         sub, riser = _sub(rng), _riser(rng)
-        for t in score["ticks"]:
+        for k, t in enumerate(score["ticks"]):
             c, g = sound.vary(tick, rng)
             _place(fx, c, t, _db(TICK_DB) * g)
+            _place(fx_side, c, t, _db(TICK_DB) * g * (sound.PAN_TICK if k % 2 else -sound.PAN_TICK))
         for t in score["subs"]:
             _place(fx, sub, max(0.0, t - 0.02), _db(SUB_DB))
         for t in score["rooms"]:
@@ -375,23 +381,36 @@ def mix(slug: str) -> Path:
         for t in score["paper"]:
             c, g = sound.vary(paper, rng)
             _place(fx, c, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB) * g)
+            _place(fx_side, c, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB) * g * rng.uniform(-sound.PAN_PAPER, sound.PAN_PAPER))
         for t in score["risers"]:
             _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
     amb, amb_subjects = _ambience(d, n)
-    out = vo + bed * bed_gain + room + fx + amb
-    measured = sound.metrics(vo, bed * bed_gain + amb, {k: score[k] for k in ("ticks", "subs", "rooms", "paper", "risers")},
+    music = bed * bed_gain
+    del bed, bed_gain
+    mid = vo + music
+    mid += room
+    mid += fx
+    mid += amb
+    # the stereo field (sound.py): the voice centre, the music, the place and the room around it
+    side = sound.widen(music, sound.WIDTH_BED) + sound.widen(amb, sound.WIDTH_AMB) + sound.widen(room, sound.WIDTH_ROOM) + fx_side
+    out = np.stack([mid + side, mid - side], axis=1)
+    side_db = sound.side_under_mid_db(mid, side)
+    del side
+    measured = sound.metrics(vo, music + amb, {k: score[k] for k in ("ticks", "subs", "rooms", "paper", "risers")},
                              speaking, float(timing["duration"])) if score else {}
+    if score:
+        measured["side_under_mid_db"] = side_db
     if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
         f = int(min(2.5, tail) * SR)
         end = int((float(timing["duration"]) + tail) * SR)
-        out[end - f:end] *= np.linspace(1, 0, f) ** 1.5
+        out[end - f:end] *= (np.linspace(1, 0, f) ** 1.5)[:, None]
         out[end:] = 0.0
     peak = np.abs(out).max()
     if peak > 0.98:
         out = out / peak * 0.98
     raw = d / "media" / "mix-raw.wav"
-    sf.write(str(raw), out.astype(np.float32), SR)
+    sf.write(str(raw), out.astype(np.float32, copy=False), SR)
     final = d / "media" / "mix.wav"
     # the ceiling sits 0.5 dB under the spec's -1.5 dBTP: the AAC encode adds about 0.3 dB of
     # inter-sample peak (G01's draft measured -1.2 from a -1.5 mix)

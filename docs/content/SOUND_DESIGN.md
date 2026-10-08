@@ -18,6 +18,7 @@ cost. Nobody has to know how to mix: the rules do it the same way every time.
 | **Sound leads picture.** A place is heard before it's seen, and lingers after. | the J-cut and L-cut (Murch) | A footage shot's ambience starts before its cut and tails after. Paper foley leads its picture by three frames. | 0.5 s in, 0.35 s out, 0.1 s |
 | **Every room has a tone.** True silence sounds like a fault. | production sound practice | Room tone runs under the whole film, levelled by its body. | −48 dB |
 | **Music marks the structure.** | documentary scoring | Each chapter has its own cue from one family. The bed swells while a chapter card holds, with a riser into it and a low drop under it. The end card holds 4 s as the bed resolves to silence. | +8 dB swell |
+| **The voice holds the centre; the world surrounds it.** | stereo mixing (mid/side) | The voice and the low hits sit dead centre. The music, the place and the room are widened by an all-pass side signal, and ticks and paper are panned slightly. Folded to mono (a phone's speaker) the side cancels exactly, so the mono mix is unchanged. | bed 0.45, place 0.6, room 0.7; ticks ±0.15, paper ±0.3 |
 | **Loud enough, never fatiguing.** | broadcast loudness | −16 LUFS integrated, true peak −2 dBTP before the encode (−1.5 after), a loudness range a documentary breathes in. | `film-qa` |
 
 ## What film-qa checks, for no tokens
@@ -28,6 +29,7 @@ cost. Nobody has to know how to mix: the rules do it the same way every time.
 | Designed effects a minute (ticks, low hits, room changes, paper, risers) | 2 to 14: enough to keep attention, not so many they tire |
 | The longest stretch with nothing designed under the voice | at most 60 s |
 | Loudness range | 2–12 LU |
+| The stereo side under the centre (mono safety) | at least 6 dB: a mono speaker loses under 1 dB (G01: 21 dB) |
 | Integrated loudness | −17 to −15 LUFS |
 | True peak | at most −1.5 dBTP |
 
@@ -42,6 +44,6 @@ The chain above is built for a real voice in a real room. To record:
 
 ## Next, when worth it
 
-- **A stereo field:** the voice in the centre, the music wide, foley panned toward where a print lands on screen.
+- **Foley panned to the picture:** paper toward where a print lands on screen. Today its pan is random within ±0.3.
 - **Music edited to the picture's hit points:** a cue's downbeat on a chapter card, a sting on the thesis line. Today cues change on chapter bounds.
 - **Per-subject ambience from a licensed library,** in place of generated beds where it sounds generic.

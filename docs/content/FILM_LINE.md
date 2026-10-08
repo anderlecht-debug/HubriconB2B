@@ -28,8 +28,9 @@ That makes the floor about 0.4M tokens a film. G01 spent one to two orders of ma
 3. **Every AI step runs under a hard budget.** Use `hubricon-content ai-step <slug> <step> --prompt-file …`. It counts tokens live, weighted to cost, and stops the run the moment its budget is spent. A film stops starting AI steps once its own total is spent. Budgets and models live in `content/film/budgets.json`: Sonnet for plan, pick, fix and review, and Opus only for a script draft.
 4. **One pass per AI step.** There is no multi-agent critique of a film. The validator and film-qa are the critics. A fix pass reads film-qa's punch list, not the film.
 5. **Few, whole sessions, never many short ones.** Every `claude` session first loads its system prompt, tools and instructions: measured on 2026-10-07 at about 43k tokens before a word of work, which is about 53k cost-weighted. One planning session plans the whole film. A fix pass takes the whole punch list at once.
-6. **The unattended runner is capped too.** `scripts/content-tick.sh` runs each 30-minute tick through `ai-tick`: Sonnet, a cap per tick, per day and per week (`budgets.json` "runner"), and a tick past a cap does not start. Its ledger is `content/.cache/runner-meter.json`.
-7. **The meter is read, not guessed.** `hubricon-content film-cost <slug>` gives a film's tokens by step against budget.
+6. **A step that only answers is a reply, not a session.** `ai_step.reply` runs `claude -p` with no tools, its own one-line system prompt and a working directory outside the repo (no CLAUDE.md, no memory), the prompt on stdin. Measured 2026-10-07: 657 tokens of fixed load in place of about 43,000, on the same subscription. The `decide` step is one: G02's 252 shots came back in one reply for **163k weighted tokens** (31k in, 24.7k out, 150 s), against 1.3M as a session.
+7. **The unattended runner is capped too.** `scripts/content-tick.sh` runs each 30-minute tick through `ai-tick`: Sonnet, a cap per tick, per day and per week (`budgets.json` "runner"), and a tick past a cap does not start. Its ledger is `content/.cache/runner-meter.json`.
+8. **The meter is read, not guessed.** `hubricon-content film-cost <slug>` gives a film's tokens by step against budget.
 
 ## The line, as one command
 
@@ -38,8 +39,8 @@ That makes the floor about 0.4M tokens a film. G01 spent one to two orders of ma
 The steps are `voice`, `skeleton`, `decide`, `fill`, `source`, `pictures`, `render`, `qa`, `draft` and `cost`, in that order. Each runs as its own process and is recorded in `videos/<slug>/line.json`, so a stopped or crashed run resumes where it left off. The line stops with a reason when it can't go on: no voice yet, or a budget spent.
 
 - **`skeleton`:** code drafts the shots.
-- **`decide`:** the one model pass.
-- **`fill`:** the validator's known mechanical problems are fixed by code (`line.autofix`). A budgeted `fix` pass runs only if real problems remain.
+- **`decide`:** the one model pass, as a reply (rule 6): the brief in, `decisions.json` out. A reply with no JSON object stops the line and is kept in `decisions.raw.txt`.
+- **`fill`:** the validator's known mechanical problems are fixed by code (`line.autofix`). A budgeted `fix` pass runs only if real problems remain, as a reply too: `plan_brief.fix_brief` carries the problems, the shots they name with one either side, the plan fields and the styles; the reply's field patches are merged by code (`start` and `end` admitted). What a reply can't fix stops the line with the list.
 - **`pictures`:** auto-pick, auto-prints and resolve-gaps.
 - **`render`:** sizes its workers to free memory.
 
@@ -49,7 +50,7 @@ The steps are `voice`, `skeleton`, `decide`, `fill`, `source`, `pictures`, `rend
 |---|---|---|---|
 | 1 | Script (the founder's, or a draft he approves) | `ai-step <slug> script` | Opus, budgeted |
 | 2 | Timing from his takes | `takes-to-vo`, `timing` | 0 |
-| 3 | Shot plan | `ai-step <slug> plan` (shot-plan skill), then `shots-fill`, `shots-validate` | Sonnet, budgeted |
+| 3 | Shot plan | `plan-skeleton`, then the `decide` reply on `plan-brief.md`, then `plan-apply`, `shots-fill`, `shots-validate` | Sonnet, ~0.16M |
 | 4 | Sourcing | `source <slug>` | 0 |
 | 5 | Picks | `pick` for the ranked shots, `ai-step <slug> pick` for the rest | Sonnet, budgeted |
 | 6 | Render | `render-shots <slug> --workers 4` (unattended, overnight) | 0 |

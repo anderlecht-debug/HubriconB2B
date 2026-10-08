@@ -20,6 +20,7 @@ from __future__ import annotations
 import numpy as np
 
 SR = 48000
+CHUNK = SR * 30        # long filters run on 30 s at a time: double precision without a film-length double copy
 
 # Murch's voice: rumble cut, gentle noise reduction, de-ess, mud cut, presence, air, a leveling
 # compressor then a peak one, a limiter. Values are gentle on purpose: a chain is heard when it's wrong.
@@ -50,7 +51,7 @@ PRIORITY = {"riser": 5, "sub": 4, "tick": 3, "room": 2, "paper": 1}
 def breath_gate(vo: np.ndarray, words: list[dict], offset: float = 0.0) -> np.ndarray:
     """The narration with every gap between words of BREATH_MIN_GAP or more pulled down by BREATH_DB,
     on 20 ms ramps, so a breath stays human and never pumps."""
-    g = np.ones(len(vo))
+    g = np.ones(len(vo), dtype=np.float32)
     r = int(0.02 * SR)
     lo = 10 ** (BREATH_DB / 20)
     for a, b in zip(words, words[1:]):
@@ -70,7 +71,10 @@ def bands(x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """The voice's band of a track, and the rest of it."""
     from scipy.signal import butter, sosfilt
     sos = butter(4, VOICE_BAND, btype="bandpass", fs=SR, output="sos")
-    mid = sosfilt(sos, x)          # one pass: a phase shift in the music is inaudible, and a long film's track is large
+    # one pass (a phase shift in the music is inaudible), filtered in double a chunk at a time, kept as float32
+    mid, zi = np.empty(len(x), dtype=np.float32), np.zeros((sos.shape[0], 2))
+    for i in range(0, len(x), CHUNK):
+        mid[i:i + CHUNK], zi = sosfilt(sos, x[i:i + CHUNK], zi=zi)
     return mid, x - mid
 
 
@@ -84,7 +88,7 @@ def carve(bed: np.ndarray, speaking: np.ndarray) -> np.ndarray:
 
 def predips(n: int, hits: list[float]) -> np.ndarray:
     """A gain curve for the bed: down PREDIP_DB over the PREDIP_S before each hit, back over RECOVER_S."""
-    g = np.ones(n)
+    g = np.ones(n, dtype=np.float32)
     lo = 10 ** (PREDIP_DB / 20)
     for t in hits:
         i0, i1, i2 = int(max(0.0, t - PREDIP_S) * SR), int(t * SR), int((t + RECOVER_S) * SR)
@@ -136,3 +140,30 @@ def metrics(vo: np.ndarray, music: np.ndarray, events: dict[str, list[float]], s
     return {"voice_over_music_db": None if ratio is None else round(ratio, 1),
             "effects_per_minute": round(len(ts) / max(seconds / 60, 1e-9), 1),
             "longest_undesigned_s": round(max(gaps) if gaps else seconds, 1)}
+
+
+# ── the stereo field: the voice dead centre, the world around it (mid/side, mono-safe) ───────────
+# A side signal is the track through a chain of all-pass filters (same spectrum, scattered phase).
+# Left = mid + side, right = mid - side, so folded to mono (a phone's speaker) the side cancels
+# exactly and the mix is the mono mix: width that costs nothing in mono.
+WIDTH_BED, WIDTH_AMB, WIDTH_ROOM = 0.45, 0.6, 0.7
+PAN_TICK, PAN_PAPER = 0.15, 0.3
+_ALLPASS = (0.62, -0.41, 0.77, -0.23)
+
+
+def widen(x: np.ndarray, width: float) -> np.ndarray:
+    """The side signal for a track: decorrelated by first-order all-passes, scaled by `width`."""
+    from scipy.signal import lfilter
+    y = np.array(x, dtype=np.float32)
+    for a in _ALLPASS:
+        zi = np.zeros(1)
+        for i in range(0, len(y), CHUNK):
+            y[i:i + CHUNK], zi = lfilter([a, 1.0], [1.0, a], y[i:i + CHUNK], zi=zi)
+    y *= np.float32(width)
+    return y
+
+
+def side_under_mid_db(mid: np.ndarray, side: np.ndarray) -> float:
+    """How far the side sits under the mid: folded to mono, the mix loses 10·log10(1 + side²/mid²) dB."""
+    m, s = float(np.dot(mid, mid)), float(np.dot(side, side))
+    return round(10 * np.log10(max(m, 1e-12) / max(s, 1e-12)), 1)

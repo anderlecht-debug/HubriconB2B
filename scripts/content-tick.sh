@@ -45,6 +45,32 @@ cd "$WT" || exit 1
 git checkout -q content 2>/dev/null
 git fetch -q origin content 2>/dev/null && git merge -q --ff-only origin/content 2>/dev/null
 
+# Scripts the founder drafted elsewhere and dropped in the inbox become films (docs/content/SCRIPT_KIT.md):
+# each is checked and filed by code, for no tokens. A clean one waits on his takes and is moved to taken/;
+# a refused one goes to refused/ with its problems beside it, never retried until he drops a new copy.
+INBOX="${CONTENT_INBOX:-$HOME/Hubricon/scripts-inbox}"
+mkdir -p "$INBOX/taken" "$INBOX/refused"
+TOOK=""
+for F in "$INBOX"/*.md "$INBOX"/*.txt; do
+  [ -f "$F" ] || continue
+  [ "${CONTENT_DRY_RUN:-0}" = "1" ] && break
+  RES=$(cd "$WT/content" && .venv/bin/python -m hubricon_content.cli script-in "$F" 2>&1 | tail -1)
+  B=$(basename "$F"); STAMP=$(date +%Y%m%d-%H%M%S)
+  if printf '%s' "$RES" | grep -q '"status": "ok"'; then
+    mv "$F" "$INBOX/taken/$STAMP-$B"; TOOK="$TOOK $B"
+  else
+    mv "$F" "$INBOX/refused/$STAMP-$B"; printf '%s\n' "$RES" > "$INBOX/refused/$STAMP-$B.problems.json"
+  fi
+  printf '%s script-in %s: %s\n' "$(date -Is)" "$B" "$RES" >> "$RUN/log"
+done
+if [ -n "$TOOK" ]; then
+  cd "$WT" || exit 0
+  git add -A content docs 2>/dev/null
+  git diff --cached --quiet || git commit -q -m "Content pipeline: a founder's script taken in:$TOOK" \
+    -m "Moat: brand (the founder's own films, filed the moment he hands them over)"
+  git push -q origin content 2>/dev/null || true
+fi
+
 # An idle queue (everything parked for the founder or blocked on an input) needs no
 # Claude session at all; the state files are refreshed and the tick ends.
 if [ "${CONTENT_DRY_RUN:-0}" != "1" ] && "$WT/content/.venv/bin/hubricon-content" next --dry 2>/dev/null | grep -q '"idle": true'; then

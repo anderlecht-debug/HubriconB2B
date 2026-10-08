@@ -84,8 +84,9 @@ def _shot(a, b, beat, keys, visual):
             "intent": "", "visual": visual}
 
 
-def apply(slug: str, decisions: dict) -> dict:
-    """Merge the model's decisions ({"mode": …, "shots": {id: {field: value}}}) into the drafted plan."""
+def apply(slug: str, decisions: dict, also: tuple = ()) -> dict:
+    """Merge the model's decisions ({"mode": …, "shots": {id: {field: value}}}) into the drafted plan.
+    `also` admits more fields (a fix pass may move `start` and `end`)."""
     d = scriptmod.video_dir(slug)
     plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
     by = {s["id"]: s for s in plan["shots"]}
@@ -98,7 +99,7 @@ def apply(slug: str, decisions: dict) -> dict:
             unknown.append(sid)
             continue
         for k, v in (fields or {}).items():
-            if k in DECIDED:
+            if k in DECIDED or k in also:
                 s[k] = v
                 set_ += 1
     # what follows from a decision is code's: the room from the style, and a landing word where the
