@@ -36,12 +36,14 @@ body { min-height: 100vh; }
     <button class="btn quiet" id="next">Next beat →</button>
     <span class="meter" aria-hidden="true"><i id="level"></i></span>
   </div>
+  <p class="note" id="pace" aria-live="polite"></p>
   <div class="dots" id="dots"></div>
   <p class="note">Read each beat once through, as you would say it to one operator across a table. Space starts and stops a take. A take you keep replaces the one before it. Headphones on, so the mic hears only you.</p>
   <p class="note warn" id="rehearsal" hidden>Rehearsal: this script is not approved yet, so takes are not kept.</p>
 </main>
 <script type="module">
 const $ = (id) => document.getElementById(id);
+const { pace } = await import("/pace.mjs");
 const data = await (await fetch("/beats.json")).json();
 let i = 0, rec = null, chunks = [], blob = null, kept = new Set(data.kept);
 $("slug").textContent = data.slug;
@@ -83,6 +85,12 @@ function toggle() {
     $("rec").firstChild.textContent = "Record again ";
     $("play").disabled = false;
     $("keep").disabled = data.rehearsal;
+    // the pace, before he decides to keep it: words a minute over the voiced span only
+    blob.arrayBuffer().then((ab) => ctx.decodeAudioData(ab)).then((audio) => {
+      const p = pace(audio.getChannelData(0), audio.sampleRate, data.beats[i].text.split(/\s+/).filter(Boolean).length);
+      $("pace").textContent = p.note;
+      $("pace").classList.toggle("warn", p.verdict !== "good");
+    }).catch(() => { $("pace").textContent = ""; });
   };
   rec.start();
   $("rec").firstChild.textContent = "Stop ";
@@ -98,7 +106,7 @@ $("keep").onclick = async () => {
   $("keep").disabled = true;
   paint();
 };
-$("next").onclick = () => { i = Math.min(data.beats.length - 1, i + 1); blob = null; $("play").disabled = $("keep").disabled = true; $("rec").firstChild.textContent = "Record "; paint(); };
+$("next").onclick = () => { i = Math.min(data.beats.length - 1, i + 1); blob = null; $("pace").textContent = ""; $("play").disabled = $("keep").disabled = true; $("rec").firstChild.textContent = "Record "; paint(); };
 paint();
 </script>
 </body>

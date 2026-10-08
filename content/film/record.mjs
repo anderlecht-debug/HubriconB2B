@@ -58,6 +58,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const send = (code, type, body) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
     if (req.method === "GET" && url.pathname === "/") return send(200, "text/html", readFileSync(join(CONTENT, "film", "record.html")));
     if (req.method === "GET" && url.pathname.startsWith("/assets/")) return send(200, "text/css", readFileSync(join(ROOT, url.pathname)));
+    if (req.method === "GET" && url.pathname === "/pace.mjs") return send(200, "text/javascript", readFileSync(join(CONTENT, "film", "pace.mjs")));
     if (req.method === "GET" && url.pathname === "/beats.json") return send(200, "application/json", JSON.stringify({ slug, rehearsal: !approved(slug), beats: list, kept: kept() }));
     const take = url.pathname.match(/^\/take\/(b\d+)$/);
     if (req.method === "POST" && take && !approved(slug)) return send(403, "application/json", JSON.stringify({ error: "the script is not approved; takes are not kept" }));

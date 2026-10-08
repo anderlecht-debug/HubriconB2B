@@ -19,6 +19,12 @@ This file sits beside SOUND_DESIGN.md.
 | **A voice that is clear and alive.** Viewers stay with a speaker who is fast and enthusiastic, not slow and flat. | Guo, Kim & Rubin 2014 | Each beat of his reading sits between 120 and 200 words a minute; a beat outside it is read again. | 120–200 wpm | film (his own takes only) |
 | **No dead air.** Something on screen responds to the words every few seconds; a chart a viewer must read holds still. | retention editing practice; Mayer's coherence principle | No 4 s frozen picture; no type shot with nothing to draw; no shot opening on bare paper. | freeze 4 s; `shots.CONTENT` | film |
 
+## At the teleprompter
+
+`record.mjs` shows each take's pace the moment it is stopped, before he keeps it: words a minute over
+the voiced span only (`content/film/pace.mjs`). A take outside 120–200 says so, and what to do. The pause
+before a key figure needs the alignment, so it is checked later, in film-qa.
+
 ## What the three pilots showed (2026-10-07)
 
 The checks were calibrated on G01–G03, the capability proofs:
@@ -34,7 +40,5 @@ The checks were calibrated on G01–G03, the capability proofs:
 - **Retention from YouTube.** The real signal: each video's audience-retention curve, mapped onto its
   beats and shots, so a dip names the sentence and the picture it happened on. Needs the Google Cloud
   OAuth setup and public uploads.
-- **Pace at the teleprompter.** `record.mjs` shows each take's words a minute and the pause before its
-  key figure, so a fast beat is read again on the spot.
 - **A worksheet per film.** The TRY beat's steps, with the same demo numbers, as a one-page sheet on the
   matching /learn lesson (a site change, for the founder's go).
