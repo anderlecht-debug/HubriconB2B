@@ -1,0 +1,91 @@
+{
+ "slug": "08-elasticity-plain-english",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The hook has him read elasticity as a warning not to touch the price, and the 'let them be wrong' beat states the markup-plus-gut method fairly, granting that units are the thing he can see, before the crack draws the line the units sit on."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "'In plain English': the ratio is read off a plotted line, named after it is shown, and the pricing rule is given in words before its symbol. The new title's promise — that units holding is not proof the price is right — is delivered three times: the hill puts the right price on the slope and the true unit margin, neither of which units holding reveals; the range is too wide to name a top for {{el_no_top}} of the {{el_skus_fit}} products that could be fit; and the close asks him to stop treating units holding as proof. Note for the founder: the title changed from 'why your price is probably wrong', which the corrected engine contradicts ({{el_p_optimal}} on the prices already being about right)."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "Elasticity is named after the slope has been read as a ratio; the hill is built from the pull in both directions before the top is located; the inverse-elasticity rule is stated in words and only then as a symbol, explicitly as a convenience."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: the price you want sits on a hill whose top is fixed by the demand slope and the true unit margin, and that slope is measured with a width. The hold verdict in chapter two is where that one idea lands, not a second idea. One CTA, in the honest limit."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Almost nobody can say where the top of their profit hill is, and the honest measurement usually refuses to name it' is disputable and specific, and so is the line that a measurement willing to say it cannot see the top is the one to trust when it says climb. A competent operator can argue that a refusal is a useless answer."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "Every chart beat names its run and every key exists in facts.json. Re-judged after the 2026-10-06 redraft: chapter two's DATA SOURCE names ELASTICITY.FIT and PRICE.OPTIMUM with {{pm_count}} recommended steps, and the dropped pm_* step figures appear nowhere in the script or the hooks."
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "The method is complete: pull price and units by month, fit log units on log price with its standard error, move the price on purpose when it never moved and wait {{el_min_periods}} months, compute the true unit margin after fees and ads, set the kept fraction to the inverse of the slope, and — when the range is too wide to name a top — work the rule at the estimate alone and move only if it lands above today's price, under the {{pm_step_cap}} cap, reading each result against its range. That is the same guard the Price Curve course was corrected to on 2026-10-06. Robust errors and sizing the step to the uncertainty are left to the model in the honest limit, as §7 allows."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close says what the viewer can do (the line for the top products), where it breaks ({{n_skus}} products every month, errors that don't assume the noise is tidy, and turning each range into a step the right size for what's unknown in it), and that the gap is a model. No service is named, as pillar 3 requires, and the CTA is the course page."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "4 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "Elasticity, the hill, the wrong margin and the stretch at the top apply to any product business; 'the platform's cut' reads as any channel's fees. Weakness to note for the scenes step: the profit hill is not one of the listed Manim scenes, so the elasticity scene needs a hill variant driven by the same fit and the margin decomposition."
+  }
+ ]
+}

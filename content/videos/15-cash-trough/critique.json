@@ -1,0 +1,91 @@
+{
+  "slug": "15-cash-trough",
+  "pass": true,
+  "validator_problems": [],
+  "items": [
+    {
+      "n": 1,
+      "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+      "pass": true,
+      "note": "The 0:15 beat states the model the viewer actually runs, that growing revenue, a profitable close and a healthy balance mean cash is fine and he would see trouble coming, and names the assumption buried in it rather than mocking it. The correction arrives at 0:45."
+    },
+    {
+      "n": 2,
+      "question": "Is there a concrete number in the first sentence?",
+      "pass": true,
+      "note": "first sentence carries a {{key}} figure"
+    },
+    {
+      "n": 3,
+      "question": "Is the title's promise fully delivered?",
+      "pass": true,
+      "note": "The title promises that the problem is a trough rather than revenue, and the script delivers exactly that: a catalogue whose revenue and monthly closes are healthy, whose ending cash is above its opening cash, and whose low point sits far below both."
+    },
+    {
+      "n": 4,
+      "question": "Does any notation appear before its intuition?",
+      "pass": true,
+      "note": "The settlement lag and the lumpiness of supplier wires are shown before anything is named, and the term cash trough is given only after the viewer has watched the steps form a bottom. The simulation is introduced as running the same calendar many times, with the percentiles named after they are read off the paths."
+    },
+    {
+      "n": 5,
+      "question": "Is there exactly one idea, and exactly one CTA?",
+      "pass": true,
+      "note": "1 CTA beat(s); one idea is judged by the skill"
+    },
+    {
+      "n": 6,
+      "question": "Does the CTA match the awareness stage in \u00a78?",
+      "pass": true,
+      "note": "CTA matches \u00a78 for this pillar"
+    },
+    {
+      "n": 7,
+      "question": "Is there one claim a competent operator could dispute?",
+      "pass": true,
+      "note": "The ending balance is the least useful number on a cash forecast, and growth makes the trough deeper while improving every number the operator watches. A competent operator can dispute both, and the wire calendar beat shows the mechanism behind them."
+    },
+    {
+      "n": 8,
+      "question": "Is there any gap over 40 seconds without a re-hook?",
+      "pass": true,
+      "note": "no gap over 40 s"
+    },
+    {
+      "n": 9,
+      "question": "Does every number name its model run?",
+      "pass": true,
+      "note": "every chart beat names its run; every key exists"
+    },
+    {
+      "n": 10,
+      "question": "Is any step of the method withheld?",
+      "pass": true,
+      "note": "The method is complete and self-executable: the dated outflow list, receipts lagged by the settlement cycle, demand varied across cases with the wire dates held fixed, the minimum of each line read rather than the ending balance, and the floor set above the worst of those minimums."
+    },
+    {
+      "n": 11,
+      "question": "Does the close state a real limitation rather than pitch?",
+      "pass": true,
+      "note": "The close names what a handful of demand cases cannot give: correlated demand across the catalogue, lead times that slip and drag a wire with them, the link between a soft month and a late container, and the weekly re-run. It says plainly that a few cases give a shape but not the bad end, which is the end being planned against, and it still tells the viewer to build the calendar tomorrow."
+    },
+    {
+      "n": 12,
+      "question": "Any banned phrase present?",
+      "pass": true,
+      "note": "none"
+    },
+    {
+      "n": 13,
+      "question": "Are CLIP markers placed, with at least three usable?",
+      "pass": true,
+      "note": "4 CLIP markers"
+    },
+    {
+      "n": 14,
+      "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1\u20132 exempt)",
+      "pass": true,
+      "note": "exempt (pillar 1\u20132)"
+    }
+  ]
+}

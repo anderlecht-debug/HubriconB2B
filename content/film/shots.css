@@ -1,0 +1,142 @@
+/* The long films' stage kinds (VISUAL_SPEC.md §8.1, §14), beside film.css. Layout only:
+   every colour is a token from /assets/hubricon.css and every size, time and scale is a
+   custom property set from the style's numbers in content/film/styles.json
+   (content/film/shots.mjs). Numbers arrive unitless; px are multiplied in here. */
+
+.shot { position: absolute; inset: 0; }
+.shot .drift { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center;
+  transform-origin: 50% 45%; animation: shot-drift var(--shot) linear both; }
+.shot .scene.top .drift { justify-content: flex-start; }
+@keyframes shot-drift { from { transform: scale(1); } to { transform: scale(var(--drift-to)); } }
+.shot .scene { padding: 120px 160px 132px; }
+.shot .scene.top { padding-top: 104px; }
+
+/* ── the world room: a picture, moving ── */
+.shot .world { padding: 0; background: var(--ink); }
+.still-frame { position: absolute; inset: 0; overflow: hidden; }
+.still-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  object-position: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
+  transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%); will-change: transform; }
+.still-img.m-push, .still-img.m-pull, .still-img.m-drift { animation: still-scale var(--dur) cubic-bezier(0.37, 0, 0.63, 1) both; }
+@keyframes still-scale { from { transform: scale(var(--from)); } to { transform: scale(var(--to)); } }
+.still-img.m-pan-right { animation: pan-right var(--dur) cubic-bezier(0.37, 0, 0.63, 1) both; }
+.still-img.m-pan-left { animation: pan-left var(--dur) cubic-bezier(0.37, 0, 0.63, 1) both; }
+@keyframes pan-right { from { transform: scale(var(--scale)) translateX(calc(var(--travel) * 50%)); } to { transform: scale(var(--scale)) translateX(calc(var(--travel) * -50%)); } }
+@keyframes pan-left { from { transform: scale(var(--scale)) translateX(calc(var(--travel) * -50%)); } to { transform: scale(var(--scale)) translateX(calc(var(--travel) * 50%)); } }
+.still-img.m-reveal { animation: reveal-pull var(--pull) var(--ease-out) var(--on) both, reveal-drift var(--rest) linear calc(var(--on) + var(--pull)) forwards; }
+@keyframes reveal-pull { from { transform: scale(var(--from)); } to { transform: scale(var(--to)); } }
+@keyframes reveal-drift { from { transform: scale(var(--to)); } to { transform: scale(var(--drift)); } }
+
+/* What may sit over a picture (§3.3): above the bottom 12%, where the player's controls live. */
+.ov-credit { position: absolute; right: 96px; bottom: 140px; font-size: 24px; font-weight: var(--regular); color: color-mix(in srgb, var(--paper) 70%, transparent); }
+.ov-place { position: absolute; left: 96px; bottom: 140px; color: var(--paper); text-shadow: 0 1px 1px color-mix(in srgb, var(--ink) 35%, transparent);
+  animation: place-in 700ms var(--ease-out) 500ms both, place-out 400ms ease 4500ms forwards; }
+.ov-place-name { font-size: 34px; font-weight: var(--strong); }
+.ov-date { font-size: 28px; font-weight: var(--regular); }
+@keyframes place-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes place-out { to { opacity: 0; } }
+.ov-illustration { position: absolute; right: 96px; bottom: 140px; font-size: 22px; color: var(--paper); opacity: 0.85; }
+
+/* ── documents (P1, P2) ── */
+.doc-page { align-self: center; min-width: 1120px; max-width: 1400px; padding: 48px 64px; background: var(--paper);
+  border: 1px solid var(--rule-2); border-radius: calc(var(--radius) * 1px); transform-origin: 50% var(--origin);
+  animation: doc-push var(--push-dur) cubic-bezier(0.37, 0, 0.63, 1) var(--push-at) both; }
+@keyframes doc-push { from { transform: scale(var(--start-scale)); } to { transform: scale(var(--push-scale)); } }
+.doc-line { position: relative; font-size: calc(var(--line) * 1px); line-height: 1.5; color: var(--ink-2); margin: 0;
+  animation: doc-dim var(--dim-dur) ease var(--dim-at) both; }
+.doc-line.doc-target { color: var(--ink); font-weight: var(--strong); animation: none; }
+.doc-line.doc-money { animation: doc-blue var(--mark-dur) ease var(--mark-at) both; }
+@keyframes doc-dim { from { opacity: 1; } to { opacity: var(--dim); } }
+@keyframes doc-blue { from { color: var(--ink); } to { color: var(--blue); } }
+.doc-mark { position: absolute; left: 0; bottom: 0.08em; height: calc(var(--mark) * 1px); width: 100%; background: var(--ink);
+  transform-origin: left; animation: doc-mark var(--mark-dur) var(--ease-out) var(--mark-at) both; }
+.doc-money .doc-mark { background: var(--blue); }
+@keyframes doc-mark { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.doc-image { display: block; max-width: 100%; filter: grayscale(1); }
+.doc-source { align-self: center; margin-top: 24px; font-size: calc(var(--source) * 1px); color: var(--ink-3); }
+
+/* ── the table scan (P3) ── */
+.tbl-wrap { position: relative; margin-top: 40px; }
+.tbl table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; position: relative; }
+.tbl th { font-size: calc(var(--header) * 1px); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase;
+  color: var(--ink-3); text-align: left; padding: 0 24px 14px 0; border-bottom: 2px solid var(--ink); }
+.tbl td { font-size: calc(var(--cell) * 1px); color: var(--ink-2); padding: 14px 24px 14px 0; border-bottom: 1px solid var(--rule); }
+.tbl .num { text-align: right; }
+.tbl-hit td { animation: tbl-hit var(--band-dur) var(--ease-out) var(--band-at) both; }
+@keyframes tbl-hit { from { color: var(--ink-2); font-weight: var(--regular); } to { color: var(--ink); font-weight: var(--strong); } }
+.tbl td.tbl-money { animation: tbl-money 300ms ease var(--money-at) both; }
+@keyframes tbl-money { from { color: var(--ink); } to { color: var(--blue); } }
+.tbl-band { position: absolute; left: -16px; right: -16px; height: calc(var(--cell) * 1px + 28px); background: var(--paper-2);
+  top: calc(var(--header) * 1.6px + 16px + (var(--row) - 1) * (var(--cell) * 1px + 29px));
+  animation: tbl-band var(--band-dur) var(--ease-out) var(--band-at) both; }
+@keyframes tbl-band { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: none; } }
+
+/* ── numbers (P5, P6) ── */
+.pair-q { font-size: calc(var(--q) * 1px); font-weight: var(--strong); color: var(--ink); margin-bottom: 48px; max-width: 30ch; }
+.pair-row { display: flex; gap: 120px; }
+.pair-label { font-size: calc(var(--l) * 1px); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.pair-figure { font-size: calc(var(--f) * 1px); font-weight: var(--strong); letter-spacing: -0.04em; line-height: 1.05; color: var(--ink); }
+.pair-figure.money { color: var(--blue); }
+.pair-gap { margin-top: 48px; font-size: calc(var(--g) * 1px); color: var(--ink-2); max-width: 46ch; }
+
+/* ── the count (P7) ── */
+.dots { margin-top: 40px; display: flex; flex-wrap: wrap; gap: calc(var(--gap) * 1px); max-width: 1600px; }
+.dots i { width: calc(var(--dot) * 1px); height: calc(var(--dot) * 1px); border-radius: 50%; background: var(--rule-2); }
+.dots i.dot-on { animation: dot-fill 120ms ease var(--at) both; }
+.dots-money i.dot-on { animation-name: dot-fill-money; }
+@keyframes dot-fill { from { background: var(--rule-2); } to { background: var(--ink); } }
+@keyframes dot-fill-money { from { background: var(--rule-2); } to { background: var(--blue); } }
+
+/* ── the timeline (P11) ── */
+.tl-track { position: relative; height: 420px; margin-top: 60px; }
+.tl-axis { position: absolute; left: 0; right: 0; top: 50%; height: calc(var(--axis) * 1px); background: var(--ink); }
+.tl-event { position: absolute; left: var(--x); top: 0; bottom: 0; width: 560px; margin-left: -280px; text-align: center; }
+.tl-tick { position: absolute; left: 50%; top: calc(50% - var(--tickh) * 0.5px); width: 2px; height: calc(var(--tickh) * 1px); background: var(--ink); }
+.tl-date { position: absolute; left: 0; right: 0; bottom: calc(50% + var(--tickh) * 0.5px + 12px); font-size: calc(var(--date) * 1px); font-weight: var(--strong); color: var(--ink); }
+.tl-label { position: absolute; left: 0; right: 0; top: calc(50% + var(--tickh) * 0.5px + 12px); font-size: calc(var(--label) * 1px); color: var(--ink-2); line-height: 1.25; }
+.tl-label.money { color: var(--blue); }
+.tl-low .tl-date { bottom: calc(50% + var(--tickh) * 0.5px + 110px); }
+.tl-low .tl-label { top: calc(50% + var(--tickh) * 0.5px + 110px); }
+
+/* ── the formula (P12) ── */
+.f-panel { align-self: flex-start; display: flex; flex-wrap: wrap; align-items: baseline; gap: 28px; padding: 48px 56px;
+  background: var(--paper-2); border-radius: calc(var(--radius) * 1px); max-width: 1600px; }
+.f-term { font-size: calc(var(--term) * 1px); font-weight: var(--strong); color: var(--ink); letter-spacing: -0.02em; }
+.f-term.money { color: var(--blue); }
+.f-op { font-size: calc(var(--term) * 1px); font-weight: var(--regular); color: var(--ink-3); }
+
+/* ── the quote (P14) and the chapter card (P15) ── */
+.quote { font-size: calc(var(--q) * 1px); font-weight: var(--strong); line-height: 1.15; letter-spacing: -0.02em; color: var(--ink); max-width: 24ch; margin: 0; }
+.quote-by { margin-top: 32px; font-size: calc(var(--a) * 1px); color: var(--ink-3); }
+.ch-hair { display: block; width: calc(var(--hair) * 1px); height: 2px; background: var(--ink); margin-bottom: 40px;
+  transform-origin: left; animation: doc-mark 350ms var(--ease-out) both; }
+.ch-title { font-size: calc(var(--size) * 1px); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.04; color: var(--ink); max-width: 21ch; }
+
+/* ── archival on paper (W5, W6, W11) ── */
+.arch { align-self: center; margin: 0; }
+.arch img { display: block; border: 1px solid var(--rule-2); filter: grayscale(1); }
+.arch figcaption { display: flex; justify-content: space-between; gap: 40px; margin-top: calc(var(--gap) * 1px);
+  font-size: calc(var(--cap) * 1px); color: var(--ink-3); }
+.arch-drift { animation-name: arch-drift; }
+@keyframes arch-drift { from { transform: scale(1); } to { transform: scale(var(--to)); } }
+.stk-row { display: flex; justify-content: center; align-items: center; gap: calc(var(--gut) * 1px); }
+.stk { height: calc(var(--h) * 1px); width: auto; border: 1px solid var(--rule-2); filter: grayscale(1); }
+.stk-row .stk-other { animation: film-in 700ms var(--ease-out) var(--at) both, stk-dim 400ms ease var(--on-at) forwards; }
+.stk-row .stk-focus { animation: film-in 700ms var(--ease-out) var(--at) both, stk-mark 400ms ease var(--on-at) forwards; }
+@keyframes stk-dim { to { opacity: var(--dim); } }
+@keyframes stk-mark { from { outline: 0 solid transparent; outline-offset: 0; } to { outline: calc(var(--ol) * 1px) solid var(--ink); outline-offset: calc(var(--olgap) * 1px); } }
+.stk-drift { animation-name: stk-push; }
+@keyframes stk-push { from { transform: scale(1); } to { transform: scale(var(--to)); } }
+.split-row { display: flex; justify-content: center; gap: calc(var(--gut) * 1px); }
+.split-panel { margin: 0; }
+.split-label { font-size: calc(var(--lab) * 1px); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px; }
+.split-panel img, .split-right { display: block; width: calc(var(--pw) * 1px); height: calc(var(--ph) * 1px); object-fit: cover; border: 1px solid var(--rule-2); }
+.split-panel img { filter: grayscale(1); }
+.split-right { background: var(--paper-2); }
+
+/* ── the receipt (P4): the site's .rcpt at film size ── */
+.film-rcpt .rcpt { margin-top: 40px; font-size: calc(var(--cell) * 1px); }
+.film-rcpt .rcpt th { font-size: 24px; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); padding-bottom: 14px; }
+.film-rcpt .rcpt td { padding: 18px 28px 18px 0; }
+.film-rcpt .rcpt-why { font-size: calc(var(--why) * 1px); margin-top: 6px; }
+.film-rcpt .rcpt .money { color: var(--blue); font-weight: var(--strong); }

@@ -1,0 +1,96 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Inter Display SemiBold,44,&H00170E0A,&H00170E0A,&H00FFFFFF,&HFFFFFFFF,0,0,0,0,100,100,-0.6,0,1,2.5,0,2,140,140,104,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:06.56,Sub,,0,0,0,,$95,201. That's where this catalog's\Ncash bottoms out on day 13 days, on a
+Dialogue: 0,0:00:06.56,0:00:11.46,Sub,,0,0,0,,business making 32.3% net. You'd say a\Nmargin like that can't run out of
+Dialogue: 0,0:00:11.46,0:00:17.23,Sub,,0,0,0,,money. It can, on a date you can read\Noff a calendar. Here's the model. You
+Dialogue: 0,0:00:17.23,0:00:22.43,Sub,,0,0,0,,watch the P&L. Revenue up, margin\Nhealthy, net positive, so the business
+Dialogue: 0,0:00:22.43,0:00:27.20,Sub,,0,0,0,,fine and the bank balance is a lagging\Ncopy of the P&L. When cash gets tight
+Dialogue: 0,0:00:27.20,0:00:32.90,Sub,,0,0,0,,it's a surprise, and the explanation\Nis always something else. A big PO. A
+Dialogue: 0,0:00:32.90,0:00:37.93,Sub,,0,0,0,,slow payout. A bad month. It's a fair\Nmodel, because over a long enough
+Dialogue: 0,0:00:37.93,0:00:43.22,Sub,,0,0,0,,window the P&L and the bank do agree.\NThe trouble is the window. Inside it,
+Dialogue: 0,0:00:43.28,0:00:48.34,Sub,,0,0,0,,the money leaves on one set of dates\Nand comes back on another, and the P&L
+Dialogue: 0,0:00:48.34,0:00:53.63,Sub,,0,0,0,,doesn't carry dates. Here's the demo\Ncatalog on screen. Tarnhollow, demo
+Dialogue: 0,0:00:53.63,0:01:01.02,Sub,,0,0,0,,data, 24 products, about $3.5M a year.\NLast month: $318,632 of sales,
+Dialogue: 0,0:01:01.03,0:01:07.52,Sub,,0,0,0,,$102,864 of true net profit, 32.3% net\Nmargin. On the P&L this business is
+Dialogue: 0,0:01:07.52,0:01:14.71,Sub,,0,0,0,,fine. Now the bank. $262,000 on hand\Ntoday. Inside the next 90 days, the
+Dialogue: 0,0:01:14.71,0:01:21.13,Sub,,0,0,0,,supplier wires already scheduled add\Nup to $345,501. That's more than the
+Dialogue: 0,0:01:21.13,0:01:25.74,Sub,,0,0,0,,cash in the bank, on a business that\Nis profitable every month. The money
+Dialogue: 0,0:01:25.74,0:01:29.98,Sub,,0,0,0,,comes back. The question is when, and\Nwhether the balance runs dry on the
+Dialogue: 0,0:01:29.98,0:01:30.90,Sub,,0,0,0,,way.
+Dialogue: 0,0:01:32.70,0:01:38.90,Sub,,0,0,0,,On screen is the cash cone. 10,000\Npossible versions of the next 90 days,
+Dialogue: 0,0:01:38.95,0:01:43.71,Sub,,0,0,0,,drawn from what this catalog's demand\Nactually does, with every supplier
+Dialogue: 0,0:01:43.81,0:01:50.54,Sub,,0,0,0,,wire as a red tick. Read it left to\Nright, and find the clocks. First, the
+Dialogue: 0,0:01:50.54,0:01:57.48,Sub,,0,0,0,,wire schedule. 35 wires inside the\Nwindow. The largest, $23,482, for
+Dialogue: 0,0:01:57.48,0:02:03.68,Sub,,0,0,0,,TH-ENADUT-03, leaves on day 0 days.\NThat's today. Next, how long the goods
+Dialogue: 0,0:02:03.68,0:02:08.65,Sub,,0,0,0,,take to arrive. The typical supplier\Nlead time here is 40 days. For that
+Dialogue: 0,0:02:08.65,0:02:14.42,Sub,,0,0,0,,long the money is gone and there's\Nnothing new to sell. Then the shelf.
+Dialogue: 0,0:02:14.42,0:02:19.37,Sub,,0,0,0,,units land they sit until they sell.\NThe tightest product in this catalog,
+Dialogue: 0,0:02:19.53,0:02:25.56,Sub,,0,0,0,,TH-STAMIX-12, has 22 days of cover,\Nand slower products sit longer than
+Dialogue: 0,0:02:25.56,0:02:31.79,Sub,,0,0,0,,that. Last, the payout. The platform\Nholds the sale for a 14 days cycle
+Dialogue: 0,0:02:31.79,0:02:37.49,Sub,,0,0,0,,before it pays you. Now put the clocks\Nin a row. Wire, then lead time, then
+Dialogue: 0,0:02:37.49,0:02:43.49,Sub,,0,0,0,,shelf, then payout. The cash\Nconversion cycle is the length of that
+Dialogue: 0,0:02:43.49,0:02:49.58,Sub,,0,0,0,,days between a dollar leaving for the\Nsupplier and the same dollar landing
+Dialogue: 0,0:02:49.60,0:02:55.12,Sub,,0,0,0,,back in the bank. It isn't on the P&L\Nbecause the P&L has no calendar. It's
+Dialogue: 0,0:02:55.12,0:03:00.48,Sub,,0,0,0,,on this chart, because this chart is\Nnothing but a calendar.
+Dialogue: 0,0:03:02.28,0:03:09.42,Sub,,0,0,0,,Now verify it against the cone. The\Nmedian path's low point is $95,201.
+Dialogue: 0,0:03:09.42,0:03:16.40,Sub,,0,0,0,,bad paths' low point, the worst day of\Nthe unlucky tail, is $95,201, and it
+Dialogue: 0,0:03:16.40,0:03:22.26,Sub,,0,0,0,,arrives on day 13 days. Look where\Nthat day sits. It's after the wires
+Dialogue: 0,0:03:22.26,0:03:26.79,Sub,,0,0,0,,left and before the goods have landed,\Nlet alone sold and paid out. That's
+Dialogue: 0,0:03:26.79,0:03:31.34,Sub,,0,0,0,,the cycle showing up as a date. In\Nthis run the share of paths that ever
+Dialogue: 0,0:03:31.34,0:03:39.37,Sub,,0,0,0,,runs dry is 0.0%. That's with $262,000\Nin the bank on day 0 days. Bring the
+Dialogue: 0,0:03:39.37,0:03:46.11,Sub,,0,0,0,,starting balance down toward $95,201\Nand the same schedule, same margin,
+Dialogue: 0,0:03:46.13,0:03:51.46,Sub,,0,0,0,,same products, starts touching the\Nfloor. The margin never changed. Only
+Dialogue: 0,0:03:51.46,0:03:56.20,Sub,,0,0,0,,balance did, and the dates did the\Nrest. And here's what the cone knows
+Dialogue: 0,0:03:56.20,0:04:00.96,Sub,,0,0,0,,a spreadsheet doesn't. Products don't\Nsell independently. Across this
+Dialogue: 0,0:04:00.96,0:04:08.01,Sub,,0,0,0,,catalog, demand moves together with a\Ncorrelation of 0.48, so a slow week is
+Dialogue: 0,0:04:08.01,0:04:12.36,Sub,,0,0,0,,slow for most of the products at once,\Nand the trough is deeper than it
+Dialogue: 0,0:04:12.36,0:04:17.18,Sub,,0,0,0,,would be if each product rolled its\Nown dice. Seen from the other end,
+Dialogue: 0,0:04:17.18,0:04:26.20,Sub,,0,0,0,,90 days the top of the cone is\N$352,682 and the bottom is $322,319.
+Dialogue: 0,0:04:26.20,0:04:32.75,Sub,,0,0,0,,plan, same margin. Over a full year\Nthat gap opens to $65,320 on dice
+Dialogue: 0,0:04:33.45,0:04:34.88,Sub,,0,0,0,,So what's the number worth?
+Dialogue: 0,0:04:35.67,0:04:40.21,Sub,,0,0,0,,Every day you shorten the cycle is a\Nday less of cash sitting in the gap,
+Dialogue: 0,0:04:40.22,0:04:44.84,Sub,,0,0,0,,and here's what's sitting in the gap\Non this catalog right now. On the
+Dialogue: 0,0:04:44.84,0:04:51.44,Sub,,0,0,0,,clock, stock ordered past its economic\Nquantity costs $3,874 a month in fees
+Dialogue: 0,0:04:51.44,0:04:56.00,Sub,,0,0,0,,to hold, and there are 13 orders the\Nnewsvendor would trim. That's cash
+Dialogue: 0,0:04:56.00,0:05:01.50,Sub,,0,0,0,,parked on a shelf. On the wire clock,\Nthe largest wire is $23,482 and it
+Dialogue: 0,0:05:01.50,0:05:06.03,Sub,,0,0,0,,goes out on day 0 days, so it sets the\Ndepth of the trough more than any
+Dialogue: 0,0:05:06.03,0:05:10.64,Sub,,0,0,0,,other line on the calendar. On the\Npayout clock, 14 days is fixed by the
+Dialogue: 0,0:05:10.64,0:05:15.06,Sub,,0,0,0,,platform. You can't shorten it. You\Ncan stop treating it as instant. And
+Dialogue: 0,0:05:15.06,0:05:20.06,Sub,,0,0,0,,price of getting this wrong isn't a\Nfee. It's the reorder you can't place
+Dialogue: 0,0:05:20.06,0:05:23.82,Sub,,0,0,0,,because the cash is in transit, and\Nthe rank you buy back with ads
+Dialogue: 0,0:05:23.82,0:05:29.09,Sub,,0,0,0,,afterwards. The risk model puts the\Nexpected shortfall below plan in a bad
+Dialogue: 0,0:05:29.09,0:05:36.50,Sub,,0,0,0,,period at $38,007, and the worst run\Nof periods at $61,358 of net against
+Dialogue: 0,0:05:36.50,0:05:45.31,Sub,,0,0,0,,expected $99,365. The cycle is where\Nthat shortfall lands. This week.
+Dialogue: 0,0:05:45.33,0:05:50.87,Sub,,0,0,0,,write the cycle down. Wire date,\Nlanding date, first sale, first
+Dialogue: 0,0:05:50.87,0:05:55.24,Sub,,0,0,0,,your top products, from your own POs\Nand settlement reports. It's a
+Dialogue: 0,0:05:55.24,0:06:00.50,Sub,,0,0,0,,spreadsheet with dates in it, and most\Noperators have never made one. Next,
+Dialogue: 0,0:06:00.50,0:06:05.71,Sub,,0,0,0,,draw the wires. Every scheduled\Nsupplier payment inside the next 90
+Dialogue: 0,0:06:05.71,0:06:10.88,Sub,,0,0,0,,a calendar, against the cash you hold\Nand the payouts you expect. Where the
+Dialogue: 0,0:06:10.88,0:06:18.71,Sub,,0,0,0,,line dips lowest is your own day 13\Ndays. Then move the clocks. Split the
+Dialogue: 0,0:06:18.71,0:06:23.76,Sub,,0,0,0,,largest wire into a deposit and a\Nbalance where the supplier allows it.
+Dialogue: 0,0:06:23.76,0:06:28.62,Sub,,0,0,0,,flattens the trough without touching\Nthe margin. Trim the orders the
+Dialogue: 0,0:06:28.65,0:06:34.03,Sub,,0,0,0,,newsvendor flags as overstocked,\Nbecause that cash comes back onto the
+Dialogue: 0,0:06:34.03,0:06:34.85,Sub,,0,0,0,,calendar.
+Dialogue: 0,0:06:35.65,0:06:40.75,Sub,,0,0,0,,Ask for terms before you ask for\Ngrowth. Last, hold cash for the
+Dialogue: 0,0:06:40.75,0:06:47.38,Sub,,0,0,0,,for the month. Fixed costs here are\N$31,500 a month, and the trough
+Dialogue: 0,0:06:47.38,0:06:53.43,Sub,,0,0,0,,on day 13 days. The right reserve is\Nthe trough plus a buffer for the
+Dialogue: 0,0:06:53.43,0:06:58.84,Sub,,0,0,0,,bad tail, not a round number of\Nmonths. What you can do yourself is
+Dialogue: 0,0:06:58.84,0:07:02.58,Sub,,0,0,0,,calendar for your top products, and\Nit's worth doing this week. What you
+Dialogue: 0,0:07:02.58,0:07:08.21,Sub,,0,0,0,,can't do by hand is the cone. 10,000\Nversions of the next 90 days across 24
+Dialogue: 0,0:07:08.21,0:07:12.98,Sub,,0,0,0,,products with demand that moves\Ntogether, redrawn every time a wire
+Dialogue: 0,0:07:12.98,0:07:17.64,Sub,,0,0,0,,a payout slips. That's a model, and\Nthis is one of the places a bad model
+Dialogue: 0,0:07:17.64,0:07:23.09,Sub,,0,0,0,,dangerous, because a cone drawn too\Nnarrow tells you you're safe. What you
+Dialogue: 0,0:07:23.09,0:07:29.34,Sub,,0,0,0,,can do today is stop reading the\Nmargin as a cash forecast. Find your
+Dialogue: 0,0:07:29.34,0:07:34.30,Sub,,0,0,0,,days. You can build this yourself. If\Nyou're doing real volume and want it
+Dialogue: 0,0:07:34.30,0:07:39.02,Sub,,0,0,0,,run with rigor, this is what I do, and\NI only get paid when it works.

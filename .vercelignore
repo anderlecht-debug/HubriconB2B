@@ -10,6 +10,10 @@ reports
 # Remove a line here when that page's blocker clears; nothing links to them meanwhile.
 teardowns
 research
+# the content pipeline, its docs and the Claude Code project config are not for the public site
+content
+docs
+.claude
 # Superseded pages, kept for reference (HUBRICON_SPEC.md: archive, don't delete). Not served.
 archive
 # The founder is off camera (HUBRICON_SPEC.md, "Face: off camera"), and the retired look's assets are not served.

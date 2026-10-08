@@ -1,0 +1,12 @@
+<h2>Refunded, never returned</h2>
+<p>A customer asks for a refund. Amazon pays it out of your balance. The customer keeps the item. Amazon's policy is that if the return never arrives, you are reimbursed, but the automatic pass misses a share of these, and they are easy to spot yourself. On the demo catalogue it is 24 claims worth $650.</p>
+<h3>Where the row is</h3>
+<p>A pair of reports, joined on the order id. In Transactions, filter Type to Refund; each row has the order id, the SKU, the quantity and the amount. In FBA Customer Returns, each return has the same order id. A refund with no return against its order, or with fewer units returned than refunded, is a candidate. The template's Refunds sheet does the join for you: it counts returned units per order and shows the shortfall.</p>
+<h3>The clock has a floor and a ceiling</h3>
+<p>A refund younger than 45 days is not a claim yet; the customer still has time to send it back, and filing early gets you a form reply. The claim becomes eligible 60 days after the refund date and shuts 120 days after it. That is a long window, which is exactly why these get forgotten.</p>
+<h3>Value and odds</h3>
+<p>Here the value is not landed cost. It is the refunded amount per unit, because that is what left your balance and it is the most Amazon will return. Treat it as a ceiling. Approval odds: 70%.</p>
+<h3>What disqualifies a candidate</h3>
+<p>An order Amazon already reimbursed under a return-related reason in the Reimbursements report. A return that arrived and was graded, whatever the grade. A refund on an order that was never shipped by FBA.</p>
+<h3>How to file</h3>
+<p>Seller Support, Fulfillment by Amazon, then the customer return option, then refund without return. Give the order id, the SKU, the refund date and the amount. Say that the returns report shows no unit received for the order and that the return window has passed. Log the case.</p>

@@ -1,0 +1,80 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Inter Display SemiBold,44,&H00170E0A,&H00170E0A,&H00FFFFFF,&HFFFFFFFF,0,0,0,0,100,100,-0.6,0,1,2.5,0,2,140,140,104,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.30,0:00:05.18,Sub,,0,0,0,,546 months. That's the price history\None product needs before its demand
+Dialogue: 0,0:00:05.18,0:00:09.68,Sub,,0,0,0,,curve is pinned tightly enough to\Nprice on. Your few-week price test
+Dialogue: 0,0:00:09.68,0:00:13.88,Sub,,0,0,0,,the new price worked. It could not\Nhave known that, and I can draw what
+Dialogue: 0,0:00:13.88,0:00:19.99,Sub,,0,0,0,,missed. Here's the test most of us\Nrun. Pick a product. Raise the price a
+Dialogue: 0,0:00:19.99,0:00:24.82,Sub,,0,0,0,,notch. Watch it for a few weeks.\NCompare units and revenue to the weeks
+Dialogue: 0,0:00:24.82,0:00:31.20,Sub,,0,0,0,,before. If revenue went up and units\Nheld, keep the new price. If units
+Dialogue: 0,0:00:31.20,0:00:36.72,Sub,,0,0,0,,away, put it back. It's a fair test.\NIt's what every pricing tool suggests,
+Dialogue: 0,0:00:36.72,0:00:40.87,Sub,,0,0,0,,and it feels like evidence because\Nsomething measurable happened. The
+Dialogue: 0,0:00:40.87,0:00:45.78,Sub,,0,0,0,,problem isn't the idea of testing. The\Nproblem is how much a few weeks can
+Dialogue: 0,0:00:45.78,0:00:50.62,Sub,,0,0,0,,tell you, and it's far less than it\Nlooks. Take one product off the demo
+Dialogue: 0,0:00:50.62,0:00:58.28,Sub,,0,0,0,,catalog. TH-OVEMIT-22, from\NTarnhollow, demo data, about $3.5M a
+Dialogue: 0,0:00:58.28,0:01:02.51,Sub,,0,0,0,,24 products. This one has 12 months of\Nhistory where the price moved and the
+Dialogue: 0,0:01:02.51,0:01:06.97,Sub,,0,0,0,,units moved with it. That's far more\Nthan a few weeks. Fit the demand curve
+Dialogue: 0,0:01:06.97,0:01:13.08,Sub,,0,0,0,,through it and you get a best guess:\Nan elasticity of -2.20. Units fall
+Dialogue: 0,0:01:13.08,0:01:17.82,Sub,,0,0,0,,faster than price rises, by about that\Nratio. Now ask the fit how sure it
+Dialogue: 0,0:01:17.82,0:01:24.78,Sub,,0,0,0,,is. The honest range runs from -3.52\Nto -0.88. At one end a price rise is a
+Dialogue: 0,0:01:24.78,0:01:30.18,Sub,,0,0,0,,disaster. At the other it's nearly\Nfree. Same product, same data, same
+Dialogue: 0,0:01:30.27,0:01:35.06,Sub,,0,0,0,,The width of that range is 2.64, and\Nit's the thing your test never showed
+Dialogue: 0,0:01:35.06,0:01:36.01,Sub,,0,0,0,,you.
+Dialogue: 0,0:01:37.81,0:01:42.81,Sub,,0,0,0,,Why so wide, with a year of data?\NBecause demand moves on its own. The
+Dialogue: 0,0:01:42.81,0:01:47.24,Sub,,0,0,0,,plan, run again with the customers\Narriving in a different order,
+Dialogue: 0,0:01:47.24,0:01:54.11,Sub,,0,0,0,,$65,320 apart after a year, with no\Nprice change at all. Every month on
+Dialogue: 0,0:01:54.11,0:01:59.06,Sub,,0,0,0,,curve carries that noise. Draw the 12\Npoints and the line through them. Each
+Dialogue: 0,0:01:59.09,0:02:04.31,Sub,,0,0,0,,point could sit a good way higher or\Nlower and still be the same product in
+Dialogue: 0,0:02:04.31,0:02:10.14,Sub,,0,0,0,,the same month. So the line can tilt,\Nand every tilt the points allow is a
+Dialogue: 0,0:02:10.14,0:02:16.62,Sub,,0,0,0,,different elasticity. The fit reports\Nthat as a standard error, 0.67 here,
+Dialogue: 0,0:02:16.68,0:02:21.60,Sub,,0,0,0,,and the range you saw is the line\Ntilting as far as the points let it.
+Dialogue: 0,0:02:21.60,0:02:26.15,Sub,,0,0,0,,fit won't speak at all until it has 5\Nmonths and the price has moved by at
+Dialogue: 0,0:02:26.15,0:02:32.55,Sub,,0,0,0,,least 2%. On this catalog, 2 of the 24\Nproducts failed that bar. Their
+Dialogue: 0,0:02:32.55,0:02:37.56,Sub,,0,0,0,,prices never moved, so there was no\Ncurve to draw. Your few-week test is
+Dialogue: 0,0:02:37.56,0:02:43.53,Sub,,0,0,0,,below that bar for every product it\Ntouched. Not a wide answer. No answer.
+Dialogue: 0,0:02:45.33,0:02:49.61,Sub,,0,0,0,,Here's the part that should bother you\Nmore. Suppose you commit to getting
+Dialogue: 0,0:02:49.61,0:02:55.64,Sub,,0,0,0,,more data. How much more? The error\Nfalls as you add months, but it falls
+Dialogue: 0,0:02:55.64,0:03:01.08,Sub,,0,0,0,,slowly, and every step down costs more\Nthan the last. On this product,
+Dialogue: 0,0:03:01.11,0:03:06.41,Sub,,0,0,0,,bringing the error to something you'd\Nact on takes 22 months. Bringing it
+Dialogue: 0,0:03:06.41,0:03:12.16,Sub,,0,0,0,,down by the same kind of step again\Ntakes 87. Pinning it tightly enough
+Dialogue: 0,0:03:12.16,0:03:18.57,Sub,,0,0,0,,the price decision is unambiguous\Ntakes 546 months. Products don't live
+Dialogue: 0,0:03:18.57,0:03:24.49,Sub,,0,0,0,,long. The sample size you needed was\Nnever going to arrive. And it gets
+Dialogue: 0,0:03:24.49,0:03:29.34,Sub,,0,0,0,,worse when you test more than one\Nproduct. Run the short test across a
+Dialogue: 0,0:03:29.34,0:03:34.00,Sub,,0,0,0,,catalog and you will find winners,\Nbecause some products will move the
+Dialogue: 0,0:03:34.00,0:03:41.16,Sub,,0,0,0,,way for a few weeks on noise alone. On\Nthis same catalog, a sweep of 364
+Dialogue: 0,0:03:41.16,0:03:48.02,Sub,,0,0,0,,series raised 91 flags from the\Ndetectors. Then each detector was run
+Dialogue: 0,0:03:48.02,0:03:53.46,Sub,,0,0,0,,times on data with nothing in it, to\Nlearn what its own noise looks like,
+Dialogue: 0,0:03:53.46,0:03:59.17,Sub,,0,0,0,,and the flags were held to a false\Ndiscovery rate of 5%. 18 survived. The
+Dialogue: 0,0:03:59.17,0:04:04.06,Sub,,0,0,0,,rest were the noise floor wearing the\Ncostume of a finding. Your price test
+Dialogue: 0,0:04:04.08,0:04:08.58,Sub,,0,0,0,,is one detector with no null run\Nbehind it, so every winner it hands
+Dialogue: 0,0:04:08.58,0:04:13.03,Sub,,0,0,0,,unchecked. The more products you test,\Nthe more winners it hands you, and
+Dialogue: 0,0:04:13.03,0:04:18.47,Sub,,0,0,0,,the smaller the share that are real. A\Nshort list, and it's this week's
+Dialogue: 0,0:04:18.47,0:04:24.26,Sub,,0,0,0,,work. First, stop reading a test as\Nworked or didn't. Write down the range
+Dialogue: 0,0:04:24.26,0:04:28.67,Sub,,0,0,0,,the data allows, and if you can't\Ncompute a range, treat the test as a
+Dialogue: 0,0:04:28.67,0:04:35.45,Sub,,0,0,0,,story. Next, make the price move on\Npurpose. Small steps, capped at 5%, in
+Dialogue: 0,0:04:35.45,0:04:39.98,Sub,,0,0,0,,both directions, over months, because\Nthe fit needs 5 of them and at least
+Dialogue: 0,0:04:39.99,0:04:45.48,Sub,,0,0,0,,2% of movement before it can say\Nanything. Then price on the range, not
+Dialogue: 0,0:04:45.48,0:04:54.10,Sub,,0,0,0,,point. The best move on the demo\Ncatalog is TH-CASIRO-01 to $37.84, a
+Dialogue: 0,0:04:54.10,0:05:00.53,Sub,,0,0,0,,step, worth about $388 a month. The\Nhonest version is $20 to $909, with a
+Dialogue: 0,0:05:00.53,0:05:05.82,Sub,,0,0,0,,chance it loses. Decide looking at the\Nwhole range. Last, keep a control.
+Dialogue: 0,0:05:05.83,0:05:09.89,Sub,,0,0,0,,Leave one product's price where it is\Nand watch how far it moves on its own
+Dialogue: 0,0:05:10.18,0:05:14.28,Sub,,0,0,0,,over the same weeks. That's your noise\Nfloor, and a winner that didn't beat
+Dialogue: 0,0:05:14.28,0:05:20.66,Sub,,0,0,0,,it wasn't a winner. What you can do\Nyourself is fit one product's curve in
+Dialogue: 0,0:05:20.66,0:05:26.54,Sub,,0,0,0,,spreadsheet. Log of units against log\Nof price, the slope is the elasticity,
+Dialogue: 0,0:05:26.63,0:05:30.83,Sub,,0,0,0,,and the spreadsheet gives you the\Nstandard error. What you can't do by
+Dialogue: 0,0:05:30.89,0:05:35.14,Sub,,0,0,0,,is keep it honest across 24 products\Nevery month, with errors that don't
+Dialogue: 0,0:05:35.14,0:05:39.74,Sub,,0,0,0,,trust the noise to be tidy, and check\Neach decision against 4,000 runs of
+Dialogue: 0,0:05:39.74,0:05:45.17,Sub,,0,0,0,,nothing. That part is a model, and a\Nbad model is worse than the few-week
+Dialogue: 0,0:05:45.17,0:05:51.07,Sub,,0,0,0,,test. What you can do today is stop\Ncalling a test a win. Ask how wide the
+Dialogue: 0,0:05:51.07,0:05:56.31,Sub,,0,0,0,,answer is. You can build this\Nyourself. If you're doing real volume
+Dialogue: 0,0:05:56.31,0:06:01.20,Sub,,0,0,0,,it run with rigor, this is what I do,\Nand I only get paid when it works.

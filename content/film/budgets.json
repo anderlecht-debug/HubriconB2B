@@ -1,0 +1,44 @@
+{
+ "note": "Hard caps on the AI steps of one film (docs/content/FILM_LINE.md). Tokens are cost-weighted: input x1, cache write x1.25, cache read x0.1, output x5. A step is stopped the moment it spends its budget; a film stops starting AI steps once its total is spent.",
+ "film": 1500000,
+ "default": {
+  "model": "claude-sonnet-5-5",
+  "tokens": 200000
+ },
+ "steps": {
+  "plan": {
+   "model": "claude-sonnet-5-5",
+   "tokens": 400000,
+   "note": "the decide step: one reply (no tools, no session load) to plan-brief.md with every shot's decisions; G02's 252 shots measured 163k (2026-10-07)"
+  },
+  "pick": {
+   "model": "claude-sonnet-5-5",
+   "tokens": 300000,
+   "note": "only the picture shots the filters could not rank"
+  },
+  "fix": {
+   "model": "claude-sonnet-5-5",
+   "tokens": 200000,
+   "note": "a reply: the validator's remaining problems and the shots they name, field patches back (plan_brief.fix_brief)"
+  },
+  "review": {
+   "model": "claude-sonnet-5-5",
+   "tokens": 200000,
+   "note": "one look at the review sheets once film-qa is clean"
+  },
+  "script": {
+   "model": "claude-opus-5-5",
+   "tokens": 400000,
+   "note": "a script draft for the founder's review",
+   "effort": "high"
+  }
+ },
+ "runner": {
+  "model": "claude-sonnet-5-5",
+  "tick": 400000,
+  "day": 1500000,
+  "week": 6000000,
+  "note": "the unattended content runner (scripts/content-tick.sh): each 30-minute tick is one capped session; a tick past the day's or the week's cap does not start",
+  "effort": "medium"
+ }
+}

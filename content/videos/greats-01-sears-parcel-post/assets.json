@@ -1,0 +1,522 @@
+{
+ "a04": {
+  "assets": [
+   "smithsonian:NPM-a.2008-37"
+  ],
+  "reason": "NPM a.2008-37, c. 1913, CC0: a fleet of parcel post wagons, with 'PARCEL POST' painted on the lead wagon. The pull starts on the lettering (the new way to send a parcel, named) and opens to the whole fleet. Pull, not push, because a02 plans a push. #2 is the staged baby-in-mailbag photo and is refused.",
+  "on": "2026-10-06"
+ },
+ "a05": {
+  "assets": [],
+  "reason": "fallback paper:kinetic: No 1913 rate card exists in the allowed libraries that passes. Smithsonian's only rate object is the c. 1914 parcel post rate indicator, shot on black (it fails luma). The Official Parcel Post map is the Hitchcock map that d19 uses. Commons, LOC and archive turned up nothing (bricks, unrelated books). d06 has to show a different card from this one anyway, so the line on paper keeps the card's reveal for D.",
+  "on": "2026-10-06"
+ },
+ "a07": {
+  "assets": [
+   "smithsonian:NPM-a.2006-81",
+   "pexels:4156510"
+  ],
+  "reason": "Then: NPM a.2006-81, c. 1914, CC0, two parcel post wagons loaded with parcels in front of a stone post office. Now: pexels 4156510, parcels and sacks sliding along a dock conveyor in daylight. It is one continuous 27.8 s take; from 10 s the framing has settled (the first 8 s drift handheld), and there are no faces or logos. Parcels then, parcels now. Refused: #87 (MENTA/BORCA/INNOVA brand marks), #3 (Hitchcock opening night: a murky night interior; it also belongs to D's launch beat).",
+  "on": "2026-10-06"
+ },
+ "a20": {
+  "assets": [
+   "commons:34169793"
+  ],
+  "reason": "Commons CC0: Rural Free Delivery carrier in his wagon marked 'Greenfield R.F.D. No. 5 U.S. Mail', Greenfield, Indiana, 1905. A real carrier with the service's name on his wagon, as the voice says 'Rural Free Delivery'. Preferred over the quarter-scale Smithsonian wagon model shot on black (#0 to #5). The 1914 Harris & Ewing RFD-at-mailbox negatives (#7, #8) are left for D/E (e02/d30 ask for a carrier with a parcel at a farm mailbox).",
+  "on": "2026-10-06"
+ },
+ "a22": {
+  "assets": [
+   "smithsonian:NPM-A.2010-1"
+  ],
+  "reason": "NPM A.2010-1, c. 1905, CC0, 3000 px wide: a rural carrier reaching from his early automobile into a roadside 'U.S. MAIL' box on a snowy lane. It holds on the mailbox, then pulls back on 'carrier' to the carrier on his route. #0 is the same Greenfield photo as a20 (no reuse), and its mailbox is not visible.",
+  "on": "2026-10-06"
+ },
+ "a24": {
+  "assets": [
+   "commons:19230455"
+  ],
+  "reason": "'Old Post Office, Washington, D.C. (1909)', Post Office Department print, public domain: the Department's building as it stood in the parcel-post years, its date from provenance. Better than the HABS views with 1970s cars (#6, #8), the 1027 px postcard (#0) and the 1930s staff snapshots (#1, #4, #7).",
+  "on": "2026-10-06"
+ },
+ "a25": {
+  "assets": [
+   "commons:67330000"
+  ],
+  "reason": "John Wanamaker, Bain News Service glass negative, 1915 (LOC via Commons, public domain): a clean, bright head-and-shoulders portrait, pushing toward the face as he is named. An archival portrait of the named subject is allowed (§6.6). The 16:9 crop leaves out the negative's scratched title.",
+  "on": "2026-10-06"
+ },
+ "a29": {
+  "assets": [
+   "commons:66974426"
+  ],
+  "reason": "LOC Bain glass negative (Commons, public domain): an express wagon painted 'ADAMS EXPRESS COMPANY' and 'SOUTHERN EXPRESS Co.', carrying the sign 'THIS WAGON CARRIES INTERSTATE COMMERCE TRAFFIC ONLY'. The companies' own wagon and their interstate parcel trade. The pan runs right from the lettering toward the horses; the burned-in caption sits in the bottom strip and is cropped. Preferred over the 1890 engraving (#0); #1 and #2 are French rail posters.",
+  "on": "2026-10-06"
+ },
+ "c04": {
+  "assets": [
+   "commons:34044214"
+  ],
+  "reason": "HABS 'Overall view of merchandise building, view to southeast' (Sears Roebuck and Company Mail Order Plant, 924 South Homan Avenue, public domain, 4982 px): the plant's whole length and its tower on the open lot, the building the schedule ran in. The pan runs right along the facade. At 1.08 the crop leaves out the HABS number on the film edge. Chosen over #3 (1980s cars across the front) and #6 (street fence). b27, the last still before it, pans left.",
+  "on": "2026-10-06"
+ },
+ "c06": {
+  "assets": [
+   "commons:164149974"
+  ],
+  "reason": "The plan's own picture: the Sears advertising postcard 'Freight Shipments and Shipping Room', c. 1920 (Commons, CC BY 2.0, 2254 px). The push settles on its right-hand photograph, where orders from the departments are put into baskets, the room a late department missed. The card's printed caption is part of the object, and the push moves away from it. The HABS candidates (#1 to #5) show empty 1980s rooms.",
+  "on": "2026-10-06"
+ },
+ "c11": {
+  "assets": [
+   "commons:164149972"
+  ],
+  "reason": "The plan's own picture: the Sears 'Merchandise Packers' advertising postcard, c. 1920 (Commons, CC BY 2.0, 2269 px). Boxes come down the curved chutes to the packers, 'how merchandise reaches the packers from the upper floors', which is the guidebook's chase down the chutes. It starts close on the chute with boxes on it and pulls back to the row of packers. Pull, not push, because c06 (the last still) pushes.",
+  "on": "2026-10-06"
+ },
+ "c15": {
+  "assets": [
+   "pexels:39488470"
+  ],
+  "reason": "Pexels 39488470, 'close up of wall clock movement', 4K at 50 fps. A locked-off, high-key white clock face with plain black hands and a sweeping second hand: the window on the clock. The take is one continuous 12.04 s, so from 0.5 s it covers the shot's 10.67 s with no cut. No brand, text or face. #3 (world-map dial) is busy, #2 has a person, and #7 is an identifiable real station (King's Cross).",
+  "on": "2026-10-06"
+ },
+ "c18": {
+  "assets": [
+   "commons:34044073"
+  ],
+  "reason": "The 1906 stereograph 'No. 13, The Train Shed and Shipping Rooms, Sears, Roebuck & Co., Chicago' (Commons, CC BY 2.0, 2076x2132). Freight cars stand at the platforms where every return came back. The full-width crop holds the card's front, with both halves and its printed caption, and stops above the text on the back. The push goes toward the freight cars. The previous still, c11, pulls. Two better single-frame HABS copy photographs of the train shed (commons:34044761, c. 1917, and commons:34044781, c. 1910) failed only on 'preview could not be decoded'. If a re-source can decode 34044761, it would be the stronger full-bleed frame.",
+  "on": "2026-10-06"
+ },
+ "c23": {
+  "assets": [
+   "commons:32816252"
+  ],
+  "reason": "'Parcel Post 1912-13 issues' (Commons, public domain, 3993x2035): the twelve U.S. Parcel Post stamps of the first issue, 'U.S. PARCEL POST' legible on each. It is the stamp that went on the box, held up on paper. Chosen over #0 (a postage-due plate proof, not the stamp the sender bought), #2 (a 1973 issue) and the four-stamp strips #3 to #6, which are too thin for the frame.",
+  "on": "2026-10-06"
+ },
+ "c27": {
+  "assets": [
+   "commons:68026496"
+  ],
+  "reason": "'The Montgomery Ward & Co. building, Chicago: one of the largest commercial buildings in the world', a 1905 lithograph postcard (LOC via Commons, public domain, 2253x3433). The rival's own building, with streetcars and the cartouche naming it, pulling back as the correction begins. The tall card is cropped to the band from the building's body to the cartouche (y 0.47 to 0.84), which leaves out the sender's handwriting at top and bottom. Chosen over #8 (a colour stereo pair; c18 is already a stereo card), #4 (a heavily HDR-graded 2013 photo with kayakers) and the modern branch-store photos. The plan's motion is pull, and c24 before it is a push.",
+  "on": "2026-10-06"
+ },
+ "e09": {
+  "assets": [
+   "commons:34044766"
+  ],
+  "reason": "HABS photographic copy of a c. 1920 Sears photograph, 'Interior view of Merchandise Building, packing department, second floor', Sears Roebuck Mail Order Plant, Chicago (LOC via Commons, public domain, 5000x4044): packers wrapping parcels, with the wrapped bundles on the table. It sits under 'we will ship by the most economical method' and 'the box'. The pull starts on the bundles and opens out to the room. The asset is on no C sheet; C's packers are the colour postcards (c06, c11). #0 and #1 are stereo cards, each half too small, and #2 is the card's printed back. Crop inside the print's white HABS mount (about 8% each side); a cover crop at 1.00 shows it.",
+  "on": "2026-10-06"
+ },
+ "e13": {
+  "assets": [
+   "pexels:33063729"
+  ],
+  "reason": "Pexels 33063729: an extreme close-up of a pencil point drawing a line, monochrome, soft light. The pencil and nothing else. One take from the 0.12 s cut to the end. From 2.0 s the point is on the paper and the line is growing; the lead only crumbles after 17 s. Better than #4 (a bubble-sheet exam reads as a test, not a sum), #6 (a gold pen) and #1 (a torso over a worksheet).",
+  "on": "2026-10-06"
+ },
+ "e16": {
+  "assets": [
+   "pexels:4520154"
+  ],
+  "reason": "Pexels 4520154, top-down on an open carton in daylight. A hand lowers one more book into a box that already holds books (about 4.5 s) and settles it: 'add almost a full pound of something else to the order'. One continuous 13 s take, arms only, no brand. From 3.5 s the hand comes in. #1's saturated red and yellow clothes fight the grade; #2 and #5 are taping, #4 a printed 'SMALL' box being labelled.",
+  "on": "2026-10-06"
+ },
+ "e17": {
+  "assets": [
+   "commons:65731546"
+  ],
+  "reason": "Auckland War Memorial Museum object photograph (Commons, CC BY 4.0, 1968x2454): a hanging kerosene lamp, its glass chimney over the burner under a white reflector. The 16:9 band holds reflector, chimney and burner, and the push settles on the chimney as 'the lamp chimney' is said. The lone chimneys #0 to #2 crop to a band of plain glass that reads as a vase, and #2 has a copyright card. #4 has a 'Miller Lamp' maker's mark on saturated blue; #5 has a blue glass font. Credit Auckland Museum, CC BY 4.0. The museum lights it with a display bulb; nothing on screen says otherwise, and it reads as a lit lamp.",
+  "on": "2026-10-06"
+ },
+ "e24": {
+  "assets": [
+   "commons:67157769"
+  ],
+  "reason": "Harris & Ewing glass negative 'BURLESON, ALBERT SIDNEY. REP. FROM TEXAS, 1899-1913; POSTMASTER GENERAL, 1913-1921', 1913 (LOC via Commons, public domain, 7651x10252): the Postmaster General himself on marble steps, bowler hat, papers in hand, eyes on the lens. Bright and high-key (luma 153). The 16:9 band holds hat to chest; the pull starts on his face and opens to the papers in his hand while the Act's clause is read. An archival portrait of the named subject is allowed (§6.6). Pull, because if e23 goes to paper the previous still is e17's push. #5 is from 1911, before he held the office; #0 and #1 add Mrs. Burleson. Crop inside the negative's black side edges.",
+  "on": "2026-10-06"
+ },
+ "e34": {
+  "assets": [
+   "pexels:6550428"
+  ],
+  "reason": "Pexels 6550428, 4K: a slow sideways glide down an empty aisle of card-catalogue drawers in grey daylight, as 'the record' is searched and shows nothing. No person, no brand, and no caption claiming Sears. One 19.8 s take with no cut, so from 1.0 s it covers the 8.8 s shot. #0 (hands flicking index cards) is warm and tight; #2 (periodicals on wooden shelves) is warm wood.",
+  "on": "2026-10-06"
+ },
+ "e36": {
+  "assets": [
+   "commons:34044091"
+  ],
+  "reason": "HABS 'East front and northeast corner', Sears Roebuck and Company Mail Order Plant, Merchandise Building, 924 South Homan Avenue (LOC via Commons, public domain, 4977x3962): the plant's tower close and full height, the machine Sears built first. The push heads up the tower. This is a different view from the machine chapter: c04 pans the whole length from far off (34044214), and c06 and c11 are interior postcards. #0 (the 1906 engine room) is a stereo card, too small per half; #7's conveyors are too close to C's chutes. The focus sits low enough that the HABS number on the negative's top edge stays out.",
+  "on": "2026-10-06"
+ },
+ "b10": {
+  "assets": [
+   "pexels:33288765"
+  ],
+  "reason": "freight train of wrapped lumber loads riding together, overcast daylight, tripod, moving left to right; continuous take 1.6-5.1 s holds only the plain flatcars (the graffiti boxcar has left frame, no tank-car marks yet); no door-closing clip exists on the sheet, this is the shared shipment",
+  "on": "2026-10-06"
+ },
+ "b13": {
+  "assets": [
+   "pexels:8125994"
+  ],
+  "reason": "a hand working in pencil on a paper sheet, close, no face (chin enters only after 9 s, outside the 0.5-4.0 s window); the only candidate that is a person doing arithmetic-style work on paper rather than drawing, a pie chart (2) or a suit at an office pad (3)",
+  "on": "2026-10-06"
+ },
+ "b14": {
+  "assets": [
+   "pexels:16941027"
+  ],
+  "reason": "locked-off farm field behind a split-rail fence, daylight, grass and leaves moving in the wind; window 18.8-28.9 s avoids the tripod bump at 6-7 s and has the most wind motion; the reader's world held while the voice says hold on to that person",
+  "on": "2026-10-06"
+ },
+ "b18": {
+  "assets": [
+   "pexels:8322044"
+  ],
+  "reason": "open antique pocket watch, movement visible, high-key on a white bench, nearly locked-off; window 5.0-9.3 s avoids the small reframe at 3-4 s; no brand legible (7 shows an engraved maker's name and drifts handheld)",
+  "on": "2026-10-06"
+ },
+ "d14": {
+  "assets": [
+   "pexels:5973538"
+  ],
+  "reason": "empty granite staircase in three-quarter profile, flat treads and sharp risers, locked-off daylight; window 0.5-4.45 s is before anyone enters (a person appears at 9 s); 1 is a dingy handheld stairwell, 0 a walking handheld, 4 has people's legs",
+  "on": "2026-10-06"
+ },
+ "f12": {
+  "assets": [
+   "pexels:4477613"
+  ],
+  "reason": "slow glide down a large warehouse aisle of pallets of boxed products, no people, no legible marks; continuous 0.3-10.4 s; 3 shows Huawei logos on every carton, 0 is a man as the subject, 2 a worker carrying a box",
+  "on": "2026-10-06"
+ },
+ "f26": {
+  "assets": [
+   "pexels:7855155"
+  ],
+  "reason": "a labelled carton waiting on a packing table, a hand lifting a shipping label from the table at 2.8 s ('nobody hands it to you'), quiet and nearly still; window 0.2-9.3 s ends before the camera swings at 10 s; 0 is busy handheld with an open laptop",
+  "on": "2026-10-06"
+ },
+ "f29": {
+  "assets": [
+   "pixabay:8686"
+  ],
+  "reason": "a plain carton arriving through a case taper onto a roller line, locked-off, cut on the box's motion at 2.6 s for 'the box itself'; no tape-measure clip on the sheet, 1-2 carry printed SMALL branding, 0 a suit sleeve; note this clip was also used in the visual-trial unit (no usage.json entry)",
+  "on": "2026-10-06"
+ },
+ "g10": {
+  "assets": [
+   "pexels:5969990"
+  ],
+  "reason": "hands closing a thin mailer box on a white table, side-on, high-key, hands only; continuous 0.4-5.0 s; the packaging itself as the question is asked (1 has packing peanuts but a saturated cyan mug and orange clothes, 0 has CLOTH brand labels)",
+  "on": "2026-10-06"
+ },
+ "g11": {
+  "assets": [
+   "pexels:7308166"
+  ],
+  "reason": "close on hands at a padded mailer, white table, label unreadable, high-key; continuous 0.3-3.4 s; a different look from g10's box (2 shows Amazon boxes and is refused, 3 frames a torso, 0 shows a legible handwritten address)",
+  "on": "2026-10-06"
+ },
+ "g19": {
+  "assets": [
+   "pixabay:143214"
+  ],
+  "reason": "a long road winding away through hazy hills, a few vehicles on it, muted daylight, slow drone glide: distance made physical for 'your mix of zones'; no van on the sheet, and 0 is a saturated top-down with log trucks",
+  "on": "2026-10-06"
+ },
+ "g21": {
+  "assets": [
+   "pexels:5370836"
+  ],
+  "reason": "locked-off trailer mouth: cartons stacked and sitting while parcels slide past on the belt, daylight, no people, only tiny unreadable labels; continuous 0.5-10.2 s; things sitting still while the line moves past",
+  "on": "2026-10-06"
+ },
+ "g23": {
+  "assets": [
+   "pexels:7205601"
+  ],
+  "reason": "oversized cartons on the floor of a white room, slow smooth push, high-key, no people, no marks; continuous 0.3-4.7 s; 'a bigger box'",
+  "on": "2026-10-06"
+ },
+ "g30": {
+  "assets": [
+   "pexels:7855140"
+  ],
+  "reason": "hands set a wrapped product into a small box and close it, shipping labels on the table, hands only; continuous 0.5-8.9 s: 'try the packaging'; same packing-table series as f26 but six minutes away, a recurring place rather than a repeat",
+  "on": "2026-10-06"
+ },
+ "g35": {
+  "assets": [
+   "pexels:4294436"
+  ],
+  "reason": "glide down tall orange racking aisles stacked to the roof with wrapped stock, bright, no people: aisle after aisle; continuous 0.4-9.8 s; 3-4 are f12's building with large legible aisle codes; check the bucket labels at full resolution for a legible brand",
+  "on": "2026-10-06"
+ },
+ "g38": {
+  "assets": [
+   "pexels:4473187"
+  ],
+  "reason": "locked-off empty conveyor belt running, nothing on it, gentle steady motion for the observational hold; continuous 1.0-13.4 s; 1 drifts with a tilt, 0 (rain and a plant) is nearly frozen and off-world",
+  "on": "2026-10-06"
+ },
+ "a17": {
+  "assets": [
+   "commons:171292591"
+  ],
+  "reason": "Boston & Maine station, freight house and platforms at South Boylston, Mass., dated 20 October 1898: held on the freight house and its wagons in the distance, pulling back on 'depot' to the whole country station; focus kept high so the negative's caption and number stay outside the crop",
+  "on": "2026-10-06"
+ },
+ "a18": {
+  "assets": [
+   "commons:17413310"
+  ],
+  "reason": "a lone log general store at the end of a long dirt road (Bureau of Public Roads, September 1934): the trip into town for the mail, in one frame; the only period store photograph that passed (the others are 2021 shell casings, a modern Dollar General and a card back), its own later date in the credit",
+  "on": "2026-10-06"
+ },
+ "a23": {
+  "assets": [
+   "pexels:11791714"
+  ],
+  "reason": "a plain dirt lane through a meadow in low morning light, locked-off, no markings or people: 'down that lane'; continuous 9 s take, 4.3 s from 1.0 s (25 fps, noted); no mailbox clip passed",
+  "on": "2026-10-06"
+ },
+ "b02": {
+  "assets": [
+   "commons:68063177"
+  ],
+  "reason": "Governor Woodrow Wilson campaigning by train for president, Bradford, Ohio, 1912 (LC): the candidate mid-gesture on the rear platform; the overlay carries only Bradford, Ohio and 1912, never Gloucester",
+  "on": "2026-10-06"
+ },
+ "b15": {
+  "assets": [
+   "commons:74216206"
+  ],
+  "reason": "Sears, Roebuck and Co.'s own 1906 stereoview card, 'R. W. Sears, President Sears, Roebuck & Co., at his desk', with his signed letter to customers: the company that would ship the most, held up as evidence (CC BY 2.0, credited); no 1888 watch advertisement passed",
+  "on": "2026-10-06"
+ },
+ "b17": {
+  "assets": [
+   "commons:68022628"
+  ],
+  "reason": "the 1895 LC portrait sheet: starts on R. W. Sears, President, the youngest picture of him that passed, and pulls back to the company's three men as he is named; pull, because b02 before it pushes",
+  "on": "2026-10-06"
+ },
+ "b24": {
+  "assets": [
+   "commons:66927012"
+  ],
+  "reason": "'J. Rosenwald', Bain glass negative dated 1900 (LC): Rosenwald alone at the turn of the century, pushing to his face; the negative's emulsion is flaked across one cheek (if that reads badly, 6 is a clean 1929 portrait, but its date fights 'by the turn of the century')",
+  "on": "2026-10-06"
+ },
+ "b27": {
+  "assets": [
+   "commons:70195480"
+  ],
+  "reason": "New rail road map of the United States (Chicago, Rock Island & Pacific, 1879, LC): the whole continent's lines radiating from Chicago, panning west toward the Pacific as 'across the continent' is said; wider than 2:1, so the pan has room",
+  "on": "2026-10-06"
+ },
+ "d03": {
+  "assets": [
+   "commons:18022281"
+  ],
+  "reason": "Bain glass negative (LC via Commons) captioned on the plate 'Postmaster Morgan, P.M.G. Hitchcock, Ovington': the two men the cup passed between, named, pushing onto Morgan and Hitchcock as Morgan is named; the cup itself was refused by the grade (museum shots luma 53-91). NOTE: the record's date field is the Commons upload date (2008); the photograph is 'between 1910 and 1915' (the 1911 Garden City air-mail flight), so the lower third must not print 2008",
+  "on": "2026-10-06"
+ },
+ "d04": {
+  "assets": [
+   "commons:67050888"
+  ],
+  "reason": "'Mrs. Wm. Sulzer & parcel post', Bain negative dated 1913 (LC via Commons), the plate's own caption visible in the frame: the launch year's parcel post publicity, held up as evidence under the cups ('It was publicity' follows); no cup photograph passed the grade. Shows no cup, so if the founder reads it as implying one, fall back to paper",
+  "on": "2026-10-06"
+ },
+ "d12": {
+  "assets": [
+   "commons:155723468"
+  ],
+  "reason": "'Long Lake Farmers Ship Live Poultry' (Commons, Parcel post): a Lake Minnetonka Parcel Post carrier weighs a farm's parcel on a hanging spring scale beside his U.S. Mail truck while the farmer points at the reading: the weighing that decided the pound; pull from the scale to the yard, because d03 pushes (undated, so no year is captioned)",
+  "on": "2026-10-06"
+ },
+ "d20": {
+  "assets": [
+   "smithsonian:NPM-A.2009-41"
+  ],
+  "reason": "Post Office Department photograph no. 178, 1913 (Smithsonian NPM, CC0): a clerk at a bin heaped with parcels in the first months of parcel post; held on his hands and the wrappings, pulling back on 'zone.' to the heap as 'Then the parcels came'; focus kept high so the print's burned-in caption and stamp stay below the crop",
+  "on": "2026-10-06"
+ },
+ "d27": {
+  "assets": [
+   "commons:67265739"
+  ],
+  "reason": "'N.Y. Post Office - unsorted mail', Bain negative 1914 (LC via Commons): long tables heaped with rolled periodicals and flats, the mail that carried the asking; no people as subject; focus keeps the plate's caption below the crop",
+  "on": "2026-10-06"
+ },
+ "d30": {
+  "assets": [
+   "commons:67175435"
+  ],
+  "reason": "'Post Office Department. Parcel Post. Rural Free Delivery', 1914 (Harris & Ewing, LC via Commons): a rural carrier's buggy at a roadside box, handing over the mail on a country road, the record naming parcel post: 'Now it could'; 1914 is the year the provenance carries",
+  "on": "2026-10-06"
+ },
+ "f24": {
+  "assets": [
+   "smithsonian:NPM-a.2006-84"
+  ],
+  "reason": "Smithsonian NPM (CC0), c. 1914: a motor truck lettered 'United States Mail, Parcel Post' at a post office dock, its screened body stacked with wrapped parcels: held on the parcels before they move, pulling back on 'postage,' to the truck and its crew; no window or scale photograph passed",
+  "on": "2026-10-06"
+ },
+ "g16": {
+  "assets": [
+   "commons:67002379"
+  ],
+  "reason": "'British Parcels Post - sorting parcels for foreign mail', Bain negative 1910 (LC via Commons): wicker baskets labelled Queensland, Egypt, Costa Rica, Republic of Colombia, Jamaica, each parcel sorted by where it goes: 'Where do your parcels actually go?'; the plate says British, so it claims nothing about the US card; push after f24's reveal; focus keeps the plate's caption above the crop",
+  "on": "2026-10-06"
+ },
+ "g31": {
+  "assets": [
+   "smithsonian:NPM-1985_0354_1j"
+  ],
+  "reason": "Parcel Post scale, Property of P.O. Dept., c. 1932 (Smithsonian NPM, CC0): three-quarter view with the graduated beam and poise in front, starting on the beam's ounce marks ('an ounce over a line') and pulling back to the whole scale; pull, because g16 pushes",
+  "on": "2026-10-06"
+ },
+ "a10": {
+  "assets": [
+   "pexels:7233830"
+  ],
+  "reason": "a bright kitchen scale taking a pour, wide: the ounce being weighed, high-key",
+  "on": "2026-10-06"
+ },
+ "a11": {
+  "assets": [
+   "pexels:34215388"
+  ],
+  "reason": "close: flour sifting onto a digital scale, a sliver at a time; cuts wide to close from a10",
+  "on": "2026-10-06"
+ },
+ "c21": {
+  "assets": [
+   "pexels:5903898"
+  ],
+  "reason": "parcels moving down a sorting conveyor: every parcel handled, no scale passed the filters",
+  "on": "2026-10-06"
+ },
+ "g27": {
+  "assets": [
+   "commons:34044227"
+  ],
+  "reason": "the Sears plant's length receding to the horizon, HABS: the scale behind 'how many units you'll actually sell'",
+  "on": "2026-10-06"
+ },
+ "c09": {
+  "assets": [
+   "commons:34044543",
+   "commons:34044548",
+   "commons:34044540",
+   "commons:34044418"
+  ],
+  "reason": "the plant's own spiral chutes and pneumatic tube station, HABS, as the sentence describes them",
+  "on": "2026-10-06"
+ },
+ "e02": {
+  "assets": [
+   "commons:67175442"
+  ],
+  "reason": "'Post Office Department. Parcel Post. Rural Free Delivery', Harris & Ewing glass negative, 1914 (LC via Commons, LCCN2016865324): the carrier leans from his buggy to hand the mail to a man at a roadside box. Opens close on the handover and pulls back to the country road. Pull, because d27 (the last still before it) pushes. Its twin negative LCCN2016865323 is d30's pick in round 2b, so the same scene comes back about 20 s later, once framed on paper and once full-bleed. If that reads as a repeat, the clean alternative is #6, 'Starting Rural Free Delivery in Excelsior' (a carrier hands a woman her mail at her door). Crop inside the negative's black edge",
+  "on": "2026-10-06"
+ },
+ "e05": {
+  "assets": [
+   "commons:25454114"
+  ],
+  "reason": "a Sears, Roebuck & Co. catalogue page (Catalogue No. 111, c.1902, Acme Queen parlor organ; museum photograph, Commons, Sears catalogs category). Its left column prints 'SHIPPING WEIGHT: The weight of this organ, boxed for shipment, is about 350 pounds', which is exactly 'next to every item in the catalogue, its shipping weight'. Focus y 0.35 sets the 16:9 band at about 20-62% of the page height. That keeps the '$27.45' headline (the reason round 2a refused this file for a08, b08, c24 and d24) and the order number out of frame and puts the shipping-weight paragraph near the top. The push runs toward the column. Push, because e02 pulls and e09 pulls. Caveats: the page is c.1902, not the 1917 book the voice opened, so the lower third must print the catalogue's c.1902 (never the 2011 photograph date) and must not say 1917. It is a slightly skewed museum snapshot with a thin strip of wall at the right edge at scale 1.00",
+  "on": "2026-10-06"
+ },
+ "e38": {
+  "assets": [
+   "commons:67397404"
+  ],
+  "reason": "'Mail order head at White House conference... Robert E. Wood, President of Sears-Roebuck', Harris & Ewing, 10 November 1937 (LC via Commons): Wood himself, hat and overcoat, walking out of the White House. This is the Sears-era picture of the man named. The 1918 desk portrait (#4) shows him as Acting Quartermaster General, before Sears. The band runs from his hat to mid-coat. Pull, because e36 pushes",
+  "on": "2026-10-06"
+ },
+ "e41": {
+  "assets": [
+   "commons:126347526"
+  ],
+  "reason": "'Main Street, Hobart, Indiana', postcard, c.1940 (Steven R. Shook collection, CC BY 2.0, credited): cars parked nose-in down both kerbs of a small-town shopping street, under 'cars, cities and chain stores had moved where people shopped'. Pans right, after e38's pull. The lower third must say c.1940, not the 2008 upload date. Trim the grey card mount; its printed caption sits outside the band",
+  "on": "2026-10-06"
+ },
+ "g15": {
+  "assets": [
+   "pexels:13422070"
+  ],
+  "reason": "a forklift sets a stretch-wrapped pallet onto the stack and draws its forks out, leaving the wrapped load as it is ('if it doesn't pay, leave it'). Grey, cool and locked-off, with no faces (0 detected across 19 samples). One continuous 38 s take, used from 31.3 s for 6.7 s (ends 37.96 s, inside the 38.0 s record). It is close rather than wide. The forklift mast carries a small 'ESPERA' safety sticker",
+  "on": "2026-10-06"
+ },
+ "e15": {
+  "assets": [
+   "pexels:8667841"
+  ],
+  "reason": "a hand working an old beam balance: weight decided the price, an ounce at a time",
+  "on": "2026-10-06"
+ },
+ "f08": {
+  "assets": [
+   "pexels:30763171"
+  ],
+  "reason": "aerial of a fulfilment-scale warehouse, no branding: where today's fee is charged",
+  "on": "2026-10-06"
+ },
+ "g06": {
+  "assets": [
+   "pexels:37245727"
+  ],
+  "reason": "a precision balance behind glass: an ounce over a line, measured exactly",
+  "on": "2026-10-06"
+ },
+ "e42": {
+  "assets": [
+   "pexels:4156510"
+  ],
+  "reason": "parcels on a sorting line today: the card it rode is still with us",
+  "on": "2026-10-06"
+ },
+ "d23b": {
+  "assets": [
+   "commons:16522337"
+  ],
+  "reason": "a carrier's cart heaped with mail sacks: the catalogue itself was mail",
+  "on": "2026-10-06"
+ },
+ "f04b": {
+  "assets": [
+   "pexels:7855154"
+  ],
+  "reason": "hands closing a small shipping box at a table: a seller shipping their own orders, no face, no logo",
+  "on": "2026-10-06"
+ },
+ "b08b": {
+  "assets": [
+   "commons:174123646"
+  ],
+  "reason": "a Sears catalogue page, 'OUR LATEST CATALOGUE!': the catalogue speaking to its customers in capital letters",
+  "on": "2026-10-06"
+ },
+ "d29": {
+  "assets": [
+   "commons:31143299"
+  ],
+  "reason": "the Bergheim General Store, est. 1903, which is also its town's post office; a present-day photograph, dated by its label",
+  "on": "2026-10-06"
+ },
+ "g30b": {
+  "assets": [
+   "pixabay:9085"
+  ],
+  "reason": "a hand writing a date into a planner: set a reminder for the next card change",
+  "on": "2026-10-06"
+ }
+}

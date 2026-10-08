@@ -1,0 +1,45 @@
+{
+ "resources": [
+  {
+   "caption": "digital file from b&w film copy neg.",
+   "files": [
+    [
+     {
+      "height": 0,
+      "levels": 1,
+      "mimetype": "image/tiff",
+      "size": 1854802,
+      "url": "https://tile.loc.gov/storage-services/master/pnp/cph/3a20000/3a24000/3a24600/3a24604u.tif",
+      "width": 0
+     },
+     {
+      "height": 118,
+      "levels": 1,
+      "mimetype": "image/jpeg",
+      "size": 5124,
+      "url": "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604_150px.jpg",
+      "width": 150
+     },
+     {
+      "height": 118,
+      "levels": 1,
+      "mimetype": "image/gif",
+      "size": 20876,
+      "url": "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604t.gif",
+      "width": 150
+     },
+     {
+      "height": 503,
+      "levels": 1,
+      "mimetype": "image/jpeg",
+      "size": 67305,
+      "url": "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604r.jpg",
+      "width": 640
+     }
+    ]
+   ],
+   "image": "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604_150px.jpg",
+   "url": "https://www.loc.gov/resource/cph.3a24604/"
+  }
+ ]
+}
