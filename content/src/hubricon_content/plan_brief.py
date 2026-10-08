@@ -75,11 +75,7 @@ def build(slug: str) -> Path:
     lines = [f"# Plan brief: {slug}", "", f"Narration {float(timing['duration']):.1f} s. {task}", ""]
     skill = SKILL.read_text(encoding="utf-8") if SKILL.exists() else ""
     skill = re.sub(r"^---.*?---\s*", "", skill, flags=re.S)
-    lines += ["## The rules (the shot-plan skill)", "", skill.strip(), "", PARAMS, "## Styles (name: kinds · room · seconds)", ""]
-    for name, st in sorted(reg["styles"].items()):
-        if st.get("deferred"):
-            continue
-        lines.append(f"- `{name}`: {', '.join(st.get('kinds', []))} · {st.get('room', '?')} · {st.get('seconds', '')}")
+    lines += ["## The rules (the shot-plan skill)", "", skill.strip(), "", PARAMS, *_styles(reg)]
     lines += ["", "## The figures the voice says ({{key}} = value: label)", ""]
     said = sorted({k for ks in spoken.values() for k in ks})
     for k in said:
@@ -107,6 +103,50 @@ def build(slug: str) -> Path:
     out = d / "plan-brief.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
+
+
+def _styles(reg: dict) -> list[str]:
+    out = ["## Styles (name: kinds · room · seconds)", ""]
+    for name, st in sorted(reg["styles"].items()):
+        if not st.get("deferred"):
+            out.append(f"- `{name}`: {', '.join(st.get('kinds', []))} · {st.get('room', '?')} · {st.get('seconds', '')}")
+    return out
+
+
+FIX = """\
+## What you return
+
+Fix the problems above by changing the shots named (and, where a fix needs it, their neighbours).
+Reply with ONE JSON object and nothing else (no prose, no code fence):
+
+    {"shots": {"<id>": {<field>: <value>, …}, …}}
+
+- Give only the fields you change; a field you leave keeps its value. `params` replaces the shot's params whole.
+- Keep a shot's `start` and `end` unless a problem names its length. A changed `end` moves the next shot's
+  `start` with it: give both.
+- Values are `{{key}}` placeholders, never typed figures.
+"""
+
+
+def fix_brief(slug: str, problems: list[str]) -> str:
+    """The fix pass's whole input: the problems, the shots they name (and one either side), the plan
+    fields and the styles. Everything a reply needs, nothing it doesn't."""
+    from . import shots
+    d = scriptmod.video_dir(slug)
+    plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
+    ids = [s["id"] for s in plan["shots"]]
+    pos = {sid: i for i, sid in enumerate(ids)}
+    text = "\n".join(problems)
+    named = {sid for sid in ids if re.search(rf"(?<![\w-]){re.escape(sid)}(?![\w-])", text)}
+    for a, b in re.findall(r"([\w-]+)–([\w-]+):", text):     # a run named by its ends: every shot in it
+        if a in pos and b in pos:
+            named |= set(ids[pos[a]:pos[b] + 1])
+    keep = sorted({j for sid in named for j in (pos[sid] - 1, pos[sid], pos[sid] + 1) if 0 <= j < len(ids)})
+    lines = [f"# Fix brief: {slug}", "", "## The problems the validator reports", "", *[f"- {p}" for p in problems], "",
+             "## The shots they name, with one either side (JSON, one a line)", ""]
+    lines += [json.dumps(plan["shots"][j], ensure_ascii=False) for j in keep] or ["(none named: the problems are film-wide)"]
+    lines += ["", PARAMS, *_styles(shots.registry()), "", FIX]
+    return "\n".join(lines) + "\n"
 
 
 DECISIONS = """\

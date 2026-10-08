@@ -118,3 +118,17 @@ print(json.dumps({{"type": "result", "result": "```json\\n" + json.dumps({{"shot
     assert "--max-turns" in a and seen["cwd"] == str(tmp_path / "reply")    # outside the repo: no CLAUDE.md, no memory
     assert res["weighted_tokens"] == 750
     assert ai_step.json_reply("no object here") is None and ai_step.json_reply("{broken") is None
+
+
+def test_a_fix_brief_carries_the_shots_its_problems_name_and_their_neighbours(tmp_path, monkeypatch):
+    from hubricon_content import plan_brief
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    shots = [{"id": i, "start": n, "end": n + 1, "kind": "still", "style": "still-push"}
+             for n, i in enumerate(["a01", "a02", "a03", "a03b", "a04", "a05", "a06", "a07", "a08"])]
+    (tmp_path / "shots.json").write_text(json.dumps({"shots": shots}))
+    brief = plan_brief.fix_brief("f", ["a03b: two push moves back to back", "a06–a07: still-push three in a row"])
+    carried = [json.loads(l)["id"] for l in brief.splitlines() if l.startswith('{"id"')]
+    # named: a03b, and the run a06–a07; each with one either side. "a03" inside "a03b" is not a mention
+    # of a03 (it comes in as a03b's neighbour), and a02 stays out
+    assert carried == ["a03", "a03b", "a04", "a05", "a06", "a07", "a08"]
+    assert "What you return" in brief and "a02" not in carried

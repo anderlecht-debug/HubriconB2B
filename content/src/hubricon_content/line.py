@@ -227,6 +227,8 @@ def _clean(slug: str) -> list[str]:
 
 PLAN_SYSTEM = ("You plan the shots of a documentary film for Hubricon. You answer with exactly one JSON object, "
                "as the brief's section 'What you return' describes, and nothing before or after it.")
+FIX_SYSTEM = ("You fix problems in a documentary film's shot plan. You answer with exactly one JSON object, "
+              "as the brief's section 'What you return' describes, and nothing before or after it.")
 STEPS = ["voice", "skeleton", "decide", "fill", "source", "pictures", "render", "qa", "draft", "cost"]
 
 
@@ -287,9 +289,11 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
                 _cli("shots-fill", slug)
             left = _clean(slug)
             if left:
-                r = ai_step.run(slug, "fix", f"Fix these problems in content/videos/{slug}/shots.json by editing that file (one write), "
-                                "then stop. Keep every shot's start and end unless a problem names its length. Problems:\n- " + "\n- ".join(left[:80]),
-                                extra=ai_step.STEP_ARGS)
+                # one reply with the shots the problems name: field patches back, merged by code
+                r = ai_step.reply(slug, "fix", FIX_SYSTEM, plan_brief.fix_brief(slug, left[:80]))
+                dec = ai_step.json_reply(r.get("result"))
+                if dec and isinstance(dec.get("shots"), dict):
+                    plan_skeleton.apply(slug, dec, also=("start", "end"))
                 _cli("shots-fill", slug)
                 left = _clean(slug)
                 if left:

@@ -19,7 +19,7 @@
   "fix": {
    "model": "claude-sonnet-5-5",
    "tokens": 200000,
-   "note": "plan edits for film-qa's punch list, one pass"
+   "note": "a reply: the validator's remaining problems and the shots they name, field patches back (plan_brief.fix_brief)"
   },
   "review": {
    "model": "claude-sonnet-5-5",

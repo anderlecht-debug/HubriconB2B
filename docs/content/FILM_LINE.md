@@ -40,7 +40,7 @@ The steps are `voice`, `skeleton`, `decide`, `fill`, `source`, `pictures`, `rend
 
 - **`skeleton`:** code drafts the shots.
 - **`decide`:** the one model pass, as a reply (rule 6): the brief in, `decisions.json` out. A reply with no JSON object stops the line and is kept in `decisions.raw.txt`.
-- **`fill`:** the validator's known mechanical problems are fixed by code (`line.autofix`). A budgeted `fix` pass runs only if real problems remain.
+- **`fill`:** the validator's known mechanical problems are fixed by code (`line.autofix`). A budgeted `fix` pass runs only if real problems remain, as a reply too: `plan_brief.fix_brief` carries the problems, the shots they name with one either side, the plan fields and the styles; the reply's field patches are merged by code (`start` and `end` admitted). What a reply can't fix stops the line with the list.
 - **`pictures`:** auto-pick, auto-prints and resolve-gaps.
 - **`render`:** sizes its workers to free memory.
 
