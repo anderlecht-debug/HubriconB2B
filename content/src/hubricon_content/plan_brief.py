@@ -186,6 +186,9 @@ def _with_shots(d, slug, lines, plan, timing, spoken):
             lines.append(f"### Beat {beat}" + (f". VISUAL: {v}" if v else ""))
         said = " ".join(w["word"] for w in shotmod.words_in(words, s["start"], s["end"]))
         figs = [f"{{{{{k}}}}}@{t:.2f}" for t, ks in spoken.items() if s["start"] - 0.05 <= t < s["end"] for k in ks]
+        if s.get("fixed"):
+            lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] FIXED: {s.get('intent', '')}; leave it out")
+            continue
         lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] {s['room']} {s['kind']}/{s['style']}"
                      + (f" {' '.join(figs)}" if figs else "") + f" | {said}")
     out = d / "plan-brief.md"

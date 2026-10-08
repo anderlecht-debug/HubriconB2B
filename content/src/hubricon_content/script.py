@@ -25,7 +25,7 @@ ALL_SCENES = CHART_SCENES | {"kinetic", "chapter_card", "screenshot", "number", 
 HEADER_KEYS = ["TITLE", "THUMBNAIL", "PILLAR", "TIER", "AWARENESS STAGE", "CTA", "SPIKY CLAIM",
                "MISCONCEPTION", "RUNTIME"]
 BEAT_RE = re.compile(r"^\[(\d+):(\d\d)\]\s*(.*)$")
-FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA):\s*(.*)$")
+FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA|KEEP|TRY):\s*(.*)$")
 HOOK_RE = re.compile(r"^([123])\.\s+(.*)$")
 STAMP_RE = re.compile(r"(\d+):(\d\d)")
 WPM = 150
@@ -88,7 +88,7 @@ def parse(text: str) -> dict:
             m = BEAT_RE.match(line)
             if m:
                 cur = {"at": int(m.group(1)) * 60 + int(m.group(2)), "name": m.group(3).strip(),
-                       "VO": "", "VISUAL": "", "DATA SOURCE": "", "CLIP": "", "TEMPLATE": "", "CTA": ""}
+                       "VO": "", "VISUAL": "", "DATA SOURCE": "", "CLIP": "", "TEMPLATE": "", "CTA": "", "KEEP": "", "TRY": ""}
                 beats.append(cur)
                 field = None
                 continue
@@ -134,6 +134,62 @@ def _banned(text: str) -> list[str]:
         if re.search(pat, low):
             hits.append(phrase)
     return hits
+
+
+# How people learn from a narrated film (docs/content/LEARNING_DESIGN.md), checked on a long film's script.
+CHAPTER_WORDS = (225, 900)    # 1.5 to 6 minutes at 150 words a minute (Guo et al. 2014: engagement falls past ~6)
+KEEP_WORDS = 12               # the takeaway is set as a kinetic-thesis card, 12 words at most
+RECALL_MIN = 2                # the last chapter brings back at least this many of the film's earlier figures
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"[^a-z0-9{}_ ]+", "", re.sub(r"\s+", " ", text.lower())).strip()
+
+
+def chapters(script: dict) -> list[dict]:
+    """The film's chapters: the open, then each run of beats after a CHAPTER card."""
+    out, cur = [], {"name": "the open", "beats": []}
+    for b in script["beats"]:
+        if b["name"].upper().startswith("CHAPTER"):
+            out.append(cur)
+            cur = {"name": re.sub(r"^CHAPTER\s*\d*\s*[—-]?\s*", "", b["name"], flags=re.I).strip() or b["name"], "beats": []}
+        else:
+            cur["beats"].append(b)
+    out.append(cur)
+    return [c for c in out if c["beats"]]
+
+
+def learning(script: dict) -> list[str]:
+    """The learning rules a long film's script is held to: segments, a guess before each answer, a takeaway
+    per chapter, a step to try, and a recall at the end."""
+    problems, ch = [], chapters(script)
+    for c in ch[1:]:                                   # the open is the hook, not a lesson
+        vo = " ".join(b["VO"] for b in c["beats"])
+        n = len(vo.split())
+        if not CHAPTER_WORDS[0] <= n <= CHAPTER_WORDS[1]:
+            problems.append(f"chapter {c['name']}: {n} words (about {n / 150:.1f} min); a chapter runs "
+                            f"{CHAPTER_WORDS[0]}–{CHAPTER_WORDS[1]} words, 1.5 to 6 minutes: split a long one at its steps")
+        if "?" not in vo:
+            problems.append(f"chapter {c['name']}: asks the viewer nothing; put a question before its answer "
+                            "(a guess first makes the answer stick)")
+        keeps = [b for b in c["beats"] if b.get("KEEP")]
+        if len(keeps) != 1:
+            problems.append(f"chapter {c['name']}: {len(keeps)} KEEP lines; one, on its last beat, the sentence the viewer keeps")
+        for b in keeps:
+            k = b["KEEP"]
+            if len(k.split()) > KEEP_WORDS:
+                problems.append(f"beat {b['name']}: KEEP is {len(k.split())} words; {KEEP_WORDS} at most")
+            if _norm(k) not in _norm(b["VO"]):
+                problems.append(f"beat {b['name']}: KEEP must be said word for word in the beat's VO (it is shown as it is spoken)")
+    if not any(b.get("TRY", "").lower().startswith("y") for b in script["beats"]):
+        problems.append("no TRY beat: mark the beat that gives the viewer the step to do this week with `TRY: yes`")
+    if len(ch) > 2:
+        earlier = {k for c in ch[:-1] for b in c["beats"] for k in PLACEHOLDER.findall(b["VO"])}
+        last = {k for b in ch[-1]["beats"] for k in PLACEHOLDER.findall(b["VO"])}
+        if len(last & earlier) < RECALL_MIN:
+            problems.append(f"the last chapter brings back {len(last & earlier)} of the film's earlier figures; "
+                            f"at least {RECALL_MIN}, so the ending is a recall")
+    return problems
 
 
 def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict) -> list[str]:
@@ -222,6 +278,8 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
     lo, hi = WORDS.get(tier.upper(), (650, 2200))
     if not lo <= n <= hi:
         problems.append(f"{n} spoken words; tier {tier} wants {lo}–{hi}")
+    if tier.upper() == "D":
+        problems += learning(script)
     return problems
 
 
@@ -231,8 +289,8 @@ def render(script: dict, facts: dict) -> dict:
     out["header"] = {k: render_facts(v, facts) for k, v in out["header"].items()}
     out["hooks"] = {int(k): render_facts(v, facts) for k, v in out["hooks"].items()}
     for b in out["beats"]:
-        for f in ("VO", "CTA", "VISUAL"):
-            b[f] = render_facts(b[f], facts)
+        for f in ("VO", "CTA", "VISUAL", "KEEP"):
+            b[f] = render_facts(b.get(f, ""), facts)
     return out
 
 
