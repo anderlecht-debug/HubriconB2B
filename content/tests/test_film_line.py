@@ -169,3 +169,20 @@ def test_a_decision_merges_into_the_drafted_params_and_never_replaces_them(tmp_p
     p = json.loads((tmp_path / "shots.json").read_text())["shots"][0]["params"]
     assert p["events"] == [{"date": "", "label": "{{a}}"}] and p["layout"] == "dates" and p["builds"] == [0.3]
     assert "heading" not in p                                                   # null removes a param
+
+
+def test_a_type_shot_opens_on_what_its_figure_is():
+    from hubricon_content import line
+    facts = {"rent": {"value": "$30 a month", "label": "the Lancaster store's rent (paid monthly)"},
+             "a": {"value": "1879", "label": "the store opens; a second clause"}, "b": {"value": "$3.50", "label": "his first wage"},
+             "long": {"value": "1", "label": "a label so long that it runs well past the nine words a line holds"}}
+    plan = {"shots": [
+        {"id": "s1", "kind": "number", "style": "number-land", "params": {"value": "{{rent}}"}},
+        {"id": "s2", "kind": "pair", "style": "number-pair", "params": {"left": {"value": "{{a}}"}, "right": {"value": "{{b}}", "label": "kept"}}},
+        {"id": "s3", "kind": "number", "style": "number-land", "params": {"value": "{{long}}"}},
+        {"id": "s4", "kind": "number", "style": "callback", "params": {"callback": "s1"}}]}
+    line.context_lines(plan, facts)
+    s1, s2, s3, s4 = plan["shots"]
+    assert s1["params"]["sub"] == "The Lancaster store's rent"
+    assert s2["params"]["left"]["label"] == "The store opens" and s2["params"]["right"]["label"] == "kept"
+    assert "sub" not in s3["params"] and "sub" not in s4["params"]

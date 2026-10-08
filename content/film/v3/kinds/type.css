@@ -108,6 +108,8 @@
 .ty-p-row { display: flex; align-items: flex-end; }
 .ty-p-row.units { margin-bottom: 64px; }
 .ty-p-col { display: flex; flex-direction: column; gap: 36px; flex: none; }
+.ty-p-col:not(.v) { width: var(--col-w, auto); }
+.ty-p-col .ty-label { white-space: normal; text-wrap: balance; }
 .ty-p-col.l { animation: ty-dim 0.9s ease calc(var(--next) * 1s) both; }
 .ty-p-fig { line-height: 0.9; }
 .ty-p-unit { position: absolute; left: 0.03em; top: 100%; margin-top: 18px; font-family: var(--serif); font-style: italic; line-height: 1; color: rgb(242 238 230 / 0.7); text-shadow: none; }
