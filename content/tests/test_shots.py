@@ -306,3 +306,12 @@ def test_a_source_line_never_names_a_repository_file():
     plan, tm = fx.fresh()
     plan["shots"][2].setdefault("params", {})["source"] = "Typeset from the fee card, as recorded in ratecard.json"
     has(problems(plan, tm), "names a repository file")
+
+
+def test_a_figure_said_mid_phrase_gets_a_legal_cut_on_its_word():
+    words = [{"word": w, "start": a, "end": b} for w, a, b in
+             [("That", 0.0, 0.2), ("year", 0.25, 0.5), ("it", 0.55, 0.6), ("sold", 0.65, 0.9), ("$60.6", 0.95, 1.5), ("million.", 1.5, 2.0)]]
+    seg = {"kind": "beat", "start": 0.0, "end": 2.0, "words": words, "spoken": [{"key": "sales", "t": 0.95}]}
+    cuts = {c["t"]: c["kind"] for c in cutpoints([seg])}
+    assert cuts.get(0.925) == "figure"                   # between "sold" and the figure: the picture changes on the word
+    assert all(k != "figure" for t, k in cuts.items() if t != 0.925)

@@ -19,6 +19,8 @@ import re
 
 from . import script as scriptmod
 
+WAIT_OK, WAIT_WEIGHT, WAIT_HORIZON = 0.6, 1.5, 4.0   # a figure within 0.6 s of its cut is on the word
+
 DECIDED = ("kind", "style", "on", "params", "query", "sources", "fallback", "specific", "intent", "label", "overlay", "chart", "room")
 
 
@@ -38,6 +40,15 @@ def draft(slug: str) -> dict:
              for i, c in enumerate(timing["segments"]) if c["kind"] == "beat"]
     beat_at = lambda t: next(((i, v) for a, b, i, v in beats if a - 0.05 <= t < b), (beats[-1][2], beats[-1][3]) if beats else (0, ""))
     holds_ok = lambda c: not any(c - hold + 0.034 < t < c for t, _ in reveals)
+    # cut on the word: a cut that leaves the next shot waiting on bare paper for its figure costs, so the
+    # shot holding a figure opens just before the figure is said (G02: 28 of 79 type shots waited 1.5 s or more)
+    rt = [t for t, _ in reveals]
+
+    def wait_cost(c):
+        nxt = next((t for t in rt if t > c), None)
+        return WAIT_WEIGHT * max(0.0, nxt - c - WAIT_OK) if nxt is not None and nxt - c < WAIT_HORIZON else 0.0
+
+    score = lambda c, aim: abs(c - aim) + wait_cost(c)
 
     shots, start = [], 0.0
     while start < duration - 0.05:
@@ -53,9 +64,9 @@ def draft(slug: str) -> dict:
         lo, hi = start + 3.5, start + ceil
         inside = [c for c in cuts if lo <= c <= min(hi, wall) and holds_ok(c)]
         if wall <= hi and (wall - start >= 3.0 or not shots):
-            end = wall if not inside or abs(wall - (start + target)) < 1.5 else min(inside, key=lambda c: abs(c - (start + target)))
+            end = wall if not inside or abs(wall - (start + target)) < 1.5 else min(inside, key=lambda c: score(c, start + target))
         elif inside:
-            end = min(inside, key=lambda c: abs(c - (start + target)))
+            end = min(inside, key=lambda c: score(c, start + target))
         else:   # no legal cut in range keeps the holds: the first one after the ceiling that does, else the wall
             end = next((c for c in cuts if c > hi and c <= wall and holds_ok(c)), wall)
         if wall - end < 3.0 and wall - end > 0.05:   # never leave a sliver before a card or the end

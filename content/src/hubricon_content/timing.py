@@ -60,7 +60,8 @@ def estimate_words(text: str) -> tuple[list[dict], float]:
 
 def cutpoints(segments: list[dict]) -> list[dict]:
     """Every legal cut (VISUAL_SPEC.md §4, §7.2): segment boundaries, sentence ends
-    and pauses of 120 ms or more, each at the middle of its silence."""
+    and pauses of 120 ms or more, each at the middle of its silence, and the word
+    boundary before each spoken figure."""
     cuts = {}
 
     def add(t, kind):
@@ -76,6 +77,14 @@ def cutpoints(segments: list[dict]) -> list[dict]:
             gap = b["start"] - a["end"]
             if SENTENCE_END.search(a["word"]) or gap >= CUT_PAUSE:
                 add(a["end"] + max(0.0, gap) / 2, "sentence" if SENTENCE_END.search(a["word"]) else "pause")
+        # cut on the figure: the picture may change on the word that says a figure, mid-phrase (a picture cut
+        # leaves the voice untouched), so the shot holding it opens as it is said, not on bare paper seconds
+        # before (G02: 13 long waits had no pause near the figure)
+        for r in seg.get("spoken") or []:
+            t = float(r["t"])
+            before = [w for w in words if w["end"] <= t + 0.01]
+            if before and t - seg["start"] > 0.5:
+                add(before[-1]["end"] + max(0.0, t - before[-1]["end"]) / 2, "figure")
     return [{"t": t, "kind": k} for t, k in sorted(cuts.items())]
 
 
