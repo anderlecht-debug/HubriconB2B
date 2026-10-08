@@ -31,6 +31,18 @@ That makes the floor about 0.4M tokens a film. G01 spent one to two orders of ma
 6. **The unattended runner is capped too.** `scripts/content-tick.sh` runs each 30-minute tick through `ai-tick`: Sonnet, a cap per tick, per day and per week (`budgets.json` "runner"), and a tick past a cap does not start. Its ledger is `content/.cache/runner-meter.json`.
 7. **The meter is read, not guessed.** `hubricon-content film-cost <slug>` gives a film's tokens by step against budget.
 
+## The line, as one command
+
+    hubricon-content film-line <slug> [--placeholder] [--from STEP] [--until STEP]
+
+The steps are `voice`, `skeleton`, `decide`, `fill`, `source`, `pictures`, `render`, `qa`, `draft` and `cost`, in that order. Each runs as its own process and is recorded in `videos/<slug>/line.json`, so a stopped or crashed run resumes where it left off. The line stops with a reason when it can't go on: no voice yet, or a budget spent.
+
+- **`skeleton`:** code drafts the shots.
+- **`decide`:** the one model pass.
+- **`fill`:** the validator's known mechanical problems are fixed by code (`line.autofix`). A budgeted `fix` pass runs only if real problems remain.
+- **`pictures`:** auto-pick, auto-prints and resolve-gaps.
+- **`render`:** sizes its workers to free memory.
+
 ## The line, in order
 
 | # | Step | Command | Tokens |
