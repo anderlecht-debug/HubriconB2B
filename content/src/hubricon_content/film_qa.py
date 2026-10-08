@@ -30,6 +30,44 @@ SOUND = {"voice_over_music_db": 15.0, "effects_per_minute": (2.0, 14.0), "longes
          "side_under_mid_db": 6.0}   # folded to mono (a phone speaker) the mix loses at most 1 dB
 
 
+# How people learn from a narrated film (docs/content/LEARNING_DESIGN.md), measured on the plan and the timing.
+LEARN = {"on_the_word": 0.7, "word_wait_s": 0.6, "chapter_min": 6.5, "wpm": (120, 200), "wpm_min_words": 25}
+
+
+def learning(plan: dict, timing: dict, own_voice: bool) -> list[dict]:
+    from . import shots
+    out = []
+    rv = sorted(float(r["t"]) for r in shots.spoken_reveals(timing))
+    waits = []
+    for s in plan["shots"]:
+        if s.get("room") != "paper" or s.get("kind") in ("chapter", "end") or s.get("style") == "callback":
+            continue
+        inside = [t for t in rv if float(s["start"]) - 0.05 <= t < float(s["end"])]
+        if inside:
+            waits.append(min(inside) - float(s["start"]))
+    if waits:
+        share = sum(w <= LEARN["word_wait_s"] for w in waits) / len(waits)
+        if share < LEARN["on_the_word"]:
+            out.append({"check": "learning", "msg": f"{share:.0%} of figure shots open on their figure's word (within "
+                        f"{LEARN['word_wait_s']} s); at least {LEARN['on_the_word']:.0%}: the picture arrives with its word"})
+    marks = [float(c["at"]) for c in timing.get("chapters", [])] + [float(timing["duration"])]
+    for c, nxt in zip(timing.get("chapters", []), marks[1:]):
+        if (nxt - float(c["at"])) / 60 > LEARN["chapter_min"]:
+            out.append({"check": "learning", "t": float(c["at"]), "msg": f"chapter {c.get('title', '')!r} runs "
+                        f"{(nxt - float(c['at'])) / 60:.1f} min; at most {LEARN['chapter_min']} (engagement falls past about 6)"})
+    if own_voice:     # his reading's pace, beat by beat; a placeholder voice reads at whatever pace it was set to
+        for seg in timing["segments"]:
+            ws = seg.get("words") or []
+            if seg.get("kind") != "beat" or len(ws) < LEARN["wpm_min_words"]:
+                continue
+            wpm = len(ws) / max(0.1, (ws[-1]["end"] - ws[0]["start"]) / 60)
+            lo, hi = LEARN["wpm"]
+            if not lo <= wpm <= hi:
+                out.append({"check": "learning", "t": float(seg["start"]), "msg": f"beat {seg.get('name', '')!r} is read at "
+                            f"{wpm:.0f} words a minute; {lo}–{hi} keeps it clear and alive: read it again"})
+    return out
+
+
 def _ffprobe_seconds(p: Path) -> float:
     out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)],
                          capture_output=True, text=True).stdout.strip()
@@ -133,6 +171,7 @@ def run(slug: str, check_media: bool = True) -> dict:
         problems.append({"check": "stage", "msg": f"qa.mjs failed: {proc.stderr.strip()[-300:]}"})
     if check_media:
         problems += media(d, plan, timing)
+    problems += learning(plan, timing, own_voice=(d / "takes").exists())
     by = {}
     for p in problems:
         by[p["check"]] = by.get(p["check"], 0) + 1

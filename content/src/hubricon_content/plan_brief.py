@@ -121,7 +121,8 @@ Reply with ONE JSON object and nothing else (no prose, no code fence):
 
     {"shots": {"<id>": {<field>: <value>, …}, …}}
 
-- Give only the fields you change; a field you leave keeps its value. `params` replaces the shot's params whole.
+- Give only the fields you change; a field you leave keeps its value. `params` merges into the shot's params;
+  set a param to null to remove it.
 - Keep a shot's `start` and `end` unless a problem names its length. A changed `end` moves the next shot's
   `start` with it: give both.
 - Values are `{{key}}` placeholders, never typed figures.
@@ -185,6 +186,9 @@ def _with_shots(d, slug, lines, plan, timing, spoken):
             lines.append(f"### Beat {beat}" + (f". VISUAL: {v}" if v else ""))
         said = " ".join(w["word"] for w in shotmod.words_in(words, s["start"], s["end"]))
         figs = [f"{{{{{k}}}}}@{t:.2f}" for t, ks in spoken.items() if s["start"] - 0.05 <= t < s["end"] for k in ks]
+        if s.get("fixed"):
+            lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] FIXED: {s.get('intent', '')}; leave it out")
+            continue
         lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] {s['room']} {s['kind']}/{s['style']}"
                      + (f" {' '.join(figs)}" if figs else "") + f" | {said}")
     out = d / "plan-brief.md"

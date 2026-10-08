@@ -391,6 +391,21 @@ def cmd_script_in(a):
         raise SystemExit(1)
 
 
+def cmd_retention(a):
+    from . import retention
+    _out(retention.run(a.slug))
+
+
+def cmd_retention_patterns(a):
+    from . import retention
+    _out(retention.patterns())
+
+
+def cmd_worksheet(a):
+    from . import worksheet
+    _out(worksheet.build(a.slug))
+
+
 def cmd_film_cost(a):
     from . import meter
     _out(meter.summary(a.slug))
@@ -548,6 +563,11 @@ def main(argv=None) -> None:
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own"]); p.set_defaults(fn=cmd_voice)
+    p = sub.add_parser("retention", help="a published film's retention curve on its beats and shots (qa/retention.md)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_retention)
+    sub.add_parser("retention-patterns", help="across films: the styles that hold viewers and the ones that lose them").set_defaults(fn=cmd_retention_patterns)
+    p = sub.add_parser("worksheet", help="a film's one-page worksheet: its takeaways, this week's step, its figures (worksheet.md)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_worksheet)
     p = sub.add_parser("script-in", help="a script written elsewhere becomes a film: checked, filed, queued for his takes (SCRIPT_KIT.md)")
     p.add_argument("file"); p.add_argument("--slug"); p.add_argument("--dry", action="store_true", help="check only, write nothing")
     p.set_defaults(fn=cmd_script_in)

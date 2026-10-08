@@ -271,6 +271,9 @@ def _balanced(text: str) -> list[str]:
     return [" ".join(words[:best]), " ".join(words[best:])]
 
 
+NOT_DRAWN = {"qa.mjs", "layout_qa.mjs", "profile.mjs"}   # film/v3 tools that check or time the stage
+
+
 class Job:
     """A shot, resolved: what the renderer draws and everything that names its clip."""
 
@@ -471,11 +474,14 @@ class Job:
         self.assets.append(g["sha256"])
 
     def key(self) -> str:
+        # the stage's own files are in the key; its checking tools draw nothing and are not (an edit to qa.mjs
+        # once re-rendered every clip of a film)
         files = ["assets/tokens.json", "assets/grade.json", "film/styles.json", "film/shots.css", "film/shots.mjs"]
         if LOOK == "v3":   # the shared stage, and only this shot's own kind module, so editing one kind re-renders its clips alone
             v3 = CONTENT_DIR / "film" / "v3"
             family = V3_FAMILY.get(self.kind, "type")
-            files += sorted(str(p.relative_to(CONTENT_DIR)) for p in v3.glob("*") if p.suffix in (".css", ".mjs", ".js", ".html"))
+            files += sorted(str(p.relative_to(CONTENT_DIR)) for p in v3.glob("*")
+                            if p.suffix in (".css", ".mjs", ".js", ".html") and p.name not in NOT_DRAWN and not p.name.endswith(".test.mjs"))
             files += [f"film/v3/kinds/{family}.mjs", f"film/v3/kinds/{family}.css"]
             if self.job.get("print") and family != "photos":   # a companion print is drawn by the photos kind
                 files += ["film/v3/kinds/photos.mjs", "film/v3/kinds/photos.css"]

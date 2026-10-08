@@ -151,6 +151,20 @@ def _runs(shots: list[dict], key) -> list[tuple[list[dict], object]]:
     return runs
 
 
+# What each paper kind draws, as the stage reads it (film/v3/kinds): any one of the field sets will do. Without
+# one the stage shows the bare desk for the whole shot (G02, 2026-10-07: 25 shots, a timeline up to 16 s, after a
+# decision's params replaced the drafted ones). A number or pair falls back to its spoken figure; kinetic type to its words.
+CONTENT = {"timeline": [("events",)], "pair": [("left", "right"), ("reveals",)], "number": [("value",), ("reveals",)],
+           "formula": [("terms",)], "quote": [("text",)]}
+
+
+def draws(s: dict) -> bool:
+    """The shot has something to draw (a callback draws its target's)."""
+    alts = CONTENT.get(s.get("kind"))
+    p = s.get("params") if isinstance(s.get("params"), dict) else {}
+    return not alts or s.get("style") == "callback" or any(all(p.get(f) or s.get(f) for f in alt) for alt in alts)
+
+
 def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage: dict | None = None) -> list[str]:
     reg = registry()
     cad, var = reg["cadence"], reg["variety"]
@@ -173,6 +187,8 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
     # ── 8. every shot a known style, allowed for its room and kind; every `on` found ──
     for s in shots:
         sid, st = s.get("id"), styles.get(s.get("style"))
+        if not draws(s):
+            p(f"{sid}: a {s['kind']} with no {' or '.join('/'.join(a) for a in CONTENT[s['kind']])}: it draws an empty desk")
         if st is None:
             p(f"{sid}: style {s.get('style')!r} is not in the library (§14)")
             continue

@@ -70,10 +70,18 @@ SCRIPT
   VISUAL: chapter
 
 [4:18] A BEAT THAT DRAWS A CHART
-  VO: …
+  VO: Which would you raise first? … A price you've never moved is a price you've never measured.
   VISUAL: staircase of the demo product's price steps …
   DATA SOURCE: demo: Tarnhollow demo data
+  KEEP: A price you've never moved is a price you've never measured.
   CLIP: no
+
+[24:10] WHAT YOU CAN DO THIS WEEK
+  VO: Pick your top products by revenue. For each one, …
+  VISUAL: formula-build listing the steps as terms …
+  DATA SOURCE: demo: Tarnhollow demo data
+  TRY: yes
+  CLIP: yes
 
 [28:55] THE HONEST LIMIT
   VO: What this can't do, and what that needs.
@@ -131,6 +139,21 @@ example `greats-04-the-dime`. A Greats film is numbered after the last one.
 - **Exactly one `CTA:`**, on the honest-limit beat, pointing to hubricon.com/learn. Pillars 1 to 4 name no
   product in the soft close. Never the Teardown.
 - **A re-hook at least every 40 seconds**, listed honestly in `RE-HOOK AUDIT`.
+
+**How it teaches** (docs/content/LEARNING_DESIGN.md, the research behind each)
+
+- **Chapters of 1.5 to 6 minutes** (225–900 spoken words). Split a long teaching section at its steps,
+  each its own chapter.
+- **Every chapter asks the viewer a question before it answers it.** A guess first makes the answer
+  stick.
+- **Every chapter ends on one `KEEP:` line.** The sentence the viewer keeps, 12 words at most, also
+  said word for word in that beat's VO. It is set on screen as it is spoken.
+- **At least one `TRY: yes` beat** gives the step to do this week, with the demo's numbers as the
+  worked example.
+- **The last chapter brings back at least two of the film's earlier figures**, so the ending is a
+  recall, not a summary.
+- **Teach a method, not a history.** A story from the past can frame the film, but the film is
+  for a seller who wants to use what it teaches.
 
 **Banned phrases**
 

@@ -520,6 +520,8 @@ export function number(job) {
 
 /* ---------- pair ---------- */
 
+const LABEL_COL = 420;   // px: the narrowest a labelled pair column is set
+
 export function pair(job) {
   bindCtx(job);
   const p = job.params || {}, L = p.left || {}, R = p.right || {};
@@ -536,15 +538,18 @@ export function pair(job) {
   const lineOf = (c, u, px, t, blue, quiet, k) => figLine(strip(c.value, u), px, { times: figTimes(strip(c.value, u), spoken, t), blue, quiet, known: k });
   // both figures as large as the box allows, with at least 240 px of line between them; long
   // trailing words set below their figure when inline they would shrink the pair
+  // a labelled column is at least LABEL_COL wide and its label wraps inside it: a label never sets the
+  // column's width on its own (G02 s016: two long labels ran together and pushed "$3.50 a week" off the frame)
+  const colW = (f, c) => (c.label ? Math.max(f.w, LABEL_COL) : f.w);
   const fit = (below) => {
     const lu = below ? unitsOf(L.value) : "", ru = below ? unitsOf(R.value) : "";
     let px = 260, lf, rf;
     for (;; px -= 4) {
       lf = lineOf(L, lu, px, lAt, blueL, kl === "money" && !blueL, kL);
       rf = lineOf(R, ru, px, rAt, blueR, false, kR);
-      if (lf.w + rf.w + 240 <= B.w || px <= 120) break;
+      if (colW(lf, L) + colW(rf, R) + 240 <= B.w || px <= 120) break;
     }
-    return { px, lf, rf, lu, ru, ok: lf.w + rf.w + 240 <= B.w };
+    return { px, lf, rf, lu, ru, ok: colW(lf, L) + colW(rf, R) + 240 <= B.w };
   };
   let F = fit(false);
   if (F.px < 190) { const G = fit(true); if ((G.lu || G.ru) && G.px > F.px + 24) F = G; }
@@ -578,7 +583,7 @@ export function pair(job) {
   const { px, lf, rf } = F;
   const linkW = B.w - lf.w - rf.w, d = 0.7, drawFrom = Math.max(lAt + 0.4, rAt - d - 0.05);
   const gapIn = p.gap && serifW(p.gap, BODY, true) <= linkW - 90;
-  const col = (c, t, f, unit, side, blue, k) => `<div class="ty-p-col ${side}" style="--next:${r3(rAt)}">` +
+  const col = (c, t, f, unit, side, blue, k) => `<div class="ty-p-col ${side}" style="--next:${r3(rAt)};--col-w:${Math.round(colW(f, c))}px">` +
     `<p class="ty-label">${labelSpans(c.label || "", spoken, labT(c, t))}</p>` +
     `<div class="ty-p-fig" style="font-size:${px0(px)}">${bloom(f.w * 1.4, px * 1.8, t, blue)}${f.html}` +
     `${unit ? `<span class="ty-p-unit" style="font-size:${px0(Math.max(LABEL, px * 0.3))}">${k && t <= 0.4 ? wordSpans(unit, [-1], { set: true }) : wordSpans(unit, sayFrom(unit, spoken, t + 0.1))}</span>` : ""}` +

@@ -132,3 +132,57 @@ def test_a_fix_brief_carries_the_shots_its_problems_name_and_their_neighbours(tm
     # of a03 (it comes in as a03b's neighbour), and a02 stays out
     assert carried == ["a03", "a03b", "a04", "a05", "a06", "a07", "a08"]
     assert "What you return" in brief and "a02" not in carried
+
+
+def test_a_shot_that_lost_what_it_draws_gets_it_back_and_the_validator_flags_an_empty_one():
+    from hubricon_content import line, shots
+    plan = {"shots": [
+        {"id": "s1", "start": 10.0, "end": 16.0, "kind": "timeline", "style": "timeline", "params": {"layout": "dates"},
+         "reveals": [{"key": "a", "t": 10.5}, {"key": "b", "t": 12.0}, {"key": "c", "t": 14.0}]},
+        {"id": "s2", "start": 16.0, "end": 20.0, "kind": "quote", "style": "quote", "params": {"print": {"want": {}}},
+         "says": "One price, and the price was a nickel."},
+        {"id": "s3", "start": 20.0, "end": 26.0, "kind": "formula", "style": "formula-build", "params": {},
+         "reveals": [{"key": "e", "t": 21.0}, {"key": "f", "t": 23.5}]},
+        {"id": "s4", "start": 26.0, "end": 30.0, "kind": "timeline", "style": "callback", "params": {"callback": "s1"}}]}
+    fixed = line.restore_content(plan)
+    s1, s2, s3, s4 = plan["shots"]
+    assert [f.split(":")[0] for f in fixed] == ["s1", "s2", "s3"]
+    assert s1["params"]["layout"] == "ledger" and [e["label"] for e in s1["params"]["events"]] == ["{{a}}", "{{b}}", "{{c}}"]
+    assert s2["params"]["text"] == "One price, and the price was a nickel." and "print" in s2["params"]   # what the decision added is kept
+    assert s3["params"]["terms"] == [{"text": "{{e}}", "at": 1.0}, {"text": "{{f}}", "at": 3.5}]
+    assert s4["params"] == {"callback": "s1"}                                    # a callback draws its target
+    assert not shots.draws({"kind": "timeline", "style": "timeline", "params": {"layout": "dates"}})
+    assert shots.draws({"kind": "number", "style": "number-land", "params": {}, "reveals": [{"key": "d"}]})   # its spoken figure
+    assert shots.draws({"kind": "kinetic", "style": "kinetic-thesis", "params": {}})                           # its words
+
+
+def test_a_decision_merges_into_the_drafted_params_and_never_replaces_them(tmp_path, monkeypatch):
+    from hubricon_content import plan_skeleton, shots
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    plan = {"shots": [{"id": "s001", "start": 0.0, "end": 6.0, "room": "paper", "kind": "timeline", "style": "timeline",
+                       "params": {"layout": "ledger", "events": [{"date": "", "label": "{{a}}"}]}}]}
+    (tmp_path / "shots.json").write_text(json.dumps(plan))
+    monkeypatch.setattr(shots, "registry", lambda: {"styles": {}})
+    monkeypatch.setattr(shots, "load_timing", lambda d: ({"segments": []}, None))
+    monkeypatch.setattr(shots, "spoken", lambda t: [])
+    plan_skeleton.apply("f", {"shots": {"s001": {"params": {"layout": "dates", "builds": [0.3], "heading": None}}}})
+    p = json.loads((tmp_path / "shots.json").read_text())["shots"][0]["params"]
+    assert p["events"] == [{"date": "", "label": "{{a}}"}] and p["layout"] == "dates" and p["builds"] == [0.3]
+    assert "heading" not in p                                                   # null removes a param
+
+
+def test_a_type_shot_opens_on_what_its_figure_is():
+    from hubricon_content import line
+    facts = {"rent": {"value": "$30 a month", "label": "the Lancaster store's rent (paid monthly)"},
+             "a": {"value": "1879", "label": "the store opens; a second clause"}, "b": {"value": "$3.50", "label": "his first wage"},
+             "long": {"value": "1", "label": "a label so long that it runs well past the nine words a line holds"}}
+    plan = {"shots": [
+        {"id": "s1", "kind": "number", "style": "number-land", "params": {"value": "{{rent}}"}},
+        {"id": "s2", "kind": "pair", "style": "number-pair", "params": {"left": {"value": "{{a}}"}, "right": {"value": "{{b}}", "label": "kept"}}},
+        {"id": "s3", "kind": "number", "style": "number-land", "params": {"value": "{{long}}"}},
+        {"id": "s4", "kind": "number", "style": "callback", "params": {"callback": "s1"}}]}
+    line.context_lines(plan, facts)
+    s1, s2, s3, s4 = plan["shots"]
+    assert s1["params"]["sub"] == "The Lancaster store's rent"
+    assert s2["params"]["left"]["label"] == "The store opens" and s2["params"]["right"]["label"] == "kept"
+    assert "sub" not in s3["params"] and "sub" not in s4["params"]

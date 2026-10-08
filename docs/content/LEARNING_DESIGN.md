@@ -1,0 +1,61 @@
+# Learning design: how the films teach, as checks
+
+The films exist to teach a seller something they can use. Every rule below comes from research on how
+people learn from narrated pictures, and each is checked by code, for no tokens: in the script, when it is
+taken in (`script-in`, `script.learning`), and in the film (`film-qa`, `film_qa.learning`).
+This file sits beside SOUND_DESIGN.md.
+
+## The principles, and the rule each became
+
+| Principle | From | The rule | The number | Checked |
+|---|---|---|---|---|
+| **Segmenting.** People learn more from a lesson in short parts than from one long run. | Mayer, *Multimedia Learning*; Guo, Kim & Rubin 2014 (6.9M edX sessions: median engagement ~100% under 6 min, ~50% at 9–12 min, ~20% beyond) | A chapter runs 1.5 to 6 minutes. A long teaching section is split at its steps. | 225–900 words; 6.5 min in the film | script, film |
+| **A guess before the answer.** Being asked first, even when the guess is wrong, makes the answer stick. | the pretesting effect (Richland, Kornell & Kao 2009; Kornell, Hays & Bjork 2009) | Every chapter asks the viewer a question before it answers. | at least one `?` a chapter | script |
+| **Signaling.** Mark what matters as it is said. | Mayer | Each chapter closes on its takeaway: one sentence, spoken, and set on screen word by word as it is said (a fixed kinetic-thesis card). | `KEEP:`, 12 words at most, said verbatim | script, plan |
+| **Temporal contiguity.** A picture teaches best when it arrives with its words. | Mayer | A figure's shot opens on the figure's word: the timing adds a legal cut before every spoken figure, and the skeleton prefers it. | 70% of figure shots within 0.6 s | film |
+| **Redundancy.** Narration plus a picture beats narration plus a picture plus the same words printed. | Mayer | On screen goes the figure or the key phrase, never the sentence being read. A thesis card holds 12 words at most. | 12 words | plan (validator) |
+| **Retrieval.** Recalling something strengthens it more than hearing it again. | Roediger & Karpicke 2006 | The last chapter brings back the film's earlier figures. | at least 2 | script |
+| **Transfer.** A method is learned when it is used. | worked-example research (Sweller; Renkl) | One beat gives the step to do this week, marked `TRY: yes`. | at least one | script |
+| **A voice that is clear and alive.** Viewers stay with a speaker who is fast and enthusiastic, not slow and flat. | Guo, Kim & Rubin 2014 | Each beat of his reading sits between 120 and 200 words a minute; a beat outside it is read again. | 120–200 wpm | film (his own takes only) |
+| **No dead air.** Something on screen responds to the words every few seconds; a chart a viewer must read holds still. | retention editing practice; Mayer's coherence principle | No 4 s frozen picture; no type shot with nothing to draw; no shot opening on bare paper. | freeze 4 s; `shots.CONTENT` | film |
+
+## At the teleprompter
+
+`record.mjs` shows each take's pace the moment it is stopped, before he keeps it: words a minute over
+the voiced span only (`content/film/pace.mjs`). A take outside 120–200 says so, and what to do. The pause
+before a key figure needs the alignment, so it is checked later, in film-qa.
+
+## What viewers do (built, waiting on the YouTube sign-in)
+
+`hubricon-content retention <slug>` reads a published film's audience-retention curve from YouTube
+Analytics (100 points). It writes `qa/retention.md`:
+
+- the share still watching at 30 s;
+- the film against videos of its length (0.5 is typical);
+- the steepest drops past the open: each beyond 2.5 times the film's usual loss, with its time, its shot
+  and style, its beat and the words said there;
+- the moments viewers watched again.
+
+`retention-patterns` ranks every style by the loss per minute while it is on screen, against its own
+film's pace, across all published films. It turns into rules what viewers did, which is what the critic
+rounds guessed at.
+
+It needs the one-time `youtube-auth`, which now asks for read-only analytics with the upload scopes.
+YouTube reports retention once a video has views.
+
+## What the three pilots showed (2026-10-07)
+
+The checks were calibrated on G01–G03, the capability proofs:
+
+- In all three, the teaching chapter ("The card you pay now", "Your dime", "Your calendar") ran 9.4 to 11.9
+  minutes in one block. That is the part a seller needs, in the shape least watched.
+- 8 of the 17 chapters asked the viewer nothing.
+- G03's ending brought back one earlier figure.
+- Only 30–33% of figure shots opened on their figure's word. With the figure cut it is 76% on G02's timing.
+
+## Next, when worth it
+
+- **The worksheet on /learn.** `hubricon-content worksheet <slug>` already writes each film's one-page sheet
+  (`worksheet.md`): its KEEP lines, the TRY beat as numbered steps, and the figures with their sources,
+  demo figures marked demo data. G02's runs to 10 steps. Putting it on the matching /learn lesson, linked
+  from the film's description, is a site change for the founder's go.

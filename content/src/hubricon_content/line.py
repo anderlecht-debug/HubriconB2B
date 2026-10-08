@@ -158,6 +158,83 @@ def resolve_gaps(slug: str) -> dict:
 
 # ── the whole line as one resumable command (FILM_LINE.md) ───────────────────────────────────────
 
+def restore_content(plan: dict) -> list[str]:
+    """A paper shot with nothing to draw gets its content back from what is spoken under it: its figures
+    (`reveals`) for a number, pair, timeline or formula, its words (`says`) for a quote or kinetic type."""
+    from .shots import draws
+    fixed = []
+    for s in plan["shots"]:
+        p = s.get("params") if isinstance(s.get("params"), dict) else {}
+        if draws(s):
+            continue
+        reveals = sorted(s.get("reveals") or [], key=lambda r: r["t"])
+        keys = list(dict.fromkeys(r["key"] for r in reveals))
+        k = s["kind"]
+        if k == "number" and keys:
+            p["value"] = f"{{{{{keys[0]}}}}}"
+        elif k == "pair" and len(keys) >= 2:
+            p.update(left={**(p.get("left") or {}), "value": f"{{{{{keys[0]}}}}}"},
+                     right={**(p.get("right") or {}), "value": f"{{{{{keys[1]}}}}}"})
+        elif k == "timeline" and keys:
+            p["events"] = [{"date": "", "label": f"{{{{{x}}}}}"} for x in keys]
+            if p.get("layout") in (None, "dates"):
+                p["layout"] = "ledger"          # a line in time needs dates; figures with none stand as a ledger
+        elif k == "formula" and keys:
+            p["terms"] = [{"text": f"{{{{{r['key']}}}}}", "at": round(float(r["t"]) - float(s["start"]), 2)} for r in reveals]
+        elif k == "quote" and s.get("says"):
+            p["text"] = s["says"]
+        else:
+            continue
+        s["params"] = p
+        fixed.append(f"{s['id']}: its {k} drawn again from what is spoken under it")
+    return fixed
+
+
+CONTEXT_WORDS = 9
+
+
+def context_of(label: str | None) -> str | None:
+    """A figure's fact label as the line set at the cut: its first clause, no parentheses, 9 words at most."""
+    import re
+    if not label:
+        return None
+    t = re.sub(r"\s*\([^)]*\)", "", str(label)).split(";")[0].strip(" ,.")
+    if len(t.split()) > CONTEXT_WORDS and "," in t and len(t.split(",")[0].split()) >= 3:
+        t = t.split(",")[0].strip()
+    if not t or len(t.split()) > CONTEXT_WORDS or "http" in t:
+        return None
+    return t[0].upper() + t[1:]
+
+
+def context_lines(plan: dict, facts: dict) -> list[str]:
+    """A type shot opens on what its figure is, never on bare paper: a number's `sub` and a pair's labels, set
+    at the cut, from the figures' fact labels (no tokens), where the plan gave none. The figure lands on its word."""
+    import re
+    fixed = []
+    key = lambda v: (re.findall(r"\{\{\s*(\w+)\s*\}\}", str(v or "")) or [None])[0]
+    for s in plan["shots"]:
+        if s.get("style") == "callback" or s.get("fixed"):
+            continue
+        p = s.get("params") if isinstance(s.get("params"), dict) else None
+        if p is None:
+            continue
+        if s.get("kind") == "number" and not p.get("sub"):
+            k = key(p.get("value")) or next((r["key"] for r in s.get("reveals") or []), None)
+            c = context_of((facts.get(k) or {}).get("label"))
+            if c:
+                p["sub"] = c
+                fixed.append(f"{s['id']}: opens on {c!r}")
+        elif s.get("kind") == "pair":
+            for side in ("left", "right"):
+                v = p.get(side)
+                if isinstance(v, dict) and not v.get("label"):
+                    c = context_of((facts.get(key(v.get("value"))) or {}).get("label"))
+                    if c:
+                        v["label"] = c
+                        fixed.append(f"{s['id']}: its {side} figure labelled {c!r}")
+    return fixed
+
+
 def autofix(slug: str) -> dict:
     """The validator's problems that have a known mechanical fix, fixed by code (the fixes made by hand
     on G02, 2026-10-07): a style's missing landing word, a thesis card longer than its 12 words or a
@@ -170,7 +247,7 @@ def autofix(slug: str) -> dict:
     timing, _ = shotmod.load_timing(d)
     problems = shotmod.validate(plan, timing, scriptmod.load_facts(slug))
     by = {s["id"]: s for s in plan["shots"]}
-    fixed = []
+    fixed = restore_content(plan) + context_lines(plan, scriptmod.load_facts(slug))
     longest = lambda s: max([w.strip(".,;:!?\"'’”()") for w in (s.get("says") or "").split()] or [None], key=lambda w: len(w or ""))
     card = lambda lines: {"lines": [x for x in lines if x], "line": 1, "source": "As this film states it"}
     for p in problems:
