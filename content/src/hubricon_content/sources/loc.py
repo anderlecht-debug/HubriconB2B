@@ -9,7 +9,9 @@ The search answer carries the rights, the creators, the place and the date,
 but not the full-resolution file: the Prints and Photographs Division serves
 the master as a TIFF whose size is not in the record. `resolve` reads the item
 once and, when the TIFF's size is missing, its header (the first 64 KB), for
-only the candidates worth checking.
+only the candidates worth checking. A master larger than a still is graded at
+comes through the item's IIIF image service at that size: about 2 MB in place
+of a 300–700 MB TIFF (one of which once ran this PC out of memory).
 """
 
 from __future__ import annotations
@@ -24,6 +26,8 @@ from . import net as netmod
 NAME, KINDS, KEYS, CREDIT = "loc", ("image",), ("CONTENT_CONTACT_EMAIL",), "Library of Congress"
 API = "https://www.loc.gov/photos/"
 ACCEPT = "No known restrictions on publication"
+IIIF_EDGE = 4800   # the long edge a still is graded at (render_shots.SHRINK_EDGE)
+_IIIF = re.compile(r"(https://tile\.loc\.gov/image-services/iiif/[^/]+)/")
 
 
 def search(query: str, kind: str = "image", n: int = 40, *, net=None) -> list[dict]:
@@ -97,8 +101,15 @@ def resolve(c: dict, net) -> dict:
         c.update(json.loads(memo.read_text(encoding="utf-8")))
         return c
     item = net.get_json(NAME, (c.get("item_url") or c["url"]).split("?")[0], {"fo": "json", "at": "resources"})
-    files = [f for res in item.get("resources") or [] for group in res.get("files") or [] for f in group
-             if isinstance(f, dict) and str(f.get("mimetype", "")).startswith("image/") and f.get("url")]
+    files, service = [], {}
+    for res in item.get("resources") or []:
+        for group in res.get("files") or []:
+            group = [f for f in group if isinstance(f, dict) and f.get("url")]
+            base = next((m.group(1) for f in group if (m := _IIIF.match(str(f["url"])))), None)
+            for f in group:
+                if str(f.get("mimetype", "")).startswith("image/"):
+                    files.append(f)
+                    service[f["url"]] = base
     jpg = [f for f in files if f.get("width") and f.get("height")]
     best = max(jpg, key=lambda f: f["width"] * f["height"], default=None)
     found = {"file_url": best["url"], "width": best["width"], "height": best["height"]} if best else {}
@@ -110,6 +121,10 @@ def resolve(c: dict, net) -> dict:
         if w and h and (not found or w * h > found["width"] * found["height"]):
             found = {"file_url": t["url"], "width": w, "height": h}
         break
+    if found and max(found["width"], found["height"]) > IIIF_EDGE and service.get(found["file_url"]):
+        k = IIIF_EDGE / max(found["width"], found["height"])
+        found = {"file_url": f"{service[found['file_url']]}/full/!{IIIF_EDGE},{IIIF_EDGE}/0/default.jpg",
+                 "width": round(found["width"] * k), "height": round(found["height"] * k)}
     if found:
         c.update(found)
         memo.parent.mkdir(parents=True, exist_ok=True)
