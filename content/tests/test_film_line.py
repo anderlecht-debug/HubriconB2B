@@ -186,3 +186,17 @@ def test_a_type_shot_opens_on_what_its_figure_is():
     assert s1["params"]["sub"] == "The Lancaster store's rent"
     assert s2["params"]["left"]["label"] == "The store opens" and s2["params"]["right"]["label"] == "kept"
     assert "sub" not in s3["params"] and "sub" not in s4["params"]
+
+
+def test_a_placeholder_timing_is_replaced_by_his_takes_and_never_built_on(tmp_path, monkeypatch):
+    from hubricon_content import line, state
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    (tmp_path / "timing.json").write_text(json.dumps({"voice": "placeholder", "duration": 1.0, "segments": []}))
+    calls = []
+    monkeypatch.setattr(line, "_cli", lambda *a, env=None, **k: (calls.append(a[0]), (0, ""))[1])
+    monkeypatch.setattr(state, "_takes_in", lambda slug: False)
+    res = line.run_line("f", until="voice")
+    assert res["status"] == "stopped" and "record.mjs" in res["reason"] and calls == []    # no takes: the preview is not built on
+    monkeypatch.setattr(state, "_takes_in", lambda slug: True)
+    line.run_line("f", until="voice")
+    assert calls == ["takes-to-vo", "timing"]                                               # his takes: timed again from them

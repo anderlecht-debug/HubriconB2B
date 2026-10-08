@@ -336,7 +336,10 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
         if step in st["done"] and not start:
             continue
         if step == "voice":
-            if not (d / "timing.json").exists():
+            tj = d / "timing.json"
+            # a timing read by the placeholder voice is a preview: his own film is timed from his takes
+            stale = tj.exists() and not placeholder and json.loads(tj.read_text(encoding="utf-8")).get("voice") == "placeholder"
+            if not tj.exists() or stale:
                 from .state import _takes_in
                 if placeholder:
                     cmds, env = ("tts", "timing"), {"CONTENT_ALLOW_PLACEHOLDER": "1"}
