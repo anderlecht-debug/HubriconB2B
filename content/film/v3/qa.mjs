@@ -5,7 +5,7 @@
 //   early-figure  a figure readable before the voice says it (digits or a spelled number), unless the
 //                 film said it before (job.said_before / said_phrases), or it is known (job.known);
 //                 axis rulers and the label slot (citations) are exempt, as decided on G01
-//   bare-opening  the shot's first frame is an empty desk: almost no lit area, no held picture, and at most one line
+//   bare-opening  the shot's first frame is an empty desk: almost no lit area, no held picture, no line of 3+ words
 //   label-on-lit  the label slot sits over a lit picture or page (it must read on dark)
 //   under-print   a line of text runs under a companion print
 //   title-safe    a line outside title-safe; overlap: two landed lines on top of each other
@@ -129,8 +129,13 @@ try {
       // pictures of the frame: the opening, and the label's ground at three moments
       if (t === 0.1) {
         const f = await luma({ x: 0, y: 0, width: 1920, height: 1080 }, true);
-        const lines = new Set(text.filter((b) => !b.label).map((b) => b.y0 >> 4)).size;
-        if (f.lit < 0.03 && lines <= 1 && !held) report(job, t, "bare-opening", `opens on an empty desk (${(100 * f.lit).toFixed(1)}% lit, ${lines} line)`);
+        // a visible line of three words or more (a figure's context, a pair's labels, a quote's first words) is
+        // an opening, not an empty desk: the shot says what is coming before its figure lands on its word
+        // (words are spans of their own, so a line's words are counted across its boxes)
+        const perLine = new Map();
+        for (const b of text) if (!b.label && (b.o ?? 1) > 0.3) perLine.set(b.y0 >> 4, (perLine.get(b.y0 >> 4) || 0) + String(b.txt || "").trim().split(/\s+/).length);
+        const lines = [...perLine.values()].filter((n) => n >= 3).length;
+        if (f.lit < 0.03 && lines === 0 && !held) report(job, t, "bare-opening", `opens on an empty desk (${(100 * f.lit).toFixed(1)}% lit, no line)`);
       }
       if (label && (t === 0.1 || [0.5, 0.95].some((f) => Math.abs(t - f * T) < STEP / 2))) {
         const g = await luma({ x: Math.max(0, label.x0 - 8), y: Math.max(0, label.y0 - 6), width: Math.min(1900, label.x1 - label.x0 + 16), height: label.y1 - label.y0 + 12 }, true);
