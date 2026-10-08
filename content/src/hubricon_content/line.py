@@ -260,10 +260,15 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
             continue
         if step == "voice":
             if not (d / "timing.json").exists():
-                if not placeholder:
-                    return stop(step, "no timing yet: record the takes (record.mjs, then takes-to-vo), or pass --placeholder")
-                for cmd in ("tts", "timing"):
-                    rc, out = _cli(cmd, slug, env={"CONTENT_ALLOW_PLACEHOLDER": "1"})
+                from .state import _takes_in
+                if placeholder:
+                    cmds, env = ("tts", "timing"), {"CONTENT_ALLOW_PLACEHOLDER": "1"}
+                elif _takes_in(slug):            # his takes are in: they become the narration and its timing
+                    cmds, env = ("takes-to-vo", "timing"), None
+                else:
+                    return stop(step, f"no takes yet: node content/film/record.mjs {slug}")
+                for cmd in cmds:
+                    rc, out = _cli(cmd, slug, env=env)
                     if rc:
                         return stop(step, f"{cmd} failed: {out[-300:]}")
             done(step)

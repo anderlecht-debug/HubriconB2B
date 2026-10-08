@@ -373,11 +373,22 @@ def cmd_line_due(a):
     q = _q()
     item = state.next_item(q)
     out = {}
-    if item.get("kind") == "video" and item.get("step") in ("shots", "source", "pick", "render_shots"):
+    if item.get("kind") == "video" and item.get("step") in ("tts", "timing", "shots", "source", "pick", "render_shots"):
         u = state.unit(q, item["unit"])
-        if u and u.get("tier") == "D" and u.get("voice") == "own" and (scriptmod.video_dir(u["slug"]) / "timing.json").exists():
+        voiced = (scriptmod.video_dir(u["slug"]) / "timing.json").exists() or state._takes_in(u["slug"]) if u else False
+        if u and u.get("tier") == "D" and u.get("voice") != "placeholder" and voiced:
             out = {"slug": u["slug"], "step": item["step"]}
     _out(out)
+
+
+def cmd_script_in(a):
+    from . import intake
+    res = intake.script_in(a.file, slug=a.slug, dry=a.dry)
+    if res["status"] == "ok":
+        _status_files(state.load())
+    _out(res)
+    if res["status"] == "refused":
+        raise SystemExit(1)
 
 
 def cmd_film_cost(a):
@@ -537,6 +548,11 @@ def main(argv=None) -> None:
     p = sub.add_parser("next"); p.add_argument("--dry", action="store_true", help="report without changing the queue"); p.set_defaults(fn=cmd_next)
     p = sub.add_parser("status"); p.add_argument("--md", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("voice"); p.add_argument("slug"); p.add_argument("voice", choices=["own"]); p.set_defaults(fn=cmd_voice)
+    p = sub.add_parser("script-in", help="a script written elsewhere becomes a film: checked, filed, queued for his takes (SCRIPT_KIT.md)")
+    p.add_argument("file"); p.add_argument("--slug"); p.add_argument("--dry", action="store_true", help="check only, write nothing")
+    p.set_defaults(fn=cmd_script_in)
+    sub.add_parser("script-reference", help="write docs/content/SCRIPT_REFERENCE.md: the styles, scenes and demo keys a script may use").set_defaults(
+        fn=lambda a: print(__import__("hubricon_content.intake", fromlist=["x"]).reference()))
     p = sub.add_parser("takes-to-vo", help="the founder's own takes (record.mjs) as the unit's narration")
     p.add_argument("slug"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_takes_to_vo)
     p = sub.add_parser("mark"); p.add_argument("unit"); p.add_argument("step"); p.add_argument("outcome", choices=["done", "failed", "blocked", "awaiting"]); p.add_argument("note", nargs="?", default=""); p.set_defaults(fn=cmd_mark)
