@@ -55,5 +55,7 @@ The checks were calibrated on G01–G03, the capability proofs:
 
 ## Next, when worth it
 
-- **A worksheet per film.** The TRY beat's steps, with the same demo numbers, as a one-page sheet on the
-  matching /learn lesson (a site change, for the founder's go).
+- **The worksheet on /learn.** `hubricon-content worksheet <slug>` already writes each film's one-page sheet
+  (`worksheet.md`): its KEEP lines, the TRY beat as numbered steps, and the figures with their sources,
+  demo figures marked demo data. G02's runs to 10 steps. Putting it on the matching /learn lesson, linked
+  from the film's description, is a site change for the founder's go.
