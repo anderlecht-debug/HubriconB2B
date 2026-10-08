@@ -322,4 +322,8 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
             from . import meter
             m = meter.summary(slug)
             done(step, f"{m['ai_weighted_tokens']:,} weighted tokens")
+    # the queue hears what the line did, so the runner's skill never repeats a step by hand
+    for q_step, line_step in (("shots", "fill"), ("source", "source"), ("pick", "pictures"), ("render_shots", "render")):
+        if line_step in st["done"]:
+            _cli("mark", slug, q_step, "done")
     return {"status": "ok", "log": log}

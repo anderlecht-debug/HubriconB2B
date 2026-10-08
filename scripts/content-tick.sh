@@ -59,6 +59,22 @@ if [ "${CONTENT_DRY_RUN:-0}" != "1" ] && "$WT/content/.venv/bin/hubricon-content
   exit 0
 fi
 
+# A long film whose next step is one of the line's runs as code, outside any AI session (the founder's
+# call of 2026-10-07, docs/content/FILM_LINE.md): film-line is one resumable command, and only its own
+# decide and fix passes use a model, under their budgets. Only a film read in his own voice qualifies.
+DUE=$(cd "$WT/content" && .venv/bin/python -m hubricon_content.cli line-due 2>/dev/null | tail -1)
+SLUG=$(printf '%s' "$DUE" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("slug",""))' 2>/dev/null)
+if [ -n "$SLUG" ] && [ "${CONTENT_DRY_RUN:-0}" != "1" ]; then
+  START=$(date +%s)
+  OUT=$(cd "$WT/content" && CLAUDE_BIN="$CLAUDE" timeout 55m .venv/bin/python -m hubricon_content.cli film-line "$SLUG" 2>&1); RC=$?
+  { printf '%s film-line %s rc=%s secs=%s\n' "$(date -Is)" "$SLUG" "$RC" "$(( $(date +%s) - START ))"
+    printf '%s\n' "$OUT" | tail -c 4000; printf '\n---\n'; } >> "$RUN/log"
+  cd "$WT" || exit 0
+  git add -A content docs 2>/dev/null; git diff --cached --quiet || git commit -q -m "Content pipeline: the film line advanced $SLUG"
+  git push -q origin content 2>/dev/null || true
+  exit 0
+fi
+
 # A real tick sees the claude.ai connectors so it can reach Higgsfield for the films'
 # texture stills (the founder's call, 2026-10-04). scripts/content-runner.settings.json
 # allows five Higgsfield tools and denies every other connector by name; anything not

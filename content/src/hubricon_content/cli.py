@@ -366,6 +366,20 @@ def cmd_film_line(a):
         sys.exit(2)
 
 
+def cmd_line_due(a):
+    """The film whose next step the line runs as code, if any (the runner's shell calls this before any
+    AI session): a long film, its step one of the line's, its voice the founder's own takes."""
+    from . import script as scriptmod
+    q = _q()
+    item = state.next_item(q)
+    out = {}
+    if item.get("kind") == "video" and item.get("step") in ("shots", "source", "pick", "render_shots"):
+        u = state.unit(q, item["unit"])
+        if u and u.get("tier") == "D" and u.get("voice") == "own" and (scriptmod.video_dir(u["slug"]) / "timing.json").exists():
+            out = {"slug": u["slug"], "step": item["step"]}
+    _out(out)
+
+
 def cmd_film_cost(a):
     from . import meter
     _out(meter.summary(a.slug))
@@ -497,6 +511,8 @@ def main(argv=None) -> None:
     p.add_argument("slug"); p.add_argument("--from", dest="start", default=None, choices=None)
     p.add_argument("--until", default=None); p.add_argument("--placeholder", action="store_true", help="the offline placeholder voice when no takes exist")
     p.set_defaults(fn=cmd_film_line)
+    p = sub.add_parser("line-due", help="the long film the line would advance now, if any (for the runner's shell)")
+    p.set_defaults(fn=cmd_line_due)
     p = sub.add_parser("film-cost", help="what a film has cost: AI tokens by step against budget, API calls by source")
     p.add_argument("slug"); p.set_defaults(fn=cmd_film_cost)
     p = sub.add_parser("draft", help="the review draft of a long film, encoded on the GPU (media/draft.mp4)")
