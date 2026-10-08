@@ -3103,8 +3103,13 @@ def _iso_day(s: str) -> str:
 
 
 def cmd_stripe_smoke(args):
-    """Every Stripe call the billing path makes, against a TEST-mode key."""
+    """Every Stripe call the billing path makes, against a TEST-mode key.
+
+    The test key sits beside the live one in .env as STRIPE_TEST_SECRET_KEY and
+    stands in for STRIPE_SECRET_KEY in this process only."""
     from . import stripe_smoke
+    if os.environ.get("STRIPE_TEST_SECRET_KEY"):
+        os.environ["STRIPE_SECRET_KEY"] = os.environ["STRIPE_TEST_SECRET_KEY"]
     sys.exit(stripe_smoke.run(os.environ.get("STRIPE_SECRET_KEY", "")))
 
 

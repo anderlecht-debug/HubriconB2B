@@ -91,6 +91,24 @@ test("each month's outcome is what became of its invoice", () => {
   assert.equal(say(disputed, { status: "open", issued_at: "2026-09-10T15:00:00" }), "Under the fee after a dispute · sent Sep 10");
 });
 
+test("a billed month links its invoice, and only Stripe's own invoice page", () => {
+  const jul = P.monthsOf([row({ ...JUL, attributed_usd: 7300 })])[0];
+  const aug = P.monthsOf([row({ ...AUG, attributed_usd: 5030 })])[0];
+  const url = "https://invoice.stripe.com/i/acct_1/test_x";
+  const link = (m, inv) => P.invoiceLink(inv, P.outcomeOf(m, inv));
+  const sent = { status: "open", number: "HUB-0002", hosted_invoice_url: url, issued_at: "2026-08-10T15:00:00" };
+  assert.equal(link(jul, sent), ` · <a href="${url}" target="_blank" rel="noopener">Invoice HUB-0002</a>`);
+  assert.match(link(jul, { ...sent, status: "paid" }), /Invoice HUB-0002<\/a>$/, "paid: the page carries the receipt");
+  assert.match(link(aug, { ...sent, status: "paid", refunded_usd: 6000 }), /href=/, "refunded: the credit note is on it");
+  assert.equal(link(jul, { ...sent, status: "draft" }), "", "a held invoice is not the client's to see");
+  assert.equal(link(aug, { ...sent, status: "void" }), "", "a voided month has nothing to pay or file");
+  assert.equal(link(jul, null), "");
+  assert.equal(link(jul, { ...sent, hosted_invoice_url: "https://evil.example/i/x" }), "");
+  assert.equal(link(jul, { ...sent, hosted_invoice_url: null }), "");
+  assert.match(link(jul, { ...sent, number: '<b>"x' }), /Invoice &lt;b&gt;&quot;x<\/a>/);
+  assert.match(script, /select=status,number,hosted_invoice_url,/, "the portal reads the invoice's number and page");
+});
+
 test("the sentence under the number says 'our bill' only when a bill was sent", () => {
   const jul = P.monthsOf([row({ ...JUL, attributed_usd: 7300 })])[0];
   const none = P.monthSentence(jul, P.outcomeOf(jul, null));

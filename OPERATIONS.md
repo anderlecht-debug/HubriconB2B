@@ -105,7 +105,7 @@ set) · `declined` · `churned`. Every automated client email asks `lifecycle.ma
 | migration `20261001000005_exit_and_export.sql` | the exit clock and the private `exports` bucket (if the role cannot create it, make a private bucket `exports` in the dashboard) |
 | migration `20261001000006_portal_consents.sql` | the portal's call date and one-click withdrawal |
 | migration `20261001000007_token_purpose.sql` | single-purpose links (privacy §5 is true from here) |
-| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` in GitHub, then `npm run stripe:setup` | billing, refunds and the exit true-up (the operator prints PROMISE NOT KEPT until then) |
+| ~~`STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` in GitHub, then `npm run stripe:setup`~~ done 2026-10-05; Vercel's two Stripe values still wait (see "Stripe, live (2026-10-05)") | billing, refunds and the exit true-up |
 | `RESEND_API_KEY` on Vercel | the /learn welcome email (the operator's emails run in GitHub, which has the key) |
 | `GITHUB_DISPATCH_TOKEN`, `GITHUB_DISPATCH_REPO` on Vercel | uploads wake the operator |
 | Calendly: the confirmation and 24-hour reminder text (below); name the kickoff event with "kickoff" | prep before the call; `lifecycle.call_at` never mistakes a kickoff for the call |
@@ -1195,11 +1195,9 @@ Void invoices and refunded dollars drop out of the ledger's fee denominator
 
 Read-only until `STRIPE_SECRET_KEY` is set: without it an uncovered invoice
 is a digest warning, never a silent bill. `operator.yml` passes
-`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID`, but as of 2026-09-25 neither secret
-exists in the GitHub Production environment (`gh secret list --env Production`),
-so the day-30 pass and the rolling gate stop at the digest until they are
-added. terms §3, welcome and the index guarantee say the sentence;
-`hubricon promises` tracks it.
+`STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID`; both are in the GitHub Production
+environment since 2026-10-05. terms §3, welcome and the index guarantee say the
+sentence; `hubricon promises` tracks it.
 
 ### The smaller door: recovery-only
 
@@ -1301,6 +1299,57 @@ Schema: `supabase/migrations/20260925000001_guarantee_stack.sql` (additive:
 `invoices.refunded_usd`, `clients.exit_trued_up_at`, `clients.exit_refund_usd`,
 `clients.late_teardown_month_at`). Apply it before the operator runs this code;
 without it the exit pass names the migration in the digest.
+
+### Stripe, live (2026-10-05)
+
+The founder put a live secret key in `.env`. `npm run stripe:setup` ran on the Hubricon account
+(`acct_1U7qfw1iZwPRr8FK`, which had no product, price, customer or invoice): product
+`prod_VO3jgqasqQf6iV` "Hubricon Managed Profit", price `price_1UNHbt1iZwPRr8FK2nXmLEbW` ($6,000 a
+month), and webhook `we_1UNHbu1iZwPRr8FKkNtihZaz` → `/api/stripe-webhook`, all seven events,
+pinned to `2025-08-27.basil` (the SDK's version, which `billing.STRIPE_VERSION` matches). The
+script now writes `STRIPE_PRICE_ID` and a new endpoint's `STRIPE_WEBHOOK_SECRET` into `.env`
+instead of printing them. `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` are GitHub Production secrets.
+ACH Direct Debit is an active capability; the payment-methods page shows it off, which governs
+Checkout only, so the setup script now checks the capability.
+
+**Done 2026-10-06:** `npm run vercel:stripe` copied `STRIPE_SECRET_KEY` and
+`STRIPE_WEBHOOK_SECRET` from `.env` into hubricon-b2-b (production and preview) and rebuilt the
+production commit (0d7fd93, `dpl_8njw4y8P4puFuRkMbiT6pi5AvPNj`). Auto mode refuses to run it for
+Claude; it ran with a per-command approval. A signed test event (`evt_hubricon_selftest_20261006`,
+left in `private.stripe_events`) got 200 and a wrongly signed one 400. The old endpoint
+`we_1U80dW…` is deleted and the hand-made all-events one posting to the home page,
+`we_1U8lQV…`, is disabled, so `we_1UNHbu…` is the only live endpoint.
+
+**Still open, all outside the repo:**
+
+1. **Dashboard settings no API reaches** (Stripe refuses account updates on one's own account:
+   "you may only use it on connected accounts"): Billing → Subscriptions and emails: trial-ending and
+   upcoming-renewal reminders off (the subscription trials to the end of the first billed month,
+   and either email would announce a $6,000 bill before the Record has judged the month);
+   Customer emails: successful payments and refunds on; Branding: icon and logo
+   `brand/stripe-mark-512.png` (the favicon's ring and H, white on ink), brand colour `#0a0e17`
+   (Stripe paints headers with it), accent `#0b5fff` (Stripe's buttons and links, the Pay button
+   among them: blue stays on money); Public details: support email.
+2. **A test key** (`sk_test_…`) in `.env` lets `hubricon stripe-smoke` run every billing call,
+   the invoice's dress included, against Stripe itself. The live key is refused by design.
+3. **Least access:** the key is a full secret key. A restricted key with the permissions
+   `.env.example` lists would do every job here and nothing else.
+
+**What a client now gets from a bill** (the 11-out-of-5 applied to money):
+
+- *The invoice proves itself* (`billing.invoice_dress`, written onto the held draft before it is
+  finalized): its memo says what the Record measured for the month and by how much it clears the
+  fee; four header fields give the month billed, the Record's figure, what the client is up after
+  paying, and where every move behind the number is; the footer says how a doubted dollar comes
+  off. It is the page that reaches a bookkeeper or an investor, so it carries the number first, as
+  the spec orders. Stripe's own line shows the subscription's next period (it bills a period ahead,
+  we bill in arrears), so the month billed is named in words. If Stripe refuses the dress the
+  invoice still goes, plain, and the digest says so. Recovery Only invoices carry the same account.
+- *A returned ACH payment is told, once per attempt* (`billing_payment_returned`): the link to pay
+  from any US bank account, the fourteen-day line from terms §4, no fee. It runs after the gate,
+  so an invoice the gate has just voided is never chased.
+- *The scoreboard links each billed month's invoice* (Stripe's page, with the PDF and the
+  receipt), and only Stripe's own invoice host.
 
 ### Going live, in order
 

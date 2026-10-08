@@ -848,6 +848,15 @@ const P = (() => {
     else if (o.key === "held") s += " Its invoice is held, not sent.";
     return s;
   }
+  /* The invoice itself, for a month that was billed. Stripe's page holds the PDF
+     and, once paid, the receipt: what a bookkeeper asks for, without asking us.
+     Only Stripe's own invoice host is ever linked. */
+  function invoiceLink(inv, o) {
+    if (!inv || !["sent", "paid", "refunded"].includes(o.key)) return "";
+    const url = String(inv.hosted_invoice_url || "");
+    if (!/^https:\/\/invoice\.stripe\.com\//.test(url)) return "";
+    return ` · <a href="${esc(url)}" target="_blank" rel="noopener">Invoice${inv.number ? ` ${esc(inv.number)}` : ""}</a>`;
+  }
   /* Billed since day one: what was sent, less anything given back. */
   const billedTotal = (invoices) => round2(sum((invoices || [])
     .filter((i) => ["open", "paid", "uncollectible"].includes(i.status))
@@ -1126,7 +1135,7 @@ const P = (() => {
            anomNote, directLine, foundNote, packsByChannel, packLabel,
            esc, clip, asDate, fdate, fmonth, fday, fwhen, money, usd, monthLabel, stageOf, beforeYes, schedule,
            firstMonthEnd, monthsOf, cleared, provenOf, provenLabel, tickPlan, invoiceFor, outcomeOf, outcomeText,
-           monthSentence, billedTotal, holding, heldLine, monthsLeftInYear, forwardLine, FORWARD_NOTE, nextCheck,
+           invoiceLink, monthSentence, billedTotal, holding, heldLine, monthsLeftInYear, forwardLine, FORWARD_NOTE, nextCheck,
            ago, heartbeat, freshAlert, sealsByMove, grouped, sealHtml, leakName, groupMoves, GRADE, CHANGE_BY_EMAIL,
            consentRows, referralUrl, PRINT_FOOT, printHtml };
 })();
@@ -1745,9 +1754,10 @@ function renderScore(c){
   if (c.months.length && !pre){
     table.innerHTML = `<div class="scroll"><table><tr><th>Month</th><th class="num">Measured</th><th class="num">Fee</th><th>Outcome</th></tr>`
       + c.months.map((m) => {
-        const o = P.outcomeOf(m, P.invoiceFor(m, c.invoices, c.sched));
+        const inv = P.invoiceFor(m, c.invoices, c.sched);
+        const o = P.outcomeOf(m, inv);
         return `<tr><td>${esc(P.monthLabel(m))}</td><td class="num">${usd(m.total)}</td><td class="num">${m.free ? "—" : usd(m.fee)}</td>`
-          + `<td class="out ${o.cleared ? "clear" : ""}">${esc(P.outcomeText(m, o))}${m.disputed ? ` · ${usd(m.disputed)} disputed and removed` : ""}</td></tr>`;
+          + `<td class="out ${o.cleared ? "clear" : ""}">${esc(P.outcomeText(m, o))}${m.disputed ? ` · ${usd(m.disputed)} disputed and removed` : ""}${P.invoiceLink(inv, o)}</td></tr>`;
       }).join("") + `</table></div>`;
     table.hidden = false;
   } else {
@@ -2292,7 +2302,7 @@ async function loadNow(){
     maybe(`/rest/v1/chart_packs?select=payload,created_at,run_id&${f}&order=created_at.desc&limit=${stores.length > 1 ? 6 : 1}`),
     maybe(`/rest/v1/chart_packs?select=run_id,created_at&${f}&order=created_at.desc&limit=4`),
     maybe(`/rest/v1/record_months?select=*&${f}&order=month_index.asc`),
-    maybe(`/rest/v1/invoices?select=status,amount_due,amount_paid,refunded_usd,issued_at,paid_at,voided_at,period_start,period_end,gate_month_index,gate_decision,created_at&${f}`)
+    maybe(`/rest/v1/invoices?select=status,number,hosted_invoice_url,amount_due,amount_paid,refunded_usd,issued_at,paid_at,voided_at,period_start,period_end,gate_month_index,gate_decision,created_at&${f}`)
       .then((r) => r ?? maybe(`/rest/v1/invoices?select=status,amount_due,amount_paid,issued_at,paid_at,voided_at,period_start,period_end,created_at&${f}`)),
     maybe(`/rest/v1/record_seals?select=entry,directive_id,leaf,global_head,sealed_at,sealed:document->>sealed&${f}&order=seq.asc`),
     rpc("public_record_seal"),

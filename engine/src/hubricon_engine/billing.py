@@ -42,6 +42,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
+from email.utils import parseaddr
 
 STRIPE_API = "https://api.stripe.com/v1"
 # Every call is made at the version the webhook's Node SDK pins (stripe@18.5 in
@@ -232,13 +233,79 @@ def month_label(month: dict) -> str:
     return f"{month['start'].strftime('%b %-d')} – {month['end'].strftime('%b %-d, %Y')}"
 
 
-def release_invoice(inv: dict, stripe=None) -> dict:
-    """A held draft the Record covers: finalize it without Stripe's own
-    auto-send, then send it once. Returns the sent invoice."""
+# -- what an invoice says about itself ----------------------------------------------------
+
+# Stripe lets an invoice carry four custom fields beside its lines, each name up
+# to 40 characters and each value up to 140.
+CUSTOM_FIELDS_MAX, FIELD_NAME_MAX, FIELD_VALUE_MAX = 4, 40, 140
+TERMS_URL = "hubricon.com/terms#invoicing"
+
+
+def _reply_address() -> str:
+    """The address a client writes to about a bill: the one every letter replies to."""
+    raw = os.environ.get("EMAIL_REPLY_TO") or os.environ.get("EMAIL_FROM") or ""
+    return parseaddr(raw)[1] or "hagen.simmons@hubricon.com"
+
+
+def _custom_fields(pairs: list[tuple[str, str]]) -> dict:
+    data = {}
+    for i, (name, value) in enumerate(pairs[:CUSTOM_FIELDS_MAX]):
+        data[f"custom_fields[{i}][name]"] = name[:FIELD_NAME_MAX]
+        data[f"custom_fields[{i}][value]"] = value[:FIELD_VALUE_MAX]
+    return data
+
+
+def invoice_footer() -> str:
+    return (f"Paid on proof: a month is invoiced only when your Profit Record measured more than the fee, and "
+            f"nothing is credited or carried between months. If a dollar behind this invoice looks wrong, write "
+            f"to {_reply_address()}: a dollar the Record cannot defend comes off, the month is judged again, and "
+            f"if it no longer clears, this invoice is voided or refunded. Terms §3 and §4: {TERMS_URL}")
+
+
+def invoice_dress(v: dict, portal_url: str) -> dict:
+    """What a released invoice says about itself, so the proof travels with the bill.
+
+    The invoice is the page that reaches a bookkeeper, a CFO or an investor, often
+    without the letter beside it, so it carries the spec's order on its own face:
+    the number first, then the bill. The memo says what the month measured and
+    why it is invoiced; four header fields give the month billed, the Record's
+    figure, what the client is up after paying, and where every move behind the
+    number lives; the footer says what happens to a dollar they doubt. Stripe's
+    own line shows the subscription's next period (it bills a period ahead, and
+    this invoice is in arrears), so the month billed is named here, in words."""
+    month = month_label(v["month"])
+    up = v["total"] - v["fee"]
+    memo = (f"Your Profit Record measured ${v['total']:,.0f} for {month}, on that month's own exports. That clears "
+            f"the ${v['fee']:,.0f} fee by ${up:,.0f}, so the month is invoiced, in arrears. A month that does not "
+            f"clear is never invoiced.")
+    return {"description": memo, "footer": invoice_footer(), **_custom_fields([
+        ("Month billed", month),
+        ("Profit Record, that month", f"${v['total']:,.0f} measured"),
+        ("Up on the month, after this invoice", f"${up:,.0f}"),
+        ("Every move behind the number", portal_url.split("://", 1)[-1]),
+    ])}
+
+
+def release_invoice(inv: dict, stripe=None, verdict: dict | None = None, portal_url: str | None = None) -> dict:
+    """A held draft the Record covers: dress it with the month's number, finalize
+    it without Stripe's own auto-send, then send it once. Returns the sent invoice.
+
+    The dress never holds a bill back: if Stripe refuses it, the invoice goes out
+    plain (the letter beside it carries the number) and the returned invoice says
+    `undressed`, for the digest."""
     call = stripe or _stripe
     sid = inv["stripe_invoice_id"]
+    undressed = None
+    if verdict is not None and verdict.get("month") is not None:
+        try:
+            call(f"invoices/{sid}", invoice_dress(verdict, portal_url or "https://www.hubricon.com/portal"))
+        except RuntimeError as err:
+            undressed = str(err)[:200]
     finalized = call(f"invoices/{sid}/finalize", {"auto_advance": "false"})
-    return call(f"invoices/{sid}/send", {}) or finalized
+    sent = call(f"invoices/{sid}/send", {}) or finalized
+    if undressed:
+        sent = {**(sent or {}), "undressed": undressed}
+    return sent
 
 
 def refund_invoice(inv: dict, cash_usd: float, why: str, credit_usd: float = 0.0, stripe=None) -> dict:
@@ -309,6 +376,47 @@ def unbilled_email_blocks(v: dict, how: str, portal_url: str) -> list[dict]:
         {"p": "The work carries on. Next month is judged on its own number."},
     ]
     return blocks
+
+
+# -- a payment the bank sent back ----------------------------------------------------------
+
+def payment_returned(inv: dict) -> bool:
+    """An invoice whose ACH payment came back: still open, and a payment was
+    attempted on it. ACH that is still clearing reads the same, so the caller
+    asks this only of a client the webhook has put at past_due, which only
+    `invoice.payment_failed` does."""
+    raw = inv.get("raw") or {}
+    return inv.get("status") == "open" and bool(raw.get("attempted"))
+
+
+def payment_attempts(inv: dict) -> int:
+    return int((inv.get("raw") or {}).get("attempt_count") or 1)
+
+
+def payment_returned_subject(inv: dict) -> str:
+    number = inv.get("number")
+    return f"{f'Invoice {number}' if number else 'Your invoice'}: your bank returned the ACH payment"
+
+
+def payment_returned_email_blocks(inv: dict, portal_url: str) -> list[dict]:
+    """terms §4, said before it bites: the payment came back, the invoice is still
+    open, the link pays it from any US bank account, and what happens at fourteen
+    days. No fee is added, because the terms name none."""
+    number = inv.get("number")
+    amount = float(inv.get("amount_due") or 0) - float(inv.get("amount_paid") or 0)
+    url = inv.get("hosted_invoice_url")
+    return [
+        {"p": f"The ACH payment for {f'invoice {number}' if number else 'your invoice'} (${amount:,.2f}) came back "
+              f"from your bank unpaid. Banks return a debit for ordinary reasons, such as a limit or a debit block "
+              f"on the account. Nothing else about your account has changed."},
+        *([{"button": "Pay the invoice", "url": url}] if url else []),
+        {"p": "The invoice is still open, and its page takes any US bank account. If it is still open fourteen days "
+              "after its due date, execution and monitoring pause until it is settled (terms §4). Nothing on your "
+              "Record is lost, and nothing is added to the bill."},
+        {"button": "Open your scoreboard", "url": portal_url},
+        {"p": "If the payment should have gone through, reply and tell me. I can see what Stripe reports and will "
+              "say plainly what it shows."},
+    ]
 
 
 # -- the exit true-up ---------------------------------------------------------------------
@@ -617,6 +725,19 @@ def recovery_due(claims: list[dict], today: date, share: float | None = None,
     return result
 
 
+RECOVERY_FOOTER = ("Recovery Only: we invoice a share of what Amazon actually paid on claims we filed, and nothing "
+                   "else. A month in which nothing lands is never invoiced. Questions about a claim: {reply}. "
+                   "Terms §4: {terms}")
+
+
+def recovery_memo(due: dict) -> str:
+    """The invoice's own account of itself, as the letter gives it: what landed, on how many claims, the share."""
+    start, end = (date.fromisoformat(str(due[k])[:10]) for k in ("period_start", "period_end"))
+    return (f"Amazon paid ${due['recovered']:,.2f} on {due['n_claims']} claim(s) we filed between "
+            f"{start:%B %-d} and {end:%B %-d, %Y}. This invoice is our {due['share'] * 100:.0f}% of what "
+            f"landed. There is no monthly fee on this plan.")
+
+
 def invoice_recovery_share(client: dict, due: dict, stripe=None) -> dict:
     """One Stripe invoice for the period: an item for the share, sent by email,
     ACH, net seven days. Nothing recurring is created.
@@ -642,6 +763,8 @@ def invoice_recovery_share(client: dict, due: dict, stripe=None) -> dict:
             "days_until_due": NET_DAYS,
             "auto_advance": "false",
             "pending_invoice_items_behavior": "exclude",
+            "description": recovery_memo(due),
+            "footer": RECOVERY_FOOTER.format(reply=_reply_address(), terms=TERMS_URL),
             "payment_settings[payment_method_types][0]": "us_bank_account",
             "metadata[hubricon_client_id]": client["id"],
             "metadata[hubricon_plan]": "recovery",

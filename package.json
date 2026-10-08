@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "stripe:setup": "node --env-file-if-exists=.env scripts/stripe-setup.mjs",
+    "vercel:stripe": "node --env-file-if-exists=.env scripts/vercel-stripe-env.mjs",
     "new-client": "node --env-file-if-exists=.env scripts/new-client.mjs",
     "invite-user": "node --env-file-if-exists=.env scripts/invite-user.mjs"
   },

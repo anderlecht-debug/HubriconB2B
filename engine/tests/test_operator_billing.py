@@ -313,6 +313,40 @@ def test_a_client_whose_ach_payment_failed_is_still_gated(monkeypatch):
     assert calls == ["invoices/in_1/void"] and db.rows("invoices")[0]["status"] == "void"
 
 
+def _letters_with_refs(monkeypatch):
+    out = []
+    monkeypatch.setattr(cli, "_send_client_email",
+                        lambda db, c, kind, ref, subject, blocks, send: out.append((kind, ref, subject)) or True)
+    return out
+
+
+def test_a_returned_ach_payment_on_a_billed_month_is_told_once_per_attempt(monkeypatch):
+    _stripe_log(monkeypatch)
+    letters = _letters_with_refs(monkeypatch)
+    billed = {**_inv(1, "open", "2026-09-01"), "gate_decision": "covered", "number": "HUB-0001",
+              "hosted_invoice_url": "https://invoice.stripe.com/i/z", "raw": {"attempted": True, "attempt_count": 1}}
+    db = FakeDB(clients=[_client(status="past_due")], directives=[], recovery_claims=[], client_emails=[],
+                invoices=[billed], funnel_events=[])
+    p = operator.Pass(db, send=False, dry=False)
+    p.billing()
+    assert letters == [("billing_payment_returned", "in_1#1", "Invoice HUB-0001: your bank returned the ACH payment")]
+    assert any("came back" in h for h in p.human)
+
+
+def test_a_payment_the_gate_voids_in_the_same_pass_is_never_chased(monkeypatch):
+    """The month did not clear, so the gate voids its open invoice; the letter
+    runs after the gate and reads the invoice fresh, so nobody is asked to pay
+    an invoice that no longer exists."""
+    calls = _stripe_log(monkeypatch)
+    letters = _letters_with_refs(monkeypatch)
+    returned = {**_inv(1, "open", "2026-09-01"), "raw": {"attempted": True, "attempt_count": 1}}
+    db = FakeDB(clients=[_client(status="past_due")], directives=[], recovery_claims=[], client_emails=[],
+                invoices=[returned], funnel_events=[])
+    operator.Pass(db, send=False, dry=False).billing()
+    assert calls == ["invoices/in_1/void"]
+    assert not any(k == "billing_payment_returned" for k, _, _ in letters)
+
+
 def test_a_slow_first_issue_no_longer_adds_a_free_month(monkeypatch):
     """The Teardown and its late-month promise were retired on 2026-09-30
     (HUBRICON_SPEC.md: "The Teardown is killed"), so a slow first read of a
@@ -435,8 +469,10 @@ def test_each_held_invoice_is_judged_against_its_own_month(monkeypatch):
     by = {r["id"]: r for r in db.rows("invoices")}
     assert by["i1"]["gate_decision"] == "covered" and by["i1"]["status"] == "open" and by["i1"]["gate_month_index"] == 1
     assert by["i2"]["gate_decision"] == "waived" and by["i2"]["status"] == "void" and by["i2"]["gate_month_index"] == 2
-    # A cleared month is finalized without Stripe's auto-send and sent once; a short one is voided unsent.
-    assert calls == ["invoices/in_1/finalize", "invoices/in_1/send", "invoices/in_2/finalize", "invoices/in_2/void"]
+    # A cleared month is dressed with its own number, finalized without Stripe's auto-send and sent once;
+    # a short one is voided unsent.
+    assert calls == ["invoices/in_1", "invoices/in_1/finalize", "invoices/in_1/send",
+                     "invoices/in_2/finalize", "invoices/in_2/void"]
     assert [k for k, _ in letters] == ["month_cleared", "month_unbilled"]
     assert "$3,000 on your Record, under the $6,000 fee. No invoice" in letters[1][1]
     # A month above the fee does not lend its surplus to the next one.

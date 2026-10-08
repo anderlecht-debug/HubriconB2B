@@ -59,8 +59,14 @@ class FakeStripe:
                 inv["status"] = "void"
             elif action == "pay":
                 inv.update(status="paid", amount_paid=inv["amount_due"])
-            elif data.get("auto_advance") == "false":
-                inv["auto_advance"] = False
+            else:
+                if data.get("auto_advance") == "false":
+                    inv["auto_advance"] = False
+                inv.update({k: data[k] for k in ("description", "footer") if k in data})
+                fields = [{"name": data[f"custom_fields[{i}][name]"], "value": data[f"custom_fields[{i}][value]"]}
+                          for i in range(4) if f"custom_fields[{i}][name]" in data]
+                if fields:
+                    inv["custom_fields"] = fields
             return dict(inv)
         if path == "payment_methods/pm_card_visa/attach":
             return {"id": "pm_t"}

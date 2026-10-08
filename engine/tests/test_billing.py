@@ -83,6 +83,73 @@ def test_a_covered_draft_is_finalized_without_the_auto_send_then_sent_once():
     assert sent["hosted_invoice_url"] == "https://pay/in_d"
 
 
+SEPT = {"index": 2, "start": date(2026, 9, 1), "end": date(2026, 9, 30), "free": False}
+CLEARED = {"month": SEPT, "fee": 6000.0, "total": 18420.4, "measured": True, "free": False, "clears": True}
+
+
+def test_a_released_invoice_carries_its_proof_on_its_own_face():
+    """The spec's order, number then bill, on the page a bookkeeper or an investor
+    actually opens: the memo, four header fields and the footer are written onto
+    the held draft before it is finalized, so the PDF and Stripe's own email say it."""
+    calls = []
+
+    def stripe(path, data=None, idempotency_key=None):
+        calls.append((path, data))
+        return {"id": "in_d", "status": "open", "hosted_invoice_url": "https://invoice.stripe.com/i/x"}
+
+    sent = billing.release_invoice({**INV2, "status": "draft", "stripe_invoice_id": "in_d"}, stripe=stripe,
+                                   verdict=CLEARED, portal_url="https://www.hubricon.com/portal")
+    assert [p for p, _ in calls] == ["invoices/in_d", "invoices/in_d/finalize", "invoices/in_d/send"]
+    assert "undressed" not in sent
+    dress = calls[0][1]
+    assert dress["description"] == ("Your Profit Record measured $18,420 for Sep 1 – Sep 30, 2026, on that month's "
+                                    "own exports. That clears the $6,000 fee by $12,420, so the month is invoiced, "
+                                    "in arrears. A month that does not clear is never invoiced.")
+    fields = {dress[f"custom_fields[{i}][name]"]: dress[f"custom_fields[{i}][value]"] for i in range(4)}
+    assert fields == {"Month billed": "Sep 1 – Sep 30, 2026", "Profit Record, that month": "$18,420 measured",
+                      "Up on the month, after this invoice": "$12,420",
+                      "Every move behind the number": "www.hubricon.com/portal"}
+    assert "custom_fields[4][name]" not in dress
+    assert all(len(n) <= billing.FIELD_NAME_MAX and len(v) <= billing.FIELD_VALUE_MAX for n, v in fields.items())
+    footer = dress["footer"]
+    assert footer.startswith("Paid on proof:") and "hubricon.com/terms#invoicing" in footer
+    assert "@" in footer and "voided or refunded" in footer
+
+
+def test_the_dress_never_holds_a_covered_bill_back():
+    calls = []
+
+    def stripe(path, data=None, idempotency_key=None):
+        calls.append(path)
+        if path == "invoices/in_d":
+            raise RuntimeError("Stripe invoices/in_d: HTTP 400 custom_fields")
+        return {"id": "in_d", "status": "open"}
+
+    sent = billing.release_invoice({**INV2, "status": "draft", "stripe_invoice_id": "in_d"}, stripe=stripe,
+                                   verdict=CLEARED, portal_url="https://x/portal")
+    assert calls == ["invoices/in_d", "invoices/in_d/finalize", "invoices/in_d/send"]
+    assert sent["status"] == "open" and "HTTP 400" in sent["undressed"]
+
+
+def test_a_returned_ach_payment_is_told_plainly_with_the_way_to_pay_and_the_fourteen_day_line():
+    returned = {**INV2, "number": "HUB-0003", "hosted_invoice_url": "https://invoice.stripe.com/i/y",
+                "raw": {"attempted": True, "attempt_count": 2}}
+    assert billing.payment_returned(returned) and billing.payment_attempts(returned) == 2
+    assert not billing.payment_returned({**returned, "raw": {"attempted": False}})     # emailed, never attempted
+    assert not billing.payment_returned({**returned, "status": "paid"})
+    assert not billing.payment_returned({**returned, "status": "draft"})
+    assert billing.payment_returned_subject(returned) == "Invoice HUB-0003: your bank returned the ACH payment"
+    assert billing.payment_returned_subject({}) == "Your invoice: your bank returned the ACH payment"
+    blocks = billing.payment_returned_email_blocks(returned, "https://www.hubricon.com/portal")
+    text = " ".join(b.get("p", "") for b in blocks)
+    assert "invoice HUB-0003 ($6,000.00)" in text and "fourteen days" in text and "terms §4" in text
+    assert "nothing is added to the bill" in text
+    assert {"button": "Pay the invoice", "url": "https://invoice.stripe.com/i/y"} in blocks
+    # Without a payment page on file the letter still goes, with no dead button.
+    assert not any(b.get("button") == "Pay the invoice"
+                   for b in billing.payment_returned_email_blocks({**returned, "hosted_invoice_url": None}, "https://x"))
+
+
 def test_a_refund_is_a_credit_note_with_a_key_made_of_what_it_returns():
     calls = []
     billing.refund_invoice(INV1, 2500.0, "exit", stripe=lambda path, data=None, idempotency_key=None:
@@ -196,6 +263,10 @@ def test_a_recovery_invoice_is_one_item_one_invoice_finalized_and_sent_with_no_s
     text = " ".join(b.get("p", "") for b in billing.recovery_email_blocks(due, inv["hosted_invoice_url"], "https://x"))
     assert "$2,000.00" in text and "$500.00" in text and "no monthly fee on this plan" in text
     assert "retainer" not in text
+    # The invoice says the same on its own face, for whoever opens it without the letter.
+    assert "$2,000.00 on 1 claim(s) we filed between September 1 and September 30, 2026" in invoice["description"]
+    assert "our 25% of what landed" in invoice["description"] and "Recovery Only" in invoice["footer"]
+    assert "retainer" not in invoice["description"] + invoice["footer"]
 
 
 def test_a_recovery_invoice_a_failed_run_left_behind_is_finished_never_duplicated():

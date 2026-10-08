@@ -1045,6 +1045,17 @@ class Pass:
                                    billing.started_email_blocks(first, fee, PORTAL_URL), self.send)
             self.say(f"{company}: billing started in arrears; the first invoice judges {billing.month_label(first)}.")
 
+        # After every gate decision of this pass, so an invoice the gate has just
+        # voided or refunded is never chased for payment.
+        for c in clients:
+            if c.get("status") != "past_due" or onboarding.is_internal(c["contact_email"], c.get("contact_name")):
+                continue
+            try:
+                self._payment_returned(c, cli, billing)
+            except Exception as err:
+                self.warnings.append(f"{c['company_name'] or c['contact_email']}: the returned-payment letter "
+                                     f"failed: {err}")
+
         # terms §5: the day Managed Profit ends, the Record is checked once more.
         leaving = (self.db.table("clients").select("*").eq("status", "churned")
                    .is_("exit_trued_up_at", "null").execute().data)
@@ -1071,6 +1082,26 @@ class Pass:
             self.warnings.append(f"Billing paused: apply supabase/migrations/20260925000001_guarantee_stack.sql "
                                  f"({str(err)[:100]}). Nothing is billed, sent, voided or refunded until it is.")
             return False
+
+    def _payment_returned(self, c: dict, cli, billing) -> None:
+        """terms §4, the scary moment said plainly: a client whose ACH payment came
+        back hears it from us, once per attempt, with the link to pay and what
+        happens at fourteen days. Whatever Stripe's own email says, it does not
+        say that, and a client who hears nothing first learns of it from a pause."""
+        company = c["company_name"] or c["contact_email"]
+        for inv in cli._fetch_invoices(self.db, c["id"]):
+            if not billing.payment_returned(inv):
+                continue
+            label = f"invoice {inv.get('number') or str(inv.get('stripe_invoice_id'))[:12]}"
+            if self.dry:
+                self.say(f"[dry] {company}: the ACH payment on {label} came back; would write to say so")
+                continue
+            ref = f"{inv.get('stripe_invoice_id')}#{billing.payment_attempts(inv)}"
+            if cli._send_client_email(self.db, c, "billing_payment_returned", ref,
+                                      billing.payment_returned_subject(inv),
+                                      billing.payment_returned_email_blocks(inv, PORTAL_URL), self.send):
+                self.human.append(f"{company}: the ACH payment on {label} came back; they have the link to pay "
+                                  f"again and the fourteen-day line from terms §4.")
 
     def _record_months(self, c: dict) -> list[dict]:
         return self.db.table("record_months").select("*").eq("client_id", c["id"]).execute().data
@@ -1130,10 +1161,14 @@ class Pass:
                                              f"STRIPE_SECRET_KEY missing. Nobody is billed until it is.")
                         continue
                     try:
-                        sent = billing.release_invoice(inv)
+                        sent = billing.release_invoice(inv, verdict=v, portal_url=PORTAL_URL)
                     except Exception as err:
                         self.warnings.append(f"{company}: {label} cleared but Stripe would not send it: {err}")
                         continue
+                    if (sent or {}).get("undressed"):
+                        self.warnings.append(f"{company}: {label} went out without the month's number on its face "
+                                             f"(Stripe refused the memo and fields: {sent['undressed']}); the "
+                                             f"letter carries it.")
                     inv["status"] = "open"
                     patch.update({"status": "open", "issued_at": _iso(),
                                   "hosted_invoice_url": (sent or {}).get("hosted_invoice_url") or inv.get("hosted_invoice_url"),

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import time
 import urllib.parse
+from datetime import date
 
 from . import billing
 
@@ -92,11 +93,19 @@ def run(key: str) -> int:
                 step("the webhook's hold: auto_advance=false on a draft",
                      lambda: expect(call(f"invoices/{first['id']}", {"auto_advance": "false"})["auto_advance"] is False,
                                     "auto_advance still true"))
-                sent = step("release_invoice: finalize without auto-send, then send",
-                            lambda: billing.release_invoice(_inv(first)))
+                month = {"index": 1, "start": date(2026, 9, 1), "end": date(2026, 9, 30), "free": False}
+                verdict = {"month": month, "fee": 6000.0, "total": 18420.0, "measured": True, "clears": True}
+                sent = step("release_invoice: dressed with the month's number, finalized without auto-send, sent",
+                            lambda: billing.release_invoice(_inv(first), verdict=verdict,
+                                                            portal_url="https://www.hubricon.com/portal"))
                 if sent:
                     step("the released invoice is open, with a payment page",
                          lambda: expect(sent.get("status") == "open" and sent.get("hosted_invoice_url"), str(sent.get("status"))))
+                    step("Stripe took the dress: memo, four fields, footer",
+                         lambda: expect(not sent.get("undressed") and len(sent.get("custom_fields") or []) == 4
+                                        and "$18,420" in (sent.get("description") or "")
+                                        and (sent.get("footer") or "").startswith("Paid on proof"),
+                                        str(sent.get("undressed") or sent.get("custom_fields"))))
                     step("void it (cleanup)", lambda: call(f"invoices/{first['id']}/void", {}))
             elif first:
                 print(f"  note  Stripe finalized the first invoice at once (status {first.get('status')}); "
