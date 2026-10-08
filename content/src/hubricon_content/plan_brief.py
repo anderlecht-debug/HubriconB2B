@@ -121,7 +121,8 @@ Reply with ONE JSON object and nothing else (no prose, no code fence):
 
     {"shots": {"<id>": {<field>: <value>, …}, …}}
 
-- Give only the fields you change; a field you leave keeps its value. `params` replaces the shot's params whole.
+- Give only the fields you change; a field you leave keeps its value. `params` merges into the shot's params;
+  set a param to null to remove it.
 - Keep a shot's `start` and `end` unless a problem names its length. A changed `end` moves the next shot's
   `start` with it: give both.
 - Values are `{{key}}` placeholders, never typed figures.

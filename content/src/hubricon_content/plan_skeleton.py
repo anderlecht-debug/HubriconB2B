@@ -99,7 +99,10 @@ def apply(slug: str, decisions: dict, also: tuple = ()) -> dict:
             unknown.append(sid)
             continue
         for k, v in (fields or {}).items():
-            if k in DECIDED or k in also:
+            if k == "params" and isinstance(v, dict) and isinstance(s.get("params"), dict):
+                # merged, never replaced: a decision that sets a layout keeps the figures the draft put there
+                s["params"] = {pk: pv for pk, pv in {**s["params"], **v}.items() if pv is not None}
+            elif k in DECIDED or k in also:
                 s[k] = v
                 set_ += 1
     # what follows from a decision is code's: the room from the style, and a landing word where the

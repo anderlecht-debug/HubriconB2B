@@ -64,6 +64,10 @@ def build(sequence=SEQUENCE):
                 row["params"]["builds"] = [t + k for k in range(6, int(secs), 6)]
         if st.get("params", {}).get("clipping"):
             row["params"]["clipping"] = True
+        if style == "number-land" and "reveal" not in extra:   # a figure it draws, spoken or not (shots.CONTENT)
+            row["params"]["value"] = "{{leak}}"
+        if style == "formula-build":           # a formula draws its terms, or the desk is bare (shots.CONTENT)
+            row["params"]["terms"] = [{"text": "price"}, {"text": "units"}]
         if style == "footage-process":
             row["params"].update({"group": "pack", "step": extra["step"]})
         if style == "texture":
