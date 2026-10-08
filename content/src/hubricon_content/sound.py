@@ -136,3 +136,27 @@ def metrics(vo: np.ndarray, music: np.ndarray, events: dict[str, list[float]], s
     return {"voice_over_music_db": None if ratio is None else round(ratio, 1),
             "effects_per_minute": round(len(ts) / max(seconds / 60, 1e-9), 1),
             "longest_undesigned_s": round(max(gaps) if gaps else seconds, 1)}
+
+
+# ── the stereo field: the voice dead centre, the world around it (mid/side, mono-safe) ───────────
+# A side signal is the track through a chain of all-pass filters (same spectrum, scattered phase).
+# Left = mid + side, right = mid - side, so folded to mono (a phone's speaker) the side cancels
+# exactly and the mix is the mono mix: width that costs nothing in mono.
+WIDTH_BED, WIDTH_AMB, WIDTH_ROOM = 0.45, 0.6, 0.7
+PAN_TICK, PAN_PAPER = 0.15, 0.3
+_ALLPASS = (0.62, -0.41, 0.77, -0.23)
+
+
+def widen(x: np.ndarray, width: float) -> np.ndarray:
+    """The side signal for a track: decorrelated by first-order all-passes, scaled by `width`."""
+    from scipy.signal import lfilter
+    y = np.asarray(x, dtype=np.float32)
+    for a in _ALLPASS:
+        y = lfilter([a, 1.0], [1.0, a], y).astype(np.float32)
+    return y * np.float32(width)
+
+
+def side_under_mid_db(mid: np.ndarray, side: np.ndarray) -> float:
+    """How far the side sits under the mid: folded to mono, the mix loses 10·log10(1 + side²/mid²) dB."""
+    m, s = float(np.dot(mid, mid)), float(np.dot(side, side))
+    return round(10 * np.log10(max(m, 1e-12) / max(s, 1e-12)), 1)

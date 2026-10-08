@@ -347,6 +347,7 @@ def mix(slug: str) -> Path:
     room = room * _db(ROOM_TONE_DB)
 
     fx = np.zeros(n)
+    fx_side = np.zeros(n, dtype=np.float32)   # panned effects (sound.py: mid/side)
     tick_file, whoosh_file = ASSETS / "sfx" / "tick.mp3", ASSETS / "sfx" / "whoosh.mp3"
     tick = _decode(tick_file).astype(np.float64) if tick_file.exists() else _tick(rng)
     whoosh = _decode(whoosh_file).astype(np.float64) if whoosh_file.exists() else _whoosh(rng)
@@ -362,9 +363,10 @@ def mix(slug: str) -> Path:
         _place(fx, whoosh, max(0.0, float(ch["at"]) - 0.08), _db(WHOOSH_DB))
     if score:
         sub, riser = _sub(rng), _riser(rng)
-        for t in score["ticks"]:
+        for k, t in enumerate(score["ticks"]):
             c, g = sound.vary(tick, rng)
             _place(fx, c, t, _db(TICK_DB) * g)
+            _place(fx_side, c, t, _db(TICK_DB) * g * (sound.PAN_TICK if k % 2 else -sound.PAN_TICK))
         for t in score["subs"]:
             _place(fx, sub, max(0.0, t - 0.02), _db(SUB_DB))
         for t in score["rooms"]:
@@ -375,17 +377,26 @@ def mix(slug: str) -> Path:
         for t in score["paper"]:
             c, g = sound.vary(paper, rng)
             _place(fx, c, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB) * g)
+            _place(fx_side, c, max(0.0, t - FOLEY_LEAD), _db(FOLEY_DB) * g * rng.uniform(-sound.PAN_PAPER, sound.PAN_PAPER))
         for t in score["risers"]:
             _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
     amb, amb_subjects = _ambience(d, n)
-    out = vo + bed * bed_gain + room + fx + amb
-    measured = sound.metrics(vo, bed * bed_gain + amb, {k: score[k] for k in ("ticks", "subs", "rooms", "paper", "risers")},
+    music = (bed * bed_gain).astype(np.float32)
+    mid = (vo + music + room + fx + amb).astype(np.float32)
+    # the stereo field (sound.py): the voice centre, the music, the place and the room around it
+    side = sound.widen(music, sound.WIDTH_BED) + sound.widen(amb, sound.WIDTH_AMB) + sound.widen(room, sound.WIDTH_ROOM) + fx_side
+    out = np.stack([mid + side, mid - side], axis=1)
+    side_db = sound.side_under_mid_db(mid, side)
+    del side
+    measured = sound.metrics(vo, music + amb, {k: score[k] for k in ("ticks", "subs", "rooms", "paper", "risers")},
                              speaking, float(timing["duration"])) if score else {}
+    if score:
+        measured["side_under_mid_db"] = side_db
     if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
         f = int(min(2.5, tail) * SR)
         end = int((float(timing["duration"]) + tail) * SR)
-        out[end - f:end] *= np.linspace(1, 0, f) ** 1.5
+        out[end - f:end] *= (np.linspace(1, 0, f) ** 1.5)[:, None]
         out[end:] = 0.0
     peak = np.abs(out).max()
     if peak > 0.98:
