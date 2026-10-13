@@ -140,6 +140,7 @@ def build(u: dict, q: dict, force: bool = False, estimate: bool = False) -> dict
                "vo_start": round(vo_start, 3), "end": round(end, 3), "audio": str(audio.relative_to(d)) if audio else None,
                "visual": b["VISUAL"], "data_source": b["DATA SOURCE"], "clip": b["CLIP"].lower().startswith("y"),
                "vo": rb["VO"], "keep": rb.get("KEEP") or None, "reveals": reveals, "spoken": spoken,
+               "breathe": str(rb.get("BREATHE", "")).lower().startswith("y"), "montage": str(rb.get("MONTAGE", "")).lower().startswith("y"),
                "words": [{"word": w["word"], "start": round(vo_start + w["start"], 3), "end": round(vo_start + w["end"], 3)} for w in words]}
         segments.append(seg)
         if seg["clip"]:

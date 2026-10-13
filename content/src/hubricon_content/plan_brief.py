@@ -175,9 +175,12 @@ and each says what is spoken under it. Decide each shot. Reply with ONE JSON obj
 
 
 def _with_shots(d, slug, lines, plan, timing, spoken):
-    from . import shots as shotmod
+    from . import music, shots as shotmod
     words = shotmod.spoken(timing)
-    lines += ["", DECISIONS.format(slug=slug), "## The shots, drafted by code", ""]
+    titles = ["the open"] + [c.get("title", "") for c in timing.get("chapters", [])]
+    lines += ["", DECISIONS.format(slug=slug),
+              f"Also give each chapter its music's mood, one of {', '.join(music.MOODS)}, in the same object: "
+              '"moods": {' + ", ".join(f'"{t}": "…"' for t in titles) + "}.", "", "## The shots, drafted by code", ""]
     beat = None
     for s in plan["shots"]:
         if s.get("beat") != beat:
@@ -186,6 +189,10 @@ def _with_shots(d, slug, lines, plan, timing, spoken):
             lines.append(f"### Beat {beat}" + (f". VISUAL: {v}" if v else ""))
         said = " ".join(w["word"] for w in shotmod.words_in(words, s["start"], s["end"]))
         figs = [f"{{{{{k}}}}}@{t:.2f}" for t, ks in spoken.items() if s["start"] - 0.05 <= t < s["end"] for k in ks]
+        if s.get("fixed") and s.get("pictures"):
+            lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] world still/{s['style']} FIXED cut and style ({s.get('intent', '')}): "
+                         f"give only query, sources, fallback, specific | {said}")
+            continue
         if s.get("fixed"):
             lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] FIXED: {s.get('intent', '')}; leave it out")
             continue

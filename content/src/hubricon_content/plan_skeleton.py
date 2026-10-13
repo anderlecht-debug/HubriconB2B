@@ -19,6 +19,7 @@ import re
 
 from . import script as scriptmod
 
+PICTURE_FIELDS = ("query", "sources", "fallback", "specific", "intent")
 WAIT_OK, WAIT_WEIGHT, WAIT_HORIZON = 0.6, 1.5, 4.0   # a figure within 0.6 s of its cut is on the word
 
 DECIDED = ("kind", "style", "on", "params", "query", "sources", "fallback", "specific", "intent", "label", "overlay", "chart", "room")
@@ -51,8 +52,14 @@ def draft(slug: str) -> dict:
     score = lambda c, aim: abs(c - aim) + wait_cost(c)
 
     keeps = _keeps(timing, cuts)
+    held = _held(timing, cuts, hold, [t for t, _ in reveals])
     shots, start = [], 0.0
     while start < duration - 0.05:
+        span = next((h for h in held if abs(h[0] - start) < 0.05), None)
+        if span:     # a BREATHE hold or a MONTAGE run: cut and style are code's; the decision picks the pictures
+            shots += span[2]
+            start = span[1]
+            continue
         keep = next(((a, b, text) for a, b, text in keeps if abs(a - start) < 0.05), None)
         if keep:      # the chapter's takeaway, set as it is said: fixed, the decision leaves it
             i, _ = beat_at(keep[0])
@@ -67,7 +74,8 @@ def draft(slug: str) -> dict:
                           "on": None, "params": {}, "intent": "the chapter card"})
             start = card[1]
             continue
-        wall = min([a for a, _ in cards if a > start + 0.05] + [a for a, _, _ in keeps if a > start + 0.05] + [duration])
+        wall = min([a for a, _ in cards if a > start + 0.05] + [a for a, _, _ in keeps if a > start + 0.05]
+                   + [h[0] for h in held if h[0] > start + 0.05] + [duration])
         target, ceil = (5.0, 7.5) if start < 60 else (6.5, 8.0)
         lo, hi = start + 3.5, start + ceil
         inside = [c for c in cuts if lo <= c <= min(hi, wall) and holds_ok(c)]
@@ -91,13 +99,55 @@ def draft(slug: str) -> dict:
     return plan
 
 
+BREATHE_MAX, MONTAGE_CUT = 25.0, (2.0, 3.0)
+
+
+def _held(timing: dict, cuts: list[float], hold: float, reveal_t: list[float]) -> list[tuple[float, float, list[dict]]]:
+    """BREATHE and MONTAGE beats as fixed spans of shots. A BREATHE beat is one picture held still under
+    it (split into holds of at most 25 s at legal cuts); a MONTAGE beat is cut every 2-3 s at legal cuts,
+    never within the hold after a figure."""
+    out = []
+    for i, seg in enumerate(timing["segments"]):
+        if seg.get("kind") != "beat" or not (seg.get("breathe") or seg.get("montage")):
+            continue
+        a, b = float(seg["start"]), float(seg["end"])
+        inside = [c for c in cuts if a + 0.05 < c < b - 0.05]
+        edges = [a]
+        if seg.get("breathe"):
+            n = max(1, int(-(-(b - a) // BREATHE_MAX)))
+            for k in range(1, n):
+                aim = a + k * (b - a) / n
+                edges.append(min(inside, key=lambda c: abs(c - aim)) if inside else aim)
+            style, intent = "breathe-hold", "BREATHE: one picture held, no camera move"
+        else:
+            ok = lambda c: not any(c - hold + 0.034 < t < c for t in reveal_t)
+            while True:
+                nxt = [c for c in inside if MONTAGE_CUT[0] <= c - edges[-1] <= MONTAGE_CUT[1] and ok(c)]
+                if not nxt:
+                    later = [c for c in inside if c - edges[-1] > MONTAGE_CUT[1] and ok(c)]
+                    if not later or b - later[0] < MONTAGE_CUT[0]:
+                        break
+                    nxt = [later[0]]
+                c = min(nxt, key=lambda c: abs(c - edges[-1] - 2.5))
+                if b - c < MONTAGE_CUT[0]:
+                    break
+                edges.append(c)
+            style, intent = "montage-cut", "MONTAGE: a run of pictures, a cut every 2-3 s"
+        edges.append(b)
+        shots = [{"start": round(x, 3), "end": round(y, 3), "beat": i, "room": "world", "kind": "still", "style": style, "on": None,
+                  "params": {}, "query": [], "intent": intent, "fixed": True, "pictures": True,
+                  "visual": re.sub(r"\s+", " ", str(seg.get("visual") or "")).strip()} for x, y in zip(edges, edges[1:])]
+        out.append((a, b, shots))
+    return out
+
+
 def _keeps(timing: dict, cuts: list[float]) -> list[tuple[float, float, str]]:
     """Each beat's KEEP sentence as a fixed span from the legal cut before its first word to the one after its last."""
     import re as _re
     norm = lambda w: _re.sub(r"[^a-z0-9]", "", w.lower())
     out = []
     for seg in timing["segments"]:
-        if seg.get("kind") != "beat" or not seg.get("keep"):
+        if seg.get("kind") != "beat" or not seg.get("keep") or seg.get("breathe") or seg.get("montage"):
             continue
         want = [norm(w) for w in seg["keep"].split() if norm(w)]
         ws = seg.get("words") or []
@@ -131,15 +181,20 @@ def apply(slug: str, decisions: dict, also: tuple = ()) -> dict:
     by = {s["id"]: s for s in plan["shots"]}
     if decisions.get("mode") in ("history", "explainer"):
         plan["mode"] = decisions["mode"]
+    from .music import MOODS
+    if isinstance(decisions.get("moods"), dict):          # each chapter's music, by mood (music.py)
+        plan["moods"] = {str(k): v for k, v in decisions["moods"].items() if v in MOODS}
     unknown, set_ = [], 0
     for sid, fields in (decisions.get("shots") or {}).items():
         s = by.get(sid)
         if s is None:
             unknown.append(sid)
             continue
-        if s.get("fixed"):            # code's (a chapter's takeaway): the decision leaves it
+        if s.get("fixed") and not s.get("pictures"):      # code's (a chapter's takeaway): the decision leaves it
             continue
         for k, v in (fields or {}).items():
+            if s.get("fixed") and k not in PICTURE_FIELDS:    # a BREATHE or MONTAGE shot: only its picture is decided
+                continue
             if k == "params" and isinstance(v, dict) and isinstance(s.get("params"), dict):
                 # merged, never replaced: a decision that sets a layout keeps the figures the draft put there
                 s["params"] = {pk: pv for pk, pv in {**s["params"], **v}.items() if pv is not None}

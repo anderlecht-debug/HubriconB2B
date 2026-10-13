@@ -835,6 +835,37 @@
     8
    ],
    "note": "figures the voice said earlier in the film, drawn again to scale in a beat: no new figure lands, so it reads in 3 s"
+  },
+  "breathe-hold": {
+   "code": "W-BR",
+   "room": "world",
+   "kinds": [
+    "still",
+    "footage"
+   ],
+   "group": "archival",
+   "seconds": [
+    12,
+    25
+   ],
+   "on": "none",
+   "motion": "hold",
+   "note": "BREATHE: one picture held 12-25 s, no camera move, the music down 10 dB and no designed effects"
+  },
+  "montage-cut": {
+   "code": "W-MO",
+   "room": "world",
+   "kinds": [
+    "still",
+    "footage"
+   ],
+   "group": "archival",
+   "seconds": [
+    2,
+    3
+   ],
+   "on": "none",
+   "note": "MONTAGE: a run of pictures cut every 2-3 s"
   }
  },
  "easing": {

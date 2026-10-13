@@ -78,6 +78,10 @@ TRIAL = [
     ("kinetic-thesis", 6, "The P&L has no calendar.", {}),
     ("quote", 7, "The P&L has no calendar.", {"params": {"text": "The P&L has no calendar.", "attribution": "From the V05 script, 2026"}}),
     ("breath", 2, "", {"room": "world", "kind": "footage"}),
+    ("breathe-hold", 14, "The money is there. The books say so. And still the account is empty, week after week, "
+     "while the store keeps selling.", {"room": "world", "kind": "still"}),
+    ("montage-cut", 3, "A box.", {"room": "world", "kind": "still"}),
+    ("montage-cut", 3, "A truck.", {"room": "world", "kind": "still"}),
     ("callback", 8, "The same cone, now with the trough marked.", {"on": "trough", "params": {"callback": "s025"}, "chart": {"scene": "cash_cone"}}),
     ("end", 6, "", {}),
 ]
@@ -99,6 +103,8 @@ QUERIES = {
     "split-then-now": (["mail order warehouse", "warehouse shelves boxes"], ARCHIVAL + STOCK),
     "match-bridge": (["concrete staircase steps building"], STOCK),
     "breath": (["rain loading dock static"], STOCK),
+    "breathe-hold": (["empty store aisle night"], STOCK),
+    "montage-cut": (["cardboard box warehouse"], STOCK),
     "texture": (["paper ledger pages still life"], ["higgsfield"]),
 }
 

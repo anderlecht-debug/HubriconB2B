@@ -187,6 +187,7 @@ function moveStops(job, t0, t1) {
   const tf = (s, y = 0, x = 0, tx = 0) => `transform:perspective(2400px) translateX(${f(tx, 3)}%) rotateY(${deg(y)}) rotateX(${deg(x)}) scale(${f(s, 4)})`;
   const long = job.seconds > (r.long_after_s ?? Infinity);
   const to = (long ? r.long_to : r.to) ?? 1.07, from = r.from ?? 1;
+  if (motion === "hold") return [[t0, tf(1)], [t1, tf(1)]];          // a held picture (BREATHE; a still with no reason to move)
   if (motion === "pull") return [[t0, tf(to, ry, rx), GLIDE], [t1, tf(from)]];
   if (motion === "drift") return [[t0, tf(from), GLIDE], [t1, tf(r.to ?? 1.03, ry * 0.6, rx * 0.6)]];
   if (motion === "pan-left" || motion === "pan-right") {

@@ -81,6 +81,8 @@ body { font-family: var(--sans); color: var(--light); font-optical-sizing: auto;
 /* One camera for every desk shot (the motion critique of 2026-10-06): a push of 1% of scale a second
    and a drift of 8 px a second, at constant speed through the cut (no ease-out: an easing stop is
    what makes every cut visible). A kind's own moves ride on top of it, on inner layers. */
+/* a still camera (a BREATHE hold, or a desk shot with no figure of its own under FILM_MOTION=motivated) */
+.v3.cam-still .cam > .rig { animation: none !important; }
 .cam > .rig { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: var(--cam-origin, var(--grid-x) 45%);
   animation: cam var(--cam-dur, var(--dur, 10s)) linear 0s both; }
 @keyframes cam {

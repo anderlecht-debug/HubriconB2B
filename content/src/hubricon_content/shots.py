@@ -158,6 +158,9 @@ CONTENT = {"timeline": [("events",)], "pair": [("left", "right"), ("reveals",)],
            "formula": [("terms",)], "quote": [("text",)]}
 
 
+BREATHE_MAX_S = 25.0      # a BREATHE hold (styles.json breathe-hold), past the 14 s ceiling by design
+
+
 def draws(s: dict) -> bool:
     """The shot has something to draw (a callback draws its target's)."""
     alts = CONTENT.get(s.get("kind"))
@@ -246,9 +249,10 @@ def validate(plan: dict, timing: dict, facts: dict, picked: bool = False, usage:
         lo, hi = st.get("seconds", [cad["min_s"], cad["max_s"]])
         if s.get("style") != "chapter" and not (lo - cad["style_length_slack_s"] - TOL <= L <= hi + cad["style_length_slack_s"] + TOL):
             p(f"{s['id']}: {L:.1f} s; {s.get('style')} runs {lo:g}–{hi:g} s")
-        if s.get("style") not in ("chapter", "breath") and L < cad["min_s"] - TOL:
+        if s.get("style") not in ("chapter", "breath", "montage-cut") and L < cad["min_s"] - TOL:
             p(f"{s['id']}: {L:.1f} s is under the {cad['min_s']:g} s floor")
-        ceiling = cad["chart_max_s"] if s.get("kind") in ("chart", "timeline") else cad["max_s"]
+        ceiling = (cad["chart_max_s"] if s.get("kind") in ("chart", "timeline") else
+                   BREATHE_MAX_S if s.get("style") == "breathe-hold" else cad["max_s"])
         if L > ceiling + TOL:
             p(f"{s['id']}: {L:.1f} s is over the {ceiling:g} s ceiling for a {s.get('kind')}")
         if s.get("kind") in ("chart", "timeline") and L > cad["max_s"]:

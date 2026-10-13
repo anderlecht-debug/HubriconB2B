@@ -23,7 +23,7 @@ def _timing():
 
 def test_score_follows_the_plan():
     ev = audio.score_events(_plan(), _timing())
-    assert ev["ticks"] == [1.0, 22.0]                    # every figure lands with a tick, never two at once
+    assert ev["ticks"] == [1.0, 22.0]                    # a shot's first figure (and a hero) lands with a tick, never two at once
     assert ev["subs"] == [1.0]                           # only a hero figure gets the low hit
     assert ev["rooms"] == [5.0]                          # paper → world; the card cut keeps its own whoosh
     assert ev["drops"] == [14.5]                         # the bed drops under the thesis line

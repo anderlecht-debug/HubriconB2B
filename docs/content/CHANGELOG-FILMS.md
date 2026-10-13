@@ -125,6 +125,52 @@ inside its pause. The teleprompter and the splitter number G02's five chapters i
 **Could not do.** No real takes exist yet, so the split has only run on the placeholder voice. A
 human reading has messier gaps; the quietest-point cut is meant for that, but it is unproven.
 
+## 4. Rhythm and sound (2026-10-13)
+
+**Changed.**
+- **Two script tags, honoured by the skeleton and never changed by the model.** The decision may choose
+  their pictures, nothing else.
+  - `BREATHE: yes` makes the beat one picture held 12–25 s (split at legal cuts if longer), with no camera
+    move, the music 10 dB down and no designed effects.
+  - `MONTAGE: yes` cuts the beat every 2–3 s at legal cuts, never inside the 3 s hold after a figure.
+
+  Two styles carry them, `breathe-hold` and `montage-cut`; the validator lets a hold pass the 14 s ceiling.
+- **A motivated camera**, behind `FILM_MOTION=motivated` for the founder's verdict:
+  - a world still holds unless the plan moves it or it follows a figure;
+  - a desk shot's rig moves only when a figure of its own lands. A document's camera still travels to
+    the phrase being read, which is motivated by the words.
+
+  The default stays the locked camera.
+- **Sound:**
+  - a figure's landing is marked only for a shot's first figure and its hero figure, not every figure;
+  - designed effects have a ceiling of 10 a minute and no floor; the old "nothing designed for 60 s" rule
+    is gone;
+  - each chapter gets one silence, music and effects out for 2.2 s just before its KEEP line, or else its
+    first hero figure;
+  - a BREATHE hold ducks the music 10 dB and carries no effects.
+- **film-qa** checks each chapter has its silence, and skips BREATHE spans when it looks for frozen
+  pictures.
+
+**Measured on G02** (its existing plan; its BREATHE and MONTAGE markers take effect in the full re-run below).
+
+| | Before | After |
+|---|---|---|
+| Designed effects a minute | 11.7 | **9.5** |
+| Silence per chapter (music and effects out) | none | **2.2 s in each of the five** (the open included) |
+| Voice over music, under speech | 16.0 dB | 16.5 dB |
+
+**The camera comparison** (`media/motion-compare.mp4`, locked on the left, motivated on the right). The
+change from the first frame to the last of s014, a world still with no figure before it, fell from
+24.5 to 1.1: it holds. s005 (a still after a figure) and s001 (a desk shot with its own figure) push in
+both, as designed.
+
+**The look was re-locked** for the two new styles in `styles.json`, the same kind of change as the
+2026-10-07 re-lock. Nothing else in the locked files moved. The camera default is not part of the lock
+change; it waits for the founder's verdict on the comparison.
+
+**Could not do.** The full visual trial (one shot of every style) was not re-rendered for the re-lock;
+the two new styles are in the trial plan and will render with its next run.
+
 ## 5. The music library (2026-10-13)
 
 **Changed.**

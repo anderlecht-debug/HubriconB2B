@@ -116,6 +116,8 @@ SUB_DB = -24.0            # a low hit under a hero figure, felt more than heard
 ROOM_WHOOSH_DB = -32.0    # where the picture moves between paper and the world
 RISER_DB = -30.0          # a short rise into each chapter card
 CARD_SWELL_DB = 8.0       # the bed comes up while the card holds (no voice there)
+SILENCE_S = 2.2           # each chapter's silence: music and effects out before its KEEP line or hero figure
+BREATHE_DUCK_DB = -10.0   # the music under a BREATHE hold
 # A long film's bed is levelled by its average (RMS), not its peaks: a sparse piano cue's peaks sit
 # some 15–20 dB above its body, so peak-levelled at −32 dB and ducked −20 it measured 35 dB under the
 # voice, which is no music at all (G01 draft, 2026-10-06). Levelled by RMS and ducked 10 dB, it sits
@@ -180,17 +182,20 @@ def _riser(rng, seconds: float = 1.8) -> np.ndarray:
     return x / (np.abs(x).max() + 1e-9)
 
 
-def _family(bed: np.ndarray, n: int, bounds: list[float]) -> np.ndarray:
+def _family(bed: np.ndarray, n: int, bounds: list[float], cues: list | None = None) -> np.ndarray:
     """The bed as a family of cues, one per chapter, crossfading over FAMILY_XFADE at each boundary.
     `bed` is the cue itself (minutes), not the cue tiled to the film's length."""
     out = np.zeros(n, dtype=np.float32)
     k = int(FAMILY_XFADE * SR)
     edges = [0.0] + [b for b in bounds if 0 < b * SR < n] + [n / SR]
     for i, (a, b) in enumerate(zip(edges, edges[1:])):
-        offset, ratio = FAMILY[i % len(FAMILY)]
-        # a lower key by resampling (slower and darker, as a family member should be)
-        src = np.interp(np.arange(0, len(bed), ratio), np.arange(len(bed)), bed).astype(np.float32)
-        src = np.roll(src, -int(offset * len(src)))
+        if cues and i < len(cues) and cues[i] is not None:      # the library's cue for this chapter's mood
+            src = np.asarray(cues[i], dtype=np.float32)
+        else:
+            offset, ratio = FAMILY[i % len(FAMILY)]
+            # a lower key by resampling (slower and darker, as a family member should be)
+            src = np.interp(np.arange(0, len(bed), ratio), np.arange(len(bed)), bed).astype(np.float32)
+            src = np.roll(src, -int(offset * len(src)))
         i0, i1 = max(0, int(a * SR) - k // 2), min(n, int(b * SR) + k // 2)
         cue = np.tile(src, int(np.ceil((i1 - i0) / len(src))) + 1)[: i1 - i0]
         fade = np.ones(i1 - i0, dtype=np.float32)
@@ -211,23 +216,43 @@ def score_events(plan: dict, timing: dict) -> dict:
     ticks, subs, rooms, drops = [], [], [], []
     for s in shots:
         if s.get("room") == "paper":
-            for r in s.get("reveals", []):
-                t = float(r["t"])
-                if not ticks or t - ticks[-1] > 0.25:
-                    ticks.append(t)
+            reveals = sorted(float(r["t"]) for r in s.get("reveals", []))
+            # a landing is marked for a shot's first figure and a hero figure only, not every figure
+            # (2026-10-12: 11.7 designed effects a minute on G02 read as a machine counting)
+            if reveals and (not ticks or reveals[0] - ticks[-1] > 0.25):
+                ticks.append(reveals[0])
             if s.get("style") in HERO and s.get("reveals"):
                 on = str(s.get("on") or "")
                 hit = next((float(r["t"]) for r in s["reveals"] if f"{{{{{r['key']}}}}}" == on), float(s["reveals"][-1]["t"]))
                 subs.append(hit)
+                if all(abs(hit - t) > 0.25 for t in ticks):
+                    ticks.append(hit)
         if s.get("style") == "kinetic-thesis":
             drops.append(float(s["start"]))
     near_card = lambda t: any(abs(t - a) < 0.5 or abs(t - b) < 0.5 for a, b in cards)
     for a, b in zip(shots, shots[1:]):
         if a.get("room") != b.get("room") and not near_card(float(b["start"])):
             rooms.append(float(b["start"]))
-    return {"ticks": ticks, "subs": subs, "rooms": rooms, "drops": drops,
-            "risers": [a for a, _ in cards], "cards": cards,
-            "paper": [float(s["start"]) for s in shots if s.get("kind") in PAPER_KINDS and s.get("room") == "paper"]}
+    ticks.sort()
+    breathe = [(float(s["start"]), float(s["end"])) for s in shots if s.get("style") == "breathe-hold"]
+    out = {"ticks": ticks, "subs": subs, "rooms": rooms, "drops": drops,
+           "risers": [a for a, _ in cards], "cards": cards,
+           "paper": [float(s["start"]) for s in shots if s.get("kind") in PAPER_KINDS and s.get("room") == "paper"]}
+    # one silence a chapter: music and effects out for SILENCE_S just before its KEEP line, else its first hero figure
+    marks = [0.0] + [float(c["at"]) for c in timing.get("chapters", [])] + \
+            [float(timing.get("duration") or max((float(s["end"]) for s in shots), default=0.0))]
+    keeps = sorted(float(s["start"]) for s in shots if s.get("fixed") and s.get("style") == "kinetic-thesis")
+    silences = []
+    for a, b in zip(marks, marks[1:]):
+        anchor = next((t for t in keeps if a + SILENCE_S + 0.5 < t < b), None)
+        anchor = anchor if anchor is not None else next((t for t in sorted(subs) if a + SILENCE_S + 0.5 < t < b), None)
+        if anchor is not None:
+            silences.append((round(anchor - SILENCE_S - 0.1, 3), round(anchor - 0.1, 3)))
+    quiet = breathe + silences
+    for k in ("ticks", "subs", "rooms", "drops", "risers", "paper"):     # nothing designed inside a breath or a silence
+        out[k] = [t for t in out[k] if not any(x - 0.05 <= t <= y for x, y in quiet)]
+    out.update(breathe=breathe, silences=silences)
+    return out
 
 
 def _ambience(d: Path, n: int) -> tuple[np.ndarray, list[str]]:
@@ -314,8 +339,15 @@ def mix(slug: str) -> Path:
         score.update({"ticks": th["tick"], "subs": th["sub"], "rooms": th["room"], "paper": th["paper"]})
     if score:
         del bed
-        bed = _family(cue, n, [float(c["at"]) for c in timing["chapters"]])
-        bed_source += f" · a family of {len(timing['chapters']) + 1} cues"
+        from . import music
+        titles = ["the open"] + [c.get("title", "") for c in timing["chapters"]]
+        moods = [(plan.get("moods") or {}).get(t) for t in titles]
+        chosen = music.pick(slug, moods) if any(moods) else [None] * len(titles)
+        bed = _family(cue, n, [float(c["at"]) for c in timing["chapters"]],
+                      [_decode(Path(c["file"])) if c else None for c in chosen])
+        cue_names = [c["name"] if c else None for c in chosen]
+        lib = [x for x in cue_names if x]
+        bed_source += f" · a family of {len(timing['chapters']) + 1} cues" + (f" · library cues by mood: {', '.join(lib)}" if lib else "")
     if score:
         bed = bed / (np.sqrt(np.mean(bed ** 2)) + 1e-9)
         bed = sound.carve(bed, speaking)          # under speech: the voice's band cut hard, the rest a little
@@ -337,6 +369,20 @@ def mix(slug: str) -> Path:
             back = int(1.5 * SR)
             lift[i0:i1] = 0.0
             lift[i1:i1 + back] = np.linspace(0, 1, len(lift[i1:i1 + back]))
+        ramp = int(0.15 * SR)
+        for a, b in score.get("silences", []):     # each chapter's silence: the music out, then back
+            i0, i1 = int(a * SR), min(n, int(b * SR))
+            lift[max(0, i0 - ramp):i0] *= np.linspace(1, 0, len(lift[max(0, i0 - ramp):i0]))
+            lift[i0:i1] = 0.0
+            lift[i1:i1 + ramp] *= np.linspace(0, 1, len(lift[i1:i1 + ramp]))
+        duck = _db(BREATHE_DUCK_DB)
+        for a, b in score.get("breathe", []):      # a BREATHE hold: the music down 10 dB, eased in and out
+            i0, i1 = int(a * SR), min(n, int(b * SR))
+            if i1 - i0 > 2 * ramp:
+                g = np.full(i1 - i0, duck, dtype=np.float32)
+                g[:ramp] = np.linspace(1, duck, ramp)
+                g[-ramp:] = np.linspace(duck, 1, ramp)
+                lift[i0:i1] *= g
         if tail:   # the end card holds with no voice: the bed comes up, then fades out to the film's last frame
             i0, r = int(float(timing["duration"]) * SR), int(0.6 * SR)
             hold = np.ones(max(0, n - i0)) * _db(CARD_SWELL_DB)
@@ -385,6 +431,11 @@ def mix(slug: str) -> Path:
         for t in score["risers"]:
             _place(fx, sub_drop, max(0.0, t - FOLEY_LEAD), _db(SUBDROP_DB))
 
+    if score:     # nothing designed sounds inside a chapter's silence: whatever a clip carried into it is cut
+        for a, b in score.get("silences", []):
+            i0, i1 = int(a * SR), min(n, int(b * SR))
+            fx[i0:i1] = 0.0
+            fx_side[i0:i1] = 0.0
     amb, amb_subjects = _ambience(d, n)
     music = bed * bed_gain
     del bed, bed_gain
@@ -401,6 +452,11 @@ def mix(slug: str) -> Path:
                              speaking, float(timing["duration"])) if score else {}
     if score:
         measured["side_under_mid_db"] = side_db
+        marks = [("the open", 0.0)] + [(c.get("title", ""), float(c["at"])) for c in timing.get("chapters", [])]
+        ends = [m[1] for m in marks[1:]] + [float(timing["duration"])]
+        measured["silence_per_chapter"] = [
+            {"chapter": name, "silence_s": round(max([min(b, e) - max(a, s0) for a, b in score.get("silences", []) if a < e and b > s0] or [0.0]), 2)}
+            for (name, s0), e in zip(marks, ends)]
     if tail:   # everything fades out over the tail's last 2.5 s, to silence on the last frame
         f = int(min(2.5, tail) * SR)
         end = int((float(timing["duration"]) + tail) * SR)

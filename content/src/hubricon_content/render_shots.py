@@ -40,6 +40,10 @@ STAGE_CHARTS = {"staircase", "montecarlo", "aging"}
 # The v3 look (FILM_LOOK=v3, the founder's call of 2026-10-06) draws every chart on the stage,
 # the engine's too, from the same figures: the waterfall from this film's own run.json.
 LOOK = "v3" if os.environ.get("FILM_LOOK") == "v3" else "paper"
+# The camera: "locked" (the look locked 2026-10-06: every still pushes, every desk shot pushes 1%/s) or
+# "motivated" (the 2026-10-12 work order, for the founder's comparison before any re-lock: a world still
+# holds unless the plan moves it or it follows a figure; a desk shot moves only when a figure of its own lands)
+MOTION = os.environ.get("FILM_MOTION", "locked")
 V3_FAMILY = {"document": "documents", "table": "documents", "quote": "documents", "receipt": "documents",
              "still": "photos", "texture": "photos", "archive": "photos", "stack": "photos", "split": "photos",
              "footage": "photos", "chart": "charts"}   # everything else is type
@@ -344,6 +348,7 @@ class Job:
         self.src = src
         i = plan["shots"].index(shot)
         self.prev = plan["shots"][i - 1] if i else None
+        self._camera()
         if src is not shot:
             i = plan["shots"].index(shot)
             self.job["callback"] = {"of": src["id"],
@@ -473,6 +478,21 @@ class Job:
             return
         self.job["backdrop"] = {"url": g["url"], "focus": prev.get("focus") or [0.5, 0.5]}
         self.assets.append(g["sha256"])
+
+    def _camera(self) -> None:
+        """A BREATHE hold never moves; under FILM_MOTION=motivated the camera moves only with a reason."""
+        s = self.shot
+        if s.get("style") == "breathe-hold":
+            self.job["motion"], self.job["cam"] = "hold", "still"
+            return
+        if MOTION != "motivated":
+            return
+        prev = self.prev or {}
+        after_figure = prev.get("room") == "paper" and bool(prev.get("reveals"))
+        if self.room == "world" and s.get("kind") == "still":
+            self.job["motion"] = s.get("motion") or ("push" if after_figure else "hold")
+        elif self.room == "paper" and not s.get("reveals"):
+            self.job["cam"] = "still"
 
     def key(self) -> str:
         # the stage's own files are in the key; its checking tools draw nothing and are not (an edit to qa.mjs
