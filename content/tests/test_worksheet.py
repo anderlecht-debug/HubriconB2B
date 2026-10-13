@@ -21,6 +21,6 @@ SCRIPT
     res = worksheet.build("f")
     text = (tmp_path / "worksheet.md").read_text()
     assert res["status"] == "ok" and res["steps"] == 3
-    assert "1. Pull your prices." in text and "2. Check they moved 2%. If not, you have a dime." in text and "3. Write it down." in text
+    assert "A worksheet for the film" in text and "1. Pull your prices." in text and "2. Check they moved 2%. If not, you have a dime." in text and "3. Write it down." in text
     assert "- A price you never move is a price you never measured." in text
     assert "| 2% (demo data) | the movement the fit needs | ELASTICITY.FIT on Tarnhollow demo data |" in text

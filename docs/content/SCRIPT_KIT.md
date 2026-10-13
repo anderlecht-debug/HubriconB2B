@@ -154,9 +154,26 @@ example `greats-04-the-dime`. A Greats film is numbered after the last one.
 **Clips, the call to action and re-hooks**
 
 - **At least three `CLIP: yes`** beats, on self-contained moments.
-- **Exactly one `CTA:`**, on the honest-limit beat, pointing to hubricon.com/learn. Pillars 1 to 4 name no
-  product in the soft close. Never the Teardown.
-- **A re-hook at least every 40 seconds**, listed honestly in `RE-HOOK AUDIT`.
+- **Exactly one `CTA:`**, within 30 seconds after the `TRY` beat ends (the founder's call, 2026-10-13):
+  the viewer is pointed onward while the step is fresh. It points to hubricon.com/learn. Pillars 1 to 4 name
+  no product in the soft close. Never the Teardown.
+- **A re-hook at least every 40 seconds** in a method film, listed honestly in `RE-HOOK AUDIT`.
+
+**Its form** (`FORM:` in the header, one of three, so a week's films vary their shape; the queue never starts
+two of one form back to back in a week)
+
+- **`method`**: the step-by-step chapters. A question before each chapter's answer, a `KEEP` per chapter,
+  a re-hook every 40 s.
+- **`teardown`**: one real case carried through. At least one chapter carried by a single sourced case
+  study (three or more of its figures from one source, not demo data); a `KEEP` per chapter.
+- **`story`**: a history frame. One `KEEP` for the whole film.
+
+**Its rhythm** (optional beat tags; the plan honours them, and the model never changes them)
+
+- **`BREATHE: yes`**: one picture held 12–25 s under the beat, no camera move, the music down 10 dB and no
+  designed effects. For the moment a viewer needs to sit with.
+- **`MONTAGE: yes`**: the beat cut every 2–3 s across a run of pictures. For a list, a passage of time, a
+  pile-up.
 
 **How it teaches** (docs/content/LEARNING_DESIGN.md, the research behind each)
 

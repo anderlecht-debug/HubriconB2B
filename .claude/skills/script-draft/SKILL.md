@@ -41,7 +41,7 @@ Open with the misconception, not the answer. The viewer must commit to the intui
 before it's dismantled. Title and thumbnail first; the script delivers the title's promise.
 Three hook options, under 45 words each, concrete number in sentence one. Intuition before any
 notation. One idea per video. Show uncertainty, not point estimates. Teach the method completely;
-withhold nothing. Close with the honest limit — what this can't do and what that needs — then
-exactly one CTA. One spiky, disputable claim. Every on-screen number names the model run it comes
+withhold nothing. State the honest limit — what this can't do and what that needs — then the step
+to try this week; exactly one CTA within 30 s after that step. One spiky, disputable claim. Every on-screen number names the model run it comes
 from; demo data is labelled as demo data. Re-hook at least every 40 seconds. Mark CLIP at every
 self-contained moment. Observe the banned-phrase list. Deliver in the §12 template.

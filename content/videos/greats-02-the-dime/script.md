@@ -6,6 +6,7 @@ TITLE 3:          Why Woolworth Held One Price for {{w_ceiling_span}}
 THUMBNAIL 1:      The coin from the film's opening, close and sharp on dark paper | TEXT: Never measured | PICTURE: s005
 THUMBNAIL 2:      The ceiling's span as one figure | TEXT: {{w_ceiling_span}} unmoved
 THUMBNAIL 3:      The Woolworth Building lit at night, paid for in coins | TEXT: Paid in dimes
+FORM:             story
 PILLAR:           3
 TIER:             D
 AWARENESS STAGE:  problem-aware
@@ -62,6 +63,7 @@ SCRIPT
 
 [4:46] THE CHAIN
   VO: The machine grew from there. Scranton, {{w_scranton_date}}, run by his brother, Sum: the store the company's own history dates the chain from. Then stores run by partners: his cousin Seymour Knox, and Fred Kirby. In {{w_office_year}}, Woolworth rented desk room in New York for {{w_office_rent}} and did all the buying himself. By {{w_stores_1900_year}} he had {{w_stores_1900}} stores of his own, with the famous {{w_redfronts}}. One price, one look, one buyer. You could walk into any of them and know what everything cost before you'd seen any of it.
+  MONTAGE: yes
   VISUAL: still-pan across the Scranton store photograph (Wikimedia Commons, public domain); archive-stack of early five-and-ten storefronts and a 1908 Charlton store interior postcard (Wikimedia Commons, public domain), landing as the partners are named; timeline of store counts, each landing as spoken.
   CLIP: no
 
@@ -213,6 +215,7 @@ SCRIPT
 
 [23:56] THE STEP
   VO: So how do you step when you can't see the top? Work the formula at the estimate alone. If that puts the best price above today's, step up: near minus one the top runs off to the right, and the estimate agrees. If it puts it below today's while the range still reaches minus one, hold: the estimate says down, and the range can't rule out far up. And never by much: the demo's model caps any single move at {{pm_step_cap}}, so that a wrong step costs little and a right one shows up in the data. A small step you can measure beats a confident number you can't. And sometimes the right step is none at all.
+  KEEP: A small step you can measure beats a confident number you can't.
   VISUAL: counterfactual on the demo product's profit band: the top worked out at the estimate alone, one mark on the price axis beside today's price, the current price as the hollow dot and a small step up as the solid dot, the step's size in blue, Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data, PRICE.OPTIMUM
   CLIP: yes
@@ -236,12 +239,14 @@ SCRIPT
 
 [26:50] WHAT YOU CAN DO THIS WEEK
   VO: So here's this week. Pick your top products by revenue. For each one, pull its price and units by period, as far back as you have, and divide each period's units by its days. Leave out stockouts, big deals and launches. Check the rule: has the spread of its prices reached {{el_min_price_cv}} of their average, over at least {{el_min_periods}} periods? If not, you have a dime. Write it down. For the ones that have moved, fit the line: the log of units a day against the log of price. Read the slope and its range: its standard error, times the multiplier for your number of periods, which the course's spreadsheet gives you. If the slope is shallower than minus one, the direction is up. If the range is clear of minus one, the top is your costs that don't move with price, divided by what the share-of-price fees leave you, times the slope over one plus the slope: step toward it. If the range reaches minus one, work that formula at the estimate alone: above today's price, step up; below it, hold. Either way, by no more than {{pm_step_cap}}. Before you take the step, write down the units you expect: today's, times one plus the step, raised to the slope. While it's live, watch your conversion, and on Amazon your Buy Box share; if either drops, reverse the step. When the period ends, add it to the history and fit again. And if no price on the curve makes your margin, the cost is the thing to move, the way Woolworth's buyers moved the ring and the toy.
+  TRY: yes
   VISUAL: formula-build listing the steps as terms, each landing as spoken, the best-price formula built term by term; receipt: one demo product's line, its price spread, its slope and range, the step and the prediction written before it, labelled Tarnhollow demo data.
   DATA SOURCE: demo: Tarnhollow demo data
   CLIP: yes
 
 [28:38] THE RETURN
   VO: {{w_day1}}, in nickels, on a Saturday in Lancaster. A ceiling held for {{w_ceiling_span}}. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
+  BREATHE: yes
   VISUAL: still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".
   DATA SOURCE: published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report
   CLIP: no

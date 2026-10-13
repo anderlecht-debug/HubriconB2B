@@ -90,6 +90,9 @@ def run(u: dict, q: dict, force: bool = False) -> dict:
         if cr:
             desc += "\n\n" + cr
     (d / "description.md").write_text(desc + "\n", encoding="utf-8")
-    pinned = links[1]   # "every piece points to /learn" (HUBRICON_SPEC.md, the content engine)
+    # the pinned comment: the film's own spoken CTA, then its tracked link ("every piece points to /learn")
+    spoken = next((render_facts(b["CTA"], facts) for b in sc["beats"] if b.get("CTA")), "")
+    pinned = (spoken.strip() + "\n" if spoken else "") + f"{SITE}/learn?src={code}"
+    (d / "pinned-comment.txt").write_text(pinned + "\n", encoding="utf-8")
     (d / "pinned-comment.md").write_text(pinned + "\n", encoding="utf-8")
     return {"status": "ok", "description": "description.md", "chapters": len(timing.get("chapters", []))}

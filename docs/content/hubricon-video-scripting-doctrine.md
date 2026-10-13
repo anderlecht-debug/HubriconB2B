@@ -316,8 +316,9 @@ Requirements:
 - Intuition before any notation. One idea per video. Show uncertainty, not
   point estimates (§5).
 - Teach the method completely. Withhold nothing (§6).
-- Close with the honest limit — what this can't do and what that needs — then
-  exactly one CTA, chosen by awareness stage from §8.
+- State the honest limit — what this can't do and what that needs — then give the step to
+  try this week; exactly one CTA, chosen by awareness stage from §8, comes within 30 s after
+  that step (the founder's call, 2026-10-13: the viewer is pointed onward while the step is fresh).
 - One spiky, disputable claim.
 - Every on-screen number must name the model run it comes from. Demo data
   labeled as demo data.

@@ -29,7 +29,7 @@ def build(slug: str) -> dict:
         return {"status": "skipped", "reason": "the script has no TRY beat"}
     title = sc["header"].get("TITLE", slug)
     keeps = [b["KEEP"] for b in sc["beats"] if b.get("KEEP")]
-    lines = [f"# {title}", "", "*A one-page worksheet for the film. Figures marked demo come from the Tarnhollow demo "
+    lines = [f"# {title}", "", "*A worksheet for the film. Figures marked demo come from the Tarnhollow demo "
              "catalogue: demo data, not a client and not a result.*", ""]
     if keeps:
         lines += ["## What to keep", "", *[f"- {k}" for k in keeps], ""]
@@ -58,4 +58,46 @@ def build(slug: str) -> dict:
     lines += ["The free course that goes further: hubricon.com/learn"]
     out = d / "worksheet.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"status": "ok", "worksheet": str(out), "steps": sum(1 for l in lines if re.match(r"^\d+\. ", l)), "figures": len(used)}
+    pdf_path = pdf(d, "\n".join(lines))
+    return {"status": "ok", "worksheet": str(out), "pdf": str(pdf_path) if pdf_path else None, "steps": sum(1 for l in lines if re.match(r"^\d+\. ", l)), "figures": len(used)}
+
+
+CSS = """
+@page { size: Letter; margin: 0.55in 0.65in; }
+body { font: 400 10pt/1.38 "Inter", system-ui, sans-serif; color: #0a0e17; }
+h1 { font: 700 17pt/1.18 "Inter", sans-serif; letter-spacing: -0.01em; margin: 0 0 6pt; }
+h2 { font: 600 10.5pt/1.3 "Inter", sans-serif; margin: 12pt 0 5pt; text-transform: uppercase; letter-spacing: 0.06em; color: #636b7a; }
+em { color: #636b7a; font-size: 9.5pt; }
+ol, ul { padding-left: 16pt; margin: 0; } li { margin: 0 0 3.5pt; }
+table { border-collapse: collapse; width: 100%; font-size: 8.5pt; } th, td { border-bottom: 1px solid #cdd2da; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+td { word-break: break-word; }
+"""
+
+
+def _chrome():
+    import glob
+    from pathlib import Path
+    found = sorted(glob.glob(str(Path.home() / ".cache/ms-playwright/chromium-*/chrome-linux64/chrome")))
+    return found[-1] if found else None
+
+
+def pdf(d, md: str):
+    """The worksheet as a one-page PDF, ready for /learn: the markdown set in the site's type, printed by the
+    same Chromium that renders the films. None when no Chromium is on the machine."""
+    import subprocess
+    import markdown
+    chrome = _chrome()
+    if not chrome:
+        return None
+    from .state import CONTENT_DIR
+    fonts = CONTENT_DIR / "assets" / "fonts"
+    face = "".join(f"@font-face {{ font-family: 'Inter'; src: url('file://{f}'); font-weight: {w}; }}"
+                   for f, w in ((next(fonts.glob('*Inter*Regular*'), None), 400), (next(fonts.glob('*Inter*SemiBold*'), None), 600),
+                                (next(fonts.glob('*Inter*Bold*'), None), 700)) if f)
+    html = d / "worksheet.html"
+    html.write_text(f"<!doctype html><html><head><meta charset='utf-8'><style>{face}{CSS}</style></head><body>"
+                    f"{markdown.markdown(md, extensions=['tables'])}</body></html>", encoding="utf-8")
+    out = d / "worksheet.pdf"
+    subprocess.run([chrome, "--headless=new", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
+                    f"--print-to-pdf={out}", f"file://{html}"], capture_output=True, timeout=120)
+    return out if out.exists() else None
