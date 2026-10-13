@@ -200,3 +200,42 @@ def test_a_placeholder_timing_is_replaced_by_his_takes_and_never_built_on(tmp_pa
     monkeypatch.setattr(state, "_takes_in", lambda slug: True)
     line.run_line("f", until="voice")
     assert calls == ["takes-to-vo", "timing"]                                               # his takes: timed again from them
+
+
+def test_a_chapter_take_is_cut_into_its_beats_in_the_silences_and_a_beat_retake_wins(tmp_path, monkeypatch):
+    import numpy as np
+    import soundfile as sf
+    from hubricon_content import tts
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    beats = [{"name": "COLD OPEN", "VO": "a b c"}, {"name": "CHAPTER — ONE", "VO": "one"}, {"name": "THE CLERK", "VO": "d e f g h i j k"}]
+    monkeypatch.setattr(tts, "_beat_texts", lambda slug: ([b["VO"] for b in beats], beats))
+    sr = 16000
+    voice = lambda s: 0.3 * np.sin(np.arange(int(s * sr)) / 3).astype("float32")
+    take = np.concatenate([voice(0.6), np.zeros(int(0.5 * sr), "float32"), voice(3.0)])     # "one" | pause | "d … k"
+    (tmp_path / "takes").mkdir()
+    sf.write(str(tmp_path / "takes" / "c2.wav"), take, sr)
+    heard = [{"word": "one", "start": 0.0, "end": 0.55}] + [{"word": w, "start": 1.1 + 0.37 * k, "end": 1.4 + 0.37 * k} for k, w in enumerate("defghijk")]
+    monkeypatch.setattr(tts, "align", lambda wav: heard)
+    assert tts.missing_takes("f") == ["b1"]                                     # the open is unread; the chapter's beats are in c2
+    r = tts.split_chapters("f")
+    assert r["beats"] == ["b2", "b3"]
+    one = sf.read(str(tmp_path / "takes" / "split" / "b2.wav"))[0]
+    assert 0.6 <= len(one) / sr <= 1.1                                          # cut inside the pause, after "one"
+    sf.write(str(tmp_path / "takes" / "b3.wav"), voice(1.0), sr)               # a single-beat retake
+    assert tts.take_for(tmp_path, 3) == tmp_path / "takes" / "b3.wav" and tts.take_for(tmp_path, 2).parent.name == "split"
+
+
+def test_the_cta_must_follow_the_try_beat_within_30_seconds():
+    from hubricon_content import script as sm
+    def film(cta_at):
+        beats = [{"at": 0, "name": "OPEN", "VO": "Hi.", "CTA": "", "TRY": ""},
+                 {"at": 600, "name": "THIS WEEK", "VO": "Pick one.", "CTA": "", "TRY": "yes"},
+                 {"at": 660, "name": "THE LIMIT", "VO": "It breaks.", "CTA": "", "TRY": ""},
+                 {"at": 700, "name": "THE END", "VO": "Done.", "CTA": "", "TRY": ""}]
+        for b in beats:
+            if b["at"] == cta_at:
+                b["CTA"] = "The free course at hubricon.com/learn."
+        return {"header": {"FORM": "method"}, "beats": beats, "hooks": {}, "tail": {}}
+    assert not any("must come within 30 s" in p for p in sm.learning(film(660)))     # right after the step
+    assert any("must come within 30 s" in p for p in sm.learning(film(700)))         # 40 s after it: too late
+    assert any("must come within 30 s" in p for p in sm.learning(film(0)))           # before the step

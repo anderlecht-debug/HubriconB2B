@@ -36,7 +36,7 @@ def test_every_take_becomes_vo_and_alignment_in_the_script_words(tmp_path, monke
     (d / "audio" / "vo-01.mp3").write_bytes(b"earlier")   # an earlier read of the beat steps aside
     u = {"slug": "s", "voice": None, "publishable": True}
     res = tts.takes_to_vo(u, {})
-    assert res == {"status": "ok", "voice": "own", "beats": 2}
+    assert res == {"status": "ok", "voice": "own", "beats": 2, "pace_outside": []}
     assert sorted(p.name for p in (d / "audio").iterdir()) == ["vo-01.wav", "vo-03.wav"]
     meta = json.loads((d / "alignment" / "vo-01.json").read_text(encoding="utf-8"))
     assert meta["provider"] == "own" and [w["word"] for w in meta["words"]] == ["$12", "a", "unit."]

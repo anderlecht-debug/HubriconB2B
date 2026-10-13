@@ -33,7 +33,8 @@ body { min-height: 100vh; }
     <button class="btn rec" id="rec">Record <span aria-hidden="true">●</span></button>
     <button class="btn quiet" id="play" disabled>Play it back</button>
     <button class="btn quiet" id="keep" disabled>Keep this take</button>
-    <button class="btn quiet" id="next">Next beat →</button>
+    <button class="btn quiet" id="next">Next →</button>
+    <button class="btn quiet" id="mode" title="Read a whole chapter in one take; a single beat can still be read again">By chapter</button>
     <span class="meter" aria-hidden="true"><i id="level"></i></span>
   </div>
   <p class="note" id="pace" aria-live="polite"></p>
@@ -45,15 +46,18 @@ body { min-height: 100vh; }
 const $ = (id) => document.getElementById(id);
 const { pace } = await import("/pace.mjs");
 const data = await (await fetch("/beats.json")).json();
-let i = 0, rec = null, chunks = [], blob = null, kept = new Set(data.kept);
+let i = 0, rec = null, chunks = [], blob = null, kept = new Set(data.kept), mode = "beat";
+const items = () => (mode === "beat" ? data.beats : data.chapters);
 $("slug").textContent = data.slug;
 $("rehearsal").hidden = !data.rehearsal;
 
 function paint() {
-  const b = data.beats[i];
-  $("where").textContent = `Beat ${i + 1} of ${data.beats.length} · ${b.name}`;
+  const b = items()[i];
+  $("where").textContent = `${mode === "beat" ? "Beat" : "Chapter"} ${i + 1} of ${items().length} · ${b.name}`;
   $("prompt").textContent = b.text;
-  $("dots").replaceChildren(...data.beats.map((x, k) => {
+  $("prompt").style.whiteSpace = "pre-line";
+  $("mode").textContent = mode === "beat" ? "By chapter" : "By beat";
+  $("dots").replaceChildren(...items().map((x, k) => {
     const d = document.createElement("button");
     d.textContent = k + 1;
     d.className = kept.has(x.id) ? "kept" : "";
@@ -87,7 +91,7 @@ function toggle() {
     $("keep").disabled = data.rehearsal;
     // the pace, before he decides to keep it: words a minute over the voiced span only
     blob.arrayBuffer().then((ab) => ctx.decodeAudioData(ab)).then((audio) => {
-      const p = pace(audio.getChannelData(0), audio.sampleRate, data.beats[i].text.split(/\s+/).filter(Boolean).length);
+      const p = pace(audio.getChannelData(0), audio.sampleRate, items()[i].text.split(/\s+/).filter(Boolean).length);
       $("pace").textContent = p.note;
       $("pace").classList.toggle("warn", p.verdict !== "good");
     }).catch(() => { $("pace").textContent = ""; });
@@ -100,13 +104,14 @@ addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(
 $("play").onclick = () => blob && new Audio(URL.createObjectURL(blob)).play();
 $("keep").onclick = async () => {
   if (!blob) return;
-  const res = await fetch(`/take/${data.beats[i].id}`, { method: "POST", body: blob });
+  const res = await fetch(`/take/${items()[i].id}`, { method: "POST", body: blob });
   const out = await res.json();
   kept = new Set(out.kept);
   $("keep").disabled = true;
   paint();
 };
-$("next").onclick = () => { i = Math.min(data.beats.length - 1, i + 1); blob = null; $("pace").textContent = ""; $("play").disabled = $("keep").disabled = true; $("rec").firstChild.textContent = "Record "; paint(); };
+$("mode").onclick = () => { mode = mode === "beat" ? "chapter" : "beat"; i = 0; blob = null; $("pace").textContent = ""; $("play").disabled = $("keep").disabled = true; paint(); };
+$("next").onclick = () => { i = Math.min(items().length - 1, i + 1); blob = null; $("pace").textContent = ""; $("play").disabled = $("keep").disabled = true; $("rec").firstChild.textContent = "Record "; paint(); };
 paint();
 </script>
 </body>

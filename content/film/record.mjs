@@ -19,10 +19,17 @@ const CONTENT = join(ROOT, "content");
 /** The beats of a script.md, each with its narration and every {{key}} filled from facts. */
 export function beats(scriptText, facts) {
   const out = [];
-  let cur = null;
+  let cur = null, ch = 0;
   for (const line of scriptText.split("\n")) {
     const head = line.match(/^\[(\d+):(\d\d)\]\s*(.*)$/);
-    if (head) { cur = { id: `b${out.length + 1}`, at: Number(head[1]) * 60 + Number(head[2]), name: head[3].trim(), text: "" }; out.push(cur); continue; }
+    if (head) {
+      // chapters numbered as tts.chapter_groups numbers them: the open, then each CHAPTER card and what follows
+      const name = head[3].trim();
+      ch = out.length === 0 ? 1 : /^CHAPTER/i.test(name) ? ch + 1 : ch;
+      cur = { id: `b${out.length + 1}`, at: Number(head[1]) * 60 + Number(head[2]), name, text: "", chapter: `c${ch}` };
+      out.push(cur);
+      continue;
+    }
     const vo = line.match(/^\s+VO:\s*(.*)$/);
     if (vo && cur) cur.text = vo[1].replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/g, (_, k) => {
       if (!facts[k]) throw new Error(`no fact ${k}`);
@@ -31,6 +38,19 @@ export function beats(scriptText, facts) {
     if (/^(RE-HOOK AUDIT|DERIVED ASSETS):/.test(line)) cur = null;
   }
   return out.filter((b) => b.text);
+}
+
+/** A whole chapter at a time: one take for the open, then one per chapter (takes/c<K>.wav), which
+ * takes-to-vo cuts into its beats. A single beat can still be read again on its own (beat mode). */
+export function chapters(list) {
+  const out = [];
+  for (const b of list) {
+    let c = out.find((x) => x.id === b.chapter);
+    if (!c) { c = { id: b.chapter, name: out.length === 0 && !/^CHAPTER/i.test(b.name) ? "The open" : b.name.replace(/^CHAPTER\s*[—-]?\s*/i, ""), beats: [], text: "" }; out.push(c); }
+    c.beats.push(b.id);
+    c.text = c.text ? `${c.text}\n\n${b.text}` : b.text;
+  }
+  return out;
 }
 
 function approved(slug) {
@@ -59,10 +79,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (req.method === "GET" && url.pathname === "/") return send(200, "text/html", readFileSync(join(CONTENT, "film", "record.html")));
     if (req.method === "GET" && url.pathname.startsWith("/assets/")) return send(200, "text/css", readFileSync(join(ROOT, url.pathname)));
     if (req.method === "GET" && url.pathname === "/pace.mjs") return send(200, "text/javascript", readFileSync(join(CONTENT, "film", "pace.mjs")));
-    if (req.method === "GET" && url.pathname === "/beats.json") return send(200, "application/json", JSON.stringify({ slug, rehearsal: !approved(slug), beats: list, kept: kept() }));
-    const take = url.pathname.match(/^\/take\/(b\d+)$/);
+    if (req.method === "GET" && url.pathname === "/beats.json") return send(200, "application/json", JSON.stringify({ slug, rehearsal: !approved(slug), beats: list, chapters: chapters(list), kept: kept() }));
+    const take = url.pathname.match(/^\/take\/([bc]\d+)$/);
     if (req.method === "POST" && take && !approved(slug)) return send(403, "application/json", JSON.stringify({ error: "the script is not approved; takes are not kept" }));
-    if (req.method === "POST" && take && list.some((b) => b.id === take[1])) {
+    if (req.method === "POST" && take && (list.some((b) => b.id === take[1]) || chapters(list).some((c) => c.id === take[1]))) {
       const chunks = [];
       req.on("data", (c) => chunks.push(c));
       req.on("end", () => {

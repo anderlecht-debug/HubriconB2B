@@ -57,11 +57,89 @@ def _beat_texts(slug: str) -> tuple[list[str], list[dict]]:
     return [speakable(b["VO"]) for b in sc["beats"]], sc["beats"]
 
 
+def chapter_groups(beats: list[dict]) -> list[list[int]]:
+    """Beat numbers (from 1, every beat of the script) by chapter: the open, then each CHAPTER card with the
+    beats after it. record.mjs numbers its chapters the same way (c1, c2, ...)."""
+    groups, cur = [], []
+    for i, b in enumerate(beats, 1):
+        if str(b.get("name", "")).upper().startswith("CHAPTER") and cur:
+            groups.append(cur)
+            cur = []
+        cur.append(i)
+    return groups + ([cur] if cur else [])
+
+
+def take_for(d: Path, i: int) -> Path | None:
+    """A beat's take: its own (a single-beat retake wins), else its part of a chapter take."""
+    for p in (d / "takes" / f"b{i}.wav", d / "takes" / "split" / f"b{i}.wav"):
+        if p.exists():
+            return p
+    return None
+
+
 def missing_takes(slug: str) -> list[str]:
-    """The beats the founder has not read yet (takes/b<N>.wav), in order."""
+    """The beats the founder has not read yet, in order: no take of its own and no chapter take holding it."""
     d = scriptmod.video_dir(slug)
-    texts, _ = _beat_texts(slug)
-    return [f"b{i}" for i, t in enumerate(texts, start=1) if t and not (d / "takes" / f"b{i}.wav").exists()]
+    texts, beats = _beat_texts(slug)
+    in_chapter = {i for k, g in enumerate(chapter_groups(beats), 1) if (d / "takes" / f"c{k}.wav").exists() for i in g}
+    return [f"b{i}" for i, t in enumerate(texts, start=1) if t and not take_for(d, i) and i not in in_chapter]
+
+
+PACE_WPM = (120, 200)     # a beat read outside this is reported, not refused (LEARNING_DESIGN.md)
+
+
+def _quietest(audio, sr: int, a: float, b: float) -> int:
+    """The sample at the quietest 20 ms between two times: the cut between beats lands in the silence, not on
+    a word's tail (the transcriber's word ends run a little early)."""
+    import numpy as np
+    i0, i1, w = max(0, int(a * sr)), min(len(audio), int(b * sr)), max(1, int(0.02 * sr))
+    if i1 - i0 <= w:
+        return (i0 + i1) // 2
+    x = audio if audio.ndim == 1 else audio.mean(axis=1)
+    e = np.convolve(x[i0:i1] ** 2, np.ones(w) / w, mode="valid")
+    return i0 + int(np.argmin(e)) + w // 2
+
+
+def split_chapters(slug: str, force: bool = False) -> dict:
+    """Each chapter take (takes/c<K>.wav, read in one go at the teleprompter) cut into its beats
+    (takes/split/b<N>.wav): faster-whisper times the chapter's words, the script's own words take those
+    times, and each cut falls in the gap between one beat's last word and the next one's first. Everything
+    downstream sees one take per beat, as before. Reports each split beat's pace."""
+    import soundfile as sf
+    d = scriptmod.video_dir(slug)
+    texts, beats = _beat_texts(slug)
+    out_dir = d / "takes" / "split"
+    split, pace = [], []
+    for k, group in enumerate(chapter_groups(beats), 1):
+        take = d / "takes" / f"c{k}.wav"
+        want = [i for i in group if texts[i - 1]]
+        if not take.exists() or not want:
+            continue
+        fresh = all((out_dir / f"b{i}.wav").exists() and (out_dir / f"b{i}.wav").stat().st_mtime >= take.stat().st_mtime for i in want)
+        if fresh and not force:
+            continue
+        words = snap_words(" ".join(texts[i - 1] for i in want), align(take))
+        audio, sr = sf.read(str(take), dtype="float32")
+        spans, pos = [], 0
+        for i in want:
+            n = len(texts[i - 1].split())
+            spans.append((i, words[pos:pos + n]))
+            pos += n
+        out_dir.mkdir(parents=True, exist_ok=True)
+        start = 0
+        for j, (i, ws) in enumerate(spans):
+            if j + 1 < len(spans) and ws and spans[j + 1][1]:
+                end = _quietest(audio, sr, ws[-1]["end"] - 0.05, spans[j + 1][1][0]["start"] + 0.05)
+            else:
+                end = len(audio)
+            sf.write(str(out_dir / f"b{i}.wav"), audio[start:max(end, start + 1)], sr)
+            start = end
+            if len(ws) >= 8 and ws[-1]["end"] > ws[0]["start"]:
+                wpm = round(len(ws) / ((ws[-1]["end"] - ws[0]["start"]) / 60))
+                if not PACE_WPM[0] <= wpm <= PACE_WPM[1]:
+                    pace.append({"beat": f"b{i}", "name": beats[i - 1]["name"], "wpm": wpm})
+            split.append(f"b{i}")
+    return {"chapters_split": len({s for s in split}), "beats": split, "pace_outside": pace}
 
 
 def provider(slug: str | None = None) -> tuple[str, str]:
@@ -206,16 +284,18 @@ def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
     sc = scriptmod.render(scriptmod.parse((d / "script.md").read_text(encoding="utf-8")), facts)
     texts = [speakable(b["VO"]) for b in sc["beats"]]
     wanted = [i for i, t in enumerate(texts, start=1) if t]
-    missing = [f"b{i}" for i in wanted if not (d / "takes" / f"b{i}.wav").exists()]
+    chapters = split_chapters(slug)          # chapter takes become beat takes first; a beat's own retake wins
+    missing = [f"b{i}" for i in wanted if not take_for(d, i)]
     if missing:
         return {"status": "blocked", "reason": f"no take for {', '.join(missing)}: read them with "
                                                f"`node content/film/record.mjs {slug}`"}
     (d / "audio").mkdir(exist_ok=True)
     (d / "alignment").mkdir(exist_ok=True)
     for i in wanted:
-        take, audio = d / "takes" / f"b{i}.wav", d / "audio" / f"vo-{i:02d}.wav"
+        take, audio = take_for(d, i), d / "audio" / f"vo-{i:02d}.wav"
         meta = d / "alignment" / f"vo-{i:02d}.json"
-        if audio.exists() and meta.exists() and not force and json.loads(meta.read_text(encoding="utf-8")).get("provider") == "own":
+        if audio.exists() and meta.exists() and not force and json.loads(meta.read_text(encoding="utf-8")).get("provider") == "own" \
+                and audio.stat().st_mtime >= take.stat().st_mtime:      # a chapter read again redoes its beats
             continue
         for other in (d / "audio").glob(f"vo-{i:02d}.*"):   # an earlier read of this beat (placeholder, or mp3) steps aside
             if other.suffix != ".wav":
@@ -226,4 +306,4 @@ def takes_to_vo(u: dict, q: dict, force: bool = False) -> dict:
                                     "words": words}, ensure_ascii=False) + "\n", encoding="utf-8")
     u["voice"] = "own"
     u["publishable"] = False   # set again only by approve-final
-    return {"status": "ok", "voice": "own", "beats": len(wanted)}
+    return {"status": "ok", "voice": "own", "beats": len(wanted), "pace_outside": chapters["pace_outside"]}
