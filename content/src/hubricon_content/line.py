@@ -257,6 +257,13 @@ def resolve_gaps(slug: str) -> dict:
     plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
     sh = plan["shots"]
     absorbed, carded = [], []
+    for s in sh:      # a then-and-now with no pictures says its own two lines on a typed card (2026-10-13: G02's s242)
+        if s.get("kind") == "split" and not s.get("asset"):
+            p_ = s.get("params") or {}
+            lines = [x for x in (p_.get("then"), p_.get("now")) if x] or [s.get("says")]
+            s.update({"kind": "document", "style": "doc-highlight", "room": "paper", "on": None,
+                      "params": {"lines": lines, "line": 1, "source": "As this film states it"}})
+            carded.append(s["id"])
     i = 0
     while i < len(sh):
         s = sh[i]

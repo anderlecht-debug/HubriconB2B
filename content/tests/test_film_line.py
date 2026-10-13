@@ -279,3 +279,14 @@ def test_a_step_that_can_draw_neither_prices_nor_weights_becomes_a_ledger():
         {"id": "c", "kind": "timeline", "params": {"layout": "step", "events": [{"date": "{{y}}", "label": "the merger"}]}}]}
     assert [f.split(":")[0] for f in line.steps_that_draw(plan, facts)] == ["c"]
     assert [s["params"]["layout"] for s in plan["shots"]] == ["step", "step", "ledger"]
+
+
+def test_a_then_and_now_with_no_pictures_becomes_its_own_words_on_a_card(tmp_path, monkeypatch):
+    from hubricon_content import line
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    plan = {"shots": [{"id": "s242", "start": 0.0, "end": 6.0, "room": "world", "kind": "split", "style": "split-then-now",
+                       "params": {"then": "1932: the trial stores", "now": "a test, then another test"}, "says": "x"}]}
+    (tmp_path / "shots.json").write_text(json.dumps(plan))
+    res = line.resolve_gaps("f")
+    s = json.loads((tmp_path / "shots.json").read_text())["shots"][0]
+    assert "s242" in res["carded"] and s["kind"] == "document" and s["params"]["lines"] == ["1932: the trial stores", "a test, then another test"]
