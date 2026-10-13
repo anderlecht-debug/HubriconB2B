@@ -34,6 +34,38 @@ SOUND = {"voice_over_music_db": 15.0, "effects_per_minute": (2.0, 14.0), "longes
 LEARN = {"on_the_word": 0.7, "word_wait_s": 0.6, "chapter_min": 6.5, "wpm": (120, 200), "wpm_min_words": 25}
 
 
+PAYOFF_S = 5.0     # the opening pays off the thumbnail within this many seconds (advisory for now)
+
+
+def packaging(d: Path, plan: dict, timing: dict) -> list[dict]:
+    """The first seconds pay off the chosen thumbnail: its figure said or shown, or its picture (or one of the
+    same subject) on screen. Advisory: reported, never blocking."""
+    from . import script as scriptmod, shots, thumbnail
+    sp = d / "script.md"
+    if not sp.exists():
+        return []
+    concept = scriptmod.parse(sp.read_text(encoding="utf-8"))["header"].get("THUMBNAIL", "")
+    if not concept:
+        return []
+    c = scriptmod.thumbnail_concept(concept)
+    keys = re.findall(r"\{\{\s*(\w+)\s*\}\}", f"{c['text']} {c['visual']}")
+    early = [s for s in plan["shots"] if float(s["start"]) < PAYOFF_S]
+    if keys and not c["picture"]:
+        said = any(r["key"] in keys and float(r["t"]) < PAYOFF_S for r in shots.spoken_reveals(timing))
+        shown = any(any(k in json.dumps(s.get("params") or {}) for k in keys) for s in early)
+        if said or shown:
+            return []
+        return [{"check": "packaging", "msg": f"the thumbnail's figure ({', '.join(keys)}) is not said or shown in the first "
+                 f"{PAYOFF_S:.0f} s: the opening should pay off the thumbnail"}]
+    hit = thumbnail.stakes_shot(plan, c)
+    want = thumbnail._words(f"{c['visual']} {c['picture'] or ''}")
+    words = lambda s: thumbnail._words(" ".join(s.get("query") or []) + " " + str((s.get("asset") or {}).get("title", "")))
+    if (hit and any(s["id"] == hit["id"] for s in early)) or any(s.get("room") == "world" and want & words(s) for s in early):
+        return []
+    return [{"check": "packaging", "msg": f"the first {PAYOFF_S:.0f} s show none of the thumbnail's picture ({c['visual'][:60]!r}): "
+             "the opening should pay off the thumbnail"}]
+
+
 def learning(plan: dict, timing: dict, own_voice: bool) -> list[dict]:
     from . import shots
     out = []
@@ -147,6 +179,7 @@ def run(slug: str, check_media: bool = True) -> dict:
     problems, advisory = [], []
     for p in shots.validate(plan, timing, facts):
         (advisory if ADVISORY.search(p) else problems).append({"check": "plan", "msg": p})
+    advisory += packaging(d, plan, timing)
     for s in plan["shots"]:
         c = d / "shots" / f"{s['id']}.mp4"
         if not c.exists():

@@ -61,7 +61,7 @@ def header(script: str) -> dict:
     for line in script.splitlines():
         if line.strip() == "SCRIPT":
             break
-        m = re.match(r"^([A-Z][A-Z ]+):\s*(.*)$", line)
+        m = re.match(r"^([A-Z][A-Z0-9 ]*):\s*(.*)$", line)
         if m:
             out[m.group(1).strip()] = m.group(2).strip()
     return out

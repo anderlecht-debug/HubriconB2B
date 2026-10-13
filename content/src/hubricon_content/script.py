@@ -23,7 +23,9 @@ HOUSE_SCENES = {"staircase", "montecarlo", "aging"}
 CHART_SCENES = {"waterfall", "cash_cone", "elasticity", "newsvendor", "paths", "sample_size"} | HOUSE_SCENES
 ALL_SCENES = CHART_SCENES | {"kinetic", "chapter_card", "screenshot", "number", "formula"}
 HEADER_KEYS = ["TITLE", "THUMBNAIL", "PILLAR", "TIER", "AWARENESS STAGE", "CTA", "SPIKY CLAIM",
-               "MISCONCEPTION", "RUNTIME"]
+               "MISCONCEPTION", "RUNTIME", "FORM",
+               # packaging first: three titles and three thumbnail concepts, the chosen ones among them
+               "TITLE 1", "TITLE 2", "TITLE 3", "THUMBNAIL 1", "THUMBNAIL 2", "THUMBNAIL 3"]
 BEAT_RE = re.compile(r"^\[(\d+):(\d\d)\]\s*(.*)$")
 FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA|KEEP|TRY):\s*(.*)$")
 HOOK_RE = re.compile(r"^([123])\.\s+(.*)$")
@@ -66,7 +68,7 @@ def parse(text: str) -> dict:
     for raw in text.splitlines():
         line = raw.rstrip()
         if section == "header":
-            m = re.match(r"^([A-Z ]+):\s*(.*)$", line)
+            m = re.match(r"^([A-Z][A-Z0-9 ]*):\s*(.*)$", line)
             if m and m.group(1).strip() in HEADER_KEYS:
                 header[m.group(1).strip()] = m.group(2).strip()
                 continue
@@ -146,6 +148,46 @@ def _norm(text: str) -> str:
     return re.sub(r"[^a-z0-9{}_ ]+", "", re.sub(r"\s+", " ", text.lower())).strip()
 
 
+THUMB_TEXT_WORDS = 4          # a thumbnail carries at most four words; a {{key}} figure is one
+
+
+def thumbnail_concept(line: str) -> dict:
+    """A concept line, "<the stakes, as a picture> | TEXT: <at most four words> [| PICTURE: <shot id or words>]"."""
+    m = re.search(r"(?:^|[|·])\s*TEXT:\s*(.*?)\s*(?:[|·]\s*PICTURE:\s*(.*?)\s*)?$", line or "")
+    if not m:
+        return {"visual": (line or "").strip(" |·"), "text": "", "picture": None}
+    return {"visual": line[:m.start()].strip(" |·"), "text": m.group(1).strip(), "picture": (m.group(2) or "").strip() or None}
+
+
+def _same(a: str, b: str) -> bool:
+    return _norm(a) == _norm(b)
+
+
+def packaging(script: dict) -> list[str]:
+    """Packaging first: three titles and three thumbnail concepts, the chosen TITLE and THUMBNAIL among them."""
+    h, problems = script["header"], []
+    titles = [h.get(f"TITLE {i}", "") for i in (1, 2, 3)]
+    thumbs = [h.get(f"THUMBNAIL {i}", "") for i in (1, 2, 3)]
+    for i, t in enumerate(titles, 1):
+        if not t:
+            problems.append(f"header field TITLE {i} missing: three title candidates, the chosen TITLE one of them")
+    for i, t in enumerate(thumbs, 1):
+        if not t:
+            problems.append(f"header field THUMBNAIL {i} missing: three thumbnail concepts, the chosen THUMBNAIL one of them")
+            continue
+        c = thumbnail_concept(t)
+        n = len(re.sub(r"\{\{\s*\w+\s*\}\}", "X", c["text"]).split())
+        if not c["visual"] or not c["text"]:
+            problems.append(f"THUMBNAIL {i}: write the stakes as a picture, then `| TEXT: <at most {THUMB_TEXT_WORDS} words>`")
+        elif n > THUMB_TEXT_WORDS:
+            problems.append(f"THUMBNAIL {i}: its text is {n} words; {THUMB_TEXT_WORDS} at most")
+    if all(titles) and h.get("TITLE") and not any(_same(h["TITLE"], t) for t in titles):
+        problems.append("TITLE must be one of TITLE 1–3, word for word")
+    if all(thumbs) and h.get("THUMBNAIL") and not any(_same(h["THUMBNAIL"], t) for t in thumbs):
+        problems.append("THUMBNAIL must be one of THUMBNAIL 1–3, word for word")
+    return problems
+
+
 def chapters(script: dict) -> list[dict]:
     """The film's chapters: the open, then each run of beats after a CHAPTER card."""
     out, cur = [], {"name": "the open", "beats": []}
@@ -200,6 +242,7 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
             problems.append(f"header field {k} missing")
     # number guard on everything a viewer hears or reads
     prose = {"TITLE": h.get("TITLE", ""), "THUMBNAIL": h.get("THUMBNAIL", ""), "CTA": h.get("CTA", "")}
+    prose.update({k: h[k] for k in ("TITLE 1", "TITLE 2", "TITLE 3", "THUMBNAIL 1", "THUMBNAIL 2", "THUMBNAIL 3") if h.get(k)})
     for i, hook in script["hooks"].items():
         prose[f"hook {i}"] = hook
     for b in script["beats"]:
@@ -279,7 +322,7 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
     if not lo <= n <= hi:
         problems.append(f"{n} spoken words; tier {tier} wants {lo}–{hi}")
     if tier.upper() == "D":
-        problems += learning(script)
+        problems += packaging(script) + learning(script)
     return problems
 
 

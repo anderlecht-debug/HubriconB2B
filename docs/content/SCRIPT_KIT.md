@@ -45,7 +45,13 @@ You get a draft to watch.
 SERIES:           Greats of Commerce
 TITLE:            Woolworth's Kept Its Dime Ceiling for {{w_ceiling_span}}. Here's What It Never Told Them
 SHORT:            the dime
-THUMBNAIL:        One {{key}} figure and one chart fragment; no face, no arrows
+THUMBNAIL:        A dime, close and sharp, on dark paper | TEXT: Never measured
+TITLE 1:          Woolworth's Kept Its Dime Ceiling for {{w_ceiling_span}}. Here's What It Never Told Them
+TITLE 2:          The Most Famous Price in American Retail Was Never Measured
+TITLE 3:          Why Woolworth Held One Price for {{w_ceiling_span}}
+THUMBNAIL 1:      A dime, close and sharp, on dark paper | TEXT: Never measured
+THUMBNAIL 2:      The span as one figure | TEXT: {{w_ceiling_span}} unmoved
+THUMBNAIL 3:      The Woolworth Building lit at night | TEXT: Paid in dimes | PICTURE: Woolworth Building
 PILLAR:           3
 TIER:             D
 AWARENESS STAGE:  problem-aware
@@ -102,6 +108,18 @@ w_rent | $30 a month | the Lancaster store's rent | https://archive.org/… (the
 example `greats-04-the-dime`. A Greats film is numbered after the last one.
 
 ## The rules the intake checks
+
+**Packaging first** (the title and thumbnail are written before the script, and tested)
+
+- **Three titles** (`TITLE 1`–`TITLE 3`) and **three thumbnail concepts** (`THUMBNAIL 1`–`THUMBNAIL 3`). `TITLE`
+  and `THUMBNAIL` are the chosen ones, copied word for word from their three. All three of each go to
+  YouTube's title and thumbnail test.
+- **A thumbnail concept** is the stakes as a picture, then `| TEXT:` with at most four words (a `{{key}}`
+  figure counts as one). Add `| PICTURE:` with a shot id or a few words to name the film's own picture it
+  uses; leave it out for a figure concept (a `{{key}}` in TEXT), which is set large on the film's dark look.
+  A thumbnail only ever uses the film's own licensed pictures or its own stage scenes.
+- **The first 5 seconds pay off the chosen thumbnail.** Its picture, or its figure, is on screen or said
+  in the opening (film-qa reports it; advisory for now).
 
 **Figures and sources**
 

@@ -1,5 +1,11 @@
 TITLE:            Woolworth's Kept Its Dime Ceiling for {{w_ceiling_span}}. Here's What It Never Told Them
-THUMBNAIL:        A dime, close and sharp, on paper; beside it a hairline price curve with a single point and its hollow band
+THUMBNAIL:        The coin from the film's opening, close and sharp on dark paper | TEXT: Never measured | PICTURE: s005
+TITLE 1:          Woolworth's Kept Its Dime Ceiling for {{w_ceiling_span}}. Here's What It Never Told Them
+TITLE 2:          The Most Famous Price in American Retail Was Never Measured
+TITLE 3:          Why Woolworth Held One Price for {{w_ceiling_span}}
+THUMBNAIL 1:      The coin from the film's opening, close and sharp on dark paper | TEXT: Never measured | PICTURE: s005
+THUMBNAIL 2:      The ceiling's span as one figure | TEXT: {{w_ceiling_span}} unmoved
+THUMBNAIL 3:      The Woolworth Building lit at night, paid for in coins | TEXT: Paid in dimes
 PILLAR:           3
 TIER:             D
 AWARENESS STAGE:  problem-aware
