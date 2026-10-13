@@ -11,6 +11,7 @@ No picture is used twice in a film.
 from __future__ import annotations
 
 import json
+import re
 
 from . import pick as pk
 from . import script as scriptmod
@@ -366,6 +367,27 @@ def context_lines(plan: dict, facts: dict) -> list[str]:
     return fixed
 
 
+WEIGHT = re.compile(r"\b(lb|lbs|pound|pounds|ounce|ounces|oz|kg|gram|grams)\b", re.I)
+
+
+def steps_that_draw(plan: dict, facts: dict) -> list[str]:
+    """A timeline laid out as a step draws two prices either side of an edge, or a staircase of weights
+    (film/v3/kinds/type.mjs step). One whose events resolve to neither is set as a ledger, by code, before
+    the render (2026-10-13: s222's step stopped G02's render)."""
+    from hubricon_engine.narrate import render as render_facts
+    fixed = []
+    for s in plan["shots"]:
+        p = s.get("params") or {}
+        if s.get("kind") != "timeline" or p.get("layout") != "step":
+            continue
+        vals = [render_facts(f"{e.get('label', '')} {e.get('date', '')}", facts) for e in p.get("events") or [] if isinstance(e, dict)]
+        if sum("$" in v for v in vals) >= 2 or any(WEIGHT.search(v) for v in vals):
+            continue
+        p["layout"] = "ledger"
+        fixed.append(f"{s['id']}: a step with neither two prices nor a weight, set as a ledger")
+    return fixed
+
+
 def fixed_pictures(plan: dict) -> list[str]:
     """A BREATHE hold or a MONTAGE cut the decision left without a picture to look for: its query from the
     concrete nouns of what is said under it (or its beat's VISUAL brief), its sources by the film's mode, a
@@ -400,7 +422,8 @@ def autofix(slug: str) -> dict:
     timing, _ = shotmod.load_timing(d)
     problems = shotmod.validate(plan, timing, scriptmod.load_facts(slug))
     by = {s["id"]: s for s in plan["shots"]}
-    fixed = restore_content(plan) + context_lines(plan, scriptmod.load_facts(slug)) + fixed_pictures(plan)
+    facts = scriptmod.load_facts(slug)
+    fixed = restore_content(plan) + context_lines(plan, facts) + fixed_pictures(plan) + steps_that_draw(plan, facts)
     longest = lambda s: max([w.strip(".,;:!?\"'’”()") for w in (s.get("says") or "").split()] or [None], key=lambda w: len(w or ""))
     card = lambda lines: {"lines": [x for x in lines if x], "line": 1, "source": "As this film states it"}
     for p in problems:

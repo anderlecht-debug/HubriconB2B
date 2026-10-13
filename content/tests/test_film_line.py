@@ -268,3 +268,14 @@ def test_a_style_with_no_landing_word_loses_the_drafts(tmp_path, monkeypatch):
     monkeypatch.setattr(scriptmod, "load_facts", lambda slug: {})
     line.autofix("f")
     assert json.loads((tmp_path / "shots.json").read_text())["shots"][0]["on"] is None
+
+
+def test_a_step_that_can_draw_neither_prices_nor_weights_becomes_a_ledger():
+    from hubricon_content import line
+    facts = {"p1": {"value": "$5"}, "p2": {"value": "$10"}, "y": {"value": "1912"}, "w": {"value": "4 pounds"}}
+    plan = {"shots": [
+        {"id": "a", "kind": "timeline", "params": {"layout": "step", "events": [{"label": "{{p1}}"}, {"label": "{{p2}}"}]}},
+        {"id": "b", "kind": "timeline", "params": {"layout": "step", "events": [{"label": "{{w}}"}]}},
+        {"id": "c", "kind": "timeline", "params": {"layout": "step", "events": [{"date": "{{y}}", "label": "the merger"}]}}]}
+    assert [f.split(":")[0] for f in line.steps_that_draw(plan, facts)] == ["c"]
+    assert [s["params"]["layout"] for s in plan["shots"]] == ["step", "step", "ledger"]

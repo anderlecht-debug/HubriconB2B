@@ -620,6 +620,8 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
             skipped.append(s["id"])
             continue
         (stage if job.renderer == "stage" else others).append((job, clip, side, k))
+    failed: list[str] = []
+
     def finish(job, clip, side, k):
         if not _clip_ok(clip, job.frames):
             raise RuntimeError(f"{clip.name}: not {job.frames} frames")
@@ -647,6 +649,10 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
             raise RuntimeError(f"the stage failed:\n{res.stderr[-2000:]}")
         rects = json.loads(res.stdout.strip().splitlines()[-1])
         for job, clip, side, k in part:
+            err = (rects.get(job.shot["id"]) or {}).get("error") if isinstance(rects, dict) else None
+            if err:
+                failed.append(f"{job.shot['id']}: {err}")
+                continue
             if job.kind == "split":
                 tmp = clip.with_suffix(".stage.mp4")
                 _split_composite(job, tmp, rects[job.shot["id"]]["rect"], clip)
@@ -659,6 +665,8 @@ def render(u: dict, q: dict | None = None, force: bool = False, only: set[str] |
         elif job.renderer == "manim":
             _manim(job, clip)
         finish(job, clip, side, k)
+    if failed:
+        return {"status": "failed", "rendered": len(done), "cached": len(skipped), "failed": failed, "workers": workers}
     return {"status": "ok", "rendered": len(done), "cached": len(skipped), "workers": workers}
 
 

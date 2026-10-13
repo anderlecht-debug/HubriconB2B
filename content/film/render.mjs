@@ -208,7 +208,11 @@ export async function renderShots(jobs, { workers = 4 } = {}) {
       await page.evaluate("new Promise((r) => { const ok = () => document.fonts.ready.then(r); document.readyState === 'complete' ? ok() : addEventListener('load', ok); })");
       while (queue.length) {
         const job = queue.shift();
-        results[job.id] = await renderShot(page, job, built);
+        try {
+          results[job.id] = await renderShot(page, job, built);
+        } catch (e) {       // one shot that can't draw is reported; the batch goes on (2026-10-13: s222 ended a whole render)
+          results[job.id] = { error: String(e && e.message || e).slice(0, 400) };
+        }
       }
     } finally {
       page.close();
