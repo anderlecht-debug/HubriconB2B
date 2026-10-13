@@ -1,6 +1,10 @@
 # Woolworth's Kept Its Dime Ceiling for more than 50 years. Here's What It Never Told Them
 
-*A one-page worksheet for the film. Figures marked demo come from the Tarnhollow demo catalogue: demo data, not a client and not a result.*
+*A worksheet for the film. Figures marked demo come from the Tarnhollow demo catalogue: demo data, not a client and not a result.*
+
+## What to keep
+
+- A small step you can measure beats a confident number you can't.
 
 ## Try it this week
 

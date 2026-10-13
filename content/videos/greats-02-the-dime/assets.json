@@ -15,9 +15,9 @@
  },
  "s046": {
   "assets": [
-   "pexels:6828019"
+   "loc:2018698553"
   ],
-  "reason": "auto-pick: relevance +0.031, the best of 3 that show the sentence",
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
   "on": "2026-10-13"
  },
  "s048": {
@@ -71,16 +71,16 @@
  },
  "s097": {
   "assets": [
-   "pexels:7221526"
+   "commons:4017407"
   ],
-  "reason": "auto-pick: relevance +0.032, the best of 2 that show the sentence",
+  "reason": "auto-pick: relevance +0.134, the best of 6 that show the sentence",
   "on": "2026-10-13"
  },
  "s098": {
   "assets": [
-   "pexels:7792708"
+   "pexels:5219643"
   ],
-  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "reason": "auto-pick: relevance +0.087, the best of 3 that show the sentence",
   "on": "2026-10-13"
  },
  "s100": {
@@ -148,9 +148,9 @@
  },
  "s140": {
   "assets": [
-   "pexels:7830310"
+   "pixabay:145342"
   ],
-  "reason": "auto-pick: relevance +0.068, the best of 4 that show the sentence",
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
   "on": "2026-10-13"
  },
  "s142": {
@@ -183,9 +183,9 @@
  },
  "s158": {
   "assets": [
-   "pexels:38988868"
+   "pexels:10573435"
   ],
-  "reason": "auto-pick: relevance +0.128, the best of 7 that show the sentence",
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
   "on": "2026-10-13"
  },
  "s160": {
@@ -211,9 +211,9 @@
  },
  "s172": {
   "assets": [
-   "pexels:37595882"
+   "pexels:5889450"
   ],
-  "reason": "auto-pick: relevance +0.109, the best of 3 that show the sentence",
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
   "on": "2026-10-13"
  },
  "s180": {
@@ -232,16 +232,16 @@
  },
  "s183": {
   "assets": [
-   "pexels:6666444"
+   "pexels:7855140"
   ],
   "reason": "auto-pick: relevance +0.080, the best of 5 that show the sentence",
   "on": "2026-10-13"
  },
  "s185": {
   "assets": [
-   "pexels:9057674"
+   "pexels:5903898"
   ],
-  "reason": "auto-pick: relevance +0.112, the best of 8 that show the sentence",
+  "reason": "auto-pick: relevance +0.122, the best of 4 that show the sentence",
   "on": "2026-10-13"
  },
  "s193": {
@@ -260,9 +260,9 @@
  },
  "s200": {
   "assets": [
-   "pixabay:122394"
+   "pixabay:109145"
   ],
-  "reason": "auto-pick: relevance +0.070, the best of 4 that show the sentence",
+  "reason": "auto-pick: relevance +0.115, the best of 7 that show the sentence",
   "on": "2026-10-13"
  },
  "s207": {
@@ -274,16 +274,16 @@
  },
  "s210": {
   "assets": [
-   "pexels:16092448"
+   "pexels:7123283"
   ],
-  "reason": "auto-pick: relevance +0.122, the best of 6 that show the sentence",
+  "reason": "auto-pick: relevance +0.113, the best of 5 that show the sentence",
   "on": "2026-10-13"
  },
  "s214": {
   "assets": [
-   "pexels:3927379"
+   "pexels:37245727"
   ],
-  "reason": "auto-pick: relevance +0.094, the best of 6 that show the sentence",
+  "reason": "auto-pick: relevance +0.086, the best of 4 that show the sentence",
   "on": "2026-10-13"
  },
  "s215": {
@@ -309,9 +309,9 @@
  },
  "s224": {
   "assets": [
-   "pexels:39488470"
+   "pexels:32589722"
   ],
-  "reason": "auto-pick: relevance +0.094, the best of 4 that show the sentence",
+  "reason": "auto-pick: relevance +0.092, the best of 3 that show the sentence",
   "on": "2026-10-13"
  },
  "s228": {
@@ -323,9 +323,9 @@
  },
  "s232": {
   "assets": [
-   "pexels:38934511"
+   "pexels:10815920"
   ],
-  "reason": "auto-pick: relevance +0.107, the best of 5 that show the sentence",
+  "reason": "auto-pick: relevance +0.116, the best of 7 that show the sentence",
   "on": "2026-10-13"
  },
  "s235": {
@@ -344,9 +344,9 @@
  },
  "s245": {
   "assets": [
-   "pixabay:23881"
+   "pexels:10472349"
   ],
-  "reason": "auto-pick: relevance +0.074, the best of 4 that show the sentence",
+  "reason": "auto-pick: relevance +0.066, the best of 2 that show the sentence",
   "on": "2026-10-13"
  },
  "s003": {
@@ -379,10 +379,10 @@
  },
  "s021": {
   "assets": [
-   "commons:16540447"
+   "pexels:6079432"
   ],
-  "reason": "auto-pick: the filters' top passed candidate",
-  "on": "2026-10-07"
+  "reason": "auto-pick: relevance +0.087, the best of 4 that show the sentence",
+  "on": "2026-10-13"
  },
  "s025": {
   "assets": [
@@ -407,10 +407,10 @@
  },
  "s037": {
   "assets": [
-   "loc:2018698162"
+   "loc:2019689053"
   ],
-  "reason": "auto-pick: the filters' top passed candidate",
-  "on": "2026-10-07"
+  "reason": "auto-pick: relevance +0.075, the best of 3 that show the sentence",
+  "on": "2026-10-13"
  },
  "s040": {
   "assets": [
@@ -451,9 +451,9 @@
  },
  "s060": {
   "assets": [
-   "loc:2026166639"
+   "pexels:37208833"
   ],
-  "reason": "auto-pick: relevance +0.060, the best of 3 that show the sentence",
+  "reason": "auto-pick: relevance +0.101, the best of 5 that show the sentence",
   "on": "2026-10-13"
  },
  "s069": {
@@ -486,10 +486,10 @@
  },
  "s086": {
   "assets": [
-   "commons:4017407"
+   "commons:141446365"
   ],
-  "reason": "auto-pick: the filters' top passed candidate",
-  "on": "2026-10-07"
+  "reason": "auto-pick: relevance +0.061, the best of 1 that show the sentence",
+  "on": "2026-10-13"
  },
  "s087": {
   "assets": [
@@ -516,9 +516,9 @@
  },
  "s108": {
   "assets": [
-   "commons:141508063"
+   "pexels:12405689"
   ],
-  "reason": "auto-pick: relevance +0.072, the best of 2 that show the sentence",
+  "reason": "auto-pick: relevance +0.088, the best of 3 that show the sentence",
   "on": "2026-10-13"
  },
  "s111": {
@@ -579,9 +579,9 @@
  },
  "s221": {
   "assets": [
-   "loc:2020724021"
+   "pexels:35028944"
   ],
-  "reason": "auto-pick: relevance +0.006, the best of 1 that show the sentence",
+  "reason": "auto-pick: relevance +0.067, the best of 3 that show the sentence",
   "on": "2026-10-13"
  },
  "s240": {
@@ -589,6 +589,300 @@
    "commons:65650993"
   ],
   "reason": "auto-pick: relevance +0.076, the best of 1 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s006": {
+  "assets": [
+   "pexels:28542772"
+  ],
+  "reason": "auto-pick: relevance +0.078, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s013": {
+  "assets": [
+   "pexels:27902023"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s024": {
+  "assets": [
+   "pexels:29376327"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s026": {
+  "assets": [
+   "pexels:2909754"
+  ],
+  "reason": "auto-pick: relevance +0.070, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s038": {
+  "assets": [
+   "commons:26652627"
+  ],
+  "reason": "auto-pick: relevance +0.126, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s039": {
+  "assets": [
+   "pexels:6114640"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s057": {
+  "assets": [
+   "loc:2017880625"
+  ],
+  "reason": "auto-pick: relevance +0.054, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s064": {
+  "assets": [
+   "pexels:6693710"
+  ],
+  "reason": "auto-pick: relevance +0.075, the best of 6 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s066": {
+  "assets": [
+   "commons:19499259"
+  ],
+  "reason": "auto-pick: relevance +0.092, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s067": {
+  "assets": [
+   "commons:117097759"
+  ],
+  "reason": "auto-pick: relevance +0.087, the best of 8 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s068": {
+  "assets": [
+   "pixabay:81241"
+  ],
+  "reason": "auto-pick: relevance +0.067, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s075": {
+  "assets": [
+   "pexels:26569061"
+  ],
+  "reason": "auto-pick: relevance +0.088, the best of 4 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s077": {
+  "assets": [
+   "pixabay:136740"
+  ],
+  "reason": "auto-pick: relevance +0.002, the best of 1 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s083": {
+  "assets": [
+   "pexels:1601247"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s089": {
+  "assets": [
+   "pexels:6203891"
+  ],
+  "reason": "auto-pick: relevance +0.061, the best of 7 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s101": {
+  "assets": [
+   "commons:117137706"
+  ],
+  "reason": "auto-pick: relevance +0.063, the best of 6 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s117": {
+  "assets": [
+   "pexels:39221946"
+  ],
+  "reason": "auto-pick: relevance +0.095, the best of 4 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s123": {
+  "assets": [
+   "commons:104647502"
+  ],
+  "reason": "auto-pick: relevance +0.101, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s138": {
+  "assets": [
+   "pexels:7280207"
+  ],
+  "reason": "auto-pick: relevance +0.078, the best of 7 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s144": {
+  "assets": [
+   "commons:161305431"
+  ],
+  "reason": "auto-pick: relevance +0.086, the best of 4 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s148": {
+  "assets": [
+   "pixabay:12876"
+  ],
+  "reason": "auto-pick: relevance +0.084, the best of 7 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s156": {
+  "assets": [
+   "pexels:1322056"
+  ],
+  "reason": "auto-pick: relevance +0.064, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s161": {
+  "assets": [
+   "pixabay:131988"
+  ],
+  "reason": "auto-pick: relevance +0.003, the best of 1 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s168": {
+  "assets": [
+   "commons:291114"
+  ],
+  "reason": "auto-pick: relevance +0.146, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s175": {
+  "assets": [
+   "pixabay:197209"
+  ],
+  "reason": "auto-pick: relevance +0.096, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s188": {
+  "assets": [
+   "pexels:8276001"
+  ],
+  "reason": "auto-pick: relevance +0.079, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s191": {
+  "assets": [
+   "pexels:6114652"
+  ],
+  "reason": "auto-pick: relevance +0.058, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s205": {
+  "assets": [
+   "pexels:5889621"
+  ],
+  "reason": "auto-pick: relevance +0.059, the best of 6 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s209": {
+  "assets": [
+   "pexels:35758017"
+  ],
+  "reason": "auto-pick: relevance +0.081, the best of 4 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s218": {
+  "assets": [
+   "pexels:3714737"
+  ],
+  "reason": "auto-pick: relevance +0.091, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s227": {
+  "assets": [
+   "pexels:6186871"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s236": {
+  "assets": [
+   "pexels:5900584"
+  ],
+  "reason": "auto-pick: relevance +0.092, the best of 2 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s237": {
+  "assets": [
+   "pexels:6178877"
+  ],
+  "reason": "auto-pick: relevance +0.084, the best of 6 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s244": {
+  "assets": [
+   "pexels:6170323"
+  ],
+  "reason": "auto-pick: relevance +0.109, the best of 5 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s248": {
+  "assets": [
+   "pexels:4477613"
+  ],
+  "reason": "auto-pick: relevance +0.055, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s255": {
+  "assets": [
+   "pexels:4464118"
+  ],
+  "reason": "auto-pick: relevance +0.113, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s256": {
+  "assets": [
+   "pexels:7484778"
+  ],
+  "reason": "auto-pick: relevance +0.051, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s258": {
+  "assets": [
+   "pexels:6170605"
+  ],
+  "reason": "auto-pick: relevance +0.090, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s260": {
+  "assets": [
+   "pixabay:11289"
+  ],
+  "reason": "auto-pick: relevance +0.077, the best of 1 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s264": {
+  "assets": [
+   "pexels:7482684"
+  ],
+  "reason": "auto-pick: relevance +0.099, the best of 3 that show the sentence",
+  "on": "2026-10-13"
+ },
+ "s266": {
+  "assets": [
+   "pexels:34727828"
+  ],
+  "reason": "visual-pick: chosen from its contact sheet in one capped reply",
+  "on": "2026-10-13"
+ },
+ "s271": {
+  "assets": [
+   "pexels:856162"
+  ],
+  "reason": "auto-pick: relevance +0.086, the best of 6 that show the sentence",
   "on": "2026-10-13"
  }
 }
