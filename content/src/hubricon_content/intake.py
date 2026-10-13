@@ -131,7 +131,8 @@ def script_in(path: str | Path, slug: str | None = None, dry: bool = False) -> d
     record = f"node content/film/record.mjs {slug}"
     reason = f"the founder's own takes: read the script at the teleprompter, {record} (docs/content/VOICE-RECORDING.md)"
     unit = {"id": uid, "phase": 3, "kind": "video", "day": None, "title": head["TITLE"], "pillar": pillar, "tier": tier,
-            "slug": slug, "models": [], "status": "blocked", "blocked_on": reason, "requires_done": None, "voice": "own",
+            "slug": slug, "form": head.get("FORM", "").strip().lower() or None, "models": [], "status": "blocked",
+            "blocked_on": reason, "requires_done": None, "voice": "own",
             "publishable": False, "review_notes": [], "attempts": {}}
     steps = state.VIDEO_STEPS_D if tier == "D" else state.VIDEO_STEPS
     unit["steps"] = {s: "todo" for s in steps}

@@ -10,7 +10,7 @@ forever.
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 CONTENT_DIR = Path(__file__).resolve().parents[2]
@@ -205,6 +205,24 @@ def _next_step(u: dict) -> str | None:
     return None
 
 
+FORM_WEEK = 7
+
+
+def same_form_this_week(q: dict, u: dict, today: date | None = None) -> bool:
+    """The film's FORM is the last started film's, and that one started within the week."""
+    if not u.get("form"):
+        return False
+    today = today or date.today()
+    recent = [s for s in q.get("line_starts", []) if s["unit"] != u["id"] and date.fromisoformat(s["on"]) > today - timedelta(days=FORM_WEEK)]
+    return bool(recent) and recent[-1]["form"] == u["form"]
+
+
+def record_line_start(q: dict, u: dict, today: date | None = None) -> None:
+    """The film's line has started (his takes became its narration): its FORM now counts against the week."""
+    starts = [s for s in q.setdefault("line_starts", []) if s["unit"] != u["id"]]
+    q["line_starts"] = starts + [{"unit": u["id"], "form": u.get("form"), "on": (today or date.today()).isoformat()}]
+
+
 def next_item(q: dict) -> dict:
     """The one thing to do now, or why there is nothing."""
     refresh_capabilities(q)
@@ -245,6 +263,8 @@ def next_item(q: dict) -> dict:
         if step is None:
             u["status"] = "done"
             continue
+        if step == "tts" and same_form_this_week(q, u):
+            continue  # two films of one FORM don't start back to back in a week (the week varies its shape)
         if u["status"] == "todo" and awaiting >= MAX_AWAITING and u["steps"]["review"] != "approved":
             continue  # the founder's inbox is full; draft nothing more
         if step == "scenes" and not q.get("style_locked") and not u["id"].startswith(FIRST_VIDEO):

@@ -6,6 +6,7 @@ from hubricon_content import script as sm
 def _script(ch2_vo, keep="A price you never move is a price you never measured.", try_=True, recall="{{a}} and {{b}}"):
     filler = " ".join(["word"] * 240)
     return sm.parse(f"""TITLE: t
+FORM: method
 HOOKS
 1. A hook.
 SCRIPT
@@ -66,3 +67,27 @@ def test_film_qa_names_figures_off_their_word_and_long_chapters():
     msgs = [p["msg"] for p in film_qa.learning(plan, timing, own_voice=False)]
     assert any("50% of figure shots open on their figure's word" in m for m in msgs)
     assert any("chapter 'Long' runs 14.8 min" in m for m in msgs)
+
+
+def test_each_form_has_its_own_learning_profile():
+    vo = " ".join(["word"] * 240)                       # no question anywhere
+    method = sm.learning(_script(vo))
+    assert any("asks the viewer nothing" in p for p in method)
+    story = _script(vo)
+    story["header"]["FORM"] = "story"
+    for b in story["beats"]:
+        b["KEEP"] = ""
+    p = sm.learning(story)
+    assert not any("asks the viewer nothing" in x for x in p) and any("a story film needs one KEEP line" in x for x in p)
+    story["beats"][-1]["KEEP"] = "A price you never move is a price you never measured."
+    assert not any("KEEP" in x for x in sm.learning(story))                      # one for the film is enough
+    teardown = _script(vo)
+    teardown["header"]["FORM"] = "teardown"
+    facts = {"a": {"source": "https://example.org/case/report.pdf p. 3"}, "b": {"source": "https://example.org/case/report.pdf p. 9"}}
+    assert any("single real case" in x for x in sm.learning(teardown, facts))  # two figures: not yet a case
+    facts["c"] = {"source": "https://example.org/case/other.pdf"}
+    teardown["beats"][2]["VO"] += " And {{c}}."
+    assert not any("single real case" in x for x in sm.learning(teardown, facts))
+    nameless = _script(vo)
+    nameless["header"].pop("FORM")
+    assert any("FORM must be one of" in x for x in sm.learning(nameless))

@@ -27,7 +27,7 @@ HEADER_KEYS = ["TITLE", "THUMBNAIL", "PILLAR", "TIER", "AWARENESS STAGE", "CTA",
                # packaging first: three titles and three thumbnail concepts, the chosen ones among them
                "TITLE 1", "TITLE 2", "TITLE 3", "THUMBNAIL 1", "THUMBNAIL 2", "THUMBNAIL 3"]
 BEAT_RE = re.compile(r"^\[(\d+):(\d\d)\]\s*(.*)$")
-FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA|KEEP|TRY):\s*(.*)$")
+FIELD_RE = re.compile(r"^\s+(VO|VISUAL|DATA SOURCE|CLIP|TEMPLATE|CTA|KEEP|TRY|BREATHE|MONTAGE):\s*(.*)$")
 HOOK_RE = re.compile(r"^([123])\.\s+(.*)$")
 STAMP_RE = re.compile(r"(\d+):(\d\d)")
 WPM = 150
@@ -90,7 +90,7 @@ def parse(text: str) -> dict:
             m = BEAT_RE.match(line)
             if m:
                 cur = {"at": int(m.group(1)) * 60 + int(m.group(2)), "name": m.group(3).strip(),
-                       "VO": "", "VISUAL": "", "DATA SOURCE": "", "CLIP": "", "TEMPLATE": "", "CTA": "", "KEEP": "", "TRY": ""}
+                       "VO": "", "VISUAL": "", "DATA SOURCE": "", "CLIP": "", "TEMPLATE": "", "CTA": "", "KEEP": "", "TRY": "", "BREATHE": "", "MONTAGE": ""}
                 beats.append(cur)
                 field = None
                 continue
@@ -201,21 +201,43 @@ def chapters(script: dict) -> list[dict]:
     return [c for c in out if c["beats"]]
 
 
-def learning(script: dict) -> list[str]:
-    """The learning rules a long film's script is held to: segments, a guess before each answer, a takeaway
-    per chapter, a step to try, and a recall at the end."""
+CTA_AFTER_TRY_S = 30                        # the one CTA follows the step to try (the doctrine, 2026-10-13)
+FORMS = ("teardown", "method", "story")   # a week's films vary their shape (the queue keeps two alike apart)
+CASE_FIGURES = 3                            # a teardown chapter carries one case: at least 3 figures from one source
+
+
+def form_of(script: dict) -> str:
+    return str(script["header"].get("FORM", "")).strip().lower()
+
+
+def _case(source: str) -> str:
+    """A figure's case: the document it comes from (a link's site and first path part, else its words)."""
+    m = re.search(r"https?://([^/\s]+)(/[^/\s?#]*)?", source or "")
+    return (m.group(1) + (m.group(2) or "")).lower() if m else re.sub(r"\s+", " ", (source or "").lower())[:60]
+
+
+def learning(script: dict, facts: dict | None = None) -> list[str]:
+    """The learning rules a long film's script is held to, by its FORM (LEARNING_DESIGN.md):
+
+    - every form: chapters of 1.5–6 minutes, a step to try, a recall at the end;
+    - method: a guess before each chapter's answer, and a takeaway per chapter;
+    - teardown: a takeaway per chapter, and one chapter carried by a single sourced case;
+    - story: one takeaway for the film."""
     problems, ch = [], chapters(script)
+    form = form_of(script)
+    if form not in FORMS:
+        problems.append(f"FORM must be one of {', '.join(FORMS)} (the week's films vary their shape)")
     for c in ch[1:]:                                   # the open is the hook, not a lesson
         vo = " ".join(b["VO"] for b in c["beats"])
         n = len(vo.split())
         if not CHAPTER_WORDS[0] <= n <= CHAPTER_WORDS[1]:
             problems.append(f"chapter {c['name']}: {n} words (about {n / 150:.1f} min); a chapter runs "
                             f"{CHAPTER_WORDS[0]}–{CHAPTER_WORDS[1]} words, 1.5 to 6 minutes: split a long one at its steps")
-        if "?" not in vo:
+        if form == "method" and "?" not in vo:
             problems.append(f"chapter {c['name']}: asks the viewer nothing; put a question before its answer "
                             "(a guess first makes the answer stick)")
         keeps = [b for b in c["beats"] if b.get("KEEP")]
-        if len(keeps) != 1:
+        if form != "story" and len(keeps) != 1:
             problems.append(f"chapter {c['name']}: {len(keeps)} KEEP lines; one, on its last beat, the sentence the viewer keeps")
         for b in keeps:
             k = b["KEEP"]
@@ -223,6 +245,31 @@ def learning(script: dict) -> list[str]:
                 problems.append(f"beat {b['name']}: KEEP is {len(k.split())} words; {KEEP_WORDS} at most")
             if _norm(k) not in _norm(b["VO"]):
                 problems.append(f"beat {b['name']}: KEEP must be said word for word in the beat's VO (it is shown as it is spoken)")
+    for b in script["beats"]:
+        if b.get("BREATHE", "").lower().startswith("y") and b.get("MONTAGE", "").lower().startswith("y"):
+            problems.append(f"beat {b['name']}: BREATHE and MONTAGE can't share a beat")
+        if b.get("KEEP") and (b.get("BREATHE", "").lower().startswith("y") or b.get("MONTAGE", "").lower().startswith("y")):
+            problems.append(f"beat {b['name']}: a KEEP line is set as its own card; give BREATHE or MONTAGE to another beat")
+    beats = script["beats"]
+    tries = [i for i, b in enumerate(beats) if b.get("TRY", "").lower().startswith("y")]
+    ctas = [b for b in beats if b.get("CTA")]
+    if tries and len(ctas) == 1:
+        t = tries[-1]
+        end = beats[t + 1]["at"] if t + 1 < len(beats) else beats[t]["at"]
+        if not beats[t]["at"] <= ctas[0]["at"] <= end + CTA_AFTER_TRY_S:
+            problems.append(f"the CTA (at {ctas[0]['at'] // 60}:{ctas[0]['at'] % 60:02d}) must come within {CTA_AFTER_TRY_S} s after "
+                            f"the TRY beat ends: the viewer is pointed onward while the step is fresh")
+    if form == "story" and not any(b.get("KEEP") for b in script["beats"]):
+        problems.append("a story film needs one KEEP line: the sentence the viewer keeps from the whole film")
+    if form == "teardown" and facts is not None:
+        demo = lambda k: "demo" in str((facts.get(k) or {}).get("source", "")).lower()
+        def one_case(c):
+            keys = {k for b in c["beats"] for k in PLACEHOLDER.findall(b["VO"]) if k in facts and not demo(k)}
+            cases = {_case(facts[k].get("source", "")) for k in keys}
+            return len(keys) >= CASE_FIGURES and len(cases) == 1
+        if not any(one_case(c) for c in ch[1:]):
+            problems.append(f"a teardown needs one chapter carried by a single real case: at least {CASE_FIGURES} of its figures "
+                            "from one sourced case study (not demo data)")
     if not any(b.get("TRY", "").lower().startswith("y") for b in script["beats"]):
         problems.append("no TRY beat: mark the beat that gives the viewer the step to do this week with `TRY: yes`")
     if len(ch) > 2:
@@ -241,8 +288,10 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
         if not h.get(k):
             problems.append(f"header field {k} missing")
     # number guard on everything a viewer hears or reads
-    prose = {"TITLE": h.get("TITLE", ""), "THUMBNAIL": h.get("THUMBNAIL", ""), "CTA": h.get("CTA", "")}
-    prose.update({k: h[k] for k in ("TITLE 1", "TITLE 2", "TITLE 3", "THUMBNAIL 1", "THUMBNAIL 2", "THUMBNAIL 3") if h.get(k)})
+    seen = lambda line: " ".join(v for k, v in thumbnail_concept(line).items() if k != "picture" and v)   # a PICTURE shot id is not shown
+    prose = {"TITLE": h.get("TITLE", ""), "THUMBNAIL": seen(h.get("THUMBNAIL", "")), "CTA": h.get("CTA", "")}
+    prose.update({k: (seen(h[k]) if k.startswith("THUMBNAIL") else h[k])
+                  for k in ("TITLE 1", "TITLE 2", "TITLE 3", "THUMBNAIL 1", "THUMBNAIL 2", "THUMBNAIL 3") if h.get(k)})
     for i, hook in script["hooks"].items():
         prose[f"hook {i}"] = hook
     for b in script["beats"]:
@@ -296,7 +345,7 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
             problems.append(f"beat {b['name']}: VISUAL names no scene ({', '.join(sorted(ALL_SCENES))})")
     ctas = [b for b in script["beats"] if b["CTA"]]
     if len(ctas) != 1:
-        problems.append(f"{len(ctas)} beats carry a CTA; exactly one (the honest limit) may")
+        problems.append(f"{len(ctas)} beats carry a CTA; exactly one may")
     # HUBRICON_SPEC.md ("Content engine"): every piece points to /learn and closes on one calm
     # line; the home page's film (pillar 0) points to the call first. The Teardown is gone.
     cta_text = (h.get("CTA", "") + " " + " ".join(b["CTA"] for b in ctas)).lower()
@@ -314,7 +363,8 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
     # re-hook cadence: beat starts plus the audit's stamps
     stamps = sorted({b["at"] for b in script["beats"]} | {
         int(m.group(1)) * 60 + int(m.group(2)) for m in STAMP_RE.finditer(script["tail"].get("RE-HOOK AUDIT", ""))})
-    for a, b in zip(stamps, stamps[1:]):
+    rehook = not (tier.upper() == "D" and form_of(script) in ("teardown", "story"))   # the 40 s re-hook is a method film's rule
+    for a, b in zip(stamps, stamps[1:]) if rehook else []:
         if b - a > 40:
             problems.append(f"re-hook gap of {b - a}s between {a // 60}:{a % 60:02d} and {b // 60}:{b % 60:02d}")
     n = word_count(spoken(script), facts)
@@ -322,7 +372,7 @@ def validate(script: dict, facts: dict, tier: str, pillar: int, cta_rules: dict)
     if not lo <= n <= hi:
         problems.append(f"{n} spoken words; tier {tier} wants {lo}–{hi}")
     if tier.upper() == "D":
-        problems += packaging(script) + learning(script)
+        problems += packaging(script) + learning(script, facts)
     return problems
 
 

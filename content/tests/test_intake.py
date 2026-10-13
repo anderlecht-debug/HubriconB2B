@@ -66,3 +66,15 @@ def test_a_clean_script_is_filed_and_queued_waiting_on_his_takes(tmp_path, monke
     missing.write_text(SCRIPT)                                   # no FACTS: {{x_year}} has no source
     res = intake.script_in(missing, slug="other")
     assert res["status"] == "refused" and any("x_year" in p for p in res["problems"])
+
+
+def test_two_films_of_one_form_do_not_start_back_to_back_in_a_week():
+    from datetime import date
+    q = {"units": [], "line_starts": []}
+    a, b, c = {"id": "G04", "form": "method"}, {"id": "G05", "form": "method"}, {"id": "G06", "form": "story"}
+    state.record_line_start(q, a, today=date(2026, 10, 13))
+    assert state.same_form_this_week(q, b, today=date(2026, 10, 15))           # another method film waits
+    assert not state.same_form_this_week(q, c, today=date(2026, 10, 15))       # a story film may start
+    assert not state.same_form_this_week(q, b, today=date(2026, 10, 21))       # a week on, it may start
+    state.record_line_start(q, c, today=date(2026, 10, 15))
+    assert not state.same_form_this_week(q, b, today=date(2026, 10, 16))       # the last started was a story
