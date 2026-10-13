@@ -232,3 +232,56 @@ Letter page; the first layout ran to two, so the type was tightened and the shee
 
 **Could not do.** Putting the PDF on the matching /learn lesson is a site change, waiting for the founder's go.
 YouTube's API can post a comment but not pin it, so pinning stays a click.
+
+## The full re-run of G02, and before and after (2026-10-13)
+
+The line ran on G02 end to end on the new code (placeholder voice):
+- the timing rebuilt (cut-on-the-figure cuts, the KEEP line, the BREATHE beat);
+- a fresh skeleton (272 shots), decided by one reply with each chapter's music mood;
+- fill and autofix, then sourcing;
+- relevance auto-pick plus the capped visual-pick reply, then resolve-gaps;
+- render (235 clips), film-qa, the draft remixed against the new plan, the review sheets.
+
+| Measure | Before | After | |
+|---|---|---|---|
+| Bare openings | 23 | **33** | worse |
+| Freezes, 4 s or more | 20 | **21** | about the same |
+| Median picture relevance | 0.055 (rank picks) | **0.079** | better |
+| Shots a model reviewed for pictures | n/a | 11 | |
+| Figure shots opening on their word | 33% | **69%** | better (the 2026-10-07 figure cut, first used here) |
+| Designed effects a minute | 11.7 | **10.3** | better, still 0.3 over the new ceiling |
+| Silence per chapter (music and effects out) | none | **2.2 s in all five** | new |
+| Weighted AI tokens on G02 in this work | 1.74M (old session path) | **422k** | see below |
+| Render time, 235 clips | ~70 min (3 workers) | **63 min** (3.7 clips a minute, under the 10-thread cap) | about the same |
+
+**Tokens, honestly.** 422k is what G02 cost in this work, failed runs included.
+
+| Step | Weighted tokens |
+|---|---|
+| The planning reply, all 274 shots | 275k |
+| Its re-plan after moving one marker (17 shots; the other 255 carried) | 45k |
+| Two fix replies from runs that stopped | 71k |
+| Two picture replies (the first one's picks were lost to a bug, now fixed) | 31k |
+
+**A clean single pass on today's code is about 290k:** the plan at 275k plus a picture reply at about 13k. That's over the ~200k target. In the planning reply, 46.6k of output tokens make 233k of its 275k weighted. The decisions themselves are about 15k tokens of JSON, so roughly 31k tokens are the model's thinking. Capping or switching off its thinking on this one step is the lever that reaches the target. It's not done here; it needs a quality check against today's plan.
+
+**Why bare openings rose.** It wasn't the typed cards. The 33 are ordinary documents (8), timelines (5), pairs (5), chapter cards (4) and grids, formulas and receipts, each opening before its first element lands. The new plan has more type shots: 272 drafted against 232. The figure cut moved figures onto their words (33% → 69%), but the shots around a figure still open early. This order didn't target it. The previous round's fixes covered pairs and numbers; documents, timelines and chapter cards are next.
+
+**What failed validation, and why** (each fixed and committed as it happened):
+1. **The planning reply ran on the engine's API key, not the subscription.** The CLI loads `.env`; the call failed on a workspace header. `ai_step` now strips every Anthropic key from Claude's environment.
+2. **43 plan problems after the first decide.** My BREATHE and MONTAGE code let a held picture land on beats that say figures, and autofix set a landing word where it should have cleared one. Such beats are now refused, and the skeleton never holds a figure under a picture. G02's test markers moved to its one figure-free beat.
+3. **One shot ended a render.** s222's "step" timeline had no prices. The stage now reports one shot's failure and goes on, and autofix sets an impossible step as a ledger.
+4. **s242, a then-and-now with no pictures, reached the render.** resolve-gaps now sets it as its own words on a typed card.
+5. **The picture reply's picks were lost to a Commons 429.** A refused download now keeps the picture, and answers are saved.
+
+**Still open.**
+- **G02's teaching chapter runs 11 minutes,** and "The ceiling" 7.5. Only the founder can split them, by adding chapter cards (new spoken words).
+- **G02 has no figure-free beat for a MONTAGE,** so MONTAGE is proven by its unit test only.
+- **32 typed cards.** 24 picture shots had no candidate showing their sentence (every one scored below 0). The next step is one re-query from the beat's VISUAL brief before a shot becomes a card.
+- **Four plan problems the gap step creates** after validation (a 17 s card, two "three in a row") are not re-checked by the line.
+- **The motivated camera** waits for the founder's verdict (`media/motion-compare.mp4`). The look was re-locked only for the two new styles.
+
+**Cadence at 3 films a week.**
+- *Render:* about 63 min a film, about 3.2 h a week.
+- *AI:* about 290k × 3 ≈ 0.9M weighted tokens a week at today's cost; about 0.6M once the planning reply's thinking is capped.
+- *The founder's time:* reading three scripts' takes a chapter at a time, and watching three drafts.

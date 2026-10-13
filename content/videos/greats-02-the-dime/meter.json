@@ -16,5 +16,113 @@
 },
 "seconds": 13.2,
 "cost_usd": 0.13014
+},
+{
+"at": "2026-10-13T16:15:36+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 0,
+"step": "plan",
+"model": "claude-sonnet-5-5",
+"budget": 400000,
+"stopped": false,
+"usage": {
+"input_tokens": 0,
+"cache_creation_input_tokens": 0,
+"cache_read_input_tokens": 0,
+"output_tokens": 0
+},
+"seconds": 19.3,
+"cost_usd": 0
+},
+{
+"at": "2026-10-13T16:24:00+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 274858,
+"step": "plan",
+"model": "claude-sonnet-5-5",
+"budget": 400000,
+"stopped": false,
+"usage": {
+"input_tokens": 2,
+"cache_creation_input_tokens": 33353,
+"cache_read_input_tokens": 0,
+"output_tokens": 46633
+},
+"seconds": 310.9,
+"cost_usd": 1.52645
+},
+{
+"at": "2026-10-13T16:24:43+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 46123,
+"step": "fix",
+"model": "claude-sonnet-5-5",
+"budget": 200000,
+"stopped": false,
+"usage": {
+"input_tokens": 2,
+"cache_creation_input_tokens": 14049,
+"cache_read_input_tokens": 0,
+"output_tokens": 5712
+},
+"seconds": 41.5,
+"cost_usd": 0.294824
+},
+{
+"at": "2026-10-13T16:33:20+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 44694,
+"step": "plan",
+"model": "claude-sonnet-5-5",
+"budget": 400000,
+"stopped": false,
+"usage": {
+"input_tokens": 2,
+"cache_creation_input_tokens": 17442,
+"cache_read_input_tokens": 0,
+"output_tokens": 4578
+},
+"seconds": 33.0,
+"cost_usd": 0.30245199999999994
+},
+{
+"at": "2026-10-13T16:33:35+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 24602,
+"step": "fix",
+"model": "claude-sonnet-5-5",
+"budget": 200000,
+"stopped": false,
+"usage": {
+"input_tokens": 2,
+"cache_creation_input_tokens": 12800,
+"cache_read_input_tokens": 0,
+"output_tokens": 1720
+},
+"seconds": 14.2,
+"cost_usd": 0.181552
+},
+{
+"at": "2026-10-13T17:34:40+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 13402,
+"step": "pick",
+"model": "claude-sonnet-5-5",
+"budget": 30000,
+"stopped": false,
+"usage": {
+"input_tokens": 2,
+"cache_creation_input_tokens": 10252,
+"cache_read_input_tokens": 0,
+"output_tokens": 117
+},
+"seconds": 5.3,
+"cost_usd": 0.10796299999999999
 }
 ]

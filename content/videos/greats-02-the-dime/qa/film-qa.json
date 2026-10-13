@@ -1,256 +1,364 @@
 {
  "slug": "greats-02-the-dime",
  "status": "problems",
- "problems": 51,
+ "problems": 69,
  "by_check": {
-  "plan": 1,
-  "clip": 3,
-  "bare-opening": 23,
-  "title-safe": 2,
-  "freeze": 19,
+  "plan": 6,
+  "bare-opening": 33,
+  "early-figure": 2,
+  "title-safe": 3,
+  "sound": 1,
+  "freeze": 21,
   "learning": 3
  },
  "advisory": [
-  "charts: 11% of the runtime; a history film keeps it within 15%–25% (§5)",
-  "numbers: 38% of the runtime; a history film keeps it within 8%–12% (§5)",
-  "documents: 20% of the runtime; a history film keeps it within 10%–18% (§5)",
-  "stock: 14% of the runtime; a history film keeps it within 15%–25% (§5)",
-  "archival: 17% of the runtime; a history film keeps it within 20%–35% (§5)"
+  "charts: 9% of the runtime; a history film keeps it within 15%–25% (§5)",
+  "numbers: 41% of the runtime; a history film keeps it within 8%–12% (§5)",
+  "documents: 28% of the runtime; a history film keeps it within 10%–18% (§5)",
+  "archival: 6% of the runtime; a history film keeps it within 20%–35% (§5)",
+  "number-land: 20% of the runtime; 15% at most",
+  "doc-highlight: 20% of the runtime; 15% at most",
+  "the first 5 s show none of the thumbnail's picture (\"The coin from the film's opening, close and sharp on dark pa\"): the opening should pay off the thumbnail"
  ],
+ "relevance": {
+  "median": 0.0786,
+  "scored": 60,
+  "model_reviewed": 11
+ },
  "list": [
   {
    "check": "plan",
-   "msg": "the first minute's median shot is 6.6 s; keep it at 6 s or under"
+   "msg": "s242: doc-highlight lands on a word: set `on`"
   },
   {
-   "shot": "s001",
-   "check": "clip",
-   "msg": "clip runs 0.00 s; the shot is 7.17 s"
+   "check": "plan",
+   "msg": "s065: 17.2 s; doc-highlight runs 5–14 s"
   },
   {
-   "shot": "s004",
-   "check": "clip",
-   "msg": "clip runs 0.00 s; the shot is 12.86 s"
+   "check": "plan",
+   "msg": "s065: 17.2 s is over the 14 s ceiling for a document"
   },
   {
-   "shot": "s006",
-   "check": "clip",
-   "msg": "clip runs 0.00 s; the shot is 3.95 s"
+   "check": "plan",
+   "msg": "s048–s052: number-land 3 times running; never three"
   },
   {
-   "shot": "s008",
+   "check": "plan",
+   "msg": "s159–s161: doc-highlight 3 times running; never three"
+  },
+  {
+   "check": "plan",
+   "msg": "s240–s242: doc-highlight 3 times running; never three"
+  },
+  {
+   "shot": "s009",
    "kind": "grid",
    "t": 0.1,
    "check": "bare-opening",
    "msg": "opens on an empty desk (0.0% lit, no line)"
   },
   {
-   "shot": "s009",
+   "shot": "s015",
+   "kind": "kinetic",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.6% lit, no line)"
+  },
+  {
+   "shot": "s016",
+   "kind": "chapter",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (1.2% lit, no line)"
+  },
+  {
+   "shot": "s018",
+   "kind": "timeline",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.1% lit, no line)"
+  },
+  {
+   "shot": "s023",
+   "kind": "timeline",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s027",
    "kind": "quote",
    "t": 0.1,
    "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
+   "msg": "opens on an empty desk (0.3% lit, no line)"
   },
   {
-   "shot": "s011",
-   "kind": "number",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s017",
+   "shot": "s033",
    "kind": "pair",
    "t": 0.1,
    "check": "bare-opening",
    "msg": "opens on an empty desk (0.0% lit, no line)"
   },
   {
-   "shot": "s018",
-   "kind": "number",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s022",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.1% lit, no line)"
-  },
-  {
-   "shot": "s028",
-   "kind": "timeline",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s033",
-   "kind": "timeline",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s035",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.2% lit, no line)"
-  },
-  {
    "shot": "s045",
-   "kind": "timeline",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.3% lit, no line)"
-  },
-  {
-   "shot": "s051",
-   "kind": "formula",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.6% lit, no line)"
-  },
-  {
-   "shot": "s070",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s084",
-   "kind": "timeline",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s089",
-   "kind": "chapter",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (1.0% lit, no line)"
-  },
-  {
-   "shot": "s092",
    "kind": "document",
    "t": 0.1,
    "check": "bare-opening",
    "msg": "opens on an empty desk (0.0% lit, no line)"
   },
   {
-   "shot": "s096",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.5% lit, no line)"
-  },
-  {
-   "shot": "s130",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.0% lit, no line)"
-  },
-  {
-   "shot": "s135",
-   "kind": "quote",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (1.1% lit, no line)"
-  },
-  {
-   "shot": "s138",
-   "kind": "timeline",
-   "t": 0.1,
-   "check": "bare-opening",
-   "msg": "opens on an empty desk (0.3% lit, no line)"
-  },
-  {
-   "shot": "s153",
+   "shot": "s055",
    "kind": "chapter",
    "t": 0.1,
    "check": "bare-opening",
-   "msg": "opens on an empty desk (0.9% lit, no line)"
+   "msg": "opens on an empty desk (1.3% lit, no line)"
   },
   {
-   "shot": "s157",
-   "kind": "number",
-   "t": 2,
-   "check": "title-safe",
-   "msg": "\"20-cent\" outside title-safe"
-  },
-  {
-   "shot": "s169",
+   "shot": "s059",
    "kind": "formula",
    "t": 0.1,
    "check": "bare-opening",
    "msg": "opens on an empty desk (0.6% lit, no line)"
   },
   {
-   "shot": "s231",
+   "shot": "s072",
    "kind": "formula",
    "t": 0.1,
    "check": "bare-opening",
-   "msg": "opens on an empty desk (1.1% lit, no line)"
+   "msg": "opens on an empty desk (0.6% lit, no line)"
   },
   {
-   "shot": "s237",
+   "shot": "s082",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s085",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s088",
+   "kind": "quote",
+   "t": 0.1,
+   "check": "early-figure",
+   "msg": "\"14\" readable in \"14\" before it is said"
+  },
+  {
+   "shot": "s088",
+   "kind": "quote",
+   "t": 0.1,
+   "check": "early-figure",
+   "msg": "\"1891\" readable in \"1891\" before it is said"
+  },
+  {
+   "shot": "s095",
+   "kind": "pair",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.6% lit, no line)"
+  },
+  {
+   "shot": "s100",
+   "kind": "chapter",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (1.3% lit, no line)"
+  },
+  {
+   "shot": "s103",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s112",
+   "kind": "timeline",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.8% lit, no line)"
+  },
+  {
+   "shot": "s116",
+   "kind": "pair",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.1% lit, no line)"
+  },
+  {
+   "shot": "s129",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s130",
+   "kind": "pair",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s130",
+   "kind": "pair",
+   "t": 6.5,
+   "check": "title-safe",
+   "msg": "\"$172,500\" outside title-safe"
+  },
+  {
+   "shot": "s135",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s152",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s154",
+   "kind": "timeline",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.1% lit, no line)"
+  },
+  {
+   "shot": "s169",
+   "kind": "chapter",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (1.2% lit, no line)"
+  },
+  {
+   "shot": "s171",
    "kind": "formula",
    "t": 0.1,
    "check": "bare-opening",
-   "msg": "opens on an empty desk (0.5% lit, no line)"
+   "msg": "opens on an empty desk (0.4% lit, no line)"
+  },
+  {
+   "shot": "s174",
+   "kind": "number",
+   "t": 4,
+   "check": "title-safe",
+   "msg": "\"20-cent\" outside title-safe"
+  },
+  {
+   "shot": "s177",
+   "kind": "timeline",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.7% lit, no line)"
+  },
+  {
+   "shot": "s181",
+   "kind": "pair",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s187",
+   "kind": "receipt",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s204",
+   "kind": "grid",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s217",
+   "kind": "grid",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s229",
+   "kind": "kinetic",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.2% lit, no line)"
+  },
+  {
+   "shot": "s238",
+   "kind": "document",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
   },
   {
    "shot": "s252",
+   "kind": "receipt",
+   "t": 0.1,
+   "check": "bare-opening",
+   "msg": "opens on an empty desk (0.0% lit, no line)"
+  },
+  {
+   "shot": "s272",
    "kind": "end",
    "t": 5,
    "check": "title-safe",
    "msg": "\"pay.\" outside title-safe"
   },
   {
-   "check": "freeze",
-   "t": 43.2,
-   "msg": "a frozen picture from 43.2 s (4 s or more)"
+   "check": "sound",
+   "msg": "10.3 designed effects a minute; at most 10: past that a film sounds counted, not designed"
   },
   {
    "check": "freeze",
-   "t": 60.5,
-   "msg": "a frozen picture from 60.5 s (4 s or more)"
+   "t": 39.3,
+   "msg": "a frozen picture from 39.3 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 108.5,
-   "msg": "a frozen picture from 108.5 s (4 s or more)"
+   "t": 80.5,
+   "msg": "a frozen picture from 80.5 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 182.4,
-   "msg": "a frozen picture from 182.4 s (4 s or more)"
+   "t": 118.6,
+   "msg": "a frozen picture from 118.6 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 219.9,
-   "msg": "a frozen picture from 219.9 s (4 s or more)"
+   "t": 228.1,
+   "msg": "a frozen picture from 228.1 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 464.3,
-   "msg": "a frozen picture from 464.3 s (4 s or more)"
+   "t": 256.2,
+   "msg": "a frozen picture from 256.2 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 488.4,
-   "msg": "a frozen picture from 488.4 s (4 s or more)"
+   "t": 509.2,
+   "msg": "a frozen picture from 509.2 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 492.8,
-   "msg": "a frozen picture from 492.8 s (4 s or more)"
+   "t": 521.8,
+   "msg": "a frozen picture from 521.8 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 546.8,
+   "msg": "a frozen picture from 546.8 s (4 s or more)"
   },
   {
    "check": "freeze",
@@ -259,23 +367,23 @@
   },
   {
    "check": "freeze",
-   "t": 710.4,
-   "msg": "a frozen picture from 710.4 s (4 s or more)"
+   "t": 817.2,
+   "msg": "a frozen picture from 817.2 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 826.2,
-   "msg": "a frozen picture from 826.2 s (4 s or more)"
+   "t": 859.1,
+   "msg": "a frozen picture from 859.1 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1113.2,
-   "msg": "a frozen picture from 1113.2 s (4 s or more)"
+   "t": 960.5,
+   "msg": "a frozen picture from 960.5 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1176.1,
-   "msg": "a frozen picture from 1176.1 s (4 s or more)"
+   "t": 972.4,
+   "msg": "a frozen picture from 972.4 s (4 s or more)"
   },
   {
    "check": "freeze",
@@ -284,32 +392,42 @@
   },
   {
    "check": "freeze",
-   "t": 1202.7,
-   "msg": "a frozen picture from 1202.7 s (4 s or more)"
+   "t": 1279.5,
+   "msg": "a frozen picture from 1279.5 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1280.7,
-   "msg": "a frozen picture from 1280.7 s (4 s or more)"
+   "t": 1353.9,
+   "msg": "a frozen picture from 1353.9 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1359.7,
-   "msg": "a frozen picture from 1359.7 s (4 s or more)"
+   "t": 1389.6,
+   "msg": "a frozen picture from 1389.6 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1551.9,
-   "msg": "a frozen picture from 1551.9 s (4 s or more)"
+   "t": 1485.3,
+   "msg": "a frozen picture from 1485.3 s (4 s or more)"
   },
   {
    "check": "freeze",
-   "t": 1588.9,
-   "msg": "a frozen picture from 1588.9 s (4 s or more)"
+   "t": 1491.6,
+   "msg": "a frozen picture from 1491.6 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 1580.1,
+   "msg": "a frozen picture from 1580.1 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 1595.5,
+   "msg": "a frozen picture from 1595.5 s (4 s or more)"
   },
   {
    "check": "learning",
-   "msg": "33% of figure shots open on their figure's word (within 0.6 s); at least 70%: the picture arrives with its word"
+   "msg": "69% of figure shots open on their figure's word (within 0.6 s); at least 70%: the picture arrives with its word"
   },
   {
    "check": "learning",
