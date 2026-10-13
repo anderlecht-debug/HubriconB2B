@@ -62,16 +62,21 @@ def build(slug: str) -> dict:
     return {"status": "ok", "worksheet": str(out), "pdf": str(pdf_path) if pdf_path else None, "steps": sum(1 for l in lines if re.match(r"^\d+\. ", l)), "figures": len(used)}
 
 
-CSS = """
-@page { size: Letter; margin: 0.55in 0.65in; }
-body { font: 400 10pt/1.38 "Inter", system-ui, sans-serif; color: #0a0e17; }
-h1 { font: 700 17pt/1.18 "Inter", sans-serif; letter-spacing: -0.01em; margin: 0 0 6pt; }
-h2 { font: 600 10.5pt/1.3 "Inter", sans-serif; margin: 12pt 0 5pt; text-transform: uppercase; letter-spacing: 0.06em; color: #636b7a; }
-em { color: #636b7a; font-size: 9.5pt; }
-ol, ul { padding-left: 16pt; margin: 0; } li { margin: 0 0 3.5pt; }
-table { border-collapse: collapse; width: 100%; font-size: 8.5pt; } th, td { border-bottom: 1px solid #cdd2da; padding: 4pt 6pt; text-align: left; vertical-align: top; }
-td { word-break: break-word; }
-"""
+def _css() -> str:
+    """The sheet's type, its colours from the one design system (content/assets/tokens.json)."""
+    from . import tokens
+    rgb = lambda k: "rgb({},{},{})".format(*tokens.rgb(k))
+    ink, ink3, rule = rgb("ink"), rgb("ink_3"), rgb("rule_2")
+    return (
+        "@page { size: Letter; margin: 0.55in 0.65in; }"
+        f"body {{ font: 400 10pt/1.38 'Inter', system-ui, sans-serif; color: {ink}; }}"
+        "h1 { font: 700 17pt/1.18 'Inter', sans-serif; letter-spacing: -0.01em; margin: 0 0 6pt; }"
+        f"h2 {{ font: 600 10.5pt/1.3 'Inter', sans-serif; margin: 12pt 0 5pt; text-transform: uppercase; letter-spacing: 0.06em; color: {ink3}; }}"
+        f"em {{ color: {ink3}; font-size: 9.5pt; }}"
+        "ol, ul { padding-left: 16pt; margin: 0; } li { margin: 0 0 3.5pt; }"
+        "table { border-collapse: collapse; width: 100%; font-size: 8.5pt; }"
+        f"th, td {{ border-bottom: 1px solid {rule}; padding: 4pt 6pt; text-align: left; vertical-align: top; }}"
+        "td { word-break: break-word; }")
 
 
 def _chrome():
@@ -95,7 +100,7 @@ def pdf(d, md: str):
                    for f, w in ((next(fonts.glob('*Inter*Regular*'), None), 400), (next(fonts.glob('*Inter*SemiBold*'), None), 600),
                                 (next(fonts.glob('*Inter*Bold*'), None), 700)) if f)
     html = d / "worksheet.html"
-    html.write_text(f"<!doctype html><html><head><meta charset='utf-8'><style>{face}{CSS}</style></head><body>"
+    html.write_text(f"<!doctype html><html><head><meta charset='utf-8'><style>{face}{_css()}</style></head><body>"
                     f"{markdown.markdown(md, extensions=['tables'])}</body></html>", encoding="utf-8")
     out = d / "worksheet.pdf"
     subprocess.run([chrome, "--headless=new", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
