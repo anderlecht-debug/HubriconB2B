@@ -13,8 +13,8 @@
   },
   "pick": {
    "model": "claude-sonnet-5-5",
-   "tokens": 300000,
-   "note": "only the picture shots the filters could not rank"
+   "tokens": 30000,
+   "note": "one reply with the contact sheets of the shots whose best picture the relevance model doubts (below LOW); as many sheets as fit"
   },
   "fix": {
    "model": "claude-sonnet-5-5",

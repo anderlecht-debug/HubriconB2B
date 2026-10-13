@@ -14,6 +14,12 @@ dependencies = [
     "pytest>=8.0",
     "markdown>=3.5",
     "fonttools>=4.50",
+    # picture relevance on the GPU (FILM_PROCESS.md 2.7): a local image-text model, no tokens
+    "torch>=2.5",
+    "open-clip-torch>=2.26",
+    "transformers>=4.40",          # SigLIP's tokenizer
+    # a music cue's tempo and key, read by code (music library)
+    "librosa>=0.10",
 ]
 
 [project.optional-dependencies]
@@ -35,3 +41,11 @@ packages = ["src/hubricon_content"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true

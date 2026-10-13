@@ -142,6 +142,9 @@ def fetch_preview(c: dict, net=None) -> Path:
 def fetch_full(c: dict, net=None) -> Path:
     """The full-resolution file, fetched only for the picked asset. Records its sha256,
     which the render cache keys on (§8.3)."""
+    if c.get("source") == "commons":     # a large original as Wikimedia's own resize (records cached before 2026-10-13)
+        from . import commons
+        c.update(commons.sized(c))
     net = net or netmod.default()
     resolve(c, net)
     if not c.get("file_url"):

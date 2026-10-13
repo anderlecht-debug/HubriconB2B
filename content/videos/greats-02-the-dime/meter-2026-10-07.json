@@ -1,0 +1,37 @@
+[
+{
+"at": "2026-10-07T20:05:50+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 442253,
+"step": "plan",
+"model": "claude-sonnet-5-5",
+"budget": 700000,
+"stopped": false,
+"usage": {
+"input_tokens": 36,
+"cache_creation_input_tokens": 228544,
+"cache_read_input_tokens": 1555973,
+"output_tokens": 188
+},
+"seconds": 2406.7
+},
+{
+"at": "2026-10-07T20:32:06+00:00",
+"service": "claude",
+"unit": "weighted tokens",
+"quantity": 1300416,
+"step": "plan",
+"model": "claude-sonnet-5-5",
+"budget": 700000,
+"stopped": false,
+"usage": {
+"input_tokens": 20,
+"cache_creation_input_tokens": 169490,
+"cache_read_input_tokens": 702335,
+"output_tokens": 203660
+},
+"seconds": 1412.9,
+"cost_usd": 7.698935249999999
+}
+]

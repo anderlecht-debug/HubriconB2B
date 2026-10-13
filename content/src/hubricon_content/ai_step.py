@@ -106,12 +106,19 @@ REPLY_ARGS = ("--tools", "", "--disable-slash-commands", "--strict-mcp-config", 
 
 
 def reply(slug: str, step: str, system: str, prompt: str, *, model: str | None = None, budget: int | None = None,
-          claude: str | None = None) -> dict:
+          claude: str | None = None, images: list | None = None) -> dict:
     """One AI step answered in a single reply (no tools, no session load), under its budget, counted in the
-    film's meter. The prompt goes in on stdin; the answer comes back as `result`."""
+    film's meter. The prompt goes in on stdin; the answer comes back as `result`. `images` (JPEG bytes) go in
+    the same message, before the prompt (measured 2026-10-12: a 640 px image about 1,600 tokens)."""
+    import base64
     REPLY_DIR.mkdir(parents=True, exist_ok=True)
-    return run(slug, step, None, model=model, budget=budget, cwd=REPLY_DIR, claude=claude,
-               extra=("--system-prompt", system, *REPLY_ARGS), stdin=prompt)
+    extra = ("--system-prompt", system, *REPLY_ARGS)
+    if images:
+        content = [{"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64.b64encode(b).decode()}}
+                   for b in images] + [{"type": "text", "text": prompt}]
+        prompt = json.dumps({"type": "user", "message": {"role": "user", "content": content}})
+        extra = ("--input-format", "stream-json", *extra)
+    return run(slug, step, None, model=model, budget=budget, cwd=REPLY_DIR, claude=claude, extra=extra, stdin=prompt)
 
 
 def json_reply(text: str | None) -> dict | None:

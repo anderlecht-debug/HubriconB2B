@@ -188,7 +188,8 @@
     "sha256": "b4d98c66e2effbc02fd5c579141a3c0620652e6d2826dee12ddff3b77a5c8f01",
     "passed_filters": true,
     "phash": "eb939d169478d648"
-   }
+   },
+   "relevance": 0.1354
   },
   {
    "id": "s006",
@@ -440,7 +441,8 @@
     "sha256": "2fcf5f43a8b4f4a1b2f99757b8f3a979c1c78b46bbefbcbc52340dd1928aad64",
     "passed_filters": true,
     "phash": "da91476ea9c235e1"
-   }
+   },
+   "relevance": 0.0238
   },
   {
    "id": "s015",
@@ -630,7 +632,8 @@
     "sha256": "7676a68e599d607724837d0724c33c0076b9f1f59890d455f757a1088745b65e",
     "passed_filters": true,
     "phash": "d2c0e14f3c342f7c"
-   }
+   },
+   "relevance": 0.0957
   },
   {
    "id": "s020",
@@ -697,7 +700,8 @@
     "sha256": "b4b4a66accdc359bdd5575181fe2e0d49bea9aeb1f539646cd71ddd2f75c2c6a",
     "passed_filters": true,
     "phash": "8e71c88f70ca6db2"
-   }
+   },
+   "relevance": 0.0479
   },
   {
    "id": "s022",
@@ -766,7 +770,8 @@
     "phash": "a9d28d6b18e8a4de",
     "in": 0.0,
     "out": 7.48
-   }
+   },
+   "relevance": 0.0253
   },
   {
    "id": "s025",
@@ -812,7 +817,8 @@
     "sha256": "0f9b2bab600b866095289136038a59267af72e6b2f67a5832a361f32afb2553f",
     "passed_filters": true,
     "phash": "d8c9ab3ec9c2c349"
-   }
+   },
+   "relevance": -0.0362
   },
   {
    "id": "s026",
@@ -1021,7 +1027,8 @@
     "sha256": "2dff3e42da9811aa9fdb779f4855faca41fbd96d5620a23bbde3b674e8567b18",
     "passed_filters": true,
     "phash": "aab7b516df0280f8"
-   }
+   },
+   "relevance": 0.122
   },
   {
    "id": "s032",
@@ -1133,7 +1140,8 @@
     "sha256": "8a0de9ff89a8da440022eb36ec3896428e9954fff352dbe09ad587f25112b6c0",
     "passed_filters": true,
     "phash": "a993ce34b106c33f"
-   }
+   },
+   "relevance": 0.1202
   },
   {
    "id": "s035",
@@ -1211,7 +1219,8 @@
     "sha256": "e31d746818ee7797cd591be26ceb2096c4873844ede8a08bdc7ca812cafb1a21",
     "passed_filters": true,
     "phash": "9476136c4ceda9a9"
-   }
+   },
+   "relevance": -0.1224
   },
   {
    "id": "s038",
@@ -1304,7 +1313,8 @@
     "sha256": "f54ebf21a9d748993e318a6a00cdf98638643b0fd75e442cc47122cafe3d9ed4",
     "passed_filters": true,
     "phash": "e6829e3ea0941efc"
-   }
+   },
+   "relevance": 0.0203
   },
   {
    "id": "s041",
@@ -1550,7 +1560,8 @@
     "phash": "e0e08d0dc85d63bf",
     "in": 0.0,
     "out": 6.68
-   }
+   },
+   "relevance": 0.0284
   },
   {
    "id": "s047",
@@ -1614,7 +1625,8 @@
     "phash": "f93919028a98b777",
     "in": 0.0,
     "out": 7.051
-   }
+   },
+   "relevance": 0.0538
   },
   {
    "id": "s049",
@@ -1643,29 +1655,31 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "loc:2002699522",
+    "id": "loc:90714531",
     "source": "loc",
-    "url": "https://www.loc.gov/item/2002699522/",
+    "url": "https://www.loc.gov/item/90714531/",
     "author": "Hine, Lewis Wickes, 1874-1940",
     "licence": "No known restrictions on publication",
     "rights": "No known restrictions on publication. For information, see \"American National Red Cross photograph collection,\" https://hdl.loc.gov/loc.pnp/res.717.anrc",
-    "title": "In the warehouse of a wholesale grocery, where Red Cross food orders were filled at wholesale prices. Food orders were not standardized, but governed by the family's needs, according to the knowledge of the local Red Cross committees. (Sandy Valley Wholesale Grocery, Paintsville, Ky)",
-    "description": "Group of people oustide Sandy Valley Wholesale Grocery, Paintsville, Ky., where Red Cross food orders were filled at wholesale prices, during drought of 1930-31.",
+    "title": "In the warehouse of a wholesale grocery, where Red Cross food orders were filled at wholesale prices. This farmer, his wife and son, are receiving a well balanced rationing order. Food orders were not standardized, but governed by the family's needs, according to the knowledge of the local Red Cross committees. (Sandy Valley Wholesale Grocery, Paintsville, Ky)",
+    "description": "1 photographic print.",
     "credit": "Library of Congress",
     "place": "Kentucky--Paintsville",
     "date": "1930",
     "subject": [
+     "Food relief--Kentucky--Paintsville--1930-1940",
      "Warehouses--Kentucky--Paintsville--1930-1940",
      "United States--Kentucky--Paintsville"
     ],
     "retrieved": "2026-10-07",
-    "width": 6864,
-    "height": 5648,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2002699522-cb4915f7.tif",
-    "sha256": "e8c284eb5e4f67110fda516eb53baa4cfac944573a6ad69eaa445acab8723379",
+    "width": 6902,
+    "height": 5667,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/90714531-fa45bc19.tif",
+    "sha256": "6c83609ba179c5f43b50fd411f5d539b780a65f7573a314cd565af32b52fbc63",
     "passed_filters": true,
-    "phash": "fe54d56d55903c22"
-   }
+    "phash": "ba1fc5e9d0941794"
+   },
+   "relevance": 0.0206
   },
   {
    "id": "s050",
@@ -1779,7 +1793,8 @@
     "sha256": "71d6fefdd159eb2127e9bcdf336a432f102a5944654506f31bd51c3035147794",
     "passed_filters": true,
     "phash": "81ec3db8522d6b96"
-   }
+   },
+   "relevance": -0.0381
   },
   {
    "id": "s053",
@@ -1921,33 +1936,25 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "loc:2019688689",
-    "source": "loc",
-    "url": "https://www.loc.gov/item/2019688689/",
-    "author": "Highsmith, Carol M., 1946-",
-    "licence": "No known restrictions on publication",
-    "rights": "No known restrictions on publication.",
-    "title": "Corner winery in what was once a Newberry's Five-and-Ten-Cent store in downtown Stroudsburg, one of the larger cities in eastern Pennsylvania's Pocono Mountain region",
-    "description": "1 photograph : digital, tiff file, color.",
-    "credit": "Library of Congress",
-    "place": "pennsylvania; stroudsburg; united states",
-    "date": "2019",
-    "subject": [
-     "United States--Pennsylvania--Stroudsburg",
-     "America",
-     "Pocono mountains",
-     "Five-and-ten-cent stores",
-     "Dime stores",
-     "Winery"
-    ],
+    "id": "commons:31981586",
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:The_5_%26_10_(cent)_store_LCCN98518346.tif",
+    "author": "Work Projects Administration Poster Collection",
+    "licence": "Public domain",
+    "rights": "Public domain",
+    "title": "The 5 & 10 (cent) store LCCN98518346",
+    "description": "Title: The 5 & 10 [cent] store Abstract: Poster showing various items that can be purchased at a five and ten cent store, such as rings, pans, games of checkers, china, cards, clothing, and other items. Physical description: 1 print on board (poster) : silkscreen, color. Notes: Work Projects Administration Poster Collection (Library of Congress).; Date stamped on verso: May 24 1941.",
+    "credit": "Wikimedia Commons",
+    "date": "between 1936 and 1941 date QS:P,+1950-00-00T00:00:00Z/7,P1319,+1936-00-00T00:00:00Z/9,P1326,+1941-00-00T00:00:00Z/9",
     "retrieved": "2026-10-07",
-    "width": 9994,
-    "height": 7169,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2019688689-c095e531.tif",
-    "sha256": "adb984b82d1782c33329b323292bb83a21a999b5f059715db001c784c5de4fc3",
+    "width": 2792,
+    "height": 4096,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/commons/31981586-6ee809e4.tif",
+    "sha256": "9b4673eb6f67e728b72618cbaf8a0d27612ce767f1ea84f64f04e7a018a0f113",
     "passed_filters": true,
-    "phash": "c7cab871915e18e3"
-   }
+    "phash": "c1377c842e8f33d8"
+   },
+   "relevance": 0.0954
   },
   {
    "id": "s059",
@@ -1974,9 +1981,9 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:6950975",
+    "id": "pexels:6950972",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/close-up-video-of-an-organic-soap-6950975/",
+    "url": "https://www.pexels.com/video/close-up-video-of-an-organic-soap-6950972/",
     "author": "Pavel Danilyuk",
     "author_url": "https://www.pexels.com/@pavel-danilyuk",
     "licence": "Pexels License",
@@ -1987,14 +1994,15 @@
     "width": 1920,
     "height": 1080,
     "fps": 25.0,
-    "duration": 11.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/6950975-1bfa755f.mp4",
-    "sha256": "8371d462455d811729571641d67d50cae81ce5df8e4c3b5f462657793952d76f",
+    "duration": 10.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/6950972-ef0e5a77.mp4",
+    "sha256": "6f0926ec1b41685672f9b3f6bb35249b04c633a170204dd9798004e87b1211a5",
     "passed_filters": true,
-    "phash": "d28c354ab5c65b35",
+    "phash": "c037156a1b55aadd",
     "in": 0.0,
     "out": 4.93
-   }
+   },
+   "relevance": 0.0969
   },
   {
    "id": "s060",
@@ -2023,32 +2031,31 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "loc:2014630338",
+    "id": "loc:2026166639",
     "source": "loc",
-    "url": "https://www.loc.gov/item/2014630338/",
-    "author": "Highsmith, Carol M., 1946-",
+    "url": "https://www.loc.gov/item/2026166639/",
+    "author": "Trikosko, Marion S.",
     "licence": "No known restrictions on publication",
-    "rights": "No known restrictions on publication.",
-    "title": "Old, weathered advertising sign on a downtown five-and-dime store, Uvalde, Texas",
-    "description": "1 photograph : digital, tiff file, color.",
+    "rights": "No known restrictions on publication. For information see \"U.S. News & World Report Magazine Collection,\" https://hdl.loc.gov/loc.pnp/res.078.usnw",
+    "title": "[People at the counter of the Senate stationery store]",
+    "description": "1 photograph : safety negative ; film width 35mm (roll format)",
     "credit": "Library of Congress",
-    "place": "texas; united states; uvalde",
-    "date": "2014",
+    "place": "Washington (D.C.)",
+    "date": "1975",
     "subject": [
-     "United States--Texas--Uvalde",
-     "Five-and-dime",
-     "Kress",
-     "Outdoor advertisements",
-     "America"
+     "United States.--Congress.--Senate.--Senate Stationery Room--1970-1980",
+     "Stationery--1970-1980",
+     "Stores & shops--Washington (D.C.)--1970-1980"
     ],
     "retrieved": "2026-10-07",
-    "width": 7360,
-    "height": 4912,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2014630338-1dc433aa.jpg",
-    "sha256": "7895c6223b65da05316db66b07244fae271d20d79308df762f7a0256b9a8f67c",
+    "width": 5397,
+    "height": 3595,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2026166639-02a50623.tif",
+    "sha256": "63e3dbffeb434d0e9a46985194bf29a66f6442763e288468599724399399c5f9",
     "passed_filters": true,
-    "phash": "82bf9ff080e82fe0"
-   }
+    "phash": "93bcabd727e06032"
+   },
+   "relevance": -0.046
   },
   {
    "id": "s061",
@@ -2122,7 +2129,8 @@
     "phash": "913f95674b9ab0c4",
     "in": 0.0,
     "out": 6.894
-   }
+   },
+   "relevance": 0.0549
   },
   {
    "id": "s063",
@@ -2166,7 +2174,8 @@
     "sha256": "4286cc0c169bcbbdb8c4a8e920600386229ee8833edbc384f2bdd989e8a51e4c",
     "passed_filters": true,
     "phash": "cc936a5a3378832f"
-   }
+   },
+   "relevance": 0.0724
   },
   {
    "id": "s065",
@@ -2311,7 +2320,8 @@
     "sha256": "a0c9535683f777e044072f5e1685b1b2dde3e21299cd5a5f7b58a3fad2e543b9",
     "passed_filters": true,
     "phash": "ceffb3b8c018c2c4"
-   }
+   },
+   "relevance": 0.039
   },
   {
    "id": "s070",
@@ -2360,27 +2370,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:33519703",
+    "id": "pexels:11595344",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/industrial-metal-crafting-process-in-workshop-33519703/",
-    "author": "Ivan Montes de Oca",
-    "author_url": "https://www.pexels.com/@ivan-montes-de-oca-2155019715",
+    "url": "https://www.pexels.com/video/close-up-view-of-spray-painting-11595344/",
+    "author": "tejinder ladi photography",
+    "author_url": "https://www.pexels.com/@tladifotografi",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "industrial metal crafting process in workshop",
+    "title": "close up view of spray painting",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
-    "height": 2160,
-    "fps": 30.0,
-    "duration": 12.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/33519703-c5fe31d9.mp4",
-    "sha256": "2dcdd7bdbda74516c21c81352d499d8e015ad17df39ad2b4d4d74c8650d87af5",
+    "width": 1920,
+    "height": 1080,
+    "fps": 25.0,
+    "duration": 20.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/11595344-7d3d9f62.mp4",
+    "sha256": "82a2d01542ea9d21aaaa70f61bbc38c846376339abb4e7083ddcf9bc12e45e95",
     "passed_filters": true,
-    "phash": "c782332cbee383c3",
+    "phash": "8ea44755dcae25d1",
     "in": 0.0,
     "out": 6.83
-   }
+   },
+   "relevance": 0.1071
   },
   {
    "id": "s072",
@@ -2426,7 +2437,8 @@
     "sha256": "41548530f6c75a051a4aaccbeb4b9f39d5f552b819ab96bd01229e1a0bb2852d",
     "passed_filters": true,
     "phash": "ef8ad47878f38888"
-   }
+   },
+   "relevance": 0.095
   },
   {
    "id": "s073",
@@ -2592,7 +2604,8 @@
     "sha256": "4511f106cd6207059a787ec2612b33a3097a42ea9c31e43edcb35c45567ed7e6",
     "passed_filters": true,
     "phash": "aa9780e3952ad73c"
-   }
+   },
+   "relevance": 0.0011
   },
   {
    "id": "s077",
@@ -2665,28 +2678,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pixabay:8256",
-    "source": "pixabay",
-    "url": "https://pixabay.com/videos/id-8256/",
-    "author": "Coverr-Free-Footage",
-    "author_url": "https://pixabay.com/users/1281706/",
-    "licence": "Pixabay Content License",
-    "rights": "Pixabay Content License",
-    "title": "pencil, write, author",
-    "description": "pencil, write, author, education, pen, paper, school, writing, notes, office, table, idea, letter, creativity, study, homework",
-    "credit": "Pixabay",
+    "id": "pexels:9388054",
+    "source": "pexels",
+    "url": "https://www.pexels.com/video/person-writing-using-a-fountain-pen-9388054/",
+    "author": "emirkhan bal",
+    "author_url": "https://www.pexels.com/@mootlak",
+    "licence": "Pexels License",
+    "rights": "Pexels License",
+    "title": "person writing using a fountain pen",
+    "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 1920,
-    "height": 1080,
+    "width": 3840,
+    "height": 2160,
     "fps": 25.0,
-    "duration": 15.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/8256-dbb88174.mp4",
-    "sha256": "3ab0a3983ef67dcbf8f66f25638b2fc30bc430888823c1d4c99d5986fb71a8fc",
+    "duration": 18.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/9388054-96e9688a.mp4",
+    "sha256": "34f2c12f4e0b196b7a623e88ff102e8c3ca36da85ac02389fd4f4e481f6b7916",
     "passed_filters": true,
-    "phash": "c8ecb7864cf83331",
+    "phash": "d95794ad295a926a",
     "in": 0.0,
     "out": 4.11
-   }
+   },
+   "relevance": 0.0805
   },
   {
    "id": "s080",
@@ -2773,7 +2786,8 @@
     "sha256": "0293a305996b3b1af9cdddc8304a4baf1d521dce06520d89d554daa0ebe9283a",
     "passed_filters": true,
     "phash": "8ea4c03f6591ff0c"
-   }
+   },
+   "relevance": 0.0436
   },
   {
    "id": "s083",
@@ -2998,7 +3012,8 @@
     "sha256": "a05fab70d8ecb706ce5c27c8b4882c00b05f643cf05a56985e7636861574c714",
     "passed_filters": true,
     "phash": "b3f10c1ee6c80ed6"
-   }
+   },
+   "relevance": 0.1067
   },
   {
    "id": "s087",
@@ -3164,27 +3179,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:28783841",
+    "id": "pexels:6101151",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/professional-fish-cleaning-process-close-up-28783841/",
-    "author": "fjeijf bfiqbfcq",
-    "author_url": "https://www.pexels.com/@fjeijf-bfiqbfcq-1929755483",
+    "url": "https://www.pexels.com/video/figurine-of-a-woman-holding-a-weighing-scale-6101151/",
+    "author": "KATRIN BOLOVTSOVA",
+    "author_url": "https://www.pexels.com/@ekaterina-bolovtsova",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "professional fish cleaning process close up",
+    "title": "figurine of a woman holding a weighing scale",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
+    "width": 4096,
     "height": 2160,
-    "fps": 25.0,
-    "duration": 12.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/28783841-148fcc88.mp4",
-    "sha256": "fde361e71fc7abfe1057257e5c50b1b8e24aa6b651274559d7a3ce79b6c07a4f",
+    "fps": 30.0,
+    "duration": 14.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/6101151-ba079400.mp4",
+    "sha256": "a2db5e8e0b2f6972ba385a47d699afec2466146cd2b6db583379054ae1af5431",
     "passed_filters": true,
-    "phash": "b5b2545c8fa7903c",
+    "phash": "d1c5ec810f7ae499",
     "in": 0.0,
     "out": 4.176
-   }
+   },
+   "relevance": 0.0397
   },
   {
    "id": "s091",
@@ -3283,7 +3299,8 @@
     "sha256": "6402eecd1b36f9a675eea6d8fa3df29259ab86a614490282d1f7986897b70618",
     "passed_filters": true,
     "phash": "9e1cb9d363892a2b"
-   }
+   },
+   "relevance": 0.1604
   },
   {
    "id": "s094",
@@ -3398,7 +3415,8 @@
     "phash": "95fc180cf8c32ff0",
     "in": 0.0,
     "out": 7.43
-   }
+   },
+   "relevance": 0.0343
   },
   {
    "id": "s098",
@@ -3425,27 +3443,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:7898696",
+    "id": "pexels:7792708",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/a-brown-paper-7898696/",
-    "author": "oleg lehnitsky",
-    "author_url": "https://www.pexels.com/@oleglehnitsky",
+    "url": "https://www.pexels.com/video/grey-wool-fabric-7792708/",
+    "author": "Monstera Production",
+    "author_url": "https://www.pexels.com/@gabby-k",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "a brown paper",
+    "title": "grey wool fabric",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 1920,
-    "height": 1080,
+    "width": 3840,
+    "height": 2160,
     "fps": 30.0,
-    "duration": 10.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7898696-ac945343.mp4",
-    "sha256": "7c39de90eec87ab782d8612391bb5c562ba4d94178d4790763c4aed52211464c",
+    "duration": 13.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7792708-d088d63a.mp4",
+    "sha256": "e533d0ce677f7f4f69394a319c7e3f85f26d571af6d04bac38b62a9c45e2284e",
     "passed_filters": true,
-    "phash": "c5bcbfe203c8211f",
+    "phash": "b08ce070bd5c5eb6",
     "in": 0.0,
     "out": 7.71
-   }
+   },
+   "relevance": 0.0082
   },
   {
    "id": "s099",
@@ -3490,7 +3509,8 @@
     "sha256": "aba0e998de92c88397242f3642e3b857d78e07e83b252db5ec9094de24b9e4e2",
     "passed_filters": true,
     "phash": "e1e9969659986569"
-   }
+   },
+   "relevance": 0.056
   },
   {
    "id": "s100",
@@ -3537,7 +3557,8 @@
     "phash": "d3a8340fdaee8135",
     "in": 0.0,
     "out": 4.598
-   }
+   },
+   "relevance": 0.0671
   },
   {
    "id": "s101",
@@ -3712,7 +3733,8 @@
     "sha256": "930e6cf1a45718740fbb39a4735745b2869a28f561124f110bc3118f8ebe3494",
     "passed_filters": true,
     "phash": "e4ec71b7c549096a"
-   }
+   },
+   "relevance": 0.0345
   },
   {
    "id": "s107",
@@ -3756,7 +3778,8 @@
     "sha256": "909a1d88a22ab14791a086cecdc818f452fcbe4b1e7848372a7a2d3f3c1bed43",
     "passed_filters": true,
     "phash": "ecce3b1883e2d81d"
-   }
+   },
+   "relevance": 0.0458
   },
   {
    "id": "s108",
@@ -3900,13 +3923,14 @@
     "description": "Horizontal black and white photograph shows the A. Schultze Variety Store. Augusta Schultze, the owner, her husband Ludwig, and Harry Strassner stand in front of the store. Godart Leppert is standing out of the window on the second floor of the building.",
     "credit": "Wikimedia Commons",
     "retrieved": "2026-10-07",
-    "width": 6136,
-    "height": 4904,
+    "width": 4800,
+    "height": 3836,
     "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/commons/158075966-d8c17a99.jpg",
     "sha256": "8b42d70440571f938f52c8b5a243b4981245e8ca8ae3dc9617a90d297e651ab6",
     "passed_filters": true,
     "phash": "efd0982f8439ad46"
-   }
+   },
+   "relevance": 0.1007
   },
   {
    "id": "s113",
@@ -4009,27 +4033,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:4512976",
+    "id": "pexels:5601393",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/little-girl-hanging-the-sign-board-on-the-wooden-door-4512976/",
-    "author": "Ketut Subiyanto",
-    "author_url": "https://www.pexels.com/@ketut-subiyanto",
+    "url": "https://www.pexels.com/video/a-wooden-signpost-on-the-beach-5601393/",
+    "author": "cottonbro studio",
+    "author_url": "https://www.pexels.com/@cottonbro",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "little girl hanging the sign board on the wooden door",
+    "title": "a wooden signpost on the beach",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
     "width": 3840,
     "height": 2160,
-    "fps": 25.0,
-    "duration": 15.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/4512976-9cca7f7c.mp4",
-    "sha256": "1d59e9ab87c7900dbab215c1216d70d9515a64fd950d96ae8bb370d3e1815621",
+    "fps": 29.97,
+    "duration": 9.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/5601393-dca93766.mp4",
+    "sha256": "84c598a4999216b8b13254f9aceea46eddc42e2038856f20edf66cd035025629",
     "passed_filters": true,
-    "phash": "d40965b99d64939b",
+    "phash": "e51c2f0b8f4972cc",
     "in": 0.0,
     "out": 5.45
-   }
+   },
+   "relevance": 0.0287
   },
   {
    "id": "s116",
@@ -4222,7 +4247,8 @@
     "sha256": "5c47f8240b212a83a590814c053f77b7fa2bc439f92b91cb7ca6fe3e32dd3511",
     "passed_filters": true,
     "phash": "f0878aa0fb4cd257"
-   }
+   },
+   "relevance": 0.087
   },
   {
    "id": "s121",
@@ -4275,7 +4301,8 @@
     "sha256": "629e54e38786ae7c9bc1fb999388c7da630e51cb2327626bb1eeaa7f5bff4691",
     "passed_filters": true,
     "phash": "f6e98680dc239b33"
-   }
+   },
+   "relevance": 0.0073
   },
   {
    "id": "s122",
@@ -4379,31 +4406,29 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "loc:2017885680",
+    "id": "loc:2010651162",
     "source": "loc",
-    "url": "https://www.loc.gov/item/2017885680/",
-    "author": "Highsmith, Carol M., 1946-",
+    "url": "https://www.loc.gov/item/2010651162/",
+    "author": "Library of Congress",
     "licence": "No known restrictions on publication",
-    "rights": "No known restrictions on publication.",
-    "title": "The historic Phillips Grocery Store in Holly Springs, Mississippi",
-    "description": "1 photograph : digital, tiff file, color.",
+    "rights": "No known restrictions on publication. For information, see \"National Photo Company Collection,\" https://www.loc.gov/rr/print/res/275_npco.html",
+    "title": "[Woman shopping for canned goods at grocery store]",
+    "description": "1 photographic print.",
     "credit": "Library of Congress",
-    "place": "marshall county; holly springs; mississippi; united states",
-    "date": "2016",
+    "date": "1920",
     "subject": [
-     "United States--Mississippi--Marshall County--Holly Springs",
-     "America",
-     "Phillips Grocery Store",
-     "Historic buildings"
+     "Grocery stores--1920-1930",
+     "Shopping--1920-1930"
     ],
     "retrieved": "2026-10-07",
-    "width": 6090,
-    "height": 4452,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2017885680-6d71026b.jpg",
-    "sha256": "22612fb31097c24bdbd07ee51a850f94d30feda97f9a87a55f26b8755382e976",
+    "width": 7400,
+    "height": 5840,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2010651162-b98773e2.tif",
+    "sha256": "4ad880c75db0cf87fd87e7f25665c5dfd5a547a26477a19ddf3a1bae22219f6b",
     "passed_filters": true,
-    "phash": "e4f4cb0b99786d21"
-   }
+    "phash": "8b3eb896e1989f60"
+   },
+   "relevance": 0.1055
   },
   {
    "id": "s126",
@@ -4469,27 +4494,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:7280012",
+    "id": "pexels:7221529",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/close-up-shot-of-various-ceramic-items-in-a-shelf-7280012/",
-    "author": "Yaroslav Shuraev",
-    "author_url": "https://www.pexels.com/@yaroslav-shuraev",
+    "url": "https://www.pexels.com/video/stacked-molds-on-a-shelf-7221529/",
+    "author": "cottonbro studio",
+    "author_url": "https://www.pexels.com/@cottonbro",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "close up shot of various ceramic items in a shelf",
+    "title": "stacked molds on a shelf",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
     "width": 4096,
     "height": 2160,
-    "fps": 23.98,
-    "duration": 8.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7280012-607369d3.mp4",
-    "sha256": "ed24ac9dcef12fd1c16974f9487727c6f0f0202ea2e44fd11afc295da48dc8ca",
+    "fps": 25.0,
+    "duration": 26.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7221529-aac17afa.mp4",
+    "sha256": "31d8a16a94a192194d463d572b21fb4834e2d8dd4e68c4bd8b80132b63ec03f5",
     "passed_filters": true,
-    "phash": "9d2b94659cf19ec0",
+    "phash": "b432333c0fad0f8d",
     "in": 0.0,
     "out": 5.05
-   }
+   },
+   "relevance": 0.0771
   },
   {
    "id": "s128",
@@ -4536,7 +4562,8 @@
     "phash": "8d529b6de49807e3",
     "in": 0.0,
     "out": 4.19
-   }
+   },
+   "relevance": 0.1183
   },
   {
    "id": "s129",
@@ -4650,7 +4677,8 @@
     "phash": "ad920e0719c71fec",
     "in": 0.0,
     "out": 6.804
-   }
+   },
+   "relevance": 0.1016
   },
   {
    "id": "s133",
@@ -4677,28 +4705,29 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pixabay:4952",
+    "id": "pixabay:26771",
     "source": "pixabay",
-    "url": "https://pixabay.com/videos/id-4952/",
-    "author": "klimkin",
-    "author_url": "https://pixabay.com/users/1298145/",
+    "url": "https://pixabay.com/videos/id-26771/",
+    "author": "SecretPoems",
+    "author_url": "https://pixabay.com/users/11586270/",
     "licence": "Pixabay Content License",
     "rights": "Pixabay Content License",
-    "title": "book, write, pen",
-    "description": "book, write, pen, diary, letter, hands, girl, notebook",
+    "title": "letter, writting, pen",
+    "description": "letter, writting, pen, book, office, poem, message, hand, man",
     "credit": "Pixabay",
     "retrieved": "2026-10-07",
     "width": 1920,
     "height": 1080,
     "fps": 25.0,
-    "duration": 16.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/4952-efd08077.mp4",
-    "sha256": "858b38ae891edc220df9b1780f921da6247deb179716dfeb4672ce03a3bfd690",
+    "duration": 41.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/26771-7be1c272.mp4",
+    "sha256": "cabc6814a475724709d173e46ef82c3952291d9ff4dc543c9abbc2db7634ad06",
     "passed_filters": true,
-    "phash": "de52e36b904fb860",
+    "phash": "ccb3b31b0ce4a11f",
     "in": 0.0,
     "out": 4.17
-   }
+   },
+   "relevance": 0.062
   },
   {
    "id": "s134",
@@ -4880,7 +4909,8 @@
     "sha256": "95d5f36c522a2e0ab9674db74e90c4041a62d6ac7aac117284562477e8bfc39b",
     "passed_filters": true,
     "phash": "e8aafdfb05822487"
-   }
+   },
+   "relevance": -0.0483
   },
   {
    "id": "s140",
@@ -4907,27 +4937,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:9130348",
+    "id": "pexels:7830310",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/a-person-opening-a-drawer-9130348/",
-    "author": "Dario Fernandez Ruz",
-    "author_url": "https://www.pexels.com/@dario-fernandez-ruz",
+    "url": "https://www.pexels.com/video/video-of-wooden-drawers-7830310/",
+    "author": "Monstera Production",
+    "author_url": "https://www.pexels.com/@gabby-k",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "a person opening a drawer",
+    "title": "video of wooden drawers",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
     "width": 3840,
     "height": 2160,
     "fps": 30.0,
-    "duration": 13.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/9130348-eeb90e64.mp4",
-    "sha256": "92817306c30b89ac45699920fcbb4fb4eae1faac553fd20760c09332719657d7",
+    "duration": 25.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7830310-4225086c.mp4",
+    "sha256": "d53600178e0613630437b3358ca7031e1c7b1ed807bd94bec3000de79aa46af9",
     "passed_filters": true,
-    "phash": "a76d2760f81f0f81",
+    "phash": "d5b56a5e55e415c0",
     "in": 0.0,
     "out": 4.89
-   }
+   },
+   "relevance": 0.0705
   },
   {
    "id": "s141",
@@ -4976,27 +5007,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:11507525",
+    "id": "pexels:7815781",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/close-up-on-person-wrapping-objects-in-paper-11507525/",
-    "author": "khanhhoangminh",
-    "author_url": "https://www.pexels.com/@khanhhoangminh",
+    "url": "https://www.pexels.com/video/tree-branch-soap-and-scrub-on-a-table-together-7815781/",
+    "author": "Mikhail Nilov",
+    "author_url": "https://www.pexels.com/@mikhail-nilov",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "close up on person wrapping objects in paper",
+    "title": "tree branch soap and scrub on a table together",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
-    "height": 2160,
+    "width": 1920,
+    "height": 1080,
     "fps": 25.0,
-    "duration": 23.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/11507525-97a38076.mp4",
-    "sha256": "13a26f7829a9d641a80fa78ea203afab26a0fd353f3193d47a40dcba761a803b",
+    "duration": 22.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7815781-629c05d3.mp4",
+    "sha256": "99af372de1e0bf7b384790596973fe76393e2628d46d7db2e277fd1cdd83d4c1",
     "passed_filters": true,
-    "phash": "f83e6c91b02c9b56",
+    "phash": "9fe6408b5d2a479c",
     "in": 0.0,
     "out": 5.06
-   }
+   },
+   "relevance": 0.0555
   },
   {
    "id": "s143",
@@ -5042,7 +5074,8 @@
     "sha256": "fb6a9d107607716f498253bd0a2021ac2f6486b5583ec235a49b7a8d08480827",
     "passed_filters": true,
     "phash": "84b56e12cd6d12ed"
-   }
+   },
+   "relevance": 0.063
   },
   {
    "id": "s144",
@@ -5122,7 +5155,8 @@
     "sha256": "cfed1b09ed47e15573c80c8121ba267f7dcb170b4ede6c9b91b5a0a7ba4d4609",
     "passed_filters": true,
     "phash": "d0c2245f8aad9fca"
-   }
+   },
+   "relevance": 0.0951
   },
   {
    "id": "s146",
@@ -5170,7 +5204,8 @@
     "phash": "dce8f2b30b462ccc",
     "in": 0.0,
     "out": 7.284
-   }
+   },
+   "relevance": -0.1246
   },
   {
    "id": "s147",
@@ -5320,24 +5355,32 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "commons:68161130",
-    "source": "commons",
-    "url": "https://commons.wikimedia.org/wiki/File:New_York_south_from_Woolworth_Bldg._LCCN94504763.jpg",
-    "author": "Miscellaneous Items in High Demand, PPOC, Library of Congress",
-    "licence": "Public domain",
-    "rights": "Public domain",
-    "title": "New York south from Woolworth Bldg. LCCN94504763",
-    "description": "Title: New York south from Woolworth Bldg. Abstract/medium: 1 photographic print.",
-    "credit": "Wikimedia Commons",
-    "date": "1913",
+    "id": "loc:2026164124",
+    "source": "loc",
+    "url": "https://www.loc.gov/item/2026164124/",
+    "author": "Gilbert, Cass, 1859-1934",
+    "licence": "No known restrictions on publication",
+    "rights": "No known restrictions on publication.",
+    "title": "Wind bracing in tower and Broadway and Park Place fronts of Woolworth building",
+    "description": "Illustration shows a structural drawing for wind bracing and a presentation perspective rendering.",
+    "credit": "Library of Congress",
+    "place": "New York (State)--New York",
+    "date": "1911",
+    "subject": [
+     "Woolworth Building (New York, N.Y.)--1910-1920",
+     "Skyscrapers--New York (State)--New York--1910-1920",
+     "Office buildings--New York (State)--New York--1910-1920",
+     "Structural systems--New York (State)--New York--1910-1920"
+    ],
     "retrieved": "2026-10-07",
-    "width": 4096,
-    "height": 3285,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/commons/68161130-f1f35e36.jpg",
-    "sha256": "8e3e6fa6b92da179f9485878f0383b8f96d9dcd36f74bcf3ab920cd6f314fb24",
+    "width": 2364,
+    "height": 4638,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/loc/2026164124-1bf1245d.tif",
+    "sha256": "627ad01bc7a547e45044df373e625a3d9685d14e3de604df38285e90cc9cbe4c",
     "passed_filters": true,
-    "phash": "c7919b6a6a03a57a"
-   }
+    "phash": "e2869659994d956b"
+   },
+   "relevance": 0.1363
   },
   {
    "id": "s153",
@@ -5404,27 +5447,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:855469",
+    "id": "pexels:39221952",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/digital-printing-855469/",
-    "author": "Pixabay",
-    "author_url": "https://www.pexels.com/@pixabay",
+    "url": "https://www.pexels.com/video/supermarket-aisle-with-shoppers-in-new-zealand-39221952/",
+    "author": "Kiwi and Camera",
+    "author_url": "https://www.pexels.com/@kiwi-and-camera-2158354883",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "digital printing",
+    "title": "supermarket aisle with shoppers in new zealand",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
     "width": 1920,
     "height": 1080,
-    "fps": 29.97,
-    "duration": 16.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/855469-019f34f8.mp4",
-    "sha256": "8e33d80e04ef14b5b4a7a53cd26e532d7df0d4ee2c5ec98d456f3c31cc12374a",
+    "fps": 25.0,
+    "duration": 13.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/39221952-06e7d4c1.mp4",
+    "sha256": "13afb0a1ff8328e20ad04b216bd0128641a61d4f0874f1fadd38ce553e0fb36b",
     "passed_filters": true,
-    "phash": "9cdf6831586cb18d",
+    "phash": "a750ac60ffe21738",
     "in": 0.0,
     "out": 7.01
-   }
+   },
+   "relevance": 0.0507
   },
   {
    "id": "s156",
@@ -5508,27 +5552,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:28603433",
+    "id": "pexels:38988868",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/a-lone-duck-swims-in-the-water-at-sunset-28603433/",
-    "author": "Ahto Palmre",
-    "author_url": "https://www.pexels.com/@ahtopalmre",
+    "url": "https://www.pexels.com/video/serene-sunset-over-calm-ocean-waters-38988868/",
+    "author": "Efrem Efre",
+    "author_url": "https://www.pexels.com/@efrem-efre-2786187",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "a lone duck swims in the water at sunset",
+    "title": "serene sunset over calm ocean waters",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 1920,
-    "height": 1080,
-    "fps": 29.97,
-    "duration": 45.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/28603433-2423c8fe.mp4",
-    "sha256": "3b12e5a4eaf5cd2bda476dfc6ecfff272fe24a078c5fd3daa0bdc4387a95a734",
+    "width": 3840,
+    "height": 2160,
+    "fps": 59.94,
+    "duration": 15.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/38988868-5e78df83.mp4",
+    "sha256": "f854c68ae8cde962870d68c2e38116bbaf07cabacab26c20cdca768c48cf921e",
     "passed_filters": true,
-    "phash": "cc333933ccc7c319",
+    "phash": "ffc43e794080b666",
     "in": 0.0,
     "out": 9.02
-   }
+   },
+   "relevance": 0.1261
   },
   {
    "id": "s159",
@@ -5578,27 +5623,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:5968348",
+    "id": "pexels:34741560",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/close-up-view-of-a-person-putting-box-on-top-of-the-table-5968348/",
-    "author": "https://kaboompics.com/",
-    "author_url": "https://www.pexels.com/@karola-g",
+    "url": "https://www.pexels.com/video/close-up-of-cardboard-box-corner-with-label-34741560/",
+    "author": "Aamir Somewhere",
+    "author_url": "https://www.pexels.com/@aamirsomewhere",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "close up view of a person putting box on top of the table",
+    "title": "close up of cardboard box corner with label",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 4096,
+    "width": 3840,
     "height": 2160,
-    "fps": 25.0,
-    "duration": 6.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/5968348-a07bb04a.mp4",
-    "sha256": "6fdbd995b77923c827437dabafdb855da29bd38bb27876303454b63a9900fb1c",
+    "fps": 60.0,
+    "duration": 5.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/34741560-99364296.mp4",
+    "sha256": "2a180d03c4b825c2d7e7b3f4073f766ca9439b14dbc9f6472222ea702f5cd70e",
     "passed_filters": true,
-    "phash": "d0ec9bc61db62459",
+    "phash": "f031ce66996e3389",
     "in": 0.0,
     "out": 4.02
-   }
+   },
+   "relevance": 0.1275
   },
   {
    "id": "s161",
@@ -5764,27 +5810,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:6891196",
+    "id": "pexels:7033612",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/roasted-coffee-beans-on-table-6891196/",
-    "author": "Sascha Weber",
-    "author_url": "https://www.pexels.com/@buxteh",
+    "url": "https://www.pexels.com/video/close-up-shot-of-a-burning-matchstick-7033612/",
+    "author": "Tima Miroshnichenko",
+    "author_url": "https://www.pexels.com/@tima-miroshnichenko",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "roasted coffee beans on table",
+    "title": "close up shot of a burning matchstick",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 1920,
-    "height": 1080,
+    "width": 3840,
+    "height": 2160,
     "fps": 25.0,
-    "duration": 12.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/6891196-375b958d.mp4",
-    "sha256": "5145c070aad1e64e406f8949b87b513eaa8fd6d902dba7ef7f05a86f2b84b461",
+    "duration": 26.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7033612-ccc95756.mp4",
+    "sha256": "7582253cd10ab951e2cd74735f7503f0b84e18a38c2ff6fc92e1d7e0ad45071a",
     "passed_filters": true,
-    "phash": "c8ce44c477397959",
+    "phash": "c3c976343c1d9b32",
     "in": 0.0,
     "out": 6.83
-   }
+   },
+   "relevance": 0.0747
   },
   {
    "id": "s166",
@@ -5894,28 +5941,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pixabay:219269",
-    "source": "pixabay",
-    "url": "https://pixabay.com/videos/id-219269/",
-    "author": "lkorhonen",
-    "author_url": "https://pixabay.com/users/23487237/",
-    "licence": "Pixabay Content License",
-    "rights": "Pixabay Content License",
-    "title": "river, stream, slopes",
-    "description": "river, stream, slopes, steep, rocks, nature",
-    "credit": "Pixabay",
+    "id": "pexels:39164677",
+    "source": "pexels",
+    "url": "https://www.pexels.com/video/aerial-view-of-lush-green-hillside-pathway-39164677/",
+    "author": "Jorge Zaldívar Marroquín",
+    "author_url": "https://www.pexels.com/@conejodepapel",
+    "licence": "Pexels License",
+    "rights": "Pexels License",
+    "title": "aerial view of lush green hillside pathway",
+    "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
-    "height": 2160,
-    "fps": 25.0,
-    "duration": 14.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/219269-68acabc3.mp4",
-    "sha256": "87f3e016c07fec22efe00c406107896d72be078ffa5162e9a31695b4ebb42ecc",
+    "width": 1920,
+    "height": 1080,
+    "fps": 29.97,
+    "duration": 12.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/39164677-14c6fe8e.mp4",
+    "sha256": "fc5ed188dc97d5c59458110f99ae1e7b610db1f2a4d44f727b1b062bde1fd3b1",
     "passed_filters": true,
-    "phash": "f83ece113e1e4d09",
+    "phash": "e9af8509f0423fd4",
     "in": 0.0,
     "out": 4.7
-   }
+   },
+   "relevance": 0.0865
   },
   {
    "id": "s171",
@@ -5995,7 +6042,8 @@
     "phash": "d9972668c91636e5",
     "in": 0.0,
     "out": 5.3
-   }
+   },
+   "relevance": 0.1094
   },
   {
    "id": "s173",
@@ -6162,7 +6210,8 @@
     "phash": "df90748db0578de0",
     "in": 0.0,
     "out": 4.14
-   }
+   },
+   "relevance": 0.1183
   },
   {
    "id": "s181",
@@ -6226,7 +6275,8 @@
     "phash": "b8d8661769a5ca2b",
     "in": 0.0,
     "out": 5.225
-   }
+   },
+   "relevance": 0.0932
   },
   {
    "id": "s183",
@@ -6273,7 +6323,8 @@
     "phash": "b65cd961860bcc97",
     "in": 0.0,
     "out": 4.36
-   }
+   },
+   "relevance": 0.0718
   },
   {
    "id": "s184",
@@ -6344,27 +6395,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:7744304",
+    "id": "pexels:9057674",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/high-angle-shot-of-a-set-of-school-supplies-7744304/",
-    "author": "MART PRODUCTION",
-    "author_url": "https://www.pexels.com/@mart-production",
+    "url": "https://www.pexels.com/video/close-up-of-person-drawing-lines-9057674/",
+    "author": "SHVETS production",
+    "author_url": "https://www.pexels.com/@shvets-production",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "high angle shot of a set of school supplies",
+    "title": "close up of person drawing lines",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 4096,
+    "width": 3840,
     "height": 2160,
     "fps": 25.0,
-    "duration": 21.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/7744304-a0f09950.mp4",
-    "sha256": "485dea5b821bf53ada9bc86a7581f28f8ce3f37199d5241f235208c65143859b",
+    "duration": 7.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/9057674-e750f8cc.mp4",
+    "sha256": "d360f4222085df2b346e9caddecf87709749905b87d08fcbf1ed179b153e0ad2",
     "passed_filters": true,
-    "phash": "d31a4a030f4b53fb",
+    "phash": "c86c761f1a4fc1f0",
     "in": 0.0,
     "out": 5.32
-   }
+   },
+   "relevance": 0.1056
   },
   {
    "id": "s186",
@@ -6443,7 +6495,8 @@
     "sha256": "602eaa30fde1ee2d0435eb03b343984232780587ff499e83348c6ec6009bbfaf",
     "passed_filters": true,
     "phash": "eb99b0c4c52d9633"
-   }
+   },
+   "relevance": 0.1117
   },
   {
    "id": "s189",
@@ -6566,28 +6619,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pixabay:3012",
-    "source": "pixabay",
-    "url": "https://pixabay.com/videos/id-3012/",
-    "author": "InspiredImages",
-    "author_url": "https://pixabay.com/users/57296/",
-    "licence": "Pixabay Content License",
-    "rights": "Pixabay Content License",
-    "title": "snail, mollusc, nature",
-    "description": "snail, mollusc, nature, animals, brown, shell, wildlife, exoskeleton, hardshell, life, macro, arthropod, moving, rock, small, movement, slow, slowly, yellow",
-    "credit": "Pixabay",
+    "id": "pexels:6613341",
+    "source": "pexels",
+    "url": "https://www.pexels.com/video/a-swinging-pendulum-6613341/",
+    "author": "Engin Akyurt",
+    "author_url": "https://www.pexels.com/@enginakyurt",
+    "licence": "Pexels License",
+    "rights": "Pexels License",
+    "title": "a swinging pendulum",
+    "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 1920,
-    "height": 1080,
-    "fps": 25.0,
-    "duration": 23.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/3012-f8641f7a.mp4",
-    "sha256": "4b608e5ce329aba9445ac0f602de0d28b4ec2a11d3d56db0fe7b60af174904a5",
+    "width": 4096,
+    "height": 2160,
+    "fps": 29.97,
+    "duration": 60.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/6613341-a4fe34aa.mp4",
+    "sha256": "ae1f5d36576555579d4b80cb17928a44bb28f0511260cbf5a5963d009bce1c08",
     "passed_filters": true,
-    "phash": "da9296a72d48cdc9",
+    "phash": "e7989661fa24ecc2",
     "in": 0.0,
     "out": 4.99
-   }
+   },
+   "relevance": 0.1002
   },
   {
    "id": "s194",
@@ -6684,7 +6737,8 @@
     "phash": "e66f91184ec0b973",
     "in": 0.0,
     "out": 5.45
-   }
+   },
+   "relevance": 0.0104
   },
   {
    "id": "s198",
@@ -6767,7 +6821,8 @@
     "phash": "cbb99091bb9f40e8",
     "in": 0.0,
     "out": 8.42
-   }
+   },
+   "relevance": 0.0694
   },
   {
    "id": "s201",
@@ -6912,7 +6967,8 @@
     "phash": "f2071ff3d14c0639",
     "in": 0.0,
     "out": 8.05
-   }
+   },
+   "relevance": 0.119
   },
   {
    "id": "s208",
@@ -6999,7 +7055,8 @@
     "phash": "82c878720e0df6f7",
     "in": 0.0,
     "out": 7.84
-   }
+   },
+   "relevance": 0.1313
   },
   {
    "id": "s212",
@@ -7071,27 +7128,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:5889612",
+    "id": "pexels:3927379",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/gift-boxes-on-sale-5889612/",
-    "author": "Max Fischer",
-    "author_url": "https://www.pexels.com/@max-fischer",
+    "url": "https://www.pexels.com/video/tying-a-pink-ribbon-lace-on-a-wrapped-gift-3927379/",
+    "author": "cottonbro studio",
+    "author_url": "https://www.pexels.com/@cottonbro",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "gift boxes on sale",
+    "title": "tying a pink ribbon lace on a wrapped gift",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
+    "width": 4096,
     "height": 2160,
     "fps": 25.0,
-    "duration": 14.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/5889612-e847f96b.mp4",
-    "sha256": "7f9f8b39a5daaaea07dc1125165bf8c4c709a230a5a51a666290aa111e62e6a5",
+    "duration": 20.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/3927379-ed011fac.mp4",
+    "sha256": "9eb27f842c349dc1024ed5bc862e2b29a0fd9b7347ec9e2c4807d7dc2aa1ce71",
     "passed_filters": true,
-    "phash": "c14aeb41d432de8f",
+    "phash": "ddc8037f30dec207",
     "in": 0.0,
     "out": 7.86
-   }
+   },
+   "relevance": 0.0908
   },
   {
    "id": "s215",
@@ -7118,27 +7176,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:10598760",
+    "id": "pexels:8666756",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/bottles-on-shelf-in-laboratory-10598760/",
-    "author": "Vincuk Konan",
-    "author_url": "https://www.pexels.com/@trashsmash",
+    "url": "https://www.pexels.com/video/a-person-getting-a-tiny-glass-bottle-on-a-rack-8666756/",
+    "author": "cottonbro studio",
+    "author_url": "https://www.pexels.com/@cottonbro",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "bottles on shelf in laboratory",
+    "title": "a person getting a tiny glass bottle on a rack",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3840,
+    "width": 4096,
     "height": 2160,
-    "fps": 29.97,
-    "duration": 20.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/10598760-8137235d.mp4",
-    "sha256": "27d1e925d17f660a4a51cce697bff3ff0e20461870ae9280230a7f8d54ea55db",
+    "fps": 25.0,
+    "duration": 7.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/8666756-519b4df9.mp4",
+    "sha256": "a51e75d88e8a892438cf0a710c2e4462f250a8f39ddb630a137b458e67e139a8",
     "passed_filters": true,
-    "phash": "91ab0ec560d4ea7b",
+    "phash": "85e1f74a18aecbb0",
     "in": 0.0,
     "out": 4.83
-   }
+   },
+   "relevance": 0.0372
   },
   {
    "id": "s216",
@@ -7232,7 +7291,8 @@
     "sha256": "cce3a5d5ef6bd064beddb14db1c2c7cdf057e9d8f226e77a63f2a7cc54a6b794",
     "passed_filters": true,
     "phash": "88aaaad5d5d5bac0"
-   }
+   },
+   "relevance": 0.1102
   },
   {
    "id": "s220",
@@ -7312,7 +7372,8 @@
     "sha256": "b03e726ec7487ec5c013a0283fff845e0aa327c661656f4b1c335b6d6b9b39ba",
     "passed_filters": true,
     "phash": "8e5f506a9162a5bd"
-   }
+   },
+   "relevance": 0.0021
   },
   {
    "id": "s222",
@@ -7339,27 +7400,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:38940214",
+    "id": "pexels:34711718",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/street-view-of-local-shops-and-daily-life-38940214/",
-    "author": "Circuit Occidental",
-    "author_url": "https://www.pexels.com/@circuit-occidental-2152520313",
+    "url": "https://www.pexels.com/video/charming-istanbul-street-with-cafes-and-shops-34711718/",
+    "author": "Sururi Ballıdağ Director",
+    "author_url": "https://www.pexels.com/@drector",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "street view of local shops and daily life",
+    "title": "charming istanbul street with cafes and shops",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
-    "width": 3200,
+    "width": 2560,
     "height": 1440,
-    "fps": 30.0,
-    "duration": 20.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/38940214-daf22d77.mp4",
-    "sha256": "33eb624b56ea8bb6f74d79bd50ed913d11f986a4dedd9ad2f25b45613fe66668",
+    "fps": 29.97,
+    "duration": 12.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/34711718-324c2c64.mp4",
+    "sha256": "7276de536b45cc27d4a7da6be0fb29e1f9a11cdd1714707b531e49f64765cff3",
     "passed_filters": true,
-    "phash": "995b5f2220e06dcf",
+    "phash": "8c9cbe6ad740b0b9",
     "in": 0.0,
     "out": 4.75
-   }
+   },
+   "relevance": 0.0649
   },
   {
    "id": "s223",
@@ -7386,27 +7448,28 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pexels:31079319",
+    "id": "pexels:34658303",
     "source": "pexels",
-    "url": "https://www.pexels.com/video/aerial-view-of-expansive-farmlands-and-fields-31079319/",
-    "author": "Piotr Wojnowski",
-    "author_url": "https://www.pexels.com/@piotr-wojnowski-2767306",
+    "url": "https://www.pexels.com/video/aerial-view-of-vibrant-patchwork-farmlands-34658303/",
+    "author": "PUWOOK Kwak",
+    "author_url": "https://www.pexels.com/@ilovephotos",
     "licence": "Pexels License",
     "rights": "Pexels License",
-    "title": "aerial view of expansive farmlands and fields",
+    "title": "aerial view of vibrant patchwork farmlands",
     "credit": "Pexels",
     "retrieved": "2026-10-07",
     "width": 3840,
     "height": 2160,
-    "fps": 29.97,
-    "duration": 62.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/31079319-3fc82d90.mp4",
-    "sha256": "18199afe69e29f6b75e1068de151eb1ebc524c615cb6540ecced261c29a5b21d",
+    "fps": 60.0,
+    "duration": 20.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pexels/34658303-572039fc.mp4",
+    "sha256": "4c44e09798471b0a39e63b0784d212f6284f46d2fd09dd46ffd72efe308863db",
     "passed_filters": true,
-    "phash": "d091aff2a0f8c4ce",
+    "phash": "abb44acb26cb45d2",
     "in": 0.0,
     "out": 6.97
-   }
+   },
+   "relevance": 0.1373
   },
   {
    "id": "s224",
@@ -7453,7 +7516,8 @@
     "phash": "80358dda5f65f390",
     "in": 0.0,
     "out": 4.9
-   }
+   },
+   "relevance": 0.1023
   },
   {
    "id": "s225",
@@ -7553,7 +7617,8 @@
     "phash": "c1441c77f69213cf",
     "in": 0.0,
     "out": 5.07
-   }
+   },
+   "relevance": 0.0508
   },
   {
    "id": "s229",
@@ -7667,7 +7732,8 @@
     "phash": "cbdaf232140d4767",
     "in": 0.0,
     "out": 7.05
-   }
+   },
+   "relevance": 0.105
   },
   {
    "id": "s233",
@@ -7742,28 +7808,29 @@
    "source_status": "ok",
    "source_reason": null,
    "asset": {
-    "id": "pixabay:297",
+    "id": "pixabay:254",
     "source": "pixabay",
-    "url": "https://pixabay.com/videos/id-297/",
+    "url": "https://pixabay.com/videos/id-254/",
     "author": "Life-Of-Vids",
     "author_url": "https://pixabay.com/users/1282862/",
     "licence": "Pixabay Content License",
     "rights": "Pixabay Content License",
-    "title": "doorstep, steps, stairs",
-    "description": "doorstep, steps, stairs, entry, walk, pedestrians, walking, entering, people, busy, door",
+    "title": "stairs, steps, feet",
+    "description": "stairs, steps, feet, walking, people, legs, up, down, concrete, floor, walk, entry, busy, city",
     "credit": "Pixabay",
     "retrieved": "2026-10-07",
     "width": 1920,
     "height": 1080,
     "fps": 29.97,
-    "duration": 72.0,
-    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/297-c8c8b086.mp4",
-    "sha256": "424e31461b23afc5aa64984dfd718d3e1715a5f94693598a2dc0396f631ee0ad",
+    "duration": 45.0,
+    "file": "/home/lp9/Hubricon/HubriconB2B-visual/content/.cache/assets/pixabay/254-64fec9c4.mp4",
+    "sha256": "e9c6802c45c16e219dd88f5d8327b50375340474d95bb3bbd8de6acf1949f993",
     "passed_filters": true,
-    "phash": "d33b98c1d1987e64",
+    "phash": "c03021703fdfcb37",
     "in": 0.0,
     "out": 5.1
-   }
+   },
+   "relevance": 0.0971
   },
   {
    "id": "s236",
@@ -7864,7 +7931,8 @@
     "phash": "f5c893dc03790de4",
     "in": 0.0,
     "out": 5.39
-   }
+   },
+   "relevance": 0.0719
   },
   {
    "id": "s240",
@@ -7910,7 +7978,8 @@
     "sha256": "4f8b75bc1481c5d38294f056c6c5387923e846a11c704ab4950ef9fdbff3f594",
     "passed_filters": true,
     "phash": "bf90e03fc3418f54"
-   }
+   },
+   "relevance": 0.0759
   },
   {
    "id": "s241",
@@ -8043,7 +8112,8 @@
     "phash": "8f1ef19734253478",
     "in": 0.0,
     "out": 8.34
-   }
+   },
+   "relevance": 0.0735
   },
   {
    "id": "s246",

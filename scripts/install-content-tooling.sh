@@ -11,12 +11,15 @@ uv pip install --python .venv/bin/python -e . -e ../engine
 # The placeholder voice and the alignment/QA transcriber are optional: a wheel
 # gap on a new Python must not block the rest of the pipeline.
 uv pip install --python .venv/bin/python -e ".[voice]" || echo "voice extras unavailable; placeholder narration will be marked blocked"
+# The sourcing filters (faces, duplicates, text in frame). Never `uv sync` this venv: it installs the project
+# alone and removes the engine and the extras above (2026-10-12: it took faster-whisper, Kokoro and the filters).
+uv pip install --python .venv/bin/python -e ".[visual]" || echo "visual extras unavailable; the sourcing filters will skip faces and duplicates"
 mkdir -p "$HOME/.local/share/fonts"
 cp assets/fonts/*.ttf "$HOME/.local/share/fonts/"
 fc-cache -f >/dev/null 2>&1 || true
 .venv/bin/python - <<'PY'
 import importlib
-for m in ("manim", "faster_whisper", "googleapiclient", "openpyxl", "hubricon_engine"):
+for m in ("manim", "faster_whisper", "googleapiclient", "openpyxl", "hubricon_engine", "cv2", "imagehash", "torch", "open_clip", "librosa"):
     try:
         importlib.import_module(m); print(f"ok   {m}")
     except Exception as e:

@@ -151,3 +151,16 @@ def test_a_commons_category_query_lists_the_category_and_keeps_it_as_subject(tmp
     assert params["generator"] == "categorymembers" and params["gcmtitle"] == "Category:Sears, Roebuck and Company"
     assert all(c["subject"] == "Commons category: Sears, Roebuck and Company" for c in found)
     assert sources.plain("category: Sears Roebuck") == "Sears Roebuck"      # other libraries never see the word
+
+
+def test_a_commons_original_larger_than_the_grade_comes_as_wikimedias_own_resize():
+    from hubricon_content.sources import commons as cm
+    page = {"pageid": 7, "title": "File:Store.tif", "imageinfo": [{"url": "https://upload.wikimedia.org/a/ab/Store.tif", "mime": "image/tiff",
+            "thumburl": "https://upload.wikimedia.org/thumb/a/ab/Store.tif/960px-Store.tif.jpg", "width": 9756, "height": 7752,
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Store.tif", "extmetadata": {"LicenseShortName": {"value": "Public domain"}}}]}
+    c = cm._candidate(page, 0)
+    assert c["file_url"].endswith("/4800px-Store.tif.jpg") and (c["width"], c["height"]) == (4800, 3814)
+    assert c["preview_url"].endswith("/960px-Store.tif.jpg")
+    old = {"source": "commons", "width": 9756, "height": 7752, "file_url": "https://upload.wikimedia.org/a/ab/Store.tif",
+           "preview_url": "https://upload.wikimedia.org/thumb/a/ab/Store.tif/960px-Store.tif.jpg"}
+    assert cm.sized(old)["file_url"].endswith("/4800px-Store.tif.jpg") and cm.sized({"width": 900, "height": 600}) == {}

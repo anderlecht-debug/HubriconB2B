@@ -15,6 +15,7 @@ import re
 from . import candidate, plain, text
 from . import net as netmod
 
+MAX_EDGE = 4800      # the long edge a still is graded at (render_shots.SHRINK_EDGE)
 NAME, KINDS, KEYS, CREDIT = "commons", ("image",), ("CONTENT_CONTACT_EMAIL",), "Wikimedia Commons"
 API = "https://commons.wikimedia.org/w/api.php"
 META = ("LicenseShortName|License|UsageTerms|LicenseUrl|Artist|Credit|ImageDescription|DateTimeOriginal|"
@@ -65,6 +66,15 @@ def _clean(url: str | None) -> str | None:
     return url.split("?")[0] if url else None
 
 
+def sized(c: dict) -> dict:
+    """A candidate whose original is larger than the grade, re-pointed at Wikimedia's resize to MAX_EDGE."""
+    w, h, thumb = c.get("width") or 0, c.get("height") or 0, c.get("preview_url") or ""
+    if max(w, h) <= MAX_EDGE or not re.search(r"/\d+px-", thumb):
+        return {}
+    k = MAX_EDGE / max(w, h)
+    return {"file_url": re.sub(r"/\d+px-", f"/{round(w * k)}px-", thumb), "width": round(w * k), "height": round(h * k)}
+
+
 def _candidate(p: dict, rank: int) -> dict | None:
     info = (p.get("imageinfo") or [None])[0]
     if not info or not str(info.get("mime", "")).startswith("image/") or info.get("mime") == "image/svg+xml":
@@ -74,10 +84,16 @@ def _candidate(p: dict, rank: int) -> dict | None:
     if not artist or re.fullmatch(r"https?://\S+", artist):      # some uploads give a link as the artist
         artist = text(meta.get("Credit")) or artist
     title = text(meta.get("ObjectName")) or re.sub(r"^File:|\.\w+$", "", p.get("title", ""))
+    width, height, file_url, thumb = info.get("width"), info.get("height"), _clean(info.get("url")), _clean(info.get("thumburl"))
+    # an original larger than a still is graded at comes as Wikimedia's own resize to that edge: a few MB in
+    # place of a 100-700 MB master decoded whole in memory (2026-10-13; the LOC masters, 2026-10-07)
+    big = sized({"width": width, "height": height, "preview_url": thumb})
+    if big:
+        file_url, width, height = big["file_url"], big["width"], big["height"]
     return candidate(
         id=f"commons:{p.get('pageid')}", source=NAME, kind="image", url=info.get("descriptionurl"),
-        file_url=_clean(info.get("url")), preview_url=_clean(info.get("thumburl")),
-        width=info.get("width"), height=info.get("height"), author=artist or None,
+        file_url=file_url, preview_url=thumb,
+        width=width, height=height, author=artist or None,
         licence=licence_of(meta), licence_url=meta.get("LicenseUrl"),
         rights=text(meta.get("LicenseShortName")) or text(meta.get("UsageTerms")) or "no licence in the record",
         restrictions=text(meta.get("Restrictions")) or None, title=title,

@@ -31,31 +31,160 @@ def _used(plan: dict) -> set:
     return out
 
 
-def auto_pick(slug: str) -> dict:
+def auto_pick(slug: str, repick: bool = False) -> dict:
+    """Every picture shot takes its best passed candidate. Scored by the relevance model (relevance.py), a
+    candidate below its THRESHOLD is not taken and the rest are ordered by relevance with the source's rank
+    a little; a shot whose best stays below LOW is listed for the one capped visual-pick reply. Unscored
+    (no model on this machine), the source's rank alone orders them, as before."""
+    from . import relevance
     d = scriptmod.video_dir(slug)
     plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
     used = _used(plan)
-    picked, left = [], []
+    picked, left, low = [], [], []
     for s in plan["shots"]:
-        if s.get("kind") not in PICTURE or s.get("asset"):
+        if s.get("kind") not in PICTURE or (s.get("asset") and not repick):
             continue
+        if repick and s.get("asset"):
+            for a in (s["asset"] if isinstance(s["asset"], list) else [s["asset"]]):
+                used.discard(a.get("id"))
         rec_p = d / "sources" / f"{s['id']}.json"
         rec = json.loads(rec_p.read_text(encoding="utf-8")) if rec_p.exists() else {}
         ok = [c for c in rec.get("candidates", []) if c.get("passed_filters") and c.get("id") not in used]
         ok.sort(key=lambda c: (c.get("rank", 99), c.get("sheet_index", 99)))
+        scored = any("relevance" in c for c in ok)
+        if scored:
+            ok = [c for _, c in sorted(((relevance.blend(c, i), c) for i, c in enumerate(ok)
+                                        if c.get("relevance", -1.0) >= relevance.THRESHOLD), key=lambda x: -x[0])]
+            if not ok or ok[0]["relevance"] < relevance.LOW:
+                low.append(s["id"])
         need = 3 if s["kind"] == "stack" else 1
         if len(ok) < need:
             left.append(s["id"])
             continue
         nums = [int(c["sheet_index"]) for c in ok[:need]]
+        why = (f"auto-pick: relevance {ok[0]['relevance']:+.3f}, the best of {len(ok)} that show the sentence" if scored
+               else "auto-pick: the filters' top passed candidate")
         try:
-            pk.pick(slug, s["id"], nums, reason="auto-pick: the filters' top passed candidate")
+            pk.pick(slug, s["id"], nums, reason=why)
         except SystemExit as e:
             left.append(f"{s['id']} ({e})")
             continue
+        except Exception as e:     # noqa: BLE001: a library refusing a download (a 429) costs one shot its new pick, never the run
+            left.append(f"{s['id']} (kept its picture: {type(e).__name__} {str(e)[:60]})")
+            continue
         used.update(c["id"] for c in ok[:need])
         picked.append(s["id"])
-    return {"status": "ok", "picked": len(picked), "left_for_pick_step": left}
+    return {"status": "ok", "picked": len(picked), "left_for_pick_step": left, "low": low}
+
+
+PICK_SYSTEM = ("You choose pictures for a documentary film. You answer with exactly one JSON object, as the "
+               "prompt's last paragraph describes, and nothing before or after it.")
+SHEET_PX = 800          # a contact sheet's width as the model sees it (about 1,100–1,400 tokens a sheet)
+
+
+def visual_pick(slug: str, low: list[str]) -> dict:
+    """The shots whose best picture is doubtful, in one capped reply: each shot's contact sheet, its words and
+    its candidates' scores in; a sheet number (or none) per shot out. As many sheets as the step's budget
+    holds go, the most doubtful first; the rest keep their auto-pick (FILM_PROCESS.md 2.7)."""
+    import io
+    from PIL import Image
+    from . import ai_step
+    d = scriptmod.video_dir(slug)
+    plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
+    by = {s["id"]: s for s in plan["shots"]}
+    cap = int(ai_step.budgets()["steps"]["pick"]["tokens"])
+    room = cap * 0.75 - 1500                       # the prompt, the answer, a margin under the cap
+    def best(sid):
+        rec = json.loads((d / "sources" / f"{sid}.json").read_text(encoding="utf-8"))
+        return max((c.get("relevance", -1.0) for c in rec.get("candidates", []) if c.get("passed_filters")), default=-1.0)
+    images, lines, sent = [], [], []
+    for sid in sorted(low, key=best):
+        sheet = d / "sources" / f"{sid}.jpg"
+        if not sheet.exists():
+            continue
+        im = Image.open(sheet).convert("RGB")
+        im.thumbnail((SHEET_PX, 4000))
+        cost = im.width * im.height / 750
+        if cost > room:
+            break
+        room -= cost
+        b = io.BytesIO()
+        im.save(b, "JPEG", quality=82)
+        images.append(b.getvalue())
+        sent.append(sid)
+        s = by[sid]
+        rec = json.loads((d / "sources" / f"{sid}.json").read_text(encoding="utf-8"))
+        cands = "; ".join(f"#{c['sheet_index']} {c.get('relevance', 0):+.2f}" for c in rec.get("candidates", []) if c.get("passed_filters"))
+        lines.append(f"Picture {len(sent)}: shot {sid}. Spoken: \"{(s.get('says') or '')[:220]}\" Passed candidates (sheet number, "
+                     f"relevance): {cands}.")
+    if not sent:
+        return {"status": "skipped", "reason": "no contact sheet fits the budget", "reviewed": 0}
+    prompt = ("Each picture above is a contact sheet of candidate pictures for one shot of a documentary about retail "
+              "history and pricing; each candidate is numbered under its picture, and crossed-out ones failed the filters.\n"
+              + "\n".join(lines) + "\n\nFor each shot choose the passed candidate that best shows what is spoken, as a "
+              "viewer would expect to see it (period and subject right; never a modern building for a historic store). "
+              'If none fits, choose null. Reply with one JSON object: {"shots": {"<shot id>": <sheet number or null>, ...}}.')
+    saved = d / "qa" / "visual-pick.json"
+    old = json.loads(saved.read_text(encoding="utf-8")) if saved.exists() else {}
+    if sorted(old.get("sent", [])) == sorted(sent) and old.get("answer") is not None:
+        r, ans = {"status": "reused", "weighted_tokens": 0}, old["answer"]         # asked once: never paid for twice
+    else:
+        r = ai_step.reply(slug, "pick", PICK_SYSTEM, prompt, images=images)
+        ans = (ai_step.json_reply(r.get("result")) or {}).get("shots") or {}
+        saved.parent.mkdir(exist_ok=True)
+        saved.write_text(json.dumps({"sent": sent, "answer": ans, "weighted_tokens": r.get("weighted_tokens")}, indent=1) + "\n",
+                         encoding="utf-8")
+    chose, none = [], []
+    for sid in sent:
+        n = ans.get(sid)
+        if isinstance(n, int):
+            try:
+                pk.pick(slug, sid, [n], reason="visual-pick: chosen from its contact sheet in one capped reply")
+                chose.append(sid)
+            except SystemExit:
+                pass
+            except Exception:    # noqa: BLE001: a library refusing the download (a 429) keeps the shot's picture
+                pass
+        elif sid in ans:
+            none.append(sid)
+    if none:      # no candidate shows the sentence: resolve-gaps absorbs the shot or sets the film's own words
+        plan = json.loads((d / "shots.json").read_text(encoding="utf-8"))
+        for s in plan["shots"]:
+            if s["id"] in none:
+                s.pop("asset", None)
+        (d / "shots.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"status": r.get("status"), "reviewed": len(sent), "chosen": chose, "none_fit": none,
+            "weighted_tokens": r.get("weighted_tokens")}
+
+
+PRINT_POOL = 6          # acceptable print candidates gathered per shot before the best is chosen
+
+
+def _best_print(s: dict, pool: list[dict], net) -> dict | None:
+    """The companion print that best shows the shot's words (relevance.py), from the acceptable ones; the
+    first acceptable one when the model is not on this machine; none when every one shows something else."""
+    if not pool:
+        return None
+    try:
+        from . import relevance, sources
+        files = []
+        for c in pool:
+            try:
+                files.append((c, relevance._picture(sources.fetch_preview(c, net))))
+            except Exception:    # noqa: BLE001: a preview that won't download is not a candidate
+                continue
+        files = [(c, f) for c, f in files if f]
+        if not files:
+            return pool[0]
+        text = relevance.text_of({**s, "query": [((s.get("params") or {}).get("print") or {}).get("want", {}).get("query") or ""]})
+        ranked = sorted(zip(relevance.scores(text, [f for _, f in files]), range(len(files))), key=lambda x: -(x[0] + relevance.RANK_WEIGHT / (1 + x[1])))
+        sc, i = ranked[0]
+        if sc < relevance.THRESHOLD:
+            return None
+        files[i][0]["relevance"] = round(sc, 4)
+        return files[i][0]
+    except ImportError:
+        return pool[0]
 
 
 def auto_prints(slug: str) -> dict:
@@ -77,7 +206,7 @@ def auto_prints(slug: str) -> dict:
             dropped.append(f"{s['id']} (no query)")
             continue
         ctx = filters.context({**s, "kind": "archive", "style": "archive-print", "specific": None}, reg)
-        found = None
+        found, pool = None, []
         for src in w.get("sources") or ["smithsonian", "commons"]:
             try:
                 cands = sources.search(src, query, kind="image", n=20, net=net)
@@ -96,10 +225,12 @@ def auto_prints(slug: str) -> dict:
                     continue
                 c["rejected_because"] = []
                 filters.finish(c)
-                found = c
+                pool.append(c)
+                if len(pool) >= PRINT_POOL:
+                    break
+            if len(pool) >= PRINT_POOL:
                 break
-            if found:
-                break
+        found = _best_print(s, pool, net)
         if not found:
             s["params"].pop("print")
             dropped.append(f"{s['id']} ({query})")
@@ -255,6 +386,8 @@ def autofix(slug: str) -> dict:
         if not m or m.group(1) not in by:
             continue
         s, msg = by[m.group(1)], m.group(2)
+        if s.get("fixed"):          # code's shots (a chapter's takeaway, a BREATHE hold, a MONTAGE run) are never rewritten
+            continue
         if msg.endswith("lands on a word: set `on`") or "is not spoken inside the shot" in msg:
             s["on"] = longest(s)
         elif msg.startswith("a thesis line is"):
@@ -351,6 +484,13 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
                     rc, out = _cli(cmd, slug, env=env)
                     if rc:
                         return stop(step, f"{cmd} failed: {out[-300:]}")
+                if not placeholder:          # his film's line has started: its FORM counts against the week
+                    from . import state
+                    q = state.load()
+                    u = next((x for x in q["units"] if x.get("slug") == slug), None)
+                    if u:
+                        state.record_line_start(q, u)
+                        state.save(q)
             done(step)
         elif step == "skeleton":
             plan = plan_skeleton.draft(slug)
@@ -390,14 +530,25 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
                 return stop(step, f"sourcing failed: {out[-300:]}")
             done(step)
         elif step == "pictures":
+            try:      # the relevance model scores every candidate on the GPU, for no tokens (relevance.py)
+                from . import relevance
+                relevance.score_film(slug)
+            except ImportError:
+                pass
             a = auto_pick(slug)
             p = auto_prints(slug)
+            v = visual_pick(slug, a["low"]) if a.get("low") else {"reviewed": 0}
+            try:
+                relevance.score_film(slug)     # the picks as they stand, for film-qa
+            except (ImportError, NameError):
+                pass
             g = resolve_gaps(slug)
             _cli("shots-fill", slug)
             for _ in range(2):
                 autofix(slug)
                 _cli("shots-fill", slug)
-            done(step, f"{a['picked']} picked, {p['prints']} prints, {len(g['absorbed'])} absorbed, {len(g['carded'])} carded")
+            done(step, f"{a['picked']} picked, {v['reviewed']} reviewed by a model, {p['prints']} prints, "
+                       f"{len(g['absorbed'])} absorbed, {len(g['carded'])} carded")
         elif step == "render":
             rc, out = _cli("render-shots", slug, "--workers", str(_workers()), env={"CONTENT_ALLOW_PLACEHOLDER": "1"})
             if rc:

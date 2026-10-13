@@ -164,7 +164,8 @@ def stakes_shot(plan: dict, c: dict) -> dict | None:
         hit = next((s for s in shots if s["id"] == c["picture"]), None)
         if hit:
             return hit
-    pool = [s for s in shots if s.get("room") == "world" and (s.get("asset") or {}).get("file")]
+    from .relevance import asset_of
+    pool = [s for s in shots if s.get("room") == "world" and asset_of(s).get("file")]
     if not pool:
         return None
     want = _words(f"{c.get('visual', '')} {c.get('picture') or ''}")
@@ -175,7 +176,7 @@ def stakes_shot(plan: dict, c: dict) -> dict | None:
             return ranked[0]
     except Exception:
         pass
-    have = lambda s: _words(" ".join(s.get("query") or []) + " " + (s.get("says") or "") + " " + str((s.get("asset") or {}).get("title", "")))
+    have = lambda s: _words(" ".join(s.get("query") or []) + " " + (s.get("says") or "") + " " + str(asset_of(s).get("title", "")))
     return max(pool, key=lambda s: len(want & have(s)))
 
 
@@ -191,17 +192,18 @@ def _frame(path, at: float) -> Image.Image:
 def stakes(d, plan: dict, c: dict, facts: dict) -> tuple[Image.Image, dict]:
     """The stakes kind: a picture of what is at stake, full bleed, darkened toward its words, at most four."""
     from . import footage
+    from .relevance import asset_of
     s = stakes_shot(plan, c)
     prov = {}
     clip = d / "shots" / f"{(s or {}).get('id')}.mp4"
     if s and clip.exists():
         # the picture exactly as the film shows it: the shot's own clip, mid-move, in the film's look
         pic = _frame(clip, 0.5 * footage.probe(clip)["duration"])
-        a = s.get("asset") or {}
+        a = asset_of(s)
         prov = {"shot": s["id"], "asset": a.get("id"), "credit": a.get("credit") or a.get("author"), "licence": a.get("licence"),
                 **({} if a else {"scene": "a frame of the film's own stage scene"})}
-    elif s and s.get("room") == "world" and (s.get("asset") or {}).get("file"):
-        a = s["asset"]
+    elif s and s.get("room") == "world" and asset_of(s).get("file"):
+        a = asset_of(s)
         src = Path(a["file"])
         if src.suffix.lower() in (".mp4", ".mov", ".webm"):
             pic = _frame(src, float(a.get("in", 0.0)) + 1.0)

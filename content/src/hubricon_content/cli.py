@@ -401,6 +401,21 @@ def cmd_retention_patterns(a):
     _out(retention.patterns())
 
 
+def cmd_music_tag(a):
+    from . import music
+    _out(music.tag(a.file, a.mood, a.licence, a.source, a.title))
+
+
+def cmd_music_list(a):
+    from . import music
+    _out([{k: c[k] for k in ("name", "mood", "tempo", "key", "licence")} for c in music.cues()])
+
+
+def cmd_relevance(a):
+    from . import relevance
+    _out(relevance.score_film(a.slug))
+
+
 def cmd_worksheet(a):
     from . import worksheet
     _out(worksheet.build(a.slug))
@@ -566,6 +581,12 @@ def main(argv=None) -> None:
     p = sub.add_parser("retention", help="a published film's retention curve on its beats and shots (qa/retention.md)")
     p.add_argument("slug"); p.set_defaults(fn=cmd_retention)
     sub.add_parser("retention-patterns", help="across films: the styles that hold viewers and the ones that lose them").set_defaults(fn=cmd_retention_patterns)
+    p = sub.add_parser("music-tag", help="tag a licensed music cue: mood (yours), tempo and key (read by code), licence")
+    p.add_argument("file"); p.add_argument("--mood", required=True); p.add_argument("--licence", required=True)
+    p.add_argument("--source", required=True); p.add_argument("--title"); p.set_defaults(fn=cmd_music_tag)
+    sub.add_parser("music-list", help="the tagged music cues on file").set_defaults(fn=cmd_music_list)
+    p = sub.add_parser("relevance", help="score every candidate and picked picture against its shot's words (GPU, no tokens)")
+    p.add_argument("slug"); p.set_defaults(fn=cmd_relevance)
     p = sub.add_parser("worksheet", help="a film's one-page worksheet: its takeaways, this week's step, its figures (worksheet.md)")
     p.add_argument("slug"); p.set_defaults(fn=cmd_worksheet)
     p = sub.add_parser("script-in", help="a script written elsewhere becomes a film: checked, filed, queued for his takes (SCRIPT_KIT.md)")

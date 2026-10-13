@@ -26,7 +26,7 @@ from .state import CONTENT_DIR
 ADVISORY = re.compile(r"of the runtime|at most$")
 LUFS, TRUE_PEAK = (-17.0, -15.0), -1.5
 # the mix's own numbers (sound.metrics, docs/content/SOUND_DESIGN.md)
-SOUND = {"voice_over_music_db": 15.0, "effects_per_minute": (2.0, 14.0), "longest_undesigned_s": 60.0, "lra": (2.0, 12.0),
+SOUND = {"voice_over_music_db": 15.0, "effects_per_minute": (0.0, 10.0), "lra": (2.0, 12.0), "silence_s": 2.0,
          "side_under_mid_db": 6.0}   # folded to mono (a phone speaker) the mix loses at most 1 dB
 
 
@@ -35,6 +35,17 @@ LEARN = {"on_the_word": 0.7, "word_wait_s": 0.6, "chapter_min": 6.5, "wpm": (120
 
 
 PAYOFF_S = 5.0     # the opening pays off the thumbnail within this many seconds (advisory for now)
+
+
+def relevance_report(d: Path, plan: dict) -> dict:
+    """The film's picture relevance (relevance.py): the median score of its picked pictures and how many shots a
+    model reviewed in the one capped visual-pick reply."""
+    import statistics
+    sc = [float(s["relevance"]) for s in plan["shots"] if s.get("room") == "world" and "relevance" in s]
+    picks = json.loads((d / "assets.json").read_text(encoding="utf-8")) if (d / "assets.json").exists() else {}
+    ids = {s["id"] for s in plan["shots"]}
+    reviewed = sum(1 for k, v in picks.items() if k in ids and isinstance(v, dict) and "visual-pick" in str(v.get("reason", "")))
+    return {"median": round(statistics.median(sc), 4) if sc else None, "scored": len(sc), "model_reviewed": reviewed}
 
 
 def packaging(d: Path, plan: dict, timing: dict) -> list[dict]:
@@ -153,10 +164,12 @@ def media(d: Path, plan: dict, timing: dict) -> list[dict]:
     if meas.get("voice_over_music_db") is not None and meas["voice_over_music_db"] < SOUND["voice_over_music_db"]:
         out.append({"check": "sound", "msg": f"the voice sits {meas['voice_over_music_db']} dB over the music under speech; at least {SOUND['voice_over_music_db']}"})
     epm = meas.get("effects_per_minute")
-    if epm is not None and not (SOUND["effects_per_minute"][0] <= epm <= SOUND["effects_per_minute"][1]):
-        out.append({"check": "sound", "msg": f"{epm} designed effects a minute; {SOUND['effects_per_minute'][0]}–{SOUND['effects_per_minute'][1]} keeps attention without fatigue"})
-    if meas.get("longest_undesigned_s", 0) > SOUND["longest_undesigned_s"]:
-        out.append({"check": "sound", "msg": f"{meas['longest_undesigned_s']} s with nothing designed under the voice; at most {SOUND['longest_undesigned_s']}"})
+    if epm is not None and epm > SOUND["effects_per_minute"][1]:
+        out.append({"check": "sound", "msg": f"{epm} designed effects a minute; at most {SOUND['effects_per_minute'][1]:g}: past that a film sounds counted, not designed"})
+    for c in (meas.get("silence_per_chapter") or [])[1:]:          # every chapter (the open has none to give)
+        if c["silence_s"] < SOUND["silence_s"]:
+            out.append({"check": "sound", "msg": f"chapter {c['chapter']!r} has no silence (music and effects out {SOUND['silence_s']:g} s or more "
+                        "before its KEEP line or hero figure): contrast is what makes the next moment land"})
     if meas.get("side_under_mid_db") is not None and meas["side_under_mid_db"] < SOUND["side_under_mid_db"]:
         out.append({"check": "sound", "msg": f"the stereo side sits {meas['side_under_mid_db']} dB under the centre; at least {SOUND['side_under_mid_db']} so a phone's mono speaker loses under 1 dB"})
     log = subprocess.run(["ffmpeg", "-nostats", "-i", str(m), "-an", "-vf",
@@ -164,7 +177,10 @@ def media(d: Path, plan: dict, timing: dict) -> list[dict]:
                          capture_output=True, text=True).stderr
     for a, b in re.findall(r"black_start:([\d.]+) black_end:([\d.]+)", log):
         out.append({"check": "black", "t": float(a), "msg": f"black from {float(a):.1f} to {float(b):.1f} s"})
+    breathe = [(float(s["start"]), float(s["end"])) for s in plan["shots"] if s.get("style") == "breathe-hold"]
     for a in re.findall(r"freeze_start: ([\d.]+)", log):
+        if any(x - 0.5 <= float(a) <= y for x, y in breathe):
+            continue                                 # a BREATHE hold is still by design
         if float(a) < want - 6:                      # the end card's hold is a still frame by design
             out.append({"check": "freeze", "t": float(a), "msg": f"a frozen picture from {float(a):.1f} s (4 s or more)"})
     return out
@@ -180,6 +196,7 @@ def run(slug: str, check_media: bool = True) -> dict:
     for p in shots.validate(plan, timing, facts):
         (advisory if ADVISORY.search(p) else problems).append({"check": "plan", "msg": p})
     advisory += packaging(d, plan, timing)
+    rel = relevance_report(d, plan)
     for s in plan["shots"]:
         c = d / "shots" / f"{s['id']}.mp4"
         if not c.exists():
@@ -209,7 +226,7 @@ def run(slug: str, check_media: bool = True) -> dict:
     for p in problems:
         by[p["check"]] = by.get(p["check"], 0) + 1
     res = {"slug": slug, "status": "clean" if not problems else "problems", "problems": len(problems), "by_check": by,
-           "advisory": [a["msg"] for a in advisory]}
+           "advisory": [a["msg"] for a in advisory], "relevance": rel}
     (d / "qa").mkdir(exist_ok=True)
     (d / "qa" / "film-qa.json").write_text(json.dumps({**res, "list": problems}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     return {**res, "list": problems}
