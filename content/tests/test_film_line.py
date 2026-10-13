@@ -239,3 +239,19 @@ def test_the_cta_must_follow_the_try_beat_within_30_seconds():
     assert not any("must come within 30 s" in p for p in sm.learning(film(660)))     # right after the step
     assert any("must come within 30 s" in p for p in sm.learning(film(700)))         # 40 s after it: too late
     assert any("must come within 30 s" in p for p in sm.learning(film(0)))           # before the step
+
+
+def test_an_ai_step_never_hands_claude_an_api_key(tmp_path, monkeypatch):
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-should-not-pass")
+    monkeypatch.setenv("ANTHROPIC_WORKSPACE_ID", "wrkspc_x")
+    p = tmp_path / "claude"
+    p.write_text(f"""#!{sys.executable}
+import json, os, sys
+sys.stdin.read()
+seen = [k for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_WORKSPACE_ID") if k in os.environ]
+print(json.dumps({{"type": "result", "result": json.dumps({{"seen": seen}}), "is_error": False}}), flush=True)
+""")
+    p.chmod(p.stat().st_mode | stat.S_IEXEC)
+    res = ai_step.reply("f", "plan", "x", "y", claude=str(p))
+    assert ai_step.json_reply(res["result"]) == {"seen": []}

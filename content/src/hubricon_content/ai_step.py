@@ -25,6 +25,7 @@ from pathlib import Path
 from . import meter
 from .state import CONTENT_DIR
 
+API_ENV = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_WORKSPACE_ID", "ANTHROPIC_BASE_URL")
 WEIGHTS = {"input_tokens": 1.0, "cache_creation_input_tokens": 1.25, "cache_read_input_tokens": 0.1, "output_tokens": 5.0}
 BUDGETS = CONTENT_DIR / "film" / "budgets.json"
 LEDGER = CONTENT_DIR / ".cache" / "runner-meter.json"
@@ -46,8 +47,13 @@ def stream(cmd: list[str], budget: int, cwd: str | Path, stdin: str | None = Non
     """Run `claude -p … --output-format stream-json --verbose`, stopping it the moment it spends its budget.
     `stdin` carries a prompt too long for one argument (Linux caps one at 128 KB)."""
     t0 = time.time()
+    # the subscription, never an API key: the content CLI loads .env (whose ANTHROPIC_API_KEY is the engine's), and
+    # claude would bill that key instead (2026-10-13: a film-line decide failed on it; a differently scoped key
+    # would have billed API dollars silently). The runner unsets the same names (scripts/content-tick.sh).
+    env = {k: v for k, v in os.environ.items() if k not in API_ENV}
     # a reply is the whole answer: room for a 50-minute film's decisions (about 25k tokens) in one message
-    env = {**os.environ, "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"} if stdin is not None else None
+    if stdin is not None:
+        env["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] = "64000"
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, cwd=str(cwd),
                             stdin=subprocess.PIPE if stdin is not None else subprocess.DEVNULL, env=env)
     if stdin is not None:
