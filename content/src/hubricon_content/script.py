@@ -248,6 +248,8 @@ def learning(script: dict, facts: dict | None = None) -> list[str]:
     for b in script["beats"]:
         if b.get("BREATHE", "").lower().startswith("y") and b.get("MONTAGE", "").lower().startswith("y"):
             problems.append(f"beat {b['name']}: BREATHE and MONTAGE can't share a beat")
+        if (b.get("BREATHE", "").lower().startswith("y") or b.get("MONTAGE", "").lower().startswith("y")) and PLACEHOLDER.search(b["VO"]):
+            problems.append(f"beat {b['name']}: BREATHE and MONTAGE are pictures; this beat says figures, which live on paper")
         if b.get("KEEP") and (b.get("BREATHE", "").lower().startswith("y") or b.get("MONTAGE", "").lower().startswith("y")):
             problems.append(f"beat {b['name']}: a KEEP line is set as its own card; give BREATHE or MONTAGE to another beat")
     beats = script["beats"]

@@ -68,3 +68,32 @@ def test_the_camera_holds_a_breath_and_under_motivated_motion_moves_only_with_a_
     for x in (after, alone, desk):
         render_shots.Job._camera(x)
     assert after.job["motion"] == "push" and alone.job["motion"] == "hold" and desk.job["cam"] == "still"
+
+
+def test_a_redraft_keeps_every_unchanged_shots_decisions_and_asks_only_for_the_rest():
+    prev = {"moods": {"the open": "calm"}, "shots": [
+        {"id": "s001", "start": 0.0, "end": 6.0, "kind": "number", "style": "number-land", "intent": "the date", "params": {"value": "{{a}}"}},
+        {"id": "s002", "start": 6.0, "end": 12.0, "kind": "still", "style": "still-push", "intent": "the store", "query": ["store"],
+         "asset": {"id": "loc:1"}}]}
+    plan = {"shots": [{"id": "s001", "start": 0.0, "end": 6.0, "kind": "number", "style": "number-land", "params": {}},
+                      {"id": "s002", "start": 6.0, "end": 9.0, "kind": "still", "style": "still-push", "params": {}},
+                      {"id": "s003", "start": 9.0, "end": 12.0, "kind": "still", "style": "still-push", "params": {}}]}
+    assert plan_skeleton.carry(prev, plan) == 1
+    s1, s2, _ = plan["shots"]
+    assert s1["carried"] and s1["intent"] == "the date" and s1["params"] == {"value": "{{a}}"} and "carried" not in s2
+    assert plan["moods"] == {"the open": "calm"}
+
+
+def test_a_beat_that_says_figures_is_never_held_under_a_picture():
+    from hubricon_content import line
+    from hubricon_content import script as sm
+    t = _timing(breathe=True)
+    t["segments"][0]["spoken"] = [{"key": "a", "t": 3.0}]
+    assert plan_skeleton._held(t, [round(0.45 + 0.5 * i, 3) for i in range(80)], 3.0, [3.0]) == []
+    s = {"header": {"FORM": "story"}, "hooks": {}, "tail": {}, "beats": [
+        {"at": 0, "name": "THE CHAIN", "VO": "By {{y}} there were {{n}} stores.", "MONTAGE": "yes", "KEEP": "", "TRY": "", "CTA": ""}]}
+    assert any("this beat says figures" in p for p in sm.learning(s))
+    plan = {"mode": "history", "shots": [{"id": "s9", "fixed": True, "pictures": True, "style": "breathe-hold", "query": [],
+                                          "says": "a bar of soap on the counter", "intent": "BREATHE"}]}
+    line.fixed_pictures(plan)
+    assert plan["shots"][0]["query"] == ["bar soap counter"] and plan["shots"][0]["fallback"] == "paper:kinetic"

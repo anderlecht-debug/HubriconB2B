@@ -110,6 +110,8 @@ def _held(timing: dict, cuts: list[float], hold: float, reveal_t: list[float]) -
     for i, seg in enumerate(timing["segments"]):
         if seg.get("kind") != "beat" or not (seg.get("breathe") or seg.get("montage")):
             continue
+        if seg.get("spoken"):      # figures live on paper: a beat that says figures is drafted as any other
+            continue
         a, b = float(seg["start"]), float(seg["end"])
         inside = [c for c in cuts if a + 0.05 < c < b - 0.05]
         edges = [a]
@@ -139,6 +141,27 @@ def _held(timing: dict, cuts: list[float], hold: float, reveal_t: list[float]) -
                   "visual": re.sub(r"\s+", " ", str(seg.get("visual") or "")).strip()} for x, y in zip(edges, edges[1:])]
         out.append((a, b, shots))
     return out
+
+
+CARRY = ("kind", "style", "on", "params", "query", "sources", "fallback", "specific", "intent", "label", "overlay", "chart",
+         "room", "asset", "motion", "focus", "relevance")
+
+
+def carry(prev: dict, plan: dict) -> int:
+    """After a redraft, a shot with the same start and end as one already decided keeps that one's decisions
+    and picture: only what changed goes back to the model (2026-10-13: moving one beat's BREATHE need not
+    re-plan 274 shots). Fixed shots are code's and never carried."""
+    old = {(round(float(s["start"]), 2), round(float(s["end"]), 2)): s for s in prev.get("shots", []) if s.get("intent")}
+    n = 0
+    for s in plan["shots"]:
+        o = old.get((round(float(s["start"]), 2), round(float(s["end"]), 2)))
+        if o and not s.get("fixed") and not o.get("fixed"):
+            s.update({k: o[k] for k in CARRY if k in o})
+            s["carried"] = True
+            n += 1
+    if prev.get("moods"):
+        plan["moods"] = prev["moods"]
+    return n
 
 
 def _keeps(timing: dict, cuts: list[float]) -> list[tuple[float, float, str]]:

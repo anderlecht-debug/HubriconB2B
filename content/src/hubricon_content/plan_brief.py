@@ -189,6 +189,8 @@ def _with_shots(d, slug, lines, plan, timing, spoken):
             lines.append(f"### Beat {beat}" + (f". VISUAL: {v}" if v else ""))
         said = " ".join(w["word"] for w in shotmod.words_in(words, s["start"], s["end"]))
         figs = [f"{{{{{k}}}}}@{t:.2f}" for t, ks in spoken.items() if s["start"] - 0.05 <= t < s["end"] for k in ks]
+        if s.get("carried"):
+            continue                 # decided before and unchanged (plan_skeleton.carry)
         if s.get("fixed") and s.get("pictures"):
             lines.append(f"- {s['id']} [{s['start']:.2f}–{s['end']:.2f}] world still/{s['style']} FIXED cut and style ({s.get('intent', '')}): "
                          f"give only query, sources, fallback, specific | {said}")

@@ -63,7 +63,6 @@ SCRIPT
 
 [4:46] THE CHAIN
   VO: The machine grew from there. Scranton, {{w_scranton_date}}, run by his brother, Sum: the store the company's own history dates the chain from. Then stores run by partners: his cousin Seymour Knox, and Fred Kirby. In {{w_office_year}}, Woolworth rented desk room in New York for {{w_office_rent}} and did all the buying himself. By {{w_stores_1900_year}} he had {{w_stores_1900}} stores of his own, with the famous {{w_redfronts}}. One price, one look, one buyer. You could walk into any of them and know what everything cost before you'd seen any of it.
-  MONTAGE: yes
   VISUAL: still-pan across the Scranton store photograph (Wikimedia Commons, public domain); archive-stack of early five-and-ten storefronts and a 1908 Charlton store interior postcard (Wikimedia Commons, public domain), landing as the partners are named; timeline of store counts, each landing as spoken.
   CLIP: no
 
@@ -79,6 +78,7 @@ SCRIPT
 
 [6:16] THE SOAP AND THE SKIMMER
   VO: Look at what that does to a buyer's mind. The soap barely pays. The skimmer pays handsomely. In a store with one price, the customer doesn't know which is which, and doesn't care. The store has to. So a one-price store isn't simple. It's simple on the outside, and on the inside it's a portfolio: every item carrying a different margin under the same tag, and the buyer's whole job is to keep the average above the line. That's the first thing Woolworth understood. Same tag, different margins. Which means, as we'll see, different best prices.
+  BREATHE: yes
   VISUAL: chart-build of the three items as bars of the share kept, all under the same price line, the bars in blue; footage-insert of a bar of plain soap and a tin skimmer side by side on paper (stock, no labels).
   DATA SOURCE: published: computed from the first store's cost list, as recorded in the company's centennial report
   CLIP: no
@@ -246,7 +246,6 @@ SCRIPT
 
 [28:38] THE RETURN
   VO: {{w_day1}}, in nickels, on a Saturday in Lancaster. A ceiling held for {{w_ceiling_span}}. The tallest building in the world, paid for in nickels and dimes. It never told Woolworth what his customers would have paid. Your prices can.
-  BREATHE: yes
   VISUAL: still-push resuming on the cold open's coin in the same framing, then the modern price label on a shelf edge in the same framing; kinetic-thesis: "It never told Woolworth what his customers would have paid.".
   DATA SOURCE: published: the Lancaster takings, as recorded by the Woolworths Museum and the company's centennial report
   CLIP: no

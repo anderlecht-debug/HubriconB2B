@@ -366,6 +366,28 @@ def context_lines(plan: dict, facts: dict) -> list[str]:
     return fixed
 
 
+def fixed_pictures(plan: dict) -> list[str]:
+    """A BREATHE hold or a MONTAGE cut the decision left without a picture to look for: its query from the
+    concrete nouns of what is said under it (or its beat's VISUAL brief), its sources by the film's mode, a
+    fallback. Code's shots are filled by code."""
+    from . import sources
+    hist = plan.get("mode", "history") == "history"
+    fixed = []
+    for s in plan["shots"]:
+        if not (s.get("fixed") and s.get("pictures")):
+            continue
+        if not s.get("query"):
+            q = sources.nouns(s.get("says") or s.get("visual") or "") or sources.nouns(s.get("intent") or "")
+            if q:
+                s["query"] = [" ".join(q.split()[:4])]
+        if not s.get("sources"):
+            s["sources"] = ["loc", "commons", "smithsonian"] if hist else ["pexels", "pixabay"]
+        if not s.get("fallback"):
+            s["fallback"] = "paper:kinetic"
+        fixed.append(f"{s['id']}: its picture's query, sources and fallback set by code")
+    return fixed
+
+
 def autofix(slug: str) -> dict:
     """The validator's problems that have a known mechanical fix, fixed by code (the fixes made by hand
     on G02, 2026-10-07): a style's missing landing word, a thesis card longer than its 12 words or a
@@ -378,7 +400,7 @@ def autofix(slug: str) -> dict:
     timing, _ = shotmod.load_timing(d)
     problems = shotmod.validate(plan, timing, scriptmod.load_facts(slug))
     by = {s["id"]: s for s in plan["shots"]}
-    fixed = restore_content(plan) + context_lines(plan, scriptmod.load_facts(slug))
+    fixed = restore_content(plan) + context_lines(plan, scriptmod.load_facts(slug)) + fixed_pictures(plan)
     longest = lambda s: max([w.strip(".,;:!?\"'’”()") for w in (s.get("says") or "").split()] or [None], key=lambda w: len(w or ""))
     card = lambda lines: {"lines": [x for x in lines if x], "line": 1, "source": "As this film states it"}
     for p in problems:
@@ -388,7 +410,7 @@ def autofix(slug: str) -> dict:
         s, msg = by[m.group(1)], m.group(2)
         if s.get("fixed"):          # code's shots (a chapter's takeaway, a BREATHE hold, a MONTAGE run) are never rewritten
             continue
-        if msg.endswith("lands on a word: set `on`") or "is not spoken inside the shot" in msg:
+        if msg.endswith("lands on a word: set `on`") or "is not spoken inside the shot" in msg or msg.endswith("has no `on` event"):
             s["on"] = longest(s)
         elif msg.startswith("a thesis line is"):
             s.update({"kind": "document", "style": "doc-highlight", "room": "paper", "params": card((s.get("params") or {}).get("lines") or [s.get("says")])})
@@ -493,10 +515,19 @@ def run_line(slug: str, start: str | None = None, until: str | None = None, plac
                         state.save(q)
             done(step)
         elif step == "skeleton":
+            prev_p = d / "shots.json"
+            prev = json.loads(prev_p.read_text(encoding="utf-8")) if prev_p.exists() else {}
             plan = plan_skeleton.draft(slug)
+            kept = plan_skeleton.carry(prev, plan) if any(s.get("intent") for s in prev.get("shots", [])) else 0
+            if kept:
+                (d / "shots.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
             plan_brief.build(slug)
-            done(step, f"{len(plan['shots'])} shots drafted")
+            done(step, f"{len(plan['shots'])} shots drafted, {kept} carried from the decided plan")
         elif step == "decide":
+            plan_now = json.loads((d / "shots.json").read_text(encoding="utf-8"))
+            if all(s.get("carried") or (s.get("fixed") and not s.get("pictures")) for s in plan_now["shots"]):
+                done(step, "nothing left to decide: every shot carried")
+                continue
             # one reply, no tools: the brief holds everything, the answer is the decisions (ai_step.reply)
             r = ai_step.reply(slug, "plan", PLAN_SYSTEM, (d / "plan-brief.md").read_text(encoding="utf-8"))
             dec = ai_step.json_reply(r.get("result"))
