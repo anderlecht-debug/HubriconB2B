@@ -255,3 +255,16 @@ print(json.dumps({{"type": "result", "result": json.dumps({{"seen": seen}}), "is
     p.chmod(p.stat().st_mode | stat.S_IEXEC)
     res = ai_step.reply("f", "plan", "x", "y", claude=str(p))
     assert ai_step.json_reply(res["result"]) == {"seen": []}
+
+
+def test_a_style_with_no_landing_word_loses_the_drafts(tmp_path, monkeypatch):
+    from hubricon_content import line, shots
+    monkeypatch.setattr(scriptmod, "video_dir", lambda slug: tmp_path)
+    plan = {"shots": [{"id": "s011", "start": 0.0, "end": 5.0, "room": "paper", "kind": "quote", "style": "quote", "on": "{{q}}",
+                       "params": {"text": "We could have sold more."}}]}
+    (tmp_path / "shots.json").write_text(json.dumps(plan))
+    monkeypatch.setattr(shots, "load_timing", lambda d: ({"segments": [], "duration": 5.0}, None))
+    monkeypatch.setattr(shots, "validate", lambda plan, timing, facts: ["s011: quote has no `on` event"])
+    monkeypatch.setattr(scriptmod, "load_facts", lambda slug: {})
+    line.autofix("f")
+    assert json.loads((tmp_path / "shots.json").read_text())["shots"][0]["on"] is None

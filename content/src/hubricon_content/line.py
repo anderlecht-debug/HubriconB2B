@@ -410,7 +410,9 @@ def autofix(slug: str) -> dict:
         s, msg = by[m.group(1)], m.group(2)
         if s.get("fixed"):          # code's shots (a chapter's takeaway, a BREATHE hold, a MONTAGE run) are never rewritten
             continue
-        if msg.endswith("lands on a word: set `on`") or "is not spoken inside the shot" in msg or msg.endswith("has no `on` event"):
+        if msg.endswith("has no `on` event"):        # a style with no landing word (a quote, a thesis card): the draft's goes
+            s["on"] = None
+        elif msg.endswith("lands on a word: set `on`") or "is not spoken inside the shot" in msg:
             s["on"] = longest(s)
         elif msg.startswith("a thesis line is"):
             s.update({"kind": "document", "style": "doc-highlight", "room": "paper", "params": card((s.get("params") or {}).get("lines") or [s.get("says")])})
