@@ -1,0 +1,13 @@
+<h2>Returns Amazon damaged</h2>
+<p>When a return arrives, Amazon grades it. Some grades are your problem and some are Amazon's. On the demo catalogue 26 returns worth $237 were Amazon's.</p>
+<h3>Where the row is</h3>
+<p>FBA Customer Returns, the column called detailed disposition. A disposition of CARRIER_DAMAGED or DAMAGED means Amazon or its carrier damaged the unit after the customer sent it back, and that is a claim. A disposition of CUSTOMER_DAMAGED, DEFECTIVE, EXPIRED is customer damage, a defect, or expiry, and none of those is Amazon's liability. Sellable means the unit went back into your inventory and there is nothing to claim.</p>
+<p>On the demo catalogue, 48 returns were sellable, 44 were customer damage or defective, and 6 damaged returns had already been paid. The claims are what is left.</p>
+<h3>Already paid?</h3>
+<p>Check the status column on the return. If it contains the word reimbursed, Amazon paid. Check the Reimbursements report for the order id with a return or damage reason. Either one removes the candidate.</p>
+<h3>The window</h3>
+<p>Eligible at once; there is no waiting period on a graded return. The window shuts 60 days after the return date. These close fast, and the demo catalogue's soonest deadline at the time of the run was a carrier damaged claim with 2 days left.</p>
+<h3>Value and odds</h3>
+<p>Landed cost per unit. Approval odds: 60%, the lowest in this playbook, because Amazon will sometimes regrade the return on review. File anyway; the expected value is still positive on almost every row.</p>
+<h3>How to file</h3>
+<p>Seller Support, Fulfillment by Amazon, then the customer return option, then a damaged return. Give the order id, the license plate number from the returns report, the SKU, the disposition Amazon itself recorded, and the return date. Ask for reimbursement at cost for a unit Amazon graded as damaged in its custody. Log the case.</p>

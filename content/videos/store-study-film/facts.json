@@ -1,0 +1,107 @@
+{
+  "store_sales": {
+    "value": "\u00a39.8M",
+    "label": "the store's sales in 2010",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_customers": {
+    "value": "5,852",
+    "label": "customers the data numbers",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_cut": {
+    "value": "June 7, 2011",
+    "label": "the engine's own calibration cut-off",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_weeks": {
+    "value": "26",
+    "label": "weeks called after the cut-off",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_called": {
+    "value": "7,671",
+    "label": "repeat orders the engine called",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_happened": {
+    "value": "7,865",
+    "label": "repeat orders that happened",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_off": {
+    "value": "2.5%",
+    "label": "how far apart, more than called",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_named": {
+    "value": "498",
+    "label": "regulars named as slipping away",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_named_gone": {
+    "value": "274",
+    "label": "of them who never came back",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_steady_gone_share": {
+    "value": "20%",
+    "label": "regulars not named who never came back",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_lost_spend": {
+    "value": "\u00a3318,525",
+    "label": "what the lost regulars spent the year before",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_top_n": {
+    "value": "200",
+    "label": "best sellers called each month",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_q_called": {
+    "value": "542,981",
+    "label": "units called for September to November",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_q_happened": {
+    "value": "538,415",
+    "label": "units sold",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_q_off": {
+    "value": "0.8%",
+    "label": "how far apart over the quarter",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_worst": {
+    "value": "13.9%",
+    "label": "the worst single month, sold against called",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_band_lo": {
+    "value": "56%",
+    "label": "products inside their 80% range, the worst month",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_band_hi": {
+    "value": "66%",
+    "label": "products inside their 80% range, the best month",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_from": {
+    "value": "December 2009",
+    "label": "the first month of the published orders",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_to": {
+    "value": "December 2011",
+    "label": "the last month of the published orders",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  },
+  "store_band_target": {
+    "value": "80%",
+    "label": "the share of products each range promised to hold",
+    "source": "the store study (data/store-study.json): Hubricon's engine on a real retailer's published orders (UCI Online Retail II, CC BY 4.0), modeled on published data, not a client, not a result"
+  }
+}

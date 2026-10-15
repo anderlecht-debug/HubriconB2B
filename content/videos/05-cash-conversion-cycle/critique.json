@@ -1,0 +1,92 @@
+{
+ "slug": "05-cash-conversion-cycle",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The hook has him say a margin like that can't run out of money, and the 'let them be wrong' beat states the P&L-as-cash-forecast model fairly, granting that over a long window the P&L and the bank agree, before the crack shows the wires exceeding the balance."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "The cycle is defined as the clocks laid in a row (wire, lead time, shelf, payout), found on the cone with a key for each clock, verified as the trough {{trough_p5}} on day {{min_p5_day}}, and tied to survival through {{p_ruin}} and the starting balance. Note for the founder and the facts step: the demo catalog's own cycle length in days is never spoken as one figure, because no fact key computes it; a ccc_days key from the cash horizon would let the script say it outright."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "No symbols. 'Cash conversion cycle' is named only after the clocks are put in a row; correlation, expected shortfall and economic quantity each arrive with their plain gloss in the same sentence. The newsvendor is named as the model that flags overstock rather than taught, which is its own video."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: cash leaves and returns on dates the P&L does not carry, and the gap between them is the number. What it's worth and what to do are the same idea applied. One CTA, the free Profit Teardown."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Hold cash for the trough, not for the month' disputes the runway-in-months rule directly, and 'a profitable catalog can run out of cash on a date you can read off a calendar' is specific enough to argue with."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "The procedure is complete: write the four dates per product from POs and settlements, draw every wire inside {{horizon_days}} against cash and payouts, split the largest wire, trim the overstocked orders, ask for terms, and reserve for the trough plus a buffer. The cone itself is left to the model in the honest limit, as §7 allows."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close says what the viewer can do (the calendar for the top products), where it breaks ({{n_paths}} paths across {{skus_in_cone}} correlated products, redrawn as wires move), that a cone drawn too narrow is dangerous, and names the free Profit Teardown once as the thing that runs it, which §8 allows for pillar 2. No urgency, no scarcity."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "5 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "exempt (pillar 1–2)"
+  }
+ ],
+ "judged_by": "critique skill, unattended tick 2026-09-18"
+}

@@ -1,0 +1,172 @@
+{
+  "who": {
+    "value": "a car-care brand",
+    "label": "the case-study brand, anonymised",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "category": {
+    "value": "Automotive",
+    "label": "its category",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "weight": {
+    "value": "8.8 ounces",
+    "label": "the listing's published item weight",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "edge": {
+    "value": "8 ounces",
+    "label": "the weight-band edge it sits past",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "step_np": {
+    "value": "$0.26",
+    "label": "the step, per unit, on the card in force until October 14",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "step_peak": {
+    "value": "$0.28",
+    "label": "the step, per unit, on the holiday card",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "units": {
+    "value": "3,600",
+    "label": "estimated units a month, from the public sales rank",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "leak_p10": {
+    "value": "$6,400",
+    "label": "the step a year, P10",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "leak_p90": {
+    "value": "$19,200",
+    "label": "the step a year, P90",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "years": {
+    "value": "10,000",
+    "label": "simulated years",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "months_total": {
+    "value": "120,000",
+    "label": "simulated months",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "months_losing": {
+    "value": "0",
+    "label": "simulated months at a loss before ads, storage and returns",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "aged_before": {
+    "value": "$1.50",
+    "label": "aged-inventory surcharge a cubic foot, days 241 to 270",
+    "source": "Amazon's storage schedule in force from January 15, 2026"
+  },
+  "aged_after": {
+    "value": "$5.45",
+    "label": "aged-inventory surcharge a cubic foot, days 271 to 300",
+    "source": "Amazon's storage schedule in force from January 15, 2026"
+  },
+  "cliff_day": {
+    "value": "271",
+    "label": "the day the surcharge steps",
+    "source": "Amazon's storage schedule in force from January 15, 2026"
+  },
+  "brands_modeled": {
+    "value": "1,856",
+    "label": "Amazon brands modeled from public pages",
+    "source": "data/case-study.json selection"
+  },
+  "brands_silent": {
+    "value": "1,473",
+    "label": "of them, brands that showed nothing worth fixing",
+    "source": "data/case-study.json selection"
+  },
+  "surcharge": {
+    "value": "3.5%",
+    "label": "the fuel and logistics surcharge on every fulfilment fee",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "peak_from": {
+    "value": "October 15",
+    "label": "the holiday card's first day",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "peak_to": {
+    "value": "January 14",
+    "label": "the holiday card's last day",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "np_through": {
+    "value": "October 14",
+    "label": "the last day of the card in force before the holiday card",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "over": {
+    "value": "0.8 of an ounce",
+    "label": "how far past the edge the listing's published weight sits",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "price_edge": {
+    "value": "$10",
+    "label": "the price edge between the card's first two columns",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "peak_min": {
+    "value": "$0.20",
+    "label": "the smallest holiday increase on any standard-size row",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "peak_max": {
+    "value": "$0.42",
+    "label": "the largest holiday increase on any standard-size row",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "stor_off": {
+    "value": "$0.78",
+    "label": "monthly storage a cubic foot, January to September",
+    "source": "Amazon's storage schedule in force from January 15, 2026"
+  },
+  "stor_peak": {
+    "value": "$2.40",
+    "label": "monthly storage a cubic foot, October to December",
+    "source": "Amazon's storage schedule in force from January 15, 2026"
+  },
+  "cs_fee_np": {
+    "value": "$4.35",
+    "label": "the case-study unit's fee until October 14",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "cs_fee_peak": {
+    "value": "$4.64",
+    "label": "the case-study unit's fee from October 15",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "cs_delta": {
+    "value": "$0.29",
+    "label": "the case-study unit's holiday increase",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "cs_window_lo": {
+    "value": "$1,500",
+    "label": "the holiday increase over the three months, low end",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "cs_window_hi": {
+    "value": "$4,600",
+    "label": "the holiday increase over the three months, high end",
+    "source": "public-data case study (data/case-study.json), modeled from public data, not a client, not a result"
+  },
+  "ten_min": {
+    "value": "$0.85",
+    "label": "the $10 price step, smallest row",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  },
+  "ten_max": {
+    "value": "$1.05",
+    "label": "the $10 price step, largest row",
+    "source": "Amazon's published 2026 US FBA cards (ratecard.json, loaded 2026-09-09)"
+  }
+}

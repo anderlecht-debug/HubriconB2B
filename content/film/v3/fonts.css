@@ -1,0 +1,13 @@
+/* v3 type, every face self-hosted (OFL / Apache 2.0, licences beside the files in
+   content/assets/fonts): Inter for data and labels, Fraunces for display, Instrument Serif
+   for quotes, Old Standard for period print (Acts, catalogues, the 1914 guidebook), Special
+   Elite for typed records. */
+@font-face { font-family: "Inter"; src: url("/content/assets/fonts/InterVariable.ttf") format("truetype"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "Fraunces"; src: url("/content/assets/fonts/Fraunces[SOFT,WONK,opsz,wght].ttf") format("truetype"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "Fraunces"; src: url("/content/assets/fonts/Fraunces-Italic[SOFT,WONK,opsz,wght].ttf") format("truetype"); font-weight: 100 900; font-style: italic; font-display: block; }
+@font-face { font-family: "Instrument Serif"; src: url("/content/assets/fonts/InstrumentSerif-Regular.ttf") format("truetype"); font-display: block; }
+@font-face { font-family: "Instrument Serif"; src: url("/content/assets/fonts/InstrumentSerif-Italic.ttf") format("truetype"); font-style: italic; font-display: block; }
+@font-face { font-family: "Old Standard"; src: url("/content/assets/fonts/OldStandard-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Old Standard"; src: url("/content/assets/fonts/OldStandard-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Old Standard"; src: url("/content/assets/fonts/OldStandard-Italic.ttf") format("truetype"); font-style: italic; font-display: block; }
+@font-face { font-family: "Special Elite"; src: url("/content/assets/fonts/SpecialElite-Regular.ttf") format("truetype"); font-display: block; }

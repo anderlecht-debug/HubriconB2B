@@ -1,0 +1,92 @@
+{
+ "slug": "07-contribution-vs-gross-margin",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The hook has him say the first number is his margin and the rest is overhead, and the 'let them be wrong' beat states the gross-plus-overhead model fairly, granting that it is how the accounts are laid out and correct for a business with one product, before the waterfall shows the fees and ads charged per product."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "The gap between the margins is shown as {{gross_vs_contribution_gap}} of revenue, contribution is built from the settlement, campaign and cost reports, verified on the bestseller and the bottom product, and 'the one that matters' is argued through the reorder, ad, price and concentration decisions that go wrong on gross. Note for the founder: on this demo the bestseller survives the test and {{n_skus_negative_net}} products lose money, so the crack is quieter than the title suggests; the script says so plainly rather than manufacturing a casualty."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "No symbols. Contribution margin is named only after the per-product waterfall has been built ('now it has a name'); the newsvendor's economic quantity and the break-even return on ad spend each arrive with their plain gloss in the same sentence."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: fees and ads are charged per product, not spread, so the margin a product has is contribution, and every decision should rank on it. One CTA, the course page."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Gross margin is a number for your supplier's benefit, not yours' and 'take gross margin off the dashboard' are both disputable and specific."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "The build is complete: which report carries each fee, the allocation rule for shared campaigns (attributed sales, never revenue share), the landed cost components, the per-product waterfall, the ranking, and the break-even return on ad spend from contribution. Rechecking fee tiers monthly across every order is left to the model in the honest limit, as §7 allows."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close says what the viewer can do (the waterfall for the top products, an afternoon), where it breaks ({{n_skus}} products, overlapping campaigns, fee tiers, every month, drifting back to revenue share), and that the gap is a model. No service is named, as pillar 5 requires, and the CTA is the course page."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "5 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "Contribution against gross applies to any channel with payment or platform fees and paid acquisition; the script says 'the platform' throughout and the allocation rule is universal. Weakness to note: the report names lean toward a marketplace settlement; a Shopify reader maps them to payouts and the ad platforms' reports without help from the script."
+  }
+ ],
+ "judged_by": "critique skill, unattended tick 2026-09-18"
+}

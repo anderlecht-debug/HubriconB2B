@@ -1,0 +1,1341 @@
+{
+ "slug": "05-cash-conversion-cycle",
+ "mode": "explainer",
+ "fps": 30,
+ "shots": [
+  {
+   "id": "s001",
+   "start": 0.0,
+   "end": 12.895,
+   "room": "paper",
+   "kind": "pair",
+   "style": "number-pair",
+   "on": "{{net_pct_latest}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "min_p5",
+     "t": 0.3
+    },
+    {
+     "key": "min_p5_day",
+     "t": 4.65
+    },
+    {
+     "key": "net_pct_latest",
+     "t": 7.2
+    }
+   ],
+   "intent": "the trough figure lands on its first word, then the margin beside it: rich on paper, short of cash",
+   "says": "$95,201. That's where this catalog's cash bottoms out on day 13 days, on a business making 32.3% net. You'd say a margin like that can't run out of money.",
+   "label": "demo"
+  },
+  {
+   "id": "s002",
+   "start": 12.895,
+   "end": 18.14,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": "calendar",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "paper wall calendar page close up daylight"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a calendar page: the date the voice names",
+   "says": "It can, on a date you can read off a calendar.",
+   "label": null
+  },
+  {
+   "id": "s003",
+   "start": 18.14,
+   "end": 24.685,
+   "room": "paper",
+   "kind": "document",
+   "style": "doc-highlight",
+   "on": "positive",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "the demo catalogue's P&L, the net line marked as the voice says positive",
+   "says": "Here's the model. You watch the P&L. Revenue up, margin healthy, net positive,",
+   "label": null
+  },
+  {
+   "id": "s004",
+   "start": 24.685,
+   "end": 31.335,
+   "room": "world",
+   "kind": "still",
+   "style": "still-push",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "bank teller window interior photograph"
+   ],
+   "sources": [
+    "loc",
+    "smithsonian",
+    "commons"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "an old bank counter: the balance the P&L is supposed to copy",
+   "says": "so the business is fine and the bank balance is a lagging copy of the P&L.",
+   "label": null
+  },
+  {
+   "id": "s005",
+   "start": 31.335,
+   "end": 37.435,
+   "room": "world",
+   "kind": "texture",
+   "style": "texture",
+   "on": null,
+   "params": {},
+   "overlay": {
+    "illustration": true
+   },
+   "reveals": [],
+   "query": [
+    "empty cardboard boxes stacked still life"
+   ],
+   "sources": [
+    "higgsfield"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "atmosphere for the surprise: empty cartons in flat light",
+   "says": "When cash gets tight it's a surprise, and the explanation is always something else.",
+   "label": null
+  },
+  {
+   "id": "s006",
+   "start": 37.435,
+   "end": 42.085,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "purchase order paperwork stamp close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a purchase order being stamped: a big PO",
+   "says": "A big PO. A slow payout. A bad month.",
+   "label": null
+  },
+  {
+   "id": "s007",
+   "start": 42.085,
+   "end": 49.385,
+   "room": "world",
+   "kind": "still",
+   "style": "still-pan",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "accounting ledgers on shelves archive photograph"
+   ],
+   "sources": [
+    "loc",
+    "smithsonian",
+    "commons"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "rows of old ledgers: the long window where the books and the bank agree",
+   "says": "It's a fair model, because over a long enough window the P&L and the bank do agree.",
+   "label": null
+  },
+  {
+   "id": "s008",
+   "start": 49.385,
+   "end": 52.785,
+   "room": "paper",
+   "kind": "kinetic",
+   "style": "kinetic-thesis",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "the beat's claim in its own words",
+   "says": "The trouble is the window. Inside it,",
+   "label": null
+  },
+  {
+   "id": "s009",
+   "start": 52.785,
+   "end": 58.135,
+   "room": "world",
+   "kind": "texture",
+   "style": "texture",
+   "on": null,
+   "params": {},
+   "overlay": {
+    "illustration": true
+   },
+   "reveals": [],
+   "query": [
+    "calendar pages and parcel tape still life"
+   ],
+   "sources": [
+    "higgsfield"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "dates going out and coming back, as atmosphere",
+   "says": "the money leaves on one set of dates and comes back on another,",
+   "label": null
+  },
+  {
+   "id": "s010",
+   "start": 58.135,
+   "end": 63.975,
+   "room": "paper",
+   "kind": "table",
+   "style": "table-scan",
+   "on": "catalog",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "the demo catalogue's product table arrives as it is named",
+   "says": "and the P&L doesn't carry dates. Here's the demo catalog on screen.",
+   "label": null
+  },
+  {
+   "id": "s011",
+   "start": 63.975,
+   "end": 77.525,
+   "room": "paper",
+   "kind": "chart",
+   "style": "chart-build",
+   "on": "{{net_latest}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "demo_brand",
+     "t": 64.18
+    },
+    {
+     "key": "demo_label",
+     "t": 64.73
+    },
+    {
+     "key": "n_skus",
+     "t": 65.68
+    },
+    {
+     "key": "annual_revenue_m",
+     "t": 67.03
+    },
+    {
+     "key": "rev_latest",
+     "t": 69.53
+    },
+    {
+     "key": "net_latest",
+     "t": 70.88
+    },
+    {
+     "key": "net_pct_latest",
+     "t": 73.03
+    }
+   ],
+   "chart": {
+    "scene": "waterfall"
+   },
+   "intent": "revenue down to true net for the latest month, each figure as it is said",
+   "says": "Tarnhollow, demo data, 24 products, about $3.5M a year. Last month: $318,632 of sales, $102,864 of true net profit, 32.3% net margin. On the P&L this business is fine.",
+   "label": "demo"
+  },
+  {
+   "id": "s012",
+   "start": 77.525,
+   "end": 90.575,
+   "room": "paper",
+   "kind": "pair",
+   "style": "number-pair",
+   "on": "{{wires_total}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "cash_on_hand",
+     "t": 79.28
+    },
+    {
+     "key": "horizon_days",
+     "t": 82.43
+    },
+    {
+     "key": "wires_total",
+     "t": 86.58
+    }
+   ],
+   "intent": "cash on hand against the wires already scheduled: the second number is the point",
+   "says": "Now the bank. $262,000 on hand today. Inside the next 90 days, the supplier wires already scheduled add up to $345,501. That's more than the cash in the bank,",
+   "label": "demo"
+  },
+  {
+   "id": "s013",
+   "start": 90.575,
+   "end": 95.975,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "delivery van loading parcels close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "parcels leaving: money that comes back later",
+   "says": "on a business that is profitable every month. The money comes back.",
+   "label": null
+  },
+  {
+   "id": "s014",
+   "start": 95.975,
+   "end": 102.02,
+   "room": "paper",
+   "kind": "chart",
+   "style": "range-band",
+   "on": "when",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the cone opens: the question is when",
+   "says": "The question is when, and whether the balance runs dry on the way.",
+   "label": null
+  },
+  {
+   "id": "s015",
+   "start": 102.02,
+   "end": 103.12,
+   "room": "paper",
+   "kind": "chapter",
+   "style": "chapter",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "Find it",
+   "says": "",
+   "label": null
+  },
+  {
+   "id": "s016",
+   "start": 103.12,
+   "end": 122.415,
+   "room": "paper",
+   "kind": "chart",
+   "style": "chart-build",
+   "on": "{{n_paths}}",
+   "params": {
+    "builds": [
+     111.0,
+     117.0
+    ]
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "n_paths",
+     "t": 106.17
+    },
+    {
+     "key": "horizon_days",
+     "t": 108.57
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the cash cone builds: ten thousand paths, the wires as ticks",
+   "says": "On screen is the cash cone. 10,000 possible versions of the next 90 days, drawn from what this catalog's demand actually does, with every supplier wire as a red tick. Read it left to right, and find the clocks. First, the wire schedule.",
+   "label": "demo"
+  },
+  {
+   "id": "s017",
+   "start": 122.415,
+   "end": 134.415,
+   "room": "paper",
+   "kind": "table",
+   "style": "table-scan",
+   "on": "{{largest_wire}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "wire_count",
+     "t": 122.62
+    },
+    {
+     "key": "largest_wire",
+     "t": 125.92
+    },
+    {
+     "key": "largest_wire_sku",
+     "t": 126.87
+    },
+    {
+     "key": "largest_wire_day",
+     "t": 128.62
+    }
+   ],
+   "intent": "the wire schedule; the largest row marked as its amount is said",
+   "says": "35 wires inside the window. The largest, $23,482, for TH-ENADUT-03, leaves on day 0 days. That's today. Next, how long the goods take to arrive.",
+   "label": "demo"
+  },
+  {
+   "id": "s018",
+   "start": 134.415,
+   "end": 143.915,
+   "room": "paper",
+   "kind": "number",
+   "style": "number-land",
+   "on": "{{lead_time_typical}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "lead_time_typical",
+     "t": 137.42
+    }
+   ],
+   "intent": "the supplier lead time, one figure",
+   "says": "The typical supplier lead time here is 40 days. For that long the money is gone and there's nothing new to sell.",
+   "label": "demo"
+  },
+  {
+   "id": "s019",
+   "start": 143.915,
+   "end": 149.015,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "warehouse shelf cartons close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "the shelf the voice names",
+   "says": "Then the shelf. Once units land they sit until they sell.",
+   "label": null
+  },
+  {
+   "id": "s020",
+   "start": 149.015,
+   "end": 157.415,
+   "room": "paper",
+   "kind": "number",
+   "style": "number-land",
+   "on": "{{stockout_worst_cover}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "stockout_worst_sku",
+     "t": 151.77
+    },
+    {
+     "key": "stockout_worst_cover",
+     "t": 152.72
+    }
+   ],
+   "intent": "the tightest product's days of cover",
+   "says": "The tightest product in this catalog, TH-STAMIX-12, has 22 days of cover, and slower products sit longer than that.",
+   "label": "demo"
+  },
+  {
+   "id": "s021",
+   "start": 157.415,
+   "end": 168.215,
+   "room": "paper",
+   "kind": "document",
+   "style": "doc-highlight",
+   "on": "{{payout_cycle}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "payout_cycle",
+     "t": 162.12
+    }
+   ],
+   "intent": "the platform's payout schedule, the hold period marked",
+   "says": "Last, the payout. The platform holds the sale for a 14 days cycle before it pays you. Now put the clocks in a row.",
+   "label": "demo"
+  },
+  {
+   "id": "s022",
+   "start": 168.215,
+   "end": 172.215,
+   "room": "paper",
+   "kind": "formula",
+   "style": "formula-build",
+   "on": "payout",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "wire + lead time + shelf + payout, each term as it is said",
+   "says": "Wire, then lead time, then shelf, then payout.",
+   "label": null
+  },
+  {
+   "id": "s023",
+   "start": 172.215,
+   "end": 183.915,
+   "room": "paper",
+   "kind": "timeline",
+   "style": "timeline",
+   "on": null,
+   "params": {
+    "events": [
+     "wire",
+     "landing",
+     "sale",
+     "payout"
+    ]
+   },
+   "overlay": {},
+   "reveals": [],
+   "intent": "the four clocks in a row: the cycle as a length of time",
+   "says": "The cash conversion cycle is the length of that row: the days between a dollar leaving for the supplier and the same dollar landing back in the bank.",
+   "label": null
+  },
+  {
+   "id": "s024",
+   "start": 183.915,
+   "end": 194.31,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-establish",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "office wall calendar daylight wide"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a calendar on an office wall: the chart that is nothing but a calendar",
+   "says": "It isn't on the P&L because the P&L has no calendar. It's on this chart, because this chart is nothing but a calendar.",
+   "label": null
+  },
+  {
+   "id": "s025",
+   "start": 194.31,
+   "end": 195.41,
+   "room": "paper",
+   "kind": "chapter",
+   "style": "chapter",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "Verify it",
+   "says": "",
+   "label": null
+  },
+  {
+   "id": "s026",
+   "start": 195.41,
+   "end": 212.955,
+   "room": "paper",
+   "kind": "chart",
+   "style": "callback",
+   "on": "{{min_p5_day}}",
+   "params": {
+    "callback": "s016",
+    "builds": [
+     203.0,
+     208.0
+    ]
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "min_median",
+     "t": 200.86
+    },
+    {
+     "key": "trough_p5",
+     "t": 207.11
+    },
+    {
+     "key": "min_p5_day",
+     "t": 209.66
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the cone from the first chapter, the trough now marked",
+   "says": "Now verify it against the cone. The median path's low point is $95,201. The bad paths' low point, the worst day of the unlucky tail, is $95,201, and it arrives on day 13 days. Look where that day sits.",
+   "label": "demo"
+  },
+  {
+   "id": "s027",
+   "start": 212.955,
+   "end": 220.655,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-establish",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "container ship unloading cranes port daylight wide"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "goods not yet landed: a ship at the berth",
+   "says": "It's after the wires have left and before the goods have landed, let alone sold and paid out.",
+   "label": null
+  },
+  {
+   "id": "s028",
+   "start": 220.655,
+   "end": 224.205,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "shipping label date stamp close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a date on a shipping document: the cycle as a date",
+   "says": "That's the cycle showing up as a date.",
+   "label": null
+  },
+  {
+   "id": "s029",
+   "start": 224.205,
+   "end": 239.705,
+   "room": "paper",
+   "kind": "chart",
+   "style": "range-band",
+   "on": "{{p_ruin}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "p_ruin",
+     "t": 229.21
+    },
+    {
+     "key": "cash_on_hand",
+     "t": 230.76
+    },
+    {
+     "key": "largest_wire_day",
+     "t": 233.16
+    },
+    {
+     "key": "trough_p5",
+     "t": 236.71
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the share of paths that run dry, then the balance lowered toward the trough",
+   "says": "In this run the share of paths that ever runs dry is 0.0%. That's with $262,000 in the bank on day 0 days. Bring the starting balance down toward $95,201 and the same schedule, same margin,",
+   "label": "demo"
+  },
+  {
+   "id": "s030",
+   "start": 239.705,
+   "end": 248.955,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-observe",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "empty warehouse floor pallets static"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "an empty floor while the voice says only the balance changed",
+   "says": "same products, starts touching the floor. The margin never changed. Only the balance did, and the dates did the rest.",
+   "label": null
+  },
+  {
+   "id": "s031",
+   "start": 248.955,
+   "end": 255.255,
+   "room": "paper",
+   "kind": "document",
+   "style": "doc-highlight",
+   "on": "spreadsheet",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "a plain spreadsheet, the line it cannot hold marked",
+   "says": "And here's what the cone knows that a spreadsheet doesn't. Products don't sell independently.",
+   "label": null
+  },
+  {
+   "id": "s032",
+   "start": 255.255,
+   "end": 272.055,
+   "room": "paper",
+   "kind": "chart",
+   "style": "chart-build",
+   "on": "{{demand_corr}}",
+   "params": {
+    "builds": [
+     264.0,
+     268.0
+    ]
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "demand_corr",
+     "t": 259.61
+    }
+   ],
+   "chart": {
+    "scene": "paths"
+   },
+   "intent": "paths that move together, the correlation as it is said",
+   "says": "Across this catalog, demand moves together with a correlation of 0.48, so a slow week is slow for most of the products at once, and the trough is deeper than it would be if each product rolled its own dice.",
+   "label": "demo"
+  },
+  {
+   "id": "s033",
+   "start": 272.055,
+   "end": 290.595,
+   "room": "paper",
+   "kind": "chart",
+   "style": "range-band",
+   "on": "{{terminal_p10}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "horizon_days",
+     "t": 274.81
+    },
+    {
+     "key": "terminal_p90",
+     "t": 278.01
+    },
+    {
+     "key": "terminal_p10",
+     "t": 280.01
+    },
+    {
+     "key": "year_luck_spread",
+     "t": 286.06
+    }
+   ],
+   "chart": {
+    "scene": "paths"
+   },
+   "intent": "the fan's top and bottom at ninety days, then the year's spread",
+   "says": "Seen from the other end, after 90 days the top of the cone is $352,682 and the bottom is $322,319. Same plan, same margin. Over a full year that gap opens to $65,320 on dice alone. So what's the number worth?",
+   "label": "demo"
+  },
+  {
+   "id": "s034",
+   "start": 290.595,
+   "end": 297.245,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-establish",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "warehouse pallets stacked inventory wide daylight"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "stock sitting in the gap",
+   "says": "Every day you shorten the cycle is a day less of cash sitting in the gap,",
+   "label": null
+  },
+  {
+   "id": "s035",
+   "start": 297.245,
+   "end": 302.295,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "cartons on warehouse shelf close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "the cartons themselves",
+   "says": "and here's what's sitting in the gap on this catalog right now.",
+   "label": null
+  },
+  {
+   "id": "s036",
+   "start": 302.295,
+   "end": 316.495,
+   "room": "paper",
+   "kind": "chart",
+   "style": "chart-build",
+   "on": "{{nv_bleed_month}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "nv_bleed_month",
+     "t": 307.05
+    },
+    {
+     "key": "nv_econ_orders",
+     "t": 311.2
+    }
+   ],
+   "chart": {
+    "scene": "newsvendor"
+   },
+   "intent": "the overstocked orders above the economic quantity, the monthly bleed as it is said",
+   "says": "On the shelf clock, stock ordered past its economic quantity costs $3,874 a month in fees to hold, and there are 13 orders the newsvendor would trim. That's cash parked on a shelf.",
+   "label": "demo"
+  },
+  {
+   "id": "s037",
+   "start": 316.495,
+   "end": 330.345,
+   "room": "paper",
+   "kind": "table",
+   "style": "callback",
+   "on": "{{largest_wire}}",
+   "params": {
+    "callback": "s017"
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "largest_wire",
+     "t": 320.05
+    },
+    {
+     "key": "largest_wire_day",
+     "t": 322.85
+    }
+   ],
+   "intent": "the wire schedule again, the largest wire marked",
+   "says": "On the wire clock, the largest wire is $23,482 and it goes out on day 0 days, so it sets the depth of the trough more than any other line on the calendar.",
+   "label": "demo"
+  },
+  {
+   "id": "s038",
+   "start": 330.345,
+   "end": 340.345,
+   "room": "paper",
+   "kind": "document",
+   "style": "callback",
+   "on": "{{payout_cycle}}",
+   "params": {
+    "callback": "s021"
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "payout_cycle",
+     "t": 332.3
+    }
+   ],
+   "intent": "the payout schedule again: fixed by the platform",
+   "says": "On the payout clock, 14 days is fixed by the platform. You can't shorten it. You can stop treating it as instant.",
+   "label": "demo"
+  },
+  {
+   "id": "s039",
+   "start": 340.345,
+   "end": 353.595,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-observe",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "container truck highway daylight static"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "goods in transit while the voice names the price",
+   "says": "And the price of getting this wrong isn't a fee. It's the reorder you can't place because the cash is in transit, and the rank you buy back with ads afterwards.",
+   "label": null
+  },
+  {
+   "id": "s040",
+   "start": 353.595,
+   "end": 369.19,
+   "room": "paper",
+   "kind": "chart",
+   "style": "range-band",
+   "on": "{{risk_cvar_95}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "risk_cvar_95",
+     "t": 359.4
+    },
+    {
+     "key": "risk_worst_5",
+     "t": 362.75
+    },
+    {
+     "key": "risk_expected_net",
+     "t": 365.15
+    }
+   ],
+   "chart": {
+    "scene": "montecarlo"
+   },
+   "intent": "the risk model's bad tail, each figure as it is said",
+   "says": "The risk model puts the expected shortfall below plan in a bad period at $38,007, and the worst run of periods at $61,358 of net against an expected $99,365. The cycle is where that shortfall lands.",
+   "label": "demo"
+  },
+  {
+   "id": "s041",
+   "start": 369.19,
+   "end": 372.935,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "notebook pen writing dates close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a hand writing dates: write the cycle down",
+   "says": "This week. First, write the cycle down.",
+   "label": null
+  },
+  {
+   "id": "s042",
+   "start": 372.935,
+   "end": 381.635,
+   "room": "paper",
+   "kind": "table",
+   "style": "table-scan",
+   "on": "payout",
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "the four-date sheet, row by row",
+   "says": "Wire date, landing date, first sale, first payout, for your top products, from your own POs and settlement reports.",
+   "label": null
+  },
+  {
+   "id": "s043",
+   "start": 381.635,
+   "end": 387.735,
+   "room": "world",
+   "kind": "still",
+   "style": "still-push",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "bookkeeper writing in ledger photograph"
+   ],
+   "sources": [
+    "loc",
+    "smithsonian",
+    "commons"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a clerk at a ledger: the sheet most operators never made",
+   "says": "It's a spreadsheet with dates in it, and most operators have never made one.",
+   "label": null
+  },
+  {
+   "id": "s044",
+   "start": 387.735,
+   "end": 399.285,
+   "room": "paper",
+   "kind": "chart",
+   "style": "callback",
+   "on": "{{horizon_days}}",
+   "params": {
+    "callback": "s016"
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "horizon_days",
+     "t": 392.84
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the cone again: every wire on the ninety-day calendar",
+   "says": "Next, draw the wires. Every scheduled supplier payment inside the next 90 days, on a calendar, against the cash you hold and the payouts you expect.",
+   "label": "demo"
+  },
+  {
+   "id": "s045",
+   "start": 399.285,
+   "end": 415.885,
+   "room": "paper",
+   "kind": "chart",
+   "style": "counterfactual",
+   "on": "flattens",
+   "params": {
+    "builds": [
+     406.0,
+     410.0
+    ]
+   },
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "min_p5_day",
+     "t": 403.09
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "the trough day marked, then the largest wire split and the trough lifting",
+   "says": "Where the line dips lowest is your own day 13 days. Then move the clocks. Split the largest wire into a deposit and a balance where the supplier allows it. That flattens the trough without touching the margin.",
+   "label": "demo"
+  },
+  {
+   "id": "s046",
+   "start": 415.885,
+   "end": 422.785,
+   "room": "paper",
+   "kind": "chart",
+   "style": "callback",
+   "on": "overstocked",
+   "params": {
+    "callback": "s036"
+   },
+   "overlay": {},
+   "reveals": [],
+   "chart": {
+    "scene": "newsvendor"
+   },
+   "intent": "the newsvendor chart again, the trimmed orders marked",
+   "says": "Trim the orders the newsvendor flags as overstocked, because that cash comes back onto the calendar.",
+   "label": null
+  },
+  {
+   "id": "s047",
+   "start": 422.785,
+   "end": 426.335,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "supplier contract paper pen close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "the terms on paper",
+   "says": "Ask for terms before you ask for growth.",
+   "label": null
+  },
+  {
+   "id": "s048",
+   "start": 426.335,
+   "end": 443.335,
+   "room": "paper",
+   "kind": "chart",
+   "style": "range-band",
+   "on": "{{min_p5_day}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "monthly_fixed_costs",
+     "t": 432.79
+    },
+    {
+     "key": "min_p5_day",
+     "t": 436.54
+    }
+   ],
+   "chart": {
+    "scene": "cash_cone"
+   },
+   "intent": "fixed costs against the trough day, the bad tail as the buffer",
+   "says": "Last, hold cash for the trough, not for the month. Fixed costs here are $31,500 a month, and the trough arrives on day 13 days. The right reserve is the trough plus a buffer for the cone's bad tail,",
+   "label": "demo"
+  },
+  {
+   "id": "s049",
+   "start": 443.335,
+   "end": 454.125,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-observe",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "desk notebook calendar daylight static"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "the calendar the founder can make this week",
+   "says": "not a round number of months. What you can do yourself is the calendar for your top products, and it's worth doing this week.",
+   "label": null
+  },
+  {
+   "id": "s050",
+   "start": 454.125,
+   "end": 458.075,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "hands working sums on paper with pencil close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "hands at the paper: what cannot be done by hand",
+   "says": "What you can't do by hand is the cone.",
+   "label": null
+  },
+  {
+   "id": "s051",
+   "start": 458.075,
+   "end": 468.575,
+   "room": "paper",
+   "kind": "chart",
+   "style": "chart-build",
+   "on": "{{n_paths}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "n_paths",
+     "t": 458.28
+    },
+    {
+     "key": "horizon_days",
+     "t": 460.28
+    },
+    {
+     "key": "skus_in_cone",
+     "t": 461.48
+    }
+   ],
+   "chart": {
+    "scene": "paths"
+   },
+   "intent": "ten thousand versions redrawn as a wire moves",
+   "says": "10,000 versions of the next 90 days across 24 products with demand that moves together, redrawn every time a wire moves or a payout slips.",
+   "label": "demo"
+  },
+  {
+   "id": "s052",
+   "start": 468.575,
+   "end": 479.225,
+   "room": "world",
+   "kind": "texture",
+   "style": "texture",
+   "on": null,
+   "params": {},
+   "overlay": {
+    "illustration": true
+   },
+   "reveals": [],
+   "query": [
+    "narrow beam of light on paper still life"
+   ],
+   "sources": [
+    "higgsfield"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "a cone drawn too narrow, as atmosphere",
+   "says": "That's a model, and this is one of the places a bad model is dangerous, because a cone drawn too narrow tells you you're safe.",
+   "label": null
+  },
+  {
+   "id": "s053",
+   "start": 479.225,
+   "end": 485.175,
+   "room": "world",
+   "kind": "still",
+   "style": "still-push",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "accountant reading ledger photograph"
+   ],
+   "sources": [
+    "loc",
+    "smithsonian",
+    "commons"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "reading the books, the habit to stop",
+   "says": "What you can do today is stop reading the margin as a cash forecast.",
+   "label": null
+  },
+  {
+   "id": "s054",
+   "start": 485.175,
+   "end": 489.875,
+   "room": "paper",
+   "kind": "number",
+   "style": "number-land",
+   "on": "{{min_p5_day}}",
+   "params": {},
+   "overlay": {},
+   "reveals": [
+    {
+     "key": "min_p5_day",
+     "t": 486.58
+    }
+   ],
+   "intent": "your own trough day, one figure",
+   "says": "Find your day 13 days. You can build this yourself.",
+   "label": "demo"
+  },
+  {
+   "id": "s055",
+   "start": 489.875,
+   "end": 494.525,
+   "room": "world",
+   "kind": "footage",
+   "style": "footage-insert",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "query": [
+    "parcels on conveyor belt close up"
+   ],
+   "sources": [
+    "pexels",
+    "pixabay"
+   ],
+   "fallback": "paper:kinetic",
+   "intent": "real volume moving",
+   "says": "If you're doing real volume and want it run with rigor,",
+   "label": null
+  },
+  {
+   "id": "s056",
+   "start": 494.525,
+   "end": 500.47,
+   "room": "paper",
+   "kind": "end",
+   "style": "end",
+   "on": null,
+   "params": {},
+   "overlay": {},
+   "reveals": [],
+   "intent": "the end card: the method, free",
+   "says": "this is what I do, and I only get paid when it works.",
+   "label": null
+  }
+ ]
+}

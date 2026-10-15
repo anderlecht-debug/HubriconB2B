@@ -1,0 +1,92 @@
+{
+ "slug": "01-survivorship-bias",
+ "pass": true,
+ "validator_problems": [],
+ "items": [
+  {
+   "n": 1,
+   "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+   "pass": true,
+   "note": "The 'let them be wrong' beat states the copy-the-winner model fairly and in the viewer's words before the crack lands."
+  },
+  {
+   "n": 2,
+   "question": "Is there a concrete number in the first sentence?",
+   "pass": true,
+   "note": "first sentence carries a {{key}} figure"
+  },
+  {
+   "n": 3,
+   "question": "Is the title's promise fully delivered?",
+   "pass": true,
+   "note": "Delivered: survivorship bias is shown with numbers from a run, and 'useless' is argued as shared moves plus a selected sample, not asserted."
+  },
+  {
+   "n": 4,
+   "question": "Does any notation appear before its intuition?",
+   "pass": true,
+   "note": "No notation anywhere; the argument is paths on a chart and a worst-day comparison."
+  },
+  {
+   "n": 5,
+   "question": "Is there exactly one idea, and exactly one CTA?",
+   "pass": true,
+   "note": "One idea: outcomes select the sample you hear from. Chapter 2 is the same idea from the downside. One CTA, subscribe."
+  },
+  {
+   "n": 6,
+   "question": "Does the CTA match the awareness stage in §8?",
+   "pass": true,
+   "note": "CTA matches §8 for this pillar"
+  },
+  {
+   "n": 7,
+   "question": "Is there one claim a competent operator could dispute?",
+   "pass": true,
+   "note": "'Most of the gap between the top tenth and the median is dice' is disputable and specific."
+  },
+  {
+   "n": 8,
+   "question": "Is there any gap over 40 seconds without a re-hook?",
+   "pass": true,
+   "note": "no gap over 40 s"
+  },
+  {
+   "n": 9,
+   "question": "Does every number name its model run?",
+   "pass": true,
+   "note": "every chart beat names its run; every key exists"
+  },
+  {
+   "n": 10,
+   "question": "Is any step of the method withheld?",
+   "pass": true,
+   "note": "Three concrete steps are given in full; the honest limit names what scale needs a model without withholding a step."
+  },
+  {
+   "n": 11,
+   "question": "Does the close state a real limitation rather than pitch?",
+   "pass": true,
+   "note": "The close states a limitation (running a full catalogue many times is a model) and pitches nothing; no service is named."
+  },
+  {
+   "n": 12,
+   "question": "Any banned phrase present?",
+   "pass": true,
+   "note": "none"
+  },
+  {
+   "n": 13,
+   "question": "Are CLIP markers placed, with at least three usable?",
+   "pass": true,
+   "note": "4 CLIP markers"
+  },
+  {
+   "n": 14,
+   "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1–2 exempt)",
+   "pass": true,
+   "note": "Universal for any operator with cash timing and demand variance; the example is a product catalogue but the lesson is not Amazon-specific. Weakness to note: the 'let them be wrong' beat lacks a real screenshot until the founder supplies one."
+  }
+ ],
+ "judged_by": "critique skill, interactive session 2026-09-18"
+}

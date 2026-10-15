@@ -324,8 +324,8 @@ presented as a company with a method, not a person with a pitch. The founder's n
 stays where the law and the terms need it (terms, privacy) and in the structured data.
 Since 2026-09-30 the face is off camera everywhere (settled in `HUBRICON_SPEC.md`: the
 math has no age, the brand carries the authority), so the founder's welcome video is off
-/apply too (`archive/apply-2026-09-25.html`). Videos use the founder's voice, recorded
-first and later an ElevenLabs clone trained on those recordings, never a stock voice.
+/apply too (`archive/apply-2026-09-25.html`). Videos are narrated in the founder's own
+recorded voice, never a clone and never a stock or AI voice (his call, 2026-10-06).
 
 ## The film's lines
 

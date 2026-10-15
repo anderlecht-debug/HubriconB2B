@@ -1,0 +1,91 @@
+{
+  "slug": "11-discounting-math",
+  "pass": true,
+  "validator_problems": [],
+  "items": [
+    {
+      "n": 1,
+      "question": "Does the viewer commit to a wrong answer before hearing the right one?",
+      "pass": true,
+      "note": "The 0:15 beat states the rule of thumb in the viewer's own words, that the discount costs him the discount and the volume makes it back, and asks him to hold on to it. Both parts are only dismantled from 0:45 onward."
+    },
+    {
+      "n": 2,
+      "question": "Is there a concrete number in the first sentence?",
+      "pass": true,
+      "note": "first sentence carries a {{key}} figure"
+    },
+    {
+      "n": 3,
+      "question": "Is the title's promise fully delivered?",
+      "pass": true,
+      "note": "The title promises the arithmetic of what a discount gave away and the script delivers both halves of it: what the cut takes (contribution, not gross) and what it demands back (the break-even lift). The turn's claim that the demanded lift clears the measured elasticity at the middle of the band and at the point estimate, and is only met at the far elastic end, was checked against this unit's own facts before it was written, using the log-linear response the fit itself assumes. It is the one claim to re-check if the demo catalogue's margin or elasticity figures move."
+    },
+    {
+      "n": 4,
+      "question": "Does any notation appear before its intuition?",
+      "pass": true,
+      "note": "The glass draining by a fixed depth comes before any line, the line comes before the curve, and the term break-even volume lift is given only after the viewer has watched the curve bend. Elasticity arrives here as a measured input carrying its interval rather than as a derivation; the fit itself is taught end to end in the price-increase episode, which is free and on the same page."
+    },
+    {
+      "n": 5,
+      "question": "Is there exactly one idea, and exactly one CTA?",
+      "pass": true,
+      "note": "1 CTA beat(s); one idea is judged by the skill"
+    },
+    {
+      "n": 6,
+      "question": "Does the CTA match the awareness stage in \u00a78?",
+      "pass": true,
+      "note": "CTA matches \u00a78 for this pillar"
+    },
+    {
+      "n": 7,
+      "question": "Is there one claim a competent operator could dispute?",
+      "pass": true,
+      "note": "A promotion is not a trade of margin for volume but a bet that the product is more price-sensitive than its own price history says. A competent operator can dispute it, and the beat shows the arithmetic that makes it disputable."
+    },
+    {
+      "n": 8,
+      "question": "Is there any gap over 40 seconds without a re-hook?",
+      "pass": true,
+      "note": "no gap over 40 s"
+    },
+    {
+      "n": 9,
+      "question": "Does every number name its model run?",
+      "pass": true,
+      "note": "every chart beat names its run; every key exists"
+    },
+    {
+      "n": 10,
+      "question": "Is any step of the method withheld?",
+      "pass": true,
+      "note": "Nothing is held back: what to measure per unit, the break-even lift and why it accelerates, where to find the elasticity, what to compare it against, and how to read the result afterwards against units rather than revenue. The elasticity fit is in the price-increase episode, free, not behind a paid tier."
+    },
+    {
+      "n": 11,
+      "question": "Does the close state a real limitation rather than pitch?",
+      "pass": true,
+      "note": "The close names limits the arithmetic cannot reach: whether the cut takes its units from the neighbouring product, the rank it costs and the bidding to recover it, whether the pulled-forward units were coming anyway, and the same question re-asked across the catalogue every month. No pitch, one calm soft close."
+    },
+    {
+      "n": 12,
+      "question": "Any banned phrase present?",
+      "pass": true,
+      "note": "none"
+    },
+    {
+      "n": 13,
+      "question": "Are CLIP markers placed, with at least three usable?",
+      "pass": true,
+      "note": "4 CLIP markers"
+    },
+    {
+      "n": 14,
+      "question": "Would a $30M founder outside Amazon still get something from this? (pillars 1\u20132 exempt)",
+      "pass": true,
+      "note": "Pillar 3, so it must pass. What you keep per unit, the break-even lift and the measured elasticity are catalogue arithmetic, not platform arithmetic. The settlement report and the rank are named as where to look rather than as what makes the method work."
+    }
+  ]
+}

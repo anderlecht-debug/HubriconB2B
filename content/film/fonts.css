@@ -1,0 +1,11 @@
+/* Inter for the film stage, from the repo instead of Google Fonts, so a render needs
+   no network and draws the same file Manim, the thumbnail and the subtitles use
+   (content/assets/fonts, OFL). The variable font carries the optical-size axis, so
+   type from about 20 px up takes Inter Display, as on the site. */
+@font-face {
+  font-family: "Inter";
+  src: url("/content/assets/fonts/InterVariable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}

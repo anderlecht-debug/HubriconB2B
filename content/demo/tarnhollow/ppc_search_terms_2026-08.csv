@@ -1,0 +1,65 @@
+Campaign Name,Ad Group Name,Targeting,Match Type,Customer Search Term,Impressions,Clicks,Spend,7 Day Total Sales,7 Day Total Orders (#),7 Day Total Units (#)
+Skillets - Exact,Core,cast,EXACT,cast iron skillet 10in,"12,672",352,$281.61,$979.24,27,28
+Skillets - Exact,Core,cast,EXACT,cast iron skillet 12in,"13,905",386,$309.00,$917.17,19,20
+Skillets - Exact,Core,enamel,EXACT,enamel dutch oven 5qt,"11,335",314,$251.89,"$1,016.52",13,13
+Skillets - Exact,Core,carbon,EXACT,carbon steel wok,"15,175",421,$337.22,"$1,367.03",26,27
+Skillets - Exact,Core,cast,EXACT,cast iron skillet 10in,"12,138",337,$269.73,$847.52,23,24
+Skillets - Exact,Core,cast,EXACT,cast iron skillet 12in,"11,818",328,$262.62,"$1,277.22",27,28
+Skillets - Exact,Core,knife,BROAD,knife sharpening near me,"7,641",181,$127.35,$0.00,0,0
+Skillets - Exact,Core,walmart,BROAD,walmart cutting board,"10,567",251,$176.12,$0.00,0,0
+Skillets - Broad,Core,cast,BROAD,cast iron skillet 10in,"7,981",221,$177.35,$605.75,16,16
+Skillets - Broad,Core,cast,BROAD,cast iron skillet 12in,"11,881",330,$264.03,$699.86,15,15
+Skillets - Broad,Core,enamel,BROAD,enamel dutch oven 5qt,"9,835",273,$218.56,$725.55,9,9
+Skillets - Broad,Core,carbon,BROAD,carbon steel wok,"13,059",362,$290.20,"$1,224.61",23,24
+Skillets - Broad,Core,cast,BROAD,cast iron skillet 10in,"5,028",139,$111.73,$508.44,14,14
+Skillets - Broad,Core,cast,BROAD,cast iron skillet 12in,"10,732",298,$238.48,$899.24,19,20
+Skillets - Broad,Core,cheap,BROAD,cheap knives set,"3,016",71,$50.26,$0.00,0,0
+Skillets - Broad,Core,coffee,BROAD,coffee shop wholesale,"5,646",134,$94.10,$0.00,0,0
+Knives - Exact,Core,chef,EXACT,chef knife 8in,"10,389",288,$230.87,"$1,064.88",18,19
+Knives - Exact,Core,paring,EXACT,paring knife 3.5in,"8,615",239,$191.45,$762.93,41,43
+Knives - Exact,Core,bread,EXACT,bread knife 10in,"8,480",235,$188.44,$750.32,25,26
+Knives - Exact,Core,knife,EXACT,knife sharpener whetstone,"6,477",179,$143.93,$474.51,18,19
+Knives - Exact,Core,chef,EXACT,chef knife 8in,"7,719",214,$171.54,$668.41,11,11
+Knives - Exact,Core,paring,EXACT,paring knife 3.5in,"9,158",254,$203.51,$887.38,48,50
+Knives - Exact,Core,cast,BROAD,cast iron recipe ideas,"6,618",157,$110.30,$0.00,0,0
+Knives - Exact,Core,knife,BROAD,knife sharpening near me,"2,811",66,$46.85,$0.00,0,0
+Knives - Broad,Core,chef,BROAD,chef knife 8in,"4,121",114,$91.58,$280.52,4,4
+Knives - Broad,Core,paring,BROAD,paring knife 3.5in,"7,835",217,$174.11,$852.32,46,48
+Knives - Broad,Core,bread,BROAD,bread knife 10in,"4,476",124,$99.47,$414.69,14,14
+Knives - Broad,Core,knife,BROAD,knife sharpener whetstone,"8,377",232,$186.15,$758.48,30,31
+Knives - Broad,Core,chef,BROAD,chef knife 8in,"7,233",200,$160.73,$788.70,13,13
+Knives - Broad,Core,paring,BROAD,paring knife 3.5in,"7,140",198,$158.66,$721.44,39,41
+Knives - Broad,Core,walmart,BROAD,walmart cutting board,"5,211",124,$86.85,$0.00,0,0
+Knives - Broad,Core,coffee,BROAD,coffee shop wholesale,"6,033",143,$100.55,$0.00,0,0
+Boards - Exact,Core,bamboo,EXACT,bamboo cutting board l,"7,951",220,$176.68,$539.12,19,20
+Boards - Exact,Core,bamboo,EXACT,bamboo cutting board m,"7,614",211,$169.20,$417.37,21,22
+Boards - Exact,Core,walnut,EXACT,walnut serving tray,"6,727",186,$149.49,$472.10,12,12
+Boards - Exact,Core,bamboo,EXACT,bamboo cutting board l,"6,627",184,$147.26,$493.97,18,19
+Boards - Exact,Core,bamboo,EXACT,bamboo cutting board m,"3,207",89,$71.26,$202.91,10,10
+Boards - Exact,Core,walnut,EXACT,walnut serving tray,"3,382",93,$75.16,$255.27,6,6
+Boards - Exact,Core,walmart,BROAD,walmart cutting board,"4,173",99,$69.55,$0.00,0,0
+Boards - Exact,Core,skillet,BROAD,skillet lodge,"4,237",100,$70.62,$0.00,0,0
+Coffee - Exact,Core,french,EXACT,french press 34oz,"5,773",160,$128.30,$464.03,15,15
+Coffee - Exact,Core,pour,EXACT,pour over kettle gooseneck,"6,584",182,$146.32,$368.27,8,8
+Coffee - Exact,Core,coffee,EXACT,coffee canister airtight,"7,117",197,$158.15,$666.86,29,30
+Coffee - Exact,Core,tea,EXACT,tea infuser mug,"7,193",199,$159.85,$685.54,36,38
+Coffee - Exact,Core,french,EXACT,french press 34oz,"4,270",118,$94.89,$411.07,13,13
+Coffee - Exact,Core,pour,EXACT,pour over kettle gooseneck,"4,800",133,$106.67,$496.58,11,11
+Coffee - Exact,Core,knife,BROAD,knife sharpening near me,"3,532",84,$58.87,$0.00,0,0
+Coffee - Exact,Core,french,BROAD,french press vs drip,"3,514",83,$58.56,$0.00,0,0
+Coffee - Broad,Core,french,BROAD,french press 34oz,"3,871",107,$86.02,$276.35,8,8
+Coffee - Broad,Core,pour,BROAD,pour over kettle gooseneck,"3,500",97,$77.77,$295.25,6,6
+Coffee - Broad,Core,coffee,BROAD,coffee canister airtight,"6,741",187,$149.79,$462.33,20,21
+Coffee - Broad,Core,tea,BROAD,tea infuser mug,"4,936",137,$109.70,$506.07,27,28
+Coffee - Broad,Core,french,BROAD,french press 34oz,"4,689",130,$104.20,$471.76,15,15
+Coffee - Broad,Core,pour,BROAD,pour over kettle gooseneck,"4,662",129,$103.59,$355.60,8,8
+Coffee - Broad,Core,cast,BROAD,cast iron recipe ideas,"3,004",71,$50.07,$0.00,0,0
+Coffee - Broad,Core,cheap,BROAD,cheap knives set,"3,645",86,$60.75,$0.00,0,0
+Catalog - Auto,Core,cast,BROAD,cast iron skillet 10in,"11,715",325,$260.33,"$1,236.13",34,36
+Catalog - Auto,Core,cast,BROAD,cast iron skillet 12in,"15,275",424,$339.44,"$1,150.96",24,25
+Catalog - Auto,Core,enamel,BROAD,enamel dutch oven 5qt,"23,807",661,$529.04,"$2,491.57",32,33
+Catalog - Auto,Core,carbon,BROAD,carbon steel wok,"17,919",497,$398.20,"$1,184.62",23,24
+Catalog - Auto,Core,bamboo,BROAD,bamboo cutting board l,"12,297",341,$273.27,$808.98,29,30
+Catalog - Auto,Core,bamboo,BROAD,bamboo cutting board m,"21,993",610,$488.74,"$1,519.43",78,82
+Catalog - Auto,Core,cast,BROAD,cast iron recipe ideas,"6,321",150,$105.35,$0.00,0,0
+Catalog - Auto,Core,cheap,BROAD,cheap knives set,"9,330",222,$155.50,$0.00,0,0

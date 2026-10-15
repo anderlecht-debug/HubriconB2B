@@ -1,0 +1,43 @@
+{
+ "slug": "greats-01-sears-parcel-post",
+ "status": "problems",
+ "problems": 5,
+ "by_check": {
+  "stage": 1,
+  "freeze": 4
+ },
+ "advisory": [
+  "charts: 6% of the runtime; a history film keeps it within 15%–25% (§5)",
+  "numbers: 36% of the runtime; a history film keeps it within 8%–12% (§5)",
+  "documents: 28% of the runtime; a history film keeps it within 10%–18% (§5)",
+  "stock: 10% of the runtime; a history film keeps it within 15%–25% (§5)",
+  "doc-highlight: 16% of the runtime; 15% at most",
+  "timeline: 17% of the runtime; 15% at most"
+ ],
+ "list": [
+  {
+   "check": "stage",
+   "msg": "qa.mjs failed: mous>:23:143\n    at Array.filter (<anonymous>)\n    at <anonymous>:23:97\n    at <anonymous>:26:3\n    at Object.evaluate (file:///home/lp9/Hubricon/HubriconB2B-visual/content/film/render.mjs:86:43)\n    at async file:///home/lp9/Hubricon/HubriconB2B-visual/content/film/v3/qa.mjs:102:39\n\nNode.js v26.9.0"
+  },
+  {
+   "check": "freeze",
+   "t": 425.8,
+   "msg": "a frozen picture from 425.8 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 875.2,
+   "msg": "a frozen picture from 875.2 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 1214.9,
+   "msg": "a frozen picture from 1214.9 s (4 s or more)"
+  },
+  {
+   "check": "freeze",
+   "t": 1582.0,
+   "msg": "a frozen picture from 1582.0 s (4 s or more)"
+  }
+ ]
+}

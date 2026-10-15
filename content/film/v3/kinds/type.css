@@ -1,0 +1,457 @@
+/* v3 type: figures and words as light on the dark desk (FILM_LOOK_V3.md, "Data is light"; rounds 2–3).
+   Built on base.css's tokens: --fs-label/body/heading/display-*, --hero-*, --glow-*, --unit-scale.
+   Every entrance is keyed to --at (seconds from the shot's first frame; type.mjs sets it from the
+   job's own word onsets). Filters (blur) only ever run during a landing, never on a held frame, and
+   nothing waits on screen under a blur: an element not yet due is absent (opacity 0). */
+
+.ty { position: absolute; inset: 0; color: var(--light); }
+:where(.ty) :is(p, h2) { margin: 0; font-weight: inherit; }
+.ty-box { position: absolute; left: var(--grid-x); top: var(--bx-top); width: var(--bx-w); height: var(--bx-h);
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+.ty-push { position: absolute; inset: 0; transform-origin: var(--push-origin, var(--cam-origin)); animation: ty-push var(--push-d, 8s) linear calc(var(--push-at, 0) * 1s) both; }
+@keyframes ty-push { to { transform: scale(var(--push-to, 1)); } }
+.ty-head, .ty-fd, .ty-u, .ty-k, .ty-f, .ty-n-tail, .ty-n-sub, .ty-p-gap, .ty-g-cap, .ty-t-date, .ty-b-name, .ty-l-name, .ty-l-sb,
+.ty-c-lab-s, .ty-c-name, .ty-c-rname, .ty-s-ctx, .ty-ch-title, .ty-e-head, .ty-e-sec, .ty-f-cap, .ty-hook-when {
+  font-family: var(--serif); font-weight: 400; font-variation-settings: "SOFT" 20, "WONK" 0; }
+.ty-head { font: var(--heading-font); font-variation-settings: "SOFT" 20, "WONK" 0; letter-spacing: -0.01em; word-spacing: 0.06em; margin-bottom: 56px; }
+
+/* ---- motion -------------------------------------------------------------------------------- */
+/* A figure lands on its word (S3), from nothing: blur 10 → 0, scale 1.06 → 1, tracking +4% → 0.
+   Spoken at the cut it cuts in mid-landing (R1); `set` stands formed (said before the cut). */
+.ty-land { display: inline-block; animation: ty-land var(--d, 0.35s) var(--ease-out) calc(var(--at, 0) * 1s) both; }
+.ty-land.cut { --o0: 0.4; --b0: 12px; }
+@keyframes ty-land {
+  from { opacity: var(--o0, 0); filter: blur(var(--b0, 10px)); transform: scale(var(--s0, 1.06)); letter-spacing: calc(var(--ls, -0.04em) + 0.04em); }
+  to { opacity: 1; filter: none; transform: none; letter-spacing: var(--ls, -0.04em); }
+}
+/* the money the line lands on blooms: glow to full in 0.15 s, settling to 60% by 0.6 s */
+.ty-land.money { animation: ty-land var(--d, 0.35s) var(--ease-out) calc(var(--at, 0) * 1s) both, ty-bloom-glow 0.6s linear calc(var(--at, 0) * 1s + var(--d, 0.35s) - 0.1s) both; }
+@keyframes ty-bloom-glow {
+  0% { text-shadow: 0 0 10px rgb(49 117 255 / 0), 0 0 36px rgb(49 117 255 / 0); }
+  25% { text-shadow: var(--glow-blue); }
+  100% { text-shadow: 0 0 10px rgb(49 117 255 / 0.27), 0 0 36px rgb(49 117 255 / 0.13); }
+}
+/* a spoken word lands on its onset: blur 8 → 0, 6 px → 0, 0.25 s, from nothing */
+.ty-w { display: inline-block; animation: ty-word 0.25s var(--ease-out) calc(var(--at, 0) * 1s) both; }
+.ty-w.cut { --o0: 0.4; }
+/* a figure the voice never says here, and never said: never drawn */
+.ty .never { opacity: 0 !important; animation: none !important; }
+@keyframes ty-word { from { opacity: var(--o0, 0); filter: blur(var(--bw, 8px)); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
+/* a word that starts an element at the cut (chapter, end): already arriving on the first frame */
+.ty-cw { display: inline-block; animation: ty-cw 0.55s var(--ease-out) calc(var(--at, 0) * 1s) both; }
+@keyframes ty-cw { from { opacity: 0; transform: translateY(0.14em); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ty-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ty-draw { to { clip-path: inset(0 0 0 0); } }
+@keyframes ty-dim { to { opacity: 0.5; } }
+@keyframes ty-quiet { to { color: rgb(242 238 230 / 0.85); text-shadow: none; } }
+
+/* The light a landing figure throws on the desk: a soft pool (blue for the money the line lands on). */
+.ty-bloom { position: absolute; left: 50%; top: 50%; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 240 214 / 0.08), rgb(255 240 214 / 0.03) 55%, transparent);
+  transform: translate(-50%, -50%); animation: ty-pool 1.4s var(--ease-out) calc(var(--at, 0) * 1s) both; }
+.ty-bloom.blue { background: radial-gradient(closest-side, rgb(47 116 255 / 0.07), rgb(47 116 255 / 0.025) 55%, transparent); }
+@keyframes ty-pool { from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+/* beats: a figure's glow swells and settles; no fill, so any number of them stack */
+.ty-pulse, .ty-pulse-blue { position: absolute; inset: -20% -10%; z-index: -1; pointer-events: none; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgb(255 240 214 / 0.12), transparent); animation: ty-beat 1.4s ease-in-out calc(var(--at) * 1s) none; }
+.ty-pulse-blue { background: radial-gradient(closest-side, rgb(47 116 255 / 0.16), transparent); }
+@keyframes ty-beat { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- figures -------------------------------------------------------------------------------- */
+.ty-fn { font-family: var(--hero-face); font-weight: var(--hero-weight); font-feature-settings: "tnum" 1, "case" 1; }
+.ty-fd { font-weight: 400; }
+.ty .money { color: var(--blue); text-shadow: var(--glow-blue); }
+.ty .quiet { color: rgb(242 238 230 / 0.85); }
+.ty-u { display: inline-block; font-style: italic; color: rgb(242 238 230 / 0.7); letter-spacing: 0; text-shadow: none; }
+.ty-u.sl { margin-left: 0.28em; }
+.ty-u.sr { margin-right: 0.28em; }
+.ty-sp { display: inline-block; width: 0.25em; }
+.ty-n-fig, .ty-p-fig, .ty-g-fig, .ty-t-fig, .ty-c-fig, .ty-s-fig, .ty-b-val, .ty-l-val, .ty-c-val, .ty-c-rval { position: relative; z-index: 0; white-space: nowrap; line-height: 0.9; }
+.ty-n-fig .ty-fn, .ty-p-fig .ty-fn, .ty-g-fig .ty-fn, .ty-c-fig .ty-fn { text-shadow: var(--glow-ivory); }
+.ty-n-fig .money, .ty-p-fig .money, .ty-c-fig .money { text-shadow: var(--glow-blue); }
+
+/* ---- the hairline that draws itself (≤ 0.8 s), bright point leading; beats run the point again ---- */
+.ty-rule { position: relative; height: 2px; align-self: flex-start; max-width: 100%; }
+.ty-rule > i { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(242 238 230 / 0.8) 0, rgb(242 238 230 / 0.8) var(--fw), rgb(242 238 230 / 0.1) 100%);
+  clip-path: inset(0 100% 0 0); animation: ty-draw 0.8s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-rule::after, .ty-rule > b { content: ""; position: absolute; top: -7px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: radial-gradient(circle, var(--light) 0, rgb(255 240 214 / 0.75) 32%, transparent 70%); opacity: 0;
+  animation: ty-head 0.8s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-rule > b { animation: ty-head 1.6s var(--ease-in-out) calc(var(--at) * 1s) none; }
+@keyframes ty-head { 0% { left: 0%; opacity: 0; } 10% { opacity: 1; } 75% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+
+.ty-label { font: 500 var(--fs-label)/1.2 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2); white-space: nowrap; }
+
+/* ---- number --------------------------------------------------------------------------------- */
+.ty-n-fig { line-height: 0.84; }
+.ty-n.centre { align-items: center; text-align: center; }
+.ty-n.centre .ty-rule { align-self: center; }
+.ty-n.centre .ty-est { align-self: center; }
+.ty-fd.ty-words .ty-vl { display: block; white-space: nowrap; }
+.ty-fd.ty-words { line-height: 1.02; }
+.ty-est { margin-top: 30px; padding: 9px 14px; border: 1.5px solid rgb(242 238 230 / 0.32); border-radius: 3px;
+  font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2);
+  animation: ty-fade 0.5s ease calc(var(--at) * 1s) both; }
+.ty-n-tail { margin-top: 44px; font-size: var(--fs-display-s); line-height: 1.05; letter-spacing: -0.015em; word-spacing: 0.06em; }
+.ty-n-sub { margin-top: 30px; font-size: 44px; font-style: italic; line-height: 1.25; color: var(--light-2); max-width: 1300px; text-wrap: balance; }
+.ty-rule + .ty-n-sub { margin-top: 40px; }
+.ty-n-sub.above { margin: 0 0 44px; }
+.ty-n-cap { display: flex; flex-direction: column; align-items: inherit; }
+.ty-n.centre .ty-n-cap { align-items: center; }
+/* a late figure's words stand large in the middle of the frame, then settle under it as it lands */
+.ty-n-cap.settle { transform-origin: 0 0; animation: ty-settle 0.6s var(--ease-in-out) calc(var(--sat) * 1s) both; }
+.ty-n.centre .ty-n-cap.settle { transform-origin: 50% 0; }
+@keyframes ty-settle { from { transform: translateY(var(--sdy)) scale(var(--ssc)); } to { transform: none; } }
+
+/* ---- pair ----------------------------------------------------------------------------------- */
+.ty-p { align-items: stretch; }
+.ty-p-row { display: flex; align-items: flex-end; }
+.ty-p-row.units { margin-bottom: 64px; }
+.ty-p-col { display: flex; flex-direction: column; gap: 36px; flex: none; }
+.ty-p-col:not(.v) { width: var(--col-w, auto); }
+.ty-p-col .ty-label { white-space: normal; text-wrap: balance; }
+.ty-p-col.l { animation: ty-dim 0.9s ease calc(var(--next) * 1s) both; }
+.ty-p-fig { line-height: 0.9; }
+.ty-p-unit { position: absolute; left: 0.03em; top: 100%; margin-top: 18px; font-family: var(--serif); font-style: italic; line-height: 1; color: rgb(242 238 230 / 0.7); text-shadow: none; }
+.ty-p-link { position: relative; flex: 1; align-self: stretch; }
+.ty-p-line { position: absolute; left: 48px; right: 48px; bottom: var(--lift); height: 2px;
+  background: linear-gradient(90deg, rgb(242 238 230 / 0.25), rgb(242 238 230 / 0.85));
+  clip-path: inset(0 100% 0 0); animation: ty-draw var(--d) cubic-bezier(0.45, 0.05, 0.25, 1) calc(var(--at) * 1s) both; }
+.ty-p-head, .ty-p-link > s { position: absolute; left: 48px; right: 48px; bottom: var(--lift); height: 0; text-decoration: none; }
+.ty-p-head::after, .ty-p-link > s::after { content: ""; position: absolute; top: -8px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: radial-gradient(circle, var(--light) 0, rgb(255 240 214 / 0.75) 32%, transparent 70%); opacity: 0;
+  animation: ty-head var(--d) cubic-bezier(0.45, 0.05, 0.25, 1) calc(var(--at) * 1s) both; }
+.ty-p-link > s::after { animation: ty-head 1.4s var(--ease-in-out) calc(var(--at) * 1s) none; }
+.ty-p-link > b { position: absolute; right: 49px; bottom: calc(var(--lift) + 1px); width: 20px; height: 20px;
+  border-top: 2px solid var(--light); border-right: 2px solid var(--light); transform: translate(0, 50%) rotate(45deg);
+  opacity: 0; animation: ty-fade 0.2s ease calc(var(--at) * 1s + var(--d) - 0.08s) both; }
+.ty-p-link > u, .ty-p-link::before { content: ""; position: absolute; bottom: calc(var(--lift) - 13px); width: 2px; height: 28px; background: rgb(242 238 230 / 0.7);
+  animation: ty-fade 0.3s ease calc(var(--at) * 1s) both; }
+.ty-p-link::before { left: 47px; }
+.ty-p-link > u { right: 47px; animation-delay: calc(var(--at) * 1s + var(--d) - 0.08s); }
+.ty-p-gap { margin-top: 80px; font-size: 52px; font-style: italic; line-height: 1.2; text-wrap: balance; }
+.ty-p.v { align-items: flex-start; }
+.ty-p-col.v { gap: 22px; }
+.ty-p-drop { position: relative; flex: none; width: 2px; height: 60px; margin: 18px 0 18px 0.3em; }
+.ty-p-drop > i { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(242 238 230 / 0.25), rgb(242 238 230 / 0.85));
+  clip-path: inset(0 0 100% 0); animation: ty-draw var(--d) cubic-bezier(0.45, 0.05, 0.25, 1) calc(var(--at) * 1s) both; }
+.ty-p-drop > b { position: absolute; left: -9px; bottom: 2px; width: 18px; height: 18px; border-right: 2px solid var(--light); border-bottom: 2px solid var(--light);
+  transform: rotate(45deg); opacity: 0; animation: ty-fade 0.2s ease calc(var(--at) * 1s + var(--d) - 0.08s) both; }
+.ty-p-gap.in { position: absolute; left: 0; right: 0; bottom: calc(var(--lift) - 92px); margin: 0; text-align: center; font-size: var(--fs-body); white-space: nowrap; }
+
+/* ---- the hook: the money at frame 0, the moment under it --------------------------------------- */
+.ty-hook { justify-content: center; padding-bottom: 40px; }
+.ty-hook.centre { align-items: center; text-align: center; }
+/* the print lifts off: the block glides to the frame's centre and grows a little (0.8 s) */
+.ty-hook.glide { transform-origin: 0 50%; animation: ty-glide 0.8s var(--ease-in-out) calc(var(--gat) * 1s) both; }
+@keyframes ty-glide { from { transform: none; } to { transform: translate(var(--gdx), 10px) scale(var(--gs)); } }
+.ty-p-fig.hero { line-height: 0.82; }
+.ty-hook-when { margin-top: 0.3em; line-height: 1; color: var(--light-2); letter-spacing: -0.02em; word-spacing: 0.06em; }
+.ty-hook-when .ty-hw { font-style: italic; }
+.ty-hook-gap { margin-top: 44px; font-family: var(--serif); font-size: var(--fs-display-s); line-height: 1.05; letter-spacing: -0.014em; word-spacing: 0.06em; color: var(--light); }
+
+/* ---- grid ----------------------------------------------------------------------------------- */
+.ty-g { align-items: stretch; }
+.ty-g-row { display: flex; align-items: center; justify-content: space-between; }
+.ty-g-count { flex: none; }
+.ty-g-fig { font-size: 300px; line-height: 0.84; }
+.ty-g-cap { margin-top: 48px; font-size: var(--fs-body); font-style: italic; line-height: 1.25; color: var(--light-2); max-width: 540px; text-wrap: balance; }
+.ty-g-dots { position: relative; display: grid; grid-auto-rows: var(--pitch); }
+.ty-g-dots > i { width: var(--dot); height: var(--dot); border-radius: 50%; place-self: center;
+  box-shadow: inset 0 0 0 2px rgb(242 238 230 / 0.32); animation: ty-ring 0.5s ease calc(var(--ring) * 1s) both; }
+.ty-g-dots > i.on { animation: ty-ring 0.5s ease calc(var(--ring) * 1s) both, ty-lit 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
+@keyframes ty-ring { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+@keyframes ty-lit {
+  0% { background: rgb(242 238 230 / 0); }
+  30% { background: var(--light); box-shadow: inset 0 0 0 2px var(--light), 0 0 26px 5px rgb(255 240 214 / 0.45); transform: scale(1.18); }
+  100% { background: var(--light); box-shadow: inset 0 0 0 2px var(--light), 0 0 14px rgb(255 240 214 / 0.18); transform: scale(1); }
+}
+.ty-g-dots.money > i.on { animation-name: ty-ring, ty-lit-blue; }
+@keyframes ty-lit-blue {
+  0% { background: rgb(47 116 255 / 0); }
+  30% { background: var(--blue); box-shadow: inset 0 0 0 2px var(--blue), 0 0 26px 5px var(--blue-glow); transform: scale(1.18); }
+  100% { background: var(--blue); box-shadow: inset 0 0 0 2px var(--blue), 0 0 16px var(--blue-glow); transform: scale(1); }
+}
+/* ---- kinetic -------------------------------------------------------------------------------- */
+.ty-k { line-height: 1.06; letter-spacing: -0.014em; word-spacing: 0.06em; justify-content: flex-end; box-sizing: border-box; }
+.ty-k .ty-w.soft { color: rgb(242 238 230 / 0.7); }
+.ty-k .ty-w.last { position: relative; z-index: 0; }
+.ty-k-line + .ty-k-line { margin-top: 0.3em; }
+.ty-k-line.it { font-style: italic; }
+.ty-k-line.dims { animation: ty-dim 1s ease calc(var(--dim) * 1s) both; }
+.ty-vl { display: block; white-space: nowrap; }
+
+/* ---- formula -------------------------------------------------------------------------------- */
+.ty-f-box.centre { align-items: center; }
+.ty-f { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; letter-spacing: -0.014em; word-spacing: 0.06em; max-width: 100%; }
+.ty-f-row, .ty-f-line { display: flex; align-items: baseline; white-space: nowrap; position: relative; }
+.ty-f-line + .ty-f-line { margin-top: 0.34em; }
+.ty-f-line.sum { margin-top: 0.62em; }
+.ty-f-term { position: relative; z-index: 0; display: inline-block; }
+.ty-f-term.res { font-style: italic; }
+.ty-f-term.res .ty-f-text { text-shadow: var(--glow-ivory); }
+.ty-f-term.lone { font-size: 1.7em; line-height: 0.8; }
+.ty-f-q { --ls: 0em; --s0: 1.25; --b0: 14px; text-shadow: 0 0 22px rgb(255 240 214 / 0.3); }
+.ty-f-in { font-family: var(--sans); font-weight: 300; color: var(--light-2); }
+.ty-f-q.pencil { display: inline-block; color: var(--light-2); clip-path: inset(-0.6em -0.6em 100% -0.6em);
+  animation: ty-pencil-draw var(--drawd) cubic-bezier(0.5, 0, 0.3, 1) calc(var(--draw) * 1s) both, ty-ink 0.6s ease calc(var(--ink) * 1s) both; }
+@keyframes ty-pencil-draw { from { clip-path: inset(-0.6em -0.6em 100% -0.6em); } to { clip-path: inset(-0.6em -0.6em -0.6em -0.6em); } }
+@keyframes ty-ink { to { color: var(--light); text-shadow: 0 0 22px rgb(255 240 214 / 0.3); } }
+.ty-f .ty-fn { letter-spacing: -0.02em; }
+/* the blank each term fills: a graphite baseline there, sharp, from the first frame; gone once the term lands */
+.ty-f-slot { position: absolute; left: 0.04em; right: 0.04em; bottom: 0.04em; height: 3px; border-radius: 2px; background: rgb(242 238 230 / 0.34); transform-origin: 0 50%;
+  animation: ty-slot 0.6s var(--ease-out) calc(var(--slot) * 1s) both, ty-out 0.4s ease calc(var(--at) * 1s + 0.25s) both; }
+@keyframes ty-slot { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes ty-out { to { opacity: 0; } }
+.ty-f-op { display: inline-block; margin: 0 var(--gap); color: var(--light); flex: none; animation: ty-op-lit 0.4s ease calc(var(--lit) * 1s) both; }
+@keyframes ty-op-lit { from { opacity: 0; } to { opacity: 1; } }
+.ty-f-op.sym { width: 0.62em; height: 0.62em; align-self: center; margin-top: 0.08em; }
+.ty-f-op.sym svg { display: block; width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.ty-f-op.sym path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.3s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-f-op.sym circle { fill: currentColor; stroke: none; transform-box: fill-box; transform-origin: center; animation: ty-dot 0.4s var(--ease-out) calc(var(--at) * 1s + 0.2s) both; }
+@keyframes ty-stroke { to { stroke-dashoffset: 0; } }
+@keyframes ty-dot { from { transform: scale(0); } to { transform: none; } }
+.ty-f-op.word { font-style: italic; font-size: 0.62em; }
+.ty-f-op.word .ty-w { animation: none; }
+.ty-f-gut { display: inline-flex; align-items: center; width: 1.2em; flex: none; align-self: stretch; }
+.ty-f-gut .ty-f-op { margin: 0; }
+.ty-f-lhs { display: inline-block; flex: none; }
+/* the sum's rule: a graphite pencil stroke, drawn on the word that says it */
+.ty-f-sum { position: absolute; top: -0.3em; height: 10px; }
+.ty-pencil { display: block; width: 100%; height: 10px; overflow: visible; }
+.ty-pencil path { fill: none; stroke: var(--light-2); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.6s cubic-bezier(0.5, 0, 0.3, 1) calc(var(--at) * 1s) both; }
+.ty-f-cap { margin-top: 96px; font-size: var(--fs-body); font-style: italic; line-height: 1.25; letter-spacing: 0; word-spacing: 0.04em; color: var(--light-2); text-wrap: balance; }
+
+/* ---- a line of real dates -------------------------------------------------------------------- */
+.ty-t { justify-content: center; }
+.ty-t-area { position: relative; align-self: stretch; flex: none; }
+.ty-t-track { position: absolute; left: 0; height: 0; }
+.ty-t-ghost { position: absolute; left: 0; top: -1px; height: 2px; background: rgb(242 238 230 / 0.12); }
+.ty-t-seg { position: absolute; top: -1px; height: 2px; background: rgb(242 238 230 / 0.78);
+  clip-path: inset(0 100% 0 0); animation: ty-draw var(--d) cubic-bezier(0.45, 0.05, 0.25, 1) calc(var(--at) * 1s) both; }
+.ty-t-seg.tail { background: linear-gradient(90deg, rgb(242 238 230 / 0.78), rgb(242 238 230 / 0)); }
+.ty-t-head { position: absolute; top: -8px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: radial-gradient(circle, var(--light) 0, rgb(255 240 214 / 0.75) 32%, transparent 70%);
+  animation: ty-thead var(--d) cubic-bezier(0.45, 0.05, 0.25, 1) calc(var(--at) * 1s) both; }
+.ty-t-head.again { animation-fill-mode: none; opacity: 0; }
+@keyframes ty-thead { 0% { transform: translateX(0px); opacity: 0; } 8% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateX(var(--w)); opacity: 0; } }
+/* a beat: light runs back along the line, from the last date to the first */
+.ty-t-back { position: absolute; top: -2px; height: 4px; opacity: 0; pointer-events: none;
+  background: linear-gradient(270deg, transparent, rgb(255 240 214 / 0.95) 8%, transparent 16%) 0 0 / 600% 100% no-repeat;
+  animation: ty-runback 1.6s var(--ease-in-out) calc(var(--at) * 1s) none; }
+@keyframes ty-runback { 0% { opacity: 1; background-position: 0% 0; } 100% { opacity: 1; background-position: 100% 0; } }
+.ty-t-ev { position: absolute; top: 0; }
+.ty-t-stem { position: absolute; left: -1px; width: 2px; background: rgb(242 238 230 / 0.7);
+  transform: scaleY(0); animation: ty-tick 0.45s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-t-stem.up { bottom: 0; transform-origin: 50% 100%; }
+.ty-t-stem.down { top: 0; transform-origin: 50% 0; }
+.ty-t-blk { position: absolute; white-space: nowrap; display: flex; flex-direction: column; gap: 10px;
+  animation: ty-dim 0.9s ease calc(var(--next) * 1s) both, ty-undim 0.8s ease calc(var(--back) * 1s) both; }
+@keyframes ty-tick { to { transform: scaleY(1); } }
+.ty-t-node { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: var(--light);
+  box-shadow: 0 0 22px rgb(255 240 214 / 0.55); animation: ty-node 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.5) calc(var(--at) * 1s) both; }
+@keyframes ty-node { from { transform: scale(0); } to { transform: scale(1); } }
+.ty-t-ring { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 0 0 2px rgb(242 238 230 / 0.7);
+  animation: ty-ringout 1.1s var(--ease-out) calc(var(--at) * 1s) both; }
+@keyframes ty-ringout { 0% { opacity: 0; transform: scale(1); } 2% { opacity: 0.9; } 100% { opacity: 0; transform: scale(4.5); } }
+.ty-t-up, .ty-t-down { position: absolute; left: -2px; white-space: nowrap; animation: ty-dim 0.9s ease calc(var(--next) * 1s) both, ty-undim 0.8s ease calc(var(--back) * 1s) both; }
+@keyframes ty-undim { from { opacity: 0.5; } to { opacity: 1; } }
+.ty-t-up { bottom: 58px; }
+.ty-t-down { top: 58px; }
+.ty-t-ev.rt :is(.ty-t-up, .ty-t-down) { left: auto; right: -2px; text-align: right; }
+.ty-t-brk { position: absolute; height: 18px; }
+.ty-t-brk > i { position: absolute; inset: 0 0 auto; height: 18px; border: 2px solid rgb(242 238 230 / 0.7); border-top: 0;
+  clip-path: inset(0 100% 0 0); animation: ty-draw 0.8s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-t-brk-l { position: absolute; left: 0; right: 0; top: 34px; margin: 0; text-align: center; font-family: var(--serif); font-style: italic; white-space: nowrap; }
+.ty-t-date { line-height: 1; letter-spacing: -0.012em; word-spacing: 0.06em; }
+.ty-t-label { font-family: var(--sans); font-weight: 500; line-height: 1.15; color: var(--light-2); }
+
+/* ---- bars to scale, drawn as light from one axis --------------------------------------------- */
+/* The value left of the axis on its bar's centre line, the name over its bar: a name never reads
+   as the label of the value above it. The axis and the names stand at the cut over a stub of light. */
+.ty-b { align-items: stretch; }
+.ty-b-rows { position: relative; flex: none; }
+.ty-b-rows::before { content: ""; position: absolute; left: var(--axis); top: 0; bottom: 0; width: 2px; background: rgb(242 238 230 / 0.45);
+  transform-origin: 50% 0; animation: ty-axis 0.6s var(--ease-out) -0.6s both; }
+@keyframes ty-axis { from { transform: scaleY(0); } to { transform: none; } }
+.ty-b-row { position: relative; }
+.ty-b-name { position: absolute; margin: 0; line-height: 1.1; color: var(--light-2); white-space: nowrap; }
+.ty-b-name.wrap { white-space: normal; text-wrap: balance; }
+.ty-b-val { position: absolute; left: 0; transform: translateY(-50%); text-align: right; white-space: nowrap; line-height: 0.9; }
+.ty-b-val .ty-fn { letter-spacing: var(--hero-track-l); }
+/* the landing value settles from a larger size into its place by the axis */
+.ty-b-pop { display: inline-block; transform-origin: 100% 60%; animation: ty-pop 0.9s var(--ease-out) calc(var(--at) * 1s) both; }
+@keyframes ty-pop { from { transform: scale(var(--pop, 1)); } to { transform: none; } }
+/* before its figure is said, a row has a hairline tick on the axis: no length that could be read as a value */
+.ty-b-tick { position: absolute; width: 3px; background: rgb(242 238 230 / 0.5); animation: ty-fade 0.4s ease -0.6s both; }
+.ty-b-bar { position: absolute; }
+/* a part inside its whole (a share cut from the bars): lit to scale over the whole's bar, its figure beside it */
+.ty-b-part { position: absolute; border-radius: 0 3px 3px 0; background: var(--light); box-shadow: 0 0 22px rgb(255 240 214 / 0.5);
+  transform-origin: 0 50%; animation: ty-grow 0.7s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-b-plab { position: absolute; transform: translateY(-50%); display: flex; align-items: baseline; gap: 22px; white-space: nowrap; }
+.ty-b-pname { margin: 0; font-family: var(--serif); font-style: italic; line-height: 1.1; color: var(--light-2); }
+.ty-b-pval { line-height: 0.9; }
+.ty-b-pval .ty-fn { letter-spacing: var(--hero-track-l); }
+.ty-b-bar > i { position: absolute; inset: 0; border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, rgb(242 238 230 / 0.55), rgb(242 238 230 / 0.92)); box-shadow: 0 0 24px rgb(255 240 214 / 0.16);
+  transform-origin: 0 50%; animation: ty-grow 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
+@keyframes ty-grow { from { transform: scaleX(0); } to { transform: none; } }
+/* the row's lane: an empty track the full width of the scale, there from the cut */
+.ty-b-lane { position: absolute; border-radius: 0 3px 3px 0; background: rgb(242 238 230 / 0.06); box-shadow: inset 0 0 0 1px rgb(242 238 230 / 0.1); animation: ty-fade 0.5s ease -0.6s both; }
+@keyframes ty-glint { 0% { opacity: 1; background-position: -40px 0; } 100% { opacity: 1; background-position: calc(100% + 40px) 0; } }
+.ty-b-val.fades .money { animation: ty-land var(--d, 0.35s) var(--ease-out) calc(var(--at, 0) * 1s) both, ty-bloom-glow 0.6s linear calc(var(--at, 0) * 1s + 0.25s) both, ty-quiet 0.6s ease calc(var(--until) * 1s) both; }
+
+/* ---- one 100% bar, split by share ------------------------------------------------------------ */
+.ty-s { align-items: stretch; }
+.ty-s-ctx { display: flex; align-items: baseline; gap: 28px; }
+.ty-s-ctx .ty-fd { line-height: 1.05; }
+.ty-s-ctx { flex-wrap: wrap; row-gap: 8px; }
+.ty-s-ctx-m { line-height: 1; white-space: nowrap; }
+.ty-s-ctx-m .ty-fn { letter-spacing: -0.02em; }
+.ty-s-ctx-l { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2); }
+.ty-s-bar { position: relative; flex: none; }
+.ty-s-lab.under { bottom: auto; top: calc(100% + 26px); }
+.ty-s-track { position: absolute; inset: 0; border: 2px solid rgb(242 238 230 / 0.32); border-radius: 3px;
+  clip-path: inset(0 100% 0 0); animation: ty-draw 0.8s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-s-seg { position: absolute; top: 0; bottom: 0; }
+.ty-s-seg > i { position: absolute; inset: 5px 2px; background: linear-gradient(90deg, rgb(242 238 230 / 0.6), rgb(242 238 230 / 0.92));
+  box-shadow: 0 0 22px rgb(255 240 214 / 0.16); transform-origin: 0 50%; animation: ty-grow 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-s-seg > s { position: absolute; inset: 0; text-decoration: none; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 240 214 / 0.85) 50%, transparent) 0 0 / 60px 100% no-repeat;
+  animation: ty-glint 1.4s var(--ease-in-out) calc(var(--at) * 1s) none; }
+.ty-s-lab { position: absolute; bottom: calc(100% + 26px); white-space: nowrap; }
+.ty-s-fig .ty-fn { letter-spacing: -0.02em; }
+.ty-s-fig { line-height: 0.92; }
+.ty-s-name { margin-top: 14px; font: 500 var(--fs-label)/1.2 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2); }
+
+/* ---- a price step: columns to scale, the jump the hero -------------------------------------- */
+.ty-c { justify-content: flex-start; align-items: stretch; }
+.ty-c > .ty-head { position: absolute; top: 0; left: 0; }
+.ty-c-cols { position: absolute; left: 0; top: 0; width: 100%; }
+.ty-c-base { position: absolute; left: -10px; height: 2px; background: rgb(242 238 230 / 0.45); transform-origin: 0 50%; animation: ty-slot 0.6s var(--ease-out) -0.6s both; }
+.ty-c-col { position: absolute; }
+/* the step's ground: faint rules and an empty slot per column, there from the cut */
+.ty-c-rule { position: absolute; left: -10px; height: 0; border-top: 1px solid rgb(242 238 230 / 0.08); }
+.ty-c-slot { position: absolute; background: rgb(242 238 230 / 0.045); box-shadow: inset 0 0 0 1px rgb(242 238 230 / 0.08); }
+.ty-c-col > i { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(242 238 230 / 0.85), rgb(242 238 230 / 0.45));
+  box-shadow: 0 0 26px rgb(255 240 214 / 0.12); transform-origin: 50% 100%; animation: ty-rise-col 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
+/* a price the voice said before the cut: its column's outline stands from the first frame */
+.ty-c-col.known::before { content: ""; position: absolute; inset: 0; border: 2px solid rgb(242 238 230 / 0.22); border-bottom: 0; }
+@keyframes ty-rise-col { from { transform: scaleY(0); } to { transform: none; } }
+.ty-c-riser { position: absolute; left: 0; right: 0; top: 0; background: var(--blue); box-shadow: 0 0 30px var(--blue-glow);
+  transform-origin: 50% 100%; animation: ty-rise-col 0.5s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-c-col > .ty-pulse-riser { position: absolute; left: -12px; right: -12px; top: -12px; height: 60%; z-index: -1; opacity: 0;
+  background: radial-gradient(closest-side, rgb(47 116 255 / 0.3), transparent); animation: ty-beat 1.4s ease-in-out calc(var(--at) * 1s) none; }
+.ty-c-val { position: absolute; left: 0; bottom: calc(100% + 16px); line-height: 0.9; white-space: nowrap; }
+.ty-c-val .ty-fn { letter-spacing: -0.02em; }
+.ty-c-lab { position: absolute; margin: 0; font: 500 var(--fs-label)/1.25 var(--sans); letter-spacing: 0.04em; color: var(--light-2); }
+/* the lower price's level carried across the riser, and the leader from the riser to the hero */
+.ty-c-level { position: absolute; height: 0; border-top: 2px dashed rgb(242 238 230 / 0.5); clip-path: inset(0 100% 0 0);
+  animation: ty-draw 0.5s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-c-lead { position: absolute; height: 2px; background: linear-gradient(90deg, rgb(47 116 255 / 0.9), rgb(47 116 255 / 0.25)); clip-path: inset(0 100% 0 0);
+  animation: ty-draw 0.6s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-c-ctx { position: absolute; display: flex; flex-wrap: wrap; column-gap: 48px; row-gap: 22px; align-items: flex-end; }
+.ty-c-row { display: flex; flex-direction: column; gap: 8px; }
+.ty-c-rname { font: 500 var(--fs-label)/1.2 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light-2); white-space: nowrap; }
+.ty-c-rval { font-size: 52px; line-height: 0.95; white-space: nowrap; }
+.ty-c-rval .ty-fn { letter-spacing: -0.02em; }
+.ty-c-hero { position: absolute; display: flex; flex-direction: column; gap: 14px; }
+.ty-c-name { line-height: 1.15; white-space: nowrap; }
+.ty-c-fig { position: relative; z-index: 0; line-height: 0.86; white-space: nowrap; }
+.ty-c-fig .ty-fn { letter-spacing: -0.04em; }
+
+/* ---- a step by weight: the staircase itself ------------------------------------------------- */
+.ty-sw { justify-content: flex-start; align-items: stretch; }
+.ty-sw > .ty-head { position: absolute; top: 0; left: 0; }
+.ty-sw-area { position: absolute; left: 0; top: 0; width: 100%; }
+.ty-sw-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.ty-sw-guide { stroke: rgb(242 238 230 / 0.16); stroke-width: 2; stroke-dasharray: 4 10; }
+.ty-sw-base { stroke: rgb(242 238 230 / 0.45); stroke-width: 2; }
+.ty-sw-fill { fill: rgb(242 238 230 / 0.07); stroke: none; opacity: 0; animation: ty-fade 0.9s ease calc(var(--at) * 1s) both; }
+.ty-sw-line { fill: none; stroke: rgb(242 238 230 / 0.88); stroke-width: 3; stroke-linejoin: miter; filter: drop-shadow(0 0 10px rgb(255 240 214 / 0.25));
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 1.4s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-sw-riser { fill: none; stroke: var(--blue); stroke-width: 7; stroke-linecap: round; filter: drop-shadow(0 0 12px var(--blue-glow));
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.45s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-sw-riser-beat { fill: none; stroke: rgb(47 116 255 / 0.5); stroke-width: 22; stroke-linecap: round; opacity: 0; filter: blur(6px);
+  animation: ty-beat 1.4s ease-in-out calc(var(--at) * 1s) none; }
+.ty-sw-same { fill: none; stroke: var(--light); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 10px rgb(255 240 214 / 0.5));
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.7s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-sw-span { fill: none; stroke: var(--light); stroke-width: 3; stroke-linejoin: miter; filter: drop-shadow(0 0 8px rgb(255 240 214 / 0.55));
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-sw-subline { fill: rgb(242 238 230 / 0.1); stroke: var(--light); stroke-width: 3; stroke-linejoin: miter;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: ty-stroke 1.1s var(--ease-in-out) calc(var(--at) * 1s) both, ty-fade 0.3s ease calc(var(--at) * 1s) both; }
+.ty-sw-dot { position: absolute; width: 0; height: 0; }
+.ty-sw-lab { position: absolute; display: flex; flex-direction: column; gap: 8px; white-space: nowrap; }
+.ty-sw-lab.r { align-items: flex-end; text-align: right; }
+.ty-sw-lab.c { align-items: center; text-align: center; }
+.ty-sw-ph { font-family: var(--serif); line-height: 1.12; letter-spacing: -0.01em; word-spacing: 0.05em; }
+.ty-sw-cap { font-family: var(--serif); font-style: italic; line-height: 1.22; color: var(--light-2); }
+.ty-sw .dims { animation: ty-dim 0.9s ease calc(var(--dimAt, 999) * 1s) both; }
+
+/* ---- a typeset ledger ------------------------------------------------------------------------ */
+.ty-l { align-items: stretch; }
+.ty-l-rows { display: flex; flex-direction: column; }
+.ty-l-row, .ty-l-sec { position: relative; display: flex; align-items: center; }
+.ty-l-name { flex: none; line-height: 1.1; white-space: nowrap; }
+.ty-l-name.period { font-family: var(--period); color: var(--light-2); }
+.ty-l-name.typed { font-family: var(--typed); color: var(--light-2); }
+.ty-l-rows.stacked { gap: 26px; }
+.ty-l-rows.stacked .ty-l-name { white-space: normal; max-width: 100%; text-wrap: balance; }
+.ty-l-entry { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; }
+.ty-l-entry .ty-l-val { line-height: 0.95; }
+.ty-l-quote { margin-top: 64px; font-family: var(--serif); font-style: italic; line-height: 1.28; color: rgb(242 238 230 / 0.7); text-wrap: balance; max-width: 1240px; }
+.ty-l-quote .key { color: var(--light); text-shadow: var(--glow-ivory); }
+.ty-l-lead { flex: 1; align-self: center; height: 2px; margin: 12px 28px 0; opacity: 0;
+  background: radial-gradient(circle, rgb(242 238 230 / 0.45) 1.2px, transparent 1.6px) 0 50% / 14px 2px repeat-x;
+  animation: ty-fade 0.5s ease calc(var(--at) * 1s) both; }
+.ty-l-val { flex: none; font-size: 64px; }
+.ty-l-val .ty-fn { letter-spacing: -0.02em; }
+.ty-l-val.fades .money { animation: ty-land var(--d, 0.35s) var(--ease-out) calc(var(--at, 0) * 1s) both, ty-bloom-glow 0.6s linear calc(var(--at, 0) * 1s + 0.25s) both, ty-quiet 0.6s ease calc(var(--until) * 1s) both; }
+.ty-l-sec { gap: 24px; align-items: baseline; padding-top: 18px; }
+.ty-l-sa { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--light); }
+.ty-l-sb { font-size: var(--fs-body); font-style: italic; color: var(--light-2); white-space: nowrap; }
+/* a beat: a row is read again, a hairline of light passing under it */
+/* the page is ruled before its entries: a hairline under every row from the cut */
+.ty-l-rule { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgb(242 238 230 / 0.1); transform-origin: 0 50%;
+  animation: ty-slot 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-l-rows.dates { gap: 0; }
+.ty-l-entry.dated { justify-content: center; gap: 6px; padding-bottom: 10px; }
+.ty-l-date { line-height: 1; white-space: nowrap; }
+.ty-l-dlab { font-family: var(--serif); font-style: italic; line-height: 1.2; color: var(--light-2); max-width: 100%; text-wrap: balance; }
+.ty-l-dlab.period { font-family: var(--period); font-style: normal; }
+.ty-l-dlab.typed { font-family: var(--typed); font-style: normal; }
+.ty-l-row.barred { padding-bottom: 14px; box-sizing: border-box; }
+.ty-l-bar { position: absolute; left: 0; bottom: 10px; height: 8px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, rgb(242 238 230 / 0.35), rgb(242 238 230 / 0.8));
+  transform-origin: 0 50%; animation: ty-grow 0.8s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-l-bar.key { background: var(--blue); box-shadow: 0 0 18px var(--blue-glow); }
+.ty-l-row > s, .ty-l-sec > s { position: absolute; left: 0; right: 0; bottom: 4px; height: 2px; text-decoration: none; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 240 214 / 0.85) 50%, transparent) 0 0 / 30% 100% no-repeat;
+  animation: ty-sweepline 1.4s var(--ease-in-out) calc(var(--at) * 1s) none; }
+@keyframes ty-sweepline { 0% { opacity: 1; background-position: -40% 0; } 100% { opacity: 1; background-position: 140% 0; } }
+
+/* ---- chapter -------------------------------------------------------------------------------- */
+.ty-ch-top { display: flex; align-items: center; gap: 32px; margin-bottom: 48px; align-self: stretch; }
+.ty-ch-kick { font: 500 var(--fs-label)/1 var(--sans); letter-spacing: 0.32em; text-transform: uppercase; color: var(--light-2); white-space: nowrap;
+  animation: ty-track 0.9s var(--ease-out) -0.4s both; }
+.ty-ch-kick b { font-weight: 500; color: var(--light); }
+@keyframes ty-track { from { letter-spacing: 0.7em; opacity: 0; } to { letter-spacing: 0.32em; opacity: 1; } }
+.ty-ch-hair { flex: 1; height: 2px; background: linear-gradient(90deg, rgb(242 238 230 / 0.7), rgb(242 238 230 / 0.06));
+  clip-path: inset(0 100% 0 0); animation: ty-draw 0.8s var(--ease-in-out) -0.2s both; }
+.ty-ch-title { position: relative; z-index: 0; line-height: 1.02; letter-spacing: -0.024em; word-spacing: 0.06em; }
+
+/* ---- end: the left 55% only (YouTube's end-screen elements take the right) ------------------- */
+.ty-e-head { line-height: 1.04; letter-spacing: -0.022em; word-spacing: 0.06em; }
+.ty-e-url { position: relative; margin-top: 56px; font: 500 56px/1 var(--sans); letter-spacing: -0.01em; color: var(--light); }
+.ty-e-rule { position: absolute; left: 0; right: 0; bottom: -18px; height: 2px; background: rgb(242 238 230 / 0.5);
+  clip-path: inset(0 100% 0 0); animation: ty-draw 0.7s var(--ease-in-out) calc(var(--at) * 1s) both; }
+.ty-e-sec { margin-top: 64px; font-size: var(--fs-body); font-style: italic; line-height: 1.3; color: var(--light-2); text-wrap: balance; }
+/* the one action: the site's button, as light on the desk (BRAND: one button, never two) */
+.ty-e-cta { display: inline-flex; align-items: center; gap: 0.5em; margin-top: 48px; padding: 20px 34px 21px; border-radius: 999px;
+  font: 600 40px/1 var(--sans); letter-spacing: -0.005em; color: var(--ground); background: var(--light);
+  box-shadow: 0 0 60px rgb(var(--light-rgb, 242 238 230) / 0.16); animation: ty-cw 0.6s var(--ease-out) calc(var(--at) * 1s) both; }
+.ty-e-cta b { font-weight: 500; }
+.ty-e-act { display: flex; align-items: center; gap: 28px; margin-top: 48px; }
+.ty-e-act .ty-e-cta { margin-top: 0; }
+.ty-e-addr { margin: 0; font: 500 36px/1 var(--sans); letter-spacing: -0.005em; color: rgb(242 238 230 / 0.78);
+  animation: ty-cw 0.6s var(--ease-out) calc(var(--at) * 1s) both; }

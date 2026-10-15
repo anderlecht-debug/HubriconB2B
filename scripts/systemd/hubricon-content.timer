@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Hubricon content pipeline tick every 30 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+RandomizedDelaySec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

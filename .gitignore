@@ -9,6 +9,40 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .claude/settings.local.json
+# content pipeline: environments, runner state, secrets and rendered media stay local
+content/.venv/
+content/.runner/
+content/.secrets/
+content/videos/*/media/
+content/videos/*/audio/
+content/videos/*/scenes/
+content/videos/*/frames/
+# sourcing: candidates, contact sheets and request counts are large and regenerable from the cache
+content/videos/*/sources/
+content/videos/*/shorts/
+content/videos/**/*.mp4
+content/videos/**/*.mov
+content/videos/**/*.wav
+content/videos/**/*.mp3
+content/videos/**/*.m4a
+content/.manim/
+content/videos/*/.manim/
+# Manim's text cache when a script draws type outside a configured media dir
+/media/
+content/.cache/
+content/videos/00-smoke/
+# per-shot clips and their cache sidecars are rebuilt from the plan (VISUAL_SPEC.md §8.3)
+content/videos/*/shots/
+content/videos/*/sources/
+content/videos/visual-trial/*.json
+content/videos/visual-trial/qa/contact.jpg
+content/videos/visual-trial/qa/first-minute.jpg
 # The case study's one listing names the brand. The repo is public and the page is anonymised,
 # so the input stays on the machine that builds the page (HUBRICON.md, the public-data case study).
 scripts/case-study/listing.json
+
+# film-qa working files (FILM_LINE.md): regenerated on every run
+content/videos/*/qa/jobs.json
+content/videos/*/qa/sheets/
+content/videos/*/qa/film-qa.txt
+content/videos/*/qa/*.log

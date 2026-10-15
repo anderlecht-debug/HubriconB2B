@@ -1,0 +1,39 @@
+{
+ "metadata": {
+  "identifier": "201096_Mode-Art_Can_1258_R2",
+  "creator": "Mode-Art Pictures",
+  "frame_rate": "24 fps",
+  "location": "USA; Illinois; Chicago, Illinois",
+  "production_date": "1955-02-28",
+  "licenseurl": "http://creativecommons.org/publicdomain/mark/1.0/"
+ },
+ "files": [
+  {
+   "name": "201096_Mode-Art_Can_1258_R2_master.intros.mov",
+   "source": "original",
+   "mtime": "1722045155",
+   "size": "1511621176",
+   "md5": "b95c01927bd6dbb60ccc47d8d10cf877",
+   "crc32": "9b460758",
+   "sha1": "716525f3e14c43a2bf8b7a21189a120c178f8e5e",
+   "format": "QuickTime",
+   "length": "590.58",
+   "width": "2048",
+   "height": "1536"
+  },
+  {
+   "name": "201096_Mode-Art_Can_1258_R2_master.intros.mp4",
+   "source": "derivative",
+   "format": "h.264",
+   "original": "201096_Mode-Art_Can_1258_R2_master.intros.mov",
+   "mtime": "1722047720",
+   "size": "51214555",
+   "md5": "3f3c7f00ca05875b2b9af29475662efe",
+   "crc32": "853ec91d",
+   "sha1": "91cce93b64cea0ff8ea0f8f3d713931d0d9b4056",
+   "length": "590.58",
+   "width": "640",
+   "height": "480"
+  }
+ ]
+}

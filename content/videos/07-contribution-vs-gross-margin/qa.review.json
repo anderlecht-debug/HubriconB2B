@@ -1,0 +1,110 @@
+{
+ "slug": "07-contribution-vs-gross-margin",
+ "pass": false,
+ "reviewed": "2026-10-05",
+ "against": [
+  "docs/content/hubricon-video-production-bible.md §11",
+  "docs/content/PREMIUM-STANDARD.md, as amended by docs/content/VISUAL_SPEC.md (2026-10-04)",
+  "content/assets/style-lock.json"
+ ],
+ "frames": 51,
+ "items": [
+  {
+   "n": 1,
+   "item": "No generated face, avatar or synthetic human in any frame",
+   "pass": true,
+   "note": "Fifty-one frames, one every ten seconds. Kinetic cards, the revenue-to-net waterfall, figure cards, one chapter card and the corner mark; no figure, no avatar, nothing photographic anywhere in the film."
+  },
+  {
+   "n": 2,
+   "item": "Texture is never the subject",
+   "pass": true,
+   "note": "No texture is used at all. Every frame is the paper room: type, a chart, a figure, or the chapter card's hairline (f-022)."
+  },
+  {
+   "n": 3,
+   "item": "Every number on screen traces to a model run, and demo data is labelled",
+   "pass": true,
+   "note": "Every figure comes from facts.json and run.json through the reveal loop; nothing is typed into a scene. Each one is MARGIN.DECOMP, SPEND.RESPONSE, NEWSVENDOR or risk on Tarnhollow demo data, seed 42. The TARNHOLLOW DEMO DATA chip is on every frame that carries a figure or the chart; the prose-only cards (f-003 to f-006, f-041 to f-045) carry no number and no chip, which is the rule applied correctly rather than a miss."
+  },
+  {
+   "n": 4,
+   "item": "Charts are Manim scenes driven by engine output, not hand-rebuilt",
+   "pass": true,
+   "note": "One chart class, scenes/charts.py Waterfall, reading run.json's waterfall object for revenue, fees, landed cost, ads and net. The bar heights, the labels and the values are all computed from that object; the callout column is the reveal loop reading facts.json."
+  },
+  {
+   "n": 5,
+   "item": "Every chart builds progressively and carries an annotation",
+   "pass": true,
+   "note": "charts.py:144-169: axes created first, then each bar grown from its base with its name and its value, with a data tick on each landing, and the callout column annotating on top. The ten-second sample lands after each build completes, so the progression is read off the module and its events rather than off a frame; the chapter card is caught mid-build at f-022, which shows the same staged drawing."
+  },
+  {
+   "n": 6,
+   "item": "Room tone, data ticks, transition SFX and a ducking bed",
+   "pass": true,
+   "note": "mix.json: room tone at -48 dB, ten ticks, two whooshes, bed-elevenlabs.mp3 at -32 dB ducking to -20 dB, SFX from ElevenLabs sound generation. qa.json reads no silence over a second and -16.3 LUFS against a -16 target."
+  },
+  {
+   "n": 7,
+   "item": "A publishable voice, disclosed as what it is",
+   "pass": true,
+   "note": "voice is \"library\": the ElevenLabs library voice the founder chose on 2026-10-04 (content/assets/voice.json), which PREMIUM-STANDARD accepts as amended. The description does not exist yet, so qa.json reports disclosure_in_description as null; that is the describe step's check."
+  },
+  {
+   "n": 8,
+   "item": "Cut to VISUAL_SPEC §4, and nothing frozen over four seconds",
+   "pass": true,
+   "note": "qa.json: 59 cuts, mean interval 8.54 s, longest 25.13 s, inside the thirty a chart build may hold; no frozen run in any scene clip, max_hold 0.0 s. This is the first unit cut after the hold fix landed in scenes/base.py, and it passed first time."
+  },
+  {
+   "n": 9,
+   "item": "Subtitles burned in, legible, never boxed",
+   "pass": true,
+   "note": "Coverage 1.0, transcript match 0.971. Inter Display in ink with a thin paper outline, two lines, centred over a wide bottom margin; no box. The picture keeps out of the band on every frame, the chart frames included."
+  },
+  {
+   "n": 10,
+   "item": "The style lock is written and followed",
+   "pass": true,
+   "note": "content/assets/style-lock.json, locked from V01 on 2026-10-05. Paper, ink, one blue, Inter Display at the stage's sizes; the chapter card is the spec's hairline and title. Nothing in these frames departs from it."
+  },
+  {
+   "n": 11,
+   "item": "One blue element per frame, and blue only on money and the leak",
+   "pass": true,
+   "note": "Blue falls on the waterfall's net bar and its value, and on the spoken money figures ($4,101 at f-017, $33,634 at f-023, $14,339 at f-024, $3,874 at f-033). Every other callout, label and card is ink; no red and no green anywhere. The same thing V04 and V05 left for the founder holds here: a frame carrying a blue money callout over the blue net bar (f-023, f-024) has blue in two places, which the house grammar allows but only he can settle for the series."
+  },
+  {
+   "n": 12,
+   "item": "No gradient, glow, halo or vignette; hard cuts only",
+   "pass": true,
+   "note": "None in any frame. Transitions are hard cuts; the only motion inside a shot is the drift the spec asks for."
+  },
+  {
+   "n": 13,
+   "item": "At most three text blocks per frame, captions small and dim",
+   "pass": true,
+   "note": "The busiest frames are the chart ones: heading, then at most two callouts in the right column, with the burned-in subtitle counted separately. The older callout of the pair steps back from blue to ink."
+  },
+  {
+   "n": 14,
+   "item": "Charts have direct labels, a demo label, no legend and no grid",
+   "pass": true,
+   "note": "Hairline axes, every bar named underneath it and valued above it, the demo chip bottom left. No legend and no gridlines anywhere."
+  },
+  {
+   "n": 15,
+   "item": "Every on-screen number is readable",
+   "pass": false,
+   "note": "The figures are legible and correctly placed, but one of them is read out in a sentence that does not survive the substitution. gross_vs_contribution_gap's value is \"38.4%\", and script.md line 28 writes the word points after it, so the screen and the narration both say \"the margin you quote and the margin you keep is 38.4% points of revenue\" (f-010). Its facts label does the same thing on the figure cards: \"38.4%\" over \"points of margin between gross and contribution\" (f-002, f-039). A percentage sign and the word points are two units for one number, and the same figure is written correctly twice elsewhere in the same script, in the hook (line 18) and in WHAT IT'S WORTH (line 46), where it reads \"38.4% of revenue\". The fix is in the script and its facts, not in a scene: either line 28 says \"of revenue\" like the other two, or the fact carries a unitless point count for the sentences that supply the unit, and its label follows. While he is in the file: line 40's \"by contribution it ranks 1 in the catalog\" (f-025) is true and legible but reads clipped out loud, and \"ranks first\" would say the same thing."
+  },
+  {
+   "n": 16,
+   "item": "The narration and the script's production lines describe the picture that is actually on screen",
+   "pass": false,
+   "note": "The narration names no colour and nothing that is not on screen, so the film itself is clean. The THUMBNAIL line does not: script.md line 2 asks for \"{{gross_vs_contribution_gap}} in amber over the waterfall fragment\". Amber is retired by VISUAL_SPEC §3.1 (2026-10-04) and the film carries no amber pixel; the thumbnail step reads that line next and would draw the one frame in the series in a colour the series no longer has. The fix is to name the blue, or to name no colour and let the style lock decide."
+  }
+ ],
+ "notes": "Sixteen items, fourteen passing. The render itself is clean: the cadence and the frozen-picture checks pass first time on the hold fix, the mix is on target, the subtitles cover the whole film, and no frame breaks the palette or the type. Both failures are in the approved script, so neither can be fixed inside this step: the script is at review == approved, and changing a word of the narration means re-recording it, re-timing it and re-rendering the scenes against it. The step is blocked on the founder re-approving a corrected script. The corrections are two, and neither touches a figure or a claim: drop the word points after {{gross_vs_contribution_gap}} on line 28 so it reads \"of revenue\" as it does in the hook (or give the facts a unitless point count and label), and take \"in amber\" out of the thumbnail line."
+}

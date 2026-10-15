@@ -1,0 +1,110 @@
+{
+ "slug": "08-elasticity-plain-english",
+ "pass": false,
+ "reviewed": "2026-10-05",
+ "against": [
+  "docs/content/hubricon-video-production-bible.md §11",
+  "docs/content/PREMIUM-STANDARD.md, as amended by docs/content/VISUAL_SPEC.md (2026-10-04)",
+  "content/assets/style-lock.json"
+ ],
+ "frames": 36,
+ "items": [
+  {
+   "n": 1,
+   "item": "No generated face, avatar or synthetic human in any frame",
+   "pass": true,
+   "note": "Thirty-six frames, one every ten seconds. Kinetic cards, the demand-versus-price chart, figure cards, one chapter card and the corner mark; no figure, no avatar, nothing photographic anywhere in the film."
+  },
+  {
+   "n": 2,
+   "item": "Texture is never the subject",
+   "pass": true,
+   "note": "No texture is used at all. Every frame is the paper room: type, the chart, or the chapter card's hairline and title (f-020)."
+  },
+  {
+   "n": 3,
+   "item": "Every number on screen traces to a model run, and demo data is labelled",
+   "pass": true,
+   "note": "Every figure comes from facts.json and run.json through the reveal loop; nothing is typed into a scene. ELASTICITY.FIT, PRICE.OPTIMUM and MARGIN.DECOMP on Tarnhollow demo data, seed 42. The TARNHOLLOW DEMO DATA chip is on every frame but the chapter card (f-020), which carries no figure."
+  },
+  {
+   "n": 4,
+   "item": "Charts are Manim scenes driven by engine output, not hand-rebuilt",
+   "pass": true,
+   "note": "scenes/charts.py Elasticity, reading run.json's elasticity_curves for the SKU named in facts.json: the monthly points, the fitted curve and the interval band are all the model's own arrays. The callout column and the two inline annotations are the reveal loop reading facts.json."
+  },
+  {
+   "n": 5,
+   "item": "Every chart builds progressively and carries an annotation",
+   "pass": true,
+   "note": "Caught in the frames this time: axes and their numbers alone with the first points at f-006, then the band and the fitted line at f-007, then the slope annotation ε = -2.20 at f-010, then the interval annotation above the band with the band deepening behind it at f-011. Each landing takes a data tick."
+  },
+  {
+   "n": 6,
+   "item": "Room tone, data ticks, transition SFX and a ducking bed",
+   "pass": true,
+   "note": "mix.json carries the locked sound: room tone at -48 dB, the ticks and whooshes from ElevenLabs sound generation, bed-elevenlabs.mp3 at -32 dB ducking to -20 dB. qa.json reads no silence over a second and -16.9 LUFS against a -16 target."
+  },
+  {
+   "n": 7,
+   "item": "A publishable voice, disclosed as what it is",
+   "pass": true,
+   "note": "voice is \"library\": the ElevenLabs library voice the founder chose on 2026-10-04 (content/assets/voice.json), which PREMIUM-STANDARD accepts as amended. The description does not exist yet, so qa.json reports disclosure_in_description as null; that is the describe step's check."
+  },
+  {
+   "n": 8,
+   "item": "Cut to VISUAL_SPEC §4, and nothing frozen over four seconds",
+   "pass": true,
+   "note": "qa.json: 39 cuts, mean interval 9.06 s, longest 28.5 s, inside the thirty a chart build may hold, and the frames show something new landing inside it every few seconds (the callout pair turns over at f-023, f-024, f-025, f-026, f-027, f-028). No frozen run anywhere, max_hold 0.0 s."
+  },
+  {
+   "n": 9,
+   "item": "Subtitles burned in, legible, never boxed",
+   "pass": true,
+   "note": "Coverage 1.0, transcript match 0.982, the best of the three units cut so far. Inter Display in ink with a thin paper outline, two lines, centred over a wide bottom margin; no box. The chart keeps out of the band on every frame."
+  },
+  {
+   "n": 10,
+   "item": "The style lock is written and followed",
+   "pass": true,
+   "note": "content/assets/style-lock.json, locked from V01 on 2026-10-05. Paper, ink, one blue, Inter Display at the stage's sizes; the chapter card at f-020 is the spec's hairline and title. Nothing in these frames departs from it."
+  },
+  {
+   "n": 11,
+   "item": "One blue element per frame, and blue only on money and the leak",
+   "pass": true,
+   "note": "Blue falls on the fit's interval band and on the spoken money figures ($3.5M at f-007, $1,701 at f-028). VISUAL_SPEC §8.4 names the band as the one thing besides money that takes blue, so the band is right. The two-places question stands exactly as V04 and V05 left it: a frame carrying a blue money callout beside the blue band (f-007, f-009, f-028) has blue twice, which the house grammar allows but only the founder can settle for the series. No red and no green anywhere."
+  },
+  {
+   "n": 12,
+   "item": "No gradient, glow, halo or vignette; hard cuts only",
+   "pass": true,
+   "note": "None in any frame. Transitions are hard cuts; the only motion inside a shot is the drift the spec asks for."
+  },
+  {
+   "n": 13,
+   "item": "At most three text blocks per frame, captions small and dim",
+   "pass": true,
+   "note": "The busiest frames are the chart ones: heading, the interval annotation on the band, and at most two callouts in the right column, with the burned-in subtitle counted separately. The annotation replaces itself rather than stacking, which is the V04 fix working (charts.py:354-370)."
+  },
+  {
+   "n": 14,
+   "item": "Charts have direct labels, a demo label, no legend and no grid",
+   "pass": true,
+   "note": "Hairline axes with two numbers on each, the slope named on the curve, the interval named on the band, the demo chip bottom left. No legend and no gridlines anywhere."
+  },
+  {
+   "n": 15,
+   "item": "Every on-screen number is readable",
+   "pass": true,
+   "note": "Every placeholder in this script survives its substitution: the values that carry no unit are the ones whose sentences supply it (\"wait 5 months\" at f-031, \"moved by 2% across 5 months\" at f-025), and the ones that carry a unit are never given a second (\"-2.20\", \"32.1% of revenue\", \"a 5.0% step to $37.84\", \"a 4% chance it loses money\"). Nothing here repeats V05's and V07's double unit."
+  },
+  {
+   "n": 16,
+   "item": "The narration describes the picture that is actually on screen",
+   "pass": false,
+   "note": "Three things, and the first is the real one. (1) The whole middle of the film is about a shape the viewer never sees. CHAPTER 1 says \"as the price climbs, profit climbs, then flattens, then falls. It's a hill. Every product has one. The top of the hill is the price you want\", and CHAPTER 2 says \"the top isn't a point ... the top is a stretch of hill\". The script's VISUAL lines ask for exactly that: the profit hill built underneath the demand line, a second lower hill drawn off the gross margin to show the wrong top, then the top shaded into a stretch. charts.py has no hill scene — Waterfall, CashCone, Paths, Elasticity, Newsvendor, SampleSize and nothing else — so both beats fall back to Elasticity, and for two and a half minutes the narration describes a hill over a straight fitted line (f-012 to f-019, f-021 to f-028). The argument of the video is the hill; it is the one picture the film does not have. (2) The chapter-2 chart is a leftover: it holds TH-OVEMIT-22's scatter and its \"-0.88 · upper bound of its ninety-five percent interval\" annotation while the narration has moved to the catalogue's counts and to TH-CASIRO-01's step (f-023 to f-028), so the picture names one SKU while the voice names another. (3) THUMBNAIL on script.md line 2 asks for \"{{el_point}} in amber over the elasticity fragment\"; amber is retired by VISUAL_SPEC §3.1 (2026-10-04) and the film carries no amber pixel, the same leftover found in V05 and V07."
+  }
+ ],
+ "notes": "Sixteen items, fifteen passing. The render is clean on every mechanical count — the cadence, the frozen-picture check, the mix, the subtitles at 0.982 against the script, the palette, the type — and the number safety is clean, which is what V05 and V07 were blocked on. What fails is the picture itself: the film argues the profit hill and never draws it, because the scene does not exist yet. That is build work on this branch, not a founder decision, and it is the next thing this unit needs: a Hill scene in scenes/charts.py driven by PRICE.OPTIMUM's own curve, drawing the profit hill under the demand line, the second hill off the gross margin, and the top as a shaded stretch at the interval, plus a catalogue picture for chapter 2 so the chart stops naming a SKU the narration has left. The one thing only the founder can give is the third correction: take \"in amber\" out of the thumbnail line of the approved script. The step is blocked on that, and on the Hill scene landing before the unit re-renders from scenes."
+}

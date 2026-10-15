@@ -1,0 +1,10 @@
+{
+  "locked_on": "2026-10-01",
+  "from": "content/videos/style-reel",
+  "files": {
+    "assets/hubricon.css": "c72b3043902ffd37158b08014df11b8cbd2ccf28fb5490ba045c106a2b3be908",
+    "assets/charts.mjs": "09e883145fee28cc3a2ac6135f99d67a1e9c9a11428fceff1104e282113f2da5",
+    "content/film/film.css": "8b3cce29407aea08527d5b0e0d13a6dbb20de1eb5969be1dce669c413da456ae",
+    "content/film/scenes.mjs": "9c64ac35df7481476f7581497c613827539f15458ca23deae4952e36f8f1bf1a"
+  }
+}

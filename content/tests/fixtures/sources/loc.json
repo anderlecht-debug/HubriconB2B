@@ -1,0 +1,292 @@
+{
+ "results": [
+  {
+   "access_restricted": false,
+   "online_format": [
+    "image"
+   ],
+   "image_url": [
+    "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604_150px.jpg#h=118&w=150",
+    "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604t.gif#h=118&w=150",
+    "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604r.jpg#h=503&w=640"
+   ],
+   "url": "https://www.loc.gov/item/2011660924/",
+   "id": "http://www.loc.gov/item/2011660924/",
+   "title": "Bookkeeper's and teller's department First National Bank of Somerville, New Jersey",
+   "date": "1908-01-01",
+   "dates": [
+    "1908"
+   ],
+   "location": [
+    "new jersey",
+    "somerville"
+   ],
+   "subject": [
+    "new jersey",
+    "photographic prints",
+    "bookkeepers",
+    "bank tellers",
+    "banking",
+    "somerville"
+   ],
+   "description": [
+    "1 photographic print. | Photograph shows five bookkeepers writing in large ledgers working at their stations in the foreground; at least three individuals (possibly tellers) working inside chain-link cage in background."
+   ],
+   "resources": [
+    {
+     "caption": "digital file from b&w film copy neg.",
+     "files": 1,
+     "image": "https://tile.loc.gov/storage-services/service/pnp/cph/3a20000/3a24000/3a24600/3a24604_150px.jpg",
+     "url": "https://www.loc.gov/resource/cph.3a24604/"
+    }
+   ],
+   "item": {
+    "rights_advisory": "No known restrictions on publication.",
+    "location": [
+     "New Jersey--Somerville"
+    ],
+    "summary": "Photograph shows five bookkeepers writing in large ledgers working at their stations in the foreground; at least three individuals (possibly tellers) working inside chain-link cage in background.",
+    "subjects": [
+     "Bookkeepers--New Jersey--Somerville--1900-1910",
+     "Bank tellers--New Jersey--Somerville--1900-1910",
+     "Banking--New Jersey--Somerville--1900-1910"
+    ],
+    "date": "1908."
+   }
+  },
+  {
+   "access_restricted": false,
+   "online_format": [
+    "image"
+   ],
+   "image_url": [
+    "https://tile.loc.gov/storage-services/service/pnp/ppmscd/04600/04630_150px.jpg#h=102&w=150",
+    "https://tile.loc.gov/storage-services/service/pnp/ppmscd/04600/04630r.jpg#h=434&w=640",
+    "https://tile.loc.gov/storage-services/service/pnp/ppmscd/04600/04630v.jpg#h=694&w=1024"
+   ],
+   "url": "https://www.loc.gov/item/2026164851/",
+   "id": "http://www.loc.gov/item/2026164851/",
+   "title": "[Man standing at a Union Trust bank teller machine, Washington, D.C.]",
+   "date": "1975",
+   "dates": [
+    "1975"
+   ],
+   "location": [
+    "washington d.c."
+   ],
+   "subject": [
+    "automated teller machines",
+    "banking",
+    "washington (d.c.)",
+    "film negatives"
+   ],
+   "description": [
+    "1 photograph : safety negative ; film width 35mm (roll format)"
+   ],
+   "resources": [
+    {
+     "caption": "digital file from original",
+     "files": 1,
+     "image": "https://tile.loc.gov/storage-services/service/pnp/ppmscd/04600/04630_150px.jpg",
+     "url": "https://www.loc.gov/resource/ppmscd.04630/"
+    }
+   ],
+   "item": {
+    "rights_advisory": "No known restrictions on publication. For information see \"U.S. News & World Report Magazine Collection,\" https://hdl.loc.gov/loc.pnp/res.078.usnw",
+    "creators": [
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=O%27Halloran%2C%20Thomas%20J.&co=cph",
+      "role": "photographer",
+      "title": "O'Halloran, Thomas J."
+     }
+    ],
+    "location": [
+     "Washington (D.C.)"
+    ],
+    "subjects": [
+     "Banking--Washington (D.C.)--1970-1980",
+     "Automated teller machines--1970-1980"
+    ],
+    "date": "06/23/1975 [23 June 1975]"
+   }
+  },
+  {
+   "access_restricted": false,
+   "online_format": [
+    "image",
+    "pdf"
+   ],
+   "image_url": [
+    "https://tile.loc.gov/storage-services/service/pnp/habshaer/ga/ga0700/ga0757/photos/378344p_150px.jpg#h=120&w=150",
+    "https://tile.loc.gov/storage-services/service/pnp/habshaer/ga/ga0700/ga0757/photos/378344pr.jpg#h=511&w=640",
+    "https://tile.loc.gov/storage-services/service/pnp/habshaer/ga/ga0700/ga0757/photos/378344pv.jpg#h=817&w=1024"
+   ],
+   "url": "https://www.loc.gov/item/ga0757/",
+   "id": "http://www.loc.gov/item/ga0757/",
+   "title": "Triangle Building, 1333 Warren Avenue & 1300 Broadway, Columbus, Muscogee County, GA",
+   "location": [
+    "columbus",
+    "georgia",
+    "muscogee county"
+   ],
+   "subject": [
+    "office buildings",
+    "newspaper industry",
+    "power industry",
+    "grocery stores",
+    "commerce",
+    "building deterioration"
+   ],
+   "description": [
+    "Photo(s): 12 | Data Page(s): 9 | Photo Caption Page(s): 1"
+   ],
+   "resources": [
+    {
+     "caption": "Photos from Survey HABS GA-2314 ",
+     "files": 12,
+     "image": "https://tile.loc.gov/storage-services/service/pnp/habshaer/ga/ga0700/ga0757/photos/378344p_150px.jpg",
+     "url": "https://www.loc.gov/resource/hhh.ga0757.photos"
+    },
+    {
+     "caption": "Data Pages from Survey HABS GA-2314 ",
+     "files": 1,
+     "image": "/static/images/original-format/manuscript-mixed-material.svg",
+     "url": "http://www.loc.gov/item/ga0757/"
+    },
+    {
+     "caption": "Photo Captions from Survey HABS GA-2314 ",
+     "files": 1,
+     "image": "/static/images/original-format/manuscript-mixed-material.svg",
+     "url": "http://www.loc.gov/item/ga0757/"
+    }
+   ],
+   "item": {
+    "rights_advisory": "No known restrictions on images made by the U.S. Government; images     copied from other sources may be restricted.    https://www.loc.gov/rr/print/res/114_habs.html",
+    "creators": [
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Historic%20American%20Buildings%20Survey&co=hh",
+      "role": "creator",
+      "title": "Historic American Buildings Survey"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Page%2C%20R%20W&co=hh",
+      "role": "",
+      "title": "Page, R W"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Page%2C%20W%20E&co=hh",
+      "role": "",
+      "title": "Page, W E"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Columbus%20Electric%20%26%20Power%20Company&co=hh",
+      "role": "",
+      "title": "Columbus Electric & Power Company"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Columbus%20Ledger&co=hh",
+      "role": "",
+      "title": "Columbus Ledger"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Hickman%2C%20Charles%20F&co=hh",
+      "role": "",
+      "title": "Hickman, Charles F"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Bradfield%2C%20J%20F&co=hh",
+      "role": "",
+      "title": "Bradfield, J F"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Georgia%20Power%20Company&co=hh",
+      "role": "",
+      "title": "Georgia Power Company"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Day%2C%20James%20F&co=hh",
+      "role": "",
+      "title": "Day, James F"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Southeastern%20Archeological%20Services%2C%20Inc.&co=hh",
+      "role": "contractor",
+      "title": "Southeastern Archeological Services, Inc."
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Lupold%2C%20John%20S&co=hh",
+      "role": "historian",
+      "title": "Lupold, John S"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Cawthorn%2C%20Jim&co=hh",
+      "role": "photographer",
+      "title": "Cawthorn, Jim"
+     }
+    ]
+   }
+  },
+  {
+   "access_restricted": false,
+   "online_format": [
+    "online text",
+    "pdf",
+    "image"
+   ],
+   "image_url": [
+    "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:12.5/0/default.jpg",
+    "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:12.5/0/default.jpg#h=398&w=60",
+    "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:25/0/default.jpg#h=796&w=120",
+    "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:50/0/default.jpg#h=1592&w=240",
+    "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:100/0/default.jpg#h=3184&w=480"
+   ],
+   "url": "https://www.loc.gov/item/03027422/",
+   "id": "http://www.loc.gov/item/03027422/",
+   "title": "The illustration of books; a manual for the use of students, notes for a course of lectures at the Slade School, University College,",
+   "date": "1896",
+   "dates": [
+    "1896"
+   ],
+   "subject": [
+    "handbooks, manuals, etc",
+    "illustration of books"
+   ],
+   "description": [
+    "\"Some of these lectures were printed in the 'Art journal.'\" LAC scc 2019-09-19 update (1 card) LAC ecr 2019-10-10 review"
+   ],
+   "resources": [
+    {
+     "caption": "Page View",
+     "files": 219,
+     "fulltext_file": "page level only",
+     "image": "https://tile.loc.gov/image-services/iiif/service:rbc:rbc0001:2024:2024rosen027422:0001/full/pct:12.5/0/default.jpg",
+     "pdf": "https://tile.loc.gov/storage-services/service/rbc/rbc0001/2024/2024rosen027422/2024rosen027422.pdf",
+     "url": "https://www.loc.gov/resource/rbc0001.2024rosen027422/"
+    }
+   ],
+   "item": {
+    "creators": [
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Pennell%2C%20Joseph%2C%201857-1926.",
+      "role": "",
+      "title": "Pennell, Joseph, 1857-1926."
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Levis%2C%20Howard%20Coppuck%2C%20DLC",
+      "role": "former owner",
+      "title": "Levis, Howard Coppuck, DLC"
+     },
+     {
+      "link": "https://www.loc.gov/pictures/related/?fi=name&q=Lessing%20J.%20Rosenwald%20Reference%20Collection%20%28Library%20of%20Congress%29%20DLC",
+      "role": "",
+      "title": "Lessing J. Rosenwald Reference Collection (Library of Congress) DLC"
+     }
+    ],
+    "subjects": [
+     "Illustration of books--Handbooks, manuals, etc"
+    ],
+    "date": "1896"
+   }
+  }
+ ]
+}

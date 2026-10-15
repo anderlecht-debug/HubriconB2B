@@ -1,0 +1,20 @@
+{
+ "path": "learn/index.html",
+ "mode": "copy",
+ "pass": true,
+ "items": [
+  {"n": 1, "question": "Any banned phrase present?", "pass": true, "note": "None (lib/learn_hub.test.mjs greps the visible text for the CLAUDE.md list plus coming soon, limited, countdown)."},
+  {"n": 2, "question": "Is 'free' used at most twice?", "pass": true, "note": "Once: the Free badge on the course card."},
+  {"n": 3, "question": "No countdown, no 'limited', no fake counts, no 'coming soon'?", "pass": true, "note": "One card, for the one course that exists in full. No card, line or badge for courses two to four or the Teardown Hour (build prompt §1, §7.1)."},
+  {"n": 4, "question": "Does the form have six fields and no phone number?", "pass": true, "note": "Not applicable: the hub carries no form. The course page's form was judged in copy-reimbursement-playbook.json."},
+  {"n": 5, "question": "Is lesson one readable without the form?", "pass": true, "note": "Not applicable on the hub; the card links straight to the course page, where lesson one is open."},
+  {"n": 6, "question": "Does any sentence claim results, clients or testimonials that do not exist?", "pass": true, "note": "The footer states there are no published results. The position line describes what the service does, not what it has done."},
+  {"n": 7, "question": "Does every dollar figure trace to facts.json and carry a demo label?", "pass": true, "note": "No figure on the page."},
+  {"n": 8, "question": "Learn doc §2: one card per built course with badges, the position stated plainly in the headline, under two hundred words?", "pass": true, "note": "Headline: 'The method is public. The execution is the product.' One card with New and Free badges. Visible word count is under two hundred, held by the test."},
+  {"n": 9, "question": "Luxury pass: no urgency, no scarcity, no exclamation marks?", "pass": true, "note": "None. The only link in the body is the card itself."}
+ ],
+ "checks": {
+  "node --test lib/learn_hub.test.mjs": "4 passed"
+ },
+ "judged_by": "critique skill (copy), unattended tick 2026-09-18"
+}
