@@ -148,10 +148,145 @@ export const VIDEO = {
   motion: {
     holdMs: 1500,              // a finished visual sits still before the next thing moves. Starting value
     silenceMs: 500,            // everything drops out before a reveal
-    turnMs: 600,               // the move from one scene to the next. Starting value
-    cameraEase: "ease-in-out", // a camera glide; everything that arrives still uses ease-out
   },
 };
+
+// Each group below starts from what is physically true about how the thing is seen,
+// and derives its numbers from that, in the file, so a rule can be checked rather
+// than argued. Rockefeller asked how many drops of solder sealed a can: forty, then
+// thirty-eight leaked, thirty-nine held. Same standard: the least that works, measured.
+
+// ---------------------------------------------------------------- the thumbnail
+// True: it is judged in under a second, at its smallest about 168px wide (the
+// watch-next column), in a feed of saturated, dark, shouting images, on a dark
+// page for many viewers and a white one for the rest. So: anything that does not
+// survive being shrunk to 168px does not exist; the way to be seen is contrast with
+// the feed, not volume; and recognition comes from the same layout every time,
+// because a logo is a smudge at that size.
+
+const THUMB_W = 1280, SMALLEST_SHOWN = 168;
+const AT_SMALLEST = SMALLEST_SHOWN / THUMB_W;           // 0.131: one unit here is 0.13px there
+const INTER_CAP = 0.727;                               // Inter's capital height, as a share of its size
+
+export const THUMB = {
+  frame: { w: THUMB_W, h: 720 },
+  render: { scale: 3 },                                 // 3840×2160, YouTube's recommended size; upload from desktop (50 MB cap; the phone app's is 2 MB)
+  smallestShown: SMALLEST_SHOWN,
+  // A stroke thinner than one screen pixel at the smallest size vanishes, so no
+  // hairline exists in a thumbnail: nothing is drawn under 8 units. The chart's lines
+  // are as heavy as the title's letter stems (Inter 600 at 144 is about 16 units), so
+  // the words and the chart read as one object. The leak, the only colour, is twice that.
+  minStroke: Math.ceil(1 / AT_SMALLEST),                // 8: one screen pixel at 168px
+  lineStroke: 16,                                       // 2.1px at 168px, the weight of the letters
+  leakStroke: 32,                                       // 4.2px at 168px: the heaviest mark in the image
+  // Words: three at most, two lines at most, and a capital at least 12 screen
+  // pixels tall at 168px wide, the smallest text a phone's own interface uses.
+  words: { max: 3, lines: 2, px: 144, leading: 1, weight: 600, track: "-0.032em",
+    capAtSmallestPx: +(144 * INTER_CAP * AT_SMALLEST).toFixed(1) },      // 13.7
+  // One layout, every video. The claim top-left where the eye lands first, the
+  // film's own chart beneath it as the evidence and the face. Units of the 1280×720 frame.
+  boxes: {
+    words: { x: 72, y: 56, w: 1136, h: 288 },
+    chart: { x: 72, y: 368, w: 928, h: 300 },
+  },
+  // YouTube paints over these: the running time bottom-right, and a progress bar
+  // along the bottom on anything the viewer has started. Nothing of ours goes there.
+  keepOut: [
+    { name: "running time", x: 1040, y: 600, w: 240, h: 120 },
+    { name: "progress bar", x: 0, y: 688, w: 1280, h: 32 },
+  ],
+  ground: "paper",       // white in a dark feed is the brightest thing on the page; in a white feed the ink carries it
+  blue: "the leak only, and the only colour in the image",
+  honesty: "every figure on a thumbnail is stated, sourced and labelled in the film's first minute",
+  variants: { max: 3, change: "the words only", decidedBy: "watch time share" },   // YouTube's Test & Compare; Shorts excluded
+  judge: { feeds: ["dark", "light"], widths: [168, 360] },                       // look at it where it lives before it ships
+  never: ["a face", "arrows or circles", "emoji", "outlined or shadowed text", "a gradient", "a second colour",
+    "the logo", "more than three words", "a number the film does not state"],
+};
+
+// ---------------------------------------------------------------- captions
+// True: captions exist for a viewer with the sound off, and reading is a fixed
+// cost: the eye has to find the line, then read it. Words that move, bounce or
+// change colour make the eye find them again on every change. So captions sit
+// still, appear a phrase at a time, and change colour once, for one reason.
+
+const CPS = 17;                                         // characters a second: the reading speed subtitle standards hold to
+
+export const CAPTIONS = {
+  // Long films: nothing burned into the picture. The exact script, timed from the
+  // recording, is uploaded as the caption file, so anyone who turns captions on
+  // reads your words instead of a machine's guesses, and nobody else sees two copies.
+  longForm: "the exact script as the caption file; nothing burned in",
+  // Clips (Shorts, Reels, TikTok), mostly watched muted: burned in, in their own band.
+  clips: {
+    px: 64, leading: 1.2, weight: 600, track: "-0.01em",
+    maxLines: 2,
+    maxCharsPerLine: 22,                                // 22 × about 35px = the 840px between the safe-area edges, with room
+    cps: CPS,
+    minMs: 900,                                         // a short phrase still gets time to be read
+    fadeMs: 100,                                        // appears whole; never pops, slides or scales
+    breakAt: "phrase ends; a figure is never split from its unit",
+    colour: "ink; a dollar figure turns blue on the same frame its chart turns blue",
+    band: "captions own a band at the foot of the safe area; no data sits in it",
+  },
+  never: ["word-by-word reveal", "bouncing, popping or scaling", "karaoke highlighting", "a colour per word",
+    "outlines or boxes behind the text", "emoji", "all capitals"],
+};
+
+// ---------------------------------------------------------------- the finish
+// True: grain, vignettes and glow were invented to hide what a camera got wrong:
+// noise, soft corners, blown highlights. A film drawn from exact numbers has nothing
+// to hide, and a precision brand should not look like it is hiding anything. So the
+// finish is sharpness: rendered at twice the size it is watched and scaled down,
+// at 60 frames, with the colours exactly the tokens. The one thing borrowed from
+// real cameras is motion blur, and only where a real shutter would show it.
+
+export const FINISH = {
+  sharpness: "rendered at 2× (3840×2160) and 60 frames; scaled down, every edge is clean",
+  // A fast move at 60 frames jumps in visible steps. A real 180° shutter smears an
+  // object by the distance it travels in half a frame. Below this speed nothing is
+  // blurred, so type stays crisp on every ordinary move. Starting value.
+  motionBlur: { shutterAngle: 180, samples: 8, onlyAbovePxPerFrame: 16 },   // 16px a frame at 1080p = 960px a second
+  // Depth from movement, never from blur: while the camera travels, the scene it is
+  // travelling to arrives a little slower than the one it leaves, then lands exactly.
+  // Never inside a chart: its grid is the measurement and stays locked to the data.
+  depth: { parallax: 0.92, appliesTo: "the scene the camera is travelling to", never: "inside a chart" },
+  grade: "none: the colours on screen are the tokens' values, exactly",
+  never: ["film grain", "vignette", "glow or bloom", "drop shadows", "lens flare", "chromatic aberration",
+    "light leaks or film burns", "a colour grade or LUT", "letterbox bars", "camera shake"],
+};
+
+// ---------------------------------------------------------------- the camera
+// True: a camera move tells the viewer "look here", and nothing else. Two moves at
+// once, or a move while they are reading, splits attention; Napoleon's rule was to
+// mass force at the decisive point, and a frame works the same way. So: one move a
+// beat, only towards the data the next line is about, never while text is being read.
+// And the film is one continuous canvas: every chart sits beside the last, and the
+// camera travels between them instead of cutting, so the viewer sees how one idea
+// leads to the next. The only cut is an act break, to night.
+
+export const CAMERA = {
+  ease: "ease-in-out",                                  // starts and stops like something with mass; arrivals still use ease-out
+  movesPerBeat: 1,
+  target: "the data the next line is about",
+  waitsForReading: { cps: CPS },                        // a move starts once the text on screen has had its reading time
+  zoom: { min: 1, max: 3, maxPerMove: 2 },              // past 3×, the viewer loses where they are on the canvas. Starting value
+  // Travel time grows with distance, so speed stays calm: 700 ms plus 500 ms for
+  // each frame-width crossed, never under 0.9 s or over 2 s. Starting value.
+  travel: { baseMs: 700, perFrameMs: 500, minMs: 900, maxMs: 2000 },
+  canvas: { continuous: true, gap: 0.25 },              // scenes side by side, a quarter frame apart
+  cutsOnlyAt: "an act break, to night",
+  never: ["rotation", "shake", "two moves at once", "a move while text is being read", "a zoom for emphasis alone"],
+};
+
+/** How long the camera takes to travel `frames` frame-widths. */
+export function travelMs(frames) {
+  const t = CAMERA.travel;
+  return Math.round(Math.min(t.maxMs, Math.max(t.minMs, t.baseMs + t.perFrameMs * frames)));
+}
+
+/** How long a line of text must stay readable before anything moves: its length at the reading speed. */
+export const readingMs = (text) => Math.max(CAPTIONS.clips.minMs, Math.round((String(text).length / CPS) * 1000));
 
 // ---------------------------------------------------------------- the sound
 // Six cues, each with one job, so a viewer learns the language without noticing.
@@ -175,7 +310,7 @@ export const SOUND = {
     tick: { gainDb: -26, file: null, licence: null, maxPerSecond: 20,
       job: "a number counting: one tick per change it shows, like a watch movement" },
     turn: { gainDb: -20, file: null, licence: null,
-      job: "the move between scenes: a breath of texture, never a swoosh" },
+      job: "the camera travelling to the next scene: a breath of texture, never a swoosh" },
   },
   silence: { ms: VIDEO.motion.silenceMs, job: "everything out before a reveal; scheduled like a sound" },
 };

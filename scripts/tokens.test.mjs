@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CSS, NIGHT, VIDEO, SOUND, cssTokens, css, ms, ease, cubicBezier } from "../assets/tokens.mjs";
+import { CSS, NIGHT, VIDEO, SOUND, THUMB, CAPTIONS, FINISH, CAMERA, cssTokens, css, ms, ease, cubicBezier, travelMs, readingMs } from "../assets/tokens.mjs";
 import { tokenBlock, STYLESHEET } from "./build-tokens.mjs";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
@@ -116,7 +116,6 @@ test("a film has four type sizes, and the smallest reads on a phone", () => {
   assert.deepEqual([...sizes].sort((a, b) => a - b), sizes, "sizes run small to large");
   for (const k of ["statement", "display", "hero"]) assert.equal(VIDEO.type[k].track, css("track-display"));
   assert.equal(VIDEO.type.label.track, css("track-label"));
-  assert.ok(VIDEO.motion.cameraEase in { "ease-in-out": 1 });
 });
 
 test("the safe areas leave room for the picture", () => {
@@ -140,4 +139,67 @@ test("no sound is used without its licence, and the reveal stays rare", () => {
 test("the CSS table has no duplicate names", () => {
   const all = CSS.flatMap(([, rows]) => rows.filter(Boolean).map(([n]) => n));
   assert.equal(new Set(all).size, all.length);
+});
+
+// ---- the four derived groups: each rule is arithmetic on what is true about how it is seen
+
+const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const inside = (a, f) => a.x >= 0 && a.y >= 0 && a.x + a.w <= f.w && a.y + a.h <= f.h;
+
+test("a thumbnail survives being shrunk to the smallest place it is shown", () => {
+  const scale = THUMB.smallestShown / THUMB.frame.w;
+  assert.ok(THUMB.minStroke * scale >= 1, "a line under one screen pixel at the smallest size vanishes");
+  assert.ok(THUMB.lineStroke >= THUMB.minStroke, "a chart line under the floor vanishes");
+  assert.ok(THUMB.leakStroke >= 2 * THUMB.lineStroke, "the leak must be the heaviest mark");
+  assert.ok(THUMB.words.px * 0.727 * scale >= 12, "a capital under 12px at the smallest size cannot be read");
+  assert.ok(THUMB.words.max <= 3 && THUMB.words.lines <= 2);
+  assert.equal(THUMB.frame.w * THUMB.render.scale, 3840, "YouTube's recommended thumbnail is 3840 wide");
+  assert.equal(THUMB.frame.w / THUMB.frame.h, 16 / 9);
+});
+
+test("a thumbnail's words and chart stay clear of each other and of what YouTube paints over", () => {
+  const { words, chart } = THUMB.boxes;
+  for (const b of [words, chart]) assert.ok(inside(b, THUMB.frame), "a box leaves the frame");
+  assert.ok(!overlaps(words, chart), "words sit on the data");
+  assert.ok(words.h >= THUMB.words.lines * THUMB.words.px * THUMB.words.leading, "the words box cannot hold its lines");
+  for (const k of THUMB.keepOut) for (const b of [words, chart]) assert.ok(!overlaps(b, k), `a box sits under YouTube's ${k.name}`);
+  assert.equal(THUMB.variants.max, 3);
+  assert.ok(THUMB.never.includes("a face") && THUMB.never.includes("a second colour"));
+});
+
+test("clip captions are readable at a glance and sit inside the safe area", () => {
+  const c = CAPTIONS.clips, sv = VIDEO.safeVertical, v = VIDEO.vertical;
+  assert.ok(c.cps <= 20, "faster than subtitle reading standards");
+  assert.ok(c.maxLines <= 2);
+  const safeW = v.w - sv.left - sv.right;
+  assert.ok(c.maxCharsPerLine * c.px * 0.56 <= safeW, "a full line runs out of the safe area");
+  assert.ok(c.px >= 56, "too small for a phone held upright");
+  assert.ok(c.fadeMs <= 150, "a caption must appear, not perform");
+  assert.equal(readingMs("ab"), c.minMs);
+  assert.equal(readingMs("x".repeat(34)), 2000);
+  for (const n of ["word-by-word reveal", "karaoke highlighting", "bouncing, popping or scaling"]) assert.ok(CAPTIONS.never.includes(n));
+  assert.match(CAPTIONS.longForm, /nothing burned in/);
+});
+
+test("the finish hides nothing", () => {
+  for (const n of ["film grain", "vignette", "glow or bloom", "drop shadows", "a colour grade or LUT"]) assert.ok(FINISH.never.includes(n), n);
+  assert.equal(VIDEO.render.final.scale, 2);
+  assert.equal(VIDEO.render.final.fps, 60);
+  assert.ok(FINISH.motionBlur.onlyAbovePxPerFrame > 0, "blur on every move softens the type");
+  assert.ok(FINISH.motionBlur.shutterAngle > 0 && FINISH.motionBlur.shutterAngle <= 360);
+  assert.ok(FINISH.depth.parallax > 0.8 && FINISH.depth.parallax < 1);
+  assert.equal(FINISH.depth.never, "inside a chart");
+});
+
+test("the camera moves once a beat, calmly, and never while text is read", () => {
+  assert.equal(CAMERA.ease, "ease-in-out");
+  assert.equal(CAMERA.movesPerBeat, 1);
+  assert.ok(CAMERA.zoom.max <= 3 && CAMERA.zoom.maxPerMove <= CAMERA.zoom.max && CAMERA.zoom.min === 1);
+  assert.equal(CAMERA.waitsForReading.cps, CAPTIONS.clips.cps, "the camera and the captions read at the same speed");
+  assert.equal(travelMs(0), CAMERA.travel.minMs);
+  assert.equal(travelMs(1 + CAMERA.canvas.gap), 1325);
+  assert.equal(travelMs(10), CAMERA.travel.maxMs);
+  for (let f = 0; f < 6; f += 0.25) assert.ok(travelMs(f + 0.25) >= travelMs(f), "a longer trip never takes less time");
+  for (const n of ["rotation", "shake", "a move while text is being read"]) assert.ok(CAMERA.never.includes(n));
+  assert.ok(CAMERA.canvas.continuous);
 });
