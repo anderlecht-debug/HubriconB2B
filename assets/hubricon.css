@@ -9,27 +9,32 @@
    describes it in words.
    ============================================================================ */
 
+/* tokens:begin. Generated from /assets/tokens.mjs by `node scripts/build-tokens.mjs`.
+   Edit the values there, never here: scripts/tokens.test.mjs fails if the two differ. */
 :root {
   /* colour */
-  --paper: #ffffff;
+  --paper: #ffffff;                  /* every page's ground. A lot of air */
   --paper-2: #f5f6f8;                /* a quiet panel, never a card shadow */
-  --ink: #0a0e17;
-  --ink-2: #3b4250;                  /* body copy */
-  --ink-3: #636b7a;                  /* captions, labels, axes: 5.3:1 on paper */
-  --ink-4: #9aa1ae;                  /* a chart's second neutral: a fee, a cost, a ghosted series */
-  --rule: #e4e7ec;
-  --rule-2: #cdd2da;
-  --blue: #0b5fff;                   /* money and the leak. Nothing else. 5.0:1 on paper */
-  --blue-wash: rgb(11 95 255 / 0.07);
+  --ink: #0a0e17;                    /* headlines, the button, every chart's lines. 19.3:1 on paper */
+  --ink-2: #3b4250;                  /* body copy. 10.1:1 */
+  --ink-3: #636b7a;                  /* captions, labels, axes. 5.4:1 */
+  --ink-4: #9aa1ae;                  /* a chart's second neutral: a fee, a cost, a ghosted series. 2.6:1: marks, not words */
+  --rule: #e4e7ec;                   /* hairlines, gridlines */
+  --rule-2: #cdd2da;                 /* chip borders, axes */
+  --blue: #0b5fff;                   /* money and the leak. Nothing else. 5.1:1 on paper */
+  --blue-wash: rgb(11 95 255 / 0.07);/* the blue as a ground: a range, a band */
+  --selection: rgb(11 95 255 / 0.16);/* selected text */
 
-  --night: #070a11;
+  --night: #070a11;                  /* a dark section's ground. It separates acts, never decorates */
   --night-2: #0d121c;
-  --night-ink: #f3f5f9;
-  --night-ink-2: #a8b0bf;
-  --night-ink-3: #7c8596;
-  --night-ink-4: #4f5768;
+  --night-ink: #f3f5f9;              /* 18.1:1 on night */
+  --night-ink-2: #a8b0bf;            /* 9.1:1 */
+  --night-ink-3: #7c8596;            /* 5.3:1 */
+  --night-ink-4: #4f5768;            /* 2.7:1: marks, not words */
   --night-rule: #1d2431;
-  --night-blue: #5b94ff;
+  --night-rule-2: #2c3443;
+  --night-blue: #5b94ff;             /* 6.7:1 on night */
+  --night-blue-wash: rgb(91 148 255 / 0.1);
 
   /* type: one sans, two weights. Inter is loaded with its optical-size axis, so text from
      about 20px up takes Inter Display, the cut drawn for large sizes (2026-09-30). */
@@ -45,7 +50,7 @@
   --t-display-s: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
   --t-display-m: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
   --t-display-l: clamp(2.375rem, 1.2rem + 4.6vw, 4.5rem);
-  --t-display-xl: clamp(2.75rem, 1rem + 6.2vw, 6rem);    /* the one or two lines a page is remembered by */
+  --t-display-xl: clamp(2.75rem, 1rem + 6.2vw, 6rem);/* the one or two lines a page is remembered by */
   --track-display: -0.032em;
   --track-label: 0.08em;
 
@@ -65,6 +70,9 @@
   --wide: 1120px;
   --measure: 60ch;
   --radius: 10px;
+  --nav-h: 56px;                     /* the bar's height */
+  --glass: rgb(255 255 255 / 0.9);   /* the bar's white glass */
+  --scrim: rgb(255 255 255 / 0.45);  /* the page behind an open panel */
 
   /* charts: weights, washes and motion read from here, never set in a chart */
   --line-hair: 1px;
@@ -74,9 +82,20 @@
   --mc-path-draw: 0.28;              /* a path's opacity while it draws */
   --mc-path-rest: 0.07;              /* and once it has settled */
   --mc-band: 0.13;                   /* the P10–P90 band */
-  --mc-draw-ms: 2000ms;
-  --mc-band-ms: 400ms;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* motion: one draw-in, then still. Nothing loops and nothing moves again */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);/* launches, then settles slowly: everything that arrives */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);/* films only: a camera that starts and stops moving */
+  --mc-draw-ms: 2000ms;              /* a chart's paths sketching in, left to right */
+  --mc-band-ms: 400ms;               /* the band filling once the lines have landed */
+  --mc-settle-ms: 900ms;             /* the paths fading back to almost nothing */
+  --count-ms: 1600ms;                /* a number counting up to the figure the page prints */
+  --reveal-rise: 20px;               /* how far a section's parts rise into place */
+  --reveal-fade-ms: 800ms;
+  --reveal-move-ms: 1000ms;
+  --stagger: 120ms;                  /* a beat: the gap between parts arriving */
+  --calm-ms: 600ms;                  /* the dissolve for a visitor who asked for less motion */
+  --bar-fill-ms: 1600ms;             /* the scoreboard's bar filling to the bill and past it */
 }
 
 /* A dark section is the same system with the ink and paper swapped, so every
@@ -89,12 +108,13 @@
   --ink-3: var(--night-ink-3);
   --ink-4: var(--night-ink-4);
   --rule: var(--night-rule);
-  --rule-2: #2c3443;
+  --rule-2: var(--night-rule-2);
   --blue: var(--night-blue);
-  --blue-wash: rgb(91 148 255 / 0.1);
+  --blue-wash: var(--night-blue-wash);
   background: var(--paper);
   color: var(--ink-2);
 }
+/* tokens:end */
 
 /* ---------------------------------------------------------------- base ---- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -115,7 +135,7 @@ body {
 img, svg, video { display: block; max-width: 100%; }
 a { color: inherit; }
 b, strong { font-weight: var(--strong); color: var(--ink); }
-::selection { background: rgb(11 95 255 / 0.16); color: var(--ink); }
+::selection { background: var(--selection); color: var(--ink); }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
 
 h1, h2, h3 {
@@ -252,7 +272,6 @@ p { text-wrap: pretty; }
    behind the bar's contents: a backdrop-filter on the bar itself would trap the phone
    menu inside it, and nothing between the bar and a panel is positioned, so a panel
    spans the whole window. */
-:root { --nav-h: 56px; --glass: rgb(255 255 255 / 0.9); --scrim: rgb(255 255 255 / 0.45); }
 html { scroll-padding-top: calc(var(--nav-h) + var(--s-4)); }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
@@ -527,12 +546,12 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
    puts an element back to its start (.armed) only while it is still below the screen,
    and plays it (.in) as it arrives. What is already on screen, or what a visitor jumps
    past, simply stays as it is. */
-.armed[data-reveal] { opacity: 0; transform: translateY(20px); transition: none; }
-[data-reveal].in { transition: opacity 0.8s var(--ease-out) var(--d, 0ms), transform 1s var(--ease-out) var(--d, 0ms); }
+.armed[data-reveal] { opacity: 0; transform: translateY(var(--reveal-rise)); transition: none; }
+[data-reveal].in { transition: opacity var(--reveal-fade-ms) var(--ease-out) var(--d, 0ms), transform var(--reveal-move-ms) var(--ease-out) var(--d, 0ms); }
 .bar.armed[data-reveal] { opacity: 1; transform: none; }
 .bar-fill { transform-origin: left center; }
 .bar.armed .bar-fill { transform: scaleX(0); }
-.bar.in .bar-fill { transition: transform 1.6s var(--ease-out) 0.15s; }
+.bar.in .bar-fill { transition: transform var(--bar-fill-ms) var(--ease-out) 0.15s; }
 .bar.armed .bar-bill, .bar.armed + .bar-keys { opacity: 0; }
 .bar.in .bar-bill, .bar.in + .bar-keys { transition: opacity 0.6s ease 1.1s; }
 
@@ -869,7 +888,7 @@ html:not(.js) .course-page .pager { display: none; }
 .playing .draw { stroke-dasharray: 1; animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both; }
 .playing .mc-path.draw {
   animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both,
-             settle 900ms ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
+             settle var(--mc-settle-ms) ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
 }
 .playing .fade { animation: fade var(--mc-band-ms) ease var(--after, var(--mc-draw-ms)) both; }
 @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
@@ -877,7 +896,7 @@ html:not(.js) .course-page .pager { display: none; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .mc--mood.playing .mc-path.draw {
   animation: draw var(--mc-draw-ms) var(--ease-out) var(--delay, 0ms) both,
-             settle-mood 900ms ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
+             settle-mood var(--mc-settle-ms) ease calc(var(--mc-draw-ms) + var(--delay, 0ms)) both;
 }
 @keyframes settle-mood { from { stroke-opacity: var(--mc-path-draw); } to { stroke-opacity: calc(var(--mc-path-rest) * 1.4); } }
 
@@ -886,7 +905,7 @@ html:not(.js) .course-page .pager { display: none; }
 }
 /* Asked for less motion: a section dissolves in, it never slides (.calm, set by the switch) */
 .calm .armed[data-reveal] { opacity: 0; transform: none; transition: none; }
-.calm [data-reveal].in { transform: none !important; transition: opacity 0.6s ease var(--d, 0ms) !important; }
+.calm [data-reveal].in { transform: none !important; transition: opacity var(--calm-ms) ease var(--d, 0ms) !important; }
 @media print {
   .night { --paper: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #ccc; --blue: #0b5fff; }
 }

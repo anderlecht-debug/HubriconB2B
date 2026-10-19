@@ -99,7 +99,7 @@ function countUp(el, final) {
   if (!m) return;
   const target = Number(m[0].replace(/,/g, ""));
   const show = (v) => { el.textContent = final.replace(m[0], Math.round(v).toLocaleString("en-US")); };
-  const t0 = performance.now(), dur = 1600;
+  const t0 = performance.now(), dur = ms("--count-ms", 1600);
   const tick = (t) => {
     const p = Math.min(1, (t - t0) / dur);
     show(target * (1 - Math.pow(1 - p, 4)));
@@ -108,7 +108,7 @@ function countUp(el, final) {
   requestAnimationFrame(tick);
 }
 if (motion || calm) {
-  const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + 1200;   // draw, band, the paths settling
+  const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + ms("--mc-settle-ms", 900) + 300;   // draw, band, the paths settling, the last path's delay
   const playChart = (el) => {
     el.classList.add("playing");
     el.classList.remove("armed");
