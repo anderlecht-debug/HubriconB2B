@@ -46,8 +46,8 @@ const spec = (paint = "inline") => ({
   x: { domain: [0, 20], ticks: [0, 4, 8, 12, 16, 20], format: (v, last) => (last ? `${v} oz` : `${v}`) },
   y: { format: (v) => `$${v.toFixed(2)}` },
   series: [
-    { id: "a", points: [[0, 3.86], [4, 4.09], [8, 4.35], [12, 4.76], [16, 5.21], [20, 5.21]], kind: "step", role: "context", name: "From Jan 15" },
-    { id: "b", points: [[0, 4.11], [4, 4.36], [8, 4.64], [12, 5.06], [16, 5.53], [20, 5.53]], kind: "step", role: "focus", name: "In force to Jan 14", tip: (v) => `$${v.toFixed(2)}` },
+    { id: "a", points: [[0, 3.86], [4, 4.09], [8, 4.35], [12, 4.76], [16, 5.21], [20, 5.21]], kind: "step", role: "context", name: "Other card" },
+    { id: "b", points: [[0, 4.11], [4, 4.36], [8, 4.64], [12, 5.06], [16, 5.53], [20, 5.53]], kind: "step", role: "focus", name: "Card in force", tip: (v) => `$${v.toFixed(2)}` },
   ],
   risers: [{ x: 8, y0: 4.36, y1: 4.64 }],
   dots: [{ x: 8, y: 4.36, hollow: true, label: "8.0 oz, one step down" }, { x: 8.8, y: 4.64, label: "This listing, 8.8 oz", emphasis: true }],
@@ -120,4 +120,15 @@ test("text is measured, and the solver prefers clear space near its point", () =
   const taken = [{ x: 0, y: 0, w: 50, h: 50 }];
   const c = place([{ x: 10, y: 10, w: 10, h: 10 }, { x: 60, y: 10, w: 10, h: 10 }], taken, bounds, [55, 15]);
   assert.equal(c.x, 60);
+});
+
+test("growth with no time scale: a chart without x ticks draws no labels under its axis", () => {
+  const s = { ...spec(), x: { domain: [0, 20] }, series: [spec().series[1]], risers: [], dots: [], notes: [] };
+  const svg = lineChart(s, Infinity).svg;
+  const axisY = +svg.match(/<line x1="[\d.]+" x2="[\d.]+" y1="([\d.]+)" y2="\1" style="stroke:#cdd2da/)[1];
+  // the value axis's labels sit in the left margin, set flush right; anything else under the axis is an x label
+  const below = [...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" text-anchor="(\w+)"[^>]*>([^<]+)<\/text>/g)]
+    .filter((m) => m[2] !== "end" && +m[1] > axisY + 2 && +m[1] < s.h - 24).map((m) => [m[1], m[2], m[3]]);
+  assert.deepEqual(below.map((m) => m[2]), [], "labels under the axis");
+  assert.ok(lineChart(spec(), Infinity).svg.includes(">20 oz<"), "a numerical driver still gets its axis");
 });

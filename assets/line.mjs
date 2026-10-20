@@ -26,6 +26,10 @@
    7. Story order in motion: context first, then the series that matters draws
       in with a tip that carries its real value, then a silence, then the finding.
       Numbers shown while drawing are always real data points, never in-betweens.
+   8. No time scales (the founder, 2026-10-19): growth is shown by its numbers,
+      never against a calendar. The horizontal axis is a numerical driver
+      (weight, price, units) or it carries no labels at all; dates, weeks and
+      months never label an axis or name a line.
 
    No imports beyond the tokens; plain strings out. Works in a browser, in Node
    and in the video renderer.
@@ -240,7 +244,7 @@ export function timeline(spec) {
   const t = {};
   t.stage = [0, fade];
   t.context = hasContext ? [fade * 0.5, fade * 0.5 + draw * 0.5] : [0, 0];
-  t.focus = [hasContext ? t.context[1] : fade * 0.5, 0];
+  t.focus = [hasContext ? t.context[1] : fade, 0];      // the grid is in place before the line starts
   t.focus[1] = t.focus[0] + draw;
   t.names = [t.focus[1], t.focus[1] + fade];
   t.reveal = t.focus[1] + VIDEO.motion.silenceMs;            // the silence, then the finding
@@ -257,7 +261,7 @@ const progress = (at, [a, b]) => (b <= a ? (at >= a ? 1 : 0) : Math.min(1, Math.
  * spec: {
  *   w, h, font (13 on the site, 40 in a film), paint ("css" | "inline"), ground ("day" | "night"),
  *   title?, titlePx?, subtitle?, source?,           the takeaway, the units, the source and labels
- *   x: { domain: [a, b], ticks: [...], format(v, last) },
+ *   x: { domain: [a, b], ticks?: [...], format(v, last) },   no ticks: no labels on the horizontal axis
  *   y: { domain?: [a, b], ticks?: [...], format(v) },
  *   series: [{ id, points: [[x, y], …], kind, role: "focus" | "context" | "ghost" | "leak", name, tip(v)? }],
  *   risers: [{ x, y0, y1 }],                        the finding as a vertical step, in blue
@@ -294,6 +298,8 @@ export function lineChart(spec, at = Infinity) {
   const yVals = spec.series.flatMap((s) => s.points.map((p) => p[1])).concat((spec.risers || []).flatMap((r) => [r.y0, r.y1]));
   const yDom = spec.y.domain || [Math.min(...yVals), Math.max(...yVals)];
   const yTicks = spec.y.ticks || niceTicks(yDom[0], yDom[1], 4);
+  // a line never lies on the axis: the scale reaches down to the gridline below the lowest value
+  if (!spec.y.ticks && !spec.y.domain && yTicks.length > 1 && yDom[0] < yTicks[0] - 1e-9) yTicks.unshift(Math.round((yTicks[0] - (yTicks[1] - yTicks[0])) * 1e6) / 1e6);
   const y0 = Math.min(yDom[0], yTicks[0]), y1 = Math.max(yDom[1], yTicks[yTicks.length - 1]);
   const yLabW = Math.max(...yTicks.map((v) => textWidth(spec.y.format(v), f, 400, true)));
   const left = pad + yLabW + 12 * u;
@@ -301,7 +307,8 @@ export function lineChart(spec, at = Infinity) {
   const nameW = Math.max(0, ...named.map((s) => textWidth(s.name, f, s.role === "focus" ? 600 : 400)));
   const inlineNames = nameW + 14 * u > W * 0.25;            // a narrow chart keeps its width for the data
   const right = W - pad - (nameW && !inlineNames ? nameW + 14 * u : 0);
-  const plotBottom = bottom - f * 2.1;
+  const hasX = (spec.x.ticks || []).length > 0;
+  const plotBottom = bottom - (hasX ? f * 2.1 : f * 0.6);
   const plotTop = top + f * 0.6;
   const X = linear(spec.x.domain[0], spec.x.domain[1], left, right);
   const Y = linear(y0, y1, plotBottom, plotTop);
@@ -330,7 +337,7 @@ export function lineChart(spec, at = Infinity) {
     grid += txt(left - 12 * u, y + f * 0.34, spec.y.format(v), { anchor: "end", tab: true, op: stageOp });
   }
   grid += `<line x1="${r1(left)}" x2="${r1(right)}" y1="${r1(plotBottom)}" y2="${r1(plotBottom)}" style="stroke:${P("rule-2")};stroke-width:${r1(lw("line-hair"))}px;shape-rendering:crispEdges;opacity:${stageOp}"/>`;
-  const xt = spec.x.ticks;
+  const xt = spec.x.ticks || [];
   const xl = xt.map((v, i) => {
     const last = i === xt.length - 1, s = spec.x.format(v, last), w = textWidth(s, f, 400, true);
     const anchor = i === 0 && X(v) - left < f ? "start" : last && right - X(v) < f * 2 ? "end" : "middle";
