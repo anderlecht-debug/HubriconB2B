@@ -910,6 +910,19 @@ html:not(.js) .course-page .pager { display: none; }
   .night { --paper: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #ccc; --blue: #0b5fff; }
 }
 
+/* The number (assets/number.mjs, 2026-10-19). Every digit has its own fixed place, sized by
+   the digit it ends on; while it plays (.num-live) a wheel of digits rolls in that place and
+   the wheels land left to right. Finished in the HTML before it plays, and with no script. */
+.num { display: inline-block; white-space: nowrap; }
+.num--money { color: var(--blue); }
+.num-d { position: relative; display: inline-block; line-height: 1.1; }
+.num-w { display: none; }
+.num-live .num-g { visibility: hidden; }
+.num-live .num-w { display: block; position: absolute; left: -0.06em; right: -0.06em; top: 0; height: 1.1em; overflow: hidden; text-align: center; line-height: 1.1; }
+.num-live:not(.num-series) .num-w { -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); }
+.num-col { display: block; }
+.num-col > span { display: block; height: 1.1em; }
+
 /* ═══ The pages behind the tabs (since 2026-10-01, evening) ═══════════════════════════════
    The home page is short and the rest of the business has a page under each tab
    (HUBRICON_SPEC.md, "A short first page"). These sections moved off the home page with
