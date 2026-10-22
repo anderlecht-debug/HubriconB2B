@@ -94,6 +94,7 @@ export const CSS = [
   ["motion: one draw-in, then still. Nothing loops and nothing moves again", [
     ["ease-out", "cubic-bezier(0.16, 1, 0.3, 1)", "launches, then settles slowly: everything that arrives"],
     ["ease-in-out", "cubic-bezier(0.65, 0, 0.35, 1)", "films only: a camera that starts and stops moving"],
+    ["ease-sweep", "cubic-bezier(0.35, 0.15, 0.25, 1)", "a draw across a whole chart: an even glide that still lands softly"],
     ["mc-draw-ms", "2000ms", "a chart's paths sketching in, left to right"],
     ["mc-band-ms", "400ms", "the band filling once the lines have landed"],
     ["mc-settle-ms", "900ms", "the paths fading back to almost nothing"],
@@ -364,6 +365,7 @@ export function cubicBezier(x1, y1, x2, y2) {
 const EASES = {
   "ease-out": () => cubicBezier(...bezierOf("ease-out")),
   "ease-in-out": () => cubicBezier(...bezierOf("ease-in-out")),
+  "ease-sweep": () => cubicBezier(...bezierOf("ease-sweep")),
   count: () => (p) => 1 - Math.pow(1 - p, 4),           // the count-up's curve (site.js)
   linear: () => (p) => p,
 };
@@ -373,7 +375,7 @@ function bezierOf(name) {
   return m[1].split(",").map(Number);
 }
 
-/** An easing by name: "ease-out", "ease-in-out", "count" or "linear". */
+/** An easing by name: "ease-out", "ease-in-out", "ease-sweep", "count" or "linear". */
 export function ease(name) {
   const make = EASES[name];
   if (!make) throw new Error(`no easing "${name}"`);

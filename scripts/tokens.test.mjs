@@ -95,7 +95,7 @@ test("the blue is the only accent: no other saturated colour is a token", () => 
 test("durations are milliseconds, and the easings land where the browser's do", () => {
   for (const [n, v] of cssTokens()) if (n.endsWith("-ms")) assert.match(v, /^\d+ms$/, `--${n}`);
   assert.equal(ms("count-ms"), 1600);
-  for (const name of ["ease-out", "ease-in-out", "count", "linear"]) {
+  for (const name of ["ease-out", "ease-in-out", "ease-sweep", "count", "linear"]) {
     const f = ease(name);
     assert.equal(f(0), 0, name);
     assert.equal(f(1), 1, name);

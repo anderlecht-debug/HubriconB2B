@@ -86,6 +86,7 @@
   /* motion: one draw-in, then still. Nothing loops and nothing moves again */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);/* launches, then settles slowly: everything that arrives */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);/* films only: a camera that starts and stops moving */
+  --ease-sweep: cubic-bezier(0.35, 0.15, 0.25, 1);/* a draw across a whole chart: an even glide that still lands softly */
   --mc-draw-ms: 2000ms;              /* a chart's paths sketching in, left to right */
   --mc-band-ms: 400ms;               /* the band filling once the lines have landed */
   --mc-settle-ms: 900ms;             /* the paths fading back to almost nothing */
@@ -922,6 +923,10 @@ html:not(.js) .course-page .pager { display: none; }
 .num-live:not(.num-series) .num-w { -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); }
 .num-col { display: block; }
 .num-col > span { display: block; height: 1.1em; }
+
+/* Ten thousand years (assets/montecarlo.mjs, 2026-10-21): the grid is printed over the fan's
+   light, multiplied on paper; in a night section it is screened, so it reads as light too. */
+.night .mc-grid { mix-blend-mode: screen !important; }
 
 /* ═══ The pages behind the tabs (since 2026-10-01, evening) ═══════════════════════════════
    The home page is short and the rest of the business has a page under each tab

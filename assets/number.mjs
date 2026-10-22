@@ -195,8 +195,12 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  * The figure at one moment, as an SVG. In a film (paint "inline") a digit moving
  * faster than FINISH's threshold is blurred along its travel, as a real shutter
  * would: half a frame of motion at 60 frames a second.
+ *
+ * Inside another drawing (a chart's label), pass `at: [x, y]`: the figure comes back
+ * as a plain group placed there, not a nested <svg>, so no page CSS written for
+ * charts ("svg { width: 100% }") can reach in and resize it.
  */
-export function numberSVG(spec, at = Infinity, { fps = VIDEO.render.final.fps, id = "n" } = {}) {
+export function numberSVG(spec, at = Infinity, { fps = VIDEO.render.final.fps, id = "n", place = null } = {}) {
   const P = paint(spec.paint ?? "inline", spec.ground);
   const L = numberLayout(spec), st = numberState(spec, at);
   const fill = P(spec.tone === "money" ? "blue" : spec.tone === "quiet" ? "ink-3" : "ink");
@@ -229,9 +233,10 @@ export function numberSVG(spec, at = Infinity, { fps = VIDEO.render.final.fps, i
       `<text x="${r2(cx)}" y="${r2(L.baseline - off + pitch)}" text-anchor="middle">${s.b}</text></g></g>`;
   });
   if (defs) defs = `<linearGradient id="${id}-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${EDGE}" stop-color="#fff"/><stop offset="${1 - EDGE}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` + defs;
-  const svg = `<svg class="num-svg" viewBox="0 0 ${r2(L.width)} ${r2(L.height)}" width="${r2(L.width)}" height="${r2(L.height)}" role="img" aria-label="${esc(spec.text)}">` +
-    (defs ? `<defs>${defs}</defs>` : "") +
-    `<g style="${font};fill:${fill};opacity:${r2(st.op)}">${body}</g></svg>`;
+  const inner = (defs ? `<defs>${defs}</defs>` : "") + `<g style="${font};fill:${fill};opacity:${r2(st.op)}">${body}</g>`;
+  const svg = place
+    ? `<g class="num-g" transform="translate(${r2(place[0])} ${r2(place[1])})" role="img" aria-label="${esc(spec.text)}">${inner}</g>`
+    : `<svg class="num-svg" viewBox="0 0 ${r2(L.width)} ${r2(L.height)}" width="${r2(L.width)}" height="${r2(L.height)}" role="img" aria-label="${esc(spec.text)}">${inner}</svg>`;
   return { svg, width: L.width, height: L.height, cues: st.cues, end: st.end };
 }
 
