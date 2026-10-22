@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parse, formatLike, numberState, numberLayout, numberSVG, numberHTML } from "../assets/number.mjs";
+import { parse, formatLike, numberState, numberLayout, numberSVG, numberHTML, receiptHTML, numberCitation, numberReceiptSVG } from "../assets/number.mjs";
 import { ms, SOUND, FINISH } from "../assets/tokens.mjs";
 
 const final = (spec) => numberState(spec, Infinity).slots.map((s) => (s.kind === "wheel" ? String(s.a) : s.shown)).join("");
@@ -122,4 +122,58 @@ test("in a page, the figure plays and leaves the markup exactly as it found it",
   assert.ok(!el.classList.contains("num-live"), "still marked as playing");
   assert.ok(kids.filter((k) => k.className === "num-d").every((k) => k.children[1].textContent === ""), "a wheel kept its digits");
   assert.ok([...shown].includes("$42,170"), "the series' middle value never showed");
+});
+
+// ---- taken to 11: the working behind a figure
+
+const usd = (v) => "$" + v.toLocaleString("en-US");
+const working = {
+  text: "$11,200", tone: "money",
+  receipt: {
+    rows: [["Over the 8 oz fee line by", "0.8 oz"], ["Fee step, holiday card", "$0.28 a unit"], ["Units a month, estimated", "3,559"]],
+    total: ["A typical year of the step", "$11,200"],
+    range: { lo: 6400, hi: 19200, at: 11200, read: usd, say: "8 in 10 years" },
+    note: "From 10,000 simulated years, not multiplied.",
+    source: "Estimate · Modeled from public data · Not a client · Not a result",
+    dated: "priced 2026-09-30",
+  },
+};
+
+test("a figure's data reads back from its own markup", () => {
+  const html = numberHTML({ text: "$11,200", duration: 1600 });
+  const raw = html.match(/data-number="([^"]*)"/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+  assert.deepEqual(JSON.parse(raw), { text: "$11,200", duration: 1600 });
+});
+
+test("the working opens with no script: its rows, its total, its range to scale, its label", () => {
+  const html = receiptHTML(working);
+  assert.match(html, /^<details class="receipt"[^>]*><summary>The working<\/summary>/);
+  assert.equal((html.match(/class="rc-row[ "]/g) || []).length, 4, "three rows and the total");
+  assert.ok(html.includes("<dt>A typical year of the step</dt><dd>$11,200</dd>"));
+  const at = +html.match(/--at:([\d.]+)/)[1];
+  assert.ok(Math.abs(at - (11200 - 6400) / (19200 - 6400)) < 1e-4, "the figure is not drawn where it sits in its range");
+  assert.ok(html.includes(">$6,400<") && html.includes(">$19,200<") && html.includes(">8 in 10 years<"), "the low end is printed, not hidden");
+  assert.ok(html.includes(working.receipt.source));
+  assert.match(html, /<button class="rc-copy" type="button" hidden /, "the copy button shows only where a script can copy");
+});
+
+test("copy with its source: the figure travels with its range, its label and its date", () => {
+  const cite = numberCitation(working);
+  assert.equal(cite, "$11,200 — a typical year of the step (8 in 10 years: $6,400 to $19,200). Estimate · Modeled from public data · Not a client · Not a result. Hubricon, priced 2026-09-30.");
+  assert.ok(receiptHTML(working).includes(`data-cite="${cite.replace(/"/g, "&quot;")}"`));
+});
+
+test("the working as film: each row lands in turn, the total last, and the end is the still", () => {
+  const still = numberReceiptSVG(working, Infinity), end = still.end;
+  assert.equal(numberReceiptSVG(working, end + 1).svg, still.svg);
+  // a row's value is never on screen before its row has arrived, and the total comes after every row
+  let seen = 0;
+  for (let at = 0; at < end; at += 40) {
+    const svg = numberReceiptSVG(working, at).svg;
+    const rows = working.receipt.rows.filter(([k]) => svg.includes(`>${k}<`)).length;
+    assert.ok(rows >= seen, "a row left"); seen = rows;
+    if (svg.includes(">A typical year of the step<")) assert.equal(rows, working.receipt.rows.length, "the total came before its rows");
+  }
+  assert.ok(still.cues.some((c) => c.name === "reveal"), "no reveal as the total lands");
+  assert.ok(still.cues.every((c, i) => i === 0 || c.at >= still.cues[i - 1].at));
 });

@@ -924,6 +924,42 @@ html:not(.js) .course-page .pager { display: none; }
 .num-col { display: block; }
 .num-col > span { display: block; height: 1.1em; }
 
+/* The working (number.mjs receiptHTML, 2026-10-21): a quiet line under a figure that opens the
+   rows it is made from, its range drawn to scale, its label, and a copy button the script
+   reveals. Native <details>: it opens with no script at all. */
+.receipt { margin-top: var(--s-3); max-width: 34rem; font-size: var(--t-14); line-height: 1.45; }
+.receipt summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.55em; color: var(--ink-3); font-weight: 600; }
+.receipt summary::-webkit-details-marker { display: none; }
+.receipt summary::after { content: ""; width: 0.4em; height: 0.4em; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-0.15em) rotate(45deg); transition: transform 0.25s var(--ease-out); }
+.receipt[open] summary::after { transform: translateY(0.1em) rotate(225deg); }
+.receipt summary:hover, .receipt[open] summary { color: var(--ink); }
+.receipt summary:focus-visible, .rc-copy:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+.rc-body { padding-top: var(--s-4); display: grid; gap: var(--s-4); }
+.rc-rows { margin: 0; display: grid; }
+.rc-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); padding-block: var(--s-2); border-top: 1px solid var(--rule); }
+.rc-row dt { color: var(--ink-3); }
+.rc-row dd { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rc-total { border-top-color: var(--ink-4); }
+.rc-total dt { color: var(--ink); font-weight: 600; }
+.rc-range { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "track track track" "lo say hi"; row-gap: var(--s-2); font-variant-numeric: tabular-nums; }
+.rc-track { grid-area: track; position: relative; height: 1px; margin-block: 6px; background: var(--rule-2); }
+.rc-track::before, .rc-track::after { content: ""; position: absolute; top: -4px; width: 1px; height: 9px; background: var(--ink-3); }
+.rc-track::before { left: 0; }
+.rc-track::after { right: 0; }
+.rc-mark { position: absolute; left: calc(var(--at) * 100%); top: -4px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--ink); }
+.rc-lo, .rc-hi { color: var(--blue); font-weight: 600; }
+.rc-lo { grid-area: lo; }
+.rc-hi { grid-area: hi; text-align: right; }
+.rc-say { grid-area: say; text-align: center; color: var(--ink-3); padding-inline: var(--s-2); }
+.rc-note { color: var(--ink-3); }
+.rc-source { color: var(--ink-3); font-size: var(--t-12); }
+.rc-copy { justify-self: start; font: inherit; font-weight: 600; color: var(--ink); background: none; border: 1px solid var(--rule-2); border-radius: var(--radius); padding: var(--s-2) var(--s-3); cursor: pointer; transition: border-color 0.2s var(--ease-out); }
+.rc-copy:hover { border-color: var(--ink-3); }
+@media (prefers-reduced-motion: no-preference) {
+  .receipt[open] .rc-row, .receipt[open] .rc-range { animation: rc-in calc(var(--reveal-fade-ms) * 0.6) var(--ease-out) both; animation-delay: calc(var(--i) * var(--stagger)); }
+}
+@keyframes rc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
 /* Ten thousand years (assets/montecarlo.mjs, 2026-10-21): the grid is printed over the fan's
    light, multiplied on paper; in a night section it is screened, so it reads as light too. */
 .night .mc-grid { mix-blend-mode: screen !important; }
@@ -940,7 +976,10 @@ html:not(.js) .course-page .pager { display: none; }
 .mc-story.armed .mc-beat.is-on { opacity: 1; }
 .mc-beat h3 { font-size: var(--t-display-s); letter-spacing: var(--track-display); line-height: 1.08; color: var(--ink); text-wrap: balance; }
 .mc-beat p { font-size: var(--t-18); color: var(--ink-2); max-width: 36ch; }
-.mc-chart { touch-action: pan-y; }
+.mc-chart, .line-chart { touch-action: pan-y; }
+/* a chart a reader can walk with the keys shows where they are; a tap does not leave a ring */
+.chart:focus { outline: none; }
+.chart:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
 .mc-story-caption { display: none; }
 /* On a phone the chart takes the screen's width, so once armed the words live under it, in place,
    and change with the beat; the beats themselves become the distance the reader scrolls. */

@@ -41,7 +41,7 @@
    ============================================================================ */
 
 import { css, ms, ease, VIDEO, CAMERA } from "./tokens.mjs";
-import { painter, linear, niceTicks, shape, partial, pathD } from "./line.mjs";
+import { painter, linear, niceTicks, shape, partial, pathD, shareCard } from "./line.mjs";
 import { textWidth } from "./inter.mjs";
 import { numberSVG } from "./number.mjs";
 
@@ -563,25 +563,14 @@ export function mcStoryFrame(spec, t, { beatMs = 3400, touch = null } = {}) {
 
 // ---------------------------------------------------------------- the card to share
 
-const MARK = '<path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z"/>';
-
 /**
  * One clean card of the chart, for a deck or an email: the title, the finished chart with its
  * three answers, the label that never comes off, and Hubricon's quiet mark. 1200 × 630.
  */
 export function mcCard(spec) {
-  const W = 1200, H = 630, pad = 56, P = painter(spec.paint || "inline", spec.ground);
-  const chart = mcChart({ ...spec, variant: "full", w: W - pad * 2, h: 440, font: 17, title: null, subtitle: null, source: null, id: (spec.id || "mc") + "-card" }, Infinity).svg
-    .replace("<svg ", `<svg x="${pad}" y="128" width="${W - pad * 2}" height="440" `);
-  const t = (x, y, s, size, weight, fill, anchor = "start") => `<text x="${x}" y="${y}" text-anchor="${anchor}" style="font-size:${size}px;font-weight:${weight};fill:${P(fill)}">${esc(s)}</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="font-family:${spec.paint === "css" ? "var(--font)" : "Inter Display, Inter, sans-serif"}">` +
-    `<rect width="${W}" height="${H}" style="fill:${P("paper")}"/>` +
-    t(pad, 84, spec.cardTitle || "Ten thousand simulated years of one listing's profit", 40, 600, "ink") +
-    chart +
-    t(pad, H - 34, spec.source || "Modeled from public data · Not a client · Not a result", 16, 400, "ink-3") +
-    `<g transform="translate(${W - pad - 132} ${H - 58}) scale(0.5)" style="fill:${P("ink")}"><circle cx="32" cy="32" r="27" fill="none" style="stroke:${P("ink")}" stroke-width="5"/>${MARK}</g>` +
-    t(W - pad, H - 34, "Hubricon", 20, 600, "ink", "end") +
-    `</svg>`;
+  return shareCard({ title: spec.cardTitle || "Ten thousand simulated years of one listing's profit", source: spec.source || "Modeled from public data · Not a client · Not a result",
+    paint: "inline", ground: spec.ground,
+    chart: (w, h) => mcChart({ ...spec, variant: "full", w, h, font: 17, paint: "inline", title: null, subtitle: null, source: null, id: (spec.id || "mc") + "-card" }, Infinity).svg });
 }
 
 // ---------------------------------------------------------------- in a page

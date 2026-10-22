@@ -31,6 +31,20 @@
       (weight, price, units) or it carries no labels at all; dates, weeks and
       months never label an axis or name a line.
 
+   Taken to 11 (HUBRICON_SPEC.md, the scoreboard's ladder):
+   7  A heartbeat. Touch reads the line where the finger is, only at real
+      points (a step reads anywhere on its tread, since a fee card is defined
+      for every weight). The reading sits in the clear corner the label solver
+      finds, never under the finger.
+   8  It tells you what you did not ask: the gap to the other line at that
+      point, or, on a staircase, where the next step comes and what it costs.
+   9  It is yours: pin a point, move, and the reading says how much changed
+      since the pin. Arrow keys walk the real points; Enter pins.
+   10 It meets the scary moment first: if the line ever falls, its worst fall
+      is marked and named, and whether it came back.
+   11 shareCard: one clean 1200 × 630 card of any chart, with its label and
+      the mark, for someone else's deck.
+
    No imports beyond the tokens; plain strings out. Works in a browser, in Node
    and in the video renderer.
    ============================================================================ */
@@ -253,10 +267,15 @@ const progress = (at, [a, b]) => (b <= a ? (at >= a ? 1 : 0) : Math.min(1, Math.
  *   dots: [{ x, y, hollow, label, emphasis }],
  *   bands: [{ x0, x1, label }],
  *   notes: [{ x, y, title, body }],                 the annotation: headline, one line, a leader to (x, y)
+ *   id?,                                            prefix for the parts a page patches (default "ln")
+ *   x.read?(v), y.read?(v), x.snap?,                how touch says a place and a value; a step's reading resolution
+ *   series[].short?, compare?(focus, other), fall?  the reading's short names; the gap line; false: no worst fall
  * }
- * Returns { svg, cues, duration }. cues: [{ name, at }] for the film's sound.
+ * opts.touch: { x, pin? } in data units, already snapped (lineSnap): the reading drawn into this frame.
+ * Returns { svg, cues, duration, geom }. cues: [{ name, at }] for the film's sound; geom is what
+ * touch needs (lineSnap, lineTouch, playLine).
  */
-export function lineChart(spec, at = Infinity) {
+export function lineChart(spec, at = Infinity, { touch = null } = {}) {
   const P = painter(spec.paint, spec.ground);
   const f = spec.font || 13, u = f / 13;                    // every weight and gap scales with the type
   const lw = (name) => parseFloat(css(name)) * u;
@@ -270,15 +289,21 @@ export function lineChart(spec, at = Infinity) {
   const W = spec.w, H = spec.h, pad = 8 * u;
   let top = pad, bottom = H - pad;
   let head = "";
+  // words above and below the chart wrap to its width: on a phone the title and the label are never cut
+  const width = W - 2 * pad;
   if (spec.title) {
     const ts = spec.titlePx || f * 1.55;
-    head += txt(pad, top + ts * 0.86, spec.title, { size: ts, weight: 600, fill: "ink" });
-    top += ts * 1.25;
+    for (const line of wrap(spec.title, ts, 600, width)) { head += txt(pad, top + ts * 0.86, line, { size: ts, weight: 600, fill: "ink" }); top += ts * 1.18; }
+    top += ts * 0.07;
   }
-  if (spec.subtitle) { head += txt(pad, top + f * 0.9, spec.subtitle, { fill: "ink-3" }); top += f * 1.6; }
+  if (spec.subtitle) { for (const line of wrap(spec.subtitle, f, 400, width)) { head += txt(pad, top + f * 0.9, line, { fill: "ink-3" }); top += f * 1.35; } top += f * 0.25; }
   if (spec.title || spec.subtitle) top += f * 1.1;
   let foot = "";
-  if (spec.source) { foot = txt(pad, bottom - f * 0.15, spec.source, { size: f * 0.85, fill: "ink-3" }); bottom -= f * 1.7; }
+  if (spec.source) {
+    const lines = wrap(spec.source, f * 0.85, 400, width, " · ");
+    lines.forEach((line, i) => { foot += txt(pad, bottom - f * 0.15 - (lines.length - 1 - i) * f * 1.2, line, { size: f * 0.85, fill: "ink-3" }); });
+    bottom -= f * 1.7 + (lines.length - 1) * f * 1.2;
+  }
 
   const yVals = spec.series.flatMap((s) => s.points.map((p) => p[1])).concat((spec.risers || []).flatMap((r) => [r.y0, r.y1]));
   const yDom = spec.y.domain || [Math.min(...yVals), Math.max(...yVals)];
@@ -467,6 +492,34 @@ export function lineChart(spec, at = Infinity) {
     }
   });
 
+  // ---- the worst fall, named before anyone asks (rung 10): from the line's running peak to the lowest point after it
+  const focusS = spec.series.find((q) => q.role === "focus") || spec.series[0];
+  const fall = spec.fall === false ? null : worstFall(focusS.points, (y1 - y0) * 0.02);
+  if (fall) {
+    const op = ez(progress(at, T.notes));
+    const [px, pv] = focusS.points[fall.i], [qx, qv] = focusS.points[fall.j];
+    const xa = X(px), xb = X(qx), ya = Y(pv), yb = Y(qv), cap = 4 * u;
+    const title = `Worst fall ${signed(readOf(spec, focusS), qv - pv)}`, body = fall.back ? "then it came back" : "not back yet";
+    const tw = Math.max(textWidth(title, f, 600), textWidth(body, f, 400)), th = f * 2.5, g = 10 * u;
+    // the bracket is in the way of its own label
+    for (let x = xa; x <= xb; x += 6 * u) taken.push({ x: x - 2 * u, y: ya - 2 * u, w: 4 * u, h: 4 * u, k: 3 });
+    for (let y = ya; y <= yb; y += 6 * u) taken.push({ x: xb - 2 * u, y: y - 2 * u, w: 4 * u, h: 4 * u, k: 3 });
+    const c = place([
+      { x: xb + g, y: (ya + yb) / 2 - th / 2, w: tw, h: th }, { x: (xa + xb) / 2 - tw / 2, y: ya - g * 0.6 - th, w: tw, h: th },
+      { x: xb - tw, y: ya - g * 0.6 - th, w: tw, h: th }, { x: xb - g - tw, y: (ya + yb) / 2 - th / 2, w: tw, h: th },
+      { x: xb + g, y: yb + g, w: tw, h: th }, { x: xb - g - tw, y: yb + g, w: tw, h: th },
+    ], taken, bounds, [xb, (ya + yb) / 2], f * 1.1, 6 * u, 5 * u);
+    taken.push({ ...c, k: 3 });
+    if (op > 0) {
+      const o = `opacity:${r1(op * 100) / 100}`, hair = `stroke:${P("ink-3")};stroke-width:${r1(lw("line-hair"))}px`;
+      marks += `<line x1="${r1(xa)}" x2="${r1(xb)}" y1="${r1(ya)}" y2="${r1(ya)}" style="${hair};${o}"/>` +
+        `<line x1="${r1(xb)}" x2="${r1(xb)}" y1="${r1(ya)}" y2="${r1(yb)}" style="${hair};${o}"/>` +
+        `<line x1="${r1(xb - cap)}" x2="${r1(xb + cap)}" y1="${r1(yb)}" y2="${r1(yb)}" style="${hair};${o}"/>`;
+      notes += txt(c.x, c.y + f * 0.92, title, { weight: 600, fill: "ink", op, haloed: true }) +
+        txt(c.x, c.y + f * 2.2, body, { fill: "ink-3", op, haloed: true });
+    }
+  }
+
   for (const d of spec.dots || []) {
     if (!d.label) continue;
     const x = X(d.x), y = Y(d.y), wgt = d.emphasis ? 600 : 400;
@@ -480,14 +533,261 @@ export function lineChart(spec, at = Infinity) {
     marks += txt(c.x, c.y + f * 0.92, d.label, { weight: wgt, fill: d.emphasis ? "ink" : "ink-3", op: fop, haloed: true });
   }
 
+  // ---- where a reading sits (rung 7): the clearest corner of the plot, found once, sized for the widest reading
+  const id = spec.id || "ln";
+  const geom = { spec, id, f, u, P, X, Y, left, right, plotTop, plotBottom, focus: focusS, lw, txt };
+  const xs = touchXs(spec, focusS);
+  const rowsAll = xs.map((x) => readingRows(geom, x, xs[0]));
+  const rw = Math.max(...rowsAll.flat().map((r) => textWidth(r.s, r.size, r.weight, true))), rh = Math.max(...rowsAll.map((rows) => rows.reduce((a, r) => a + r.size * 1.38, 0)));
+  const inset = 10 * u;
+  const corner = place([
+    { x: left + inset, y: plotTop, w: rw, h: rh }, { x: right - inset - rw, y: plotTop, w: rw, h: rh },
+    { x: left + inset, y: plotBottom - rh - inset, w: rw, h: rh }, { x: right - inset - rw, y: plotBottom - rh - inset, w: rw, h: rh },
+  ], taken, { x: left, y: plotTop - f, w: right - left, h: plotBottom - plotTop + f }, null, 0, 0, 4 * u);
+  geom.readout = corner;
+  geom.xs = xs;
+  const t = touch ? lineTouch(geom, touch) : { back: "", front: "" };
+
   const svg = `<svg class="chart line-chart" viewBox="0 0 ${W} ${H}" role="img"${spec.label ? ` aria-label="${esc(spec.label)}"` : ""} style="font-family:${spec.paint === "inline" ? "Inter Display, Inter, sans-serif" : "var(--font)"}">` +
     (spec.paint === "inline" ? `<rect width="${W}" height="${H}" style="fill:${P("paper")}"/>` : "") +
-    head + back + grid + lines + leaders + marks + names + notes + tipLayer + foot + `</svg>`;
+    head + back + grid + `<g id="${id}-touch-back">${t.back}</g>` + lines + leaders + marks + names + notes + tipLayer + foot + `<g id="${id}-touch">${t.front}</g>` + `</svg>`;
   cues.sort((a, b) => a.at - b.at);
   const seen = new Set();
-  return { svg, cues: cues.filter((c) => { const k = c.name + c.at; if (seen.has(k)) return false; seen.add(k); return true; }), duration: T.end };
+  return { svg, cues: cues.filter((c) => { const k = c.name + c.at; if (seen.has(k)) return false; seen.add(k); return true; }), duration: T.end, geom };
+}
+
+// ---------------------------------------------------------------- touch (rungs 7–9)
+
+/** How a series' value is said: its own reading, the axis's reading, its tip, or the axis's label. */
+const readOf = (spec, s) => s.read || spec.y.read || s.tip || spec.series.find((q) => q.tip)?.tip || spec.y.format;
+/** A change, said with its sign: +$0.28, −1,230. */
+const signed = (fmt, d) => (d < 0 ? "−" : "+") + fmt(Math.abs(d)).replace(/^[-−]/, "");
+const shortOf = (s) => s.short ?? s.name ?? "";
+
+/** A series' real value at x: on a step, the tread x stands on (an edge belongs to the tread before it); otherwise only at its own points. */
+export function valueAt(s, x) {
+  const pts = s.points;
+  if (s.kind === "step") {
+    if (x < pts[0][0] || x > pts[pts.length - 1][0]) return null;
+    let i = 0;
+    while (i + 1 < pts.length && pts[i + 1][0] < x) i++;
+    return pts[i][1];
+  }
+  const hit = pts.find(([px]) => Math.abs(px - x) < 1e-9);
+  return hit ? hit[1] : null;
+}
+
+/** The places touch may read: every real point; on a step, every snap along its treads. */
+function touchXs(spec, focus) {
+  const [a, b] = spec.x.domain;
+  if (focus.kind === "step") {
+    const step = spec.x.snap || (b - a) / 200, out = [];
+    for (let x = a; x <= b + 1e-9; x += step) out.push(Math.round(x * 1e6) / 1e6);
+    return out;
+  }
+  return focus.points.map(([x]) => x);
+}
+
+/** The place nearest a pointer, in data units: a real point, or a snap on a step's tread. */
+export function lineSnap(geom, px) {
+  const x = geom.X.invert(Math.min(geom.right, Math.max(geom.left, px)));
+  return geom.xs.reduce((best, v) => (Math.abs(v - x) < Math.abs(best - x) ? v : best), geom.xs[0]);
+}
+
+/** The reading at x, row by row: where (when the axis can say it), each line's value, what you did not ask, and the change since a pin. */
+function readingRows({ spec, f, focus }, x, pin) {
+  const rows = [];
+  if (spec.x.read) rows.push({ s: spec.x.read(x), size: f * 0.92, weight: 400, fill: "ink-3" });
+  const tone = (q) => (q.role === "leak" ? "blue" : q.role === "focus" ? "ink" : "ink-3");
+  const vals = [];
+  for (const q of [focus, ...spec.series.filter((q) => q !== focus)]) {
+    const v = valueAt(q, x);
+    if (v == null) continue;
+    vals.push([q, v]);
+    const name = shortOf(q);
+    rows.push({ s: (name ? name + " " : "") + readOf(spec, q)(v), size: q === focus ? f * 1.15 : f, weight: q === focus ? 600 : 400, fill: tone(q) });
+  }
+  const extra = whatYouDidNotAsk(spec, focus, x, vals);
+  if (extra) rows.push({ s: extra, size: f * 0.92, weight: 400, fill: "ink-2" });
+  if (pin != null && valueAt(focus, pin) != null && valueAt(focus, x) != null)
+    rows.push({ s: `Since the pin ${signed(readOf(spec, focus), valueAt(focus, x) - valueAt(focus, pin))}`, size: f * 0.92, weight: 600, fill: "ink-2" });
+  return rows;
+}
+
+/** Rung 8: the gap to the other line here, or on a staircase, the next step and its cost. */
+function whatYouDidNotAsk(spec, focus, x, vals) {
+  const other = vals.find(([q]) => q !== focus);
+  const vf = valueAt(focus, x);
+  if (other && vf != null && other[1] !== 0) {
+    if (spec.compare) return spec.compare(vf, other[1]);
+    const pct = ((vf - other[1]) / Math.abs(other[1])) * 100;
+    return `${Math.abs(pct).toFixed(1)}% ${pct >= 0 ? "above" : "below"} ${shortOf(other[0]).toLowerCase() || "the other line"}`;
+  }
+  if (focus.kind === "step" && spec.x.read && vf != null) {
+    const pts = focus.points;
+    for (let k = 1; k < pts.length; k++) {
+      if (pts[k][0] >= x && pts[k][1] !== vf && k + 0 < pts.length) {
+        const edge = pts[k][0];
+        if (edge >= spec.x.domain[1]) break;
+        return `Next step ${signed(readOf(spec, focus), pts[k][1] - vf)} past ${spec.x.read(edge)}`;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * The reading drawn: behind the lines, the span from a pin and a hairline at the place; in front,
+ * a ring on each line where it is read, and the rows in the clear corner. The finger is the
+ * animation, so it changes the instant the finger does.
+ */
+export function lineTouch(geom, { x, pin = null }) {
+  const { P, X, Y, f, u, plotTop, plotBottom, spec, focus, readout, lw } = geom;
+  const halo = `paint-order:stroke;stroke:${P("paper")};stroke-width:${r1(0.34 * f)}px;stroke-linejoin:round`;
+  let back = "", front = "";
+  if (pin != null) {
+    const a = X(Math.min(pin, x)), b = X(Math.max(pin, x));
+    back += `<rect x="${r1(a)}" y="${r1(plotTop)}" width="${r1(Math.max(0, b - a))}" height="${r1(plotBottom - plotTop)}" style="fill:${P("paper-2")}"/>`;
+    back += `<line x1="${r1(X(pin))}" x2="${r1(X(pin))}" y1="${r1(plotTop)}" y2="${r1(plotBottom)}" style="stroke:${P("ink-3")};stroke-width:${r1(lw("line-hair"))}px"/>`;
+  }
+  const cx = X(x);
+  // the place's hairline goes behind the lines and their words, so it never strikes through a label
+  back += `<line x1="${r1(cx)}" x2="${r1(cx)}" y1="${r1(plotTop)}" y2="${r1(plotBottom)}" style="stroke:${P("ink-3")};stroke-width:${r1(lw("line-hair"))}px"/>`;
+  for (const q of [...spec.series.filter((q) => q !== focus), focus]) {
+    const v = valueAt(q, x);
+    if (v == null) continue;
+    const stroke = q.role === "leak" ? "blue" : q.role === "focus" ? "ink" : "ink-3";
+    front += `<circle cx="${r1(cx)}" cy="${r1(Y(v))}" r="${r1((q === focus ? 4.4 : 3.4) * u)}" style="fill:${P("paper")};stroke:${P(stroke)};stroke-width:${r1(1.6 * u)}px"/>`;
+  }
+  if (pin != null && valueAt(focus, pin) != null) front += `<circle cx="${r1(X(pin))}" cy="${r1(Y(valueAt(focus, pin)))}" r="${r1(3.4 * u)}" style="fill:${P("ink-3")}"/>`;
+  let y = readout.y;
+  for (const r of readingRows(geom, x, pin)) {
+    y += r.size * 1.12;
+    front += `<text x="${r1(readout.x)}" y="${r1(y)}" style="font-size:${r1(r.size)}px;font-weight:${r.weight};fill:${P(r.fill)};font-variant-numeric:tabular-nums;${halo}">${esc(r.s)}</text>`;
+    y += r.size * 0.26;
+  }
+  return { back, front };
+}
+
+/** Rung 10: the largest fall from a running peak to a later low, if it is worth naming, and whether the line came back. */
+export function worstFall(points, min = 0) {
+  let peak = 0, best = null;
+  for (let j = 1; j < points.length; j++) {
+    if (points[j][1] > points[peak][1]) peak = j;
+    const d = points[peak][1] - points[j][1];
+    if (d > min && d > (best?.fall ?? 0)) best = { i: peak, j, fall: d };
+  }
+  if (best) best.back = points.slice(best.j + 1).some(([, v]) => v >= points[best.i][1]);
+  return best;
+}
+
+// ---------------------------------------------------------------- the card (rung 11)
+
+const MARK = '<path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z"/>';
+
+/**
+ * One clean card of a finished chart, for a deck, an email or a board pack: the title, the chart,
+ * the label that never comes off, and Hubricon's quiet mark (BRAND.md). 1200 × 630, its own colours.
+ * `chart(w, h)` returns the chart's SVG at that size.
+ */
+export function shareCard({ title, source, chart, paint = "inline", ground = "day" }) {
+  const W = 1200, H = 630, pad = 56, P = painter(paint, ground);
+  const body = chart(W - pad * 2, 440).replace("<svg ", `<svg x="${pad}" y="128" width="${W - pad * 2}" height="440" `);
+  const t = (x, y, s, size, weight, fill, anchor = "start") => `<text x="${x}" y="${y}" text-anchor="${anchor}" style="font-size:${size}px;font-weight:${weight};fill:${P(fill)}">${esc(s)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="font-family:${paint === "css" ? "var(--font)" : "Inter Display, Inter, sans-serif"}">` +
+    `<rect width="${W}" height="${H}" style="fill:${P("paper")}"/>` +
+    t(pad, 84, title, 40, 600, "ink") + body +
+    t(pad, H - 34, source, 16, 400, "ink-3") +
+    `<g transform="translate(${W - pad - 132} ${H - 58}) scale(0.5)" style="fill:${P("ink")}"><circle cx="32" cy="32" r="27" fill="none" style="stroke:${P("ink")}" stroke-width="5"/>${MARK}</g>` +
+    t(W - pad, H - 34, "Hubricon", 20, 600, "ink", "end") +
+    `</svg>`;
+}
+
+/** A line chart's card: the chart finished, without its own title (the card carries it). */
+export function lineCard(spec) {
+  return shareCard({ title: spec.cardTitle || spec.title, source: spec.source, paint: "inline", ground: spec.ground,
+    chart: (w, h) => lineChart({ ...spec, w, h, font: 17, paint: "inline", title: null, subtitle: null, source: null, id: (spec.id || "ln") + "-card" }, Infinity).svg });
+}
+
+// ---------------------------------------------------------------- in a page
+
+/** Where a pointer is, in the chart's own units. */
+function toChart(svg, e) {
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return [p.x, p.y];
+}
+
+/**
+ * Play a line chart in a page: the draw-in, then the reading. Hover or touch reads the line; a
+ * click or a second tap on the same place pins it; arrow keys walk the real points, Enter pins,
+ * Escape clears. It draws only while something moves. Returns a function that stops it and
+ * leaves the finished still.
+ */
+export function playLine(host, spec, { now = () => performance.now(), raf = requestAnimationFrame, caf = cancelAnimationFrame, touchable = true } = {}) {
+  const id = spec.id || "ln";
+  let r = lineChart(spec, 0);
+  host.innerHTML = r.svg;
+  const t0 = now();
+  let rid = 0, live = true, ready = false, touch = null, geom = null;
+  const show = () => {
+    const t = touch ? lineTouch(geom, touch) : { back: "", front: "" };
+    host.querySelector(`#${id}-touch-back`).innerHTML = t.back;
+    host.querySelector(`#${id}-touch`).innerHTML = t.front;
+  };
+  const frame = () => {
+    rid = 0;
+    const at = now() - t0;
+    if (at >= r.duration) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); return; }
+    host.innerHTML = lineChart(spec, at).svg;
+    if (live) rid = raf(frame);
+  };
+  rid = raf(frame);
+  function arm() {
+    if (!touchable || typeof window === "undefined") return;
+    const svg = host.querySelector("svg");
+    svg.setAttribute("tabindex", "0");
+    svg.setAttribute("aria-description", "Move across the chart to read it. Click to pin a point; arrow keys step through the real points.");
+    const move = (e) => { const x = lineSnap(geom, toChart(svg, e)[0]); if (!touch || touch.x !== x) { touch = { x, pin: touch?.pin ?? null }; show(); } };
+    svg.addEventListener("pointermove", move);
+    svg.addEventListener("pointerdown", (e) => {
+      const x = lineSnap(geom, toChart(svg, e)[0]);
+      if (touch && touch.x === x) touch = { x, pin: touch.pin === x ? null : x };   // a second tap on the same place pins it, or lets it go
+      else touch = { x, pin: touch?.pin ?? null };
+      show();
+    });
+    svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse" && touch && touch.pin == null) { touch = null; show(); } });
+    svg.addEventListener("keydown", (e) => {
+      const xs = geom.xs;
+      const i = touch ? xs.indexOf(touch.x) : -1;
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        const k = Math.min(xs.length - 1, Math.max(0, i < 0 ? 0 : i + (e.key === "ArrowRight" ? 1 : -1)));
+        touch = { x: xs[k], pin: touch?.pin ?? null }; show(); e.preventDefault();
+      } else if ((e.key === "Enter" || e.key === " ") && touch) { touch = { x: touch.x, pin: touch.pin === touch.x ? null : touch.x }; show(); e.preventDefault(); }
+      else if (e.key === "Escape") { touch = null; show(); }
+    });
+  }
+  return () => { live = false; caf(rid); rid = 0; if (!ready) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); } };
 }
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Words broken into lines that fit `maxW`, measured with Inter's own widths. A label's parts
+ * ("Not a client · Not a result") break at their separators first, so no part is split.
+ */
+export function wrap(s, size, weight, maxW, sep = " ") {
+  const parts = String(s).split(sep), lines = [];
+  let cur = "";
+  for (const part of parts) {
+    const next = cur ? cur + sep + part : part;
+    if (!cur || textWidth(next, size, weight) <= maxW) { cur = next; continue; }
+    lines.push(cur + (sep === " " ? "" : sep.trimEnd()));
+    cur = part;
+  }
+  if (cur) lines.push(cur);
+  // a part longer than the line on its own is broken at its spaces
+  return sep === " " ? lines : lines.flatMap((l) => (textWidth(l, size, weight) > maxW ? wrap(l, size, weight, maxW, " ") : [l]));
 }

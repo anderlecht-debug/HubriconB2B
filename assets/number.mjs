@@ -19,6 +19,17 @@
       itself; with no script, or for a visitor who asked for less motion, it
       simply is the figure.
 
+   Taken to 11 (the scoreboard's ladder), a figure can carry its receipt:
+   7  A heartbeat: "The working" under the figure opens the rows it is made
+      from, each one landing in turn. Native <details>: it opens with no script.
+   8  It tells you what you did not ask: where the figure sits in its range,
+      the 1-in-10 low to the 1-in-10 high, drawn to scale.
+   10 It meets the scary moment first: the low end is printed, not hidden.
+   11 Copy with its source: one click copies the figure as a citation, with
+      its range, its label and its date, so it is quoted honestly elsewhere.
+   In a film, numberReceiptSVG builds the working row by row, each value
+   landing on its wheels, the total last: the figure showing its work.
+
    numberState(spec, at) is pure: the same spec and moment give the same
    frame, so a film rendered frame by frame and a page playing live agree.
    numberSVG draws a frame for the films; numberHTML and playNumber are the
@@ -189,7 +200,7 @@ export function numberLayout(spec) {
 const NIGHT_OF = Object.fromEntries(NIGHT);
 const paint = (mode, ground) => (name) => (mode === "css" ? `var(--${name})` : css(ground === "night" ? NIGHT_OF[name] || name : name));
 const r2 = (v) => Math.round(v * 100) / 100;
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /**
  * The figure at one moment, as an SVG. In a film (paint "inline") a digit moving
@@ -293,4 +304,121 @@ export function playNumber(el, spec = JSON.parse(el.dataset.number), { now = () 
   };
   id = raf(frame);
   return finish;
+}
+
+// ---------------------------------------------------------------- the receipt (rungs 7–11)
+
+/**
+ * receipt: {
+ *   rows: [[what, value], ...]     the inputs, in words and figures, each true on its own
+ *   total: [what, value]           the figure itself, said in words
+ *   range?: { lo, hi, at, read(v), say }   the 1-in-10 low and high, where the figure sits, how to say a value, the range in words
+ *   note?                          how the rows make the total, honestly ("From 10,000 simulated years ...")
+ *   source                         the label that never comes off
+ *   dated?                         when it was priced
+ * }
+ */
+
+/** The figure as a citation: what it is, its range, its label and date, for pasting elsewhere. */
+export function numberCitation(spec) {
+  const r = spec.receipt;
+  const range = r.range ? ` (${r.range.say}: ${r.range.read(r.range.lo)} to ${r.range.read(r.range.hi)})` : "";
+  return `${spec.text} — ${r.total[0].replace(/^./, (c) => c.toLowerCase())}${range}. ${r.source}. Hubricon${r.dated ? `, ${r.dated}` : ""}.`;
+}
+
+/**
+ * The working, as HTML for the site: a quiet "The working" under the figure that opens the rows,
+ * the range drawn to scale, the source, and a copy button that a script reveals (no script, no
+ * button, nothing broken). Place it right after the figure.
+ */
+export function receiptHTML(spec, { id = "r" } = {}) {
+  const r = spec.receipt;
+  const rows = r.rows.map(([k, v], i) => `<div class="rc-row" style="--i:${i}"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("") +
+    `<div class="rc-row rc-total" style="--i:${r.rows.length}"><dt>${esc(r.total[0])}</dt><dd>${esc(r.total[1])}</dd></div>`;
+  let range = "";
+  if (r.range) {
+    const at = (r.range.at - r.range.lo) / (r.range.hi - r.range.lo);
+    range = `<div class="rc-range" style="--at:${Math.min(1, Math.max(0, at)).toFixed(4)};--i:${r.rows.length + 1}" role="img" aria-label="${esc(`${r.range.say}: ${r.range.read(r.range.lo)} to ${r.range.read(r.range.hi)}; this figure, ${spec.text}`)}">` +
+      `<span class="rc-track"><span class="rc-mark"></span></span><span class="rc-lo">${esc(r.range.read(r.range.lo))}</span><span class="rc-say">${esc(r.range.say)}</span><span class="rc-hi">${esc(r.range.read(r.range.hi))}</span></div>`;
+  }
+  return `<details class="receipt" id="${esc(id)}"><summary>The working</summary><div class="rc-body">` +
+    `<dl class="rc-rows">${rows}</dl>${range}` +
+    (r.note ? `<p class="rc-note">${esc(r.note)}</p>` : "") +
+    `<p class="rc-source">${esc(r.source)}</p>` +
+    `<button class="rc-copy" type="button" hidden data-cite="${esc(numberCitation(spec))}">Copy with its source</button>` +
+    `</div></details>`;
+}
+
+/** Arm the copy buttons inside `root`: revealed only where the clipboard works. */
+export function armReceipts(root = document) {
+  if (!globalThis.navigator?.clipboard) return;
+  for (const b of root.querySelectorAll(".rc-copy[hidden]")) {
+    b.hidden = false;
+    b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(b.dataset.cite); b.textContent = "Copied, with its source"; }
+      catch { b.textContent = "Select the text to copy"; }
+      setTimeout(() => { b.textContent = "Copy with its source"; }, 2400);
+    });
+  }
+}
+
+/**
+ * The working as a film frame: the rows arrive one by one, each value landing on its wheels,
+ * then a hairline and the total, larger, last. Pure: the same moment gives the same frame.
+ * Returns { svg, width, height, cues, end }.
+ */
+export function numberReceiptSVG(spec, at = Infinity, { w = 1200, px = VIDEO.type.label.px, start = 0, fps = VIDEO.render.final.fps, id = "rc" } = {}) {
+  const P = paint(spec.paint ?? "inline", spec.ground);
+  const r = spec.receipt, lineH = px * 1.9, gap = ms("stagger") * 3, land = ms("count-ms") * 0.6;
+  const font = spec.paint === "css" ? "var(--font)" : "Inter Display, Inter, sans-serif";
+  const ez = ease("ease-out");
+  let body = "", y = 0;
+  const cues = [];
+  const rowAt = (i) => start + i * (gap + land * 0.5);
+  r.rows.forEach(([k, v], i) => {
+    const t0 = rowAt(i), op = ez(clamp01((at - t0) / ms("reveal-fade-ms"))), rise = (1 - op) * parseFloat(css("reveal-rise"));
+    y += lineH;
+    if (op <= 0.0005) return;
+    body += `<g style="opacity:${r2(op)}" transform="translate(0 ${r2(rise)})">` +
+      `<text x="0" y="${r2(y)}" style="font-size:${r2(px)}px;font-weight:400;fill:${P("ink-3")}">${esc(k)}</text>`;
+    const fig = numberSVG({ text: v, px, weight: 600, tone: "ink", paint: spec.paint ?? "inline", ground: spec.ground, start: t0, duration: land }, at, { fps, id: `${id}-${i}`, place: [0, 0] });
+    body += `<g transform="translate(${r2(w - fig.width)} ${r2(y - px * 0.95)})">${fig.svg}</g></g>`;
+    for (const c of fig.cues) if (c.name === "tick") cues.push(c);
+  });
+  // the total: a hairline, then the figure in its own tone, larger, landing last
+  const tT = rowAt(r.rows.length), opT = ez(clamp01((at - tT) / ms("reveal-fade-ms"))), tpx = px * 1.6;
+  y += px * 0.9;
+  const ruleY = y;
+  y += tpx * 1.35;
+  if (opT > 0.0005) {
+    body += `<line x1="0" x2="${r2(w)}" y1="${r2(ruleY)}" y2="${r2(ruleY)}" style="stroke:${P("rule-2")};stroke-width:${r2(Math.max(1, px / 24))}px;opacity:${r2(opT)}"/>`;
+    body += `<text x="0" y="${r2(y)}" style="font-size:${r2(px)}px;font-weight:600;fill:${P("ink")};opacity:${r2(opT)}">${esc(r.total[0])}</text>`;
+    const fig = numberSVG({ text: spec.text, px: tpx, weight: 600, tone: spec.tone, paint: spec.paint ?? "inline", ground: spec.ground, start: tT, finding: true }, at, { fps, id: `${id}-t`, place: [0, 0] });
+    body += `<g transform="translate(${r2(w - fig.width)} ${r2(y - tpx * 0.95)})">${fig.svg}</g>`;
+    cues.push(...fig.cues);
+  }
+  // the range, to scale: the 1-in-10 low and high in their own tone, the figure's mark gliding to where it sits
+  let endAt = tT + ms("count-ms");
+  if (r.range) {
+    const tR = endAt + ms("stagger") * 2, opR = ez(clamp01((at - tR) / ms("reveal-fade-ms")));
+    const glide = ease("ease-in-out")(clamp01((at - tR - ms("stagger")) / ms("mc-draw-ms")));
+    const where = (r.range.at - r.range.lo) / (r.range.hi - r.range.lo);
+    y += px * 1.6;
+    const ty = y, sw = Math.max(1, px / 24);
+    y += px * 1.7;
+    if (opR > 0.0005) {
+      const o = `opacity:${r2(opR)}`;
+      body += `<line x1="0" x2="${r2(w)}" y1="${r2(ty)}" y2="${r2(ty)}" style="stroke:${P("rule-2")};stroke-width:${r2(sw)}px;${o}"/>` +
+        `<line x1="0" x2="0" y1="${r2(ty - px * 0.22)}" y2="${r2(ty + px * 0.22)}" style="stroke:${P("ink-3")};stroke-width:${r2(sw)}px;${o}"/>` +
+        `<line x1="${r2(w)}" x2="${r2(w)}" y1="${r2(ty - px * 0.22)}" y2="${r2(ty + px * 0.22)}" style="stroke:${P("ink-3")};stroke-width:${r2(sw)}px;${o}"/>` +
+        `<circle cx="${r2(w * where * glide)}" cy="${r2(ty)}" r="${r2(px * 0.2)}" style="fill:${P("ink")};${o}"/>` +
+        `<text x="0" y="${r2(y)}" style="font-size:${r2(px)}px;font-weight:600;fill:${P("blue")};font-variant-numeric:tabular-nums;${o}">${esc(r.range.read(r.range.lo))}</text>` +
+        `<text x="${r2(w / 2)}" y="${r2(y)}" text-anchor="middle" style="font-size:${r2(px)}px;font-weight:400;fill:${P("ink-3")};${o}">${esc(r.range.say)}</text>` +
+        `<text x="${r2(w)}" y="${r2(y)}" text-anchor="end" style="font-size:${r2(px)}px;font-weight:600;fill:${P("blue")};font-variant-numeric:tabular-nums;${o}">${esc(r.range.read(r.range.hi))}</text>`;
+    }
+    endAt = tR + ms("stagger") + ms("mc-draw-ms");
+  }
+  const height = y + px * 0.6;
+  const svg = `<svg class="num-receipt" viewBox="0 0 ${r2(w)} ${r2(height)}" width="${r2(w)}" height="${r2(height)}" style="font-family:${font}">${body}</svg>`;
+  return { svg, width: w, height, cues: cues.sort((a, b) => a.at - b.at), end: endAt };
 }
