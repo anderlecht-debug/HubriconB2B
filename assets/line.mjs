@@ -636,7 +636,8 @@ function whatYouDidNotAsk(spec, focus, x, vals) {
       if (pts[k][0] >= x && pts[k][1] !== vf && k + 0 < pts.length) {
         const edge = pts[k][0];
         if (edge >= spec.x.domain[1]) break;
-        return `Next step ${signed(readOf(spec, focus), pts[k][1] - vf)} past ${spec.x.read(edge)}`;
+        const nx = spec.next || {};
+        return `${nx.word || "Next step"} ${signed(nx.delta || readOf(spec, focus), pts[k][1] - vf)} ${nx.at ? nx.at(edge) : `past ${spec.x.read(edge)}`}`;
       }
     }
   }

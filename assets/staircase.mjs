@@ -34,26 +34,38 @@ import { lineChart, lineCard, playLine } from "./line.mjs";
  *   listing?: { oz, fee }, edge?: { oz, fee }, step?    the case: where the listing sits, the edge below it, the step
  *   range?: { p10, p90 }            what the step costs a year, 1 in 10 low to 1 in 10 high (simulated)
  *   title?, subtitle?, source?, label?
+ *   Any stepped schedule fits the same shape (the aging cliff does, in days):
+ *   per? ("a unit")                 what a fee is per, in words
+ *   read?(x), inc? (0.1), ticks?    how a place is said, the control's step, the axis's ticks
+ *   finding?: { x, y0, y1, title, body }   the step that matters, when there is no listing to point at
+ *   ask?, say?(st, x)               the control's label, and its sentence
+ *   next?: { word, delta(d), at(edge) }   how the reading says the next step ("Next band +$16 at day 211")
  * }
  */
 export function stairsSpec(st, { w = 760, h = 440, font = 13, paint = "css", ground, id = "stairs", title = true } = {}) {
-  const u = st.unit || "oz", xMax = st.xMax ?? st.treads[st.treads.length - 1][0];
+  const u = st.unit || "oz", xMax = st.xMax ?? st.treads[st.treads.length - 1][0], per = st.per || "a unit";
   const fmt = (v) => `${+v.toFixed(2)}`;
   const money = st.money || ((v) => `$${v.toFixed(2)}`);
   const rows = st.treads.filter(([e]) => e < xMax);
   const pts = [[0, st.treads[0][1]]];
   rows.forEach(([edge], i) => pts.push([edge, st.treads[i + 1][1]]));
   pts.push([xMax, (st.treads.find(([e]) => e >= xMax) || st.treads[st.treads.length - 1])[1]]);
-  const ticks = niceEdges(xMax);
+  const ticks = st.ticks || niceEdges(xMax);
   const spec = {
     w, h, font, paint, ground, id,
     title: title ? st.title : null, subtitle: title ? st.subtitle : null, source: st.source, label: st.label,
-    x: { domain: [0, xMax], ticks, format: (v, last) => (last ? `${v} ${u}` : `${v}`), read: (v) => `${v.toFixed(1)} ${u}`, snap: 0.1 },
-    y: { format: money, read: (v) => `${money(v)} a unit` },
+    x: { domain: [0, xMax], ticks, format: (v, last) => (last ? `${v} ${u}` : `${v}`), read: st.read || ((v) => `${v.toFixed(1)} ${u}`), snap: st.inc || 0.1 },
+    y: { format: money, read: (v) => `${money(v)} ${per}` },
     series: [{ id: "card", points: pts, kind: "step", role: "focus", short: "", tip: money }],
     risers: [], dots: [], notes: [],
     fall: false,
+    next: st.next,
   };
+  if (st.finding) {
+    const fd = st.finding;
+    spec.risers.push({ x: fd.x, y0: fd.y0, y1: fd.y1 });
+    spec.notes.push({ x: fd.x, y: (fd.y0 + fd.y1) / 2, title: fd.title, body: fd.body });
+  }
   if (st.listing && st.edge && st.step) {
     spec.risers.push({ x: st.edge.oz, y0: st.edge.fee, y1: st.listing.fee });
     spec.dots.push({ x: st.edge.oz, y: st.edge.fee, hollow: true, label: `${fmt(st.edge.oz)} ${u}, one step down` });
@@ -83,6 +95,7 @@ export function weighIn(treads, oz) {
  * what creeping over costs; otherwise, how far the nearest edge is. `near` is how close counts.
  */
 export function weighInWords(st, oz, { near = 1 } = {}) {
+  if (st.say) return st.say(st, oz);
   const w = weighIn(st.treads, oz), u = st.unit || "oz";
   const money = st.money || ((v) => `$${v.toFixed(2)}`);
   if (!w) return `Past the last band on this card.`;
@@ -101,12 +114,12 @@ export function weighInWords(st, oz, { near = 1 } = {}) {
  * the sentence. Finished with no script (it says where the case listing stands); a script makes it live.
  */
 export function weighInHTML(st, { id = "weigh", start } = {}) {
-  const u = st.unit || "oz", xMax = st.xMax ?? st.treads[st.treads.length - 1][0];
+  const u = st.unit || "oz", xMax = st.xMax ?? st.treads[st.treads.length - 1][0], inc = st.inc || 0.1, ask = st.ask || "Your shipping weight";
   const oz = start ?? st.listing?.oz ?? st.treads[0][0];
-  const v = (+oz).toFixed(1);
+  const v = (+oz).toFixed(decimals(inc));
   return `<div class="weigh" id="${esc(id)}">` +
-    `<label class="weigh-field"><span>Your shipping weight</span><span class="weigh-in"><input type="number" inputmode="decimal" min="0.1" max="${xMax}" step="0.1" value="${v}" aria-describedby="${esc(id)}-says"><span>${esc(u)}</span></span></label>` +
-    `<input class="weigh-slide" type="range" min="0.1" max="${xMax}" step="0.1" value="${v}" aria-label="Your shipping weight, in ${esc(u)}">` +
+    `<label class="weigh-field"><span>${esc(ask)}</span><span class="weigh-in"><input type="number" inputmode="decimal" min="${inc}" max="${xMax}" step="${inc}" value="${v}" aria-describedby="${esc(id)}-says"><span>${esc(u)}</span></span></label>` +
+    `<input class="weigh-slide" type="range" min="${inc}" max="${xMax}" step="${inc}" value="${v}" aria-label="${esc(ask)}, in ${esc(u)}">` +
     `<output class="weigh-says" id="${esc(id)}-says" aria-live="polite">${esc(weighInWords(st, +oz))}</output>` +
     `</div>`;
 }
@@ -119,12 +132,12 @@ export function playStairs(host, st, opts = {}, control = null) {
   const stop = playLine(host, stairsSpec(st, opts), opts.player);
   if (!control) return stop;
   const num = control.querySelector('input[type="number"]'), slide = control.querySelector(".weigh-slide"), says = control.querySelector(".weigh-says");
-  const xMax = st.xMax ?? st.treads[st.treads.length - 1][0];
+  const xMax = st.xMax ?? st.treads[st.treads.length - 1][0], inc = st.inc || 0.1, dp = decimals(inc);
   const set = (raw, from) => {
-    const oz = Math.min(xMax, Math.max(0.1, Math.round(+raw * 10) / 10));
+    const oz = Math.min(xMax, Math.max(inc, Math.round(+raw / inc) * inc));
     if (!Number.isFinite(oz)) return;
-    if (from !== num) num.value = oz.toFixed(1);
-    if (from !== slide) slide.value = oz.toFixed(1);
+    if (from !== num) num.value = oz.toFixed(dp);
+    if (from !== slide) slide.value = oz.toFixed(dp);
     says.textContent = weighInWords(st, oz);
     stop.read(oz);
   };
@@ -140,6 +153,7 @@ export const stairsCard = (st, opts = {}) => lineCard({ ...stairsSpec(st, { ...o
 // ---------------------------------------------------------------- helpers
 
 const ozs = (v) => `${+(+v).toFixed(2)}`;
+const decimals = (inc) => (String(inc).split(".")[1] || "").length;
 const dollars = (v) => `$${Math.round(v).toLocaleString("en-US")}`;
 /** Weight ticks every 4 up to the axis's end (or every 2 on a short card), ending on it. */
 function niceEdges(xMax) {
