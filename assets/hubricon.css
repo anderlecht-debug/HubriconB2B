@@ -924,6 +924,17 @@ html:not(.js) .course-page .pager { display: none; }
 .num-col { display: block; }
 .num-col > span { display: block; height: 1.1em; }
 
+/* Your shipping weight (staircase.mjs weighInHTML, 2026-10-22): type it or drag it; the chart
+   reads the card there and one sentence says where it stands. Finished with no script. */
+.weigh { display: grid; gap: var(--s-3); margin-top: var(--s-4); max-width: 40rem; }
+.weigh-field { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); font-size: var(--t-14); font-weight: 600; color: var(--ink); }
+.weigh-in { display: inline-flex; align-items: baseline; gap: 0.35em; font-weight: 400; color: var(--ink-3); }
+.weigh-in input::-webkit-inner-spin-button, .weigh-in input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.weigh-in input { -moz-appearance: textfield; appearance: textfield; width: 6ch; font: inherit; font-size: var(--t-18); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); padding: 4px 8px; }
+.weigh-in input:focus-visible, .weigh-slide:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.weigh-slide { width: 100%; margin: 0; accent-color: var(--ink); }
+.weigh-says { display: block; font-size: var(--t-16); color: var(--ink-2); min-height: 3em; }
+
 /* The working (number.mjs receiptHTML, 2026-10-21): a quiet line under a figure that opens the
    rows it is made from, its range drawn to scale, its label, and a copy button the script
    reveals. Native <details>: it opens with no script at all. */

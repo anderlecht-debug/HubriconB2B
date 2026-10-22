@@ -275,7 +275,13 @@ const progress = (at, [a, b]) => (b <= a ? (at >= a ? 1 : 0) : Math.min(1, Math.
  * Returns { svg, cues, duration, geom }. cues: [{ name, at }] for the film's sound; geom is what
  * touch needs (lineSnap, lineTouch, playLine).
  */
-export function lineChart(spec, at = Infinity, { touch = null } = {}) {
+export function lineChart(spec, at = Infinity, opts = {}) {
+  // a chart too crowded to hold its reading in a clear corner gets a band for it above the plot
+  const first = drawLine(spec, at, opts, 0);
+  return first.geom.clear ? first : drawLine(spec, at, opts, first.geom.readout.h + (spec.font || 13) * 0.5);
+}
+
+function drawLine(spec, at, { touch = null } = {}, band = 0) {
   const P = painter(spec.paint, spec.ground);
   const f = spec.font || 13, u = f / 13;                    // every weight and gap scales with the type
   const lw = (name) => parseFloat(css(name)) * u;
@@ -319,7 +325,7 @@ export function lineChart(spec, at = Infinity, { touch = null } = {}) {
   const right = W - pad - (nameW && !inlineNames ? nameW + 14 * u : 0);
   const hasX = (spec.x.ticks || []).length > 0;
   const plotBottom = bottom - (hasX ? f * 2.1 : f * 0.6);
-  const plotTop = top + f * 0.6;
+  const plotTop = top + f * 0.6 + band;
   const X = linear(spec.x.domain[0], spec.x.domain[1], left, right);
   const Y = linear(y0, y1, plotBottom, plotTop);
   const bounds = { x: left, y: plotTop - f, w: W - pad - left, h: plotBottom - plotTop + f };
@@ -544,7 +550,8 @@ export function lineChart(spec, at = Infinity, { touch = null } = {}) {
     { x: left + inset, y: plotTop, w: rw, h: rh }, { x: right - inset - rw, y: plotTop, w: rw, h: rh },
     { x: left + inset, y: plotBottom - rh - inset, w: rw, h: rh }, { x: right - inset - rw, y: plotBottom - rh - inset, w: rw, h: rh },
   ], taken, { x: left, y: plotTop - f, w: right - left, h: plotBottom - plotTop + f }, null, 0, 0, 4 * u);
-  geom.readout = corner;
+  geom.readout = band ? { x: left + inset, y: plotTop - band, w: rw, h: rh } : corner;
+  geom.clear = band > 0 || !taken.some((t) => (t.k ?? 1) >= 1 && overlap({ x: corner.x - 2 * u, y: corner.y - 2 * u, w: corner.w + 4 * u, h: corner.h + 4 * u }, t) > 0);
   geom.xs = xs;
   const t = touch ? lineTouch(geom, touch) : { back: "", front: "" };
 
@@ -738,7 +745,7 @@ export function playLine(host, spec, { now = () => performance.now(), raf = requ
   const frame = () => {
     rid = 0;
     const at = now() - t0;
-    if (at >= r.duration) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); return; }
+    if (at >= r.duration) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); if (touch) { touch = { ...touch, x: nearestX(geom, touch.x) }; show(); } return; }
     host.innerHTML = lineChart(spec, at).svg;
     if (live) rid = raf(frame);
   };
@@ -767,8 +774,14 @@ export function playLine(host, spec, { now = () => performance.now(), raf = requ
       else if (e.key === "Escape") { touch = null; show(); }
     });
   }
-  return () => { live = false; caf(rid); rid = 0; if (!ready) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); } };
+  const stop = () => { live = false; caf(rid); rid = 0; if (!ready) { r = lineChart(spec, Infinity); host.innerHTML = r.svg; geom = r.geom; ready = true; arm(); if (touch) show(); } };
+  /** Read the line at x from outside (a control on the page): shown once the draw-in has landed. */
+  stop.read = (x) => { touch = { x: geom ? nearestX(geom, x) : x, pin: null }; if (ready) show(); };
+  return stop;
 }
+
+/** The readable place nearest a value, in data units. */
+const nearestX = (geom, x) => geom.xs.reduce((best, v) => (Math.abs(v - x) < Math.abs(best - x) ? v : best), geom.xs[0]);
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
