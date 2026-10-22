@@ -316,6 +316,8 @@ function drawLine(spec, at, { touch = null } = {}, band = 0) {
   const yTicks = spec.y.ticks || niceTicks(yDom[0], yDom[1], 4);
   // a line never lies on the axis: the scale reaches down to the gridline below the lowest value
   if (!spec.y.ticks && !spec.y.domain && yTicks.length > 1 && yDom[0] < yTicks[0] - 1e-9) yTicks.unshift(Math.round((yTicks[0] - (yTicks[1] - yTicks[0])) * 1e6) / 1e6);
+  // and up to the gridline above the highest, so the top of a line is never left without a figure
+  if (!spec.y.ticks && !spec.y.domain && yTicks.length > 1 && yDom[1] > yTicks[yTicks.length - 1] + 1e-9) yTicks.push(Math.round((yTicks[yTicks.length - 1] + (yTicks[1] - yTicks[0])) * 1e6) / 1e6);
   const y0 = Math.min(yDom[0], yTicks[0]), y1 = Math.max(yDom[1], yTicks[yTicks.length - 1]);
   const yLabW = Math.max(...yTicks.map((v) => textWidth(spec.y.format(v), f, 400, true)));
   const left = pad + yLabW + 12 * u;
@@ -376,9 +378,35 @@ function drawLine(spec, at, { touch = null } = {}, band = 0) {
   };
   const cues = [];
   const ends = [];
+  // ---- areas: a spread between two edges (a 5-to-95 band), quiet, behind the lines, with the context
+  for (const a of spec.areas || []) {
+    const op = ez(progress(at, T.context[1] > T.context[0] ? T.context : T.stage));
+    const hi = shape(a.hi.map(([x, y]) => [X(x), Y(y)]), a.kind || "monotone"), lo = shape(a.lo.map(([x, y]) => [X(x), Y(y)]), a.kind || "monotone");
+    const back_ = pathD(lo.slice().reverse().map((g) => ({ ...g, p0: g.p1, c1: g.c2, c2: g.c1, p1: g.p0 }))).replace(/^M/, "L");
+    if (op > 0) back += `<path d="${pathD(hi)} ${back_}Z" style="fill:${P(a.fill || "rule")};opacity:${r1(op * 100) / 100}"/>`;
+    if (a.label) {
+      const [lx, ly] = a.labelAt ? [X(a.labelAt[0]), Y(a.labelAt[1])] : [X(a.hi[a.hi.length - 1][0]), Y(a.hi[a.hi.length - 1][1])];
+      names += txt(lx, ly - f * 0.5, a.label, { fill: "ink-3", anchor: "end", op, haloed: true });
+      taken.push({ x: lx - textWidth(a.label, f, 400), y: ly - f * 1.4, w: textWidth(a.label, f, 400), h: f * 1.2, k: 3 });
+    }
+  }
+
   for (const s of spec.series) {
     const st = roleStyle[s.role] || roleStyle.focus;
     const screen = s.points.map(([x, y]) => [X(x), Y(y)]);
+    // a series of separate observations is drawn as dots, arriving in order, never joined
+    if (s.kind === "points") {
+      const window = s.role === "focus" ? T.focus : T.context, p = progress(at, window), n = Math.ceil(ez(p) * screen.length - 1e-9);
+      const fill = s.role === "focus" ? "ink" : s.role === "leak" ? "blue" : "ink-3";
+      screen.forEach(([x, y], i) => {
+        taken.push({ x: x - 3.5 * u, y: y - 3.5 * u, w: 7 * u, h: 7 * u });
+        if (i < n) lines += s.hollow
+          ? `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(4.2 * u)}" style="fill:${P("paper")};stroke:${P(fill)};stroke-width:${r1(1.6 * u)}px"/>`
+          : `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1((s.r || 3) * u)}" style="fill:${P(fill)};opacity:${s.role === "focus" ? 1 : 0.7}"/>`;
+      });
+      if (s.name) ends.push({ s, x: screen[screen.length - 1][0], y: screen[screen.length - 1][1] });
+      continue;
+    }
     const segs = shape(screen, s.kind || "monotone", s.points.map((p) => p[1]));
     const window = s.role === "focus" || s.role === "leak" ? T.focus : T.context;
     const p = progress(at, window), frac = s.role === "focus" ? ez(p) : ez(p);
