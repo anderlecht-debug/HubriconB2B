@@ -928,6 +928,35 @@ html:not(.js) .course-page .pager { display: none; }
    light, multiplied on paper; in a night section it is screened, so it reads as light too. */
 .night .mc-grid { mix-blend-mode: screen !important; }
 
+/* The story (playStory): the chart holds still while its five beats scroll past, each beat's
+   words lit as the reader reaches it. Touch belongs to the chart: a sideways move lights a year,
+   an upward one still scrolls the page. Until the script arms it (and never, for a visitor who
+   asked for less motion), it is the finished chart beside a plain list of the five beats. */
+.mc-story { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: var(--s-7); }
+.mc-story-stage { position: sticky; top: var(--nav-h); height: calc(100vh - var(--nav-h)); display: grid; align-content: center; align-self: start; min-width: 0; }
+.mc-story-stage svg { display: block; width: 100%; height: auto; }
+.mc-beat { min-height: 72vh; display: grid; align-content: center; gap: var(--s-3); }
+.mc-story.armed .mc-beat { opacity: 0.3; transition: opacity var(--calm-ms) var(--ease-out); }
+.mc-story.armed .mc-beat.is-on { opacity: 1; }
+.mc-beat h3 { font-size: var(--t-display-s); letter-spacing: var(--track-display); line-height: 1.08; color: var(--ink); text-wrap: balance; }
+.mc-beat p { font-size: var(--t-18); color: var(--ink-2); max-width: 36ch; }
+.mc-chart { touch-action: pan-y; }
+.mc-story-caption { display: none; }
+/* On a phone the chart takes the screen's width, so once armed the words live under it, in place,
+   and change with the beat; the beats themselves become the distance the reader scrolls. */
+@media (max-width: 760px) {
+  .mc-story { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .mc-story-stage { position: static; height: auto; }
+  .mc-beat { min-height: 0; padding-block: var(--s-4); }
+  .mc-story.armed .mc-story-stage { position: sticky; height: calc(100vh - var(--nav-h)); align-content: start; z-index: 1; background: var(--paper); padding-block: var(--s-4); gap: var(--s-4); }
+  .mc-story.armed .mc-story-caption { display: grid; gap: var(--s-2); transition: opacity 240ms var(--ease-out); }
+  .mc-story.armed .mc-story-caption.is-changing { opacity: 0; }
+  .mc-story-caption h3 { font-size: var(--t-24); letter-spacing: var(--track-display); line-height: 1.15; color: var(--ink); }
+  .mc-story-caption p { font-size: var(--t-16); color: var(--ink-2); }
+  .mc-story.armed .mc-beat { min-height: 70vh; padding: 0; }
+  .mc-story.armed .mc-beat > * { opacity: 0; }
+}
+
 /* ═══ The pages behind the tabs (since 2026-10-01, evening) ═══════════════════════════════
    The home page is short and the rest of the business has a page under each tab
    (HUBRICON_SPEC.md, "A short first page"). These sections moved off the home page with

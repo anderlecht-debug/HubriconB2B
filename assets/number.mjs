@@ -233,7 +233,8 @@ export function numberSVG(spec, at = Infinity, { fps = VIDEO.render.final.fps, i
       `<text x="${r2(cx)}" y="${r2(L.baseline - off + pitch)}" text-anchor="middle">${s.b}</text></g></g>`;
   });
   if (defs) defs = `<linearGradient id="${id}-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${EDGE}" stop-color="#fff"/><stop offset="${1 - EDGE}" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` + defs;
-  const inner = (defs ? `<defs>${defs}</defs>` : "") + `<g style="${font};fill:${fill};opacity:${r2(st.op)}">${body}</g>`;
+  // a figure at no strength is left out of the drawing, not drawn invisible: an empty layer can trip a renderer
+  const inner = (defs ? `<defs>${defs}</defs>` : "") + `<g style="${font};fill:${fill};opacity:${r2(st.op)}${st.op > 0.0005 ? "" : ";display:none"}">${body}</g>`;
   const svg = place
     ? `<g class="num-g" transform="translate(${r2(place[0])} ${r2(place[1])})" role="img" aria-label="${esc(spec.text)}">${inner}</g>`
     : `<svg class="num-svg" viewBox="0 0 ${r2(L.width)} ${r2(L.height)}" width="${r2(L.width)}" height="${r2(L.height)}" role="img" aria-label="${esc(spec.text)}">${inner}</svg>`;
