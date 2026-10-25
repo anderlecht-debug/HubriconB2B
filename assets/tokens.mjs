@@ -105,6 +105,8 @@ export const CSS = [
     ["stagger", "120ms", "a beat: the gap between parts arriving"],
     ["calm-ms", "600ms", "the dissolve for a visitor who asked for less motion"],
     ["bar-fill-ms", "1600ms", "the scoreboard's bar filling to the bill and past it"],
+    ["ui-ms", "200ms", "a hover, a press, a colour change: quick enough to feel instant, slow enough to be seen"],
+    ["ui-out-ms", "300ms", "a menu or a scrim leaving: a touch slower than it came, so nothing snaps away"],
   ]],
 ];
 

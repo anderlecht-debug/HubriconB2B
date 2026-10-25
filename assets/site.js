@@ -108,7 +108,7 @@ function countUp(el, final) {
   requestAnimationFrame(tick);
 }
 if (motion || calm) {
-  const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + ms("--mc-settle-ms", 900) + 300;   // draw, band, the paths settling, the last path's delay
+  const chartMs = ms("--mc-draw-ms", 2000) + ms("--mc-band-ms", 400) + ms("--mc-settle-ms", 900) + ms("--ui-out-ms", 300);   // draw, band, the paths settling, the last path's delay
   const playChart = (el) => {
     el.classList.add("playing");
     el.classList.remove("armed");

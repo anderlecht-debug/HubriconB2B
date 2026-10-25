@@ -203,3 +203,21 @@ test("the camera moves once a beat, calmly, and never while text is read", () =>
   for (const n of ["rotation", "shake", "a move while text is being read"]) assert.ok(CAMERA.never.includes(n));
   assert.ok(CAMERA.canvas.continuous);
 });
+
+test("every transition takes its time and its easing from the tokens; no bare 'ease'", () => {
+  const sheet = readFileSync(new URL("../assets/hubricon.css", import.meta.url), "utf8");
+  for (const m of sheet.matchAll(/transition:\s*([^;}]+)/g)) {
+    const v = m[1].trim();
+    if (v === "none" || v.startsWith("none")) continue;
+    for (const part of v.split(/,(?![^(]*\))/)) {
+      const bare = part.replace(/var\([^)]*\)|calc\([^)]*\)|\b0s\b/g, "");
+      assert.doesNotMatch(bare, /\d+(\.\d+)?m?s\b/, `a literal time in "${v}"`);
+      assert.doesNotMatch(part, /(^|\s)ease(\s|$)/, `a bare ease in "${v}"`);
+    }
+  }
+});
+
+test("words are never set in the grey kept for marks (--ink-4 is 2.6:1)", () => {
+  const sheet = readFileSync(new URL("../assets/hubricon.css", import.meta.url), "utf8");
+  for (const m of sheet.matchAll(/([^{}]+)\{[^}]*(?:^|[;{\s])color:\s*var\(--ink-4\)[^}]*\}/g)) assert.fail(`"${m[1].trim()}" sets text in --ink-4`);
+});
