@@ -223,6 +223,28 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 .mine-go .btn[hidden] { display: none; }
 .mine-go .btn[hidden] + .cta-note { display: none; }
 @media (max-width: 960px) { .mine { grid-template-columns: minmax(0, 1fr); } .mine-big { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mt-row { grid-template-columns: 1.6fr 0.6fr 0.7fr 2fr; } .mt-row > :last-child { grid-column: 1 / -1; } }
+
+/* hero: the ledger, promised vs. ready, order by order */
+.hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; }
+.hero h1 { font-size: clamp(2.75rem, 1.2rem + 4.6vw, 5rem); max-width: 13ch; }
+.hero .lede { max-width: 44ch; }
+.ledger { border: 1px solid var(--rule); border-radius: 14px; padding: var(--s-5); background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  box-shadow: 0 1px 0 rgb(10 14 23 / 0.02), 0 24px 48px -28px rgb(10 14 23 / 0.28); }
+.ledger-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
+.ledger-rows { list-style: none; margin-top: var(--s-4); display: grid; gap: var(--s-3); }
+.lr { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 4.5rem; align-items: center; gap: var(--s-3); font-size: var(--t-14); font-variant-numeric: tabular-nums; }
+.lr .d { color: var(--ink-3); }
+.lr .v { text-align: right; font-weight: var(--strong); color: var(--ink); }
+.lr .v.late { color: var(--blue); }
+.lr .track { position: relative; height: 10px; border-radius: 99px; background: var(--rule); }
+.lr .ok, .lr .over { position: absolute; top: 0; bottom: 0; border-radius: 99px; }
+.lr .ok { left: 0; background: var(--ink); }
+.lr .over { background: var(--blue); box-shadow: 0 0 12px rgb(11 95 255 / 0.55); }
+.lr .pin { position: absolute; top: -5px; bottom: -5px; width: 0; border-left: 1.5px dashed var(--ink); }
+.ledger-foot { margin-top: var(--s-4); display: flex; gap: var(--s-4); font-size: var(--t-12); color: var(--ink-3); }
+.ledger-foot i { display: inline-block; width: 14px; height: 6px; border-radius: 9px; margin-right: 6px; vertical-align: middle; }
+.k-ok { background: var(--ink); } .k-late { background: var(--blue); }
+@media (max-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); } .ledger { max-width: 560px; } }
 </style>
 </head>
 <body>
@@ -245,8 +267,6 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
     <div>
       <p class="label">For ecommerce brands that outsource production</p>
       <h1 id="headline">Your supplier promised a date. <span class="tone">Know the real one before you order.</span></h1>
-    </div>
-    <div>
       <p class="lede">A late order means stockouts, rushed air freight, and cash tied up in extra stock just in case. You can track a shipment once it leaves your supplier, but the weeks before that are a guess. Hubricon pools order dates from brands that use the same suppliers, so you can see the delay coming.</p>
       <div class="cta">
         <a class="btn btn-lg" href="#yours">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
@@ -254,6 +274,11 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
       </div>
       <p class="cta-note" style="margin-top:var(--s-3)">Free. Three dates per order, nothing else.</p>
     </div>
+    <figure class="ledger" id="ledger" aria-label="Five orders at one simulated supplier: the date promised and the date each was really ready.">
+      <figcaption class="ledger-head"><span class="label">Promised vs. ready · one supplier</span><span class="label label-box">Simulated</span></figcaption>
+      <ol class="ledger-rows" id="ledger-rows"></ol>
+      <p class="ledger-foot"><span class="key"><i class="k-ok"></i>until the promised date</span><span class="key"><i class="k-late"></i>past it</span></p>
+    </figure>
   </div>
 </section>
 
@@ -458,5 +483,6 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 
 <script type="module" src="/assets/lateness.js"></script>
 <script type="module" src="/assets/lateness-report.js"></script>
+<script type="module" src="/assets/lateness-ledger.js"></script>
 </body>
 </html>

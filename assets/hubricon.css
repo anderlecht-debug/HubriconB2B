@@ -9,6 +9,29 @@
    describes it in words.
    ============================================================================ */
 
+/* ---------------------------------------------------------------- type ----
+   The type system (2026-11-22). Two faces, both self-hosted so the page never waits on a
+   third party and never reflows when a font arrives late:
+   - Inter, variable, with its optical-size axis: text at 14 to 20px takes Inter Text,
+     anything from about 24px up takes Inter Display, automatically.
+   - Instrument Serif italic: the quieter half of a two-tone headline (.tone inside a
+     heading) and nothing else. The claim stays in sans ink; the turn after it reads in a
+     human hand. One accent face, used one way, so it stays a signature, not a costume.
+   Licences: assets/fonts/LICENSE-*.txt (SIL Open Font License). */
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("/assets/fonts/inter-latin-opsz.woff2") format("woff2-variations"), url("/assets/fonts/inter-latin-opsz.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/instrument-serif-latin-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/assets/fonts/instrument-serif-latin.woff2") format("woff2");
+}
+
 :root {
   /* colour */
   --paper: #ffffff;
@@ -33,21 +56,29 @@
 
   /* type: one sans, two weights. Inter is loaded with its optical-size axis, so text from
      about 20px up takes Inter Display, the cut drawn for large sizes (2026-09-30). */
-  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --regular: 400;
   --strong: 600;
+  --display: 590;                    /* headline weight: the variable font lets display sit a hair under 600 */
+  --label-weight: 560;
   --t-12: 0.75rem;
   --t-14: 0.875rem;
   --t-16: 1rem;
   --t-18: 1.125rem;
   --t-20: 1.25rem;
   --t-24: 1.5rem;
-  --t-display-s: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
-  --t-display-m: clamp(2.125rem, 1.3rem + 3.4vw, 3.75rem);
-  --t-display-l: clamp(2.375rem, 1.2rem + 4.6vw, 4.5rem);
-  --t-display-xl: clamp(2.75rem, 1rem + 6.2vw, 6rem);    /* the one or two lines a page is remembered by */
-  --track-display: -0.032em;
-  --track-label: 0.08em;
+  /* display sizes step by a perfect fourth (1.333) at desktop and close to 1.25 on a phone */
+  --t-display-s: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  --t-display-m: clamp(2.25rem, 1.5rem + 2.9vw, 3.5rem);
+  --t-display-l: clamp(2.75rem, 1.6rem + 4.4vw, 4.75rem);
+  --t-display-xl: clamp(3.125rem, 1.3rem + 6.8vw, 6.75rem);    /* the one or two lines a page is remembered by */
+  --track-display: -0.034em;
+  --track-display-xl: -0.042em;
+  --track-label: 0.09em;
+  --lead-display: 1.02;
+  --lead-heading: 1.08;
+  --lead-body: 1.62;
 
   /* space: one scale, everywhere */
   --s-1: 4px;
@@ -77,6 +108,10 @@
   --mc-draw-ms: 2000ms;
   --mc-band-ms: 400ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --reveal-y: 18px;
+  --reveal-blur: 6px;
+  --reveal-ms: 900ms;
 }
 
 /* A dark section is the same system with the ink and paper swapped, so every
@@ -106,8 +141,10 @@ body {
   font-family: var(--font);
   font-weight: var(--regular);
   font-size: var(--t-18);
-  line-height: 1.6;
+  line-height: var(--lead-body);
   font-optical-sizing: auto;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures contextual;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -120,15 +157,26 @@ b, strong { font-weight: var(--strong); color: var(--ink); }
 
 h1, h2, h3 {
   color: var(--ink);
-  font-weight: var(--strong);
+  font-weight: var(--display);
   letter-spacing: var(--track-display);
-  line-height: 1.06;
+  line-height: var(--lead-heading);
   text-wrap: balance;
 }
-h1 { font-size: var(--t-display-l); }
+h1 { font-size: var(--t-display-l); line-height: var(--lead-display); letter-spacing: var(--track-display-xl); }
 h2 { font-size: var(--t-display-m); }
-h3 { font-size: var(--t-24); letter-spacing: -0.018em; line-height: 1.25; }
-p { text-wrap: pretty; }
+h3 { font-size: var(--t-24); font-weight: var(--strong); letter-spacing: -0.02em; line-height: 1.25; }
+p { text-wrap: pretty; hanging-punctuation: first; }
+p, li, dd { font-feature-settings: "kern", "calt", "case" 0; }
+
+/* The two-tone headline: the claim in sans ink, the turn after it in serif italic, a step
+   quieter. Optically the serif runs small and light beside Inter Display, so it is set a
+   little larger and a little tighter to sit on the same line height. */
+:is(h1, h2, .display, .creed p, .offer-line, .case-headline) .tone {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  font-size: 1.1em; letter-spacing: -0.012em; line-height: 0.9;
+  color: var(--ink-3);
+}
+h3 .tone { font-weight: var(--regular); }
 
 /* -------------------------------------------------------------- layout ---- */
 .wrap { width: min(var(--wide), 100% - 2 * var(--gutter)); margin-inline: auto; }
@@ -162,19 +210,20 @@ p { text-wrap: pretty; }
 .case-headline .est {                      /* beside a display figure it is the honesty label, not a footnote */
   display: inline-block; vertical-align: 0.9em; margin-left: var(--s-3);
   border: 1px solid var(--rule-2); border-radius: 6px; padding: 0 var(--s-2); line-height: 1.7;
-  font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase;
+  font-weight: var(--label-weight); letter-spacing: var(--track-label); text-transform: uppercase;
 }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
   min-height: 52px; padding: 0 var(--s-6);
-  font: var(--strong) var(--t-16) / 1 var(--font); letter-spacing: -0.005em;
+  font: var(--strong) var(--t-16) / 1 var(--font); letter-spacing: -0.011em;
   color: var(--paper); background: var(--ink);
   border: 0; border-radius: var(--radius); cursor: pointer;
   text-decoration: none; white-space: nowrap;
-  transition: background-color 0.2s ease;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(10 14 23 / 0.18);
+  transition: background-color 0.2s ease, box-shadow 0.3s var(--ease-out), transform 0.2s var(--ease-out);
 }
-.btn:hover { background: color-mix(in srgb, var(--ink) 84%, var(--paper)); }
+.btn:hover { background: color-mix(in srgb, var(--ink) 86%, var(--paper)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 6px 18px -6px rgb(10 14 23 / 0.45); }
 .btn .arrow { transition: transform 0.25s var(--ease-out); }
 .btn:hover .arrow { transform: translateX(3px); }
 .btn:active { transform: translateY(1px); }
@@ -527,8 +576,8 @@ article.tile-feature:has(a.tile-cover:hover) { border-color: var(--ink); }
    puts an element back to its start (.armed) only while it is still below the screen,
    and plays it (.in) as it arrives. What is already on screen, or what a visitor jumps
    past, simply stays as it is. */
-.armed[data-reveal] { opacity: 0; transform: translateY(20px); transition: none; }
-[data-reveal].in { transition: opacity 0.8s var(--ease-out) var(--d, 0ms), transform 1s var(--ease-out) var(--d, 0ms); }
+.armed[data-reveal] { opacity: 0; transform: translateY(var(--reveal-y)); filter: blur(var(--reveal-blur)); transition: none; }
+[data-reveal].in { transition: opacity var(--reveal-ms) var(--ease-out) var(--d, 0ms), transform calc(var(--reveal-ms) + 200ms) var(--ease-out) var(--d, 0ms), filter var(--reveal-ms) var(--ease-out) var(--d, 0ms); }
 .bar.armed[data-reveal] { opacity: 1; transform: none; }
 .bar-fill { transform-origin: left center; }
 .bar.armed .bar-fill { transform: scaleX(0); }
@@ -1045,3 +1094,15 @@ html:not(.js) .course-page .pager { display: none; }
     padding-bottom: var(--s-3); margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
   .strip-tile { scroll-snap-align: start; }
 }
+
+
+/* ------------------------------------------------------------ details ----
+   The small things a careful reader notices (2026-11-22). */
+a { text-decoration-thickness: 1px; text-underline-offset: 0.22em; text-decoration-skip-ink: auto; }
+a:hover { text-decoration-thickness: 1.5px; }
+.lede { letter-spacing: -0.011em; }
+.label { font-size: 0.6875rem; }
+:is(.numbers dt, .call dd, .board-big, .price, .step-n, .frame-n) { letter-spacing: -0.03em; font-feature-settings: "tnum", "cv01"; }
+::selection { background: rgb(11 95 255 / 0.18); }
+@media (prefers-reduced-motion: reduce) { .armed[data-reveal] { filter: none; } }
+@media (max-width: 420px) { .btn { white-space: normal; text-align: center; line-height: 1.25; padding-block: var(--s-3); } .btn-lg { padding-inline: var(--s-5); } }
