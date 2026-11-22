@@ -1,0 +1,4 @@
+factory,order_date,promised_ready_date,actual_ready_date,notes
+Factory A,2026-03-02,2026-04-06,2026-04-15,
+Factory A,2026-06-10,2026-07-15,2026-07-14,
+Factory B,2026-08-18,2026-09-22,2026-10-09,

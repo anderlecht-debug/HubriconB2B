@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon — Know how late your factory will be</title>
+<meta name="description" content="Every tracker starts the day your goods are ready. Hubricon pools order dates from brands that share factories to forecast the weeks before that. Free lateness report on your own factories while we test it.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0e17'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M24.5 21h5v8.5h5V21h5v22h-5v-8.5h-5V43h-5z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:title" content="Know how late your factory will be, before you place the order">
+<meta property="og:description" content="A free lateness report on your own factories. Three dates per order.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600&display=swap">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<style>
+/* The factory-lateness page (draft, 2026-11-22). Five bands: the promise with the queue
+   simulation, the dark weeks, why lateness is predictable, the free report, the call.
+   Every value is a token from /assets/hubricon.css. Blue marks the leak: days late. */
+:root { --wide: 1200px; }
+.nowrap { white-space: nowrap; }
+.nav-in { grid-template-columns: minmax(0, 1fr) auto; }
+.nav-link { font-size: var(--t-14); color: var(--ink-2); text-decoration: none; padding: 0 var(--s-3); }
+.nav-link:hover { color: var(--ink); }
+
+/* 1 · the promise */
+.hero { padding-block: var(--s-8) var(--s-8); border-bottom: 1px solid var(--rule); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--s-8); align-items: center; }
+.hero h1 { margin-top: var(--s-4); font-size: clamp(2.5rem, 1rem + 4.4vw, 4.5rem); max-width: 14ch; }
+.hero .lede { margin-top: var(--s-5); font-size: var(--t-20); max-width: 42ch; }
+.hero .cta { margin-top: var(--s-6); }
+.text-link { font-size: var(--t-16); font-weight: var(--strong); color: var(--ink); text-underline-offset: 3px; }
+
+/* the simulation instrument */
+.sim .exhibit-body { padding: var(--s-5) var(--s-5) var(--s-3); }
+.sim-ctl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--s-4); }
+.sim-ctl label { font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); white-space: nowrap; }
+.sim-ctl output { font-size: var(--t-24); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; min-width: 4ch; text-align: right; }
+input[type=range] { width: 100%; accent-color: var(--ink); }
+.sim-read { margin-top: var(--s-5); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
+.sim-read > div { border-left: 2px solid var(--ink); padding: 2px 0 2px var(--s-3); }
+.sim-read dt { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sim-read dd { margin-top: var(--s-1); font-size: var(--t-12); line-height: 1.4; color: var(--ink-3); }
+.sim-read .leak { border-left-color: var(--blue); }
+.sim-read .leak dt { color: var(--blue); }
+.sim-k { margin-top: var(--s-5); font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.sim svg { width: 100%; height: auto; margin-top: var(--s-2); overflow: visible; }
+.sim svg text { font-family: var(--font); font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+.sim .ax { stroke: var(--rule-2); stroke-width: 1; }
+.sim .grid { stroke: var(--rule); stroke-width: 1; }
+.sim .promise { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.sim .dot { fill: var(--ink-4); }
+.sim .dot.late { fill: var(--blue); }
+.sim .ghost { fill: none; stroke: var(--ink-4); stroke-width: 1.5; }
+.sim .curve { fill: none; stroke: var(--ink); stroke-width: 2; }
+
+/* 2 · the dark weeks */
+.band h2 { margin-top: var(--s-4); max-width: 22ch; }
+.band .lede { margin-top: var(--s-5); }
+.timeline { margin-top: var(--s-7); display: grid; grid-template-columns: 2fr 5fr 6fr; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.tl { padding: var(--s-5); min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; gap: var(--s-4); }
+.tl + .tl { border-left: 1px solid var(--rule); }
+.tl-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.tl b { display: block; font-size: var(--t-20); letter-spacing: -0.018em; line-height: 1.25; }
+.tl p { font-size: var(--t-14); line-height: 1.5; color: var(--ink-3); margin-top: var(--s-2); }
+.tl.dark { background: var(--night); }
+.tl.dark .tl-k { color: var(--night-blue); }
+.tl.dark b { color: var(--night-ink); }
+.tl.dark p { color: var(--night-ink-2); }
+.tl.lit { background: var(--paper-2); }
+.tl-who { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.chip { font-size: var(--t-12); border: 1px solid var(--rule-2); border-radius: 999px; padding: 2px 10px; color: var(--ink-2); background: var(--paper); }
+.tl.dark .chip { border-color: #2c3443; color: var(--night-ink-3); background: transparent; }
+
+/* 3 · why it is predictable */
+.why { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--s-8); align-items: start; margin-top: var(--s-7); }
+.why-points { list-style: none; display: grid; }
+.why-points li { padding: var(--s-5) 0; border-top: 1px solid var(--rule-2); }
+.why-points li:last-child { border-bottom: 1px solid var(--rule-2); }
+.why-points b { display: block; font-size: var(--t-20); letter-spacing: -0.018em; line-height: 1.3; }
+.why-points span { display: block; margin-top: var(--s-2); font-size: var(--t-16); color: var(--ink-2); }
+.eb { list-style: none; display: grid; gap: var(--s-4); }
+.eb-row { display: grid; grid-template-columns: 15ch minmax(0, 1fr) 6ch; align-items: center; gap: var(--s-3); font-size: var(--t-14); }
+.eb-row .who { color: var(--ink-2); line-height: 1.3; }
+.eb-track { height: 28px; background: var(--paper-2); border-radius: 4px; overflow: hidden; }
+.eb-fill { display: block; height: 100%; background: var(--ink-4); }
+.eb-row.pool .eb-fill { background: var(--ink); }
+.eb-row .v { text-align: right; font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* 4 · the free report */
+.offer-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--s-8); align-items: start; }
+.offer-grid h2 { margin-top: var(--s-4); max-width: 16ch; }
+.offer-grid .lede { margin-top: var(--s-5); }
+.flow { list-style: none; display: grid; }
+.flow li { display: grid; grid-template-columns: var(--s-7) minmax(0, 1fr); gap: var(--s-1) 0; padding: var(--s-4) 0; border-top: 1px solid var(--rule-2); }
+.flow li:last-child { border-bottom: 1px solid var(--rule-2); }
+.flow .n { grid-row: span 2; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.flow b { font-size: var(--t-18); }
+.flow span:not(.n) { font-size: var(--t-14); color: var(--ink-3); }
+.sample { margin-top: var(--s-6); border: 1px solid var(--rule-2); border-radius: var(--radius); overflow: hidden; font-size: var(--t-14); }
+.sample table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sample th, .sample td { text-align: left; padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.sample th { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: 0.04em; color: var(--ink-3); }
+.sample tr:last-child td { border-bottom: 0; }
+.sample-cap { padding: var(--s-2) var(--s-3); font-size: var(--t-12); color: var(--ink-3); border-top: 1px solid var(--rule); }
+.honest { margin-top: var(--s-6); padding: var(--s-5); border: 1px solid var(--rule-2); border-radius: var(--radius); }
+.honest p { font-size: var(--t-16); color: var(--ink-2); }
+.honest p + p { margin-top: var(--s-3); }
+.offer-go { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-6); }
+.offer-go .cta { margin-top: 0; }
+
+/* 5 · the call */
+.close h2 { max-width: 20ch; }
+.close .cta { margin-top: var(--s-6); }
+.foot-min { padding-block: var(--s-6); border-top: 1px solid var(--rule); font-size: var(--t-12); color: var(--ink-3); }
+.foot-min .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-3); }
+.foot-min a { color: var(--ink-3); }
+
+@media (max-width: 960px) {
+  .hero-grid, .why, .offer-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
+  .timeline { grid-template-columns: minmax(0, 1fr); }
+  .tl + .tl { border-left: 0; border-top: 1px solid var(--rule); }
+  .tl { min-height: 0; }
+}
+@media (max-width: 560px) {
+  .sim-read dt { font-size: var(--t-24); }
+  .eb-row { grid-template-columns: 11ch minmax(0, 1fr) 5ch; }
+  .sample { overflow-x: auto; }
+}
+
+/* Fig. 1 · the stage: the showpiece, full width and dark */
+.hero-grid { align-items: end; }
+.stage { padding-block: var(--s-8); }
+.stage-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--s-4); }
+.stage-head h2 { margin-top: var(--s-3); font-size: var(--t-display-s); max-width: 24ch; }
+.stage-ctl { margin-top: var(--s-6); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-5); align-items: center; max-width: 720px; }
+.stage .sim-ctl output { color: var(--ink); }
+.stage input[type=range] { accent-color: var(--night-blue); }
+.replay { font: inherit; font-size: var(--t-14); font-weight: var(--strong); color: var(--ink); background: transparent; border: 1px solid var(--rule-2); border-radius: 999px; padding: 6px 16px; cursor: pointer; }
+.replay:hover { border-color: var(--ink-3); }
+.canvas-box { position: relative; margin-top: var(--s-5); border: 1px solid var(--rule); border-radius: var(--radius); background: radial-gradient(120% 80% at 70% 0%, #0f1828 0%, var(--night) 60%); overflow: hidden; }
+#stage { display: block; width: 100%; height: clamp(360px, 46vw, 540px); }
+.clock { position: absolute; left: var(--s-5); top: var(--s-4); display: flex; gap: var(--s-4); align-items: baseline; pointer-events: none; }
+#clock { font-size: var(--t-24); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+#queue-now { font-size: var(--t-14); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.stage .sim-read { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: var(--s-6); }
+.stage-cap { margin-top: var(--s-5); font-size: var(--t-14); line-height: 1.6; color: var(--ink-3); max-width: 90ch; }
+.stage-cap a { color: var(--ink-2); }
+
+/* what is built */
+.built { margin-top: var(--s-7); }
+.built dt.leak { color: var(--blue); }
+.figs { display: grid; gap: var(--s-6); }
+.fan svg { width: 100%; height: auto; overflow: visible; }
+.fan svg text { font-family: var(--font); font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+.fan .run { fill: none; stroke: var(--ink); stroke-opacity: 0.06; stroke-width: 1; }
+.fan .band { fill: var(--blue-wash); }
+.fan .mid { fill: none; stroke: var(--blue); stroke-width: 3; }
+.fan .grid { stroke: var(--rule); }
+.fan .mark { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3; }
+.fan .mark-dot { fill: var(--blue); stroke: var(--paper); stroke-width: 2; }
+
+@media (max-width: 960px) { .stage .sim-read, .built { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .stage-ctl { grid-template-columns: minmax(0, 1fr); } }
+
+/* 3b · what to expect */
+#expect h2 { max-width: 26ch; font-size: var(--t-display-s); }
+.calc { margin-top: var(--s-7); display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-7); align-items: start; }
+.calc-in { display: grid; gap: var(--s-5); padding: var(--s-5); background: var(--paper-2); border-radius: var(--radius); }
+.field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2) var(--s-3); align-items: baseline; }
+.field label { font-size: var(--t-14); color: var(--ink-2); }
+.field output { font-size: var(--t-20); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+.field input { grid-column: 1 / -1; }
+.calc-note { font-size: var(--t-12); color: var(--ink-3); margin-top: calc(-1 * var(--s-3)); }
+.calc-big { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); }
+.calc-big > div { border-left: 2px solid var(--ink); padding: 2px 0 2px var(--s-3); }
+.calc-big dt { font-size: var(--t-display-s); font-weight: var(--strong); letter-spacing: var(--track-display); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.calc-big dd { margin-top: var(--s-2); font-size: var(--t-14); line-height: 1.4; color: var(--ink-2); }
+.calc-big .leak { border-left-color: var(--blue); }
+.calc-big .leak dt { color: var(--blue); }
+#ladder { width: 100%; height: auto; margin-top: var(--s-6); overflow: visible; }
+#ladder text { font-family: var(--font); font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+#ladder .grid { stroke: var(--rule); }
+#ladder .l-risk { fill: none; stroke: var(--ink-4); stroke-width: 2; stroke-dasharray: 4 4; }
+#ladder .l-park { fill: none; stroke: var(--ink); stroke-width: 2; }
+#ladder .a-free { fill: var(--blue-wash); }
+#ladder .l-free { fill: none; stroke: var(--blue); stroke-width: 3; }
+#ladder .you { stroke: var(--ink); stroke-dasharray: 2 3; }
+#ladder .dot-risk { fill: var(--ink-4); } #ladder .dot-park { fill: var(--ink); } #ladder .dot-free { fill: var(--blue); stroke: var(--paper); stroke-width: 2; }
+#ladder .key { font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+.calc-cap { margin-top: var(--s-4); font-size: var(--t-14); line-height: 1.6; color: var(--ink-3); }
+.calc-cap .label-box { margin-right: var(--s-2); }
+@media (max-width: 960px) { .calc { grid-template-columns: minmax(0, 1fr); } .calc-big { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+<header class="nav" data-nav>
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
+    <div class="nav-end">
+      <a class="nav-link" href="#why">How it works</a>
+      <a class="btn btn-nav" href="#report">Get your free report <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- 1 · the promise -->
+<section class="hero" aria-labelledby="headline">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="label">For brands that make product in a factory</p>
+      <h1 id="headline">Know how late your factory will be. <span class="tone">Before you place the order.</span></h1>
+    </div>
+    <div>
+      <p class="lede">Every tracker starts the day your goods are ready. The weeks before that, while your order waits behind other brands' orders, nobody measures. Hubricon pools order dates from brands that use the same factories, so the line in front of yours becomes visible.</p>
+      <div class="cta">
+        <a class="btn btn-lg" href="#report">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="text-link" href="https://calendly.com/hubricon" data-book>Or book a call with Hagen</a>
+      </div>
+      <p class="cta-note" style="margin-top:var(--s-3)">Free. Three dates per order, nothing else.</p>
+    </div>
+  </div>
+</section>
+
+<section class="night stage" id="sim" aria-labelledby="sim-title">
+  <div class="wrap">
+    <div class="stage-head">
+      <div>
+        <p class="label">Fig. 1 · One factory, one year, replayed</p>
+        <h2 id="sim-title">Watch the line form. <span class="tone">Then watch it make orders late.</span></h2>
+      </div>
+      <span class="label label-box">Simulated · Not a client · Not a result</span>
+    </div>
+    <div class="stage-ctl">
+      <div class="sim-ctl">
+        <label for="load">How busy the factory is</label>
+        <input id="load" type="range" min="50" max="95" step="5" value="85">
+        <output for="load" id="load-out">85%</output>
+      </div>
+      <button class="replay" id="replay" type="button" aria-label="Replay the year">Replay <span aria-hidden="true">↻</span></button>
+    </div>
+    <div class="canvas-box">
+      <canvas id="stage" role="img" aria-label="Each line is one order, from the day it was placed to the day it was ready. The part past its promised date is blue. Below it, the line of work waiting at the factory, and a tally of how late every order was."></canvas>
+      <p class="clock" aria-hidden="true"><span id="clock">1 Jan</span><span id="queue-now"></span></p>
+    </div>
+    <dl class="sim-read" aria-live="polite">
+      <div><dt id="r-ontime">–</dt><dd>of this factory's orders ready by the promised date</dd></div>
+      <div class="leak"><dt id="r-p90">–</dt><dd>late or worse, for 1 order in 10</dd></div>
+      <div class="leak"><dt id="r-max">–</dt><dd>the latest order of the year</dd></div>
+      <div class="leak"><dt id="r-mc">–</dt><dd>the same 1-in-10 figure for the middle factory of 200 simulated at this load</dd></div>
+    </dl>
+    <p class="stage-cap">Each thin line is one order, drawn from the day it was placed to the day it was ready, and it turns blue past its promised date. Under it is the work waiting in line at the factory, in days. Every finished order drops into the tally on the right. Orders arrive in lots, wait first in, first out behind everyone else's, then take 12 days of production plus material and inspection delays. The factory promises 20 days. Every factory closes for Lunar New Year at once, so even a quiet one runs late in February. This runs in your browser on Hubricon's factory simulation, the same model behind Fig. 2 and Fig. 3. <a href="/assets/lateness-sim.mjs">Read its code</a>.</p>
+  </div>
+</section>
+
+<!-- 2 · the dark weeks -->
+<section class="section band" id="dark">
+  <div class="wrap">
+    <p class="label">The part nobody measures</p>
+    <h2>Your forwarder tracks the boat. <span class="tone">Nobody tracks the factory.</span></h2>
+    <p class="lede">Once goods are ready, there are trackers, delay indexes and even insurance for late cargo. Before that date there is only a date someone promised you. Production usually runs 15 to 30 days, and that's where a quiet stockout starts.</p>
+    <div class="timeline" role="list">
+      <div class="tl lit" role="listitem"><div><span class="tl-k">Day 0</span><b>You place the order</b><p>Deposit paid. A ready date is promised.</p></div></div>
+      <div class="tl dark" role="listitem"><div><span class="tl-k">The dark weeks</span><b>Your order waits in the factory's queue, then gets made</b><p>How long it waits depends on every other brand's orders at that factory, and you can't see any of them.</p></div><div class="tl-who"><span class="chip">No tracker</span><span class="chip">No index</span><span class="chip">No insurance</span></div></div>
+      <div class="tl lit" role="listitem"><div><span class="tl-k">Cargo ready</span><b>Shipped, sailed, landed, received</b><p>Measured from here on by forwarders, carriers, ports and your 3PL.</p></div><div class="tl-who"><span class="chip">Tracking</span><span class="chip">Delay indexes</span><span class="chip">Cargo-delay insurance</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · why it is predictable -->
+<section class="section band" id="why">
+  <div class="wrap">
+    <p class="label">Why lateness can be forecast</p>
+    <h2>A late factory is a full factory. <span class="tone">Fullness can be measured.</span></h2>
+    <dl class="numbers built">
+      <div><dt>60</dt><dd>factories simulated over four years, every order queued day by day</dd></div>
+      <div><dt>16,000</dt><dd>orders forecast with and without other brands' data, and scored</dd></div>
+      <div><dt class="leak">&minus;21%</dt><dd>forecast error with 5 brands pooled per factory (5.7 to 4.5 days)</dd></div>
+      <div><dt>Shared</dt><dd>factories among small brands, found in public US customs records</dd></div>
+    </dl>
+    <div class="why">
+      <ol class="why-points">
+        <li><b>Waiting grows much faster than load.</b><span>This is basic queueing math. At 90% busy, an order waits about nine times as long as at 50%. Move the slider in Fig. 1 and watch it happen, or see it across 200 factories in Fig. 2.</span></li>
+        <li><b>A factory's load comes from all its brands.</b><span>Small brands often share factories, and US customs records show it. No single brand sees the whole queue. A group of brands sharing their order dates can.</span></li>
+        <li><b>Busy factories stay late.</b><span>In our simulation, a factory above 80% busy was still about as late three months later (correlation 0.67). Below 70% busy, a reading told you nothing after a month. So the factories that hurt you are the ones that can be forecast.</span></li>
+      </ol>
+      <div class="figs">
+      <figure class="exhibit fan">
+        <div class="exhibit-head">
+          <span class="label">Fig. 2 · 200 factories, every load</span>
+          <span class="label label-box">Monte Carlo · Simulated</span>
+        </div>
+        <div class="exhibit-body">
+          <svg id="fan" viewBox="0 0 560 300" role="img" aria-label="For 200 simulated factories, how late the worst 1 in 10 orders ran at each level of load. Flat until about 70 percent busy, then climbing steeply."></svg>
+        </div>
+        <figcaption class="exhibit-cap">Each faint line is one simulated factory: how late its worst 1 in 10 orders ran, at every load from 50% to 95% busy. The band holds the middle 80% of factories and the blue line is the middle one. The marker follows the slider in Fig. 1. Nothing much happens until about 70%. Then it climbs fast.</figcaption>
+      </figure>
+      <figure class="exhibit">
+        <div class="exhibit-head">
+          <span class="label">Fig. 3 · Forecast error per order</span>
+          <span class="label label-box">Simulated · 60 factories · Not real orders</span>
+        </div>
+        <div class="exhibit-body">
+          <ul class="eb" id="bars">
+            <li class="eb-row"><span class="who">Calendar only</span><span class="eb-track"><span class="eb-fill" style="width:100%"></span></span><span class="v">6.5 d</span></li>
+            <li class="eb-row"><span class="who">Your own past orders</span><span class="eb-track"><span class="eb-fill" style="width:87.7%"></span></span><span class="v">5.7 d</span></li>
+            <li class="eb-row pool"><span class="who">+ 5 brands at the same factory</span><span class="eb-track"><span class="eb-fill" style="width:69.2%"></span></span><span class="v">4.5 d</span></li>
+            <li class="eb-row pool"><span class="who">+ 10 brands</span><span class="eb-track"><span class="eb-fill" style="width:64.6%"></span></span><span class="v">4.2 d</span></li>
+            <li class="eb-row pool"><span class="who">+ 20 brands</span><span class="eb-track"><span class="eb-fill" style="width:61.5%"></span></span><span class="v">4.0 d</span></li>
+          </ul>
+        </div>
+        <figcaption class="exhibit-cap">Average miss, in days, when forecasting how late an order will be ready. Shorter is better. Most of the gain comes from the first 5 to 10 brands. Adding customs shipment volume alone barely helped (5.7 days either way), because shipments can't show the queue behind them. These numbers come from the simulation. Real orders are scored the same way, one report at a time.</figcaption>
+      </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3b · what to expect at your size -->
+<section class="section band" id="expect">
+  <div class="wrap">
+    <p class="label">What to expect at your size</p>
+    <h2>The same factory costs a $500k brand and a $30M brand very different money. <span class="tone">Here is roughly how much.</span></h2>
+    <div class="calc">
+      <form class="calc-in" id="calc" onsubmit="return false">
+        <div class="field"><label for="rev">Your yearly revenue</label><output id="rev-out">$3M</output><input id="rev" type="range" min="0" max="1000" value="500"></div>
+        <div class="field"><label for="share">Share of sales made at this factory</label><output id="share-out">50%</output><input id="share" type="range" min="10" max="100" step="5" value="50"></div>
+        <div class="field"><label for="cogs">Product cost, as a share of price</label><output id="cogs-out">35%</output><input id="cogs" type="range" min="15" max="70" step="5" value="35"></div>
+        <div class="field"><label for="busy">How busy the factory is</label><output id="busy-out">85%</output><input id="busy" type="range" min="50" max="95" step="5" value="85"></div>
+        <p class="calc-note">Moves with the slider in Fig. 1.</p>
+      </form>
+      <div class="calc-out">
+        <dl class="calc-big" aria-live="polite">
+          <div><dt id="o-risk">–</dt><dd>sales at risk when an order lands 1-in-10 late and there's no extra stock to cover it</dd></div>
+          <div><dt id="o-park">–</dt><dd>cash parked in extra stock to cover lateness you can't see coming</dd></div>
+          <div class="leak"><dt id="o-free">–</dt><dd>of that cash you could stop parking with a pooled forecast from 5 brands</dd></div>
+        </dl>
+        <svg id="ladder" viewBox="0 0 640 300" role="img" aria-label="The same three figures for brands from $250k to $50M a year, on a log scale, with your revenue marked."></svg>
+        <p class="calc-cap"><span class="label label-box">Modeled estimate · Not a client result</span> Sales at risk is how late the worst 1 in 10 orders runs at this load, across 200 simulated factories, times a day of the sales this factory makes. Extra stock is sized to cover the forecast miss 9 times in 10 (1.6 × the average miss): 10.4 days of product cost when you only know the season, 7.2 days with 5 brands pooled (Fig. 3). Your own orders replace these assumptions in your report.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · the free report -->
+<section class="section night" id="report">
+  <div class="wrap offer-grid">
+    <div>
+      <p class="label">The offer · We built it. We prove it with your numbers.</p>
+      <h2>A free lateness report on your own factories.</h2>
+      <p class="lede">Send three dates for each of your recent orders. You get back how late each factory really runs against its promises, when in the year it slips, and, where other brands use the same factory, what its queue looks like now.</p>
+      <div class="honest">
+        <p><b>We built it. We prove it with your numbers.</b> The engine is built and was tested on 60 simulated factories. Every report is then scored against what your orders really did, so the proof comes from real orders, not from us. Your report starts from your own orders. A pooled reading appears where enough brands share a factory, and the report says which one you're getting.</p>
+        <p><b>Your data.</b> Your orders are never shown to another brand, and your brand's name is never attached to a factory reading.</p>
+      </div>
+      <div class="offer-go">
+        <div class="cta"><a class="btn btn-lg" href="mailto:hagen.simmons@hubricon.com?subject=Lateness%20report&amp;body=Factory%2C%20order%20date%2C%20promised%20ready%20date%2C%20actual%20ready%20date%20for%20each%20order%3A%0A%0A" data-send>Send your order dates <span class="arrow" aria-hidden="true">→</span></a></div>
+        <a class="text-link" href="https://calendly.com/hubricon" data-book>Or book a call with Hagen</a>
+      </div>
+    </div>
+    <div>
+      <ol class="flow">
+        <li><span class="n">01</span><b>Send three dates per order</b><span>Order date, promised ready date, actual ready date, and the factory. A spreadsheet, an export or a pasted list all work.</span></li>
+        <li><span class="n">02</span><b>We build your report</b><span>Each factory's lateness against its promises, by order and by season, and how well the engine would have called it.</span></li>
+        <li><span class="n">03</span><b>A 20-minute call with Hagen</b><span>We walk through it together. No pitch you didn't ask for.</span></li>
+      </ol>
+      <div class="sample">
+        <table>
+          <thead><tr><th>Factory</th><th>Order date</th><th>Promised ready</th><th>Actually ready</th></tr></thead>
+          <tbody>
+            <tr><td>Factory A</td><td>2026-03-02</td><td>2026-04-06</td><td>2026-04-15</td></tr>
+            <tr><td>Factory A</td><td>2026-06-10</td><td>2026-07-15</td><td>2026-07-14</td></tr>
+            <tr><td>Factory B</td><td>2026-08-18</td><td>2026-09-22</td><td>2026-10-09</td></tr>
+          </tbody>
+        </table>
+        <p class="sample-cap">What to send. Example rows, not real orders. <a href="/lateness-template.csv" download>Download the template (.csv)</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · the call -->
+<section class="section close">
+  <div class="wrap">
+    <h2>See how late your factories really run.</h2>
+    <div class="cta">
+      <a class="btn btn-lg" href="#report">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="text-link" href="https://calendly.com/hubricon" data-book>Or book a call with Hagen</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot-min">
+  <div class="wrap">
+    <span>Figures on this page come from Hubricon's factory simulation or are modeled estimates, as labelled. None is a client result. © 2026 Hubricon</span>
+    <span><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span>
+  </div>
+</footer>
+
+<script type="module" src="/assets/lateness.js"></script>
+</body>
+</html>
