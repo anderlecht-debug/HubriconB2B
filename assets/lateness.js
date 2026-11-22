@@ -104,8 +104,8 @@ function frame(now) {
   ctx.beginPath(); for (let d = 0; d <= qEnd; d++) d ? ctx.lineTo(X(d), QY(q[d])) : ctx.moveTo(X(d), QY(q[d]));
   ctx.strokeStyle = blue; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = ink3; ctx.textAlign = "left";
-  ctx.fillText("Work waiting in line at the factory", gx0 + 2, qy0 + 2);
-  ctx.fillText("Each line: one order, placed → ready", gx0 + 2, gy0 - 12);
+  ctx.fillText("Orders waiting at the supplier, all brands", gx0 + 2, qy0 + 2);
+  ctx.fillText("Each line: one order, placed → ready at the supplier", gx0 + 2, gy0 - 12);
 
   // the playhead
   if (p < 1) {
@@ -113,14 +113,14 @@ function frame(now) {
     ctx.beginPath(); ctx.moveTo(X(day), gy0 - 8); ctx.lineTo(X(day), qy1); ctx.stroke(); ctx.globalAlpha = 1;
   }
   $("clock").textContent = day < 365 ? dateOf(day) : (p < 1 ? "Year end: last orders finishing" : "The year, done");
-  $("queue-now").textContent = day < 365 ? `${Math.round(q[Math.floor(day)])} days of work in line` : "";
+  $("queue-now").textContent = day < 365 ? `${Math.round(q[Math.floor(day)])} days of other orders ahead of a new one` : "";
 
   // the tally: every finished order drops into its column of days late
   if (histW) {
     const hx0 = gx1 + 32, hx1 = W - padR, hy1 = gy1, hy0 = gy0;
     const LO = -8, HI = 40, cw = (hx1 - hx0) / (HI - LO + 1);
     const HX = v => hx0 + (Math.max(LO, Math.min(HI, Math.round(v))) - LO + 0.5) * cw;
-    ctx.fillStyle = ink3; ctx.textAlign = "left"; ctx.fillText("Days late, every order", hx0, gy0 - 12);
+    ctx.fillStyle = ink3; ctx.textAlign = "left"; ctx.fillText("Days late vs. the promised date", hx0, gy0 - 12);
     ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
     ctx.beginPath(); ctx.moveTo(HX(0) + cw / 2, hy0); ctx.lineTo(HX(0) + cw / 2, hy1 + 4); ctx.stroke(); ctx.setLineDash([]);
     ctx.textAlign = "center"; ctx.fillStyle = ink3;
