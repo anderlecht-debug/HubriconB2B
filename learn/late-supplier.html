@@ -36,6 +36,7 @@
 </head>
 <body class="ls-page" data-course="late-supplier">
 
+
 <!-- build:nav -->
 <header class="nav" data-nav>
 <script>
@@ -100,7 +101,7 @@
     <div class="ls-hero-text">
       <p class="ls-crumbs"><a href="/learn">Education</a><span aria-hidden="true">/</span>Course 1 · For brands that outsource production</p>
       <h1>The Late Supplier <span class="tone">Know when your stock will really be ready.</span></h1>
-      <p class="ls-hero-lede">Your stock plan hangs on your supplier's promised date. Six short lessons on why it slips, when, what it costs, and how to order on the real date instead.</p>
+      <p class="ls-hero-lede">Six short lessons. Each one a question, a model you can play with, and one thing to do on your own orders. You finish with your own supplier plan.</p>
       <ul class="ls-hero-meta">
         <li><b>6</b> lessons</li><li><b>35</b> minutes</li><li><b>1</b> worksheet</li><li><b>0</b> emails needed</li>
       </ul>
@@ -130,8 +131,12 @@
         <li><a href="#cost"><span class="n">4</span><span class="t">What a late order costs you</span><span class="m">6 min</span></a></li>
         <li><a href="#measure"><span class="n">5</span><span class="t">Score your own supplier</span><span class="m">7 min</span></a></li>
         <li><a href="#reorder"><span class="n">6</span><span class="t">Order on the real date</span><span class="m">6 min</span></a></li>
-        <li class="ls-toc-end"><a href="#one-page"><span class="n">✓</span><span class="t">The course on one page</span></a></li>
+        <li class="ls-toc-end"><a href="#one-page"><span class="n">✓</span><span class="t">Your supplier plan</span></a></li>
       </ol>
+      <div class="ls-mine" data-mine hidden>
+        <p class="ls-mine-k">Your numbers so far</p>
+        <dl data-mine-list></dl>
+      </div>
       <a class="ls-file" href="/learn/files/hubricon-late-supplier.xlsx" download data-template><span>The worksheet</span><small>.xlsx · works in Google Sheets</small></a>
     </div>
   </nav>
@@ -144,7 +149,7 @@
         <li>Say how often your supplier's promised date really holds.</li>
         <li>Tell when your supplier is filling up, before your order is late.</li>
         <li>Mark the weeks of the year your orders are most likely to slip.</li>
-        <li>Put a dollar figure on one late order, on your own numbers.</li>
+        <li>Put a dollar figure on lateness, and pick the cover that costs least.</li>
         <li>Score every supplier you use with one number.</li>
         <li>Set the day your next PO has to go out.</li>
       </ol>
@@ -166,30 +171,25 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 1 of 6 <span>· 5 min</span></p>
         <h2 id="l1-h">The date on your PO is a hope</h2>
-        <p class="ls-lede">Your supplier gives you a ready date, and you plan your stock around it. Here is how often that date holds at a typical busy supplier.</p>
+        <p class="ls-lede">You plan your stock around your supplier's promised date. How often does it hold?</p>
       </header>
 <!-- build:video-promise -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-promise -->
 
-      <div class="ls-guess" data-guess data-answer="2">
+      <div class="ls-guess" data-guess data-answer="2" data-plays="promise">
         <p class="ls-guess-k">Guess first</p>
-        <p class="ls-guess-q">A supplier is 85% booked and promises your order in <span data-fill="ls_promise">20</span> days. Out of 10 orders, how many are ready by that date?</p>
+        <p class="ls-guess-q">A supplier is 85% booked and promises <span data-fill="ls_promise">20</span> days. Of 10 orders, how many are ready on time?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
           <button type="button" class="ls-opt">9</button><button type="button" class="ls-opt">8</button><button type="button" class="ls-opt">6</button><button type="button" class="ls-opt">4</button>
         </div>
         <div class="ls-reveal">
-          <p><b>About <span data-fill="ls_on_time_10">6</span> in 10.</b> In a simulated year at one typical supplier this busy, <span data-fill="ls_on_time">62%</span> of its <span data-fill="ls_n">293</span> orders were ready by the promised date. The rest ran late: the worst 1 in 10 by <span data-fill="ls_p90">12 days</span> or more, and the latest by <span data-fill="ls_worst">25 days</span>.</p>
+          <p><b>About <span data-fill="ls_on_time_10">6</span> in 10.</b> Watch a year of orders at one typical supplier land below: <span data-fill="ls_on_time">62%</span> ready on time. The worst 1 in 10 ran <span data-fill="ls_p90">12 days</span> late or more. The latest, <span data-fill="ls_worst">25 days</span>.</p>
         </div>
       </div>
 
-      <div class="ls-prose">
-        <p>A promised date isn't a lie. It's how long your order takes if nothing is ahead of it in line. Making it takes about <span data-fill="ls_production">12</span> of the <span data-fill="ls_promise">20</span> days. The rest is the supplier's guess about the line of other brands' orders, and they can't see next month's orders any better than you can.</p>
-        <p>So most orders come in on time, and you start to trust the date. Then one doesn't, and that's the one that empties your shelf.</p>
-      </div>
-
       <figure class="ls-fig" data-fig="promise">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 1</span><span class="ls-fig-t">A year of orders at one supplier, by how late each was ready</span></figcaption>
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 1</span><span class="ls-fig-t">A year of orders at one supplier, by how late each was ready</span><button type="button" class="ls-replay" data-replay="promise">Replay the year ↻</button></figcaption>
         <div class="ls-fig-body"><!-- build:ls-fig-promise --><svg viewBox="0 0 720 300" role="img" aria-label="293 orders at one simulated supplier, 62% ready by the promised date" preserveAspectRatio="xMidYMid meet">
     <line class="axis" x1="24" x2="696" y1="236" y2="236"/><line class="tick" x1="57.6" x2="57.6" y1="236" y2="242"/><text class="ax" x="57.6" y="260" text-anchor="middle">10 days early</text><line class="tick" x1="225.6" x2="225.6" y1="236" y2="242"/><text class="ax" x="225.6" y="260" text-anchor="middle">Promised date</text><line class="tick" x1="393.6" x2="393.6" y1="236" y2="242"/><text class="ax" x="393.6" y="260" text-anchor="middle">10 days late</text><line class="tick" x1="561.6" x2="561.6" y1="236" y2="242"/><text class="ax" x="561.6" y="260" text-anchor="middle">20 days late</text>
     
@@ -201,14 +201,18 @@
           <input id="ctl-cushion" type="range" min="0" max="25" step="1" value="0" data-ctl="cushion">
           <output for="ctl-cushion" data-out="cushion">0 days</output>
         </div>
-        <p class="ls-fig-cap">Each dot is one order the supplier took that year, from every brand it makes for. Dots right of the line were ready late. Move the slider to plan for some lateness and watch how many orders it covers. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
+        <p class="ls-fig-cap">Each dot is one order, from every brand the supplier makes for. Drag the slider: how many days late do you have to plan for to cover 9 orders in 10? <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
       </figure>
+
+      <div class="ls-prose">
+        <p>A promised date is how long your order takes with nothing ahead of it. Making it takes <span data-fill="ls_production">12</span> of the <span data-fill="ls_promise">20</span> days. The rest is the supplier's guess about everyone else's orders.</p>
+      </div>
 
       <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Plan on the date 9 orders in 10 make, not the date on the PO.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 10 minutes</p>
-        <p>Pull your last 10 purchase orders. For each one, write three dates: the day you placed it, the ready date your supplier promised, and the day it was actually ready. Lesson 5 turns them into your supplier's score.</p>
+        <p>Pull your last 10 POs. Write three dates for each: ordered, promised, actually ready. Lesson 5 turns them into a score.</p>
       </aside>
 
       <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#busy" data-next><span>Next · Lesson 2</span><b>Busy suppliers are late suppliers</b></a></nav>
@@ -219,29 +223,48 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 2 of 6 <span>· 6 min</span></p>
         <h2 id="l2-h">Busy suppliers are late suppliers</h2>
-        <p class="ls-lede">Your supplier makes product for many brands besides you. When their orders pile up, yours waits in line.</p>
+        <p class="ls-lede">Your supplier makes for many brands. When their orders pile up, yours waits in line.</p>
       </header>
+
+      <div class="ls-recall" data-recall data-answer="1">
+        <p class="ls-recall-k">Quick check · from lesson 1</p>
+        <p class="ls-recall-q">Which date do you plan your stock on?</p>
+        <div class="ls-recall-opts"><button type="button">The date on the PO</button><button type="button">The date 9 orders in 10 make</button></div>
+        <p class="ls-recall-a">The date 9 orders in 10 make. The promise is the best case.</p>
+      </div>
 <!-- build:video-busy -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-busy -->
 
       <div class="ls-guess" data-guess data-answer="2">
         <p class="ls-guess-k">Guess first</p>
-        <p class="ls-guess-q">Your supplier goes from half booked to 90% booked. How much longer does a new order wait in line before work starts on it?</p>
+        <p class="ls-guess-q">Your supplier goes from half booked to 90% booked. How much longer does a new order wait in line?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
           <button type="button" class="ls-opt">Twice as long</button><button type="button" class="ls-opt">4 times</button><button type="button" class="ls-opt">9 times</button><button type="button" class="ls-opt">20 times</button>
         </div>
         <div class="ls-reveal">
-          <p><b>About <span data-fill="ls_wait_x">9</span> times as long.</b> A line grows much faster than the work feeding it. At half booked, a new order rarely finds anything ahead of it. At 90%, almost every order does, and the line takes weeks to clear even after things calm down. That's the textbook queue: the wait grows with busy ÷ (1 − busy), so 0.5 ÷ 0.5 = 1, and 0.9 ÷ 0.1 = 9.</p>
+          <p><b>About <span data-fill="ls_wait_x">9</span> times as long.</b> A line grows much faster than the work feeding it. The textbook queue: the wait grows with busy ÷ (1 − busy). At half booked that's 0.5 ÷ 0.5 = 1. At 90%, 0.9 ÷ 0.1 = 9. Watch it happen below.</p>
         </div>
       </div>
 
-      <div class="ls-prose">
-        <p>Drag the slider and watch the typical supplier. Below about 70% busy, lateness barely moves. Above it, it climbs fast. At 50% busy, the typical simulated supplier's worst 1 in 10 orders is <span data-fill="ls_half_p90">3 days</span> late. At 90%, it's <span data-fill="ls_ninety_p90">24 days</span>, and only <span data-fill="ls_ninety_on_time">35%</span> of orders are on time.</p>
-      </div>
+      <figure class="ls-fig ls-fig-line" data-fig="line">
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 2</span><span class="ls-fig-t">The line at your supplier, one day at a time</span><button type="button" class="ls-replay" data-pause>Pause</button></figcaption>
+        <div class="ls-fig-body ls-line-body"><!-- build:ls-fig-line --><div class="q-hud"><p><b>Day 149</b><span>7 orders in line</span></p><p class="r"><b>A new order waits about 8 days</b><span class="leak">Your last order waited 2 days in line</span></p></div><svg viewBox="0 0 720 130" role="img" aria-label="At 85% busy, 7 orders are waiting; a new order would wait about 8 days" preserveAspectRatio="xMidYMid meet">
+    <line class="q-floor" x1="0" x2="720" y1="80" y2="80"/>
+    <rect class="q-factory" x="536" y="16" width="88" height="64" rx="8"/>
+    <text class="ax" x="580" y="102" text-anchor="middle">Being made</text>
+    <text class="ax" x="300" y="102" text-anchor="middle">Waiting in line</text>
+    <rect class="q-wait" x="478" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="456" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="434" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="412" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="390" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="368" y="42" width="16" height="16" rx="3"/><rect class="q-wait" x="346" y="42" width="16" height="16" rx="3"/><rect class="q-make" x="572" y="42" width="16" height="16" rx="3"/><rect class="q-prog" x="548" y="68" width="44.4" height="3" rx="1.5"/><rect class="q-done" x="704.4" y="42" width="16" height="16" rx="3" opacity="0.1"/></svg><!-- /build:ls-fig-line --></div>
+        <div class="ls-ctl">
+          <label for="ctl-busy">How busy the supplier is</label>
+          <input id="ctl-busy" type="range" min="50" max="95" step="1" value="85" data-ctl="busy">
+          <output for="ctl-busy" data-out="busy">85%</output>
+        </div>
+        <p class="ls-fig-cap">Each square is one brand's order. Yours are blue. Drag the slider from 50% to 95% and watch the line. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
+      </figure>
 
       <figure class="ls-fig" data-fig="busy">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 2</span><span class="ls-fig-t">How late the worst 1 in 10 orders runs, by how busy the supplier is</span></figcaption>
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 3</span><span class="ls-fig-t">How late the worst 1 in 10 orders runs, by how busy the supplier is</span></figcaption>
         <div class="ls-fig-body"><!-- build:ls-fig-busy --><svg viewBox="0 0 720 320" role="img" aria-label="At 85% busy, the typical simulated supplier&#39;s 1-in-10 order is 16 days late" preserveAspectRatio="xMidYMid meet">
     <line class="grid" x1="56" x2="696" y1="252.25806451612902" y2="252.25806451612902"/><text class="ax" x="46" y="256.258064516129" text-anchor="end">0</text><line class="grid" x1="56" x2="696" y1="174.83870967741933" y2="174.83870967741933"/><text class="ax" x="46" y="178.83870967741933" text-anchor="end">20</text><line class="grid" x1="56" x2="696" y1="97.4193548387097" y2="97.4193548387097"/><text class="ax" x="46" y="101.4193548387097" text-anchor="end">40</text><line class="grid" x1="56" x2="696" y1="20" y2="20"/><text class="ax" x="46" y="24" text-anchor="end">60</text><text class="ax" x="56" y="284" text-anchor="middle">50%</text><text class="ax" x="198.22222222222223" y="284" text-anchor="middle">60%</text><text class="ax" x="340.44444444444446" y="284" text-anchor="middle">70%</text><text class="ax" x="482.66666666666663" y="284" text-anchor="middle">80%</text><text class="ax" x="624.8888888888889" y="284" text-anchor="middle">90%</text>
     <text class="ax" x="56" y="308">How busy the supplier is</text>
@@ -251,28 +274,23 @@
     <line class="plan" x1="553.7777777777778" x2="553.7777777777778" y1="20" y2="260"/>
     <circle class="mark" cx="553.7777777777778" cy="190.70967741935485" r="6"/>
     <text class="lab strong" x="541.7777777777778" y="178.70967741935485" text-anchor="end">1 in 10 orders: 16 days late</text></svg><!-- /build:ls-fig-busy --></div>
-        <div class="ls-ctl">
-          <label for="ctl-busy">How busy the supplier is</label>
-          <input id="ctl-busy" type="range" min="50" max="95" step="1" value="85" data-ctl="busy">
-          <output for="ctl-busy" data-out="busy">85%</output>
-        </div>
         <dl class="ls-readout">
           <div><dt data-out="busy-on">55%</dt><dd>of orders ready on time</dd></div>
           <div class="leak"><dt data-out="busy-p90">16 days</dt><dd>late, the worst 1 in 10</dd></div>
-          <div><dt data-out="busy-x">6×</dt><dd>the wait in line at half booked</dd></div>
+          <div><dt data-out="busy-x">6×</dt><dd>the wait at half booked</dd></div>
         </dl>
-        <p class="ls-fig-cap">The line is the typical supplier of <span data-fill="ls_suppliers">200</span> simulated at each level. The band holds the middle 80% of them. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
+        <p class="ls-fig-cap">The typical supplier of <span data-fill="ls_suppliers">200</span> simulated at each level; the band holds the middle 80%. The slider above moves this too. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
       </figure>
 
       <div class="ls-prose">
-        <p>That's why lateness comes in waves. Your supplier isn't getting worse at their job. Every brand they make for is ordering at once, and you can't see any of those orders.</p>
+        <p>Below 70% busy, lateness barely moves. Above it, it climbs fast. That's why lateness comes in waves: every brand is ordering at once, and you can't see their orders.</p>
       </div>
 
-      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>When your supplier gets busy, every date slips, and the busier they are, the faster it slips.</p></aside>
+      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>When your supplier gets busy, every date slips, and faster the busier it gets.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 2 minutes a month</p>
-        <p>Ask your supplier the same question on the first of every month: "If I placed an order today, when would it be ready?" Write the answer down. When that date starts moving out, they're filling up, and your next order should go out sooner.</p>
+        <p>On the first of every month, ask your supplier: "If I ordered today, when would it be ready?" When that date moves out, they're filling up. Order sooner.</p>
       </aside>
 
       <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#calendar" data-next><span>Next · Lesson 3</span><b>The weeks you can see coming</b></a></nav>
@@ -283,25 +301,32 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 3 of 6 <span>· 5 min</span></p>
         <h2 id="l3-h">The weeks you can see coming</h2>
-        <p class="ls-lede">Some lateness is a surprise. Some of it is on the calendar every year.</p>
+        <p class="ls-lede">Some lateness is a surprise. Some is on the calendar every year.</p>
       </header>
+
+      <div class="ls-recall" data-recall data-answer="1">
+        <p class="ls-recall-k">Quick check · from lesson 2</p>
+        <p class="ls-recall-q">As a supplier gets busier, lateness…</p>
+        <div class="ls-recall-opts"><button type="button">Grows steadily</button><button type="button">Barely moves, then climbs fast</button></div>
+        <p class="ls-recall-a">Barely moves until about 70% busy, then climbs fast.</p>
+      </div>
 <!-- build:video-calendar -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-calendar -->
 
       <div class="ls-guess" data-guess data-answer="1">
         <p class="ls-guess-k">Guess first</p>
-        <p class="ls-guess-q">Orders placed in which month are most likely to run late?</p>
+        <p class="ls-guess-q">Orders placed in which month run latest?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
           <button type="button" class="ls-opt">January</button><button type="button" class="ls-opt">February</button><button type="button" class="ls-opt">August</button><button type="button" class="ls-opt">November</button>
         </div>
         <div class="ls-reveal">
-          <p><b><span data-fill="ls_worst_month">February</span>.</b> Factories across China close for Lunar New Year, most for two to three weeks, and every brand's orders stack up behind the restart. Across the simulated suppliers, the worst 1 in 10 orders placed in <span data-fill="ls_worst_month">February</span> was ready <span data-fill="ls_worst_month_p90">35 days</span> after its promised date. In <span data-fill="ls_best_month">August</span>, <span data-fill="ls_best_month_p90">18 days</span>.</p>
+          <p><b><span data-fill="ls_worst_month">February</span>.</b> Factories in China close for Lunar New Year, most for two to three weeks, and every brand's orders stack up behind the restart. In the simulation, the worst 1 in 10 <span data-fill="ls_worst_month">February</span> orders ran <span data-fill="ls_worst_month_p90">35 days</span> late. <span data-fill="ls_best_month">August</span>'s: <span data-fill="ls_best_month_p90">18 days</span>.</p>
         </div>
       </div>
 
       <figure class="ls-fig" data-fig="calendar">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 3</span><span class="ls-fig-t">How late the worst 1 in 10 orders runs, by the month it was placed</span></figcaption>
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 4</span><span class="ls-fig-t">Pick the month you order. See when it's really ready.</span></figcaption>
         <div class="ls-fig-body ls-pick"><!-- build:ls-fig-calendar --><svg viewBox="0 0 720 300" role="img" aria-label="Orders placed in February: 1 in 10 ready 35 days after the promised date. Worst month: February." preserveAspectRatio="xMidYMid meet">
     <rect class="lny" x="94.6" y="4" width="32.7" height="236"/>
     <text class="ax" x="133.3" y="18">Factories closed for Lunar New Year</text>
@@ -343,20 +368,19 @@
       <rect class="mbar" x="656.7" y="98.4" width="39.3" height="141.6" rx="3"/>
       <text class="ax" x="676.3" y="262" text-anchor="middle">Dec</text>
       </g></svg><!-- /build:ls-fig-calendar --></div>
-        <p class="ls-fig-note" data-out="month">Tap a month to see its orders.</p>
-        <p class="ls-fig-cap">Every order placed at <span data-fill="ls_suppliers">200</span> simulated suppliers, each 85% booked, pooled by the month it was placed. In the simulation, factories close for 18 days from the end of January and restart slowly. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
+        <div class="ls-trip" data-out="month" aria-live="polite"></div>
+        <p class="ls-fig-cap">Every order at <span data-fill="ls_suppliers">200</span> simulated suppliers, each 85% booked, by the month it was placed, with a <span data-fill="ls_promise">20</span>-day promise. In the simulation, factories close for 18 days from the end of January. <span class="ls-tag">Simulated · Not a client · Not a result</span></p>
       </figure>
 
       <div class="ls-prose">
-        <p>The real holiday moves every year, between late January and mid February, and the slowdown runs past it: workers travel home, and not all of them come back on day one. The second wave comes in autumn, when every brand orders for the holidays at the same factories.</p>
-        <p>Both are on the calendar a year ahead, so neither should surprise you.</p>
+        <p>The real holiday moves between late January and mid February, and the slowdown runs past it. The second wave comes in autumn, when every brand orders for the holidays. Both are on the calendar a year ahead.</p>
       </div>
 
-      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Order before the line forms, not after. Lunar New Year and holiday ordering are on the calendar every year.</p></aside>
+      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Order before the line forms. Lunar New Year and the holiday rush come every year.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 5 minutes</p>
-        <p>Put next Lunar New Year in your calendar (in 2027 it falls on February 6). From that day, count back your supplier's promised lead time plus a week, because many factories wind down early. That's the last day to place an order you need before March. Set a reminder two weeks before it.</p>
+        <p>Next Lunar New Year is February 6, 2027. Count back your supplier's lead time plus a week. That's your last order date for stock you need before March. Your plan at the end works it out.</p>
       </aside>
 
       <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#cost" data-next><span>Next · Lesson 4</span><b>What a late order costs you</b></a></nav>
@@ -367,57 +391,73 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 4 of 6 <span>· 6 min</span></p>
         <h2 id="l4-h">What a late order costs you</h2>
-        <p class="ls-lede">You pay for lateness one of two ways: your stock runs out, or you hold extra just in case. Here's what each costs, on your numbers.</p>
+        <p class="ls-lede">You pay for lateness one of two ways: you run out, or you hold extra. Find the mix that costs least.</p>
       </header>
+
+      <div class="ls-recall" data-recall data-answer="0">
+        <p class="ls-recall-k">Quick check · from lesson 3</p>
+        <p class="ls-recall-q">When does an order you need before March go out?</p>
+        <div class="ls-recall-opts"><button type="button">Before Lunar New Year</button><button type="button">Right after it</button></div>
+        <p class="ls-recall-a">Before it. After the holiday, every brand's orders are already in line.</p>
+      </div>
 <!-- build:video-cost -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-cost -->
 
       <div class="ls-guess" data-guess data-answer="0">
         <p class="ls-guess-k">Guess first</p>
-        <p class="ls-guess-q">You sell $50,000 a month from one supplier. Which costs more: running out for 14 days once, or holding 14 extra days of stock for a whole year?</p>
+        <p class="ls-guess-q">You sell $50,000 a month from one supplier. What costs more: running out for 14 days once, or holding 14 extra days of stock all year?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
           <button type="button" class="ls-opt">Running out</button><button type="button" class="ls-opt">The extra stock</button><button type="button" class="ls-opt">About the same</button>
         </div>
         <div class="ls-reveal">
-          <p><b>Running out, by about <span data-fill="ls_cost_ratio">5</span> times.</b> A stockout loses the profit on every sale you can't make: <span data-fill="ls_cost_stockout">$12,833</span> here. Extra stock costs only what it takes to hold it for a year, <span data-fill="ls_cost_carrying">$2,625</span> at a 25% yearly holding cost. The catch is the cash: that cover ties up <span data-fill="ls_cost_cash">$10,500</span>, which is why most brands hold too little.</p>
+          <p><b>Running out, by about <span data-fill="ls_cost_ratio">5</span> times.</b> A stockout loses the profit on every sale you miss: <span data-fill="ls_cost_stockout">$12,833</span>. Holding the cover a year costs <span data-fill="ls_cost_carrying">$2,625</span> at a 25% holding rate. The catch: it ties up <span data-fill="ls_cost_cash">$10,500</span> of cash. So how much cover is right?</p>
         </div>
       </div>
 
-      <figure class="ls-fig" data-fig="cost">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 4</span><span class="ls-fig-t">One late order against holding cover for it, on your numbers</span></figcaption>
+      <figure class="ls-fig" data-fig="curve">
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 5</span><span class="ls-fig-t">A year of lateness on your numbers: the cover that costs least</span></figcaption>
         <div class="ls-inputs">
           <label><span>Sales from this supplier, a month</span><span class="ls-in ls-in-money"><input type="number" inputmode="numeric" min="0" step="1000" value="50000" data-in="sales"></span></label>
           <label><span>Gross margin</span><span class="ls-in ls-in-pct"><input type="number" inputmode="decimal" min="0" max="95" step="1" value="55" data-in="margin"></span></label>
-          <label><span>Days late</span><span class="ls-in"><input type="number" inputmode="numeric" min="0" max="120" step="1" value="14" data-in="late"></span></label>
+          <label><span>Worst 1 in 10, days late</span><span class="ls-in"><input type="number" inputmode="numeric" min="0" max="120" step="1" value="12" data-in="late"></span></label>
+          <label><span>Orders a year</span><span class="ls-in"><input type="number" inputmode="numeric" min="1" max="52" step="1" value="6" data-in="orders"></span></label>
           <label><span>Yearly cost to hold stock</span><span class="ls-in ls-in-pct"><input type="number" inputmode="decimal" min="0" max="100" step="1" value="25" data-in="carry"></span></label>
         </div>
-        <div class="ls-fig-body"><!-- build:ls-fig-cost --><svg viewBox="0 0 720 220" role="img" aria-label="A 14 days stockout costs about $12,833 in profit; holding that cover all year costs about $2,625" preserveAspectRatio="xMidYMid meet">
-    <text class="lab strong" x="16" y="22">One stockout: profit on the sales you can't make</text>
-    <rect class="cb-leak" x="16" y="32" width="538" height="26" rx="3"/>
-    <text class="lab strong leak" x="564" y="50">$12,833</text>
-    
-    <text class="lab strong" x="16" y="92">Holding the same days of cover for a year: carrying cost</text>
-    <rect class="cb-ink" x="16" y="102" width="110" height="26" rx="3"/>
-    <text class="lab strong" x="136" y="120">$2,625</text>
-    
-    <text class="lab strong" x="16" y="162">The cash that cover ties up (you get it back when it sells)</text>
-    <rect class="cb-ghost" x="16" y="172" width="440.2" height="26" rx="3"/>
-    <text class="lab strong" x="466.2" y="190">$10,500</text>
-    </svg><!-- /build:ls-fig-cost --></div>
-        <p class="ls-fig-cap">Arithmetic, not a forecast. A stockout loses a day's sales times your margin for every day you're out. Holding cover ties up a day's sales at product cost for every day of cover, and holding it costs a share of that each year; 25% is a common rule of thumb for storage, the cash and the odd unit that never sells. Use your own.</p>
+        <div class="ls-fig-body"><!-- build:ls-fig-curve --><svg viewBox="0 0 720 320" role="img" aria-label="Holding 0 days of cover costs about $14,869 a year in stockouts and holding; the least is $3,672 at 18 days" preserveAspectRatio="xMidYMid meet">
+    <line class="grid" x1="64" x2="696" y1="256" y2="256"/><text class="ax" x="54" y="260" text-anchor="end">$0</text><line class="grid" x1="64" x2="696" y1="198.2" y2="198.2"/><text class="ax" x="54" y="202.2" text-anchor="end">$4k</text><line class="grid" x1="64" x2="696" y1="140.4" y2="140.4"/><text class="ax" x="54" y="144.4" text-anchor="end">$8k</text><line class="grid" x1="64" x2="696" y1="82.6" y2="82.6"/><text class="ax" x="54" y="86.6" text-anchor="end">$12k</text><line class="grid" x1="64" x2="696" y1="24.8" y2="24.8"/><text class="ax" x="54" y="28.8" text-anchor="end">$16k</text><text class="ax" x="64" y="278" text-anchor="middle">0 d</text><text class="ax" x="227.9" y="278" text-anchor="middle">7 d</text><text class="ax" x="391.7" y="278" text-anchor="middle">14 d</text><text class="ax" x="532.1" y="278" text-anchor="middle">20 d</text><text class="ax" x="696" y="278" text-anchor="middle">27 d</text>
+    <text class="ax" x="64" y="302">Days of extra stock you hold</text>
+    <path class="c-hold" d="M64,256 L87.4,253.3 L110.8,250.6 L134.2,247.9 L157.6,245.2 L181,242.5 L204.4,239.7 L227.9,237 L251.3,234.3 L274.7,231.6 L298.1,228.9 L321.5,226.2 L344.9,223.5 L368.3,220.8 L391.7,218.1 L415.1,215.4 L438.5,212.7 L461.9,209.9 L485.3,207.2 L508.7,204.5 L532.1,201.8 L555.6,199.1 L579,196.4 L602.4,193.7 L625.8,191 L649.2,188.3 L672.6,185.6 L696,182.9"/>
+    <path class="c-out" d="M64,41.2 L87.4,69.2 L110.8,92.5 L134.2,111.9 L157.6,129 L181,144.7 L204.4,158.6 L227.9,170.6 L251.3,181.9 L274.7,192.1 L298.1,201.6 L321.5,210.4 L344.9,218.7 L368.3,226.2 L391.7,233.1 L415.1,239 L438.5,244.3 L461.9,248.5 L485.3,251.7 L508.7,253.8 L532.1,254.6 L555.6,255.1 L579,255.4 L602.4,255.6 L625.8,255.9 L649.2,256 L672.6,256 L696,256"/>
+    <path class="c-total" d="M64,41.2 L87.4,66.5 L110.8,87.1 L134.2,103.8 L157.6,118.2 L181,131.1 L204.4,142.4 L227.9,151.6 L251.3,160.2 L274.7,167.7 L298.1,174.5 L321.5,180.6 L344.9,186.2 L368.3,191 L391.7,195.2 L415.1,198.4 L438.5,201 L461.9,202.4 L485.3,203 L508.7,202.3 L532.1,200.4 L555.6,198.2 L579,195.8 L602.4,193.3 L625.8,190.9 L649.2,188.3 L672.6,185.6 L696,182.9"/>
+    <text class="lab leak" x="193" y="178.6" text-anchor="end">Running out</text>
+    <text class="lab" x="696" y="204.9" text-anchor="end">Holding extra</text>
+    <circle class="c-best" cx="485.3" cy="203" r="5"/>
+    <line class="plan" x1="64" x2="64" y1="24" y2="256"/>
+    <circle class="mark-ink" cx="64" cy="41.2" r="6"/>
+    <text class="lab strong" x="76" y="36" text-anchor="start">$14,869 a year</text></svg><!-- /build:ls-fig-curve --></div>
+        <div class="ls-ctl">
+          <label for="ctl-cover">Extra stock you hold</label>
+          <input id="ctl-cover" type="range" min="0" max="40" step="1" value="0" data-ctl="cover">
+          <output for="ctl-cover" data-out="cover">0 days</output>
+        </div>
+        <dl class="ls-readout">
+          <div class="leak"><dt data-out="cv-out" data-fill="ls_cv_out">$14,869</dt><dd>a year lost to running out</dd></div>
+          <div><dt data-out="cv-hold">$0</dt><dd>a year to hold the extra</dd></div>
+          <div><dt data-out="cv-best" data-fill="ls_cv_best">18 days</dt><dd data-out="cv-best-d" data-fill="ls_cv_best_d">the cover that costs least: $3,672 a year</dd></div>
+        </dl>
+        <p class="ls-fig-cap">Arithmetic on your numbers. The lateness is a year of orders at the typical simulated supplier, stretched so its worst 1 in 10 matches yours. Running out costs a day's profit for every day an order lands past your cover; holding costs a day's product cost times the holding rate for each day of cover. 25% a year is a common rule of thumb for storage, cash and shrink. Use your own.</p>
       </figure>
 
       <div class="ls-prose">
-        <p>This leaves out what a stockout does after it ends. A listing that runs dry tends to lose its rank, and some customers buy elsewhere and don't come back. So the real gap is wider than this.</p>
-        <p>The answer isn't a blanket month of extra stock either. It's the right amount for how late your supplier really runs, and less when you can see a delay coming. The next two lessons get you that number.</p>
+        <p>The curve bottoms out where one more day of cover costs as much as it saves. With a fat margin, that's often more cover than the worst 1 in 10. With a thin one, less. And it leaves out the rank a listing loses after it runs dry, so the real case for cover is stronger.</p>
       </div>
 
-      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Running out costs you margin. Holding extra costs you carrying. Size the extra to how late your supplier really runs.</p></aside>
+      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Don't guess your cover. Hold the days where running out and holding extra cost the same.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 3 minutes</p>
-        <p>Put in your top product's numbers for the supplier that worries you most. Write down the first figure. That's what one late order can cost you, and what the rest of this course is worth.</p>
+        <p>Put in your top product's numbers. Write down the best cover and what no cover costs you a year. They go into your plan.</p>
       </aside>
 
       <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#measure" data-next><span>Next · Lesson 5</span><b>Score your own supplier</b></a></nav>
@@ -428,8 +468,15 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 5 of 6 <span>· 7 min</span></p>
         <h2 id="l5-h">Score your own supplier</h2>
-        <p class="ls-lede">Three dates per order are all it takes: when you ordered, when the supplier promised it, and when it was really ready.</p>
+        <p class="ls-lede">Three dates per order: ordered, promised, really ready. That's the whole input.</p>
       </header>
+
+      <div class="ls-recall" data-recall data-answer="0">
+        <p class="ls-recall-k">Quick check · from lesson 4</p>
+        <p class="ls-recall-q">Day for day, what costs more?</p>
+        <div class="ls-recall-opts"><button type="button">Running out</button><button type="button">Holding extra</button></div>
+        <p class="ls-recall-a">Running out: it costs your margin. Holding costs only the carrying.</p>
+      </div>
 <!-- build:video-measure -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-measure -->
@@ -438,35 +485,34 @@
         <p class="ls-guess-k">Guess first</p>
         <p class="ls-guess-q">Which one number should you track for each supplier?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
-          <button type="button" class="ls-opt">Average days late</button><button type="button" class="ls-opt">Share of orders on time</button><button type="button" class="ls-opt">How late the worst 1 in 10 runs</button><button type="button" class="ls-opt">The latest order ever</button>
+          <button type="button" class="ls-opt">Average days late</button><button type="button" class="ls-opt">Share on time</button><button type="button" class="ls-opt">The worst 1 in 10</button><button type="button" class="ls-opt">The latest ever</button>
         </div>
         <div class="ls-reveal">
-          <p><b>How late the worst 1 in 10 runs.</b> The average hides the bad orders, and those are the ones that empty your shelf. The on-time share counts a one-day slip the same as a 30-day one. The latest order ever is a single story. The 1-in-10 figure is the lateness nine orders in ten come in under, and it's what your extra stock has to cover.</p>
+          <p><b>The worst 1 in 10.</b> The average hides the bad orders, and they're the ones that empty your shelf. The on-time share counts a 1-day slip like a 30-day one. The latest ever is one story. The worst 1 in 10 is what your cover has to beat.</p>
         </div>
       </div>
 
       <figure class="ls-fig ls-tool" data-fig="measure">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 5</span><span class="ls-fig-t">Your suppliers, scored from your own orders</span></figcaption>
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 6</span><span class="ls-fig-t">Your suppliers, scored from your own orders</span></figcaption>
         <div class="ls-tool-in">
-          <label for="ls-rows" class="ls-tool-k">Paste rows from a spreadsheet: supplier, order date, promised ready date, actual ready date</label>
-          <textarea id="ls-rows" rows="6" spellcheck="false" placeholder="supplier,order_date,promised_ready_date,actual_ready_date&#10;Supplier A,2026-03-02,2026-04-06,2026-04-15&#10;Supplier A,2026-06-10,2026-07-15,2026-07-14"></textarea>
+          <label for="ls-rows" class="ls-tool-k">Paste rows: supplier, order date, promised ready date, actual ready date</label>
+          <textarea id="ls-rows" rows="5" spellcheck="false" placeholder="supplier,order_date,promised_ready_date,actual_ready_date&#10;Supplier A,2026-03-02,2026-04-06,2026-04-15&#10;Supplier A,2026-06-10,2026-07-15,2026-07-14"></textarea>
           <p class="ls-tool-row"><button type="button" class="ls-chip" data-sample>Try it with sample orders</button><label class="ls-chip"><input type="file" accept=".csv,text/csv,text/plain" data-file hidden>Pick a CSV</label><a class="ls-chip" href="/lateness-template.csv" download>Template (.csv)</a></p>
           <div class="ls-score" data-score aria-live="polite">
-            <p class="ls-score-empty">Your scores appear here as soon as there's a row to read. This runs in your browser: nothing is sent or saved.</p>
+            <p class="ls-score-empty">Your scores appear here. This runs in your browser: nothing is sent or saved.</p>
           </div>
         </div>
       </figure>
 
       <div class="ls-prose">
-        <p>Read the scores this way. The on-time share tells you how often the date holds. The 1-in-10 figure tells you how much cover you need. If one supplier's 1-in-10 is twice another's, it needs twice the cover, or twice the lead time, for the same product.</p>
-        <p>With fewer than 10 orders, the 1-in-10 figure is mostly your single worst order. Treat it as a starting point, and let every new order sharpen it.</p>
+        <p>One supplier's worst 1 in 10 twice another's? It needs twice the cover for the same product. Under 10 orders, the figure is mostly your single worst order: a starting point every new order sharpens.</p>
       </div>
 
-      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Track one number per supplier: how late the worst 1 in 10 orders runs.</p></aside>
+      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>One number per supplier: how late the worst 1 in 10 orders runs.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 15 minutes</p>
-        <p>Download the worksheet and paste in the dates from lesson 1. It scores every supplier the same way, and keeps doing it as you add each order the day it's ready. <a href="/learn/files/hubricon-late-supplier.xlsx" download data-template>The worksheet (.xlsx) ↓</a></p>
+        <p>Paste the dates from lesson 1 above, or into the worksheet, which keeps scoring as you add orders. <a href="/learn/files/hubricon-late-supplier.xlsx" download data-template>The worksheet (.xlsx) ↓</a></p>
       </aside>
 
       <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#reorder" data-next><span>Next · Lesson 6</span><b>Order on the real date</b></a></nav>
@@ -477,25 +523,32 @@
       <header class="ls-head">
         <p class="ls-k">Lesson 6 of 6 <span>· 6 min</span></p>
         <h2 id="l6-h">Order on the real date</h2>
-        <p class="ls-lede">You know how late your supplier runs. Now turn it into the day your next order goes out.</p>
+        <p class="ls-lede">Turn how late your supplier runs into the day your next order goes out.</p>
       </header>
+
+      <div class="ls-recall" data-recall data-answer="1">
+        <p class="ls-recall-k">Quick check · from lesson 5</p>
+        <p class="ls-recall-q">The one number to track per supplier?</p>
+        <div class="ls-recall-opts"><button type="button">Average days late</button><button type="button">The worst 1 in 10</button></div>
+        <p class="ls-recall-a">The worst 1 in 10. It's what your cover has to beat.</p>
+      </div>
 <!-- build:video-reorder -->
 <p class="lesson-video-waiting"><span class="label">Video</span><span>This lesson, taught on screen on its own charts, will play here.</span></p>
 <!-- /build:video-reorder -->
 
       <div class="ls-guess" data-guess data-answer="2">
         <p class="ls-guess-k">Guess first</p>
-        <p class="ls-guess-q">Your supplier's worst 1 in 10 orders runs 12 days late. What covers it?</p>
+        <p class="ls-guess-q">Your supplier's worst 1 in 10 runs 12 days late. What covers it?</p>
         <div class="ls-opts" role="group" aria-label="Your guess">
-          <button type="button" class="ls-opt">Order 12 days earlier</button><button type="button" class="ls-opt">Keep 12 days of extra stock</button><button type="button" class="ls-opt">Either one: it's the same thing</button><button type="button" class="ls-opt">Push the supplier for a firm date</button>
+          <button type="button" class="ls-opt">Order 12 days earlier</button><button type="button" class="ls-opt">Hold 12 days of extra stock</button><button type="button" class="ls-opt">Either: it's the same thing</button><button type="button" class="ls-opt">A firm date from the supplier</button>
         </div>
         <div class="ls-reveal">
-          <p><b>Either one, because it's the same thing.</b> Ordering 12 days earlier means 12 more days of stock on hand when the order lands. That is the extra stock: the same units and the same cash. What a firm date gets you is a promise, and lesson 1 showed what those are worth. What changes the bill is knowing <i>when</i> you need the cushion: a quiet supplier needs less of it, and a slammed one needs more.</p>
+          <p><b>Either: it's the same thing.</b> Ordering 12 days earlier means 12 more days of stock on hand when it lands. Same units, same cash. A firm date is a promise, and lesson 1 showed what those are worth. What changes the bill is knowing <i>when</i> you need the cushion.</p>
         </div>
       </div>
 
       <figure class="ls-fig" data-fig="reorder">
-        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 6</span><span class="ls-fig-t">When your next order has to go out</span></figcaption>
+        <figcaption class="ls-fig-head"><span class="ls-fig-n">Fig. 7</span><span class="ls-fig-t">When your next order has to go out</span></figcaption>
         <div class="ls-inputs">
           <label><span>Units you sell a day</span><span class="ls-in"><input type="number" inputmode="numeric" min="0" step="1" value="40" data-in="daily"></span></label>
           <label><span>Units on hand and on the way</span><span class="ls-in"><input type="number" inputmode="numeric" min="0" step="10" value="4000" data-in="onHand"></span></label>
@@ -515,45 +568,56 @@
     <text class="lab strong" x="174.2" y="26">Order by day 23</text>
     <text class="ax" x="174.2" y="96">On the promise alone you'd wait until day 35</text></svg><!-- /build:ls-fig-reorder --></div>
         <dl class="ls-readout">
-          <div class="leak"><dt data-out="ro-real">Day <span data-fill="ls_ro_real">23</span></dt><dd>the last day to order and still cover a 1-in-10 late order</dd></div>
-          <div><dt data-out="ro-point"><span data-fill="ls_ro_point">3,080</span></dt><dd>units: the reorder point. Order when stock falls to this</dd></div>
-          <div><dt data-out="ro-extra"><span data-fill="ls_ro_extra">480</span></dt><dd>more units on hand than ordering on the promise</dd></div>
+          <div class="leak"><dt data-out="ro-real">Day <span data-fill="ls_ro_real">23</span></dt><dd data-out="ro-date">the last day to order and still beat a 1-in-10 late order</dd></div>
+          <div><dt data-out="ro-point"><span data-fill="ls_ro_point">3,080</span></dt><dd>units: order when stock falls to this</dd></div>
+          <div><dt data-out="ro-extra"><span data-fill="ls_ro_extra">480</span></dt><dd>more units than ordering on the promise</dd></div>
         </dl>
-        <p class="ls-fig-cap">The reorder point is units sold a day × (promised production days + the 1-in-10 days late + shipping days). Arithmetic, on your inputs; it assumes you sell at the same pace until the order lands.</p>
+        <p class="ls-fig-cap">Reorder point = units a day × (promised days + worst 1 in 10 late + shipping). Arithmetic on your inputs, assuming you sell at the same pace until the order lands. Lesson 5's score fills in the days late.</p>
       </figure>
 
       <div class="ls-prose">
         <h3>What one brand can't see</h3>
-        <p>Everything so far uses your own past orders. They tell you how late a supplier has run, not how busy it is today. The supplier's other customers can tell you that: when several brands that share a supplier pool their order dates, the line shows up in the data, weeks before it reaches your order.</p>
-        <p>In Hubricon's simulation of 60 suppliers, five brands pooling their dates cut the average forecast miss from 5.7 days to 4.5. That's a simulation. Real orders are scored the same way, one report at a time, and none is published yet.</p>
+        <p>Your past orders say how late a supplier has run, not how busy it is today. Its other customers can: when brands that share a supplier pool their order dates, the line shows up weeks before it reaches your order. In Hubricon's simulation of 60 suppliers, five brands pooling cut the average forecast miss from 5.7 days to 4.5. That's a simulation; none from real orders is published yet.</p>
       </div>
 
-      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Order when stock falls to a day's sales × (promised days + the 1-in-10 days late + shipping). Check it again whenever your supplier gets busy.</p></aside>
+      <aside class="ls-remember"><p class="ls-remember-k">Remember</p><p>Reorder at a day's sales × (promised + worst 1 in 10 late + shipping). Recheck when your supplier gets busy.</p></aside>
 
       <aside class="ls-do">
         <p class="ls-do-k">Do it on yours · 10 minutes</p>
-        <p>Set the reorder point for your top product on the worksheet's Reorder sheet, using the 1-in-10 figure from lesson 5. Put a reminder in your calendar on the day it says.</p>
+        <p>Put your top product in above. Then open your plan: it collects everything you've entered into one page to keep.</p>
       </aside>
 
-      <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#one-page" data-next><span>You finished the course</span><b>The six rules on one page</b></a></nav>
+      <nav class="ls-pager" aria-label="Next"><a class="ls-next" href="#one-page" data-next><span>You finished the course</span><b>Your supplier plan</b></a></nav>
     </article>
 
-    <!-- ═══ The course on one page ═══ -->
+    <!-- ═══ The plan ═══ -->
     <article class="ls-lesson ls-end" id="one-page" aria-labelledby="end-h" data-lesson>
       <header class="ls-head">
         <p class="ls-k">The course on one page</p>
-        <h2 id="end-h">Six rules for a supplier you can't see inside</h2>
+        <h2 id="end-h">Your supplier plan</h2>
+        <p class="ls-lede" data-plan-lede>Built from the numbers you entered. Change any of them in lessons 4 to 6 and it updates.</p>
       </header>
+      <div class="ls-plan" data-plan>
+        <div class="ls-plan-grid">
+          <div class="ls-plan-cell leak"><span class="k">Plan for this many days late</span><b data-plan="late">12 days</b><small>Your worst 1 in 10 (lesson 5)</small></div>
+          <div class="ls-plan-cell"><span class="k">Reorder when stock falls to</span><b data-plan="point">3,080 units</b><small>Lesson 6</small></div>
+          <div class="ls-plan-cell"><span class="k">Order your next PO by</span><b data-plan="date">Day 23</b><small data-plan="date-k">Lesson 6</small></div>
+          <div class="ls-plan-cell"><span class="k">Extra stock that costs least</span><b data-plan="cover" data-fill="ls_cv_best">18 days</b><small data-plan="cover-k">Lesson 4</small></div>
+          <div class="ls-plan-cell leak"><span class="k">What no cover costs a year</span><b data-plan="nocover" data-fill="ls_cv_out">$14,869</b><small>Lesson 4</small></div>
+          <div class="ls-plan-cell"><span class="k">Last order before Lunar New Year 2027</span><b data-plan="lny">Dec 31, 2026</b><small>Feb 6 − your lead time − 7 days (lesson 3)</small></div>
+        </div>
+        <p class="ls-plan-actions"><button type="button" class="ls-chip" data-print>Print or save as PDF</button><button type="button" class="ls-chip" data-copy>Copy as text</button></p>
+      </div>
       <ol class="ls-rules">
         <li><b>A promised date is the best case.</b> Plan on the date 9 orders in 10 make.</li>
-        <li><b>Busy suppliers are late suppliers.</b> Ask every month when a new order would be ready, and order sooner when that date moves out.</li>
-        <li><b>The calendar is no surprise.</b> Order before Lunar New Year and the autumn rush, not after.</li>
-        <li><b>A stockout costs margin; extra stock costs carrying.</b> Size the extra to how late your supplier really runs.</li>
+        <li><b>Busy suppliers are late suppliers.</b> Ask monthly when a new order would be ready.</li>
+        <li><b>The calendar is no surprise.</b> Order before Lunar New Year and the autumn rush.</li>
+        <li><b>Hold the cover that costs least.</b> Where running out and holding cost the same.</li>
         <li><b>One number per supplier.</b> How late the worst 1 in 10 orders runs.</li>
-        <li><b>Order on the real date.</b> Reorder at a day's sales × (promised + 1-in-10 late + shipping).</li>
+        <li><b>Order on the real date.</b> A day's sales × (promised + worst 1 in 10 + shipping).</li>
       </ol>
       <div class="ls-next-steps">
-        <a class="ls-step" href="/lateness"><span class="ls-step-k">Free · from your own order dates</span><b>Get a lateness report on your suppliers</b><span>Send three dates per order. You get how late each supplier really runs, and where other brands share it, how backed up it is now. <span class="arrow" aria-hidden="true">→</span></span></a>
+        <a class="ls-step" href="/lateness"><span class="ls-step-k">Free · from your own order dates</span><b>Get a lateness report on your suppliers</b><span>How late each really runs, and where other brands share it, how backed up it is now. <span class="arrow" aria-hidden="true">→</span></span></a>
         <a class="ls-step" href="/learn"><span class="ls-step-k">Free · every lesson open</span><b>Back to the library</b><span>Fees, prices, cash and margin, each with its spreadsheet. <span class="arrow" aria-hidden="true">→</span></span></a>
       </div>
 <!-- build:optin-late-supplier-end -->
@@ -577,7 +641,7 @@
 </div>
 </main>
 
-<!-- build:ls-data --><script type="application/json" id="ls-data">{"loads":[{"busy":50,"on_time":86,"p90":2.8,"p90_lo":0.4,"p90_hi":6.1,"wait_x":1},{"busy":51,"on_time":86,"p90":2.9,"p90_lo":0.4,"p90_hi":6.1,"wait_x":1},{"busy":52,"on_time":86,"p90":3,"p90_lo":0.5,"p90_hi":6.8,"wait_x":1.1},{"busy":53,"on_time":85,"p90":3.1,"p90_lo":0.7,"p90_hi":7.1,"wait_x":1.1},{"busy":54,"on_time":85,"p90":3.4,"p90_lo":0.7,"p90_hi":7.1,"wait_x":1.2},{"busy":55,"on_time":85,"p90":3.6,"p90_lo":0.9,"p90_hi":7.6,"wait_x":1.2},{"busy":56,"on_time":85,"p90":3.8,"p90_lo":1.1,"p90_hi":8.1,"wait_x":1.3},{"busy":57,"on_time":84,"p90":4.2,"p90_lo":1.1,"p90_hi":8.3,"wait_x":1.3},{"busy":58,"on_time":84,"p90":4.4,"p90_lo":1.3,"p90_hi":8.6,"wait_x":1.4},{"busy":59,"on_time":84,"p90":4.6,"p90_lo":1.2,"p90_hi":9,"wait_x":1.4},{"busy":60,"on_time":83,"p90":4.8,"p90_lo":1.5,"p90_hi":9.7,"wait_x":1.5},{"busy":61,"on_time":83,"p90":5.2,"p90_lo":1.8,"p90_hi":10.1,"wait_x":1.6},{"busy":62,"on_time":83,"p90":5.4,"p90_lo":1.9,"p90_hi":10.4,"wait_x":1.6},{"busy":63,"on_time":82,"p90":5.6,"p90_lo":2.1,"p90_hi":10.7,"wait_x":1.7},{"busy":64,"on_time":82,"p90":6,"p90_lo":2.2,"p90_hi":11.2,"wait_x":1.8},{"busy":65,"on_time":81,"p90":6.4,"p90_lo":2,"p90_hi":11.6,"wait_x":1.9},{"busy":66,"on_time":81,"p90":6.8,"p90_lo":2.4,"p90_hi":11.6,"wait_x":1.9},{"busy":67,"on_time":80,"p90":7,"p90_lo":2.4,"p90_hi":12.2,"wait_x":2},{"busy":68,"on_time":80,"p90":7.3,"p90_lo":2.6,"p90_hi":12.6,"wait_x":2.1},{"busy":69,"on_time":79,"p90":7.7,"p90_lo":3.1,"p90_hi":13.2,"wait_x":2.2},{"busy":70,"on_time":79,"p90":8.1,"p90_lo":3.3,"p90_hi":13.6,"wait_x":2.3},{"busy":71,"on_time":78,"p90":8.3,"p90_lo":3.3,"p90_hi":14.2,"wait_x":2.4},{"busy":72,"on_time":77,"p90":8.3,"p90_lo":3.6,"p90_hi":14.9,"wait_x":2.6},{"busy":73,"on_time":76,"p90":9,"p90_lo":4.2,"p90_hi":15.7,"wait_x":2.7},{"busy":74,"on_time":75,"p90":9.4,"p90_lo":4.4,"p90_hi":16.2,"wait_x":2.8},{"busy":75,"on_time":74,"p90":9.7,"p90_lo":4.9,"p90_hi":17.1,"wait_x":3},{"busy":76,"on_time":74,"p90":9.9,"p90_lo":4.9,"p90_hi":18.1,"wait_x":3.2},{"busy":77,"on_time":73,"p90":10.4,"p90_lo":5.1,"p90_hi":18.5,"wait_x":3.3},{"busy":78,"on_time":71,"p90":10.8,"p90_lo":5.3,"p90_hi":20.6,"wait_x":3.5},{"busy":79,"on_time":70,"p90":11.1,"p90_lo":5.5,"p90_hi":23.3,"wait_x":3.8},{"busy":80,"on_time":68,"p90":12,"p90_lo":5.9,"p90_hi":26.1,"wait_x":4},{"busy":81,"on_time":66,"p90":12.2,"p90_lo":6.4,"p90_hi":30.6,"wait_x":4.3},{"busy":82,"on_time":64,"p90":13,"p90_lo":6.6,"p90_hi":35.2,"wait_x":4.6},{"busy":83,"on_time":62,"p90":13.8,"p90_lo":7.1,"p90_hi":37.5,"wait_x":4.9},{"busy":84,"on_time":58,"p90":14.8,"p90_lo":7.3,"p90_hi":41,"wait_x":5.2},{"busy":85,"on_time":55,"p90":15.9,"p90_lo":7.7,"p90_hi":46.7,"wait_x":5.7},{"busy":86,"on_time":53,"p90":17,"p90_lo":7.9,"p90_hi":51.8,"wait_x":6.1},{"busy":87,"on_time":50,"p90":18.2,"p90_lo":8.1,"p90_hi":57.3,"wait_x":6.7},{"busy":88,"on_time":46,"p90":20.1,"p90_lo":9.4,"p90_hi":63.1,"wait_x":7.3},{"busy":89,"on_time":40,"p90":22.2,"p90_lo":9.3,"p90_hi":68.5,"wait_x":8.1},{"busy":90,"on_time":35,"p90":24.3,"p90_lo":10.6,"p90_hi":76.4,"wait_x":9},{"busy":91,"on_time":32,"p90":27.1,"p90_lo":11.5,"p90_hi":82.1,"wait_x":10.1},{"busy":92,"on_time":27,"p90":29.8,"p90_lo":12.4,"p90_hi":88.7,"wait_x":11.5},{"busy":93,"on_time":23,"p90":34.3,"p90_lo":12.9,"p90_hi":97.7,"wait_x":13.3},{"busy":94,"on_time":18,"p90":37.1,"p90_lo":13.6,"p90_hi":109.1,"wait_x":15.7},{"busy":95,"on_time":13,"p90":41,"p90_lo":14.2,"p90_hi":118.2,"wait_x":19}],"months":[{"p90":28.5,"p50":-2.6,"on_time":66},{"p90":34.5,"p50":16,"on_time":0},{"p90":33.4,"p50":9.5,"on_time":12},{"p90":28.4,"p50":1.9,"on_time":43},{"p90":24.2,"p50":-2.4,"on_time":62},{"p90":22.3,"p50":-3.3,"on_time":71},{"p90":19.4,"p50":-3.2,"on_time":71},{"p90":18.1,"p50":-2.8,"on_time":69},{"p90":18.2,"p50":-1.9,"on_time":62},{"p90":22,"p50":-1,"on_time":56},{"p90":26.4,"p50":-0.5,"on_time":53},{"p90":27.5,"p50":-0.6,"on_time":52}],"typical":{"seed":166,"on_time":62,"p50":-2,"p90":12.3,"worst":25,"orders":[{"day":0,"late":-4.3},{"day":1,"late":-7.8},{"day":2,"late":-5},{"day":4,"late":-5},{"day":5,"late":-1.5},{"day":6,"late":-2.2},{"day":7,"late":5.4},{"day":8,"late":-3.9},{"day":10,"late":-2.3},{"day":12,"late":-5},{"day":13,"late":-3.3},{"day":14,"late":-2.8},{"day":15,"late":-2.5},{"day":16,"late":-6.3},{"day":17,"late":-3.3},{"day":18,"late":1.6},{"day":20,"late":-4.7},{"day":21,"late":2},{"day":23,"late":-4.3},{"day":24,"late":-6.2},{"day":26,"late":-3.3},{"day":27,"late":-5.1},{"day":28,"late":-6.9},{"day":29,"late":-7.6},{"day":30,"late":12.6},{"day":31,"late":16.1},{"day":33,"late":19.5},{"day":34,"late":17.3},{"day":35,"late":19.2},{"day":37,"late":16.2},{"day":38,"late":19.6},{"day":39,"late":21.4},{"day":42,"late":14.2},{"day":43,"late":18.1},{"day":44,"late":18.7},{"day":45,"late":16.3},{"day":46,"late":25},{"day":47,"late":18},{"day":48,"late":18.6},{"day":50,"late":17.7},{"day":52,"late":16.2},{"day":53,"late":14.6},{"day":54,"late":19.1},{"day":55,"late":19.9},{"day":56,"late":14.5},{"day":57,"late":15.6},{"day":59,"late":12.4},{"day":61,"late":14.8},{"day":62,"late":12.1},{"day":63,"late":14.1},{"day":64,"late":17.8},{"day":66,"late":19.7},{"day":67,"late":17},{"day":68,"late":10.8},{"day":69,"late":10.6},{"day":70,"late":12.3},{"day":71,"late":8.5},{"day":72,"late":9.4},{"day":74,"late":8.1},{"day":75,"late":6.2},{"day":77,"late":10.7},{"day":78,"late":9.3},{"day":79,"late":8.1},{"day":80,"late":5.8},{"day":81,"late":13.3},{"day":82,"late":8.4},{"day":83,"late":5.8},{"day":84,"late":6.9},{"day":85,"late":6.4},{"day":86,"late":5.7},{"day":87,"late":6.4},{"day":88,"late":5.4},{"day":90,"late":3.9},{"day":92,"late":2.4},{"day":93,"late":3.3},{"day":94,"late":4.5},{"day":95,"late":2.4},{"day":96,"late":3.2},{"day":97,"late":2.6},{"day":99,"late":1.7},{"day":101,"late":-1},{"day":104,"late":-2.8},{"day":105,"late":0.7},{"day":106,"late":-2.7},{"day":107,"late":0.6},{"day":108,"late":-3.5},{"day":110,"late":-3.7},{"day":111,"late":-3.1},{"day":112,"late":1.4},{"day":113,"late":6.9},{"day":114,"late":-2},{"day":115,"late":-1.9},{"day":116,"late":-0.9},{"day":117,"late":3.4},{"day":119,"late":0.1},{"day":120,"late":-1.2},{"day":122,"late":1.4},{"day":124,"late":-1.3},{"day":125,"late":-2.3},{"day":126,"late":-3.9},{"day":127,"late":1.7},{"day":128,"late":0.3},{"day":129,"late":-3.8},{"day":130,"late":-2.3},{"day":131,"late":-3.1},{"day":133,"late":-4.6},{"day":134,"late":1.1},{"day":135,"late":-1.8},{"day":137,"late":-4.1},{"day":138,"late":-2.8},{"day":142,"late":-3.4},{"day":143,"late":-0.5},{"day":144,"late":-3.8},{"day":145,"late":-4.5},{"day":146,"late":-6.1},{"day":147,"late":-2},{"day":148,"late":-7.2},{"day":150,"late":-4.9},{"day":151,"late":-6.7},{"day":153,"late":-4.1},{"day":154,"late":-5.6},{"day":155,"late":-1.3},{"day":158,"late":-5.5},{"day":161,"late":-4.7},{"day":162,"late":-5.6},{"day":163,"late":-7.4},{"day":164,"late":-6.3},{"day":165,"late":-4.8},{"day":166,"late":-4.2},{"day":167,"late":-1.8},{"day":168,"late":-4.2},{"day":170,"late":-0.9},{"day":171,"late":-3.1},{"day":172,"late":3.8},{"day":173,"late":-4.2},{"day":174,"late":1.6},{"day":175,"late":1.1},{"day":176,"late":0.3},{"day":178,"late":-3},{"day":179,"late":-0.1},{"day":180,"late":-1.7},{"day":184,"late":-2.9},{"day":186,"late":-5.6},{"day":187,"late":-3.8},{"day":188,"late":-4.1},{"day":189,"late":-4},{"day":191,"late":-6.7},{"day":192,"late":0.3},{"day":193,"late":-3.8},{"day":194,"late":-2.3},{"day":195,"late":-1.5},{"day":197,"late":-2.3},{"day":198,"late":-1.6},{"day":199,"late":-3.4},{"day":200,"late":2.5},{"day":201,"late":-3.4},{"day":203,"late":-4.1},{"day":204,"late":-3.1},{"day":206,"late":-1.3},{"day":207,"late":-3},{"day":208,"late":-2.3},{"day":209,"late":-5.5},{"day":210,"late":-4.4},{"day":211,"late":-1.7},{"day":212,"late":-1.6},{"day":213,"late":-3.8},{"day":214,"late":-4.7},{"day":216,"late":-2},{"day":217,"late":-2},{"day":218,"late":-2.2},{"day":219,"late":-3.4},{"day":220,"late":-4.5},{"day":221,"late":-4},{"day":222,"late":-3.9},{"day":223,"late":-0.1},{"day":224,"late":-3.4},{"day":225,"late":-3.5},{"day":226,"late":-0.8},{"day":227,"late":3.8},{"day":228,"late":-0.8},{"day":229,"late":-1.9},{"day":231,"late":-2.4},{"day":232,"late":5.8},{"day":235,"late":-3.6},{"day":236,"late":-5},{"day":237,"late":-2.7},{"day":238,"late":-3.5},{"day":239,"late":0.8},{"day":240,"late":-2.8},{"day":242,"late":-3.8},{"day":244,"late":-1.8},{"day":245,"late":-4},{"day":246,"late":-2.2},{"day":247,"late":-2},{"day":248,"late":-3.6},{"day":249,"late":-1.6},{"day":250,"late":1.4},{"day":251,"late":0.1},{"day":252,"late":-2.9},{"day":253,"late":2.3},{"day":254,"late":0.5},{"day":255,"late":5},{"day":256,"late":-1.5},{"day":257,"late":1.1},{"day":258,"late":-0.4},{"day":259,"late":-0.1},{"day":260,"late":0.3},{"day":261,"late":0.6},{"day":262,"late":3.5},{"day":263,"late":1.3},{"day":264,"late":3.4},{"day":266,"late":2.5},{"day":267,"late":1.4},{"day":268,"late":0.7},{"day":269,"late":3.2},{"day":270,"late":10.3},{"day":271,"late":4.7},{"day":272,"late":1.8},{"day":273,"late":2.1},{"day":274,"late":5.2},{"day":275,"late":2.2},{"day":276,"late":1.2},{"day":277,"late":3.3},{"day":278,"late":1.4},{"day":279,"late":5.5},{"day":281,"late":1.9},{"day":283,"late":-0.1},{"day":284,"late":2},{"day":285,"late":0.1},{"day":286,"late":0.8},{"day":289,"late":-2.7},{"day":290,"late":-2.1},{"day":291,"late":-1.6},{"day":292,"late":-3.1},{"day":293,"late":-2.2},{"day":295,"late":1},{"day":296,"late":-2.6},{"day":297,"late":-1.1},{"day":298,"late":-4.3},{"day":300,"late":-7.3},{"day":301,"late":-4.7},{"day":302,"late":-6.7},{"day":303,"late":-7.1},{"day":304,"late":-5.5},{"day":305,"late":-4.7},{"day":306,"late":-0.5},{"day":307,"late":-1.1},{"day":308,"late":-6.3},{"day":309,"late":-6.9},{"day":310,"late":-4},{"day":311,"late":-5.1},{"day":312,"late":-2.3},{"day":313,"late":-5.7},{"day":315,"late":8.2},{"day":316,"late":-5.3},{"day":317,"late":-5.6},{"day":318,"late":-5.1},{"day":319,"late":-3.3},{"day":321,"late":-5.8},{"day":322,"late":-2},{"day":323,"late":-7.4},{"day":324,"late":-4.7},{"day":326,"late":-5.5},{"day":327,"late":-4.5},{"day":330,"late":-5.5},{"day":331,"late":-6.7},{"day":332,"late":-7.7},{"day":333,"late":-6.7},{"day":334,"late":-2.9},{"day":336,"late":-5.4},{"day":337,"late":-7.1},{"day":338,"late":-5.2},{"day":339,"late":-0.8},{"day":340,"late":-4.6},{"day":341,"late":-4.6},{"day":342,"late":-7.2},{"day":344,"late":-4.8},{"day":347,"late":-5},{"day":348,"late":-6.5},{"day":349,"late":-5.2},{"day":350,"late":-2.6},{"day":351,"late":-2},{"day":352,"late":-4.3},{"day":353,"late":0.3},{"day":354,"late":1.6},{"day":355,"late":6},{"day":356,"late":-2.2},{"day":357,"late":-3.1},{"day":360,"late":-4},{"day":361,"late":-5.6},{"day":362,"late":-3.3},{"day":363,"late":-3.7},{"day":364,"late":-1}]},"start":{"cushion":0,"busy":85,"cost":{"sales":50000,"margin":55,"late":14,"carry":25},"reorder":{"daily":40,"onHand":4000,"promised":30,"late":12,"transit":35}}}</script><!-- /build:ls-data -->
+<!-- build:ls-data --><script type="application/json" id="ls-data">{"loads":[{"busy":50,"on_time":86,"p90":2.8,"p90_lo":0.4,"p90_hi":6.1,"wait_x":1},{"busy":51,"on_time":86,"p90":2.9,"p90_lo":0.4,"p90_hi":6.1,"wait_x":1},{"busy":52,"on_time":86,"p90":3,"p90_lo":0.5,"p90_hi":6.8,"wait_x":1.1},{"busy":53,"on_time":85,"p90":3.1,"p90_lo":0.7,"p90_hi":7.1,"wait_x":1.1},{"busy":54,"on_time":85,"p90":3.4,"p90_lo":0.7,"p90_hi":7.1,"wait_x":1.2},{"busy":55,"on_time":85,"p90":3.6,"p90_lo":0.9,"p90_hi":7.6,"wait_x":1.2},{"busy":56,"on_time":85,"p90":3.8,"p90_lo":1.1,"p90_hi":8.1,"wait_x":1.3},{"busy":57,"on_time":84,"p90":4.2,"p90_lo":1.1,"p90_hi":8.3,"wait_x":1.3},{"busy":58,"on_time":84,"p90":4.4,"p90_lo":1.3,"p90_hi":8.6,"wait_x":1.4},{"busy":59,"on_time":84,"p90":4.6,"p90_lo":1.2,"p90_hi":9,"wait_x":1.4},{"busy":60,"on_time":83,"p90":4.8,"p90_lo":1.5,"p90_hi":9.7,"wait_x":1.5},{"busy":61,"on_time":83,"p90":5.2,"p90_lo":1.8,"p90_hi":10.1,"wait_x":1.6},{"busy":62,"on_time":83,"p90":5.4,"p90_lo":1.9,"p90_hi":10.4,"wait_x":1.6},{"busy":63,"on_time":82,"p90":5.6,"p90_lo":2.1,"p90_hi":10.7,"wait_x":1.7},{"busy":64,"on_time":82,"p90":6,"p90_lo":2.2,"p90_hi":11.2,"wait_x":1.8},{"busy":65,"on_time":81,"p90":6.4,"p90_lo":2,"p90_hi":11.6,"wait_x":1.9},{"busy":66,"on_time":81,"p90":6.8,"p90_lo":2.4,"p90_hi":11.6,"wait_x":1.9},{"busy":67,"on_time":80,"p90":7,"p90_lo":2.4,"p90_hi":12.2,"wait_x":2},{"busy":68,"on_time":80,"p90":7.3,"p90_lo":2.6,"p90_hi":12.6,"wait_x":2.1},{"busy":69,"on_time":79,"p90":7.7,"p90_lo":3.1,"p90_hi":13.2,"wait_x":2.2},{"busy":70,"on_time":79,"p90":8.1,"p90_lo":3.3,"p90_hi":13.6,"wait_x":2.3},{"busy":71,"on_time":78,"p90":8.3,"p90_lo":3.3,"p90_hi":14.2,"wait_x":2.4},{"busy":72,"on_time":77,"p90":8.3,"p90_lo":3.6,"p90_hi":14.9,"wait_x":2.6},{"busy":73,"on_time":76,"p90":9,"p90_lo":4.2,"p90_hi":15.7,"wait_x":2.7},{"busy":74,"on_time":75,"p90":9.4,"p90_lo":4.4,"p90_hi":16.2,"wait_x":2.8},{"busy":75,"on_time":74,"p90":9.7,"p90_lo":4.9,"p90_hi":17.1,"wait_x":3},{"busy":76,"on_time":74,"p90":9.9,"p90_lo":4.9,"p90_hi":18.1,"wait_x":3.2},{"busy":77,"on_time":73,"p90":10.4,"p90_lo":5.1,"p90_hi":18.5,"wait_x":3.3},{"busy":78,"on_time":71,"p90":10.8,"p90_lo":5.3,"p90_hi":20.6,"wait_x":3.5},{"busy":79,"on_time":70,"p90":11.1,"p90_lo":5.5,"p90_hi":23.3,"wait_x":3.8},{"busy":80,"on_time":68,"p90":12,"p90_lo":5.9,"p90_hi":26.1,"wait_x":4},{"busy":81,"on_time":66,"p90":12.2,"p90_lo":6.4,"p90_hi":30.6,"wait_x":4.3},{"busy":82,"on_time":64,"p90":13,"p90_lo":6.6,"p90_hi":35.2,"wait_x":4.6},{"busy":83,"on_time":62,"p90":13.8,"p90_lo":7.1,"p90_hi":37.5,"wait_x":4.9},{"busy":84,"on_time":58,"p90":14.8,"p90_lo":7.3,"p90_hi":41,"wait_x":5.2},{"busy":85,"on_time":55,"p90":15.9,"p90_lo":7.7,"p90_hi":46.7,"wait_x":5.7},{"busy":86,"on_time":53,"p90":17,"p90_lo":7.9,"p90_hi":51.8,"wait_x":6.1},{"busy":87,"on_time":50,"p90":18.2,"p90_lo":8.1,"p90_hi":57.3,"wait_x":6.7},{"busy":88,"on_time":46,"p90":20.1,"p90_lo":9.4,"p90_hi":63.1,"wait_x":7.3},{"busy":89,"on_time":40,"p90":22.2,"p90_lo":9.3,"p90_hi":68.5,"wait_x":8.1},{"busy":90,"on_time":35,"p90":24.3,"p90_lo":10.6,"p90_hi":76.4,"wait_x":9},{"busy":91,"on_time":32,"p90":27.1,"p90_lo":11.5,"p90_hi":82.1,"wait_x":10.1},{"busy":92,"on_time":27,"p90":29.8,"p90_lo":12.4,"p90_hi":88.7,"wait_x":11.5},{"busy":93,"on_time":23,"p90":34.3,"p90_lo":12.9,"p90_hi":97.7,"wait_x":13.3},{"busy":94,"on_time":18,"p90":37.1,"p90_lo":13.6,"p90_hi":109.1,"wait_x":15.7},{"busy":95,"on_time":13,"p90":41,"p90_lo":14.2,"p90_hi":118.2,"wait_x":19}],"months":[{"p90":28.5,"p50":-2.6,"on_time":66},{"p90":34.5,"p50":16,"on_time":0},{"p90":33.4,"p50":9.5,"on_time":12},{"p90":28.4,"p50":1.9,"on_time":43},{"p90":24.2,"p50":-2.4,"on_time":62},{"p90":22.3,"p50":-3.3,"on_time":71},{"p90":19.4,"p50":-3.2,"on_time":71},{"p90":18.1,"p50":-2.8,"on_time":69},{"p90":18.2,"p50":-1.9,"on_time":62},{"p90":22,"p50":-1,"on_time":56},{"p90":26.4,"p50":-0.5,"on_time":53},{"p90":27.5,"p50":-0.6,"on_time":52}],"typical":{"seed":166,"on_time":62,"p50":-2,"p90":12.3,"worst":25,"orders":[{"day":0,"late":-4.3},{"day":1,"late":-7.8},{"day":2,"late":-5},{"day":4,"late":-5},{"day":5,"late":-1.5},{"day":6,"late":-2.2},{"day":7,"late":5.4},{"day":8,"late":-3.9},{"day":10,"late":-2.3},{"day":12,"late":-5},{"day":13,"late":-3.3},{"day":14,"late":-2.8},{"day":15,"late":-2.5},{"day":16,"late":-6.3},{"day":17,"late":-3.3},{"day":18,"late":1.6},{"day":20,"late":-4.7},{"day":21,"late":2},{"day":23,"late":-4.3},{"day":24,"late":-6.2},{"day":26,"late":-3.3},{"day":27,"late":-5.1},{"day":28,"late":-6.9},{"day":29,"late":-7.6},{"day":30,"late":12.6},{"day":31,"late":16.1},{"day":33,"late":19.5},{"day":34,"late":17.3},{"day":35,"late":19.2},{"day":37,"late":16.2},{"day":38,"late":19.6},{"day":39,"late":21.4},{"day":42,"late":14.2},{"day":43,"late":18.1},{"day":44,"late":18.7},{"day":45,"late":16.3},{"day":46,"late":25},{"day":47,"late":18},{"day":48,"late":18.6},{"day":50,"late":17.7},{"day":52,"late":16.2},{"day":53,"late":14.6},{"day":54,"late":19.1},{"day":55,"late":19.9},{"day":56,"late":14.5},{"day":57,"late":15.6},{"day":59,"late":12.4},{"day":61,"late":14.8},{"day":62,"late":12.1},{"day":63,"late":14.1},{"day":64,"late":17.8},{"day":66,"late":19.7},{"day":67,"late":17},{"day":68,"late":10.8},{"day":69,"late":10.6},{"day":70,"late":12.3},{"day":71,"late":8.5},{"day":72,"late":9.4},{"day":74,"late":8.1},{"day":75,"late":6.2},{"day":77,"late":10.7},{"day":78,"late":9.3},{"day":79,"late":8.1},{"day":80,"late":5.8},{"day":81,"late":13.3},{"day":82,"late":8.4},{"day":83,"late":5.8},{"day":84,"late":6.9},{"day":85,"late":6.4},{"day":86,"late":5.7},{"day":87,"late":6.4},{"day":88,"late":5.4},{"day":90,"late":3.9},{"day":92,"late":2.4},{"day":93,"late":3.3},{"day":94,"late":4.5},{"day":95,"late":2.4},{"day":96,"late":3.2},{"day":97,"late":2.6},{"day":99,"late":1.7},{"day":101,"late":-1},{"day":104,"late":-2.8},{"day":105,"late":0.7},{"day":106,"late":-2.7},{"day":107,"late":0.6},{"day":108,"late":-3.5},{"day":110,"late":-3.7},{"day":111,"late":-3.1},{"day":112,"late":1.4},{"day":113,"late":6.9},{"day":114,"late":-2},{"day":115,"late":-1.9},{"day":116,"late":-0.9},{"day":117,"late":3.4},{"day":119,"late":0.1},{"day":120,"late":-1.2},{"day":122,"late":1.4},{"day":124,"late":-1.3},{"day":125,"late":-2.3},{"day":126,"late":-3.9},{"day":127,"late":1.7},{"day":128,"late":0.3},{"day":129,"late":-3.8},{"day":130,"late":-2.3},{"day":131,"late":-3.1},{"day":133,"late":-4.6},{"day":134,"late":1.1},{"day":135,"late":-1.8},{"day":137,"late":-4.1},{"day":138,"late":-2.8},{"day":142,"late":-3.4},{"day":143,"late":-0.5},{"day":144,"late":-3.8},{"day":145,"late":-4.5},{"day":146,"late":-6.1},{"day":147,"late":-2},{"day":148,"late":-7.2},{"day":150,"late":-4.9},{"day":151,"late":-6.7},{"day":153,"late":-4.1},{"day":154,"late":-5.6},{"day":155,"late":-1.3},{"day":158,"late":-5.5},{"day":161,"late":-4.7},{"day":162,"late":-5.6},{"day":163,"late":-7.4},{"day":164,"late":-6.3},{"day":165,"late":-4.8},{"day":166,"late":-4.2},{"day":167,"late":-1.8},{"day":168,"late":-4.2},{"day":170,"late":-0.9},{"day":171,"late":-3.1},{"day":172,"late":3.8},{"day":173,"late":-4.2},{"day":174,"late":1.6},{"day":175,"late":1.1},{"day":176,"late":0.3},{"day":178,"late":-3},{"day":179,"late":-0.1},{"day":180,"late":-1.7},{"day":184,"late":-2.9},{"day":186,"late":-5.6},{"day":187,"late":-3.8},{"day":188,"late":-4.1},{"day":189,"late":-4},{"day":191,"late":-6.7},{"day":192,"late":0.3},{"day":193,"late":-3.8},{"day":194,"late":-2.3},{"day":195,"late":-1.5},{"day":197,"late":-2.3},{"day":198,"late":-1.6},{"day":199,"late":-3.4},{"day":200,"late":2.5},{"day":201,"late":-3.4},{"day":203,"late":-4.1},{"day":204,"late":-3.1},{"day":206,"late":-1.3},{"day":207,"late":-3},{"day":208,"late":-2.3},{"day":209,"late":-5.5},{"day":210,"late":-4.4},{"day":211,"late":-1.7},{"day":212,"late":-1.6},{"day":213,"late":-3.8},{"day":214,"late":-4.7},{"day":216,"late":-2},{"day":217,"late":-2},{"day":218,"late":-2.2},{"day":219,"late":-3.4},{"day":220,"late":-4.5},{"day":221,"late":-4},{"day":222,"late":-3.9},{"day":223,"late":-0.1},{"day":224,"late":-3.4},{"day":225,"late":-3.5},{"day":226,"late":-0.8},{"day":227,"late":3.8},{"day":228,"late":-0.8},{"day":229,"late":-1.9},{"day":231,"late":-2.4},{"day":232,"late":5.8},{"day":235,"late":-3.6},{"day":236,"late":-5},{"day":237,"late":-2.7},{"day":238,"late":-3.5},{"day":239,"late":0.8},{"day":240,"late":-2.8},{"day":242,"late":-3.8},{"day":244,"late":-1.8},{"day":245,"late":-4},{"day":246,"late":-2.2},{"day":247,"late":-2},{"day":248,"late":-3.6},{"day":249,"late":-1.6},{"day":250,"late":1.4},{"day":251,"late":0.1},{"day":252,"late":-2.9},{"day":253,"late":2.3},{"day":254,"late":0.5},{"day":255,"late":5},{"day":256,"late":-1.5},{"day":257,"late":1.1},{"day":258,"late":-0.4},{"day":259,"late":-0.1},{"day":260,"late":0.3},{"day":261,"late":0.6},{"day":262,"late":3.5},{"day":263,"late":1.3},{"day":264,"late":3.4},{"day":266,"late":2.5},{"day":267,"late":1.4},{"day":268,"late":0.7},{"day":269,"late":3.2},{"day":270,"late":10.3},{"day":271,"late":4.7},{"day":272,"late":1.8},{"day":273,"late":2.1},{"day":274,"late":5.2},{"day":275,"late":2.2},{"day":276,"late":1.2},{"day":277,"late":3.3},{"day":278,"late":1.4},{"day":279,"late":5.5},{"day":281,"late":1.9},{"day":283,"late":-0.1},{"day":284,"late":2},{"day":285,"late":0.1},{"day":286,"late":0.8},{"day":289,"late":-2.7},{"day":290,"late":-2.1},{"day":291,"late":-1.6},{"day":292,"late":-3.1},{"day":293,"late":-2.2},{"day":295,"late":1},{"day":296,"late":-2.6},{"day":297,"late":-1.1},{"day":298,"late":-4.3},{"day":300,"late":-7.3},{"day":301,"late":-4.7},{"day":302,"late":-6.7},{"day":303,"late":-7.1},{"day":304,"late":-5.5},{"day":305,"late":-4.7},{"day":306,"late":-0.5},{"day":307,"late":-1.1},{"day":308,"late":-6.3},{"day":309,"late":-6.9},{"day":310,"late":-4},{"day":311,"late":-5.1},{"day":312,"late":-2.3},{"day":313,"late":-5.7},{"day":315,"late":8.2},{"day":316,"late":-5.3},{"day":317,"late":-5.6},{"day":318,"late":-5.1},{"day":319,"late":-3.3},{"day":321,"late":-5.8},{"day":322,"late":-2},{"day":323,"late":-7.4},{"day":324,"late":-4.7},{"day":326,"late":-5.5},{"day":327,"late":-4.5},{"day":330,"late":-5.5},{"day":331,"late":-6.7},{"day":332,"late":-7.7},{"day":333,"late":-6.7},{"day":334,"late":-2.9},{"day":336,"late":-5.4},{"day":337,"late":-7.1},{"day":338,"late":-5.2},{"day":339,"late":-0.8},{"day":340,"late":-4.6},{"day":341,"late":-4.6},{"day":342,"late":-7.2},{"day":344,"late":-4.8},{"day":347,"late":-5},{"day":348,"late":-6.5},{"day":349,"late":-5.2},{"day":350,"late":-2.6},{"day":351,"late":-2},{"day":352,"late":-4.3},{"day":353,"late":0.3},{"day":354,"late":1.6},{"day":355,"late":6},{"day":356,"late":-2.2},{"day":357,"late":-3.1},{"day":360,"late":-4},{"day":361,"late":-5.6},{"day":362,"late":-3.3},{"day":363,"late":-3.7},{"day":364,"late":-1}]},"start":{"cushion":0,"busy":85,"cost":{"sales":50000,"margin":55,"late":14,"carry":25},"curve":{"sales":50000,"margin":55,"late":12,"carry":25,"orders":6},"reorder":{"daily":40,"onHand":4000,"promised":30,"late":12,"transit":35}}}</script><!-- /build:ls-data -->
 
 <!-- build:foot -->
 <footer class="site-foot night">

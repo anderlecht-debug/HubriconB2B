@@ -171,14 +171,14 @@ export function figures(rc, mc, cs) {
  * The still frames are drawn by the same functions the page's script redraws them with
  * (assets/learn-late-supplier.mjs), at the values the page's controls open on.
  */
-export const LS_START = { cushion: 0, busy: 85, cost: { sales: 50000, margin: 55, late: 14, carry: 25 }, reorder: { daily: 40, onHand: 4000, promised: 30, late: 12, transit: 35 } };
+export const LS_START = { cushion: 0, busy: 85, cost: { sales: 50000, margin: 55, late: 14, carry: 25 }, curve: { sales: 50000, margin: 55, late: 12, carry: 25, orders: 6 }, reorder: { daily: 40, onHand: 4000, promised: 30, late: 12, transit: 35 } };
 function lateSupplierFigures(d) {
   const at = (b) => d.loads.find((l) => l.busy === b);
   const half = at(50), ninety = at(90), busy = at(LS_START.busy);
   if (!half || !ninety || !busy) throw new Error("late-supplier: rerun scripts/learn/late_supplier.mjs");
   const worst = d.months.reduce((b, m, i) => (m.p90 > d.months[b].p90 ? i : b), 0);
   const best = d.months.reduce((b, m, i) => (m.p90 < d.months[b].p90 ? i : b), 0);
-  const c = lsFig.cost(LS_START.cost), r = lsFig.reorder(LS_START.reorder);
+  const c = lsFig.cost(LS_START.cost), r = lsFig.reorder(LS_START.reorder), cv = lsFig.coverCurve(d, LS_START.curve);
   const out = (o) => Math.round(o * 10);   // "6 in 10"
   return {
     blocks: {
@@ -186,6 +186,8 @@ function lateSupplierFigures(d) {
       "ls-fig-busy": lsFig.figBusy(d, LS_START.busy),
       "ls-fig-calendar": lsFig.figCalendar(d, worst),
       "ls-fig-cost": lsFig.figCost(LS_START.cost),
+      "ls-fig-curve": lsFig.figCurve(d, LS_START.curve, 0),
+      "ls-fig-line": lsFig.figLine(lsFig.lineSim(46).run(150, LS_START.busy / 100), LS_START.busy),
       "ls-fig-reorder": lsFig.figReorder(LS_START.reorder),
       "ls-data": `<script type="application/json" id="ls-data">${JSON.stringify({ loads: d.loads, months: d.months, typical: d.typical, start: LS_START })}</script>`,
     },
@@ -214,6 +216,9 @@ function lateSupplierFigures(d) {
       ls_cost_carrying: lsFig.usd(c.carrying),
       ls_cost_cash: lsFig.usd(c.cash),
       ls_cost_ratio: `${Math.round(c.ratio)}`,
+      ls_cv_out: lsFig.usd(cv.pts[0].total),
+      ls_cv_best: lsFig.days(cv.best.c),
+      ls_cv_best_d: `the cover that costs least: ${lsFig.usd(cv.best.total)} a year`,
       ls_ro_point: Math.round(r.point).toLocaleString("en-US"),
       ls_ro_real: String(Math.round(r.onReal)),
       ls_ro_promise: String(Math.round(r.onPromise)),

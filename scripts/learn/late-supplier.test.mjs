@@ -41,16 +41,34 @@ test("lesson 5 reads pasted rows with a header in any order, and skips what it c
   assert.equal(s[0].onTime, 0.5);
 });
 
+test("lesson 4: the cover curve bottoms out between no cover and the most cover, on the reader's numbers", () => {
+  const c = F.coverCurve(data, { sales: 50000, margin: 55, late: 12, carry: 25, orders: 6 });
+  const tot = (p) => p.stockout + p.hold;
+  assert.ok(c.best.c > 0 && c.best.c < c.maxC, "the cheapest cover is neither none nor all");
+  assert.ok(tot(c.best) < tot(c.pts[0]) && tot(c.best) < tot(c.pts[c.maxC]));
+  assert.equal(c.pts[0].hold, 0);
+  const thin = F.coverCurve(data, { sales: 50000, margin: 20, late: 12, carry: 25, orders: 6 });
+  assert.ok(thin.best.c <= c.best.c, "a thinner margin never asks for more cover");
+});
+
+test("lesson 2: the line is a seeded simulation, so the page and the browser start on the same line", () => {
+  const a = F.lineSim(46).run(150, 0.85), b = F.lineSim(46).run(150, 0.85);
+  assert.equal(a.queue.length, b.queue.length);
+  assert.ok(a.queue.length > 0, "at 85% busy the starting frame shows a line");
+  const calm = F.lineSim(46).run(150, 0.5);
+  assert.ok(calm.queue.length < a.queue.length, "a half-booked supplier has a shorter line");
+});
+
 test("every simulated figure on the page is labelled as one, and its numbers come from the data file", () => {
   const figs = [...page.matchAll(/<figure class="ls-fig[^"]*" data-fig="([a-z]+)"[\s\S]*?<\/figure>/g)];
-  assert.equal(figs.length, 6);
+  assert.equal(figs.length, 7);
   for (const [f, name] of figs) {
-    if (["promise", "busy", "calendar"].includes(name)) assert.match(f, /Simulated · Not a client · Not a result/, `${name} is simulated and says so`);
+    if (["promise", "line", "busy", "calendar"].includes(name)) assert.match(f, /Simulated · Not a client · Not a result/, `${name} is simulated and says so`);
     else if (name !== "measure") assert.match(f, /Arithmetic/, `${name} is arithmetic on the reader's numbers and says so`);
   }
   assert.ok(page.includes(`>${data.typical.on_time}%</span>`), "lesson 1's on-time share is the data's");
   assert.ok(page.includes(data.about) === false && data.about.includes("Not a client"));
-  assert.match(page, /none is published yet/, "the pooling result is a simulation, and the page says no real one is out");
+  assert.match(page, /That.s a simulation; none from real orders is published yet/, "the pooling result is a simulation, and the page says no real one is out");
 });
 
 test("the worksheet the page links to exists", () => {
