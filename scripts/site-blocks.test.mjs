@@ -50,7 +50,7 @@ test("each live course's lessons are its page's lessons, each with its video slo
   const seen = new Set();
   for (const live of lib.courses.filter((c) => c.status === "live")) {
     const course = read(`${live.path.slice(1)}.html`);
-    const ids = [...course.matchAll(/<article class="lesson" id="([^"]+)"/g)].map(([, id]) => id);
+    const ids = [...course.matchAll(/<article class="(?:lesson|ls-lesson)" id="([^"]+)"/g)].map(([, id]) => id);
     assert.deepEqual(live.lessons.map((l) => l.id), ids, live.slug);
     for (const id of ids) {
       assert.match(course, new RegExp(`<!-- build:video-${id} -->`), `${live.slug}/${id}: a slot for its video`);

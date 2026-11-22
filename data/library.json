@@ -30,6 +30,71 @@
   },
   "courses": [
     {
+      "slug": "late-supplier",
+      "status": "live",
+      "title": "The Late Supplier",
+      "path": "/learn/late-supplier",
+      "cover": "queue",
+      "audience": "For brands that outsource production",
+      "fees": false,
+      "summary": "Know when your stock will really be ready, and order on that date instead of the one your supplier promised.",
+      "detail": "Why a busy supplier runs late, the weeks of the year you can see coming, what a late order costs you, how to score your own supplier from three dates per order, and the reorder date that covers it.",
+      "extras": [
+        "1 worksheet",
+        "About 35 minutes"
+      ],
+      "template": "/learn/files/hubricon-late-supplier.xlsx",
+      "start": {
+        "text": "Lesson 5: score your own supplier from three dates per order",
+        "href": "/learn/late-supplier#measure"
+      },
+      "trailer": null,
+      "lessons": [
+        {
+          "id": "promise",
+          "title": "The date on your PO is a hope",
+          "minutes": 5,
+          "question": "How often is a supplier's promised date right?",
+          "video": null
+        },
+        {
+          "id": "busy",
+          "title": "Busy suppliers are late suppliers",
+          "minutes": 6,
+          "question": "Why does lateness come in waves?",
+          "video": null
+        },
+        {
+          "id": "calendar",
+          "title": "The weeks you can see coming",
+          "minutes": 5,
+          "question": "When in the year is an order most likely to slip?",
+          "video": null
+        },
+        {
+          "id": "cost",
+          "title": "What a late order costs you",
+          "minutes": 6,
+          "question": "Is a stockout or extra stock the bigger bill?",
+          "video": null
+        },
+        {
+          "id": "measure",
+          "title": "Score your own supplier",
+          "minutes": 7,
+          "question": "Which one number should you track per supplier?",
+          "video": null
+        },
+        {
+          "id": "reorder",
+          "title": "Order on the real date",
+          "minutes": 6,
+          "question": "How early should your next PO go out?",
+          "video": null
+        }
+      ]
+    },
+    {
       "slug": "fee-staircase",
       "status": "live",
       "title": "The Fee Staircase",

@@ -181,6 +181,13 @@ function cover(kind, id) {
       <circle class="cv-hollow fade" style="--after:1100ms" cx="146" cy="126" r="5"/>
       <circle class="cv-dot fade" style="--after:1100ms" cx="168" cy="64" r="5"/>
       <path class="cv-guide" d="M156 160 V132"/>`,
+    // The Late Supplier: waiting in line against how busy the supplier is; flat, then the climb in blue
+    queue: () => `
+      <path class="cv-grid" d="M20 160 H300"/>
+      <path class="cv-guide" d="M206 160 V24"/>
+      ${draw("M20 152 C 120 150, 180 142, 206 122")}
+      ${draw("M206 122 C 238 98, 262 64, 286 20", "cv-leak", 900)}
+      <circle class="cv-bluedot fade" style="--after:1500ms" cx="286" cy="20" r="5"/>`,
     bars: () => `
       ${draw("M24 44 H296 V76 H24 Z", "cv-dim")}
       ${draw("M24 108 H196 V140 H24 Z", "cv-line", 300)}
@@ -257,7 +264,9 @@ export function joinForm(c, where = "card") {
           <button type="submit">Send it to me ${ARROW}</button>
         </div>
         <div class="hp" aria-hidden="true"><label for="${id}-website">Leave this empty</label><input id="${id}-website" name="website" tabindex="-1" autocomplete="off"></div>
-        <p class="join-fine">No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens. One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
+        <p class="join-fine">${c.fees === false
+          ? "No email is needed to read it. Leave one and we send the link and the worksheet, then a short note only when a new course opens."
+          : "No email is needed to read it. Leave one and we send the link and the spreadsheet, then a short note only when a fee card the courses use changes or a new course opens."} One click unsubscribes. <a href="/privacy#learn">How we handle your email</a>.</p>
         <p class="join-err" role="alert" hidden></p>
       </form>`;
 }
@@ -303,8 +312,10 @@ function optins(lib) {
     out[`optin-${c.slug}-cover`] = joinForm(c, "cover");
     out[`optin-${c.slug}-end`] = `
       <section class="keep" aria-labelledby="keep-${c.slug}-h">
-        <h3 id="keep-${c.slug}-h">Keep it current</h3>
-        <p>The fee cards these courses use change about once a year, and Amazon adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else.</p>${joinForm(c, "end")}
+        <h3 id="keep-${c.slug}-h">${c.fees === false ? "Hear when the next course opens" : "Keep it current"}</h3>
+        <p>${c.fees === false
+          ? "Leave an email and you get the link and the worksheet in your inbox, and one note when the next course opens. Nothing else."
+          : "The fee cards these courses use change about once a year, and Amazon adds a holiday card every autumn. Leave an email and you hear when that happens, and when the next course opens. Nothing else."}</p>${joinForm(c, "end")}
       </section>`;
   }
   return out;
@@ -343,6 +354,74 @@ function library(lib, { hub }) {
     <div class="${hub ? "lib-grid" : "rail"}">${planned.map((c) => plannedTile(c, { hub })).join("")}
     </div>
   </div>
+</div>
+`;
+}
+
+/* /learn, rebuilt 2026-11-22 (the founder: the education tabs "aren't engaging. It doesn't look like
+   anybody would ever even use it"). The featured course is a night panel with its whole lesson plan
+   on it, each lesson a question and its minutes, so a visitor sees what they'll learn and how long it
+   takes before they click; a returning reader sees where they left off (/assets/learn-hub.js, from
+   this browser's own storage, nothing sent). Then how a lesson works, the opt-in, and every other
+   course as a compact card. Every lesson is open; a planned course links nowhere and names no date. */
+const pad2 = (n) => String(n).padStart(2, "0");
+function libraryHub(lib) {
+  const live = lib.courses.filter((c) => c.status === "live");
+  const planned = lib.courses.filter((c) => c.status === "planned");
+  const [f, ...more] = live;
+  const mins = f.lessons.reduce((t, l) => t + (l.minutes || 0), 0);
+  const lessons = f.lessons.map((l, i) => `
+        <li><a href="${f.path}#${l.id}" data-lesson="${l.id}"><span class="hl-n">${pad2(i + 1)}</span><span class="hl-t">${esc(l.title)}<small>${esc(l.question || "")}</small></span><span class="hl-m">${l.minutes ? `${l.minutes} min` : ""}</span></a></li>`).join("");
+  const card = (c, i) => `
+    <a class="hub-card" href="${c.path}" data-play>
+      <span class="tile-cover night"><span class="cover-k">Course ${i + 2}</span>${cover(c.cover, `cv-hub-${c.slug}`)}</span>
+      <span class="hc-body">
+        <span class="hc-a">${esc([c.audience, `${lessonCount(c)} lessons`].filter(Boolean).join(" · "))}</span>
+        <span class="hc-t">${esc(c.title)}</span>
+        <span class="hc-s">${esc(c.summary)}</span>
+        <span class="hc-go">Open the course ${ARROW}</span>
+      </span>
+    </a>`;
+  const plan = (c) => `
+    <div class="hub-plan">
+      <span class="hp-k">Planned · ${lessonCount(c)} lessons</span>
+      <span class="hp-t">${esc(c.title)}</span>
+      <span class="hp-s">${esc(c.summary)}</span>
+      <details class="tile-more"><summary>What it will cover</summary><ol>${c.lessons.map((l) => `<li>${esc(l.title)}</li>`).join("")}</ol></details>
+    </div>`;
+  return `
+<div class="hub">
+  <article class="hub-feature night" data-play data-hub-course="${f.slug}" aria-labelledby="hf-${f.slug}">
+    <div class="hf-main">
+      <p class="hf-k"><span class="hf-new">New</span>Course 1${f.audience ? ` · ${esc(f.audience)}` : ""}</p>
+      <h2 class="hf-title" id="hf-${f.slug}"><a href="${f.path}">${esc(f.title)}</a></h2>
+      <p class="hf-sum">${esc(f.summary)}</p>
+      <ul class="hf-meta">
+        <li><b>${f.lessons.length}</b> lessons</li>${mins ? `<li><b>${mins}</b> minutes</li>` : ""}<li><b>1</b> worksheet</li><li><b>0</b> emails needed</li>
+      </ul>
+      <p class="hf-go"><a class="hf-start" href="${f.path}#${f.lessons[0].id}" data-resume>Start lesson 1, no email needed ${ARROW}</a><span class="hf-progress" data-progress hidden></span></p>
+    </div>
+    <div class="hf-art">${cover(f.cover, `cv-hub-${f.slug}`)}</div>
+    <ol class="hf-lessons" aria-label="The lessons">${lessons}
+    </ol>
+  </article>
+  <ol class="hub-how" aria-label="How every lesson works">
+    <li><span class="hh-n">1</span><b>Guess first.</b> Every lesson opens with one question. Commit to an answer, then see the real one.</li>
+    <li><span class="hh-n">2</span><b>Play with it.</b> Move a slider or type your own numbers. The figures redraw from a working supplier simulation.</li>
+    <li><span class="hh-n">3</span><b>Do it on yours.</b> Every lesson ends with one task on your own orders, most under ten minutes.</li>
+  </ol>
+  <div class="hub-join">${joinForm(f)}
+  </div>
+  <section class="hub-more" aria-labelledby="hub-more-h">
+    <div class="hub-more-head"><h2 id="hub-more-h">More from the library</h2><p>Complete courses on the money side of an online store: fees, prices, cash and margin. Every lesson open, each with its spreadsheet.</p></div>
+    <div class="hub-grid">${more.map(card).join("")}
+    </div>
+  </section>${planned.length ? `
+  <section class="hub-planned" aria-labelledby="hub-planned-h">
+    <h2 id="hub-planned-h" class="lib-k">Planned for the library <span>· free and open when each is complete</span></h2>
+    <div class="hub-plans">${planned.map(plan).join("")}
+    </div>
+  </section>` : ""}
 </div>
 `;
 }
@@ -446,7 +525,7 @@ export function siteBlocks() {
     nav: nav(lib),
     foot: foot(lib),
     "library-home": library(lib, { hub: false }),
-    "library-hub": library(lib, { hub: true }),
+    "library-hub": libraryHub(lib),
     "library-strip": libraryStrip(lib),
     "film-case": film(lib.films.case_study, "case_film"),
     "film-store": film(lib.films.store_study, "store_film"),

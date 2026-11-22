@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { SlidingWindow, clientIp } from "../lib/ratelimit.js";
 import { sendResend } from "../lib/tool_email.js";
-import { composeLearnEmail, parseSignup, unsubscribePage, unsubscribeUrl, TOKEN, PROMISE } from "../lib/learn.js";
+import { composeLearnEmail, parseSignup, unsubscribePage, unsubscribeUrl, TOKEN, promiseFor } from "../lib/learn.js";
 
 /**
  * /learn's two server-side jobs.
@@ -100,7 +100,7 @@ export async function POST(request) {
   if (sent.ok) await sb.from("learners").update({ email_sent_at: new Date().toISOString(), email_id: sent.id }).eq("id", fresh.id);
   await sb.from("funnel_events").insert({
     kind: "learn_registered",
-    payload: { course: s.course, source: s.source, learner: fresh.id, promise: PROMISE, emailed: sent.ok, ...(sent.ok ? {} : { email_error: String(sent.error).slice(0, 200) }) },
+    payload: { course: s.course, source: s.source, learner: fresh.id, promise: promiseFor(s.course), emailed: sent.ok, ...(sent.ok ? {} : { email_error: String(sent.error).slice(0, 200) }) },
   });
   return json({ ok: true, new: true, emailed: sent.ok });
 }
