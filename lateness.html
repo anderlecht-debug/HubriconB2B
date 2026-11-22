@@ -163,6 +163,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 
 @media (max-width: 960px) { .stage .sim-read, .built { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .stage-ctl { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) { #stage { height: 600px; } #queue-now { display: none; } #clock { font-size: var(--t-18); } .clock { top: var(--s-3); left: var(--s-4); } }
 
 /* 3b · what to expect */
 #expect h2 { max-width: 26ch; font-size: var(--t-display-s); }
@@ -192,6 +193,36 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 .calc-cap { margin-top: var(--s-4); font-size: var(--t-14); line-height: 1.6; color: var(--ink-3); }
 .calc-cap .label-box { margin-right: var(--s-2); }
 @media (max-width: 960px) { .calc { grid-template-columns: minmax(0, 1fr); } .calc-big { grid-template-columns: minmax(0, 1fr); } }
+
+/* 3c · your own report */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.mine { margin-top: var(--s-7); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-6); align-items: start; }
+.mine-in textarea { width: 100%; font: 13px/1.6 var(--font); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper-2); border: 1px solid var(--rule-2); border-radius: var(--radius); padding: var(--s-4); resize: vertical; }
+.mine-in textarea:focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.mine-ctl { margin-top: var(--s-3); display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
+.replay.file { position: relative; overflow: hidden; display: inline-block; }
+.replay.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.mine-out { border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--s-5); min-height: 240px; }
+.mine-empty { color: var(--ink-3); font-size: var(--t-16); }
+.mine-big { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+.mine-big > div { border-left: 2px solid var(--ink); padding: 2px 0 2px var(--s-3); }
+.mine-big dt { font-size: var(--t-24); font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.mine-big dd { font-size: var(--t-12); color: var(--ink-3); line-height: 1.4; margin-top: 2px; }
+.mine-big .leak { border-left-color: var(--blue); } .mine-big .leak dt { color: var(--blue); }
+.mine-table { margin-top: var(--s-5); display: grid; font-size: var(--t-14); }
+.mt-row { display: grid; grid-template-columns: minmax(0, 2.2fr) 0.7fr 0.8fr 2.4fr 2.4fr; gap: var(--s-3); align-items: center; padding: var(--s-2) 0; border-top: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.mt-head { font-size: var(--t-12); color: var(--ink-3); border-top: 0; }
+.mt-row .sup { color: var(--ink); font-weight: var(--strong); overflow-wrap: anywhere; }
+.mini { width: 100%; height: auto; }
+.mini .late { fill: var(--blue); } .mini .ok { fill: var(--ink-4); } .mini .prom { stroke: var(--ink); stroke-dasharray: 2 2; }
+.months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; }
+.months span { font-size: 9px; text-align: center; line-height: 18px; border-radius: 3px; color: var(--ink-3); background: color-mix(in srgb, var(--blue) calc(var(--a) * 100%), var(--paper-2)); }
+.months span.hot { color: #fff; }
+.months span.none { background: transparent; border: 1px dashed var(--rule-2); }
+.mine-go { margin-top: var(--s-5); display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); align-items: center; }
+.mine-go .btn[hidden] { display: none; }
+.mine-go .btn[hidden] + .cta-note { display: none; }
+@media (max-width: 960px) { .mine { grid-template-columns: minmax(0, 1fr); } .mine-big { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mt-row { grid-template-columns: 1.6fr 0.6fr 0.7fr 2fr; } .mt-row > :last-child { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -201,7 +232,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
     <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
     <div class="nav-end">
       <a class="nav-link" href="#why">How it works</a>
-      <a class="btn btn-nav" href="#report">Get your free report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-nav" href="#yours">Get your free report <span class="arrow" aria-hidden="true">→</span></a>
     </div>
   </div>
 </header>
@@ -218,7 +249,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
     <div>
       <p class="lede">A late order means stockouts, rushed air freight, and cash tied up in extra stock just in case. You can track a shipment once it leaves your supplier, but the weeks before that are a guess. Hubricon pools order dates from brands that use the same suppliers, so you can see the delay coming.</p>
       <div class="cta">
-        <a class="btn btn-lg" href="#report">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-lg" href="#yours">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
         <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
       </div>
       <p class="cta-note" style="margin-top:var(--s-3)">Free. Three dates per order, nothing else.</p>
@@ -244,7 +275,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
       <button class="replay" id="replay" type="button" aria-label="Replay the year">Replay <span aria-hidden="true">↻</span></button>
     </div>
     <div class="canvas-box">
-      <canvas id="stage" role="img" aria-label="Each line is one order, from the day it was placed to the day the supplier had it ready. The part past the promised date is blue. Below it, the backlog of orders waiting at the supplier, and a tally of how late every order was."></canvas>
+      <canvas id="stage" role="img" aria-label="Your order at the top, with the supplier's promised date and the forecast window. Each line below is one order, from the day it was placed to the day the supplier had it ready. The part past the promised date is blue. Below it, the backlog of orders waiting at the supplier, and a tally of how late every order was."></canvas>
       <p class="clock" aria-hidden="true"><span id="clock">1 Jan</span><span id="queue-now"></span></p>
     </div>
     <dl class="sim-read" aria-live="polite">
@@ -253,7 +284,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
       <div class="leak"><dt id="r-max">–</dt><dd>the latest order of the year</dd></div>
       <div class="leak"><dt id="r-mc">–</dt><dd>the same 1-in-10 figure for the typical supplier, out of 200 simulated this busy</dd></div>
     </dl>
-    <p class="stage-cap">Each thin line is one order, from the day it was placed to the day the supplier had it ready. It turns blue once it passes the date the supplier promised. Underneath is the backlog at the supplier: every brand's orders waiting ahead of a new one, in days of work. Each finished order drops into the tally on the right. In this model, the supplier promises 20 days, production itself takes 12, and the rest is waiting in line plus material and inspection delays. Suppliers all close for Lunar New Year at once, so even a quiet one runs late in February. This runs in your browser on Hubricon's supplier simulation, the same model behind Fig. 2 and Fig. 3. <a href="/assets/lateness-sim.mjs">Read its code</a>.</p>
+    <p class="stage-cap"><b>Click or tap anywhere on the year to place your own order.</b> The blue box is the forecast made on the day you order, from the backlog ahead of you and the Lunar New Year calendar, next to the date the supplier promised. In this simulation the real ready date lands inside the box about 8 times in 10. Each thin line below is one order, from the day it was placed to the day the supplier had it ready. It turns blue once it passes the date the supplier promised. Underneath is the backlog at the supplier: every brand's orders waiting ahead of a new one, in days of work. Each finished order drops into the tally on the right. In this model, the supplier promises 20 days, production itself takes 12, and the rest is waiting in line plus material and inspection delays. Suppliers all close for Lunar New Year at once, so even a quiet one runs late in February. This runs in your browser on Hubricon's supplier simulation, the same model behind Fig. 2 and Fig. 3. <a href="/assets/lateness-sim.mjs">Read its code</a>.</p>
   </div>
 </section>
 
@@ -346,6 +377,28 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
   </div>
 </section>
 
+<!-- 3c · your own report, now -->
+<section class="section band" id="yours">
+  <div class="wrap">
+    <p class="label">Your report, before you talk to anyone</p>
+    <h2>Paste your order dates. <span class="tone">See how late your suppliers run, right here.</span></h2>
+    <p class="lede">This runs in your browser. Nothing is uploaded or saved unless you press Send. Paste rows from a spreadsheet, pick a CSV, or try the sample first.</p>
+    <div class="mine">
+      <div class="mine-in">
+        <label class="sr" for="mine-text">Your orders</label>
+        <textarea id="mine-text" rows="9" spellcheck="false" placeholder="supplier, order date, promised ready date, actual ready date&#10;Supplier A, 2026-03-02, 2026-04-06, 2026-04-15&#10;Supplier A, 2026-06-10, 2026-07-15, 2026-07-14&#10;Supplier B, 2026-08-18, 2026-09-22, 2026-10-09"></textarea>
+        <div class="mine-ctl">
+          <button type="button" class="replay" id="mine-sample">Try the sample</button>
+          <label class="replay file">Pick a CSV<input id="mine-file" type="file" accept=".csv,.tsv,.txt,text/csv"></label>
+          <a class="text-link" href="/lateness-template.csv" download>Template (.csv)</a>
+        </div>
+      </div>
+      <div class="mine-out" id="mine-out" aria-live="polite"><p class="mine-empty">Your report appears here as soon as there's a row to read.</p></div>
+    </div>
+    <div class="mine-go"><a class="btn btn-lg" id="mine-send" hidden href="#">Send it for the pooled reading <span class="arrow" aria-hidden="true">→</span></a><p class="cta-note">Send opens an email to Hagen with your rows in it. The pooled reading adds what other brands' orders say about the same suppliers.</p></div>
+  </div>
+</section>
+
 <!-- 4 · the free report -->
 <section class="section night" id="report">
   <div class="wrap offer-grid">
@@ -358,7 +411,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
         <p><b>Your data.</b> Your orders, your brand's name and who your suppliers are are never shown or sold to anyone. Your dates only go into an anonymous combined reading for each supplier, and that reading appears only once at least three brands contribute, so no one can work backwards to yours. Ask, and we delete your data.</p>
       </div>
       <div class="offer-go">
-        <div class="cta"><a class="btn btn-lg" href="mailto:hagen.simmons@hubricon.com?subject=Lateness%20report&amp;body=Supplier%2C%20order%20date%2C%20promised%20ready%20date%2C%20actual%20ready%20date%20for%20each%20order%3A%0A%0A" data-send>Send your order dates <span class="arrow" aria-hidden="true">→</span></a></div>
+        <div class="cta"><a class="btn btn-lg" href="#yours">Build your report now <span class="arrow" aria-hidden="true">→</span></a></div>
         <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
       </div>
     </div>
@@ -388,7 +441,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
   <div class="wrap">
     <h2>See how late your suppliers really run.</h2>
     <div class="cta">
-      <a class="btn btn-lg" href="#report">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-lg" href="#yours">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
       <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
     </div>
   </div>
@@ -404,5 +457,6 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 </footer>
 
 <script type="module" src="/assets/lateness.js"></script>
+<script type="module" src="/assets/lateness-report.js"></script>
 </body>
 </html>

@@ -27,6 +27,23 @@ const mc = (() => {                     // p90 lateness for every factory at eve
 const cv = $("stage"), ctx = cv.getContext("2d");
 let W = 0, H = 0, data = null, t0 = 0, raf = 0, tEnd = 430;
 const DUR = 14000;                      // one year in fourteen seconds
+let mine = [];                          // orders the visitor placed, plus one placed for them just after Lunar New Year
+
+// The forecast a pooled reading makes on the day you order: production time plus the backlog
+// waiting ahead of you, plus the usual material and inspection delay (10th to 90th percentile).
+// In this simulation the backlog is known exactly; from real pooled orders it is estimated,
+// which is why Fig. 3's real-world-style errors are wider.
+function placeOrder(d) {
+  d = Math.max(0, Math.min(364, Math.round(d)));
+  const os = data.orders; let best = os[0];
+  for (const o of os) if (Math.abs(o.when - d) < Math.abs(best.when - d)) best = o;
+  const q = data.queue[best.when];
+  // Lunar New Year is on the calendar: days the supplier is shut add to the wait (closed 18 days, then 60% for 10)
+  const shut = (a, b) => { let lost = 0; for (let t = Math.floor(a); t < b; t++) lost += (t >= 30 && t < 48) ? 1 : (t >= 48 && t < 58) ? 0.4 : 0; return lost; };
+  let wait = q; for (let k = 0; k < 4; k++) wait = q + shut(best.when, best.when + wait);   // only the wait in line stalls
+  const base = 12 + wait;
+  mine = [{ when: best.when, late: best.late, fLo: base + 0.8, fHi: base + 5.8 }];
+}
 
 function size() {
   const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
@@ -41,6 +58,7 @@ function load(loadPct) {
   const s = summarize(orders.map(o => o.late));
   tEnd = Math.max(400, Math.ceil(Math.max(...orders.map(o => o.ready)) + 4));
   data = { orders, queue: late.queue, s, max: Math.max(...orders.map(o => o.late)) };
+  placeOrder(mine.length ? mine[0].when : 55);
   $("r-ontime").textContent = `${Math.round(s.onTime * 100)}%`;
   $("r-p90").textContent = daysTxt(s.p90);
   $("r-max").textContent = daysTxt(data.max);
@@ -54,7 +72,7 @@ function frame(now) {
   ctx.clearRect(0, 0, W, H);
 
   const narrow = W < 700;
-  const padL = 20, padR = 20, padT = 92;
+  const padL = 20, padR = 20, padT = narrow ? 196 : 176;
   const histW = narrow ? 0 : Math.min(300, W * 0.27);
   const gx0 = padL, gx1 = W - padR - (histW ? histW + 32 : 0);
   const gy0 = padT, gy1 = H * (narrow ? 0.62 : 0.68);
@@ -66,7 +84,7 @@ function frame(now) {
   for (let m = 0; m <= 13; m++) {
     const d = Math.round(m * 30.42); if (d > tEnd) break;
     ctx.strokeStyle = rule; ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.moveTo(X(d), gy0 - 8); ctx.lineTo(X(d), qy1); ctx.stroke(); ctx.globalAlpha = 1;
-    if (m < 12) { ctx.fillStyle = ink3; ctx.fillText(MONTHS[m], X(d + 15), H - 14); }
+    if (m < 12) { ctx.fillStyle = ink3; ctx.fillText(narrow ? MONTHS[m][0] : MONTHS[m], X(d + 15), H - 14); }
   }
 
   // the orders: each a line from placed to ready, blue past its promise
@@ -115,6 +133,44 @@ function frame(now) {
   $("clock").textContent = day < 365 ? dateOf(day) : (p < 1 ? "Year end: last orders finishing" : "The year, done");
   $("queue-now").textContent = day < 365 ? `${Math.round(q[Math.floor(day)])} days of other orders ahead of a new one` : "";
 
+  // your order, zoomed: its own scale so the promise, the forecast and the real date read at a glance
+  const ly = gy0 - 62;
+  for (const m of mine) {
+    const prom = m.when + PROMISE, ready = m.when + PROMISE + m.late;
+    const zs = m.when - 3, ze = m.when + Math.max(m.fHi, PROMISE + m.late, PROMISE) + 6;
+    const Z = d => gx0 + (d - zs) / (ze - zs) * (gx1 - gx0);
+    const end = Math.min(day, ready), started = day >= m.when, done = day >= ready;
+    // the day you ordered, marked on the year below
+    ctx.strokeStyle = ink; ctx.globalAlpha = 0.8; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(X(m.when), gy0 - 6); ctx.lineTo(X(m.when), qy1); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.strokeStyle = rule; ctx.beginPath(); ctx.moveTo(gx0, ly); ctx.lineTo(gx1, ly); ctx.stroke();
+    // forecast window
+    ctx.fillStyle = blue; ctx.globalAlpha = 0.2; ctx.fillRect(Z(m.when + m.fLo), ly - 12, Z(m.when + m.fHi) - Z(m.when + m.fLo), 24); ctx.globalAlpha = 1;
+    ctx.strokeStyle = blue; ctx.lineWidth = 1; ctx.strokeRect(Z(m.when + m.fLo), ly - 12, Z(m.when + m.fHi) - Z(m.when + m.fLo), 24);
+    // promise
+    ctx.strokeStyle = ink; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(Z(prom), ly - 18); ctx.lineTo(Z(prom), ly + 18); ctx.stroke(); ctx.setLineDash([]);
+    // the order growing in real time
+    if (started) {
+      ctx.lineCap = "round"; ctx.lineWidth = 6; ctx.strokeStyle = ink;
+      ctx.beginPath(); ctx.moveTo(Z(m.when), ly); ctx.lineTo(Z(Math.min(end, prom)), ly); ctx.stroke();
+      if (end > prom) { ctx.strokeStyle = blue; ctx.shadowColor = blue; ctx.shadowBlur = done ? 6 : 16; ctx.beginPath(); ctx.moveTo(Z(prom), ly); ctx.lineTo(Z(end), ly); ctx.stroke(); ctx.shadowBlur = 0; }
+      ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(Z(m.when), ly, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = end > prom ? blue : ink; ctx.beginPath(); ctx.arc(Z(end), ly, done ? 7 : 4, 0, 7); ctx.fill();
+    }
+    ctx.font = "11px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
+    ctx.fillStyle = ink3; ctx.fillText(`ordered ${dateOf(m.when)}`, Z(m.when), ly + 32);
+    ctx.fillStyle = ink; ctx.fillText(`promised ${dateOf(prom)}`, Z(prom), ly - 24);
+    ctx.fillStyle = blue; ctx.fillText(`forecast ${dateOf(m.when + m.fLo)} – ${dateOf(m.when + m.fHi)}`, Z(m.when + (m.fLo + m.fHi) / 2), ly + 32);
+    if (done) { ctx.fillStyle = m.late > 0.5 ? blue : ink; ctx.font = "600 12px Inter, system-ui, sans-serif"; ctx.fillText(`ready ${dateOf(ready)}`, Z(ready), ly - 24); }
+    // header and verdict
+    ctx.textAlign = "left"; ctx.font = "600 13px Inter, system-ui, sans-serif"; ctx.fillStyle = ink;
+    ctx.fillText("Your order", gx0, narrow ? ly - 66 : ly - 46);
+    ctx.textAlign = narrow ? "left" : "right";
+    const inside = m.late + PROMISE >= m.fLo - 0.5 && m.late + PROMISE <= m.fHi + 0.5;
+    const verdict = !started ? "Not placed yet" : !done ? "Waiting at the supplier…" : `${m.late > 0.5 ? `${Math.round(m.late)} days past the promise` : "On time"} · ${inside ? "inside the forecast" : `forecast missed by ${Math.round(Math.min(Math.abs(m.late + PROMISE - m.fLo), Math.abs(m.late + PROMISE - m.fHi)))} days`}`;
+    ctx.fillStyle = done && m.late > 0.5 ? blue : css("--ink-2"); ctx.fillText(verdict, narrow ? gx0 : gx1, ly - 46);
+    ctx.font = "11px Inter, system-ui, sans-serif";
+  }
+
   // the tally: every finished order drops into its column of days late
   if (histW) {
     const hx0 = gx1 + 32, hx1 = W - padR, hy1 = gy1, hy0 = gy0;
@@ -153,6 +209,15 @@ if (!calm && "IntersectionObserver" in window) {
 }
 $("load").addEventListener("input", e => { $("load-out").textContent = `${e.target.value}%`; load(+e.target.value); calm ? still() : play(); fanMark(); });
 $("replay").addEventListener("click", () => calm ? still() : play());
+cv.addEventListener("click", e => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left;
+  const histW = W < 700 ? 0 : Math.min(300, W * 0.27), gx1 = W - 20 - (histW ? histW + 32 : 0);
+  if (x < 20 || x > gx1) return;
+  placeOrder((x - 20) / (gx1 - 20) * tEnd);
+  if (calm) return still();
+  if (!raf) { t0 = performance.now() - Math.max(0, mine[0].when / tEnd * DUR - 600); raf = requestAnimationFrame(frame); }
+});
+cv.style.cursor = "crosshair";
 addEventListener("resize", () => { size(); if (!raf) still(); });
 
 // ---------------------------------------------------------------- Fig. 2, the fan
