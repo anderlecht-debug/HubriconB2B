@@ -1062,7 +1062,7 @@ html:not(.js) .course-page .pager { display: none; }
 @media (max-width: 900px) { .calls { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); } }
 
 /* The home page's course strip: five covers in a row, each opening its course */
-.lib-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-7); }
+.lib-strip { display: grid; grid-template-columns: repeat(var(--strip-n, 6), minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-7); }
 .strip-tile { display: grid; gap: var(--s-2); align-content: start; color: inherit; text-decoration: none; }
 .strip-tile .tile-cover { padding: var(--s-3) var(--s-4); border-radius: var(--radius); }
 .strip-tile .cover-k { font-size: var(--t-12); }
