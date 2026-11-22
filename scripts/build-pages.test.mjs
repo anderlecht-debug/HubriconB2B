@@ -105,14 +105,14 @@ test("the home page has no form; the course's optional email lives on /learn, an
   const forms = [...hub.matchAll(/<form\b[\s\S]*?<\/form>/g)].map(([f]) => f);
   assert.equal(forms.length, 1, "one form on /learn");
   const f = forms[0];
-  assert.match(f, /data-join="fee-staircase"/);
+  assert.match(f, /data-join="late-supplier"/, "the featured course is the first live one: The Late Supplier since 2026-11-22");
   assert.deepEqual([...f.matchAll(/<input\b[^>]*name="([^"]+)"/g)].map(([, n]) => n), ["email", "website"], "the address, and the field bots fill");
   assert.doesNotMatch(f, /class="btn/, "the submit is not styled as the call");
   assert.match(f, /href="\/privacy#learn"/);
   assert.match(f, /One click unsubscribes/);
   assert.match(f, /No email is needed to read it/);
   assert.match(f, /Optional/);
-  assert.match(hub, /<a class="go-to" href="\/learn\/fee-staircase#staircase">Start lesson 1, no email needed/, "the card opens lesson 1 itself");
+  assert.match(hub, /<a class="hf-start" href="\/learn\/late-supplier#promise" data-resume>Start lesson 1, no email needed/, "the card opens lesson 1 itself");
   const js = read("assets/site.js");
   assert.match(js, /fetch\("\/api\/learn"/);
   assert.match(js, /email, course: form\.dataset\.join, website: form\.website\.value, source:/, "it sends what the course page sends, nothing more");
@@ -192,11 +192,17 @@ test("nothing from the retired funnel or the retired look", () => {
 });
 
 test("no page on the design system keeps a palette of its own", () => {
-  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/fee-staircase.html", "call.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
-    const style = read(page).match(/<style>([\s\S]*?)<\/style>/)[1];
+  for (const page of ["index.html", "apply.html", "honesty.html", "your-data.html", "portal.html", "terms.html", "privacy.html", "intake.html", "welcome.html", "learn/index.html", "learn/late-supplier.html", "learn/fee-staircase.html", "call.html", "learn/price-curve.html", "manifesto.html", "verify.html"]) {
+    const style = (read(page).match(/<style>([\s\S]*?)<\/style>/) || [, ""])[1];
     assert.doesNotMatch(style, /#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i, `${page}: colours belong in /assets/hubricon.css`);
     assert.match(read(page), /href="\/assets\/hubricon\.css"/);
   }
+});
+
+test("the education pages' own stylesheet keeps no palette either: layout only, every colour a token", () => {
+  const css = read("assets/learn.css");
+  assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ""), /#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i, "assets/learn.css: colours belong in /assets/hubricon.css");
+  for (const page of ["learn/index.html", "learn/late-supplier.html"]) assert.match(read(page), /href="\/assets\/hubricon\.css">\n<link rel="stylesheet" href="\/assets\/learn\.css"/, `${page}: the design system first, then the education layout`);
 });
 
 test("the terms and /honesty carry the attribution rules word for word", () => {

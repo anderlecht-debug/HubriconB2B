@@ -20,6 +20,7 @@
 //     by scripts/build-pages.test.mjs since the founder asked for a short first page
 //     (HUBRICON_SPEC.md, "A short first page", 2026-10-01 evening).
 // scripts/build-pages.test.mjs runs the --check path, so a stale page fails CI.
+import * as lsFig from "../assets/learn-late-supplier.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import * as fees from "../lib/fees.js";
 import { monteCarloSVG, staircaseSVG, agingSVG, agingStripSVG, fitSVG, profitSVG, cashSVG, lateSVG, parcelSVG, orderSVG, waterfallSVG, responseSVG, paybackSVG, callsSVG, slippingSVG, demandSVG, usd } from "../assets/charts.mjs";
@@ -77,7 +78,9 @@ export function figures(rc, mc, cs) {
   const sm = shopifyMarginFigures(json("data/learn-shopify-margin.json"), rc);
   const om = operatorsMathFigures(json("data/learn-operators-math.json"), rc);
   const st = storeFigures(json("data/store-study.json"));
+  const lsup = lateSupplierFigures(json("data/learn-late-supplier.json"));
   const blocks = {
+    ...lsup.blocks,
     ...learn.blocks,
     ...pc.blocks,
     ...cc.blocks,
@@ -157,6 +160,64 @@ export function figures(rc, mc, cs) {
       ...sm.fill,
       ...om.fill,
       ...st.fill,
+      ...lsup.fill,
+    },
+  };
+}
+
+/**
+ * The Late Supplier's figures (/learn/late-supplier). Every number is Hubricon's supplier simulation
+ * (assets/lateness-sim.mjs), run by scripts/learn/late_supplier.mjs into data/learn-late-supplier.json.
+ * The still frames are drawn by the same functions the page's script redraws them with
+ * (assets/learn-late-supplier.mjs), at the values the page's controls open on.
+ */
+export const LS_START = { cushion: 0, busy: 85, cost: { sales: 50000, margin: 55, late: 14, carry: 25 }, reorder: { daily: 40, onHand: 4000, promised: 30, late: 12, transit: 35 } };
+function lateSupplierFigures(d) {
+  const at = (b) => d.loads.find((l) => l.busy === b);
+  const half = at(50), ninety = at(90), busy = at(LS_START.busy);
+  if (!half || !ninety || !busy) throw new Error("late-supplier: rerun scripts/learn/late_supplier.mjs");
+  const worst = d.months.reduce((b, m, i) => (m.p90 > d.months[b].p90 ? i : b), 0);
+  const best = d.months.reduce((b, m, i) => (m.p90 < d.months[b].p90 ? i : b), 0);
+  const c = lsFig.cost(LS_START.cost), r = lsFig.reorder(LS_START.reorder);
+  const out = (o) => Math.round(o * 10);   // "6 in 10"
+  return {
+    blocks: {
+      "ls-fig-promise": lsFig.figPromise(d, LS_START.cushion),
+      "ls-fig-busy": lsFig.figBusy(d, LS_START.busy),
+      "ls-fig-calendar": lsFig.figCalendar(d, worst),
+      "ls-fig-cost": lsFig.figCost(LS_START.cost),
+      "ls-fig-reorder": lsFig.figReorder(LS_START.reorder),
+      "ls-data": `<script type="application/json" id="ls-data">${JSON.stringify({ loads: d.loads, months: d.months, typical: d.typical, start: LS_START })}</script>`,
+    },
+    fill: {
+      ls_n: String(d.typical.orders.length),
+      ls_on_time: `${d.typical.on_time}%`,
+      ls_on_time_10: String(out(d.typical.on_time / 100)),
+      ls_late_share: `${100 - d.typical.on_time}%`,
+      ls_p90: lsFig.days(d.typical.p90),
+      ls_worst: lsFig.days(d.typical.worst),
+      ls_suppliers: String(d.suppliers_per_load),
+      ls_promise: String(d.promise_days),
+      ls_production: String(d.production_days),
+      ls_busy_on_time: `${busy.on_time}%`,
+      ls_busy_p90: lsFig.days(busy.p90),
+      ls_half_on_time: `${half.on_time}%`,
+      ls_half_p90: lsFig.days(Math.max(0, half.p90)),
+      ls_ninety_on_time: `${ninety.on_time}%`,
+      ls_ninety_p90: lsFig.days(ninety.p90),
+      ls_wait_x: `${Math.round(ninety.wait_x / half.wait_x)}`,
+      ls_worst_month: lsFig.MONTHS_LONG[worst],
+      ls_worst_month_p90: lsFig.days(d.months[worst].p90),
+      ls_best_month: lsFig.MONTHS_LONG[best],
+      ls_best_month_p90: lsFig.days(d.months[best].p90),
+      ls_cost_stockout: lsFig.usd(c.stockout),
+      ls_cost_carrying: lsFig.usd(c.carrying),
+      ls_cost_cash: lsFig.usd(c.cash),
+      ls_cost_ratio: `${Math.round(c.ratio)}`,
+      ls_ro_point: Math.round(r.point).toLocaleString("en-US"),
+      ls_ro_real: String(Math.round(r.onReal)),
+      ls_ro_promise: String(Math.round(r.onPromise)),
+      ls_ro_extra: Math.round(r.extraUnits).toLocaleString("en-US"),
     },
   };
 }
@@ -636,7 +697,7 @@ export function build(html, built, { requireAllFills = false, name = "page" } = 
     return `${open}${built.fill[key]}${close}`;
   });
   if (requireAllFills) {
-    const unused = Object.keys(built.fill).filter((k) => !used.has(k) && !OTHER_PAGES_ONLY.has(k) && !k.startsWith("learn_"));
+    const unused = Object.keys(built.fill).filter((k) => !used.has(k) && !OTHER_PAGES_ONLY.has(k) && !k.startsWith("learn_") && !k.startsWith("ls_"));
     if (unused.length) throw new Error(`${name}: figures computed but never shown: ${unused.join(", ")}`);
   }
   out = out.replace(/(<!-- build:faq-jsonld -->)[\s\S]*?(<!-- \/build:faq-jsonld -->)/, (_, a, z) => `${a}\n${faqJsonLd(out)}\n${z}`);
@@ -660,6 +721,7 @@ export const PAGES = [
   { file: "manifesto.html" },
   { file: "portal.html" },
   { file: "learn/index.html" },
+  { file: "learn/late-supplier.html" },
   { file: "learn/fee-staircase.html" },
   { file: "learn/price-curve.html" },
   { file: "learn/capital-and-cash.html" },
