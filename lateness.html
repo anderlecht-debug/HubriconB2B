@@ -75,7 +75,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 
 /* 3 · why it is predictable */
 .why { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--s-8); align-items: start; margin-top: var(--s-7); }
-.why-points { list-style: none; display: grid; }
+.why-points { list-style: none; display: grid; position: sticky; top: calc(var(--nav-h) + var(--s-6)); }
 .why-points li { padding: var(--s-5) 0; border-top: 1px solid var(--rule-2); }
 .why-points li:last-child { border-bottom: 1px solid var(--rule-2); }
 .why-points b { display: block; font-size: var(--t-20); letter-spacing: -0.018em; line-height: 1.3; }
@@ -245,6 +245,34 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 .ledger-foot i { display: inline-block; width: 14px; height: 6px; border-radius: 9px; margin-right: 6px; vertical-align: middle; }
 .k-ok { background: var(--ink); } .k-late { background: var(--blue); }
 @media (max-width: 960px) { .hero-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); } .ledger { max-width: 560px; } }
+
+/* hero, rebuilt 2026-11-22 from the reference set (apple.com, tesla.com, acquisition.com):
+   centred, one short headline, one line under it, one button, proof as labels */
+.hero { padding-block: clamp(var(--s-8), 8vw, var(--s-10)) var(--s-8); text-align: center; }
+.hero-c { display: flex; flex-direction: column; align-items: center; }
+.hero-c h1 { margin-top: var(--s-4); font-size: clamp(2.75rem, 1.1rem + 5.2vw, 5.5rem); max-width: 16ch; }
+.hero-c .sub { margin-top: var(--s-5); font-size: clamp(1.25rem, 1rem + 0.8vw, 1.625rem); line-height: 1.35; letter-spacing: -0.012em; color: var(--ink-2); max-width: 48ch; }
+.cta-c { justify-content: center; margin-top: var(--s-6); }
+.proofbar { margin-top: var(--s-8); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-5); width: min(860px, 100%); }
+.proofbar > div { padding-top: var(--s-3); border-top: 1px solid var(--rule-2); }
+.proofbar dt { font-size: var(--t-24); font-weight: var(--strong); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.proofbar dt.leak { color: var(--blue); }
+.proofbar dd { margin-top: 2px; font-size: var(--t-14); color: var(--ink-3); }
+.hero-c .ledger { margin-top: var(--s-8); width: min(640px, 100%); text-align: left; }
+.how { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); max-width: 80ch; }
+.how summary { cursor: pointer; color: var(--ink-2); font-weight: var(--strong); list-style: none; }
+.how summary::-webkit-details-marker { display: none; }
+.how summary::after { content: " +"; color: var(--ink-3); }
+.how[open] summary::after { content: " −"; }
+.how p { margin-top: var(--s-2); line-height: 1.6; }
+.how a { color: var(--ink-2); }
+.band .lede, .offer-grid .lede { max-width: 44ch; }
+@media (max-width: 720px) { .proofbar { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-4); } }
+
+/* section intros centred, like the reference set; the working parts below stay left-aligned */
+.band > .wrap > .label, .band > .wrap > h2, .band > .wrap > .lede { display: block; text-align: center; margin-inline: auto; }
+.band > .wrap > h2 { max-width: 20ch; }
+.close { text-align: center; }
 </style>
 </head>
 <body>
@@ -254,7 +282,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
     <a class="nav-mark" href="/" aria-label="Hubricon, home"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"/><path d="M22.5 18h6.5v11h6V18h6.5v28H35V35.5h-6V46h-6.5z" fill="currentColor"/></svg><span>Hubricon</span></a>
     <div class="nav-end">
       <a class="nav-link" href="#why">How it works</a>
-      <a class="btn btn-nav" href="#yours">Get your free report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn-nav" href="#yours">Get my free report <span class="arrow" aria-hidden="true">→</span></a>
     </div>
   </div>
 </header>
@@ -263,17 +291,20 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 
 <!-- 1 · the promise -->
 <section class="hero" aria-labelledby="headline">
-  <div class="wrap hero-grid">
-    <div>
-      <p class="label">For ecommerce brands that outsource production</p>
-      <h1 id="headline">Your supplier promised a date. <span class="tone">Know the real one before you order.</span></h1>
-      <p class="lede">A late order means stockouts, rushed air freight, and cash tied up in extra stock just in case. You can track a shipment once it leaves your supplier, but the weeks before that are a guess. Hubricon pools order dates from brands that use the same suppliers, so you can see the delay coming.</p>
-      <div class="cta">
-        <a class="btn btn-lg" href="#yours">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
-        <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
-      </div>
-      <p class="cta-note" style="margin-top:var(--s-3)">Free. Three dates per order, nothing else.</p>
+  <div class="wrap hero-c">
+    <p class="label">For brands that outsource production</p>
+    <h1 id="headline">Know when your stock will really be ready.</h1>
+    <p class="sub">Your supplier gives you a promise. We give you a forecast.</p>
+    <div class="cta cta-c">
+      <a class="btn btn-lg" href="#yours">Get my free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Book a call</a>
     </div>
+    <dl class="proofbar">
+      <div><dt>60</dt><dd>suppliers simulated</dd></div>
+      <div><dt>16,000</dt><dd>simulated orders</dd></div>
+      <div><dt class="leak">&minus;21%</dt><dd>forecast error, 5 brands pooled</dd></div>
+      <div><dt>$0</dt><dd>for your report</dd></div>
+    </dl>
     <figure class="ledger" id="ledger" aria-label="Five orders at one simulated supplier: the date promised and the date each was really ready.">
       <figcaption class="ledger-head"><span class="label">Promised vs. ready · one supplier</span><span class="label label-box">Simulated</span></figcaption>
       <ol class="ledger-rows" id="ledger-rows"></ol>
@@ -287,7 +318,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
     <div class="stage-head">
       <div>
         <p class="label">Fig. 1 · A year of orders at one supplier, replayed</p>
-        <h2 id="sim-title">Same supplier, same promise. <span class="tone">Watch orders slip when it gets busy.</span></h2>
+        <h2 id="sim-title">Same promise. Busier supplier. Later stock.</h2>
       </div>
       <span class="label label-box">Simulated · Not a client · Not a result</span>
     </div>
@@ -309,7 +340,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
       <div class="leak"><dt id="r-max">–</dt><dd>the latest order of the year</dd></div>
       <div class="leak"><dt id="r-mc">–</dt><dd>the same 1-in-10 figure for the typical supplier, out of 200 simulated this busy</dd></div>
     </dl>
-    <p class="stage-cap"><b>Click or tap anywhere on the year to place your own order.</b> The blue box is the forecast made on the day you order, from the backlog ahead of you and the Lunar New Year calendar, next to the date the supplier promised. In this simulation the real ready date lands inside the box about 8 times in 10. Each thin line below is one order, from the day it was placed to the day the supplier had it ready. It turns blue once it passes the date the supplier promised. Underneath is the backlog at the supplier: every brand's orders waiting ahead of a new one, in days of work. Each finished order drops into the tally on the right. In this model, the supplier promises 20 days, production itself takes 12, and the rest is waiting in line plus material and inspection delays. Suppliers all close for Lunar New Year at once, so even a quiet one runs late in February. This runs in your browser on Hubricon's supplier simulation, the same model behind Fig. 2 and Fig. 3. <a href="/assets/lateness-sim.mjs">Read its code</a>.</p>
+    <p class="stage-cap"><b>Tap the year to place an order.</b> You'll see the promise, our forecast, and the real date.</p>
+    <details class="how"><summary>How this works</summary><p>One simulated supplier, one year. Each thin line is an order, blue once it passes its promised date. Below it: orders waiting at the supplier, all brands. The supplier promises 20 days; production takes 12; the rest is waiting in line. The forecast uses that line plus the Lunar New Year calendar, and the real date lands inside it about 8 times in 10. <a href="/assets/lateness-sim.mjs">The code</a>.</p></details>
   </div>
 </section>
 
@@ -318,11 +350,11 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
   <div class="wrap">
     <p class="label">The part nobody tracks</p>
     <h2>Your forwarder tracks the boat. <span class="tone">Nobody tracks your supplier.</span></h2>
-    <p class="lede">Once your goods are ready, there are trackers, delay indexes and even insurance for late cargo. Before that, all you have is the date your supplier promised. Production usually takes 15 to 30 days, and that's where a stockout quietly starts.</p>
+    <p class="lede">Before your goods are ready, all you have is a promise.</p>
     <div class="timeline" role="list">
-      <div class="tl lit" role="listitem"><div><span class="tl-k">Day 0</span><b>You place the PO</b><p>Deposit paid. Your supplier promises a ready date.</p></div></div>
-      <div class="tl dark" role="listitem"><div><span class="tl-k">The dark weeks</span><b>Your order waits its turn at your supplier, then gets made</b><p>How long it waits depends on every other brand's orders at the same supplier, and you can't see any of them.</p></div><div class="tl-who"><span class="chip">No tracker</span><span class="chip">No index</span><span class="chip">No insurance</span></div></div>
-      <div class="tl lit" role="listitem"><div><span class="tl-k">Cargo ready</span><b>Shipped, sailed, landed, received</b><p>Tracked from here on by your forwarder, the carrier, the port and your 3PL.</p></div><div class="tl-who"><span class="chip">Tracking</span><span class="chip">Delay indexes</span><span class="chip">Cargo-delay insurance</span></div></div>
+      <div class="tl lit" role="listitem"><div><span class="tl-k">Day 0</span><b>You place the PO</b><p>You get a promised date.</p></div></div>
+      <div class="tl dark" role="listitem"><div><span class="tl-k">The dark weeks</span><b>Your order waits behind other brands' orders</b><p>You can't see the line.</p></div><div class="tl-who"><span class="chip">No tracking</span></div></div>
+      <div class="tl lit" role="listitem"><div><span class="tl-k">Goods ready</span><b>Shipped, landed, received</b><p>Tracked from here on.</p></div><div class="tl-who"><span class="chip">Tracking</span><span class="chip">Insurance</span></div></div>
     </div>
   </div>
 </section>
@@ -331,18 +363,12 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 <section class="section band" id="why">
   <div class="wrap">
     <p class="label">Why the delay can be forecast</p>
-    <h2>Late suppliers are busy suppliers. <span class="tone">You can't see how busy. A group of brands can.</span></h2>
-    <dl class="numbers built">
-      <div><dt>60</dt><dd>suppliers simulated over four years, every order queued day by day</dd></div>
-      <div><dt>16,000</dt><dd>orders forecast with and without other brands' data, and scored</dd></div>
-      <div><dt class="leak">&minus;21%</dt><dd>forecast error when 5 brands share a supplier's order dates (5.7 to 4.5 days)</dd></div>
-      <div><dt>Shared</dt><dd>suppliers among small brands, found in public US customs records</dd></div>
-    </dl>
+    <h2>Late suppliers are busy suppliers.</h2>
     <div class="why">
       <ol class="why-points">
-        <li><b>Your supplier makes product for many brands besides you.</b><span>When their orders pile up, yours waits. The waiting grows much faster than the workload: at 90% busy, an order waits about nine times as long as at 50%. Move the slider in Fig. 1 and watch it happen, or see it across 200 factories in Fig. 2.</span></li>
-        <li><b>No single brand can see how busy a supplier is.</b><span>Small brands often share suppliers, and US customs records show it. When those brands pool their order dates, the backlog shows up in the data. You don't need to visit a factory or know anyone there. Your order dates are enough.</span></li>
-        <li><b>A supplier that's running late stays late.</b><span>In our simulation, a supplier above 80% busy was still about as late three months later (correlation 0.67). Below 70% busy, a reading told you nothing after a month. So the suppliers that hurt you most are the ones that can be forecast.</span></li>
+        <li><b>Your supplier works for many brands.</b><span>When their orders pile up, yours waits. At 90% busy, the wait is about 9× longer than at 50%.</span></li>
+        <li><b>No brand can see the whole line alone.</b><span>Brands that share a supplier can. Your order dates are enough.</span></li>
+        <li><b>Late stays late.</b><span>A supplier over 80% busy was still late 3 months on (simulation). That makes it forecastable.</span></li>
       </ol>
       <div class="figs">
       <figure class="exhibit fan">
@@ -353,7 +379,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
         <div class="exhibit-body">
           <svg id="fan" viewBox="0 0 560 300" role="img" aria-label="For 200 simulated suppliers, how late the worst 1 in 10 orders ran at each level of busy. Flat until about 70 percent busy, then climbing steeply."></svg>
         </div>
-        <figcaption class="exhibit-cap">Each faint line is one simulated supplier: how late its worst 1 in 10 orders ran, at every level from 50% to 95% busy. The band holds the middle 80% of suppliers and the blue line is the typical one. The marker follows the slider in Fig. 1. Nothing much happens until about 70%. Then it climbs fast.</figcaption>
+        <figcaption class="exhibit-cap">Each faint line is one simulated supplier. Blue is the typical one. Lateness stays flat until about 70% busy, then climbs.</figcaption>
       </figure>
       <figure class="exhibit">
         <div class="exhibit-head">
@@ -369,7 +395,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
             <li class="eb-row pool"><span class="who">+ 20 brands</span><span class="eb-track"><span class="eb-fill" style="width:61.5%"></span></span><span class="v">4.0 d</span></li>
           </ul>
         </div>
-        <figcaption class="exhibit-cap">Average miss, in days, when forecasting how late your order will be ready. Shorter is better. Most of the gain comes from the first 5 to 10 brands. Adding customs shipment volume alone barely helped (5.7 days either way), because shipments can't show the queue behind them. These numbers come from the simulation. Real orders are scored the same way, one report at a time.</figcaption>
+        <figcaption class="exhibit-cap">Average forecast miss, in days. Shorter is better. Most of the gain comes from the first 5 to 10 brands.</figcaption>
       </figure>
       </div>
     </div>
@@ -380,7 +406,7 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 <section class="section band" id="expect">
   <div class="wrap">
     <p class="label">What to expect at your size</p>
-    <h2>A late supplier costs a $500k brand and a $30M brand very different money. <span class="tone">Here is roughly how much.</span></h2>
+    <h2>What late costs at your size.</h2>
     <div class="calc">
       <form class="calc-in" id="calc" onsubmit="return false">
         <div class="field"><label for="rev">Your yearly revenue</label><output id="rev-out">$3M</output><input id="rev" type="range" min="0" max="1000" value="500"></div>
@@ -396,7 +422,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
           <div class="leak"><dt id="o-free">–</dt><dd>of that cash freed up when you can see the delay coming</dd></div>
         </dl>
         <svg id="ladder" viewBox="0 0 640 300" role="img" aria-label="The same three figures for brands from $250k to $50M a year, on a log scale, with your revenue marked."></svg>
-        <p class="calc-cap"><span class="label label-box">Modeled estimate · Not a client result</span> Sales lost is how late the worst 1 in 10 orders runs at a supplier this busy (typical of 200 simulated), times a day of the sales that supplier makes for you. Extra stock is sized to cover the forecast miss 9 times in 10 (1.6 × the average miss): 10.4 days of product cost when you only know the season, 7.2 days with 5 brands pooled (Fig. 3). Your own orders replace these assumptions in your report.</p>
+        <p class="calc-cap"><span class="label label-box">Modeled estimate · Not a client result</span></p>
+        <details class="how"><summary>How these are worked out</summary><p>Sales lost: how late the worst 1 in 10 orders runs at a supplier this busy (typical of 200 simulated), times a day of that supplier's sales. Extra stock covers the forecast miss 9 times in 10: 10.4 days of product cost knowing only the season, 7.2 days with 5 brands pooled (Fig. 3). Your own orders replace these assumptions in your report.</p></details>
       </div>
     </div>
   </div>
@@ -406,8 +433,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 <section class="section band" id="yours">
   <div class="wrap">
     <p class="label">Your report, before you talk to anyone</p>
-    <h2>Paste your order dates. <span class="tone">See how late your suppliers run, right here.</span></h2>
-    <p class="lede">This runs in your browser. Nothing is uploaded or saved unless you press Send. Paste rows from a spreadsheet, pick a CSV, or try the sample first.</p>
+    <h2>Paste your order dates. <span class="tone">Get your report in seconds.</span></h2>
+    <p class="lede">Runs in your browser. Nothing is sent until you press Send.</p>
     <div class="mine">
       <div class="mine-in">
         <label class="sr" for="mine-text">Your orders</label>
@@ -429,22 +456,22 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
   <div class="wrap offer-grid">
     <div>
       <p class="label">The offer · We built it. We prove it with your numbers.</p>
-      <h2>A free lateness report on your own suppliers.</h2>
-      <p class="lede">Send three dates for each of your recent orders. You get back how late each supplier really runs against what it promised, when in the year it slips, and, where other brands use the same supplier, how backed up it is right now.</p>
+      <h2>Free lateness report.</h2>
+      <p class="lede">How late each supplier really runs, when it slips, and how backed up it is now.</p>
       <div class="honest">
-        <p><b>We built it. We prove it with your numbers.</b> The engine is built and was tested on 60 simulated suppliers. Every report is then scored against what your orders really did, so the proof comes from real orders, not from us. Your report starts from your own orders. A pooled reading appears where enough brands share a supplier, and the report says which one you're getting.</p>
-        <p><b>Your data.</b> Your orders, your brand's name and who your suppliers are are never shown or sold to anyone. Your dates only go into an anonymous combined reading for each supplier, and that reading appears only once at least three brands contribute, so no one can work backwards to yours. Ask, and we delete your data.</p>
+        <p><b>We built it. We prove it with your numbers.</b> Every forecast is scored against what really happened.</p>
+        <p><b>Your data.</b> Never shown or sold. Pooled readings need 3+ brands, so no one can trace yours. Ask and we delete it.</p>
       </div>
       <div class="offer-go">
         <div class="cta"><a class="btn btn-lg" href="#yours">Build your report now <span class="arrow" aria-hidden="true">→</span></a></div>
-        <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
+        <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Book a call</a>
       </div>
     </div>
     <div>
       <ol class="flow">
-        <li><span class="n">01</span><b>Send three dates per order</b><span>When you ordered, the date your supplier promised, the date it was actually ready, and the supplier. A spreadsheet, an export or a pasted list all work.</span></li>
-        <li><span class="n">02</span><b>We build your report</b><span>Each supplier's lateness against what it promised, by order and by season, and how well the engine would have called it.</span></li>
-        <li><span class="n">03</span><b>A 20-minute call with Hagen</b><span>We walk through it together. No pitch you didn't ask for.</span></li>
+        <li><span class="n">01</span><b>Send three dates per order</b><span>Ordered, promised, ready.</span></li>
+        <li><span class="n">02</span><b>Get your report</b><span>Each supplier, by order and by season.</span></li>
+        <li><span class="n">03</span><b>20 minutes with Hagen</b><span>Optional. No pitch.</span></li>
       </ol>
       <div class="sample">
         <table>
@@ -466,8 +493,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
   <div class="wrap">
     <h2>See how late your suppliers really run.</h2>
     <div class="cta">
-      <a class="btn btn-lg" href="#yours">Get your free lateness report <span class="arrow" aria-hidden="true">→</span></a>
-      <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Or book a call with Hagen</a>
+      <a class="btn btn-lg" href="#yours">Get my free lateness report <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="text-link" href="https://calendly.com/hubricon/margin-audit" data-book>Book a call</a>
     </div>
   </div>
 </section>
