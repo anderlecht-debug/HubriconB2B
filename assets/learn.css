@@ -330,7 +330,8 @@ html:not(.js) .ls-ctl, html:not(.js) .ls-inputs, html:not(.js) .ls-tool-in, html
 .st-row small { margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--paper-2); font-size: 11px; color: var(--ink-3); }
 .st-row .leak { font-weight: var(--strong); }
 .st-bar { height: 8px; border-radius: 8px; background: var(--paper-2); overflow: hidden; }
-.st-bar i { display: block; height: 100%; background: var(--blue); border-radius: 8px; }
+.st-bar i { display: block; height: 100%; width: var(--w); background: var(--blue); border-radius: 8px; transform-origin: left; animation: st-grow 700ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes st-grow { from { transform: scaleX(0); } }
 .ls-score-note { margin-top: var(--s-3); font-size: var(--t-14); color: var(--ink-3); }
 
 /* remember, and do it */
@@ -353,8 +354,8 @@ html:not(.js) .ls-ctl, html:not(.js) .ls-inputs, html:not(.js) .ls-tool-in, html
 
 /* the end */
 .ls-rules { margin: var(--s-6) 0 0; padding: 0; list-style: none; counter-reset: r; display: grid; border-top: 1px solid var(--ink); }
-.ls-rules li { counter-increment: r; display: grid; grid-template-columns: 48px minmax(0, 1fr); padding: var(--s-4) 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); line-height: 1.55; }
-.ls-rules li::before { content: counter(r, decimal-leading-zero); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.ls-rules li { counter-increment: r; position: relative; padding: var(--s-4) 0 var(--s-4) 48px; border-bottom: 1px solid var(--rule); color: var(--ink-2); line-height: 1.55; }
+.ls-rules li::before { position: absolute; left: 0; top: var(--s-4); content: counter(r, decimal-leading-zero); font-weight: var(--strong); color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .ls-rules b { display: block; color: var(--ink); font-size: var(--t-18); }
 .ls-next-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-7); }
 .ls-step { display: grid; gap: var(--s-2); align-content: start; padding: var(--s-5); border: 1px solid var(--rule); border-radius: 14px; color: var(--ink-2); text-decoration: none; transition: border-color 160ms; }
@@ -387,3 +388,105 @@ html:not(.js) .ls-ctl, html:not(.js) .ls-inputs, html:not(.js) .ls-tool-in, html
   .ls-fig svg text { font-size: 20px; }
   .ls-fig-body { padding-inline: var(--s-2); }
 }
+
+/* ---------------------------------------------- v2: the pieces that make it stick ---- */
+.ls-fig-head { position: relative; }
+.ls-replay { margin-left: auto; padding: 4px 12px; border: 1px solid var(--rule-2); border-radius: 999px; background: var(--paper);
+  font: var(--strong) var(--t-12) / 1.4 var(--font); color: var(--ink); cursor: pointer; transition: border-color 160ms; }
+.ls-replay:hover { border-color: var(--ink); }
+html:not(.js) .ls-replay { display: none; }
+
+/* the quick check from the lesson before */
+.ls-recall { margin-top: var(--s-6); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2) var(--s-5); align-items: center;
+  padding: var(--s-4) var(--s-5); border: 1px solid var(--rule); border-radius: 14px; }
+.ls-recall-k { grid-column: 1 / -1; font-size: var(--t-12); font-weight: var(--label-weight, var(--strong)); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.ls-recall-q { font-weight: var(--strong); color: var(--ink); }
+.ls-recall-opts { display: none; }
+html.js .ls-recall-opts { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.ls-recall-opts button { min-height: 36px; padding: 0 var(--s-4); border: 1px solid var(--rule-2); border-radius: 999px; background: var(--paper);
+  font: var(--strong) var(--t-14) / 1 var(--font); color: var(--ink); cursor: pointer; transition: border-color 160ms, background-color 160ms; }
+.ls-recall-opts button:hover:not(:disabled) { border-color: var(--ink); }
+.ls-recall-opts button:disabled { cursor: default; opacity: 1; color: var(--ink-3); }
+.ls-recall-opts button.is-answer, .ls-recall-opts button.is-answer:disabled { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.ls-recall-opts button.picked:not(.is-answer) { text-decoration: line-through; }
+.ls-recall-a { grid-column: 1 / -1; font-size: var(--t-14); color: var(--ink-2); }
+html.js .ls-recall.pending:not(.answered) .ls-recall-a { display: none; }
+html.js .ls-recall.answered .ls-recall-a { animation: ls-in 400ms var(--ease-out); }
+.ls-recall.answered.right .ls-recall-a::before { content: "Right. "; font-weight: var(--strong); color: var(--ink); }
+
+/* your numbers, in the rail */
+.ls-mine { margin-top: var(--s-3); padding: var(--s-4); border-radius: var(--radius); background: var(--paper-2); }
+.ls-mine[hidden] { display: none; }
+.ls-mine-k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-3); }
+.ls-mine dl { margin: var(--s-2) 0 0; display: grid; gap: 4px; }
+.ls-mine dl div { display: flex; justify-content: space-between; gap: var(--s-3); font-size: var(--t-14); }
+.ls-mine dt { color: var(--ink-3); }
+.ls-mine dd { margin: 0; font-weight: var(--strong); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* lesson 1: the newest dots land */
+.ls-fig svg .d-new { animation: d-land 260ms var(--ease-out); }
+@keyframes d-land { from { transform: translateY(-14px); opacity: 0; } }
+.ls-fig svg .d-new { transform-box: fill-box; }
+
+/* lesson 2: the line at the supplier */
+.ls-line-body { padding-top: var(--s-4); }
+.ls-fig svg .q-wait { fill: var(--ink-4); }
+.ls-fig svg .q-make { fill: var(--ink); }
+.ls-fig svg .q-done { fill: var(--ink-4); }
+.ls-fig svg .q-blue { fill: var(--blue); }
+.ls-fig svg .q-factory { fill: var(--paper-2); stroke: var(--rule-2); }
+.ls-fig svg .q-prog { fill: var(--ink); }
+.ls-fig svg .q-floor { stroke: var(--rule); }
+
+/* lesson 3: the order's trip */
+.ls-trip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin: 0 var(--s-5); padding: var(--s-4) 0 0; border-top: 1px solid var(--rule); }
+.trip-step { display: grid; gap: 2px; position: relative; }
+.trip-step span { font-size: var(--t-12); color: var(--ink-3); }
+.trip-step b { font-size: var(--t-24); font-weight: var(--display, var(--strong)); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.trip-step.leak b { color: var(--blue); }
+html:not(.js) .ls-trip { display: none; }
+
+/* lesson 4: the curve */
+.ls-fig svg .c-out { fill: none; stroke: var(--blue); stroke-width: 2; }
+.ls-fig svg .c-hold { fill: none; stroke: var(--ink-4); stroke-width: 2; stroke-dasharray: 5 4; }
+.ls-fig svg .c-total { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.ls-fig svg .c-best { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+.ls-fig svg .mark-ink { fill: var(--ink); }
+
+/* the plan */
+.ls-plan { margin-top: var(--s-6); padding: clamp(var(--s-5), 4vw, var(--s-6)); border-radius: 20px; background: var(--night); color: var(--night-ink); }
+.ls-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--night-rule); border: 1px solid var(--night-rule); border-radius: 14px; overflow: hidden; }
+.ls-plan-cell { display: grid; gap: var(--s-1); align-content: start; padding: var(--s-5); background: var(--night); }
+.ls-plan-cell .k { font-size: var(--t-12); font-weight: var(--strong); letter-spacing: 0.04em; color: var(--night-ink-3); }
+.ls-plan-cell b { font-size: var(--t-display-s); font-weight: var(--display, var(--strong)); letter-spacing: -0.03em; line-height: 1.05; color: var(--night-ink); font-variant-numeric: tabular-nums; }
+.ls-plan-cell.leak b { color: var(--night-blue); }
+.ls-plan-cell small { font-size: var(--t-12); color: var(--night-ink-3); }
+.ls-plan-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-5); }
+.ls-plan .ls-chip { background: transparent; border-color: var(--night-ink-4); color: var(--night-ink); }
+.ls-plan .ls-chip:hover { border-color: var(--night-ink); }
+html:not(.js) .ls-plan-actions { display: none; }
+
+@media (max-width: 640px) {
+  .ls-recall { grid-template-columns: minmax(0, 1fr); }
+  .ls-trip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ls-plan-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) and (min-width: 641px) { .ls-plan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media print {
+  .nav, .site-foot, .ls-hero, .ls-rail, .ls-map, .ls-lesson:not(#one-page), .ls-next-steps, .ls-end .keep, .ls-plan-actions { display: none !important; }
+  #one-page { display: block !important; }
+  .ls-body { display: block; padding: 0; }
+  .ls-plan { background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2); }
+  .ls-plan-cell { background: var(--paper); }
+  .ls-plan-cell b, .ls-plan-cell .k, .ls-plan-cell small { color: var(--ink); }
+  .ls-plan-cell.leak b { color: var(--blue); }
+}
+
+/* Fig. 2 readout sits above the line as text, so it stays legible on a phone */
+.q-hud { display: flex; justify-content: space-between; gap: var(--s-4); margin: 0 0 var(--s-2); font-size: var(--t-14); line-height: 1.35; }
+.q-hud p { margin: 0; display: grid; gap: 2px; }
+.q-hud p.r { text-align: right; }
+.q-hud b { color: var(--ink); font-weight: var(--strong); font-variant-numeric: tabular-nums; }
+.q-hud span { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.q-hud .leak { color: var(--blue); }
