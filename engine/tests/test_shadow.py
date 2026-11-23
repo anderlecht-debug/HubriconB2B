@@ -4,7 +4,7 @@ executed, then graded against the week as it happened."""
 import base64
 import json
 import os
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fakedb import FakeDB
@@ -158,17 +158,28 @@ class StoreDB(FakeDB):
         self.storage = type("S", (), {"from_": staticmethod(lambda name: bucket)})()
 
 
-def test_shadow_job_grades_last_week_then_seals_this_week():
+def test_shadow_job_seals_next_week_then_grades_it_once_it_has_happened():
     full = _full()
     db = StoreDB()
     store = {"shop": "acme.myshopify.com", "token": "t", "client_id": CLIENT, "row": {}}
-    first = shopify_run.shadow_store(db, store, WEEK, 60, pulled={**full, "today": WEEK.isoformat()})
-    assert first["graded"] is None and first["seal"] == seal.SEALED
-    assert "shopify/acme.myshopify.com/shadow/2026-11-16.json" in db.files
+    at = lambda d: datetime(d.year, d.month, d.day, 9, 45, tzinfo=UTC)
+    first = shopify_run.shadow_store(db, store, WEEK, 60, pulled={**full, "today": WEEK.isoformat()}, now=at(WEEK))
     nxt = WEEK + timedelta(days=7)
-    second = shopify_run.shadow_store(db, store, nxt, 60, pulled={**full, "today": nxt.isoformat()})
+    assert first["graded"] is None and first["seal"] == seal.SEALED and first["week_start"] == nxt.isoformat()
+    assert f"shopify/acme.myshopify.com/shadow/{nxt.isoformat()}.json" in db.files
+    after = nxt + timedelta(days=7)           # the Monday after the predicted week ends
+    second = shopify_run.shadow_store(db, store, after, 60, pulled={**full, "today": after.isoformat()},
+                                      now=at(after))
     assert second["graded"]["n_graded"] == first["calls"] and second["refused"] == []
-    assert "shopify/acme.myshopify.com/shadow/2026-11-16.grade.json" in db.files
+    assert f"shopify/acme.myshopify.com/shadow/{nxt.isoformat()}.grade.json" in db.files
+
+
+def test_no_call_is_sealed_once_its_week_is_about_to_begin():
+    db = StoreDB()
+    store = {"shop": "acme.myshopify.com", "token": "t", "client_id": CLIENT, "row": {}}
+    late = datetime(2026, 11, 22, 23, 0, tzinfo=UTC)      # Sunday night: the week starts Monday
+    out = shopify_run.shadow_store(db, store, WEEK, 60, pulled={**_full(), "today": WEEK.isoformat()}, now=late)
+    assert out["seal"] == "too_late" and not [p for p in db.files if p.endswith("-23.json")]
 
 
 def test_a_stored_call_edited_after_sealing_is_refused():

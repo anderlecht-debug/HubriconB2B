@@ -33,12 +33,13 @@ def test_payload_shape():
     assert len(v["idempotencyKey"]) <= usage.IDEMPOTENCY_KEY_MAX
 
 
-def test_idempotency_key_is_stable_and_changes_with_the_statement():
+def test_idempotency_key_is_stable_per_shop_month_and_line():
     a, b = _statement(), _statement()
-    assert usage.idempotency_key(a) == usage.idempotency_key(b)
-    assert usage.idempotency_key(a) != usage.idempotency_key(_statement(fee=199.0, net=199.0))
-    assert usage.idempotency_key(a) != usage.idempotency_key(_statement(month="2026-02"))
-    assert usage.idempotency_key(a) != usage.idempotency_key(_statement(shop="b.myshopify.com"))
+    assert usage.idempotency_key(a, LINE) == usage.idempotency_key(b, LINE)
+    # Changed numbers for the same month keep the key: Shopify never makes a second record.
+    assert usage.idempotency_key(a, LINE) == usage.idempotency_key(_statement(fee=199.0, net=199.0), LINE)
+    assert usage.idempotency_key(a, LINE) != usage.idempotency_key(_statement(month="2026-02"), LINE)
+    assert usage.idempotency_key(a, LINE) != usage.idempotency_key(_statement(shop="b.myshopify.com"), LINE)
 
 
 def test_send_success():

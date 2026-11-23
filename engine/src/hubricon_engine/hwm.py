@@ -15,13 +15,15 @@ network. usage.py turns a statement into the Shopify usage record.
 
 THE RULE, IN ORDER
 ------------------
-1. Strike. Dollars the brand disputed this month leave the Record as if they
-   had never been banked. Any fee they produced is refunded on this statement,
-   and the part of the peak they built is taken back down, so the next real
-   dollar is not spent filling a hole the struck one left.
-2. Bank. This month's dollars join the Record. A loss from a Hubricon move is a
+1. Bank. This month's dollars join the Record. A loss from a Hubricon move is a
    negative dollar: it lowers the cumulative total before anything else does,
    so no fee is charged until the loss is earned back.
+2. Strike. Dollars the brand disputed this month leave the Record as if they
+   had never been banked (banking first means a dollar disputed in its own
+   month is struck before it is ever charged). Any fee they produced and that
+   was actually collected is refunded on this statement, and the part of the
+   peak they built is taken back down, so the next real dollar is not spent
+   filling a hole the struck one left.
 3. Measure. The cumulative total we bill against is its LOWER bound: the 25th
    percentile of the book (measurement.bank_the_book's MEASURE_QUANTILE), as
    supplied with the month, never above the plain sum of the Record. A month
@@ -92,6 +94,7 @@ def run(shop: str, months: list[dict], *, cap_usd: float = DEFAULT_CAP_USD,
                       "month": "2026-03"}, ...],   # month defaults to the result's
          "lower_bound": 380.0,      # optional: cumulative book p25 after this month
          "disputed": ["d-4"],       # optional: ids the brand disputed this month
+         "collected": 1.0,          # optional: share of this month's fee Shopify took
          "cap_usd": 750.0}          # optional: the merchant raised the cap
 
     A negative `usd` is a loss from a Hubricon move. Grade "none" banks nothing
@@ -108,7 +111,21 @@ def run(shop: str, months: list[dict], *, cap_usd: float = DEFAULT_CAP_USD,
         prev = now
         lines: list[str] = []
 
-        # 1. Strike disputed dollars and refund what they paid.
+        # 1. Bank this month's dollars (before striking, so a dollar disputed in
+        #    its own month is found and struck, never charged).
+        for raw in m.get("dollars") or []:
+            if (raw.get("grade") or "").strip().lower() == "none":
+                continue
+            did = str(raw["id"])
+            if did in record or did in struck:
+                raise ValueError(f"dollar {did} banked twice")
+            usd = float(raw["usd"])
+            record[did] = {"id": did, "usd": usd, "grade": grade_of(raw["grade"]),
+                           "banked": month_index(raw.get("month") or m["month"]),
+                           "consumed": 0.0, "fee_paid": 0.0}
+
+        # 2. Strike disputed dollars and refund what they paid (fee_paid counts
+        #    only what was collected: see `collected` below).
         refunds = 0.0
         refunded_ids = []
         for did in m.get("disputed") or []:
@@ -128,18 +145,6 @@ def run(shop: str, months: list[dict], *, cap_usd: float = DEFAULT_CAP_USD,
                          + (f" and the {_usd(d['fee_paid'])} it was charged is refunded below."
                             if d["fee_paid"] > EPS else "; it had not been charged."))
             del record[did]
-
-        # 2. Bank this month's dollars.
-        for raw in m.get("dollars") or []:
-            if (raw.get("grade") or "").strip().lower() == "none":
-                continue
-            did = str(raw["id"])
-            if did in record or did in struck:
-                raise ValueError(f"dollar {did} banked twice")
-            usd = float(raw["usd"])
-            record[did] = {"id": did, "usd": usd, "grade": grade_of(raw["grade"]),
-                           "banked": month_index(raw.get("month") or m["month"]),
-                           "consumed": 0.0, "fee_paid": 0.0}
 
         # 3. The cumulative lower bound: never above the Record's own sum.
         point = sum(d["usd"] for d in record.values())
@@ -183,10 +188,14 @@ def run(shop: str, months: list[dict], *, cap_usd: float = DEFAULT_CAP_USD,
         fee = min(fee_raw, cap)
         capped = fee_raw > cap + EPS
         scale = fee / fee_raw if fee_raw > EPS else 0.0
+        # What Shopify actually took for this month's fee, as a share of it
+        # (1 when not said; 0 when the record was refused as capped or failed).
+        # A later dispute refunds only that: never money that was not charged.
+        collected = min(1.0, max(0.0, float(m.get("collected", 1.0))))
         for d, amt in take:
             d["consumed"] += amt
             rate = confirmed_rate if d["grade"] == "confirmed" else estimated_rate
-            d["fee_paid"] += rate * amt * scale
+            d["fee_paid"] += rate * amt * scale * collected
 
         # The glass box: the same numbers, in sentences.
         expl = [f"Your Record's cumulative proven total (its {'lower bound' if lb is not None else 'sum'}) "

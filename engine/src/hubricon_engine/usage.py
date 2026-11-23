@@ -16,7 +16,6 @@ the operator issues it (Shopify refunds app charges from the Partner Dashboard).
 """
 
 import hashlib
-import json
 
 CURRENCY = "USD"
 IDEMPOTENCY_KEY_MAX = 255    # Shopify's limit on appUsageRecordCreate's idempotencyKey
@@ -34,7 +33,7 @@ MUTATION = """mutation appUsageRecordCreate(
     description: $description
     idempotencyKey: $idempotencyKey
   ) {
-    appUsageRecord { id }
+    appUsageRecord { id price { amount } }
     userErrors { field message }
   }
 }"""
@@ -43,23 +42,30 @@ MUTATION = """mutation appUsageRecordCreate(
 CAP_ERROR_MARKERS = ("capped amount", "balance remaining", "exceeds the balance", "exceeds balance")
 
 
-def digest(statement: dict) -> str:
-    """sha256 of the statement's own numbers, canonical JSON, so the same
-    statement always gives the same key and a changed one never reuses it."""
-    body = json.dumps(statement, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(body.encode()).hexdigest()
-
-
-def idempotency_key(statement: dict) -> str:
-    """sha256(shop|month|statement digest): a retry of the same month sends the
-    same key, so Shopify charges it once however many times we try."""
-    raw = f"{statement['shop']}|{statement['month']}|{digest(statement)}"
+def idempotency_key(statement: dict, subscription_line_item_id: str | None = None) -> str:
+    """sha256(shop|month|line item): one key per month per subscription line,
+    whatever the statement's numbers. A retry, or a re-run on numbers that have
+    since changed, sends the same key, so Shopify returns the record it already
+    made and the month is charged once. A later correction is never a second
+    record for the month: it rides on the next month's statement as an
+    adjustment (shopify_run.cmd_meter)."""
+    line = subscription_line_item_id or statement.get("subscription_line_item_id") or ""
+    raw = f"{statement['shop']}|{statement['month']}|{line}"
     return hashlib.sha256(raw.encode()).hexdigest()[:IDEMPOTENCY_KEY_MAX]
 
 
+def _owed(statement: dict) -> float:
+    """What the month settles: `charge` (the meter's net of the month and any
+    adjustment) when given, else the statement's net fee."""
+    for k in ("charge", "net", "fee"):
+        if statement.get(k) is not None:
+            return float(statement[k])
+    return 0.0
+
+
 def amount(statement: dict) -> float:
-    """What this record charges: the net fee, never below zero."""
-    return round(max(0.0, float(statement.get("net", statement.get("fee", 0.0)))), 2)
+    """What this record charges: never below zero."""
+    return round(max(0.0, _owed(statement)), 2)
 
 
 def description(statement: dict) -> str:
@@ -68,6 +74,9 @@ def description(statement: dict) -> str:
         parts.append("capped")
     if float(statement.get("refunds") or 0) > 0:
         parts.append(f"after ${float(statement['refunds']):,.2f} refunded for disputes")
+    adj = float(statement.get("adjustment") or 0)
+    if abs(adj) >= 0.005:
+        parts.append(f"{'+' if adj > 0 else '-'}${abs(adj):,.2f} adjustment for earlier months")
     return ", ".join(parts)[:DESCRIPTION_MAX]
 
 
@@ -79,7 +88,7 @@ def payload(statement: dict, subscription_line_item_id: str) -> dict:
             "subscriptionLineItemId": subscription_line_item_id,
             "price": {"amount": f"{amount(statement):.2f}", "currencyCode": CURRENCY},
             "description": description(statement),
-            "idempotencyKey": idempotency_key(statement),
+            "idempotencyKey": idempotency_key(statement, subscription_line_item_id),
         },
     }
 
@@ -99,7 +108,7 @@ def send(statement: dict, transport, subscription_line_item_id: str | None = Non
       error            anything else; nothing was charged, retry is safe
     """
     line = subscription_line_item_id or statement.get("subscription_line_item_id")
-    due_back = round(max(0.0, -float(statement.get("net", 0.0))), 2)
+    due_back = round(max(0.0, -_owed(statement)), 2)
     out = {"status": None, "record_id": None, "amount": amount(statement),
            "refund_due": due_back, "errors": [], "payload": None}
     if out["amount"] <= 0:
@@ -124,5 +133,10 @@ def send(statement: dict, transport, subscription_line_item_id: str | None = Non
     elif messages or not (body.get("appUsageRecord") or {}).get("id"):
         out["status"], out["errors"] = "error", messages or ["no usage record returned"]
     else:
-        out["status"], out["record_id"] = "sent", body["appUsageRecord"]["id"]
+        rec = body["appUsageRecord"]
+        out["status"], out["record_id"] = "sent", rec["id"]
+        # The record Shopify holds (on a repeated key, the one it made first).
+        price = (rec.get("price") or {}).get("amount")
+        if price is not None:
+            out["amount"] = round(float(price), 2)
     return out

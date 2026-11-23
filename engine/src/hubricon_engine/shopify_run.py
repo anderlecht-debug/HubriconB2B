@@ -6,32 +6,39 @@ ingest|shadow|meter`. .github/workflows/shopify.yml runs them.
           upsert the same rows a CSV upload would write, and compute the free
           look-back (lookback.run), written to the private intake bucket under
           shopify/<shop>/lookback.json.
-  shadow  weekly (Monday). For each store: grade last week's sealed calls
-          against what happened (shadow.grade, which seals the measured
-          entries), then make and seal this week's (shadow.run). The calls are
-          kept in the intake bucket under shopify/<shop>/shadow/<week>.json so
+  shadow  weekly (Monday). For each store: grade the last full week's sealed
+          calls against what happened (shadow.grade, which seals the measured
+          entries), then make and seal NEXT week's (shadow.run), so each call
+          is sealed before its week begins. The calls are kept, written once
+          and never overwritten, in the intake bucket under
+          shopify/<shop>/shadow/<week>.json so
           the next run can grade them; before grading, each stored call is
-          checked against its sealed leaf's evidence digest, so a call edited
-          after sealing is refused, not graded.
+          rebuilt into its called document and checked against the sealed
+          leaf, so a call edited after sealing is refused, not graded.
   meter   monthly. For each live store: the months of measured dollars on the
-          client's directives, through hwm.run (the high-water-mark fee rule),
-          and the latest month's statement through usage.send. Dry run unless
-          --send. hwm and usage are imported lazily.
+          client's directives and the brand's disputes, through hwm.run (the
+          high-water-mark fee rule). Only the month that has just closed is
+          billed, once (key shop|month|line item): its net fee plus any drift
+          in months already billed, read back from shopify_fee_months, where
+          each month's billed amount, refund due and peak are persisted. Dry
+          run unless --send. hwm and usage are imported lazily.
 
 Stores come from shopify_shops (status 'active', or every one with --all) or
 from --shop with SHOPIFY_ACCESS_TOKEN. The token is decrypted with
 SHOPIFY_TOKEN_KEY exactly as lib/shopify.js encrypts it (AES-256-GCM, the shop
 domain as AAD). The data tables key on a clients row: a store's client is the
-shop row's client_id when it has one, else --client; a store with neither is
-skipped and named.
+shop row's client_id (or --client, for one --shop run); a store without one is
+skipped and named. --client is accepted only together with --shop. --client is accepted only together with --shop.
 """
 
 from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import json
 import os
+import re
 import sys
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
@@ -46,6 +53,33 @@ NEVER_BILLED_MODULES = {shadow.MODULE, ledger.MODULE}
 
 # ── stores and tokens ────────────────────────────────────────────────────────
 
+_HEX64 = re.compile(r"^[0-9a-fA-F]{64}$")
+_B64 = re.compile(r"^[A-Za-z0-9+/]*={0,2}$")
+
+
+def token_key(raw: str) -> bytes:
+    """SHOPIFY_TOKEN_KEY as 32 bytes, read exactly as lib/shopify.js tokenKey
+    reads it: 64 hex characters, or base64 in either alphabet (standard or
+    url-safe, padded or not). Anything else is refused, not half-decoded."""
+    raw = (raw or "").strip()
+    if not raw:
+        raise ValueError("SHOPIFY_TOKEN_KEY is not set")
+    if _HEX64.match(raw):
+        key = bytes.fromhex(raw)
+    else:
+        std = raw.replace("-", "+").replace("_", "/").rstrip("=")
+        std += "=" * (-len(std) % 4)
+        if not _B64.match(std) or len(std) % 4:
+            raise ValueError("SHOPIFY_TOKEN_KEY is neither hex nor base64")
+        try:
+            key = base64.b64decode(std, validate=True)
+        except (binascii.Error, ValueError) as err:
+            raise ValueError("SHOPIFY_TOKEN_KEY is neither hex nor base64") from err
+    if len(key) != 32:
+        raise ValueError("SHOPIFY_TOKEN_KEY must be 32 bytes")
+    return key
+
+
 def decrypt_token(blob: str, raw_key: str, shop: str = "") -> str:
     """lib/shopify.js decryptToken: "v1:" + base64url(iv[12] | tag[16] | ciphertext)."""
     from cryptography.hazmat.primitives.ciphers.aead import (
@@ -53,10 +87,7 @@ def decrypt_token(blob: str, raw_key: str, shop: str = "") -> str:
     )
     if not isinstance(blob, str) or not blob.startswith("v1:"):
         raise ValueError("unknown token format")
-    key = bytes.fromhex(raw_key) if len(raw_key) == 64 and all(c in "0123456789abcdefABCDEF" for c in raw_key) \
-        else base64.b64decode(raw_key)
-    if len(key) != 32:
-        raise ValueError("SHOPIFY_TOKEN_KEY must be 32 bytes")
+    key = token_key(raw_key)
     body = blob[3:]
     buf = base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
     iv, tag, ct = buf[:12], buf[12:28], buf[28:]
@@ -64,7 +95,13 @@ def decrypt_token(blob: str, raw_key: str, shop: str = "") -> str:
 
 
 def stores(db, args, env=os.environ) -> list[dict]:
-    """[{shop, token, client_id, row}] to run, each resolvable or skipped by name."""
+    """[{shop, token, client_id, row}] to run, each resolvable or skipped by name.
+
+    --client names one store's client and is accepted only with --shop: a run
+    over every store takes each store's own shopify_shops.client_id, so one
+    tenant's rows can never be written under another's."""
+    if getattr(args, "client", None) and not args.shop:
+        sys.exit("--client is only accepted together with --shop")
     if args.shop:
         token = env.get("SHOPIFY_ACCESS_TOKEN")
         if not token:
@@ -85,7 +122,7 @@ def stores(db, args, env=os.environ) -> list[dict]:
         except Exception as err:
             print(f"  skip {r['shop_domain']}: token not readable ({type(err).__name__})", file=sys.stderr)
             continue
-        out.append({"shop": r["shop_domain"], "token": token, "client_id": r.get("client_id") or args.client, "row": r})
+        out.append({"shop": r["shop_domain"], "token": token, "client_id": r.get("client_id"), "row": r})
     return out
 
 
@@ -160,7 +197,7 @@ def cmd_ingest(db, args) -> int:
     failures = 0
     for s in stores(db, args):
         if not s["client_id"]:
-            print(f"  skip {s['shop']}: no client_id on its shopify_shops row and no --client", file=sys.stderr)
+            print(f"  skip {s['shop']}: no client_id on its shopify_shops row", file=sys.stderr)
             continue
         try:
             out = ingest_store(db, s, today, args.days)
@@ -174,48 +211,76 @@ def cmd_ingest(db, args) -> int:
 # ── shadow ───────────────────────────────────────────────────────────────────
 
 def untampered(db, client_id: str, calls: list[dict]) -> tuple[list[dict], list[str]]:
-    """Stored calls whose evidence still hashes to what was sealed."""
+    """Stored calls that rebuild, field for field, into the document that was
+    sealed: the whole called document (expected dollars, band, text, target,
+    issue time and evidence), not only the evidence digest. A call edited in
+    the bucket after sealing is refused, never graded."""
     rows = db.table(sealmod.TABLE).select("*").eq("client_id", client_id).execute().data or []
     sealed = {r["entry_key"]: r for r in rows}
     ok, bad = [], []
     for c in calls:
-        row = sealed.get(sealmod.called_key(c["id"]))
+        row = sealed.get(sealmod.called_key(c.get("id")))
         doc = (row or {}).get("document") or {}
-        if row and doc.get("evidence_sha256") == sealmod.digest(sealmod.promise_evidence(c.get("evidence"))):
-            ok.append(c)
-        else:
-            bad.append(c["id"])
+        try:
+            rebuilt = sealmod.called_document(c, client_id, doc.get("sealed_at"), doc.get("sealed"))
+            same = bool(row) and sealmod.leaf_of(sealmod.as_stored(rebuilt)) == row.get("leaf") == sealmod.leaf_of(doc)
+        except Exception:
+            same = False
+        (ok.append(c) if same else bad.append(c.get("id")))
     return ok, bad
 
 
-def shadow_store(db, store: dict, today: date, days: int, pulled: dict | None = None) -> dict:
+def shadow_store(db, store: dict, today: date, days: int, pulled: dict | None = None, now=None) -> dict:
+    """Grade the last full week's sealed calls, then make and seal the calls
+    for the NEXT week (the Monday after today), so every call is sealed before
+    the week it predicts begins, in any store's time zone. A week's stored
+    calls are written once: a re-run adds only calls not yet stored and never
+    rewrites one, so the bucket always matches the seal."""
     pulled = pulled or shopify_api.pull(shopify_api.http_transport(store["shop"], store["token"]),
                                         shopify_api.http_downloader(), today=today, days=days)
     tz = (pulled.get("shop") or {}).get("timezone") or "UTC"
     cid = store["client_id"]
-    week = _monday(today)
+    this_week = _monday(today)
+    week = this_week + timedelta(days=7)          # the week the new calls predict
+    graded_week = this_week - timedelta(days=7)   # the last week that has fully happened
+    base = f"shopify/{store['shop']}/shadow"
     tables = {t: rows for t, rows, _ in shopify_api.ingest(pulled, cid)}
     econ = shopify_api.weekly_economics(pulled["orders"], cid, date.fromisoformat(pulled["since"]),
-                                        week - timedelta(days=1), tz)
-    out = {"graded": None, "refused": []}
-    last = _get(db, f"shopify/{store['shop']}/shadow/{(week - timedelta(days=7)).isoformat()}.json")
+                                        this_week - timedelta(days=1), tz)
+    out = {"graded": None, "refused": [], "week_start": week.isoformat()}
+    last = _get(db, f"{base}/{graded_week.isoformat()}.json")
     if last:
         calls, out["refused"] = untampered(db, cid, last)
         out["graded"] = shadow.grade(calls, econ, tables.get("cogs_inputs"), db=db, client_id=cid)
-        _put(db, f"shopify/{store['shop']}/shadow/{(week - timedelta(days=7)).isoformat()}.grade.json", out["graded"])
-        summary = _get(db, f"shopify/{store['shop']}/shadow/summary.json") or {"weeks": []}
-        summary["weeks"] = [w for w in summary["weeks"] if w["week_start"] != (week - timedelta(days=7)).isoformat()]
-        summary["weeks"].append({"week_start": (week - timedelta(days=7)).isoformat(), "n_graded": out["graded"]["n_graded"],
+        _put(db, f"{base}/{graded_week.isoformat()}.grade.json", out["graded"])
+        summary = _get(db, f"{base}/summary.json") or {"weeks": []}
+        summary["weeks"] = [w for w in summary["weeks"] if w["week_start"] != graded_week.isoformat()]
+        summary["weeks"].append({"week_start": graded_week.isoformat(), "n_graded": out["graded"]["n_graded"],
                                  "hits": out["graded"]["hits"], "gap_units": out["graded"]["gap_units"]})
         n = sum(w["n_graded"] for w in summary["weeks"])
         summary.update({"label": "sealed call", "n_graded": n, "hits": sum(w["hits"] for w in summary["weeks"]),
                         "hit_rate": round(sum(w["hits"] for w in summary["weeks"]) / n, 4) if n else None,
                         "target_hit_rate": out["graded"]["target_hit_rate"]})
-        _put(db, f"shopify/{store['shop']}/shadow/summary.json", summary)
+        _put(db, f"{base}/summary.json", summary)
     data = {**tables, "sku_economics": econ}
-    made = shadow.run(db, data, cid, week)
-    if made["seal"]["status"] in (sealmod.SEALED, sealmod.ALREADY, sealmod.PARTIAL):
-        _put(db, f"shopify/{store['shop']}/shadow/{week.isoformat()}.json", made["calls"])
+    now = now or datetime.now(UTC)
+    if now.date() >= week - timedelta(days=1):
+        # Within a day of the week's start (the earliest time zone's Monday), a
+        # call could be sealed after its week began: none is made.
+        out.update({"calls": 0, "seal": "too_late"})
+        out["mandate"] = mandate_store(db, store, today, data, pulled)
+        return out
+    made = shadow.run(db, data, cid, week, issued_at=now)
+    path = f"{base}/{week.isoformat()}.json"
+    kept = _get(db, path) or []
+    have = {c["id"] for c in kept}
+    marks = made["seal"].get("short") or {}
+    new = [c for c in made["calls"] if c["id"] not in have and c["id"] in marks]
+    if new:
+        # Stored calls are kept exactly as they were sealed; only calls not yet
+        # stored are added (a call whose seal predates this run and differs from
+        # it is refused at grading by `untampered`, never trusted).
+        _put(db, path, kept + new)
     out.update({"calls": len(made["calls"]), "seal": made["seal"]["status"]})
     out["mandate"] = mandate_store(db, store, today, data, pulled)
     return out
@@ -274,8 +339,20 @@ def cmd_shadow(db, args) -> int:
 
 # ── meter ────────────────────────────────────────────────────────────────────
 
-def months_of(directives: list[dict], disputed: set[str] | None = None) -> list[dict]:
-    """hwm.run's input from a client's measured directives (never a shadow call)."""
+FEE_MONTHS = "shopify_fee_months"
+DISPUTES = "shopify_disputes"
+# A month whose record was sent, or that had nothing to send, is settled: what
+# it billed is known and later corrections to it ride on the next statement.
+# A month Shopify refused (capped) or that failed collected nothing.
+SETTLED = {"sent", "nothing_to_bill", "refund_due"}
+
+
+def months_of(directives: list[dict], disputed=None) -> list[dict]:
+    """hwm.run's input from a client's measured directives (never a shadow call).
+
+    `disputed` is {directive id: month the brand disputed it} (shopify_disputes);
+    each dispute is applied in its own month. A plain set of ids is applied in
+    the latest month."""
     by: dict[str, list[dict]] = defaultdict(list)
     for d in directives:
         # Shadow calls were never made; ledger entries were never ours. Neither is ever billed.
@@ -285,12 +362,104 @@ def months_of(directives: list[dict], disputed: set[str] | None = None) -> list[
         month = str(d["measured_at"])[:7]
         by[month].append({"id": str(d["id"]), "usd": float(d["measured_impact_usd"]),
                           "grade": d.get("attribution") or "none", "month": month})
-    return [{"month": m, "dollars": by[m], "disputed": sorted(disputed or ())} for m in sorted(by)]
+    if disputed and not isinstance(disputed, dict):
+        last = max(by) if by else None
+        disputed = {str(i): last for i in disputed} if last else {}
+    hits: dict[str, list[str]] = defaultdict(list)
+    for did, month in (disputed or {}).items():
+        hits[str(month)[:7]].append(str(did))
+    return [{"month": m, "dollars": by.get(m, []), "disputed": sorted(hits.get(m, []))}
+            for m in sorted(set(by) | set(hits))]
+
+
+def load_disputes(db, shop: str) -> dict[str, str]:
+    """{directive id: the month it was disputed in}, from shopify_disputes."""
+    try:
+        rows = db.table(DISPUTES).select("*").eq("shop_domain", shop).execute().data or []
+    except Exception:
+        return {}
+    return {str(r["directive_id"]): str(r["disputed_at"])[:7] for r in rows if r.get("disputed_at")}
+
+
+def load_billed(db, shop: str) -> dict[str, dict]:
+    """{month: its shopify_fee_months row}: what each month billed, refunded and
+    the peak it was billed on, as the previous runs persisted them."""
+    rows = db.table(FEE_MONTHS).select("*").eq("shop_domain", shop).execute().data or []
+    return {r["month"]: r for r in rows}
+
+
+def closed_month(today: date) -> str:
+    """The calendar month that has just closed: the only month a run bills."""
+    return (today.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
+
+
+def _f(row: dict | None, key: str) -> float:
+    return float((row or {}).get(key) or 0)
+
+
+def settle(shop: str, months: list[dict], billed: dict[str, dict], month: str, *, cap_usd: float):
+    """(statements, the closed month's charge statement).
+
+    Every month is recomputed from the Record. A settled month's share of its
+    fee was collected in full; a capped or failed month collected nothing, so a
+    later dispute refunds nothing for it (hwm's `collected`). The closed month
+    is charged its net fee plus the drift of every settled month since it was
+    billed: (what settled months owe now) - (what they billed, less refunds
+    due). That is how a late dollar, a re-measure or a dispute in an already
+    billed month is settled: once, on the next statement, never as a second
+    record for the month it belongs to."""
+    from . import hwm
+    months = [m for m in months if m["month"] <= month]
+    if not any(m["month"] == month for m in months):
+        months.append({"month": month, "dollars": [], "disputed": []})
+    for m in months:
+        row = billed.get(m["month"])
+        if m["month"] != month:
+            m["collected"] = 1.0 if (row or {}).get("status") in SETTLED else 0.0
+    statements = hwm.run(shop, months, cap_usd=cap_usd)
+    by = {s["month"]: s for s in statements}
+    settled = [k for k, r in billed.items() if k < month and r.get("status") in SETTLED and k in by]
+    owed_before = sum(by[k]["net"] for k in settled)
+    paid_before = sum(_f(billed[k], "billed_usd") - _f(billed[k], "refund_due_usd") for k in settled)
+    adjustment = round(owed_before - paid_before, 2)
+    cur = by[month]
+    charge = round(cur["net"] + adjustment, 2)
+    last = max(settled) if settled else None
+    explanation = list(cur["explanation"])
+    if abs(adjustment) >= 0.005:
+        explanation.append(f"Adjustment for months already billed: {'+' if adjustment > 0 else '-'}"
+                           f"${abs(adjustment):,.2f} (a dollar that landed late, a re-measure or a dispute "
+                           f"changed what they owe; each month is billed once, so the difference is settled here).")
+    if last and abs(_f(billed[last], "peak_usd") - cur["peak_before"]) >= 0.005:
+        explanation.append(f"The high-water mark was ${_f(billed[last], 'peak_usd'):,.2f} when {last} was billed; "
+                           f"on the Record as it stands now it is ${cur['peak_before']:,.2f}.")
+    return statements, {**cur, "adjustment": adjustment, "charge": charge,
+                        "peak_billed_before": _f(billed.get(last), "peak_usd") if last else 0.0,
+                        "explanation": explanation}
+
+
+def _persist(db, shop: str, st: dict, res: dict, line: str | None, now: datetime) -> dict:
+    from . import usage
+    status = res["status"]
+    if status == "nothing_to_bill" and res.get("refund_due", 0) > 0:
+        status = "refund_due"
+    row = {"shop_domain": shop, "month": st["month"], "status": status,
+           "fee_usd": st["fee"], "net_usd": st["net"], "adjustment_usd": st["adjustment"],
+           "charge_usd": st["charge"],
+           "billed_usd": res["amount"] if status == "sent" else 0.0,
+           "refund_due_usd": res.get("refund_due") or 0.0,
+           "peak_usd": st["peak_after"], "record_id": res.get("record_id"),
+           "idempotency_key": usage.idempotency_key(st, line) if line else None,
+           "errors": res.get("errors") or None, "updated_at": now.isoformat()}
+    db.table(FEE_MONTHS).upsert(row, on_conflict="shop_domain,month").execute()
+    return row
 
 
 def cmd_meter(db, args) -> int:
     from . import hwm, usage  # lazy: built beside this module
     from .db import fetch_all
+    today = date.fromisoformat(args.today) if args.today else datetime.now(UTC).date()
+    month = closed_month(today)
     failures = 0
     for s in stores(db, args):
         row = s["row"] or {}
@@ -300,20 +469,41 @@ def cmd_meter(db, args) -> int:
         if not s["client_id"]:
             print(f"  skip {s['shop']}: no client_id", file=sys.stderr)
             continue
-        months = months_of(fetch_all(db, "directives", s["client_id"]))
-        if not months:
+        months = months_of(fetch_all(db, "directives", s["client_id"]), load_disputes(db, s["shop"]))
+        billed = load_billed(db, s["shop"])
+        if not [m for m in months if m["month"] <= month] and not billed:
             print(f"  {s['shop']}: no measured dollars, nothing to bill")
             continue
-        statements = hwm.run(s["shop"], months, cap_usd=float(row.get("cap_usd") or hwm.DEFAULT_CAP_USD))
-        latest = statements[-1]
-        _put(db, f"shopify/{s['shop']}/fee.json", {"label": "proven", "statements": statements})
+        statements, st = settle(s["shop"], months, billed, month,
+                                cap_usd=float(row.get("cap_usd") or hwm.DEFAULT_CAP_USD))
+        _put(db, f"shopify/{s['shop']}/fee.json", {
+            "label": "proven", "month": month, "statements": statements, "closing": st,
+            "billed": {k: {"status": r.get("status"), "billed_usd": _f(r, "billed_usd"),
+                           "refund_due_usd": _f(r, "refund_due_usd"), "peak_usd": _f(r, "peak_usd")}
+                       for k, r in sorted(billed.items())}})
         if meter_gate.mark_ask(db, s["shop"], row, statements):
             print(f"  {s['shop']}: first proven dollar banked; the fee question is now open")
-        if not args.send:
-            print(f"  {s['shop']}: dry run, {latest.get('month')} statement {json.dumps(latest, default=str)[:300]}")
+        done = billed.get(month)
+        if done and done.get("status") not in ("error",):
+            # Billed (or refused as capped) already: never a second record for
+            # the month. Anything that changed rides on next month's adjustment.
+            print(f"  {s['shop']}: {month} already {done.get('status')}, nothing sent")
             continue
-        res = usage.send(latest, shopify_api.http_transport(s["shop"], s["token"]), row.get("usage_line_item_id"))
-        print(f"  {s['shop']}: {res['status']} {res.get('amount')}")
+        if not args.send:
+            print(f"  {s['shop']}: dry run, {month} charge {st['charge']:.2f} "
+                  f"(net {st['net']:.2f}, adjustment {st['adjustment']:.2f})")
+            continue
+        line = row.get("usage_line_item_id")
+        res = usage.send(st, shopify_api.http_transport(s["shop"], s["token"]), line)
+        saved = _persist(db, s["shop"], st, res, line, datetime.now(UTC))
+        settled = {**billed, month: saved}
+        db.table(SHOPS).update({
+            "peak_usd": st["peak_after"],
+            "billed_usd": round(max(0.0, sum(_f(r, "billed_usd") - _f(r, "refund_due_usd")
+                                             for r in settled.values() if r.get("status") in SETTLED)), 2),
+        }).eq("shop_domain", s["shop"]).execute()
+        print(f"  {s['shop']}: {month} {saved['status']} {res.get('amount')}"
+              + (f", {res['refund_due']:.2f} due back to the brand" if res.get("refund_due") else ""))
         failures += res["status"] == "error"
     return 1 if failures else 0
 

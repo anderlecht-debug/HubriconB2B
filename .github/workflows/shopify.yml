@@ -3,8 +3,8 @@ name: Shopify app
 # The Shopify app's scheduled jobs (BUILD_PLAN M2 to M5), one entry point:
 # engine/src/hubricon_engine/shopify_run.py.
 #   nightly  ingest  orders (60 days), products, stock via Bulk Operations, plus the free look-back
-#   Mondays  shadow  grade last week's sealed calls, then make and seal this week's; nothing is executed
-#   monthly  meter   the high-water-mark statement per live store (hwm), sent as a usage record (usage)
+#   Mondays  shadow  grade the last full week's sealed calls, then make and seal NEXT week's (sealed before it begins); nothing is executed
+#   monthly  meter   bills the month that just closed, once, per live store (hwm + usage; shopify_fee_months)
 on:
   schedule:
     - cron: "15 7 * * *"   # nightly ingest, 07:15 UTC

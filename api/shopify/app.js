@@ -116,7 +116,7 @@ export async function pageData(shop, { env, fetch, now }) {
     ),
   );
   const ends = shadowEnds(row.installed_at, limits.shadow_weeks);
-  const latest = fee?.statements?.at?.(-1) ?? null;
+  const latest = fee?.closing ?? fee?.statements?.at?.(-1) ?? null;
   return {
     shop,
     status: row.status,

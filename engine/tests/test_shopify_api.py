@@ -3,8 +3,8 @@
 The three JSONL fixtures describe the same store as
 tests/fixtures/shopify_{orders,products,inventory}_clean.csv (the store keeps
 New York time, so the API's UTC timestamps are four hours ahead of the
-export's). The golden tests hold the two paths equal: orders and customer
-orders in full, products and stock on every field the two sources share (the
+export's). The golden tests hold the two paths equal: orders in full (the API
+path pulls no customer email, so it writes no customer orders), products and stock on every field the two sources share (the
 products export's raw row is the CSV line itself, so only its parsed
 `_variant` numbers compare; the inventory API has no line for a location an
 item is not stocked at, where the export prints a blank one)."""
@@ -42,8 +42,11 @@ def test_orders_golden_equal_to_the_csv_export():
     api = sa.orders_rows(_lines("shopify_bulk_orders.jsonl"), UPLOAD, NY)
     csv = _csv("shopify_orders", "shopify_orders_clean.csv")
     assert [t for t, _, _ in api] == ["sku_economics", "customer_orders"]
-    assert api == csv                      # every row, raw included
-    assert len(api[0][1]) == 5 and len(api[1][1]) == 5
+    # The app pulls no customer email (REVIEW_M1 #2), so the per-customer rows
+    # the CSV export yields are never written from the API; the rest is equal.
+    assert api[0] == csv[0]                # every sku_economics row, raw included
+    assert api[1][1] == [] and len(csv[1][1]) == 5
+    assert len(api[0][1]) == 5
 
 
 def test_products_golden_on_the_shared_fields():
@@ -137,7 +140,7 @@ def test_ingest_of_a_pull_equals_the_three_csv_uploads():
     csv_orders = {t: rows for t, rows, _ in _csv("shopify_orders", "shopify_orders_clean.csv")}
     strip = lambda rows: [{k: v for k, v in r.items() if k != "upload_id"} for r in rows]
     assert strip(out["sku_economics"]) == strip(csv_orders["sku_economics"])
-    assert strip(out["customer_orders"]) == strip(csv_orders["customer_orders"])
+    assert out["customer_orders"] == []    # no customer email is pulled (REVIEW_M1 #2)
     inv = {r["sku"]: r for r in out["inventory_levels"]}
     # the inventory pull's quantities, with the products export's variant numbers kept for the findings
     assert inv["WIDGET-BLUE"]["fulfillable_quantity"] == 412 and inv["WIDGET-BLUE"]["inbound_quantity"] == 100

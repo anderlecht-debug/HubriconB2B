@@ -77,7 +77,7 @@ def orders_query(since: date) -> str:
 {
   orders(query: "created_at:>=%s") {
     edges { node {
-      id name email createdAt cancelledAt displayFinancialStatus
+      id name createdAt cancelledAt displayFinancialStatus
       totalRefundedSet { shopMoney { amount } }
       lineItems { edges { node {
         id name sku quantity
@@ -289,7 +289,10 @@ def orders_frame(lines: list[dict], tz: str = "UTC") -> pd.DataFrame:
             first = i == 0
             rows.append({
                 "Name": _s(o.get("name")),
-                "Email": _s(o.get("email")) if first else "",
+                # Never the customer's email: nothing the app computes needs it
+                # (look-back, ledger, shadow, meter), so no customer_orders row
+                # is written and no protected customer data is asked for.
+                "Email": "",
                 "Financial Status": _s(o.get("displayFinancialStatus")).lower() if first else "",
                 "Created at": local_time(o.get("createdAt"), tz) if first else "",
                 "Cancelled at": local_time(o.get("cancelledAt"), tz) if first else "",
