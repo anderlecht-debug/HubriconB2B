@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubricon for your store</title>
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="/assets/hubricon.css">
+<style>
+/* /app: the page Shopify opens for an installed store. Every value is a token from
+   /assets/hubricon.css. Every number on it carries the name of what kind of number
+   it is (.est beside it): hindsight, sealed call, observed, not ours, or proven. */
+.app { padding-block: var(--s-6) var(--s-9); display: grid; gap: var(--s-7); }
+.app h1 { font-size: var(--t-display-s); }
+.app h2 { font-size: var(--t-24); margin-bottom: var(--s-3); }
+.app section { display: grid; gap: var(--s-3); border-top: 1px solid var(--rule); padding-top: var(--s-5); }
+.app .note { color: var(--ink-2); font-size: var(--t-14); max-width: 70ch; }
+.app ul { display: grid; gap: var(--s-2); padding-left: var(--s-5); }
+.app .row { display: flex; gap: var(--s-3); flex-wrap: wrap; align-items: baseline; }
+.app form { display: grid; gap: var(--s-3); max-width: 44ch; }
+.app label { display: flex; gap: var(--s-2); align-items: center; }
+.app input[type=number] { width: 8ch; font: inherit; padding: var(--s-1) var(--s-2); border: 1px solid var(--rule-2); border-radius: 6px; }
+.app .err { color: var(--ink); font-weight: var(--strong); }
+</style>
+</head>
+<body>
+<main class="wrap app" id="app">
+  <header>
+    <p class="label">Hubricon</p>
+    <h1 id="title">Your store</h1>
+    <p class="note" id="status">Loading…</p>
+  </header>
+
+  <section id="lookback" aria-labelledby="h-lookback">
+    <h2 id="h-lookback">Look-back <span class="label label-box">hindsight</span></h2>
+    <p class="note">What your own past price changes, stockouts and slow stock cost or earned, in hindsight from your orders. Not a call we sealed before the fact, not on your Profit Record, never charged.</p>
+    <div data-body></div>
+  </section>
+
+  <section id="shadow" aria-labelledby="h-shadow">
+    <h2 id="h-shadow">Shadow mode <span class="label label-box">sealed call</span></h2>
+    <p class="note">Each week the engine seals its calls before the week starts, acts on none of them, then grades them against what happened.</p>
+    <div data-body></div>
+  </section>
+
+  <section id="observed" aria-labelledby="h-observed">
+    <h2 id="h-observed">Moves we saw, not ours <span class="label label-box">observed, not ours</span></h2>
+    <p class="note">Price changes, archived products and large deliveries we saw in your store that Hubricon did not make, sealed the night we saw them. A grade here is a before and after on your own orders: not randomised, and never billed.</p>
+    <div data-body></div>
+  </section>
+
+  <section id="fee" aria-labelledby="h-fee">
+    <h2 id="h-fee">Your fee statement <span class="label label-box">proven</span></h2>
+    <p class="note">A fee is charged only on new highs of your cumulative proven profit, losses first, each dollar for 12 months, capped. Dispute any dollar and it is refunded.</p>
+    <div data-body></div>
+  </section>
+
+  <section id="tap" aria-labelledby="h-tap">
+    <h2 id="h-tap">Waiting for your tap</h2>
+    <p class="note">Moves outside your limits. Nothing here runs unless you say so.</p>
+    <div data-body></div>
+  </section>
+
+  <section id="limits" aria-labelledby="h-limits">
+    <h2 id="h-limits">Your limits</h2>
+    <p class="note" id="limits-note"></p>
+    <form id="mandate">
+      <label><input type="checkbox" name="price_moves_enabled"> Let Hubricon move prices inside these limits</label>
+      <label>Largest single price step <input type="number" name="max_price_step_pct" min="0.5" max="5" step="0.5"> %</label>
+      <label><input type="checkbox" name="reorder_needs_tap" checked> Reorders wait for my tap</label>
+      <button class="btn" type="submit">Save my limits</button>
+      <p class="note" id="mandate-msg" role="status"></p>
+    </form>
+  </section>
+</main>
+<script type="module">
+// Everything is written with textContent: no figure from the server is ever parsed as HTML.
+const $ = (sel, root = document) => root.querySelector(sel);
+const el = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
+const usd = (v) => (v == null ? "—" : `${v < 0 ? "−" : ""}$${Math.abs(Number(v)).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
+// A number, always with the name of what it is beside it.
+function fig(text, label, money = true) {
+  const s = el("span"); s.append(el("span", text, money ? "money" : "tnum"), el("span", label, "est")); return s;
+}
+function line(...parts) { const p = el("p", null, "row"); for (const x of parts) p.append(typeof x === "string" ? el("span", x) : x); return p; }
+function list(items, render) { const ul = el("ul"); for (const i of items) { const li = el("li"); li.append(...[].concat(render(i))); ul.append(li); } return ul; }
+const body = (id) => { const b = $(`#${id} [data-body]`); b.replaceChildren(); return b; };
+const empty = (id, text) => body(id).append(el("p", text, "note"));
+
+let session = null;
+
+function renderLookback({ label, data }) {
+  if (!data) return empty("lookback", "Your look-back appears after the first nightly read of your store.");
+  const b = body("lookback");
+  const t = data.total || {};
+  b.append(line("Over", fig(String(data.window?.days ?? ""), label, false), "days:", fig(usd(t.usd), label),
+                "(range", fig(usd(t.usd_low), label), "to", fig(usd(t.usd_high), label), ")"));
+  b.append(list(data.summary || [], (s) => [el("span", s), el("span", label, "est")]));
+}
+
+function renderShadow({ label, data }) {
+  if (!data || !data.n_graded) return empty("shadow", "No week has been graded yet. The first grade lands the Monday after the first sealed week.");
+  const b = body("shadow");
+  const pct = (x) => `${Math.round(Number(x) * 100)}%`;
+  b.append(line("Hit rate:", fig(pct(data.hit_rate), label, false), "of", fig(String(data.n_graded), label, false),
+                "calls landed inside their 90% range (aim:", fig(pct(data.target_hit_rate), label, false), ")."));
+  b.append(list((data.weeks || []).slice(-8).reverse(), (w) => [el("span", `Week of ${w.week_start}: `),
+    fig(`${w.hits} of ${w.n_graded}`, label, false), el("span", " inside; units off by "), fig(String(w.gap_units), label, false)]));
+}
+
+function renderObserved({ label, data }) {
+  const rows = data?.entries || [];
+  if (!rows.length) return empty("observed", "Nothing seen yet. Each night we compare your prices, stock and products with the night before.");
+  body("observed").append(list(rows.slice(-30).reverse(), (e) => {
+    const out = [el("span", e.text), el("span", label, "est")];
+    const g = e.grade;
+    if (g?.graded) out.push(el("br"), el("span", "Graded: "), fig(usd(g.usd), g.label), el("span", " (range "),
+      fig(usd(g.usd_low), label), el("span", " to "), fig(usd(g.usd_high), label), el("span", ")"));
+    else if (g) out.push(el("br"), el("span", g.basis, "note"));
+    return out;
+  }));
+}
+
+function renderFee(fee, question) {
+  const b = body("fee");
+  const s = fee.statement;
+  if (!s) b.append(el("p", "No proven dollar is on your Record yet, so nothing has been charged.", "note"));
+  else {
+    b.append(line(`${s.month}: cumulative proven`, fig(usd(s.cumulative), fee.label), "· fee", fig(usd(s.fee), fee.label),
+                  "· net", fig(usd(s.net), fee.label)));
+    b.append(list(fee.lines, (t) => [el("span", t), el("span", fee.label, "est")]));
+  }
+  b.append(line("Monthly cap:", fig(usd(fee.cap_usd), fee.label)));
+  if (question.state === "ask") {
+    const box = el("div", null, "row");
+    box.append(el("p", "Your first proven dollar is on your Record. Do you approve the fee on proven dollars as described above?"));
+    for (const [text, approved] of [["Yes, I approve", true], ["No", false]]) {
+      const btn = el("button", text, "btn"); btn.type = "button";
+      btn.addEventListener("click", () => post({ action: "fee_answer", approved }).then(load));
+      box.append(btn);
+    }
+    b.append(box);
+  } else if (question.state !== "none") b.append(el("p", `You answered the fee question: ${question.state}.`, "note"));
+}
+
+function renderTap({ label, data }) {
+  const moves = data?.moves || [];
+  if (!moves.length) return empty("tap", "Nothing is waiting for you.");
+  body("tap").append(list(moves, (m) => [el("span", m.text || m.kind), el("br"), el("span", `Why it waits: ${m.why}. `, "note"),
+    ...(m.expected_usd == null ? [] : [el("span", "Expected "), fig(usd(m.expected_usd), "estimate, not sealed")])]));
+}
+
+function renderLimits(m) {
+  const f = $("#mandate");
+  f.price_moves_enabled.checked = !!m.price_moves_enabled;
+  f.max_price_step_pct.value = m.max_price_step_pct;
+  f.reorder_needs_tap.checked = m.reorder_needs_tap !== false;
+  const notes = [];
+  notes.push(m.in_shadow ? `Shadow mode until ${m.shadow_ends ?? "four weeks after install"}: nothing runs before then, whatever you set.`
+                         : "Shadow mode is over: price steps inside your limits can run, each sealed on your Record before it does.");
+  if (!m.write_access) notes.push("Hubricon has read access only. Price steps wait for your tap until you grant write access.");
+  notes.push("The app never places a purchase order: a reorder always waits for you.");
+  $("#limits-note").textContent = notes.join(" ");
+}
+
+async function post(payload) {
+  const res = await fetch("/api/shopify/app", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${session}` }, body: JSON.stringify(payload) });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || `Error ${res.status}`);
+  return out;
+}
+
+$("#mandate").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const f = ev.currentTarget;
+  const msg = $("#mandate-msg");
+  try {
+    await post({ action: "mandate", price_moves_enabled: f.price_moves_enabled.checked,
+                 max_price_step_pct: Number(f.max_price_step_pct.value), reorder_needs_tap: f.reorder_needs_tap.checked });
+    msg.textContent = "Saved.";
+  } catch (err) { msg.textContent = err.message; msg.className = "err"; }
+});
+
+async function load() {
+  const headers = session ? { authorization: `Bearer ${session}` } : {};
+  const res = await fetch(`/api/shopify/app${session ? "" : location.search}`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { $("#status").textContent = data.error || "This page opens from your Shopify admin."; return; }
+  session = data.session;
+  if (location.search) history.replaceState(null, "", location.pathname);   // the signed query is not kept in the address bar
+  $("#title").textContent = data.shop;
+  $("#status").textContent = data.mandate.in_shadow ? "Shadow mode: we call, seal and grade; we change nothing." : "Live inside your limits.";
+  renderLookback(data.lookback); renderShadow(data.shadow); renderObserved(data.observed);
+  renderFee(data.fee, data.fee_question); renderTap(data.awaiting_tap); renderLimits(data.mandate);
+}
+load();
+</script>
+</body>
+</html>

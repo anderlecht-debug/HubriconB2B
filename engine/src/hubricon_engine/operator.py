@@ -1762,6 +1762,12 @@ class Pass:
             lines += approval.digest_lines(self.db)
         except Exception as err:
             lines += [f"Waiting for your approval: could not be read ({err}).", ""]
+        # The pre-registered fee question and its kill counter (meter_gate.py, BUILD_PLAN M6).
+        try:
+            from . import meter_gate
+            lines += meter_gate.digest_lines(self.db)
+        except Exception as err:
+            lines += [f"Fee question: could not be read ({err}).", ""]
         if self.human:
             lines += ["Only you can do these:"] + [f"  - {h}" for h in self.human] + [""]
         if self.warnings:

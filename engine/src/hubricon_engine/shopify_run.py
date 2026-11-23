@@ -36,11 +36,12 @@ import sys
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 
-from . import lookback, shadow, shopify_api
+from . import ledger, lookback, mandate, meter_gate, shadow, shopify_api
 from . import seal as sealmod
 
 SHOPS = "shopify_shops"
 BUCKET = "intake"
+NEVER_BILLED_MODULES = {shadow.MODULE, ledger.MODULE}
 
 
 # ── stores and tokens ────────────────────────────────────────────────────────
@@ -120,7 +121,38 @@ def ingest_store(db, store: dict, today: date, days: int, pulled: dict | None = 
         pulled["orders"], store["client_id"], date.fromisoformat(pulled["since"]), today - timedelta(days=1), tz)
     look = lookback.run(tables, today=today, window_days=days, last_sold=shopify_api.last_sold(pulled["orders"], tz))
     _put(db, f"shopify/{store['shop']}/lookback.json", look)
-    return {"rows": {t: len(r) for t, r, _ in written}, "lookback": look}
+    led = ledger_store(db, store, today, tables, pulled)
+    return {"rows": {t: len(r) for t, r, _ in written}, "lookback": look, "ledger": led}
+
+
+def _ours(db, client_id: str) -> set:
+    """(variant_id, price) of every step Hubricon executed, so the ledger leaves them out."""
+    try:
+        rows = db.table("directives").select("evidence, executed_by").eq("client_id", client_id).execute().data or []
+    except Exception:
+        return set()
+    return {((r.get("evidence") or {}).get("variant_id"), float((r.get("evidence") or {}).get("p_new")))
+            for r in rows if r.get("executed_by") == mandate.EXECUTED_BY
+            and (r.get("evidence") or {}).get("variant_id") and (r.get("evidence") or {}).get("p_new") is not None}
+
+
+def ledger_store(db, store: dict, today: date, tables: dict, pulled: dict) -> dict:
+    """Snapshot tonight's variants, seal every move seen since the last
+    snapshot as observed-not-ours, grade the ledger, and keep it for the app."""
+    base = f"shopify/{store['shop']}"
+    cid = store["client_id"]
+    cur = ledger.snapshot(pulled.get("products") or [], today)
+    prev = _get(db, f"{base}/snapshot.json")
+    found = ledger.detect(prev, cur, cid, ours=_ours(db, cid))
+    sealed = ledger.seal(db, cid, found) if found else {"status": sealmod.NOTHING}
+    kept = _get(db, f"{base}/ledger_entries.json") or []
+    have = {e["id"] for e in kept}
+    entries = kept + [e for e in found if e["id"] not in have and e["id"] in (sealed.get("short") or {})]
+    grades = ledger.grade(entries, tables, today, db=db, client_id=cid)
+    _put(db, f"{base}/ledger_entries.json", entries)
+    _put(db, f"{base}/ledger.json", ledger.summary(entries, grades))
+    _put(db, f"{base}/snapshot.json", cur)
+    return {"seen": len(found), "seal": sealed.get("status"), "entries": len(entries)}
 
 
 def cmd_ingest(db, args) -> int:
@@ -171,11 +203,53 @@ def shadow_store(db, store: dict, today: date, days: int, pulled: dict | None = 
         calls, out["refused"] = untampered(db, cid, last)
         out["graded"] = shadow.grade(calls, econ, tables.get("cogs_inputs"), db=db, client_id=cid)
         _put(db, f"shopify/{store['shop']}/shadow/{(week - timedelta(days=7)).isoformat()}.grade.json", out["graded"])
-    made = shadow.run(db, {**tables, "sku_economics": econ}, cid, week)
+        summary = _get(db, f"shopify/{store['shop']}/shadow/summary.json") or {"weeks": []}
+        summary["weeks"] = [w for w in summary["weeks"] if w["week_start"] != (week - timedelta(days=7)).isoformat()]
+        summary["weeks"].append({"week_start": (week - timedelta(days=7)).isoformat(), "n_graded": out["graded"]["n_graded"],
+                                 "hits": out["graded"]["hits"], "gap_units": out["graded"]["gap_units"]})
+        n = sum(w["n_graded"] for w in summary["weeks"])
+        summary.update({"label": "sealed call", "n_graded": n, "hits": sum(w["hits"] for w in summary["weeks"]),
+                        "hit_rate": round(sum(w["hits"] for w in summary["weeks"]) / n, 4) if n else None,
+                        "target_hit_rate": out["graded"]["target_hit_rate"]})
+        _put(db, f"shopify/{store['shop']}/shadow/summary.json", summary)
+    data = {**tables, "sku_economics": econ}
+    made = shadow.run(db, data, cid, week)
     if made["seal"]["status"] in (sealmod.SEALED, sealmod.ALREADY, sealmod.PARTIAL):
         _put(db, f"shopify/{store['shop']}/shadow/{week.isoformat()}.json", made["calls"])
     out.update({"calls": len(made["calls"]), "seal": made["seal"]["status"]})
+    out["mandate"] = mandate_store(db, store, today, data, pulled)
     return out
+
+
+def mandate_store(db, store: dict, today: date, data: dict, pulled: dict, transport=None) -> dict:
+    """Sort this week's drafted moves by the brand's limits; carry out the ones
+    inside them once shadow mode is over; keep the rest for the brand's tap."""
+    from .directives import draft_directives
+    from .lookback import _safe, complete
+    from .models import elasticity, margin, shopify_findings
+    row = store.get("row") or {}
+    limits = mandate.load(db, store["shop"])
+    full = complete(data)
+    margins = _safe(margin.run, full, default=[])
+    fits = _safe(elasticity.run, full, default=[])
+    drafts = _safe(draft_directives, [], [], fits, margins, channel="shopify", client_id=store["client_id"],
+                   shopify_findings=_safe(shopify_findings.run, full), default=[]) or []
+    sorted_ = mandate.sort(drafts, limits, installed_at=row.get("installed_at"), today=today, scopes=row.get("scopes"))
+    done = []
+    if sorted_[mandate.EXECUTE]:
+        transport = transport or shopify_api.http_transport(store["shop"], store["token"])
+        done = mandate.execute(db, store["client_id"], sorted_[mandate.EXECUTE], limits,
+                               mandate.variant_index(pulled.get("products") or []), transport,
+                               installed_at=row.get("installed_at"), today=today, scopes=row.get("scopes"))
+    if any(r["status"] == "executed" for r in done) and row.get("mode") != "live":
+        db.table(SHOPS).update({"mode": "live"}).eq("shop_domain", store["shop"]).execute()
+    tap = [{"sku": (d.get("evidence") or {}).get("sku"), "kind": d.get("kind"), "text": d.get("action_text"),
+            "expected_usd": d.get("expected_impact_usd"), "why": d["mandate_why"]}
+           for d in sorted_[mandate.AWAITING_TAP]]
+    _put(db, f"shopify/{store['shop']}/awaiting_tap.json", {"label": "awaiting your tap", "moves": tap})
+    return {"executed": sum(r["status"] == "executed" for r in done), "results": done,
+            "awaiting_tap": len(tap), "shadow": len(sorted_[mandate.SHADOW]),
+            "in_shadow": mandate.in_shadow(row.get("installed_at"), limits, today)}
 
 
 def cmd_shadow(db, args) -> int:
@@ -204,7 +278,9 @@ def months_of(directives: list[dict], disputed: set[str] | None = None) -> list[
     """hwm.run's input from a client's measured directives (never a shadow call)."""
     by: dict[str, list[dict]] = defaultdict(list)
     for d in directives:
-        if d.get("module") == shadow.MODULE or d.get("measured_impact_usd") is None or not d.get("measured_at"):
+        # Shadow calls were never made; ledger entries were never ours. Neither is ever billed.
+        if (d.get("module") in NEVER_BILLED_MODULES or d.get("mandate") == ledger.MANDATE
+                or d.get("measured_impact_usd") is None or not d.get("measured_at")):
             continue
         month = str(d["measured_at"])[:7]
         by[month].append({"id": str(d["id"]), "usd": float(d["measured_impact_usd"]),
@@ -230,6 +306,9 @@ def cmd_meter(db, args) -> int:
             continue
         statements = hwm.run(s["shop"], months, cap_usd=float(row.get("cap_usd") or hwm.DEFAULT_CAP_USD))
         latest = statements[-1]
+        _put(db, f"shopify/{s['shop']}/fee.json", {"label": "proven", "statements": statements})
+        if meter_gate.mark_ask(db, s["shop"], row, statements):
+            print(f"  {s['shop']}: first proven dollar banked; the fee question is now open")
         if not args.send:
             print(f"  {s['shop']}: dry run, {latest.get('month')} statement {json.dumps(latest, default=str)[:300]}")
             continue
