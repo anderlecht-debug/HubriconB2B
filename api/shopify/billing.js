@@ -3,11 +3,14 @@ import { BILLING_RETURN_URI, decryptToken, graphql, shopsTable, validShop } from
 /**
  * Shopify Billing for Hubricon: one usage line item, nothing recurring.
  *
- * createSubscription() is called by api/shopify/auth.js right after the install.
+ * createSubscription() is called by api/shopify/app.js when the brand says yes to
+ * the fee question, never at install (the look-back and shadow mode are free and
+ * need no billing approval).
  * The merchant approves it on Shopify's confirmation page, which returns them to
  *   GET /api/shopify/billing?shop=<shop>.myshopify.com&charge_id=...
  * and this handler asks Shopify (not the query string) whether the subscription
- * is active before it marks the shop active.
+ * is active before it marks the shop's billing active (billing_status; the
+ * engine's meter bills only a yes with billing active).
  *
  * The cap is Shopify's capped amount: Hubricon can never bill past it in a
  * 30-day cycle, and only the merchant can raise it.
@@ -65,7 +68,7 @@ export async function createSubscription(shop, token, opts = {}) {
   const items = out?.appSubscription?.lineItems ?? [];
   const usage = items.find((li) => li.plan?.pricingDetails?.__typename === "AppUsagePricing") ?? items[0];
   if (!out?.confirmationUrl || !usage?.id) throw new Error("appSubscriptionCreate returned no confirmation URL or line item");
-  if (opts.table) await opts.table.update(shop, { usage_line_item_id: usage.id, cap_usd: cap });
+  if (opts.table) await opts.table.update(shop, { usage_line_item_id: usage.id, cap_usd: cap, billing_status: "pending" });
   return { confirmationUrl: out.confirmationUrl, subscriptionId: out.appSubscription.id, usageLineItemId: usage.id };
 }
 
@@ -96,7 +99,7 @@ export function billingHandler({ env, fetch } = defaults()) {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
-    await table.update(shop, { status: "active" });
+    await table.update(shop, { billing_status: "active" });
     return new Response(null, { status: 302, headers: { location: `https://${shop}/admin/apps/${env.SHOPIFY_API_KEY}` } });
   };
 }

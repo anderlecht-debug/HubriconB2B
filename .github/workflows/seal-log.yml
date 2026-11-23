@@ -1,0 +1,86 @@
+name: Seal log
+
+# REDTEAM_BUILD risk 3: the Seal's global head, published once a day outside
+# Hubricon's own database and bucket. Each run appends one line
+# (engine seal.publish_line: date, global head, entry count, time read) to
+# seal-log.txt on the public, append-only branch "seal-log" of this repo, and
+# stamps that day's line with OpenTimestamps when the `ots` client installs.
+# Any later copy of a line (git history, a fork, the OTS proof) pins every
+# sealed entry beneath that head.
+#
+# It writes only the seal-log branch: it never checks out or pushes any other
+# branch, and never force-pushes. GITHUB_TOKEN's contents: write is repo-wide
+# in GitHub's model; protect every other branch with a ruleset that blocks
+# github-actions[bot], so in practice this job can write seal-log only.
+# A scheduled workflow runs from the default branch, so it starts once this
+# file is there.
+on:
+  schedule:
+    - cron: "5 6 * * *"   # daily, 06:05 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seal-log
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: Production
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Read the global head
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          uv run python -c "from hubricon_engine import db, seal; print(seal.publish_line(db.connect()))" > "$RUNNER_TEMP/line.txt"
+          cat "$RUNNER_TEMP/line.txt"
+          grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9a-f]{64} [0-9]+ [0-9TZ:-]+$' "$RUNNER_TEMP/line.txt"
+      - name: Append to the seal-log branch
+        env:
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          line="$(cat "$RUNNER_TEMP/line.txt")"
+          day="${line%% *}"
+          dir="$RUNNER_TEMP/log"
+          git init -q "$dir" && cd "$dir"
+          git config user.name "hubricon-seal-log"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
+          if git fetch -q --depth=1 origin seal-log; then
+            git checkout -q -b seal-log FETCH_HEAD
+          else
+            git checkout -q --orphan seal-log
+            printf '%s\n' "# The Seal's global head, one line a day: date head entries read-at (UTC)." \
+              "# Append-only. Verify any Record against it: node scripts/verify-record.mjs." > README.txt
+            git add README.txt
+          fi
+          touch seal-log.txt
+          if grep -q "^${day} " seal-log.txt; then
+            echo "Already published for ${day}; nothing to append."
+            exit 0
+          fi
+          printf '%s\n' "$line" >> seal-log.txt
+          mkdir -p stamps
+          printf '%s\n' "$line" > "stamps/${day}.txt"
+          if { uv tool install -q opentimestamps-client || pip install -q opentimestamps-client; } && ots stamp "stamps/${day}.txt"; then
+            echo "OpenTimestamps: stamps/${day}.txt.ots"
+          else
+            echo "::warning::OpenTimestamps stamp failed; the line is published without an OTS proof today."
+          fi
+          git add seal-log.txt stamps
+          git commit -q -m "Seal head ${day}"
+          git push -q origin HEAD:seal-log

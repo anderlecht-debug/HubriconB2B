@@ -44,7 +44,8 @@ def _directive(did, usd, measured_at, grade="direct"):
 
 def _meter_world(directives, monkeypatch, row=None):
     db = StoreDB(shopify_shops=[{"shop_domain": SHOP, "status": "active", "mode": "live", "client_id": CLIENT,
-                                 "usage_line_item_id": LINE, "cap_usd": 500, **(row or {})}],
+                                 "usage_line_item_id": LINE, "cap_usd": 500,
+                                 "fee_question": "approved", "billing_status": "active", **(row or {})}],
                  directives=directives)
     shop = Shopify()
     monkeypatch.setattr(shopify_run.shopify_api, "http_transport", lambda s, t: shop)

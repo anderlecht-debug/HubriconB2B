@@ -44,6 +44,7 @@ from .models.common import latest_snapshot, num, period_days
 from .models.inventory_econ import ANNUAL_CAPITAL_RATE, HOLD_HORIZON_DAYS
 
 LABEL = "hindsight, not a sealed call"
+UNKNOWN_MARGIN = "unknown"
 DEFAULT_WINDOW_DAYS = 60
 DATA_TABLES = ("asin_traffic", "sku_economics", "ppc_search_terms", "ppc_spend", "inventory_levels",
                "settlement_transactions", "customer_orders", "cogs_inputs", "fba_reimbursements",
@@ -260,6 +261,8 @@ def _sentence(it: dict) -> str:
         body = (f"{it['sku']} holds {f"{it['days_of_cover']:,.0f}" if it['days_of_cover'] is not None else 'unlimited'} days of stock; the "
                 f"{it['excess_units']:,.0f} units past {HOLD_HORIZON_DAYS} days tie up "
                 f"${it['cash_tied_up']:,.0f} and cost about {_money(abs(it['usd']))} in capital over the window{rng}.")
+    if it.get("margin") == UNKNOWN_MARGIN:
+        body += " No unit cost on file, so unknown margin and no profit figure (add its cost in Shopify)."
     return f"Hindsight, not a sealed call: {body}"
 
 
@@ -272,11 +275,18 @@ def run(data: dict, today: date | None = None, window_days: int = DEFAULT_WINDOW
     data = complete(data)
     data["sku_economics"] = [r for r in data["sku_economics"] if str(r.get("period_end"))[:10] >= start
                              and shopify_findings._is_shopify(r)]
+    # A cost-sheet row without a unit cost (Shopify's unitCost blank; freight
+    # alone) is no cost on file: that SKU's margin is unknown, never guessed.
+    data["cogs_inputs"] = [r for r in data["cogs_inputs"] if float(r.get("unit_cost_usd") or 0) > 0]
+    costed = {r.get("sku") for r in data["cogs_inputs"]}
     margins = _safe(margin.run, data, default=[])
     fits = _safe(elasticity.run, data, default=[])
     forecasts = _safe(forecast.run, data, horizon_days=7, elasticity_rows=fits, default=[])
     items = (price_changes(data, margins, fits) + stockouts(data, margins, today, last_sold)
              + slow_stock(data, forecasts, today, window_days))
+    for it in items:
+        if it["sku"] not in costed:
+            it.update(usd=None, usd_low=None, usd_high=None, margin=UNKNOWN_MARGIN)
     priced = [i for i in items if i["usd"] is not None]
     lows = [i["usd_low"] for i in priced if i["usd_low"] is not None]
     highs = [i["usd_high"] for i in priced if i["usd_high"] is not None]

@@ -130,14 +130,21 @@ function renderFee(fee, question) {
     b.append(line(`${s.month}: cumulative proven`, fig(usd(s.cumulative), fee.label), "· fee", fig(usd(s.fee), fee.label),
                   "· net", fig(usd(s.net), fee.label)));
     b.append(list(fee.lines, (t) => [el("span", t), el("span", fee.label, "est")]));
+    if (s.billed === false && s.not_billed) b.append(el("p", `What the fee would have been, ${s.not_billed}.`, "note"));
   }
   b.append(line("Monthly cap:", fig(usd(fee.cap_usd), fee.label)));
-  if (question.state === "ask") {
+  const pendingCharge = question.state === "approved" && question.billing_status !== "active";
+  if (question.state === "ask" || pendingCharge) {
     const box = el("div", null, "row");
-    box.append(el("p", "Your first proven dollar is on your Record. Do you approve the fee on proven dollars as described above?"));
-    for (const [text, approved] of [["Yes, I approve", true], ["No", false]]) {
+    box.append(el("p", pendingCharge
+      ? "You said yes. Nothing is billed until you approve the capped charge on Shopify."
+      : "Your first proven dollar is on your Record. Do you approve the fee on proven dollars as described above? Nothing is billed until you say yes."));
+    const choices = pendingCharge ? [["Approve the charge on Shopify", true]] : [["Yes, I approve", true], ["No", false]];
+    for (const [text, approved] of choices) {
       const btn = el("button", text, "btn"); btn.type = "button";
-      btn.addEventListener("click", () => post({ action: "fee_answer", approved }).then(load));
+      // A yes creates the capped charge; Shopify's own page is where it is approved.
+      btn.addEventListener("click", () => post({ action: "fee_answer", approved })
+        .then((out) => (out.confirmation_url ? window.top.location.assign(out.confirmation_url) : load())));
       box.append(btn);
     }
     b.append(box);

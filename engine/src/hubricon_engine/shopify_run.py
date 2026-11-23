@@ -347,8 +347,36 @@ DISPUTES = "shopify_disputes"
 SETTLED = {"sent", "nothing_to_bill", "refund_due"}
 
 
-def months_of(directives: list[dict], disputed=None) -> list[dict]:
+NO_COST = "no cost on file: not billed"
+
+
+def _sku(d: dict) -> str | None:
+    return (d.get("evidence") or {}).get("sku")
+
+
+def costed_skus(cogs_rows: list[dict]) -> set[str]:
+    """SKUs whose unit cost is on file. A cost-sheet row without a unit cost
+    (Shopify's unitCost blank, or freight only) is not a cost."""
+    return {r["sku"] for r in cogs_rows or [] if r.get("sku") and float(r.get("unit_cost_usd") or 0) > 0}
+
+
+def _billable(d: dict) -> bool:
+    return not (d.get("module") in NEVER_BILLED_MODULES or d.get("mandate") == ledger.MANDATE
+                or d.get("measured_impact_usd") is None or not d.get("measured_at"))
+
+
+def uncosted(directives: list[dict], costed: set[str]) -> list[dict]:
+    """Measured dollars on a SKU with no unit cost: never proven, never billed."""
+    return [{"id": str(d["id"]), "sku": _sku(d), "usd": float(d["measured_impact_usd"]),
+             "month": str(d["measured_at"])[:7], "label": NO_COST}
+            for d in directives if _billable(d) and _sku(d) and _sku(d) not in costed]
+
+
+def months_of(directives: list[dict], disputed=None, costed: set[str] | None = None) -> list[dict]:
     """hwm.run's input from a client's measured directives (never a shadow call).
+
+    `costed`, when given, is the set of SKUs with a unit cost on file: a dollar
+    on any other SKU is left out (profit without a cost is not proven).
 
     `disputed` is {directive id: month the brand disputed it} (shopify_disputes);
     each dispute is applied in its own month. A plain set of ids is applied in
@@ -356,8 +384,7 @@ def months_of(directives: list[dict], disputed=None) -> list[dict]:
     by: dict[str, list[dict]] = defaultdict(list)
     for d in directives:
         # Shadow calls were never made; ledger entries were never ours. Neither is ever billed.
-        if (d.get("module") in NEVER_BILLED_MODULES or d.get("mandate") == ledger.MANDATE
-                or d.get("measured_impact_usd") is None or not d.get("measured_at")):
+        if not _billable(d) or (costed is not None and _sku(d) and _sku(d) not in costed):
             continue
         month = str(d["measured_at"])[:7]
         by[month].append({"id": str(d["id"]), "usd": float(d["measured_impact_usd"]),
@@ -469,20 +496,34 @@ def cmd_meter(db, args) -> int:
         if not s["client_id"]:
             print(f"  skip {s['shop']}: no client_id", file=sys.stderr)
             continue
-        months = months_of(fetch_all(db, "directives", s["client_id"]), load_disputes(db, s["shop"]))
+        directives = fetch_all(db, "directives", s["client_id"])
+        costed = costed_skus(fetch_all(db, "cogs_inputs", s["client_id"]))
+        no_cost = [u for u in uncosted(directives, costed) if u["month"] <= month]
+        months = months_of(directives, load_disputes(db, s["shop"]), costed=costed)
         billed = load_billed(db, s["shop"])
-        if not [m for m in months if m["month"] <= month] and not billed:
+        if not [m for m in months if m["month"] <= month] and not billed and not no_cost:
             print(f"  {s['shop']}: no measured dollars, nothing to bill")
             continue
         statements, st = settle(s["shop"], months, billed, month,
                                 cap_usd=float(row.get("cap_usd") or hwm.DEFAULT_CAP_USD))
+        # Only a brand that said yes (and approved the charge on Shopify) is
+        # billed. Read before this run opens the question, so the run that
+        # opens it never bills.
+        ok, why = meter_gate.billable(row, datetime(today.year, today.month, today.day, tzinfo=UTC))
+        st = {**st, "billed": ok, "not_billed": why,
+              "explanation": st["explanation"] + [f"{u['sku']}: ${u['usd']:,.2f} measured in {u['month']}, "
+                                                  f"{NO_COST}." for u in no_cost]}
         _put(db, f"shopify/{s['shop']}/fee.json", {
             "label": "proven", "month": month, "statements": statements, "closing": st,
+            "not_billed_no_cost": no_cost,
             "billed": {k: {"status": r.get("status"), "billed_usd": _f(r, "billed_usd"),
                            "refund_due_usd": _f(r, "refund_due_usd"), "peak_usd": _f(r, "peak_usd")}
                        for k, r in sorted(billed.items())}})
         if meter_gate.mark_ask(db, s["shop"], row, statements):
             print(f"  {s['shop']}: first proven dollar banked; the fee question is now open")
+        if not ok:
+            print(f"  {s['shop']}: {month} fee {st['charge']:.2f} would be due; {why}")
+            continue
         done = billed.get(month)
         if done and done.get("status") not in ("error",):
             # Billed (or refused as capped) already: never a second record for

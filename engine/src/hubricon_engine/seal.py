@@ -1047,6 +1047,21 @@ def verify_global(rows: list[dict], witnesses=()) -> dict:
             "first_broken_seq": min(seqs) if seqs else None, "problems": problems}
 
 
+def publish_line(db, now: datetime | None = None) -> str:
+    """The one line .github/workflows/seal-log.yml appends, once a day, to the
+    public seal-log branch (and stamps with OpenTimestamps): the date, the
+    global head, how many entries it covers and when it was read.
+
+        2026-11-23 <64-hex global head> <entries> 2026-11-23T07:00:00Z
+
+    Any later copy of that line pins every entry beneath the head, outside
+    systems Hubricon controls. A read that fails raises: a wrong line is worse
+    than a missing day."""
+    now = (now or _now()).astimezone(timezone.utc)
+    entries, head = _global_tip(db)
+    return f"{now.date().isoformat()} {head} {entries} {now.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+
+
 def status(db) -> dict:
     """`hubricon seal status`: the global head and what each client's Record holds."""
     ready = table_status(db)

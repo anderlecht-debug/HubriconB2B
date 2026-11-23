@@ -12,7 +12,7 @@ import {
   verifyQueryHmac,
   verifyState,
 } from "../../lib/shopify.js";
-import { capUsd, createSubscription } from "./billing.js";
+import { capUsd } from "./billing.js";
 
 /**
  * The install, both legs, on one URL (shopify.app.toml's redirect_urls):
@@ -21,7 +21,10 @@ import { capUsd, createSubscription } from "./billing.js";
  *       -> 302 to the store's authorize page, with a signed state and its nonce in a cookie
  *   GET /api/shopify/auth?code=...&shop=...&state=...&hmac=...&timestamp=...
  *       -> verify HMAC and state, trade the code for an offline token, store it
- *          encrypted, create the usage subscription, 302 to Shopify's confirmation page
+ *          encrypted, 302 to the app. Ingest, the free look-back and shadow mode
+ *          start from here. No billing is created at install: the capped usage
+ *          charge is created only when the brand says yes to the fee question
+ *          (api/shopify/app.js, action fee_answer).
  *
  * The token is read-only (lib/shopify.js SCOPES). Nothing here acts on the store.
  */
@@ -81,22 +84,18 @@ export function authHandler({ env, fetch, now = () => Date.now() } = defaults())
       shop_domain: shop,
       token_enc: encryptToken(grant.access_token, env.SHOPIFY_TOKEN_KEY, shop),
       scopes: grant.scope,
-      status: "pending_billing",
+      status: "active",
+      billing_status: "none",
+      usage_line_item_id: null,
       installed_at: new Date(now()).toISOString(),
       uninstalled_at: null,
       cap_usd: capUsd(env),
     });
 
-    let sub;
-    try {
-      sub = await createSubscription(shop, grant.access_token, { env, fetch, table });
-    } catch {
-      return text("Hubricon is installed, but Shopify did not create the billing approval. Open the app again to retry.", 502);
-    }
     return new Response(null, {
       status: 302,
       headers: {
-        location: sub.confirmationUrl,
+        location: `https://${shop}/admin/apps/${env.SHOPIFY_API_KEY}`,
         "set-cookie": `${STATE_COOKIE}=; Path=/api/shopify; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
       },
     });

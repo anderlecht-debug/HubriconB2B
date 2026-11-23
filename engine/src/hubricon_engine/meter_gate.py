@@ -114,6 +114,41 @@ def state_of(row: dict, now: datetime) -> str:
     return "open"
 
 
+NOT_YET = "not billed: you haven't said yes"
+DECLINED = "not billed: you declined"
+NO_CHARGE = "not billed: you said yes, but the charge is not yet approved on Shopify"
+
+
+def billable(row: dict, now=None) -> tuple[bool, str | None]:
+    """(may the meter send a usage record, else the statement's label).
+
+    Only a brand that answered yes AND approved the capped charge on Shopify is
+    billed. Unanswered (or never asked) is not a yes; silence past the window,
+    like a no, is declined. A run that opens the question finds the row at
+    'none', so it never bills."""
+    now = _ts(now) or datetime.now(UTC)
+    row = row or {}
+    if row.get("fee_question", "none") == "none":
+        return False, NOT_YET
+    state = state_of(row, now)
+    if state == "declined":
+        return False, DECLINED
+    if state != "approved":
+        return False, NOT_YET
+    if row.get("billing_status") != "active" or not row.get("usage_line_item_id"):
+        return False, NO_CHARGE
+    return True, None
+
+
+def install_to_yes(rows: list[dict]) -> dict:
+    """Every install, and how many said yes to the fee: readable from install 1,
+    long before the 20-store verdict. Uninstalled stores still count as installs."""
+    installs = [r for r in rows if r.get("installed_at")]
+    yes = sum(r.get("fee_question") == "approved" for r in installs)
+    return {"installs": len(installs), "yes": yes,
+            "rate": round(yes / len(installs), 4) if installs else None}
+
+
 def rule(rows: list[dict], now=None) -> dict:
     """The pre-registered verdict over every store's row."""
     now = _ts(now) or datetime.now(UTC)
@@ -158,9 +193,14 @@ def lines(result: dict) -> list[str]:
 
 def digest_lines(db, now=None) -> list[str]:
     try:
-        rows = db.table(SHOPS).select("shop_domain, fee_question, fee_question_at").execute().data or []
+        rows = (db.table(SHOPS).select("shop_domain, fee_question, fee_question_at, installed_at, status")
+                .execute().data or [])
     except Exception as err:
         return [f"Fee question: could not be read ({type(err).__name__}).", ""]
     if not rows:
         return []
-    return lines(rule(rows, now)) + [""]
+    i = install_to_yes(rows)
+    rate = f" ({i['rate']:.0%})" if i["rate"] is not None else ""
+    early = (f"  Install to yes: {i['yes']} of {i['installs']} installs{rate} "
+             "said yes to the fee (an early signal, not the verdict).")
+    return [*lines(rule(rows, now)), early, ""]

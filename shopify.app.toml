@@ -10,6 +10,8 @@ embedded = false
 
 [access_scopes]
 # Read-only (lib/shopify.js SCOPES). write_products comes later, with the merchant's yes.
+# Opt-in, once Shopify approves the request: add read_all_orders (lib/shopify.js
+# READ_ALL_ORDERS) to read more than the last 60 days of orders.
 scopes = "read_orders,read_products,read_inventory"
 
 [auth]

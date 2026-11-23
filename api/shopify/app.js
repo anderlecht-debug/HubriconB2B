@@ -1,4 +1,6 @@
+import { createSubscription } from "./billing.js";
 import {
+  decryptToken,
   mandatesTable,
   readStored,
   shopsTable,
@@ -19,6 +21,8 @@ import {
  *   POST /api/shopify/app   Authorization: Bearer <session>
  *        { action: "mandate", max_price_step_pct, price_moves_enabled, reorder_needs_tap }
  *        { action: "fee_answer", approved: true | false }
+ *          A yes creates the capped usage charge (billing.js createSubscription) and
+ *          returns { confirmation_url }, Shopify's page where the brand approves it.
  *
  * The figures come from what the engine already wrote: the look-back, the shadow
  * grades, the moves seen in the store, the fee statements (Supabase Storage,
@@ -131,7 +135,12 @@ export async function pageData(shop, { env, fetch, now }) {
       peak_usd: Number(row.peak_usd ?? 0),
     },
     awaiting_tap: { label: LABELS.tap, data: tap },
-    fee_question: { state: row.fee_question ?? "none", first_proven_usd: row.first_proven_usd ?? null, label: LABELS.fee },
+    fee_question: {
+      state: row.fee_question ?? "none",
+      billing_status: row.billing_status ?? "none",
+      first_proven_usd: row.first_proven_usd ?? null,
+      label: LABELS.fee,
+    },
     mandate: {
       ...limits,
       write_access: String(row.scopes ?? "").split(",").map((s) => s.trim()).includes("write_products"),
@@ -174,10 +183,25 @@ export function appHandler({ env, fetch, now = () => Date.now() } = defaults()) 
     }
     if (body?.action === "fee_answer") {
       if (typeof body.approved !== "boolean") return json({ error: "approved must be true or false." }, 400);
-      if ((row.fee_question ?? "none") !== "ask") return json({ error: "There is no open fee question." }, 409);
-      const patch = { fee_question: body.approved ? "approved" : "declined", fee_answered_at: new Date(now()).toISOString() };
-      await shopsTable(db).update(shop, patch);
-      return json({ ok: true, fee_question: patch.fee_question });
+      const state = row.fee_question ?? "none";
+      // A yes whose Shopify charge is not approved yet may tap again: the charge is re-issued.
+      const retry = state === "approved" && body.approved && row.billing_status !== "active";
+      if (state !== "ask" && !retry) return json({ error: "There is no open fee question." }, 409);
+      if (!retry) {
+        const patch = { fee_question: body.approved ? "approved" : "declined", fee_answered_at: new Date(now()).toISOString() };
+        await shopsTable(db).update(shop, patch);
+      }
+      if (!body.approved) return json({ ok: true, fee_question: "declined" });
+      // Only now, on the brand's yes, is the capped usage charge created; Shopify's
+      // confirmation page is where the brand approves it.
+      try {
+        const token = decryptToken(row.token_enc, env.SHOPIFY_TOKEN_KEY, shop);
+        const sub = await createSubscription(shop, token, { env, fetch, table: shopsTable(db) });
+        return json({ ok: true, fee_question: "approved", confirmation_url: sub.confirmationUrl });
+      } catch {
+        return json({ error: "Your yes is recorded, but Shopify did not create the charge. Tap Yes again to retry.",
+                      fee_question: "approved" }, 502);
+      }
     }
     return json({ error: "Unknown action" }, 400);
   };

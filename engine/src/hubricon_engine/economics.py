@@ -68,7 +68,7 @@ MAX_MINUTES = 1440
 # shopify.yml also fires a weekly shadow run and a monthly meter; its nightly
 # ingest (the first cron) dominates its minutes, so that is the one counted.
 SCHEDULE = {"operator": "17 * * * *", "issue": "0 14 * * *", "sweep": "0 11 * * 1",
-            "shopify": "15 7 * * *"}
+            "shopify": "15 7 * * *", "seal-log": "5 6 * * *"}
 
 # Every input the arithmetic multiplies by, exactly as the migration seeds it.
 # `placeholder` means nobody has checked it; `site` is what the site tells a
