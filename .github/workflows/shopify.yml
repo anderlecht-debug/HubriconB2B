@@ -1,0 +1,78 @@
+name: Shopify app
+
+# The Shopify app's scheduled jobs (BUILD_PLAN M2 to M5), one entry point:
+# engine/src/hubricon_engine/shopify_run.py.
+#   nightly  ingest  orders (60 days), products, stock via Bulk Operations, plus the free look-back
+#   Mondays  shadow  grade last week's sealed calls, then make and seal this week's; nothing is executed
+#   monthly  meter   the high-water-mark statement per live store (hwm), sent as a usage record (usage)
+on:
+  schedule:
+    - cron: "15 7 * * *"   # nightly ingest, 07:15 UTC
+    - cron: "45 9 * * 1"   # weekly shadow, Mondays 09:45 UTC (after the night's ingest)
+    - cron: "30 12 1 * *"  # monthly meter, the 1st at 12:30 UTC
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "ingest, shadow or meter"
+        required: true
+        default: ingest
+      send:
+        description: "meter only: send the usage record (otherwise a dry run)"
+        required: false
+        default: "false"
+
+jobs:
+  shopify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Secrets live in the "Production" environment, as for sweep.yml.
+    environment: Production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Which job
+        id: pick
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_JOB: ${{ github.event.inputs.job }}
+        run: |
+          case "$SCHEDULE" in
+            "15 7 * * *")  job=ingest ;;
+            "45 9 * * 1")  job=shadow ;;
+            "30 12 1 * *") job=meter ;;
+            *)             job="${INPUT_JOB:-ingest}" ;;
+          esac
+          case "$job" in ingest|shadow|meter) ;; *) echo "::error::unknown job '$job'"; exit 1 ;; esac
+          echo "job=$job" >> "$GITHUB_OUTPUT"
+      - name: Check secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SHOPIFY_TOKEN_KEY: ${{ secrets.SHOPIFY_TOKEN_KEY }}
+        run: |
+          missing=""
+          for k in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SHOPIFY_TOKEN_KEY; do
+            [ -n "$(printenv "$k")" ] || missing="$missing $k"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Required secret(s) not set:$missing (Settings → Environments → Production)."
+            exit 1
+          fi
+          echo "Secrets present."
+      - name: Run ${{ steps.pick.outputs.job }}
+        working-directory: engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SHOPIFY_TOKEN_KEY: ${{ secrets.SHOPIFY_TOKEN_KEY }}
+          JOB: ${{ steps.pick.outputs.job }}
+          SEND: ${{ github.event.inputs.send }}
+        run: |
+          extra=""
+          # The monthly schedule sends; a manual meter run is a dry run unless asked.
+          if [ "$JOB" = meter ] && { [ "${{ github.event_name }}" = schedule ] || [ "$SEND" = true ]; }; then
+            extra="--send"
+          fi
+          uv run python -m hubricon_engine.shopify_run "$JOB" $extra

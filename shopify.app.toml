@@ -1,0 +1,31 @@
+# The Hubricon Shopify app's configuration (Shopify CLI: `shopify app deploy`).
+#
+# client_id: paste the app's Client ID from the Partner dashboard (Apps → Hubricon →
+# Client credentials). It is the same value as SHOPIFY_API_KEY in .env; it is not a
+# secret. The client secret goes in SHOPIFY_API_SECRET only, never here.
+client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
+name = "Hubricon"
+application_url = "https://hubricon.com/app"
+embedded = false
+
+[access_scopes]
+# Read-only (lib/shopify.js SCOPES). write_products comes later, with the merchant's yes.
+scopes = "read_orders,read_products,read_inventory"
+
+[auth]
+redirect_urls = ["https://hubricon.com/api/shopify/auth"]
+
+[webhooks]
+# Keep equal to API_VERSION in lib/shopify.js (lib/shopify.test.mjs checks).
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "https://hubricon.com/api/shopify/webhooks"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "https://hubricon.com/api/shopify/webhooks"
+
+[pos]
+embedded = false

@@ -65,7 +65,10 @@ MAX_MINUTES = 1440
 
 # The three workflows' schedules, as .github/workflows states them (UTC).
 # tests/test_economics.py holds this in step with the files.
-SCHEDULE = {"operator": "17 * * * *", "issue": "0 14 * * *", "sweep": "0 11 * * 1"}
+# shopify.yml also fires a weekly shadow run and a monthly meter; its nightly
+# ingest (the first cron) dominates its minutes, so that is the one counted.
+SCHEDULE = {"operator": "17 * * * *", "issue": "0 14 * * *", "sweep": "0 11 * * 1",
+            "shopify": "15 7 * * *"}
 
 # Every input the arithmetic multiplies by, exactly as the migration seeds it.
 # `placeholder` means nobody has checked it; `site` is what the site tells a

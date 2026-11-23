@@ -208,7 +208,7 @@ def test_the_page_labels_every_figure_and_draws_the_scale_curve():
     assert "No invoice this month for Beta Brands [m]: a Proving Month, or billing not started." in text
     assert re.search(r"supabase\s+\$25\.00\s+placeholder", text)
     assert "GitHub runner minutes  31 billed [a]: 5 job runs recorded [m]" in text
-    assert "only 5 of the 779 scheduled runs were recorded [m], so these minutes are a floor" in text
+    assert "only 5 of the 810 scheduled runs were recorded [m], so these minutes are a floor" in text
     assert "by hand on the founder's machine: 0.8 minutes [m], not billed" in text
     assert re.search(r"elevenlabs characters\s+3,000\s+\$0\.60\s+3,000 of 1,000 included \(founder's figure\), "
                      r"past the quota", text)
@@ -238,7 +238,7 @@ def test_with_no_clients_it_says_so_and_shows_only_the_fixed_base():
                    "per account won [a]", "After the fixed base"):
         assert absent not in text, absent
     # The runner minutes it cannot measure are a floor from the schedule, not a guess.
-    assert "not measured: no scheduled job recorded this month. The schedule fired 615 times" in text
+    assert "not measured: no scheduled job recorded this month. The schedule fired 640 times" in text
     assert "no account began service this month" in text
     assert re.search(r"2026-09\s+0\s+—\s+—\s+—\s+—\s+month to date", text)
 
@@ -445,4 +445,4 @@ def test_the_schedule_and_the_scheduled_commands_are_the_workflows():
     assert crons == economics.SCHEDULE
     assert commands == set(meter.SCHEDULED)
     fired = economics.scheduled_runs(date(2026, 9, 1), date(2026, 10, 1), datetime(2026, 10, 5, tzinfo=timezone.utc))
-    assert fired == {"operator": 720, "issue": 30, "sweep": 4}
+    assert fired == {"operator": 720, "issue": 30, "sweep": 4, "shopify": 30}
