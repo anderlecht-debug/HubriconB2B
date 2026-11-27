@@ -49,3 +49,12 @@ model change.
 - Engine: `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 5 minutes).
 - Node: `node --test lib/ scripts/` (the API helpers, the Record verifier, the home page,
   the tab pages and both case studies).
+
+## Hubricon agent team
+- Nine subagents live in .claude/agents/. Shared brief: @docs/agents/CONTEXT.md
+- Handoff and open decisions: @SUPPLY_VARIABILITY.md
+- Every agent reads docs/agents/CONTEXT.md before any task.
+- Label every number measured, sourced or inference. Never invent a quote.
+- Every agent output and client-facing text passes tools/agent_check.py (section 3.3) before anyone sees it.
+- Never send email or messages, spend money or credits, merge to main, or touch production without Hagen's explicit yes.
+- Client data never goes into git.
