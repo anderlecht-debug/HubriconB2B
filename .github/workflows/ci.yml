@@ -1,0 +1,81 @@
+name: CI
+
+# The gate in front of main. Pushing main deploys production (Vercel builds from GitHub), and
+# until this file nothing ran the tests on the way there. It runs every suite on every pull
+# request and again on main after a merge. It reads the repository and nothing else: no
+# secrets, no Production environment, no writes.
+#
+# Run the same thing locally:   npm run check
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request (or to main) replaces the run before it.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # No install step: the tests import nothing from node_modules.
+      - run: node --test
+
+  engine:
+    name: Engine tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      # tests/test_seal.py runs the JavaScript verifier against the Python seal, and is
+      # skipped when node is not on the PATH. Same Node as the job above, so it always runs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: engine/uv.lock
+      # --locked: a dependency changed in pyproject.toml without uv.lock fails here, not in production.
+      - run: uv run --locked pytest -q
+        env:
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+
+  tools:
+    name: Agent tools
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # tools/ arrives on another branch. Each check runs once its files exist, and until
+      # then says so and passes.
+      - name: The nine agents load
+        run: |
+          if [ -f tools/check_agents.py ]; then
+            python3 tools/check_agents.py
+          else
+            echo "tools/check_agents.py is not in this tree yet: nothing to check."
+          fi
+      - name: Tool tests
+        run: |
+          if ls tools/test_*.py >/dev/null 2>&1; then
+            python3 -m unittest discover -s tools -p 'test_*.py'
+          else
+            echo "no tools/test_*.py in this tree yet: nothing to run."
+          fi
