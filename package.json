@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test",
+    "test:engine": "cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q",
+    "check": "npm test && npm run test:engine",
+    "hooks": "git config core.hooksPath .githooks",
     "stripe:setup": "node --env-file-if-exists=.env scripts/stripe-setup.mjs",
     "vercel:stripe": "node --env-file-if-exists=.env scripts/vercel-stripe-env.mjs",
     "new-client": "node --env-file-if-exists=.env scripts/new-client.mjs",
