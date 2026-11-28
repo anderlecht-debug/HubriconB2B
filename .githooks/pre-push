@@ -4,7 +4,7 @@
 #   every push        the Node tests (under a second)
 #   a push to main    the engine tests as well (about 2 minutes). Pushing main deploys production.
 #
-# Turn it on once per clone:   npm run hooks
+# Turn it on once per clone:   npm ci && npm run hooks
 # Run the same checks by hand: npm test, or npm run check for both suites.
 #
 # It tests the files as they are on disk, not the commits being pushed, so commit first.

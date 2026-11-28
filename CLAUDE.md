@@ -48,7 +48,8 @@ model change.
 
 - Node: `npm test`, which is `node --test` from the repo root (under a second: the API
   helpers, the Record verifier, the home page, the tab pages, the lessons and both case
-  studies). Give it no folders: `node --test lib/ scripts/` fails on Node 22.
+  studies). Give it no folders: `node --test lib/ scripts/` fails on Node 22. A new clone
+  runs `npm ci` once first: one test imports `@supabase/supabase-js`.
 - Engine: `npm run test:engine`, which is
   `cd engine && OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 uv run pytest -q` (about 2 minutes).
 - Both: `npm run check`.
@@ -66,5 +67,5 @@ model change.
 5. Look at the Vercel preview link on the pull request before asking for the merge.
 6. Hagen merges to `main`. That merge deploys production.
 
-Run `npm run hooks` once per clone. After that git runs the Node tests before every push,
+Run `npm ci` and `npm run hooks` once per clone. After that git runs the Node tests before every push,
 and the engine tests too when the push goes to `main` (`.githooks/pre-push`).

@@ -29,7 +29,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # No install step: the tests import nothing from node_modules.
+          cache: npm
+      # scripts/learn/learn.test.mjs imports note.mjs, which imports @supabase/supabase-js.
+      # npm ci installs exactly what package-lock.json names, in about a second.
+      - run: npm ci
       - run: node --test
 
   engine:
