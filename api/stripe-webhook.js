@@ -6,10 +6,13 @@ import { handleStripeEvent } from "../lib/stripe_events.js";
  * Stripe → Hubricon. This file proves an event came from Stripe and records
  * that it was handled; lib/stripe_events.js decides what the event means
  * (mirror the invoice, hold a retainer draft for the gate, keep the client's
- * status in step).
+ * status in step, and set up a client who paid by card on /start).
  *
  * The key needs Invoices: write, for the hold. scripts/stripe-setup.mjs
- * subscribes the endpoint to every event the handler reads.
+ * subscribes the endpoint to every event the handler reads. The card setup
+ * also reads CHECKOUT_TOKEN_SECRET and RESEND_API_KEY (lib/provision.js); the
+ * pay button refuses to take a card while either is missing, so a paid session
+ * never arrives here without them.
  */
 export async function POST(request) {
   const missing = [
@@ -43,7 +46,7 @@ export async function POST(request) {
     { auth: { persistSession: false } }
   );
 
-  const failure = await handleStripeEvent(event, { db, stripe });
+  const failure = await handleStripeEvent(event, { db, stripe, env: process.env });
   if (failure) {
     // 500 makes Stripe retry later rather than dropping the event.
     return new Response(failure, { status: 500 });
