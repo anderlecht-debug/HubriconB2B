@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -374,6 +375,67 @@ class CommandLine(unittest.TestCase):
             with self.assertRaises(SystemExit) as caught:
                 agent_check.main(["x.md", "--agent", "nobody"])
         self.assertEqual(caught.exception.code, 2)
+
+
+class ForTheRunLog(unittest.TestCase):
+    """What a run folder keeps of a pass: checker.txt (--log) and numbers.json (--json)."""
+
+    TEXT = "Stock covers 14 days. [measured]\n\nMargin is 31% [sourced: the made-up export] and cash is $1,200. [inference]\n\nNo label on 7 days.\n"
+
+    def test_every_number_with_its_label_and_source(self):
+        found = agent_check.numbers_in(self.TEXT)
+        self.assertEqual(
+            [(n["line"], n["text"], n["value"], n["label"], n["source"]) for n in found],
+            [
+                (1, "14", 14.0, "measured", ""),
+                (3, "31%", 31.0, "sourced", "the made-up export"),
+                (3, "$1,200", 1200.0, "inference", ""),
+                (5, "7", 7.0, None, ""),
+            ],
+        )
+
+    def test_a_number_after_the_last_label_takes_it(self):
+        found = agent_check.numbers_in("Cover is 9 days [measured] against a target of 12 days.\n")
+        self.assertEqual([n["label"] for n in found], ["measured", "measured"])
+
+    def test_magnitudes(self):
+        self.assertEqual([n["value"] for n in agent_check.numbers_in("Revenue is $20M. [inference]\n")], [20000000.0])
+
+    def test_passes_on_one_text_are_numbered_from_1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "checker.txt"
+            agent_check.append_log(log, "client_view.md --client", 1, "FAIL")
+            agent_check.append_log(log, "verdict.md --agent feynman-red-team", 0, "OK")
+            agent_check.append_log(log, "client_view.md --client", 0, "OK")
+            passes = agent_check.read_log(log.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [(p["n"], p["target"], p["exit"]) for p in passes],
+            [(1, "client_view.md --client", 1), (1, "verdict.md --agent feynman-red-team", 0), (2, "client_view.md --client", 0)],
+        )
+        self.assertRegex(passes[0]["at"], r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
+    def test_the_log_and_json_options(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "client_view.md"
+            log, numbers = Path(tmp) / "checker.txt", Path(tmp) / "numbers.json"
+            path.write_text("Stock covers 14 days.\n", encoding="utf-8")
+            argv = [str(path), "--client", "--only", "label", "--log", str(log), "--json", str(numbers)]
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(agent_check.main(argv), 1)
+                path.write_text("Stock covers 14 days. [measured]\n", encoding="utf-8")
+                self.assertEqual(agent_check.main(argv), 0)
+            text = log.read_text(encoding="utf-8")
+            found = json.loads(numbers.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [(p["n"], p["target"], p["exit"]) for p in agent_check.read_log(text)],
+            [(1, "client_view.md --client --only label", 1), (2, "client_view.md --client --only label", 0)],
+        )
+        self.assertIn("[label] no [measured]", text)
+        self.assertIn("every rule passes", text)
+        self.assertEqual(found, [{"line": 1, "text": "14", "value": 14.0, "label": "measured", "source": ""}])
+
+    def test_text_that_only_looks_like_a_pass_is_not_one(self):
+        self.assertEqual(agent_check.read_log("pass 1 | then | x.md | exit 0\n == pass 1 | t | x.md | exit 0\n"), [])
 
 
 class OnTheBrief(unittest.TestCase):
