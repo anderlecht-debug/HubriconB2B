@@ -468,6 +468,10 @@ def test_the_command_keeps_the_directive_meaning_and_sends_drafts_otherwise(mail
     approval.draft_weekly_note(db, AGREED, "https://x/portal", now=NOW)
     monkeypatch.setattr(cli.dbmod, "connect", lambda: db)
     monkeypatch.setattr(cli.dbmod, "resolve_client", lambda _db, ident: AGREED)
+    # The command reads the clock itself, and a note drafted more than ten days ago is
+    # refused (the test above). So the clock is pinned to the afternoon the note was
+    # drafted: without this the test passed until 2026-10-15 and failed every day after.
+    monkeypatch.setattr(approval, "_now", lambda: NOW + timedelta(hours=3))
     cli.cmd_approve(SimpleNamespace(client="dana@acme.com", show=False, stale=False, discard=False,
                                     directive=None, decline=False))
     assert len(mail) == 1 and db.rows("weekly_notes")[-1]["status"] == "sent"
