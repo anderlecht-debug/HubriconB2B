@@ -15,3 +15,13 @@ archive
 # The founder is off camera (HUBRICON_SPEC.md, "Face: off camera"), and the retired look's assets are not served.
 hagen.jpg
 brand
+# How the repo is built and run, not the site: the agent tools and their tests, the agents'
+# notes, the shared brief, run logs, the git hook, the CI workflows and the agent definitions.
+# The leading slash means the top-level folder only, so a page such as /learn/tools is still served.
+/tools
+/agents
+/docs
+/runs
+/.githooks
+/.github
+/.claude
