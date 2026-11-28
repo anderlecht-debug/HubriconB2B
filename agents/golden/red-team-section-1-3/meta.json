@@ -1,0 +1,8 @@
+{
+  "agent": "feynman-red-team",
+  "client": false,
+  "numbers": true,
+  "verdict": "fix first",
+  "data": "public",
+  "accepted": "seed case written 2026-11-28, not yet reviewed by Hagen"
+}

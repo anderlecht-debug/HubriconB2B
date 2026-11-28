@@ -22,7 +22,8 @@ What this replaces: the $6,000 a month offer sold on a booked call (still on the
 - The product is the **Profit Record**: every move is written down with its expected dollars before it goes live, measured on the brand's own later reports, and sealed so anyone can check it at hubricon.com/verify. Sealed predictions, held-back tests, and (on the branch `app/shopify-profit-record`) a fee only on new highs of proven profit.
 - **Pooled demand is a supporting method** for slow sellers and short histories. It is not the moat. In simulation its gain was narrow and levelled off near 20 businesses.
 - **Measured supplier lead times** (two dates per order, read from the brand's own orders) is the supply-variability fix inside the product. It is partly built: the Late Supplier spreadsheet and `/lateness` collect the dates, and the engine does not read them yet.
-- The engine is more than reorder maths. It reads Amazon and Shopify exports and runs 23 models (margin, price, ads, inventory, fees, cash) in about 30 to 75 seconds [sourced: engine/MATH_SCORECARD.md].
+- The engine is more than reorder maths. It reads Amazon and Shopify exports and runs 23 models in one pass (margin, price, forecast, inventory, ads, fee recovery and cash among them) [measured: counted in the `ALL_MODELS` list of engine/src/hubricon_engine/cli.py]. A Shopify run skips fee recovery, so it runs 22 [measured: the same file].
+- How long a run takes has been timed on synthetic catalogues only, never on a client's data: about 29 seconds at 160 SKUs and 75.5 seconds at 400 SKUs [sourced: engine/MATH_SCORECARD.md, "What it costs to run", timed 2026-09-24 and 2026-09-23]. Nobody has re-timed it since.
 
 ### What is true today
 - No paying customers. No measured result on a real brand. Say so plainly, every time.
@@ -32,7 +33,8 @@ What this replaces: the $6,000 a month offer sold on a booked call (still on the
 
 ### Where things are in this repo
 - The handoff and every decision: `SUPPLY_VARIABILITY.md` (section 7 for decisions, section 9 for answered questions).
-- Headline numbers and their status: `docs/agents/NUMBERS.md` (when it exists, quote from there and nowhere else).
+- Headline numbers and their status: `docs/agents/NUMBERS.md`. Quote from there and nowhere else. `python3 tools/agent_check.py docs/agents/CONTEXT.md --only numbers` fails any number in this file that is not a row of it.
+- Corrections and what each became: `agents/CORRECTIONS.md`. Past questions with their accepted answers: `agents/golden/`.
 - What the business says about itself today: `HUBRICON.md`, `HUBRICON_SPEC.md`, `BRAND.md`, `MONOPOLY.md`. Parts of these still describe the $6,000 offer.
 - The problem PDF, `sim/`, `landing/` and `education/` named below are not in this repo. Use SUPPLY_VARIABILITY.md section 1 instead.
 

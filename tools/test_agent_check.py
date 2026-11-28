@@ -79,8 +79,31 @@ SAMPLES = {
         "Pooling cut slow-seller error by 27%, baseline: each store's own mean. [inference]\n",
         "Pooling cut slow-seller error by 27%. [inference]\n",
     ),
+    "archived": (
+        "Error fell to 4 days. [sourced: docs/agents/NUMBERS.md]\n",
+        "Error fell to 4 days. [sourced: archive/old-numbers.md]\n",
+    ),
+    "numbers": (
+        "The made-up store holds 14 days of stock. [measured]\n",
+        "The made-up store holds 15 days of stock. [measured]\n",
+    ),
 }
-FLAGS = {"jargon": {"client": True}, "sections": {"agent": "feynman-red-team"}}
+
+# A made-up register in the shape of docs/agents/NUMBERS.md.
+REGISTER = """\
+| Number | Unit | What it is | Status | Source or script | Date |
+|---|---|---|---|---|---|
+| 14 | days | Cover in the made-up store | measured | made up for the test | 2026-11-28 |
+| 4.0 | days | A made-up error | unverified simulation | made up for the test | 2026-11-28 |
+| 20% | share | A made-up spread | assumption | made up for the test | 2026-11-28 |
+| $1,000 | a month | A made-up price | decided | made up for the test | 2026-11-28 |
+| 36 to 70 | days | A made-up range | sourced | made up for the test | 2026-11-28 |
+"""
+FLAGS = {
+    "jargon": {"client": True},
+    "sections": {"agent": "feynman-red-team"},
+    "numbers": {"register": agent_check.parse_register(REGISTER)},
+}
 
 
 class EveryRule(unittest.TestCase):
@@ -324,6 +347,87 @@ class Baseline(unittest.TestCase):
 
     def test_a_dollar_gain_is_not_this_rule(self):
         self.assertEqual(rules("Profit rose by $400 a month. [inference]\n", only=("baseline",)), [])
+
+
+class Archived(unittest.TestCase):
+    def test_a_link_to_an_archived_file_fails(self):
+        self.assertEqual(rules("See [the old proof](archive/proof4.md).\n", only=("archived",)), ["archived"])
+        self.assertEqual(rules("See [the proof](docs/agents/NUMBERS.md).\n", only=("archived",)), [])
+
+    def test_naming_the_archive_is_not_citing_it(self):
+        self.assertEqual(rules("Retired code moves to archive/ with a README row.\n", only=("archived",)), [])
+
+    def test_a_folder_that_only_ends_in_archive_is_not_the_archive(self):
+        self.assertEqual(rules("Cover is 9 days. [sourced: data/myarchive/x.csv]\n", only=("archived",)), [])
+
+    def test_it_runs_by_default(self):
+        self.assertIn("archived", rules("Cover is 9 days. [sourced: archive/x.md]\n"))
+
+
+class Numbers(unittest.TestCase):
+    """Section 5.3: headline numbers are quoted from the register and nowhere else."""
+
+    REG = agent_check.parse_register(REGISTER)
+
+    def failing(self, text: str, **kwargs) -> list[str]:
+        return [f.message for f in agent_check.check(text, only=("numbers",), register=self.REG, **kwargs)]
+
+    def test_a_number_that_is_not_a_row_is_named(self):
+        messages = self.failing("Cover is 14 days, then 15 days, then 15 days again.\n")
+        self.assertEqual(len(messages), 1)
+        self.assertIn("not in docs/agents/NUMBERS.md: 15 (", messages[0])
+
+    def test_decimals_as_written_must_match(self):
+        self.assertEqual(self.failing("Error was 4.0 days.\n"), [])
+        self.assertEqual(len(self.failing("Error was 4 days.\n")), 1)
+
+    def test_money_and_percentages_are_their_own_kind(self):
+        self.assertEqual(self.failing("The spread is 20%.\n"), [])
+        self.assertEqual(len(self.failing("There are 20 of them.\n")), 1)
+        self.assertEqual(self.failing("It costs $1000 a month.\n"), [])
+        self.assertEqual(len(self.failing("There are 1,000 of them.\n")), 1)
+
+    def test_both_ends_of_a_range_are_rows(self):
+        self.assertEqual(self.failing("It takes 36 to 70 days.\n"), [])
+
+    def test_client_text_never_carries_an_unverified_number(self):
+        self.assertEqual(self.failing("Error was 4.0 days.\n"), [])
+        messages = self.failing("Error was 4.0 days.\n", client=True)
+        self.assertEqual(len(messages), 1)
+        self.assertIn("unverified", messages[0])
+
+    def test_a_second_status_that_is_evidence_lets_it_through(self):
+        both = agent_check.parse_register(REGISTER + "| 4.0 | units | Another made-up figure | measured | made up | 2026-11-28 |\n")
+        self.assertEqual(rules("It sold 4.0 units.\n", only=("numbers",), register=both, client=True), [])
+
+    def test_off_unless_asked_for(self):
+        self.assertNotIn("numbers", rules("Cover is 15 days. [measured]\n"))
+        self.assertIn("numbers", rules("Cover is 15 days. [measured]\n", register=self.REG))
+
+    def test_a_register_that_cannot_be_trusted_stops_the_check(self):
+        for bad in (
+            "No table here.\n",
+            REGISTER.replace("| measured |", "| probably |"),
+            REGISTER.replace("| made up for the test | 2026-11-28 |\n| 4.0", "| | 2026-11-28 |\n| 4.0"),
+            REGISTER.replace("| 14 | days", "| fourteen | days"),
+            REGISTER.replace("made up for the test | 2026-11-28 |\n| 20%", "made up for the test | |\n| 20%"),
+        ):
+            with self.subTest(register=bad[:40]):
+                with self.assertRaises(ValueError):
+                    agent_check.parse_register(bad)
+
+    def test_the_numbers_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            register = Path(tmp) / "NUMBERS.md"
+            register.write_text(REGISTER, encoding="utf-8")
+            code, out = run("Cover is 15 days. [measured]\n", "--only", "numbers", "--numbers", str(register))
+            self.assertEqual(code, 1)
+            self.assertIn("[numbers] not in", out)
+            self.assertEqual(run("Cover is 14 days. [measured]\n", "--only", "numbers", "--numbers", str(register))[0], 0)
+            register.write_text(REGISTER.replace("| measured |", "| probably |"), encoding="utf-8")
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(run("Cover is 14 days.\n", "--numbers", str(register))[0], 2)
+                self.assertEqual(run("Cover is 14 days.\n", "--numbers", str(Path(tmp) / "missing.md"))[0], 2)
 
 
 class SectionAndOnly(unittest.TestCase):

@@ -21,6 +21,12 @@ The rules, one per row of the table in section 3.3:
     sections     with --agent, the output has that agent's required sections
     baseline     a claimed % improvement names `baseline:`
 
+Two rules from section 5.3, which keep stale figures out:
+
+    archived     no [sourced: ...] label or link cites a file under archive/
+    numbers      every number is a row of docs/agents/NUMBERS.md. Off unless asked for with
+                 --numbers or --only numbers, because a client's own figures are not in it
+
 What counts as a number: digits that are not a date, a year, a time, an ID (O12, SKU-104,
 a hash, a version), a reference (section 3.3, step 5, #12), a path, a URL, an ordinal, a list
 or heading number, or code. Fenced code and inline code are skipped, except a bare number in
@@ -35,6 +41,17 @@ And two for the run log (section 6.3), which keeps the evidence of every pass:
 
     --log checker.txt   append this pass, with its exit code, to the run's checker.txt
     --json numbers.json write every number in the file with its label and source
+
+And one for text about Hubricon itself (the shared brief, site copy, a call script):
+
+    --numbers [NUMBERS.md]  also run `numbers` against the register (default docs/agents/NUMBERS.md)
+
+    python3 tools/agent_check.py docs/agents/CONTEXT.md --only numbers
+
+`numbers` fails a number that is not a row of the register. With --client it also fails a
+number whose only status there is `unverified` or `unverified simulation` (O2). It is a floor:
+it matches the figure, its decimals and whether it is money or a percentage, not what the
+figure is about, so a registered 20 passes any 20.
 """
 from __future__ import annotations
 
@@ -68,7 +85,19 @@ RULES = (
     "jargon",
     "sections",
     "baseline",
+    "archived",
+    "numbers",
 )
+
+# The statuses a row of docs/agents/NUMBERS.md may carry. The first five are the brief's
+# (section 5.3); the rest say plainly what those five cannot.
+STATUSES = (
+    "proved", "measured", "sourced", "simulated", "estimate",
+    "unverified simulation", "inference", "unverified", "decided", "assumption",
+)
+# Never evidence, so never in client text (O2).
+NOT_EVIDENCE = ("unverified simulation", "unverified")
+DEFAULT_REGISTER = Path(__file__).resolve().parent.parent / "docs" / "agents" / "NUMBERS.md"
 
 # Rules that judge the whole document, so they are skipped when only one section is checked.
 WHOLE_DOCUMENT_RULES = ("next-action", "jargon", "sections")
@@ -699,6 +728,118 @@ def rule_baseline(doc: Doc, **_) -> list[Failure]:
     return out
 
 
+_ARCHIVED = re.compile(r"(?:^|[\s(`'\"/])(archive/[\w.~/-]*)")
+_LINK_TARGET = re.compile(r"\]\(([^)\s]*)\)")
+
+
+def rule_archived(doc: Doc, **_) -> list[Failure]:
+    out = []
+    for i, line in enumerate(doc.lines):
+        if not doc.active[i]:
+            continue
+        cited = [source for _, name, source in labels(line) if name == "sourced"]
+        cited += [m.group(1) for m in _LINK_TARGET.finditer(line)]
+        for text in cited:
+            m = _ARCHIVED.search(text)
+            if m:
+                out.append(Failure(i + 1, "archived", f"cites an archived file ({m.group(1)}): cite the file that superseded it"))
+    return out
+
+
+class Register(NamedTuple):
+    """The rows of docs/agents/NUMBERS.md: each number's key and the statuses it is listed with."""
+
+    name: str
+    rows: dict
+
+
+def number_key(n: Number) -> tuple[float, int, str]:
+    """What two mentions of a number must share: the value, the decimals as written, and the kind.
+
+    `4.0` is not `4`, `20%` is not `20`, and `$1000` is `$1,000`.
+    """
+    kind = "$" if n.text[:1] in "$€£" else "%" if n.is_percent else ""
+    decimals = re.match(r"[$€£]?[0-9][0-9,]*(?:\.([0-9]+))?", n.text).group(1) or ""
+    return (_value(n.text) or 0.0, len(decimals), kind)
+
+
+def _cell(cells: list[str], at: int | None) -> str:
+    return cells[at] if at is not None and at < len(cells) else ""
+
+
+def parse_register(text: str, name: str = "docs/agents/NUMBERS.md") -> Register:
+    """Read the register: every table whose header has a `Number` and a `Status` column.
+
+    Raises ValueError when a row has no number, an unknown status, no source or no date,
+    so a register that cannot be trusted stops the check instead of passing it.
+    """
+    doc = Doc(text)
+    rows: dict = {}
+    problems = []
+    for block in doc.tables():
+        header = [_plain(c).lower() for c in _cells(doc.lines[block[0]])]
+        if "number" not in header or "status" not in header:
+            continue
+        col = {key: next((n for n, cell in enumerate(header) if cell.startswith(key)), None) for key in ("number", "status", "source", "date")}
+        for i in block[1:]:
+            cells = _cells(doc.lines[i])
+            if all(re.fullmatch(r":?-+:?", c) for c in cells if c):
+                continue
+            found = find_numbers(mask_line(_cell(cells, col["number"])))
+            status = _plain(_cell(cells, col["status"])).lower()
+            if not found:
+                problems.append(f"{name}:{i + 1}: no number in the Number column")
+            if status not in STATUSES:
+                problems.append(f"{name}:{i + 1}: status `{_cell(cells, col['status'])}` is not one of: {', '.join(STATUSES)}")
+            for key in ("source", "date"):
+                if col[key] is not None and not _cell(cells, col[key]):
+                    problems.append(f"{name}:{i + 1}: no {key}")
+            for n in found:
+                rows.setdefault(number_key(n), set()).add(status)
+    if not rows and not problems:
+        problems.append(f"{name}: no table with a Number and a Status column")
+    if problems:
+        raise ValueError("\n".join(problems))
+    return Register(name, rows)
+
+
+def load_register(path: Path | None = None) -> Register:
+    """The register at `path`, or the repo's own. A missing file is a ValueError, like a bad one."""
+    path = Path(path) if path else DEFAULT_REGISTER
+    if not path.is_file():
+        raise ValueError(f"{path}: no such register")
+    try:
+        name = str(path.resolve().relative_to(DEFAULT_REGISTER.parent.parent.parent))
+    except ValueError:
+        name = str(path)
+    return parse_register(path.read_text(encoding="utf-8"), name)
+
+
+def _unique(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
+def rule_numbers(doc: Doc, client: bool = False, register: Register | None = None, **_) -> list[Failure]:
+    if register is None:
+        return []
+    out = []
+    for i, nums in enumerate(doc.numbers):
+        if not nums or not doc.active[i]:
+            continue
+        missing, weak = [], []
+        for n in nums:
+            statuses = register.rows.get(number_key(n))
+            if statuses is None:
+                missing.append(n.text)
+            elif client and not statuses - set(NOT_EVIDENCE):
+                weak.append(n.text)
+        if missing:
+            out.append(Failure(i + 1, "numbers", f"not in {register.name}: {'; '.join(_unique(missing))} (add each with its status and source, or take it out)"))
+        if weak:
+            out.append(Failure(i + 1, "numbers", f"unverified in {register.name}, so never in client text: {'; '.join(_unique(weak))}"))
+    return out
+
+
 RULE_FUNCTIONS = {
     "label": rule_label,
     "unit": rule_unit,
@@ -709,6 +850,8 @@ RULE_FUNCTIONS = {
     "jargon": rule_jargon,
     "sections": rule_sections,
     "baseline": rule_baseline,
+    "archived": rule_archived,
+    "numbers": rule_numbers,
 }
 
 
@@ -718,14 +861,21 @@ def check(
     client: bool = False,
     section: str | None = None,
     only: tuple[str, ...] | None = None,
+    register: Register | None = None,
 ) -> list[Failure]:
     """Every failure in `text`, in line order.
 
     Client text is not an agent note, so with `client` the `Next action` section is asked for
-    only when an agent is named as well.
+    only when an agent is named as well. `numbers` runs only when a register is given, or when
+    it is named in `only` (the repo's own register is then loaded).
     """
     doc = Doc(text)
     names = [r for r in RULES if only is None or r in only]
+    if "numbers" in names and register is None:
+        if only is None:
+            names.remove("numbers")
+        else:
+            register = load_register()
     if section is not None:
         if not doc.restrict(section):
             raise ValueError(f"no section whose heading starts with {section!r}")
@@ -734,7 +884,7 @@ def check(
         names = [r for r in names if r != "next-action"]
     failures = []
     for name in names:
-        failures += RULE_FUNCTIONS[name](doc, agent=agent, client=client)
+        failures += RULE_FUNCTIONS[name](doc, agent=agent, client=client, register=register)
     return sorted(failures, key=lambda f: (f.line, RULES.index(f.rule)))
 
 
@@ -803,6 +953,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only", help="comma-separated rule names to run")
     parser.add_argument("--log", help="append this pass and its exit code to a run's checker.txt")
     parser.add_argument("--json", help="write every number in the file, with its label and source, to this JSON file")
+    parser.add_argument("--numbers", nargs="?", const=str(DEFAULT_REGISTER), metavar="NUMBERS.md",
+                        help="also fail any number that is not in the register (default docs/agents/NUMBERS.md)")
     args = parser.parse_args(argv)
 
     only = None
@@ -818,7 +970,8 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     text = path.read_text(encoding="utf-8")
     try:
-        failures = check(text, args.agent, args.client, args.section, only)
+        register = load_register(Path(args.numbers)) if args.numbers else None
+        failures = check(text, args.agent, args.client, args.section, only, register)
     except ValueError as err:
         print(f"{args.file}: {err}", file=sys.stderr)
         return 2
@@ -836,6 +989,7 @@ def main(argv: list[str] | None = None) -> int:
         flags += ["--client"] if args.client else []
         flags += [f"--section {args.section}"] if args.section else []
         flags += [f"--only {','.join(only)}"] if only else []
+        flags += ["--numbers"] if args.numbers else []
         append_log(Path(args.log), " ".join([path.name] + flags), code, "\n".join(lines))
     return code
 
