@@ -12,3 +12,7 @@ __pycache__/
 # The case study's one listing names the brand. The repo is public and the page is anonymised,
 # so the input stays on the machine that builds the page (HUBRICON.md, the public-data case study).
 scripts/case-study/listing.json
+# The run log and brand files hold client data, and client data never goes into git
+# (SUPPLY_VARIABILITY.md section 8.3). `python3 tools/check_run.py --tracked` fails if any is tracked.
+runs/
+brands/

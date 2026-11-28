@@ -30,10 +30,17 @@ Two more options, for checking part of a file or one rule:
 
     --section 1.3     check only the section whose heading starts with 1.3
     --only label,unit run only the named rules
+
+And two for the run log (section 6.3), which keeps the evidence of every pass:
+
+    --log checker.txt   append this pass, with its exit code, to the run's checker.txt
+    --json numbers.json write every number in the file with its label and source
 """
 from __future__ import annotations
 
 import argparse
+import datetime
+import json
 import re
 import sys
 from pathlib import Path
@@ -731,6 +738,62 @@ def check(
     return sorted(failures, key=lambda f: (f.line, RULES.index(f.rule)))
 
 
+_MAGNITUDES = {"k": 1e3, "K": 1e3, "M": 1e6, "MM": 1e6, "B": 1e9, "bn": 1e9}
+
+
+def _value(text: str) -> float | None:
+    """The number a piece of text stands for: `$1,200` is 1200.0 and `$20M` is 20000000.0."""
+    m = re.match(r"[$€£]?([0-9][0-9,]*(?:\.[0-9]+)?)(.*)$", text)
+    if not m:
+        return None
+    return float(m.group(1).replace(",", "")) * _MAGNITUDES.get(m.group(2), 1)
+
+
+def numbers_in(text: str) -> list[dict]:
+    """Every number in a document: its line, its text, its value, its label and the source named.
+
+    A number takes the first label written after it on the line, or failing that the last one
+    before it. `label` is None for a number on a line with no label, which is what `label` fails.
+    """
+    doc = Doc(text)
+    out = []
+    for i, nums in enumerate(doc.numbers):
+        marks = [(pos, name, source) for pos, name, source in labels(doc.lines[i]) if name != "count" and (name != "sourced" or source)]
+        for n in nums:
+            after = [mark for mark in marks if mark[0] >= n.start]
+            mark = after[0] if after else (marks[-1] if marks else None)
+            out.append({
+                "line": i + 1,
+                "text": n.text,
+                "value": _value(n.text),
+                "label": mark[1] if mark else None,
+                "source": mark[2] if mark else "",
+            })
+    return out
+
+
+_LOG_HEADER = re.compile(r"^== pass (\d+) \| (\S+) \| (.*) \| exit (\d+)$")
+
+
+def read_log(text: str) -> list[dict]:
+    """The passes recorded in a checker.txt, oldest first: {n, at, target, exit}."""
+    out = []
+    for line in text.split("\n"):
+        m = _LOG_HEADER.match(line)
+        if m:
+            out.append({"n": int(m.group(1)), "at": m.group(2), "target": m.group(3), "exit": int(m.group(4))})
+    return out
+
+
+def append_log(log: Path, target: str, code: int, output: str) -> None:
+    """Add one pass to a checker.txt. Passes on the same target are numbered from 1."""
+    before = log.read_text(encoding="utf-8") if log.is_file() else ""
+    n = 1 + sum(1 for entry in read_log(before) if entry["target"] == target)
+    at = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with log.open("a", encoding="utf-8") as fh:
+        fh.write(f"== pass {n} | {at} | {target} | exit {code}\n{output}\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check agent output or client text against the rules of section 3.3.")
     parser.add_argument("file")
@@ -738,6 +801,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--client", action="store_true", help="client-facing text: no jargon in the first line")
     parser.add_argument("--section", help="check only the section whose heading starts with this")
     parser.add_argument("--only", help="comma-separated rule names to run")
+    parser.add_argument("--log", help="append this pass and its exit code to a run's checker.txt")
+    parser.add_argument("--json", help="write every number in the file, with its label and source, to this JSON file")
     args = parser.parse_args(argv)
 
     only = None
@@ -751,18 +816,28 @@ def main(argv: list[str] | None = None) -> int:
     if not path.is_file():
         print(f"{args.file}: no such file", file=sys.stderr)
         return 2
+    text = path.read_text(encoding="utf-8")
     try:
-        failures = check(path.read_text(encoding="utf-8"), args.agent, args.client, args.section, only)
+        failures = check(text, args.agent, args.client, args.section, only)
     except ValueError as err:
         print(f"{args.file}: {err}", file=sys.stderr)
         return 2
-    for f in failures:
-        print(f"{args.file}:{f.line}: [{f.rule}] {f.message}")
+    lines = [f"{args.file}:{f.line}: [{f.rule}] {f.message}" for f in failures]
     if failures:
-        print(f"FAIL {args.file}: {len(failures)} failure(s)")
-        return 1
-    print(f"OK   {args.file}: every rule passes (labelled, not proven true)")
-    return 0
+        lines.append(f"FAIL {args.file}: {len(failures)} failure(s)")
+    else:
+        lines.append(f"OK   {args.file}: every rule passes (labelled, not proven true)")
+    print("\n".join(lines))
+    code = 1 if failures else 0
+    if args.json:
+        Path(args.json).write_text(json.dumps(numbers_in(text), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if args.log:
+        flags = [f"--agent {args.agent}"] if args.agent else []
+        flags += ["--client"] if args.client else []
+        flags += [f"--section {args.section}"] if args.section else []
+        flags += [f"--only {','.join(only)}"] if only else []
+        append_log(Path(args.log), " ".join([path.name] + flags), code, "\n".join(lines))
+    return code
 
 
 if __name__ == "__main__":
