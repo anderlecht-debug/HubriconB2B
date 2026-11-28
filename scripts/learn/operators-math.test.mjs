@@ -4,7 +4,7 @@
 // whenever those move; the examples are labelled invented wherever they show; the reader's own
 // Orders export is counted in the browser exactly as the Python reference counts it, and never
 // sent; nothing inside a lesson sells.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

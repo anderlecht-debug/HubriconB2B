@@ -3,7 +3,7 @@
 // Hubricon's engine (scripts/learn/shopify_margin.py, cold/priors.py) and are re-checked whenever
 // the cards move; the examples are labelled invented wherever they show; nothing inside a lesson
 // sells; the Products export is read in the browser and never sent.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

@@ -1,7 +1,7 @@
 // The store study (/case-study, and the home page's proof): Hubricon's engine on a real retailer's
 // published orders, called before and measured after. Held to the engine as it is today, to the
 // data's licence, and to the rule that nothing published identifies a customer.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

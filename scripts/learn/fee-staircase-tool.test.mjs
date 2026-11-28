@@ -2,7 +2,7 @@
 // the arithmetic is /lib/fees.js and /lib/call.js, which lib/fees.test.mjs and lib/call.test.mjs
 // hold to the engine; reports are read in the browser and never sent; the course reads the
 // same without scripts; one printed page, only once there is something to print.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

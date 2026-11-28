@@ -2,7 +2,7 @@
 // actually offers, with the permissions the work needs and no more; the ad accounts are asked for
 // separately, because a Shopify user cannot reach them; later months' files reach us the way they
 // really do; and nothing is said to be watched that no code watches (audit of 2026-10-01).
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

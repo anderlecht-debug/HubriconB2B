@@ -2,7 +2,7 @@
 // read in the reader's browser and nothing of theirs leaves it, the sample is labelled a
 // sample wherever it shows, a hash is never vouched for on its own, the page says plainly
 // what the Seal cannot prove yet, and it is on the one design system in the one face.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

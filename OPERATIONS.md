@@ -2222,7 +2222,7 @@ own parser and model on its fixtures. Regenerate after any change to `ingest/rea
 `ingest/headers.py`, `ingest/inventory_health.py`, `models/fee_schedule.py` or
 `models/inventory_econ.py`:
 
-    cd engine && uv run python scripts/call_golden.py && cd .. && node --test lib/
+    cd engine && uv run python scripts/call_golden.py && cd .. && npm test
 
 Two figures are the call's own and say so: the next-snapshot cliff (Amazon's 241–270 day
 estimate × (5.45 − 1.50) / 1.50, the learn spreadsheet's rule) and break-even ACoS from Amazon's

@@ -2,7 +2,7 @@
 // browser and nothing leaves it. No analytics, no request that could carry a file, not
 // indexed, not linked from the home page, on the one design system. "Keep this reading"
 // is the browser's print dialog on this same page, so keeping it sends nothing either.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

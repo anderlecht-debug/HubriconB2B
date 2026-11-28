@@ -2,7 +2,7 @@
 // the engine it teaches: the spreadsheet and every figure were checked against Hubricon's
 // engine (scripts/learn/price_curve.py), and are re-checked whenever the engine moves; the
 // worked example is labelled invented wherever it shows; nothing inside a lesson sells.
-//   node --test scripts/
+//   npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
